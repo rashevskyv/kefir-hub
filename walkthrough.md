@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.841** (2026-09-15). Попередні
+Актуальний delivery — **v0.13.842** (2026-09-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.842 — Align backup metadata columns
+
+- List-layout backup metadata розділено на Title ID, account, timestamp і archive count з окремими x-позиціями.
+- Межа кожної колонки визначається за найбільшою фактичною NanoVG-шириною серед усіх backup entries, тому розділювачі стоять на спільних pixel boundaries.
+- Кастомний secondary row використовує той самий list text clip width, що й `DrawEntry`, тому довгі metadata не перекривають праву info-колонку. Live saves, Grid, GridDetail і HbMenu не змінено.
+- Версію піднято до `0.13.842`. Gemini WSL `ReleaseWithInstall` успішно зібрав `[100%] Built target sphaira_nro`; senior review і `git diff --check` пройшли. Апаратний тест не виконувався.
 
 ## v0.13.841 — Polish save metadata and restore
 

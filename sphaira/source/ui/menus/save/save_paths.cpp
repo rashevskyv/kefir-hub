@@ -808,21 +808,27 @@ auto FormatBackupTimestamp(u64 ts, bool compact) -> std::string {
     return buf;
 }
 
-auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts, bool list_layout) -> std::string {
+auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> BackupSecondaryColumns {
     const u64 id = IsSystemLikeSave(e.save_data_type) ? e.system_save_data_id : e.application_id;
     char id_str[33];
     std::snprintf(id_str, sizeof(id_str), "%016lX", id);
 
-    const std::string account = FormatBackupAccount(e, accounts);
-    const std::string date_str = FormatBackupTimestamp(e.backup_timestamp, !list_layout);
-
-    if (list_layout) {
-        std::string out = std::string{id_str} + "  •  " + account + "  •  " + date_str;
-        if (e.backup_count > 1) {
-            out += "  •  " + std::to_string(e.backup_count) + " archives";
-        }
-        return out;
+    BackupSecondaryColumns cols;
+    cols.title_id = id_str;
+    cols.account = "  •  " + FormatBackupAccount(e, accounts);
+    const auto date_str = FormatBackupTimestamp(e.backup_timestamp, false);
+    if (!date_str.empty()) {
+        cols.timestamp = "  •  " + date_str;
     }
+    if (e.backup_count > 1) {
+        cols.archive_count = "  •  " + std::to_string(e.backup_count) + " archives";
+    }
+    return cols;
+}
+
+auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string {
+    const std::string account = FormatBackupAccount(e, accounts);
+    const std::string date_str = FormatBackupTimestamp(e.backup_timestamp, true);
 
     std::string out = account + "  •  " + date_str;
     if (e.backup_count > 1) {

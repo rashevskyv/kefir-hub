@@ -158,6 +158,12 @@ private:
     auto ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64;
     void DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e);
     void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const;
+    struct BackupColumnLayout {
+        float max_title_w{0.f};
+        float max_account_w{0.f};
+        float max_date_w{0.f};
+    };
+    void DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& v, const Vec4& image_v, const Entry& e, const BackupColumnLayout& layout, const char* info) const;
 
     auto GetSelectedEntries() const {
         std::vector<Entry> out;

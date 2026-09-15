@@ -66,9 +66,17 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
 auto VerifyZipIntegrity(const fs::FsPath& path) -> bool;
 auto VerifyDisaIntegrity(fs::Fs* fs, const fs::FsPath& path) -> bool;
 
+struct BackupSecondaryColumns {
+    std::string title_id;
+    std::string account;
+    std::string timestamp;
+    std::string archive_count;
+};
+
 auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;
 auto FormatBackupTimestamp(u64 ts, bool compact = false) -> std::string;
-auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts, bool list_layout) -> std::string;
+auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> BackupSecondaryColumns;
+auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;
 auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string;
 auto BackupGroupKey(const Entry& e) -> std::string;
 

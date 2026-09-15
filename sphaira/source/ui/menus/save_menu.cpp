@@ -745,8 +745,34 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
 
+    BackupColumnLayout backup_cols{};
+    if (m_layout.Get() == grid::LayoutType_List) {
+        nvgFontSize(vg, 15.f);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT);
+        float bounds[4]{};
+
+        for (const auto& e : m_entries) {
+            if (!e.is_backup) {
+                continue;
+            }
+            const auto cols = GetBackupSecondaryColumns(e, m_accounts);
+            if (!cols.title_id.empty()) {
+                gfx::textBounds(vg, 0, 0, bounds, cols.title_id.c_str());
+                backup_cols.max_title_w = std::max(backup_cols.max_title_w, bounds[2] - bounds[0]);
+            }
+            if (!cols.account.empty()) {
+                gfx::textBounds(vg, 0, 0, bounds, cols.account.c_str());
+                backup_cols.max_account_w = std::max(backup_cols.max_account_w, bounds[2] - bounds[0]);
+            }
+            if (!cols.timestamp.empty()) {
+                gfx::textBounds(vg, 0, 0, bounds, cols.timestamp.c_str());
+                backup_cols.max_date_w = std::max(backup_cols.max_date_w, bounds[2] - bounds[0]);
+            }
+        }
+    }
+
     const auto g = ComputeGridSections();
-    m_list->Draw(vg, theme, g.display_count, EntryToDisplay(m_index, g), [this, &image_load_count, g](NVGcontext* vg, Theme* theme, Vec4 v, s64 disp) {
+    m_list->Draw(vg, theme, g.display_count, EntryToDisplay(m_index, g), [this, &image_load_count, g, &backup_cols](NVGcontext* vg, Theme* theme, Vec4 v, s64 disp) {
         const auto entry = DisplayToEntry(disp, g);
         if (entry < 0) {
             return; // empty divider gap; the label is drawn with the first backup tile.
@@ -774,9 +800,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto selected = entry == m_index;
         Vec4 image_v = v;
         const auto info = (m_layout.Get() == grid::LayoutType_List || m_layout.Get() == grid::LayoutType_GridDetail) ? FormatListInfo(e) : std::string{};
-        const auto author_str = e.is_backup
-            ? FormatBackupSecondaryText(e, m_accounts, m_layout.Get() == grid::LayoutType_List)
-            : std::string{e.GetAuthor()};
+        const bool is_list = (m_layout.Get() == grid::LayoutType_List);
+        const auto author_str = (e.is_backup && is_list)
+            ? std::string{}
+            : (e.is_backup ? FormatBackupSecondaryText(e, m_accounts) : std::string{e.GetAuthor()});
 
         if (!IsSystemLikeSave(e.save_data_type)) {
             image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), author_str.c_str(), info.c_str(), e.selected);
@@ -784,6 +811,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), author_str.c_str(), info.c_str(), e.selected);
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
+        }
+
+        if (e.is_backup && is_list) {
+            DrawBackupSecondaryColumns(vg, theme, v, image_v, e, backup_cols, info.c_str());
         }
 
         // grey for deleted-game saves, yellow for backups, nothing otherwise.
@@ -798,6 +829,43 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             DrawSectionDivider(vg, theme, v, g);
         }
     });
+}
+
+void Menu::DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& v, const Vec4& image_v, const Entry& e, const BackupColumnLayout& layout, const char* info) const {
+    const float text_x = image_v.x + image_v.w + 14.f;
+    const float text_y = v.y + v.h / 2.f + 12.f;
+    const float text_clip_w = GetListTextClipWidth(vg, v, text_x, info);
+    if (text_clip_w <= 0.f) {
+        return;
+    }
+
+    const auto cols = GetBackupSecondaryColumns(e, m_accounts);
+    const auto col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+
+    nvgSave(vg);
+    nvgIntersectScissor(vg, text_x, 0.f, text_clip_w, SCREEN_HEIGHT);
+
+    float cur_x = text_x;
+    if (!cols.title_id.empty()) {
+        gfx::drawText(vg, cur_x, text_y, 15.f, col, cols.title_id.c_str(), NVG_ALIGN_LEFT);
+    }
+    cur_x = text_x + layout.max_title_w;
+
+    if (!cols.account.empty()) {
+        gfx::drawText(vg, cur_x, text_y, 15.f, col, cols.account.c_str(), NVG_ALIGN_LEFT);
+    }
+    cur_x = cur_x + layout.max_account_w;
+
+    if (!cols.timestamp.empty()) {
+        gfx::drawText(vg, cur_x, text_y, 15.f, col, cols.timestamp.c_str(), NVG_ALIGN_LEFT);
+    }
+    cur_x = cur_x + layout.max_date_w;
+
+    if (!cols.archive_count.empty()) {
+        gfx::drawText(vg, cur_x, text_y, 15.f, col, cols.archive_count.c_str(), NVG_ALIGN_LEFT);
+    }
+
+    nvgRestore(vg);
 }
 
 void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) {

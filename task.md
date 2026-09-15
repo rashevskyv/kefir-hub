@@ -1,9 +1,17 @@
-Актуальний delivery — **v0.13.841** (Polish save metadata and restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.842** (Align backup metadata columns). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.841 (Polish save metadata and restore)
+## Поточний delivery: v0.13.842 (Align backup metadata columns)
+
+- [x] `SAVE-BACKUP-COLUMNS-842` — розділити list metadata на Title ID, account, timestamp і archive count та вирівняти колонки за найширшим виміряним елементом.
+- [x] `SAVE-BACKUP-CLIP-842` — зберегти clipping перед правою info-колонкою та не змінювати live saves/інші layouts.
+- [x] `BUILD-842` — Gemini WSL `ReleaseWithInstall` завершився до `[100%] Built target sphaira_nro`; senior review і `git diff --check` пройшли.
+- [x] `DOCS-BUMP-842` — версію та delivery-документи оновлено; створити focused commit.
+- [ ] `HW-842` — перевірити на Switch точні vertical boundaries metadata-колонок і clipping до правої info-колонки.
+
+## Попередній delivery: v0.13.841 (Polish save metadata and restore)
 
 - [x] `SAVE-DELETED-TITLE-841` — застосувати backup metadata fallback для назв сейвів видалених ігор.
 - [x] `SAVE-ACCOUNT-TERM-841` — показувати `Account` без перекладу в save UI та лише short hex для unknown UID.

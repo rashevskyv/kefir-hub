@@ -1,8 +1,16 @@
-Поточний delivery — **v0.13.841** (Polish save metadata and restore). Завершені плани збережено в
+Поточний delivery — **v0.13.842** (Align backup metadata columns). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.841 — Polish save metadata and restore
+## Поточний delivery: v0.13.842 — Align backup metadata columns
+
+Статус: реалізовано та успішно зібрано.
+1. Secondary metadata backup-рядка розділено на Title ID, account, timestamp і archive count.
+2. Фактична NanoVG-ширина кожного поля вимірюється для всіх backup entries; наступні колонки малюються за спільними pixel tab stops.
+3. Кастомний рядок перевикористовує точний list text clip width і не перекриває праву info-колонку; live saves та інші layouts не змінено.
+4. Gemini WSL `ReleaseWithInstall` завершився до `[100%] Built target sphaira_nro`; senior review і `git diff --check` пройшли. Апаратна перевірка залишається.
+
+## Попередній delivery: v0.13.841 — Polish save metadata and restore
 
 Статус: реалізовано та успішно зібрано.
 1. Використати доступну backup metadata як fallback назви для live saves видалених ігор; без зовнішнього icon lookup.

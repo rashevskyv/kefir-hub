@@ -66,6 +66,32 @@ void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec
     gfx::drawCheckbox(vg, theme, overlay.x + inset, overlay.y + inset, tile_checkbox_size, marked);
 }
 
+auto Menu::GetListTextClipWidth(NVGcontext* vg, const Vec4& v, float text_x, const char* version, float extra_right) -> float {
+    float right_w = extra_right;
+    if (version && *version) {
+        const auto [label, value] = SplitListInfo(version);
+        float bounds[4]{};
+
+        nvgFontSize(vg, 18.f);
+        // the column is as wide as the widest size string, measured rather
+        // than guessed so a theme with a wider font doesn't clip it.
+        gfx::textBounds(vg, 0, 0, bounds, LIST_INFO_VALUE_SAMPLE);
+        const float value_w = value.empty() && label.empty() ? 0.f : bounds[2] - bounds[0];
+
+        float label_w = 0.f;
+        if (!label.empty()) {
+            gfx::textBounds(vg, 0, 0, bounds, label.c_str());
+            label_w = bounds[2] - bounds[0];
+        }
+
+        right_w += value_w + LIST_INFO_COL_GAP + label_w + 20.f;
+    } else if (extra_right > 0.f) {
+        right_w += 20.f;
+    }
+
+    return v.w - text_x + v.x - 15.f - right_w;
+}
+
 Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked, float extra_right) {
     return DrawEntry(vg, theme, true, layout, v, selected, image, name, author, version, marked, extra_right);
 }
@@ -147,7 +173,6 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
         // same x instead of being pushed around by the width of its own size.
         // extra_right is space the caller will paint itself (games list badges)
         // immediately left of that column.
-        float right_w = extra_right;
         if (version && *version) {
             const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
             const auto [label, value] = SplitListInfo(version);
@@ -164,19 +189,12 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
                 gfx::drawText(vg, right, y + h / 2.f, 18.f, info_col, value.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
 
-            float label_w = 0.f;
             if (!label.empty()) {
-                gfx::textBounds(vg, 0, 0, bounds, label.c_str());
-                label_w = bounds[2] - bounds[0];
                 gfx::drawText(vg, right - value_w - LIST_INFO_COL_GAP, y + h / 2.f, 18.f, info_col, label.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
-
-            right_w += value_w + LIST_INFO_COL_GAP + label_w + 20.f;
-        } else if (extra_right > 0.f) {
-            right_w += 20.f;
         }
 
-        const float text_clip_w = w - text_x + x - 15.f - right_w;
+        const float text_clip_w = GetListTextClipWidth(vg, v, text_x, version, extra_right);
         m_scroll_name.Draw(vg, selected, text_x, y + h / 2.f - 12.f, text_clip_w, 18.f, NVG_ALIGN_LEFT, theme->GetColour(text_id), name);
         m_scroll_author.Draw(vg, selected, text_x, y + h / 2.f + 12.f, text_clip_w, 15.f, NVG_ALIGN_LEFT, theme->GetColour(ThemeEntryID_TEXT_INFO), author);
         return Vec4{icon_x, icon_y, icon_size, icon_size};

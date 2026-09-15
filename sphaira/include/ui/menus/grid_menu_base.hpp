@@ -37,6 +37,7 @@ protected:
     // multi-select mark for one entry. `row` is the whole entry rect, `overlay`
     // the part a tile layout anchors the checkbox to (usually its icon).
     void DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec4& row, const Vec4& overlay, bool marked, bool any_marked);
+    static auto GetListTextClipWidth(NVGcontext* vg, const Vec4& v, float text_x, const char* version, float extra_right = 0.f) -> float;
 
 private:
     Vec4 DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, const Vec4& v, bool selected, int image, const char* name, const char* author, const char* version, bool marked, float extra_right);

@@ -1,13 +1,15 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.841**. Дата: 2026-09-15.
+Канічний робочий файл. Версія коду: **v0.13.842**. Дата: 2026-09-15.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
-`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-14:
-12447 nodes, 24696 edges, 654 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
+`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-15:
+12512 nodes, 24888 edges, 633 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.842 поза ponytail-чергою: secondary metadata backup-рядків розділено на NanoVG-колонки зі спільними pixel tab stops за найширшим елементом; clipping збережено перед правою info-колонкою. Gemini WSL `ReleaseWithInstall`, senior review і `git diff --check` пройшли; версію піднято до 0.13.842. Апаратний тест не виконувався. **Не закриває** чергу §2 A1–A7.
 
 v0.13.841 поза ponytail-чергою: назви видалених ігор отримують fallback із backup metadata; у save UI `Account` не перекладається, unknown UID показується коротким hex; List border зменшено до 2 px; probe save filesystem закривається перед RW-open, усуваючи `FsError_TargetLocked` при ZIP restore. WSL `ReleaseWithInstall` і `git diff --check` пройшли успішно; версію піднято до 0.13.841. Апаратний тест не запускався. **Не закриває** чергу §2 A1–A7.
 
