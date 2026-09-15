@@ -255,43 +255,8 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                     R_TRY(bis_fs.Commit());
                     R_SUCCEED();
                 } else {
-                    zlib_filefunc64_def file_func;
-                    mz::FileFuncStdio(&file_func);
-                    auto zfile = unzOpen2_64(file_path, &file_func);
-                    R_UNLESS(zfile, Result_UnzOpen2_64);
-                    ON_SCOPE_EXIT(unzClose(zfile));
-
-                    const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
-                        if (name == ".nx_save_meta.bin" || !strcasecmp(name.s, ".dbi_save_info.ini") || !strcasecmp(name.s, ".dbi_save_extra")) {
-                            return false;
-                        }
-                        return true;
-                    };
-
-                    pbox->NewTransfer("Validating save..."_i18n);
-                    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true));
-
-                    FsSaveDataAttribute attr{};
-                    attr.application_id = se.application_id;
-                    attr.uid = se.uid;
-                    attr.system_save_data_id = se.system_save_data_id;
-                    attr.save_data_type = se.save_data_type;
-                    attr.save_data_rank = se.save_data_rank;
-                    attr.save_data_index = se.save_data_index;
-
-                    fs::FsNativeSave save_fs{(FsSaveDataType)se.save_data_type, (FsSaveDataSpaceId)se.save_data_space_id, &attr, false};
-                    R_TRY(save_fs.GetFsOpenResult());
-
-                    filebrowser::FsDirCollections collections;
-                    R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", collections));
-                    R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
-
-                    pbox->NewTransfer("Restoring save..."_i18n);
-                    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true));
-
-                    R_TRY(save_fs.Commit());
+                    return save::RestoreSaveZip(pbox, se, file_path);
                 }
-                R_SUCCEED();
             }, [](Result rc) {
                 if (R_FAILED(rc)) {
                     App::PushErrorBox(rc, "Save restore failed!"_i18n);

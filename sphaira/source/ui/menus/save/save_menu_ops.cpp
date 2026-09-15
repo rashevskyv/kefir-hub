@@ -780,62 +780,7 @@ auto Menu::BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_
     return path;
 }
 
-Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const {
-    pbox->SetTitle(e.GetName());
-    if (e.image) {
-        pbox->SetImage(e.image);
-    } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
-        pbox->SetImageDataConst(data->icon);
-    } else {
-        pbox->SetImage(0);
-    }
-
-    log_write("restoring save: %s\n", path.s);
-
-    fs::FsStdio stdio_fs;
-    fs::FsNativeSd sd_fs;
-    fs::Fs* probe_fs = path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
-
-    if (IsDisaSaveFile(probe_fs, path)) {
-        // Raw DISA images replace an existing BIS save container directly. A
-        // zero ID would resolve to /save/0000000000000000, so never attempt it.
-        R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);
-        log_write("restoring raw DISA save: %s\n", path.s);
-        fs::File src_file;
-        R_TRY(probe_fs->OpenFile(path, FsOpenMode_Read, &src_file));
-        s64 src_size{};
-        R_TRY(src_file.GetSize(&src_size));
-
-        const auto partition_id = IsSystemLikeSave(e.save_data_type) ? FsBisPartitionId_System : FsBisPartitionId_User;
-        fs::FsNativeBis bis_fs{partition_id};
-        R_TRY(bis_fs.GetFsOpenResult());
-
-        char target_path[64];
-        std::snprintf(target_path, sizeof(target_path), "/save/%016lX", e.save_data_id);
-
-        bis_fs.DeleteFile(target_path);
-        R_TRY(bis_fs.CreateFile(target_path, src_size, 0));
-
-        fs::File dst_file;
-        R_TRY(bis_fs.OpenFile(target_path, FsOpenMode_Write, &dst_file));
-
-        pbox->NewTransfer("Restoring raw save..."_i18n);
-        pbox->UpdateTransfer(0, src_size);
-
-        R_TRY(thread::Transfer(pbox, src_size,
-            [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
-                return src_file.Read(off, data, size, FsReadOption_None, bytes_read);
-            },
-            [&](const void* data, s64 off, s64 size) -> Result {
-                return dst_file.Write(off, data, size, FsWriteOption_None);
-            }
-        ));
-
-        R_TRY(bis_fs.Commit());
-        log_write("finished raw save restore\n");
-        R_SUCCEED();
-    }
-
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) {
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -1009,6 +954,65 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     R_TRY(save_fs.Commit());
     log_write("finished save restore\n");
     R_SUCCEED();
+}
+
+Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const {
+    pbox->SetTitle(e.GetName());
+    if (e.image) {
+        pbox->SetImage(e.image);
+    } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
+        pbox->SetImageDataConst(data->icon);
+    } else {
+        pbox->SetImage(0);
+    }
+
+    log_write("restoring save: %s\n", path.s);
+
+    fs::FsStdio stdio_fs;
+    fs::FsNativeSd sd_fs;
+    fs::Fs* probe_fs = path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+
+    if (IsDisaSaveFile(probe_fs, path)) {
+        // Raw DISA images replace an existing BIS save container directly. A
+        // zero ID would resolve to /save/0000000000000000, so never attempt it.
+        R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);
+        log_write("restoring raw DISA save: %s\n", path.s);
+        fs::File src_file;
+        R_TRY(probe_fs->OpenFile(path, FsOpenMode_Read, &src_file));
+        s64 src_size{};
+        R_TRY(src_file.GetSize(&src_size));
+
+        const auto partition_id = IsSystemLikeSave(e.save_data_type) ? FsBisPartitionId_System : FsBisPartitionId_User;
+        fs::FsNativeBis bis_fs{partition_id};
+        R_TRY(bis_fs.GetFsOpenResult());
+
+        char target_path[64];
+        std::snprintf(target_path, sizeof(target_path), "/save/%016lX", e.save_data_id);
+
+        bis_fs.DeleteFile(target_path);
+        R_TRY(bis_fs.CreateFile(target_path, src_size, 0));
+
+        fs::File dst_file;
+        R_TRY(bis_fs.OpenFile(target_path, FsOpenMode_Write, &dst_file));
+
+        pbox->NewTransfer("Restoring raw save..."_i18n);
+        pbox->UpdateTransfer(0, src_size);
+
+        R_TRY(thread::Transfer(pbox, src_size,
+            [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
+                return src_file.Read(off, data, size, FsReadOption_None, bytes_read);
+            },
+            [&](const void* data, s64 off, s64 size) -> Result {
+                return dst_file.Write(off, data, size, FsWriteOption_None);
+            }
+        ));
+
+        R_TRY(bis_fs.Commit());
+        log_write("finished raw save restore\n");
+        R_SUCCEED();
+    }
+
+    return RestoreSaveZip(pbox, e, path);
 }
 
 Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root) const {

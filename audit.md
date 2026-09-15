@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.844**. Дата: 2026-09-15.
+Канічний робочий файл. Версія коду: **v0.13.845**. Дата: 2026-09-15.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12512 nodes, 24888 edges, 633 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.845 P1 restore slice: `save::RestoreSaveZip` став одним owner ZIP save lifecycle для Save Menu і File Browser; UI/picker/notification та обидва RAW branches лишилися у callers. P0 fail-closed/DBI/commit/UMS guarantees збережено. Другого save-aware backup backend немає, тому `BackupSaveInternal` не переносився, а решта P1 лишається в черзі. Focused/path checks і post-edit WSL ReleaseWithInstall пройшли; апаратний тест не виконувався. **Не закриває** ponytail-чергу §2 A1–A7.
 
 v0.13.844 Emergency P0 save restore: DBI leading slash нормалізується лише в save-import compatibility layer; повний ZIP payload/CRC preflight передує create/extend/delete; Save Menu і File Browser мають error-propagating final commit; native CRUD повертає auto-commit failures. Ordinary/UMS extraction і RAW restore не змінено; P1-P4 залишаються в черзі. Gemini path/save contract checks і WSL ReleaseWithInstall пройшли; повний runner має два попередні unrelated failures. Апаратний тест не виконувався. **Не закриває** ponytail-чергу §2 A1–A7.
 

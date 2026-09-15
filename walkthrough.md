@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.844** (2026-09-15). Попередні
+Актуальний delivery — **v0.13.845** (2026-09-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.845 — P1 shared ZIP save restore
+
+- `save::RestoreSaveZip` є єдиним owner ZIP save lifecycle: archive open/close, metadata, P0 preflight, create/extend, clear, extraction і final commit.
+- `Menu::RestoreSaveInternal` залишив presentation та RAW DISA branch; File Browser залишив picker/confirmation/notifications і свій RAW branch. Обидва ZIP routes делегують shared function.
+- DBI save-only normalization, preflight-before-mutation, Result propagation і ordinary/UMS unzip behavior збережено. `BackupSaveInternal` не переносився, бо другого save-aware backup backend немає; решта P1 лишається в черзі.
+- Версію піднято до `0.13.845`. Focused contract пройшов 38 checks, path regression — 364; post-edit WSL `ReleaseWithInstall` скомпілював обидва змінені units і завершився `[100%] Built target sphaira_nro`. Апаратний тест не виконувався.
 
 ## v0.13.844 — Emergency P0 safe save restore
 

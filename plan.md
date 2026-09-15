@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.844** (Emergency P0 safe save restore). Завершені плани збережено в
+Поточний delivery — **v0.13.845** (P1 shared ZIP save restore). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.844 — Emergency P0 safe save restore
+## Поточний delivery: v0.13.845 — P1 shared ZIP save restore
+
+Статус: реалізовано та успішно зібрано.
+1. Винести одну namespace-level реалізацію ZIP save restore з поточного `Menu::RestoreSaveInternal`: metadata, target create/extend, P0 preflight, clear, extraction і final commit.
+2. Save Menu wrapper зберігає title/image та RAW DISA branch; ZIP делегує shared function. File Browser зберігає picker/confirmation/notifications та RAW branch; дубльований ZIP lifecycle замінює одним shared call.
+3. Не додавати backend class/interface/new file без потреби; наявний `save_menu_ops.cpp` може бути єдиним owner, а `save_menu.hpp` — декларацією.
+4. Зберегти P0 fail-closed, DBI save-only compatibility, Result propagation та ordinary/UMS unzip semantics без змін.
+5. Оновити мінімальний contract test так, щоб обидва UI routes викликали shared function, а критичні lifecycle operations існували лише в одному owner.
+6. `BackupSaveInternal` не перенесено: File Browser не має другого save-aware backup backend, лише generic `ZipFiles`; решту P1 backup scope залишено в черзі. Focused contract (38), path regression (364) і post-edit WSL `ReleaseWithInstall` пройшли до `[100%] Built target sphaira_nro`.
+
+## Попередній delivery: v0.13.844 — Emergency P0 safe save restore
 
 Статус: реалізовано та успішно зібрано.
 1. Залишити глобальний `path::IsSafeArchiveEntry` суворим; дозволити рівно один leading `/` лише в save-import compatibility layer, після чого повторно перевірити нормалізований relative path і destination mapping.

@@ -33,60 +33,89 @@ static std::string read_file_to_string(const char* path) {
 }
 
 static int test_preflight_ordering_contract() {
-    // 3. Preflight ordering and commit contracts
+    // 1. Shared function declaration in save_menu.hpp
+    const std::string save_menu_hpp = read_file_to_string("sphaira/include/ui/menus/save_menu.hpp");
+    CHECK(!save_menu_hpp.empty());
+    CHECK(save_menu_hpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path);") != std::string::npos);
+
+    // 2. Shared function existence and ordering in save_menu_ops.cpp
     const std::string save_menu_code = read_file_to_string("sphaira/source/ui/menus/save/save_menu_ops.cpp");
     CHECK(!save_menu_code.empty());
 
-    const auto rsi_pos = save_menu_code.find("RestoreSaveInternal");
+    const auto rsz_pos = save_menu_code.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)");
+    CHECK(rsz_pos != std::string::npos);
+
+    const auto rsi_pos = save_menu_code.find("Result Menu::RestoreSaveInternal(", rsz_pos);
     CHECK(rsi_pos != std::string::npos);
 
-    const auto preflight_pos = save_menu_code.find("TransferUnzipPreflight", rsi_pos);
+    const std::string rsz_body = save_menu_code.substr(rsz_pos, rsi_pos - rsz_pos);
+
+    const auto preflight_pos = rsz_body.find("TransferUnzipPreflight");
     CHECK(preflight_pos != std::string::npos);
 
-    const auto create_pos = save_menu_code.find("fsCreateSaveDataFileSystem", preflight_pos);
+    const auto create_pos = rsz_body.find("fsCreateSaveDataFileSystem", preflight_pos);
     CHECK(create_pos != std::string::npos);
     CHECK(preflight_pos < create_pos);
 
-    const auto extend_pos = save_menu_code.find("fsExtendSaveDataFileSystem", preflight_pos);
+    const auto extend_pos = rsz_body.find("fsExtendSaveDataFileSystem", preflight_pos);
     CHECK(extend_pos != std::string::npos);
     CHECK(preflight_pos < extend_pos);
 
-    const auto delete_coll_pos = save_menu_code.find("DeleteAllCollections", preflight_pos);
+    const auto delete_coll_pos = rsz_body.find("DeleteAllCollections", preflight_pos);
     CHECK(delete_coll_pos != std::string::npos);
     CHECK(preflight_pos < delete_coll_pos);
 
-    const auto unzip_pos = save_menu_code.find("TransferUnzipAll", delete_coll_pos);
+    const auto unzip_pos = rsz_body.find("TransferUnzipAll", delete_coll_pos);
     CHECK(unzip_pos != std::string::npos);
 
-    const auto commit_pos = save_menu_code.find("save_fs.Commit()", unzip_pos);
+    const auto commit_pos = rsz_body.find("save_fs.Commit()", unzip_pos);
     CHECK(commit_pos != std::string::npos);
 
-    // Verify File Browser restore ordering and commit
+    // 3. Passes save_dbi_compat=true to both preflight and extraction
+    CHECK(rsz_body.find("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true)") != std::string::npos);
+    CHECK(rsz_body.find("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true)") != std::string::npos);
+
+    // 4. Menu::RestoreSaveInternal delegates to RestoreSaveZip and has no ZIP lifecycle after RAW branch
+    const auto bsi_pos = save_menu_code.find("Result Menu::BackupSaveInternal(", rsi_pos);
+    CHECK(bsi_pos != std::string::npos);
+    const std::string rsi_body = save_menu_code.substr(rsi_pos, bsi_pos - rsi_pos);
+
+    CHECK(rsi_body.find("return RestoreSaveZip(pbox, e, path);") != std::string::npos);
+
+    const auto raw_end = rsi_body.find("log_write(\"finished raw save restore\\n\");");
+    CHECK(raw_end != std::string::npos);
+    const std::string rsi_after_raw = rsi_body.substr(raw_end);
+    CHECK(rsi_after_raw.find("TransferUnzipPreflight") == std::string::npos);
+    CHECK(rsi_after_raw.find("fsExtendSaveDataFileSystem") == std::string::npos);
+    CHECK(rsi_after_raw.find("DeleteAllCollections") == std::string::npos);
+    CHECK(rsi_after_raw.find("TransferUnzipAll") == std::string::npos);
+    CHECK(rsi_after_raw.find("save_fs.Commit()") == std::string::npos);
+
+    // 5. Verify File Browser restore calls the shared function and removes local ZIP restore
     const std::string fb_code = read_file_to_string("sphaira/source/ui/menus/filebrowser/filebrowser_ops.cpp");
     CHECK(!fb_code.empty());
 
-    const auto fb_restore_pos = fb_code.find("RestoreSaveFile");
+    const auto fb_restore_pos = fb_code.find("void FsView::RestoreSaveFile(");
     CHECK(fb_restore_pos != std::string::npos);
 
-    const auto fb_preflight_pos = fb_code.find("TransferUnzipPreflight", fb_restore_pos);
-    CHECK(fb_preflight_pos != std::string::npos);
-
-    const auto fb_del_pos = fb_code.find("DeleteAllCollections", fb_preflight_pos);
-    CHECK(fb_del_pos != std::string::npos);
-    CHECK(fb_preflight_pos < fb_del_pos);
-
-    const auto fb_unzip_pos = fb_code.find("TransferUnzipAll", fb_del_pos);
+    const auto fb_unzip_pos = fb_code.find("void FsView::UnzipFiles(", fb_restore_pos);
     CHECK(fb_unzip_pos != std::string::npos);
 
-    const auto fb_commit_pos = fb_code.find("R_TRY(save_fs.Commit())", fb_unzip_pos);
-    CHECK(fb_commit_pos != std::string::npos);
+    const std::string fb_restore_body = fb_code.substr(fb_restore_pos, fb_unzip_pos - fb_restore_pos);
 
-    // Verify fs.cpp CRUD wrappers return fsFsCommit
+    CHECK(fb_restore_body.find("return save::RestoreSaveZip(pbox, se, file_path);") != std::string::npos);
+    CHECK(fb_restore_body.find("TransferUnzipPreflight") == std::string::npos);
+    CHECK(fb_restore_body.find("FsNativeSave") == std::string::npos);
+    CHECK(fb_restore_body.find("DeleteAllCollections") == std::string::npos);
+    CHECK(fb_restore_body.find("TransferUnzipAll") == std::string::npos);
+    CHECK(fb_restore_body.find("save_fs.Commit") == std::string::npos);
+
+    // 6. Verify fs.cpp CRUD wrappers return fsFsCommit
     const std::string fs_code = read_file_to_string("sphaira/source/fs.cpp");
     CHECK(!fs_code.empty());
     CHECK(fs_code.find("return fsFsCommit(fs);") != std::string::npos);
 
-    // Verify threaded_file_transfer.cpp uses IsSafeExtractionDestination and ResolveArchiveEntryName
+    // 7. Verify threaded_file_transfer.cpp uses IsSafeExtractionDestination and ResolveArchiveEntryName
     const std::string tft_code = read_file_to_string("sphaira/source/threaded_file_transfer.cpp");
     CHECK(!tft_code.empty());
     CHECK(tft_code.find("IsSafeExtractionDestination") != std::string::npos);

@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.844** (Emergency P0 safe save restore). Завершені задачі збережено в
+Актуальний delivery — **v0.13.845** (P1 shared ZIP save restore). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.844 (Emergency P0 safe save restore)
+## Поточний delivery: v0.13.845 (P1 shared ZIP save restore)
+
+- [x] `SAVE-P1-SHARED-RESTORE-845` — створити одну namespace-level реалізацію ZIP save lifecycle без нового backend class.
+- [x] `SAVE-P1-MENU-ROUTE-845` — лишити UI/image та RAW у `Menu::RestoreSaveInternal`, а ZIP передати shared owner.
+- [x] `SAVE-P1-FB-ROUTE-845` — лишити picker/notification та RAW у File Browser, видалити дубль ZIP lifecycle на користь shared call.
+- [x] `SAVE-P1-P0-GUARDS-845` — зберегти preflight-before-mutation, DBI save-only normalization, Result/final-commit propagation і ordinary UMS behavior.
+- [x] `SAVE-P1-CONTRACT-845` — перевірити двох UI callers і єдиного owner критичних ZIP restore operations.
+- [x] `BUILD-845` — focused contract (38), path regression (364), `git diff --check` і post-edit WSL `ReleaseWithInstall` пройшли; senior перевірив diff/claims.
+- [x] `DOCS-BUMP-845` — version/delivery docs оновлено; створити focused commit.
+- [ ] `HW-845` — перевірити однаковий ZIP restore через Saves і File Browser, DBI compatibility та corrupt-ZIP fail-closed.
+
+## Попередній delivery: v0.13.844 (Emergency P0 safe save restore)
 
 - [x] `SAVE-P0-COMPAT-844` — нормалізувати рівно один DBI leading slash лише для save import і повторно застосувати сувору relative-path/destination validation.
 - [x] `SAVE-P0-PREFLIGHT-844` — повністю прочитати й перевірити всі ZIP entries до create/extend/delete target save; invalid/unreadable ZIP не мутує чинний save.

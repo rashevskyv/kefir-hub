@@ -84,6 +84,7 @@ enum class SaveOp {
 };
 
 void SignalChange();
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path);
 
 struct Menu final : grid::Menu {
     // app_id_filter limits the grid to one game's saves (entered from the game
