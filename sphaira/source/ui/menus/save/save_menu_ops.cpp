@@ -912,8 +912,12 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
 
     // Check if save filesystem already exists or needs to be created
-    fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
-    if (R_FAILED(check_save_fs.GetFsOpenResult())) {
+    bool save_exists = false;
+    {
+        fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
+        save_exists = R_SUCCEEDED(check_save_fs.GetFsOpenResult());
+    }
+    if (!save_exists) {
         log_write("save filesystem does not exist or cannot be opened, creating save...\n");
 
         FsSaveDataCreationInfo creation_info{};

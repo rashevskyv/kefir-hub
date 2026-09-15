@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.840** (Verify save actions ReleaseWithInstall build). Завершені плани збережено в
+Поточний delivery — **v0.13.841** (Polish save metadata and restore). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.840 — Verify save actions ReleaseWithInstall build
+## Поточний delivery: v0.13.841 — Polish save metadata and restore
+
+Статус: реалізовано та успішно зібрано.
+1. Використати доступну backup metadata як fallback назви для live saves видалених ігор; без зовнішнього icon lookup.
+2. У save UI показувати сталий англійський тип `Account`, а unknown backup account — лише коротким hex ID без префікса.
+3. Зменшити жовтий backup border у List, не змінюючи великі tile layouts.
+4. Закривати probe `FsNativeSave` до повторного RW-open, усуваючи `FsError_TargetLocked` під час restore.
+5. WSL `ReleaseWithInstall` успішно завершився ціллю `[100%] Built target sphaira_nro`; `git diff --check` пройшов.
+
+## Попередній delivery: v0.13.840 — Verify save actions ReleaseWithInstall build
 
 Статус: реалізовано та успішно зібрано.
 1. Integrity worker перевіряє `.zip` через `std::string_view::ends_with`, не покладаючись на недоступний у translation unit namespace `path`.

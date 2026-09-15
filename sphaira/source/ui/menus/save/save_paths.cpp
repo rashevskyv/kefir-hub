@@ -779,13 +779,13 @@ auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& 
     }
 
     if (e.uid.uid[0] != 0 || e.uid.uid[1] != 0) {
-        char buf[48];
+        char buf[16];
         const u64 display_id = e.uid.uid[0] ? e.uid.uid[0] : e.uid.uid[1];
-        std::snprintf(buf, sizeof(buf), "Unknown account (%08lX)", static_cast<unsigned long>(display_id & 0xFFFFFFFF));
+        std::snprintf(buf, sizeof(buf), "%08lX", static_cast<unsigned long>(display_id & 0xFFFFFFFF));
         return buf;
     }
 
-    return "Unknown account";
+    return "00000000";
 }
 
 auto FormatBackupTimestamp(u64 ts, bool compact) -> std::string {

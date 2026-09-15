@@ -115,10 +115,17 @@ void DrawInnerBorder(NVGcontext* vg, const Vec4& v, const NVGcolor& col, float t
     nvgFill(vg);
 }
 
+auto FormatSaveTypeLabel(u8 data_type) -> std::string {
+    if (data_type == FsSaveDataType_Account) {
+        return "Account";
+    }
+    return i18n::get(GetSaveTypeLabel(data_type));
+}
+
 // right-hand column of a list row, DBI-style: save category in brackets, then
 // its allocated size (backup rows show archive count when > 1).
 auto FormatListInfo(const Entry& e) -> std::string {
-    const std::string label = "[" + i18n::get(GetSaveTypeLabel(e.save_data_type)) + "]";
+    const std::string label = "[" + FormatSaveTypeLabel(e.save_data_type) + "]";
     if (e.is_backup) {
         return e.backup_count > 1 ? label + "  " + std::to_string(e.backup_count) + " archives" : label;
     }
@@ -371,7 +378,7 @@ auto Menu::GetDataTypeSummary() const -> std::string {
         }
 
         if (first.empty()) {
-            first = i18n::get(GetSaveTypeLabel(type));
+            first = FormatSaveTypeLabel(type);
         }
         count++;
     }
@@ -439,7 +446,7 @@ void Menu::DisplayDataTypeOptions() {
     for (size_t i = 0; i < SAVE_TYPES.size(); i++) {
         const auto type = SAVE_TYPES[i];
         auto* entry = options->Add<SidebarEntryCheckbox>(
-            i18n::get(GetSaveTypeLabel(type)),
+            FormatSaveTypeLabel(type),
             [this, i](){ return m_save_type_enabled[i]; },
             [this, i, type, system_index](bool enabled) {
                 if (type == FsSaveDataType_System) {
@@ -793,7 +800,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     });
 }
 
-void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) const {
+void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) {
     NVGcolor col;
     if (e.is_backup) {
         col = nvgRGB(0xF2, 0xC5, 0x22); // yellow: backup archive
@@ -805,7 +812,8 @@ void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const
         col = nvgRGB(0x9A, 0x9A, 0x9A); // grey: deleted-game save
     }
 
-    DrawInnerBorder(vg, v, col, 12.f, 5.f);
+    const float thickness = (m_layout.Get() == grid::LayoutType_List) ? 2.f : 12.f;
+    DrawInnerBorder(vg, v, col, thickness, 5.f);
 }
 
 void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const {
@@ -1156,9 +1164,31 @@ void Menu::ScanHomebrew() {
     // backup tiles come after every live save; remember the boundary so the
     // grid can split the two sections with the "Backups" divider.
     m_backup_start = static_cast<s64>(m_entries.size());
-    if (show_backups) {
-        std::vector<Entry> backups;
+    bool has_uninstalled = false;
+    for (const auto& e : m_entries) {
+        if (!IsSystemLikeSave(e.save_data_type) && !m_installed_app_ids.contains(e.application_id)) {
+            has_uninstalled = true;
+            break;
+        }
+    }
+
+    std::vector<Entry> backups;
+    if (show_backups || has_uninstalled) {
         ReadBackupEntries(backups);
+    }
+
+    std::unordered_map<u64, std::string> backup_name_lookup;
+    for (const auto& b : backups) {
+        if (b.application_id && !IsSystemLikeSave(b.save_data_type) && !backup_name_lookup.contains(b.application_id)) {
+            if (b.lang.name[0] != '\0' && !title::IsPlaceholderName(b.lang.name)) {
+                backup_name_lookup.emplace(b.application_id, b.lang.name);
+            } else if (!b.dbi_game_dir.empty() && !IsHex16(b.dbi_game_dir)) {
+                backup_name_lookup.emplace(b.application_id, b.dbi_game_dir);
+            }
+        }
+    }
+
+    if (show_backups) {
         for (auto& b : backups) {
             if (m_app_id_filter && b.application_id != m_app_id_filter) {
                 continue;
@@ -1170,7 +1200,13 @@ void Menu::ScanHomebrew() {
     for (auto& e : m_entries) {
         if (!IsSystemLikeSave(e.save_data_type) && !m_installed_app_ids.contains(e.application_id)) {
             if (e.lang.name[0] == '\0') {
-                std::snprintf(e.lang.name, sizeof(e.lang.name), "Title %016lX", e.application_id);
+                const auto it = backup_name_lookup.find(e.application_id);
+                if (it != backup_name_lookup.end() && !it->second.empty()) {
+                    std::strncpy(e.lang.name, it->second.c_str(), sizeof(e.lang.name) - 1);
+                    e.lang.name[sizeof(e.lang.name) - 1] = '\0';
+                } else {
+                    std::snprintf(e.lang.name, sizeof(e.lang.name), "Title %016lX", e.application_id);
+                }
             }
             e.lang.author[0] = '\0';
         }
@@ -2532,8 +2568,8 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
 
         const auto type = SAVE_TYPES[i];
         const auto label = (system_available && type != FsSaveDataType_System) ?
-            "    " + i18n::get(GetSaveTypeLabel(type)) :
-            i18n::get(GetSaveTypeLabel(type));
+            "    " + FormatSaveTypeLabel(type) :
+            FormatSaveTypeLabel(type);
 
         auto* entry = options->Add<SidebarEntryCheckbox>(
             label,

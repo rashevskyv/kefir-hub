@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.840** (Verify save actions ReleaseWithInstall build). Завершені задачі збережено в
+Актуальний delivery — **v0.13.841** (Polish save metadata and restore). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.840 (Verify save actions ReleaseWithInstall build)
+## Поточний delivery: v0.13.841 (Polish save metadata and restore)
+
+- [x] `SAVE-DELETED-TITLE-841` — застосувати backup metadata fallback для назв сейвів видалених ігор.
+- [x] `SAVE-ACCOUNT-TERM-841` — показувати `Account` без перекладу в save UI та лише short hex для unknown UID.
+- [x] `SAVE-LIST-BORDER-841` — зробити yellow backup border тоншим лише у List layout.
+- [x] `SAVE-RESTORE-LOCK-841` — закрити probe save filesystem до фінального RW-open і усунути `FsError_TargetLocked`.
+- [x] `BUILD-841` — успішно зібрати WSL `ReleaseWithInstall` до `sphaira_nro`.
+- [x] `DOCS-BUMP-841` — оновити version і delivery-документи та створити коміт.
+- [ ] `HW-841` — перевірити deleted titles, Account labels, list border і restore на консолі.
+
+## Попередній delivery: v0.13.840 (Verify save actions ReleaseWithInstall build)
 
 - [x] `SAVE-ZIP-SUFFIX-840` — замінити недоступний `path::EndsWithIC` у integrity worker на наявний `std::string_view::ends_with`.
 - [x] `BUILD-840` — WSL `ReleaseWithInstall` успішно завершив compile, LTO link, RomFS packing і `[100%] Built target sphaira_nro`.

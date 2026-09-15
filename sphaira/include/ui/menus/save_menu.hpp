@@ -156,7 +156,7 @@ private:
     auto EntryToDisplay(s64 entry, const GridSections& g) const -> s64;
     auto DisplayToEntry(s64 display, const GridSections& g) const -> s64; // -1 == filler
     auto ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64;
-    void DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) const;
+    void DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e);
     void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const;
 
     auto GetSelectedEntries() const {

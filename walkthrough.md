@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.840** (2026-09-14). Попередні
+Актуальний delivery — **v0.13.841** (2026-09-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.841 — Polish save metadata and restore
+
+- Видалені ігри без локальної title metadata використовують назву з уже просканованих backup metadata, а потім fallback `Title <ID>`; зовнішній пошук іконок не додано.
+- Тип сейву `Account` у Saves показується незмінним англійським терміном, а невідомий UID — як короткі 8 hex-цифр без текстового префікса.
+- У List layout кольорова рамка категорії зменшена до 2 px; великі tile layouts зберегли 12 px.
+- Probe `FsNativeSave` закривається до фінального RW-open, усуваючи `FsError_TargetLocked` під час ZIP restore.
+- WSL `ReleaseWithInstall` успішно завершився до `[100%] Built target sphaira_nro`; `git diff --check` пройшов. Апаратний тест не виконувався.
 
 ## v0.13.840 — Verify save actions ReleaseWithInstall build
 
