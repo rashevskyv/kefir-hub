@@ -117,16 +117,14 @@ Result CreateFile(FsFileSystem* fs, const FsPath& path, u64 size, u32 option, bo
     }
 
     R_TRY(fsFsCreateFile(fs, path, size, option));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result CreateDirectory(FsFileSystem* fs, const FsPath& path, bool ignore_read_only) {
     R_UNLESS(ignore_read_only || !is_read_only_root(path), Result_FsReadOnly);
 
     R_TRY(fsFsCreateDirectory(fs, path));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result CreateDirectoryRecursively(FsFileSystem* fs, const FsPath& _path, bool ignore_read_only) {
@@ -195,24 +193,21 @@ Result CreateDirectoryRecursivelyWithPath(FsFileSystem* fs, const FsPath& _path,
 Result DeleteFile(FsFileSystem* fs, const FsPath& path, bool ignore_read_only) {
     R_UNLESS(ignore_read_only || !is_read_only(path), Result_FsReadOnly);
     R_TRY(fsFsDeleteFile(fs, path));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result DeleteDirectory(FsFileSystem* fs, const FsPath& path, bool ignore_read_only) {
     R_UNLESS(ignore_read_only || !is_read_only(path), Result_FsReadOnly);
 
     R_TRY(fsFsDeleteDirectory(fs, path));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result DeleteDirectoryRecursively(FsFileSystem* fs, const FsPath& path, bool ignore_read_only) {
     R_UNLESS(ignore_read_only || !is_read_only(path), Result_FsReadOnly);
 
     R_TRY(fsFsDeleteDirectoryRecursively(fs, path));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result RenameFile(FsFileSystem* fs, const FsPath& src, const FsPath& dst, bool ignore_read_only) {
@@ -220,8 +215,7 @@ Result RenameFile(FsFileSystem* fs, const FsPath& src, const FsPath& dst, bool i
     R_UNLESS(ignore_read_only || !is_read_only(dst), Result_FsReadOnly);
 
     R_TRY(fsFsRenameFile(fs, src, dst));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result RenameDirectory(FsFileSystem* fs, const FsPath& src, const FsPath& dst, bool ignore_read_only) {
@@ -229,8 +223,7 @@ Result RenameDirectory(FsFileSystem* fs, const FsPath& src, const FsPath& dst, b
     R_UNLESS(ignore_read_only || !is_read_only(dst), Result_FsReadOnly);
 
     R_TRY(fsFsRenameDirectory(fs, src, dst));
-    fsFsCommit(fs);
-    R_SUCCEED();
+    return fsFsCommit(fs);
 }
 
 Result GetEntryType(FsFileSystem* fs, const FsPath& path, FsDirEntryType* out) {

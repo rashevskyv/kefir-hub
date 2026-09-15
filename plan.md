@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.843** (Restore-first actions and account-filtered backups). Завершені плани збережено в
+Поточний delivery — **v0.13.844** (Emergency P0 safe save restore). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.843 — Restore-first actions and account-filtered backups
+## Поточний delivery: v0.13.844 — Emergency P0 safe save restore
+
+Статус: реалізовано та успішно зібрано.
+1. Залишити глобальний `path::IsSafeArchiveEntry` суворим; дозволити рівно один leading `/` лише в save-import compatibility layer, після чого повторно перевірити нормалізований relative path і destination mapping.
+2. До першої мутації target save повністю пройти ZIP: metadata/name/size, нормалізація, mapping, open/read/CRC/close кожного payload entry; пропуск metadata не скасовує перевірку читабельності.
+3. Лише після успішного preflight виконувати create/extend/delete/extract; усі `Result` від extend, CRUD, write/resize та фінального `Commit()` мають доходити до UI.
+4. Save Menu і дубльований File Browser ZIP restore повинні використовувати однакові save-only normalization/preflight guarantees; File Browser зобов'язаний завершуватися успішним `save_fs.Commit()`.
+5. Додати один host regression/contract check для DBI leading slash, traversal/absolute rejection і порядку preflight-before-mutation; не змінювати RAW restore та не починати P1 shared-backend refactor.
+6. Gemini підняв patch до `0.13.844`: path/save contract checks пройшли, WSL `ReleaseWithInstall` завершився `[100%] Built target sphaira_nro`; повний `tests/run.sh` дійшов до двох попередніх unrelated failures (`min_x`, dead `PromptBatchRestoreAccountTargets`). Senior перевірив diff/callers і UMS follow-up.
+
+## Попередній delivery: v0.13.843 — Restore-first actions and account-filtered backups
 
 Статус: реалізовано та успішно зібрано.
 1. Backup actions починаються з Restore і завжди завершуються Delete.

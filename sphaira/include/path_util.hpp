@@ -119,6 +119,21 @@ inline auto IsSafeArchiveEntry(std::string_view path) -> bool {
     return true;
 }
 
+// Normalizes a ZIP entry path for save-import compatibility:
+// - Sphaira/DBI backups may record entries with exactly one leading slash (e.g. "/folder/file", "/dir/")
+// - Removes at most one leading slash
+// - The resulting relative path must pass the unchanged strict IsSafeArchiveEntry check
+inline auto NormalizeSaveArchiveEntry(std::string_view path) -> std::optional<std::string_view> {
+    if (path.empty()) {
+        return std::nullopt;
+    }
+    const auto norm = path.front() == '/' ? path.substr(1) : path;
+    if (!IsSafeArchiveEntry(norm)) {
+        return std::nullopt;
+    }
+    return norm;
+}
+
 // Normalizes an absolute SD card path:
 // - Must start with '/'
 // - Rejects '\', ':', control characters (< 0x20, 0x7F)
@@ -462,6 +477,51 @@ inline auto IsSubpathOf(std::string_view path, std::string_view parent) -> bool 
     }
 
     return false;
+}
+
+// Validates that an extraction destination path is safe:
+// - Must not be empty or contain repeated slashes ("//")
+// - Must not contain '\\', ':', or control characters (< 0x20, 0x7F)
+// - Must not contain '.' or '..' directory traversal components
+// - Must be within base_path (or equal to base_path)
+inline auto IsSafeDestinationPath(std::string_view dest_path, std::string_view base_path) -> bool {
+    if (dest_path.empty() || dest_path.find("//") != std::string_view::npos) {
+        return false;
+    }
+    for (const char c : dest_path) {
+        const auto uc = static_cast<unsigned char>(c);
+        if (uc < 0x20 || uc == 0x7F || c == '\\' || c == ':') {
+            return false;
+        }
+    }
+    std::size_t start = 0;
+    while (start < dest_path.size()) {
+        const auto end = dest_path.find('/', start);
+        const auto comp = (end == std::string_view::npos)
+            ? dest_path.substr(start)
+            : dest_path.substr(start, end - start);
+        if (comp == "." || comp == "..") {
+            return false;
+        }
+        if (end == std::string_view::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    return IsSubpathOf(dest_path, base_path);
+}
+
+// Validates destination containment for extraction:
+// When save_dbi_compat is enabled (save restore), enforces strict containment:
+// - Rejects traversal ('..', '.'), repeated slashes ('//'), '\\', ':', and control chars
+// - Must remain within base_path (or equal to base_path)
+// When save_dbi_compat is false (ordinary extraction), preserves existing behavior so that
+// legitimate device-prefixed destinations (e.g. "ums0:/backups/file.txt") are not rejected.
+inline auto IsSafeExtractionDestination(std::string_view dest_path, std::string_view base_path, bool save_dbi_compat) -> bool {
+    if (!save_dbi_compat) {
+        return true;
+    }
+    return IsSafeDestinationPath(dest_path, base_path);
 }
 
 // True if `path` ends with ".nro", case-insensitively.

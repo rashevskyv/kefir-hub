@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.843**. Дата: 2026-09-15.
+Канічний робочий файл. Версія коду: **v0.13.844**. Дата: 2026-09-15.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12512 nodes, 24888 edges, 633 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.844 Emergency P0 save restore: DBI leading slash нормалізується лише в save-import compatibility layer; повний ZIP payload/CRC preflight передує create/extend/delete; Save Menu і File Browser мають error-propagating final commit; native CRUD повертає auto-commit failures. Ordinary/UMS extraction і RAW restore не змінено; P1-P4 залишаються в черзі. Gemini path/save contract checks і WSL ReleaseWithInstall пройшли; повний runner має два попередні unrelated failures. Апаратний тест не виконувався. **Не закриває** ponytail-чергу §2 A1–A7.
 
 v0.13.843 поза ponytail-чергою: backup action menu починається Restore і завершується Delete; account-bound backup groups фільтруються за enabled local UID; foreign/unknown entries у multi-select отримують послідовний local target picker до старту batch restore. Gemini WSL ReleaseWithInstall, JSON validation, senior review і git diff --check пройшли; версію піднято до 0.13.843. Апаратний тест не виконувався. **Не закриває** чергу §2 A1–A7.
 

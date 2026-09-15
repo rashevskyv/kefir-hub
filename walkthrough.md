@@ -1,7 +1,15 @@
-Актуальний delivery — **v0.13.843** (2026-09-15). Попередні
+Актуальний delivery — **v0.13.844** (2026-09-15). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.844 — Emergency P0 safe save restore
+
+- Save-import compatibility знімає рівно один DBI leading slash і повторно застосовує незмінний строгий archive validator; traversal, absolute/device та unsafe destination mapping відхиляються.
+- `TransferUnzipPreflight` до будь-якої мутації повністю enumerates, opens, drains, size/CRC-checks і closes кожен ZIP entry та rewind-ить архів; Save Menu і File Browser використовують той самий save-only режим.
+- Target create/extend/delete починаються лише після preflight. Обидва `fsExtendSaveDataFileSystem`, native CRUD auto-commit та фінальні save commits передають failure до наявного UI error flow; File Browser отримав відсутній фінальний commit.
+- Ordinary `TransferUnzipAll`, включно з UMS device-prefixed destinations, зберіг попередню поведінку. RAW restore і P1-P4 не змінено.
+- Версію піднято до `0.13.844`. Gemini path contract (364 checks), save restore contract (23 checks) і WSL `ReleaseWithInstall` пройшли; повний `tests/run.sh` має два попередні unrelated failures (`min_x` warning і dead `PromptBatchRestoreAccountTargets`). Апаратний тест не виконувався.
 
 ## v0.13.843 — Restore-first actions and account-filtered backups
 

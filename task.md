@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.843** (Restore-first actions and account-filtered backups). Завершені задачі збережено в
+Актуальний delivery — **v0.13.844** (Emergency P0 safe save restore). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.843 (Restore-first actions and account-filtered backups)
+## Поточний delivery: v0.13.844 (Emergency P0 safe save restore)
+
+- [x] `SAVE-P0-COMPAT-844` — нормалізувати рівно один DBI leading slash лише для save import і повторно застосувати сувору relative-path/destination validation.
+- [x] `SAVE-P0-PREFLIGHT-844` — повністю прочитати й перевірити всі ZIP entries до create/extend/delete target save; invalid/unreadable ZIP не мутує чинний save.
+- [x] `SAVE-P0-RESULTS-844` — передавати помилки extend, CRUD, write/resize і фінального commit до UI; success лише після commit.
+- [x] `SAVE-P0-FILEBROWSER-844` — надати File Browser ZIP restore ті самі normalization/preflight guarantees та обов'язковий фінальний `save_fs.Commit()` без P1 refactor.
+- [x] `SAVE-P0-CONTRACT-844` — додати найменший host check для DBI compatibility, traversal rejection і preflight-before-mutation.
+- [x] `BUILD-844` — path/save contract checks і WSL `ReleaseWithInstall` пройшли; повний runner має два підтверджені unrelated failures; senior перевірив diff і UMS follow-up.
+- [x] `DOCS-BUMP-844` — version/delivery docs оновлено; створити focused commit.
+- [ ] `HW-844` — перевірити на Switch DBI restore, rejection пошкодженого ZIP без втрати чинного save та surfaced commit/write failure.
+
+## Попередній delivery: v0.13.843 (Restore-first actions and account-filtered backups)
 
 - [x] SAVE-ACTION-ORDER-843 — Restore є першою, а Delete останньою дією backup menu.
 - [x] SAVE-BACKUP-ACCOUNT-FILTER-843 — account-bound backups фільтруються за enabled local UID без змін неакаунтних типів.

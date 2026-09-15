@@ -261,6 +261,16 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                     R_UNLESS(zfile, Result_UnzOpen2_64);
                     ON_SCOPE_EXIT(unzClose(zfile));
 
+                    const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
+                        if (name == ".nx_save_meta.bin" || !strcasecmp(name.s, ".dbi_save_info.ini") || !strcasecmp(name.s, ".dbi_save_extra")) {
+                            return false;
+                        }
+                        return true;
+                    };
+
+                    pbox->NewTransfer("Validating save..."_i18n);
+                    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true));
+
                     FsSaveDataAttribute attr{};
                     attr.application_id = se.application_id;
                     attr.uid = se.uid;
@@ -277,12 +287,9 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                     R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
 
                     pbox->NewTransfer("Restoring save..."_i18n);
-                    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
-                        if (name == ".nx_save_meta.bin" || !strcasecmp(name.s, ".dbi_save_info.ini") || !strcasecmp(name.s, ".dbi_save_extra")) {
-                            return false;
-                        }
-                        return true;
-                    }));
+                    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true));
+
+                    R_TRY(save_fs.Commit());
                 }
                 R_SUCCEED();
             }, [](Result rc) {

@@ -527,6 +527,47 @@ fs::FsPath SanitizeZipEntryName(const fs::FsPath& name) {
     return out;
 }
 
+Result ResolveArchiveEntryName(const unz_file_info64& info, const char* name_buf, bool save_dbi_compat, fs::FsPath& out_name) {
+    if (info.size_filename == 0) {
+        log_write("archive entry has empty name\n");
+        R_THROW(FsError_InvalidCharacter);
+    }
+
+    if (info.size_filename >= sizeof(out_name.s)) {
+        log_write("archive entry name too long (%lu bytes)\n", static_cast<unsigned long>(info.size_filename));
+        R_THROW(FsError_TooLongPath);
+    }
+
+    if (std::strlen(name_buf) != info.size_filename) {
+        log_write("archive entry name length mismatch (%zu != %lu)\n", std::strlen(name_buf), static_cast<unsigned long>(info.size_filename));
+        R_THROW(FsError_TooLongPath);
+    }
+
+    const std::string_view raw{name_buf, info.size_filename};
+    if (save_dbi_compat) {
+        const auto norm = path::NormalizeSaveArchiveEntry(raw);
+        if (!norm.has_value()) {
+            log_write("unsafe save archive entry: %s\n", name_buf);
+            R_THROW(FsError_InvalidCharacter);
+        }
+        if (norm->size() >= sizeof(out_name.s)) {
+            log_write("normalized save archive entry too long (%zu bytes)\n", norm->size());
+            R_THROW(FsError_TooLongPath);
+        }
+        std::memcpy(out_name.s, norm->data(), norm->size());
+        out_name.s[norm->size()] = '\0';
+    } else {
+        if (!path::IsSafeArchiveEntry(raw)) {
+            log_write("unsafe archive entry path: %s\n", name_buf);
+            R_THROW(FsError_InvalidCharacter);
+        }
+        std::memcpy(out_name.s, name_buf, info.size_filename);
+        out_name.s[info.size_filename] = '\0';
+    }
+
+    R_SUCCEED();
+}
+
 } // namespace
 
 Result Transfer(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, WriteCallback wfunc, Mode mode) {
@@ -632,7 +673,131 @@ Result TransferZip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsP
     );
 }
 
-Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode) {
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat) {
+    unz_global_info64 ginfo;
+    if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
+        R_THROW(Result_UnzGetGlobalInfo64);
+    }
+
+    if (ginfo.number_entry == 0 || ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+        R_THROW(FsError_InvalidSize);
+    }
+    const auto entry_count = static_cast<s64>(ginfo.number_entry);
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        R_THROW(Result_UnzGoToFirstFile);
+    }
+
+    std::vector<u8> drain_buf(64 * 1024);
+
+    for (s64 i = 0; i < entry_count; i++) {
+        if (pbox) {
+            R_TRY(pbox->ShouldExitResult());
+        }
+
+        if (i > 0) {
+            if (UNZ_OK != unzGoToNextFile(zfile)) {
+                log_write("failed to unzGoToNextFile during preflight\n");
+                R_THROW(Result_UnzGoToNextFile);
+            }
+        }
+
+        unz_file_info64 info;
+        char name_buf[sizeof(fs::FsPath)]{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0)) {
+            log_write("failed to get current info during preflight\n");
+            R_THROW(Result_UnzGetCurrentFileInfo64);
+        }
+
+        if (info.uncompressed_size > static_cast<u64>(std::numeric_limits<s64>::max())) {
+            log_write("archive uncompressed size exceeds s64 maximum\n");
+            R_THROW(FsError_InvalidSize);
+        }
+
+        fs::FsPath name;
+        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
+
+        name = SanitizeZipEntryName(name);
+
+        auto path = fs::AppendPath(base_path, name);
+        const bool keep = filter ? filter(name, path) : true;
+        if (keep) {
+            if (!path::IsSafeExtractionDestination(path, base_path, save_dbi_compat)) {
+                log_write("unsafe destination path: %s\n", path.s);
+                R_THROW(FsError_InvalidCharacter);
+            }
+        }
+
+        if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+            log_write("failed to open current file during preflight: %s\n", name_buf);
+            R_THROW(Result_UnzOpenCurrentFile);
+        }
+
+        u32 crc32_out = 0;
+        u64 bytes_drained = 0;
+        int read_res = 0;
+        do {
+            if (pbox) {
+                const auto exit_rc = pbox->ShouldExitResult();
+                if (R_FAILED(exit_rc)) {
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(exit_rc);
+                }
+            }
+
+            read_res = unzReadCurrentFile(zfile, drain_buf.data(), drain_buf.size());
+            if (read_res < 0) {
+                log_write("failed to read zip file during preflight: %s %d\n", name_buf, read_res);
+                unzCloseCurrentFile(zfile);
+                R_THROW(Result_UnzReadCurrentFile);
+            }
+            if (read_res > 0) {
+                if (info.crc) {
+                    crc32_out = crc32CalculateWithSeed(crc32_out, drain_buf.data(), read_res);
+                }
+                bytes_drained += static_cast<u64>(read_res);
+            }
+        } while (read_res > 0);
+
+        const int close_res = unzCloseCurrentFile(zfile);
+        if (close_res == UNZ_CRCERROR) {
+            log_write("crc error on unzCloseCurrentFile during preflight: %s\n", name_buf);
+            R_THROW(0x8);
+        } else if (close_res != UNZ_OK) {
+            log_write("failed to close zip file during preflight: %s %d\n", name_buf, close_res);
+            R_THROW(Result_UnzReadCurrentFile);
+        }
+
+        if (bytes_drained != info.uncompressed_size) {
+            log_write("archive entry drained size mismatch (%llu != %llu)\n", static_cast<unsigned long long>(bytes_drained), static_cast<unsigned long long>(info.uncompressed_size));
+            R_THROW(FsError_InvalidSize);
+        }
+
+        if (info.crc && crc32_out != info.crc) {
+            log_write("archive entry crc mismatch (%08x != %08x)\n", crc32_out, static_cast<unsigned int>(info.crc));
+            R_THROW(0x8);
+        }
+    }
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        log_write("failed to unzGoToFirstFile after preflight\n");
+        R_THROW(Result_UnzGoToFirstFile);
+    }
+
+    R_SUCCEED();
+}
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat) {
+    zlib_filefunc64_def file_func;
+    mz::FileFuncStdio(&file_func);
+
+    auto zfile = unzOpen2_64(zip_out, &file_func);
+    R_UNLESS(zfile, Result_UnzOpen2_64);
+    ON_SCOPE_EXIT(unzClose(zfile));
+
+    return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat);
+}
+
+Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat) {
     unz_global_info64 ginfo;
     if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
         R_THROW(Result_UnzGetGlobalInfo64);
@@ -666,35 +831,22 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             R_THROW(Result_UnzGetCurrentFileInfo64);
         }
 
-        if (info.size_filename == 0) {
-            log_write("archive entry has empty name\n");
-            R_THROW(FsError_InvalidCharacter);
-        }
+        fs::FsPath name;
+        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
 
-        if (info.size_filename >= sizeof(name_buf)) {
-            log_write("archive entry name too long (%lu bytes)\n", static_cast<unsigned long>(info.size_filename));
-            R_THROW(FsError_TooLongPath);
-        }
-
-        if (std::strlen(name_buf) != info.size_filename) {
-            log_write("archive entry name length mismatch (%zu != %lu)\n", std::strlen(name_buf), static_cast<unsigned long>(info.size_filename));
-            R_THROW(FsError_TooLongPath);
-        }
-
-        if (!path::IsSafeArchiveEntry(std::string_view{name_buf, info.size_filename})) {
-            log_write("unsafe archive entry path: %s\n", name_buf);
-            R_THROW(FsError_InvalidCharacter);
-        }
-
-        const auto full_path_len = base_len + (base_needs_slash ? 1 : 0) + info.size_filename;
+        const auto full_path_len = base_len + (base_needs_slash ? 1 : 0) + std::strlen(name.s);
         if (full_path_len + 1 > sizeof(fs::FsPath)) {
             log_write("archive entry output path exceeds buffer (%zu bytes)\n", full_path_len + 1);
             R_THROW(FsError_TooLongPath);
         }
 
-        if (info.uncompressed_size > static_cast<u64>(std::numeric_limits<s64>::max()) ||
-            static_cast<u64>(std::numeric_limits<s64>::max()) - static_cast<u64>(total_size) < info.uncompressed_size) {
+        if (info.uncompressed_size > static_cast<u64>(std::numeric_limits<s64>::max())) {
             log_write("archive uncompressed size exceeds s64 maximum\n");
+            R_THROW(FsError_InvalidSize);
+        }
+
+        if (static_cast<u64>(std::numeric_limits<s64>::max()) - static_cast<u64>(total_size) < info.uncompressed_size) {
+            log_write("archive total uncompressed size exceeds s64 maximum\n");
             R_THROW(FsError_InvalidSize);
         }
 
@@ -729,11 +881,14 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
         ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
 
         unz_file_info64 info;
-        fs::FsPath name;
-        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name, sizeof(name), 0, 0, 0, 0)) {
+        char name_buf[sizeof(fs::FsPath)]{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), 0, 0, 0, 0)) {
             log_write("failed to get current info\n");
             R_THROW(Result_UnzGetCurrentFileInfo64);
         }
+
+        fs::FsPath name;
+        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
 
         // replace characters HOS rejects (e.g. '*', '?', '"', '<', '>', '|') so a
         // single bad entry doesn't abort the whole pack with FsError_InvalidCharacter.
@@ -759,6 +914,11 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             continue;
         }
 
+        if (!path::IsSafeExtractionDestination(path, base_path, save_dbi_compat)) {
+            log_write("unsafe destination path: %s\n", path.s);
+            R_THROW(FsError_InvalidCharacter);
+        }
+
         if (path[std::strlen(path) -1] == '/') {
             Result rc;
             if (R_FAILED(rc = fs->CreateDirectoryRecursively(path)) && rc != FsError_PathAlreadyExists) {
@@ -780,7 +940,7 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
     R_SUCCEED();
 }
 
-Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode) {
+Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat) {
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -788,7 +948,7 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs
     R_UNLESS(zfile, Result_UnzOpen2_64);
     ON_SCOPE_EXIT(unzClose(zfile));
 
-    return TransferUnzipAll(pbox, zfile, fs, base_path, filter, mode);
+    return TransferUnzipAll(pbox, zfile, fs, base_path, filter, mode, save_dbi_compat);
 }
 
 } // namespace::thread

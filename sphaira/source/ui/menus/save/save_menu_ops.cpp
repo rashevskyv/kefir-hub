@@ -9,6 +9,7 @@
 #include "threaded_file_transfer.hpp"
 #include "minizip_helper.hpp"
 #include "dumper.hpp"
+#include "path_util.hpp"
 
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -843,6 +844,20 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     ON_SCOPE_EXIT(unzClose(zfile));
     log_write("opened zip\n");
 
+    const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
+        // skip restoring the meta files (sphaira and dbi).
+        if (name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
+            log_write("skipping meta\n");
+            return false;
+        }
+
+        // restore everything else.
+        return true;
+    };
+
+    pbox->NewTransfer("Validating save..."_i18n);
+    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true));
+
     std::optional<NXSaveMeta> meta{};
 
     // get manifest
@@ -946,7 +961,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         if (e.save_data_id != 0) {
             if (data_size > 0 && journal_size > 0) {
                 log_write("extending save file\n");
-                fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, data_size, journal_size);
+                R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, data_size, journal_size));
                 log_write("extended save file\n");
             } else {
                 FsSaveDataExtraData extra{};
@@ -958,16 +973,18 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
                         for (s64 i = 0; i < ginfo.number_entry; i++) {
                             if (i > 0 && UNZ_OK != unzGoToNextFile(zfile)) break;
                             unz_file_info64 info{};
-                            fs::FsPath name{};
-                            if (UNZ_OK == unzGetCurrentFileInfo64(zfile, &info, name, sizeof(name), 0, 0, 0, 0)) {
-                                if (name != NX_SAVE_META_NAME && strcasecmp(name.s, DBI_SAVE_INFO_NAME) && strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
+                            char name_buf[sizeof(fs::FsPath)]{};
+                            if (UNZ_OK == unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), 0, 0, 0, 0)) {
+                                const auto norm = sphaira::path::NormalizeSaveArchiveEntry(std::string_view{name_buf, info.size_filename});
+                                const auto norm_view = norm.has_value() ? *norm : std::string_view{name_buf, info.size_filename};
+                                if (norm_view != NX_SAVE_META_NAME && strcasecmp(std::string(norm_view).c_str(), DBI_SAVE_INFO_NAME) && strcasecmp(std::string(norm_view).c_str(), DBI_SAVE_EXTRA_NAME)) {
                                     total_size += info.uncompressed_size;
                                 }
                             }
                         }
                         const auto rounded_size = total_size + (total_size % extra.journal_size);
                         log_write("extending manual meta parse\n");
-                        fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, rounded_size, extra.journal_size);
+                        R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, rounded_size, extra.journal_size));
                         log_write("extended manual meta parse\n");
                     }
                 }
@@ -987,17 +1004,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     log_write("opened save file\n");
     // restore save data from zip.
     pbox->NewTransfer("Restoring save..."_i18n);
-    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", [&](const fs::FsPath& name, fs::FsPath& path) -> bool {
-        // skip restoring the meta files (sphaira and dbi).
-        if (name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
-            log_write("skipping meta\n");
-            return false;
-        }
-
-        // restore everything else.
-        log_write("restoring: %s\n", path.s);
-        return true;
-    }));
+    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true));
 
     R_TRY(save_fs.Commit());
     log_write("finished save restore\n");
