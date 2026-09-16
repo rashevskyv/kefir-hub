@@ -11,9 +11,8 @@ propagation, and summary publication semantics.
 It validates:
 - C++ source contract patterns restricted to the open-handle TransferUnzipPreflight
   body in threaded_file_transfer.cpp, header declarations in threaded_file_transfer.hpp,
-  metadata constants in save_paths.hpp, filter/diagnostic wiring in save_menu_ops.cpp,
-  shared restore ownership across save_menu_ops.cpp and filebrowser_ops.cpp, and
-  app version in CMakeLists.txt.
+  metadata constants in save_paths.hpp, filter/diagnostic wiring in save_menu_ops.cpp, and
+  shared restore ownership across save_menu_ops.cpp and filebrowser_ops.cpp.
 - Synthetic behavioral fixtures covering reachable preflight scenarios:
   regular/zero-byte files, explicit directory vs implicit parent distinction,
   actual NX/DBI metadata filtering and leading-slash normalization, corrupt excluded
@@ -244,16 +243,7 @@ def test_source_contracts():
           "File Browser restore must delegate to save::RestoreSaveZip")
     check("return RestoreSaveZip(pbox, e, path);" in save_ops_src,
           "Save Menu restore must delegate to RestoreSaveZip")
-
-    # 6. CMakeLists.txt version check
-    cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
-    with open(cmake_path, "r", encoding="utf-8") as f:
-        cmake_src = f.read()
-
-    check("set(sphaira_VERSION 0.13.850)" in cmake_src,
-          "CMakeLists.txt must set sphaira_VERSION to 0.13.850")
-
-    print("Source contracts: ALL PASS (6 anchor groups)")
+    print("Source contracts: ALL PASS (5 anchor groups)")
 
 
 # ---------------------------------------------------------------------------

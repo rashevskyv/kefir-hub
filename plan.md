@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.851**: shutdown lifecycle safety та діагностика; реалізовано Gemini, прийнято senior source review. Завершені плани збережено в
+Поточний delivery — **v0.13.852**: existing-save capacity admission; реалізовано Gemini, прийнято senior source review. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.851 — shutdown lifecycle safety
+## Поточний delivery: v0.13.852 — existing-save capacity admission
+
+Статус: реалізовано Gemini, follow-up 09-16 19:35 прийнято senior full source/caller/diff review. App 0.13.852; база cda36d782973de5ea344738b55f2ebcb711fe561, exact primary/master/clean/base ancestry перевірено перед planning edits. Graphify update: 12670 nodes / 25221 edges / 637 communities, 7 partial-parser warnings. Gemini повідомив PASS п'яти Python checks: capacity (12 model groups), summary (5 source/15 archive/3 arithmetic), selected-target, discovery, MTP. Senior тести не запускав; git diff --check пройшов. Compile/link/NRO/runtime/hardware не перевірено. Text anchors/model не C++ control-flow/IPC/mount-lifetime proof.
+1. Shared RestoreSaveZip existing selected slot only: зберегти full ZIP payload/CRC preflight, checked actual-space extra-data read за selected nonzero ID; порівняти application/system ID, full UID, type/index/rank з selected attr. Read failure/mismatch/invalid live sizes fail до clear; data_size > 0, journal_size >= 0 (zero не є divisor).
+2. Видалити обидва existing extend guesses та existing-slot metadata size authority. No growth/shrink/rounding/conversion/sum; no other-space fallback. Zero-ID legacy create branch не redesign, caller guards збережено.
+3. Перед writable restore mount/clear відмовити, якщо checked summary.file_bytes > live.data_size. Це лише rejection lower bound, не capacity oracle; equality/less не гарантують allocation/implicit-dir/metadata/journal fit. Source metadata hints не використовуються для existing sizing.
+4. Завершено: compiler-free Python source/model regression, targeted legacy C++ text-contract adjustment без compilation та app bump 0.13.851 -> 0.13.852. Історичні exact-version assertions прибрано з capacity/summary checks; substantive assertions збережено. Senior acceptance і чотири delivery docs завершено для focused commit. No compiler/build/NRO/WSL/compiled tests/tests/run.sh/binaries.
+5. Remaining queue: proven required capacity/alignment або explicit validated sizing policy; growth-only checked actual-space extend з closed probes та mandatory readback, journal-aware copy/remount/readback. No rollback/transaction guarantee. HOS >=3 IPC57/permission support не гарантується, read failure fail-closed.
+
+## Попередній delivery: v0.13.851 — shutdown lifecycle safety
 
 Статус: реалізовано Gemini; follow-up 09-16 16:48 прийнято senior source/diff review. App 0.13.851. Shared install-session mutex серіалізує admission closure/snapshot і publication; cancellation поза mutex до producer joins. Gemini повідомив PASS 7 source/model groups і dead-symbol gate; senior тести не запускав, git diff --check пройшов. Primary master clean на b4770f00 перед task-doc edits. SD config/kefir/log.txt відсутній, errors.txt містить тільки успішний ACC_DIAG; crash/fatal report не знайдено. Причину конкретного збою та traceback не підтверджено. Compile/NRO/runtime/hardware не перевірено; source anchors і sequential Python model не є C++ thread/IPC proof.
 1. Gemini: розділити MTP stop для runtime port handback і final shutdown; final App destructor не запускає usbHsFsInitialize після haze stop. Зберегти чинні runtime callers, callbacks suppression, transfer cancellation і join-before-proxy destruction.

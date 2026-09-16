@@ -873,19 +873,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)
     u64 owner_id = 0;
     u32 flags = 0;
 
-    if (e.save_data_id != 0) {
-        if (meta.has_value()) {
-            data_size = meta->data_size;
-            journal_size = meta->journal_size;
-            owner_id = meta->owner_id;
-            flags = meta->flags;
-        } else if (dbi_extra.has_value()) {
-            data_size = dbi_extra->data_size;
-            journal_size = dbi_extra->journal_size;
-            owner_id = dbi_extra->owner_id;
-            flags = dbi_extra->flags;
-        }
-    } else {
+    if (e.save_data_id == 0) {
         if (meta.has_value()) {
             if (!attr.application_id) attr.application_id = meta->attr.application_id;
             if (!attr.system_save_data_id) attr.system_save_data_id = meta->attr.system_save_data_id;
@@ -949,38 +937,29 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)
         if (R_FAILED(create_rc)) {
             R_TRY(create_rc);
         }
-    } else {
-        if (e.save_data_id != 0) {
-            if (data_size > 0 && journal_size > 0) {
-                log_write("extending save file\n");
-                R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, data_size, journal_size));
-                log_write("extended save file\n");
-            } else {
-                FsSaveDataExtraData extra{};
-                if (R_SUCCEEDED(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&extra, sizeof(extra), save_data_space_id, e.save_data_id)) && extra.journal_size > 0) {
-                    log_write("doing manual meta parse\n");
-                    s64 total_size = 0;
-                    unz_global_info64 ginfo{};
-                    if (UNZ_OK == unzGetGlobalInfo64(zfile, &ginfo) && UNZ_OK == unzGoToFirstFile(zfile)) {
-                        for (s64 i = 0; i < ginfo.number_entry; i++) {
-                            if (i > 0 && UNZ_OK != unzGoToNextFile(zfile)) break;
-                            unz_file_info64 info{};
-                            char name_buf[sizeof(fs::FsPath)]{};
-                            if (UNZ_OK == unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), 0, 0, 0, 0)) {
-                                const auto norm = sphaira::path::NormalizeSaveArchiveEntry(std::string_view{name_buf, info.size_filename});
-                                const auto norm_view = norm.has_value() ? *norm : std::string_view{name_buf, info.size_filename};
-                                if (norm_view != NX_SAVE_META_NAME && strcasecmp(std::string(norm_view).c_str(), DBI_SAVE_INFO_NAME) && strcasecmp(std::string(norm_view).c_str(), DBI_SAVE_EXTRA_NAME)) {
-                                    total_size += info.uncompressed_size;
-                                }
-                            }
-                        }
-                        const auto rounded_size = total_size + (total_size % extra.journal_size);
-                        log_write("extending manual meta parse\n");
-                        R_TRY(fsExtendSaveDataFileSystem(save_data_space_id, e.save_data_id, rounded_size, extra.journal_size));
-                        log_write("extended manual meta parse\n");
-                    }
-                }
-            }
+    } else if (e.save_data_id != 0) {
+        FsSaveDataExtraData live{};
+        R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, e.save_data_id));
+
+        if (live.attr.application_id != attr.application_id ||
+            live.attr.uid.uid[0] != attr.uid.uid[0] ||
+            live.attr.uid.uid[1] != attr.uid.uid[1] ||
+            live.attr.system_save_data_id != attr.system_save_data_id ||
+            live.attr.save_data_type != attr.save_data_type ||
+            live.attr.save_data_rank != attr.save_data_rank ||
+            live.attr.save_data_index != attr.save_data_index) {
+            return FsError_PathNotFound;
+        }
+
+        if (live.data_size <= 0 || live.journal_size < 0) {
+            return FsError_InvalidSize;
+        }
+
+        // ponytail: payload bytes are a rejection lower bound; implicit
+        // directories, allocation, and journal overhead are not accounted for;
+        // verified sizing/growth remains queued.
+        if (summary.file_bytes > live.data_size) {
+            return FsError_InvalidSize;
         }
     }
 

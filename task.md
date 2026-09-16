@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.851**: shutdown lifecycle safety; реалізовано Gemini, прийнято senior source review. Завершені задачі збережено в
+Актуальний delivery — **v0.13.852**: existing-save capacity admission; реалізовано Gemini, прийнято senior source review. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.851 (shutdown lifecycle safety)
+## Поточний delivery: v0.13.852 (existing-save capacity admission)
+
+- [x] `P2B-RESEARCH-852` — exact primary clean master/base ancestry; Graphify update; shared restore/native lifetimes/all extend callers і current libnx/JKSV/Checkpoint sources перевірено.
+- [x] `P2B-LIVE-852` — checked selected actual-space extra read; full attr identity, positive usable data/nonnegative journal; failures до clear.
+- [x] `P2B-NOGUESS-852` — обидва existing extend guesses та metadata sizing authority прибрано; no growth/shrink/space fallback.
+- [x] `P2B-ADMISSION-852` — reject payload bytes > actual usable data до clear; guard не доводить fit і не враховує allocation/implicit dirs/journal.
+- [x] `P2B-STATIC-852` — Gemini follow-up 09-16 19:35 повідомив PASS capacity/summary/target/discovery/MTP Python checks; legacy C++ text-contract correction без compiler. Senior full source/caller/diff review та git diff --check; senior тести не запускав. Text/model не C++/IPC proof.
+- [x] `DOCS-BUMP-852` — Gemini app 0.13.852; senior acceptance і чотири delivery docs завершено для focused commit.
+- [ ] `P2B-GROWTH-852-QUEUED` — proven capacity/alignment та checked growth/readback; journal-aware copy/remount verification окремо.
+- [ ] `HW-852` — окрема compile/test-build задача та disposable-save console checks; Python не виконує C++/IPC.
+
+## Попередній delivery: v0.13.851 (shutdown lifecycle safety)
 
 - [x] `EXIT-RESEARCH-851` — primary clean master b4770f00, Graphify-first та SD read-only investigation; конкретний crash/stack не підтверджено.
 - [x] `EXIT-MTP-851` — final Exit(false) без USB host reinitialization; runtime default handback збережено.

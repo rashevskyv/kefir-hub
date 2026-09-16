@@ -57,9 +57,7 @@ static int test_preflight_ordering_contract() {
     CHECK(create_pos != std::string::npos);
     CHECK(preflight_pos < create_pos);
 
-    const auto extend_pos = rsz_body.find("fsExtendSaveDataFileSystem", preflight_pos);
-    CHECK(extend_pos != std::string::npos);
-    CHECK(preflight_pos < extend_pos);
+    CHECK(rsz_body.find("fsExtendSaveDataFileSystem") == std::string::npos);
 
     const auto delete_coll_pos = rsz_body.find("DeleteAllCollections", preflight_pos);
     CHECK(delete_coll_pos != std::string::npos);
@@ -72,7 +70,7 @@ static int test_preflight_ordering_contract() {
     CHECK(commit_pos != std::string::npos);
 
     // 3. Passes save_dbi_compat=true to both preflight and extraction
-    CHECK(rsz_body.find("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true)") != std::string::npos);
+    CHECK(rsz_body.find("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary)") != std::string::npos);
     CHECK(rsz_body.find("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true)") != std::string::npos);
 
     // 4. Menu::RestoreSaveInternal delegates to RestoreSaveZip and has no ZIP lifecycle after RAW branch

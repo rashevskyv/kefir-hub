@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.851** (2026-09-16). Попередні
+Актуальний delivery — **v0.13.852** (2026-09-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.852 — existing-save capacity admission
+
+- Shared RestoreSaveZip після full ZIP payload/CRC preflight і закриття scoped probe читає actual-space extra data за selected save ID з перевіркою Result. Порівнює application/system ID, обидві UID halves, type/index/rank; mismatch повертає PathNotFound до фінального writable mount/clear.
+- Live usable data має бути positive, journal nonnegative. Payload bytes понад live.data_size повертають InvalidSize до clear. Zero journal не divisor. Metadata sizes не задають existing destination sizing; legacy zero-ID branch збережено.
+- Обидва unsafe extend paths, повторний ZIP sizing scan та total + remainder rounding видалено. Existing target не росте і не зменшується. Byte guard — тільки lower-bound rejection: implicit directories, allocation slack/metadata та journal copy budget не доведено. Passing guard не fit proof; rollback після mid-copy failure не заявляється.
+- Save Menu/File Browser shared owner, selected space, save-only DBI normalization, clear/extract/Commit збережено. RAW/MTP/scanner/shutdown/binaries не змінено. Verified growth/alignment/readback і journal-aware copy/remount verification queued.
+- Gemini follow-up 09-16 19:35 повідомив PASS усіх п'яти Python checks: capacity (12 fixture groups), summary (5 source/15 archive/3 arithmetic), selected target, exact discovery, MTP. Historical exact-version assertions прибрано з capacity/summary checks; substantive regressions збережено. C++ text contract скориговано, не компільовано. Senior перевірив full source/callers/diff та git diff --check, тести не запускав. Text/model не C++/IPC/mount-lifetime proof; compile/link/NRO/runtime/hardware не перевірено.
+- App 0.13.851 -> 0.13.852; senior acceptance і чотири docs завершено для focused commit. Користувач компілює окремо, потім на disposable save перевіряє успішний невеликий ZIP restore обома UI routes та refusal undersized archive зі збереженням старих даних. HOS/permission read failures fail-closed, firmware coverage не заявляється.
 
 ## v0.13.851 — shutdown lifecycle safety та діагностика
 

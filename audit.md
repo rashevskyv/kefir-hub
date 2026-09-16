@@ -1,6 +1,8 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.851**. Дата: 2026-09-16.
+Канічний робочий файл. Версія коду: **v0.13.852**. Дата: 2026-09-16.
+
+v0.13.852 P2-B safe admission slice завершено: checked selected actual-space live extra read/full attr comparison та positive data/nonnegative journal; payload bytes > usable data відхиляються до clear. Обидва unsafe extend guesses і existing metadata sizing authority видалено. No growth/shrink; passing byte guard не доводить allocation/implicit-directory/journal fit і не гарантує rollback. Gemini follow-up 09-16 19:35 повідомив PASS capacity/summary/target/discovery/MTP Python checks; senior full source/caller/diff review та git diff --check без запуску тестів. Compile/link/NRO/runtime/hardware не перевірено. Закриває unsafe-guess removal/obvious-undersize admission, не full capacity/growth: proven sizing/alignment, checked growth/readback та journal-aware copy/remount verification залишаються queued. §2 A1–A7/create/adapters/RAW/MTP/shutdown/binaries поза scope.
 
 v0.13.851 shutdown lifecycle safety: final haze::Exit(false) без USB host restart; shared-mutex install admission closure/snapshot і publication з cancellation до producer joins; Web stop до widgets/install state/i18n/GPU teardown. Synchronous begin/end phase trace через existing errors.txt logger незалежно від normal logging. Gemini повідомив PASS 7 source/model groups і dead-symbol gate; senior source/caller/diff review та git diff --check без запуску тестів. Compile/NRO/hardware не перевірено. SD не містила crash dump/normal exit log; конкретний первинний збій і stack не підтверджено. Не закриває save-sizing/growth або ponytail-чергу §2 A1–A7.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
