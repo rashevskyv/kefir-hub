@@ -1,7 +1,17 @@
-Актуальний delivery — **v0.13.850** (2026-09-16). Попередні
+Актуальний delivery — **v0.13.851** (2026-09-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.851 — shutdown lifecycle safety та діагностика
+
+- Final App shutdown використовує haze::Exit(false): libhaze join перед proxy clear, без повторного запуску USB host. Runtime callers зберігають default handback.
+- На початку App destructor admission closure та active-session snapshot виконуються під тим самим mutex, що й PushInstallSession. Publication перед closure потрапляє у snapshot і скасовується; після closure відхиляється. CancelSession викликається поза mutex до blocking producer joins.
+- WebShareStop приєднує Web workers до widgets/install state/i18n/GPU destruction. Progress cancellation подається перед Web join; body-read loops manifest/remote input виходять при зупинці сервера. userAppExit fallback збережено.
+- Існуючий synchronous log_write_error записує begin/end і timing shutdown phases в config/kefir/errors.txt незалежно від normal log_enabled. Лише phase/version/timing, без identities/secrets. Це phase trace, не crash stack.
+- SD F: досліджена лише читанням: normal log відсутній, errors містить успішний ACC_DIAG, crash/fatal dump не знайдено. Причину первинного збою не підтверджено, усунення саме того crash без відтворення не заявляється.
+- Gemini follow-up 09-16 16:48 повідомив PASS 7 compiler-free source/model groups (два publication interleavings і pre-fix model), dead-symbol gate та git diff --check. Senior перевірив source/callers/diff та git diff --check; тести не запускав. Sequential Python simulation і text anchors не є C++ threads/IPC/hardware verification. Compile/link/NRO не перевірено.
+- App 0.13.850 -> 0.13.851; senior acceptance і delivery docs завершено для focused commit. Користувач компілює окремо, перевіряє SELECT/HOME, MTP idle/transfer/disconnect, Web upload/direct install та USB flash; при повторному збої зберігає errors.txt і fatal report, якщо він з'явиться.
 
 ## v0.13.850 — validated ZIP payload accounting prerequisite
 

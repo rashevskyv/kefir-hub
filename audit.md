@@ -1,6 +1,8 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.850**. Дата: 2026-09-16.
+Канічний робочий файл. Версія коду: **v0.13.851**. Дата: 2026-09-16.
+
+v0.13.851 shutdown lifecycle safety: final haze::Exit(false) без USB host restart; shared-mutex install admission closure/snapshot і publication з cancellation до producer joins; Web stop до widgets/install state/i18n/GPU teardown. Synchronous begin/end phase trace через existing errors.txt logger незалежно від normal logging. Gemini повідомив PASS 7 source/model groups і dead-symbol gate; senior source/caller/diff review та git diff --check без запуску тестів. Compile/NRO/hardware не перевірено. SD не містила crash dump/normal exit log; конкретний первинний збій і stack не підтверджено. Не закриває save-sizing/growth або ponytail-чергу §2 A1–A7.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —

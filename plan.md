@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.850** (validated ZIP payload accounting prerequisite; прийнято source review). Завершені плани збережено в
+Поточний delivery — **v0.13.851**: shutdown lifecycle safety та діагностика; реалізовано Gemini, прийнято senior source review. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.850 — validated ZIP payload accounting
+## Поточний delivery: v0.13.851 — shutdown lifecycle safety
+
+Статус: реалізовано Gemini; follow-up 09-16 16:48 прийнято senior source/diff review. App 0.13.851. Shared install-session mutex серіалізує admission closure/snapshot і publication; cancellation поза mutex до producer joins. Gemini повідомив PASS 7 source/model groups і dead-symbol gate; senior тести не запускав, git diff --check пройшов. Primary master clean на b4770f00 перед task-doc edits. SD config/kefir/log.txt відсутній, errors.txt містить тільки успішний ACC_DIAG; crash/fatal report не знайдено. Причину конкретного збою та traceback не підтверджено. Compile/NRO/runtime/hardware не перевірено; source anchors і sequential Python model не є C++ thread/IPC proof.
+1. Gemini: розділити MTP stop для runtime port handback і final shutdown; final App destructor не запускає usbHsFsInitialize після haze stop. Зберегти чинні runtime callers, callbacks suppression, transfer cancellation і join-before-proxy destruction.
+2. Gemini: зупинити Web producer threads до звільнення widgets/install state/i18n/GPU. Спершу простежити всі synchronous request/install wait loops та чинний cancel flow; не переносити join перед необхідним cancellation. userAppExit fallback має лишитися idempotent. Не додавати detached threads чи timeout з подальшим знищенням live owners.
+3. Gemini: bounded synchronous shutdown begin/end breadcrumbs через існуючий error log, незалежно від normal logging, перед blocking phases, включно з userAppExit. Тільки phase/version/timing/Result, без paths/identities/secrets. Не заявляти відновлений stack trace без crash addresses.
+4. Один compiler-free regression для final-vs-runtime MTP behavior, producer-before-owner teardown та begin/end diagnostics; model/source checks не доводять C++ runtime. No build/compiler/tests/run.sh; користувач компілює окремо.
+5. Gemini app bump 0.13.850 -> 0.13.851 завершено; senior review, acceptance і усі чотири delivery docs завершено для focused commit. Saves sizing/growth та інші queued tasks поза scope. Наступне: користувач компілює та перевіряє SELECT/HOME, MTP idle/transfer/disconnect, Web idle/upload/direct install і USB flash; errors.txt має begin/end фаз.
+
+## Попередній delivery: v0.13.850 — validated ZIP payload accounting
 
 Статус: реалізовано Gemini та прийнято після test-only follow-up і senior source/diff review; app 0.13.850. Gemini повідомив PASS summary (6 source groups, 15 model fixture groups, 3 defensive arithmetic groups), попередні P2-B/P2-A/MTP Python checks і git diff --check. Senior перевірив source/diff та git diff --check, тести не запускав. Compile/NRO/runtime/hardware не перевірено. Summary — checked payload accounting, не capacity estimator. Text anchors не AST/control-flow proof; path model спрощений і не виконує C++/IPC. Host-native path tests у цьому delivery не запускались.
 1. Додати optional output summary до обох TransferUnzipPreflight overloads. Локальний summary публікувати тільки після повної перевірки всіх entries і успішного rewind; failure/cancel лишає caller output незмінним. Payload classification відповідає extraction після normalization/sanitizer/filter/mapping. Metadata drain/CRC збережено, але skipped entries не входять у payload totals.

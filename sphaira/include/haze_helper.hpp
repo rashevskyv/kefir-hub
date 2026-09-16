@@ -8,7 +8,7 @@
 namespace sphaira::haze {
 
 bool Init();
-void Exit();
+void Exit(bool reinit_usb_host = true);
 bool IsRunning();
 
 // an arbitrary fs exposed as an extra, "pinned" MTP storage. fs_factory

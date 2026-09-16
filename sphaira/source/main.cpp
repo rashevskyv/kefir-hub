@@ -191,6 +191,9 @@ void userAppInit(void) {
 }
 
 void userAppExit(void) {
+    log_write_error("[SHUTDOWN] begin userAppExit");
+    sphaira::TimeStamp ts;
+
     sphaira::WebShareStop();
     sphaira::net::Exit();
 
@@ -203,6 +206,8 @@ void userAppExit(void) {
     accountExit();
     psmExit();
     plExit();
+
+    log_write_error("[SHUTDOWN] end userAppExit (%zu ms)", ts.GetMs());
 
     // NOTE (DMC): prevents exfat / fat32 corruption on all SD cards.
     fsdevCommitDevice("sdmc");

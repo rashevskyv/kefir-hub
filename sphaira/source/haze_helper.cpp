@@ -352,7 +352,7 @@ bool Init() {
     return g_is_running = true;
 }
 
-void Exit() {
+void Exit(bool reinit_usb_host) {
     SCOPED_MUTEX(&g_mutex);
     if (!g_is_running) {
         return;
@@ -372,11 +372,13 @@ void Exit() {
 
     log_write("[MTP] exitied\n");
 
-    // hand the port back to host so a flash drive is visible again.
-    if (App::GetWriteProtect()) {
-        usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+    if (reinit_usb_host) {
+        // hand the port back to host so a flash drive is visible again.
+        if (App::GetWriteProtect()) {
+            usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
+        }
+        usbHsFsInitialize(1);
     }
-    usbHsFsInitialize(1);
 }
 
 bool IsRunning() {

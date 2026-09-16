@@ -481,10 +481,10 @@ auto App::HasActiveTransfer() -> bool {
 }
 
 auto App::PushInstallSession(std::shared_ptr<ui::menu::dbi::InstallSession> session) -> bool {
-    if (!g_app) return false;
+    if (!g_app || !session) return false;
     SCOPED_MUTEX(&g_app->m_install_session_mutex);
-    if (g_app->m_active_install_session) {
-        log_write("[App] PushInstallSession called while install session active, refusing\n");
+    if (g_app->m_install_sessions_closed || g_app->m_active_install_session) {
+        log_write("[App] PushInstallSession called while install session active or shutting down, refusing\n");
         return false;
     }
     g_app->m_active_install_session = std::move(session);
@@ -508,6 +508,13 @@ void App::CloseActiveInstallSession() {
         SCOPED_MUTEX(&g_app->m_install_session_mutex);
         g_app->m_active_install_session.reset();
     }
+}
+
+auto App::CloseInstallAdmissionAndGetSession() -> std::shared_ptr<ui::menu::dbi::InstallSession> {
+    if (!g_app) return nullptr;
+    SCOPED_MUTEX(&g_app->m_install_session_mutex);
+    g_app->m_install_sessions_closed = true;
+    return g_app->m_active_install_session;
 }
 
 void App::ResetTouchAfterApplet() {
@@ -1776,8 +1783,17 @@ App::~App() {
     // boost mode is disabled in userAppExit().
     App::SetBoostMode(true);
 
+    log_write_error("[SHUTDOWN] begin app exit v%s", APP_VERSION);
     log_write("starting to exit\n");
     TimeStamp ts;
+
+    // Shutdown admission must close at the beginning of the destructor under the mutex:
+    // Every session published before admission closure is captured in this snapshot and cancelled;
+    // every publication attempt after admission closure is refused by PushInstallSession.
+    auto cancel_session = CloseInstallAdmissionAndGetSession();
+    if (cancel_session) {
+        cancel_session->CancelSession();
+    }
 
     // same phase timing as the constructor: shutdown blocks on the same
     // servers and mounts, and "sometimes it is slow to close" needs a number
@@ -1790,6 +1806,9 @@ App::~App() {
         }
         phase.Update();
     };
+
+    log_write_error("[SHUTDOWN] begin background services");
+    TimeStamp bg_phase;
 
     // Wake any remote filesystem reads before widget destructors wait for
     // their worker threads. The applet keeps exit locked until this finishes.
@@ -1807,14 +1826,6 @@ App::~App() {
 
     mark("ntp + forwarder_auto");
 
-    if (haze::IsRunning()) {
-        log_write("closing mtp\n");
-        haze::Exit();
-    }
-    sphaira::devoptab::mtp::CloseMtpSession();
-
-    mark("mtp");
-
     if (App::GetFtpEnable()) {
         log_write("closing ftp\n");
         ftpsrv::Exit();
@@ -1828,13 +1839,50 @@ App::~App() {
     }
 
     mark("nxlink");
+    log_write_error("[SHUTDOWN] end background services (%zu ms)", bg_phase.GetMs());
 
+    log_write_error("[SHUTDOWN] begin mtp");
+    TimeStamp mtp_phase;
+    if (haze::IsRunning()) {
+        log_write("closing mtp\n");
+        haze::Exit(false);
+    }
+    sphaira::devoptab::mtp::CloseMtpSession();
+
+    mark("mtp");
+    log_write_error("[SHUTDOWN] end mtp (%zu ms)", mtp_phase.GetMs());
+
+    log_write_error("[SHUTDOWN] begin web");
+    TimeStamp web_phase;
+    if (cancel_session) {
+        cancel_session->CancelSession();
+    }
+    if (auto pbox = WebGetProgressBox()) {
+        pbox->RequestExit();
+    }
+    if (m_active_transfer_pbox) {
+        m_active_transfer_pbox->RequestExit();
+    }
+    if (sphaira::WebShareIsRunning()) {
+        log_write("closing web\n");
+    }
+    sphaira::WebShareStop();
+
+    mark("web");
+    log_write_error("[SHUTDOWN] end web (%zu ms)", web_phase.GetMs());
+
+    log_write_error("[SHUTDOWN] begin usb host");
+    TimeStamp usb_phase;
     if (usbHsFsGetStatusChangeUserEvent()) {
         log_write("closing hdd\n");
         usbHsFsExit();
     }
 
     mark("usb mass storage");
+    log_write_error("[SHUTDOWN] end usb host (%zu ms)", usb_phase.GetMs());
+
+    log_write_error("[SHUTDOWN] begin widgets/gpu");
+    TimeStamp gpu_phase;
 
     // GPU must be idle before widgets free nvg images, but the swapchain and
     // nvg context have to stay alive for those deletes (file viewer, games
@@ -1881,6 +1929,7 @@ App::~App() {
 #endif
 
     mark("graphics teardown");
+    log_write_error("[SHUTDOWN] end widgets/gpu (%zu ms)", gpu_phase.GetMs());
 
     // backup hbmenu if it is not sphaira
     if (App::GetReplaceHbmenuEnable() && !IsHbmenu()) {
@@ -1937,6 +1986,7 @@ App::~App() {
     mark("hbmenu replace");
 
     log_write("\t[EXIT] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
+    log_write_error("[SHUTDOWN] end app exit (%zu ms)", ts.GetMs());
 
     if (App::GetLogEnable()) {
         log_write("closing log\n");

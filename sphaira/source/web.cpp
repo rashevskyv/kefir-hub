@@ -577,6 +577,9 @@ void HandleUploadManifest(Socket sock, const std::string& req) {
     body.resize(std::min<size_t>(body.size(), static_cast<size_t>(content_length)));
 
     for (u32 attempts = 0; attempts < 20000 && (s64)body.size() < content_length; attempts++) {
+        if (!g_share_running.load()) {
+            break;
+        }
         char buf[4096];
         const auto want = std::min<s64>(sizeof(buf), content_length - (s64)body.size());
         const auto got = recv(sock, buf, want, 0);
@@ -1304,6 +1307,9 @@ void HandleRemoteInputPost(Socket sock, const std::string& req, bool draft = fal
     body.resize(std::min<size_t>(body.size(), static_cast<size_t>(content_length)));
 
     for (u32 attempts = 0; attempts < 20000 && (s64)body.size() < content_length; attempts++) {
+        if (!g_share_running.load()) {
+            break;
+        }
         char buf[4096];
         const auto want = std::min<s64>(sizeof(buf), content_length - (s64)body.size());
         const auto got = recv(sock, buf, want, 0);

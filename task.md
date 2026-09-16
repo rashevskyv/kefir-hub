@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.850** (validated ZIP payload accounting prerequisite; прийнято source review). Завершені задачі збережено в
+Актуальний delivery — **v0.13.851**: shutdown lifecycle safety; реалізовано Gemini, прийнято senior source review. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.850 (validated ZIP payload accounting)
+## Поточний delivery: v0.13.851 (shutdown lifecycle safety)
+
+- [x] `EXIT-RESEARCH-851` — primary clean master b4770f00, Graphify-first та SD read-only investigation; конкретний crash/stack не підтверджено.
+- [x] `EXIT-MTP-851` — final Exit(false) без USB host reinitialization; runtime default handback збережено.
+- [x] `EXIT-WEB-851` — shared-mutex admission closure/snapshot/publication, cancellation поза mutex до producer joins; Web join до widgets/install state/i18n/GPU teardown; idempotent userAppExit fallback.
+- [x] `EXIT-DIAG-851` — bounded synchronous begin/end shutdown phase breadcrumbs незалежно від normal log; без secrets.
+- [x] `EXIT-STATIC-851` — Gemini повідомив PASS 7 source/model groups і dead-symbol gate; senior source/diff review та git diff --check без запуску тестів. Sequential model не C++/IPC; no runtime guarantees.
+- [x] `DOCS-BUMP-851` — Gemini app bump 0.13.851; senior acceptance і усі чотири docs завершено для focused commit.
+- [ ] `HW-851` — користувач компілює окремо; Switch shutdown SELECT/HOME, MTP idle/transfer/disconnect та Web active/idle перевірки.
+
+## Попередній delivery: v0.13.850 (validated ZIP payload accounting)
 
 - [x] `P2B-RESEARCH-850` — exact primary clean master/base ancestry, Graphify refresh, all extend/extra read/native lifetime/ZIP/filter/metadata callers і libnx/JKSV/Checkpoint primary sources досліджено; full growth policy не делегується без підтвердженого contract.
 - [x] `P2B-SUMMARY-850` — optional checked payload bytes/files/explicit-directory summary у preflight; publish only after full CRC/read/close/rewind success, failure/cancel output unchanged.

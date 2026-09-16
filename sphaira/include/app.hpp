@@ -88,6 +88,7 @@ public:
     static auto GetActiveInstallSession() -> std::shared_ptr<ui::menu::dbi::InstallSession>;
     static auto HasActiveInstallSession() -> bool;
     static void CloseActiveInstallSession();
+    static auto CloseInstallAdmissionAndGetSession() -> std::shared_ptr<ui::menu::dbi::InstallSession>;
 
     // Drop a click/drag that started before a blocking applet (swkbd) so the
     // same finger-up is not delivered to the menu underneath on return.
@@ -442,6 +443,7 @@ public:
     std::unique_ptr<ui::ProgressBox> m_active_transfer_pbox{};
     Mutex m_install_session_mutex{};
     std::shared_ptr<ui::menu::dbi::InstallSession> m_active_install_session{};
+    bool m_install_sessions_closed{false};
 
     AppletHookCookie m_appletHookCookie{};
 
