@@ -7,6 +7,7 @@
 #include <string_view>
 #include <vector>
 #include <ctime>
+#include <optional>
 
 namespace sphaira::ui::menu::save {
 
@@ -92,6 +93,10 @@ auto ParseDbiBackupAppId(std::string_view name) -> u64;
 auto GetSaveTypeLabel(u8 data_type) -> const char*;
 auto SaveTypeIndex(u8 data_type) -> size_t;
 auto SaveEntryKey(const FsSaveDataInfo& e) -> std::string;
+auto DiscoverSaveDataInfo(const AccountUid* uid_filter = nullptr, const std::optional<u8>& type_filter = std::nullopt) -> std::vector<FsSaveDataInfo>;
+inline auto DiscoverSaveDataInfo(u8 type_filter) -> std::vector<FsSaveDataInfo> {
+    return DiscoverSaveDataInfo(nullptr, type_filter);
+}
 auto IsSystemLikeSave(u8 data_type) -> bool;
 auto DisplayEntryKey(const Entry& e) -> std::string;
 auto BuildSaveName(const Entry& e) -> fs::FsPath;

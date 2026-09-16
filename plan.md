@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.847** (MTP сейви: гра → користувач; планування). Завершені плани збережено в
+Поточний delivery — **v0.13.848** (P2-A exact discovery / actual space; планування). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.847 — MTP сейви: гра → користувач
+## Поточний delivery: v0.13.848 — P2-A exact discovery / actual space
+
+Статус: реалізовано Gemini та прийнято після повторного senior source/diff review; версія 0.13.848. Empty SetIndex guard повертається до indexed entry access. Gemini повідомив passing compiler-free P2-A/MTP/dead-symbol checks; senior перевірив source і git diff --check, тести не запускав. UI empty-state не має окремого anchored regression у повернутому check; runtime/build/hardware не перевірено. Оновлений bundled TegraExplorer.bin включено за прямою вказівкою користувача, без binary/runtime validation.
+1. Один shared unfiltered per-space reader у save_paths.cpp/.hpp; explicit libnx spaces System/User/SdSystem/Temporary/SdUser/ProperSystem/SafeMode — probes, не гарантія доступності. Filter returned records за type/full UID; retain returned space/rank; reuse SaveEntryKey. Open/read errors явно log без identity/secrets; failed reads не публікують частковий space.
+2. Menu::ReadSaveEntries і ListAccountSaves та File Browser ZIP target discovery reuse helper; non-account scan не залежить від accounts. Preserve title-grouped tiles, але actual action slots дедуплікуються тільки SaveEntryKey.
+3. FsNativeSave system-ID RW open передає caller actual space. Existing live operations не hardcode System і не трактують space=0 як unknown. Existing selected ZIP target з nonzero save ID відкривається exact-space і fail-closed; new-save/create policy та metadata redesign не змінюються.
+4. File Browser filename ID auto-target лише за одним exact matching slot, ambiguous → existing picker з slot labels; RAW target coverage не розширюється. ResolveRestoreTarget backup/new-target redesign окремо; live nonbackup seed не переобирає інший rank/space.
+5. MTP scanner/coverage/layout/pinned export без змін; Game Details discovery лишається окремим caller follow-up. P2-B/P3/P4, RAW writes, void CloseFile та stale RO settings поза scope.
+6. Gemini static-only checks, bump 0.13.848; жодного compiler/build/tests/run.sh. Senior після diff review оновлює всі delivery docs і commit. Firmware/permission/runtime/hardware guarantees не заявляти.
+
+## Попередній delivery: v0.13.847 — MTP сейви: гра → користувач
 
 Статус: реалізовано Gemini та прийнято після повторного senior diff review; app version 0.13.847. Records сортуються до name allocation; save-only game formatter резервує prefix/suffix space. Gemini повідомив passing Python contract/model (7 source groups, 5 behavioral groups) і dead-symbol gate; senior перевірив source/diff та `git diff --check`, але тести не запускав. Python model не виконує C++ і не повністю відтворює shared sanitizer. Compile/runtime/hardware verification відкладено.
 1. Reuse `FsSaveProxy`: game display name зі stable Title-ID suffix → account nickname без `Account` → безпосередні live save root contents. Не додавати backend, ZIP або backup layer.

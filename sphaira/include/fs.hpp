@@ -544,7 +544,7 @@ struct FsNativeSave final : FsNative {
         if (read_only) {
             m_open_result = fsOpenReadOnlySaveDataFileSystem(&m_fs, save_data_space_id, attr);
         } else if (data_type == FsSaveDataType_System || data_type == FsSaveDataType_SystemBcat) {
-            m_open_result = fsOpenSaveDataFileSystemBySystemSaveDataId(&m_fs, FsSaveDataSpaceId_System, attr);
+            m_open_result = fsOpenSaveDataFileSystemBySystemSaveDataId(&m_fs, save_data_space_id, attr);
         } else {
             m_open_result = fsOpenSaveDataFileSystem(&m_fs, save_data_space_id, attr);
         }

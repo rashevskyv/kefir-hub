@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.847** (MTP сейви: гра → користувач; планування). Завершені задачі збережено в
+Актуальний delivery — **v0.13.848** (P2-A exact discovery / actual space; планування). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.847 (MTP сейви: гра → користувач)
+## Поточний delivery: v0.13.848 (P2-A exact discovery / actual space)
+
+- [x] `P2A-RESEARCH-848` — clean exact primary/master/HEAD/ancestry, Graphify, Menu/File Browser/native callers і libnx IPC facts перевірено.
+- [x] `P2A-DISCOVERY-848` — shared unfiltered per-space discovery з returned space/rank, full UID filter та SaveEntryKey dedup.
+- [x] `P2A-CALLERS-848` — Menu/File Browser reuse; zero-account nonaccount visibility, grouped presentation; empty SetIndex guard перевірено source review.
+- [x] `P2A-SPACE-848` — actual-space native RW/RO і existing live operations; exact selected ZIP target fail-closed.
+- [x] `P2A-PICKER-848` — ambiguous filename identity не вибирає перший slot; slot labels, RAW coverage незмінна.
+- [x] `P2A-STATIC-848` — Gemini повідомив passing P2-A/MTP/dead-symbol checks; senior source/diff і git diff --check. Без runtime guarantees; окремий UI empty-state regression відсутній.
+- [x] `DOCS-BUMP-848` — Gemini version 0.13.848; senior acceptance/docs завершено для focused commit; user-approved TegraExplorer.bin включено.
+- [ ] `HW-848` — окремі build і hardware tasks; unsupported/permission spaces та exact RW/RO routing.
+
+## Попередній delivery: v0.13.847 (MTP сейви: гра → користувач)
 
 - [x] `MTP-RESEARCH-847` — exact clean primary master/HEAD/ancestry, Graphify refresh, current proxy/callers та targeted history досліджено.
 - [x] `MTP-LAYOUT-847` — account nickname без type prefix; game → user → live contents через чинний proxy.

@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.847** (2026-09-16). Попередні
+Актуальний delivery — **v0.13.848** (2026-09-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.848 — P2-A exact discovery / actual space
+
+- Shared DiscoverSaveDataInfo probes сім concrete libnx spaces unfiltered; returned type/full UID фільтруються client-side, space/rank збережені, slots дедуплікуються SaveEntryKey. Failed space не публікує staged partial records; availability не гарантується.
+- Save Menu і File Browser ZIP picker reuse discovery; nonaccount scan працює без accounts. Title-grouped tiles збережено; ambiguous filename ID переходить до picker. SetIndex безпечно повертається для empty entries.
+- FsNativeSave system-ID RW передає actual caller space. Live delete/metadata та exact existing ZIP target використовують returned space, включно System=0; existing-target open failure не переходить до create. Backup/new-target resolution і creation redesign відкладено.
+- MTP scanner/layout/pinned export, legacy RAW coverage та explicit System account-domain callers незмінні. Game Details reader, P2-B/P3/P4, CloseFile commit error і stale RO text не виправлялись.
+- Gemini повідомив passing compiler-free P2-A contract/model, MTP і dead-symbol checks; senior source/diff review і git diff --check. Empty UI guard source-reviewed, окремий anchored regression відсутній. Compile/NRO/compiled tests/runtime/hardware не запускались. Версія 0.13.848.
+- Bundled assets/romfs/tegra/TegraExplorer.bin оновлено користувачем і включено в commit за прямою вказівкою; binary validation не виконувалась.
 
 ## v0.13.847 — MTP сейви: гра → користувач
 

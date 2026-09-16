@@ -943,10 +943,6 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff(0);
     }
 
-    if (m_accounts.empty()) {
-        return;
-    }
-
     u64 id{};
     if (!m_entries.empty()) {
         if (IsSystemLikeSave(m_entries[m_index].save_data_type)) {
@@ -970,67 +966,31 @@ void Menu::SetIndex(s64 index) {
 
 auto Menu::ListAccountSaves(const AccountUid& uid) -> std::vector<Entry> {
     std::vector<Entry> out;
-    AccountProfileBase acc{};
-    acc.uid = uid;
-    FsSaveDataSpaceId space_id;
-    FsSaveDataFilter filter;
-    GetFsSaveAttr(acc, FsSaveDataType_Account, space_id, filter);
-
-    FsSaveDataInfoReader reader;
-    if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
-        return out;
-    }
-    ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
-
-    std::vector<FsSaveDataInfo> info_list(256);
-    while (true) {
-        s64 record_count{};
-        if (R_FAILED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &record_count)) || !record_count) {
-            break;
-        }
-        for (s32 i = 0; i < record_count; i++) {
-            out.emplace_back(info_list[i]);
-        }
+    const auto infos = DiscoverSaveDataInfo(&uid, FsSaveDataType_Account);
+    out.reserve(infos.size());
+    for (const auto& info : infos) {
+        out.emplace_back(info);
     }
     return out;
 }
 
 void Menu::ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const {
-    if (m_accounts.empty()) {
-        return;
-    }
-
-    FsSaveDataSpaceId space_id;
-    FsSaveDataFilter filter;
-    const auto index = account_index >= 0 ? account_index : 0;
-    if (index >= static_cast<s64>(m_accounts.size())) {
-        return;
-    }
-
-    GetFsSaveAttr(m_accounts[index], data_type, space_id, filter);
-
-    FsSaveDataInfoReader reader;
-    if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
-        log_write("[SAVE] failed to open reader\n");
-        return;
-    }
-    ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
-
-    std::vector<FsSaveDataInfo> info_list(ENTRY_CHUNK_COUNT);
-    while (true) {
-        s64 record_count{};
-        if (R_FAILED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &record_count))) {
-            log_write("failed fsSaveDataInfoReaderRead()\n");
-            break;
+    if (data_type == FsSaveDataType_Account) {
+        if (m_accounts.empty()) {
+            return;
         }
-
-        // finished parsing all entries.
-        if (!record_count) {
-            break;
+        const auto index = account_index >= 0 ? account_index : 0;
+        if (index >= static_cast<s64>(m_accounts.size())) {
+            return;
         }
-
-        for (s32 i = 0; i < record_count; i++) {
-            out.emplace_back(info_list[i]);
+        const auto infos = DiscoverSaveDataInfo(&m_accounts[index].uid, FsSaveDataType_Account);
+        for (const auto& info : infos) {
+            out.emplace_back(info);
+        }
+    } else {
+        const auto infos = DiscoverSaveDataInfo(nullptr, data_type);
+        for (const auto& info : infos) {
+            out.emplace_back(info);
         }
     }
 }
@@ -1085,14 +1045,11 @@ void Menu::ScanHomebrew() {
     m_is_reversed = false;
     m_dirty = false;
 
-    if (m_accounts.empty()) {
-        SetIndex(0);
-        return;
-    }
-
-    if (m_account_enabled.size() != m_accounts.size()) {
+    if (!m_accounts.empty() && m_account_enabled.size() != m_accounts.size()) {
         m_account_enabled.assign(m_accounts.size(), false);
-        m_account_enabled[m_account_index] = true;
+        if (m_account_index < static_cast<s64>(m_accounts.size())) {
+            m_account_enabled[m_account_index] = true;
+        }
     }
 
     const auto account_indexes = GetSelectedAccountIndexes();
@@ -1603,6 +1560,12 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
 }
 
 auto Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid) -> Entry {
+    if (!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)) {
+        Entry target = backup;
+        target.is_backup = false;
+        return target;
+    }
+
     Entry target = backup;
     target.is_backup = false;
     if (explicit_uid) {
@@ -1798,8 +1761,7 @@ void Menu::CreateBackupIfNewer(const std::vector<Entry>& seeds) {
                 continue;
             }
 
-            const auto space_id = IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
-                e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
+            const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
 
             FsSaveDataExtraData live_extra{};
             const auto rc = fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live_extra, sizeof(live_extra), space_id, e.save_data_id);

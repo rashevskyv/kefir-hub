@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.847**. Дата: 2026-09-16.
+Канічний робочий файл. Версія коду: **v0.13.848**. Дата: 2026-09-16.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12512 nodes, 24888 edges, 633 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.848 P2-A slice: shared unfiltered per-space discovery, full SaveEntryKey slots і actual-space native/live routing; Menu/ZIP picker reuse, ambiguous IDs не first-select. Empty SetIndex guard source-reviewed. MTP/RAW policies збережено; Game Details і backup/new-target redesign deferred. Gemini повідомив passing compiler-free checks; senior diff/check прийнято без compile/runtime/hardware guarantees, окремий empty UI regression відсутній. User-approved bundled TegraExplorer.bin включено без binary validation. **Не закриває** §2 A1–A7, P2-B/P3/P4.
 
 v0.13.847 MTP layout slice: чинний Saves proxy показує game → UTF-8 nickname → live contents, з bounded Title-ID suffix, sorted record allocation та checked non-secret collision suffixes. Backend/types/spaces/pinned export/write semantics збережено. Gemini повідомив passing compiler-free model/contract/dead-symbol checks; senior diff review і `git diff --check` пройшли, тести senior не запускав. Python model не є C++ runtime і не повністю відтворює sanitizer. Compile/hardware відкладено; CloseFile commit Result, synthetic space та stale RO settings лишаються known risks. **Не закриває** §2 A1–A7 або P2/P3/P4.
 

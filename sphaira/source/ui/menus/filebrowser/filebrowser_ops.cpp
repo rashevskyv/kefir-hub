@@ -32,6 +32,7 @@
 #include <memory>
 #include <ranges>
 #include <algorithm>
+#include <set>
 
 namespace sphaira::ui::menu::filebrowser {
 
@@ -172,42 +173,87 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
         FsSaveDataType_SystemBcat,
     };
 
-    for (const auto& acc : accounts) {
-        for (const auto type : SAVE_TYPES) {
-            FsSaveDataSpaceId space_id = FsSaveDataSpaceId_User;
-            FsSaveDataFilter filter{};
-            filter.attr.save_data_type = type;
-            filter.filter_by_save_data_type = true;
-            if (type == FsSaveDataType_Account) {
-                filter.attr.uid = acc.uid;
-                filter.filter_by_user_id = true;
-            } else if (type == FsSaveDataType_System || type == FsSaveDataType_SystemBcat) {
-                space_id = FsSaveDataSpaceId_System;
-            } else if (type == FsSaveDataType_Cache) {
-                space_id = FsSaveDataSpaceId_SdUser;
-            } else if (type == FsSaveDataType_Temporary) {
-                space_id = FsSaveDataSpaceId_Temporary;
-            }
+    if (is_disa) {
+        for (const auto& acc : accounts) {
+            for (const auto type : SAVE_TYPES) {
+                FsSaveDataSpaceId space_id = FsSaveDataSpaceId_User;
+                FsSaveDataFilter filter{};
+                filter.attr.save_data_type = type;
+                filter.filter_by_save_data_type = true;
+                if (type == FsSaveDataType_Account) {
+                    filter.attr.uid = acc.uid;
+                    filter.filter_by_user_id = true;
+                } else if (type == FsSaveDataType_System || type == FsSaveDataType_SystemBcat) {
+                    space_id = FsSaveDataSpaceId_System;
+                } else if (type == FsSaveDataType_Cache) {
+                    space_id = FsSaveDataSpaceId_SdUser;
+                } else if (type == FsSaveDataType_Temporary) {
+                    space_id = FsSaveDataSpaceId_Temporary;
+                }
 
-            FsSaveDataInfoReader reader;
-            if (R_SUCCEEDED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
-                ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
-                std::vector<FsSaveDataInfo> info_list(256);
-                s64 count = 0;
-                while (R_SUCCEEDED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &count)) && count > 0) {
-                    for (s64 i = 0; i < count; i++) {
-                        save::Entry se;
-                        static_cast<FsSaveDataInfo&>(se) = info_list[i];
-                        se.save_data_space_id = space_id;
-                        auto data = title::Get(se.application_id);
-                        std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
-                        std::string acc_name = (type == FsSaveDataType_Account) ? acc.nickname : save::GetSaveTypeLabel(type);
-                        char id_str[32];
-                        std::snprintf(id_str, sizeof(id_str), " [%016lX]", se.save_data_id);
-                        save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
+                FsSaveDataInfoReader reader;
+                if (R_SUCCEEDED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
+                    ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
+                    std::vector<FsSaveDataInfo> info_list(256);
+                    s64 count = 0;
+                    while (R_SUCCEEDED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &count)) && count > 0) {
+                        for (s64 i = 0; i < count; i++) {
+                            save::Entry se;
+                            static_cast<FsSaveDataInfo&>(se) = info_list[i];
+                            se.save_data_space_id = space_id;
+                            auto data = title::Get(se.application_id);
+                            std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
+                            std::string acc_name = (type == FsSaveDataType_Account) ? acc.nickname : save::GetSaveTypeLabel(type);
+                            char id_str[32];
+                            std::snprintf(id_str, sizeof(id_str), " [%016lX]", se.save_data_id);
+                            save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
+                        }
                     }
                 }
             }
+        }
+    } else {
+        std::set<std::string> seen_keys;
+
+        const auto add_candidates = [&](const std::vector<FsSaveDataInfo>& infos, const std::string& acc_name) {
+            for (const auto& info : infos) {
+                const auto key = save::SaveEntryKey(info);
+                if (seen_keys.insert(key).second) {
+                    save::Entry se;
+                    static_cast<FsSaveDataInfo&>(se) = info;
+
+                    auto data = title::Get(se.application_id);
+                    std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
+
+                    char id_str[64];
+                    if (se.save_data_index != 0 || se.save_data_rank != 0) {
+                        std::snprintf(id_str, sizeof(id_str), " [idx:%u rk:%u sp:%u %016lX]",
+                            se.save_data_index, se.save_data_rank, se.save_data_space_id, se.save_data_id);
+                    } else {
+                        std::snprintf(id_str, sizeof(id_str), " [sp:%u %016lX]",
+                            se.save_data_space_id, se.save_data_id);
+                    }
+                    save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
+                }
+            }
+        };
+
+        for (const auto& acc : accounts) {
+            const auto infos = save::DiscoverSaveDataInfo(&acc.uid, FsSaveDataType_Account);
+            add_candidates(infos, acc.nickname);
+        }
+
+        constexpr u8 NON_ACCOUNT_TYPES[] = {
+            FsSaveDataType_Bcat,
+            FsSaveDataType_Device,
+            FsSaveDataType_Temporary,
+            FsSaveDataType_Cache,
+            FsSaveDataType_System,
+            FsSaveDataType_SystemBcat,
+        };
+        for (const auto type : NON_ACCOUNT_TYPES) {
+            const auto infos = save::DiscoverSaveDataInfo(nullptr, type);
+            add_candidates(infos, save::GetSaveTypeLabel(type));
         }
     }
 
@@ -268,11 +314,17 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
     };
 
     if (target_id) {
+        const SaveOption* matched_candidate = nullptr;
+        size_t match_count = 0;
         for (const auto& opt : save_options) {
             if (opt.entry.save_data_id == target_id || opt.entry.application_id == target_id || opt.entry.system_save_data_id == target_id) {
-                execute_restore(opt.entry, opt.label);
-                return;
+                matched_candidate = &opt;
+                match_count++;
             }
+        }
+        if (match_count == 1 && matched_candidate != nullptr) {
+            execute_restore(matched_candidate->entry, matched_candidate->label);
+            return;
         }
     }
 

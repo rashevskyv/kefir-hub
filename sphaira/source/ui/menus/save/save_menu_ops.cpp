@@ -83,8 +83,7 @@ auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Resul
         pbox->UpdateTransfer(i + 1, entries.size());
         pbox->SetActionName("Deleting save data..."_i18n);
 
-        const auto space_id = IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
-            e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
+        const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
 
         Result rc = 0;
         if (e.save_data_id != 0) {
@@ -442,8 +441,7 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
                 (*deleted_count)++;
             } else {
                 pbox->SetActionName("Deleting save data..."_i18n);
-                const auto space_id = IsSystemLikeSave(e.save_data_type) ? FsSaveDataSpaceId_System :
-                    e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
+                const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
 
                 Result rc = 0;
                 if (e.save_data_id != 0) {
@@ -848,34 +846,56 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)
     u64 owner_id = 0;
     u32 flags = 0;
 
-    if (meta.has_value()) {
-        if (!attr.application_id) attr.application_id = meta->attr.application_id;
-        if (!attr.system_save_data_id) attr.system_save_data_id = meta->attr.system_save_data_id;
-        if (!attr.save_data_type) attr.save_data_type = meta->attr.save_data_type;
-        if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = meta->attr.uid;
-        data_size = meta->data_size;
-        journal_size = meta->journal_size;
-        owner_id = meta->owner_id;
-        flags = meta->flags;
-    } else if (dbi_extra.has_value()) {
-        if (!attr.application_id) attr.application_id = dbi_extra->attr.application_id;
-        if (!attr.system_save_data_id) attr.system_save_data_id = dbi_extra->attr.system_save_data_id;
-        if (!attr.save_data_type) attr.save_data_type = dbi_extra->attr.save_data_type;
-        if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = dbi_extra->attr.uid;
-        data_size = dbi_extra->data_size;
-        journal_size = dbi_extra->journal_size;
-        owner_id = dbi_extra->owner_id;
-        flags = dbi_extra->flags;
+    if (e.save_data_id != 0) {
+        if (meta.has_value()) {
+            data_size = meta->data_size;
+            journal_size = meta->journal_size;
+            owner_id = meta->owner_id;
+            flags = meta->flags;
+        } else if (dbi_extra.has_value()) {
+            data_size = dbi_extra->data_size;
+            journal_size = dbi_extra->journal_size;
+            owner_id = dbi_extra->owner_id;
+            flags = dbi_extra->flags;
+        }
+    } else {
+        if (meta.has_value()) {
+            if (!attr.application_id) attr.application_id = meta->attr.application_id;
+            if (!attr.system_save_data_id) attr.system_save_data_id = meta->attr.system_save_data_id;
+            if (!attr.save_data_type) attr.save_data_type = meta->attr.save_data_type;
+            if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = meta->attr.uid;
+            data_size = meta->data_size;
+            journal_size = meta->journal_size;
+            owner_id = meta->owner_id;
+            flags = meta->flags;
+        } else if (dbi_extra.has_value()) {
+            if (!attr.application_id) attr.application_id = dbi_extra->attr.application_id;
+            if (!attr.system_save_data_id) attr.system_save_data_id = dbi_extra->attr.system_save_data_id;
+            if (!attr.save_data_type) attr.save_data_type = dbi_extra->attr.save_data_type;
+            if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = dbi_extra->attr.uid;
+            data_size = dbi_extra->data_size;
+            journal_size = dbi_extra->journal_size;
+            owner_id = dbi_extra->owner_id;
+            flags = dbi_extra->flags;
+        }
     }
 
-    const auto save_data_space_id = IsSystemLikeSave(attr.save_data_type) ? FsSaveDataSpaceId_System :
-        e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User;
+    const auto save_data_space_id = (e.save_data_id != 0)
+        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)
+        : (IsSystemLikeSave(attr.save_data_type) ? FsSaveDataSpaceId_System :
+           e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User);
 
     // Check if save filesystem already exists or needs to be created
     bool save_exists = false;
     {
         fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
-        save_exists = R_SUCCEEDED(check_save_fs.GetFsOpenResult());
+        const auto check_rc = check_save_fs.GetFsOpenResult();
+        if (e.save_data_id != 0) {
+            R_TRY(check_rc);
+            save_exists = true;
+        } else {
+            save_exists = R_SUCCEEDED(check_rc);
+        }
     }
     if (!save_exists) {
         log_write("save filesystem does not exist or cannot be opened, creating save...\n");
