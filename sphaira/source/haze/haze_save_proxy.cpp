@@ -15,6 +15,7 @@
 #include <usbhsfs.h>
 
 #include <algorithm>
+#include <cctype>
 #include <map>
 #include <memory>
 #include <set>
@@ -99,7 +100,7 @@ struct FsSaveProxy final : FsProxyBase {
         const auto pp_old = Parse(old_path);
         const auto pp_new = Parse(new_path);
         R_UNLESS(pp_old.depth >= 3 && pp_new.depth >= 3, FsError_PathNotFound);
-        R_UNLESS(pp_old.game == pp_new.game && pp_old.type == pp_new.type, FsError_PathNotFound);
+        R_UNLESS(!strcasecmp(pp_old.game.c_str(), pp_new.game.c_str()) && !strcasecmp(pp_old.type.c_str(), pp_new.type.c_str()), FsError_PathNotFound);
         std::shared_ptr<fs::FsNative> fs;
         R_TRY(MountSave(pp_old, fs));
         R_TRY(fs->RenameFile(pp_old.rest, pp_new.rest));
@@ -131,7 +132,7 @@ struct FsSaveProxy final : FsProxyBase {
         const auto pp_old = Parse(old_path);
         const auto pp_new = Parse(new_path);
         R_UNLESS(pp_old.depth >= 3 && pp_new.depth >= 3, FsError_PathNotFound);
-        R_UNLESS(pp_old.game == pp_new.game && pp_old.type == pp_new.type, FsError_PathNotFound);
+        R_UNLESS(!strcasecmp(pp_old.game.c_str(), pp_new.game.c_str()) && !strcasecmp(pp_old.type.c_str(), pp_new.type.c_str()), FsError_PathNotFound);
         std::shared_ptr<fs::FsNative> fs;
         R_TRY(MountSave(pp_old, fs));
         R_TRY(fs->RenameDirectory(pp_old.rest, pp_new.rest));
@@ -299,79 +300,205 @@ private:
         int depth{}; // 0 = root, 1 = game, 2 = game/type, 3 = inside the save.
     };
 
-    struct AccountName {
+    struct AccountInfo {
         AccountUid uid;
-        std::string name;
+        std::string raw_nickname;
     };
 
-    static auto UidHex(const AccountUid& uid) -> std::string {
-        char buf[0x30];
-        std::snprintf(buf, sizeof(buf), "%016lX%016lX", uid.uid[0], uid.uid[1]);
-        return buf;
+    static bool EqualsCaseInsensitive(std::string_view a, std::string_view b) {
+        if (a.size() != b.size()) {
+            return false;
+        }
+        for (size_t i = 0; i < a.size(); ++i) {
+            if (std::tolower(static_cast<unsigned char>(a[i])) !=
+                std::tolower(static_cast<unsigned char>(b[i]))) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    static auto BuildAccountNames() -> std::vector<AccountName> {
-        std::vector<AccountName> out;
-        for (const auto& acc : App::GetAccountList()) {
-            fs::FsPath buf{};
-            std::snprintf(buf, sizeof(buf), "%s", acc.nickname);
-            title::utilsReplaceIllegalCharacters(buf, true);
-
-            auto name = TrimName(buf.s);
-            if (name.empty()) {
-                name = UidHex(acc.uid);
+    static bool IsWindowsReservedDeviceName(std::string_view name) {
+        const auto dot_pos = name.find('.');
+        const auto stem = (dot_pos != std::string_view::npos) ? name.substr(0, dot_pos) : name;
+        if (stem.size() == 3) {
+            if (EqualsCaseInsensitive(stem, "CON") ||
+                EqualsCaseInsensitive(stem, "PRN") ||
+                EqualsCaseInsensitive(stem, "AUX") ||
+                EqualsCaseInsensitive(stem, "NUL")) {
+                return true;
             }
-            out.push_back({acc.uid, std::move(name)});
-        }
-
-        // two accounts with the same nickname get a short uid suffix to keep
-        // their folders distinct.
-        std::vector<bool> dup(out.size(), false);
-        for (size_t i = 0; i < out.size(); i++) {
-            for (size_t j = i + 1; j < out.size(); j++) {
-                if (!strcasecmp(out[i].name.c_str(), out[j].name.c_str())) {
-                    dup[i] = dup[j] = true;
+        } else if (stem.size() == 4) {
+            const char c3 = stem[3];
+            if (c3 >= '1' && c3 <= '9') {
+                const auto prefix = stem.substr(0, 3);
+                if (EqualsCaseInsensitive(prefix, "COM") ||
+                    EqualsCaseInsensitive(prefix, "LPT")) {
+                    return true;
                 }
             }
         }
-        for (size_t i = 0; i < out.size(); i++) {
-            if (dup[i]) {
-                out[i].name += " (" + UidHex(out[i].uid).substr(0, 8) + ")";
-            }
-        }
-
-        return out;
+        return false;
     }
 
-    static auto GetAccountDirName(const AccountUid& uid, const std::vector<AccountName>& accounts) -> std::string {
-        for (const auto& acc : accounts) {
-            if (!std::memcmp(&uid, &acc.uid, sizeof(uid))) {
-                return acc.name;
-            }
+    static auto TrimMtpName(std::string s) -> std::string {
+        while (!s.empty() && (s.front() == ' ' || s.front() == '\t')) {
+            s.erase(s.begin());
         }
-        // account no longer exists - same fallback as save_menu's GetAccountName.
-        return UidHex(uid);
+        while (!s.empty() && (s.back() == ' ' || s.back() == '\t' || s.back() == '.')) {
+            s.pop_back();
+        }
+        return s;
     }
 
-    static auto BuildTypeDirName(const FsSaveDataInfo& info, const std::vector<AccountName>& accounts) -> std::string {
-        const auto subdir = ui::menu::save::GetSaveTypeSubdir(info.save_data_type).toString();
+    static auto SanitizeMtpComponent(std::string_view input) -> std::string {
+        std::string s = title::SanitizeUtf8TitleName(input);
+        s = TrimMtpName(s);
+        if (s.empty() || s == "." || s == "..") {
+            return {};
+        }
+        if (IsWindowsReservedDeviceName(s)) {
+            s = "_" + s;
+        }
+        return s;
+    }
 
-        if (info.save_data_type == FsSaveDataType_Account) {
-            return subdir + " " + GetAccountDirName(info.uid, accounts);
+    static auto TruncateMtpComponent(std::string_view input, size_t max_len) -> std::string {
+        std::string s = title::TruncateUtf8(input, max_len);
+        return TrimMtpName(s);
+    }
+
+    static auto FormatSaveIdSuffix(u64 save_data_id) -> std::string {
+        return " [" + title::FormatTitleId(save_data_id) + "]";
+    }
+
+    static bool IsReservedBucketName(std::string_view name) {
+        if (EqualsCaseInsensitive(name, "BCAT") ||
+            EqualsCaseInsensitive(name, "Device") ||
+            EqualsCaseInsensitive(name, "Cache")) {
+            return true;
+        }
+        if (name.size() > 6 && !strncasecmp(name.data(), "Cache ", 6)) {
+            return true;
+        }
+        return false;
+    }
+
+    // Deterministic total order for save records using retained actual fields.
+    // Full UID is used internally as a tie-breaker without inspecting padding bytes.
+    static bool CompareSaveDataInfo(const FsSaveDataInfo& a, const FsSaveDataInfo& b) {
+        if (a.save_data_type != b.save_data_type) {
+            return a.save_data_type < b.save_data_type;
+        }
+        if (a.save_data_index != b.save_data_index) {
+            return a.save_data_index < b.save_data_index;
+        }
+        if (a.save_data_rank != b.save_data_rank) {
+            return a.save_data_rank < b.save_data_rank;
+        }
+        if (a.save_data_id != b.save_data_id) {
+            return a.save_data_id < b.save_data_id;
+        }
+        if (a.save_data_space_id != b.save_data_space_id) {
+            return a.save_data_space_id < b.save_data_space_id;
+        }
+        if (a.system_save_data_id != b.system_save_data_id) {
+            return a.system_save_data_id < b.system_save_data_id;
+        }
+        if (a.application_id != b.application_id) {
+            return a.application_id < b.application_id;
+        }
+        if (a.uid.uid[0] != b.uid.uid[0]) {
+            return a.uid.uid[0] < b.uid.uid[0];
+        }
+        if (a.uid.uid[1] != b.uid.uid[1]) {
+            return a.uid.uid[1] < b.uid.uid[1];
+        }
+        return false;
+    }
+
+    static bool IsSameSaveRecord(const FsSaveDataInfo& a, const FsSaveDataInfo& b) {
+        return a.save_data_id == b.save_data_id &&
+               a.save_data_space_id == b.save_data_space_id &&
+               a.save_data_type == b.save_data_type &&
+               a.application_id == b.application_id &&
+               a.system_save_data_id == b.system_save_data_id &&
+               a.save_data_rank == b.save_data_rank &&
+               a.save_data_index == b.save_data_index &&
+               std::memcmp(&a.uid, &b.uid, sizeof(AccountUid)) == 0;
+    }
+
+    // Formats a bounded game directory name ensuring the complete stable [Title ID]
+    // suffix is preserved intact and fits sizeof(FsDirectoryEntry::name)-1 even if
+    // a '_' prefix is added for a Windows reserved device name.
+    static auto FormatSaveGameDirName(const char* localized_name, u64 application_id) -> std::string {
+        const std::string suffix = " [" + title::FormatTitleId(application_id) + "]";
+        std::string base = title::ResolveMtpDisplayTitleName(localized_name, nullptr, nullptr, application_id);
+        if (base == title::FormatTitleId(application_id) || base.empty()) {
+            return "[" + title::FormatTitleId(application_id) + "]";
         }
 
-        // multiple cache saves per game are distinguished by their index.
-        if (info.save_data_type == FsSaveDataType_Cache && info.save_data_index) {
-            return subdir + " " + std::to_string(info.save_data_index);
+        const bool is_reserved = IsWindowsReservedDeviceName(base);
+        constexpr size_t MAX_NAME_LEN = sizeof(FsDirectoryEntry::name) - 1;
+        const size_t reserved_space = suffix.size() + (is_reserved ? 1 : 0);
+        const size_t max_title_len = (MAX_NAME_LEN > reserved_space) ? (MAX_NAME_LEN - reserved_space) : 0;
+
+        base = title::TruncateUtf8(base, max_title_len);
+        while (!base.empty() && (base.back() == ' ' || base.back() == '\t')) {
+            base.pop_back();
         }
 
-        return subdir;
+        if (base.empty()) {
+            return "[" + title::FormatTitleId(application_id) + "]";
+        }
+
+        return (is_reserved ? "_" : "") + base + suffix;
+    }
+
+    static auto BuildSaveGameDirName(u64 application_id) -> std::string {
+        const char* localized_name = nullptr;
+        if (const auto data = title::Get(application_id); data && data->status == title::NacpLoadStatus::Loaded) {
+            localized_name = data->lang.name;
+        }
+        return FormatSaveGameDirName(localized_name, application_id);
+    }
+
+    static void DisambiguateFinalName(const TypeMap& game_map,
+                                      const std::string& base,
+                                      const FsSaveDataInfo& info,
+                                      std::string& out_name) {
+        constexpr size_t MAX_NAME_LEN = sizeof(FsDirectoryEntry::name) - 1;
+        char disambig[80];
+        std::snprintf(disambig, sizeof(disambig), " [%016llX-s%u-t%u-r%u-i%u]",
+            static_cast<unsigned long long>(info.save_data_id),
+            static_cast<unsigned>(info.save_data_space_id),
+            static_cast<unsigned>(info.save_data_type),
+            static_cast<unsigned>(info.save_data_rank),
+            static_cast<unsigned>(info.save_data_index));
+        const size_t extra_len = std::strlen(disambig);
+        const size_t max_base = (MAX_NAME_LEN > extra_len) ? (MAX_NAME_LEN - extra_len) : 0;
+        std::string dbase = TruncateMtpComponent(base.empty() ? "Account" : base, max_base);
+        out_name = dbase + disambig;
+
+        int counter = 2;
+        while (game_map.find(out_name) != game_map.end()) {
+            std::string cnt = " (" + std::to_string(counter++) + ")";
+            const size_t total_suffix_len = extra_len + cnt.size();
+            const size_t mb = (MAX_NAME_LEN > total_suffix_len) ? (MAX_NAME_LEN - total_suffix_len) : 0;
+            std::string cb = TruncateMtpComponent(base.empty() ? "Account" : base, mb);
+            out_name = cb + cnt + disambig;
+        }
     }
 
     // scans once at registration (never per ReadDirectory), building the
-    // virtual tree: game dir -> type dir -> save info.
+    // virtual tree: game dir -> save dir -> save info.
     void ScanSaves() {
-        const auto accounts = BuildAccountNames();
+        const auto raw_accounts = App::GetAccountList();
+        std::vector<AccountInfo> accounts;
+        accounts.reserve(raw_accounts.size());
+        for (const auto& acc : raw_accounts) {
+            accounts.push_back({acc.uid, std::string(acc.nickname)});
+        }
 
         // ref-counted background loader used by title::Get() for game names.
         const bool has_title = R_SUCCEEDED(title::Init());
@@ -384,6 +511,8 @@ private:
             FsSaveDataType_Device,
             FsSaveDataType_Cache,
         };
+
+        std::map<u64, std::vector<FsSaveDataInfo>> game_save_records;
 
         for (const auto data_type : SAVE_TYPES) {
             // mirrors GetFsSaveAttr() in save_menu.cpp: cache saves live in
@@ -410,11 +539,169 @@ private:
 
                 for (s64 i = 0; i < record_count; i++) {
                     const auto& info = info_list[i];
-                    const auto game = BuildGameDirName(info.application_id);
-                    const auto type = BuildTypeDirName(info, accounts);
-                    // emplace: the first scanned save wins on (unlikely) key clashes.
-                    m_tree[game].emplace(type, info);
+                    game_save_records[info.application_id].push_back(info);
                 }
+            }
+        }
+
+        constexpr size_t MAX_NAME_LEN = sizeof(FsDirectoryEntry::name) - 1;
+
+        for (auto& [app_id, records] : game_save_records) {
+            // Establish a deterministic total order and deduplicate identical scan records.
+            std::sort(records.begin(), records.end(), CompareSaveDataInfo);
+            auto it = std::unique(records.begin(), records.end(), IsSameSaveRecord);
+            records.erase(it, records.end());
+
+            const auto game_name = BuildSaveGameDirName(app_id);
+            auto& game_map = m_tree[game_name];
+
+            // 1. Process non-account buckets first in deterministic order to establish stable bucket names.
+            for (const auto& info : records) {
+                if (info.save_data_type == FsSaveDataType_Account) {
+                    continue;
+                }
+                std::string base;
+                if (info.save_data_type == FsSaveDataType_Bcat) {
+                    base = "BCAT";
+                } else if (info.save_data_type == FsSaveDataType_Device) {
+                    base = "Device";
+                } else if (info.save_data_type == FsSaveDataType_Cache) {
+                    base = info.save_data_index ? ("Cache " + std::to_string(info.save_data_index)) : "Cache";
+                } else {
+                    base = ui::menu::save::GetSaveTypeSubdir(info.save_data_type).toString();
+                }
+
+                std::string name = base;
+                if (game_map.find(name) != game_map.end()) {
+                    name = base + FormatSaveIdSuffix(info.save_data_id);
+                }
+                if (game_map.find(name) != game_map.end()) {
+                    DisambiguateFinalName(game_map, base, info, name);
+                }
+                game_map.emplace(name, info);
+            }
+
+            // 2. Process account saves in deterministic order.
+            struct AccountSaveEntry {
+                FsSaveDataInfo info;
+                std::string base;
+                std::string candidate_name;
+                bool has_usable_nickname{false};
+                bool needs_suffix{false};
+            };
+            std::vector<AccountSaveEntry> acc_entries;
+
+            for (const auto& info : records) {
+                if (info.save_data_type != FsSaveDataType_Account) {
+                    continue;
+                }
+                const AccountInfo* found_acc = nullptr;
+                for (const auto& acc : accounts) {
+                    if (!std::memcmp(&info.uid, &acc.uid, sizeof(AccountUid))) {
+                        found_acc = &acc;
+                        break;
+                    }
+                }
+
+                AccountSaveEntry entry{};
+                entry.info = info;
+                if (found_acc) {
+                    entry.base = SanitizeMtpComponent(found_acc->raw_nickname);
+                }
+
+                if (entry.base.empty()) {
+                    entry.has_usable_nickname = false;
+                    entry.base = "Account";
+                    entry.needs_suffix = true;
+                } else {
+                    entry.has_usable_nickname = true;
+                    if (IsReservedBucketName(entry.base) || game_map.find(entry.base) != game_map.end()) {
+                        entry.needs_suffix = true;
+                    }
+                }
+                acc_entries.push_back(std::move(entry));
+            }
+
+            // Ponytail: O(n^2) duplicate scans are bounded by console account limit (<= 8); if general scaling is needed, upgrade to an unordered_map frequency index.
+            for (size_t i = 0; i < acc_entries.size(); i++) {
+                for (size_t j = i + 1; j < acc_entries.size(); j++) {
+                    if (EqualsCaseInsensitive(acc_entries[i].base, acc_entries[j].base)) {
+                        acc_entries[i].needs_suffix = true;
+                        acc_entries[j].needs_suffix = true;
+                    }
+                }
+            }
+
+            for (size_t i = 0; i < acc_entries.size(); i++) {
+                for (size_t j = i + 1; j < acc_entries.size(); j++) {
+                    if (acc_entries[i].has_usable_nickname && acc_entries[j].has_usable_nickname) {
+                        const size_t suffix_len = 19;
+                        const size_t max_base = (MAX_NAME_LEN > suffix_len) ? (MAX_NAME_LEN - suffix_len) : 0;
+                        const auto ti = TruncateMtpComponent(acc_entries[i].base, max_base);
+                        const auto tj = TruncateMtpComponent(acc_entries[j].base, max_base);
+                        if (EqualsCaseInsensitive(ti, tj)) {
+                            acc_entries[i].needs_suffix = true;
+                            acc_entries[j].needs_suffix = true;
+                        }
+                    }
+                }
+            }
+
+            auto format_acc_name = [&](const AccountSaveEntry& entry) -> std::string {
+                std::string name;
+                if (entry.needs_suffix) {
+                    const std::string suffix = FormatSaveIdSuffix(entry.info.save_data_id);
+                    const size_t suffix_len = suffix.size();
+                    const size_t max_base = (MAX_NAME_LEN > suffix_len) ? (MAX_NAME_LEN - suffix_len) : 0;
+                    std::string truncated_base = TruncateMtpComponent(entry.base, max_base);
+                    if (truncated_base.empty()) {
+                        truncated_base = "Account";
+                    }
+                    name = truncated_base + suffix;
+                } else {
+                    name = TruncateMtpComponent(entry.base, MAX_NAME_LEN);
+                }
+
+                if (IsWindowsReservedDeviceName(name)) {
+                    name = "_" + name;
+                }
+                if (name.size() > MAX_NAME_LEN) {
+                    name = title::TruncateUtf8(name, MAX_NAME_LEN);
+                    name = TrimMtpName(name);
+                }
+                return name;
+            };
+
+            for (auto& entry : acc_entries) {
+                entry.candidate_name = format_acc_name(entry);
+            }
+
+            // If a candidate name collides with another account's candidate name or an existing bucket, ensure suffixing.
+            for (size_t i = 0; i < acc_entries.size(); i++) {
+                if (!acc_entries[i].needs_suffix && game_map.find(acc_entries[i].candidate_name) != game_map.end()) {
+                    acc_entries[i].needs_suffix = true;
+                    acc_entries[i].candidate_name = format_acc_name(acc_entries[i]);
+                }
+                for (size_t j = i + 1; j < acc_entries.size(); j++) {
+                    if (EqualsCaseInsensitive(acc_entries[i].candidate_name, acc_entries[j].candidate_name)) {
+                        if (!acc_entries[i].needs_suffix) {
+                            acc_entries[i].needs_suffix = true;
+                            acc_entries[i].candidate_name = format_acc_name(acc_entries[i]);
+                        }
+                        if (!acc_entries[j].needs_suffix) {
+                            acc_entries[j].needs_suffix = true;
+                            acc_entries[j].candidate_name = format_acc_name(acc_entries[j]);
+                        }
+                    }
+                }
+            }
+
+            for (const auto& entry : acc_entries) {
+                std::string name = entry.candidate_name;
+                if (game_map.find(name) != game_map.end()) {
+                    DisambiguateFinalName(game_map, entry.base, entry.info, name);
+                }
+                game_map.emplace(name, entry.info);
             }
         }
 

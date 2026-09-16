@@ -1,9 +1,19 @@
-Актуальний delivery — **v0.13.846** (host test blockers). Завершені задачі збережено в
+Актуальний delivery — **v0.13.847** (MTP сейви: гра → користувач; планування). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.846 (Host test blockers)
+## Поточний delivery: v0.13.847 (MTP сейви: гра → користувач)
+
+- [x] `MTP-RESEARCH-847` — exact clean primary master/HEAD/ancestry, Graphify refresh, current proxy/callers та targeted history досліджено.
+- [x] `MTP-LAYOUT-847` — account nickname без type prefix; game → user → live contents через чинний proxy.
+- [x] `MTP-NAMES-847` — UTF-8 names, Windows device-name guard, bounded game suffix та sorted collision-safe allocation без raw UID; runtime не перевірено.
+- [x] `MTP-PRESERVE-847` — preserve non-account buckets, scan spaces, mounted-drive export і write/commit semantics; без P2/P3/P4.
+- [x] `MTP-STATIC-847` — Gemini повідомив passing compiler-free model/contract/dead-symbol checks; senior source/diff review і `git diff --check` пройшли. Model не замінює C++ runtime.
+- [x] `DOCS-BUMP-847` — Gemini app bump до 0.13.847; senior delivery docs синхронізовано для focused commit.
+- [ ] `HW-847` — майбутня окрема build задача та Switch/Windows MTP перевірка hierarchy, collisions, live reads і правильного save routing.
+
+## Попередній delivery: v0.13.846 (Host test blockers)
 
 - [x] `GRID-LEFT-CLIP-846` — використати `min_x` для повного left clipping і не малювати clipped focused item.
 - [x] `GRID-LEFT-TEST-846` — додати вузький host regression для clipped першої та видимої наступної колонки.

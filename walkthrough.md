@@ -1,7 +1,14 @@
-Актуальний delivery — **v0.13.846** (2026-09-15). Попередні
+Актуальний delivery — **v0.13.847** (2026-09-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.847 — MTP сейви: гра → користувач
+
+- Чинний live decrypted Saves proxy показує game title зі stable Title-ID suffix → UTF-8 nickname без Account prefix → direct live contents. Missing nickname має neutral Account + non-secret save-ID suffix; UID presentation прибрано.
+- Actual records сортуються до allocation, identical records дедуплікуються; collisions отримують checked suffixes. Save-only game formatter резервує prefix/suffix space без змін Games drive.
+- Account/User, BCAT/User, Device/User, Cache/SdUser, pinned SD/content/archive export, FsNativeSave backend, shared handles/LRU, RW-open → RO fallback і commit/rename semantics збережено. System/SystemBcat/Temporary та P2/P3/P4 не додавались.
+- Known risks незмінні: void CloseFile ігнорує commit Result, synthetic root space fallback, stale read-only settings. Gemini повідомив passing Python model/contract (7 source groups, 5 behavioral groups) і dead-symbol gate; senior повторно перевірив diff і git diff --check. Model не виконує C++ та не повністю відтворює sanitizer. Compile/NRO/compiled tests/hardware не запускались; версія 0.13.847.
 
 ## v0.13.846 — Fix host test blockers
 

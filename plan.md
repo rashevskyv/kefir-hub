@@ -1,8 +1,18 @@
-Поточний delivery — **v0.13.846** (host test blockers). Завершені плани збережено в
+Поточний delivery — **v0.13.847** (MTP сейви: гра → користувач; планування). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.846 — Host test blockers
+## Поточний delivery: v0.13.847 — MTP сейви: гра → користувач
+
+Статус: реалізовано Gemini та прийнято після повторного senior diff review; app version 0.13.847. Records сортуються до name allocation; save-only game formatter резервує prefix/suffix space. Gemini повідомив passing Python contract/model (7 source groups, 5 behavioral groups) і dead-symbol gate; senior перевірив source/diff та `git diff --check`, але тести не запускав. Python model не виконує C++ і не повністю відтворює shared sanitizer. Compile/runtime/hardware verification відкладено.
+1. Reuse `FsSaveProxy`: game display name зі stable Title-ID suffix → account nickname без `Account` → безпосередні live save root contents. Не додавати backend, ZIP або backup layer.
+2. Reuse UTF-8 sanitizer і trimming; локально закрити reserved Windows names, byte limits і case-insensitive collisions. Повний UID лишається внутрішнім; visible collision/fallback suffix використовує non-secret save ID, не UID prefix. Не втрачати записи через unchecked `emplace`.
+3. Зберегти Account/User, BCAT/User, Device/User і Cache/SdUser scan та mount semantics. Non-account buckets лишаються BCAT/Device/Cache + index; account nickname, що збігається з bucket, disambiguate. System/SystemBcat/Temporary не додавати.
+4. Зберегти RW-open → RO fallback, CRUD Result/Commit propagation, shared handle lifetime, LRU=4 та single-thread transfer. Known risks: `CloseFile` не повертає commit Result; root space fallback синтетичний; settings описує Saves як read-only. Цей delivery їх не виправляє.
+5. Preserve working pinned MTP export SD/content/archive (`MountCurrentOverMtp` → `MountFs` → `Init` → `MakeFsProxy`). Save-specific restoration не включати; P2 exact-space/create/metadata, P3 adapters і P4 RAW поза scope.
+6. Gemini bump 0.13.846 → 0.13.847 виконано. Senior acceptance і delivery docs завершено для focused commit; builds/compiled tests не запускались. Switch/Windows MTP verification — окремий наступний workflow.
+
+## Попередній delivery: v0.13.846 — Host test blockers
 
 Статус: реалізовано; compile verification відкладено за workspace policy.
 1. `TraverseGrid` відкидає елементи з `x < min_x` до наявної right-bound перевірки, зберігаючи повне горизонтальне входження й не повертаючи clipped focused item наприкінці.
