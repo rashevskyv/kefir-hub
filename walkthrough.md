@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.849** (2026-09-16). Попередні
+Актуальний delivery — **v0.13.850** (2026-09-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.850 — validated ZIP payload accounting prerequisite
+
+- Обидва TransferUnzipPreflight overloads підтримують optional UnzipPayloadSummary output. Один validation pass рахує kept regular-file bytes/files і explicit-directory entries після normalization/sanitizer/filter/mapping; zero-byte files рахуються, implicit parent directories не додаються. Metadata виключається лише з summary, не з open/read/size/CRC/close validation.
+- Checked s64 aggregate/counts і defensive u64 drain guard відкидають overflow/excess до mutation навіть без requested output. Empty kept destination відкидається до trailing-slash access; новий drain error branch закриває current ZIP entry. Local summary публікується лише після всіх entries і успішного final rewind; failure/cancel не перезаписує caller output.
+- Shared RestoreSaveZip отримує summary і додає один counts/bytes-only diagnostic. Save Menu/File Browser shared owner, extraction/final Commit і existing extend paths збережено.
+- Gemini test-only follow-up виправив реальні NX/DBI names/case fixtures, corrupt skipped metadata, sentinel retention, close/cancel/null-output failures і defensive arithmetic coverage. Повідомлено PASS 6 source groups, 15 synthetic model fixture groups, 3 defensive arithmetic groups; попередні P2-B/P2-A/MTP Python checks також повідомлено PASS. Senior перевірив product/test source, diff і git diff --check; тести не запускав. Text anchors не AST/control-flow proof; path model спрощений. Host-native path tests у цьому delivery не запускались; Python не виконує C++/libnx/async runtime.
+- App 0.13.849 -> 0.13.850; senior acceptance і delivery docs завершено для focused commit. Compile/link/NRO/hardware не перевірено. Користувач запускає окремий test-build, потім disposable-save ZIP/CRC/metadata restore checks.
+- Це prerequisite, не capacity/growth fix: source sizing hints, fallback sizing/alignment, checked live sizes/readback і journal policy лишаються queued. Summary не є allocation plan або required data size. Transactional rollback/journal-aware copy/remount verification, create-from-backup/wire adapters, RAW/MTP/scanner і bundled binaries не змінено.
 
 ## v0.13.849 — P2-B selected restore target safety
 

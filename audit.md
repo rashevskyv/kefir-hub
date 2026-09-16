@@ -1,13 +1,15 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.849**. Дата: 2026-09-16.
+Канічний робочий файл. Версія коду: **v0.13.850**. Дата: 2026-09-16.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
-`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-15:
-12512 nodes, 24888 edges, 633 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
+`graphify query` / `path` / `explain`. `graph.json` оновлено 2026-09-16 перед delivery edits:
+12609 nodes, 25122 edges, 655 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update. Parser попередив про partial extraction 7 files; product diff цього delivery потребує наступного graph refresh.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.850 P2-B prerequisite завершено: optional checked ZIP payload summary із чинного full CRC preflight; kept regular-file bytes/files і explicit directories, checked aggregate/counts/drain, publication only after successful final rewind. Metadata drain збережено; shared owner додає counts-only diagnostic. Gemini повідомив PASS summary (6 source/15 model/3 defensive arithmetic groups) і попередні P2-B/P2-A/MTP Python checks; senior source/diff/git diff --check review без запуску тестів. Text anchors не control-flow proof, path model спрощений, host-native tests/compile/NRO/hardware не запускались. **Закриває лише payload-accounting prerequisite**, не capacity/growth/alignment/journal/rollback: existing unsafe extend paths залишаються queued; create/wire adapters, §2 A1–A7, P3/P4 не закрито. Binaries/RAW/MTP/scanner не змінено.
 
 v0.13.849 P2-B selected-target slice завершено: existing live-slot confirmation/picker, source archive / destination identity separation, explicit account remap, all-target resolution і duplicate rejection перед batch mutation. Shared seeds/accounts lifetime усуває premature move-capture; count/live/nonzero validation перед worker fail-closed. Gemini повідомив PASS P2-B/P2-A/MTP compiler-free checks; senior source/diff review і git diff --check, без запуску тестів. Python lifetime model не виконує asynchronous C++/IPC; compile/hardware відкладено. Binaries не змінено. **Закриває лише selected-existing-target slice**, не весь P2-B: validated create, sizing/growth/alignment, DBI/NX reconciliation і wire adapters залишаються queued; §2 A1–A7, P3/P4 не закрито.
 

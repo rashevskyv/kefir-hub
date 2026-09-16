@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.849** (P2-B selected restore target safety; прийнято source review). Завершені задачі збережено в
+Актуальний delivery — **v0.13.850** (validated ZIP payload accounting prerequisite; прийнято source review). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.849 (P2-B selected restore target safety)
+## Поточний delivery: v0.13.850 (validated ZIP payload accounting)
+
+- [x] `P2B-RESEARCH-850` — exact primary clean master/base ancestry, Graphify refresh, all extend/extra read/native lifetime/ZIP/filter/metadata callers і libnx/JKSV/Checkpoint primary sources досліджено; full growth policy не делегується без підтвердженого contract.
+- [x] `P2B-SUMMARY-850` — optional checked payload bytes/files/explicit-directory summary у preflight; publish only after full CRC/read/close/rewind success, failure/cancel output unchanged.
+- [x] `P2B-OVERFLOW-850` — checked conversions/addition/counts/drained bytes; overflow до mutation, metadata excluded only from summary, zero-byte files counted.
+- [x] `P2B-OWNER-850` — shared RestoreSaveZip requests summary; counts-only diagnostics; no sizing/extend authority, no duplicate scan/backend.
+- [x] `P2B-STATIC-850` — Gemini повідомив PASS summary (6 source/15 model/3 arithmetic groups), P2-B/P2-A/MTP Python checks і git diff --check; senior source/diff/check review без запуску тестів. Text anchors не control-flow proof, model не C++/IPC; host-native tests/build не запускались.
+- [x] `DOCS-BUMP-850` — Gemini app 0.13.850; senior acceptance і чотири delivery docs синхронізовано для focused commit.
+- [ ] `P2B-GROWTH-QUEUED` — existing unsafe extend paths залишаються відкритими; checked actual-space live sizes, authoritative overhead/alignment або prompted/fail-closed sizing, growth-only journal/data, checked extend/readback/open; rollback/journal-aware copy окремо.
+- [ ] `HW-850` — окремий test-build та disposable-save console verification після accepted diff; Python model не C++ IPC runtime.
+
+## Попередній delivery: v0.13.849 (P2-B selected restore target safety)
 
 - [x] `P2B-RESEARCH-849` — primary clean master/HEAD/ancestry і Graphify-first target/metadata/create callers досліджено.
 - [x] `P2B-TARGET-849` — explicit existing live-slot picker/confirmation; source archive context відокремлено від discovered target identity.

@@ -673,7 +673,7 @@ Result TransferZip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsP
     );
 }
 
-Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat) {
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output) {
     unz_global_info64 ginfo;
     if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
         R_THROW(Result_UnzGetGlobalInfo64);
@@ -688,6 +688,7 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
         R_THROW(Result_UnzGoToFirstFile);
     }
 
+    UnzipPayloadSummary local_summary{};
     std::vector<u8> drain_buf(64 * 1024);
 
     for (s64 i = 0; i < entry_count; i++) {
@@ -722,9 +723,34 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
         auto path = fs::AppendPath(base_path, name);
         const bool keep = filter ? filter(name, path) : true;
         if (keep) {
+            const auto path_len = path.length();
+            if (path_len == 0) {
+                log_write("empty destination path\n");
+                R_THROW(FsError_InvalidCharacter);
+            }
+
             if (!path::IsSafeExtractionDestination(path, base_path, save_dbi_compat)) {
                 log_write("unsafe destination path: %s\n", path.s);
                 R_THROW(FsError_InvalidCharacter);
+            }
+
+            if (path[path_len - 1] == '/') {
+                if (local_summary.directory_count == std::numeric_limits<s64>::max()) {
+                    log_write("archive directory count exceeds s64 maximum\n");
+                    R_THROW(FsError_InvalidSize);
+                }
+                local_summary.directory_count++;
+            } else {
+                if (local_summary.file_count == std::numeric_limits<s64>::max()) {
+                    log_write("archive file count exceeds s64 maximum\n");
+                    R_THROW(FsError_InvalidSize);
+                }
+                if (static_cast<u64>(std::numeric_limits<s64>::max()) - static_cast<u64>(local_summary.file_bytes) < info.uncompressed_size) {
+                    log_write("archive file_bytes aggregate overflow exceeds s64 maximum\n");
+                    R_THROW(FsError_InvalidSize);
+                }
+                local_summary.file_count++;
+                local_summary.file_bytes += static_cast<s64>(info.uncompressed_size);
             }
         }
 
@@ -752,10 +778,16 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
                 R_THROW(Result_UnzReadCurrentFile);
             }
             if (read_res > 0) {
+                const auto read_u64 = static_cast<u64>(read_res);
+                if (std::numeric_limits<u64>::max() - bytes_drained < read_u64 || bytes_drained + read_u64 > info.uncompressed_size) {
+                    log_write("archive entry exceeded declared uncompressed size during read: %s\n", name_buf);
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(FsError_InvalidSize);
+                }
                 if (info.crc) {
                     crc32_out = crc32CalculateWithSeed(crc32_out, drain_buf.data(), read_res);
                 }
-                bytes_drained += static_cast<u64>(read_res);
+                bytes_drained += read_u64;
             }
         } while (read_res > 0);
 
@@ -784,9 +816,13 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
         R_THROW(Result_UnzGoToFirstFile);
     }
 
+    if (output) {
+        *output = local_summary;
+    }
+
     R_SUCCEED();
 }
-Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat) {
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output) {
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -794,7 +830,7 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, 
     R_UNLESS(zfile, Result_UnzOpen2_64);
     ON_SCOPE_EXIT(unzClose(zfile));
 
-    return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat);
+    return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat, output);
 }
 
 Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat) {

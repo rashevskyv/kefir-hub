@@ -820,8 +820,13 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)
         return true;
     };
 
+    thread::UnzipPayloadSummary summary{};
     pbox->NewTransfer("Validating save..."_i18n);
-    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true));
+    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary));
+    log_write("save preflight payload: %lld bytes, %lld files, %lld dirs\n",
+        static_cast<long long>(summary.file_bytes),
+        static_cast<long long>(summary.file_count),
+        static_cast<long long>(summary.directory_count));
 
     std::optional<NXSaveMeta> meta{};
 
