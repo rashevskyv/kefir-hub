@@ -1,6 +1,6 @@
 # audit.md
 
-Канічний робочий файл. Версія коду: **v0.13.848**. Дата: 2026-09-16.
+Канічний робочий файл. Версія коду: **v0.13.849**. Дата: 2026-09-16.
 Ponytail-аудит усього дерева. Фікси цим файлом не застосовуються.
 
 Карта коду: repo-root `graphify-out/` (див. `AGENTS.md`). Перед grep —
@@ -8,6 +8,8 @@ Ponytail-аудит усього дерева. Фікси цим файлом н
 12512 nodes, 24888 edges, 633 communities; `graph.html` і `GRAPH_REPORT.md` регенеровано incremental update.
 
 Далі працюємо тільки з чергою в §2.
+
+v0.13.849 P2-B selected-target slice завершено: existing live-slot confirmation/picker, source archive / destination identity separation, explicit account remap, all-target resolution і duplicate rejection перед batch mutation. Shared seeds/accounts lifetime усуває premature move-capture; count/live/nonzero validation перед worker fail-closed. Gemini повідомив PASS P2-B/P2-A/MTP compiler-free checks; senior source/diff review і git diff --check, без запуску тестів. Python lifetime model не виконує asynchronous C++/IPC; compile/hardware відкладено. Binaries не змінено. **Закриває лише selected-existing-target slice**, не весь P2-B: validated create, sizing/growth/alignment, DBI/NX reconciliation і wire adapters залишаються queued; §2 A1–A7, P3/P4 не закрито.
 
 v0.13.848 P2-A slice: shared unfiltered per-space discovery, full SaveEntryKey slots і actual-space native/live routing; Menu/ZIP picker reuse, ambiguous IDs не first-select. Empty SetIndex guard source-reviewed. MTP/RAW policies збережено; Game Details і backup/new-target redesign deferred. Gemini повідомив passing compiler-free checks; senior diff/check прийнято без compile/runtime/hardware guarantees, окремий empty UI regression відсутній. User-approved bundled TegraExplorer.bin включено без binary validation. **Не закриває** §2 A1–A7, P2-B/P3/P4.
 

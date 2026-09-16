@@ -1,9 +1,20 @@
-Актуальний delivery — **v0.13.848** (P2-A exact discovery / actual space; планування). Завершені задачі збережено в
+Актуальний delivery — **v0.13.849** (P2-B selected restore target safety; прийнято source review). Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.848 (P2-A exact discovery / actual space)
+## Поточний delivery: v0.13.849 (P2-B selected restore target safety)
+
+- [x] `P2B-RESEARCH-849` — primary clean master/HEAD/ancestry і Graphify-first target/metadata/create callers досліджено.
+- [x] `P2B-TARGET-849` — explicit existing live-slot picker/confirmation; source archive context відокремлено від discovered target identity.
+- [x] `P2B-REMAP-849` — explicit account selection; batch resolve-before-mutation, duplicate rejection і shared seeds/accounts lifetime; cancel/no-match fail-closed.
+- [x] `P2B-NOCREATE-849` — unresolved backup не переходить до guessed create; count/all-target guards до worker; validated create-from-backup queued.
+- [x] `P2B-STATIC-849` — Gemini повідомив PASS P2-B (4 source/12 model groups), P2-A і MTP; senior source/diff review та git diff --check, без запуску тестів. Model не виконує C++ asynchronous callbacks/IPC.
+- [x] `DOCS-BUMP-849` — Gemini app 0.13.849; senior acceptance і чотири docs завершено для focused commit.
+- [ ] `HW-849` — користувач збирає; console single/multi-slot, account remap, batch cancel/duplicate і exact destination verification на disposable saves.
+- [ ] `P2B-QUEUED` — checked sizing/growth/alignment, DBI/NX reconciliation, confirmed JKSV wire adapter і validated exact-space create; не закрито цим slice.
+
+## Попередній delivery: v0.13.848 (P2-A exact discovery / actual space)
 
 - [x] `P2A-RESEARCH-848` — clean exact primary/master/HEAD/ancestry, Graphify, Menu/File Browser/native callers і libnx IPC facts перевірено.
 - [x] `P2A-DISCOVERY-848` — shared unfiltered per-space discovery з returned space/rank, full UID filter та SaveEntryKey dedup.

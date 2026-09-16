@@ -1,8 +1,17 @@
-Поточний delivery — **v0.13.848** (P2-A exact discovery / actual space; планування). Завершені плани збережено в
+Поточний delivery — **v0.13.849** (P2-B selected restore target safety; прийнято source review). Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.848 — P2-A exact discovery / actual space
+## Поточний delivery: v0.13.849 — P2-B selected restore target safety
+
+Статус: реалізовано Gemini та прийнято після follow-up senior source/diff review; app 0.13.849. Premature move-capture виправлено shared ownership seeds/accounts; batch count і всі live/nonzero targets перевіряються до worker/auto-backup. Gemini повідомив PASS P2-B/P2-A/MTP Python checks; senior тести не запускав. Compile/NRO/runtime/hardware не перевірено; binaries не змінено.
+1. Найменший slice: backup restore вибирає підтверджений existing live slot через чинний PopupList; no-match/cancel/ambiguous без явного вибору не мутують save і не переходять до guessed create.
+2. Source backup context відокремити від selected target FsSaveDataInfo. Full UID/type/index/rank/space target походять виключно від discovery; metadata/path hints лише shortlist/context, не overwrite. Account remap лише через явний user/slot вибір.
+3. Preserve direct nonbackup live-seed exact path; batch спершу resolve/select всі targets, потім restore. Unknown backup fields не використовувати як zero/default exact constraints. Shared RestoreSaveZip owner/P0/P2-A збережено.
+4. Create-from-backup, checked growth/alignment sizing, DBI/NX precedence reconciliation, legacy 128-byte і packed JKSV wire adapters залишаються queued P2-B/P3. Compatibility не заявляти за filename; цей slice не приймає metadata як нову create authority.
+5. RAW format/coverage, MTP coverage/permissions/CloseFile, Game Details і bundled binaries поза scope. No compiler/build/NRO/compiled tests/tests/run.sh; Gemini static contract/synthetic checks і bump 0.13.849 виконано, senior review/docs завершено для focused commit. Python lifetime fixture є моделлю sequential callbacks, не C++ asynchronous execution.
+
+## Попередній delivery: v0.13.848 — P2-A exact discovery / actual space
 
 Статус: реалізовано Gemini та прийнято після повторного senior source/diff review; версія 0.13.848. Empty SetIndex guard повертається до indexed entry access. Gemini повідомив passing compiler-free P2-A/MTP/dead-symbol checks; senior перевірив source і git diff --check, тести не запускав. UI empty-state не має окремого anchored regression у повернутому check; runtime/build/hardware не перевірено. Оновлений bundled TegraExplorer.bin включено за прямою вказівкою користувача, без binary/runtime validation.
 1. Один shared unfiltered per-space reader у save_paths.cpp/.hpp; explicit libnx spaces System/User/SdSystem/Temporary/SdUser/ProperSystem/SafeMode — probes, не гарантія доступності. Filter returned records за type/full UID; retain returned space/rank; reuse SaveEntryKey. Open/read errors явно log без identity/secrets; failed reads не публікують частковий space.

@@ -1559,63 +1559,137 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
     return out;
 }
 
-auto Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid) -> Entry {
-    if (!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)) {
-        Entry target = backup;
-        target.is_backup = false;
-        return target;
-    }
+namespace {
 
-    Entry target = backup;
-    target.is_backup = false;
-    if (explicit_uid) {
-        target.uid = *explicit_uid;
-    }
-
-    AccountProfileBase acc{};
-    acc.uid = target.uid;
-    FsSaveDataSpaceId space_id;
-    FsSaveDataFilter filter;
-    GetFsSaveAttr(acc, target.save_data_type, space_id, filter);
-
-    target.save_data_id = 0;
-    target.save_data_space_id = space_id;
-
-    FsSaveDataInfoReader reader;
-    if (R_SUCCEEDED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
-        ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
-        std::vector<FsSaveDataInfo> info_list(256);
-        bool found = false;
-        while (!found) {
-            s64 record_count = 0;
-            if (R_FAILED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &record_count)) || record_count <= 0) {
-                break;
-            }
-            for (s32 i = 0; i < record_count; i++) {
-                const auto& info = info_list[i];
-                const bool id_match = IsSystemLikeSave(target.save_data_type)
-                    ? (info.system_save_data_id == target.system_save_data_id)
-                    : (info.application_id == target.application_id);
-                if (id_match &&
-                    info.save_data_type == target.save_data_type &&
-                    info.save_data_index == target.save_data_index) {
-                    if (target.save_data_type == FsSaveDataType_Account) {
-                        if (std::memcmp(&info.uid, &target.uid, sizeof(AccountUid)) != 0) {
-                            continue;
-                        }
-                    }
-                    target.save_data_id = info.save_data_id;
-                    target.save_data_space_id = info.save_data_space_id;
-                    target.save_data_rank = info.save_data_rank;
-                    target.size = info.size;
-                    found = true;
-                    break;
-                }
-            }
+auto FormatTargetSlotLabel(const Entry& target, const std::vector<AccountProfileBase>& accounts) -> std::string {
+    std::string game_name;
+    if (target.GetName() && target.GetName()[0] != '\0') {
+        game_name = target.GetName();
+    } else {
+        auto data = title::Get(target.application_id);
+        if (data && data->lang.name[0] != '\0') {
+            game_name = data->lang.name;
+        } else if (target.system_save_data_id != 0) {
+            game_name = "System";
+        } else {
+            game_name = "Unknown";
         }
     }
 
-    return target;
+    std::string type_acc;
+    if (target.save_data_type == FsSaveDataType_Account) {
+        std::string nickname;
+        for (const auto& acc : accounts) {
+            if (!std::memcmp(&target.uid, &acc.uid, sizeof(AccountUid))) {
+                nickname = acc.nickname;
+                break;
+            }
+        }
+        type_acc = nickname.empty() ? "Account" : ("Account: " + nickname);
+    } else {
+        type_acc = GetSaveTypeLabel(target.save_data_type);
+    }
+
+    char id_str[96];
+    std::snprintf(id_str, sizeof(id_str), " [idx:%u rk:%u sp:%u %016lX]",
+        target.save_data_index, target.save_data_rank, target.save_data_space_id, target.save_data_id);
+
+    return game_name + " (" + type_acc + ")" + id_str;
+}
+
+} // namespace
+
+void Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid, std::function<void(std::optional<Entry>)> cb) {
+    if (!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)) {
+        Entry target = backup;
+        target.is_backup = false;
+        cb(target);
+        return;
+    }
+
+    std::vector<FsSaveDataInfo> infos;
+    if (backup.save_data_type == FsSaveDataType_Account) {
+        if (explicit_uid) {
+            infos = DiscoverSaveDataInfo(explicit_uid, FsSaveDataType_Account);
+        } else if (backup.uid.uid[0] != 0 || backup.uid.uid[1] != 0) {
+            infos = DiscoverSaveDataInfo(&backup.uid, FsSaveDataType_Account);
+        } else {
+            infos = DiscoverSaveDataInfo(nullptr, FsSaveDataType_Account);
+        }
+    } else if (backup.save_data_type != 0xFF) {
+        infos = DiscoverSaveDataInfo(nullptr, backup.save_data_type);
+    } else {
+        infos = DiscoverSaveDataInfo(nullptr, std::nullopt);
+    }
+
+    std::vector<Entry> candidates;
+    std::set<std::string> seen_keys;
+
+    for (const auto& info : infos) {
+        const bool id_match = IsSystemLikeSave(info.save_data_type)
+            ? (backup.system_save_data_id != 0 && info.system_save_data_id == backup.system_save_data_id)
+            : (backup.application_id != 0 && info.application_id == backup.application_id);
+        if (!id_match) {
+            continue;
+        }
+
+        if (backup.save_data_type != 0xFF && info.save_data_type != backup.save_data_type) {
+            continue;
+        }
+
+        if (info.save_data_type == FsSaveDataType_Account) {
+            if (explicit_uid && std::memcmp(&info.uid, explicit_uid, sizeof(AccountUid)) != 0) {
+                continue;
+            }
+        }
+
+        const auto key = SaveEntryKey(info);
+        if (!seen_keys.insert(key).second) {
+            continue;
+        }
+
+        Entry target{};
+        static_cast<FsSaveDataInfo&>(target) = info;
+        target.is_backup = false;
+        std::memcpy(&target.lang, &backup.lang, sizeof(target.lang));
+        target.image = backup.image;
+        target.status = backup.status;
+        candidates.emplace_back(std::move(target));
+    }
+
+    if (candidates.empty()) {
+        App::Push<OptionBox>("No existing save slot found on console."_i18n, "OK"_i18n);
+        cb(std::nullopt);
+        return;
+    }
+
+    if (candidates.size() == 1) {
+        const auto accounts = App::GetAccountList();
+        const auto label = FormatTargetSlotLabel(candidates.front(), accounts);
+        App::Push<OptionBox>("Restore save data to\n" + label + "?", "No"_i18n, "Yes"_i18n, 0, [candidates, cb = std::move(cb)](auto choice) {
+            if (!choice || *choice != 1) {
+                cb(std::nullopt);
+                return;
+            }
+            cb(candidates.front());
+        });
+        return;
+    }
+
+    const auto accounts = App::GetAccountList();
+    PopupList::Items items;
+    for (const auto& c : candidates) {
+        items.emplace_back(FormatTargetSlotLabel(c, accounts));
+    }
+
+    auto popup = std::make_unique<PopupList>("Select restore target slot"_i18n, items, [candidates, cb = std::move(cb)](auto op_index) {
+        if (!op_index || *op_index >= static_cast<s64>(candidates.size())) {
+            cb(std::nullopt);
+            return;
+        }
+        cb(candidates[*op_index]);
+    });
+    App::Push(std::move(popup));
 }
 
 void Menu::PromptSaveAction() {
@@ -1896,6 +1970,34 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                 const auto accounts = App::GetAccountList();
                 if (seeds.size() == 1) {
                     const auto& e = seeds.front();
+                    const auto on_account_ready = [this, e](const AccountUid* explicit_uid) {
+                        ResolveRestoreTarget(e, explicit_uid, [this, e](std::optional<Entry> target) {
+                            if (!target) {
+                                return;
+                            }
+
+                            const auto location = MakeSdCardDumpLocation();
+                            const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+                            fs::FsNativeSd sd_fs;
+                            const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
+
+                            if (archives.size() <= 1 && !archives.empty()) {
+                                RestoreSavesPicked(std::move(*target), location, backup_root, archives.front().path);
+                            } else if (!archives.empty()) {
+                                ShowRestorePickerPopup(std::move(*target), location, backup_root, {}, archives);
+                            } else if (!e.backup_path.empty()) {
+                                RestoreSavesPicked(std::move(*target), location, backup_root, e.backup_path);
+                            } else {
+                                fs::FsPath latest_path;
+                                if (FindLatestBackupPath(&sd_fs, e, backup_root, latest_path)) {
+                                    RestoreSavesPicked(std::move(*target), location, backup_root, latest_path);
+                                } else {
+                                    App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+                                }
+                            }
+                        });
+                    };
+
                     if (e.save_data_type == FsSaveDataType_Account) {
                         bool uid_found = false;
                         for (const auto& acc : accounts) {
@@ -1904,55 +2006,18 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                                 break;
                             }
                         }
-                        if (!uid_found || (e.uid.uid[0] == 0 && e.uid.uid[1] == 0)) {
+                        if (uid_found && (e.uid.uid[0] != 0 || e.uid.uid[1] != 0)) {
+                            on_account_ready(&e.uid);
+                        } else {
                             RestoreForUser(e);
-                            return;
                         }
-                    }
-                    const auto location = MakeSdCardDumpLocation();
-                    const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
-                    fs::FsNativeSd sd_fs;
-                    const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
-
-                    auto target = ResolveRestoreTarget(e);
-
-                    if (archives.size() <= 1 && !archives.empty()) {
-                        RestoreSavesPicked(std::move(target), location, backup_root, archives.front().path);
-                    } else if (!archives.empty()) {
-                        ShowRestorePickerPopup(std::move(target), location, backup_root, {}, archives);
-                    } else if (!target.backup_path.empty()) {
-                        const auto backup_path = target.backup_path;
-                        RestoreSavesPicked(std::move(target), location, backup_root, backup_path);
                     } else {
-                        StartRestore({std::move(target)}, location, backup_root);
+                        on_account_ready(nullptr);
                     }
                 } else {
-                    const auto is_local_account = [&](const AccountUid& uid) {
-                        if (uid.uid[0] == 0 && uid.uid[1] == 0) {
-                            return false;
-                        }
-                        for (const auto& acc : accounts) {
-                            if (!std::memcmp(&uid, &acc.uid, sizeof(AccountUid))) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    };
-
-                    std::vector<size_t> prompt_indices;
-                    for (size_t i = 0; i < seeds.size(); i++) {
-                        if (seeds[i].save_data_type == FsSaveDataType_Account && !is_local_account(seeds[i].uid)) {
-                            prompt_indices.push_back(i);
-                        }
-                    }
-
-                    if (!prompt_indices.empty() && accounts.empty()) {
-                        App::Push<OptionBox>("No user accounts found on this console."_i18n, "OK"_i18n);
-                        return;
-                    }
-
-                    auto chosen_uids = std::make_shared<std::vector<AccountUid>>(seeds.size());
-                    PromptBatchRestoreAccountTargets(seeds, std::move(prompt_indices), accounts, chosen_uids, 0);
+                    auto resolved_targets = std::make_shared<std::vector<Entry>>(seeds.size());
+                    auto seen_target_keys = std::make_shared<std::set<std::string>>();
+                    PromptBatchRestoreTargets(std::move(seeds), 0, accounts, resolved_targets, seen_target_keys);
                 }
                 break;
             }
@@ -2171,85 +2236,133 @@ void Menu::RestoreForUser(Entry e) {
         }
 
         const auto chosen_uid = accounts[*op_index].uid;
-        const auto location = MakeSdCardDumpLocation();
-        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+        ResolveRestoreTarget(e, &chosen_uid, [this, e](std::optional<Entry> target) {
+            if (!target) {
+                return;
+            }
 
-        fs::FsNativeSd sd_fs;
-        const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
+            const auto location = MakeSdCardDumpLocation();
+            const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+            fs::FsNativeSd sd_fs;
+            const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
 
-        auto target = ResolveRestoreTarget(e, &chosen_uid);
-
-        if (archives.size() <= 1 && !archives.empty()) {
-            RestoreSavesPicked(std::move(target), location, backup_root, archives.front().path);
-        } else if (!archives.empty()) {
-            ShowRestorePickerPopup(std::move(target), location, backup_root, {}, archives);
-        } else if (!target.backup_path.empty()) {
-            const auto backup_path = target.backup_path;
-            RestoreSavesPicked(std::move(target), location, backup_root, backup_path);
-        } else {
-            StartRestore({std::move(target)}, location, backup_root);
-        }
+            if (archives.size() <= 1 && !archives.empty()) {
+                RestoreSavesPicked(std::move(*target), location, backup_root, archives.front().path);
+            } else if (!archives.empty()) {
+                ShowRestorePickerPopup(std::move(*target), location, backup_root, {}, archives);
+            } else if (!e.backup_path.empty()) {
+                RestoreSavesPicked(std::move(*target), location, backup_root, e.backup_path);
+            } else {
+                fs::FsPath latest_path;
+                if (FindLatestBackupPath(&sd_fs, e, backup_root, latest_path)) {
+                    RestoreSavesPicked(std::move(*target), location, backup_root, latest_path);
+                } else {
+                    App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+                }
+            }
+        });
     });
     App::Push(std::move(popup));
 }
 
-void Menu::PromptBatchRestoreAccountTargets(
-    std::vector<Entry> seeds,
-    std::vector<size_t> prompt_indices,
-    std::vector<AccountProfileBase> accounts,
-    std::shared_ptr<std::vector<AccountUid>> chosen_uids,
-    size_t prompt_step) {
+void Menu::PromptBatchRestoreTargets(
+    std::shared_ptr<std::vector<Entry>> seeds,
+    size_t step,
+    std::shared_ptr<std::vector<AccountProfileBase>> accounts,
+    std::shared_ptr<std::vector<Entry>> resolved_targets,
+    std::shared_ptr<std::set<std::string>> seen_target_keys) {
 
-    if (prompt_step >= prompt_indices.size()) {
-        std::vector<Entry> resolved;
-        resolved.reserve(seeds.size());
-        for (size_t i = 0; i < seeds.size(); i++) {
-            const auto& s = seeds[i];
-            const bool was_prompted = std::ranges::find(prompt_indices, i) != prompt_indices.end();
-            if (was_prompted) {
-                resolved.emplace_back(ResolveRestoreTarget(s, &(*chosen_uids)[i]));
-            } else {
-                resolved.emplace_back(ResolveRestoreTarget(s));
-            }
-        }
-
+    if (step >= seeds->size()) {
         const auto location = MakeSdCardDumpLocation();
         const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
-        RestoreSaves(std::move(resolved), location, backup_root);
+        RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root);
         return;
     }
 
-    const size_t seed_idx = prompt_indices[prompt_step];
-    const auto& entry = seeds[seed_idx];
+    const auto is_local_account = [&](const AccountUid& uid) {
+        if (uid.uid[0] == 0 && uid.uid[1] == 0) {
+            return false;
+        }
+        for (const auto& acc : *accounts) {
+            if (!std::memcmp(&uid, &acc.uid, sizeof(AccountUid))) {
+                return true;
+            }
+        }
+        return false;
+    };
 
-    PopupList::Items items;
-    for (const auto& acc : accounts) {
-        items.emplace_back(acc.nickname);
-    }
-
-    std::string game_name;
-    if (entry.GetName() && entry.GetName()[0] != '\0') {
-        game_name = entry.GetName();
-    } else if (entry.application_id != 0) {
-        char buf[32];
-        std::snprintf(buf, sizeof(buf), "Title %016lX", entry.application_id);
-        game_name = buf;
-    }
-
-    const std::string title = game_name.empty()
-        ? "Restore for user"_i18n
-        : "Restore for user"_i18n + ": " + game_name;
-
-    auto popup = std::make_unique<PopupList>(title, items, [this, seeds = std::move(seeds), prompt_indices = std::move(prompt_indices), accounts = std::move(accounts), chosen_uids, prompt_step, seed_idx](auto op_index) mutable {
-        if (!op_index || *op_index >= static_cast<s64>(accounts.size())) {
+    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys](std::optional<Entry> target) {
+        if (!target) {
             return;
         }
 
-        (*chosen_uids)[seed_idx] = accounts[*op_index].uid;
-        PromptBatchRestoreAccountTargets(std::move(seeds), std::move(prompt_indices), std::move(accounts), chosen_uids, prompt_step + 1);
-    });
-    App::Push(std::move(popup));
+        const auto key = SaveEntryKey(*target);
+        if (!seen_target_keys->insert(key).second) {
+            App::Push<OptionBox>("Duplicate restore target slot selected."_i18n, "OK"_i18n);
+            return;
+        }
+
+        (*resolved_targets)[step] = std::move(*target);
+        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys);
+    };
+
+    const auto& s = (*seeds)[step];
+    if (s.save_data_type == FsSaveDataType_Account) {
+        if (is_local_account(s.uid)) {
+            ResolveRestoreTarget(s, &s.uid, on_target_resolved);
+        } else {
+            if (accounts->empty()) {
+                App::Push<OptionBox>("No user accounts found on this console."_i18n, "OK"_i18n);
+                return;
+            }
+
+            PopupList::Items items;
+            for (const auto& acc : *accounts) {
+                items.emplace_back(acc.nickname);
+            }
+
+            std::string game_name;
+            if (s.GetName() && s.GetName()[0] != '\0') {
+                game_name = s.GetName();
+            } else if (s.application_id != 0) {
+                char buf[32];
+                std::snprintf(buf, sizeof(buf), "Title %016lX", s.application_id);
+                game_name = buf;
+            }
+
+            const std::string title = game_name.empty()
+                ? "Restore for user"_i18n
+                : "Restore for user"_i18n + ": " + game_name;
+
+            auto popup = std::make_unique<PopupList>(title, items, [this, seeds, step, accounts, on_target_resolved](auto op_index) {
+                if (!op_index || *op_index >= static_cast<s64>(accounts->size())) {
+                    return;
+                }
+
+                const auto chosen_uid = (*accounts)[*op_index].uid;
+                ResolveRestoreTarget((*seeds)[step], &chosen_uid, on_target_resolved);
+            });
+            App::Push(std::move(popup));
+        }
+    } else {
+        ResolveRestoreTarget(s, nullptr, on_target_resolved);
+    }
 }
+
+void Menu::PromptBatchRestoreTargets(
+    std::vector<Entry> seeds,
+    size_t step,
+    std::vector<AccountProfileBase> accounts,
+    std::shared_ptr<std::vector<Entry>> resolved_targets,
+    std::shared_ptr<std::set<std::string>> seen_target_keys) {
+    PromptBatchRestoreTargets(
+        std::make_shared<std::vector<Entry>>(std::move(seeds)),
+        step,
+        std::make_shared<std::vector<AccountProfileBase>>(std::move(accounts)),
+        std::move(resolved_targets),
+        std::move(seen_target_keys));
+}
+
 
 void Menu::DeleteBackupGroups(const std::vector<Entry>& groups) {
     const auto prompt = groups.size() == 1

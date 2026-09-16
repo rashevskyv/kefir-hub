@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.848** (2026-09-16). Попередні
+Актуальний delivery — **v0.13.849** (2026-09-16). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.849 — P2-B selected restore target safety
+
+- Backup restore вибирає discovered existing live slot: один candidate вимагає confirmation, кілька — explicit picker з type/account/index/rank/space/save ID. No-match/cancel не запускають restore/create; exact nonbackup live seed з незмінним UID збережено.
+- Source entry/archive lookup лишається окремим від destination FsSaveDataInfo; account remap здійснюється через explicit user selection. Target full UID/type/index/rank/actual space походять від discovery, не source metadata.
+- Batch послідовно resolve/select всі targets, відкидає duplicate SaveEntryKey до запуску. Seeds/accounts живуть у shared vectors через callbacks; premature move-capture виправлено після senior review. RestoreSaves перевіряє однакові counts і всі live/nonzero targets до worker/auto-backup; missing source backup зберігає per-item skip.
+- RestoreSaveInternal відкидає unresolved/zero-ID target; shared ZIP owner відкидає backup entry. Existing target fail-closed open і P0 lifecycle збережено. Validated create-from-backup, sizing/growth/alignment, DBI/NX precedence і JKSV wire adapters лишаються queued; compatibility не заявляється.
+- Gemini повідомив PASS compiler-free P2-B (4 source/12 model groups), P2-A (6/10) і MTP (7/5). Senior перевірив source/diff та git diff --check, тести не запускав. Lifetime fixture моделює sequential callbacks, не реальний asynchronous C++/IPC. Compile/NRO/runtime/hardware не перевірено; користувачу потрібна збірка й console checks.
+- Версія 0.13.849; bundled binaries, MTP scanner/layout/permissions, Game Details і RAW format/coverage не змінено. Senior delivery docs синхронізовано для focused commit.
 
 ## v0.13.848 — P2-A exact discovery / actual space
 

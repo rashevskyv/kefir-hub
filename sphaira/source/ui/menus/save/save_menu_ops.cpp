@@ -343,28 +343,48 @@ void Menu::RestoreSaves(std::vector<Entry> entries) {
 }
 
 void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+    RestoreSaves(entries, entries, location, backup_root);
+}
+
+void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+    if (sources.size() != targets.size()) {
+        App::Push<OptionBox>("Source and target count mismatch."_i18n, "OK"_i18n);
+        return;
+    }
+
+    for (const auto& dst : targets) {
+        if (dst.is_backup || dst.save_data_id == 0) {
+            App::Push<OptionBox>("Cannot restore directly to backup or invalid save target."_i18n, "OK"_i18n);
+            return;
+        }
+    }
+
     auto restored = std::make_shared<size_t>(0);
     auto skipped = std::make_shared<size_t>(0);
 
-    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, entries, location, backup_root, restored, skipped](auto pbox) mutable -> Result {
+    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped](auto pbox) mutable -> Result {
         const auto fs = MakeFsForLocation(location);
 
-        for (auto& e : entries) {
-            detail::LoadControlEntry(e);
+        for (size_t i = 0; i < sources.size(); i++) {
+            auto& src = sources[i];
+            auto& dst = targets[i];
+            detail::LoadControlEntry(dst);
 
             fs::FsPath file_path;
-            if (!FindLatestBackupPath(fs.get(), e, backup_root, file_path)) {
+            if (!src.backup_path.empty()) {
+                file_path = src.backup_path;
+            } else if (!FindLatestBackupPath(fs.get(), src, backup_root, file_path)) {
                 (*skipped)++;
                 continue;
             }
 
-            if (App::GetSaveAutoBackupOnRestore() && e.save_data_id != 0) {
+            if (App::GetSaveAutoBackupOnRestore() && dst.save_data_id != 0) {
                 pbox->SetActionName("Auto backup"_i18n);
-                R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), true, backup_root));
+                R_TRY(BackupSaveInternal(pbox, location, dst, App::GetSaveCompressBackup(), true, backup_root));
             }
 
             pbox->SetActionName("Restore"_i18n);
-            R_TRY(RestoreSaveInternal(pbox, e, file_path));
+            R_TRY(RestoreSaveInternal(pbox, dst, file_path));
             (*restored)++;
         }
 
@@ -779,6 +799,8 @@ auto Menu::BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_
 }
 
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) {
+    R_UNLESS(!e.is_backup, FsError_PathNotFound);
+
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -977,6 +999,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)
 }
 
 Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const {
+    R_UNLESS(!e.is_backup && e.save_data_id != 0, FsError_PathNotFound);
     pbox->SetTitle(e.GetName());
     if (e.image) {
         pbox->SetImage(e.image);

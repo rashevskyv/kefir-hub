@@ -7,7 +7,10 @@
 #include "option.hpp"
 #include "dumper.hpp"
 #include <array>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <set>
 #include <vector>
 #include <span>
 #include <unordered_set>
@@ -193,6 +196,7 @@ private:
     void BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void RestoreSaves(std::vector<Entry> entries);
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
     void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
@@ -213,7 +217,8 @@ private:
     void VerifyIntegrity(const std::vector<Entry>& seeds);
     void DeleteOlderBackups(const std::vector<Entry>& seeds);
     void RestoreForUser(Entry e);
-    void PromptBatchRestoreAccountTargets(std::vector<Entry> seeds, std::vector<size_t> prompt_indices, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<AccountUid>> chosen_uids, size_t prompt_step);
+    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys);
+    void PromptBatchRestoreTargets(std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys);
     void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();
@@ -227,7 +232,10 @@ private:
     // newest first. generalises FindLatestBackupPath.
     auto CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate>;
     auto CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root = "/dumps") const -> std::vector<BackupCandidate>;
-    static auto ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid = nullptr) -> Entry;
+    static void ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid, std::function<void(std::optional<Entry>)> cb);
+    static void ResolveRestoreTarget(const Entry& backup, std::function<void(std::optional<Entry>)> cb) {
+        ResolveRestoreTarget(backup, nullptr, std::move(cb));
+    }
     auto GetAccountName(const AccountUid& uid) const -> std::string;
     auto GetAccountSummary() const -> std::string;
     auto GetDataTypeSummary() const -> std::string;
