@@ -123,15 +123,43 @@ def test_source_contracts():
           "UnzipPayloadSummary must contain zero-initialized s64 file_count")
     check("s64 directory_count{0};" in hpp_src,
           "UnzipPayloadSummary must contain zero-initialized s64 directory_count")
-    check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr);" in hpp_src,
-          "threaded_file_transfer.hpp must declare zfile TransferUnzipPreflight with trailing optional UnzipPayloadSummary* output = nullptr")
-    check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr);" in hpp_src,
-          "threaded_file_transfer.hpp must declare zip_out TransferUnzipPreflight with trailing optional UnzipPayloadSummary* output = nullptr")
+    check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr, UnzipPayloadInventory* inventory_out = nullptr);" in hpp_src,
+          "threaded_file_transfer.hpp must declare zfile TransferUnzipPreflight with trailing optional UnzipPayloadSummary* output and UnzipPayloadInventory* inventory_out")
+    check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr, UnzipPayloadInventory* inventory_out = nullptr);" in hpp_src,
+          "threaded_file_transfer.hpp must declare zip_out TransferUnzipPreflight with trailing optional UnzipPayloadSummary* output and UnzipPayloadInventory* inventory_out")
+
+    # Gate rejecting redundant/defaulted 6-argument overloads
+    check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr);" not in hpp_src,
+          "threaded_file_transfer.hpp must not declare redundant 6-argument zfile TransferUnzipPreflight overload")
+    check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr);" not in hpp_src,
+          "threaded_file_transfer.hpp must not declare redundant 6-argument zip_out TransferUnzipPreflight overload")
 
     # 2. threaded_file_transfer.cpp: open-handle TransferUnzipPreflight body checks
     tft_cpp = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer.cpp")
     with open(tft_cpp, "r", encoding="utf-8") as f:
         cpp_src = f.read()
+
+    # Pipeline in ResolveArchiveDestinationEntry: Resolve -> Sanitize -> Append -> Filter -> Keep -> Classify
+    res_start = cpp_src.find("Result ResolveArchiveDestinationEntry(")
+    res_end = cpp_src.find("std::vector<std::string> GetParentDirectories(", res_start)
+    check(res_start != -1 and res_end != -1 and res_start < res_end,
+          "threaded_file_transfer.cpp must define ResolveArchiveDestinationEntry before GetParentDirectories")
+    res_body = cpp_src[res_start:res_end]
+
+    pos_resolve = res_body.find("ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name)")
+    pos_sanitize = res_body.find("SanitizeZipEntryName(name)", pos_resolve)
+    pos_append = res_body.find("fs::AppendPath(base_path, name)", pos_sanitize)
+    pos_filter = res_body.find("filter ? filter(name, out.path) : true", pos_append)
+    pos_keep = res_body.find("if (out.keep) {", pos_filter)
+    pos_path_len = res_body.find("path_len == 0", pos_keep)
+    pos_is_safe = res_body.find("path::IsSafeExtractionDestination(out.path, base_path, save_dbi_compat)", pos_path_len)
+    pos_classify_dir = res_body.find("out.path[path_len - 1] == '/'", pos_is_safe)
+
+    check(pos_resolve != -1 and pos_sanitize != -1 and pos_append != -1 and pos_filter != -1 and
+          pos_keep != -1 and pos_path_len != -1 and pos_is_safe != -1 and pos_classify_dir != -1,
+          "ResolveArchiveDestinationEntry must contain full Resolve -> Sanitize -> Append -> Filter -> Keep -> Classify pipeline")
+    check(pos_resolve < pos_sanitize < pos_append < pos_filter < pos_keep < pos_path_len < pos_is_safe < pos_classify_dir,
+          "Pipeline stages in ResolveArchiveDestinationEntry must occur in strict sequential order")
 
     start_idx = cpp_src.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile,")
     end_idx = cpp_src.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out,")
@@ -144,26 +172,22 @@ def test_source_contracts():
     check("info.uncompressed_size > static_cast<u64>(std::numeric_limits<s64>::max())" in preflight_body,
           "TransferUnzipPreflight body must validate per-entry uncompressed_size against s64 max")
 
-    # Pipeline ordering: Resolve -> Sanitize -> Append -> Filter -> Keep -> Classify
-    pos_resolve = preflight_body.find("ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name)")
-    pos_sanitize = preflight_body.find("SanitizeZipEntryName(name)", pos_resolve)
-    pos_append = preflight_body.find("fs::AppendPath(base_path, name)", pos_sanitize)
-    pos_filter = preflight_body.find("filter ? filter(name, path) : true", pos_append)
-    pos_keep = preflight_body.find("if (keep) {", pos_filter)
-    pos_path_len = preflight_body.find("path_len == 0", pos_keep)
-    pos_is_safe = preflight_body.find("path::IsSafeExtractionDestination(path, base_path, save_dbi_compat)", pos_path_len)
-    pos_classify_dir = preflight_body.find("path[path_len - 1] == '/'", pos_is_safe)
-    pos_dir_inc = preflight_body.find("local_summary.directory_count++;", pos_classify_dir)
+    check("R_TRY(ResolveArchiveDestinationEntry(info, name_buf, base_path, filter, save_dbi_compat, resolved));" in preflight_body,
+          "TransferUnzipPreflight body must call ResolveArchiveDestinationEntry")
+
+    pos_call_resolve = preflight_body.find("ResolveArchiveDestinationEntry(info, name_buf, base_path, filter, save_dbi_compat, resolved)")
+    pos_keep_branch = preflight_body.find("if (resolved.keep) {", pos_call_resolve)
+    pos_dir_branch = preflight_body.find("if (resolved.is_directory) {", pos_keep_branch)
+    pos_dir_inc = preflight_body.find("local_summary.directory_count++;", pos_dir_branch)
     pos_file_inc = preflight_body.find("local_summary.file_count++;", pos_dir_inc)
     pos_file_bytes = preflight_body.find("local_summary.file_bytes += static_cast<s64>(info.uncompressed_size);", pos_file_inc)
     pos_open = preflight_body.find("if (UNZ_OK != unzOpenCurrentFile(zfile))", pos_file_bytes)
 
-    check(pos_resolve != -1 and pos_sanitize != -1 and pos_append != -1 and pos_filter != -1 and
-          pos_keep != -1 and pos_path_len != -1 and pos_is_safe != -1 and pos_classify_dir != -1 and
+    check(pos_call_resolve != -1 and pos_keep_branch != -1 and pos_dir_branch != -1 and
           pos_dir_inc != -1 and pos_file_inc != -1 and pos_file_bytes != -1 and pos_open != -1,
-          "TransferUnzipPreflight body must contain full Resolve -> Sanitize -> Append -> Filter -> Keep -> Classify pipeline")
-    check(pos_resolve < pos_sanitize < pos_append < pos_filter < pos_keep < pos_path_len < pos_is_safe < pos_classify_dir < pos_file_bytes < pos_open,
-          "Pipeline stages must occur in strict sequential order within the kept-entry block before unzOpenCurrentFile")
+          "TransferUnzipPreflight must branch on resolved.keep, classify directory vs file, and open current file")
+    check(pos_call_resolve < pos_keep_branch < pos_dir_branch < pos_dir_inc < pos_file_inc < pos_file_bytes < pos_open,
+          "Classification and accounting in TransferUnzipPreflight must occur in strict sequential order before unzOpenCurrentFile")
 
     # Counter overflow guards
     check("local_summary.directory_count == std::numeric_limits<s64>::max()" in preflight_body,
@@ -196,10 +220,10 @@ def test_source_contracts():
           pos_rewind < pos_output_guard < pos_assign < pos_succeed,
           "Summary publication (*output = local_summary) must occur strictly after final rewind failure block, guarded by 'if (output)', before R_SUCCEED")
 
-    # Path overload forwards output
+    # Path overload forwards output and inventory_out
     path_overload_body = cpp_src[end_idx:]
-    check("return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat, output);" in path_overload_body,
-          "TransferUnzipPreflight path overload must forward output pointer to zfile overload")
+    check("return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat, output, inventory_out);" in path_overload_body,
+          "TransferUnzipPreflight path overload must forward output and inventory_out pointers to zfile overload")
 
     # 3. save_paths.hpp: metadata constants
     save_paths_hpp = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
@@ -222,7 +246,7 @@ def test_source_contracts():
           "RestoreSaveZip save_filter must use exact match for NX_SAVE_META_NAME and case-insensitive strcasecmp for DBI names")
     check("thread::UnzipPayloadSummary summary{};" in save_ops_src,
           "RestoreSaveZip must instantiate UnzipPayloadSummary")
-    check('TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary)' in save_ops_src,
+    check('TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary' in save_ops_src,
           "RestoreSaveZip must pass &summary to TransferUnzipPreflight")
     check('log_write("save preflight payload: %lld bytes, %lld files, %lld dirs\\n",' in save_ops_src,
           "RestoreSaveZip must log counts/bytes-only diagnostic after preflight")

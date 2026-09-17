@@ -57,7 +57,7 @@ def test_source_contracts() -> None:
     rsz_body = save_ops_src[rsz_start:rsi_start]
 
     # 1.1 Ordering: Checked preflight before exact-space live extra read, capacity guard, writable mount, and destructive clear
-    pos_preflight = rsz_body.find("R_TRY(thread::TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary));")
+    pos_preflight = rsz_body.find("R_TRY(thread::TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary")
     check(pos_preflight != -1,
           "RestoreSaveZip must execute checked TransferUnzipPreflight (R_TRY) with &summary")
 
@@ -77,7 +77,7 @@ def test_source_contracts() -> None:
     check(pos_delete_coll != -1,
           "RestoreSaveZip must call DeleteAllCollections before restore extraction")
 
-    pos_unzip_all = rsz_body.find("thread::TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true)")
+    pos_unzip_all = rsz_body.find("thread::TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true")
     check(pos_unzip_all != -1,
           "RestoreSaveZip must extract ZIP contents via TransferUnzipAll with save_filter")
 

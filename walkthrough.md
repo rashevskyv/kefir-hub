@@ -1,7 +1,19 @@
-Актуальний delivery — **v0.13.853** (2026-09-17). Попередні
+Актуальний delivery — **v0.13.854** (2026-09-17). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.854 — fresh-remount ZIP verification
+
+Shared RestoreSaveZip success тепер вимагає checked copy/flush/per-file commit/final commit, destruction of writable mount, selected actual-space identity reread, новий full-attr RO mount та exact inventory/size/streaming bytes verification. RO scope exit і checked source callback close завершуються перед success. Native void close не підтверджує power-loss durability.
+
+Preflight manifest через shared destination resolver містить files/sizes та explicit+implicit dirs, rejects duplicates/sanitizer aliases/kind/parent conflicts до mutation. Common verifier reused для recovery і final save; filtered root metadata та directory payload drain/CRC-check, empty files/dirs і source traversal termination/rewind checked. v853 mandatory retained SD recovery та v852 lower-bound capacity admission збережено.
+
+Both UI routes/picked/batch відрізняють failure before mutation від possible changed/unverified target. Published recovery paths retained; mixed ZIP/RAW failure використовує neutral retained prefix, RAW semantics збережено. Gemini implementation reviewed; explicit user-authorized senior completion виправив remaining prefix/traversal/test policy issues.
+
+Senior фактично виконав сім compiler-free Python checks PASS: post-restore verification, recovery, payload summary, existing capacity, selected target, discovery, MTP. New check містить real ZIP policy fixtures, 16 fault model gates та source lifecycle assertions. en/uk JSON/new-key parity і git diff --check PASS. Source/model не виконує C++/IPC/threads; C++ test лише text-adjusted. Compile/configure/build/WSL/NRO/compiled tests/tests/run.sh/hardware НЕ запускались. App 0.13.854, four docs updated для focused commit; no push.
+
+Далі користувач компілює окремо; disposable Switch checks обома routes/remap/empty/implicit dirs/large transfers/remount failure/cancel/manual recovery. Journal budget/cadence, sizing/growth і isolation queued; no automatic rollback/atomic batch/snapshot/power-loss guarantee.
 
 ## v0.13.853 — verified recovery admission
 

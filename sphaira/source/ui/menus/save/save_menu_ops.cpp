@@ -394,8 +394,10 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
         auto restored = std::make_shared<size_t>(0);
         auto skipped = std::make_shared<size_t>(0);
         auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
+        auto last_mutation_started = std::make_shared<bool>(false);
+        auto last_item_is_raw = std::make_shared<bool>(false);
 
-        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped, recovery_paths](auto pbox) mutable -> Result {
+        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw](auto pbox) mutable -> Result {
             const auto fs = MakeFsForLocation(location);
 
             for (size_t i = 0; i < sources.size(); i++) {
@@ -412,6 +414,9 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 }
 
                 const bool is_raw = IsDisaSaveFile(fs.get(), file_path);
+                *last_item_is_raw = is_raw;
+                *last_mutation_started = false;
+
                 if (App::GetSaveAutoBackupOnRestore() && dst.save_data_id != 0 && is_raw) {
                     pbox->SetActionName("Auto backup"_i18n);
                     R_TRY(BackupSaveInternal(pbox, location, dst, App::GetSaveCompressBackup(), true, backup_root));
@@ -419,16 +424,20 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
 
                 pbox->SetActionName("Restore"_i18n);
                 fs::FsPath item_recovery_path;
-                const Result restore_rc = RestoreSaveInternal(pbox, dst, file_path, &item_recovery_path);
+                bool item_mutation_started = false;
+                const Result restore_rc = RestoreSaveInternal(pbox, dst, file_path, &item_recovery_path, &item_mutation_started);
                 if (!item_recovery_path.empty()) {
                     recovery_paths->push_back(item_recovery_path);
                 }
-                R_TRY(restore_rc);
+                if (R_FAILED(restore_rc)) {
+                    *last_mutation_started = item_mutation_started;
+                    return restore_rc;
+                }
                 (*restored)++;
             }
 
             R_SUCCEED();
-        }, [restored, skipped, recovery_paths](Result rc){
+        }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw](Result rc){
             if (R_FAILED(rc)) {
                 App::PushErrorBox(rc, "Restore failed!"_i18n);
             } else {
@@ -444,13 +453,27 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
             }
 
             if (!recovery_paths->empty()) {
-                std::string rec_msg = (R_SUCCEEDED(rc) ? "Restore completed.\nSafety recovery archive(s):\n"_i18n : "Restore stopped.\nSafety recovery archive(s) retained:\n"_i18n);
+                std::string prefix;
+                if (R_SUCCEEDED(rc)) {
+                    prefix = "Restore completed.\nSafety recovery archive(s):\n"_i18n;
+                } else if (*last_item_is_raw) {
+                    prefix = "Restore stopped.\nSafety recovery archive(s) retained:\n"_i18n;
+                } else if (!*last_item_is_raw && *last_mutation_started) {
+                    prefix = "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n"_i18n;
+                } else {
+                    prefix = "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n"_i18n;
+                }
+                std::string rec_msg = prefix;
                 for (const auto& rp : *recovery_paths) {
                     rec_msg += rp.s;
                     rec_msg += "\n";
                 }
                 rec_msg += "\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
                 App::Push<OptionBox>(rec_msg, "OK"_i18n);
+            } else if (R_FAILED(rc)) {
+                if (!*last_item_is_raw && !*last_mutation_started) {
+                    App::Push<OptionBox>("Restore stopped before current target save was modified."_i18n, "OK"_i18n);
+                }
             }
         });
     });
@@ -720,8 +743,9 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
         if (!op_index || *op_index != 1) return;
 
         auto recovery_path = std::make_shared<fs::FsPath>();
+        auto mutation_started = std::make_shared<bool>(false);
 
-        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen, recovery_path, is_raw](auto pbox) mutable -> Result {
+        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen, recovery_path, mutation_started, is_raw](auto pbox) mutable -> Result {
             detail::LoadControlEntry(e);
 
             if (App::GetSaveAutoBackupOnRestore() && e.save_data_id != 0 && is_raw) {
@@ -730,18 +754,32 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
             }
 
             pbox->SetActionName("Restore"_i18n);
-            R_TRY(RestoreSaveInternal(pbox, e, chosen, recovery_path.get()));
+            R_TRY(RestoreSaveInternal(pbox, e, chosen, recovery_path.get(), mutation_started.get()));
             R_SUCCEED();
-        }, [recovery_path](Result rc){
+        }, [recovery_path, mutation_started, is_raw](Result rc){
             if (R_FAILED(rc)) {
                 App::PushErrorBox(rc, "Restore failed!"_i18n);
             } else {
                 App::Notify("Restore successful!"_i18n);
             }
 
-            if (!recovery_path->empty()) {
-                const std::string msg = (R_SUCCEEDED(rc) ? "Restore completed.\nSafety recovery archive:\n"_i18n : "Restore stopped.\nSafety recovery archive retained:\n"_i18n) + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
-                App::Push<OptionBox>(msg, "OK"_i18n);
+            if (!is_raw) {
+                if (!recovery_path->empty()) {
+                    std::string prefix;
+                    if (R_SUCCEEDED(rc)) {
+                        prefix = "Restore completed.\nSafety recovery archive:\n"_i18n;
+                    } else if (*mutation_started) {
+                        prefix = "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n"_i18n;
+                    } else {
+                        prefix = "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n;
+                    }
+                    const std::string msg = prefix + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+                    App::Push<OptionBox>(msg, "OK"_i18n);
+                } else if (R_FAILED(rc)) {
+                    if (!*mutation_started) {
+                        App::Push<OptionBox>("Restore stopped before target save was modified."_i18n, "OK"_i18n);
+                    }
+                }
             }
         });
     });
@@ -1245,20 +1283,99 @@ static Result WriteSaveBackupZip(
     R_SUCCEED();
 }
 
+struct SaveReaderContext {
+    zlib_filefunc64_def base_funcs{};
+    bool io_error{false};
+    bool close_error{false};
+
+    [[nodiscard]] bool HasError() const {
+        return io_error || close_error;
+    }
+
+    void InitFileFunc(zlib_filefunc64_def* funcs) {
+        mz::FileFuncStdio(&base_funcs);
+        *funcs = base_funcs;
+        funcs->opaque = this;
+        funcs->zopen64_file = [](voidpf opaque, const void* filename, int mode) -> voidpf {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            return self->base_funcs.zopen64_file(self->base_funcs.opaque, filename, mode);
+        };
+        funcs->zread_file = [](voidpf opaque, voidpf stream, void* buf, uLong size) -> uLong {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            const auto res = self->base_funcs.zread_file(self->base_funcs.opaque, stream, buf, size);
+            if (res < size) {
+                if (self->base_funcs.zerror_file && self->base_funcs.zerror_file(self->base_funcs.opaque, stream)) {
+                    self->io_error = true;
+                }
+            }
+            return res;
+        };
+        funcs->zseek64_file = [](voidpf opaque, voidpf stream, ZPOS64_T offset, int origin) -> long {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            const auto res = self->base_funcs.zseek64_file(self->base_funcs.opaque, stream, offset, origin);
+            if (res != 0) {
+                self->io_error = true;
+            }
+            return res;
+        };
+        funcs->ztell64_file = [](voidpf opaque, voidpf stream) -> ZPOS64_T {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            const auto res = self->base_funcs.ztell64_file(self->base_funcs.opaque, stream);
+            if (res == static_cast<ZPOS64_T>(-1)) {
+                self->io_error = true;
+            } else if (self->base_funcs.zerror_file && self->base_funcs.zerror_file(self->base_funcs.opaque, stream)) {
+                self->io_error = true;
+            }
+            return res;
+        };
+        funcs->zclose_file = [](voidpf opaque, voidpf stream) -> int {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            int res = 0;
+            if (self->base_funcs.zclose_file) {
+                res = self->base_funcs.zclose_file(self->base_funcs.opaque, stream);
+                if (res != 0) {
+                    self->close_error = true;
+                }
+            }
+            return res;
+        };
+        funcs->zerror_file = [](voidpf opaque, voidpf stream) -> int {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            int res = 0;
+            if (self->base_funcs.zerror_file) {
+                res = self->base_funcs.zerror_file(self->base_funcs.opaque, stream);
+                if (res != 0) {
+                    self->io_error = true;
+                }
+            }
+            return res;
+        };
+    }
+};
+
 } // namespace
 
-Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path) {
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started) {
+    if (out_mutation_started) {
+        *out_mutation_started = false;
+    }
     if (haze::IsRunning()) {
         return FsError_TargetLocked;
     }
     R_UNLESS(!e.is_backup, FsError_PathNotFound);
 
+    SaveReaderContext source_reader_ctx;
     zlib_filefunc64_def file_func;
-    mz::FileFuncStdio(&file_func);
+    source_reader_ctx.InitFileFunc(&file_func);
 
     auto zfile = unzOpen2_64(path, &file_func);
     R_UNLESS(zfile, Result_UnzOpen2_64);
-    ON_SCOPE_EXIT(unzClose(zfile));
+    bool source_reader_open = true;
+    ON_SCOPE_EXIT {
+        if (source_reader_open && zfile) {
+            unzClose(zfile);
+        }
+    };
     log_write("opened zip\n");
 
     const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
@@ -1273,44 +1390,125 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     };
 
     thread::UnzipPayloadSummary summary{};
+    thread::UnzipPayloadInventory source_inventory{};
     pbox->NewTransfer("Validating save..."_i18n);
-    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary));
+    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary, &source_inventory));
     log_write("save preflight payload: %lld bytes, %lld files, %lld dirs\n",
         static_cast<long long>(summary.file_bytes),
         static_cast<long long>(summary.file_count),
         static_cast<long long>(summary.directory_count));
 
     std::optional<NXSaveMeta> meta{};
+    std::optional<FsSaveDataExtraData> dbi_extra{};
 
-    // get manifest
-    if (UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, NX_SAVE_META_NAME, 0)) {
-        log_write("found meta file\n");
-        if (UNZ_OK == unzOpenCurrentFile(zfile)) {
+    if (e.save_data_id == 0) {
+        const int meta_locate_rc = unzLocateFile(zfile, NX_SAVE_META_NAME, 0);
+        if (meta_locate_rc != UNZ_OK && meta_locate_rc != UNZ_END_OF_LIST_OF_FILE) {
+            R_THROW(Result_UnzOpen2_64);
+        }
+        if (meta_locate_rc == UNZ_OK) {
+            log_write("found meta file\n");
+            if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+                R_THROW(Result_UnzOpenCurrentFile);
+            }
+            bool meta_open = true;
+            ON_SCOPE_EXIT {
+                if (meta_open && zfile) {
+                    unzCloseCurrentFile(zfile);
+                }
+            };
+
             log_write("opened meta file\n");
-            ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+            NXSaveMeta temp_meta{};
+            u64 bytes_read = 0;
+            int len = unzReadCurrentFile(zfile, &temp_meta, sizeof(temp_meta));
+            if (len < 0) {
+                meta_open = false;
+                unzCloseCurrentFile(zfile);
+                R_THROW(Result_UnzReadCurrentFile);
+            }
+            bytes_read += len;
 
-            NXSaveMeta temp_meta;
-            const auto len = unzReadCurrentFile(zfile, &temp_meta, sizeof(temp_meta));
-            if (len == sizeof(temp_meta) && temp_meta.magic == NX_SAVE_META_MAGIC && temp_meta.version == NX_SAVE_META_VERSION) {
+            u8 drain_buf[512];
+            int drain_r = 0;
+            do {
+                drain_r = unzReadCurrentFile(zfile, drain_buf, sizeof(drain_buf));
+                if (drain_r < 0) {
+                    meta_open = false;
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(Result_UnzReadCurrentFile);
+                }
+                bytes_read += drain_r;
+            } while (drain_r > 0);
+
+            meta_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
+
+            if (bytes_read == sizeof(temp_meta) && temp_meta.magic == NX_SAVE_META_MAGIC && temp_meta.version == NX_SAVE_META_VERSION) {
                 meta = temp_meta;
                 log_write("loaded meta!\n");
             }
         }
-    }
 
-    // dbi backups store the raw FsSaveDataExtraData instead of the sphaira meta.
-    std::optional<FsSaveDataExtraData> dbi_extra{};
-    if (!meta.has_value() && UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2)) {
-        if (UNZ_OK == unzOpenCurrentFile(zfile)) {
-            ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+        // dbi backups store the raw FsSaveDataExtraData instead of the sphaira meta.
+        if (!meta.has_value()) {
+            const int dbi_locate_rc = unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2);
+            if (dbi_locate_rc != UNZ_OK && dbi_locate_rc != UNZ_END_OF_LIST_OF_FILE) {
+                R_THROW(Result_UnzOpen2_64);
+            }
+            if (dbi_locate_rc == UNZ_OK) {
+                if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+                    R_THROW(Result_UnzOpenCurrentFile);
+                }
+                bool dbi_open = true;
+                ON_SCOPE_EXIT {
+                    if (dbi_open && zfile) {
+                        unzCloseCurrentFile(zfile);
+                    }
+                };
 
-            FsSaveDataExtraData temp{};
-            if (sizeof(temp) == unzReadCurrentFile(zfile, &temp, sizeof(temp))) {
-                dbi_extra = temp;
-                log_write("loaded dbi save extra data\n");
+                FsSaveDataExtraData temp{};
+                u64 bytes_read = 0;
+                int len = unzReadCurrentFile(zfile, &temp, sizeof(temp));
+                if (len < 0) {
+                    dbi_open = false;
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(Result_UnzReadCurrentFile);
+                }
+                bytes_read += len;
+
+                u8 drain_buf[512];
+                int drain_r = 0;
+                do {
+                    drain_r = unzReadCurrentFile(zfile, drain_buf, sizeof(drain_buf));
+                    if (drain_r < 0) {
+                        dbi_open = false;
+                        unzCloseCurrentFile(zfile);
+                        R_THROW(Result_UnzReadCurrentFile);
+                    }
+                    bytes_read += drain_r;
+                } while (drain_r > 0);
+
+                dbi_open = false;
+                const int close_res = unzCloseCurrentFile(zfile);
+                if (close_res == UNZ_CRCERROR) {
+                    R_THROW(0x8);
+                }
+                R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
+
+                if (bytes_read == sizeof(temp)) {
+                    dbi_extra = temp;
+                    log_write("loaded dbi save extra data\n");
+                }
             }
         }
     }
+
+    R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);
 
     FsSaveDataAttribute attr{};
     attr.application_id = e.application_id;
@@ -1415,332 +1613,288 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         }
     }
 
-    // open the save file system for writing
-    fs::FsNativeSave save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
-    R_TRY(save_fs.GetFsOpenResult());
+    // Lexical RW scope: open the save file system for writing
+    {
+        fs::FsNativeSave save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
+        R_TRY(save_fs.GetFsOpenResult());
 
-    filebrowser::FsDirCollections collections;
-    if (e.save_data_id != 0) {
-        filebrowser::FsDirCollections live_collections;
-        R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", live_collections, true));
+        filebrowser::FsDirCollections collections;
+        if (e.save_data_id != 0) {
+            filebrowser::FsDirCollections live_collections;
+            R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", live_collections, true));
 
-        // Validate live entries against reserved metadata and invalid characters
-        for (const auto& col : live_collections) {
-            if (col.path != "/") {
-                for (const char c : std::string_view{col.path.s}) {
-                    if (IsInvalidSavePathChar(c)) {
-                        return FsError_InvalidCharacter;
-                    }
-                }
-            }
-            for (const auto& f : col.files) {
-                if (col.path == "/") {
-                    if (!strcasecmp(f.name, NX_SAVE_META_NAME) ||
-                        !strcasecmp(f.name, DBI_SAVE_INFO_NAME) ||
-                        !strcasecmp(f.name, DBI_SAVE_EXTRA_NAME)) {
-                        return FsError_PathAlreadyExists;
-                    }
-                }
-                for (const char c : std::string_view{f.name}) {
-                    if (IsInvalidSavePathChar(c)) {
-                        return FsError_InvalidCharacter;
-                    }
-                }
-            }
-        }
-
-        // Collision-safe directory reservation on SD
-        fs::FsNativeSd sd_fs;
-        R_TRY(sd_fs.GetFsOpenResult());
-        const auto rec_parent_rc = sd_fs.CreateDirectoryRecursively("/dumps/recovery");
-        if (R_FAILED(rec_parent_rc) && rec_parent_rc != FsError_PathAlreadyExists) {
-            return rec_parent_rc;
-        }
-
-        const auto now = std::time(nullptr);
-        const auto tm = *std::localtime(&now);
-        fs::FsPath owned_dir;
-        bool reserved = false;
-        for (u32 counter = 0; counter < 1000; counter++) {
-            R_TRY(pbox->ShouldExitResult());
-            char dir_buf[sizeof(fs::FsPath)];
-            const int n = std::snprintf(dir_buf, sizeof(dir_buf), "/dumps/recovery/%04d%02d%02d_%02d%02d%02d_%016lX_%03u",
-                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-                tm.tm_hour, tm.tm_min, tm.tm_sec,
-                e.save_data_id, counter);
-            R_UNLESS(n > 0 && static_cast<size_t>(n) < sizeof(dir_buf), FsError_TooLongPath);
-
-            const auto create_rc = sd_fs.CreateDirectory(dir_buf);
-            if (R_SUCCEEDED(create_rc)) {
-                owned_dir = dir_buf;
-                reserved = true;
-                break;
-            }
-            if (create_rc != FsError_PathAlreadyExists) {
-                return create_rc;
-            }
-        }
-        R_UNLESS(reserved, FsError_PathAlreadyExists);
-
-        const fs::FsPath recovery_temp_path = owned_dir + "/recovery.zip.temp";
-        const fs::FsPath recovery_final_path = owned_dir + "/recovery.zip";
-
-        enum class RecoveryPubState {
-            Unpublished,
-            Renamed,
-            Published
-        };
-        RecoveryPubState pub_state = RecoveryPubState::Unpublished;
-
-        ON_SCOPE_EXIT {
-            if (pub_state == RecoveryPubState::Unpublished) {
-                sd_fs.DeleteFile(recovery_temp_path);
-                sd_fs.DeleteDirectory(owned_dir);
-            } else if (pub_state == RecoveryPubState::Renamed) {
-                sd_fs.DeleteFile(recovery_final_path);
-                sd_fs.DeleteDirectory(owned_dir);
-            }
-        };
-
-        pbox->NewTransfer("Creating recovery backup..."_i18n);
-        R_TRY(pbox->ShouldExitResult());
-        R_TRY(WriteSaveBackupZip(pbox, &sd_fs, recovery_temp_path, &save_fs, e, live, live_collections, false, true, true));
-
-        // Reopen recovery backup and preflight
-        zlib_filefunc64_def rec_file_func;
-        mz::FileFuncStdio(&rec_file_func);
-        auto rec_zfile = unzOpen2_64(recovery_temp_path, &rec_file_func);
-        R_UNLESS(rec_zfile, Result_UnzOpen2_64);
-        bool rec_reader_open = true;
-        ON_SCOPE_EXIT {
-            if (rec_reader_open && rec_zfile) {
-                unzClose(rec_zfile);
-            }
-        };
-
-        thread::UnzipPayloadSummary rec_summary{};
-        pbox->NewTransfer("Validating recovery backup..."_i18n);
-        R_TRY(thread::TransferUnzipPreflight(pbox, rec_zfile, "/", save_filter, true, &rec_summary));
-
-        // Build live inventory maps for bijection verification
-        struct LiveFileInfo {
-            fs::FsPath full_fs_path;
-            s64 size = 0;
-            bool verified = false;
-        };
-        std::map<std::string, LiveFileInfo> live_files;
-        std::map<std::string, bool> live_dirs;
-        s64 live_bytes_sum = 0;
-
-        for (const auto& col : live_collections) {
-            if (col.path != "/") {
-                const char* r = col.path.s;
-                while (*r == '/') r++;
-                if (*r != '\0') {
-                    std::string dir_key{r};
-                    if (!dir_key.ends_with('/')) dir_key += '/';
-                    auto [dit, dinserted] = live_dirs.try_emplace(dir_key, false);
-                    R_UNLESS(dinserted, FsError_PathAlreadyExists);
-                }
-            }
-            for (const auto& lf : col.files) {
-                R_UNLESS(lf.file_size >= 0, FsError_InvalidSize);
-                R_UNLESS(std::numeric_limits<s64>::max() - live_bytes_sum >= lf.file_size, FsError_InvalidSize);
-                fs::FsPath full_path = fs::AppendPath(col.path, lf.name);
-                const char* rf = full_path.s;
-                while (*rf == '/') rf++;
-                auto [fit, finserted] = live_files.try_emplace(std::string{rf}, LiveFileInfo{full_path, lf.file_size, false});
-                R_UNLESS(finserted, FsError_PathAlreadyExists);
-                live_bytes_sum += lf.file_size;
-            }
-        }
-
-        R_UNLESS(live_dirs.size() <= static_cast<size_t>(std::numeric_limits<s64>::max()), FsError_InvalidSize);
-        R_UNLESS(live_files.size() <= static_cast<size_t>(std::numeric_limits<s64>::max()), FsError_InvalidSize);
-        const s64 live_dir_count = static_cast<s64>(live_dirs.size());
-        const s64 live_file_count = static_cast<s64>(live_files.size());
-
-        R_UNLESS(rec_summary.directory_count == live_dir_count, FsError_PathNotFound);
-        R_UNLESS(rec_summary.file_count == live_file_count, FsError_PathNotFound);
-        R_UNLESS(rec_summary.file_bytes == live_bytes_sum, FsError_InvalidSize);
-
-        R_UNLESS(UNZ_OK == unzGoToFirstFile(rec_zfile), Result_UnzGoToFirstFile);
-
-        while (true) {
-            R_TRY(pbox->ShouldExitResult());
-
-            unz_file_info64 finfo;
-            char name_buf[sizeof(fs::FsPath)]{};
-            R_UNLESS(UNZ_OK == unzGetCurrentFileInfo64(rec_zfile, &finfo, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0), Result_UnzGetCurrentFileInfo64);
-
-            std::string_view raw{name_buf, finfo.size_filename};
-            const auto norm = path::NormalizeSaveArchiveEntry(raw);
-            R_UNLESS(norm.has_value(), FsError_InvalidCharacter);
-
-            const std::string entry_str{norm.value()};
-            for (const char c : entry_str) {
-                if (c != '/' && IsInvalidSavePathChar(c)) {
-                    return FsError_InvalidCharacter;
-                }
-            }
-
-            fs::FsPath resolved_name = entry_str;
-            const bool is_meta = !save_filter(resolved_name, resolved_name);
-
-            if (!is_meta) {
-                if (entry_str.ends_with('/')) {
-                    auto it = live_dirs.find(entry_str);
-                    R_UNLESS(it != live_dirs.end(), FsError_PathNotFound);
-                    R_UNLESS(!it->second, FsError_PathAlreadyExists);
-                    it->second = true;
-                } else {
-                    auto it = live_files.find(entry_str);
-                    R_UNLESS(it != live_files.end(), FsError_PathNotFound);
-                    R_UNLESS(!it->second.verified, FsError_PathAlreadyExists);
-                    R_UNLESS(finfo.uncompressed_size == static_cast<u64>(it->second.size), FsError_InvalidSize);
-
-                    // Byte-for-byte stream comparison against held live mount
-                    R_UNLESS(UNZ_OK == unzOpenCurrentFile(rec_zfile), Result_UnzOpenCurrentFile);
-                    bool rec_curr_file_open = true;
-                    ON_SCOPE_EXIT {
-                        if (rec_curr_file_open && rec_zfile) {
-                            unzCloseCurrentFile(rec_zfile);
+            // Validate live entries against reserved metadata and invalid characters
+            for (const auto& col : live_collections) {
+                if (col.path != "/") {
+                    for (const char c : std::string_view{col.path.s}) {
+                        if (IsInvalidSavePathChar(c)) {
+                            return FsError_InvalidCharacter;
                         }
-                    };
-
-                    fs::File lf;
-                    R_TRY(save_fs.OpenFile(it->second.full_fs_path, FsOpenMode_Read, &lf));
-
-                    s64 lf_size = 0;
-                    R_TRY(lf.GetSize(&lf_size));
-                    R_UNLESS(lf_size == it->second.size, FsError_InvalidSize);
-
-                    constexpr size_t CMP_BUF_SIZE = 32768;
-                    std::vector<u8> zbuf(CMP_BUF_SIZE);
-                    std::vector<u8> fbuf(CMP_BUF_SIZE);
-
-                    s64 offset = 0;
-                    while (offset < lf_size) {
-                        R_TRY(pbox->ShouldExitResult());
-                        const auto chunk = static_cast<s64>(std::min<size_t>(CMP_BUF_SIZE, lf_size - offset));
-                        const int zread = unzReadCurrentFile(rec_zfile, zbuf.data(), chunk);
-                        R_UNLESS(zread == chunk, FsError_InvalidSize);
-
-                        u64 fread = 0;
-                        R_TRY(lf.Read(offset, fbuf.data(), chunk, FsReadOption_None, &fread));
-                        R_UNLESS(static_cast<s64>(fread) == chunk, FsError_InvalidSize);
-
-                        R_UNLESS(std::memcmp(zbuf.data(), fbuf.data(), chunk) == 0, FsError_InvalidSize);
-                        offset += chunk;
                     }
-
-                    u8 dummy;
-                    R_UNLESS(unzReadCurrentFile(rec_zfile, &dummy, 1) == 0, FsError_InvalidSize);
-
-                    rec_curr_file_open = false;
-                    R_UNLESS(UNZ_OK == unzCloseCurrentFile(rec_zfile), Result_UnzOpenCurrentFile);
-
-                    it->second.verified = true;
+                }
+                for (const auto& f : col.files) {
+                    if (col.path == "/") {
+                        if (!strcasecmp(f.name, NX_SAVE_META_NAME) ||
+                            !strcasecmp(f.name, DBI_SAVE_INFO_NAME) ||
+                            !strcasecmp(f.name, DBI_SAVE_EXTRA_NAME)) {
+                            return FsError_PathAlreadyExists;
+                        }
+                    }
+                    for (const char c : std::string_view{f.name}) {
+                        if (IsInvalidSavePathChar(c)) {
+                            return FsError_InvalidCharacter;
+                        }
+                    }
                 }
             }
 
-            const int next_rc = unzGoToNextFile(rec_zfile);
-            if (next_rc == UNZ_END_OF_LIST_OF_FILE) {
-                break;
-            }
-            R_UNLESS(next_rc == UNZ_OK, Result_UnzGoToNextFile);
-        }
+            // Build live inventory maps for bijection verification
+            struct LiveFileInfo {
+                fs::FsPath full_fs_path;
+                s64 size = 0;
+                bool verified = false;
+            };
+            std::map<std::string, LiveFileInfo> live_files;
+            std::map<std::string, bool> live_dirs;
+            s64 live_bytes_sum = 0;
 
-        for (const auto& [d, matched] : live_dirs) {
-            R_UNLESS(matched, FsError_PathNotFound);
-        }
-        for (const auto& [f, info] : live_files) {
-            R_UNLESS(info.verified, FsError_PathNotFound);
-        }
-
-        // Explicit checked close of candidate recovery reader BEFORE re-enumeration/publication
-        rec_reader_open = false;
-        R_UNLESS(UNZ_OK == unzClose(rec_zfile), Result_UnzOpen2_64);
-
-        // Re-enumerate live inventory from save_fs immediately before clear
-        filebrowser::FsDirCollections current_collections;
-        R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", current_collections, true));
-
-        std::map<std::string, s64> curr_files;
-        std::set<std::string> curr_dirs;
-        for (const auto& col : current_collections) {
-            if (col.path != "/") {
-                const char* r = col.path.s;
-                while (*r == '/') r++;
-                if (*r != '\0') {
-                    std::string dir_key{r};
-                    if (!dir_key.ends_with('/')) dir_key += '/';
-                    auto [dit, dinserted] = curr_dirs.insert(dir_key);
-                    R_UNLESS(dinserted, FsError_TargetLocked);
+            for (const auto& col : live_collections) {
+                if (col.path != "/") {
+                    const char* r = col.path.s;
+                    while (*r == '/') r++;
+                    if (*r != '\0') {
+                        std::string dir_key{r};
+                        if (!dir_key.ends_with('/')) dir_key += '/';
+                        auto [dit, dinserted] = live_dirs.try_emplace(dir_key, false);
+                        R_UNLESS(dinserted, FsError_PathAlreadyExists);
+                    }
+                }
+                for (const auto& lf : col.files) {
+                    R_UNLESS(lf.file_size >= 0, FsError_InvalidSize);
+                    R_UNLESS(std::numeric_limits<s64>::max() - live_bytes_sum >= lf.file_size, FsError_InvalidSize);
+                    fs::FsPath full_path = fs::AppendPath(col.path, lf.name);
+                    const char* rf = full_path.s;
+                    while (*rf == '/') rf++;
+                    auto [fit, finserted] = live_files.try_emplace(std::string{rf}, LiveFileInfo{full_path, lf.file_size, false});
+                    R_UNLESS(finserted, FsError_PathAlreadyExists);
+                    live_bytes_sum += lf.file_size;
                 }
             }
-            for (const auto& cf : col.files) {
-                R_UNLESS(cf.file_size >= 0, FsError_TargetLocked);
-                fs::FsPath c_full = fs::AppendPath(col.path, cf.name);
-                const char* rf = c_full.s;
-                while (*rf == '/') rf++;
-                auto [fit, finserted] = curr_files.try_emplace(std::string{rf}, cf.file_size);
-                R_UNLESS(finserted, FsError_TargetLocked);
+
+            R_UNLESS(live_dirs.size() <= static_cast<size_t>(std::numeric_limits<s64>::max()), FsError_InvalidSize);
+            R_UNLESS(live_files.size() <= static_cast<size_t>(std::numeric_limits<s64>::max()), FsError_InvalidSize);
+
+            // Collision-safe directory reservation on SD
+            fs::FsNativeSd sd_fs;
+            R_TRY(sd_fs.GetFsOpenResult());
+            const auto rec_parent_rc = sd_fs.CreateDirectoryRecursively("/dumps/recovery");
+            if (R_FAILED(rec_parent_rc) && rec_parent_rc != FsError_PathAlreadyExists) {
+                return rec_parent_rc;
             }
+
+            const auto now = std::time(nullptr);
+            const auto tm = *std::localtime(&now);
+            fs::FsPath owned_dir;
+            bool reserved = false;
+            for (u32 counter = 0; counter < 1000; counter++) {
+                R_TRY(pbox->ShouldExitResult());
+                char dir_buf[sizeof(fs::FsPath)];
+                const int n = std::snprintf(dir_buf, sizeof(dir_buf), "/dumps/recovery/%04d%02d%02d_%02d%02d%02d_%016lX_%03u",
+                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                    tm.tm_hour, tm.tm_min, tm.tm_sec,
+                    e.save_data_id, counter);
+                R_UNLESS(n > 0 && static_cast<size_t>(n) < sizeof(dir_buf), FsError_TooLongPath);
+
+                const auto create_rc = sd_fs.CreateDirectory(dir_buf);
+                if (R_SUCCEEDED(create_rc)) {
+                    owned_dir = dir_buf;
+                    reserved = true;
+                    break;
+                }
+                if (create_rc != FsError_PathAlreadyExists) {
+                    return create_rc;
+                }
+            }
+            R_UNLESS(reserved, FsError_PathAlreadyExists);
+
+            const fs::FsPath recovery_temp_path = owned_dir + "/recovery.zip.temp";
+            const fs::FsPath recovery_final_path = owned_dir + "/recovery.zip";
+
+            enum class RecoveryPubState {
+                Unpublished,
+                Renamed,
+                Published
+            };
+            RecoveryPubState pub_state = RecoveryPubState::Unpublished;
+
+            ON_SCOPE_EXIT {
+                if (pub_state == RecoveryPubState::Unpublished) {
+                    sd_fs.DeleteFile(recovery_temp_path);
+                    sd_fs.DeleteDirectory(owned_dir);
+                } else if (pub_state == RecoveryPubState::Renamed) {
+                    sd_fs.DeleteFile(recovery_final_path);
+                    sd_fs.DeleteDirectory(owned_dir);
+                }
+            };
+
+            pbox->NewTransfer("Creating recovery backup..."_i18n);
+            R_TRY(pbox->ShouldExitResult());
+            R_TRY(WriteSaveBackupZip(pbox, &sd_fs, recovery_temp_path, &save_fs, e, live, live_collections, false, true, true));
+
+            // Reopen recovery backup and preflight
+            SaveReaderContext rec_reader_ctx;
+            zlib_filefunc64_def rec_file_func;
+            rec_reader_ctx.InitFileFunc(&rec_file_func);
+            auto rec_zfile = unzOpen2_64(recovery_temp_path, &rec_file_func);
+            R_UNLESS(rec_zfile, Result_UnzOpen2_64);
+            bool rec_reader_open = true;
+            ON_SCOPE_EXIT {
+                if (rec_reader_open && rec_zfile) {
+                    unzClose(rec_zfile);
+                }
+            };
+
+            thread::UnzipPayloadSummary rec_summary{};
+            thread::UnzipPayloadInventory rec_inventory{};
+            pbox->NewTransfer("Validating recovery backup..."_i18n);
+            R_TRY(thread::TransferUnzipPreflight(pbox, rec_zfile, "/", save_filter, true, &rec_summary, &rec_inventory));
+
+            const s64 live_dir_count = static_cast<s64>(live_dirs.size());
+            const s64 live_file_count = static_cast<s64>(live_files.size());
+            R_UNLESS(rec_summary.directory_count == live_dir_count, FsError_PathNotFound);
+            R_UNLESS(rec_summary.file_count == live_file_count, FsError_PathNotFound);
+            R_UNLESS(rec_summary.file_bytes == live_bytes_sum, FsError_InvalidSize);
+
+            // Verified recovery archive check against native held mount
+            R_TRY(thread::VerifyArchiveAgainstNative(pbox, rec_zfile, &save_fs, "/", rec_inventory, save_filter, true));
+
+            // Explicit checked close of candidate recovery reader BEFORE re-enumeration/publication
+            rec_reader_open = false;
+            R_UNLESS(UNZ_OK == unzClose(rec_zfile), Result_UnzOpen2_64);
+            R_UNLESS(!rec_reader_ctx.HasError(), Result_UnzOpen2_64);
+
+            // Re-enumerate live inventory from save_fs immediately before clear
+            filebrowser::FsDirCollections current_collections;
+            R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", current_collections, true));
+
+            std::map<std::string, s64> curr_files;
+            std::set<std::string> curr_dirs;
+            for (const auto& col : current_collections) {
+                if (col.path != "/") {
+                    const char* r = col.path.s;
+                    while (*r == '/') r++;
+                    if (*r != '\0') {
+                        std::string dir_key{r};
+                        if (!dir_key.ends_with('/')) dir_key += '/';
+                        auto [dit, dinserted] = curr_dirs.insert(dir_key);
+                        R_UNLESS(dinserted, FsError_TargetLocked);
+                    }
+                }
+                for (const auto& cf : col.files) {
+                    R_UNLESS(cf.file_size >= 0, FsError_TargetLocked);
+                    fs::FsPath c_full = fs::AppendPath(col.path, cf.name);
+                    const char* rf = c_full.s;
+                    while (*rf == '/') rf++;
+                    auto [fit, finserted] = curr_files.try_emplace(std::string{rf}, cf.file_size);
+                    R_UNLESS(finserted, FsError_TargetLocked);
+                }
+            }
+
+            R_UNLESS(curr_dirs.size() == live_dirs.size(), FsError_TargetLocked);
+            for (const auto& [d, _] : live_dirs) {
+                R_UNLESS(curr_dirs.contains(d), FsError_TargetLocked);
+            }
+            R_UNLESS(curr_files.size() == live_files.size(), FsError_TargetLocked);
+            for (const auto& [f, info] : live_files) {
+                auto it = curr_files.find(f);
+                R_UNLESS(it != curr_files.end(), FsError_TargetLocked);
+                R_UNLESS(it->second == info.size, FsError_TargetLocked);
+            }
+
+            // Publish validated recovery archive using native primitive to separate rename from commit
+            const auto rename_rc = fsFsRenameFile(&sd_fs.m_fs, recovery_temp_path, recovery_final_path);
+            R_TRY(rename_rc);
+            pub_state = RecoveryPubState::Renamed;
+
+            const auto sdmc_rc = fsdevCommitDevice("sdmc");
+            if (R_FAILED(sdmc_rc)) {
+                return sdmc_rc;
+            }
+
+            const auto sd_commit_rc = sd_fs.Commit();
+            if (R_FAILED(sd_commit_rc)) {
+                return sd_commit_rc;
+            }
+
+            pub_state = RecoveryPubState::Published;
+            if (out_recovery_path) {
+                *out_recovery_path = recovery_final_path;
+            }
+
+            collections = std::move(current_collections);
+        } else {
+            R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", collections));
         }
 
-        R_UNLESS(curr_dirs.size() == live_dirs.size(), FsError_TargetLocked);
-        for (const auto& [d, _] : live_dirs) {
-            R_UNLESS(curr_dirs.contains(d), FsError_TargetLocked);
-        }
-        R_UNLESS(curr_files.size() == live_files.size(), FsError_TargetLocked);
-        for (const auto& [f, info] : live_files) {
-            auto it = curr_files.find(f);
-            R_UNLESS(it != curr_files.end(), FsError_TargetLocked);
-            R_UNLESS(it->second == info.size, FsError_TargetLocked);
-        }
-
-        // Publish validated recovery archive using native primitive to separate rename from commit
-        const auto rename_rc = fsFsRenameFile(&sd_fs.m_fs, recovery_temp_path, recovery_final_path);
-        R_TRY(rename_rc);
-        pub_state = RecoveryPubState::Renamed;
-
-        const auto sdmc_rc = fsdevCommitDevice("sdmc");
-        if (R_FAILED(sdmc_rc)) {
-            return sdmc_rc;
-        }
-
-        const auto sd_commit_rc = sd_fs.Commit();
-        if (R_FAILED(sd_commit_rc)) {
-            return sd_commit_rc;
-        }
-
-        pub_state = RecoveryPubState::Published;
-        if (out_recovery_path) {
-            *out_recovery_path = recovery_final_path;
-        }
-
+        R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);
         R_TRY(pbox->ShouldExitResult());
 
-        collections = std::move(current_collections);
-    } else {
-        R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", collections));
+        // Conservative mutation flag: mark mutation started immediately before clear
+        if (out_mutation_started) {
+            *out_mutation_started = true;
+        }
+
+        // ponytail: held mount and byte comparison verify correspondence at check time, but do not provide snapshot isolation against concurrent external mutation; true atomic save transactions require filesystem-level snapshot support.
+        R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
+
+        log_write("opened save file\n");
+        // restore save data from zip.
+        pbox->NewTransfer("Restoring save..."_i18n);
+        R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true, true));
+
+        R_TRY(save_fs.Commit());
+        log_write("finished save restore commit\n");
+    } // End lexical RW scope: save_fs is destroyed here!
+
+    // Reread live extra data to verify save identity after restore
+    if (e.save_data_id != 0) {
+        FsSaveDataExtraData post_live{};
+        R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&post_live, sizeof(post_live), save_data_space_id, e.save_data_id));
+        if (post_live.attr.application_id != attr.application_id ||
+            post_live.attr.uid.uid[0] != attr.uid.uid[0] ||
+            post_live.attr.uid.uid[1] != attr.uid.uid[1] ||
+            post_live.attr.system_save_data_id != attr.system_save_data_id ||
+            post_live.attr.save_data_type != attr.save_data_type ||
+            post_live.attr.save_data_rank != attr.save_data_rank ||
+            post_live.attr.save_data_index != attr.save_data_index) {
+            return FsError_PathNotFound;
+        }
+        if (post_live.data_size <= 0 || post_live.journal_size < 0) {
+            return FsError_InvalidSize;
+        }
     }
 
-    // ponytail: held mount and byte comparison verify correspondence at check time, but do not provide snapshot isolation against concurrent external mutation; true atomic save transactions require filesystem-level snapshot support.
-    R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
+    // Open fresh read-only mount to verify restored save contents
+    {
+        pbox->NewTransfer("Verifying restored save..."_i18n);
+        fs::FsNativeSave ro_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, true};
+        R_TRY(ro_save_fs.GetFsOpenResult());
+        R_TRY(thread::VerifyArchiveAgainstNative(pbox, zfile, &ro_save_fs, "/", source_inventory, save_filter, true));
+    }
 
-    log_write("opened save file\n");
-    // restore save data from zip.
-    pbox->NewTransfer("Restoring save..."_i18n);
-    R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true));
+    // Explicit checked close of source reader
+    source_reader_open = false;
+    R_UNLESS(UNZ_OK == unzClose(zfile), Result_UnzOpen2_64);
+    R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);
 
-    R_TRY(save_fs.Commit());
     log_write("finished save restore\n");
     R_SUCCEED();
 }
 
-Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path) const {
+Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started) const {
+    if (out_mutation_started) {
+        *out_mutation_started = false;
+    }
     R_UNLESS(!e.is_backup && e.save_data_id != 0, FsError_PathNotFound);
     pbox->SetTitle(e.GetName());
     if (e.image) {
@@ -1797,7 +1951,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         R_SUCCEED();
     }
 
-    return RestoreSaveZip(pbox, e, path, out_recovery_path);
+    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started);
 }
 
 Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root) const {

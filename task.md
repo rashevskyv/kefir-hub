@@ -1,9 +1,24 @@
-Актуальний delivery — **v0.13.853**: verified recovery admission; прийнято senior review. Завершені задачі збережено в
+Актуальний delivery — **v0.13.854**: fresh-remount ZIP verification завершено. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.853 (verified recovery admission)
+## Поточний delivery: v0.13.854 (fresh-remount ZIP verification)
+
+- [x] `VERIFY-RESEARCH-854` — exact primary/master/clean/ac6675c3 ancestry; root Graphify update; source/callers/native CRUD/transfer threads/ZIP close/platform evidence; fixed policy, no product edits/compile.
+- [x] `VERIFY-REWORK-854` — Gemini follow-up fixes reviewed: shared resolver/overloads, pre-clear source/cancel gates, checked bounds/drain/source inventory, RAW isolation.
+- [x] `VERIFY-REWORK2-854` — explicit user-authorized senior completion: neutral mixed RAW batch prefix, source traversal termination, faithful ZIP model and 16 fault gates.
+- [x] `VERIFY-INVENTORY-854` — opt-in preflight manifest, shared mapped/sanitized pipeline, checked publication/rewind, implicit parents, pre-mutation collision/kind conflicts; summary semantics preserved.
+- [x] `VERIFY-COPY-854` — opt-in native unzip checked flush/explicit close+invalidation/per-file commit/ZIP entry close; final commit; writable lexical scope ends before new RO mount; global Fs unchanged.
+- [x] `VERIFY-REMOUNT-854` — selected actual identity reread/exact-space RO, common recovery/post-copy streaming verifier, exact inventory/size/bytes/CRC/EOF/read/reader-close checks; no unverified success fallback.
+- [x] `VERIFY-UI-854` — shared conservative mutation-started output, both routes and picked/batch phase messages, retained published paths, success only after verification; RAW preserved.
+- [x] `VERIFY-STATIC-854` — senior seven Python checks PASS, JSON/key parity and diff check PASS; real ZIP/model/source gates, no compiler/runtime proof.
+- [x] `DOCS-BUMP-854` — app 0.13.854, accepted source/diff, four docs updated для focused primary-master commit; no push.
+- [ ] `JOURNAL-QUEUED-854` — proven checked allocation/metadata/zero-small/mid-file budget policy; separate delivery, no guessed margin/cadence.
+- [ ] `HW-854` — separate test-build; disposable-save both routes/remap/empty/implicit dirs/large single+multi transfer/remount refusal/cancel/manual recovery.
+- [ ] `ISOLATION-QUEUED-854` — no snapshot/atomic batch/rollback/power-loss durability guarantees.
+
+## Попередній delivery: v0.13.853 (verified recovery admission)
 
 - [x] `RECOVERY-RESEARCH-853` — primary/master/clean/base ancestry, graph/source/callers/lifetimes, fixed scope.
 - [x] `RECOVERY-WRITER-853` — shared streaming SD writer, destination NX metadata, checked ZIP/stdio close-flush-sync/commits, empty save/files/directories.

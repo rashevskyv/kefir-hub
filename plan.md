@@ -1,8 +1,20 @@
-Поточний delivery — **v0.13.853**: verified recovery admission; прийнято senior review. Завершені плани збережено в
+Поточний delivery — **v0.13.854**: fresh-remount ZIP verification завершено. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.853 — verified recovery admission
+## Поточний delivery: v0.13.854 — fresh-remount ZIP verification
+
+База ac6675c3b0b7704def169d574f050c3b5a7c40a3 (v0.13.853). Primary D:/git/dev/sphaira, master, clean/base ancestry перевірено до delivery; expected dirty paths належать цьому delivery. Gemini implementation reviewed; після explicit user authorization senior завершив bounded corrections напряму. Graphify root refreshed: 12766 nodes / 25401 edges / 642 communities, 8 partial-parser warnings.
+
+1. Opt-in preflight inventory використовує shared resolved/sanitized/mapped destination pipeline. Exact files/sizes і explicit+implicit directories; duplicate/alias/kind/parent conflicts відхиляються до mutation. Inventory публікується після full CRC та checked rewind; summary semantics/default callers збережено.
+2. Shared recovery/post-restore verifier порівнює exact native inventory та streaming bytes у bounded buffers. Empty files/directories, implicit parents і filtered root metadata враховано; усі source entries drain/CRC-check, iteration termination/rewind/reader callback errors checked. Published recovery retention і v853 admission збережено.
+3. Shared restore opt-in checked native copy: transfer join, checked flush навіть empty file, explicit close+handle invalidation, checked per-file commit/ZIP entry close та final commit. Writable lexical scope завершується до selected actual-space identity reread і нового full-attr RO mount. Success лише після exact inventory/size/bytes verification, RO scope exit та checked source close. Global File::Close/CRUD semantics незмінні; native void close не дає durability Result.
+4. Both UI routes/picked/batch повідомляють до-mutation failure або possible changed/unverified target; published recovery paths retained. Mixed ZIP/RAW batch failure має neutral retained-path prefix; RAW не отримує ZIP mutation semantics.
+5. Senior фактично виконав сім compiler-free Python checks PASS, en/uk JSON/key parity PASS і git diff --check PASS. New regression: real ZIP policy cases, 16 injected fault model gates та source lifecycle gates. Python/source/model не доказ C++ threads/IPC/runtime. Legacy C++ contract text-adjusted, не compiled. App 0.13.853 -> 0.13.854, four docs updated для focused primary-master commit; no push.
+
+Remaining: separate test-build і disposable Switch checks обома routes/remap/empty/implicit dirs/large transfers/failure/cancel/manual recovery. Journal allocation/metadata/zero-small/mid-file budget, proven sizing/growth та isolation залишаються queued. No automatic rollback/atomic batch/snapshot exclusion/power-loss durability guarantee. No compiler/configure/build/WSL/NRO/compiled tests/tests/run.sh/binaries run.
+
+## Попередній delivery: v0.13.853 — verified recovery admission
 
 База e7942e899bdef25bd886c03d5489ee1ce6a1afcb. Primary/master/clean/base ancestry перевірено до planning, root/master/ancestry повторено перед acceptance. Graphify root update: 12690 nodes / 25254 edges / 652 communities, 7 parser warnings. App 0.13.852 -> 0.13.853; four docs updated для focused commit.
 

@@ -2420,5 +2420,12 @@
   "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP.": "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP.",
   "Creating recovery backup...": "Creating recovery backup...",
   "Validating recovery backup...": "Validating recovery backup...",
-  "Restore selected saves?": "Restore selected saves?"
+  "Restore selected saves?": "Restore selected saves?",
+  "Verifying restored save...": "Verifying restored save...",
+  "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n": "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n",
+  "Restore stopped before target save was modified.\nSafety recovery archive retained:\n": "Restore stopped before target save was modified.\nSafety recovery archive retained:\n",
+  "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n": "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n",
+  "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n": "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n",
+  "Restore stopped before target save was modified.": "Restore stopped before target save was modified.",
+  "Restore stopped before current target save was modified.": "Restore stopped before current target save was modified."
 }

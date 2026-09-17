@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "minizip_helper.hpp"
 #include "path_util.hpp"
+#include "ui/menus/filebrowser.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -568,6 +569,57 @@ Result ResolveArchiveEntryName(const unz_file_info64& info, const char* name_buf
     R_SUCCEED();
 }
 
+struct ResolvedDestinationEntry {
+    fs::FsPath path;
+    bool is_directory{false};
+    bool keep{false};
+};
+
+Result ResolveArchiveDestinationEntry(
+    const unz_file_info64& info,
+    const char* name_buf,
+    const fs::FsPath& base_path,
+    UnzipAllFilter filter,
+    bool save_dbi_compat,
+    ResolvedDestinationEntry& out) {
+
+    fs::FsPath name;
+    R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
+    name = SanitizeZipEntryName(name);
+
+    out.path = fs::AppendPath(base_path, name);
+    out.keep = filter ? filter(name, out.path) : true;
+    if (out.keep) {
+        const auto path_len = out.path.length();
+        if (path_len == 0) {
+            log_write("empty destination path\n");
+            R_THROW(FsError_InvalidCharacter);
+        }
+
+        if (!path::IsSafeExtractionDestination(out.path, base_path, save_dbi_compat)) {
+            log_write("unsafe destination path: %s\n", out.path.s);
+            R_THROW(FsError_InvalidCharacter);
+        }
+
+        out.is_directory = (out.path[path_len - 1] == '/');
+    } else {
+        out.is_directory = false;
+    }
+
+    R_SUCCEED();
+}
+
+std::vector<std::string> GetParentDirectories(const std::string& path) {
+    std::vector<std::string> parents;
+    size_t last_slash = path.find_last_of('/');
+    while (last_slash != std::string::npos && last_slash > 0) {
+        std::string parent = path.substr(0, last_slash);
+        parents.push_back(parent);
+        last_slash = parent.find_last_of('/');
+    }
+    return parents;
+}
+
 } // namespace
 
 Result Transfer(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, WriteCallback wfunc, Mode mode) {
@@ -585,7 +637,7 @@ Result TransferPull(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, StartCa
     return TransferInternal(pbox, size, rfunc, nullptr, sfunc, mode);
 }
 
-static Result TransferUnzipInternal(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, s64 size, u32 crc32, Mode mode, UnzipProgressCallback progress, bool update_progress) {
+static Result TransferUnzipInternal(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, s64 size, u32 crc32, Mode mode, UnzipProgressCallback progress, bool update_progress, bool checked_native_save = false) {
     Result rc;
     if (R_FAILED(rc = fs->CreateDirectoryRecursivelyWithPath(path)) && rc != FsError_PathAlreadyExists) {
         log_write("failed to create folder: %s 0x%04X\n", path.s, rc);
@@ -602,13 +654,23 @@ static Result TransferUnzipInternal(ui::ProgressBox* pbox, void* zfile, fs::Fs* 
 
     // only update the size if this is an existing file.
     if (rc == FsError_PathAlreadyExists) {
-        R_TRY(f.SetSize(size));
+        if (checked_native_save) {
+            const auto set_size_rc = f.SetSize(size);
+            if (R_FAILED(set_size_rc)) {
+                fsFileClose(&f.m_native);
+                f.m_native = {};
+                f.m_fs = nullptr;
+                return set_size_rc;
+            }
+        } else {
+            R_TRY(f.SetSize(size));
+        }
     }
 
     // NOTES: do not use temp file with rename / delete after as it massively slows
     // down small file transfers (RA 21s -> 50s).
     u32 crc32_out{};
-    R_TRY(thread::TransferInternal(pbox, size,
+    const auto transfer_rc = thread::TransferInternal(pbox, size,
         [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
             const auto result = unzReadCurrentFile(zfile, data, size);
             if (result <= 0) {
@@ -631,12 +693,32 @@ static Result TransferUnzipInternal(ui::ProgressBox* pbox, void* zfile, fs::Fs* 
             R_SUCCEED();
         },
         nullptr, mode, SMALL_BUFFER_SIZE, update_progress ? TransferProgressCallback{} : TransferProgressCallback{[](s64, s64){}}
-    ));
+    );
 
-    // validate crc32 (if set in the info).
-    R_UNLESS(!crc32 || crc32 == crc32_out, 0x8);
+    if (checked_native_save) {
+        if (R_FAILED(transfer_rc)) {
+            fsFileClose(&f.m_native);
+            f.m_native = {};
+            f.m_fs = nullptr;
+            return transfer_rc;
+        }
 
-    R_SUCCEED();
+        const auto flush_rc = fsFileFlush(&f.m_native);
+        fsFileClose(&f.m_native);
+        f.m_native = {};
+        f.m_fs = nullptr;
+        R_TRY(flush_rc);
+
+        R_TRY(fs->Commit());
+
+        R_UNLESS(!crc32 || crc32 == crc32_out, 0x8);
+        R_SUCCEED();
+    } else {
+        R_TRY(transfer_rc);
+        // validate crc32 (if set in the info).
+        R_UNLESS(!crc32 || crc32 == crc32_out, 0x8);
+        R_SUCCEED();
+    }
 }
 
 Result TransferUnzip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& path, s64 size, u32 crc32, Mode mode, bool update_progress) {
@@ -673,7 +755,7 @@ Result TransferZip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsP
     );
 }
 
-Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output) {
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out) {
     unz_global_info64 ginfo;
     if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
         R_THROW(Result_UnzGetGlobalInfo64);
@@ -689,6 +771,8 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
     }
 
     UnzipPayloadSummary local_summary{};
+    UnzipPayloadInventory local_inventory{};
+    std::set<std::string> explicit_dirs;
     std::vector<u8> drain_buf(64 * 1024);
 
     for (s64 i = 0; i < entry_count; i++) {
@@ -715,26 +799,11 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
             R_THROW(FsError_InvalidSize);
         }
 
-        fs::FsPath name;
-        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
+        ResolvedDestinationEntry resolved{};
+        R_TRY(ResolveArchiveDestinationEntry(info, name_buf, base_path, filter, save_dbi_compat, resolved));
 
-        name = SanitizeZipEntryName(name);
-
-        auto path = fs::AppendPath(base_path, name);
-        const bool keep = filter ? filter(name, path) : true;
-        if (keep) {
-            const auto path_len = path.length();
-            if (path_len == 0) {
-                log_write("empty destination path\n");
-                R_THROW(FsError_InvalidCharacter);
-            }
-
-            if (!path::IsSafeExtractionDestination(path, base_path, save_dbi_compat)) {
-                log_write("unsafe destination path: %s\n", path.s);
-                R_THROW(FsError_InvalidCharacter);
-            }
-
-            if (path[path_len - 1] == '/') {
+        if (resolved.keep) {
+            if (resolved.is_directory) {
                 if (local_summary.directory_count == std::numeric_limits<s64>::max()) {
                     log_write("archive directory count exceeds s64 maximum\n");
                     R_THROW(FsError_InvalidSize);
@@ -751,6 +820,52 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
                 }
                 local_summary.file_count++;
                 local_summary.file_bytes += static_cast<s64>(info.uncompressed_size);
+            }
+
+            if (inventory_out) {
+                if (resolved.is_directory) {
+                    std::string canonical_dir = resolved.path.s;
+                    while (canonical_dir.size() > 1 && canonical_dir.back() == '/') {
+                        canonical_dir.pop_back();
+                    }
+                    if (canonical_dir.empty() || canonical_dir == "/") {
+                        R_THROW(FsError_InvalidCharacter);
+                    }
+                    if (!explicit_dirs.insert(canonical_dir).second) {
+                        log_write("duplicate explicit directory: %s\n", canonical_dir.c_str());
+                        R_THROW(FsError_PathAlreadyExists);
+                    }
+                    if (local_inventory.files.contains(canonical_dir)) {
+                        log_write("dir conflicts with existing file: %s\n", canonical_dir.c_str());
+                        R_THROW(FsError_PathAlreadyExists);
+                    }
+                    for (const auto& parent : GetParentDirectories(canonical_dir)) {
+                        if (local_inventory.files.contains(parent)) {
+                            log_write("parent of dir conflicts with existing file: %s\n", parent.c_str());
+                            R_THROW(FsError_PathAlreadyExists);
+                        }
+                        local_inventory.directories.insert(parent);
+                    }
+                    local_inventory.directories.insert(canonical_dir);
+                } else {
+                    std::string file_key = resolved.path.s;
+                    if (local_inventory.files.contains(file_key)) {
+                        log_write("duplicate kept file: %s\n", file_key.c_str());
+                        R_THROW(FsError_PathAlreadyExists);
+                    }
+                    if (local_inventory.directories.contains(file_key)) {
+                        log_write("file conflicts with directory or parent: %s\n", file_key.c_str());
+                        R_THROW(FsError_PathAlreadyExists);
+                    }
+                    for (const auto& parent : GetParentDirectories(file_key)) {
+                        if (local_inventory.files.contains(parent)) {
+                            log_write("parent of file conflicts with existing file: %s\n", parent.c_str());
+                            R_THROW(FsError_PathAlreadyExists);
+                        }
+                        local_inventory.directories.insert(parent);
+                    }
+                    local_inventory.files.emplace(std::move(file_key), static_cast<s64>(info.uncompressed_size));
+                }
             }
         }
 
@@ -819,10 +934,14 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
     if (output) {
         *output = local_summary;
     }
+    if (inventory_out) {
+        *inventory_out = std::move(local_inventory);
+    }
 
     R_SUCCEED();
 }
-Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output) {
+
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out) {
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -830,10 +949,16 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, 
     R_UNLESS(zfile, Result_UnzOpen2_64);
     ON_SCOPE_EXIT(unzClose(zfile));
 
-    return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat, output);
+    return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat, output, inventory_out);
 }
 
-Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat) {
+Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat, bool checked_native_save) {
+    if (checked_native_save) {
+        if (!fs || !fs->IsNative()) {
+            R_THROW(FsError_NotImplemented);
+        }
+    }
+
     unz_global_info64 ginfo;
     if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
         R_THROW(Result_UnzGetGlobalInfo64);
@@ -914,7 +1039,12 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             log_write("failed to open current file\n");
             R_THROW(Result_UnzOpenCurrentFile);
         }
-        ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
+        bool curr_file_open = true;
+        ON_SCOPE_EXIT {
+            if (curr_file_open && zfile) {
+                unzCloseCurrentFile(zfile);
+            }
+        };
 
         unz_file_info64 info;
         char name_buf[sizeof(fs::FsPath)]{};
@@ -923,12 +1053,8 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             R_THROW(Result_UnzGetCurrentFileInfo64);
         }
 
-        fs::FsPath name;
-        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
-
-        // replace characters HOS rejects (e.g. '*', '?', '"', '<', '>', '|') so a
-        // single bad entry doesn't abort the whole pack with FsError_InvalidCharacter.
-        name = SanitizeZipEntryName(name);
+        ResolvedDestinationEntry resolved{};
+        R_TRY(ResolveArchiveDestinationEntry(info, name_buf, base_path, filter, save_dbi_compat, resolved));
 
         const auto entry_progress_start = progress_offset;
         const s64 entry_progress_size = use_entry_progress ? 1 : static_cast<s64>(info.uncompressed_size);
@@ -941,34 +1067,47 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             pbox->UpdateTransfer(progress_offset, progress_total);
         };
 
-        // check if we should skip this file.
-        // don't make const as to allow the function to modify the path
-        // this function is used for the updater to change sphaira.nro to exe path.
-        auto path = fs::AppendPath(base_path, name);
-        if (filter && !filter(name, path)) {
+        if (!resolved.keep) {
+            curr_file_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
             finish_entry();
             continue;
         }
 
-        if (!path::IsSafeExtractionDestination(path, base_path, save_dbi_compat)) {
-            log_write("unsafe destination path: %s\n", path.s);
-            R_THROW(FsError_InvalidCharacter);
-        }
-
-        if (path[std::strlen(path) -1] == '/') {
+        if (resolved.is_directory) {
             Result rc;
-            if (R_FAILED(rc = fs->CreateDirectoryRecursively(path)) && rc != FsError_PathAlreadyExists) {
-                log_write("failed to create folder: %s 0x%04X\n", path.s, rc);
+            if (R_FAILED(rc = fs->CreateDirectoryRecursively(resolved.path)) && rc != FsError_PathAlreadyExists) {
+                log_write("failed to create folder: %s 0x%04X\n", resolved.path.s, rc);
+                curr_file_open = false;
+                unzCloseCurrentFile(zfile);
                 R_THROW(rc);
             }
+            curr_file_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
             finish_entry();
         } else {
-            R_TRY(TransferUnzipInternal(pbox, zfile, fs, path, info.uncompressed_size, info.crc, mode,
+            const auto unzip_rc = TransferUnzipInternal(pbox, zfile, fs, resolved.path, info.uncompressed_size, info.crc, mode,
                 [&](s64 bytes_written) {
                     update_progress(bytes_written);
                 },
-                false
-            ));
+                false,
+                checked_native_save
+            );
+            curr_file_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            R_TRY(unzip_rc);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
             finish_entry();
         }
     }
@@ -976,7 +1115,7 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
     R_SUCCEED();
 }
 
-Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat) {
+Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs* fs, const fs::FsPath& base_path, UnzipAllFilter filter, Mode mode, bool save_dbi_compat, bool checked_native_save) {
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
 
@@ -984,7 +1123,476 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs
     R_UNLESS(zfile, Result_UnzOpen2_64);
     ON_SCOPE_EXIT(unzClose(zfile));
 
-    return TransferUnzipAll(pbox, zfile, fs, base_path, filter, mode, save_dbi_compat);
+    return TransferUnzipAll(pbox, zfile, fs, base_path, filter, mode, save_dbi_compat, checked_native_save);
+}
+
+Result VerifyArchiveAgainstNative(
+    ui::ProgressBox* pbox,
+    void* zfile,
+    fs::Fs* fs,
+    const fs::FsPath& base_path,
+    const UnzipPayloadInventory& expected_inventory,
+    UnzipAllFilter filter,
+    bool save_dbi_compat) {
+
+    if (!fs || !fs->IsNative()) {
+        R_THROW(FsError_NotImplemented);
+    }
+    if (pbox) {
+        R_TRY(pbox->ShouldExitResult());
+    }
+
+    // 1. Enumerate native destination with actual sizes
+    ui::menu::filebrowser::FsDirCollections collections;
+    R_TRY(ui::menu::filebrowser::FsView::get_collections(fs, base_path, "", collections, true));
+
+    std::map<std::string, s64> native_files;
+    std::set<std::string> native_dirs;
+
+    for (const auto& col : collections) {
+        if (col.path != base_path) {
+            std::string dir_key = col.path.s;
+            while (dir_key.size() > 1 && dir_key.back() == '/') {
+                dir_key.pop_back();
+            }
+            if (!dir_key.empty() && dir_key != "/") {
+                native_dirs.insert(dir_key);
+                for (const auto& parent : GetParentDirectories(dir_key)) {
+                    native_dirs.insert(parent);
+                }
+            }
+        }
+        for (const auto& d : col.dirs) {
+            auto dir_path = fs::AppendPath(col.path, d.name);
+            std::string dir_key = dir_path.s;
+            while (dir_key.size() > 1 && dir_key.back() == '/') {
+                dir_key.pop_back();
+            }
+            if (!dir_key.empty() && dir_key != "/") {
+                native_dirs.insert(dir_key);
+                for (const auto& parent : GetParentDirectories(dir_key)) {
+                    native_dirs.insert(parent);
+                }
+            }
+        }
+        for (const auto& f : col.files) {
+            R_UNLESS(f.file_size >= 0, FsError_InvalidSize);
+            auto file_path = fs::AppendPath(col.path, f.name);
+            std::string file_key = file_path.s;
+            auto [fit, finserted] = native_files.try_emplace(file_key, f.file_size);
+            R_UNLESS(finserted, FsError_PathAlreadyExists);
+            for (const auto& parent : GetParentDirectories(file_key)) {
+                native_dirs.insert(parent);
+            }
+        }
+    }
+
+    // 2. Exact inventory bijection check
+    R_UNLESS(native_files.size() == expected_inventory.files.size(), FsError_PathNotFound);
+    for (const auto& [path, size] : expected_inventory.files) {
+        auto it = native_files.find(path);
+        R_UNLESS(it != native_files.end(), FsError_PathNotFound);
+        R_UNLESS(it->second == size, FsError_InvalidSize);
+    }
+    R_UNLESS(native_dirs.size() == expected_inventory.directories.size(), FsError_PathNotFound);
+    for (const auto& dir : expected_inventory.directories) {
+        R_UNLESS(native_dirs.contains(dir), FsError_PathNotFound);
+    }
+
+    // 3. Traversal and streaming byte-for-byte comparison
+    unz_global_info64 ginfo;
+    if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
+        R_THROW(Result_UnzGetGlobalInfo64);
+    }
+    if (ginfo.number_entry == 0 || ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+        R_THROW(FsError_InvalidSize);
+    }
+    const auto entry_count = static_cast<s64>(ginfo.number_entry);
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        R_THROW(Result_UnzGoToFirstFile);
+    }
+
+    UnzipPayloadInventory observed_inventory{};
+    std::set<std::string> observed_explicit_dirs;
+    std::set<std::string> verified_files;
+
+    for (s64 i = 0; i < entry_count; i++) {
+        if (pbox) {
+            R_TRY(pbox->ShouldExitResult());
+        }
+
+        if (i > 0) {
+            if (UNZ_OK != unzGoToNextFile(zfile)) {
+                log_write("failed to unzGoToNextFile in VerifyArchiveAgainstNative\n");
+                R_THROW(Result_UnzGoToNextFile);
+            }
+        }
+
+        unz_file_info64 info;
+        char name_buf[sizeof(fs::FsPath)]{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0)) {
+            log_write("failed to get current info in VerifyArchiveAgainstNative\n");
+            R_THROW(Result_UnzGetCurrentFileInfo64);
+        }
+
+        if (info.uncompressed_size > static_cast<u64>(std::numeric_limits<s64>::max())) {
+            log_write("archive uncompressed size exceeds s64 maximum in verifier\n");
+            R_THROW(FsError_InvalidSize);
+        }
+
+        ResolvedDestinationEntry resolved{};
+        R_TRY(ResolveArchiveDestinationEntry(info, name_buf, base_path, filter, save_dbi_compat, resolved));
+
+        if (resolved.keep) {
+            if (resolved.is_directory) {
+                std::string canonical_dir = resolved.path.s;
+                while (canonical_dir.size() > 1 && canonical_dir.back() == '/') {
+                    canonical_dir.pop_back();
+                }
+                if (canonical_dir.empty() || canonical_dir == "/") {
+                    R_THROW(FsError_InvalidCharacter);
+                }
+                if (!observed_explicit_dirs.insert(canonical_dir).second) {
+                    log_write("verifier observed duplicate explicit directory: %s\n", canonical_dir.c_str());
+                    R_THROW(FsError_PathAlreadyExists);
+                }
+                if (observed_inventory.files.contains(canonical_dir)) {
+                    log_write("verifier dir conflicts with file: %s\n", canonical_dir.c_str());
+                    R_THROW(FsError_PathAlreadyExists);
+                }
+                for (const auto& parent : GetParentDirectories(canonical_dir)) {
+                    if (observed_inventory.files.contains(parent)) {
+                        log_write("verifier parent of dir conflicts with file: %s\n", parent.c_str());
+                        R_THROW(FsError_PathAlreadyExists);
+                    }
+                    observed_inventory.directories.insert(parent);
+                }
+                observed_inventory.directories.insert(canonical_dir);
+            } else {
+                std::string file_key = resolved.path.s;
+                if (observed_inventory.files.contains(file_key)) {
+                    log_write("verifier observed duplicate kept file: %s\n", file_key.c_str());
+                    R_THROW(FsError_PathAlreadyExists);
+                }
+                if (observed_inventory.directories.contains(file_key)) {
+                    log_write("verifier file conflicts with directory: %s\n", file_key.c_str());
+                    R_THROW(FsError_PathAlreadyExists);
+                }
+                for (const auto& parent : GetParentDirectories(file_key)) {
+                    if (observed_inventory.files.contains(parent)) {
+                        log_write("verifier parent of file conflicts with file: %s\n", parent.c_str());
+                        R_THROW(FsError_PathAlreadyExists);
+                    }
+                    observed_inventory.directories.insert(parent);
+                }
+                observed_inventory.files.emplace(file_key, static_cast<s64>(info.uncompressed_size));
+            }
+        }
+
+        if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+            log_write("failed to open current file in VerifyArchiveAgainstNative: %s\n", name_buf);
+            R_THROW(Result_UnzOpenCurrentFile);
+        }
+        bool curr_open = true;
+        ON_SCOPE_EXIT {
+            if (curr_open && zfile) {
+                unzCloseCurrentFile(zfile);
+            }
+        };
+
+        if (!resolved.keep) {
+            // Excluded source metadata: drain completely and check CRC
+            std::vector<u8> drain_buf(32768);
+            u32 crc_calc = 0;
+            u64 bytes_drained = 0;
+            int zr = 0;
+            do {
+                if (pbox) {
+                    const auto exit_rc = pbox->ShouldExitResult();
+                    if (R_FAILED(exit_rc)) {
+                        curr_open = false;
+                        unzCloseCurrentFile(zfile);
+                        return exit_rc;
+                    }
+                }
+                zr = unzReadCurrentFile(zfile, drain_buf.data(), drain_buf.size());
+                if (zr < 0) {
+                    curr_open = false;
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(Result_UnzReadCurrentFile);
+                }
+                if (zr > 0) {
+                    const auto r_u64 = static_cast<u64>(zr);
+                    if (std::numeric_limits<u64>::max() - bytes_drained < r_u64 || bytes_drained + r_u64 > info.uncompressed_size) {
+                        curr_open = false;
+                        unzCloseCurrentFile(zfile);
+                        R_THROW(FsError_InvalidSize);
+                    }
+                    if (info.crc) {
+                        crc_calc = crc32CalculateWithSeed(crc_calc, drain_buf.data(), zr);
+                    }
+                    bytes_drained += r_u64;
+                }
+            } while (zr > 0);
+
+            curr_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
+            R_UNLESS(bytes_drained == info.uncompressed_size, FsError_InvalidSize);
+            if (info.crc && crc_calc != info.crc) {
+                R_THROW(0x8);
+            }
+        } else if (resolved.is_directory) {
+            std::string canonical_dir = resolved.path.s;
+            while (canonical_dir.size() > 1 && canonical_dir.back() == '/') {
+                canonical_dir.pop_back();
+            }
+            R_UNLESS(expected_inventory.directories.contains(canonical_dir), FsError_PathNotFound);
+            R_UNLESS(native_dirs.contains(canonical_dir), FsError_PathNotFound);
+
+            // Drain kept directory entries through EOF with checked byte count/CRC/close
+            std::vector<u8> drain_buf(32768);
+            u32 crc_calc = 0;
+            u64 bytes_drained = 0;
+            int zr = 0;
+            do {
+                if (pbox) {
+                    const auto exit_rc = pbox->ShouldExitResult();
+                    if (R_FAILED(exit_rc)) {
+                        curr_open = false;
+                        unzCloseCurrentFile(zfile);
+                        return exit_rc;
+                    }
+                }
+                zr = unzReadCurrentFile(zfile, drain_buf.data(), drain_buf.size());
+                if (zr < 0) {
+                    curr_open = false;
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(Result_UnzReadCurrentFile);
+                }
+                if (zr > 0) {
+                    const auto r_u64 = static_cast<u64>(zr);
+                    if (std::numeric_limits<u64>::max() - bytes_drained < r_u64 || bytes_drained + r_u64 > info.uncompressed_size) {
+                        curr_open = false;
+                        unzCloseCurrentFile(zfile);
+                        R_THROW(FsError_InvalidSize);
+                    }
+                    if (info.crc) {
+                        crc_calc = crc32CalculateWithSeed(crc_calc, drain_buf.data(), zr);
+                    }
+                    bytes_drained += r_u64;
+                }
+            } while (zr > 0);
+
+            curr_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
+            R_UNLESS(bytes_drained == info.uncompressed_size, FsError_InvalidSize);
+            if (info.crc && crc_calc != info.crc) {
+                R_THROW(0x8);
+            }
+        } else {
+            auto eit = expected_inventory.files.find(resolved.path.s);
+            R_UNLESS(eit != expected_inventory.files.end(), FsError_PathNotFound);
+            R_UNLESS(static_cast<u64>(eit->second) == info.uncompressed_size, FsError_InvalidSize);
+            R_UNLESS(!verified_files.contains(resolved.path.s), FsError_PathAlreadyExists);
+
+            fs::File nf;
+            const auto open_rc = fs->OpenFile(resolved.path, FsOpenMode_Read, &nf);
+            if (R_FAILED(open_rc)) {
+                curr_open = false;
+                unzCloseCurrentFile(zfile);
+                return open_rc;
+            }
+
+            s64 nf_size = 0;
+            const auto size_rc = nf.GetSize(&nf_size);
+            if (R_FAILED(size_rc)) {
+                nf.Close();
+                curr_open = false;
+                unzCloseCurrentFile(zfile);
+                return size_rc;
+            }
+            if (nf_size != eit->second) {
+                nf.Close();
+                curr_open = false;
+                unzCloseCurrentFile(zfile);
+                return FsError_InvalidSize;
+            }
+
+            constexpr size_t CMP_BUF_SIZE = 32768;
+            std::vector<u8> zbuf(CMP_BUF_SIZE);
+            std::vector<u8> fbuf(CMP_BUF_SIZE);
+            s64 offset = 0;
+            u32 file_crc = 0;
+
+            while (offset < nf_size) {
+                if (pbox) {
+                    const auto exit_rc = pbox->ShouldExitResult();
+                    if (R_FAILED(exit_rc)) {
+                        nf.Close();
+                        curr_open = false;
+                        unzCloseCurrentFile(zfile);
+                        return exit_rc;
+                    }
+                }
+                const auto chunk = static_cast<s64>(std::min<size_t>(CMP_BUF_SIZE, nf_size - offset));
+                s64 z_accum = 0;
+                while (z_accum < chunk) {
+                    int zr = unzReadCurrentFile(zfile, zbuf.data() + z_accum, chunk - z_accum);
+                    if (zr <= 0) {
+                        nf.Close();
+                        curr_open = false;
+                        unzCloseCurrentFile(zfile);
+                        return FsError_InvalidSize;
+                    }
+                    z_accum += zr;
+                }
+                if (info.crc) {
+                    file_crc = crc32CalculateWithSeed(file_crc, zbuf.data(), chunk);
+                }
+
+                u64 fread = 0;
+                const auto read_rc = nf.Read(offset, fbuf.data(), chunk, FsReadOption_None, &fread);
+                if (R_FAILED(read_rc)) {
+                    nf.Close();
+                    curr_open = false;
+                    unzCloseCurrentFile(zfile);
+                    return read_rc;
+                }
+                if (static_cast<s64>(fread) != chunk) {
+                    nf.Close();
+                    curr_open = false;
+                    unzCloseCurrentFile(zfile);
+                    return FsError_InvalidSize;
+                }
+                if (std::memcmp(zbuf.data(), fbuf.data(), chunk) != 0) {
+                    nf.Close();
+                    curr_open = false;
+                    unzCloseCurrentFile(zfile);
+                    return FsError_InvalidSize;
+                }
+                offset += chunk;
+            }
+
+            u8 dummy;
+            int extra_zr = unzReadCurrentFile(zfile, &dummy, 1);
+            if (extra_zr != 0) {
+                nf.Close();
+                curr_open = false;
+                unzCloseCurrentFile(zfile);
+                return FsError_InvalidSize;
+            }
+
+            nf.Close();
+
+            curr_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
+            if (info.crc && file_crc != info.crc) {
+                R_THROW(0x8);
+            }
+
+            verified_files.insert(resolved.path.s);
+        }
+    }
+
+    R_UNLESS(observed_inventory.files == expected_inventory.files, FsError_PathNotFound);
+    R_UNLESS(observed_inventory.directories == expected_inventory.directories, FsError_PathNotFound);
+    R_UNLESS(verified_files.size() == expected_inventory.files.size(), FsError_PathNotFound);
+    R_UNLESS(UNZ_END_OF_LIST_OF_FILE == unzGoToNextFile(zfile), Result_UnzGoToNextFile);
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        log_write("failed to rewind zip after verification\n");
+        R_THROW(Result_UnzGoToFirstFile);
+    }
+
+    // 4. Re-enumerate native inventory after byte comparison to catch observable changes
+    ui::menu::filebrowser::FsDirCollections post_collections;
+    R_TRY(ui::menu::filebrowser::FsView::get_collections(fs, base_path, "", post_collections, true));
+
+    std::map<std::string, s64> post_files;
+    std::set<std::string> post_dirs;
+
+    for (const auto& col : post_collections) {
+        if (col.path != base_path) {
+            std::string dir_key = col.path.s;
+            while (dir_key.size() > 1 && dir_key.back() == '/') {
+                dir_key.pop_back();
+            }
+            if (!dir_key.empty() && dir_key != "/") {
+                post_dirs.insert(dir_key);
+                for (const auto& parent : GetParentDirectories(dir_key)) {
+                    post_dirs.insert(parent);
+                }
+            }
+        }
+        for (const auto& d : col.dirs) {
+            auto dir_path = fs::AppendPath(col.path, d.name);
+            std::string dir_key = dir_path.s;
+            while (dir_key.size() > 1 && dir_key.back() == '/') {
+                dir_key.pop_back();
+            }
+            if (!dir_key.empty() && dir_key != "/") {
+                post_dirs.insert(dir_key);
+                for (const auto& parent : GetParentDirectories(dir_key)) {
+                    post_dirs.insert(parent);
+                }
+            }
+        }
+        for (const auto& f : col.files) {
+            R_UNLESS(f.file_size >= 0, FsError_TargetLocked);
+            auto file_path = fs::AppendPath(col.path, f.name);
+            std::string file_key = file_path.s;
+            auto [fit, finserted] = post_files.try_emplace(file_key, f.file_size);
+            R_UNLESS(finserted, FsError_TargetLocked);
+            for (const auto& parent : GetParentDirectories(file_key)) {
+                post_dirs.insert(parent);
+            }
+        }
+    }
+
+    R_UNLESS(post_files.size() == native_files.size(), FsError_TargetLocked);
+    for (const auto& [path, size] : native_files) {
+        auto it = post_files.find(path);
+        R_UNLESS(it != post_files.end(), FsError_TargetLocked);
+        R_UNLESS(it->second == size, FsError_TargetLocked);
+    }
+    R_UNLESS(post_dirs.size() == native_dirs.size(), FsError_TargetLocked);
+    for (const auto& dir : native_dirs) {
+        R_UNLESS(post_dirs.contains(dir), FsError_TargetLocked);
+    }
+
+    R_SUCCEED();
+}
+
+Result VerifyArchiveAgainstNative(
+    ui::ProgressBox* pbox,
+    const fs::FsPath& zip_out,
+    fs::Fs* fs,
+    const fs::FsPath& base_path,
+    const UnzipPayloadInventory& expected_inventory,
+    UnzipAllFilter filter,
+    bool save_dbi_compat) {
+
+    zlib_filefunc64_def file_func;
+    mz::FileFuncStdio(&file_func);
+
+    auto zfile = unzOpen2_64(zip_out, &file_func);
+    R_UNLESS(zfile, Result_UnzOpen2_64);
+    ON_SCOPE_EXIT(unzClose(zfile));
+
+    return VerifyArchiveAgainstNative(pbox, zfile, fs, base_path, expected_inventory, filter, save_dbi_compat);
 }
 
 } // namespace::thread

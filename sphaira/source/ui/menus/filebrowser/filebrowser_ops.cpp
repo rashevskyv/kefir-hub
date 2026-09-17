@@ -277,8 +277,9 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
             if (!op_index || *op_index != 1) return;
 
             auto recovery_path = std::make_shared<fs::FsPath>();
+            auto mutation_started = std::make_shared<bool>(false);
 
-            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_disa, se, recovery_path](auto pbox) -> Result {
+            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_disa, se, recovery_path, mutation_started](auto pbox) -> Result {
                 if (is_disa) {
                     fs::File src_file;
                     R_TRY(m_fs->OpenFile(file_path, FsOpenMode_Read, &src_file));
@@ -313,18 +314,32 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                     R_TRY(bis_fs.Commit());
                     R_SUCCEED();
                 } else {
-                    return save::RestoreSaveZip(pbox, se, file_path, recovery_path.get());
+                    return save::RestoreSaveZip(pbox, se, file_path, recovery_path.get(), mutation_started.get());
                 }
-            }, [recovery_path](Result rc) {
+            }, [recovery_path, mutation_started, is_disa](Result rc) {
                 if (R_FAILED(rc)) {
                     App::PushErrorBox(rc, "Save restore failed!"_i18n);
                 } else {
                     App::Notify("Save restored successfully!"_i18n);
                 }
 
-                if (!recovery_path->empty()) {
-                    const std::string msg = (R_SUCCEEDED(rc) ? "Restore completed.\nSafety recovery archive:\n"_i18n : "Restore stopped.\nSafety recovery archive retained:\n"_i18n) + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
-                    App::Push<OptionBox>(msg, "OK"_i18n);
+                if (!is_disa) {
+                    if (!recovery_path->empty()) {
+                        std::string prefix;
+                        if (R_SUCCEEDED(rc)) {
+                            prefix = "Restore completed.\nSafety recovery archive:\n"_i18n;
+                        } else if (*mutation_started) {
+                            prefix = "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n"_i18n;
+                        } else {
+                            prefix = "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n;
+                        }
+                        const std::string msg = prefix + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+                        App::Push<OptionBox>(msg, "OK"_i18n);
+                    } else if (R_FAILED(rc)) {
+                        if (!*mutation_started) {
+                            App::Push<OptionBox>("Restore stopped before target save was modified."_i18n, "OK"_i18n);
+                        }
+                    }
                 }
             });
         });

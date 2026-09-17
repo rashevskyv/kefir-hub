@@ -72,10 +72,10 @@ def test_source_contracts() -> None:
     with open(hpp_path, "r", encoding="utf-8") as f:
         hpp_src = f.read()
 
-    check("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr);" in hpp_src,
-          "save_menu.hpp must declare RestoreSaveZip with out_recovery_path")
-    check("Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr) const;" in hpp_src,
-          "save_menu.hpp must declare RestoreSaveInternal with out_recovery_path")
+    check("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr);" in hpp_src,
+          "save_menu.hpp must declare RestoreSaveZip with out_recovery_path and out_mutation_started")
+    check("Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr) const;" in hpp_src,
+          "save_menu.hpp must declare RestoreSaveInternal with out_recovery_path and out_mutation_started")
 
     # 1.2 save_menu_ops.cpp implementations
     ops_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
@@ -108,7 +108,7 @@ def test_source_contracts() -> None:
           "WriteSaveBackupZip must fail closed on flush/sync/close failure")
 
     # RestoreSaveZip definition and body
-    rsz_start = ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path)")
+    rsz_start = ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started)")
     check(rsz_start != -1, "RestoreSaveZip definition must exist in save_menu_ops.cpp")
 
     rsi_start = ops_src.find("Result Menu::RestoreSaveInternal(", rsz_start)
@@ -149,9 +149,9 @@ def test_source_contracts() -> None:
           "RestoreSaveZip must check file count representability in s64")
     check("try_emplace" in rsz_body, "RestoreSaveZip must use try_emplace for checked uniqueness")
 
-    # Single advance path in recovery archive verification loop
-    check("is_meta" in rsz_body, "RestoreSaveZip must identify metadata without skipping iterator advance")
-    check("unzGoToNextFile(rec_zfile)" in rsz_body, "RestoreSaveZip must advance iterator on every file")
+    # Verified recovery archive check against native held mount
+    check("VerifyArchiveAgainstNative(pbox, rec_zfile, &save_fs, \"/\", rec_inventory, save_filter, true)" in rsz_body,
+          "RestoreSaveZip must verify recovery archive against native held mount")
 
     # Checked recovery reader close BEFORE publication
     check("unzClose(rec_zfile)" in rsz_body, "RestoreSaveZip must close recovery reader before publication")
@@ -220,8 +220,8 @@ def test_source_contracts() -> None:
           "filebrowser_ops.cpp must check haze::IsRunning() only for ZIP restores")
     check("A safety recovery backup will be created on SD before overwriting" in fb_ops_src,
           "filebrowser_ops.cpp must include safety notice in confirmation prompt")
-    check("save::RestoreSaveZip(pbox, se, file_path, recovery_path.get())" in fb_ops_src,
-          "filebrowser_ops.cpp must forward recovery_path pointer to RestoreSaveZip")
+    check("save::RestoreSaveZip(pbox, se, file_path, recovery_path.get(), mutation_started.get())" in fb_ops_src,
+          "filebrowser_ops.cpp must forward recovery_path and mutation_started pointer to RestoreSaveZip")
     check('App::PushErrorBox(rc, "Save restore failed!"_i18n);' in fb_ops_src,
           "filebrowser_ops.cpp must show PushErrorBox for failures")
     check("!recovery_path->empty()" in fb_ops_src,

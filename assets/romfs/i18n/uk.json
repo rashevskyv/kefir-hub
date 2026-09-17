@@ -2449,5 +2449,12 @@
   "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP.": "Перед перезаписом на SD буде створено перевірену резервну копію відновлення.\nБудь ласка, закрийте запущену гру та вимкніть MTP.",
   "Creating recovery backup...": "Створення резервної копії відновлення...",
   "Validating recovery backup...": "Перевірка резервної копії відновлення...",
-  "Restore selected saves?": "Відновити вибрані збереження?"
+  "Restore selected saves?": "Відновити вибрані збереження?",
+  "Verifying restored save...": "Перевірка відновленого збереження...",
+  "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n": "Відновлення зупинено: цільове збереження могло змінитися, а відновлений вміст не перевірено.\nВідновлювальний архів безпеки збережено:\n",
+  "Restore stopped before target save was modified.\nSafety recovery archive retained:\n": "Відновлення зупинено до зміни цільового збереження.\nВідновлювальний архів безпеки збережено:\n",
+  "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n": "Відновлення зупинено: поточне цільове збереження могло змінитися, а відновлений вміст не перевірено.\nВідновлювальний(і) архів(и) безпеки збережено:\n",
+  "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n": "Відновлення зупинено до зміни поточного цільового збереження.\nВідновлювальний(і) архів(и) безпеки збережено:\n",
+  "Restore stopped before target save was modified.": "Відновлення зупинено до зміни цільового збереження.",
+  "Restore stopped before current target save was modified.": "Відновлення зупинено до зміни поточного цільового збереження."
 }

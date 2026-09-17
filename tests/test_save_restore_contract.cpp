@@ -70,8 +70,8 @@ static int test_preflight_ordering_contract() {
     CHECK(commit_pos != std::string::npos);
 
     // 3. Passes save_dbi_compat=true to both preflight and extraction
-    CHECK(rsz_body.find("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary)") != std::string::npos);
-    CHECK(rsz_body.find("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true)") != std::string::npos);
+    CHECK(rsz_body.find("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary") != std::string::npos);
+    CHECK(rsz_body.find("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true") != std::string::npos);
 
     // 4. Menu::RestoreSaveInternal delegates to RestoreSaveZip and has no ZIP lifecycle after RAW branch
     const auto bsi_pos = save_menu_code.find("Result Menu::BackupSaveInternal(", rsi_pos);
