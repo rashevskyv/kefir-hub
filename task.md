@@ -1,9 +1,18 @@
-Актуальний delivery — **v0.13.854**: fresh-remount ZIP verification завершено. Завершені задачі збережено в
-[`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
-та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
-у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
+Актуальний delivery — **v0.13.855**: serial ZIP commit lifecycle завершено.
 
-## Поточний delivery: v0.13.854 (fresh-remount ZIP verification)
+## Поточний delivery: v0.13.855
+
+- [x] `JOURNAL-RESEARCH-855` — primary/master/clean/base ancestry, Graphify та libnx/JKSV/Checkpoint lifecycle research.
+- [x] `JOURNAL-POLICY-855` — selected declared journal request cap, zero cadence, negative fail; allocation/metadata ceiling.
+- [x] `JOURNAL-COPY-855` — serial exact-offset write/checked flush/close/commit/reopen; progress після commit, cancel gates, empty files.
+- [x] `JOURNAL-META-855` — component directory create/checked commit/kind check; full-size file metadata commit; no retry/SetSize; clear/final commits.
+- [x] `JOURNAL-PRESERVE-855` — v854 preflight/admission/recovery/MTP/fresh RO/source-close guarantees; generic unzip/UMS/RAW/global CRUD preserved.
+- [x] `JOURNAL-STATIC-855` — senior connected ZIP/event/fault/cancel/progress/recovery/final-verification model; eight Python suites + diff check PASS, no compile/IPC/hardware.
+- [x] `DOCS-BUMP-855` — app 0.13.855, user-authorized senior completion, accepted diff/four docs/focused primary-master commit; no push.
+- [ ] `JOURNAL-BUDGET-QUEUED-855` — actual free journal/allocation/metadata fit proof remains queued.
+- [ ] `HW-855` — separate test-build and disposable Switch both routes/large/zero-tiny/fault/cancel/manual recovery/fresh remount checks.
+
+## Попередній delivery: v0.13.854 (fresh-remount ZIP verification)
 
 - [x] `VERIFY-RESEARCH-854` — exact primary/master/clean/ac6675c3 ancestry; root Graphify update; source/callers/native CRUD/transfer threads/ZIP close/platform evidence; fixed policy, no product edits/compile.
 - [x] `VERIFY-REWORK-854` — Gemini follow-up fixes reviewed: shared resolver/overloads, pre-clear source/cancel gates, checked bounds/drain/source inventory, RAW isolation.

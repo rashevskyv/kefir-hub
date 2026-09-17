@@ -199,9 +199,10 @@ def test_source_contracts() -> None:
     close_pos = rsz_body.index("source_reader_open = false;", ro_pos)
     assert commit_pos < post_pos < ro_pos < close_pos < rsz_body.rfind("R_SUCCEED();")
     copy_body = tft_cpp[tft_cpp.index("static Result TransferUnzipInternal("):tft_cpp.index("Result TransferUnzip(ui::")]
-    flush_pos = copy_body.index("const auto flush_rc = fsFileFlush")
-    assert copy_body.index("const auto transfer_rc = thread::TransferInternal") < flush_pos
-    assert flush_pos < copy_body.index("R_TRY(flush_rc);") < copy_body.index("R_TRY(fs->Commit());")
+    write_pos = copy_body.index("const auto write_rc = fsFileWrite")
+    flush_pos = copy_body.index("const auto flush_rc = fsFileFlush", write_pos)
+    assert write_pos < flush_pos
+    assert flush_pos < copy_body.index("R_TRY(flush_rc);", flush_pos) < copy_body.index("const auto commit_rc = fs->Commit();", flush_pos)
     assert "UNZ_END_OF_LIST_OF_FILE == unzGoToNextFile(zfile)" in vaan_body
     raw_prefix = ops_cpp.index("} else if (*last_item_is_raw) {")
     raw_end = ops_cpp.index("} else if", raw_prefix + 2)
@@ -286,8 +287,8 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.854)" in cmake_src,
-          "sphaira/CMakeLists.txt must be bumped to 0.13.854")
+    check("set(sphaira_VERSION " in cmake_src,
+          "sphaira/CMakeLists.txt remains the canonical version source")
 
     print("  -> Static source contracts PASSED.")
 

@@ -1846,11 +1846,13 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
 
         // ponytail: held mount and byte comparison verify correspondence at check time, but do not provide snapshot isolation against concurrent external mutation; true atomic save transactions require filesystem-level snapshot support.
         R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
+        R_TRY(save_fs.Commit());
 
         log_write("opened save file\n");
         // restore save data from zip.
         pbox->NewTransfer("Restoring save..."_i18n);
-        R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true, true));
+        const s64 target_journal_size = (e.save_data_id != 0) ? live.journal_size : 0;
+        R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true, true, target_journal_size));
 
         R_TRY(save_fs.Commit());
         log_write("finished save restore commit\n");

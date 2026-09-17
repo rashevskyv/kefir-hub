@@ -1,7 +1,16 @@
-Актуальний delivery — **v0.13.854** (2026-09-17). Попередні
-walkthrough збережено в
-[`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
-та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+Актуальний delivery — **v0.13.855** (2026-09-17). History: archive/walkthrough_archive.md.
+
+## v0.13.855 — serial ZIP commit lifecycle
+
+Accepted v0.13.855: serial ZIP commit lifecycle. Gemini implementation/follow-up reviewed; user explicitly authorized senior completion of connected regression fixtures and unconditional native ownership invalidation. Baseline e5fe804ed59718a48abaf4e4dbdcfca26de3129e, primary D:/git/dev/sphaira/master; clean verified before planning.
+
+Checked native save copy uses serial bounded ZIP read, exact-offset write, checked flush, explicit native close/invalidation, checked commit for every successful chunk, progress after commit and Write-only reopen. Cancellation gates before create/after metadata commit/before read/before write/after commit; empty files supported. Positive selected actual-space live declared journal caps requests at min(512 KiB, journal, remaining); zero retains cadence, negative fails before extraction metadata. No source hints for existing target.
+
+Directory primitives and metadata commits are separate, component-wise, with existing-kind validation and no recursive retry masking. Full-size native file create option 0 commits before payload; unexpected file fails without SetSize. Clear-boundary/final commits checked. Generic unzip/UMS/RAW/global CRUD unchanged. All v854 preflight/CRC/inventory/selected identity/lower-bound/recovery-before-clear/MTP admission/mutation UI/final fresh RO exact inventory-size-bytes/source-close guarantees preserved. Published recovery retained on success/failure/cancel.
+
+Senior actually ran eight compiler-free Python suites PASS plus git diff --check PASS. Connected regression now clears old data, injects post-clear conflicts, tests shared read-result bounds and actual progress, models final mount/verify/source-close refusals and operation-hook cancellation during commit/reopen. Python/text models do not execute C++/IPC/hardware. Expected duplicate ZIP warnings are fixture inputs. No compile/configure/WSL build/NRO/compiled tests/tests/run.sh/binaries/push.
+
+Ceiling: declared-size payload cap is not actual free journal. Allocation/metadata/block overhead unmeasured; even one primitive may exhaust journal; tiny caps may be slow. Quantitative budget/sizing/growth/isolation remain queued. No no-exhaustion/capacity/atomic/rollback/snapshot/power-loss guarantee. Separate test-build and disposable Switch both routes/>journal file/zero-tiny/empty/implicit dirs/fault/cancel/manual recovery/fresh RO checks required.
 
 ## v0.13.854 — fresh-remount ZIP verification
 
