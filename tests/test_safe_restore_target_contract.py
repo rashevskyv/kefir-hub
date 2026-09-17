@@ -90,7 +90,7 @@ def test_source_contracts():
 
     check("FindLatestBackupPath(fs.get(), src, backup_root, file_path)" in ops_cpp_src,
           "RestoreSaves must use source entry to locate backup file")
-    check("RestoreSaveInternal(pbox, dst, file_path)" in ops_cpp_src,
+    check("RestoreSaveInternal(pbox, dst, file_path" in ops_cpp_src,
           "RestoreSaves must pass destination target to RestoreSaveInternal")
     check("R_UNLESS(!e.is_backup && e.save_data_id != 0, FsError_PathNotFound);" in ops_cpp_src,
           "RestoreSaveInternal must guard against unresolved backup entries and zero-ID targets")
@@ -104,7 +104,7 @@ def test_source_contracts():
 
     check("save::DiscoverSaveDataInfo(&acc.uid, FsSaveDataType_Account)" in fb_src,
           "RestoreSaveFile ZIP picker must query Account saves per local UID via shared discovery")
-    check("return save::RestoreSaveZip(pbox, se, file_path);" in fb_src,
+    check("return save::RestoreSaveZip(pbox, se, file_path" in fb_src,
           "RestoreSaveFile must pass discovered live entry se to RestoreSaveZip")
 
     print("Source contracts: ALL PASS (4 anchor groups)")

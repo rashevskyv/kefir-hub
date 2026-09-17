@@ -48,7 +48,7 @@ def test_source_contracts() -> None:
     with open(save_ops_path, "r", encoding="utf-8") as f:
         save_ops_src = f.read()
 
-    rsz_start = save_ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)")
+    rsz_start = save_ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path")
     check(rsz_start != -1, "RestoreSaveZip definition must exist in save_menu_ops.cpp")
 
     rsi_start = save_ops_src.find("Result Menu::RestoreSaveInternal(", rsz_start)
@@ -156,9 +156,9 @@ def test_source_contracts() -> None:
     with open(fb_ops_path, "r", encoding="utf-8") as f:
         fb_ops_src = f.read()
 
-    check("return save::RestoreSaveZip(pbox, se, file_path);" in fb_ops_src,
+    check("return save::RestoreSaveZip(pbox, se, file_path" in fb_ops_src,
           "File Browser restore must delegate to save::RestoreSaveZip")
-    check("return RestoreSaveZip(pbox, e, path);" in save_ops_src,
+    check("return RestoreSaveZip(pbox, e, path" in save_ops_src,
           "Save Menu RestoreSaveInternal must delegate to RestoreSaveZip")
 
     print("    OK: All static source contracts passed.")

@@ -598,7 +598,7 @@ void Menu::DisplaySaveOptions() {
 
         options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, App::GetSaveAutoBackupOnRestore(), [](bool& v_out){
             App::SetSaveAutoBackupOnRestore(v_out);
-        }, "Automatically create a backup before restoring a save."_i18n);
+        }, "Automatically create a backup before restoring a raw save (ZIP restores always verify and create an SD recovery archive first)."_i18n);
 
         options->Add<SidebarEntryBool>("Compress backup"_i18n, App::GetSaveCompressBackup(), [](bool& v_out){
             App::SetSaveCompressBackup(v_out);

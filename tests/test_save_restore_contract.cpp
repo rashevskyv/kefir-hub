@@ -36,13 +36,13 @@ static int test_preflight_ordering_contract() {
     // 1. Shared function declaration in save_menu.hpp
     const std::string save_menu_hpp = read_file_to_string("sphaira/include/ui/menus/save_menu.hpp");
     CHECK(!save_menu_hpp.empty());
-    CHECK(save_menu_hpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path);") != std::string::npos);
+    CHECK(save_menu_hpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path") != std::string::npos);
 
     // 2. Shared function existence and ordering in save_menu_ops.cpp
     const std::string save_menu_code = read_file_to_string("sphaira/source/ui/menus/save/save_menu_ops.cpp");
     CHECK(!save_menu_code.empty());
 
-    const auto rsz_pos = save_menu_code.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path)");
+    const auto rsz_pos = save_menu_code.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path");
     CHECK(rsz_pos != std::string::npos);
 
     const auto rsi_pos = save_menu_code.find("Result Menu::RestoreSaveInternal(", rsz_pos);
@@ -78,7 +78,7 @@ static int test_preflight_ordering_contract() {
     CHECK(bsi_pos != std::string::npos);
     const std::string rsi_body = save_menu_code.substr(rsi_pos, bsi_pos - rsi_pos);
 
-    CHECK(rsi_body.find("return RestoreSaveZip(pbox, e, path);") != std::string::npos);
+    CHECK(rsi_body.find("return RestoreSaveZip(pbox, e, path") != std::string::npos);
 
     const auto raw_end = rsi_body.find("log_write(\"finished raw save restore\\n\");");
     CHECK(raw_end != std::string::npos);
@@ -101,7 +101,7 @@ static int test_preflight_ordering_contract() {
 
     const std::string fb_restore_body = fb_code.substr(fb_restore_pos, fb_unzip_pos - fb_restore_pos);
 
-    CHECK(fb_restore_body.find("return save::RestoreSaveZip(pbox, se, file_path);") != std::string::npos);
+    CHECK(fb_restore_body.find("return save::RestoreSaveZip(pbox, se, file_path") != std::string::npos);
     CHECK(fb_restore_body.find("TransferUnzipPreflight") == std::string::npos);
     CHECK(fb_restore_body.find("FsNativeSave") == std::string::npos);
     CHECK(fb_restore_body.find("DeleteAllCollections") == std::string::npos);

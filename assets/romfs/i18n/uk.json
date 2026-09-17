@@ -2437,5 +2437,17 @@
   "Are you sure you want to delete all backups for the selected games?": "Ви впевнені, що хочете видалити всі резервні копії для вибраних ігор?",
   "Delete backups": "Видалити резервні копії",
   "deleted, ": "видалено, ",
-  "failed.": "не вдалося."
+  "failed.": "не вдалося.",
+  "Automatically create a backup before restoring a raw save (ZIP restores always verify and create an SD recovery archive first).": "Автоматично створювати резервну копію перед відновленням сирого збереження (відновлення ZIP завжди спершу верифікує та створює відновлювальний архів на SD).",
+  "MTP is currently active. Please close the running game and disable MTP before restoring save data.": "MTP зараз активний. Будь ласка, закрийте запущену гру та вимкніть MTP перед відновленням даних збереження.",
+  "Restore completed.\nSafety recovery archive(s):\n": "Відновлення завершено.\nВідновлювальний(і) архів(и) безпеки:\n",
+  "Restore stopped.\nSafety recovery archive(s) retained:\n": "Відновлення зупинено.\nВідновлювальний(і) архів(и) безпеки збережено:\n",
+  "Restore completed.\nSafety recovery archive:\n": "Відновлення завершено.\nВідновлювальний архів безпеки:\n",
+  "Restore stopped.\nSafety recovery archive retained:\n": "Відновлення зупинено.\nВідновлювальний архів безпеки збережено:\n",
+  "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot.": "Ручне відновлення: відкрийте Файловий браузер -> виберіть recovery.zip -> Відновити у підтверджений цільовий слот.",
+  "Restore save data to\n": "Відновити дані збереження у\n",
+  "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP.": "Перед перезаписом на SD буде створено перевірену резервну копію відновлення.\nБудь ласка, закрийте запущену гру та вимкніть MTP.",
+  "Creating recovery backup...": "Створення резервної копії відновлення...",
+  "Validating recovery backup...": "Перевірка резервної копії відновлення...",
+  "Restore selected saves?": "Відновити вибрані збереження?"
 }

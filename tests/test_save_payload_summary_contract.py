@@ -239,9 +239,9 @@ def test_source_contracts():
     with open(fb_ops, "r", encoding="utf-8") as f:
         fb_ops_src = f.read()
 
-    check("save::RestoreSaveZip(pbox, se, file_path)" in fb_ops_src,
+    check("save::RestoreSaveZip(pbox, se, file_path" in fb_ops_src,
           "File Browser restore must delegate to save::RestoreSaveZip")
-    check("return RestoreSaveZip(pbox, e, path);" in save_ops_src,
+    check("return RestoreSaveZip(pbox, e, path" in save_ops_src,
           "Save Menu restore must delegate to RestoreSaveZip")
     print("Source contracts: ALL PASS (5 anchor groups)")
 

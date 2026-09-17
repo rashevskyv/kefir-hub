@@ -1,7 +1,17 @@
-Актуальний delivery — **v0.13.852** (2026-09-16). Попередні
+Актуальний delivery — **v0.13.853** (2026-09-17). Попередні
 walkthrough збережено в
 [`archive/walkthrough_v0.13.357-v0.13.430.md`](archive/walkthrough_v0.13.357-v0.13.430.md)
 та [`archive/walkthrough_archive.md`](archive/walkthrough_archive.md).
+
+## v0.13.853 — verified recovery admission
+
+Shared RestoreSaveZip existing selected target після full source ZIP/live identity/byte admission створює mandatory local SD NX recovery саме destination, включно explicit remap. Reuse shared backup writer, streaming SD, checked entry/final ZIP close і scoped fflush/fsync/fclose/commits; invalid fd fail-closed. Empty saves/files/directories підтримано.
+Reopen/full CRC preflight, exact inventory/streaming bytes comparison та sized re-enumeration перед clear; checked sums/counts. Owned collision-safe /dumps/recovery/<timestamp>_<save-id>_<counter>/, native rename окремо від commit, three ownership states; foreign final не видаляється. Published archive/path retained after failure/cancel і both UI routes повідомляють manual recovery File Browser -> recovery.zip -> confirmed existing slot. Cleanup best-effort при failing SD; incomplete artifact не advertised.
+Shared ZIP MTP refusal/upfront game-close/MTP-off notice; toggle лише optional RAW backup. Batch sequential per-target, earlier completed restores не rollback. Held mount не snapshot isolation; no atomic restore/batch/automatic rollback/power-loss/capacity-fit guarantee. RAW/growth/create/adapters/MTP redesign/shutdown/binaries поза scope.
+
+Gemini 09-17 16:18 прийнято senior source/caller/diff review. Senior за explicit user authorization додав test-only malformed inventory/close-failure/retention fixtures та фактично виконав шість compiler-free Python checks PASS, en/uk JSON PASS і git diff --check PASS. Model/text не C++/IPC/runtime proof; compile/link/NRO/compiled tests/hardware НЕ запускались. App 0.13.852 -> 0.13.853; four delivery docs updated для focused commit.
+
+Next: separate test-build, Switch fsync support і disposable-save checks обома routes/remap/empty/no-space/flush refusal/collision/manual recovery. Journal queued окремо: actual budget/metadata/zero-small handling, checked write-flush-close-commit-reopen cadence, all CRUD/unzip callers/device verification.
 
 ## v0.13.852 — existing-save capacity admission
 

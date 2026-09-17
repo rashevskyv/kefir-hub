@@ -1,9 +1,23 @@
-Актуальний delivery — **v0.13.852**: existing-save capacity admission; реалізовано Gemini, прийнято senior source review. Завершені задачі збережено в
+Актуальний delivery — **v0.13.853**: verified recovery admission; прийнято senior review. Завершені задачі збережено в
 [`archive/task_v0.13.249-v0.13.430.md`](archive/task_v0.13.249-v0.13.430.md)
 та [`archive/task_archive.md`](archive/task_archive.md). Порядок —
 у [`plan.md`](plan.md), результат — у [`walkthrough.md`](walkthrough.md).
 
-## Поточний delivery: v0.13.852 (existing-save capacity admission)
+## Поточний delivery: v0.13.853 (verified recovery admission)
+
+- [x] `RECOVERY-RESEARCH-853` — primary/master/clean/base ancestry, graph/source/callers/lifetimes, fixed scope.
+- [x] `RECOVERY-WRITER-853` — shared streaming SD writer, destination NX metadata, checked ZIP/stdio close-flush-sync/commits, empty save/files/directories.
+- [x] `RECOVERY-ADMISSION-853` — full source/live admission; recovery full preflight/exact inventory/bytes/sized re-enumeration before clear; checked arithmetic.
+- [x] `RECOVERY-OWNERSHIP-853` — native rename then commits, three cleanup states, no foreign final deletion; published archive retained after failure/cancel.
+- [x] `RECOVERY-UI-853` — both routes retained paths/upfront policy/shared ZIP MTP guard; RAW toggle scope, neutral errors, en/uk.
+- [x] `RECOVERY-REWORK-853` — Gemini 16:18 accepted; senior small test-only completion under user authorization.
+- [x] `RECOVERY-STATIC-853` — senior six Python checks/JSON/diff PASS; source/model not C++/IPC proof.
+- [x] `DOCS-BUMP-853` — app 0.13.853, accepted/four docs updated for focused commit.
+- [ ] `JOURNAL-QUEUED-853` — actual budget/metadata/zero-small handling, checked close-flush-commit-reopen/all callers; separate delivery.
+- [ ] `HW-853` — separate test-build, fsync support, both routes/remap/empty/no-space/flush refusal/collision/manual recovery.
+- [ ] `ISOLATION-QUEUED-853` — no snapshot exclusion/atomic batch/rollback/power-loss guarantee.
+
+## Попередній delivery: v0.13.852 (existing-save capacity admission)
 
 - [x] `P2B-RESEARCH-852` — exact primary clean master/base ancestry; Graphify update; shared restore/native lifetimes/all extend callers і current libnx/JKSV/Checkpoint sources перевірено.
 - [x] `P2B-LIVE-852` — checked selected actual-space extra read; full attr identity, positive usable data/nonnegative journal; failures до clear.

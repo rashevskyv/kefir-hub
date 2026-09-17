@@ -87,7 +87,7 @@ enum class SaveOp {
 };
 
 void SignalChange();
-Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path);
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr);
 
 struct Menu final : grid::Menu {
     // app_id_filter limits the grid to one game's saves (entered from the game
@@ -225,7 +225,7 @@ private:
     void SyncSavesRemoteWithLocation(const location::Entry& loc);
 
     auto BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath;
-    Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path) const;
+    Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr) const;
     Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false, const fs::FsPath& backup_root = "/dumps") const;
     bool FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const;
     // every restorable archive for e across all backup formats/locations,

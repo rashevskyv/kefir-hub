@@ -2408,5 +2408,17 @@
   "Are you sure you want to delete all backups for the selected games?": "Are you sure you want to delete all backups for the selected games?",
   "Delete backups": "Delete backups",
   "deleted, ": "deleted, ",
-  "failed.": "failed."
+  "failed.": "failed.",
+  "Automatically create a backup before restoring a raw save (ZIP restores always verify and create an SD recovery archive first).": "Automatically create a backup before restoring a raw save (ZIP restores always verify and create an SD recovery archive first).",
+  "MTP is currently active. Please close the running game and disable MTP before restoring save data.": "MTP is currently active. Please close the running game and disable MTP before restoring save data.",
+  "Restore completed.\nSafety recovery archive(s):\n": "Restore completed.\nSafety recovery archive(s):\n",
+  "Restore stopped.\nSafety recovery archive(s) retained:\n": "Restore stopped.\nSafety recovery archive(s) retained:\n",
+  "Restore completed.\nSafety recovery archive:\n": "Restore completed.\nSafety recovery archive:\n",
+  "Restore stopped.\nSafety recovery archive retained:\n": "Restore stopped.\nSafety recovery archive retained:\n",
+  "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot.": "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot.",
+  "Restore save data to\n": "Restore save data to\n",
+  "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP.": "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP.",
+  "Creating recovery backup...": "Creating recovery backup...",
+  "Validating recovery backup...": "Validating recovery backup...",
+  "Restore selected saves?": "Restore selected saves?"
 }

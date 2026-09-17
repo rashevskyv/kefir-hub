@@ -24,6 +24,7 @@
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "title_info.hpp"
+#include "haze_helper.hpp"
 #include <minizip/zip.h>
 #include <minizip/unzip.h>
 #include <cstring>
@@ -146,6 +147,11 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
         return;
     }
 
+    if (!is_disa && haze::IsRunning()) {
+        App::Push<OptionBox>("MTP is currently active. Please close the running game and disable MTP before restoring save data."_i18n, "OK"_i18n);
+        return;
+    }
+
     u64 target_id = 0;
     std::string_view name_view{entry.name};
     if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
@@ -263,10 +269,16 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
     }
 
     const auto execute_restore = [this, file_path, is_disa](save::Entry se, const std::string& label) {
-        App::Push<OptionBox>("Restore save data to\n" + label + "?", "No"_i18n, "Yes"_i18n, 0, [this, file_path, is_disa, se](auto op_index) {
+        const std::string prompt = is_disa
+            ? ("Restore save data to\n"_i18n + label + "?")
+            : ("Restore save data to\n"_i18n + label + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n);
+
+        App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, file_path, is_disa, se](auto op_index) {
             if (!op_index || *op_index != 1) return;
 
-            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_disa, se](auto pbox) -> Result {
+            auto recovery_path = std::make_shared<fs::FsPath>();
+
+            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_disa, se, recovery_path](auto pbox) -> Result {
                 if (is_disa) {
                     fs::File src_file;
                     R_TRY(m_fs->OpenFile(file_path, FsOpenMode_Read, &src_file));
@@ -301,13 +313,18 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                     R_TRY(bis_fs.Commit());
                     R_SUCCEED();
                 } else {
-                    return save::RestoreSaveZip(pbox, se, file_path);
+                    return save::RestoreSaveZip(pbox, se, file_path, recovery_path.get());
                 }
-            }, [](Result rc) {
+            }, [recovery_path](Result rc) {
                 if (R_FAILED(rc)) {
                     App::PushErrorBox(rc, "Save restore failed!"_i18n);
                 } else {
                     App::Notify("Save restored successfully!"_i18n);
+                }
+
+                if (!recovery_path->empty()) {
+                    const std::string msg = (R_SUCCEEDED(rc) ? "Restore completed.\nSafety recovery archive:\n"_i18n : "Restore stopped.\nSafety recovery archive retained:\n"_i18n) + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+                    App::Push<OptionBox>(msg, "OK"_i18n);
                 }
             });
         });

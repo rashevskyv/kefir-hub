@@ -1,8 +1,20 @@
-Поточний delivery — **v0.13.852**: existing-save capacity admission; реалізовано Gemini, прийнято senior source review. Завершені плани збережено в
+Поточний delivery — **v0.13.853**: verified recovery admission; прийнято senior review. Завершені плани збережено в
 [`archive/plan_v0.13.357-v0.13.430.md`](archive/plan_v0.13.357-v0.13.430.md)
 та [`archive/plan_archive.md`](archive/plan_archive.md).
 
-## Поточний delivery: v0.13.852 — existing-save capacity admission
+## Поточний delivery: v0.13.853 — verified recovery admission
+
+База e7942e899bdef25bd886c03d5489ee1ce6a1afcb. Primary/master/clean/base ancestry перевірено до planning, root/master/ancestry повторено перед acceptance. Graphify root update: 12690 nodes / 25254 edges / 652 communities, 7 parser warnings. App 0.13.852 -> 0.13.853; four docs updated для focused commit.
+
+Shared RestoreSaveZip existing selected target після full source ZIP/live identity/byte admission створює mandatory local SD NX recovery саме destination, включно explicit remap. Reuse shared backup writer, streaming SD, checked entry/final ZIP close і scoped fflush/fsync/fclose/commits; invalid fd fail-closed. Empty saves/files/directories підтримано.
+Reopen/full CRC preflight, exact inventory/streaming bytes comparison та sized re-enumeration перед clear; checked sums/counts. Owned collision-safe /dumps/recovery/<timestamp>_<save-id>_<counter>/, native rename окремо від commit, three ownership states; foreign final не видаляється. Published archive/path retained after failure/cancel і both UI routes повідомляють manual recovery File Browser -> recovery.zip -> confirmed existing slot. Cleanup best-effort при failing SD; incomplete artifact не advertised.
+Shared ZIP MTP refusal/upfront game-close/MTP-off notice; toggle лише optional RAW backup. Batch sequential per-target, earlier completed restores не rollback. Held mount не snapshot isolation; no atomic restore/batch/automatic rollback/power-loss/capacity-fit guarantee. RAW/growth/create/adapters/MTP redesign/shutdown/binaries поза scope.
+
+Gemini 09-17 16:18 прийнято senior source/caller/diff review. Senior за explicit user authorization додав test-only malformed inventory/close-failure/retention fixtures та фактично виконав шість compiler-free Python checks PASS, en/uk JSON PASS і git diff --check PASS. Model/text не C++/IPC/runtime proof; compile/link/NRO/compiled tests/hardware НЕ запускались. Recovery 17 groups із expanded malformed inventories/failure/retention cases; duplicate-name warnings очікувані fixtures. Legacy C++ contract лише text-adjusted, не compiled.
+
+Next: separate test-build, Switch fsync support і disposable-save checks обома routes/remap/empty/no-space/flush refusal/collision/manual recovery. Journal queued окремо: actual budget/metadata/zero-small handling, checked write-flush-close-commit-reopen cadence, all CRUD/unzip callers/device verification.
+
+## Попередній delivery: v0.13.852 — existing-save capacity admission
 
 Статус: реалізовано Gemini, follow-up 09-16 19:35 прийнято senior full source/caller/diff review. App 0.13.852; база cda36d782973de5ea344738b55f2ebcb711fe561, exact primary/master/clean/base ancestry перевірено перед planning edits. Graphify update: 12670 nodes / 25221 edges / 637 communities, 7 partial-parser warnings. Gemini повідомив PASS п'яти Python checks: capacity (12 model groups), summary (5 source/15 archive/3 arithmetic), selected-target, discovery, MTP. Senior тести не запускав; git diff --check пройшов. Compile/link/NRO/runtime/hardware не перевірено. Text anchors/model не C++ control-flow/IPC/mount-lifetime proof.
 1. Shared RestoreSaveZip existing selected slot only: зберегти full ZIP payload/CRC preflight, checked actual-space extra-data read за selected nonzero ID; порівняти application/system ID, full UID, type/index/rank з selected attr. Read failure/mismatch/invalid live sizes fail до clear; data_size > 0, journal_size >= 0 (zero не є divisor).
