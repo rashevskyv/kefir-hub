@@ -148,7 +148,10 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
             App::Push<OptionBox>("Not a valid save backup directory."_i18n, "OK"_i18n);
             return;
         }
-    } else if (!is_disa && !is_zip) {
+    } else if (is_disa) {
+        App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
+        return;
+    } else if (!is_zip) {
         App::Push<OptionBox>("Not a valid save backup file."_i18n, "OK"_i18n);
         return;
     }
@@ -158,18 +161,6 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
         return;
     }
 
-    u64 target_id = 0;
-    if (!is_dir) {
-        std::string_view name_view{entry.name};
-        if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
-            name_view = name_view.substr(0, name_view.size() - 5);
-        }
-        if (name_view.size() == 16) {
-            char* end = nullptr;
-            target_id = std::strtoull(std::string{name_view}.c_str(), &end, 16);
-        }
-    }
-
     struct SaveOption {
         save::Entry entry;
         std::string label;
@@ -177,8 +168,37 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
     std::vector<SaveOption> save_options;
 
     const auto accounts = App::GetAccountList();
-    constexpr u8 SAVE_TYPES[] = {
-        FsSaveDataType_Account,
+    std::set<std::string> seen_keys;
+
+    const auto add_candidates = [&](const std::vector<FsSaveDataInfo>& infos, const std::string& acc_name) {
+        for (const auto& info : infos) {
+            const auto key = save::SaveEntryKey(info);
+            if (seen_keys.insert(key).second) {
+                save::Entry se;
+                static_cast<FsSaveDataInfo&>(se) = info;
+
+                auto data = title::Get(se.application_id);
+                std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
+
+                char id_str[64];
+                if (se.save_data_index != 0 || se.save_data_rank != 0) {
+                    std::snprintf(id_str, sizeof(id_str), " [idx:%u rk:%u sp:%u %016lX]",
+                        se.save_data_index, se.save_data_rank, se.save_data_space_id, se.save_data_id);
+                } else {
+                    std::snprintf(id_str, sizeof(id_str), " [sp:%u %016lX]",
+                        se.save_data_space_id, se.save_data_id);
+                }
+                save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
+            }
+        }
+    };
+
+    for (const auto& acc : accounts) {
+        const auto infos = save::DiscoverSaveDataInfo(&acc.uid, FsSaveDataType_Account);
+        add_candidates(infos, acc.nickname);
+    }
+
+    constexpr u8 NON_ACCOUNT_TYPES[] = {
         FsSaveDataType_Bcat,
         FsSaveDataType_Device,
         FsSaveDataType_Temporary,
@@ -186,89 +206,9 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
         FsSaveDataType_System,
         FsSaveDataType_SystemBcat,
     };
-
-    if (is_disa) {
-        for (const auto& acc : accounts) {
-            for (const auto type : SAVE_TYPES) {
-                FsSaveDataSpaceId space_id = FsSaveDataSpaceId_User;
-                FsSaveDataFilter filter{};
-                filter.attr.save_data_type = type;
-                filter.filter_by_save_data_type = true;
-                if (type == FsSaveDataType_Account) {
-                    filter.attr.uid = acc.uid;
-                    filter.filter_by_user_id = true;
-                } else if (type == FsSaveDataType_System || type == FsSaveDataType_SystemBcat) {
-                    space_id = FsSaveDataSpaceId_System;
-                } else if (type == FsSaveDataType_Cache) {
-                    space_id = FsSaveDataSpaceId_SdUser;
-                } else if (type == FsSaveDataType_Temporary) {
-                    space_id = FsSaveDataSpaceId_Temporary;
-                }
-
-                FsSaveDataInfoReader reader;
-                if (R_SUCCEEDED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
-                    ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
-                    std::vector<FsSaveDataInfo> info_list(256);
-                    s64 count = 0;
-                    while (R_SUCCEEDED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &count)) && count > 0) {
-                        for (s64 i = 0; i < count; i++) {
-                            save::Entry se;
-                            static_cast<FsSaveDataInfo&>(se) = info_list[i];
-                            se.save_data_space_id = space_id;
-                            auto data = title::Get(se.application_id);
-                            std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
-                            std::string acc_name = (type == FsSaveDataType_Account) ? acc.nickname : save::GetSaveTypeLabel(type);
-                            char id_str[32];
-                            std::snprintf(id_str, sizeof(id_str), " [%016lX]", se.save_data_id);
-                            save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
-                        }
-                    }
-                }
-            }
-        }
-    } else {
-        std::set<std::string> seen_keys;
-
-        const auto add_candidates = [&](const std::vector<FsSaveDataInfo>& infos, const std::string& acc_name) {
-            for (const auto& info : infos) {
-                const auto key = save::SaveEntryKey(info);
-                if (seen_keys.insert(key).second) {
-                    save::Entry se;
-                    static_cast<FsSaveDataInfo&>(se) = info;
-
-                    auto data = title::Get(se.application_id);
-                    std::string game_name = (data && data->lang.name[0] != '\0') ? data->lang.name : (se.system_save_data_id ? "System" : "Unknown");
-
-                    char id_str[64];
-                    if (se.save_data_index != 0 || se.save_data_rank != 0) {
-                        std::snprintf(id_str, sizeof(id_str), " [idx:%u rk:%u sp:%u %016lX]",
-                            se.save_data_index, se.save_data_rank, se.save_data_space_id, se.save_data_id);
-                    } else {
-                        std::snprintf(id_str, sizeof(id_str), " [sp:%u %016lX]",
-                            se.save_data_space_id, se.save_data_id);
-                    }
-                    save_options.push_back({se, game_name + " (" + acc_name + ")" + id_str});
-                }
-            }
-        };
-
-        for (const auto& acc : accounts) {
-            const auto infos = save::DiscoverSaveDataInfo(&acc.uid, FsSaveDataType_Account);
-            add_candidates(infos, acc.nickname);
-        }
-
-        constexpr u8 NON_ACCOUNT_TYPES[] = {
-            FsSaveDataType_Bcat,
-            FsSaveDataType_Device,
-            FsSaveDataType_Temporary,
-            FsSaveDataType_Cache,
-            FsSaveDataType_System,
-            FsSaveDataType_SystemBcat,
-        };
-        for (const auto type : NON_ACCOUNT_TYPES) {
-            const auto infos = save::DiscoverSaveDataInfo(nullptr, type);
-            add_candidates(infos, save::GetSaveTypeLabel(type));
-        }
+    for (const auto type : NON_ACCOUNT_TYPES) {
+        const auto infos = save::DiscoverSaveDataInfo(nullptr, type);
+        add_candidates(infos, save::GetSaveTypeLabel(type));
     }
 
     if (save_options.empty()) {
@@ -281,9 +221,7 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
             return;
         }
 
-        const std::string prompt = is_disa
-            ? ("Restore save data to\n"_i18n + label + "?")
-            : ("Restore save data to\n"_i18n + label + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n);
+        const std::string prompt = "Restore save data to\n"_i18n + label + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
         App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, file_path, is_dir, is_disa, se](auto op_index) {
             if (!op_index || *op_index != 1) return;
@@ -292,40 +230,7 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
             auto mutation_started = std::make_shared<bool>(false);
 
             App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_dir, is_disa, se, recovery_path, mutation_started](auto pbox) -> Result {
-                if (is_disa) {
-                    fs::File src_file;
-                    R_TRY(m_fs->OpenFile(file_path, FsOpenMode_Read, &src_file));
-                    s64 src_size{};
-                    R_TRY(src_file.GetSize(&src_size));
-
-                    const auto partition_id = save::IsSystemLikeSave(se.save_data_type) ? FsBisPartitionId_System : FsBisPartitionId_User;
-                    fs::FsNativeBis bis_fs{partition_id};
-                    R_TRY(bis_fs.GetFsOpenResult());
-
-                    char target_path[64];
-                    std::snprintf(target_path, sizeof(target_path), "/save/%016lX", se.save_data_id);
-
-                    bis_fs.DeleteFile(target_path);
-                    R_TRY(bis_fs.CreateFile(target_path, src_size, 0));
-
-                    fs::File dst_file;
-                    R_TRY(bis_fs.OpenFile(target_path, FsOpenMode_Write, &dst_file));
-
-                    pbox->NewTransfer("Restoring raw save..."_i18n);
-                    pbox->UpdateTransfer(0, src_size);
-
-                    R_TRY(thread::Transfer(pbox, src_size,
-                        [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
-                            return src_file.Read(off, data, size, FsReadOption_None, bytes_read);
-                        },
-                        [&](const void* data, s64 off, s64 size) -> Result {
-                            return dst_file.Write(off, data, size, FsWriteOption_None);
-                        }
-                    ));
-
-                    R_TRY(bis_fs.Commit());
-                    R_SUCCEED();
-                } else if (is_dir) {
+                if (is_dir) {
                     return save::RestoreSaveFolder(pbox, se, file_path, recovery_path.get(), mutation_started.get());
                 } else {
                     return save::RestoreSaveZip(pbox, se, file_path, recovery_path.get(), mutation_started.get());
@@ -358,21 +263,6 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
             });
         });
     };
-
-    if (target_id) {
-        const SaveOption* matched_candidate = nullptr;
-        size_t match_count = 0;
-        for (const auto& opt : save_options) {
-            if (opt.entry.save_data_id == target_id || opt.entry.application_id == target_id || opt.entry.system_save_data_id == target_id) {
-                matched_candidate = &opt;
-                match_count++;
-            }
-        }
-        if (match_count == 1 && matched_candidate != nullptr) {
-            execute_restore(matched_candidate->entry, matched_candidate->label);
-            return;
-        }
-    }
 
     PopupList::Items items;
     for (const auto& opt : save_options) {

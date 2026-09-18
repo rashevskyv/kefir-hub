@@ -1,6 +1,32 @@
+Актуальний delivery — **v0.13.858 accepted**: fail-closed RAW restore; accepted baseline **v0.13.857**.
+
+## Поточний delivery: v0.13.858 — fail-closed RAW restore
+
+- [x] `RAW-ACCEPT-858` — Gemini16:01 recovery-before-write/failure fixtures reviewed, RAW suite PASS reported; old11 PASS from15:57 retained. Senior diff check/source review, no suite rerun/build. Product accepted bounded refusal only.
+
+
+- [x] `RAW-RESEARCH-858` — exact primary/master/clean/base ancestry twice; canonical Graphify update/query; both RAW writers, single/batch callers, optional logical ZIP backup, integrity UI, libnx/format/JKSV/Checkpoint sources reviewed.
+- [x] `RAW-POLICY-858` — all RAW container restores unsupported before auto-backup/target mutation; no magic/filename/size/ZIP-remap authority, no cryptographic or recovery guarantees invented.
+- [x] `RAW-HANDOFF-858` — self-contained NEW Gemini prompt prepared; manual user handoff, no senior product implementation/parallel agents/builds.
+- [x] `RAW-REFUSE-858` — shared policy/message and both caller gates + internal defense; remove duplicated BIS destructive blocks, preserve ZIP/folder and source/discovery/export.
+- [x] `RAW-UI-858` — honest RAW unsupported refusal/single/batch results, integrity unsupported count, no false success/corrupt/full-integrity claim; en/uk parity/setting description.
+- [x] `RAW-FIXTURES-858` — real independent structural byte fixtures + connected no-write route/fault/cancel models and static boundaries; all11 old compiler-free suites preserved, no runtime proof.
+- [x] `RAW-REVIEW-858` — senior full diff/source/callers/results/lifetimes/claim review; corrections only Gemini.
+- [x] `DOCS-BUMP-858` — junior .857 -> .858; after acceptance senior all four docs/focused primary master commit, clean+ancestor/no push.
+- [ ] `HW-858` — separate user compile/disposable Switch refusal single/batch/File Browser, retained earlier ZIP recovery, normal ZIP/folder regressions.
+- [ ] `RAW-DESTRUCTIVE-QUEUED` — proven authentication/format/console identity, checked immutable-ish stage and exact RAW destination recovery/write/readback contract; outside .858.
+
 Актуальний delivery — **v0.13.857 accepted**: безпечний import папки backup; попередній baseline **v0.13.856**.
 
-## Поточний delivery: v0.13.857 — безпечний import папки backup
+- [x] `RAW-REVIEW1-858` — Gemini15:28 NOT ACCEPTED: missing real binary/connected route-fault fixtures; new ZIP filename shortcut; stale Settings RAW description. Senior diff check PASS, no suite rerun/build/product edits/commit.
+- [x] `RAW-REWORK1-858` — focused NEW Gemini corrections and meaningful fixtures, preserve no-build/policy/ZIP/folder contracts.
+
+- [x] `RAW-REVIEW2-858` — Gemini15:41 NOT ACCEPTED: invented fixture offsets, missing encoded overflow/version/routes fault matrix and ZIP model admission, ineffective sentinel writes, missing integrity outcome checks; toggle description still promises inactive behavior.
+- [x] `RAW-REWORK2-858` — correct documented byte fixtures and connected preflight/refusal matrix; honest retained setting description. No builds.
+
+- [x] `RAW-REVIEW3-858` — Gemini15:57 previous corrections closed; one test blocker: mixed recovery created after target write, not before. Test-only order/failure rework pending; no product changes required.
+
+## Попередній delivery: v0.13.857 — безпечний import папки backup
 
 - [x] `FOLDER-ACCEPT-857` — final Gemini13:51 actual repeated ZIP admission/full selected-live identity/size checks reviewed; 11 Python suites + JSON parity PASS reported by Gemini, senior diff check PASS. No senior suite rerun/compile/C++ IPC or hardware proof. User-authorized TegraExplorer ROMFS update preserved/included without binary validation.
 

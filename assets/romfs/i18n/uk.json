@@ -2460,5 +2460,12 @@
   "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n": "Відновлення зупинено: поточне цільове збереження могло змінитися, а відновлений вміст не перевірено.\nВідновлювальний(і) архів(и) безпеки збережено:\n",
   "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n": "Відновлення зупинено до зміни поточного цільового збереження.\nВідновлювальний(і) архів(и) безпеки збережено:\n",
   "Restore stopped before target save was modified.": "Відновлення зупинено до зміни цільового збереження.",
-  "Restore stopped before current target save was modified.": "Відновлення зупинено до зміни поточного цільового збереження."
+  "Restore stopped before current target save was modified.": "Відновлення зупинено до зміни поточного цільового збереження.",
+  "RAW container restore is unsupported.": "Відновлення RAW контейнерів не підтримується.",
+  "Automatically create a backup before restoring (ZIP restores always verify and create an SD recovery archive first; RAW container restore is unsupported).": "Автоматично створювати резервну копію перед відновленням (відновлення ZIP завжди спершу верифікує та створює відновлювальний архів на SD; відновлення RAW контейнерів не підтримується).",
+  " RAW save container(s) are unsupported for verification.": " RAW контейнер(ів) збережень не підтримуються для перевірки.",
+  "ZIP archives verified: ": "ZIP архіви перевірено: ",
+  " valid.\n": " дійсні.\n",
+  " valid ZIP archive(s).\n": " дійсних ZIP архів(ів).\n",
+  "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.": "Відновлення ZIP завжди створює перевірений відновлювальний архів на SD незалежно від цього налаштування. Відновлення RAW контейнерів не підтримується."
 }

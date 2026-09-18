@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include "path_util.hpp"
 #include "minizip_helper.hpp"
+#include "i18n.hpp"
 #include <minizip/unzip.h>
 #include <minIni.h>
 #include <cstring>
@@ -1675,30 +1676,8 @@ auto VerifyZipIntegrity(const fs::FsPath& path) -> bool {
     return entries_read == gi.number_entry && entries_read > 0;
 }
 
-auto VerifyDisaIntegrity(fs::Fs* fs, const fs::FsPath& path) -> bool {
-    if (!IsDisaSaveFile(fs, path)) {
-        return false;
-    }
-    fs::File file;
-    if (R_FAILED(fs->OpenFile(path, FsOpenMode_Read, &file))) {
-        return false;
-    }
-    s64 size{};
-    if (R_FAILED(file.GetSize(&size)) || size < 0x200) {
-        return false;
-    }
-
-    std::vector<u8> buffer(64 * 1024);
-    s64 offset = 0;
-    while (offset < size) {
-        const u64 to_read = std::min<s64>(buffer.size(), size - offset);
-        u64 bytes_read = 0;
-        if (R_FAILED(file.Read(offset, buffer.data(), to_read, FsReadOption_None, &bytes_read)) || bytes_read != to_read) {
-            return false;
-        }
-        offset += bytes_read;
-    }
-    return true;
+auto GetRawRestoreUnsupportedMessage() -> std::string {
+    return "RAW container restore is unsupported."_i18n;
 }
 
 } // namespace sphaira::ui::menu::save

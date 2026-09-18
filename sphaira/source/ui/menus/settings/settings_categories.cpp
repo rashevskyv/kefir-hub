@@ -312,7 +312,7 @@ auto BuildSavesCategoryItems() -> std::vector<SettingsItem> {
         }
     });
     items.emplace_back(MakeBoolItem("Compress backup"_i18n, "Save backups as compressed ZIP archives to reduce disk space."_i18n, App::GetSaveCompressBackup, App::SetSaveCompressBackup));
-    items.emplace_back(MakeBoolItem("Auto backup on restore"_i18n, "Automatically create a backup before restoring a raw save (ZIP restores always verify and create an SD recovery archive first)."_i18n, App::GetSaveAutoBackupOnRestore, App::SetSaveAutoBackupOnRestore));
+    items.emplace_back(MakeBoolItem("Auto backup on restore"_i18n, "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported."_i18n, App::GetSaveAutoBackupOnRestore, App::SetSaveAutoBackupOnRestore));
     items.emplace_back(MakeFolderItem("Save Backup Search Paths"_i18n, "Manage custom folders scanned for save backups."_i18n, BuildSaveBackupSearchPathsItems));
 
     items.emplace_back(MakeHeader("Remote"_i18n));

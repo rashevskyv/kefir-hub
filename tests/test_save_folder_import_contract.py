@@ -129,8 +129,8 @@ def test_source_contracts():
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.857)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.857")
+    check("set(sphaira_VERSION 0.13.857)" in cmake_src or "set(sphaira_VERSION 0.13.858)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.857 or 0.13.858")
 
     # 1.2 save_menu.hpp declarations
     sm_hpp_path = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -318,8 +318,8 @@ def test_source_contracts():
         fbp_src = f.read()
     check("const bool is_dir = entry.IsDir();" in fbp_src,
           "filebrowser_ops.cpp RestoreSaveFile must check entry.IsDir()")
-    check("if (!is_dir) {" in fbp_src and "target_id = std::strtoull" in fbp_src,
-          "filebrowser_ops.cpp RestoreSaveFile must suppress target_id inference for directories")
+    check("target_id = std::strtoull" not in fbp_src,
+          "filebrowser_ops.cpp RestoreSaveFile must not infer target_id from filename")
     check("haze::IsRunning()" in fbp_src,
           "filebrowser_ops.cpp RestoreSaveFile must check haze::IsRunning()")
     check("se.save_data_id == 0 || se.is_backup" in fbp_src,

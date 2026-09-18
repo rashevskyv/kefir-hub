@@ -121,7 +121,6 @@ auto InferBackupIdFromPath(std::string_view full_path) -> u64;
 
 auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, BackupArchiveInfo& out) -> bool;
 auto VerifyZipIntegrity(const fs::FsPath& path) -> bool;
-auto VerifyDisaIntegrity(fs::Fs* fs, const fs::FsPath& path) -> bool;
 
 struct BackupSecondaryColumns {
     std::string title_id;
@@ -166,6 +165,8 @@ auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool;
 auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath>;
 auto IsDisaSaveFile(fs::Fs* fs, const fs::FsPath& path) -> bool;
 auto IsRawSaveCandidate(fs::Fs* fs, const fs::FsPath& path, std::string_view name) -> bool;
+inline constexpr Result Result_RawSaveRestoreUnsupported = Result_FsInvalidType;
+auto GetRawRestoreUnsupportedMessage() -> std::string;
 auto GetBackupSearchPaths() -> std::vector<std::string>;
 auto GetShareableSaveBackupRoots() -> std::vector<std::string>;
 auto AddBackupSearchPath(const fs::FsPath& path) -> bool;

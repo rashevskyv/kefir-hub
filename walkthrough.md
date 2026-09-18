@@ -1,3 +1,11 @@
+Актуальний delivery — **v0.13.858** (2026-09-18). History: archive/walkthrough_archive.md.
+
+## v0.13.858 — fail-closed RAW restore
+
+Accepted v0.13.858, 2026-09-18 after Gemini16:01 final test-only correction. Removed both Save Menu/File Browser destructive RAW BIS container writers. Recognized RAW refused before auto-backup/target mutation in single/batch/browser, with internal defense; RAW integrity reported unsupported rather than readable-valid. Supported ZIP/folder always explicitly select/confirm existing destination; filename target shortcut removed. Both retained toggle descriptions state mandatory ZIP SD recovery regardless of setting and RAW unsupported. Existing ZIP/folder admission, destination recovery/retention, actual-space identity, serial commits and fresh-RO verification preserved. No RAW authentication/portability/remap or destructive support claims.
+
+Verification evidence: Gemini15:57 reports all12 compiler-free Python suites and dead-symbol check PASS; Gemini16:01 reran changed RAW suite only plus diff check PASS. Senior reviewed full product diff/callers and successive actual fixture/model changes, ran git diff --check, did not rerun suites or compile. Real unauthenticated/incomplete header-layout fixtures, 15 artifact/fault variants across4 modeled routes, target sentinels, mixed batch actual recovery archive with recovery-before-write ordering and recovery creation/readback failures; these do not execute C++/libnx/IPC/hardware. Final tests use captured sentinel initial bytes and simplified ZIP/path admission; no snapshot/exhaustive verifier/runtime proof. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. User separate compile/disposable Switch checks required. Full RAW proven authentication/identity/console contract, checked staging/exact raw recovery/write/readback remain queued; no automatic rollback/atomicity/journal-fit claims.
+
 Актуальний delivery — **v0.13.857** (2026-09-18). History: archive/walkthrough_archive.md.
 
 ## v0.13.857 — import явно вибраної SD backup-папки

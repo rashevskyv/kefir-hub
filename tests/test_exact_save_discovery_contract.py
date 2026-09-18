@@ -108,8 +108,8 @@ def test_source_contracts():
           "RestoreSaveFile ZIP picker must query non-account saves once total via shared discovery")
     check("save::SaveEntryKey(info)" in fb_src,
           "RestoreSaveFile ZIP picker must deduplicate candidates using SaveEntryKey")
-    check("match_count == 1 && matched_candidate != nullptr" in fb_src,
-          "RestoreSaveFile must auto-select target_id only when exactly ONE candidate matches")
+    check('App::Push<PopupList>("Select Target Save"_i18n' in fb_src,
+          "RestoreSaveFile ZIP/folder must always present explicit target picker")
 
     print("Source contracts: ALL PASS (6 anchor groups)")
 

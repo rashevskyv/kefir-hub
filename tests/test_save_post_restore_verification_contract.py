@@ -250,8 +250,8 @@ def test_source_contracts() -> None:
           "filebrowser_ops.cpp must capture is_disa in completion callback")
     check("if (!is_disa) {" in fb_ops,
           "filebrowser_ops.cpp must isolate RAW restores from ZIP verification messages")
-    check("bis_fs.DeleteFile(target_path);\n                    R_TRY(bis_fs.CreateFile" in fb_ops,
-          "filebrowser_ops.cpp must not flag mutation_started in RAW branch")
+    check("bis_fs.DeleteFile" not in fb_ops,
+          "filebrowser_ops.cpp must not contain destructive RAW restore block")
     check("Restore stopped: target save may have changed and restored contents are unverified" in fb_ops,
           "filebrowser_ops.cpp must branch error message based on mutation_started")
 

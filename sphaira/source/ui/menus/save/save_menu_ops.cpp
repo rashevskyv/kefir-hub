@@ -417,9 +417,8 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 *last_item_is_raw = is_raw;
                 *last_mutation_started = false;
 
-                if (App::GetSaveAutoBackupOnRestore() && dst.save_data_id != 0 && is_raw) {
-                    pbox->SetActionName("Auto backup"_i18n);
-                    R_TRY(BackupSaveInternal(pbox, location, dst, App::GetSaveCompressBackup(), true, backup_root));
+                if (is_raw) {
+                    return Result_RawSaveRestoreUnsupported;
                 }
 
                 pbox->SetActionName("Restore"_i18n);
@@ -439,7 +438,11 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
             R_SUCCEED();
         }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw](Result rc){
             if (R_FAILED(rc)) {
-                App::PushErrorBox(rc, "Restore failed!"_i18n);
+                if (*last_item_is_raw) {
+                    App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
+                } else {
+                    App::PushErrorBox(rc, "Restore failed!"_i18n);
+                }
             } else {
                 if (*restored) {
                     App::Notify("Restore successful!"_i18n);
@@ -730,14 +733,17 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
     fs::Fs* probe_fs = chosen.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
     const bool is_raw = IsDisaSaveFile(probe_fs, chosen);
 
-    if (!is_raw && haze::IsRunning()) {
+    if (is_raw) {
+        App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
+        return;
+    }
+
+    if (haze::IsRunning()) {
         App::Push<OptionBox>("MTP is currently active. Please close the running game and disable MTP before restoring save data."_i18n, "OK"_i18n);
         return;
     }
 
-    const std::string prompt = is_raw
-        ? ("Restore save data to\n"_i18n + e.GetName() + "?")
-        : ("Restore save data to\n"_i18n + e.GetName() + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n);
+    const std::string prompt = "Restore save data to\n"_i18n + e.GetName() + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
     App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, e = std::move(e), location, backup_root, chosen = std::move(chosen), is_raw](auto op_index) mutable {
         if (!op_index || *op_index != 1) return;
@@ -747,11 +753,6 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
 
         App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen, recovery_path, mutation_started, is_raw](auto pbox) mutable -> Result {
             detail::LoadControlEntry(e);
-
-            if (App::GetSaveAutoBackupOnRestore() && e.save_data_id != 0 && is_raw) {
-                pbox->SetActionName("Auto backup"_i18n);
-                R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), true, backup_root));
-            }
 
             pbox->SetActionName("Restore"_i18n);
             R_TRY(RestoreSaveInternal(pbox, e, chosen, recovery_path.get(), mutation_started.get()));
@@ -2420,43 +2421,8 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     fs::Fs* probe_fs = path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
 
     if (IsDisaSaveFile(probe_fs, path)) {
-        // Raw DISA images replace an existing BIS save container directly. A
-        // zero ID would resolve to /save/0000000000000000, so never attempt it.
-        R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);
-        log_write("restoring raw DISA save: %s\n", path.s);
-        fs::File src_file;
-        R_TRY(probe_fs->OpenFile(path, FsOpenMode_Read, &src_file));
-        s64 src_size{};
-        R_TRY(src_file.GetSize(&src_size));
-
-        const auto partition_id = IsSystemLikeSave(e.save_data_type) ? FsBisPartitionId_System : FsBisPartitionId_User;
-        fs::FsNativeBis bis_fs{partition_id};
-        R_TRY(bis_fs.GetFsOpenResult());
-
-        char target_path[64];
-        std::snprintf(target_path, sizeof(target_path), "/save/%016lX", e.save_data_id);
-
-        bis_fs.DeleteFile(target_path);
-        R_TRY(bis_fs.CreateFile(target_path, src_size, 0));
-
-        fs::File dst_file;
-        R_TRY(bis_fs.OpenFile(target_path, FsOpenMode_Write, &dst_file));
-
-        pbox->NewTransfer("Restoring raw save..."_i18n);
-        pbox->UpdateTransfer(0, src_size);
-
-        R_TRY(thread::Transfer(pbox, src_size,
-            [&](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
-                return src_file.Read(off, data, size, FsReadOption_None, bytes_read);
-            },
-            [&](const void* data, s64 off, s64 size) -> Result {
-                return dst_file.Write(off, data, size, FsWriteOption_None);
-            }
-        ));
-
-        R_TRY(bis_fs.Commit());
-        log_write("finished raw save restore\n");
-        R_SUCCEED();
+        log_write("refusing unsupported raw DISA save restore: %s\n", path.s);
+        return Result_RawSaveRestoreUnsupported;
     }
 
     return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started);

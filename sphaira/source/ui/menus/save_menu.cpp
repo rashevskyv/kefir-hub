@@ -598,7 +598,7 @@ void Menu::DisplaySaveOptions() {
 
         options->Add<SidebarEntryBool>("Auto backup on restore"_i18n, App::GetSaveAutoBackupOnRestore(), [](bool& v_out){
             App::SetSaveAutoBackupOnRestore(v_out);
-        }, "Automatically create a backup before restoring a raw save (ZIP restores always verify and create an SD recovery archive first)."_i18n);
+        }, "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported."_i18n);
 
         options->Add<SidebarEntryBool>("Compress backup"_i18n, App::GetSaveCompressBackup(), [](bool& v_out){
             App::SetSaveCompressBackup(v_out);
@@ -2081,9 +2081,10 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
 void Menu::VerifyIntegrity(const std::vector<Entry>& seeds) {
     auto valid_count = std::make_shared<size_t>(0);
     auto invalid_count = std::make_shared<size_t>(0);
+    auto unsupported_raw_count = std::make_shared<size_t>(0);
     auto failed_names = std::make_shared<std::vector<std::string>>();
 
-    App::Push<ProgressBox>(0, "Verify integrity"_i18n, "", [this, seeds, valid_count, invalid_count, failed_names](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Verify integrity"_i18n, "", [this, seeds, valid_count, invalid_count, unsupported_raw_count, failed_names](auto pbox) -> Result {
         fs::FsNativeSd sd_fs;
         const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
 
@@ -2107,15 +2108,15 @@ void Menu::VerifyIntegrity(const std::vector<Entry>& seeds) {
             pbox->SetTitle(name);
             pbox->UpdateTransfer(i + 1, all_archives.size());
 
-            bool ok = false;
             if (std::string_view{archive_path.s}.ends_with(".zip")) {
-                ok = VerifyZipIntegrity(archive_path);
+                if (VerifyZipIntegrity(archive_path)) {
+                    (*valid_count)++;
+                } else {
+                    (*invalid_count)++;
+                    failed_names->emplace_back(name);
+                }
             } else if (IsRawSaveCandidate(&sd_fs, archive_path, name)) {
-                ok = VerifyDisaIntegrity(&sd_fs, archive_path);
-            }
-
-            if (ok) {
-                (*valid_count)++;
+                (*unsupported_raw_count)++;
             } else {
                 (*invalid_count)++;
                 failed_names->emplace_back(name);
@@ -2123,23 +2124,45 @@ void Menu::VerifyIntegrity(const std::vector<Entry>& seeds) {
         }
 
         R_SUCCEED();
-    }, [valid_count, invalid_count, failed_names](Result rc) {
+    }, [valid_count, invalid_count, unsupported_raw_count, failed_names](Result rc) {
         if (R_FAILED(rc)) {
             App::PushErrorBox(rc, "Integrity verification failed!"_i18n);
             return;
         }
 
-        if (*invalid_count == 0) {
-            const std::string msg = "Integrity verified: all "_i18n + std::to_string(*valid_count) + " archive(s) are valid."_i18n;
-            App::Push<OptionBox>(msg, "OK"_i18n);
+        if (*unsupported_raw_count == 0) {
+            if (*invalid_count == 0) {
+                const std::string msg = "Integrity verified: all "_i18n + std::to_string(*valid_count) + " archive(s) are valid."_i18n;
+                App::Push<OptionBox>(msg, "OK"_i18n);
+            } else {
+                std::string msg = "Integrity check failed: "_i18n + std::to_string(*invalid_count) + " corrupt archive(s) found:\n"_i18n;
+                for (size_t i = 0; i < std::min<size_t>(5, failed_names->size()); i++) {
+                    msg += "• " + (*failed_names)[i] + "\n";
+                }
+                if (failed_names->size() > 5) {
+                    msg += "...and " + std::to_string(failed_names->size() - 5) + " more.";
+                }
+                App::Push<OptionBox>(msg, "OK"_i18n);
+            }
         } else {
-            std::string msg = "Integrity check failed: "_i18n + std::to_string(*invalid_count) + " corrupt archive(s) found:\n"_i18n;
-            for (size_t i = 0; i < std::min<size_t>(5, failed_names->size()); i++) {
-                msg += "• " + (*failed_names)[i] + "\n";
+            std::string msg;
+            if (*valid_count > 0 || *invalid_count > 0) {
+                if (*invalid_count == 0) {
+                    msg = "ZIP archives verified: "_i18n + std::to_string(*valid_count) + " valid.\n"_i18n;
+                } else {
+                    msg = "Integrity check failed: "_i18n + std::to_string(*invalid_count) + " corrupt archive(s) found:\n"_i18n;
+                    for (size_t i = 0; i < std::min<size_t>(5, failed_names->size()); i++) {
+                        msg += "• " + (*failed_names)[i] + "\n";
+                    }
+                    if (failed_names->size() > 5) {
+                        msg += "...and " + std::to_string(failed_names->size() - 5) + " more.\n";
+                    }
+                    if (*valid_count > 0) {
+                        msg += std::to_string(*valid_count) + " valid ZIP archive(s).\n"_i18n;
+                    }
+                }
             }
-            if (failed_names->size() > 5) {
-                msg += "...and " + std::to_string(failed_names->size() - 5) + " more.";
-            }
+            msg += std::to_string(*unsupported_raw_count) + " RAW save container(s) are unsupported for verification."_i18n;
             App::Push<OptionBox>(msg, "OK"_i18n);
         }
     });

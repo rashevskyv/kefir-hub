@@ -2431,5 +2431,12 @@
   "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n": "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n",
   "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n": "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n",
   "Restore stopped before target save was modified.": "Restore stopped before target save was modified.",
-  "Restore stopped before current target save was modified.": "Restore stopped before current target save was modified."
+  "Restore stopped before current target save was modified.": "Restore stopped before current target save was modified.",
+  "RAW container restore is unsupported.": "RAW container restore is unsupported.",
+  "Automatically create a backup before restoring (ZIP restores always verify and create an SD recovery archive first; RAW container restore is unsupported).": "Automatically create a backup before restoring (ZIP restores always verify and create an SD recovery archive first; RAW container restore is unsupported).",
+  " RAW save container(s) are unsupported for verification.": " RAW save container(s) are unsupported for verification.",
+  "ZIP archives verified: ": "ZIP archives verified: ",
+  " valid.\n": " valid.\n",
+  " valid ZIP archive(s).\n": " valid ZIP archive(s).\n",
+  "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.": "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported."
 }

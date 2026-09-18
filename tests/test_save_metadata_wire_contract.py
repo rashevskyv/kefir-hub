@@ -235,8 +235,8 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.856)" in cmake_src or "set(sphaira_VERSION 0.13.857)" in cmake_src,
-          "sphaira/CMakeLists.txt version must be 0.13.856 or 0.13.857")
+    check("set(sphaira_VERSION 0.13.856)" in cmake_src or "set(sphaira_VERSION 0.13.857)" in cmake_src or "set(sphaira_VERSION 0.13.858)" in cmake_src,
+          "sphaira/CMakeLists.txt version must be 0.13.856, 0.13.857 or 0.13.858")
 
     print("  -> Static source contracts & gate order checks PASSED.")
 
