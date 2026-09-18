@@ -139,10 +139,16 @@ void FsView::InstallFiles() {
 
 void FsView::RestoreSaveFile(const FileEntry& entry) {
     const auto file_path = GetNewPath(entry);
-    const bool is_disa = save::IsDisaSaveFile(m_fs.get(), file_path);
-    const bool is_zip = std::string_view{entry.name}.ends_with(".zip");
+    const bool is_dir = entry.IsDir();
+    const bool is_disa = !is_dir && save::IsDisaSaveFile(m_fs.get(), file_path);
+    const bool is_zip = !is_dir && std::string_view{entry.name}.ends_with(".zip");
 
-    if (!is_disa && !is_zip) {
+    if (is_dir) {
+        if (!IsSd()) {
+            App::Push<OptionBox>("Not a valid save backup directory."_i18n, "OK"_i18n);
+            return;
+        }
+    } else if (!is_disa && !is_zip) {
         App::Push<OptionBox>("Not a valid save backup file."_i18n, "OK"_i18n);
         return;
     }
@@ -153,13 +159,15 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
     }
 
     u64 target_id = 0;
-    std::string_view name_view{entry.name};
-    if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
-        name_view = name_view.substr(0, name_view.size() - 5);
-    }
-    if (name_view.size() == 16) {
-        char* end = nullptr;
-        target_id = std::strtoull(std::string{name_view}.c_str(), &end, 16);
+    if (!is_dir) {
+        std::string_view name_view{entry.name};
+        if (name_view.ends_with(".disa") || name_view.ends_with(".bin")) {
+            name_view = name_view.substr(0, name_view.size() - 5);
+        }
+        if (name_view.size() == 16) {
+            char* end = nullptr;
+            target_id = std::strtoull(std::string{name_view}.c_str(), &end, 16);
+        }
     }
 
     struct SaveOption {
@@ -268,18 +276,22 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
         return;
     }
 
-    const auto execute_restore = [this, file_path, is_disa](save::Entry se, const std::string& label) {
+    const auto execute_restore = [this, file_path, is_dir, is_disa](save::Entry se, const std::string& label) {
+        if (se.save_data_id == 0 || se.is_backup) {
+            return;
+        }
+
         const std::string prompt = is_disa
             ? ("Restore save data to\n"_i18n + label + "?")
             : ("Restore save data to\n"_i18n + label + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n);
 
-        App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, file_path, is_disa, se](auto op_index) {
+        App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, file_path, is_dir, is_disa, se](auto op_index) {
             if (!op_index || *op_index != 1) return;
 
             auto recovery_path = std::make_shared<fs::FsPath>();
             auto mutation_started = std::make_shared<bool>(false);
 
-            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_disa, se, recovery_path, mutation_started](auto pbox) -> Result {
+            App::Push<ProgressBox>(0, "Restoring save..."_i18n, "", [this, file_path, is_dir, is_disa, se, recovery_path, mutation_started](auto pbox) -> Result {
                 if (is_disa) {
                     fs::File src_file;
                     R_TRY(m_fs->OpenFile(file_path, FsOpenMode_Read, &src_file));
@@ -313,6 +325,8 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
 
                     R_TRY(bis_fs.Commit());
                     R_SUCCEED();
+                } else if (is_dir) {
+                    return save::RestoreSaveFolder(pbox, se, file_path, recovery_path.get(), mutation_started.get());
                 } else {
                     return save::RestoreSaveZip(pbox, se, file_path, recovery_path.get(), mutation_started.get());
                 }

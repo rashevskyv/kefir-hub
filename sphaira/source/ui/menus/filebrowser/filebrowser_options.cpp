@@ -351,7 +351,15 @@ void FsView::DisplayOptions() {
                 RestoreSaveFile(GetEntry());
             }, "Restore this save data file to the console."_i18n);
         }
+    }
 
+    if (IsSd() && m_entries_current.size() && !m_selected_count && !IsParentEntry(m_index) && GetEntry().IsDir()) {
+        options->Add<SidebarEntryCallback>("Restore save data"_i18n, [this](){
+            RestoreSaveFile(GetEntry());
+        }, "Restore this save backup directory to the console."_i18n);
+    }
+
+    if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
         options->Add<SidebarEntryCallback>("View as text"_i18n, [this](){
             App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::View, !IsReadOnly(GetNewPathCurrent()));
         }, "Open the selected file in read-only text view mode."_i18n);

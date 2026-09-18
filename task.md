@@ -1,6 +1,25 @@
-Актуальний delivery — **v0.13.856 accepted**: JKSV ZIP metadata wire compatibility; попередній baseline **v0.13.855**.
+Актуальний delivery — **v0.13.857 accepted**: безпечний import папки backup; попередній baseline **v0.13.856**.
 
-## Поточний delivery: v0.13.856 — JKSV ZIP metadata wire compatibility
+## Поточний delivery: v0.13.857 — безпечний import папки backup
+
+- [x] `FOLDER-ACCEPT-857` — final Gemini13:51 actual repeated ZIP admission/full selected-live identity/size checks reviewed; 11 Python suites + JSON parity PASS reported by Gemini, senior diff check PASS. No senior suite rerun/compile/C++ IPC or hardware proof. User-authorized TegraExplorer ROMFS update preserved/included without binary validation.
+
+- [x] `FOLDER-RESEARCH-857` — exact primary/master/empty/base ancestry; canonical Graphify AST update/query; File Browser picker/generic ZIP/shared restore/native directory reader and upstream JKSV/Checkpoint layout reviewed.
+- [x] `FOLDER-POLICY-857` — SD-only explicit directory and existing destination; strict checked inventory -> owned finalized/validated ZIP -> existing shared restore/recovery; no second copy backend, no snapshot claims.
+- [x] `FOLDER-HANDOFF-857` — self-contained NEW Gemini prompt prepared; manual user handoff, no coding agents or senior product edits.
+- [x] `FOLDER-STAGE-857` — bounded EOF traversal/exact readable payload/empty dirs/files/root metadata; checked ZIP finalization/full admission/inventory comparison/cancel.
+- [x] `FOLDER-UI-857` — one SD highlighted directory action, explicit existing target picker/confirmation, en/uk parity and recovery/mutation result preservation.
+- [x] `FOLDER-OWNERSHIP-857` — staging ancestry refusal; exact owned stage cleanup only, retained destination recovery/foreign/source artifacts, honest cleanup failures.
+- [x] `FOLDER-STATIC-857` — connected real folder/ZIP fixtures and focused fault model/source anchors, all nine prior Python suites/JSON/diff checks; no C++/IPC proof.
+- [x] `FOLDER-REVIEW-857` — senior full diff/callers/lifetimes/mutation boundary and verification claim review; all corrections back to Gemini.
+- [x] `FOLDER-REVIEW1-857` — Gemini10:55 NOT ACCEPTED: source component validation/staging ancestry bypass, unchecked full-path truncation, ignored trailing-read failures/empty-file drift, undefined Result_ZipClose, full-empty tree unsupported; new tests synthetic only with invented metadata filter and no connected faults. No senior test rerun/build/product edits; diff check PASS.
+- [x] `FOLDER-REWORK1-857` — NEW Gemini targeted source corrections and real folder/ZIP connected fault fixtures; preserve old nine suites/default shared behavior and recovery retention.
+- [x] `FOLDER-REVIEW2-857` — Gemini11:55 NOT ACCEPTED: canonical/join/read/finalize fixes present; native reservation uses undefined FsNativeSd::Get(); allow-empty enabled on both existing ZIP routes and generic extraction changed; tests still disconnect actual artifacts from fault model and miss required gates/remap. Background TegraExplorer ROMFS update user-authorized, not blocker; AGENTS.md records preference.
+- [x] `FOLDER-REVIEW3-857` — Gemini12:33 NOT ACCEPTED: verifier references undeclared allow_empty without signature/call propagation, so full-empty restore cannot compile; correct85 fixture now present but admission model rejects selected UID remap and ties source identity to destination contrary to product policy; real artifacts improved, required fault gates still incomplete. Senior diff check PASS, no suite rerun/compile/product edits/commit.
+- [x] `DOCS-BUMP-857` — Gemini app .856 -> .857, senior all four docs/focused primary-master commit/ancestor+clean; no push.
+- [ ] `HW-857` — separate user compile and disposable Switch folder/empty/remap/refusal/no-space/cancel/manual recovery; neither role compiles this delivery.
+
+## Попередній delivery: v0.13.856 — JKSV ZIP metadata wire compatibility
 
 - [x] `META-RESEARCH-856` — exact primary/master/clean/bb5ff82 ancestry; Graphify update/query; all metadata consumers/writer/discovery/filter/verifier and pinned upstream/historical/released layouts inspected.
 - [x] `META-POLICY-856` — fixed LE85/two86/legacy128 bounded decoding, ambiguity refusal, source-only identity, duplicates/conflicts fail before mutation; exact offsets and validation in plan.md.

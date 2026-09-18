@@ -88,6 +88,8 @@ enum class SaveOp {
 
 void SignalChange();
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr);
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty);
+Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& folder_path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr);
 
 struct Menu final : grid::Menu {
     // app_id_filter limits the grid to one game's saves (entered from the game

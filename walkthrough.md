@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.856** (2026-09-18). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.857** (2026-09-18). History: archive/walkthrough_archive.md.
+
+## v0.13.857 — import явно вибраної SD backup-папки
+
+File Browser exposes Restore save data for one highlighted native SD directory. Always pick and confirm an existing live slot. Adapter scans native directory batches to checked EOF, validates source components/full path bounds/kinds/inventory and exact reads (including empty files/EOF), streams all contents plus unchanged root metadata and explicit empty directories into a collision-reserved owned ZIP under /dumps/save-import. Checked ZIP entry/final close, flush/sync/close and SD commits precede reopen/full CRC/inventory/shared metadata admission. Only then existing RestoreSaveZip owns destination admission, mandatory exact destination recovery before clear, serial commit cadence and fresh RO verification/source close. Full-empty folder uses explicit empty opt-in; ordinary ZIP defaults remain strict. Published recovery retained on success/failure/cancel; cleanup touches only exact owned stage and nonrecursive empty owned directory. Metadata-free Checkpoint and supported JKSV metadata reuse current source-only policy; explicit Account remap preserves destination UID/actual space/live sizes.
+
+Accepted after Gemini13:51 final model corrections: real tree/ZIP/artifact tests, independent JKSV85 + DBI coexistence/conflict fixtures, remap, repeated shared-boundary archive read and selected-live checks, pre/post-mutation faults, final inventory/size/bytes and leftover-empty refusal. Gemini reports 11 Python suites + JSON/new-key parity + diff check PASS; senior reviewed complete diff/callers/lifetimes and ran diff check, did not rerun suites. Models/source anchors do not execute C++/libnx/IPC/hardware or prove exhaustive runtime behavior. App .856 -> .857; primary master focused commit, no push. Authorized background TegraExplorer ROMFS update included without binary validation; preference persisted in AGENTS.md.
+
+No build/configure/WSL/NRO/compiled tests/tests/run.sh run. User must separately compile and use disposable Switch saves: folder action/explicit picker, Checkpoint/JKSV/remap, nested-empty/full-empty, MTP/invalid path/metadata/no-space/cancel refusal before clear, recovery retention/manual restore and fresh-RO failure messaging. No atomicity/rollback/snapshot/capacity-fit/journal-fit claim; sizing/growth/create/RAW/global scanner and unrelated audit queue deferred.
 
 ## v0.13.856 — JKSV ZIP save metadata compatibility
 

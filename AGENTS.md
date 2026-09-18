@@ -1,6 +1,7 @@
 # Workspace policy
 
 - Work exclusively in the primary checkout: `D:\git\dev\sphaira`.
+- Background updates to `assets/romfs/tegra/TegraExplorer.bin` are user-authorized ROMFS updates, not an out-of-scope blocker. Preserve them and continue the active delivery review without asking again; do not claim this binary was validated by source/model checks.
 - Do not create, select, or operate in a Git worktree for this project.
 - Do not run `git worktree` commands or delegate work to a separate worktree.
 - Before making a change, verify that the active repository is the primary checkout above. If it is not, stop and ask the user rather than editing another checkout.

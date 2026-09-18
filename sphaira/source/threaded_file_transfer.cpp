@@ -968,14 +968,27 @@ Result TransferZip(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsP
     );
 }
 
-Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out) {
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out, bool allow_empty) {
     unz_global_info64 ginfo;
     if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
         R_THROW(Result_UnzGetGlobalInfo64);
     }
 
-    if (ginfo.number_entry == 0 || ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+    if (ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
         R_THROW(FsError_InvalidSize);
+    }
+
+    if (ginfo.number_entry == 0) {
+        if (!allow_empty) {
+            R_THROW(FsError_InvalidSize);
+        }
+        if (output) {
+            *output = UnzipPayloadSummary{};
+        }
+        if (inventory_out) {
+            *inventory_out = UnzipPayloadInventory{};
+        }
+        R_SUCCEED();
     }
     const auto entry_count = static_cast<s64>(ginfo.number_entry);
 
@@ -1154,6 +1167,10 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
     R_SUCCEED();
 }
 
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out) {
+    return TransferUnzipPreflight(pbox, zfile, base_path, filter, save_dbi_compat, output, inventory_out, false);
+}
+
 Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out) {
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
@@ -1181,6 +1198,9 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
     }
 
     if (ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+        R_THROW(FsError_InvalidSize);
+    }
+    if (ginfo.number_entry == 0) {
         R_THROW(FsError_InvalidSize);
     }
     const auto entry_count = static_cast<s64>(ginfo.number_entry);
@@ -1362,7 +1382,8 @@ Result VerifyArchiveAgainstNative(
     const fs::FsPath& base_path,
     const UnzipPayloadInventory& expected_inventory,
     UnzipAllFilter filter,
-    bool save_dbi_compat) {
+    bool save_dbi_compat,
+    bool allow_empty) {
 
     if (!fs || !fs->IsNative()) {
         R_THROW(FsError_NotImplemented);
@@ -1433,8 +1454,19 @@ Result VerifyArchiveAgainstNative(
     if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
         R_THROW(Result_UnzGetGlobalInfo64);
     }
-    if (ginfo.number_entry == 0 || ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+    if (ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
         R_THROW(FsError_InvalidSize);
+    }
+    if (ginfo.number_entry == 0) {
+        if (pbox) {
+            R_TRY(pbox->ShouldExitResult());
+        }
+        R_UNLESS(expected_inventory.files.empty() && expected_inventory.directories.empty(), FsError_InvalidSize);
+        R_UNLESS(native_files.empty() && native_dirs.empty(), FsError_PathNotFound);
+        if (!allow_empty) {
+            R_THROW(FsError_InvalidSize);
+        }
+        R_SUCCEED();
     }
     const auto entry_count = static_cast<s64>(ginfo.number_entry);
 
@@ -1812,7 +1844,8 @@ Result VerifyArchiveAgainstNative(
     const fs::FsPath& base_path,
     const UnzipPayloadInventory& expected_inventory,
     UnzipAllFilter filter,
-    bool save_dbi_compat) {
+    bool save_dbi_compat,
+    bool allow_empty) {
 
     zlib_filefunc64_def file_func;
     mz::FileFuncStdio(&file_func);
@@ -1821,7 +1854,7 @@ Result VerifyArchiveAgainstNative(
     R_UNLESS(zfile, Result_UnzOpen2_64);
     ON_SCOPE_EXIT(unzClose(zfile));
 
-    return VerifyArchiveAgainstNative(pbox, zfile, fs, base_path, expected_inventory, filter, save_dbi_compat);
+    return VerifyArchiveAgainstNative(pbox, zfile, fs, base_path, expected_inventory, filter, save_dbi_compat, allow_empty);
 }
 
 } // namespace::thread

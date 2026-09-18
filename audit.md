@@ -1,6 +1,8 @@
 # audit.md
 
-Версія коду: **v0.13.856**. Дата: 2026-09-18.
+Версія коду: **v0.13.857**. Дата: 2026-09-18.
+
+Accepted v0.13.857: explicit native-SD folder -> owned checked staged ZIP -> existing shared restore/recovery. One File Browser action and explicit existing destination; bounded EOF scan/checked paths/exact reads/empty files+dirs; checked ZIP finalize/stream flush-sync-close/SD commits/full stage admission. Full-empty folder opt-in preserves ordinary ZIP defaults. Recovery retained, exact owned nonrecursive stage cleanup, selected UID/actual space/live sizes authoritative. Gemini13:51 reports 11 compiler-free Python suites/JSON parity/diff check PASS; senior full source/caller/diff/model review + diff check, no suite rerun/compile/runtime proof. Authorized background TegraExplorer update included without binary validation, AGENTS preference recorded. No build/configure/WSL/NRO/tests/run.sh/push. Separate user compilation/disposable Switch checks required. Closes selected-SD folder adapter slice only; no global folder scanner/create/growth/journal-fit/snapshot/atomicity/rollback, unrelated queue remains open.
 
 Accepted v0.13.856, 2026-09-18: JKSV ZIP save metadata compatibility. Gemini reports all nine compiler-free Python suites PASS; senior reviewed source, callers, working-tree diff, declaration order, shared filtering and final connected-model corrections, and ran git diff --check. Senior did not rerun Python suites. Text/token assertions and Python wire/ZIP/lifecycle models do not execute C++/libnx/IPC or prove hardware behavior. No configure/compile/WSL build/NRO/compiled tests/tests/run.sh/binaries/push.
 

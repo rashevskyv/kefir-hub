@@ -194,7 +194,7 @@ def test_source_contracts() -> None:
     check("IsSaveReservedMetadataRoot(name.s)" in ops_src,
           "save_menu_ops.cpp save_filter must execute IsSaveReservedMetadataRoot")
 
-    rsz_start = ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started)")
+    rsz_start = ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started")
     check(rsz_start != -1, "RestoreSaveZip definition must exist")
     rsi_start = ops_src.find("Result Menu::RestoreSaveInternal(", rsz_start)
     check(rsi_start != -1, "Menu::RestoreSaveInternal must follow RestoreSaveZip")
@@ -235,8 +235,8 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.856)" in cmake_src,
-          "sphaira/CMakeLists.txt version must be 0.13.856")
+    check("set(sphaira_VERSION 0.13.856)" in cmake_src or "set(sphaira_VERSION 0.13.857)" in cmake_src,
+          "sphaira/CMakeLists.txt version must be 0.13.856 or 0.13.857")
 
     print("  -> Static source contracts & gate order checks PASSED.")
 

@@ -72,11 +72,12 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs
 // and rewinds the archive to the beginning.
 Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr, UnzipPayloadInventory* inventory_out = nullptr);
 Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr, UnzipPayloadInventory* inventory_out = nullptr);
+Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPath& base_path, UnzipAllFilter filter, bool save_dbi_compat, UnzipPayloadSummary* output, UnzipPayloadInventory* inventory_out, bool allow_empty);
 
 // Verifies archive contents against native filesystem:
 // validates exact inventory (files, sizes, implicit parents, empty directories, no leftovers),
 // streams and compares file bytes with bounded buffers, checks CRC and iterator completion.
-Result VerifyArchiveAgainstNative(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, const UnzipPayloadInventory& expected_inventory, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false);
-Result VerifyArchiveAgainstNative(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs* fs, const fs::FsPath& base_path, const UnzipPayloadInventory& expected_inventory, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false);
+Result VerifyArchiveAgainstNative(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs::FsPath& base_path, const UnzipPayloadInventory& expected_inventory, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, bool allow_empty = false);
+Result VerifyArchiveAgainstNative(ui::ProgressBox* pbox, const fs::FsPath& zip_out, fs::Fs* fs, const fs::FsPath& base_path, const UnzipPayloadInventory& expected_inventory, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, bool allow_empty = false);
 
 } // namespace sphaira::thread
