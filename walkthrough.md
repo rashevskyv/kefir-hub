@@ -1,4 +1,16 @@
-Актуальний delivery — **v0.13.859** (2026-09-18). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.860** (2026-09-18). History: archive/walkthrough_archive.md.
+
+## v0.13.860 — checked ordinary SD backup publication
+
+Accepted v0.13.860, 2026-09-18 after Gemini17:59 final test-only correction. Ordinary SD backup reuses existing checked recovery stream independently of recovery semantics; exclusive native sibling stage ownership is recorded before commit, final collisions explicitly refuse without deleting prior archives, native rename and checked final commits use Unpublished/Renamed/Published states. Only exact owned temp/renamed final and nonrecursive owned stage are cleaned best effort. Existing metadata formats, compression, selected/live identity admission, actual-space RO routing, zero-ID/empty behavior, recovery/folder semantics and RAW refusal preserved. UMS/stdio export branch unchanged.
+
+Verification evidence: Gemini17:59 reports all14 compiler-free contract suites, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed actual product/callers/ownership/lifetimes/errors and successive connected fixture corrections; senior ran git diff --check, did not rerun suites or compile. Real source/ZIP/sink artifacts, actual short writes and OS fsync error, explicit entry/archive close calls with modeled failed returns, full independent wire-field/payload readback, eleven concrete type-space/rank/index records, valid prior/foreign ZIP byte sentinels and ordered publication/fault assertions. Thirty-three scenarios include successful/early-return/cancel cases, not thirty-three independent failures. Python/text checks do not execute C++/libnx/IPC/hardware or prove full concurrency/firmware all7 support. File-only os.walk and tiny whole-file payload fixtures are not scanner/empty-directory or streaming completeness proof; remaining model abstractions are not platform evidence. No snapshot/atomic rollback/power-loss durability/capacity/journal-fit claims. Cleanup failures can leave artifacts without operation success.
+
+Final same-delivery test correction reviewed: ZIP close success events occur only after modeled failure checks; both fsync hook/flag routes exercise real OS errors and refuse publication. User authorized senior finalization; folded into the existing local unpushed .860 delivery commit, app version unchanged.
+
+Ordinary SD checked-publication slice DONE (.860). UMS/stdio lifecycle, source scanner completeness, backup library rank/space grouping and CreateBackupIfNewer heuristic remain queued; no full P1/P2 or §2 A1–A7 closure. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. Separate user compile and disposable Switch SD success/collision/cancel/manual restore, UMS/recovery/folder/RAW refusal regressions required.
+
+Попередній delivery — **v0.13.859** (2026-09-18). History: archive/walkthrough_archive.md.
 
 ## v0.13.859 — backup selected/live identity admission
 

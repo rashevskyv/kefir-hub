@@ -1,6 +1,18 @@
-Поточний delivery — **v0.13.859 accepted**: backup selected/live identity admission. Accepted baseline **v0.13.858**, HEAD 856717e8f7a2818df8f8a55a040866dbfbc49421. Product accepted after Gemini16:20; focused primary-master commit.
+Поточний delivery — **v0.13.860 accepted**: checked ordinary SD backup publication. Accepted baseline **v0.13.859**, HEAD 02c86d8e1df031654e3ae601588fcaf6fc5c49fc.
 
-## Поточний delivery: v0.13.859 — backup selected/live identity admission
+## Поточний delivery: v0.13.860 — checked ordinary SD backup publication
+
+Accepted v0.13.860, 2026-09-18 after Gemini17:59 final test-only correction. Ordinary SD backup reuses existing checked recovery stream independently of recovery semantics; exclusive native sibling stage ownership is recorded before commit, final collisions explicitly refuse without deleting prior archives, native rename and checked final commits use Unpublished/Renamed/Published states. Only exact owned temp/renamed final and nonrecursive owned stage are cleaned best effort. Existing metadata formats, compression, selected/live identity admission, actual-space RO routing, zero-ID/empty behavior, recovery/folder semantics and RAW refusal preserved. UMS/stdio export branch unchanged.
+
+Verification evidence: Gemini17:59 reports all14 compiler-free contract suites, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed actual product/callers/ownership/lifetimes/errors and successive connected fixture corrections; senior ran git diff --check, did not rerun suites or compile. Real source/ZIP/sink artifacts, actual short writes and OS fsync error, explicit entry/archive close calls with modeled failed returns, full independent wire-field/payload readback, eleven concrete type-space/rank/index records, valid prior/foreign ZIP byte sentinels and ordered publication/fault assertions. Thirty-three scenarios include successful/early-return/cancel cases, not thirty-three independent failures. Python/text checks do not execute C++/libnx/IPC/hardware or prove full concurrency/firmware all7 support. File-only os.walk and tiny whole-file payload fixtures are not scanner/empty-directory or streaming completeness proof; remaining model abstractions are not platform evidence. No snapshot/atomic rollback/power-loss durability/capacity/journal-fit claims. Cleanup failures can leave artifacts without operation success.
+
+Final same-delivery test correction reviewed: ZIP close success events occur only after modeled failure checks; both fsync hook/flag routes exercise real OS errors and refuse publication. User authorized senior finalization; folded into the existing local unpushed .860 delivery commit, app version unchanged.
+
+Ordinary SD checked-publication slice DONE (.860). UMS/stdio lifecycle, source scanner completeness, backup library rank/space grouping and CreateBackupIfNewer heuristic remain queued; no full P1/P2 or §2 A1–A7 closure. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. Separate user compile and disposable Switch SD success/collision/cancel/manual restore, UMS/recovery/folder/RAW refusal regressions required.
+
+Senior review history: Gemini16:51/16:58 test evidence returned for missing faults/order/metadata and concrete close hooks; final17:27 corrections close those blockers. Product implementation remained unchanged during test-only rounds.
+
+## Попередній delivery: v0.13.859 — backup selected/live identity admission
 
 Accepted v0.13.859, 2026-09-18 after Gemini16:20 test-only correction. BackupSaveInternal now compares selected attribute with actual-space/save-ID extra.attr before RO mount, enumeration or output mutation: application ID, both UID halves, system ID, type, rank and index. Mismatch returns existing FsError_PathNotFound; no identity repair/default-space retry/padding comparison. Existing routing for all seven types, zero-ID/empty behavior, ZIP writer and restore/recovery boundaries unchanged. RAW read-only adapter candidate stopped: no verified integrated external-container reader; v858 RAW refusal preserved.
 

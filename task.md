@@ -1,6 +1,26 @@
+Актуальний delivery — **v0.13.860 accepted**: checked ordinary SD backup publication; baseline **v0.13.859**, 02c86d8e1df031654e3ae601588fcaf6fc5c49fc.
+
+## Поточний delivery: v0.13.860 — checked ordinary SD backup publication
+
+- [x] `PUB-ACCEPT-860` — Gemini17:59 final test-only corrections reviewed; all14 suites/dead-symbol PASS reported, senior actual source/fixture review + diff check; no suite rerun/build.
+- [x] `PUB-FINAL-860` — final close-success event ordering and both actual OS fsync fault routes reviewed; user-authorized same-delivery completion folded into local .860 commit.
+- [x] `PUB-REWORK2-860` — actual close hooks/OS fsync failure/ordered lifecycle/full wire fields/foreign ZIP bytes; bounded model evidence only.
+
+- [x] `PUB-RESEARCH-860` — primary/master/clean/ancestor, canonical AST graph refresh/query, exact callers/writer/native-stdio/recovery/discovery reviewed; no build.
+- [x] `PUB-POLICY-860` — SD-only checked existing stream, exclusive owned native stage, final collision refusal, separated rename/commit ownership; UMS unchanged.
+- [x] `PUB-HANDOFF-860` — self-contained NEW Gemini prompt; manual user transfer, no senior product edits/coding agents.
+- [x] `PUB-WRITER-860` — SD transport checks reuse recovery callbacks, semantics remain independent.
+- [x] `PUB-OWNERSHIP-860` — checked parent/reservation/commits/cancel; exact stage cleanup, retain foreign/prior finals.
+- [x] `PUB-FIXTURE-860` — real source/ZIP/independent metadata/fault lifecycle/artifact sentinels; all13 existing suites preserved.
+- [x] `PUB-REVIEW1-860` — Gemini16:51 reviewed; product policy matches, regression evidence incomplete; senior diff check PASS/no suite rerun/build.
+- [x] `PUB-REWORK1-860` — test-only actual foreign ZIP collision, missing fault cases/order/full wire-payload readback; product unchanged.
+- [x] `PUB-REVIEW-860` — senior actual diff/callers/errors/ownership/evidence review; corrections Gemini only.
+- [x] `DOCS-BUMP-860` — junior .860; senior four docs after acceptance/focused commit/clean+ancestor/no push.
+- [ ] `HW-860` — separate user compile/disposable Switch SD valid/collision/cancel/fault/manual restore and UMS/recovery/folder/RAW regressions.
+
 Актуальний delivery — **v0.13.859 accepted**: backup selected/live identity admission; accepted baseline **v0.13.858**. Accepted after Gemini16:20; focused primary-master commit.
 
-## Поточний delivery: v0.13.859 — backup selected/live identity admission
+## Попередній delivery: v0.13.859 — backup selected/live identity admission
 
 - [x] BACKUP-ACCEPT-859 — Gemini16:20 corrections reviewed; all13 suites/dead-symbol PASS reported, senior diff check/source review; no suite rerun/build. Bounded export guard accepted.
 

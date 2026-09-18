@@ -1023,7 +1023,8 @@ static Result WriteSaveBackupZip(
     const filebrowser::FsDirCollections& collections,
     bool dbi_format,
     bool compressed,
-    bool recovery_mode = false) {
+    bool recovery_mode = false,
+    bool checked_stream = false) {
 
     const auto t = (extra.timestamp != 0) ? static_cast<time_t>(extra.timestamp) : std::time(nullptr);
     const auto tm = std::localtime(&t);
@@ -1036,12 +1037,13 @@ static Result WriteSaveBackupZip(
     zip_info_default.tmz_date.tm_mon = tm->tm_mon;
     zip_info_default.tmz_date.tm_year = tm->tm_year;
 
-    const auto file_download = recovery_mode || App::IsApplet() || e.size >= 1024ULL * 1024ULL * 1024ULL;
+    const bool use_checked_stream = recovery_mode || checked_stream;
+    const auto file_download = use_checked_stream || App::IsApplet() || e.size >= 1024ULL * 1024ULL * 1024ULL;
 
     RecoveryStreamContext rec_ctx{};
     mz::MzMem mz_mem{};
     zlib_filefunc64_def file_func{};
-    if (recovery_mode) {
+    if (use_checked_stream) {
         file_func.zopen64_file = RecoveryOpen;
         file_func.zread_file = RecoveryRead;
         file_func.zwrite_file = RecoveryWrite;
@@ -1243,7 +1245,7 @@ static Result WriteSaveBackupZip(
         R_UNLESS(ZIP_OK == zipClose(zfile, "sphaira v" APP_VERSION_HASH), Result_ZipWriteInFileInZip);
     }
 
-    if (recovery_mode) {
+    if (use_checked_stream) {
         R_UNLESS(!rec_ctx.write_failed, Result_ZipWriteInFileInZip);
         R_UNLESS(!rec_ctx.flush_failed, Result_FsUnknownStdioError);
         R_UNLESS(!rec_ctx.sync_failed, Result_FsUnknownStdioError);
@@ -2493,17 +2495,123 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     const auto path = dbi_format
         ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm, dbi_base))
         : fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
-    const auto temp_path = path + ".temp";
+    const bool is_sd = (location.entry.type == dump::DumpLocationType_SdCard);
+    if (is_sd) {
+        fs::FsNativeSd sd_fs;
+        R_TRY(sd_fs.GetFsOpenResult());
 
-    fs->CreateDirectoryRecursivelyWithPath(temp_path);
-    ON_SCOPE_EXIT(fs->DeleteFile(temp_path));
+        FsDirEntryType final_entry_type{};
+        const auto pre_probe_rc = sd_fs.GetEntryType(path, &final_entry_type);
+        if (R_SUCCEEDED(pre_probe_rc)) {
+            return FsError_PathAlreadyExists;
+        }
+        if (pre_probe_rc != FsError_PathNotFound) {
+            return pre_probe_rc;
+        }
 
-    R_TRY(WriteSaveBackupZip(pbox, fs.get(), temp_path, &save_fs, e, extra, collections, dbi_format, compressed, false));
+        const auto parent_rc = sd_fs.CreateDirectoryRecursivelyWithPath(path);
+        if (R_FAILED(parent_rc) && parent_rc != FsError_PathAlreadyExists) {
+            return parent_rc;
+        }
 
-    fs->DeleteFile(path);
-    R_TRY(fs->RenameFile(temp_path, path));
+        fs::FsPath stage_dir;
+        const int stage_n = std::snprintf(stage_dir, sizeof(stage_dir), "%s.stage", path.s);
+        R_UNLESS(stage_n > 0 && static_cast<size_t>(stage_n) < sizeof(stage_dir), FsError_TooLongPath);
 
-    R_SUCCEED();
+        fs::FsPath owned_temp_path;
+        const int temp_n = std::snprintf(owned_temp_path, sizeof(owned_temp_path), "%s/backup.zip.temp", stage_dir.s);
+        R_UNLESS(temp_n > 0 && static_cast<size_t>(temp_n) < sizeof(owned_temp_path), FsError_TooLongPath);
+
+        if (pbox) {
+            R_TRY(pbox->ShouldExitResult());
+        }
+
+        bool owned_stage_created = false;
+        enum class BackupPubState {
+            Unpublished,
+            Renamed,
+            Published
+        };
+        BackupPubState pub_state = BackupPubState::Unpublished;
+
+        ON_SCOPE_EXIT {
+            if (pub_state == BackupPubState::Unpublished) {
+                if (owned_stage_created) {
+                    sd_fs.DeleteFile(owned_temp_path);
+                    sd_fs.DeleteDirectory(stage_dir);
+                }
+            } else if (pub_state == BackupPubState::Renamed) {
+                sd_fs.DeleteFile(path);
+                if (owned_stage_created) {
+                    sd_fs.DeleteDirectory(stage_dir);
+                }
+            } else if (pub_state == BackupPubState::Published) {
+                if (owned_stage_created) {
+                    sd_fs.DeleteDirectory(stage_dir);
+                }
+            }
+        };
+
+        const auto stage_prim_rc = fsFsCreateDirectory(&sd_fs.m_fs, stage_dir);
+        if (R_FAILED(stage_prim_rc)) {
+            return stage_prim_rc;
+        }
+        owned_stage_created = true;
+
+        const auto stage_commit_rc = sd_fs.Commit();
+        if (R_FAILED(stage_commit_rc)) {
+            return stage_commit_rc;
+        }
+
+        if (pbox) {
+            R_TRY(pbox->ShouldExitResult());
+        }
+
+        R_TRY(WriteSaveBackupZip(pbox, &sd_fs, owned_temp_path, &save_fs, e, extra, collections, dbi_format, compressed, false, true));
+
+        if (pbox) {
+            R_TRY(pbox->ShouldExitResult());
+        }
+
+        const auto post_probe_rc = sd_fs.GetEntryType(path, &final_entry_type);
+        if (R_SUCCEEDED(post_probe_rc)) {
+            return FsError_PathAlreadyExists;
+        }
+        if (post_probe_rc != FsError_PathNotFound) {
+            return post_probe_rc;
+        }
+
+        const auto rename_rc = fsFsRenameFile(&sd_fs.m_fs, owned_temp_path, path);
+        if (R_FAILED(rename_rc)) {
+            return rename_rc;
+        }
+        pub_state = BackupPubState::Renamed;
+
+        const auto sdmc_rc = fsdevCommitDevice("sdmc");
+        if (R_FAILED(sdmc_rc)) {
+            return sdmc_rc;
+        }
+
+        const auto sd_commit_rc = sd_fs.Commit();
+        if (R_FAILED(sd_commit_rc)) {
+            return sd_commit_rc;
+        }
+
+        pub_state = BackupPubState::Published;
+        R_SUCCEED();
+    } else {
+        const auto temp_path = path + ".temp";
+
+        fs->CreateDirectoryRecursivelyWithPath(temp_path);
+        ON_SCOPE_EXIT(fs->DeleteFile(temp_path));
+
+        R_TRY(WriteSaveBackupZip(pbox, fs.get(), temp_path, &save_fs, e, extra, collections, dbi_format, compressed, false, false));
+
+        fs->DeleteFile(path);
+        R_TRY(fs->RenameFile(temp_path, path));
+
+        R_SUCCEED();
+    }
 }
 
 void Menu::SyncSavesRemote() {

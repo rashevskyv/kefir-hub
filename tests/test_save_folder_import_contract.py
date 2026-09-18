@@ -129,8 +129,8 @@ def test_source_contracts():
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.857)" in cmake_src or "set(sphaira_VERSION 0.13.858)" in cmake_src or "set(sphaira_VERSION 0.13.859)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.857, 0.13.858 or 0.13.859")
+    check("set(sphaira_VERSION 0.13.857)" in cmake_src or "set(sphaira_VERSION 0.13.858)" in cmake_src or "set(sphaira_VERSION 0.13.859)" in cmake_src or "set(sphaira_VERSION 0.13.860)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.857, 0.13.858, 0.13.859 or 0.13.860")
 
     # 1.2 save_menu.hpp declarations
     sm_hpp_path = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save_menu.hpp")
