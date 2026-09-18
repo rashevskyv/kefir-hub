@@ -1,4 +1,14 @@
-Актуальний delivery — **v0.13.855** (2026-09-17). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.856** (2026-09-18). History: archive/walkthrough_archive.md.
+
+## v0.13.856 — JKSV ZIP save metadata compatibility
+
+Accepted v0.13.856, 2026-09-18: JKSV ZIP save metadata compatibility. Gemini reports all nine compiler-free Python suites PASS; senior reviewed source, callers, working-tree diff, declaration order, shared filtering and final connected-model corrections, and ran git diff --check. Senior did not rerun Python suites. Text/token assertions and Python wire/ZIP/lifecycle models do not execute C++/libnx/IPC or prove hardware behavior. No configure/compile/WSL build/NRO/compiled tests/tests/run.sh/binaries/push.
+
+Shared bounded little-endian decoder/archive reader supports proven JKSV85, both revision-1 JKSV86 layouts with divergent-valid ambiguity refusal, unchanged Sphaira legacy128 and DBI extra512. Discovery, DBI matcher, all-target ZIP restore and recovery admission reuse it. Invalid present metadata, duplicate reserved roots, directory/path aliases, source-field conflicts and read/count/CRC/entry-close/traversal/rewind failures reject; owner/callback close errors are checked. Reserved root filtering is case-insensitive; nested same-basename files remain payload; DBI INI remains opaque and drained without an arbitrary size cap. Valid embedded index0 is not replaced by filename hints.
+
+Selected existing destination identity, both Account UID halves, actual space and live sizes remain authoritative, including explicit remap. Preserve full payload preflight, recovery-before-clear/retention, MTP refusal, v855 closed-handle serial cadence and final fresh-RO/source-close verification. Own legacy writer unchanged. Validated create-from-backup, growth/capacity/journal budget, snapshot/atomic restore/rollback and generic ZIP/UMS/RAW remain outside scope; existing zero-ID legacy fallback is not redesigned or advertised.
+
+Final test corrections align connected events open -> preflight -> metadata -> selected-live -> recovery -> clear -> extract -> fresh-RO -> source-close. Pre-mutation faults never reach clear; final close faults report failure after mutation. Existing-target model removes invented new-creation behavior. Separate user compilation and disposable Switch checks on both restore routes remain required: JKSV85/unique86, ambiguous/corrupt/duplicate/conflicting refusal before clear, Account remap, metadata-free DBI and legacy manual recovery.
 
 ## v0.13.855 — serial ZIP commit lifecycle
 

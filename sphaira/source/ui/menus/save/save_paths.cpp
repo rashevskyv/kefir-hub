@@ -396,38 +396,744 @@ auto IsDbiBackupName(const Entry& e, const char* name) -> bool {
     return len > 4 && !strcasecmp(name + len - 4, ".zip");
 }
 
+inline auto ReadU8(const u8* p) -> u8 {
+    return p[0];
+}
+inline auto ReadU16LE(const u8* p) -> u16 {
+    return static_cast<u16>(p[0]) |
+          (static_cast<u16>(p[1]) << 8);
+}
+inline auto ReadU32LE(const u8* p) -> u32 {
+    return static_cast<u32>(p[0]) |
+          (static_cast<u32>(p[1]) << 8) |
+          (static_cast<u32>(p[2]) << 16) |
+          (static_cast<u32>(p[3]) << 24);
+}
+inline auto ReadU64LE(const u8* p) -> u64 {
+    return static_cast<u64>(p[0]) |
+          (static_cast<u64>(p[1]) << 8) |
+          (static_cast<u64>(p[2]) << 16) |
+          (static_cast<u64>(p[3]) << 24) |
+          (static_cast<u64>(p[4]) << 32) |
+          (static_cast<u64>(p[5]) << 40) |
+          (static_cast<u64>(p[6]) << 48) |
+          (static_cast<u64>(p[7]) << 56);
+}
+inline auto ReadS64LE(const u8* p) -> s64 {
+    return static_cast<s64>(ReadU64LE(p));
+}
+
+struct DecodedSaveMetaInternal {
+    u64 application_id{};
+    AccountUid uid{};
+    u64 system_save_data_id{};
+    u8 save_data_type{0xFF};
+    u8 save_data_rank{};
+    u16 save_data_index{};
+    u64 owner_id{};
+    u64 timestamp{};
+    u32 flags{};
+    u32 unk_x54{};
+    s64 data_size{};
+    s64 journal_size{};
+    u64 commit_id{};
+    u64 raw_size{};
+    std::optional<u8> source_space{};
+};
+
+inline auto ValidateDecodedSaveMeta(const DecodedSaveMetaInternal& m, bool is_86_layout) -> bool {
+    // type 0..6
+    if (m.save_data_type > FsSaveDataType_SystemBcat) {
+        return false;
+    }
+    // rank 0..1
+    if (m.save_data_rank > FsSaveDataRank_Secondary) {
+        return false;
+    }
+    // data/journal signed s64 >= 0
+    if (m.data_size < 0 || m.journal_size < 0) {
+        return false;
+    }
+
+    if (m.save_data_type == FsSaveDataType_Account) {
+        // Account: nonzero app, systemID 0, full 128-bit UID nonzero
+        if (m.application_id == 0) {
+            return false;
+        }
+        if (m.system_save_data_id != 0) {
+            return false;
+        }
+        if (m.uid.uid[0] == 0 && m.uid.uid[1] == 0) {
+            return false;
+        }
+    } else if (m.save_data_type == FsSaveDataType_System || m.save_data_type == FsSaveDataType_SystemBcat) {
+        // System/SystemBcat: nonzero systemID
+        if (m.system_save_data_id == 0) {
+            return false;
+        }
+    } else {
+        // Other types: nonzero app
+        if (m.application_id == 0) {
+            return false;
+        }
+    }
+
+    // source space 86 allow 0,1,2,3,4,100,101; reject 255/All/unknown
+    if (is_86_layout) {
+        if (!m.source_space.has_value()) {
+            return false;
+        }
+        const auto sp = *m.source_space;
+        const bool valid_space = (sp == FsSaveDataSpaceId_System ||
+                                  sp == FsSaveDataSpaceId_User ||
+                                  sp == FsSaveDataSpaceId_SdSystem ||
+                                  sp == FsSaveDataSpaceId_Temporary ||
+                                  sp == FsSaveDataSpaceId_SdUser ||
+                                  sp == FsSaveDataSpaceId_ProperSystem ||
+                                  sp == FsSaveDataSpaceId_SafeMode);
+        if (!valid_space) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+inline auto DecodeJksv85(const u8* p, DecodedSaveMetaInternal& out) -> bool {
+    const u32 magic = ReadU32LE(p + 0);
+    if (magic != JKSV_SAVE_META_MAGIC) {
+        return false;
+    }
+    const u8 revision = ReadU8(p + 4);
+    if (revision != JKSV_SAVE_META_REVISION) {
+        return false;
+    }
+    out = DecodedSaveMetaInternal{};
+    out.application_id = ReadU64LE(p + 5);
+    out.uid.uid[0] = ReadU64LE(p + 13);
+    out.uid.uid[1] = ReadU64LE(p + 21);
+    out.system_save_data_id = ReadU64LE(p + 29);
+    out.save_data_type = ReadU8(p + 37);
+    out.save_data_rank = ReadU8(p + 38);
+    out.save_data_index = ReadU16LE(p + 39);
+    out.owner_id = ReadU64LE(p + 41);
+    out.timestamp = ReadU64LE(p + 49);
+    out.flags = ReadU32LE(p + 57);
+    out.data_size = ReadS64LE(p + 61);
+    out.journal_size = ReadS64LE(p + 69);
+    out.commit_id = ReadU64LE(p + 77);
+    out.source_space = std::nullopt;
+    out.raw_size = 0;
+    out.unk_x54 = 0;
+
+    return ValidateDecodedSaveMeta(out, false);
+}
+
+inline auto DecodeJksvTail86(const u8* p, DecodedSaveMetaInternal& out) -> bool {
+    if (!DecodeJksv85(p, out)) {
+        return false;
+    }
+    out.source_space = ReadU8(p + 85);
+    return ValidateDecodedSaveMeta(out, true);
+}
+
+inline auto DecodeJksvMiddle86(const u8* p, DecodedSaveMetaInternal& out) -> bool {
+    const u32 magic = ReadU32LE(p + 0);
+    if (magic != JKSV_SAVE_META_MAGIC) {
+        return false;
+    }
+    const u8 revision = ReadU8(p + 4);
+    if (revision != JKSV_SAVE_META_REVISION) {
+        return false;
+    }
+    out = DecodedSaveMetaInternal{};
+    out.application_id = ReadU64LE(p + 5);
+    out.uid.uid[0] = ReadU64LE(p + 13);
+    out.uid.uid[1] = ReadU64LE(p + 21);
+    out.system_save_data_id = ReadU64LE(p + 29);
+    out.save_data_type = ReadU8(p + 37);
+    out.save_data_rank = ReadU8(p + 38);
+    out.save_data_index = ReadU16LE(p + 39);
+    out.source_space = ReadU8(p + 41);
+    out.owner_id = ReadU64LE(p + 42);
+    out.timestamp = ReadU64LE(p + 50);
+    out.flags = ReadU32LE(p + 58);
+    out.data_size = ReadS64LE(p + 62);
+    out.journal_size = ReadS64LE(p + 70);
+    out.commit_id = ReadU64LE(p + 78);
+    out.raw_size = 0;
+    out.unk_x54 = 0;
+
+    return ValidateDecodedSaveMeta(out, true);
+}
+
+inline auto CompareCommonSourceFields(const DecodedSaveMetaInternal& a, const DecodedSaveMetaInternal& b) -> bool {
+    return (a.application_id == b.application_id) &&
+           (a.uid.uid[0] == b.uid.uid[0] && a.uid.uid[1] == b.uid.uid[1]) &&
+           (a.system_save_data_id == b.system_save_data_id) &&
+           (a.save_data_type == b.save_data_type) &&
+           (a.save_data_rank == b.save_data_rank) &&
+           (a.save_data_index == b.save_data_index) &&
+           (a.owner_id == b.owner_id) &&
+           (a.timestamp == b.timestamp) &&
+           (a.flags == b.flags) &&
+           (a.data_size == b.data_size) &&
+           (a.journal_size == b.journal_size) &&
+           (a.commit_id == b.commit_id);
+}
+
+inline auto DecodeJksv86WithAmbiguityCheck(const u8* p, DecodedSaveMetaInternal& out) -> bool {
+    DecodedSaveMetaInternal tail{};
+    DecodedSaveMetaInternal mid{};
+    const bool tail_valid = DecodeJksvTail86(p, tail);
+    const bool mid_valid = DecodeJksvMiddle86(p, mid);
+
+    if (!tail_valid && !mid_valid) {
+        return false;
+    }
+    if (tail_valid && !mid_valid) {
+        out = tail;
+        return true;
+    }
+    if (!tail_valid && mid_valid) {
+        out = mid;
+        return true;
+    }
+
+    // Both valid: accept only identical decoded source semantics including space
+    if (CompareCommonSourceFields(tail, mid) && tail.source_space == mid.source_space) {
+        out = tail;
+        return true;
+    }
+    // Different valid interpretations -> fail closed
+    return false;
+}
+
+inline auto DecodeSphaira128(const u8* p, DecodedSaveMetaInternal& out) -> bool {
+    const u32 magic = ReadU32LE(p + 0);
+    if (magic != NX_SAVE_META_MAGIC) {
+        return false;
+    }
+    const u32 version = ReadU32LE(p + 4);
+    if (version != NX_SAVE_META_VERSION) {
+        return false;
+    }
+    out = DecodedSaveMetaInternal{};
+    out.application_id = ReadU64LE(p + 8);
+    out.uid.uid[0] = ReadU64LE(p + 16);
+    out.uid.uid[1] = ReadU64LE(p + 24);
+    out.system_save_data_id = ReadU64LE(p + 32);
+    out.save_data_type = ReadU8(p + 40);
+    out.save_data_rank = ReadU8(p + 41);
+    out.save_data_index = ReadU16LE(p + 42);
+    // bytes 44..47 pad, 48..71 unk ignored (no blanket zero requirement)
+    out.owner_id = ReadU64LE(p + 72);
+    out.timestamp = ReadU64LE(p + 80);
+    out.flags = ReadU32LE(p + 88);
+    out.unk_x54 = ReadU32LE(p + 92);
+    out.data_size = ReadS64LE(p + 96);
+    out.journal_size = ReadS64LE(p + 104);
+    out.commit_id = ReadU64LE(p + 112);
+    out.raw_size = ReadU64LE(p + 120);
+    out.source_space = std::nullopt;
+
+    return ValidateDecodedSaveMeta(out, false);
+}
+
+inline auto DecodeDbiRaw512(const u8* p, DecodedSaveMetaInternal& out) -> bool {
+    out = DecodedSaveMetaInternal{};
+    out.application_id = ReadU64LE(p + 0);
+    out.uid.uid[0] = ReadU64LE(p + 8);
+    out.uid.uid[1] = ReadU64LE(p + 16);
+    out.system_save_data_id = ReadU64LE(p + 24);
+    out.save_data_type = ReadU8(p + 32);
+    out.save_data_rank = ReadU8(p + 33);
+    out.save_data_index = ReadU16LE(p + 34);
+    // 36..39 pad, 40..63 unk ignored
+    out.owner_id = ReadU64LE(p + 64);
+    out.timestamp = ReadU64LE(p + 72);
+    out.flags = ReadU32LE(p + 80);
+    out.unk_x54 = ReadU32LE(p + 84);
+    out.data_size = ReadS64LE(p + 88);
+    out.journal_size = ReadS64LE(p + 96);
+    out.commit_id = ReadU64LE(p + 104);
+    // 112..511 unused ignored
+    out.raw_size = 0;
+    out.source_space = std::nullopt;
+
+    return ValidateDecodedSaveMeta(out, false);
+}
+
+inline auto DecodeNxSaveMeta(const u8* p, size_t size, DecodedSaveMetaInternal& out) -> bool {
+    if (size == 85) {
+        return DecodeJksv85(p, out);
+    } else if (size == 86) {
+        return DecodeJksv86WithAmbiguityCheck(p, out);
+    } else if (size == 128) {
+        return DecodeSphaira128(p, out);
+    }
+    return false;
+}
+
+inline auto ToNXSaveMeta(const DecodedSaveMetaInternal& d) -> NXSaveMeta {
+    NXSaveMeta m{};
+    m.magic = NX_SAVE_META_MAGIC;
+    m.version = NX_SAVE_META_VERSION;
+    m.attr.application_id = d.application_id;
+    m.attr.uid = d.uid;
+    m.attr.system_save_data_id = d.system_save_data_id;
+    m.attr.save_data_type = d.save_data_type;
+    m.attr.save_data_rank = d.save_data_rank;
+    m.attr.save_data_index = d.save_data_index;
+    m.owner_id = d.owner_id;
+    m.timestamp = d.timestamp;
+    m.flags = d.flags;
+    m.unk_x54 = d.unk_x54;
+    m.data_size = d.data_size;
+    m.journal_size = d.journal_size;
+    m.commit_id = d.commit_id;
+    m.raw_size = d.raw_size;
+    return m;
+}
+
+namespace {
+
+struct SaveReaderContext {
+    zlib_filefunc64_def base_funcs{};
+    bool io_error{false};
+    bool close_error{false};
+
+    [[nodiscard]] bool HasError() const {
+        return io_error || close_error;
+    }
+
+    void InitFileFunc(zlib_filefunc64_def* funcs) {
+        mz::FileFuncStdio(&base_funcs);
+        *funcs = base_funcs;
+        funcs->opaque = this;
+        funcs->zopen64_file = [](voidpf opaque, const void* filename, int mode) -> voidpf {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            return self->base_funcs.zopen64_file(self->base_funcs.opaque, filename, mode);
+        };
+        funcs->zread_file = [](voidpf opaque, voidpf stream, void* buf, uLong size) -> uLong {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            const auto res = self->base_funcs.zread_file(self->base_funcs.opaque, stream, buf, size);
+            if (res < size) {
+                if (self->base_funcs.zerror_file && self->base_funcs.zerror_file(self->base_funcs.opaque, stream)) {
+                    self->io_error = true;
+                }
+            }
+            return res;
+        };
+        funcs->zseek64_file = [](voidpf opaque, voidpf stream, ZPOS64_T offset, int origin) -> long {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            const auto res = self->base_funcs.zseek64_file(self->base_funcs.opaque, stream, offset, origin);
+            if (res != 0) {
+                self->io_error = true;
+            }
+            return res;
+        };
+        funcs->ztell64_file = [](voidpf opaque, voidpf stream) -> ZPOS64_T {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            const auto res = self->base_funcs.ztell64_file(self->base_funcs.opaque, stream);
+            if (res == static_cast<ZPOS64_T>(-1)) {
+                self->io_error = true;
+            } else if (self->base_funcs.zerror_file && self->base_funcs.zerror_file(self->base_funcs.opaque, stream)) {
+                self->io_error = true;
+            }
+            return res;
+        };
+        funcs->zclose_file = [](voidpf opaque, voidpf stream) -> int {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            int res = 0;
+            if (self->base_funcs.zclose_file) {
+                res = self->base_funcs.zclose_file(self->base_funcs.opaque, stream);
+                if (res != 0) {
+                    self->close_error = true;
+                }
+            }
+            return res;
+        };
+        funcs->zerror_file = [](voidpf opaque, voidpf stream) -> int {
+            auto self = static_cast<SaveReaderContext*>(opaque);
+            int res = 0;
+            if (self->base_funcs.zerror_file) {
+                res = self->base_funcs.zerror_file(self->base_funcs.opaque, stream);
+                if (res != 0) {
+                    self->io_error = true;
+                }
+            }
+            return res;
+        };
+    }
+};
+
+} // namespace
+
+auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMetadata& out, Result* out_rc) -> ArchiveMetaStatus {
+    out = DecodedSaveMetadata{};
+    if (out_rc) {
+        *out_rc = 0;
+    }
+
+    if (!zfile) {
+        if (out_rc) *out_rc = Result_UnzOpen2_64;
+        return ArchiveMetaStatus::Invalid;
+    }
+
+    unz_global_info64 ginfo{};
+    if (UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo)) {
+        if (out_rc) *out_rc = Result_UnzGetGlobalInfo64;
+        return ArchiveMetaStatus::Invalid;
+    }
+
+    if (ginfo.number_entry == 0) {
+        return ArchiveMetaStatus::NoMetadata;
+    }
+    if (ginfo.number_entry > static_cast<u64>(std::numeric_limits<s64>::max())) {
+        if (out_rc) *out_rc = FsError_InvalidSize;
+        return ArchiveMetaStatus::Invalid;
+    }
+    const auto entry_count = static_cast<s64>(ginfo.number_entry);
+
+    if (UNZ_OK != unzGoToFirstFile(zfile)) {
+        if (out_rc) *out_rc = Result_UnzGoToFirstFile;
+        return ArchiveMetaStatus::Invalid;
+    }
+
+    bool success = false;
+    ON_SCOPE_EXIT {
+        if (!success && zfile) {
+            unzGoToFirstFile(zfile);
+        }
+    };
+
+    bool seen_nx_meta = false;
+    bool seen_dbi_extra = false;
+    bool seen_dbi_info = false;
+    DecodedSaveMetaInternal nx_meta{};
+    DecodedSaveMetaInternal dbi_extra_meta{};
+    bool has_valid_nx = false;
+    bool has_valid_dbi_extra = false;
+
+    for (s64 i = 0; i < entry_count; i++) {
+        if (pbox) {
+            const auto exit_rc = pbox->ShouldExitResult();
+            if (R_FAILED(exit_rc)) {
+                if (out_rc) *out_rc = exit_rc;
+                return ArchiveMetaStatus::Invalid;
+            }
+        }
+
+        if (i > 0) {
+            if (UNZ_OK != unzGoToNextFile(zfile)) {
+                if (out_rc) *out_rc = Result_UnzGoToNextFile;
+                return ArchiveMetaStatus::Invalid;
+            }
+        }
+
+        unz_file_info64 info{};
+        char name_buf[sizeof(fs::FsPath)]{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0)) {
+            if (out_rc) *out_rc = Result_UnzGetCurrentFileInfo64;
+            return ArchiveMetaStatus::Invalid;
+        }
+
+        if (info.size_filename == 0) {
+            if (out_rc) *out_rc = FsError_InvalidCharacter;
+            return ArchiveMetaStatus::Invalid;
+        }
+        if (info.size_filename >= sizeof(name_buf)) {
+            if (out_rc) *out_rc = FsError_TooLongPath;
+            return ArchiveMetaStatus::Invalid;
+        }
+        if (std::strlen(name_buf) != info.size_filename) {
+            if (out_rc) *out_rc = FsError_TooLongPath;
+            return ArchiveMetaStatus::Invalid;
+        }
+
+        const auto norm = path::NormalizeSaveArchiveEntry(std::string_view{name_buf, info.size_filename});
+        if (!norm.has_value()) {
+            if (out_rc) *out_rc = FsError_InvalidCharacter;
+            return ArchiveMetaStatus::Invalid;
+        }
+
+        std::string_view norm_view = *norm;
+        const bool has_dir_attr = (info.external_fa & 0x10) != 0 ||
+                                  ((info.external_fa >> 16) & 0xF000) == 0x4000;
+        const bool is_dir = (!norm_view.empty() && norm_view.back() == '/') || has_dir_attr;
+        std::string_view clean_view = norm_view;
+        if (!clean_view.empty() && clean_view.back() == '/') {
+            while (clean_view.size() > 1 && clean_view.back() == '/') {
+                clean_view.remove_suffix(1);
+            }
+        }
+
+        // Check if reserved metadata root is used as a parent directory for payload
+        const auto slash_pos = clean_view.find('/');
+        if (slash_pos != std::string_view::npos) {
+            const auto first_segment = clean_view.substr(0, slash_pos);
+            if (ClassifySaveReservedMetadataRoot(first_segment) != SaveReservedMetaKind::None) {
+                if (out_rc) *out_rc = FsError_InvalidCharacter;
+                return ArchiveMetaStatus::Invalid;
+            }
+            continue;
+        }
+
+        const auto reserved_kind = ClassifySaveReservedMetadataRoot(clean_view);
+        if (reserved_kind == SaveReservedMetaKind::None) {
+            continue;
+        }
+
+        // Reject directory kind aliases (trailing slash or directory attributes)
+        if (is_dir) {
+            if (out_rc) *out_rc = FsError_InvalidCharacter;
+            return ArchiveMetaStatus::Invalid;
+        }
+
+        // Duplicate rejection
+        if (reserved_kind == SaveReservedMetaKind::NxMeta) {
+            if (seen_nx_meta) {
+                if (out_rc) *out_rc = FsError_PathAlreadyExists;
+                return ArchiveMetaStatus::Invalid;
+            }
+            seen_nx_meta = true;
+            // Known NX declared unsupported sizes fail upfront
+            if (info.uncompressed_size != 85 && info.uncompressed_size != 86 && info.uncompressed_size != 128) {
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+        } else if (reserved_kind == SaveReservedMetaKind::DbiExtra) {
+            if (seen_dbi_extra) {
+                if (out_rc) *out_rc = FsError_PathAlreadyExists;
+                return ArchiveMetaStatus::Invalid;
+            }
+            seen_dbi_extra = true;
+            // Known DBI extra declared unsupported size fails upfront
+            if (info.uncompressed_size != 512) {
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+        } else if (reserved_kind == SaveReservedMetaKind::DbiInfo) {
+            if (seen_dbi_info) {
+                if (out_rc) *out_rc = FsError_PathAlreadyExists;
+                return ArchiveMetaStatus::Invalid;
+            }
+            seen_dbi_info = true;
+            // Opaque INI: no speculative content-size ceiling
+        }
+
+        if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+            if (out_rc) *out_rc = Result_UnzOpenCurrentFile;
+            return ArchiveMetaStatus::Invalid;
+        }
+
+        u8 meta_read_buf[512]{};
+        u64 bytes_drained = 0;
+        int read_res = 0;
+        do {
+            if (pbox) {
+                const auto exit_rc = pbox->ShouldExitResult();
+                if (R_FAILED(exit_rc)) {
+                    unzCloseCurrentFile(zfile);
+                    if (out_rc) *out_rc = exit_rc;
+                    return ArchiveMetaStatus::Invalid;
+                }
+            }
+            u8 drain_chunk[512];
+            void* target_dest = (bytes_drained < sizeof(meta_read_buf))
+                ? static_cast<void*>(meta_read_buf + bytes_drained)
+                : static_cast<void*>(drain_chunk);
+            const uLong target_cap = (bytes_drained < sizeof(meta_read_buf))
+                ? static_cast<uLong>(sizeof(meta_read_buf) - bytes_drained)
+                : static_cast<uLong>(sizeof(drain_chunk));
+
+            read_res = unzReadCurrentFile(zfile, target_dest, target_cap);
+            if (read_res < 0) {
+                unzCloseCurrentFile(zfile);
+                if (out_rc) *out_rc = Result_UnzReadCurrentFile;
+                return ArchiveMetaStatus::Invalid;
+            }
+            if (static_cast<uLong>(read_res) > target_cap) {
+                unzCloseCurrentFile(zfile);
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+            if (std::numeric_limits<u64>::max() - bytes_drained < static_cast<u64>(read_res)) {
+                unzCloseCurrentFile(zfile);
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+            bytes_drained += static_cast<u64>(read_res);
+            if (bytes_drained > info.uncompressed_size) {
+                unzCloseCurrentFile(zfile);
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+        } while (read_res > 0);
+
+        const int close_res = unzCloseCurrentFile(zfile);
+        if (close_res == UNZ_CRCERROR) {
+            if (out_rc) *out_rc = 0x8;
+            return ArchiveMetaStatus::Invalid;
+        }
+        if (close_res != UNZ_OK) {
+            if (out_rc) *out_rc = Result_UnzReadCurrentFile;
+            return ArchiveMetaStatus::Invalid;
+        }
+        if (bytes_drained != info.uncompressed_size) {
+            if (out_rc) *out_rc = FsError_InvalidSize;
+            return ArchiveMetaStatus::Invalid;
+        }
+
+        if (reserved_kind == SaveReservedMetaKind::NxMeta) {
+            if (!DecodeNxSaveMeta(meta_read_buf, bytes_drained, nx_meta)) {
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+            has_valid_nx = true;
+        } else if (reserved_kind == SaveReservedMetaKind::DbiExtra) {
+            if (!DecodeDbiRaw512(meta_read_buf, dbi_extra_meta)) {
+                if (out_rc) *out_rc = FsError_InvalidSize;
+                return ArchiveMetaStatus::Invalid;
+            }
+            has_valid_dbi_extra = true;
+        }
+    }
+
+    // After declared entry count require expected end-of-list; unexpected extra entry/error -> Invalid
+    const int end_rc = unzGoToNextFile(zfile);
+    if (end_rc != UNZ_END_OF_LIST_OF_FILE) {
+        if (out_rc) *out_rc = (end_rc < 0) ? Result_UnzGoToNextFile : FsError_InvalidSize;
+        return ArchiveMetaStatus::Invalid;
+    }
+
+    // Explicit checked success rewind
+    const int rewind_rc = unzGoToFirstFile(zfile);
+    if (rewind_rc != UNZ_OK) {
+        if (out_rc) *out_rc = Result_UnzGoToFirstFile;
+        return ArchiveMetaStatus::Invalid;
+    }
+
+    if (!seen_nx_meta && !seen_dbi_extra && !seen_dbi_info) {
+        success = true;
+        return ArchiveMetaStatus::NoMetadata;
+    }
+
+    if (seen_nx_meta && !has_valid_nx) {
+        if (out_rc) *out_rc = FsError_InvalidSize;
+        return ArchiveMetaStatus::Invalid;
+    }
+    if (seen_dbi_extra && !has_valid_dbi_extra) {
+        if (out_rc) *out_rc = FsError_InvalidSize;
+        return ArchiveMetaStatus::Invalid;
+    }
+
+    DecodedSaveMetadata local_out{};
+
+    if (has_valid_nx && has_valid_dbi_extra) {
+        if (!CompareCommonSourceFields(nx_meta, dbi_extra_meta)) {
+            if (out_rc) *out_rc = FsError_InvalidSize;
+            return ArchiveMetaStatus::Invalid;
+        }
+        local_out.meta = ToNXSaveMeta(nx_meta);
+        local_out.source_space = nx_meta.source_space;
+        local_out.has_nx_meta = true;
+        local_out.has_dbi_extra = true;
+        local_out.has_dbi_info = seen_dbi_info;
+        out = local_out;
+        success = true;
+        return ArchiveMetaStatus::Valid;
+    }
+
+    if (has_valid_nx) {
+        local_out.meta = ToNXSaveMeta(nx_meta);
+        local_out.source_space = nx_meta.source_space;
+        local_out.has_nx_meta = true;
+        local_out.has_dbi_info = seen_dbi_info;
+        out = local_out;
+        success = true;
+        return ArchiveMetaStatus::Valid;
+    }
+
+    if (has_valid_dbi_extra) {
+        local_out.meta = ToNXSaveMeta(dbi_extra_meta);
+        local_out.source_space = std::nullopt;
+        local_out.has_dbi_extra = true;
+        local_out.has_dbi_info = seen_dbi_info;
+        out = local_out;
+        success = true;
+        return ArchiveMetaStatus::Valid;
+    }
+
+    if (seen_dbi_info && !seen_nx_meta && !seen_dbi_extra) {
+        local_out.has_dbi_info = true;
+        out = local_out;
+        success = true;
+        return ArchiveMetaStatus::NoMetadata;
+    }
+
+    if (out_rc) *out_rc = FsError_InvalidSize;
+    return ArchiveMetaStatus::Invalid;
+}
+
 auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool {
+    SaveReaderContext reader_ctx;
+    zlib_filefunc64_def file_func;
+    reader_ctx.InitFileFunc(&file_func);
+
+    auto zfile = unzOpen2_64(zip_path.s, &file_func);
+    if (!zfile) {
+        return false;
+    }
+    bool zfile_open = true;
+    ON_SCOPE_EXIT {
+        if (zfile_open && zfile) {
+            unzClose(zfile);
+        }
+    };
+
+    DecodedSaveMetadata archive_meta{};
+    Result meta_rc = 0;
+    const auto meta_status = ReadArchiveSaveMetadata(zfile, nullptr, archive_meta, &meta_rc);
+
+    zfile_open = false;
+    const int close_res = unzClose(zfile);
+    if (close_res != UNZ_OK || reader_ctx.HasError()) {
+        return false;
+    }
+
+    if (meta_status == ArchiveMetaStatus::Invalid) {
+        return false;
+    }
+    if (meta_status == ArchiveMetaStatus::Valid) {
+        const auto& meta = archive_meta.meta;
+        if (meta.attr.save_data_type != e.save_data_type) {
+            return false;
+        }
+        if (meta.attr.application_id != e.application_id) {
+            return false;
+        }
+        if (e.save_data_type == FsSaveDataType_Account) {
+            if (std::memcmp(&meta.attr.uid, &e.uid, sizeof(e.uid)) != 0) {
+                return false;
+            }
+        }
+        if (e.save_data_type == FsSaveDataType_Cache) {
+            if (meta.attr.save_data_index != e.save_data_index) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Absent metadata -> existing metadata-free DBI behavior preserved
     if (e.save_data_type != FsSaveDataType_Account && e.save_data_type != FsSaveDataType_Cache) {
         return true;
     }
-
-    zlib_filefunc64_def file_func;
-    mz::FileFuncStdio(&file_func);
-
-    auto zfile = unzOpen2_64(zip_path, &file_func);
-    if (!zfile) {
-        return true;
-    }
-    ON_SCOPE_EXIT(unzClose(zfile));
-
-    if (UNZ_END_OF_LIST_OF_FILE == unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2)) {
-        return true;
-    }
-    if (UNZ_OK != unzOpenCurrentFile(zfile)) {
-        return true;
-    }
-    ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
-
-    FsSaveDataExtraData extra{};
-    if (sizeof(extra) != unzReadCurrentFile(zfile, &extra, sizeof(extra))) {
-        return true;
-    }
-
-    if (e.save_data_type == FsSaveDataType_Account) {
-        return !std::memcmp(&extra.attr.uid, &e.uid, sizeof(e.uid));
-    }
-    return extra.attr.save_data_index == e.save_data_index;
+    return true;
 }
+
 
 auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath> {
     std::vector<fs::FsPath> out;
@@ -693,122 +1399,113 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
     out.dbi_game_dir = std::string{dbi_game_dir_name};
     out.timestamp = ParseBackupNameTimestamp(filename);
 
+    bool loaded = false;
+
     if (is_zip) {
         // Precedence 1: valid embedded archive metadata
+        SaveReaderContext reader_ctx;
         zlib_filefunc64_def file_func;
-        mz::FileFuncStdio(&file_func);
+        reader_ctx.InitFileFunc(&file_func);
         auto zfile = unzOpen2_64(path.s, &file_func);
-        if (zfile) {
-            ON_SCOPE_EXIT(unzClose(zfile));
-            bool loaded = false;
-
-            if (UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2)) {
-                if (UNZ_OK == unzOpenCurrentFile(zfile)) {
-                    ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
-                    FsSaveDataExtraData extra{};
-                    if (sizeof(extra) == unzReadCurrentFile(zfile, &extra, sizeof(extra))) {
-                        if (extra.attr.application_id != 0) {
-                            out.application_id = extra.attr.application_id;
-                        }
-                        if (extra.attr.system_save_data_id != 0) {
-                            out.system_save_data_id = extra.attr.system_save_data_id;
-                        }
-                        out.save_data_type = extra.attr.save_data_type;
-                        out.uid = extra.attr.uid;
-                        out.save_data_index = extra.attr.save_data_index;
-                        out.save_data_rank = extra.attr.save_data_rank;
-                        out.commit_id = extra.commit_id;
-                        out.source_timestamp = extra.timestamp;
-                        if (out.timestamp == 0 && extra.timestamp != 0) {
-                            out.timestamp = PosixToTimestamp(extra.timestamp);
-                        }
-                        loaded = true;
-                    }
-                }
+        if (!zfile) {
+            return false;
+        }
+        bool zfile_open = true;
+        ON_SCOPE_EXIT {
+            if (zfile_open && zfile) {
+                unzClose(zfile);
             }
+        };
 
-            if (!loaded && UNZ_END_OF_LIST_OF_FILE != unzLocateFile(zfile, NX_SAVE_META_NAME, 2)) {
-                if (UNZ_OK == unzOpenCurrentFile(zfile)) {
-                    ON_SCOPE_EXIT(unzCloseCurrentFile(zfile));
-                    NXSaveMeta meta{};
-                    if (sizeof(meta) == unzReadCurrentFile(zfile, &meta, sizeof(meta))) {
-                        if (meta.magic == NX_SAVE_META_MAGIC && meta.version == NX_SAVE_META_VERSION) {
-                            if (meta.attr.application_id != 0) {
-                                out.application_id = meta.attr.application_id;
-                            }
-                            if (meta.attr.system_save_data_id != 0) {
-                                out.system_save_data_id = meta.attr.system_save_data_id;
-                            }
-                            out.save_data_type = meta.attr.save_data_type;
-                            out.uid = meta.attr.uid;
-                            out.save_data_index = meta.attr.save_data_index;
-                            out.save_data_rank = meta.attr.save_data_rank;
-                            out.commit_id = meta.commit_id;
-                            out.source_timestamp = meta.timestamp;
-                            if (out.timestamp == 0 && meta.timestamp != 0) {
-                                out.timestamp = PosixToTimestamp(meta.timestamp);
-                            }
-                            loaded = true;
-                        }
-                    }
-                }
-            }
+        DecodedSaveMetadata archive_meta{};
+        Result meta_rc = 0;
+        const auto meta_status = ReadArchiveSaveMetadata(zfile, nullptr, archive_meta, &meta_rc);
+
+        zfile_open = false;
+        const int close_res = unzClose(zfile);
+        if (close_res != UNZ_OK || reader_ctx.HasError()) {
+            return false;
         }
 
-        // Precedence 2: DBI filename fields
+        if (meta_status == ArchiveMetaStatus::Invalid) {
+            // Present invalid metadata: fail closed, NO fallback!
+            return false;
+        }
+
+        if (meta_status == ArchiveMetaStatus::Valid) {
+            const auto& meta = archive_meta.meta;
+            out.application_id = meta.attr.application_id;
+            out.system_save_data_id = meta.attr.system_save_data_id;
+            out.save_data_type = meta.attr.save_data_type;
+            out.uid = meta.attr.uid;
+            out.save_data_index = meta.attr.save_data_index;
+            out.save_data_rank = meta.attr.save_data_rank;
+            out.commit_id = meta.commit_id;
+            out.source_timestamp = meta.timestamp;
+            if (out.timestamp == 0 && meta.timestamp != 0) {
+                out.timestamp = PosixToTimestamp(meta.timestamp);
+            }
+            loaded = true;
+        }
+
+        if (!loaded) {
+            // Precedence 2: DBI filename fields
+            if (out.application_id == 0 && out.system_save_data_id == 0) {
+                out.application_id = ParseDbiBackupAppId(filename);
+            }
+            if (out.save_data_type == 0xFF) {
+                if (filename.size() >= 19 && filename[16] == '_' && filename[18] == '_') {
+                    out.save_data_type = ParseDbiTypeLetter(filename[17]);
+                }
+            }
+            if (out.save_data_index == 0) {
+                out.save_data_index = ParseDbiBackupIndex(filename);
+            }
+        }
+    }
+
+    if (!loaded) {
+        // Precedence 3: explicit DBI directory/folder information
         if (out.application_id == 0 && out.system_save_data_id == 0) {
-            out.application_id = ParseDbiBackupAppId(filename);
+            if (!dbi_game_dir_name.empty()) {
+                out.application_id = ParseHex16(dbi_game_dir_name);
+            }
         }
+
+        // Precedence 4: 16-hex component inferred from the full path
+        if (out.application_id == 0 && out.system_save_data_id == 0) {
+            const auto hex = InferBackupIdFromPath(path.s);
+            if (hex != 0) {
+                std::string_view p{path.s};
+                const bool is_system = (hex & 0x8000000000000000ULL) ||
+                                       p.find("Save System") != p.npos ||
+                                       (out.save_data_type != 0xFF && IsSystemLikeSave(out.save_data_type));
+                if (is_system) {
+                    out.system_save_data_id = hex;
+                } else {
+                    out.application_id = hex;
+                }
+            }
+        }
+
+        // Save-folder context for save_data_type
         if (out.save_data_type == 0xFF) {
-            if (filename.size() >= 19 && filename[16] == '_' && filename[18] == '_') {
-                out.save_data_type = ParseDbiTypeLetter(filename[17]);
-            }
-        }
-        if (out.save_data_index == 0) {
-            out.save_data_index = ParseDbiBackupIndex(filename);
-        }
-    }
-
-    // Precedence 3: explicit DBI directory/folder information
-    if (out.application_id == 0 && out.system_save_data_id == 0) {
-        if (!dbi_game_dir_name.empty()) {
-            out.application_id = ParseHex16(dbi_game_dir_name);
-        }
-    }
-
-    // Precedence 4: 16-hex component inferred from the full path
-    if (out.application_id == 0 && out.system_save_data_id == 0) {
-        const auto hex = InferBackupIdFromPath(path.s);
-        if (hex != 0) {
             std::string_view p{path.s};
-            const bool is_system = (hex & 0x8000000000000000ULL) ||
-                                   p.find("Save System") != p.npos ||
-                                   (out.save_data_type != 0xFF && IsSystemLikeSave(out.save_data_type));
-            if (is_system) {
-                out.system_save_data_id = hex;
-            } else {
-                out.application_id = hex;
+            if (p.find("Save System BCAT") != p.npos) {
+                out.save_data_type = FsSaveDataType_SystemBcat;
+            } else if (p.find("Save System") != p.npos) {
+                out.save_data_type = FsSaveDataType_System;
+            } else if (p.find("Save BCAT") != p.npos || p.find("/BCAT/") != p.npos) {
+                out.save_data_type = FsSaveDataType_Bcat;
+            } else if (p.find("Save Device") != p.npos || p.find("/Device/") != p.npos) {
+                out.save_data_type = FsSaveDataType_Device;
+            } else if (p.find("Save Temporary") != p.npos || p.find("/Temporary/") != p.npos) {
+                out.save_data_type = FsSaveDataType_Temporary;
+            } else if (p.find("Save Cache") != p.npos || p.find("/Cache/") != p.npos) {
+                out.save_data_type = FsSaveDataType_Cache;
+            } else if (p.find("/Save/") != p.npos || p.find("/Account/") != p.npos) {
+                out.save_data_type = FsSaveDataType_Account;
             }
-        }
-    }
-
-    // Save-folder context for save_data_type
-    if (out.save_data_type == 0xFF) {
-        std::string_view p{path.s};
-        if (p.find("Save System BCAT") != p.npos) {
-            out.save_data_type = FsSaveDataType_SystemBcat;
-        } else if (p.find("Save System") != p.npos) {
-            out.save_data_type = FsSaveDataType_System;
-        } else if (p.find("Save BCAT") != p.npos || p.find("/BCAT/") != p.npos) {
-            out.save_data_type = FsSaveDataType_Bcat;
-        } else if (p.find("Save Device") != p.npos || p.find("/Device/") != p.npos) {
-            out.save_data_type = FsSaveDataType_Device;
-        } else if (p.find("Save Temporary") != p.npos || p.find("/Temporary/") != p.npos) {
-            out.save_data_type = FsSaveDataType_Temporary;
-        } else if (p.find("Save Cache") != p.npos || p.find("/Cache/") != p.npos) {
-            out.save_data_type = FsSaveDataType_Cache;
-        } else if (p.find("/Save/") != p.npos || p.find("/Account/") != p.npos) {
-            out.save_data_type = FsSaveDataType_Account;
         }
     }
 

@@ -1,6 +1,22 @@
-Актуальний delivery — **v0.13.855**: serial ZIP commit lifecycle завершено.
+Актуальний delivery — **v0.13.856 accepted**: JKSV ZIP metadata wire compatibility; попередній baseline **v0.13.855**.
 
-## Поточний delivery: v0.13.855
+## Поточний delivery: v0.13.856 — JKSV ZIP metadata wire compatibility
+
+- [x] `META-RESEARCH-856` — exact primary/master/clean/bb5ff82 ancestry; Graphify update/query; all metadata consumers/writer/discovery/filter/verifier and pinned upstream/historical/released layouts inspected.
+- [x] `META-POLICY-856` — fixed LE85/two86/legacy128 bounded decoding, ambiguity refusal, source-only identity, duplicates/conflicts fail before mutation; exact offsets and validation in plan.md.
+- [x] `META-HANDOFF-856` — self-contained NEW Gemini chat prompt prepared; manual Gemini implementation completed, no agents/builds/product edits by senior.
+- [x] `META-REVIEW1-856` — Gemini19:29 full source/diff/caller review; NOT ACCEPTED. Filter mismatch, unchecked rewind/owner close/termination, missing directory attributes, unchecked byte increments, unrequested INI cap and missing connected fixtures; compiler-free claims not independently rerun by senior.
+- [x] `META-REWORK1-856` — targeted NEW Gemini corrections and focused evidence, preserve selected destination/recovery/cadence; no compile/commit by Gemini.
+- [x] `META-REVIEW2-856` — previous product findings corrected, NOT ACCEPTED: C++ helper used before declaration; legacy-comment test bypass; connected lifecycle/fault/remap sizing fixtures still absent. Historical blockers resolved by bounded Gemini follow-ups.
+- [x] `META-DECODE-856` — minimal shared decoder/archive reader; discovery/DBI matcher/all-target restore/recovery reuse; own legacy writer unchanged.
+- [x] `META-PRESERVE-856` — metadata excluded/drained/CRC checked, absent metadata DBI, explicit remap selected destination, v855 admission/lifetimes/retention/cadence/fresh RO/source close preserved.
+- [x] `META-STATIC-856` — independent layout fixtures, real ZIP/source/model edge/corruption/duplicate/conflict routing regression; relevant Python checks/diff check, no C++/IPC proof.
+- [x] `DOCS-BUMP-856` — Gemini app .855 -> .856; senior accepted full review/four docs/focused primary-master commit/ancestor+clean; no push.
+- [ ] `HW-856` — user compile and disposable Switch both routes/JKSV85+86/remap/legacy recovery/invalid metadata no-clear; no compile by senior or Gemini.
+
+- [x] `META-ACCEPT-856` — final Gemini10:00 source/model corrections reviewed; nine Python suites PASS reported by Gemini, senior diff check PASS; no C++/IPC/hardware proof.
+
+## Попередній delivery: v0.13.855
 
 - [x] `JOURNAL-RESEARCH-855` — primary/master/clean/base ancestry, Graphify та libnx/JKSV/Checkpoint lifecycle research.
 - [x] `JOURNAL-POLICY-855` — selected declared journal request cap, zero cadence, negative fail; allocation/metadata ceiling.

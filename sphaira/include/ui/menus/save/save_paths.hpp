@@ -8,6 +8,11 @@
 #include <vector>
 #include <ctime>
 #include <optional>
+#include <cstring>
+
+namespace sphaira::ui {
+struct ProgressBox;
+}
 
 namespace sphaira::ui::menu::save {
 
@@ -25,6 +30,40 @@ constexpr u32 NX_SAVE_META_MAGIC = 0x4A4B5356; // JKSV
 constexpr u32 NX_SAVE_META_VERSION = 1;
 constexpr const char* NX_SAVE_META_NAME = ".nx_save_meta.bin";
 
+enum class SaveReservedMetaKind {
+    None,
+    NxMeta,
+    DbiExtra,
+    DbiInfo,
+};
+
+inline auto ClassifySaveReservedMetadataRoot(std::string_view name) -> SaveReservedMetaKind {
+    while (!name.empty() && name.front() == '/') {
+        name.remove_prefix(1);
+    }
+    while (!name.empty() && name.back() == '/') {
+        name.remove_suffix(1);
+    }
+    if (name.find('/') != std::string_view::npos) {
+        return SaveReservedMetaKind::None;
+    }
+    const auto equals_ic = [](std::string_view a, const char* b) {
+        const size_t b_len = std::strlen(b);
+        return a.size() == b_len && !strncasecmp(a.data(), b, b_len);
+    };
+    if (equals_ic(name, NX_SAVE_META_NAME)) return SaveReservedMetaKind::NxMeta;
+    if (equals_ic(name, DBI_SAVE_EXTRA_NAME)) return SaveReservedMetaKind::DbiExtra;
+    if (equals_ic(name, DBI_SAVE_INFO_NAME)) return SaveReservedMetaKind::DbiInfo;
+    return SaveReservedMetaKind::None;
+}
+
+inline auto IsSaveReservedMetadataRoot(std::string_view name) -> bool {
+    return ClassifySaveReservedMetadataRoot(name) != SaveReservedMetaKind::None;
+}
+
+constexpr u32 JKSV_SAVE_META_MAGIC = 0x56534B4A;
+constexpr u8 JKSV_SAVE_META_REVISION = 1;
+
 // https://github.com/J-D-K/JKSV/issues/264#issuecomment-2618962807
 struct NXSaveMeta {
     u32 magic{}; // NX_SAVE_META_MAGIC
@@ -40,6 +79,23 @@ struct NXSaveMeta {
     u64 raw_size{}; // FsSaveDataInfo::size
 };
 static_assert(sizeof(NXSaveMeta) == 128);
+
+enum class ArchiveMetaStatus {
+    NoMetadata,
+    Valid,
+    Invalid
+};
+
+struct DecodedSaveMetadata {
+    NXSaveMeta meta{};
+    std::optional<u8> source_space{};
+    bool has_nx_meta{false};
+    bool has_dbi_extra{false};
+    bool has_dbi_info{false};
+};
+
+auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMetadata& out, Result* out_rc = nullptr) -> ArchiveMetaStatus;
+
 
 struct BackupArchiveInfo {
     u64 application_id{};

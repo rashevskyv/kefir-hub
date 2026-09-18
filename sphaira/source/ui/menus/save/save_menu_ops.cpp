@@ -1379,8 +1379,8 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     log_write("opened zip\n");
 
     const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
-        // skip restoring the meta files (sphaira and dbi).
-        if (name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)) {
+        // skip restoring the reserved meta files (sphaira and dbi).
+        if (IsSaveReservedMetadataRoot(name.s)) {
             log_write("skipping meta\n");
             return false;
         }
@@ -1398,113 +1398,18 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         static_cast<long long>(summary.file_count),
         static_cast<long long>(summary.directory_count));
 
+    DecodedSaveMetadata archive_meta{};
+    Result meta_rc = 0;
+    const auto meta_status = ReadArchiveSaveMetadata(zfile, pbox, archive_meta, &meta_rc);
+    if (meta_status == ArchiveMetaStatus::Invalid) {
+        R_THROW(R_FAILED(meta_rc) ? meta_rc : Result_UnzOpen2_64);
+    }
+
     std::optional<NXSaveMeta> meta{};
-    std::optional<FsSaveDataExtraData> dbi_extra{};
 
     if (e.save_data_id == 0) {
-        const int meta_locate_rc = unzLocateFile(zfile, NX_SAVE_META_NAME, 0);
-        if (meta_locate_rc != UNZ_OK && meta_locate_rc != UNZ_END_OF_LIST_OF_FILE) {
-            R_THROW(Result_UnzOpen2_64);
-        }
-        if (meta_locate_rc == UNZ_OK) {
-            log_write("found meta file\n");
-            if (UNZ_OK != unzOpenCurrentFile(zfile)) {
-                R_THROW(Result_UnzOpenCurrentFile);
-            }
-            bool meta_open = true;
-            ON_SCOPE_EXIT {
-                if (meta_open && zfile) {
-                    unzCloseCurrentFile(zfile);
-                }
-            };
-
-            log_write("opened meta file\n");
-            NXSaveMeta temp_meta{};
-            u64 bytes_read = 0;
-            int len = unzReadCurrentFile(zfile, &temp_meta, sizeof(temp_meta));
-            if (len < 0) {
-                meta_open = false;
-                unzCloseCurrentFile(zfile);
-                R_THROW(Result_UnzReadCurrentFile);
-            }
-            bytes_read += len;
-
-            u8 drain_buf[512];
-            int drain_r = 0;
-            do {
-                drain_r = unzReadCurrentFile(zfile, drain_buf, sizeof(drain_buf));
-                if (drain_r < 0) {
-                    meta_open = false;
-                    unzCloseCurrentFile(zfile);
-                    R_THROW(Result_UnzReadCurrentFile);
-                }
-                bytes_read += drain_r;
-            } while (drain_r > 0);
-
-            meta_open = false;
-            const int close_res = unzCloseCurrentFile(zfile);
-            if (close_res == UNZ_CRCERROR) {
-                R_THROW(0x8);
-            }
-            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
-
-            if (bytes_read == sizeof(temp_meta) && temp_meta.magic == NX_SAVE_META_MAGIC && temp_meta.version == NX_SAVE_META_VERSION) {
-                meta = temp_meta;
-                log_write("loaded meta!\n");
-            }
-        }
-
-        // dbi backups store the raw FsSaveDataExtraData instead of the sphaira meta.
-        if (!meta.has_value()) {
-            const int dbi_locate_rc = unzLocateFile(zfile, DBI_SAVE_EXTRA_NAME, 2);
-            if (dbi_locate_rc != UNZ_OK && dbi_locate_rc != UNZ_END_OF_LIST_OF_FILE) {
-                R_THROW(Result_UnzOpen2_64);
-            }
-            if (dbi_locate_rc == UNZ_OK) {
-                if (UNZ_OK != unzOpenCurrentFile(zfile)) {
-                    R_THROW(Result_UnzOpenCurrentFile);
-                }
-                bool dbi_open = true;
-                ON_SCOPE_EXIT {
-                    if (dbi_open && zfile) {
-                        unzCloseCurrentFile(zfile);
-                    }
-                };
-
-                FsSaveDataExtraData temp{};
-                u64 bytes_read = 0;
-                int len = unzReadCurrentFile(zfile, &temp, sizeof(temp));
-                if (len < 0) {
-                    dbi_open = false;
-                    unzCloseCurrentFile(zfile);
-                    R_THROW(Result_UnzReadCurrentFile);
-                }
-                bytes_read += len;
-
-                u8 drain_buf[512];
-                int drain_r = 0;
-                do {
-                    drain_r = unzReadCurrentFile(zfile, drain_buf, sizeof(drain_buf));
-                    if (drain_r < 0) {
-                        dbi_open = false;
-                        unzCloseCurrentFile(zfile);
-                        R_THROW(Result_UnzReadCurrentFile);
-                    }
-                    bytes_read += drain_r;
-                } while (drain_r > 0);
-
-                dbi_open = false;
-                const int close_res = unzCloseCurrentFile(zfile);
-                if (close_res == UNZ_CRCERROR) {
-                    R_THROW(0x8);
-                }
-                R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
-
-                if (bytes_read == sizeof(temp)) {
-                    dbi_extra = temp;
-                    log_write("loaded dbi save extra data\n");
-                }
-            }
+        if (meta_status == ArchiveMetaStatus::Valid) {
+            meta = archive_meta.meta;
         }
     }
 
@@ -1533,15 +1438,6 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
             journal_size = meta->journal_size;
             owner_id = meta->owner_id;
             flags = meta->flags;
-        } else if (dbi_extra.has_value()) {
-            if (!attr.application_id) attr.application_id = dbi_extra->attr.application_id;
-            if (!attr.system_save_data_id) attr.system_save_data_id = dbi_extra->attr.system_save_data_id;
-            if (!attr.save_data_type) attr.save_data_type = dbi_extra->attr.save_data_type;
-            if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = dbi_extra->attr.uid;
-            data_size = dbi_extra->data_size;
-            journal_size = dbi_extra->journal_size;
-            owner_id = dbi_extra->owner_id;
-            flags = dbi_extra->flags;
         }
     }
 
@@ -1767,6 +1663,11 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
 
             // Verified recovery archive check against native held mount
             R_TRY(thread::VerifyArchiveAgainstNative(pbox, rec_zfile, &save_fs, "/", rec_inventory, save_filter, true));
+
+            DecodedSaveMetadata rec_meta{};
+            Result rec_meta_rc = 0;
+            const auto rec_meta_status = ReadArchiveSaveMetadata(rec_zfile, pbox, rec_meta, &rec_meta_rc);
+            R_UNLESS(rec_meta_status == ArchiveMetaStatus::Valid, R_FAILED(rec_meta_rc) ? rec_meta_rc : Result_UnzOpen2_64);
 
             // Explicit checked close of candidate recovery reader BEFORE re-enumeration/publication
             rec_reader_open = false;

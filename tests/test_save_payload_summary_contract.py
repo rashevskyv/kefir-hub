@@ -242,8 +242,8 @@ def test_source_contracts():
     with open(save_ops, "r", encoding="utf-8") as f:
         save_ops_src = f.read()
 
-    check("name == NX_SAVE_META_NAME || !strcasecmp(name.s, DBI_SAVE_INFO_NAME) || !strcasecmp(name.s, DBI_SAVE_EXTRA_NAME)" in save_ops_src,
-          "RestoreSaveZip save_filter must use exact match for NX_SAVE_META_NAME and case-insensitive strcasecmp for DBI names")
+    check("IsSaveReservedMetadataRoot(name.s)" in save_ops_src,
+          "RestoreSaveZip save_filter must use shared IsSaveReservedMetadataRoot predicate")
     check("thread::UnzipPayloadSummary summary{};" in save_ops_src,
           "RestoreSaveZip must instantiate UnzipPayloadSummary")
     check('TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary' in save_ops_src,
@@ -351,16 +351,20 @@ class BehavioralPreflightModel:
         return True
 
     @classmethod
+    def is_save_reserved_metadata_root(cls, name: str) -> bool:
+        s = name.lower()
+        return s in (cls.NX_SAVE_META_NAME.lower(), cls.DBI_SAVE_INFO_NAME.lower(), cls.DBI_SAVE_EXTRA_NAME.lower())
+
+    @classmethod
     def save_filter(cls, name: str, _path: str) -> tuple[bool, str]:
         """
         Actual Save Menu restore filter:
-        - Exact case-sensitive match for NX_SAVE_META_NAME (".nx_save_meta.bin")
-        - Case-insensitive strcasecmp match for DBI_SAVE_INFO_NAME (".dbi_save_info.ini")
-        - Case-insensitive strcasecmp match for DBI_SAVE_EXTRA_NAME (".dbi_save_extra")
+        - Case-insensitive match for reserved root metadata:
+          .nx_save_meta.bin, .dbi_save_info.ini, .dbi_save_extra.
+        - Root metadata entries are excluded from restore.
+        - Nested files with the same basename remain payload.
         """
-        if name == cls.NX_SAVE_META_NAME or \
-           name.lower() == cls.DBI_SAVE_INFO_NAME.lower() or \
-           name.lower() == cls.DBI_SAVE_EXTRA_NAME.lower():
+        if cls.is_save_reserved_metadata_root(name):
             return False, _path
         return True, _path
 
@@ -525,10 +529,11 @@ def test_behavioral_fixtures():
     check(res["file_bytes"] == 256 and res["file_count"] == 1, "Sanitized entry counted in summary")
 
     # Fixture 4: Actual NX/DBI metadata filtering and leading-slash normalization
-    # - NX_SAVE_META_NAME (.nx_save_meta.bin): exact case match
-    # - Leading slash /.nx_save_meta.bin: normalized and skipped
-    # - Uppercase .NX_SAVE_META.BIN: case mismatch -> NOT skipped, counted
-    # - DBI info/extra: case-insensitive match -> skipped with mixed case and leading slash
+    # - Case-insensitive match for reserved root metadata:
+    #   .nx_save_meta.bin, .NX_SAVE_META.BIN, .dbi_save_info.ini, .dbi_save_extra
+    #   all excluded from restore payload!
+    # - Leading slash normalized before filter evaluation
+    # - Nested files with matching basename (e.g. nested/.nx_save_meta.bin) remain payload!
     entries_4 = [
         {"name": ".nx_save_meta.bin", "uncompressed_size": 512, "chunks": [512]},
         {"name": "/.nx_save_meta.bin", "uncompressed_size": 512, "chunks": [512]},
@@ -536,14 +541,15 @@ def test_behavioral_fixtures():
         {"name": "/.DBI_SAVE_INFO.INI", "uncompressed_size": 256, "chunks": [256]},
         {"name": "/.dbi_save_extra", "uncompressed_size": 128, "chunks": [128]},
         {"name": "/.DBI_save_EXTRA", "uncompressed_size": 128, "chunks": [128]},
-        {"name": ".NX_SAVE_META.BIN", "uncompressed_size": 77, "chunks": [77]},  # Case mismatch -> kept!
+        {"name": ".NX_SAVE_META.BIN", "uncompressed_size": 77, "chunks": [77]},  # Case-insensitive root -> excluded!
+        {"name": "nested/.nx_save_meta.bin", "uncompressed_size": 50, "chunks": [50]},  # Nested basename -> kept as payload!
         {"name": "/user_data.sav", "uncompressed_size": 1000, "chunks": [1000]},
     ]
     out = {"file_bytes": -1, "file_count": -1, "directory_count": -1}
     rc, res = model.execute_preflight(entries_4, filter_fn=model.save_filter, save_dbi_compat=True, output_summary=out)
     check(rc == RES_OK, "Actual metadata names with leading-slash normalization must pass preflight")
-    check(res["file_bytes"] == 1077, "Skipped metadata excluded; uppercase NX meta kept as payload (1000 + 77)")
-    check(res["file_count"] == 2, "Only user_data.sav and uppercase .NX_SAVE_META.BIN counted in file_count")
+    check(res["file_bytes"] == 1050, "Skipped metadata excluded; nested metadata and user payload kept (1000 + 50)")
+    check(res["file_count"] == 2, "Only user_data.sav and nested/.nx_save_meta.bin counted in file_count")
     check(res["directory_count"] == 0, "No directories in this set")
 
     # Fixture 5: Corrupt skipped metadata rejects preflight and retains entire sentinel
