@@ -2458,6 +2458,16 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     attr.save_data_rank = e.save_data_rank;
     attr.save_data_index = e.save_data_index;
 
+    if (extra.attr.application_id != attr.application_id ||
+        extra.attr.uid.uid[0] != attr.uid.uid[0] ||
+        extra.attr.uid.uid[1] != attr.uid.uid[1] ||
+        extra.attr.system_save_data_id != attr.system_save_data_id ||
+        extra.attr.save_data_type != attr.save_data_type ||
+        extra.attr.save_data_rank != attr.save_data_rank ||
+        extra.attr.save_data_index != attr.save_data_index) {
+        return FsError_PathNotFound;
+    }
+
     // try and open the save file system
     fs::FsNativeSave save_fs{(FsSaveDataType)e.save_data_type, save_data_space_id, &attr, true};
     R_TRY(save_fs.GetFsOpenResult());

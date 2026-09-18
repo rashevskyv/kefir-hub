@@ -1,3 +1,11 @@
+Актуальний delivery — **v0.13.859** (2026-09-18). History: archive/walkthrough_archive.md.
+
+## v0.13.859 — backup selected/live identity admission
+
+Accepted v0.13.859, 2026-09-18 after Gemini16:20 test-only correction. BackupSaveInternal now compares selected attribute with actual-space/save-ID extra.attr before RO mount, enumeration or output mutation: application ID, both UID halves, system ID, type, rank and index. Mismatch returns existing FsError_PathNotFound; no identity repair/default-space retry/padding comparison. Existing routing for all seven types, zero-ID/empty behavior, ZIP writer and restore/recovery boundaries unchanged. RAW read-only adapter candidate stopped: no verified integrated external-container reader; v858 RAW refusal preserved.
+
+Verification evidence: Gemini16:20 reports new backup identity check plus twelve existing compiler-free Python suites, dead-symbol gate and diff check PASS. Senior reviewed actual product/caller/fixture diff and mechanical four-suite version allowances, ran git diff --check, did not rerun suites or compile. Correct independent NX magic/extra layouts, actual source filesystem reads after admission, real ZIP reopen/payload/all identity readback, source/output sentinels, per-field/read-error refusal, rank/index/padding cases and 49 synthetic type-space routing combinations. These model/static checks do not execute C++/libnx/IPC/hardware or establish firmware support for every combination. Tiny fixture payload reads are whole-file; model is not a complete backup scanner/streaming/publication verifier. No snapshot/atomicity/rollback/authentication/capacity/journal-fit claims. CreateBackupIfNewer skip heuristic remains outside this export admission slice. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. Separate user compile/disposable Switch valid backup/refusal and ZIP/folder/RAW regressions required.
+
 Актуальний delivery — **v0.13.858** (2026-09-18). History: archive/walkthrough_archive.md.
 
 ## v0.13.858 — fail-closed RAW restore

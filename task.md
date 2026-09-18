@@ -1,6 +1,26 @@
-Актуальний delivery — **v0.13.858 accepted**: fail-closed RAW restore; accepted baseline **v0.13.857**.
+Актуальний delivery — **v0.13.859 accepted**: backup selected/live identity admission; accepted baseline **v0.13.858**. Accepted after Gemini16:20; focused primary-master commit.
 
-## Поточний delivery: v0.13.858 — fail-closed RAW restore
+## Поточний delivery: v0.13.859 — backup selected/live identity admission
+
+- [x] BACKUP-ACCEPT-859 — Gemini16:20 corrections reviewed; all13 suites/dead-symbol PASS reported, senior diff check/source review; no suite rerun/build. Bounded export guard accepted.
+
+- [x] `BACKUP-RESEARCH-859` — primary/master/clean/baseline ancestor verified twice; Graphify root update/query, exact backup callers/native RO/writer identity flow reviewed.
+- [x] `RAW-GATE-859` — external RAW-file mount/verified integrated reader not proven; TegraExplorer reader requires separate dependencies/keys/integrity contract. Candidate stopped, v858 fail-closed preserved.
+- [x] `BACKUP-POLICY-859` — selected actual space unchanged; seven named attribute fields including both UID halves must agree with extra.attr before RO open/enum/output. Existing mismatch Result; no padding compare/identity repair/default-space retry.
+- [x] `BACKUP-HANDOFF-859` — self-contained NEW Gemini prompt prepared; manual transfer only, no coding agents/senior product edits/builds.
+- [x] `BACKUP-GUARD-859` — minimal BackupSaveInternal admission guard; restore/recovery/skip heuristic unchanged.
+- [x] `BACKUP-FIXTURE-859` — independent encoded identity/actual ZIP export model; seven types × concrete spaces/ranks/index/UID halves, mismatch/read-fault no-output boundaries and sentinels; preserve twelve suites/dead-symbol gate.
+- [x] `BACKUP-REVIEW-859` — senior actual diff/callers/order/Results/evidence review; corrections Gemini only, compiler-free models are not C++/libnx/IPC/hardware proof.
+- [x] `BACKUP-REVIEW1-859` — Gemini16:13 NOT ACCEPTED: product guard matches policy; four stale-version suite failures, wrong NX magic, dictionary-only source payload and incomplete NX identity readback. Senior diff check PASS, no suite rerun/build/product/test edits.
+- [x] `BACKUP-REWORK1-859` — Gemini test-only correction, mechanical four-version allowances/full thirteen suites; no product guard redesign.
+- [x] `DOCS-BUMP-859` — junior .858 -> .859; after acceptance senior four docs/focused primary master commit/ancestor+clean/no push.
+- [ ] `HW-859` — separate user compile/disposable Switch valid all-type actual-space backup and stale identity refusal; normal ZIP/folder/RAW refusal regressions.
+
+## Попередній delivery: v0.13.858 — fail-closed RAW restore
+
+Accepted baseline **v0.13.857**.
+
+### Accepted v0.13.858 checklist
 
 - [x] `RAW-ACCEPT-858` — Gemini16:01 recovery-before-write/failure fixtures reviewed, RAW suite PASS reported; old11 PASS from15:57 retained. Senior diff check/source review, no suite rerun/build. Product accepted bounded refusal only.
 
