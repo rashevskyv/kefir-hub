@@ -104,6 +104,7 @@ struct BackupArchiveInfo {
     AccountUid uid{};
     u16 save_data_index{};
     u8 save_data_rank{};
+    bool rank_known{false};
     u64 timestamp{};
     std::string dbi_game_dir{};
     fs::FsPath path{};

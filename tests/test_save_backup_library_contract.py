@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Suite: Save Backup Library Group Membership and Action Contract (Sphaira v0.13.861)
+Test Suite: Save Backup Library Group Membership and Action Contract (Sphaira v0.13.862)
 
 Target chat: Аудит і виправлення системи сейвів
 Scope & Verification Boundary:
@@ -173,6 +173,7 @@ class BackupArchiveInfoModel:
     uid_high: int = 0
     save_data_index: int = 0
     save_data_rank: int = 0
+    rank_known: bool = False
     timestamp: int = 0
     dbi_game_dir: str = ""
     path: str = ""
@@ -193,6 +194,7 @@ class EntryModel:
     save_data_index: int = 0
     save_data_rank: int = 0
     is_backup: bool = False
+    backup_rank_known: bool = False
     backup_timestamp: int = 0
     backup_count: int = 0
     backup_path: str = ""
@@ -203,10 +205,11 @@ class EntryModel:
     backup_members: List[BackupCandidateModel] = field(default_factory=list)
 
 
-def backup_group_key(app_id: int, sys_id: int, save_type: int, uid_low: int, uid_high: int, index: int) -> str:
+def backup_group_key(app_id: int, sys_id: int, save_type: int, uid_low: int, uid_high: int, index: int, rank_known: bool = True, rank: int = 0) -> str:
+    rk = "rk:1" if (rank_known and rank == 1) else ("rk:0" if rank_known else "rk:?")
     if is_system_like(save_type):
-        return f"backup:system:{save_type}:{sys_id:016X}:{index}"
-    return f"backup:app:{app_id:016X}:{save_type}:{uid_low:016X}{uid_high:016X}:{index}"
+        return f"backup:system:{save_type}:{sys_id:016X}:{index}:{rk}"
+    return f"backup:app:{app_id:016X}:{save_type}:{uid_low:016X}{uid_high:016X}:{index}:{rk}"
 
 
 def posix_to_timestamp(posix_sec: int) -> int:
@@ -335,6 +338,7 @@ def inspect_backup_archive_model(fs_path: str, filename: str, dbi_game_dir: str 
             info.uid_high = meta["uid_high"]
             info.save_data_index = meta["save_data_index"]
             info.save_data_rank = meta["save_data_rank"]
+            info.rank_known = True
             info.commit_id = meta["commit_id"]
             info.source_timestamp = meta["timestamp"]  # POSIX seconds
             if info.timestamp == 0 and meta["timestamp"] != 0:
@@ -392,7 +396,8 @@ def read_backup_entries_model(fs_root: str, custom_search_paths: Optional[List[s
         info.source = source_prio
         key = backup_group_key(
             info.application_id, info.system_save_data_id, info.save_data_type,
-            info.uid_low, info.uid_high, info.save_data_index
+            info.uid_low, info.uid_high, info.save_data_index,
+            rank_known=info.rank_known, rank=info.save_data_rank
         )
 
         if key not in group_map:
@@ -404,6 +409,7 @@ def read_backup_entries_model(fs_root: str, custom_search_paths: Optional[List[s
             e.uid_high = info.uid_high
             e.save_data_index = info.save_data_index
             e.save_data_rank = info.save_data_rank
+            e.backup_rank_known = info.rank_known
             e.is_backup = True
             e.backup_timestamp = info.timestamp
             e.backup_count = 1
@@ -534,7 +540,9 @@ def collect_group_archives_model(group: EntryModel, fs_root: str, backup_root: s
     """Pure-Python behavioral model matching Menu::CollectGroupArchives in save_menu.cpp."""
     target_key = backup_group_key(
         group.application_id, group.system_save_data_id, group.save_data_type,
-        group.uid_low, group.uid_high, group.save_data_index
+        group.uid_low, group.uid_high, group.save_data_index,
+        rank_known=group.backup_rank_known if group.is_backup else True,
+        rank=group.save_data_rank
     )
 
     if group.is_backup:
@@ -555,7 +563,9 @@ def collect_group_archives_model(group: EntryModel, fs_root: str, backup_root: s
             info.source = m.source
             arch_key = backup_group_key(
                 info.application_id, info.system_save_data_id, info.save_data_type,
-                info.uid_low, info.uid_high, info.save_data_index
+                info.uid_low, info.uid_high, info.save_data_index,
+                rank_known=info.rank_known,
+                rank=info.save_data_rank
             )
             if arch_key != target_key:
                 continue
@@ -574,7 +584,9 @@ def collect_group_archives_legacy_model(group: EntryModel, fs_root: str, backup_
     out: List[BackupCandidateModel] = []
     target_key = backup_group_key(
         group.application_id, group.system_save_data_id, group.save_data_type,
-        group.uid_low, group.uid_high, group.save_data_index
+        group.uid_low, group.uid_high, group.save_data_index,
+        rank_known=group.backup_rank_known if group.is_backup else True,
+        rank=group.save_data_rank
     )
 
     game_folder = os.path.join(fs_root, backup_root.lstrip("/"), group.name) if group.name else ""
@@ -582,7 +594,7 @@ def collect_group_archives_legacy_model(group: EntryModel, fs_root: str, backup_
         for fname in sorted(os.listdir(game_folder)):
             fpath = os.path.join(game_folder, fname)
             info = inspect_backup_archive_model(fpath, fname, group.dbi_game_dir)
-            if info and backup_group_key(info.application_id, info.system_save_data_id, info.save_data_type, info.uid_low, info.uid_high, info.save_data_index) == target_key:
+            if info and backup_group_key(info.application_id, info.system_save_data_id, info.save_data_type, info.uid_low, info.uid_high, info.save_data_index, rank_known=info.rank_known, rank=info.save_data_rank) == target_key:
                 out.append(BackupCandidateModel(ts=info.timestamp, path=f"{backup_root.rstrip('/')}/{group.name}/{fname}", source=1))
 
     # Stale fallback when narrow search is empty:
@@ -632,8 +644,8 @@ def test_static_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.861)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.861")
+    check("set(sphaira_VERSION 0.13.862)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.862")
 
     # 1.2 save_menu.hpp declarations
     sm_hpp_path = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -646,11 +658,35 @@ def test_static_source_contracts() -> None:
     check(cand_pos < entry_pos, "struct BackupCandidate must be declared before struct Entry")
     check("std::vector<BackupCandidate> backup_members" in sm_hpp,
           "struct Entry must contain backup_members vector")
+    check("bool backup_rank_known" in sm_hpp,
+          "struct Entry must contain backup_rank_known boolean member")
 
-    # 1.3 save_menu.cpp function-scoped checks
+    # 1.3 save_paths.hpp declarations
+    sp_hpp_path = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
+    with open(sp_hpp_path, "r", encoding="utf-8") as f:
+        sp_hpp = f.read()
+    check("bool rank_known{false};" in sp_hpp,
+          "save_paths.hpp must define rank_known in struct BackupArchiveInfo")
+    check("FormatBackupRankMarker" not in sp_hpp,
+          "save_paths.hpp must NOT declare FormatBackupRankMarker")
+
+    # 1.4 save_paths.cpp rank provenance & key format
+    sp_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_paths.cpp")
+    with open(sp_cpp_path, "r", encoding="utf-8") as f:
+        sp_cpp = f.read()
+    check("out.rank_known = true;" in sp_cpp,
+          "save_paths.cpp InspectBackupArchive must set rank_known to true on Valid metadata")
+    check("auto FormatBackupRankMarker(const Entry& e) -> std::string" in sp_cpp,
+          "save_paths.cpp must define FormatBackupRankMarker")
+    check("rk:0" in sp_cpp and "rk:1" in sp_cpp and "rk:?" in sp_cpp,
+          "save_paths.cpp must format explicit rank markers rk:0, rk:1, and rk:?")
+
+    # 1.5 save_menu.cpp function-scoped checks
     sm_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp")
     with open(sm_cpp_path, "r", encoding="utf-8") as f:
         sm_cpp = f.read()
+    check("auto FormatBackupRankMarker(const Entry& e) -> std::string" in sm_cpp,
+          "save_menu.cpp must define file-local FormatBackupRankMarker")
 
     # Scope A: ReadBackupEntries
     p_rbe = sm_cpp.find("void Menu::ReadBackupEntries(")
@@ -659,6 +695,8 @@ def test_static_source_contracts() -> None:
     check(p_rbe_end != -1, "End of Menu::ReadBackupEntries must be found")
     rbe_src = sm_cpp[p_rbe:p_rbe_end]
 
+    check("e.backup_rank_known = info.rank_known;" in rbe_src,
+          "ReadBackupEntries must record info.rank_known into e.backup_rank_known")
     check("e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});" in rbe_src,
           "ReadBackupEntries must record new candidate into e.backup_members")
     check("existing.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});" in rbe_src,
@@ -728,7 +766,23 @@ def test_static_source_contracts() -> None:
     check("No backups found for selected saves." in rfu_src,
           "RestoreForUser must report 'No backups found for selected saves.' on empty")
 
-    # 1.4 save_menu_ops.cpp ShowRestorePickerPopup checks
+    # Scope E: Menu::Draw HbMenu layout header
+    p_draw = sm_cpp.find("void Menu::Draw(NVGcontext* vg, Theme* theme) {")
+    check(p_draw != -1, "Menu::Draw must exist")
+    p_draw_end = sm_cpp.find("if (m_layout.Get() == grid::LayoutType_List) {", p_draw)
+    check(p_draw_end != -1, "End of Menu::Draw HbMenu block must be found")
+    draw_hb_src = sm_cpp[p_draw:p_draw_end]
+
+    check("m_layout.Get() == grid::LayoutType_HbMenu" in draw_hb_src,
+          "Menu::Draw must contain grid::LayoutType_HbMenu branch")
+    check("FormatBackupRankMarker(e)" in draw_hb_src,
+          "HbMenu backup branch must format rank marker via FormatBackupRankMarker(e)")
+    check("((e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?" in draw_hb_src,
+          "HbMenu live branch must preserve account logic")
+    check("GetAccountName(e.uid) : GetAccountSummary()" in draw_hb_src,
+          "HbMenu live branch must preserve account naming")
+
+    # 1.6 save_menu_ops.cpp ShowRestorePickerPopup checks
     ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_cpp = f.read()
@@ -995,6 +1049,24 @@ def test_suite_3_wire_and_rejection_fixtures() -> None:
         check(inspect_backup_archive_model(p_zero_sys, "reject_zero_sys.zip") is None,
               "System save with zero system ID must fail closed (None)")
 
+        # Save data rank > 1 (invalid rank)
+        p_bad_rank = os.path.join(tmpdir, "dumps", "reject_bad_rank.zip")
+        make_zip_file(p_bad_rank, {NX_SAVE_META_NAME: pack_jksv85(rank=2, ts=posix_sec)})
+        check(inspect_backup_archive_model(p_bad_rank, "reject_bad_rank.zip") is None,
+              "Save data rank 2 must fail closed (None)")
+
+        # Invalid source_space 255
+        p_bad_space = os.path.join(tmpdir, "dumps", "reject_bad_space.zip")
+        make_zip_file(p_bad_space, {NX_SAVE_META_NAME: pack_jksv_tail86(owner_id=0x01000000000100FF, source_space=255, ts=posix_sec)})
+        check(inspect_backup_archive_model(p_bad_space, "reject_bad_space.zip") is None,
+              "Invalid source space 255 must fail closed (None)")
+
+        # Truncated metadata (< 85 bytes)
+        p_trunc = os.path.join(tmpdir, "dumps", "reject_trunc.zip")
+        make_zip_file(p_trunc, {NX_SAVE_META_NAME: b"\x00" * 50})
+        check(inspect_backup_archive_model(p_trunc, "reject_trunc.zip") is None,
+              "Truncated metadata must fail closed (None)")
+
         # Verify that running directory scanner over /dumps rejects all invalid archives:
         groups = read_backup_entries_model(tmpdir)
         check(len(groups) == 0, f"No invalid archives must be admitted by the scanner! Got {len(groups)}")
@@ -1012,60 +1084,104 @@ def test_suite_4_real_archive_identity_and_grouping_matrix() -> None:
         uid1 = (0x1111111111111111, 0x2222222222222222)
         posix_ts = 1773835200
 
-        # 1. Rank 0 vs Rank 1: admitted into SAME group
+        # 1. Rank 0 vs Rank 1: admitted into SEPARATE groups (v0.13.862 provenance)
         z_rank0 = os.path.join(dumps_dir, "rank0.zip")
         z_rank1 = os.path.join(dumps_dir, "rank1.zip")
         make_zip_file(z_rank0, {NX_SAVE_META_NAME: pack_jksv85(app_id=app1, uid_low=uid1[0], uid_high=uid1[1], rank=0, ts=posix_ts)})
         make_zip_file(z_rank1, {NX_SAVE_META_NAME: pack_jksv85(app_id=app1, uid_low=uid1[0], uid_high=uid1[1], rank=1, ts=posix_ts + 10)})
 
-        # 2. Index 0 vs Index 1: admitted into SEPARATE groups
+        # 2. JKSV86 rank 0 and rank 1 distinct groups with source spaces User/SdUser
+        app_j86 = 0x0100000000031000
+        z_j86_r0 = os.path.join(dumps_dir, "j86_rank0.zip")
+        z_j86_r1 = os.path.join(dumps_dir, "j86_rank1.zip")
+        make_zip_file(z_j86_r0, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=app_j86, uid_low=uid1[0], uid_high=uid1[1], owner_id=0x0100000000010055, rank=0, source_space=1, ts=posix_ts)})
+        make_zip_file(z_j86_r1, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=app_j86, uid_low=uid1[0], uid_high=uid1[1], owner_id=0x0100000000010055, rank=1, source_space=2, ts=posix_ts + 10)})
+
+        # 3. Sphaira legacy128 rank 0 and rank 1 distinct groups
+        app_sph128 = 0x0100000000032000
+        z_sph_r0 = os.path.join(dumps_dir, "sph_rank0.zip")
+        z_sph_r1 = os.path.join(dumps_dir, "sph_rank1.zip")
+        make_zip_file(z_sph_r0, {NX_SAVE_META_NAME: pack_sphaira128(app_id=app_sph128, uid_low=uid1[0], uid_high=uid1[1], rank=0, ts=posix_ts)})
+        make_zip_file(z_sph_r1, {NX_SAVE_META_NAME: pack_sphaira128(app_id=app_sph128, uid_low=uid1[0], uid_high=uid1[1], rank=1, ts=posix_ts + 10)})
+
+        # 4. DBI extra 512 rank 0 and rank 1 distinct groups
+        app_dbi512 = 0x0100000000033000
+        z_dbi_r0 = os.path.join(dumps_dir, "dbi512_rank0.zip")
+        z_dbi_r1 = os.path.join(dumps_dir, "dbi512_rank1.zip")
+        make_zip_file(z_dbi_r0, {DBI_SAVE_EXTRA_NAME: pack_dbi_raw512(app_id=app_dbi512, uid_low=uid1[0], uid_high=uid1[1], rank=0, ts=posix_ts)})
+        make_zip_file(z_dbi_r1, {DBI_SAVE_EXTRA_NAME: pack_dbi_raw512(app_id=app_dbi512, uid_low=uid1[0], uid_high=uid1[1], rank=1, ts=posix_ts + 10)})
+
+        # 5. 3-way test on same app/UID/index: known Primary (rk:0), known Secondary (rk:1), and unknown metadata-free (rk:?)
+        app_3way = 0x0100000000034000
+        z_3w_r0 = os.path.join(dumps_dir, "0100000000034000_D_20260918120000.zip")
+        z_3w_r1 = os.path.join(dumps_dir, "0100000000034000_D_20260918120001.zip")
+        z_3w_un = os.path.join(dumps_dir, "0100000000034000_D_20260918120002.zip")
+        make_zip_file(z_3w_r0, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_3way, save_type=SAVE_TYPE_DEVICE, uid_low=0, uid_high=0, rank=0, ts=posix_ts)})
+        make_zip_file(z_3w_r1, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_3way, save_type=SAVE_TYPE_DEVICE, uid_low=0, uid_high=0, rank=1, ts=posix_ts + 1)})
+        make_zip_file(z_3w_un, {"save.dat": b"3way_un_bytes"})
+
+        # 6. Index 0 vs Index 1: admitted into SEPARATE groups
         app2 = 0x0100000000040000
         z_idx0 = os.path.join(dumps_dir, "idx0.zip")
         z_idx1 = os.path.join(dumps_dir, "idx1.zip")
         make_zip_file(z_idx0, {NX_SAVE_META_NAME: pack_jksv85(app_id=app2, uid_low=uid1[0], uid_high=uid1[1], index=0, ts=posix_ts)})
         make_zip_file(z_idx1, {NX_SAVE_META_NAME: pack_jksv85(app_id=app2, uid_low=uid1[0], uid_high=uid1[1], index=1, ts=posix_ts)})
 
-        # 3. Cache type (type 5) with Index 0 vs Index 1: admitted into SEPARATE groups
+        # 7. Cache type (type 5) with Index 0 vs Index 1: admitted into SEPARATE groups
         app_cache = 0x0100000000050000
         z_c0 = os.path.join(dumps_dir, "cache0.zip")
         z_c1 = os.path.join(dumps_dir, "cache1.zip")
         make_zip_file(z_c0, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_cache, uid_low=uid1[0], uid_high=uid1[1], save_type=SAVE_TYPE_CACHE, index=0, ts=posix_ts)})
         make_zip_file(z_c1, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_cache, uid_low=uid1[0], uid_high=uid1[1], save_type=SAVE_TYPE_CACHE, index=1, ts=posix_ts)})
 
-        # 4. Save data type: Account (1) vs Device (3): admitted into SEPARATE groups
+        # 8. Cache in User vs SdUser (source_space 1 vs 2) merging into 1 group when rank matches
+        app_cache_sp = 0x0100000000051000
+        z_csp1 = os.path.join(dumps_dir, "cache_sp1.zip")
+        z_csp2 = os.path.join(dumps_dir, "cache_sp2.zip")
+        make_zip_file(z_csp1, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=app_cache_sp, uid_low=uid1[0], uid_high=uid1[1], owner_id=0x0100000000010055, save_type=SAVE_TYPE_CACHE, source_space=1, rank=0, ts=posix_ts)})
+        make_zip_file(z_csp2, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=app_cache_sp, uid_low=uid1[0], uid_high=uid1[1], owner_id=0x0100000000010055, save_type=SAVE_TYPE_CACHE, source_space=2, rank=0, ts=posix_ts + 1)})
+
+        # 9. Save data type: Account (1) vs Device (3): admitted into SEPARATE groups
         app_dev = 0x0100000000060000
         z_acc = os.path.join(dumps_dir, "acc.zip")
         z_dev = os.path.join(dumps_dir, "dev.zip")
         make_zip_file(z_acc, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_dev, uid_low=uid1[0], uid_high=uid1[1], save_type=SAVE_TYPE_ACCOUNT, ts=posix_ts)})
         make_zip_file(z_dev, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_dev, uid_low=0, uid_high=0, save_type=SAVE_TYPE_DEVICE, ts=posix_ts)})
 
-        # 5. System saves differing in system_save_data_id: admitted into SEPARATE groups
+        # 10. System saves differing in system_save_data_id: admitted into SEPARATE groups
         z_sys1 = os.path.join(dumps_dir, "sys1.zip")
         z_sys2 = os.path.join(dumps_dir, "sys2.zip")
         make_zip_file(z_sys1, {NX_SAVE_META_NAME: pack_jksv85(app_id=0, sys_id=0x8000000000000010, save_type=SAVE_TYPE_SYSTEM, uid_low=0, uid_high=0, ts=posix_ts)})
         make_zip_file(z_sys2, {NX_SAVE_META_NAME: pack_jksv85(app_id=0, sys_id=0x8000000000000020, save_type=SAVE_TYPE_SYSTEM, uid_low=0, uid_high=0, ts=posix_ts)})
 
-        # 6. UID-high-only difference: admitted into SEPARATE groups
+        # 11. System saves across alternate valid system spaces -> merge into 1 group (count 2)
+        sys_id_sp = 0x8000000000000030
+        z_sys_sp1 = os.path.join(dumps_dir, "sys_sp1.zip")
+        z_sys_sp2 = os.path.join(dumps_dir, "sys_sp2.zip")
+        make_zip_file(z_sys_sp1, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=0, sys_id=sys_id_sp, save_type=SAVE_TYPE_SYSTEM, uid_low=0, uid_high=0, owner_id=0x0100000000010055, source_space=0, rank=0, ts=posix_ts)})
+        make_zip_file(z_sys_sp2, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=0, sys_id=sys_id_sp, save_type=SAVE_TYPE_SYSTEM, uid_low=0, uid_high=0, owner_id=0x0100000000010055, source_space=100, rank=0, ts=posix_ts + 1)})
+
+        # 12. UID-high-only difference: admitted into SEPARATE groups
         app_uid = 0x0100000000070000
         z_uh1 = os.path.join(dumps_dir, "uid_high1.zip")
         z_uh2 = os.path.join(dumps_dir, "uid_high2.zip")
         make_zip_file(z_uh1, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_uid, uid_low=0x5555, uid_high=0x6666, ts=posix_ts)})
         make_zip_file(z_uh2, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_uid, uid_low=0x5555, uid_high=0x7777, ts=posix_ts)})
 
-        # 7. Concrete source-space facts (source_space 1 vs 2): admitted into SAME group
+        # 13. Concrete source-space facts (source_space 1 vs 2): admitted into SAME group
         app_sp = 0x0100000000080000
         z_sp1 = os.path.join(dumps_dir, "sp1.zip")
         z_sp2 = os.path.join(dumps_dir, "sp2.zip")
         make_zip_file(z_sp1, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=app_sp, uid_low=uid1[0], uid_high=uid1[1], owner_id=0x0100000000010055, source_space=1, ts=posix_ts)})
         make_zip_file(z_sp2, {NX_SAVE_META_NAME: pack_jksv_tail86(app_id=app_sp, uid_low=uid1[0], uid_high=uid1[1], owner_id=0x0100000000010055, source_space=2, ts=posix_ts + 5)})
 
-        # 8. System (0) vs SystemBcat (6): admitted into SEPARATE groups
+        # 14. System (0) vs SystemBcat (6): admitted into SEPARATE groups
         z_s0 = os.path.join(dumps_dir, "system_0.zip")
         z_s6 = os.path.join(dumps_dir, "system_bcat.zip")
         make_zip_file(z_s0, {NX_SAVE_META_NAME: pack_jksv85(app_id=0, sys_id=0x8000000000000099, save_type=SAVE_TYPE_SYSTEM, uid_low=0, uid_high=0, ts=posix_ts)})
         make_zip_file(z_s6, {NX_SAVE_META_NAME: pack_jksv85(app_id=0, sys_id=0x8000000000000099, save_type=SAVE_TYPE_SYSTEM_BCAT, uid_low=0, uid_high=0, ts=posix_ts)})
 
-        # 9. Mixed wire versions (85, 86, 128, 512) for same save: admitted into SAME group
+        # 15. Mixed wire versions (85, 86, 128, 512) for same save: admitted into SAME group
         app_mix = 0x01000000000A0000
         z_v85 = os.path.join(dumps_dir, "v85.zip")
         z_v86 = os.path.join(dumps_dir, "v86.zip")
@@ -1076,85 +1192,132 @@ def test_suite_4_real_archive_identity_and_grouping_matrix() -> None:
         make_zip_file(z_v128, {NX_SAVE_META_NAME: pack_sphaira128(app_id=app_mix, uid_low=uid1[0], uid_high=uid1[1], ts=posix_ts + 2)})
         make_zip_file(z_v512, {DBI_SAVE_EXTRA_NAME: pack_dbi_raw512(app_id=app_mix, uid_low=uid1[0], uid_high=uid1[1], ts=posix_ts + 3)})
 
-        # 10. Metadata-free DBI legacy archive: browseable and grouped by parsed filename
+        # 16. Two compatible metadata-free DBI legacy archives: merge into 1 group with unknown rank
         app_dbi = 0x01000000000B0000
-        z_dbi_legacy = os.path.join(dumps_dir, "01000000000B0000_A_20260918140000.zip")
-        make_zip_file(z_dbi_legacy, {"save.dat": b"dbi_legacy_bytes"})
+        z_dbi_legacy1 = os.path.join(dumps_dir, "01000000000B0000_A_20260918140000.zip")
+        z_dbi_legacy2 = os.path.join(dumps_dir, "01000000000B0000_A_20260918140001.zip")
+        make_zip_file(z_dbi_legacy1, {"save.dat": b"dbi_legacy_bytes1"})
+        make_zip_file(z_dbi_legacy2, {"save.dat": b"dbi_legacy_bytes2"})
 
         # Run actual filesystem scanner
         groups = read_backup_entries_model(tmpdir)
 
         # Map groups by group key
         by_key = {
-            backup_group_key(g.application_id, g.system_save_data_id, g.save_data_type, g.uid_low, g.uid_high, g.save_data_index): g
+            backup_group_key(g.application_id, g.system_save_data_id, g.save_data_type, g.uid_low, g.uid_high, g.save_data_index, g.backup_rank_known, g.save_data_rank): g
             for g in groups
         }
 
         # Assertions on grouping:
-        # Rank 0 & 1 -> single group with backup_count == 2
-        k_rank = backup_group_key(app1, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0)
-        check(k_rank in by_key and by_key[k_rank].backup_count == 2, "Rank 0 and Rank 1 must merge into 1 group (count 2)")
+        # Rank 0 & 1 -> 2 SEPARATE groups (v0.13.862 provenance)
+        k_rank0 = backup_group_key(app1, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_rank1 = backup_group_key(app1, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=1)
+        check(k_rank0 in by_key and by_key[k_rank0].backup_count == 1, "Rank 0 must form distinct group (count 1)")
+        check(k_rank1 in by_key and by_key[k_rank1].backup_count == 1, "Rank 1 must form distinct group (count 1)")
+        check(k_rank0 != k_rank1, "Rank 0 and Rank 1 group keys must differ")
+
+        # JKSV86 rank 0 and 1 -> 2 distinct groups
+        k_j86_r0 = backup_group_key(app_j86, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_j86_r1 = backup_group_key(app_j86, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=1)
+        check(k_j86_r0 in by_key and k_j86_r1 in by_key and k_j86_r0 != k_j86_r1, "JKSV86 rank 0 and 1 must form distinct groups")
+
+        # Sphaira legacy128 rank 0 and 1 -> 2 distinct groups
+        k_sph_r0 = backup_group_key(app_sph128, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_sph_r1 = backup_group_key(app_sph128, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=1)
+        check(k_sph_r0 in by_key and k_sph_r1 in by_key and k_sph_r0 != k_sph_r1, "Sphaira legacy128 rank 0 and 1 must form distinct groups")
+
+        # DBI extra 512 rank 0 and 1 -> 2 distinct groups
+        k_dbi_r0 = backup_group_key(app_dbi512, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_dbi_r1 = backup_group_key(app_dbi512, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=1)
+        check(k_dbi_r0 in by_key and k_dbi_r1 in by_key and k_dbi_r0 != k_dbi_r1, "DBI 512 rank 0 and 1 must form distinct groups")
+
+        # 3-way test on same app/UID/index: Primary, Secondary, Unknown -> 3 distinct groups
+        k_3w_r0 = backup_group_key(app_3way, 0, SAVE_TYPE_DEVICE, 0, 0, 0, rank_known=True, rank=0)
+        k_3w_r1 = backup_group_key(app_3way, 0, SAVE_TYPE_DEVICE, 0, 0, 0, rank_known=True, rank=1)
+        k_3w_un = backup_group_key(app_3way, 0, SAVE_TYPE_DEVICE, 0, 0, 0, rank_known=False, rank=0)
+        check(k_3w_r0 in by_key and k_3w_r1 in by_key and k_3w_un in by_key, "3-way archives must all be admitted")
+        check(len({k_3w_r0, k_3w_r1, k_3w_un}) == 3, "3-way archives must form 3 completely distinct groups")
 
         # Index 0 & 1 -> 2 distinct groups
-        k_idx0 = backup_group_key(app2, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0)
-        k_idx1 = backup_group_key(app2, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 1)
+        k_idx0 = backup_group_key(app2, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_idx1 = backup_group_key(app2, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 1, rank_known=True, rank=0)
         check(k_idx0 in by_key and k_idx1 in by_key and k_idx0 != k_idx1, "Index 0 and Index 1 must form distinct groups")
 
         # Cache Index 0 & 1 -> 2 distinct groups
-        k_c0 = backup_group_key(app_cache, 0, SAVE_TYPE_CACHE, uid1[0], uid1[1], 0)
-        k_c1 = backup_group_key(app_cache, 0, SAVE_TYPE_CACHE, uid1[0], uid1[1], 1)
+        k_c0 = backup_group_key(app_cache, 0, SAVE_TYPE_CACHE, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_c1 = backup_group_key(app_cache, 0, SAVE_TYPE_CACHE, uid1[0], uid1[1], 1, rank_known=True, rank=0)
         check(k_c0 in by_key and k_c1 in by_key and k_c0 != k_c1, "Cache index 0 and 1 must form distinct groups")
 
+        # Cache in User vs SdUser (source space 1 vs 2) -> merge into 1 group (count 2)
+        k_csp = backup_group_key(app_cache_sp, 0, SAVE_TYPE_CACHE, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        check(k_csp in by_key and by_key[k_csp].backup_count == 2, "Cache User/SdUser archives must merge into 1 group")
+
         # Account vs Device -> 2 distinct groups
-        k_acc = backup_group_key(app_dev, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0)
-        k_dev = backup_group_key(app_dev, 0, SAVE_TYPE_DEVICE, 0, 0, 0)
+        k_acc = backup_group_key(app_dev, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
+        k_dev = backup_group_key(app_dev, 0, SAVE_TYPE_DEVICE, 0, 0, 0, rank_known=True, rank=0)
         check(k_acc in by_key and k_dev in by_key and k_acc != k_dev, "Account and Device must form distinct groups")
 
         # System saves with different system IDs -> 2 distinct groups
-        k_sys1 = backup_group_key(0, 0x8000000000000010, SAVE_TYPE_SYSTEM, 0, 0, 0)
-        k_sys2 = backup_group_key(0, 0x8000000000000020, SAVE_TYPE_SYSTEM, 0, 0, 0)
+        k_sys1 = backup_group_key(0, 0x8000000000000010, SAVE_TYPE_SYSTEM, 0, 0, 0, rank_known=True, rank=0)
+        k_sys2 = backup_group_key(0, 0x8000000000000020, SAVE_TYPE_SYSTEM, 0, 0, 0, rank_known=True, rank=0)
         check(k_sys1 in by_key and k_sys2 in by_key and k_sys1 != k_sys2, "Different system IDs must form distinct groups")
 
+        # System saves across alternate valid system spaces -> merge into 1 group (count 2)
+        k_sys_sp = backup_group_key(0, sys_id_sp, SAVE_TYPE_SYSTEM, 0, 0, 0, rank_known=True, rank=0)
+        check(k_sys_sp in by_key and by_key[k_sys_sp].backup_count == 2, "System saves across spaces must merge into 1 group")
+
         # UID-high distinction -> 2 distinct groups
-        k_uh1 = backup_group_key(app_uid, 0, SAVE_TYPE_ACCOUNT, 0x5555, 0x6666, 0)
-        k_uh2 = backup_group_key(app_uid, 0, SAVE_TYPE_ACCOUNT, 0x5555, 0x7777, 0)
+        k_uh1 = backup_group_key(app_uid, 0, SAVE_TYPE_ACCOUNT, 0x5555, 0x6666, 0, rank_known=True, rank=0)
+        k_uh2 = backup_group_key(app_uid, 0, SAVE_TYPE_ACCOUNT, 0x5555, 0x7777, 0, rank_known=True, rank=0)
         check(k_uh1 in by_key and k_uh2 in by_key and k_uh1 != k_uh2, "Differing UID-high must form distinct groups")
 
         # Source-space facts -> single group with backup_count == 2
-        k_sp = backup_group_key(app_sp, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0)
+        k_sp = backup_group_key(app_sp, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
         check(k_sp in by_key and by_key[k_sp].backup_count == 2, "Different source spaces must merge into 1 group")
 
         # System (0) vs SystemBcat (6) -> 2 distinct groups
-        k_s0 = backup_group_key(0, 0x8000000000000099, SAVE_TYPE_SYSTEM, 0, 0, 0)
-        k_s6 = backup_group_key(0, 0x8000000000000099, SAVE_TYPE_SYSTEM_BCAT, 0, 0, 0)
+        k_s0 = backup_group_key(0, 0x8000000000000099, SAVE_TYPE_SYSTEM, 0, 0, 0, rank_known=True, rank=0)
+        k_s6 = backup_group_key(0, 0x8000000000000099, SAVE_TYPE_SYSTEM_BCAT, 0, 0, 0, rank_known=True, rank=0)
         check(k_s0 in by_key and k_s6 in by_key and k_s0 != k_s6, "System and SystemBcat must form distinct groups")
 
         # Mixed wire versions -> single group with backup_count == 4
-        k_mix = backup_group_key(app_mix, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0)
+        k_mix = backup_group_key(app_mix, 0, SAVE_TYPE_ACCOUNT, uid1[0], uid1[1], 0, rank_known=True, rank=0)
         check(k_mix in by_key and by_key[k_mix].backup_count == 4, "All 4 wire formats must merge into 1 group (count 4)")
 
-        # Metadata-free DBI legacy archive -> admitted via filename
-        k_dbi = backup_group_key(app_dbi, 0, SAVE_TYPE_ACCOUNT, 0, 0, 0)
-        check(k_dbi in by_key and by_key[k_dbi].backup_count == 1, "Metadata-free DBI archive must be admitted via filename")
+        # 2 compatible metadata-free DBI legacy archives -> merge into 1 group with unknown rank
+        k_dbi = backup_group_key(app_dbi, 0, SAVE_TYPE_ACCOUNT, 0, 0, 0, rank_known=False, rank=0)
+        check(k_dbi in by_key and by_key[k_dbi].backup_count == 2, "Compatible metadata-free DBI archives must merge into 1 group (count 2)")
 
-        # Independent exact artifact membership mapping for all scan-produced groups (16 groups total):
+        # Independent exact artifact membership mapping for all scan-produced groups:
         expected_memberships: Dict[str, Set[str]] = {
-            k_rank: {"/dumps/rank0.zip", "/dumps/rank1.zip"},
+            k_rank0: {"/dumps/rank0.zip"},
+            k_rank1: {"/dumps/rank1.zip"},
+            k_j86_r0: {"/dumps/j86_rank0.zip"},
+            k_j86_r1: {"/dumps/j86_rank1.zip"},
+            k_sph_r0: {"/dumps/sph_rank0.zip"},
+            k_sph_r1: {"/dumps/sph_rank1.zip"},
+            k_dbi_r0: {"/dumps/dbi512_rank0.zip"},
+            k_dbi_r1: {"/dumps/dbi512_rank1.zip"},
+            k_3w_r0: {"/dumps/0100000000034000_D_20260918120000.zip"},
+            k_3w_r1: {"/dumps/0100000000034000_D_20260918120001.zip"},
+            k_3w_un: {"/dumps/0100000000034000_D_20260918120002.zip"},
             k_idx0: {"/dumps/idx0.zip"},
             k_idx1: {"/dumps/idx1.zip"},
             k_c0: {"/dumps/cache0.zip"},
             k_c1: {"/dumps/cache1.zip"},
+            k_csp: {"/dumps/cache_sp1.zip", "/dumps/cache_sp2.zip"},
             k_acc: {"/dumps/acc.zip"},
             k_dev: {"/dumps/dev.zip"},
             k_sys1: {"/dumps/sys1.zip"},
             k_sys2: {"/dumps/sys2.zip"},
+            k_sys_sp: {"/dumps/sys_sp1.zip", "/dumps/sys_sp2.zip"},
             k_uh1: {"/dumps/uid_high1.zip"},
             k_uh2: {"/dumps/uid_high2.zip"},
             k_sp: {"/dumps/sp1.zip", "/dumps/sp2.zip"},
             k_s0: {"/dumps/system_0.zip"},
             k_s6: {"/dumps/system_bcat.zip"},
             k_mix: {"/dumps/v85.zip", "/dumps/v86.zip", "/dumps/v128.zip", "/dumps/v512.zip"},
-            k_dbi: {"/dumps/01000000000B0000_A_20260918140000.zip"},
+            k_dbi: {"/dumps/01000000000B0000_A_20260918140000.zip", "/dumps/01000000000B0000_A_20260918140001.zip"},
         }
 
         # Check that scanner produced exactly these groups with no extras or omissions:
@@ -1174,6 +1337,26 @@ def test_suite_4_real_archive_identity_and_grouping_matrix() -> None:
                   f"Group '{key}' candidate count {len(collected)} != group.backup_count {g.backup_count}")
             for c in collected:
                 check(c.ts > 0, f"Candidate {c.path} in group {key} must have valid positive timestamp, got {c.ts}")
+
+        # Live entry matching: live FsSaveDataInfo entry matches only matching rank archive group
+        live_dir = os.path.join(dumps_dir, "LiveApp")
+        os.makedirs(live_dir, exist_ok=True)
+        app_live = 0x01000000000EE000
+        z_live_r0 = os.path.join(live_dir, "live_rank0.zip")
+        z_live_r1 = os.path.join(live_dir, "live_rank1.zip")
+        make_zip_file(z_live_r0, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_live, uid_low=uid1[0], uid_high=uid1[1], rank=0, ts=posix_ts)})
+        make_zip_file(z_live_r1, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_live, uid_low=uid1[0], uid_high=uid1[1], rank=1, ts=posix_ts + 1)})
+
+        live_e_r0 = EntryModel(application_id=app_live, uid_low=uid1[0], uid_high=uid1[1], save_data_type=SAVE_TYPE_ACCOUNT, save_data_rank=0, is_backup=False, name="LiveApp")
+        live_e_r1 = EntryModel(application_id=app_live, uid_low=uid1[0], uid_high=uid1[1], save_data_type=SAVE_TYPE_ACCOUNT, save_data_rank=1, is_backup=False, name="LiveApp")
+
+        cands_live_r0 = collect_group_archives_model(live_e_r0, tmpdir)
+        check(len(cands_live_r0) == 1 and cands_live_r0[0].path == "/dumps/LiveApp/live_rank0.zip",
+              f"Live entry rank 0 must collect only live_rank0.zip, got {[c.path for c in cands_live_r0]}")
+
+        cands_live_r1 = collect_group_archives_model(live_e_r1, tmpdir)
+        check(len(cands_live_r1) == 1 and cands_live_r1[0].path == "/dumps/LiveApp/live_rank1.zip",
+              f"Live entry rank 1 must collect only live_rank1.zip, got {[c.path for c in cands_live_r1]}")
 
     print("  -> Suite 4 (Real Archive Identity & Grouping Matrix) PASSED.")
 
@@ -1477,18 +1660,20 @@ def test_suite_6_actions_sentinels_and_readmission() -> None:
 
         p_adm_corrupt = os.path.join(adm_dir, "member_corrupt.zip")
         p_adm_diff = os.path.join(adm_dir, "member_diff.zip")
+        p_adm_rank = os.path.join(adm_dir, "member_rank.zip")
         p_adm_valid = os.path.join(adm_dir, "member_valid.zip")
 
-        # Create all 3 with valid metadata for app_adm initially
-        make_zip_file(p_adm_corrupt, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], ts=1773831000), "data.bin": b"to_corrupt"})
-        make_zip_file(p_adm_diff, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], ts=1773832000), "data.bin": b"to_change_group"})
-        make_zip_file(p_adm_valid, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], ts=1773833000), "data.bin": b"stay_valid"})
+        # Create all 4 with valid metadata for app_adm (all rank 0) initially
+        make_zip_file(p_adm_corrupt, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], rank=0, ts=1773831000), "data.bin": b"to_corrupt"})
+        make_zip_file(p_adm_diff, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], rank=0, ts=1773832000), "data.bin": b"to_change_group"})
+        make_zip_file(p_adm_rank, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], rank=0, ts=1773832500), "data.bin": b"to_mutate_rank"})
+        make_zip_file(p_adm_valid, {NX_SAVE_META_NAME: pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], rank=0, ts=1773833000), "data.bin": b"stay_valid"})
 
         # Run actual scanner to construct group
         adm_groups = read_backup_entries_model(tmpdir)
         group_adm = next(g for g in adm_groups if g.application_id == app_adm)
-        check(group_adm.backup_count == 3, f"Group must have 3 members from scanner, got {group_adm.backup_count}")
-        check(len(group_adm.backup_members) == 3, "backup_members must have 3 items")
+        check(group_adm.backup_count == 4, f"Group must have 4 members from scanner, got {group_adm.backup_count}")
+        check(len(group_adm.backup_members) == 4, "backup_members must have 4 items")
 
         # Now apply post-scan mutations on disk:
         # 1. Overwrite one retained member with corrupt bytes (invalid ZIP data)
@@ -1497,11 +1682,16 @@ def test_suite_6_actions_sentinels_and_readmission() -> None:
 
         # 2. Overwrite another with valid metadata for a DIFFERENT group (different app_id)
         app_other = 0x01000000000F0001
-        meta_diff = pack_jksv85(app_id=app_other, uid_low=uid_adm[0], uid_high=uid_adm[1], ts=1773835000)
+        meta_diff = pack_jksv85(app_id=app_other, uid_low=uid_adm[0], uid_high=uid_adm[1], rank=0, ts=1773835000)
         make_zip_file(p_adm_diff, {NX_SAVE_META_NAME: meta_diff, "data.bin": b"different_group_payload"})
         diff_bytes_after = open(p_adm_diff, "rb").read()
 
-        # 3. Keep one valid member (p_adm_valid) untouched
+        # 3. Overwrite another with mutated rank (rank=1 instead of rank=0)
+        meta_rank_mut = pack_jksv85(app_id=app_adm, uid_low=uid_adm[0], uid_high=uid_adm[1], rank=1, ts=1773836000)
+        make_zip_file(p_adm_rank, {NX_SAVE_META_NAME: meta_rank_mut, "data.bin": b"mutated_rank_payload"})
+        rank_bytes_after = open(p_adm_rank, "rb").read()
+
+        # 4. Keep one valid member (p_adm_valid) untouched
 
         # Verify collection returns ONLY the valid member:
         cands_adm = collect_group_archives_model(group_adm, tmpdir)
@@ -1509,9 +1699,11 @@ def test_suite_6_actions_sentinels_and_readmission() -> None:
         check(cands_adm[0].path == "/dumps/AdmissionTest/member_valid.zip",
               f"Collection must return member_valid.zip, got {cands_adm[0].path}")
 
-        # Verify changed-group bytes are unaltered:
+        # Verify changed-group and mutated-rank bytes are unaltered on disk:
         check(open(p_adm_diff, "rb").read() == diff_bytes_after,
               "Changed-group archive bytes must remain unaltered on disk during inspection")
+        check(open(p_adm_rank, "rb").read() == rank_bytes_after,
+              "Mutated-rank archive bytes must remain unaltered on disk during inspection")
 
         # Verify empty on removal with no stale fallback:
         os.remove(p_adm_valid)
@@ -1559,7 +1751,7 @@ def test_suite_7_source_anchors_and_model_lifetimes() -> None:
 
 def main() -> None:
     print("================================================================================")
-    print("Sphaira v0.13.861: Save Backup Library Membership & Operations Contract Suite")
+    print("Sphaira v0.13.862: Save Backup Library Membership & Operations Contract Suite")
     print("================================================================================")
 
     test_static_source_contracts()

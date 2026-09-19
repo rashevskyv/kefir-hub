@@ -37,6 +37,7 @@ struct Entry final : FsSaveDataInfo {
     // rather than live save data on the console. drawn with a yellow inner
     // border and grouped below the "Backups" divider.
     bool is_backup{};
+    bool backup_rank_known{};
     title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
     u64 backup_timestamp{};

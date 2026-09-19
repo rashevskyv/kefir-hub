@@ -132,6 +132,13 @@ auto FormatListInfo(const Entry& e) -> std::string {
     return e.size ? label + "  " + grid::FormatBytes(e.size) : label;
 }
 
+auto FormatBackupRankMarker(const Entry& e) -> std::string {
+    if (!e.backup_rank_known) {
+        return "rk:?";
+    }
+    return (e.save_data_rank == FsSaveDataRank_Secondary) ? "rk:1" : "rk:0";
+}
+
 } // namespace
 
 void SignalChange() {
@@ -724,7 +731,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         std::snprintf(title_id, sizeof(title_id), "%016lX", id);
         
         const auto account = e.is_backup ?
-            FormatBackupAccount(e, m_accounts) :
+            FormatBackupAccount(e, m_accounts) + "  •  " + FormatBackupRankMarker(e) :
             ((e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
                 GetAccountName(e.uid) : GetAccountSummary());
 
@@ -1321,6 +1328,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
             e.uid = info.uid;
             e.save_data_index = info.save_data_index;
             e.save_data_rank = info.save_data_rank;
+            e.backup_rank_known = info.rank_known;
             e.is_backup = true;
             e.backup_timestamp = info.timestamp;
             e.backup_count = 1;

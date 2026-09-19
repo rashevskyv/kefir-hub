@@ -1,6 +1,20 @@
-Актуальний delivery — **v0.13.861 accepted**: exact discovered backup-library membership; baseline **v0.13.860**, 19dc0228532047daf901e28e391c33001ab1c03b.
+Актуальний delivery — **v0.13.862 accepted**: explicit backup rank provenance; accepted baseline **v0.13.861**, e5ece7cdc2c96caaf7701c197a4e9cce550ad159.
 
-## Поточний delivery: v0.13.861 — exact discovered backup-library membership
+## Поточний delivery: v0.13.862 — explicit backup rank provenance
+
+- [x] `RANK-RESEARCH-862` — exact root/master/clean/base/ancestry, canonical Graphify refresh/query, shared decoder/discovery/group/actions/live-target flow and upstream JKSV/libnx sources reviewed.
+- [x] `RANK-POLICY-862` — known rank is source identity; metadata-free rank/space stay explicit unknown; source space is context only, never destination authority; no new wire revision.
+- [x] `RANK-HANDOFF-862` — self-contained new manual Gemini prompt prepared; no coding agents, senior product edits or builds.
+- [x] `RANK-PROVENANCE-862` — shared-decoder rank knownness carried into `BackupArchiveInfo`/backup `Entry`; known Primary/Secondary and explicit unknown split in both group-key overloads.
+- [x] `RANK-UI-862` — compact `rk:0`/`rk:1`/`rk:?` shown in backup list/grid/HbMenu; friendly names, exact members and explicit live target preserved.
+- [x] `RANK-FIXTURE-862` — independent JKSV85/86/legacy128/DBIextra/metadata-free rank/space matrix, conflicts/ambiguity, exact archive/destination separation; all15 compiler-free suites/dead-symbol/diff reported PASS.
+- [x] `RANK-REVIEW-862` — senior actual diff/callers/group keys/UI/routing/errors and reported verification accepted after narrow correction.
+- [x] `RANK-REVIEW1-862` — Gemini13:12 core provenance/grouping/readmission and connected fixtures reviewed; not accepted because HbMenu omits rank marker and helper is needlessly public.
+- [x] `RANK-REWORK1-862` — file-local rank marker, HbMenu disambiguation and narrow scoped anchor reviewed; all15/dead-symbol/diff reported PASS, no build.
+- [x] `DOCS-BUMP-862` — junior bumped `.862`; senior all four docs and focused primary-master commit/clean ancestry/no push.
+- [ ] `HW-862` — user separate compile/disposable Switch rank/unknown library and explicit destination regressions.
+
+## Попередній delivery: v0.13.861 — exact discovered backup-library membership
 
 - [x] `LIB-RESEARCH-861` — primary/master/clean/ancestor, root Graphify refresh/query, exact discovery/group/action/restore callers reviewed.
 - [x] `LIB-POLICY-861` — retain exact discovered artifact members; shared readmission; existing grouping/live target unchanged; no stale library fallback.

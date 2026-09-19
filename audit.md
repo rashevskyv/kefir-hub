@@ -1,6 +1,12 @@
 # audit.md
 
-Версія коду: **v0.13.861**. Дата: 2026-09-19.
+Версія коду: **v0.13.862**. Дата: 2026-09-19.
+
+Accepted v0.13.862 after Gemini13:22 narrow UI/test correction. Backup-library groups distinguish metadata-proven Primary, metadata-proven Secondary and explicit unknown rank. JKSV85/86, Sphaira legacy128 and DBI extra provide known rank; metadata-free filename/path fallback stays browseable without a false Primary claim. Live discovered rank remains authoritative. Source space remains optional JKSV86 archive context and is excluded from group keys and live destination routing. Exact retained-member reinspection and explicit existing-target selection/confirmation remain unchanged. Backup list/grid/HbMenu show `rk:0`, `rk:1` or `rk:?`; live UI is unchanged.
+
+Gemini reports all15 compiler-free contract suites, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed actual product/callers/UI/routing and connected real ZIP/directory fixtures covering known/unknown ranks across all supported metadata forms, Cache User/SdUser, alternate system spaces, invalid/conflicting metadata, exact members, post-scan rank mutation and unchanged destination fields. Senior ran diff check only; no suite rerun or compile. Python/static evidence does not execute C++/libnx/IPC/firmware/hardware or prove snapshot/concurrency/TOCTOU, rollback, atomicity, capacity or journal fit.
+
+Rank-provenance slice DONE (.862). Source-space destination/group authority and new metadata revision were deliberately not added. CreateBackupIfNewer, UMS/stdio lifecycle and unrelated audit queue remain open. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push; separate user compile/disposable Switch validation required.
 
 Accepted v0.13.861 after Gemini19:53 final test-only correction. Backup library retains every distinct path admitted by ReadBackupEntries; group actions consume that inventory, repeat shared metadata/group admission and fresh timestamp sorting, and omit missing, corrupt or changed-group artifacts without generated-path rediscovery or stale representative fallback. Existing grouping and explicit live target authority remain unchanged; ambiguous picker labels include exact paths.
 

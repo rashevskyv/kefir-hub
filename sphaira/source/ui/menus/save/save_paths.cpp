@@ -300,16 +300,11 @@ auto IsSystemLikeSave(u8 data_type) -> bool {
 }
 
 auto DisplayEntryKey(const Entry& e) -> std::string {
-    char key[0x80];
     if (e.is_backup) {
-        if (IsSystemLikeSave(e.save_data_type)) {
-            std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u",
-                e.save_data_type, e.system_save_data_id, e.save_data_index);
-        } else {
-            std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u",
-                e.application_id, e.save_data_type, e.uid.uid[0], e.uid.uid[1], e.save_data_index);
-        }
-    } else if (IsSystemLikeSave(e.save_data_type)) {
+        return BackupGroupKey(e);
+    }
+    char key[0x80];
+    if (IsSystemLikeSave(e.save_data_type)) {
         std::snprintf(key, sizeof(key), "system:%u:%016lX", e.save_data_type, e.system_save_data_id);
     } else {
         std::snprintf(key, sizeof(key), "app:%016lX", e.application_id);
@@ -1441,6 +1436,7 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
             out.uid = meta.attr.uid;
             out.save_data_index = meta.attr.save_data_index;
             out.save_data_rank = meta.attr.save_data_rank;
+            out.rank_known = true;
             out.commit_id = meta.commit_id;
             out.source_timestamp = meta.timestamp;
             if (out.timestamp == 0 && meta.timestamp != 0) {
@@ -1571,6 +1567,17 @@ auto FormatBackupTimestamp(u64 ts, bool compact) -> std::string {
     return buf;
 }
 
+namespace {
+
+auto FormatBackupRankMarker(const Entry& e) -> std::string {
+    if (!e.backup_rank_known) {
+        return "rk:?";
+    }
+    return (e.save_data_rank == FsSaveDataRank_Secondary) ? "rk:1" : "rk:0";
+}
+
+} // namespace
+
 auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> BackupSecondaryColumns {
     const u64 id = IsSystemLikeSave(e.save_data_type) ? e.system_save_data_id : e.application_id;
     char id_str[33];
@@ -1578,7 +1585,7 @@ auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileB
 
     BackupSecondaryColumns cols;
     cols.title_id = id_str;
-    cols.account = "  •  " + FormatBackupAccount(e, accounts);
+    cols.account = "  •  " + FormatBackupAccount(e, accounts) + "  •  " + FormatBackupRankMarker(e);
     const auto date_str = FormatBackupTimestamp(e.backup_timestamp, false);
     if (!date_str.empty()) {
         cols.timestamp = "  •  " + date_str;
@@ -1591,35 +1598,46 @@ auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileB
 
 auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string {
     const std::string account = FormatBackupAccount(e, accounts);
+    const std::string rank_str = FormatBackupRankMarker(e);
     const std::string date_str = FormatBackupTimestamp(e.backup_timestamp, true);
 
-    std::string out = account + "  •  " + date_str;
+    std::string out = account + "  •  " + rank_str + "  •  " + date_str;
     if (e.backup_count > 1) {
         out += " (" + std::to_string(e.backup_count) + ")";
     }
     return out;
 }
 
+static auto FormatRankKeyPart(bool rank_known, u8 rank) -> const char* {
+    if (!rank_known) {
+        return "rk:?";
+    }
+    return (rank == FsSaveDataRank_Secondary) ? "rk:1" : "rk:0";
+}
+
 auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string {
     char key[0x80];
+    const char* rk = FormatRankKeyPart(info.rank_known, info.save_data_rank);
     if (IsSystemLikeSave(info.save_data_type)) {
-        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u",
-            info.save_data_type, info.system_save_data_id, info.save_data_index);
+        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u:%s",
+            info.save_data_type, info.system_save_data_id, info.save_data_index, rk);
     } else {
-        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u",
-            info.application_id, info.save_data_type, info.uid.uid[0], info.uid.uid[1], info.save_data_index);
+        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u:%s",
+            info.application_id, info.save_data_type, info.uid.uid[0], info.uid.uid[1], info.save_data_index, rk);
     }
     return key;
 }
 
 auto BackupGroupKey(const Entry& e) -> std::string {
     char key[0x80];
+    const bool rank_known = e.is_backup ? e.backup_rank_known : true;
+    const char* rk = FormatRankKeyPart(rank_known, e.save_data_rank);
     if (IsSystemLikeSave(e.save_data_type)) {
-        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u",
-            e.save_data_type, e.system_save_data_id, e.save_data_index);
+        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u:%s",
+            e.save_data_type, e.system_save_data_id, e.save_data_index, rk);
     } else {
-        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u",
-            e.application_id, e.save_data_type, e.uid.uid[0], e.uid.uid[1], e.save_data_index);
+        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u:%s",
+            e.application_id, e.save_data_type, e.uid.uid[0], e.uid.uid[1], e.save_data_index, rk);
     }
     return key;
 }

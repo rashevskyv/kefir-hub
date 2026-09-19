@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.861** (2026-09-19). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.862** (2026-09-19). History: archive/walkthrough_archive.md.
+
+## v0.13.862 — explicit backup rank provenance
+
+Backup library now represents rank provenance explicitly: supported JKSV85/86, Sphaira legacy128 and DBI extra metadata produce known Primary or Secondary groups, while metadata-free fallback produces a separate unknown-rank group instead of silently becoming Primary. Live saves keep the rank returned by discovery. Source space stays archive context only and never changes grouping or the explicitly chosen live destination. Exact retained archive paths, reinspection before actions and target confirmation remain intact.
+
+Backup list, grid and HbMenu views display `rk:0`, `rk:1` or `rk:?`. Gemini13:22 reports all15 compiler-free suites and dead-symbol gate (981 declarations) PASS. Senior reviewed actual source/callers/UI/routing plus connected byte-encoded ZIP/directory models, rank/source-space matrices, conflict rejection, exact memberships, changed-rank omission and destination sentinels; senior ran `git diff --check`, did not rerun suites or compile. These checks do not execute C++/libnx/IPC/firmware/Switch hardware or prove snapshot, rollback, atomicity, capacity or journal fit.
+
+No build/configure/WSL/NRO/g++/compiled tests/tests/run.sh/push. User must compile separately and test disposable Switch Primary/Secondary/unknown tiles in list/grid/HbMenu, explicit destination selection, exact archive actions and corrupt/changed-rank omission. No source-space authority or new metadata format was added.
 
 ## v0.13.861 — exact discovered backup-library membership
 

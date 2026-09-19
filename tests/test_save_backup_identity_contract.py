@@ -384,8 +384,8 @@ def test_source_contracts() -> None:
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
 
-    check("set(sphaira_VERSION 0.13.859)" in cmake_src or "set(sphaira_VERSION 0.13.860)" in cmake_src or "set(sphaira_VERSION 0.13.861)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.859, 0.13.860 or 0.13.861")
+    check("set(sphaira_VERSION 0.13.859)" in cmake_src or "set(sphaira_VERSION 0.13.860)" in cmake_src or "set(sphaira_VERSION 0.13.861)" in cmake_src or "set(sphaira_VERSION 0.13.862)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.859, 0.13.860, 0.13.861 or 0.13.862")
 
     print("  -> Static source contract & ordering checks PASSED.")
 
