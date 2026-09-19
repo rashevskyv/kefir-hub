@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.864** (2026-09-19). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.865** (2026-09-19). History: archive/walkthrough_archive.md.
+
+## v0.13.865 — all-seven read-only MTP Saves coverage
+
+The pinned decrypted MTP `Saves` drive now reuses the existing unfiltered seven-space save discovery instead of a second four-type scanner. Account, BCAT, Device and Cache keep the existing game → nickname/type hierarchy. Temporary, System and System BCAT are exposed as explicit typed top-level buckets; System IDs are never resolved as game titles and Account UIDs never appear in visible names. Case-insensitive collisions are allocated deterministically with retained non-secret identity fields.
+
+Every visible path maps directly to its immutable discovered `FsSaveDataInfo`: actual returned space and full attribute are passed to the read-only libnx open. A failed mount is returned unchanged; the proxy does not rescan, reconstruct a space, redirect to another record or fall back. v0.13.864 mutation rejection-before-routing, RO-only mounting, no-commit close, LRU/shared-handle lifetime, pinned registration, generic SD/UMS/raw NAND MTP and restore-time MTP refusal remain unchanged.
+
+Gemini18:36 reports the focused connected model, all15 compiler-free suites, dead-symbol gate (981 declarations) and `git diff --check` PASS after two narrow evidence corrections. Fixtures cover seven types across seven concrete spaces, deterministic System/SystemBcat full disambiguation, exact retained routes, five-accessor error propagation, an explicit available-but-unused remap candidate, immutable tree, mutation matrix and LRU lifetime. Senior reviewed the actual product/test/version diff and ran diff check only; no configure, compile, WSL, NRO, g++, compiled tests or `tests/run.sh`. Compiler-free/static/model evidence is not C++/libnx/IPC/Windows MTP/firmware/Switch runtime proof.
 
 ## v0.13.864 — fail-closed read-only MTP Saves
 

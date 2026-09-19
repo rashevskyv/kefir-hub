@@ -1,6 +1,23 @@
-Актуальний delivery — **v0.13.864 accepted**: fail-closed read-only MTP Saves; accepted baseline **v0.13.863**, 4aaee321bd99e3d5f5b6fd8f70875290059ef2c4.
+Актуальний delivery — **v0.13.865 accepted**: all-seven read-only MTP Saves discovery/routing; accepted baseline **v0.13.864**, b06c26c5e26008eff376ea446a8fe61ff7a421b8.
 
-## Поточний delivery: v0.13.864 — fail-closed read-only MTP Saves
+## Поточний delivery: v0.13.865 — all-seven read-only MTP Saves coverage
+
+- [x] `MTP-ALL7-RESEARCH-865` — primary/master/clean/ancestor, canonical Graphify refresh/query, exact proxy/shared discovery/mount/name/tests and official libnx/JKSV precedent reviewed; no build or product edit.
+- [x] `MTP-ALL7-POLICY-865` — reuse shared seven-space discovery; preserve four existing game buckets; explicit Temporary/System/System BCAT top-level buckets; exact stored actual-space/full-attribute RO route, no fallback or UID display.
+- [x] `MTP-ALL7-HANDOFF-865` — self-contained prompt prepared for a new Gemini chat; senior does not implement product code, spawn coding agents or build.
+- [x] `MTP-ALL7-DISCOVERY-865` — duplicate four-type filtered scanner replaced by one shared all-type discovery call; only known seven types retained.
+- [x] `MTP-ALL7-LAYOUT-865` — bounded deterministic Temporary/System/System BCAT typed buckets; Account/BCAT/Device/Cache game hierarchy preserved.
+- [x] `MTP-ALL7-ROUTE-865` — exact immutable stored record routes actual space/full attr; real mount errors propagate with no rescan/remap/fallback; v864 RO policy unchanged.
+- [x] `MTP-ALL7-FIXTURE-865` — connected all-seven/multi-space/full-collision/stale/error/remap-sentinel/pinned/mutation/LRU model; all15 suites/dead-symbol/diff reported PASS.
+- [x] `MTP-ALL7-REVIEW-865` — senior actual diff/all callers/lifetimes/platform evidence/UI/tests review accepted after two narrow test corrections; senior diff check only, no build.
+- [x] `MTP-ALL7-REVIEW1-865` — Gemini17:43 product/shared discovery/typed buckets/RO routing reviewed; not accepted because stale version anchors were bypassed by a CMake comment and fallback/full-collision models did not prove the claimed boundaries.
+- [x] `MTP-ALL7-REWORK1-865` — fake prior-version token removed; seven historical anchors accept `.865`; exact failed route and full disambiguator fixtures added.
+- [x] `MTP-ALL7-REVIEW2-865` — Gemini17:52 honest version anchors/full collision/attempt logging reviewed; not accepted because claimed available-remap candidate is comment-only and therefore zero-use is not tested; unused random import remains.
+- [x] `MTP-ALL7-REWORK2-865` — explicit available remap candidate remains unused with zero attempts; immutable tree preserved; unused random import removed.
+- [x] `DOCS-BUMP-865` — junior `.864` → `.865`; senior updated all four docs for focused primary-master commit, no push.
+- [ ] `HW-865` — user separately compiles and tests Windows MTP enumeration/read/error behavior on disposable Account/BCAT/Device/Cache/Temporary/System/System BCAT saves and alternate spaces.
+
+## Попередній delivery: v0.13.864 — fail-closed read-only MTP Saves
 
 - [x] `MTP-RO-RESEARCH-864` — primary/master/clean/ancestor, canonical Graphify refresh and exact Saves proxy registration/routing/mount/mutation/CloseFile/settings/pinned flow reviewed; no build or product edits.
 - [x] `MTP-RO-POLICY-864` — decrypted Saves stays visible but is truly read-only: RO mount plus rejection of every write boundary before side effects; no writable lifecycle claim through void CloseFile.

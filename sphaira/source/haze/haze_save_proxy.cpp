@@ -35,9 +35,8 @@ struct FsSaveProxy final : FsProxyBase {
         const auto pp = Parse(path);
         if (pp.depth >= 2) {
             std::shared_ptr<fs::FsNative> fs;
-            if (R_SUCCEEDED(MountSave(pp, fs))) {
-                return fs->GetTotalSpace("/", out);
-            }
+            R_TRY(MountSave(pp, fs));
+            return fs->GetTotalSpace("/", out);
         }
         *out = 1024ULL * 1024ULL * 1024ULL * 32ULL;
         R_SUCCEED();
@@ -46,9 +45,8 @@ struct FsSaveProxy final : FsProxyBase {
         const auto pp = Parse(path);
         if (pp.depth >= 2) {
             std::shared_ptr<fs::FsNative> fs;
-            if (R_SUCCEEDED(MountSave(pp, fs))) {
-                return fs->GetFreeSpace("/", out);
-            }
+            R_TRY(MountSave(pp, fs));
+            return fs->GetFreeSpace("/", out);
         }
         *out = 1024ULL * 1024ULL * 1024ULL * 32ULL;
         R_SUCCEED();
@@ -454,43 +452,36 @@ private:
         const bool has_title = R_SUCCEEDED(title::Init());
         ON_SCOPE_EXIT(if (has_title) { title::Exit(); });
 
-        // user (non-system) save types only, first iteration.
-        constexpr u8 SAVE_TYPES[] = {
-            FsSaveDataType_Account,
-            FsSaveDataType_Bcat,
-            FsSaveDataType_Device,
-            FsSaveDataType_Cache,
-        };
+        namespace save = ui::menu::save;
+        const auto discovered_records = save::DiscoverSaveDataInfo(nullptr, std::nullopt);
 
         std::map<u64, std::vector<FsSaveDataInfo>> game_save_records;
+        std::vector<FsSaveDataInfo> temporary_records;
+        std::vector<FsSaveDataInfo> system_records;
+        std::vector<FsSaveDataInfo> system_bcat_records;
 
-        for (const auto data_type : SAVE_TYPES) {
-            // mirrors GetFsSaveAttr() in save_menu.cpp: cache saves live in
-            // the sd-user space, the rest in the user space.
-            const auto space_id = data_type == FsSaveDataType_Cache ? FsSaveDataSpaceId_SdUser : FsSaveDataSpaceId_User;
-
-            FsSaveDataFilter filter{};
-            filter.attr.save_data_type = data_type;
-            filter.filter_by_save_data_type = true;
-
-            FsSaveDataInfoReader reader;
-            if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space_id, &filter))) {
-                log_write("[MTP-SAVES] failed to open save info reader for type %u\n", data_type);
-                continue;
-            }
-            ON_SCOPE_EXIT(fsSaveDataInfoReaderClose(&reader));
-
-            std::vector<FsSaveDataInfo> info_list(256);
-            while (true) {
-                s64 record_count{};
-                if (R_FAILED(fsSaveDataInfoReaderRead(&reader, info_list.data(), info_list.size(), &record_count)) || !record_count) {
-                    break;
-                }
-
-                for (s64 i = 0; i < record_count; i++) {
-                    const auto& info = info_list[i];
+        for (const auto& info : discovered_records) {
+            switch (info.save_data_type) {
+                case FsSaveDataType_Account:
+                case FsSaveDataType_Bcat:
+                case FsSaveDataType_Device:
+                case FsSaveDataType_Cache:
                     game_save_records[info.application_id].push_back(info);
-                }
+                    break;
+                case FsSaveDataType_Temporary:
+                    temporary_records.push_back(info);
+                    break;
+                case FsSaveDataType_System:
+                    system_records.push_back(info);
+                    break;
+                case FsSaveDataType_SystemBcat:
+                    system_bcat_records.push_back(info);
+                    break;
+                default:
+                    log_write("[MTP-SAVES] ignoring unknown save type %u (save_id=0x%016llX)\n",
+                        static_cast<unsigned>(info.save_data_type),
+                        static_cast<unsigned long long>(info.save_data_id));
+                    break;
             }
         }
 
@@ -655,7 +646,68 @@ private:
             }
         }
 
-        log_write("[MTP-SAVES] scanned %zu games\n", m_tree.size());
+        if (!temporary_records.empty()) {
+            std::sort(temporary_records.begin(), temporary_records.end(), CompareSaveDataInfo);
+            auto it = std::unique(temporary_records.begin(), temporary_records.end(), IsSameSaveRecord);
+            temporary_records.erase(it, temporary_records.end());
+
+            auto& temp_map = m_tree["Temporary"];
+            for (const auto& info : temporary_records) {
+                const u64 id = info.application_id ? info.application_id : info.save_data_id;
+                const std::string base = title::FormatTitleId(id);
+
+                std::string name = base;
+                if (temp_map.find(name) != temp_map.end()) {
+                    name = base + FormatSaveIdSuffix(info.save_data_id);
+                }
+                if (temp_map.find(name) != temp_map.end()) {
+                    DisambiguateFinalName(temp_map, base, info, name);
+                }
+                temp_map.emplace(name, info);
+            }
+        }
+
+        if (!system_records.empty()) {
+            std::sort(system_records.begin(), system_records.end(), CompareSaveDataInfo);
+            auto it = std::unique(system_records.begin(), system_records.end(), IsSameSaveRecord);
+            system_records.erase(it, system_records.end());
+
+            auto& system_map = m_tree["System"];
+            for (const auto& info : system_records) {
+                const std::string base = "System [" + title::FormatTitleId(info.system_save_data_id) + "]";
+
+                std::string name = base;
+                if (system_map.find(name) != system_map.end()) {
+                    name = base + FormatSaveIdSuffix(info.save_data_id);
+                }
+                if (system_map.find(name) != system_map.end()) {
+                    DisambiguateFinalName(system_map, base, info, name);
+                }
+                system_map.emplace(name, info);
+            }
+        }
+
+        if (!system_bcat_records.empty()) {
+            std::sort(system_bcat_records.begin(), system_bcat_records.end(), CompareSaveDataInfo);
+            auto it = std::unique(system_bcat_records.begin(), system_bcat_records.end(), IsSameSaveRecord);
+            system_bcat_records.erase(it, system_bcat_records.end());
+
+            auto& system_bcat_map = m_tree["System BCAT"];
+            for (const auto& info : system_bcat_records) {
+                const std::string base = "System BCAT [" + title::FormatTitleId(info.system_save_data_id) + "]";
+
+                std::string name = base;
+                if (system_bcat_map.find(name) != system_bcat_map.end()) {
+                    name = base + FormatSaveIdSuffix(info.save_data_id);
+                }
+                if (system_bcat_map.find(name) != system_bcat_map.end()) {
+                    DisambiguateFinalName(system_bcat_map, base, info, name);
+                }
+                system_bcat_map.emplace(name, info);
+            }
+        }
+
+        log_write("[MTP-SAVES] scanned %zu entries\n", m_tree.size());
     }
 
     auto Parse(const char* path) const -> ParsedPath {

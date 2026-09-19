@@ -1,6 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.864**. Дата: 2026-09-19.
+Версія коду: **v0.13.865**. Дата: 2026-09-19.
+
+Accepted v0.13.865 after Gemini18:36. The pinned read-only MTP `Saves` proxy now consumes shared unfiltered discovery across System/User/SdSystem/Temporary/SdUser/ProperSystem/SafeMode and exposes all seven known save types. Account/BCAT/Device/Cache keep their game hierarchy; Temporary/System/SystemBcat use explicit typed buckets with stable non-secret identifiers. Exact retained actual-space/full-attribute routing remains authoritative, mount errors propagate without rescan/remap/fallback, and v864 mutation rejection/no-commit/LRU/shared lifetime remains intact.
+
+Gemini reports all15 compiler-free suites, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed actual product, callers, naming/collision allocation, exact routing, error propagation, version anchors and connected fixtures after rejecting a fake version token and two incomplete no-remap proofs; senior ran diff check only, no suite rerun or compile. Tests cover all seven types/spaces, full System/SystemBcat collisions, exact failed route, explicit unused alternate-space candidate, immutable tree, mutation matrix, pinned registration and LRU handle survival. Static/Python models do not execute C++/libnx/libhaze/IPC/Windows MTP/Horizon/Switch hardware and do not prove permissions or firmware support. No configure/compile/WSL/NRO/g++/compiled tests/`tests/run.sh`/push; separate user compile/device validation required.
 
 Accepted v0.13.864 after Gemini09-19 16:24. Decrypted MTP `Saves` is now fail-closed read-only at every mutation boundary: create/write/resize/delete/rename and write/append opens refuse before routing or filesystem side effects, saves mount only via the libnx read-only API, and read-handle close performs no hidden commit. Existing four-type visibility, game/nickname/bucket hierarchy, immutable full live identity, collision handling, LRU/shared lifetime, pinned export, generic MTP and restore exclusion remain unchanged.
 
