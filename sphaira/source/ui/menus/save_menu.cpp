@@ -1909,18 +1909,13 @@ void Menu::CreateBackupIfNewer(const std::vector<Entry>& seeds) {
                 continue;
             }
 
-            bool is_up_to_date = false;
-            if (live_extra.timestamp != 0 && binfo.source_timestamp != 0) {
-                if (live_extra.timestamp == binfo.source_timestamp) {
-                    if (live_extra.commit_id != 0 && binfo.commit_id != 0) {
-                        is_up_to_date = (live_extra.commit_id == binfo.commit_id);
-                    } else {
-                        is_up_to_date = true;
-                    }
-                }
-            } else if (live_extra.commit_id != 0 && binfo.commit_id != 0) {
-                is_up_to_date = (live_extra.commit_id == binfo.commit_id);
-            }
+            const bool is_up_to_date =
+                live_extra.timestamp != 0 &&
+                binfo.source_timestamp != 0 &&
+                live_extra.commit_id != 0 &&
+                binfo.commit_id != 0 &&
+                live_extra.timestamp == binfo.source_timestamp &&
+                live_extra.commit_id == binfo.commit_id;
 
             if (is_up_to_date) {
                 (*up_to_date_count)++;

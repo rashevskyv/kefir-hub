@@ -1,4 +1,22 @@
-Поточний delivery — **v0.13.862 accepted**: explicit backup rank provenance; accepted baseline **v0.13.861**, HEAD e5ece7cdc2c96caaf7701c197a4e9cce550ad159.
+Поточний delivery — **v0.13.863 accepted**: conservative CreateBackupIfNewer proof; accepted baseline **v0.13.862**, HEAD 7374ee6115c5ad13f9727390b648972d886b0165.
+
+## Поточний delivery: v0.13.863 — conservative CreateBackupIfNewer proof
+
+Accepted after Gemini14:14 and senior actual diff/caller/fixture review. CreateBackupIfNewer now skips only when fresh live and freshly re-inspected newest archive timestamps and commit IDs are all nonzero and both pairs match exactly. Every zero, mismatch, missing archive, inspection failure, live-extra read failure or metadata-free archive conservatively creates a backup. Group membership/order, rank provenance, publication, naming, UI and all restore paths are unchanged.
+
+Gemini reports all15 compiler-free suites, the expanded library suite 8/8, dead-symbol gate (981 declarations) and diff check PASS. The connected fixture uses real temporary ZIPs, independently encoded metadata, old/new predicates, zero/mismatch/failure cases, newest-versus-older ordering, cancellation and multi-seed counters. Senior reviewed source and fixtures and ran diff check only; no suite rerun or compile. Python/static evidence is not C++/libnx/IPC/firmware/hardware proof.
+
+Senior preparation 2026-09-19 13:50: primary D:/git/dev/sphaira, master, empty porcelain, HEAD/master 7374ee6115c5ad13f9727390b648972d886b0165 and ancestry verified; canonical Graphify AST refreshed and exact CreateBackupIfNewer, CollectGroupArchives, InspectBackupArchive, extra-data read and BackupSaveInternal callers reviewed. The preceding create-from-backup candidate is NO-GO: libnx leaves FsSaveDataCreationInfo.available_size undocumented and the only local Account creator marks it TODO, so the full creation contract is not proven. No create UI, product edit, version bump or commit resulted from that investigation.
+
+Fixed independent slice: CreateBackupIfNewer may skip only when the freshly read live timestamp and commit_id are both nonzero and both exactly equal to the freshly re-inspected newest retained archive metadata. Any missing/zero field, mismatch, read/inspection failure or metadata-free archive is conservative “create backup”. Preserve exact group membership/readmission, rank provenance, ordinary checked publication and all existing backup formats. Do not hash/scan payloads, introduce age heuristics, delete/prune archives, change naming, or redesign backup creation.
+
+Junior scope: sphaira/source/ui/menus/save_menu.cpp, one focused compiler-free heuristic regression (prefer extending tests/test_save_backup_library_contract.py unless a tiny dedicated file is clearer), narrowly necessary version anchors, and sphaira/CMakeLists.txt .862 -> .863. No i18n/UI text change is needed. Fixtures must cover both-equal nonzero skip; timestamp-equal with either commit zero backs up; commit-equal with timestamp zero backs up; each mismatch backs up; inspection/read failure backs up; exact newest retained archive is used; older matching archive cannot suppress a backup; all prior library/publication behavior remains intact. Preserve all15 existing compiler-free suites and dead-symbol gate.
+
+Hard verification boundary for both roles: no configure/compile/cmake build/WSL ReleaseWithInstall/NRO/g++/compiled tests/tests/run.sh. Gemini may run focused Python/static checks, relevant existing Python suites, python tests/check_dead_symbols.py, JSON checks if touched, and git diff --check. These checks do not execute C++/libnx/IPC/hardware and must not be described as runtime proof.
+
+CreateBackupIfNewer conservative-proof slice DONE (.863). Create-from-backup remains NO-GO; UMS/stdio lifecycle and unrelated queue remain open. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. Separate user compile/device checks remain required.
+
+## Попередній delivery: v0.13.862 — explicit backup rank provenance
 
 ## Поточний delivery: v0.13.862 — explicit backup rank provenance
 

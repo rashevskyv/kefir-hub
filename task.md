@@ -1,6 +1,18 @@
-Актуальний delivery — **v0.13.862 accepted**: explicit backup rank provenance; accepted baseline **v0.13.861**, e5ece7cdc2c96caaf7701c197a4e9cce550ad159.
+Актуальний delivery — **v0.13.863 accepted**: conservative CreateBackupIfNewer proof; accepted baseline **v0.13.862**, 7374ee6115c5ad13f9727390b648972d886b0165.
 
-## Поточний delivery: v0.13.862 — explicit backup rank provenance
+## Поточний delivery: v0.13.863 — conservative CreateBackupIfNewer proof
+
+- [x] FRESH-RESEARCH-863 — primary/master/clean/ancestor, canonical Graphify update/query and exact freshness/library/publication callers reviewed; no build or product edits.
+- [x] CREATE-NOGO-863 — create-from-backup stopped investigation-only because full creation sizing contract is unproven; no create UI/bump/commit.
+- [x] FRESH-POLICY-863 — skip only on exact nonzero timestamp + nonzero commit ID equality against freshly re-inspected newest retained archive; every unknown/failure/mismatch backs up.
+- [x] FRESH-HANDOFF-863 — self-contained NEW Gemini prompt prepared; manual user transfer, no senior product implementation/coding agents/builds.
+- [x] FRESH-GUARD-863 — minimal CreateBackupIfNewer predicate correction; grouping, publication, formats, naming and UI preserved.
+- [x] FRESH-FIXTURE-863 — connected real-ZIP both-equal/zero/mismatch/failure/newest-vs-older matrix; all15 Python suites/dead-symbol/diff reported PASS.
+- [x] FRESH-REVIEW-863 — senior actual diff/caller/model review accepted; senior diff check only, no suite rerun/build.
+- [x] DOCS-BUMP-863 — junior .862 -> .863; senior four docs/focused primary-master commit/clean+ancestor/no push.
+- [ ] HW-863 — separate user compile/device unchanged/live-modified/zero-metadata backup checks.
+
+## Попередній delivery: v0.13.862 — explicit backup rank provenance
 
 - [x] `RANK-RESEARCH-862` — exact root/master/clean/base/ancestry, canonical Graphify refresh/query, shared decoder/discovery/group/actions/live-target flow and upstream JKSV/libnx sources reviewed.
 - [x] `RANK-POLICY-862` — known rank is source identity; metadata-free rank/space stay explicit unknown; source space is context only, never destination authority; no new wire revision.

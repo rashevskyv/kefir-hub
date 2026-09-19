@@ -1,6 +1,12 @@
 # audit.md
 
-Версія коду: **v0.13.862**. Дата: 2026-09-19.
+Версія коду: **v0.13.863**. Дата: 2026-09-19.
+
+Accepted v0.13.863 after Gemini14:14. CreateBackupIfNewer skips only when freshly read live and freshly re-inspected newest retained archive timestamp and commit ID are all nonzero and both pairs match exactly. Every zero, mismatch, missing/invalid archive, inspection failure, live-extra read failure or metadata-free source conservatively creates a backup. Exact retained membership/order, rank provenance, publication, naming, UI and restore/recovery/folder/RAW boundaries remain unchanged.
+
+Gemini reports all15 compiler-free suites, expanded backup-library suite 8/8, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed actual product/callers and connected real temporary ZIP fixtures with independently encoded metadata, old-predicate defect reproduction, zero/mismatch/failure matrix, newest-vs-older ordering, cancellation and multi-seed counts; senior ran diff check only, no suite rerun or compile. Models do not execute C++/libnx/IPC/firmware/hardware or prove concurrency, durability, snapshot, rollback, capacity or journal fit.
+
+CreateBackupIfNewer heuristic slice DONE (.863). Validated create-from-backup remains NO-GO because the full FsSaveDataCreationInfo contract, especially available_size, is unproven; no create UI/code shipped. UMS/stdio lifecycle and unrelated audit queue remain open. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push; separate user compile/device validation required.
 
 Accepted v0.13.862 after Gemini13:22 narrow UI/test correction. Backup-library groups distinguish metadata-proven Primary, metadata-proven Secondary and explicit unknown rank. JKSV85/86, Sphaira legacy128 and DBI extra provide known rank; metadata-free filename/path fallback stays browseable without a false Primary claim. Live discovered rank remains authoritative. Source space remains optional JKSV86 archive context and is excluded from group keys and live destination routing. Exact retained-member reinspection and explicit existing-target selection/confirmation remain unchanged. Backup list/grid/HbMenu show `rk:0`, `rk:1` or `rk:?`; live UI is unchanged.
 

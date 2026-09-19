@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.862** (2026-09-19). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.863** (2026-09-19). History: archive/walkthrough_archive.md.
+
+## v0.13.863 — conservative CreateBackupIfNewer proof
+
+Create backup if newer now skips only on exact nonzero equality of both the live timestamp/commit ID and the freshly re-inspected newest archive timestamp/commit ID. Zero or missing provenance, either mismatch, archive inspection failure and live extra-data read failure all conservatively create a new backup. Exact retained membership, newest-first ordering, rank grouping, checked publication, naming, UI and restore/recovery behavior are unchanged.
+
+The proposed create-from-backup path was rejected without product changes because the full FsSaveDataCreationInfo sizing contract, particularly available_size, was not proven. Gemini14:14 reports all15 compiler-free suites, expanded library suite 8/8, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed the actual product and connected real-ZIP old/new-predicate fixtures and ran diff check only; no compile or suite rerun. Python/static checks are not C++/libnx/IPC/Switch runtime proof.
+
+No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. User must compile separately and verify unchanged saves skip while modified/zero-provenance saves create backups.
 
 ## v0.13.862 — explicit backup rank provenance
 
