@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.860** (2026-09-18). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.861** (2026-09-19). History: archive/walkthrough_archive.md.
+
+## v0.13.861 — exact discovered backup-library membership
+
+Backup tiles retain the exact archive paths admitted during scanning. Restore picker, integrity verification, pruning and deletion re-open only those paths, repeat shared metadata and current group admission, omit moved/corrupt/changed members, and sort freshly inspected timestamps. This fixes tiles whose count included arbitrary root/custom archives that the old action-time generated-path scan could not find. Empty groups report no backups instead of using a stale representative. Duplicate picker labels include exact paths; the explicitly selected live destination stays authoritative.
+
+Gemini19:53 reports all15 compiler-free contract suites and dead-symbol gate (981 declarations) PASS. Senior reviewed product code and connected directory/ZIP models including exact membership, timestamp rewrite/resort, invalid-member omission, exact chosen payload/live target separation and prune/delete byte sentinels; senior ran `git diff --check`, did not rerun suites or compile. Models/static anchors do not execute C++/libnx/IPC/hardware or prove snapshot/concurrency/TOCTOU, rollback, capacity or journal fit.
+
+No build/configure/WSL/NRO/compiled tests/tests/run.sh/push. User must compile separately and test disposable Switch library root/DBI/custom archives, duplicate labels, exact picker artifact, corrupt-member omission and verify/prune/delete counts. Rank/source-space grouping and CreateBackupIfNewer remain queued.
 
 ## v0.13.860 — checked ordinary SD backup publication
 

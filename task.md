@@ -1,6 +1,21 @@
-Актуальний delivery — **v0.13.860 accepted**: checked ordinary SD backup publication; baseline **v0.13.859**, 02c86d8e1df031654e3ae601588fcaf6fc5c49fc.
+Актуальний delivery — **v0.13.861 accepted**: exact discovered backup-library membership; baseline **v0.13.860**, 19dc0228532047daf901e28e391c33001ab1c03b.
 
-## Поточний delivery: v0.13.860 — checked ordinary SD backup publication
+## Поточний delivery: v0.13.861 — exact discovered backup-library membership
+
+- [x] `LIB-RESEARCH-861` — primary/master/clean/ancestor, root Graphify refresh/query, exact discovery/group/action/restore callers reviewed.
+- [x] `LIB-POLICY-861` — retain exact discovered artifact members; shared readmission; existing grouping/live target unchanged; no stale library fallback.
+- [x] `LIB-HANDOFF-861` — self-contained new manual Gemini prompt prepared; no coding agents/senior product edits/build.
+- [x] `LIB-MEMBERS-861` — count/picker/verify/prune/delete use retained admitted members, exact path ownership.
+- [x] `LIB-FIXTURE-861` — real ZIP wire/layout/count/sort/selection/delete and destination sentinels; all15 suites reported PASS.
+- [x] `LIB-REVIEW-861` — senior actual diff/callers/lifetimes/errors/evidence accepted after corrections.
+- [x] `LIB-REVIEW1-861` — Gemini18:35 product/callers reviewed, diff check PASS; not accepted, disconnected/weak new fixture evidence returned for test-only correction.
+- [x] `LIB-REWORK1-861` — actual discovery/group construction, valid wire/POSIX/admission cases, connected picker/target and deletion sentinels.
+- [x] `LIB-REVIEW2-861` — Gemini19:32 actual scanner/shared decoder/POSIX/rejection/identity fixtures reviewed; central rework closed, narrow readmission/sentinel delta remains.
+- [x] `LIB-REWORK2-861` — retained timestamp/group/corruption mutation, exact readmitted paths and newest bytes reviewed after Gemini19:53.
+- [x] `DOCS-BUMP-861` — junior .861; senior all four docs and focused primary-master commit/clean+ancestor/no push.
+- [ ] `HW-861` — user separate compile/disposable Switch library root/DBI/custom/duplicate paths and restore-target regressions.
+
+## Попередній delivery: v0.13.860 — checked ordinary SD backup publication
 
 - [x] `PUB-ACCEPT-860` — Gemini17:59 final test-only corrections reviewed; all14 suites/dead-symbol PASS reported, senior actual source/fixture review + diff check; no suite rerun/build.
 - [x] `PUB-FINAL-860` — final close-success event ordering and both actual OS fsync fault routes reviewed; user-authorized same-delivery completion folded into local .860 commit.

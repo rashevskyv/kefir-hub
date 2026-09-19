@@ -14,8 +14,20 @@
 #include <vector>
 #include <span>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace sphaira::ui::menu::save {
+
+// one restorable backup archive found for a save, used to build the restore
+// picker. ts is the YYYYMMDDHHMMSS key parsed from the file name (for sorting
+// and display); source is a stable tie-break for equal timestamps (lower
+// wins: dbi format beats sphaira new/legacy, matching the old single-best
+// FindLatestBackupPath behaviour; path is the final tie-break in the sorter).
+struct BackupCandidate {
+    u64 ts{};
+    fs::FsPath path{};
+    int source{};
+};
 
 struct Entry final : FsSaveDataInfo {
     NacpLanguageEntry lang{};
@@ -33,6 +45,7 @@ struct Entry final : FsSaveDataInfo {
     std::string dbi_game_dir{};
     u64 source_timestamp{};
     u64 commit_id{};
+    std::vector<BackupCandidate> backup_members{};
 
     auto GetName() const -> const char* {
         return lang.name;
@@ -60,17 +73,6 @@ struct RecentBackupDir {
     std::string mount{};
     std::string name{};
     fs::FsPath path{};
-};
-
-// one restorable backup archive found for a save, used to build the restore
-// picker. ts is the YYYYMMDDHHMMSS key parsed from the file name (for sorting
-// and display); source is a stable tie-break for equal timestamps (lower
-// wins: dbi format beats sphaira new/legacy, matching the old single-best
-// FindLatestBackupPath behaviour; path is the final tie-break in the sorter).
-struct BackupCandidate {
-    u64 ts{};
-    fs::FsPath path{};
-    int source{};
 };
 
 enum class Category {

@@ -1292,7 +1292,11 @@ void Menu::BuildInstalledAppIds() {
 
 void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
     fs::FsNativeSd fs;
-    std::unordered_map<std::string, size_t> group_map;
+    struct GroupScanMeta {
+        size_t index{};
+        int rep_source{};
+    };
+    std::unordered_map<std::string, GroupScanMeta> group_map;
     std::vector<Entry> groups;
     std::unordered_set<std::string> seen_paths;
 
@@ -1324,6 +1328,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
             e.dbi_game_dir = info.dbi_game_dir;
             e.source_timestamp = info.source_timestamp;
             e.commit_id = info.commit_id;
+            e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
 
             if (IsSystemLikeSave(e.save_data_type)) {
                 detail::FakeNacpEntryForSystem(e);
@@ -1332,15 +1337,19 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
                 e.lang.name[sizeof(e.lang.name) - 1] = '\0';
             }
 
-            group_map.emplace(key, groups.size());
+            group_map.emplace(key, GroupScanMeta{groups.size(), source_prio});
             groups.emplace_back(std::move(e));
         } else {
-            auto& existing = groups[it->second];
-            existing.backup_count++;
+            auto& meta = it->second;
+            auto& existing = groups[meta.index];
+            existing.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
+            existing.backup_count = existing.backup_members.size();
 
             bool is_newer = false;
             if (info.timestamp != existing.backup_timestamp) {
                 is_newer = info.timestamp > existing.backup_timestamp;
+            } else if (source_prio != meta.rep_source) {
+                is_newer = source_prio < meta.rep_source;
             } else {
                 is_newer = (path.toString() < existing.backup_path.toString());
             }
@@ -1350,6 +1359,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
                 existing.backup_path = path;
                 existing.source_timestamp = info.source_timestamp;
                 existing.commit_id = info.commit_id;
+                meta.rep_source = source_prio;
             }
 
             if (existing.dbi_game_dir.empty() && !info.dbi_game_dir.empty()) {
@@ -1425,6 +1435,15 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
     });
 
     for (auto& g : groups) {
+        std::ranges::sort(g.backup_members, [](const BackupCandidate& a, const BackupCandidate& b) {
+            if (a.ts != b.ts) {
+                return a.ts > b.ts;
+            }
+            if (a.source != b.source) {
+                return a.source < b.source;
+            }
+            return a.path.toString() < b.path.toString();
+        });
         out.emplace_back(std::move(g));
     }
 }
@@ -1537,6 +1556,44 @@ void Menu::OnLayoutChange() {
 }
 
 auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate> {
+    if (group.is_backup) {
+        const auto target_key = BackupGroupKey(group);
+        std::unordered_set<std::string> seen_paths;
+        std::vector<BackupCandidate> out;
+
+        for (const auto& m : group.backup_members) {
+            if (m.path.empty() || !seen_paths.insert(m.path.s).second) {
+                continue;
+            }
+
+            const auto slash = std::strrchr(m.path.s, '/');
+            const auto fname = slash ? (slash + 1) : m.path.s;
+            BackupArchiveInfo info{};
+            if (!InspectBackupArchive(fs, m.path, fname, group.dbi_game_dir, info)) {
+                continue;
+            }
+
+            info.source = m.source;
+            if (BackupGroupKey(info) != target_key) {
+                continue;
+            }
+
+            out.emplace_back(BackupCandidate{info.timestamp, m.path, m.source});
+        }
+
+        std::ranges::sort(out, [](const BackupCandidate& a, const BackupCandidate& b) {
+            if (a.ts != b.ts) {
+                return a.ts > b.ts;
+            }
+            if (a.source != b.source) {
+                return a.source < b.source;
+            }
+            return a.path.toString() < b.path.toString();
+        });
+
+        return out;
+    }
+
     const auto candidates = CollectBackups(fs, group, backup_root);
     const auto target_key = BackupGroupKey(group);
 
@@ -1985,6 +2042,8 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                                 RestoreSavesPicked(std::move(*target), location, backup_root, archives.front().path);
                             } else if (!archives.empty()) {
                                 ShowRestorePickerPopup(std::move(*target), location, backup_root, {}, archives);
+                            } else if (e.is_backup) {
+                                App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
                             } else if (!e.backup_path.empty()) {
                                 RestoreSavesPicked(std::move(*target), location, backup_root, e.backup_path);
                             } else {
@@ -2273,6 +2332,8 @@ void Menu::RestoreForUser(Entry e) {
                 RestoreSavesPicked(std::move(*target), location, backup_root, archives.front().path);
             } else if (!archives.empty()) {
                 ShowRestorePickerPopup(std::move(*target), location, backup_root, {}, archives);
+            } else if (e.is_backup) {
+                App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
             } else if (!e.backup_path.empty()) {
                 RestoreSavesPicked(std::move(*target), location, backup_root, e.backup_path);
             } else {

@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <limits>
 #include <unistd.h>
 #include <minIni.h>
@@ -703,13 +704,28 @@ void Menu::ShowRestorePickerPopup(Entry e, const dump::DumpLocation& location, c
         return buf;
     };
 
+    std::vector<std::string> raw_labels;
+    raw_labels.reserve(candidates.size());
+    std::unordered_map<std::string, size_t> label_counts;
+    for (const auto& c : candidates) {
+        auto lbl = label_for(c);
+        label_counts[lbl]++;
+        raw_labels.emplace_back(std::move(lbl));
+    }
+
     PopupList::Items items;
     std::vector<bool> markers;
-    for (const auto& c : candidates) {
+    for (size_t i = 0; i < candidates.size(); i++) {
+        const auto& c = candidates[i];
         const auto name = std::strrchr(c.path.s, '/');
         const std::string base = name ? name + 1 : c.path.s;
 
-        items.emplace_back(label_for(c));
+        std::string label = raw_labels[i];
+        if (label_counts[raw_labels[i]] > 1) {
+            label += " (" + std::string(c.path.s) + ")";
+        }
+
+        items.emplace_back(std::move(label));
         markers.emplace_back(remote_set.contains(base));
     }
 

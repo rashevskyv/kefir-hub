@@ -1,6 +1,12 @@
 # audit.md
 
-Версія коду: **v0.13.860**. Дата: 2026-09-18.
+Версія коду: **v0.13.861**. Дата: 2026-09-19.
+
+Accepted v0.13.861 after Gemini19:53 final test-only correction. Backup library retains every distinct path admitted by ReadBackupEntries; group actions consume that inventory, repeat shared metadata/group admission and fresh timestamp sorting, and omit missing, corrupt or changed-group artifacts without generated-path rediscovery or stale representative fallback. Existing grouping and explicit live target authority remain unchanged; ambiguous picker labels include exact paths.
+
+Gemini reports all15 compiler-free contract suites, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed product/callers and connected directory/ZIP fixtures: arbitrary root/DBI/custom discovery, exact 16-group paths, POSIX timestamp rewrite/resort, invalid/changed-group omission, exact picker payload/unchanged explicit target, newest/foreign/post-scan byte sentinels and scoped prune/delete. Senior ran diff check only; no suite rerun or compile. Python/static evidence does not execute C++/libnx/IPC/hardware or prove snapshot/concurrency/TOCTOU, authentication, atomic rollback, capacity or journal fit.
+
+Exact library-membership slice DONE (.861). Rank/source-space grouping and CreateBackupIfNewer remain queued. No configure/compile/WSL/NRO/g++/compiled tests/tests/run.sh/push. Separate user compile/disposable Switch validation required.
 
 Accepted v0.13.860, 2026-09-18 after Gemini17:59 final test-only correction. Ordinary SD backup reuses existing checked recovery stream independently of recovery semantics; exclusive native sibling stage ownership is recorded before commit, final collisions explicitly refuse without deleting prior archives, native rename and checked final commits use Unpublished/Renamed/Published states. Only exact owned temp/renamed final and nonrecursive owned stage are cleaned best effort. Existing metadata formats, compression, selected/live identity admission, actual-space RO routing, zero-ID/empty behavior, recovery/folder semantics and RAW refusal preserved. UMS/stdio export branch unchanged.
 
