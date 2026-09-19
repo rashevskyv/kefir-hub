@@ -1,4 +1,10 @@
-Актуальний delivery — **v0.13.863** (2026-09-19). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.864** (2026-09-19). History: archive/walkthrough_archive.md.
+
+## v0.13.864 — fail-closed read-only MTP Saves
+
+The decrypted MTP `Saves` drive now enforces the read-only policy already shown in Settings. File and directory creation, write, resize, deletion and rename callbacks fail before path parsing, save mounting or filesystem access; write/append opens are rejected before routing. Live saves are mounted only through the libnx read-only open, and closing a read handle no longer attempts a hidden commit through the void callback.
+
+The existing game → nickname/BCAT/Device/Cache → contents hierarchy, exact retained save identity, collision naming, LRU/shared-handle lifetime, pinned drive, generic SD/UMS MTP and restore-time MTP refusal remain unchanged. Gemini09-19 16:24 reports the focused connected model, all15 compiler-free suites, dead-symbol gate and diff check PASS. Senior reviewed the actual source/callers/lifetimes/settings and ran diff check only; no configure, compile, WSL, NRO, g++, compiled tests or `tests/run.sh`. Python/static evidence is not C++/libnx/libhaze/Windows MTP/Switch runtime proof.
 
 ## v0.13.863 — conservative CreateBackupIfNewer proof
 

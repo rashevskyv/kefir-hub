@@ -1,6 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.863**. Дата: 2026-09-19.
+Версія коду: **v0.13.864**. Дата: 2026-09-19.
+
+Accepted v0.13.864 after Gemini09-19 16:24. Decrypted MTP `Saves` is now fail-closed read-only at every mutation boundary: create/write/resize/delete/rename and write/append opens refuse before routing or filesystem side effects, saves mount only via the libnx read-only API, and read-handle close performs no hidden commit. Existing four-type visibility, game/nickname/bucket hierarchy, immutable full live identity, collision handling, LRU/shared lifetime, pinned export, generic MTP and restore exclusion remain unchanged.
+
+Gemini reports the focused executable compiler-free contracts/model, all15 suites, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed the actual product diff, callers, backend semantics, handle lifetime, settings truthfulness and connected model; senior ran diff check only, no suite rerun or compile. Models/static anchors do not execute C++/libnx/libhaze/Windows MTP/Switch hardware. Temporary/System/SystemBcat coverage and writable lifecycle redesign remain out of scope. No configure/compile/WSL/NRO/g++/compiled tests/`tests/run.sh`/push; separate user compile/device validation required.
 
 Accepted v0.13.863 after Gemini14:14. CreateBackupIfNewer skips only when freshly read live and freshly re-inspected newest retained archive timestamp and commit ID are all nonzero and both pairs match exactly. Every zero, mismatch, missing/invalid archive, inspection failure, live-extra read failure or metadata-free source conservatively creates a backup. Exact retained membership/order, rank provenance, publication, naming, UI and restore/recovery/folder/RAW boundaries remain unchanged.
 

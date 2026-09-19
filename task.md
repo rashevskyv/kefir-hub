@@ -1,6 +1,17 @@
-Актуальний delivery — **v0.13.863 accepted**: conservative CreateBackupIfNewer proof; accepted baseline **v0.13.862**, 7374ee6115c5ad13f9727390b648972d886b0165.
+Актуальний delivery — **v0.13.864 accepted**: fail-closed read-only MTP Saves; accepted baseline **v0.13.863**, 4aaee321bd99e3d5f5b6fd8f70875290059ef2c4.
 
-## Поточний delivery: v0.13.863 — conservative CreateBackupIfNewer proof
+## Поточний delivery: v0.13.864 — fail-closed read-only MTP Saves
+
+- [x] `MTP-RO-RESEARCH-864` — primary/master/clean/ancestor, canonical Graphify refresh and exact Saves proxy registration/routing/mount/mutation/CloseFile/settings/pinned flow reviewed; no build or product edits.
+- [x] `MTP-RO-POLICY-864` — decrypted Saves stays visible but is truly read-only: RO mount plus rejection of every write boundary before side effects; no writable lifecycle claim through void CloseFile.
+- [x] `MTP-RO-HANDOFF-864` — self-contained prompt prepared for a new Gemini chat; senior does not implement product code or build.
+- [x] `MTP-RO-GUARD-864` — create/write/resize/delete/rename and write/append open callbacks reject fail-closed; reads, hierarchy, exact stored identity and pinned export preserved.
+- [x] `MTP-RO-FIXTURE-864` — executable compiler-free mutation matrix plus scoped contracts; Gemini reports focused and all15 suites PASS.
+- [x] `MTP-RO-REVIEW-864` — senior actual diff/caller/lifetime/backend/settings/test review accepted; senior diff check only, no compile or suite rerun.
+- [x] `DOCS-BUMP-864` — junior `.863` → `.864`; senior updated all four docs for focused primary-master commit, no push.
+- [ ] `HW-864` — user separately compiles and tests Windows MTP read/copy plus rejected create/write/truncate/delete/rename on disposable saves.
+
+## Попередній delivery: v0.13.863 — conservative CreateBackupIfNewer proof
 
 - [x] FRESH-RESEARCH-863 — primary/master/clean/ancestor, canonical Graphify update/query and exact freshness/library/publication callers reviewed; no build or product edits.
 - [x] CREATE-NOGO-863 — create-from-backup stopped investigation-only because full creation sizing contract is unproven; no create UI/bump/commit.

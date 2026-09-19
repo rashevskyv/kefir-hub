@@ -1,6 +1,16 @@
-Поточний delivery — **v0.13.863 accepted**: conservative CreateBackupIfNewer proof; accepted baseline **v0.13.862**, HEAD 7374ee6115c5ad13f9727390b648972d886b0165.
+Поточний delivery — **v0.13.864 accepted**: fail-closed read-only MTP Saves; accepted baseline **v0.13.863**, HEAD 4aaee321bd99e3d5f5b6fd8f70875290059ef2c4.
 
-## Поточний delivery: v0.13.863 — conservative CreateBackupIfNewer proof
+## Поточний delivery: v0.13.864 — fail-closed read-only MTP Saves
+
+Senior preparation 2026-09-19: exact primary `D:/git/dev/sphaira`, `master`, empty porcelain, HEAD/master `4aaee321bd99e3d5f5b6fd8f70875290059ef2c4` and ancestry verified; canonical repo-root Graphify AST refreshed. Current `FsSaveProxy` contradicts the existing settings claim: it opens live saves read-write with read-only fallback, exposes create/write/truncate/delete/rename operations and commits writable handles from `void CloseFile()`, where commit failure cannot reach the MTP host. The existing read-only `FsGameProxy` supplies the local fail-closed callback pattern.
+
+Fixed policy: the decrypted `Saves` proxy is read-only at every mutation boundary. Open every save read-only; reject write/append opens and all file/directory create, write, resize, delete and rename callbacks before mount or filesystem side effects. Read/list/space queries, immutable full discovered-record routing, game → nickname/bucket → contents hierarchy, LRU/shared-handle lifetime, pinned-drive export, generic SD/UMS MTP and restore-time MTP refusal remain unchanged. No all-seven-type expansion, writable commit redesign, rescan, backend abstraction or dependency.
+
+Junior scope: `sphaira/source/haze/haze_save_proxy.cpp`; focused executable compiler-free contracts/model in `tests/test_mtp_save_contract.py`; `sphaira/CMakeLists.txt` `.863` → `.864`. Existing settings/i18n already truthfully say read-only, so no text edit unless exact inspection proves a mismatch. No four-doc edits, commit or push. Hard NO configure/compile/cmake build/WSL ReleaseWithInstall/NRO/g++/compiled tests/`tests/run.sh`; use focused Python/static checks, relevant existing Python suites, dead-symbol gate and `git diff --check` only. Models/static checks do not prove C++/libnx/IPC/Switch runtime behavior.
+
+Accepted after Gemini09-19 16:24 and senior actual diff/caller/lifetime/backend/settings/fixture review. Every mutation callback now returns `FsError_NotImplemented` before parsing, mounting or touching a handle; write/append opens are refused before routing; `MountSave` opens only through `fsOpenReadOnlySaveDataFileSystem`; read handles retain the existing shared mount lifetime and `CloseFile` only releases them. Existing hierarchy, four-type scan, exact stored identity, LRU, pinned registration, generic MTP and restore exclusion are unchanged. Gemini reports the focused model, all15 compiler-free suites, dead-symbol gate and diff check PASS; senior ran diff check only. No compile/runtime proof.
+
+## Попередній delivery: v0.13.863 — conservative CreateBackupIfNewer proof
 
 Accepted after Gemini14:14 and senior actual diff/caller/fixture review. CreateBackupIfNewer now skips only when fresh live and freshly re-inspected newest archive timestamps and commit IDs are all nonzero and both pairs match exactly. Every zero, mismatch, missing archive, inspection failure, live-extra read failure or metadata-free archive conservatively creates a backup. Group membership/order, rank provenance, publication, naming, UI and all restore paths are unchanged.
 
