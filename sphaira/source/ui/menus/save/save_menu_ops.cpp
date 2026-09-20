@@ -56,6 +56,16 @@ auto ProbeWebdavLocation(const location::Entry& loc) -> Result {
     R_SUCCEED();
 }
 
+auto DeleteLiveSaveEntry(const Entry& e) -> Result {
+    if (e.save_data_id == 0) {
+        return MAKERESULT(Module_Libnx, LibnxError_BadInput);
+    }
+    const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
+    const Result rc = fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id);
+    log_write("[SAVE] fsDeleteSaveDataFileSystemBySaveDataSpaceId(0x%x, 0x%016lX): 0x%x\n", space_id, e.save_data_id, rc);
+    return rc;
+}
+
 } // namespace
 
 void Menu::BackupSaves(std::vector<std::reference_wrapper<Entry>>& entries) {
@@ -89,23 +99,7 @@ auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Resul
         pbox->UpdateTransfer(i + 1, entries.size());
         pbox->SetActionName("Deleting save data..."_i18n);
 
-        const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
-
-        Result rc = 0;
-        if (e.save_data_id != 0) {
-            rc = fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id);
-        }
-        if (e.save_data_id == 0 || R_FAILED(rc)) {
-            FsSaveDataAttribute attr{};
-            attr.application_id = e.application_id;
-            attr.uid = e.uid;
-            attr.system_save_data_id = e.system_save_data_id;
-            attr.save_data_type = e.save_data_type;
-            attr.save_data_rank = e.save_data_rank;
-            attr.save_data_index = e.save_data_index;
-            rc = fsDeleteSaveDataFileSystemBySaveDataAttribute(space_id, &attr);
-        }
-        (void)rc;
+        R_TRY(DeleteLiveSaveEntry(e));
     }
     R_SUCCEED();
 }
@@ -489,9 +483,8 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
     }
 
     auto deleted_count = std::make_shared<size_t>(0);
-    auto failed_count = std::make_shared<size_t>(0);
 
-    App::Push<ProgressBox>(0, "Deleting saves..."_i18n, "", [this, entries, deleted_count, failed_count](auto pbox) mutable -> Result {
+    App::Push<ProgressBox>(0, "Deleting saves..."_i18n, "", [this, entries, deleted_count](auto pbox) mutable -> Result {
         fs::FsNativeSd sd_fs;
         const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
 
@@ -513,7 +506,9 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
                 pbox->SetActionName("Deleting backup files..."_i18n);
                 const auto backups = CollectBackups(&sd_fs, e, backup_root);
                 for (const auto& b : backups) {
-                    sd_fs.DeleteFile(b.path);
+                    R_TRY(pbox->ShouldExitResult());
+                    R_TRY(sd_fs.DeleteFile(b.path));
+                    (*deleted_count)++;
                 }
 
                 // Also clean up empty game directories in DBI and dumps
@@ -534,47 +529,16 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
                     const auto custom_sphaira_id_dir = fs::AppendPath(sd_fs.Root(), BuildSaveBasePath(e, true, custom_root));
                     sd_fs.DeleteDirectory(custom_sphaira_id_dir);
                 }
-
-                (*deleted_count)++;
             } else {
                 pbox->SetActionName("Deleting save data..."_i18n);
-                const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
-
-                Result rc = 0;
-                if (e.save_data_id != 0) {
-                    rc = fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id);
-                    log_write("[SAVE] fsDeleteSaveDataFileSystemBySaveDataSpaceId(0x%x, 0x%016lX): 0x%x\n", space_id, e.save_data_id, rc);
-                }
-
-                if (e.save_data_id == 0 || R_FAILED(rc)) {
-                    FsSaveDataAttribute attr{};
-                    attr.application_id = e.application_id;
-                    attr.uid = e.uid;
-                    attr.system_save_data_id = e.system_save_data_id;
-                    attr.save_data_type = e.save_data_type;
-                    attr.save_data_rank = e.save_data_rank;
-                    attr.save_data_index = e.save_data_index;
-
-                    Result rc2 = fsDeleteSaveDataFileSystemBySaveDataAttribute(space_id, &attr);
-                    log_write("[SAVE] fsDeleteSaveDataFileSystemBySaveDataAttribute: 0x%x\n", rc2);
-                    if (R_SUCCEEDED(rc2)) {
-                        rc = 0;
-                    }
-                }
-
-                if (R_SUCCEEDED(rc)) {
-                    (*deleted_count)++;
-                } else {
-                    (*failed_count)++;
-                }
+                R_TRY(DeleteLiveSaveEntry(e));
+                (*deleted_count)++;
             }
         }
         R_SUCCEED();
-    }, [this, deleted_count, failed_count](Result rc) {
+    }, [this](Result rc) {
         if (R_FAILED(rc)) {
             App::PushErrorBox(rc, "Delete failed!"_i18n);
-        } else if (*failed_count > 0 && *deleted_count == 0) {
-            App::Push<OptionBox>("Failed to delete save data."_i18n, "OK"_i18n);
         } else {
             App::Notify("Delete successful!"_i18n);
         }

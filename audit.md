@@ -1,6 +1,12 @@
 # audit.md
 
-Версія коду: **v0.13.865**. Дата: 2026-09-19.
+Версія коду: **v0.13.866**. Дата: 2026-09-20.
+
+Accepted v0.13.866 after Gemini11:59 and one focused fail-fast correction. Save Menu and profile cleanup share exact retained-space/save-ID live deletion, reject zero IDs before IPC and never fall back to attribute matching. Live and exact retained archive deletion stop on the first real failure; later cancellation/mutations cannot mask it, archive counts advance only after success, and directory cleanup is reached only after every archive in the group succeeds. Failed/cancelled operations cannot emit `Delete successful!`; successful behavior, exact library membership and all backup/restore formats remain unchanged.
+
+Gemini reports all15 compiler-free suites, expanded backup-library suite 9/9, dead-symbol gate (981 declarations) and diff check PASS. Senior reviewed actual product, both callers, result/callback ordering, version anchors and connected old/new exact-ID, alternate-target, zero-ID, profile/UI/archive, partial, cancellation and failure-ordering fixtures; senior ran diff check only, no suite rerun or compile. Python/static models do not execute C++/libnx/Horizon IPC/filesystem permissions/Switch hardware. No configure/compile/WSL/NRO/g++/compiled tests/`tests/run.sh`/push; separate user compile/device validation required.
+
+Save deletion false-success/attribute-fallback P1 DONE (.866). The three external-contract blockers remain unchanged: authenticated RAW container reading, exact growth/capacity/alignment/failure semantics, and safe create-from-backup `FsSaveDataCreationInfo`/`available_size` policy. Hardware validation remains one separate workflow; no further speculative save coding queue is opened.
 
 Accepted v0.13.865 after Gemini18:36. The pinned read-only MTP `Saves` proxy now consumes shared unfiltered discovery across System/User/SdSystem/Temporary/SdUser/ProperSystem/SafeMode and exposes all seven known save types. Account/BCAT/Device/Cache keep their game hierarchy; Temporary/System/SystemBcat use explicit typed buckets with stable non-secret identifiers. Exact retained actual-space/full-attribute routing remains authoritative, mount errors propagate without rescan/remap/fallback, and v864 mutation rejection/no-commit/LRU/shared lifetime remains intact.
 

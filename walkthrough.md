@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.865** (2026-09-19). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.866** (2026-09-20). History: archive/walkthrough_archive.md.
+
+## v0.13.866 — fail-closed exact save deletion
+
+Live-save deletion now uses one shared exact owner in both Save Menu and user-profile cleanup: a nonzero retained save ID is deleted once in its retained actual space, and the real result is returned. The former attribute fallback is gone, so a stale entry cannot redirect deletion to another matching slot. Zero IDs fail before filesystem IPC.
+
+Save Menu live and backup deletion stops on the first exact failure. Exact retained archive paths increment the deleted count only after successful removal; later entries, later cancellation checkpoints and best-effort directory cleanup are not reached after failure. Completion therefore cannot show `Delete successful!` after any requested mutation failed. Existing confirmations, refresh, exact backup membership and successful paths remain unchanged.
+
+Gemini11:59 reports all15 compiler-free suites, backup-library suite 9/9, dead-symbol gate (981 declarations) and `git diff --check` PASS after one senior-requested fail-fast correction. Senior reviewed the actual source, both callers, callback ordering, version anchors and connected failure/cancellation fixtures and ran diff check only. No configure, compile, WSL, NRO, g++, compiled tests or `tests/run.sh`; Python/static models do not prove C++/libnx/IPC/filesystem permissions or Switch runtime behavior.
 
 ## v0.13.865 — all-seven read-only MTP Saves coverage
 

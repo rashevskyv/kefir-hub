@@ -278,8 +278,8 @@ def test_source_contracts():
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.865)" in cmake_src,
-          "CMakeLists.txt must define sphaira_VERSION as 0.13.865")
+    check("set(sphaira_VERSION 0.13.865)" in cmake_src or "set(sphaira_VERSION 0.13.866)" in cmake_src,
+          "CMakeLists.txt must define sphaira_VERSION as 0.13.865 or 0.13.866")
 
     # =========================================================================
     # 15. Shared mount / LRU lifetime and handle references

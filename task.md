@@ -1,6 +1,18 @@
-Актуальний delivery — **v0.13.865 accepted**: all-seven read-only MTP Saves discovery/routing; accepted baseline **v0.13.864**, b06c26c5e26008eff376ea446a8fe61ff7a421b8.
+Актуальний delivery — **v0.13.866 accepted**: fail-closed exact save/backup deletion result propagation; accepted baseline **v0.13.865**, 568306675f3565c6f5f602304233eef49aac49bd.
 
-## Поточний delivery: v0.13.865 — all-seven read-only MTP Saves coverage
+## Поточний delivery: v0.13.866 — fail-closed save deletion results
+
+- [x] `SAVE-DELETE-RESEARCH-866` — primary/master/clean/ancestor, canonical Graphify refresh/query and exact UI/profile/live/archive delete callers reviewed; one P1 false-success/exact-target defect proven, no build/product edit.
+- [x] `SAVE-DELETE-POLICY-866` — exact retained space+nonzero save ID only, no attribute fallback; propagate real live/archive/cancel failure and never emit success after any requested deletion failure.
+- [x] `SAVE-DELETE-HANDOFF-866` — self-contained prompt prepared for a new Gemini chat; senior does not implement product code, spawn coding agents or build.
+- [x] `SAVE-DELETE-RESULT-866` — shared exact retained-space/save-ID owner; zero ID and first real failure propagate immediately with no attribute/alternate fallback.
+- [x] `SAVE-DELETE-ARCHIVE-866` — exact retained archive paths count only after successful deletion; failure stops later mutations and cleanup; no false success.
+- [x] `SAVE-DELETE-FIXTURE-866` — connected old/new false-success, alternate-target, profile/UI/archive/cancel/failure-ordering/success model; Gemini reports all15 suites PASS.
+- [x] `SAVE-DELETE-REVIEW-866` — senior actual diff/callers/result ordering/version/fixtures accepted after one fail-fast correction; senior diff check only, no build.
+- [x] `DOCS-BUMP-866` — junior `.865` → `.866`; senior synchronized all four docs for one focused primary-master commit, no push.
+- [ ] `HW-866` — separate user compile and disposable-console live/archive/profile deletion success, forced-failure and cancel checks.
+
+## Попередній delivery: v0.13.865 — all-seven read-only MTP Saves coverage
 
 - [x] `MTP-ALL7-RESEARCH-865` — primary/master/clean/ancestor, canonical Graphify refresh/query, exact proxy/shared discovery/mount/name/tests and official libnx/JKSV precedent reviewed; no build or product edit.
 - [x] `MTP-ALL7-POLICY-865` — reuse shared seven-space discovery; preserve four existing game buckets; explicit Temporary/System/System BCAT top-level buckets; exact stored actual-space/full-attribute RO route, no fallback or UID display.
