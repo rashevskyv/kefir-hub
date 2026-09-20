@@ -1,4 +1,10 @@
-Актуальний delivery — **v0.13.866** (2026-09-20). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.867** (2026-09-20). History: archive/walkthrough_archive.md.
+
+## v0.13.867 — build/test closure save-системи
+
+Повний compiler-free suite спочатку викрив застарілий `test_save_restore_contract.cpp`, який усе ще очікував видалений небезпечний RAW restore. Контракт оновлено до чинної fail-closed відмови. WSL-компілятор далі викрив накопичені save regressions: block-style виклики function-like `ON_SCOPE_EXIT`, відсутній `defines.hpp`, member `GetAccountName` усередині free ZIP writer і неіснуючий `FsError_InvalidPath`. Cleanup-виклики приведено до підтримуваного macro-синтаксису, account label передається з `Menu`, а invalid path grammar повертає наявний `FsError_InvalidCharacter`.
+
+Фінальна перевірка: `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` — `all green`; `cmake --preset ReleaseWithInstall && cmake --build --preset ReleaseWithInstall --parallel $(nproc)` — `[100%] Built target sphaira_nro`; `git diff --check` — PASS. Це не Switch runtime/hardware proof; не перевірено реальні права Horizon, durability restore/backup/delete або Windows MTP.
 
 ## v0.13.866 — fail-closed exact save deletion
 

@@ -1,6 +1,12 @@
-Поточний delivery — **v0.13.866 accepted**: fail-closed exact save/backup deletion result propagation; accepted baseline **v0.13.865**, HEAD 568306675f3565c6f5f602304233eef49aac49bd.
+Поточний delivery — **v0.13.867 accepted**: виправлено накопичені save build/test regressions і підтверджено повну WSL-збірку; accepted baseline **v0.13.866**, HEAD 658e7def5cf8a4079619077be62788e152852a88.
 
-## Поточний delivery: v0.13.866 — fail-closed save deletion results
+## Поточний delivery: v0.13.867 — build/test closure save-системи
+
+На exact primary `D:/git/dev/sphaira`, `master`, clean baseline `658e7def5cf8a4079619077be62788e152852a88` виконано canonical Graphify update, повний `tests/run.sh` і WSL `ReleaseWithInstall`. Перший прогін тестів виявив один застарілий RAW restore contract, а перша збірка — некоректний block-синтаксис `ON_SCOPE_EXIT`, відсутній include, виклик member account-name helper з free writer та неіснуючий libnx result. Мінімальні виправлення узгодили cleanup syntax, передали account name з member caller, використали дійсний invalid-character result і оновили RAW contract до чинної fail-closed відмови.
+
+Acceptance: повторний повний `tests/run.sh` — `all green`; повторний WSL configure/build — `[100%] Built target sphaira_nro`. NRO build доводить компіляцію/лінкування, але не Switch runtime, файлові дозволи, backup/restore durability чи MTP hardware behavior. Окремо потрібна disposable-console перевірка restore/backup/delete та read-only MTP Saves для всіх семи типів.
+
+## Попередній delivery: v0.13.866 — fail-closed save deletion results
 
 Senior closure audit 2026-09-20 11:21: exact primary `D:/git/dev/sphaira`, `master`, empty porcelain, HEAD/master `568306675f3565c6f5f602304233eef49aac49bd` and ancestry verified. Canonical Graphify local-AST refresh reported no topology change and eight partial-parser warnings. Exact callers prove one remaining P1: `Menu::DeleteSavesOn` discards every filesystem deletion `Result` and unconditionally succeeds after user-profile removal, while `Menu::DeleteSaves` ignores backup `DeleteFile` failures and can emit `Delete successful!`. Both live-delete paths also retry any failed exact save-ID deletion by attribute, permitting a stale record to target another current matching slot.
 

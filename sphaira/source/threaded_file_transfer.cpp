@@ -757,9 +757,9 @@ static Result TransferUnzipInternal(ui::ProgressBox* pbox, void* zfile, fs::Fs* 
             f.m_native = {};
             f.m_fs = nullptr;
         };
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             close_and_invalidate();
-        };
+        });
 
         if (size == 0) {
             const auto open_rc = fs->OpenFile(path, FsOpenMode_Write, &f);
@@ -1276,11 +1276,11 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             R_THROW(Result_UnzOpenCurrentFile);
         }
         bool curr_file_open = true;
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (curr_file_open && zfile) {
                 unzCloseCurrentFile(zfile);
             }
-        };
+        });
 
         unz_file_info64 info;
         char name_buf[sizeof(fs::FsPath)]{};
@@ -1556,11 +1556,11 @@ Result VerifyArchiveAgainstNative(
             R_THROW(Result_UnzOpenCurrentFile);
         }
         bool curr_open = true;
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (curr_open && zfile) {
                 unzCloseCurrentFile(zfile);
             }
-        };
+        });
 
         if (!resolved.keep) {
             // Excluded source metadata: drain completely and check CRC

@@ -1001,6 +1001,7 @@ static Result WriteSaveBackupZip(
     const Entry& e,
     const FsSaveDataExtraData& extra,
     const filebrowser::FsDirCollections& collections,
+    const std::string& account_name,
     bool dbi_format,
     bool compressed,
     bool recovery_mode = false,
@@ -1042,11 +1043,11 @@ static Result WriteSaveBackupZip(
         auto zfile = zipOpen2_64(temp_path, APPEND_STATUS_CREATE, nullptr, &file_func);
         R_UNLESS(zfile, Result_ZipOpen2_64);
         bool zip_archive_open = true;
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (zip_archive_open && zfile) {
                 zipClose(zfile, nullptr);
             }
-        };
+        });
 
         // add save meta (sphaira format only, dbi stores its own meta below).
         if (!dbi_format) {
@@ -1066,11 +1067,11 @@ static Result WriteSaveBackupZip(
 
             R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, NX_SAVE_META_NAME, &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
             bool meta_open = true;
-            ON_SCOPE_EXIT {
+            ON_SCOPE_EXIT({
                 if (meta_open && zfile) {
                     zipCloseFileInZip(zfile);
                 }
-            };
+            });
             R_UNLESS(ZIP_OK == zipWriteInFileInZip(zfile, &meta, sizeof(meta)), Result_ZipWriteInFileInZip);
             meta_open = false;
             R_UNLESS(ZIP_OK == zipCloseFileInZip(zfile), Result_ZipWriteInFileInZip);
@@ -1087,11 +1088,11 @@ static Result WriteSaveBackupZip(
                 std::snprintf(dir_name, sizeof(dir_name), "%s/", collection.path.s);
                 R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, dir_name, &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
                 bool dir_entry_open = true;
-                ON_SCOPE_EXIT {
+                ON_SCOPE_EXIT({
                     if (dir_entry_open && zfile) {
                         zipCloseFileInZip(zfile);
                     }
-                };
+                });
                 dir_entry_open = false;
                 R_UNLESS(ZIP_OK == zipCloseFileInZip(zfile), Result_ZipWriteInFileInZip);
             }
@@ -1111,11 +1112,11 @@ static Result WriteSaveBackupZip(
                 std::snprintf(dir_name, sizeof(dir_name), "%s/", rel_dir);
                 R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, dir_name, &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
                 bool dir_entry_open = true;
-                ON_SCOPE_EXIT {
+                ON_SCOPE_EXIT({
                     if (dir_entry_open && zfile) {
                         zipCloseFileInZip(zfile);
                     }
-                };
+                });
                 dir_entry_open = false;
                 R_UNLESS(ZIP_OK == zipCloseFileInZip(zfile), Result_ZipWriteInFileInZip);
             }
@@ -1149,11 +1150,11 @@ static Result WriteSaveBackupZip(
                 R_THROW(Result_ZipOpenNewFileInZip);
             }
             bool file_in_zip_open = true;
-            ON_SCOPE_EXIT {
+            ON_SCOPE_EXIT({
                 if (file_in_zip_open && zfile) {
                     zipCloseFileInZip(zfile);
                 }
-            };
+            });
 
             R_TRY(thread::TransferZip(pbox, zfile, save_fs, file_path));
             file_in_zip_open = false;
@@ -1174,11 +1175,11 @@ static Result WriteSaveBackupZip(
             const auto write_meta_file = [&](const char* name, const void* data, size_t size) -> Result {
                 R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, name, &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
                 bool meta_open = true;
-                ON_SCOPE_EXIT {
+                ON_SCOPE_EXIT({
                     if (meta_open && zfile) {
                         zipCloseFileInZip(zfile);
                     }
-                };
+                });
                 R_UNLESS(ZIP_OK == zipWriteInFileInZip(zfile, data, size), Result_ZipWriteInFileInZip);
                 meta_open = false;
                 R_UNLESS(ZIP_OK == zipCloseFileInZip(zfile), Result_ZipWriteInFileInZip);
@@ -1186,7 +1187,7 @@ static Result WriteSaveBackupZip(
             };
 
             const auto account = e.save_data_type == FsSaveDataType_Account
-                ? GetAccountName(e.uid)
+                ? account_name
                 : std::string{GetSaveTypeLabel(e.save_data_type)};
 
             const char* space = "User";
@@ -1436,11 +1437,11 @@ static Result StageBackupFolderToZip(
     auto zfile = zipOpen2_64(owned_stage_zip.s, APPEND_STATUS_CREATE, NULL, &file_func);
     R_UNLESS(zfile, Result_ZipOpenNewFileInZip);
     bool zfile_open = true;
-    ON_SCOPE_EXIT {
+    ON_SCOPE_EXIT({
         if (zfile_open && zfile) {
             zipClose(zfile, NULL);
         }
-    };
+    });
 
     const auto t = std::time(nullptr);
     const auto tm = std::localtime(&t);
@@ -1460,11 +1461,11 @@ static Result StageBackupFolderToZip(
         }
         R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, dir_key.c_str(), &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_NO_COMPRESSION), Result_ZipOpenNewFileInZip);
         bool dir_open = true;
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (dir_open && zfile) {
                 zipCloseFileInZip(zfile);
             }
-        };
+        });
         dir_open = false;
         R_UNLESS(ZIP_OK == zipCloseFileInZip(zfile), Result_ZipWriteInFileInZip);
         R_UNLESS(!rec_ctx.write_failed, Result_ZipWriteInFileInZip);
@@ -1489,11 +1490,11 @@ static Result StageBackupFolderToZip(
         const auto level = Z_DEFAULT_COMPRESSION;
         R_UNLESS(ZIP_OK == zipOpenNewFileInZip(zfile, file_key.c_str(), &zip_info_default, NULL, 0, NULL, 0, NULL, Z_DEFLATED, level), Result_ZipOpenNewFileInZip);
         bool file_open = true;
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (file_open && zfile) {
                 zipCloseFileInZip(zfile);
             }
-        };
+        });
 
         if (file_info.size > 0) {
             s64 remaining = file_info.size;
@@ -1593,11 +1594,11 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     auto zfile = unzOpen2_64(path, &file_func);
     R_UNLESS(zfile, Result_UnzOpen2_64);
     bool source_reader_open = true;
-    ON_SCOPE_EXIT {
+    ON_SCOPE_EXIT({
         if (source_reader_open && zfile) {
             unzClose(zfile);
         }
-    };
+    });
     log_write("opened zip\n");
 
     const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
@@ -1845,7 +1846,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
             };
             RecoveryPubState pub_state = RecoveryPubState::Unpublished;
 
-            ON_SCOPE_EXIT {
+            ON_SCOPE_EXIT({
                 if (pub_state == RecoveryPubState::Unpublished) {
                     sd_fs.DeleteFile(recovery_temp_path);
                     sd_fs.DeleteDirectory(owned_dir);
@@ -1853,11 +1854,11 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
                     sd_fs.DeleteFile(recovery_final_path);
                     sd_fs.DeleteDirectory(owned_dir);
                 }
-            };
+            });
 
             pbox->NewTransfer("Creating recovery backup..."_i18n);
             R_TRY(pbox->ShouldExitResult());
-            R_TRY(WriteSaveBackupZip(pbox, &sd_fs, recovery_temp_path, &save_fs, e, live, live_collections, false, true, true));
+            R_TRY(WriteSaveBackupZip(pbox, &sd_fs, recovery_temp_path, &save_fs, e, live, live_collections, {}, false, true, true));
 
             // Reopen recovery backup and preflight
             SaveReaderContext rec_reader_ctx;
@@ -1866,11 +1867,11 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
             auto rec_zfile = unzOpen2_64(recovery_temp_path, &rec_file_func);
             R_UNLESS(rec_zfile, Result_UnzOpen2_64);
             bool rec_reader_open = true;
-            ON_SCOPE_EXIT {
+            ON_SCOPE_EXIT({
                 if (rec_reader_open && rec_zfile) {
                     unzClose(rec_zfile);
                 }
-            };
+            });
 
             thread::UnzipPayloadSummary rec_summary{};
             thread::UnzipPayloadInventory rec_inventory{};
@@ -2046,7 +2047,7 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
 
     // 3. Reject duplicate slashes (//) anywhere in path
     if (raw_view.find("//") != std::string_view::npos) {
-        return FsError_InvalidPath;
+        return FsError_InvalidCharacter;
     }
 
     // 4. Character validation: no control chars, no 0x7F, no backslashes, no invalid save characters
@@ -2078,7 +2079,7 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
             }
             const std::string_view comp = canonical_view.substr(start, end - start);
             if (comp.empty() || comp == "." || comp == "..") {
-                return FsError_InvalidPath;
+                return FsError_InvalidCharacter;
             }
             start = end + 1;
         }
@@ -2281,7 +2282,7 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
     R_TRY(CheckedJoinPath(owned_stage_zip, owned_dir.s, "source.zip.temp"));
 
     bool stage_published = false;
-    ON_SCOPE_EXIT {
+    ON_SCOPE_EXIT({
         if (!stage_published) {
             if (!owned_stage_zip.empty()) {
                 sd_fs.DeleteFile(owned_stage_zip);
@@ -2290,7 +2291,7 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
                 sd_fs.DeleteDirectory(owned_dir);
             }
         }
-    };
+    });
 
     // Stage source folder to temporary zip archive
     pbox->NewTransfer("Staging save backup..."_i18n);
@@ -2304,11 +2305,11 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
     auto stage_zfile = unzOpen2_64(owned_stage_zip.s, &stage_file_func);
     R_UNLESS(stage_zfile, Result_UnzOpen2_64);
     bool stage_reader_open = true;
-    ON_SCOPE_EXIT {
+    ON_SCOPE_EXIT({
         if (stage_reader_open && stage_zfile) {
             unzClose(stage_zfile);
         }
-    };
+    });
 
     const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
         if (IsSaveReservedMetadataRoot(name.s)) {
@@ -2514,7 +2515,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
         };
         BackupPubState pub_state = BackupPubState::Unpublished;
 
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (pub_state == BackupPubState::Unpublished) {
                 if (owned_stage_created) {
                     sd_fs.DeleteFile(owned_temp_path);
@@ -2530,7 +2531,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
                     sd_fs.DeleteDirectory(stage_dir);
                 }
             }
-        };
+        });
 
         const auto stage_prim_rc = fsFsCreateDirectory(&sd_fs.m_fs, stage_dir);
         if (R_FAILED(stage_prim_rc)) {
@@ -2547,7 +2548,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
             R_TRY(pbox->ShouldExitResult());
         }
 
-        R_TRY(WriteSaveBackupZip(pbox, &sd_fs, owned_temp_path, &save_fs, e, extra, collections, dbi_format, compressed, false, true));
+        R_TRY(WriteSaveBackupZip(pbox, &sd_fs, owned_temp_path, &save_fs, e, extra, collections, GetAccountName(e.uid), dbi_format, compressed, false, true));
 
         if (pbox) {
             R_TRY(pbox->ShouldExitResult());
@@ -2585,7 +2586,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
         fs->CreateDirectoryRecursivelyWithPath(temp_path);
         ON_SCOPE_EXIT(fs->DeleteFile(temp_path));
 
-        R_TRY(WriteSaveBackupZip(pbox, fs.get(), temp_path, &save_fs, e, extra, collections, dbi_format, compressed, false, false));
+        R_TRY(WriteSaveBackupZip(pbox, fs.get(), temp_path, &save_fs, e, extra, collections, GetAccountName(e.uid), dbi_format, compressed, false, false));
 
         fs->DeleteFile(path);
         R_TRY(fs->RenameFile(temp_path, path));

@@ -1,6 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.866**. Дата: 2026-09-20.
+Версія коду: **v0.13.867**. Дата: 2026-09-20.
+
+Accepted v0.13.867 after the dedicated test-build workflow. Exact primary/master/clean baseline and ancestry were verified, then the full compiler-free suite and WSL `ReleaseWithInstall` exposed accumulated save closure regressions. Fixed only the compile/test blockers: supported `ON_SCOPE_EXIT` syntax and missing include, member-owned account label injection into the free ZIP writer, valid libnx invalid-character result, and the stale RAW restore contract after the existing fail-closed RAW refusal.
+
+Final evidence: full `tests/run.sh` reports `all green`; WSL configure/build reports `[100%] Built target sphaira_nro`; `git diff --check` passes. Existing third-party/compiler warnings remain non-fatal. This is build proof, not Switch runtime, Horizon permission, backup/restore/delete durability, Windows MTP or hardware proof. The three external-contract blockers remain unchanged: authenticated RAW container reading, exact growth/capacity/alignment/failure semantics, and safe create-from-backup `FsSaveDataCreationInfo`/`available_size` policy.
 
 Accepted v0.13.866 after Gemini11:59 and one focused fail-fast correction. Save Menu and profile cleanup share exact retained-space/save-ID live deletion, reject zero IDs before IPC and never fall back to attribute matching. Live and exact retained archive deletion stop on the first real failure; later cancellation/mutations cannot mask it, archive counts advance only after success, and directory cleanup is reached only after every archive in the group succeeds. Failed/cancelled operations cannot emit `Delete successful!`; successful behavior, exact library membership and all backup/restore formats remain unchanged.
 

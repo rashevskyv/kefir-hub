@@ -1,5 +1,6 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "app.hpp"
+#include "defines.hpp"
 #include "path_util.hpp"
 #include "minizip_helper.hpp"
 #include "i18n.hpp"
@@ -798,11 +799,11 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
     }
 
     bool success = false;
-    ON_SCOPE_EXIT {
+    ON_SCOPE_EXIT({
         if (!success && zfile) {
             unzGoToFirstFile(zfile);
         }
-    };
+    });
 
     bool seen_nx_meta = false;
     bool seen_dbi_extra = false;
@@ -1083,11 +1084,11 @@ auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool {
         return false;
     }
     bool zfile_open = true;
-    ON_SCOPE_EXIT {
+    ON_SCOPE_EXIT({
         if (zfile_open && zfile) {
             unzClose(zfile);
         }
-    };
+    });
 
     DecodedSaveMetadata archive_meta{};
     Result meta_rc = 0;
@@ -1407,11 +1408,11 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
             return false;
         }
         bool zfile_open = true;
-        ON_SCOPE_EXIT {
+        ON_SCOPE_EXIT({
             if (zfile_open && zfile) {
                 unzClose(zfile);
             }
-        };
+        });
 
         DecodedSaveMetadata archive_meta{};
         Result meta_rc = 0;

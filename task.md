@@ -1,6 +1,15 @@
-Актуальний delivery — **v0.13.866 accepted**: fail-closed exact save/backup deletion result propagation; accepted baseline **v0.13.865**, 568306675f3565c6f5f602304233eef49aac49bd.
+Актуальний delivery — **v0.13.867 accepted**: save build/test closure; accepted baseline **v0.13.866**, 658e7def5cf8a4079619077be62788e152852a88.
 
-## Поточний delivery: v0.13.866 — fail-closed save deletion results
+## Поточний delivery: v0.13.867 — build/test closure save-системи
+
+- [x] `BUILD-BASELINE-867` — exact primary/master/clean/ancestor і canonical Graphify update перевірено.
+- [x] `BUILD-TESTS-867` — повний `tests/run.sh`: початкова RAW contract помилка виправлена; фінально `all green`.
+- [x] `BUILD-COMPILE-867` — save cleanup/include/account/result compile regressions виправлено мінімально; WSL `ReleaseWithInstall` завершив `[100%] Built target sphaira_nro`.
+- [x] `BUILD-DIFF-867` — `git diff --check` без whitespace errors.
+- [x] `DOCS-BUMP-867` — версію `.866` → `.867`, чотири delivery-документи синхронізовано, focused commit створено без push.
+- [ ] `HW-867` — disposable Switch: ZIP/folder restore, backup publication, live/archive/profile deletion failures/cancel, read-only MTP Saves усіх семи типів.
+
+## Попередній delivery: v0.13.866 — fail-closed save deletion results
 
 - [x] `SAVE-DELETE-RESEARCH-866` — primary/master/clean/ancestor, canonical Graphify refresh/query and exact UI/profile/live/archive delete callers reviewed; one P1 false-success/exact-target defect proven, no build/product edit.
 - [x] `SAVE-DELETE-POLICY-866` — exact retained space+nonzero save ID only, no attribute fallback; propagate real live/archive/cancel failure and never emit success after any requested deletion failure.

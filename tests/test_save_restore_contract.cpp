@@ -73,21 +73,20 @@ static int test_preflight_ordering_contract() {
     CHECK(rsz_body.find("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary") != std::string::npos);
     CHECK(rsz_body.find("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true") != std::string::npos);
 
-    // 4. Menu::RestoreSaveInternal delegates to RestoreSaveZip and has no ZIP lifecycle after RAW branch
+    // 4. Menu::RestoreSaveInternal refuses unsafe RAW containers and delegates ZIP restore
     const auto bsi_pos = save_menu_code.find("Result Menu::BackupSaveInternal(", rsi_pos);
     CHECK(bsi_pos != std::string::npos);
     const std::string rsi_body = save_menu_code.substr(rsi_pos, bsi_pos - rsi_pos);
 
     CHECK(rsi_body.find("return RestoreSaveZip(pbox, e, path") != std::string::npos);
 
-    const auto raw_end = rsi_body.find("log_write(\"finished raw save restore\\n\");");
-    CHECK(raw_end != std::string::npos);
-    const std::string rsi_after_raw = rsi_body.substr(raw_end);
-    CHECK(rsi_after_raw.find("TransferUnzipPreflight") == std::string::npos);
-    CHECK(rsi_after_raw.find("fsExtendSaveDataFileSystem") == std::string::npos);
-    CHECK(rsi_after_raw.find("DeleteAllCollections") == std::string::npos);
-    CHECK(rsi_after_raw.find("TransferUnzipAll") == std::string::npos);
-    CHECK(rsi_after_raw.find("save_fs.Commit()") == std::string::npos);
+    CHECK(rsi_body.find("return Result_RawSaveRestoreUnsupported;") != std::string::npos);
+    CHECK(rsi_body.find("finished raw save restore") == std::string::npos);
+    CHECK(rsi_body.find("TransferUnzipPreflight") == std::string::npos);
+    CHECK(rsi_body.find("fsExtendSaveDataFileSystem") == std::string::npos);
+    CHECK(rsi_body.find("DeleteAllCollections") == std::string::npos);
+    CHECK(rsi_body.find("TransferUnzipAll") == std::string::npos);
+    CHECK(rsi_body.find("save_fs.Commit()") == std::string::npos);
 
     // 5. Verify File Browser restore calls the shared function and removes local ZIP restore
     const std::string fb_code = read_file_to_string("sphaira/source/ui/menus/filebrowser/filebrowser_ops.cpp");
