@@ -107,10 +107,11 @@ def test_source_contracts() -> None:
     check("ReadArchiveSaveMetadata(" in hpp_src and "-> ArchiveMetaStatus" in hpp_src,
           "save_paths.hpp must declare ReadArchiveSaveMetadata")
 
-    # 1.2 save_paths.cpp implementations & declaration order
-    paths_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_paths.cpp")
-    with open(paths_cpp_path, "r", encoding="utf-8") as f:
-        paths_src = f.read()
+    # 1.2 Save metadata and backup inspection implementations & declaration order
+    paths_src = ""
+    for unit in ["save_metadata_decoders.cpp", "save_archive_metadata.cpp", "save_backup_inspection.cpp"]:
+        with open(os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", unit), "r", encoding="utf-8") as f:
+            paths_src += f.read() + "\n"
 
     # BLOCKER 1 check: CompareCommonSourceFields defined before DecodeJksv86WithAmbiguityCheck
     pos_compare = paths_src.find("auto CompareCommonSourceFields(")

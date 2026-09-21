@@ -754,8 +754,8 @@ def test_static_source_contracts() -> None:
     check("FormatBackupRankMarker" not in sp_hpp,
           "save_paths.hpp must NOT declare FormatBackupRankMarker")
 
-    # 1.4 save_paths.cpp rank provenance & key format
-    sp_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_paths.cpp")
+    # 1.4 save_backup_inspection.cpp rank provenance & key format
+    sp_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_inspection.cpp")
     with open(sp_cpp_path, "r", encoding="utf-8") as f:
         sp_cpp = f.read()
     check("out.rank_known = true;" in sp_cpp,

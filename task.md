@@ -1,33 +1,34 @@
 # task.md
 
-Версія коду: **v0.13.871**.
+Версія коду: **v0.13.872**.
 
-## Поточний delivery: v0.13.872 — split Save paths and metadata
+## Поточний delivery: v0.13.873 — split Save menu UI/catalog
 
-- [ ] `SPLIT-PATHS-872` — path naming/building лишилося в компактному `save_paths.cpp`.
-- [ ] `SPLIT-META-872` — metadata wire decode/read винесено в cohesive unit ≤600 рядків.
-- [ ] `SPLIT-DISCOVERY-872` — backup search/discovery та inspection/integrity рознесено за стабільними відповідальностями.
-- [ ] `CMAKE-872` — explicit source list оновлено без нового build abstraction.
-- [ ] `CONTRACT-872` — save formats, filters, grouping, paths, restore admission і callers не змінилися.
-- [ ] `SIZE-872` — усі нові source/test/instruction files ≤600 рядків; legacy unit materially reduced.
-- [ ] `VERIFY-872` — 18 suites, dead-symbol, JSON parity, diff check і фінальний WSL `ReleaseWithInstall` PASS.
-- [ ] `DOCS-BUMP-872` — version/docs синхронізовано.
-- [ ] `COMMIT-872` — focused primary-master commit без push.
+- [ ] `MAP-MENU-873` — callers/state і природні межі `save_menu.cpp` підтверджені graph + source review.
+- [ ] `SPLIT-CATALOG-873` — scan/group/catalog helpers винесено без semantic change.
+- [ ] `SPLIT-UI-873` — lifecycle/layout/callback responsibilities лишилися cohesive.
+- [ ] `API-873` — public `Menu` API, routes, filters, ordering і dialogs стабільні.
+- [ ] `CMAKE-873` — нові implementation units явно зареєстровані.
+- [ ] `SIZE-873` — усі нові C/C++ files ≤600 рядків; legacy unit materially reduced.
+- [ ] `VERIFY-873` — compiler-free gates і фінальний WSL `ReleaseWithInstall` PASS.
+- [ ] `DOCS-BUMP-873` — version/docs синхронізовано.
+- [ ] `COMMIT-873` — focused primary-master commit без push.
 
-## Попередній delivery: v0.13.871 — виконано
+## Попередній delivery: v0.13.872 — виконано
 
-- [x] `DEAD-ADVANCED-871`
-- [x] `DEAD-STREAM-MENU-871`
-- [x] `DEAD-STREAM-FILE-871`
-- [x] `DEAD-WEBDAV-871`
-- [x] `BUILD-CLOSURE-871` — виправлено accumulated Save compile blockers.
-- [x] `VERIFY-871` — `[100%] Built target sphaira_nro`, 18/18 suites, dead-symbol 981, EN/UK 2549/2549, diff check PASS.
-- [x] `DOCS-BUMP-871`
-- [x] `COMMIT-871`
+- [x] `SPLIT-PATHS-872`
+- [x] `SPLIT-META-872`
+- [x] `SPLIT-DISCOVERY-872`
+- [x] `CMAKE-872`
+- [x] `CONTRACT-872`
+- [x] `SIZE-872`
+- [x] `VERIFY-872` — `[100%] Built target sphaira_nro`, 18/18 suites, dead-symbol 981, EN/UK 2549/2549, diff check PASS.
+- [x] `DOCS-BUMP-872`
+- [x] `COMMIT-872`
 
-## Після v0.13.871
+## Після v0.13.872
 
-- [ ] `SPLIT-SAVE-UI-ACTIONS`
+- [ ] `SPLIT-SAVE-OPS`
 - [ ] `SPLIT-WEB`
 - [ ] `SPLIT-APP`
 - [ ] `SPLIT-TRANSFER-YATI`

@@ -65,8 +65,8 @@ def test_static_source_contracts() -> None:
     print("[1] Running static source contracts for v0.13.868...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)")),
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, or 0.13.871")
+    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)")),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, or 0.13.872")
 
     path_util_hpp = read_file("sphaira", "include", "path_util.hpp")
     check("inline auto IsDbiRootMarkerEntry(" in path_util_hpp,
@@ -82,7 +82,11 @@ def test_static_source_contracts() -> None:
     check("s64 payload_count{0};" in save_paths_hpp,
           "save_paths.hpp must declare payload_count in DecodedSaveMetadata and BackupArchiveInfo")
 
-    save_paths_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_paths.cpp")
+    save_paths_cpp = (
+        read_file("sphaira", "source", "ui", "menus", "save", "save_paths.cpp") + "\n" +
+        read_file("sphaira", "source", "ui", "menus", "save", "save_archive_metadata.cpp") + "\n" +
+        read_file("sphaira", "source", "ui", "menus", "save", "save_backup_inspection.cpp")
+    )
     check("path::IsDbiRootMarkerEntry(raw, info.uncompressed_size, info.external_fa)" in save_paths_cpp,
           "save_paths.cpp ReadArchiveSaveMetadata must validate marker with IsDbiRootMarkerEntry")
     check("seen_dbi_root_marker" in save_paths_cpp,

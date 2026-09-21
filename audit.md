@@ -1,14 +1,15 @@
 # audit.md
 
-Версія коду: **v0.13.871**. Дата аудиту: 2026-09-21.
+Версія коду: **v0.13.872**. Дата аудиту: 2026-09-21.
 
 ## Поточний стан
 
-- v0.13.871 прибрала 540 net tracked lines у delivery diff, включно з 550+ рядками dead product code; два непотрібні StreamFile units видалено.
-- Full WSL `ReleaseWithInstall`, 18/18 Python contracts, dead-symbol gate і EN/UK parity PASS.
-- Save build-closure units лишилися 592/598 рядків.
+- v0.13.872 розклала `save_paths.cpp` з 1 794 до 463 рядків на path/config, discovery, metadata decode, archive admission та backup inspection.
+- Нові C/C++ units: 84, 109, 292, 353 і 555 рядків; public API стабільний, нових abstractions/dependencies немає.
+- Full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
+- Save build-closure units лишилися 591/597 рядків.
 - 35 oversized files знаходяться в `sphaira/source/ui/menus`.
-- Graphify після delivery: 13 261 nodes, 26 503 edges, 674 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
+- Graphify після delivery: 13 279 nodes, 26 515 edges, 662 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
 - Активні delivery-документи скорочено; попередня історія лишається в Git без потрійного дублювання.
 
 ## Черга — виконувати серійно
@@ -21,13 +22,12 @@
 4. `App::GetWebdavUrl/User/Pass` мають лише declaration + definition; активні callers використовують `GetWebdavUrlName` та `location::Entry`.
 5. Фактичний результат: no new dependencies/abstractions, full build PASS.
 
-### A2 — Saves structural split — NEXT (`v0.13.872`)
+### A2 — Saves structural split — IN PROGRESS
 
-Три legacy units: `save_menu.cpp` 2 788, `save_menu_ops.cpp` 2 696, `save_paths.cpp` 1 794 рядки. Рознести без behavior change:
+Legacy units: `save_menu.cpp` 2 788 і `save_menu_ops.cpp` 2 696 рядків. `save_paths.cpp` split завершено у v0.13.872. Наступне:
 
-- view/layout, filters, catalog, actions, restore-target UI;
-- backup, ZIP restore, folder restore, remote sync, deletion;
-- path naming, metadata decode, discovery, integrity/group formatting.
+- v0.13.873: view/layout, filters і backup catalog зі стабільним `Menu` API;
+- наступний delivery: backup, ZIP/folder restore, remote sync і deletion з `save_menu_ops.cpp`.
 
 Не вводити service interfaces/factories. Existing `Menu`/free-function APIs спочатку лишити стабільними.
 

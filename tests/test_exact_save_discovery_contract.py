@@ -38,8 +38,8 @@ def test_source_contracts():
     check("auto DiscoverSaveDataInfo(const AccountUid* uid_filter = nullptr, const std::optional<u8>& type_filter = std::nullopt) -> std::vector<FsSaveDataInfo>;" in paths_hpp_src,
           "save_paths.hpp must declare DiscoverSaveDataInfo with optional uid_filter and type_filter")
 
-    # 3. save_paths.cpp: DiscoverSaveDataInfo implementation and probe spaces
-    save_paths_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_paths.cpp")
+    # 3. save_discovery.cpp: DiscoverSaveDataInfo implementation and probe spaces
+    save_paths_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_discovery.cpp")
     with open(save_paths_cpp, "r", encoding="utf-8") as f:
         paths_cpp_src = f.read()
 

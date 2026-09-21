@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.871** (2026-09-21).
+Актуальний shipped delivery — **v0.13.872** (2026-09-21).
+
+## v0.13.872 — Save paths structural split
+
+`save_paths.cpp` зменшено з 1 794 до 463 рядків без зміни public `save_paths.hpp`. Exact installed-save discovery винесено в `save_discovery.cpp`; bounded JKSV/Sphaira/DBI decoders — у `save_metadata_decoders.cpp`; archive metadata admission — у `save_archive_metadata.cpp`; backup inspection, grouping та ZIP integrity — у `save_backup_inspection.cpp`. Спільні concrete helpers живуть у приватному `save_internal.hpp`; нових interfaces, factories або dependencies немає.
+
+Усі нові C/C++ units мають 84–555 рядків. Під час фінальної збірки додано лише прямий `log.hpp`, якого бракувало після перенесення discovery. WSL `ReleaseWithInstall` завершився `[100%] Built target sphaira_nro`; 18/18 repository contract suites, dead-symbol gate (981 declarations), EN/UK exact 2549/2549 parity та `git diff --check` пройшли. Device/runtime перевірка не виконувалася; дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.871 — dead-code cleanup and build closure
 
