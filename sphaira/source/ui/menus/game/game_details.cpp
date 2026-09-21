@@ -306,9 +306,9 @@ struct DbiDetailsMenu final : MenuBase {
         }
 
         if (!CurrentCount()) {
-            const char* empty = m_tab == Tab::Content ? "No installed components" :
-                (m_tab == Tab::Tickets ? "No rights IDs or tickets" : "No save data");
-            gfx::drawText(vg, 640, 475, 22.f, info, empty, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            const auto empty = m_tab == Tab::Content ? "No installed components"_i18n :
+                (m_tab == Tab::Tickets ? "No rights IDs or tickets"_i18n : "No save data found for this title"_i18n);
+            gfx::drawText(vg, 640, 475, 22.f, info, empty.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             return;
         }
 
@@ -358,12 +358,29 @@ struct DbiDetailsMenu final : MenuBase {
                     "%s", row.ticket_size ? "Common" : (row.personalized ? "Personalized" : "Missing"));
             } else {
                 const auto& row = m_saves[index];
-                gfx::drawTextArgs(vg, v.x + 15, v.y + 9, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
+                const auto space_label = "[" + GetSaveSpaceLabel(row.info.save_data_space_id) + "]";
+                gfx::drawTextArgs(vg, v.x + 15, v.y + 7, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, primary,
                     "%s", row.account.c_str());
-                gfx::drawTextArgs(vg, v.x + 350, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
-                    "%s | %s", save::GetSaveTypeLabel(row.info.save_data_type), FormatBytes(row.info.size).c_str());
-                gfx::drawTextArgs(vg, v.x + 760, v.y + 10, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
-                    "Save ID %016lX", row.info.save_data_id);
+                gfx::drawTextArgs(vg, v.x + 280, v.y + 8, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    "%s  %s", space_label.c_str(), i18n::get(save::GetSaveTypeLabel(row.info.save_data_type)).c_str());
+                const auto rank_str = row.info.save_data_rank == FsSaveDataRank_Primary ? "Primary"_i18n : "Secondary"_i18n;
+                gfx::drawTextArgs(vg, v.x + 560, v.y + 8, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    ("Rank: %s · Index: %u"_i18n).c_str(), rank_str.c_str(), row.info.save_data_index);
+                gfx::drawTextArgs(vg, v.x + 860, v.y + 8, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                    ("Save ID: %016lX"_i18n).c_str(), row.info.save_data_id);
+
+                if (row.has_extra) {
+                    gfx::drawTextArgs(vg, v.x + 15, v.y + 31, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, secondary,
+                        ("Allocated: %s · Data: %s · Journal: %s"_i18n).c_str(),
+                        FormatBytes(row.info.size).c_str(),
+                        FormatBytes(row.extra.data_size).c_str(),
+                        FormatBytes(row.extra.journal_size).c_str());
+                } else {
+                    gfx::drawTextArgs(vg, v.x + 15, v.y + 31, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+                        theme->GetColour(ThemeEntryID_ERROR),
+                        ("Allocated: %s · Extra data unreadable (0x%X)"_i18n).c_str(),
+                        FormatBytes(row.info.size).c_str(), row.extra_rc);
+                }
             }
         });
     }
@@ -399,6 +416,13 @@ private:
         m_row_index = 0;
         m_list->SetYoff(0);
         SetHeaderFocus(false);
+        if (m_tab == Tab::Saves) {
+            SetAction(Button::X, Action{"Create save slot"_i18n, [this](){
+                PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
+            }});
+        } else {
+            RemoveAction(Button::X);
+        }
     }
 
     auto TabHeaderItem() const -> u8 {
@@ -458,7 +482,13 @@ private:
             case HeaderItem_Mods: OpenModsFolder(); break;
             case HeaderItem_Components: SetTab(Tab::Content); break;
             case HeaderItem_Tickets: SetTab(Tab::Tickets); break;
-            case HeaderItem_Saves: SetTab(Tab::Saves); break;
+            case HeaderItem_Saves: {
+                if (m_tab == Tab::Saves) {
+                    PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
+                } else {
+                    SetTab(Tab::Saves);
+                }
+            } break;
         }
     }
 
@@ -593,46 +623,7 @@ private:
     }
 
     void LoadSaves(u64 app_id) {
-        constexpr std::array<FsSaveDataSpaceId, 4> spaces{
-            FsSaveDataSpaceId_System, FsSaveDataSpaceId_User,
-            FsSaveDataSpaceId_Temporary, FsSaveDataSpaceId_SdUser
-        };
-        const auto accounts = App::GetAccountList();
-
-        for (const auto space : spaces) {
-            FsSaveDataFilter filter{};
-            filter.attr.application_id = app_id;
-            filter.filter_by_application_id = true;
-
-            FsSaveDataInfoReader reader;
-            if (R_FAILED(fsOpenSaveDataInfoReaderWithFilter(&reader, space, &filter))) continue;
-
-            std::array<FsSaveDataInfo, 32> rows{};
-            while (true) {
-                s64 read{};
-                if (R_FAILED(fsSaveDataInfoReaderRead(&reader, rows.data(), rows.size(), &read)) || !read) break;
-                for (s64 i = 0; i < read; i++) {
-                    const auto& save_info = rows[i];
-                    if (save_info.application_id != app_id) continue;
-                    if (std::ranges::any_of(m_saves, [&save_info](const auto& row){
-                        return row.info.save_data_id == save_info.save_data_id;
-                    })) continue;
-
-                    GameSaveRow row{};
-                    row.info = save_info;
-                    row.account = save::GetSaveTypeLabel(save_info.save_data_type);
-                    if (save_info.save_data_type == FsSaveDataType_Account) {
-                        const auto account = std::ranges::find_if(accounts, [&save_info](const auto& candidate){
-                            return !std::memcmp(&candidate.uid, &save_info.uid, sizeof(save_info.uid));
-                        });
-                        if (account != accounts.end()) row.account = account->nickname;
-                    }
-                    m_save_allocated_size += save_info.size;
-                    m_saves.emplace_back(std::move(row));
-                }
-            }
-            fsSaveDataInfoReaderClose(&reader);
-        }
+        LoadGameSaves(app_id, m_saves, m_save_allocated_size);
     }
 
     // mount this component's NCA files as a read-only fs and open them in the
@@ -651,7 +642,21 @@ private:
     }
 
     void ShowCurrentActions() {
-        if (!CurrentCount()) return;
+        if (!CurrentCount()) {
+            if (m_tab == Tab::Saves) {
+                auto options = std::make_unique<Sidebar>("Save Actions"_i18n, Sidebar::Side::RIGHT);
+                ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+                options->Add<SidebarEntryCallback>("Create save slot"_i18n, [this](){
+                    PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
+                }, "Create a new save data slot for a local user."_i18n)->SetIcon(ActionIcon::Save);
+
+                options->Add<SidebarEntryCallback>("Backup and restore"_i18n, [app_id = CurrentEntry().app_id](){
+                    App::Push<save::Menu>(MenuFlag_None, app_id);
+                }, "Open the saves menu showing only this game."_i18n);
+            }
+            return;
+        }
         if (m_tab == Tab::Content) {
             const auto component = m_components[m_row_index];
             auto options = std::make_unique<Sidebar>("Component Actions"_i18n, Sidebar::Side::RIGHT);
@@ -704,19 +709,20 @@ private:
             auto options = std::make_unique<Sidebar>("Save Actions"_i18n, Sidebar::Side::RIGHT);
             ON_SCOPE_EXIT(App::Push(std::move(options)));
 
-            // backup/restore live in the saves menu (with its own locations,
-            // compression and WebDAV sync); open it filtered to this game
-            // rather than growing a second copy of that machinery here.
             options->Add<SidebarEntryCallback>("Backup and restore"_i18n, [app_id = CurrentEntry().app_id](){
                 App::Push<save::Menu>(MenuFlag_None, app_id);
             }, "Open the saves menu showing only this game."_i18n);
 
+            options->Add<SidebarEntryCallback>("Increase save size"_i18n, [this, row](){
+                PromptIncreaseSaveSize(CurrentEntry().GetName(), row, [this](){ LoadGame(); });
+            }, "Increase the allocated data size for this save slot."_i18n)->SetIcon(ActionIcon::Move);
+
+            options->Add<SidebarEntryCallback>("Create save slot"_i18n, [this](){
+                PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
+            }, "Create a new save data slot for a local user."_i18n)->SetIcon(ActionIcon::Save);
+
             options->Add<SidebarEntryCallback>("Save information"_i18n, [row](){
-                char message[512];
-                std::snprintf(message, sizeof(message), "Account: %s\nType: %s\nSave ID: %016lX\nSize: %s\nStorage space: %u",
-                    row.account.c_str(), save::GetSaveTypeLabel(row.info.save_data_type), row.info.save_data_id,
-                    FormatBytes(row.info.size).c_str(), row.info.save_data_space_id);
-                App::Push<OptionBox>(message, "OK"_i18n);
+                App::Push<OptionBox>(FormatSaveInfoMessage(row), "OK"_i18n);
             }, "Show the raw save data metadata."_i18n);
         }
     }

@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.869** (2026-09-21). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.870** (2026-09-21). History: archive/walkthrough_archive.md.
+
+## v0.13.870 — Game Tools save-slot manager
+
+The selected-game `Saves` tab now consumes shared authoritative discovery and retains every complete `FsSaveDataInfo`. Each row performs an exact extra-data read with the returned space and save ID, displays nickname or type plus space/rank/index/ID and allocated/data/journal sizes, never displays Account UID, and reports unreadable extra data without redirecting to another slot.
+
+Create is deliberately limited to installed-title Account/User/Primary/index-0 slots and an explicitly selected local nickname. Safe NACP defaults and aligned +16/+64 MiB data presets flow through planning, confirmation and `CreateSaveDataChecked`. Selected-row growth retains the exact discovered identity and current extra sizes, confirms an aligned increase, and calls only `ExtendSaveDataChecked`. Cancellation, invalid sizes and no-op remain pre-IPC; verified success and post-IPC uncertainty trigger fresh authoritative discovery.
+
+The orchestration lives in a 372-line game-side helper with a 36-line header; the connected compiler-free contract is 477 lines. After correcting `FormatBytes` namespace resolution, localizing rank/index/save-ID templates and strengthening UI-state/no-op fixtures, senior ran all 18 Python suites, dead-symbol validation (983 declarations), EN/UK JSON parse and exact 2549-key parity, and `git diff --check`: all passed. No configure, compile, WSL/NRO build, compiled C++ test, libnx IPC or Switch hardware run was performed. The authorized `TegraExplorer.bin` update remains outside the delivery and unvalidated.
 
 ## v0.13.869 — shared verified save-slot backend
 

@@ -58,8 +58,8 @@ def test_source_wiring_contracts() -> None:
 
     # A. CMakeLists.txt version and source file registration
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.869)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869")
+    check("set(sphaira_VERSION 0.13.869)" in cmake_src or "set(sphaira_VERSION 0.13.870)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869 or 0.13.870")
     check("source/ui/menus/save/save_slot_backend.cpp" in cmake_src,
           "sphaira/CMakeLists.txt must compile save_slot_backend.cpp")
 
@@ -184,10 +184,10 @@ def test_source_wiring_contracts() -> None:
     check("is_local_account" not in route_cpp,
           "save_restore_route.cpp must not bypass account picker for local backup UIDs")
 
-    # I. Grow backend has NO UI call sites yet and NO Game Tools UI was added
+    # I. Grow backend UI call sites are authorized only in game_save_manager.cpp
     for root, _, files in os.walk(os.path.join(REPO_ROOT, "sphaira", "source", "ui")):
         for f in files:
-            if f.endswith((".cpp", ".hpp")) and f != "save_slot_backend.cpp":
+            if f.endswith((".cpp", ".hpp")) and f not in ("save_slot_backend.cpp", "game_save_manager.cpp"):
                 p = os.path.join(root, f)
                 with open(p, "r", encoding="utf-8") as sf:
                     src = sf.read()

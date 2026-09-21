@@ -1,6 +1,14 @@
-Поточний delivery — **v0.13.869 accepted**: спільний verified backend створює Account/User/Primary/index-0 save slots, перевіряє create/grow IPC і дозволяє restore створити відсутній слот лише після повної перевірки exact backup; accepted baseline **v0.13.868**, HEAD d1c878e77c69ddc49244a52d9d85faae7a9f8919.
+Поточний delivery — **v0.13.870 accepted**: Game Details `Saves` показує authoritative exact slots і додає checked Account-slot create/grow UI над shared backend v0.13.869; accepted baseline **v0.13.869**, HEAD c04f7f495b6c8c8247a3d065a2bfc732a291d590.
 
-## Поточний delivery: v0.13.869 — shared verified save-slot backend
+## Поточний delivery: v0.13.870 — Game Tools save-slot manager
+
+`Game Tools → Games → Game Details → Saves` тепер використовує shared `DiscoverSaveDataInfo`, зберігає повний `FsSaveDataInfo` і exact extra-data result, показує nickname/type, space, rank, index, save ID та allocated/data/journal sizes без UID. Extra-data failure лишається видимим і блокує grow без fallback.
+
+Create обмежено installed Account/User/Primary/index-0 і explicit nickname-only local user. NACP defaults та aligned +16/+64 MiB presets проходять plan → confirm → worker → `CreateSaveDataChecked`; grow передає retained exact identity в `ExtendSaveDataChecked`. Refresh виконується лише після verified success або post-IPC uncertainty; cancellation/pre-IPC/no-op не мутують і не refresh-ять.
+
+Acceptance: senior перевірив actual diff/callers і після одного Gemini correction запустив 18/18 compiler-free Python suites, dead-symbol gate (983 declarations), JSON parse/exact EN-UK parity (2549/2549) і `git diff --check`: PASS. Нові header/source/test мають 36/372/477 рядків. Compile/WSL/NRO/libnx/Switch runtime не запускалися; `TegraExplorer.bin` виключено з delivery.
+
+## Попередній delivery: v0.13.869 — shared verified save-slot backend
 
 Один backend тепер планує Account save з установленого NACP та, за наявності, перевірених archive metadata, створює слот з explicit UID/owner/sizes/available-size/flags і приймає результат лише після exact rediscovery та extra-data verification. Той самий backend надає checked grow: concrete actual space, live attribute/size readback, alignment/non-shrink/capacity guards, один IPC і post-verification; UI growth навмисно не додано.
 

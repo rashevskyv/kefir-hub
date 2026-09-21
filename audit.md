@@ -1,6 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.869**. Дата: 2026-09-21.
+Версія коду: **v0.13.870**. Дата: 2026-09-21.
+
+Accepted v0.13.870: the queued Game Tools save-slot UI is complete. Selected-game Saves now reuses shared discovery, retains full exact identity and extra-read results, shows non-secret space/type/rank/index/ID and actual sizes, and refuses unreadable grow targets without remap. Account/User/Primary/index-0 creation uses explicit nickname-only user selection, NACP defaults or bounded aligned presets, confirmation and the checked backend. Growth routes the retained exact target through checked extend; only verified or post-IPC-uncertain outcomes refresh authoritative inventory.
+
+Senior actual-diff/caller review plus 18/18 compiler-free Python suites, dead-symbol gate (983 declarations), exact EN/UK JSON parity (2549 keys) and `git diff --check` passed after one focused correction. New header/source/test are 36/372/477 lines. No compile/WSL/NRO/libnx IPC/Switch hardware proof. `TegraExplorer.bin` remains an authorized background change outside this delivery. Remaining save-system boundary is authenticated RAW container support plus real-device validation; create/grow UI is no longer queued.
 
 Accepted v0.13.869: the previously queued safe create/grow contract is complete. One shared backend plans installed-title Account/User/Primary/index-0 creation from NACP plus validated archive sizing, passes explicit UID/owner/available-size/flags, and accepts create only after exact discovery and extra-data verification. Checked growth is reusable but has no new UI: concrete retained space/ID, live identity/sizes, alignment, non-shrink delta and target capacity are verified before one IPC and again afterward.
 

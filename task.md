@@ -1,6 +1,18 @@
-Актуальний delivery — **v0.13.869 accepted**: shared verified Account save-slot create/grow backend and restore-time creation; accepted baseline **v0.13.868**, d1c878e77c69ddc49244a52d9d85faae7a9f8919.
+Актуальний delivery — **v0.13.870 accepted**: selected-game Saves inventory plus checked Account slot create/grow UI over the shared backend; accepted baseline **v0.13.869**, c04f7f495b6c8c8247a3d065a2bfc732a291d590.
 
-## Поточний delivery: v0.13.869 — shared verified save-slot backend
+## Поточний delivery: v0.13.870 — Game Tools save-slot manager
+
+- [x] `SAVE-INVENTORY-870` — selected-title Saves роутиться через shared discovery; full `FsSaveDataInfo`, exact space/ID extra read і read failure зберігаються без remap/fallback/UID display.
+- [x] `SAVE-CREATE-UI-870` — nickname-only local picker, NACP defaults, aligned +16/+64 MiB presets, duplicate/contract guards і plan → confirm → worker → checked create.
+- [x] `SAVE-GROW-UI-870` — selected exact row retains identity/current extra sizes; shrink/no-op/overflow/cancel fail before IPC; checked grow uses actual space/save ID.
+- [x] `SAVE-REFRESH-870` — authoritative refresh only after verified success or post-IPC uncertainty; no heuristic delete or stale-row patching.
+- [x] `SAVE-I18N-870` — all new manager strings localized in EN/UK with exact 2549-key parity; nickname/type/space/rank/index/ID/sizes visible, UID hidden.
+- [x] `SAVE-CONTRACT-870` — focused 477-line connected source/behavior contract covers identity, orchestration, presets, cancellation/no-op/error and refresh gates; legacy Game/restore callers remain shared-backend routes.
+- [x] `SAVE-VERIFY-870` — senior actual diff/caller review; 18/18 Python suites, dead-symbol gate (983), JSON parity and diff check PASS; no compile/runtime claims.
+- [x] `DOCS-BUMP-870` — `.869` → `.870`, four delivery documents synchronized and focused primary-master commit created without push.
+- [ ] `HW-870` — user compile plus disposable Switch create/default/preset/cancel/duplicate, grow/no-op/error, extra-read failure and authoritative refresh checks.
+
+## Попередній delivery: v0.13.869 — shared verified save-slot backend
 
 - [x] `SAVE-CREATE-869` — Account/User/Primary/index-0 request planned from installed NACP plus validated archive sizing; explicit UID, owner, available size and flags passed to create IPC.
 - [x] `SAVE-CREATE-VERIFY-869` — create succeeds only after exact rediscovery and live extra-data identity/size verification; IPC attempt and create success remain distinct.

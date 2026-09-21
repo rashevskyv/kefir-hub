@@ -7,6 +7,7 @@
 #include "title_info.hpp"
 #include "title_nsp.hpp"
 #include "ui/types.hpp"
+#include "ui/menus/game/game_save_manager.hpp"
 
 #include <array>
 #include <string>
@@ -54,10 +55,6 @@ struct GameTicketRow {
     bool personalized{};
 };
 
-struct GameSaveRow {
-    FsSaveDataInfo info{};
-    std::string account{};
-};
 
 auto ContentFlagFromMetaType(u8 meta_type) -> u32;
 void ProbeModsFolder(Entry& entry);
