@@ -359,29 +359,19 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
         }
     }
 
-    const auto fs = MakeFsForLocation(location);
-    bool any_zip = false;
-    for (size_t i = 0; i < sources.size(); i++) {
-        fs::FsPath file_path;
-        if (!sources[i].backup_path.empty()) {
-            file_path = sources[i].backup_path;
-        } else if (!FindLatestBackupPath(fs.get(), sources[i], backup_root, file_path)) {
-            continue;
-        }
-        if (!IsDisaSaveFile(fs.get(), file_path)) {
-            any_zip = true;
-            break;
+    for (const auto& src : sources) {
+        if (src.backup_members.empty()) {
+            App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+            return;
         }
     }
 
-    if (any_zip && haze::IsRunning()) {
+    if (haze::IsRunning()) {
         App::Push<OptionBox>("MTP is currently active. Please close the running game and disable MTP before restoring save data."_i18n, "OK"_i18n);
         return;
     }
 
-    const std::string prompt = any_zip
-        ? ("Restore selected saves?"_i18n + "\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n)
-        : ("Restore selected saves?"_i18n);
+    const std::string prompt = "Restore selected saves?"_i18n + "\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
     App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, sources = std::move(sources), targets = std::move(targets), location, backup_root](auto op_index) mutable {
         if (!op_index || *op_index != 1) return;
@@ -393,22 +383,27 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
         auto last_item_is_raw = std::make_shared<bool>(false);
 
         App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw](auto pbox) mutable -> Result {
-            const auto fs = MakeFsForLocation(location);
+            fs::FsStdio stdio_fs;
+            fs::FsNativeSd sd_fs;
 
             for (size_t i = 0; i < sources.size(); i++) {
                 auto& src = sources[i];
                 auto& dst = targets[i];
                 detail::LoadControlEntry(dst);
-
-                fs::FsPath file_path;
-                if (!src.backup_path.empty()) {
-                    file_path = src.backup_path;
-                } else if (!FindLatestBackupPath(fs.get(), src, backup_root, file_path)) {
-                    (*skipped)++;
-                    continue;
+                pbox->SetTitle(dst.GetName());
+                if (dst.image) {
+                    pbox->SetImage(dst.image);
+                } else if (auto data = title::Get(dst.application_id); data && !data->icon.empty()) {
+                    pbox->SetImageDataConst(data->icon);
+                } else {
+                    pbox->SetImage(0);
                 }
+                pbox->UpdateTransfer(i + 1, sources.size());
 
-                const bool is_raw = IsDisaSaveFile(fs.get(), file_path);
+                const fs::FsPath file_path = src.backup_members.front().path;
+                fs::Fs* probe_fs = file_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+
+                const bool is_raw = IsDisaSaveFile(probe_fs, file_path);
                 *last_item_is_raw = is_raw;
                 *last_mutation_started = false;
 
@@ -416,6 +411,16 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                     return Result_RawSaveRestoreUnsupported;
                 }
 
+                const char* filename = std::strrchr(file_path.s, '/');
+                filename = filename ? filename + 1 : file_path.s;
+                BackupArchiveInfo check_info{};
+                if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
+                    BackupGroupKey(check_info) != BackupGroupKey(src)) {
+                    log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
+                    return FsError_PathNotFound;
+                }
+
+                *last_mutation_started = false;
                 pbox->SetActionName("Restore"_i18n);
                 fs::FsPath item_recovery_path;
                 bool item_mutation_started = false;
@@ -453,13 +458,19 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
             if (!recovery_paths->empty()) {
                 std::string prefix;
                 if (R_SUCCEEDED(rc)) {
-                    prefix = "Restore completed.\nSafety recovery archive(s):\n"_i18n;
+                    prefix = (recovery_paths->size() == 1)
+                        ? "Restore completed.\nSafety recovery archive:\n"_i18n
+                        : "Restore completed.\nSafety recovery archive(s):\n"_i18n;
                 } else if (*last_item_is_raw) {
                     prefix = "Restore stopped.\nSafety recovery archive(s) retained:\n"_i18n;
                 } else if (!*last_item_is_raw && *last_mutation_started) {
-                    prefix = "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n"_i18n;
+                    prefix = (recovery_paths->size() == 1)
+                        ? "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n"_i18n
+                        : "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n"_i18n;
                 } else {
-                    prefix = "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n"_i18n;
+                    prefix = (recovery_paths->size() == 1)
+                        ? "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n
+                        : "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n"_i18n;
                 }
                 std::string rec_msg = prefix;
                 for (const auto& rp : *recovery_paths) {
@@ -548,166 +559,17 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
     });
 }
 
-void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
-    // multi-select keeps the existing "latest of each" behaviour; the backup
-    // picker (and thus the remote pre-download) is only for a single save.
-    if (entries.size() != 1) {
-        RestoreSaves(std::move(entries), location, backup_root);
-        return;
-    }
 
-    Entry e = entries.front();
 
-    if (!App::GetSaveRestoreIncludeRemote()) {
-        ShowRestorePicker(std::move(e), location, backup_root, {});
-        return;
-    }
-
-    const auto webdav_locations = GetWebdavLocations();
-    if (webdav_locations.empty()) {
-        // toggle is on but nothing is configured: fall back to the local
-        // picker silently. Save Options -> Sync with remote already surfaces
-        // the "add a WebDAV location" warning for this same condition; a
-        // second OptionBox here only ended up hidden behind the picker we'd
-        // push right after it.
-        ShowRestorePicker(std::move(e), location, backup_root, {});
-        return;
-    }
-
-    // download-only sync for this save, then show the picker with anything that
-    // was pulled from the remote flagged. the picker is shown from the done
-    // callback so it runs on the UI thread after the transfer finishes.
-    const auto run = [this, e, location, backup_root](const location::Entry& loc) {
-        auto downloaded = std::make_shared<std::vector<std::string>>();
-        App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "",
-            [this, e, loc, location, backup_root, downloaded](auto pbox) mutable -> Result {
-                pbox->SetHideSpeed(true);
-                return DownloadRemoteBackupsForEntry(pbox, loc, location, e, backup_root, downloaded.get());
-            },
-            [this, e, location, backup_root, downloaded](Result rc) mutable {
-                if (R_FAILED(rc)) {
-                    App::PushErrorBox(rc, "Sync failed!"_i18n);
-                }
-                // show the picker regardless: on failure fall back to whatever
-                // backups are already on the console.
-                ShowRestorePicker(std::move(e), location, backup_root, std::move(*downloaded));
-            });
-    };
-
-    if (webdav_locations.size() == 1) {
-        run(webdav_locations.front());
-    } else {
-        PopupList::Items items;
-        for (const auto& loc : webdav_locations) {
-            std::string proto = loc.protocol;
-            if (proto.empty()) {
-                if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
-                else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav";
-            }
-            std::string proto_upper = proto;
-            std::transform(proto_upper.begin(), proto_upper.end(), proto_upper.begin(), ::toupper);
-            items.emplace_back(loc.name + " (" + proto_upper + ")");
-        }
-        App::Push<PopupList>("Select Sync Location"_i18n, items, [webdav_locations, run](auto op_index) {
-            if (op_index) {
-                run(webdav_locations[*op_index]);
-            }
-        });
-    }
-}
-
-void Menu::ShowRestorePicker(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names) {
-    detail::LoadControlEntry(e);
-
-    // CollectBackups scans every backup directory/format and, for Account/Cache
-    // saves, opens every matching dbi zip to verify it belongs to this entry -
-    // real directory/zip I/O that must not run on the render thread. Run it in
-    // a ProgressBox worker like every other backup/restore scan, and build the
-    // actual popup from the done callback (UI thread) once it's finished.
-    auto candidates = std::make_shared<std::vector<BackupCandidate>>();
-    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, candidates](auto pbox) mutable -> Result {
-        pbox->SetTitle(e.GetName());
-        const auto fs = MakeFsForLocation(location);
-        *candidates = CollectBackups(fs.get(), e, backup_root);
-        R_SUCCEED();
-    }, [this, e, location, backup_root, remote_names, candidates](Result rc) mutable {
-        if (R_FAILED(rc)) {
-            App::PushErrorBox(rc, "Restore failed!"_i18n);
-            return;
-        }
-        ShowRestorePickerPopup(std::move(e), location, backup_root, std::move(remote_names), std::move(*candidates));
+void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen) {
+    const bool in_retained = std::ranges::any_of(group.backup_members, [&](const auto& m) {
+        return m.path == chosen;
     });
-}
-
-void Menu::ShowRestorePickerPopup(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates) {
-    if (candidates.empty()) {
-        App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+    if (!in_retained) {
+        App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
         return;
     }
 
-    // exactly one archive: nothing to choose, restore it straight away.
-    if (candidates.size() == 1) {
-        RestoreSavesPicked(std::move(e), location, backup_root, candidates.front().path);
-        return;
-    }
-
-    const std::set<std::string> remote_set{remote_names.begin(), remote_names.end()};
-
-    // ts == 0 means the name didn't parse to a date (renamed by hand or by
-    // another tool) - show the raw file name instead of a bogus all-zero date
-    // so the archive stays pickable rather than silently unlisted.
-    const auto label_for = [](const BackupCandidate& c) -> std::string {
-        if (c.ts == 0) {
-            const auto name = std::strrchr(c.path.s, '/');
-            return name ? name + 1 : c.path.s;
-        }
-        char buf[32];
-        std::snprintf(buf, sizeof(buf), "%04u.%02u.%02u  %02u:%02u:%02u",
-            (u32)(c.ts / 10000000000ULL), (u32)(c.ts / 100000000ULL % 100), (u32)(c.ts / 1000000ULL % 100),
-            (u32)(c.ts / 10000ULL % 100), (u32)(c.ts / 100ULL % 100), (u32)(c.ts % 100));
-        return buf;
-    };
-
-    std::vector<std::string> raw_labels;
-    raw_labels.reserve(candidates.size());
-    std::unordered_map<std::string, size_t> label_counts;
-    for (const auto& c : candidates) {
-        auto lbl = label_for(c);
-        label_counts[lbl]++;
-        raw_labels.emplace_back(std::move(lbl));
-    }
-
-    PopupList::Items items;
-    std::vector<bool> markers;
-    for (size_t i = 0; i < candidates.size(); i++) {
-        const auto& c = candidates[i];
-        const auto name = std::strrchr(c.path.s, '/');
-        const std::string base = name ? name + 1 : c.path.s;
-
-        std::string label = raw_labels[i];
-        if (label_counts[raw_labels[i]] > 1) {
-            label += " (" + std::string(c.path.s) + ")";
-        }
-
-        items.emplace_back(std::move(label));
-        markers.emplace_back(remote_set.contains(base));
-    }
-
-    const bool any_remote = std::ranges::any_of(markers, [](bool b){ return b; });
-
-    auto popup = std::make_unique<PopupList>("Select backup"_i18n, items,
-        [this, e, location, backup_root, candidates](auto op_index) mutable {
-            if (op_index) {
-                RestoreSavesPicked(std::move(e), location, backup_root, candidates[*op_index].path);
-            }
-        });
-    if (any_remote) {
-        popup->SetRemoteMarkers(std::move(markers));
-    }
-    App::Push(std::move(popup));
-}
-
-void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen) {
     fs::FsStdio stdio_fs;
     fs::FsNativeSd sd_fs;
     fs::Fs* probe_fs = chosen.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
@@ -715,6 +577,19 @@ void Menu::RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const
 
     if (is_raw) {
         App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
+        return;
+    }
+
+    const char* filename = std::strrchr(chosen.s, '/');
+    filename = filename ? filename + 1 : chosen.s;
+    BackupArchiveInfo check_info{};
+    if (!InspectBackupArchive(probe_fs, chosen, filename, group.dbi_game_dir, check_info)) {
+        App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+        return;
+    }
+
+    if (BackupGroupKey(check_info) != BackupGroupKey(group)) {
+        App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
         return;
     }
 
@@ -1586,6 +1461,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         return FsError_TargetLocked;
     }
     R_UNLESS(!e.is_backup, FsError_PathNotFound);
+    R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);
 
     SaveReaderContext source_reader_ctx;
     zlib_filefunc64_def file_func;
@@ -1628,12 +1504,8 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         R_THROW(R_FAILED(meta_rc) ? meta_rc : Result_UnzOpen2_64);
     }
 
-    std::optional<NXSaveMeta> meta{};
-
     if (e.save_data_id == 0) {
-        if (meta_status == ArchiveMetaStatus::Valid) {
-            meta = archive_meta.meta;
-        }
+        return FsError_PathNotFound;
     }
 
     R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);
@@ -1646,30 +1518,11 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     attr.save_data_rank = e.save_data_rank;
     attr.save_data_index = e.save_data_index;
 
-    s64 data_size = 0;
-    s64 journal_size = 0;
-    u64 owner_id = 0;
-    u32 flags = 0;
-
-    if (e.save_data_id == 0) {
-        if (meta.has_value()) {
-            if (!attr.application_id) attr.application_id = meta->attr.application_id;
-            if (!attr.system_save_data_id) attr.system_save_data_id = meta->attr.system_save_data_id;
-            if (!attr.save_data_type) attr.save_data_type = meta->attr.save_data_type;
-            if (attr.uid.uid[0] == 0 && attr.uid.uid[1] == 0) attr.uid = meta->attr.uid;
-            data_size = meta->data_size;
-            journal_size = meta->journal_size;
-            owner_id = meta->owner_id;
-            flags = meta->flags;
-        }
-    }
-
     const auto save_data_space_id = (e.save_data_id != 0)
         ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)
-        : (IsSystemLikeSave(attr.save_data_type) ? FsSaveDataSpaceId_System :
-           e.save_data_space_id ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id) : FsSaveDataSpaceId_User);
+        : static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
 
-    // Check if save filesystem already exists or needs to be created
+    // Check if save filesystem already exists
     bool save_exists = false;
     {
         fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
@@ -1681,55 +1534,30 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
             save_exists = R_SUCCEEDED(check_rc);
         }
     }
+    R_UNLESS(save_exists, FsError_PathNotFound);
+
     FsSaveDataExtraData live{};
-    if (!save_exists) {
-        log_write("save filesystem does not exist or cannot be opened, creating save...\n");
+    R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, e.save_data_id));
 
-        FsSaveDataCreationInfo creation_info{};
-        creation_info.save_data_size = data_size > 0 ? data_size : 0x200000;
-        creation_info.journal_size = journal_size > 0 ? journal_size : 0x200000;
-        creation_info.available_size = 0x4000;
-        creation_info.owner_id = owner_id ? owner_id : (attr.application_id ? attr.application_id : 0);
-        creation_info.flags = flags;
-        creation_info.save_data_space_id = save_data_space_id;
+    if (live.attr.application_id != attr.application_id ||
+        live.attr.uid.uid[0] != attr.uid.uid[0] ||
+        live.attr.uid.uid[1] != attr.uid.uid[1] ||
+        live.attr.system_save_data_id != attr.system_save_data_id ||
+        live.attr.save_data_type != attr.save_data_type ||
+        live.attr.save_data_rank != attr.save_data_rank ||
+        live.attr.save_data_index != attr.save_data_index) {
+        return FsError_PathNotFound;
+    }
 
-        FsSaveDataMetaInfo meta_info{};
-        meta_info.size = sizeof(FsSaveDataMetaInfo);
-        meta_info.type = FsSaveDataMetaType_None;
+    if (live.data_size <= 0 || live.journal_size < 0) {
+        return FsError_InvalidSize;
+    }
 
-        Result create_rc = 0;
-        if (IsSystemLikeSave(attr.save_data_type)) {
-            create_rc = fsCreateSaveDataFileSystemBySystemSaveDataId(&attr, &creation_info);
-        } else {
-            create_rc = fsCreateSaveDataFileSystem(&attr, &creation_info, &meta_info);
-        }
-        log_write("fsCreateSaveDataFileSystem result: 0x%x\n", create_rc);
-        if (R_FAILED(create_rc)) {
-            R_TRY(create_rc);
-        }
-    } else if (e.save_data_id != 0) {
-        R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, e.save_data_id));
-
-        if (live.attr.application_id != attr.application_id ||
-            live.attr.uid.uid[0] != attr.uid.uid[0] ||
-            live.attr.uid.uid[1] != attr.uid.uid[1] ||
-            live.attr.system_save_data_id != attr.system_save_data_id ||
-            live.attr.save_data_type != attr.save_data_type ||
-            live.attr.save_data_rank != attr.save_data_rank ||
-            live.attr.save_data_index != attr.save_data_index) {
-            return FsError_PathNotFound;
-        }
-
-        if (live.data_size <= 0 || live.journal_size < 0) {
-            return FsError_InvalidSize;
-        }
-
-        // ponytail: payload bytes are a rejection lower bound; implicit
-        // directories, allocation, and journal overhead are not accounted for;
-        // verified sizing/growth remains queued.
-        if (summary.file_bytes > live.data_size) {
-            return FsError_InvalidSize;
-        }
+    // ponytail: payload bytes are a rejection lower bound; implicit
+    // directories, allocation, and journal overhead are not accounted for;
+    // verified sizing/growth remains queued.
+    if (summary.file_bytes > live.data_size) {
+        return FsError_InvalidSize;
     }
 
     // Lexical RW scope: open the save file system for writing

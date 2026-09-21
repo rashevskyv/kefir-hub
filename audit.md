@@ -1,6 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.867**. Дата: 2026-09-20.
+Версія коду: **v0.13.868**. Дата: 2026-09-21.
+
+Accepted v0.13.868: `A1` complete. Exact DBI `//` marker admission is fail-closed and CRC-checked; metadata-only save archives are refused; `/DBISaves` joins `/switch/DBI/saves`; restore UI paths share one exact retained-member route with final identity reinspection and no automatic target creation. Generic ZIP semantics remain unchanged. New route/test files are 454/586 physical lines (≤ 600); oversized legacy save units were reduced rather than expanded.
+
+Gemini reports 16/16 compiler-free suites, dead-symbol gate (982 declarations), JSON parity and diff check PASS. Senior reviewed actual source and ran diff check only. Compile/NRO/libnx/Switch hardware remain unverified. Next serial save item is the separately proven safe create/grow backend and UI.
 
 Accepted v0.13.867 after the dedicated test-build workflow. Exact primary/master/clean baseline and ancestry were verified, then the full compiler-free suite and WSL `ReleaseWithInstall` exposed accumulated save closure regressions. Fixed only the compile/test blockers: supported `ON_SCOPE_EXIT` syntax and missing include, member-owned account label injection into the free ZIP writer, valid libnx invalid-character result, and the stale RAW restore contract after the existing fail-closed RAW refusal.
 
@@ -541,3 +545,6 @@ net: ~-1900 C++ lines, ~-200 i18n lines, 0 deps.
 - `FOOTERS.md`, `GEMINI.md`, `TESTPLAN.md`, `tests.md`
 
 Лишились: цей файл, `README.md`, `AGENTS.md`, `LICENSE`, `hbl/nx-hbloader.LICENSE.md`, `tools/module_catalog/README.md`.
+# v0.13.868 — real DBI restore admission and unified exact route
+
+`A1` complete: exact DBI `//` marker admission is fail-closed and CRC-checked; metadata-only save archives are refused; `/DBISaves` joins `/switch/DBI/saves`; restore UI paths share one exact retained-member route with final identity reinspection and no automatic target creation. Generic ZIP semantics remain unchanged. New route/test files are 454/586 physical lines (≤ 600); oversized legacy save units were reduced rather than expanded. Gemini reports 16/16 compiler-free suites, dead-symbol gate, JSON parity and diff check PASS; senior reviewed actual source and ran diff check only. Compile/NRO/libnx/Switch hardware remain unverified. Next serial save item is the separately proven safe create/grow backend and UI.

@@ -2467,5 +2467,9 @@
   "ZIP archives verified: ": "ZIP архіви перевірено: ",
   " valid.\n": " дійсні.\n",
   " valid ZIP archive(s).\n": " дійсних ZIP архів(ів).\n",
-  "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.": "Відновлення ZIP завжди створює перевірений відновлювальний архів на SD незалежно від цього налаштування. Відновлення RAW контейнерів не підтримується."
+  "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.": "Відновлення ZIP завжди створює перевірений відновлювальний архів на SD незалежно від цього налаштування. Відновлення RAW контейнерів не підтримується.",
+  "Select restore target slot": "Виберіть цільовий слот для відновлення",
+  "No compatible live save slot found on console. Automatic save slot creation is not supported in this version.": "На консолі не знайдено сумісного слота збереження. Автоматичне створення слотів збереження не підтримується в цій версії.",
+  "Selected backup archive has changed or is no longer available.": "Вибраний архів резервної копії змінився або більше не доступний.",
+  "Selected backup contains no save payload.": "Вибрана резервна копія не містить корисних даних збереження."
 }

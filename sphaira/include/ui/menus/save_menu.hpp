@@ -209,11 +209,10 @@ private:
     // save, then restore the chosen archive. remote_names are archive file
     // names just downloaded from WebDAV (flagged with a cloud marker); empty
     // when remote restore is off.
-    void ShowRestorePicker(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names);
-    // builds and pushes the "no backups" message or the picker popup itself,
-    // once CollectBackups has already run. UI-thread only.
-    void ShowRestorePickerPopup(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates);
-    void RestoreSavesPicked(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
+    auto MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocation& location, const fs::FsPath& backup_root) const -> Entry;
+    auto MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& backup_root) const -> Entry;
+    void ShowRestorePickerPopup(Entry e, const Entry& group, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates);
+    void RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
     Result DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const;
     void PromptSaveAction();
     void PromptLiveSaveAction(const std::vector<Entry>& seeds);
@@ -222,8 +221,15 @@ private:
     void VerifyIntegrity(const std::vector<Entry>& seeds);
     void DeleteOlderBackups(const std::vector<Entry>& seeds);
     void RestoreForUser(Entry e);
+    void RestoreForUser(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid = nullptr, bool force_user_picker = false);
+    void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker = false);
+    void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys);
     void PromptBatchRestoreTargets(std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys);
+    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void PromptBatchRestoreTargets(std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();

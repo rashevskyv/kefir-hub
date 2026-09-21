@@ -314,8 +314,8 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.860)" in cmake_src or "set(sphaira_VERSION 0.13.861)" in cmake_src or "set(sphaira_VERSION 0.13.862)" in cmake_src or "set(sphaira_VERSION 0.13.863)" in cmake_src or "set(sphaira_VERSION 0.13.864)" in cmake_src or "set(sphaira_VERSION 0.13.865)" in cmake_src or "set(sphaira_VERSION 0.13.866)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.860, 0.13.861, 0.13.862, 0.13.863, 0.13.864, 0.13.865 or 0.13.866")
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(860, 869)),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.860 or later")
 
     # 1.2 sphaira/source/ui/menus/save/save_menu_ops.cpp
     ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
@@ -420,9 +420,14 @@ def test_source_contracts() -> None:
     check(gate3 != -1 and gate3 < pos_rename, "Gate 3 must precede fsFsRenameFile")
 
     # Scope guard cleanup semantics
-    pos_scope = sd_block.find("ON_SCOPE_EXIT {")
+    pos_scope = sd_block.find("ON_SCOPE_EXIT({")
+    if pos_scope == -1:
+        pos_scope = sd_block.find("ON_SCOPE_EXIT {")
     check(pos_scope != -1, "SD pipeline must define ON_SCOPE_EXIT cleanup")
-    scope_block = sd_block[pos_scope:sd_block.find("};", pos_scope)]
+    end_scope = sd_block.find("});", pos_scope)
+    if end_scope == -1:
+        end_scope = sd_block.find("};", pos_scope)
+    scope_block = sd_block[pos_scope:end_scope]
     check("pub_state == BackupPubState::Unpublished" in scope_block, "Must handle Unpublished state")
     check("pub_state == BackupPubState::Renamed" in scope_block, "Must handle Renamed state")
     check("pub_state == BackupPubState::Published" in scope_block, "Must handle Published state")

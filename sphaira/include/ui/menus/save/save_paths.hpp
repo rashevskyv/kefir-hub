@@ -23,6 +23,7 @@ namespace sphaira::ui::menu::save {
 // header cannot include this one (include cycle).
 inline constexpr const char* DEFAULT_BACKUP_ROOT = "/dumps";
 inline constexpr const char* DBI_SAVES_PATH = "/switch/DBI/saves";
+inline constexpr const char* DBI_SAVES_ROOT_PATH = "/DBISaves";
 inline constexpr const char* DBI_SAVE_INFO_NAME = ".dbi_save_info.ini";
 inline constexpr const char* DBI_SAVE_EXTRA_NAME = ".dbi_save_extra";
 
@@ -92,6 +93,7 @@ struct DecodedSaveMetadata {
     bool has_nx_meta{false};
     bool has_dbi_extra{false};
     bool has_dbi_info{false};
+    s64 payload_count{0};
 };
 
 auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMetadata& out, Result* out_rc = nullptr) -> ArchiveMetaStatus;
@@ -111,6 +113,7 @@ struct BackupArchiveInfo {
     int source{};
     u64 commit_id{};
     u64 source_timestamp{};
+    s64 payload_count{0};
 };
 
 auto ParseDbiTypeLetter(char c) -> u8;

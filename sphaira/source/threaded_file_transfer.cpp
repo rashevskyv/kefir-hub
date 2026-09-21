@@ -528,7 +528,11 @@ fs::FsPath SanitizeZipEntryName(const fs::FsPath& name) {
     return out;
 }
 
-Result ResolveArchiveEntryName(const unz_file_info64& info, const char* name_buf, bool save_dbi_compat, fs::FsPath& out_name) {
+Result ResolveArchiveEntryName(const unz_file_info64& info, const char* name_buf, bool save_dbi_compat, fs::FsPath& out_name, bool* out_is_dbi_root_marker = nullptr) {
+    if (out_is_dbi_root_marker) {
+        *out_is_dbi_root_marker = false;
+    }
+
     if (info.size_filename == 0) {
         log_write("archive entry has empty name\n");
         R_THROW(FsError_InvalidCharacter);
@@ -546,6 +550,18 @@ Result ResolveArchiveEntryName(const unz_file_info64& info, const char* name_buf
 
     const std::string_view raw{name_buf, info.size_filename};
     if (save_dbi_compat) {
+        if (raw == "//") {
+            if (!path::IsDbiRootMarkerEntry(raw, info.uncompressed_size, info.external_fa)) {
+                log_write("invalid DBI root marker: %s (size %llu, fa 0x%08x)\n", name_buf, static_cast<unsigned long long>(info.uncompressed_size), info.external_fa);
+                R_THROW(FsError_InvalidCharacter);
+            }
+            if (out_is_dbi_root_marker) {
+                *out_is_dbi_root_marker = true;
+            }
+            out_name = "";
+            R_SUCCEED();
+        }
+
         const auto norm = path::NormalizeSaveArchiveEntry(raw);
         if (!norm.has_value()) {
             log_write("unsafe save archive entry: %s\n", name_buf);
@@ -573,6 +589,7 @@ struct ResolvedDestinationEntry {
     fs::FsPath path;
     bool is_directory{false};
     bool keep{false};
+    bool is_dbi_root_marker{false};
 };
 
 Result ResolveArchiveDestinationEntry(
@@ -583,8 +600,18 @@ Result ResolveArchiveDestinationEntry(
     bool save_dbi_compat,
     ResolvedDestinationEntry& out) {
 
+    out = ResolvedDestinationEntry{};
+    bool is_marker = false;
     fs::FsPath name;
-    R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
+    R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name, &is_marker));
+    if (is_marker) {
+        out.is_dbi_root_marker = true;
+        out.is_directory = true;
+        out.keep = false;
+        out.path = "";
+        R_SUCCEED();
+    }
+
     name = SanitizeZipEntryName(name);
 
     out.path = fs::AppendPath(base_path, name);
@@ -1000,6 +1027,7 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
     UnzipPayloadInventory local_inventory{};
     std::set<std::string> explicit_dirs;
     std::vector<u8> drain_buf(64 * 1024);
+    bool seen_dbi_root_marker = false;
 
     for (s64 i = 0; i < entry_count; i++) {
         if (pbox) {
@@ -1027,6 +1055,14 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
 
         ResolvedDestinationEntry resolved{};
         R_TRY(ResolveArchiveDestinationEntry(info, name_buf, base_path, filter, save_dbi_compat, resolved));
+
+        if (resolved.is_dbi_root_marker) {
+            if (seen_dbi_root_marker) {
+                log_write("duplicate DBI root marker during preflight\n");
+                R_THROW(FsError_PathAlreadyExists);
+            }
+            seen_dbi_root_marker = true;
+        }
 
         if (resolved.keep) {
             if (resolved.is_directory) {
@@ -1157,6 +1193,13 @@ Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile, const fs::FsPa
         R_THROW(Result_UnzGoToFirstFile);
     }
 
+    if (save_dbi_compat && local_summary.file_count == 0 && local_summary.directory_count == 0) {
+        if (!allow_empty) {
+            log_write("archive contains no kept payload items\n");
+            R_THROW(FsError_InvalidSize);
+        }
+    }
+
     if (output) {
         *output = local_summary;
     }
@@ -1212,6 +1255,7 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
     const auto base_len = base_path.length();
     const bool base_needs_slash = (base_len > 0 && base_path[base_len - 1] != '/');
 
+    bool seen_dbi_marker_sizing = false;
     s64 total_size = 0;
     for (s64 i = 0; i < entry_count; i++) {
         if (i > 0) {
@@ -1229,7 +1273,16 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
         }
 
         fs::FsPath name;
-        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name));
+        bool is_marker = false;
+        R_TRY(ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name, &is_marker));
+        if (is_marker) {
+            if (seen_dbi_marker_sizing) {
+                log_write("duplicate DBI root marker in sizing pass\n");
+                R_THROW(FsError_PathAlreadyExists);
+            }
+            seen_dbi_marker_sizing = true;
+            continue;
+        }
 
         const auto full_path_len = base_len + (base_needs_slash ? 1 : 0) + std::strlen(name.s);
         if (full_path_len + 1 > sizeof(fs::FsPath)) {
@@ -1261,6 +1314,7 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
     pbox->ResetTransferProgress();
     pbox->UpdateTransfer(0, progress_total);
 
+    bool seen_dbi_marker = false;
     for (s64 i = 0; i < entry_count; i++) {
         R_TRY(pbox->ShouldExitResult());
 
@@ -1302,6 +1356,48 @@ Result TransferUnzipAll(ui::ProgressBox* pbox, void* zfile, fs::Fs* fs, const fs
             progress_offset = std::min(entry_progress_start + entry_progress_size, progress_total);
             pbox->UpdateTransfer(progress_offset, progress_total);
         };
+
+        if (resolved.is_dbi_root_marker) {
+            if (seen_dbi_marker) {
+                log_write("duplicate DBI root marker in extraction loop\n");
+                curr_file_open = false;
+                unzCloseCurrentFile(zfile);
+                R_THROW(FsError_PathAlreadyExists);
+            }
+            seen_dbi_marker = true;
+
+            char drain_buf[128];
+            int zr = 0;
+            do {
+                if (pbox) {
+                    const auto exit_rc = pbox->ShouldExitResult();
+                    if (R_FAILED(exit_rc)) {
+                        curr_file_open = false;
+                        unzCloseCurrentFile(zfile);
+                        return exit_rc;
+                    }
+                }
+                zr = unzReadCurrentFile(zfile, drain_buf, sizeof(drain_buf));
+                if (zr < 0) {
+                    curr_file_open = false;
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(Result_UnzReadCurrentFile);
+                }
+                if (zr > 0) {
+                    curr_file_open = false;
+                    unzCloseCurrentFile(zfile);
+                    R_THROW(FsError_InvalidSize);
+                }
+            } while (zr > 0);
+
+            curr_file_open = false;
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res == UNZ_CRCERROR) {
+                R_THROW(0x8);
+            }
+            R_UNLESS(close_res == UNZ_OK, Result_UnzOpenCurrentFile);
+            continue;
+        }
 
         if (!resolved.keep) {
             curr_file_open = false;

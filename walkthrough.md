@@ -1,4 +1,12 @@
-Актуальний delivery — **v0.13.867** (2026-09-20). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.868** (2026-09-21). History: archive/walkthrough_archive.md.
+
+## v0.13.868 — real DBI restore admission and unified exact route
+
+Save ZIP admission now understands DBI’s exact zero-byte root directory marker `//`. It validates directory semantics, rejects malformed or duplicate markers, drains and CRC-checks the entry, and excludes it from destination and payload accounting. Archives containing only Sphaira/DBI reserved metadata and the marker are rejected before any live-save mutation. The new empty-payload rule is scoped to save compatibility mode, so ordinary ZIP extraction keeps its previous behavior.
+
+The backup library now scans both DBI roots (`/switch/DBI/saves` and `/DBISaves`) plus configured roots, deduplicates exact paths case-insensitively, and labels DBI-backed groups. Every requested restore entry point now converges on the exact retained archive members and re-inspects identity before use. Missing or incompatible live slots fail closed with an explicit message; automatic slot creation and growth are intentionally deferred.
+
+Restore orchestration was extracted from oversized legacy units into `save_restore_route.cpp` (454 physical lines). Its focused compiler-free contract is 586 lines; both new files satisfy the 600-line limit, while the touched legacy implementation files have a net reduction. Gemini reports all 16 Python suites, dead-symbol validation (982 declarations), JSON/key parity and `git diff --check` PASS. Senior inspected the actual diff and ran diff check only. No compile, WSL/NRO build, compiled C++ tests or Switch hardware execution was performed.
 
 ## v0.13.867 — build/test closure save-системи
 

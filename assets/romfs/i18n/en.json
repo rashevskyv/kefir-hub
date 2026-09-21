@@ -2438,5 +2438,9 @@
   "ZIP archives verified: ": "ZIP archives verified: ",
   " valid.\n": " valid.\n",
   " valid ZIP archive(s).\n": " valid ZIP archive(s).\n",
-  "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.": "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported."
+  "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.": "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported.",
+  "Select restore target slot": "Select restore target slot",
+  "No compatible live save slot found on console. Automatic save slot creation is not supported in this version.": "No compatible live save slot found on console. Automatic save slot creation is not supported in this version.",
+  "Selected backup archive has changed or is no longer available.": "Selected backup archive has changed or is no longer available.",
+  "Selected backup contains no save payload.": "Selected backup contains no save payload."
 }

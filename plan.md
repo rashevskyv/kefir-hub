@@ -1,6 +1,14 @@
-Поточний delivery — **v0.13.867 accepted**: виправлено накопичені save build/test regressions і підтверджено повну WSL-збірку; accepted baseline **v0.13.866**, HEAD 658e7def5cf8a4079619077be62788e152852a88.
+Поточний delivery — **v0.13.868 accepted**: реальні DBI ZIP приймаються без послаблення generic ZIP, metadata-only архіви відхиляються, `/DBISaves` видимий, а restore йде через один exact retained-member route; accepted baseline **v0.13.867**, HEAD 930bdf286c3418b4359656e37bc2f65f9ddf74f9.
 
-## Поточний delivery: v0.13.867 — build/test closure save-системи
+## Поточний delivery: v0.13.868 — real DBI restore admission and unified exact route
+
+Приймання save ZIP тепер допускає лише exact DBI root marker `//` з нульовим розміром і directory semantics, повністю перевіряє його читання/CRC, відкидає дублікати та не включає маркер у payload/destination. Архіви лише з reserved metadata відхиляються до mutation; generic ZIP поведінка не змінена.
+
+Пошук DBI backup охоплює `/switch/DBI/saves`, `/DBISaves` і configured roots з case-insensitive exact-path dedup. `+ -> Start Restore`, backup action Restore/Restore for user і Restore з save-type options використовують один retained-member route з final archive reinspection, exact live target та без `backup_path`/latest fallback. Відсутній compatible live slot відхиляється fail-closed; creation/growth залишається окремим наступним delivery.
+
+Acceptance: Gemini звітує 16/16 compiler-free Python suites, dead-symbol gate (982 declarations), JSON parity і diff check PASS. Senior перевірив actual diff, route/callers та `git diff --check`; compile/WSL/NRO/hardware не запускалися. Нові файли: route 454 рядки, focused test 586 рядків, обидва ≤ 600.
+
+## Попередній delivery: v0.13.867 — build/test closure save-системи
 
 На exact primary `D:/git/dev/sphaira`, `master`, clean baseline `658e7def5cf8a4079619077be62788e152852a88` виконано canonical Graphify update, повний `tests/run.sh` і WSL `ReleaseWithInstall`. Перший прогін тестів виявив один застарілий RAW restore contract, а перша збірка — некоректний block-синтаксис `ON_SCOPE_EXIT`, відсутній include, виклик member account-name helper з free writer та неіснуючий libnx result. Мінімальні виправлення узгодили cleanup syntax, передали account name з member caller, використали дійсний invalid-character result і оновили RAW contract до чинної fail-closed відмови.
 

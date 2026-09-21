@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.867)
+set(sphaira_VERSION 0.13.868)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -79,6 +79,7 @@ add_executable(sphaira
     source/ui/menus/save/save_locations.cpp
     source/ui/menus/save/save_menu_detail.cpp
     source/ui/menus/save/save_menu_ops.cpp
+    source/ui/menus/save/save_restore_route.cpp
     source/ui/menus/themezer.cpp
     source/ui/menus/theme_creator.cpp
     source/ui/menus/tools_menu.cpp

@@ -146,7 +146,7 @@ def test_source_contracts():
           "threaded_file_transfer.cpp must define ResolveArchiveDestinationEntry before GetParentDirectories")
     res_body = cpp_src[res_start:res_end]
 
-    pos_resolve = res_body.find("ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name)")
+    pos_resolve = res_body.find("ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name")
     pos_sanitize = res_body.find("SanitizeZipEntryName(name)", pos_resolve)
     pos_append = res_body.find("fs::AppendPath(base_path, name)", pos_sanitize)
     pos_filter = res_body.find("filter ? filter(name, out.path) : true", pos_append)

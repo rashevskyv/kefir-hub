@@ -1,6 +1,18 @@
-Актуальний delivery — **v0.13.867 accepted**: save build/test closure; accepted baseline **v0.13.866**, 658e7def5cf8a4079619077be62788e152852a88.
+Актуальний delivery — **v0.13.868 accepted**: real DBI restore admission and unified exact retained-member route; accepted baseline **v0.13.867**, 930bdf286c3418b4359656e37bc2f65f9ddf74f9.
 
-## Поточний delivery: v0.13.867 — build/test closure save-системи
+## Поточний delivery: v0.13.868 — real DBI restore admission and unified exact route
+
+- [x] `DBI-MARKER-868` — exact zero-byte directory `//` validated/drained/CRC-checked, duplicate rejected, excluded from payload and destination; near misses fail closed.
+- [x] `DBI-PAYLOAD-868` — reserved-metadata-only archives rejected before mutation; generic non-save ZIP behavior preserved.
+- [x] `DBI-ROOTS-868` — `/switch/DBI/saves`, `/DBISaves` and configured roots discovered with case-insensitive exact-path dedup and DBI UI marker.
+- [x] `RESTORE-ROUTE-868` — plus/action/save-type restore paths converge on retained exact members, final reinspection and explicit compatible live target; no loose restore fallback.
+- [x] `RESTORE-FAILCLOSED-868` — no automatic slot creation, zero save ID and missing/incompatible live slot rejected; recovery archive reporting preserved.
+- [x] `RESTORE-MODULE-868` — orchestration extracted to `save_restore_route.cpp` (454 lines); focused contract is 586 lines; both new files ≤ 600.
+- [x] `RESTORE-VERIFY-868` — Gemini reports all 16 Python suites, dead-symbol gate, JSON parity and diff check PASS; senior actual diff and diff check accepted, no compile.
+- [x] `DOCS-BUMP-868` — `.867` → `.868`, four delivery documents synchronized and focused primary-master commit created without push.
+- [ ] `HW-868` — user compile plus disposable Switch checks for real DBI payload ZIP, metadata-only rejection, `/DBISaves`, local/foreign Account target selection and retained recovery archive.
+
+## Попередній delivery: v0.13.867 — build/test closure save-системи
 
 - [x] `BUILD-BASELINE-867` — exact primary/master/clean/ancestor і canonical Graphify update перевірено.
 - [x] `BUILD-TESTS-867` — повний `tests/run.sh`: початкова RAW contract помилка виправлена; фінально `all green`.

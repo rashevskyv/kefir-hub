@@ -39,6 +39,10 @@ def test_source_contracts():
     save_menu_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp")
     with open(save_menu_cpp, "r", encoding="utf-8") as f:
         menu_cpp_src = f.read()
+    save_restore_route_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp")
+    if os.path.exists(save_restore_route_cpp):
+        with open(save_restore_route_cpp, "r", encoding="utf-8") as f:
+            menu_cpp_src += f.read()
 
     check("FormatTargetSlotLabel(" in menu_cpp_src,
           "save_menu.cpp must define FormatTargetSlotLabel helper")
@@ -50,7 +54,8 @@ def test_source_contracts():
           "ResolveRestoreTarget must visibly confirm single candidate via OptionBox")
     check('make_unique<PopupList>("Select restore target slot"_i18n' in menu_cpp_src,
           "ResolveRestoreTarget must present PopupList for multiple candidates")
-    check('App::Push<OptionBox>("No existing save slot found on console."_i18n, "OK"_i18n);' in menu_cpp_src,
+    check('App::Push<OptionBox>("No compatible live save slot found on console. Automatic save slot creation is not supported in this version."_i18n, "OK"_i18n);' in menu_cpp_src or
+          'App::Push<OptionBox>("No existing save slot found on console."_i18n, "OK"_i18n);' in menu_cpp_src,
           "ResolveRestoreTarget must show explicit error box when no existing live slots match")
     check("seen_target_keys->insert(key).second" in menu_cpp_src,
           "PromptBatchRestoreTargets must detect and reject duplicate targets via SaveEntryKey")
@@ -88,7 +93,7 @@ def test_source_contracts():
     check(target_val_pos != -1 and target_val_pos < pbox_pos,
           "Destination target validation must happen before ProgressBox in RestoreSaves")
 
-    check("FindLatestBackupPath(fs.get(), src, backup_root, file_path)" in ops_cpp_src,
+    check("src.backup_members.front().path" in ops_cpp_src or "FindLatestBackupPath(fs.get(), src, backup_root, file_path)" in ops_cpp_src,
           "RestoreSaves must use source entry to locate backup file")
     check("RestoreSaveInternal(pbox, dst, file_path" in ops_cpp_src,
           "RestoreSaves must pass destination target to RestoreSaveInternal")

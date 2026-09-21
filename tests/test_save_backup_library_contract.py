@@ -728,8 +728,8 @@ def test_static_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.863)" in cmake_src or "set(sphaira_VERSION 0.13.864)" in cmake_src or "set(sphaira_VERSION 0.13.865)" in cmake_src or "set(sphaira_VERSION 0.13.866)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.863, 0.13.864, 0.13.865 or 0.13.866")
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(863, 869)),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.863 or later")
 
     # 1.2 save_menu.hpp declarations
     sm_hpp_path = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -818,37 +818,45 @@ def test_static_source_contracts() -> None:
     check("a.ts > b.ts" in cga_src and "a.source < b.source" in cga_src and "a.path.toString() < b.path.toString()" in cga_src,
           "CollectGroupArchives must sort candidates with (-ts, +source, +path)")
 
-    # Scope C: PromptBackupGroupAction
+    # Scope C: PromptBackupGroupAction & RestoreBackupGroups
     p_pba = sm_cpp.find("void Menu::PromptBackupGroupAction(")
     check(p_pba != -1, "Menu::PromptBackupGroupAction must exist")
-    p_pba_end = sm_cpp.find("void Menu::RestoreForUser(Entry e) {", p_pba)
-    check(p_pba_end != -1, "End of Menu::PromptBackupGroupAction must be found")
-    pba_src = sm_cpp[p_pba:p_pba_end]
+    check("RestoreBackupGroups(seeds, false);" in sm_cpp or "RestoreBackupGroups(" in sm_cpp,
+          "PromptBackupGroupAction must delegate to RestoreBackupGroups")
+    route_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp")
+    route_cpp = ""
+    if os.path.exists(route_cpp_path):
+        with open(route_cpp_path, "r", encoding="utf-8") as f:
+            route_cpp = f.read()
 
-    pos_pba_bkp = pba_src.find("} else if (e.is_backup) {")
-    pos_pba_stale = pba_src.find("} else if (!e.backup_path.empty()) {")
-    check(pos_pba_bkp != -1 and pos_pba_stale != -1,
-          "PromptBackupGroupAction must have e.is_backup and !e.backup_path.empty() branches")
-    check(pos_pba_bkp < pos_pba_stale,
-          "PromptBackupGroupAction: e.is_backup guard must precede stale backup_path fallback")
-    check("No backups found for selected saves." in pba_src,
-          "PromptBackupGroupAction must report 'No backups found for selected saves.' on empty")
+    impl_cpp = sm_cpp + route_cpp
+
+    check("void Menu::RestoreBackupGroups(" in impl_cpp, "save_menu.cpp / save_restore_route.cpp must implement RestoreBackupGroups")
+    check("void Menu::RestoreSingleBackupGroup(" in impl_cpp, "save_menu.cpp / save_restore_route.cpp must implement RestoreSingleBackupGroup")
+
+    p_rsbg = impl_cpp.find("void Menu::RestoreSingleBackupGroup(")
+    check(p_rsbg != -1, "Menu::RestoreSingleBackupGroup must exist")
+    p_rsbg_end = impl_cpp.find("void Menu::PromptBatchRestoreTargets(", p_rsbg)
+    check(p_rsbg_end != -1, "End of Menu::RestoreSingleBackupGroup must be found")
+    rsbg_src = impl_cpp[p_rsbg:p_rsbg_end]
+
+    check("No backups found for selected saves." in rsbg_src,
+          "RestoreSingleBackupGroup must report 'No backups found for selected saves.' on empty")
+    check("RestoreSavesPicked(std::move(*target), group, location, backup_root, group.backup_members.front().path);" in rsbg_src,
+          "RestoreSingleBackupGroup must restore single retained member")
+    check("ShowRestorePickerPopup(std::move(*target), group, location, backup_root, {}, group.backup_members);" in rsbg_src,
+          "RestoreSingleBackupGroup must present picker over retained members")
+    on_ready_idx = rsbg_src.find("const auto on_account_ready =")
+    on_ready_end = rsbg_src.find("};", on_ready_idx)
+    check(on_ready_idx != -1 and on_ready_end != -1, "RestoreSingleBackupGroup must define on_account_ready callback")
+    check("backup_path" not in rsbg_src[on_ready_idx:on_ready_end],
+          "RestoreSingleBackupGroup on_account_ready callback must not retain loose backup_path fallback")
 
     # Scope D: RestoreForUser
-    p_rfu = sm_cpp.find("void Menu::RestoreForUser(Entry e) {")
+    p_rfu = impl_cpp.find("void Menu::RestoreForUser(Entry e) {")
     check(p_rfu != -1, "Menu::RestoreForUser must exist")
-    p_rfu_end = sm_cpp.find("void Menu::PromptBatchRestoreTargets(", p_rfu)
-    check(p_rfu_end != -1, "End of Menu::RestoreForUser must be found")
-    rfu_src = sm_cpp[p_rfu:p_rfu_end]
-
-    pos_rfu_bkp = rfu_src.find("} else if (e.is_backup) {")
-    pos_rfu_stale = rfu_src.find("} else if (!e.backup_path.empty()) {")
-    check(pos_rfu_bkp != -1 and pos_rfu_stale != -1,
-          "RestoreForUser must have e.is_backup and !e.backup_path.empty() branches")
-    check(pos_rfu_bkp < pos_rfu_stale,
-          "RestoreForUser: e.is_backup guard must precede stale backup_path fallback")
-    check("No backups found for selected saves." in rfu_src,
-          "RestoreForUser must report 'No backups found for selected saves.' on empty")
+    check("RestoreSingleBackupGroup(" in impl_cpp[p_rfu:p_rfu + 200],
+          "RestoreForUser must delegate to RestoreSingleBackupGroup")
 
     # Scope E: Menu::Draw HbMenu layout header
     p_draw = sm_cpp.find("void Menu::Draw(NVGcontext* vg, Theme* theme) {")
@@ -871,11 +879,14 @@ def test_static_source_contracts() -> None:
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_cpp = f.read()
 
-    p_pop = ops_cpp.find("void Menu::ShowRestorePickerPopup(")
+    combined_ops_cpp = ops_cpp + route_cpp
+    p_pop = combined_ops_cpp.find("void Menu::ShowRestorePickerPopup(")
     check(p_pop != -1, "Menu::ShowRestorePickerPopup must exist")
-    p_pop_end = ops_cpp.find("void Menu::RestoreSavesPicked(", p_pop)
+    p_pop_end = combined_ops_cpp.find("void Menu::RestoreSavesPicked(", p_pop)
+    if p_pop_end == -1:
+        p_pop_end = combined_ops_cpp.find("void Menu::RestoreSingleBackupGroup(", p_pop)
     check(p_pop_end != -1, "End of Menu::ShowRestorePickerPopup must be found")
-    pop_src = ops_cpp[p_pop:p_pop_end]
+    pop_src = combined_ops_cpp[p_pop:p_pop_end]
 
     check("label_counts[raw_labels[i]] > 1" in pop_src,
           "ShowRestorePickerPopup must count duplicate labels and check > 1")

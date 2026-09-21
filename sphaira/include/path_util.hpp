@@ -134,6 +134,31 @@ inline auto NormalizeSaveArchiveEntry(std::string_view path) -> std::optional<st
     return norm;
 }
 
+// Pure predicate validating the exact DBI zero-byte root directory entry ("//"):
+// - Valid only in save/DBI compatibility mode
+// - Raw entry name must be exactly "//"
+// - Uncompressed size must be exactly zero
+// - Must possess directory semantics: when external_fa == 0, minizip relies
+//   on the entry name ending with '/' for directory semantics; when attributes
+//   are set, POSIX (0x4000) or DOS directory flag (0x10) must not indicate a
+//   regular file or non-directory.
+inline auto IsDbiRootMarkerEntry(std::string_view raw_name, std::uint64_t uncompressed_size, std::uint32_t external_fa) -> bool {
+    if (raw_name != "//") {
+        return false;
+    }
+    if (uncompressed_size != 0) {
+        return false;
+    }
+    const std::uint32_t posix_type = (external_fa >> 16) & 0xF000;
+    if (posix_type != 0 && posix_type != 0x4000) {
+        return false;
+    }
+    if (posix_type == 0 && (external_fa & 0xFF) != 0 && (external_fa & 0x10) == 0) {
+        return false;
+    }
+    return true;
+}
+
 // Normalizes an absolute SD card path:
 // - Must start with '/'
 // - Rejects '\', ':', control characters (< 0x20, 0x7F)

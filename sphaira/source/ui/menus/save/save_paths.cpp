@@ -808,6 +808,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
     bool seen_nx_meta = false;
     bool seen_dbi_extra = false;
     bool seen_dbi_info = false;
+    bool seen_dbi_root_marker = false;
     DecodedSaveMetaInternal nx_meta{};
     DecodedSaveMetaInternal dbi_extra_meta{};
     bool has_valid_nx = false;
@@ -849,7 +850,38 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
             return ArchiveMetaStatus::Invalid;
         }
 
-        const auto norm = path::NormalizeSaveArchiveEntry(std::string_view{name_buf, info.size_filename});
+        const std::string_view raw{name_buf, info.size_filename};
+        if (raw == "//") {
+            if (!path::IsDbiRootMarkerEntry(raw, info.uncompressed_size, info.external_fa)) {
+                if (out_rc) *out_rc = FsError_InvalidCharacter;
+                return ArchiveMetaStatus::Invalid;
+            }
+            if (seen_dbi_root_marker) {
+                if (out_rc) *out_rc = FsError_PathAlreadyExists;
+                return ArchiveMetaStatus::Invalid;
+            }
+            seen_dbi_root_marker = true;
+
+            if (UNZ_OK != unzOpenCurrentFile(zfile)) {
+                if (out_rc) *out_rc = Result_UnzOpenCurrentFile;
+                return ArchiveMetaStatus::Invalid;
+            }
+            char drain_chunk[64];
+            int drain_res = unzReadCurrentFile(zfile, drain_chunk, sizeof(drain_chunk));
+            if (drain_res < 0) {
+                unzCloseCurrentFile(zfile);
+                if (out_rc) *out_rc = Result_UnzReadCurrentFile;
+                return ArchiveMetaStatus::Invalid;
+            }
+            const int close_res = unzCloseCurrentFile(zfile);
+            if (close_res != UNZ_OK) {
+                if (out_rc) *out_rc = (close_res == UNZ_CRCERROR) ? 0x8 : Result_UnzOpenCurrentFile;
+                return ArchiveMetaStatus::Invalid;
+            }
+            continue;
+        }
+
+        const auto norm = path::NormalizeSaveArchiveEntry(raw);
         if (!norm.has_value()) {
             if (out_rc) *out_rc = FsError_InvalidCharacter;
             return ArchiveMetaStatus::Invalid;
@@ -874,11 +906,13 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
                 if (out_rc) *out_rc = FsError_InvalidCharacter;
                 return ArchiveMetaStatus::Invalid;
             }
+            out.payload_count++;
             continue;
         }
 
         const auto reserved_kind = ClassifySaveReservedMetadataRoot(clean_view);
         if (reserved_kind == SaveReservedMetaKind::None) {
+            out.payload_count++;
             continue;
         }
 
@@ -1142,36 +1176,80 @@ auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath> {
     };
 
     const auto scan_game_dir = [&](const fs::FsPath& game_dir) {
-        filebrowser::FsDirCollection dates{};
-        filebrowser::FsView::get_collection(fs, game_dir, "", dates, false, true, false);
-        sort_desc(dates.dirs);
-
-        for (const auto& date : dates.dirs) {
+        filebrowser::FsDirCollection direct{};
+        filebrowser::FsView::get_collection(fs, game_dir, "", direct, true, true, false);
+        sort_desc(direct.files);
+        for (const auto& file : direct.files) {
+            if (IsDbiBackupName(e, file.name)) {
+                const auto p = fs::AppendPath(direct.path, file.name);
+                bool duplicate = false;
+                for (const auto& existing : out) {
+                    if (path::EqualsIC(existing.s, p.s)) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate) {
+                    out.emplace_back(p);
+                }
+            }
+        }
+        sort_desc(direct.dirs);
+        for (const auto& date : direct.dirs) {
             filebrowser::FsDirCollection files{};
             filebrowser::FsView::get_collection(fs, fs::AppendPath(game_dir, date.name), "", files, true, false, false);
             sort_desc(files.files);
 
             for (const auto& file : files.files) {
                 if (IsDbiBackupName(e, file.name)) {
-                    out.emplace_back(fs::AppendPath(files.path, file.name));
+                    const auto p = fs::AppendPath(files.path, file.name);
+                    bool duplicate = false;
+                    for (const auto& existing : out) {
+                        if (path::EqualsIC(existing.s, p.s)) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        out.emplace_back(p);
+                    }
                 }
             }
         }
     };
 
-    const auto dbi_root = fs::AppendPath(fs->Root(), DBI_SAVES_PATH);
+    std::vector<fs::FsPath> dbi_roots;
+    auto add_root = [&](std::string_view r) {
+        if (r.empty()) return;
+        for (const auto& existing : dbi_roots) {
+            if (path::EqualsIC(existing.s, r)) return;
+        }
+        dbi_roots.emplace_back(r);
+    };
+    add_root(DBI_SAVES_PATH);
+    add_root(DBI_SAVES_ROOT_PATH);
+    for (const auto& custom : GetBackupSearchPaths()) {
+        add_root(custom);
+    }
+
     const auto game_folder = BuildDbiGameFolderName(e);
-    scan_game_dir(fs::AppendPath(dbi_root, game_folder));
+    for (const auto& root_str : dbi_roots) {
+        const auto dbi_root = fs::AppendPath(fs->Root(), root_str);
+        scan_game_dir(fs::AppendPath(dbi_root, game_folder));
+    }
 
     if (out.empty()) {
-        filebrowser::FsDirCollection root{};
-        filebrowser::FsView::get_collection(fs, dbi_root, "", root, false, true, false);
+        for (const auto& root_str : dbi_roots) {
+            const auto dbi_root = fs::AppendPath(fs->Root(), root_str);
+            filebrowser::FsDirCollection root{};
+            filebrowser::FsView::get_collection(fs, dbi_root, "", root, false, true, false);
 
-        for (const auto& dir : root.dirs) {
-            if (!strcasecmp(dir.name, game_folder)) {
-                continue;
+            for (const auto& dir : root.dirs) {
+                if (!strcasecmp(dir.name, game_folder)) {
+                    continue;
+                }
+                scan_game_dir(fs::AppendPath(dbi_root, dir.name));
             }
-            scan_game_dir(fs::AppendPath(dbi_root, dir.name));
         }
     }
 
@@ -1219,7 +1297,7 @@ auto NormalizeBackupSearchPath(std::string_view path) -> std::optional<std::stri
     if (!normalized) {
         return std::nullopt;
     }
-    if (*normalized == "/" || path::EqualsIC(*normalized, DEFAULT_BACKUP_ROOT) || path::EqualsIC(*normalized, DBI_SAVES_PATH)) {
+    if (*normalized == "/" || path::EqualsIC(*normalized, DEFAULT_BACKUP_ROOT) || path::EqualsIC(*normalized, DBI_SAVES_PATH) || path::EqualsIC(*normalized, DBI_SAVES_ROOT_PATH)) {
         return std::nullopt;
     }
     if (normalized->size() >= FS_MAX_PATH) {
@@ -1266,6 +1344,7 @@ auto GetShareableSaveBackupRoots() -> std::vector<std::string> {
 
     add_unique(DEFAULT_BACKUP_ROOT);
     add_unique(DBI_SAVES_PATH);
+    add_unique(DBI_SAVES_ROOT_PATH);
     for (const auto& extra : GetBackupSearchPaths()) {
         add_unique(extra);
     }
@@ -1428,6 +1507,13 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
             // Present invalid metadata: fail closed, NO fallback!
             return false;
         }
+
+        if (archive_meta.payload_count == 0) {
+            // Metadata-only archive without kept payload: fail closed, omit from library!
+            return false;
+        }
+
+        out.payload_count = archive_meta.payload_count;
 
         if (meta_status == ArchiveMetaStatus::Valid) {
             const auto& meta = archive_meta.meta;
@@ -1594,6 +1680,9 @@ auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileB
     if (e.backup_count > 1) {
         cols.archive_count = "  •  " + std::to_string(e.backup_count) + " archives";
     }
+    if (!e.dbi_game_dir.empty()) {
+        cols.archive_count += "  •  DBI";
+    }
     return cols;
 }
 
@@ -1605,6 +1694,9 @@ auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileB
     std::string out = account + "  •  " + rank_str + "  •  " + date_str;
     if (e.backup_count > 1) {
         out += " (" + std::to_string(e.backup_count) + ")";
+    }
+    if (!e.dbi_game_dir.empty()) {
+        out += "  •  DBI";
     }
     return out;
 }
