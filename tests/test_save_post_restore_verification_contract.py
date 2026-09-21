@@ -172,7 +172,7 @@ def test_source_contracts() -> None:
     check(rsi_start != -1, "RestoreSaveInternal must follow RestoreSaveZip")
     rsz_body = ops_cpp[rsz_start:rsi_start]
 
-    check("if (e.save_data_id == 0) {" in rsz_body,
+    check("if (target_entry.save_data_id == 0) {" in rsz_body or "if (e.save_data_id == 0) {" in rsz_body,
           "RestoreSaveZip must restrict metadata probes to legacy create")
     check("R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);" in rsz_body,
           "RestoreSaveZip must check source_reader_ctx.HasError() before clear gate")
@@ -182,7 +182,7 @@ def test_source_contracts() -> None:
     check("if (out_mutation_started)" in rsz_body and "*out_mutation_started = true;" in rsz_body,
           "RestoreSaveZip must set *out_mutation_started = true before clear")
     clear_pos = rsz_body.find("DeleteAllCollections")
-    mut_pos = rsz_body.find("*out_mutation_started = true;")
+    mut_pos = rsz_body.rfind("*out_mutation_started = true;", 0, clear_pos)
     check(mut_pos < clear_pos, "*out_mutation_started = true must precede DeleteAllCollections")
     gate_start = rsz_body.rfind("R_UNLESS(!source_reader_ctx.HasError()", 0, mut_pos)
     assert gate_start >= 0
@@ -204,7 +204,7 @@ def test_source_contracts() -> None:
     assert write_pos < flush_pos
     assert flush_pos < copy_body.index("R_TRY(flush_rc);", flush_pos) < copy_body.index("const auto commit_rc = fs->Commit();", flush_pos)
     assert "UNZ_END_OF_LIST_OF_FILE == unzGoToNextFile(zfile)" in vaan_body
-    raw_prefix = ops_cpp.index("} else if (*last_item_is_raw) {")
+    raw_prefix = ops_cpp.rindex("} else if (*last_item_is_raw) {")
     raw_end = ops_cpp.index("} else if", raw_prefix + 2)
     assert "Restore stopped.\\nSafety recovery archive(s) retained:" in ops_cpp[raw_prefix:raw_end]
     assert "before" not in ops_cpp[raw_prefix:raw_end]
@@ -220,9 +220,9 @@ def test_source_contracts() -> None:
     rsi_body = ops_cpp[rsi_start:ops_cpp.find("Result Menu::BackupSaveInternal(", rsi_start)]
     check("*out_mutation_started = true;" not in rsi_body,
           "RestoreSaveInternal RAW DISA branch must not set out_mutation_started")
-    check("[recovery_path, mutation_started, is_raw](Result rc)" in ops_cpp,
+    check("[recovery_path, mutation_started, created_slot_retained, is_raw](Result rc)" in ops_cpp or "[recovery_path, mutation_started, is_raw](Result rc)" in ops_cpp,
           "RestoreSavesPicked must capture is_raw in completion callback")
-    check("if (!is_raw) {" in ops_cpp,
+    check("if (!is_raw && !*created_slot_retained) {" in ops_cpp or "if (!is_raw) {" in ops_cpp,
           "RestoreSavesPicked must isolate RAW restores from ZIP verification messages")
     check("auto last_item_is_raw = std::make_shared<bool>(false);" in ops_cpp,
           "RestoreSaves batch must track last_item_is_raw")

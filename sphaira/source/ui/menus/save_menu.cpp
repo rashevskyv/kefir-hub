@@ -1676,14 +1676,7 @@ auto FormatTargetSlotLabel(const Entry& target, const std::vector<AccountProfile
 
 } // namespace
 
-void Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid, std::function<void(std::optional<Entry>)> cb) {
-    if (!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)) {
-        Entry target = backup;
-        target.is_backup = false;
-        cb(target);
-        return;
-    }
-
+auto Menu::FindLiveRestoreCandidates(const Entry& backup, const AccountUid* explicit_uid) -> std::vector<Entry> {
     std::vector<FsSaveDataInfo> infos;
     if (backup.save_data_type == FsSaveDataType_Account) {
         if (explicit_uid) {
@@ -1734,8 +1727,29 @@ void Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_
         candidates.emplace_back(std::move(target));
     }
 
+    return candidates;
+}
+
+void Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid, std::function<void(std::optional<Entry>)> cb) {
+    if (!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)) {
+        Entry target = backup;
+        target.is_backup = false;
+        cb(target);
+        return;
+    }
+
+    const auto candidates = FindLiveRestoreCandidates(backup, explicit_uid);
+
     if (candidates.empty()) {
-        App::Push<OptionBox>("No compatible live save slot found on console. Automatic save slot creation is not supported in this version."_i18n, "OK"_i18n);
+        if (backup.save_data_type != FsSaveDataType_Account) {
+            App::Push<OptionBox>("Save slot creation is only supported for Account saves."_i18n, "OK"_i18n);
+        } else if (backup.save_data_rank != FsSaveDataRank_Primary || backup.save_data_index != 0) {
+            App::Push<OptionBox>("Save slot creation is only supported for primary save slots."_i18n, "OK"_i18n);
+        } else if (backup.application_id == 0) {
+            App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
+        } else {
+            App::Push<OptionBox>("No compatible live save slot found on console."_i18n, "OK"_i18n);
+        }
         cb(std::nullopt);
         return;
     }

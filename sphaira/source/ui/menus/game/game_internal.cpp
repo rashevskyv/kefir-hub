@@ -12,6 +12,7 @@
 #include "ui/menus/grid_menu_base.hpp"
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/ns.hpp"
+#include "ui/menus/save/save_slot_backend.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -151,28 +152,14 @@ void LaunchEntry(const Entry& e) {
 }
 
 Result CreateSave(u64 app_id, AccountUid uid) {
-    u64 actual_size;
-    auto data = std::make_unique<NsApplicationControlData>();
-    R_TRY(nsGetApplicationControlData(NsApplicationControlSource_Storage, app_id, data.get(), sizeof(NsApplicationControlData), &actual_size));
+    save::SaveCreationRequest req{};
+    save::SaveBackendStatus status = save::SaveBackendStatus::Success;
+    R_TRY(save::PlanAccountSaveCreation(app_id, uid, nullptr, req, &status));
 
-    FsSaveDataAttribute attr{};
-    attr.application_id = app_id;
-    attr.uid = uid;
-    attr.save_data_type = FsSaveDataType_Account;
-
-    FsSaveDataCreationInfo info{};
-    info.save_data_size = data->nacp.user_account_save_data_size;
-    info.journal_size = data->nacp.user_account_save_data_journal_size;
-    info.available_size = data->nacp.user_account_save_data_size; // todo: check what this should be.
-    info.owner_id = data->nacp.save_data_owner_id;
-    info.save_data_space_id = FsSaveDataSpaceId_User;
-
-    // https://switchbrew.org/wiki/Filesystem_services#CreateSaveDataFileSystem
-    FsSaveDataMetaInfo meta{};
-    meta.size = 0x40060;
-    meta.type = FsSaveDataMetaType_Thumbnail;
-
-    R_TRY(fsCreateSaveDataFileSystem(&attr, &info, &meta));
+    const auto res = save::CreateSaveDataChecked(req);
+    if (!res.verified) {
+        return R_FAILED(res.rc) ? res.rc : FsError_PathNotFound;
+    }
 
     R_SUCCEED();
 }

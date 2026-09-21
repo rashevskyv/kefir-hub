@@ -1,6 +1,18 @@
-Актуальний delivery — **v0.13.868 accepted**: real DBI restore admission and unified exact retained-member route; accepted baseline **v0.13.867**, 930bdf286c3418b4359656e37bc2f65f9ddf74f9.
+Актуальний delivery — **v0.13.869 accepted**: shared verified Account save-slot create/grow backend and restore-time creation; accepted baseline **v0.13.868**, d1c878e77c69ddc49244a52d9d85faae7a9f8919.
 
-## Поточний delivery: v0.13.868 — real DBI restore admission and unified exact route
+## Поточний delivery: v0.13.869 — shared verified save-slot backend
+
+- [x] `SAVE-CREATE-869` — Account/User/Primary/index-0 request planned from installed NACP plus validated archive sizing; explicit UID, owner, available size and flags passed to create IPC.
+- [x] `SAVE-CREATE-VERIFY-869` — create succeeds only after exact rediscovery and live extra-data identity/size verification; IPC attempt and create success remain distinct.
+- [x] `SAVE-GROW-869` — reusable checked grow validates concrete retained space, current identity/sizes, alignment, non-shrink delta and target free space before one extend IPC and post-verification.
+- [x] `RESTORE-CREATE-869` — missing Account target runs cancellable full archive/CRC admission, exact retained-member/BackupGroupKey reinspection and explicit creation confirmation before worker-side creation.
+- [x] `RESTORE-FAILURE-869` — unsupported type/rank/index/title fail precisely; failed restore retains a newly created slot without claiming a safety recovery archive.
+- [x] `BACKEND-BOUNDARY-869` — cycle-free minimal public DTO; backend header/source, restore route and focused test remain ≤ 600 lines; Game create path reuses the backend.
+- [x] `RESTORE-VERIFY-869` — senior actual diff/caller review; 17/17 Python suites, dead-symbol gate, JSON parity and diff check PASS; no compile/runtime claims.
+- [x] `DOCS-BUMP-869` — `.868` → `.869`, four delivery documents synchronized and focused primary-master commit created without push.
+- [ ] `HW-869` — user compile plus disposable Switch checks: existing-target restore, absent-slot Account creation, cancel-before-create, corrupt/stale archive refusal, create/restore failure retention, and direct game save creation.
+
+## Попередній delivery: v0.13.868 — real DBI restore admission and unified exact route
 
 - [x] `DBI-MARKER-868` — exact zero-byte directory `//` validated/drained/CRC-checked, duplicate rejected, excluded from payload and destination; near misses fail closed.
 - [x] `DBI-PAYLOAD-868` — reserved-metadata-only archives rejected before mutation; generic non-save ZIP behavior preserved.

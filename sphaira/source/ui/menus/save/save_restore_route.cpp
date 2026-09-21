@@ -10,6 +10,9 @@
 #include "ui/progress_box.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
+#include "ui/menus/save/save_slot_backend.hpp"
+#include "minizip_helper.hpp"
+#include <minizip/unzip.h>
 #include <algorithm>
 #include <cstring>
 #include <set>
@@ -208,6 +211,147 @@ void Menu::ShowRestorePickerPopup(Entry e, const Entry& group, const dump::DumpL
     App::Push(std::move(popup));
 }
 
+namespace {
+
+void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, std::function<void(std::optional<fs::FsPath>)> cb) {
+    if (candidates.empty()) {
+        cb(std::nullopt);
+        return;
+    }
+    if (candidates.size() == 1) {
+        cb(candidates.front().path);
+        return;
+    }
+    PopupList::Items items;
+    for (const auto& c : candidates) {
+        const auto name = std::strrchr(c.path.s, '/');
+        items.emplace_back(name ? name + 1 : c.path.s);
+    }
+    auto popup = std::make_unique<PopupList>("Select backup"_i18n, items, [candidates, cb](auto op_index) {
+        if (!op_index || *op_index >= static_cast<s64>(candidates.size())) {
+            cb(std::nullopt);
+            return;
+        }
+        cb(candidates[*op_index].path);
+    });
+    App::Push(std::move(popup));
+}
+
+void PlanAndConfirmRestoreCreation(
+    const Entry& group,
+    const AccountUid& dest_uid,
+    const fs::FsPath& archive_path,
+    std::function<void(std::optional<Entry>)> cb) {
+
+    if (group.save_data_type != FsSaveDataType_Account) {
+        App::Push<OptionBox>("Save slot creation is only supported for Account saves."_i18n, "OK"_i18n);
+        cb(std::nullopt);
+        return;
+    }
+    if (group.save_data_rank != FsSaveDataRank_Primary || group.save_data_index != 0) {
+        App::Push<OptionBox>("Save slot creation is only supported for primary save slots."_i18n, "OK"_i18n);
+        cb(std::nullopt);
+        return;
+    }
+    if (group.application_id == 0) {
+        App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
+        cb(std::nullopt);
+        return;
+    }
+
+    struct PlanContext {
+        SaveArchiveAdmissionResult admission{};
+        SaveCreationRequest req{};
+        SaveBackendStatus status{SaveBackendStatus::Success};
+        Result plan_rc{0};
+        bool reinspect_ok{false};
+    };
+    auto ctx = std::make_shared<PlanContext>();
+
+    App::Push<ProgressBox>(0, "Checking backup..."_i18n, "",
+        [archive_path, group, dest_uid, ctx](auto pbox) -> Result {
+            pbox->SetHideSpeed(true);
+            pbox->SetTransfer("Verifying archive..."_i18n);
+            ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
+            if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
+            if (pbox->ShouldCancel()) return Result_TransferCancelled;
+
+            ctx->plan_rc = PlanAccountSaveCreation(
+                group.application_id, dest_uid,
+                ctx->admission.sizing.has_sizing ? &ctx->admission.sizing : nullptr,
+                ctx->req, &ctx->status);
+            if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
+                return ctx->plan_rc ? ctx->plan_rc : FsError_InvalidSize;
+            }
+
+            fs::FsStdio stdio_fs;
+            fs::FsNativeSd sd_fs;
+            fs::Fs* probe_fs = archive_path.starts_with("sdmc:/") ? static_cast<fs::Fs*>(&sd_fs) : static_cast<fs::Fs*>(&stdio_fs);
+            const char* filename = std::strrchr(archive_path.s, '/');
+            filename = filename ? filename + 1 : archive_path.s;
+            BackupArchiveInfo check_info{};
+            if (InspectBackupArchive(probe_fs, archive_path, filename, group.dbi_game_dir, check_info) &&
+                BackupGroupKey(check_info) == BackupGroupKey(group)) {
+                ctx->reinspect_ok = true;
+            }
+            return 0;
+        },
+        [group, dest_uid, ctx, cb](Result rc) mutable {
+            if (rc == Result_TransferCancelled) {
+                cb(std::nullopt);
+                return;
+            }
+            if (!ctx->admission.admitted) {
+                App::Push<OptionBox>("Invalid or corrupt save backup archive."_i18n, "OK"_i18n);
+                cb(std::nullopt);
+                return;
+            }
+            if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
+                App::Push<OptionBox>(GetBackendStatusMessage(ctx->status), "OK"_i18n);
+                cb(std::nullopt);
+                return;
+            }
+            if (!ctx->reinspect_ok) {
+                App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+                cb(std::nullopt);
+                return;
+            }
+
+            std::string user_nickname = "User";
+            for (const auto& acc : App::GetAccountList()) {
+                if (!std::memcmp(&acc.uid, &dest_uid, sizeof(AccountUid))) {
+                    user_nickname = acc.nickname;
+                    break;
+                }
+            }
+
+            const std::string game_name = (group.GetName() && group.GetName()[0] != '\0') ? group.GetName() : std::to_string(group.application_id);
+            const std::string prompt = FormatSaveCreationPrompt(ctx->req, game_name, user_nickname);
+
+            App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [group, req = ctx->req, cb](auto op_index) mutable {
+                if (!op_index || *op_index != 1) {
+                    cb(std::nullopt);
+                    return;
+                }
+                Entry target = group;
+                target.is_backup = false;
+                target.is_planned_create = true;
+                target.creation_request = req;
+                target.uid = req.attr.uid;
+                target.save_data_id = 0;
+                target.save_data_space_id = req.space_id;
+                target.save_data_type = req.attr.save_data_type;
+                target.save_data_rank = req.attr.save_data_rank;
+                target.save_data_index = req.attr.save_data_index;
+                target.size = req.data_size;
+                cb(std::move(target));
+            });
+        }
+    );
+}
+
+} // namespace
+
 void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
     if (group.backup_members.empty()) {
         fs::FsStdio stdio_fs;
@@ -229,6 +373,27 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
     }
 
     const auto on_account_ready = [this, group, location, backup_root](const AccountUid* explicit_uid) {
+        const auto candidates = FindLiveRestoreCandidates(group, explicit_uid);
+        if (candidates.empty()) {
+            const auto on_archive_selected = [this, group, explicit_uid, location, backup_root](const fs::FsPath& chosen_archive) {
+                PlanAndConfirmRestoreCreation(group, explicit_uid ? *explicit_uid : AccountUid{}, chosen_archive,
+                    [this, group, location, backup_root, chosen_archive](std::optional<Entry> target) mutable {
+                        if (!target) return;
+                        RestoreSavesPicked(std::move(*target), group, location, backup_root, chosen_archive);
+                    });
+            };
+
+            if (group.backup_members.size() == 1) {
+                on_archive_selected(group.backup_members.front().path);
+            } else {
+                PickArchiveFromCandidates(group.backup_members, [on_archive_selected](std::optional<fs::FsPath> picked) {
+                    if (!picked) return;
+                    on_archive_selected(*picked);
+                });
+            }
+            return;
+        }
+
         ResolveRestoreTarget(group, explicit_uid, [this, group, location, backup_root](std::optional<Entry> target) {
             if (!target) {
                 return;
@@ -242,7 +407,12 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
         });
     };
 
-    if (force_user_picker && group.save_data_type == FsSaveDataType_Account) {
+    if (explicit_dest_uid) {
+        on_account_ready(explicit_dest_uid);
+        return;
+    }
+
+    if (group.save_data_type == FsSaveDataType_Account) {
         const auto accounts = App::GetAccountList();
         if (accounts.empty()) {
             App::Push<OptionBox>("No user accounts found on this console."_i18n, "OK"_i18n);
@@ -265,28 +435,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
         return;
     }
 
-    if (explicit_dest_uid) {
-        on_account_ready(explicit_dest_uid);
-        return;
-    }
-
-    if (group.save_data_type == FsSaveDataType_Account) {
-        const auto accounts = App::GetAccountList();
-        bool uid_found = false;
-        for (const auto& acc : accounts) {
-            if (!std::memcmp(&group.uid, &acc.uid, sizeof(group.uid))) {
-                uid_found = true;
-                break;
-            }
-        }
-        if (uid_found && (group.uid.uid[0] != 0 || group.uid.uid[1] != 0)) {
-            on_account_ready(&group.uid);
-        } else {
-            RestoreSingleBackupGroup(std::move(group), nullptr, true, location, backup_root);
-        }
-    } else {
-        on_account_ready(nullptr);
-    }
+    on_account_ready(nullptr);
 }
 
 void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker) {
@@ -352,18 +501,6 @@ void Menu::PromptBatchRestoreTargets(
         return;
     }
 
-    const auto is_local_account = [&](const AccountUid& uid) {
-        if (uid.uid[0] == 0 && uid.uid[1] == 0) {
-            return false;
-        }
-        for (const auto& acc : *accounts) {
-            if (!std::memcmp(&uid, &acc.uid, sizeof(AccountUid))) {
-                return true;
-            }
-        }
-        return false;
-    };
-
     const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root](std::optional<Entry> target) {
         if (!target) {
             return;
@@ -380,13 +517,20 @@ void Menu::PromptBatchRestoreTargets(
     };
 
     const auto& current_seed = (*seeds)[step];
-    if (current_seed.save_data_type != FsSaveDataType_Account) {
-        ResolveRestoreTarget(current_seed, nullptr, on_target_resolved);
-        return;
-    }
+    const auto resolve_for_uid = [this, &current_seed, on_target_resolved](const AccountUid* uid) {
+        const auto candidates = FindLiveRestoreCandidates(current_seed, uid);
+        if (candidates.empty()) {
+            const auto archive_path = current_seed.backup_members.empty()
+                ? current_seed.backup_path
+                : current_seed.backup_members.front().path;
+            PlanAndConfirmRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved);
+            return;
+        }
+        ResolveRestoreTarget(current_seed, uid, on_target_resolved);
+    };
 
-    if (is_local_account(current_seed.uid)) {
-        ResolveRestoreTarget(current_seed, &current_seed.uid, on_target_resolved);
+    if (current_seed.save_data_type != FsSaveDataType_Account) {
+        resolve_for_uid(nullptr);
         return;
     }
 
@@ -405,12 +549,12 @@ void Menu::PromptBatchRestoreTargets(
         prompt += " (" + std::string(current_seed.GetName()) + ")";
     }
 
-    auto popup = std::make_unique<PopupList>(prompt, items, [this, seeds, step, accounts, resolved_targets, seen_target_keys, on_target_resolved](auto op_index) {
+    auto popup = std::make_unique<PopupList>(prompt, items, [resolve_for_uid, accounts](auto op_index) {
         if (!op_index || *op_index >= static_cast<s64>(accounts->size())) {
             return;
         }
         const auto chosen_uid = (*accounts)[*op_index].uid;
-        ResolveRestoreTarget((*seeds)[step], &chosen_uid, on_target_resolved);
+        resolve_for_uid(&chosen_uid);
     });
     App::Push(std::move(popup));
 }

@@ -1,6 +1,14 @@
-Поточний delivery — **v0.13.868 accepted**: реальні DBI ZIP приймаються без послаблення generic ZIP, metadata-only архіви відхиляються, `/DBISaves` видимий, а restore йде через один exact retained-member route; accepted baseline **v0.13.867**, HEAD 930bdf286c3418b4359656e37bc2f65f9ddf74f9.
+Поточний delivery — **v0.13.869 accepted**: спільний verified backend створює Account/User/Primary/index-0 save slots, перевіряє create/grow IPC і дозволяє restore створити відсутній слот лише після повної перевірки exact backup; accepted baseline **v0.13.868**, HEAD d1c878e77c69ddc49244a52d9d85faae7a9f8919.
 
-## Поточний delivery: v0.13.868 — real DBI restore admission and unified exact route
+## Поточний delivery: v0.13.869 — shared verified save-slot backend
+
+Один backend тепер планує Account save з установленого NACP та, за наявності, перевірених archive metadata, створює слот з explicit UID/owner/sizes/available-size/flags і приймає результат лише після exact rediscovery та extra-data verification. Той самий backend надає checked grow: concrete actual space, live attribute/size readback, alignment/non-shrink/capacity guards, один IPC і post-verification; UI growth навмисно не додано.
+
+Якщо для вибраного локального Account користувача немає live target, restore виконує повний ZIP/CRC admission у cancellable `ProgressBox`, повторно перевіряє retained member та `BackupGroupKey`, показує точні game/user/type/space/sizes/provenance і лише після підтвердження створює слот усередині restore worker. Новий слот не отримує фальшиву recovery-копію; при невдалому restore він лишається доступним із чесним повідомленням. Інші save types/ranks/indexes і неінстальовані titles відхиляються точно.
+
+Acceptance: senior перевірив actual diff і всі ключові callers; 17/17 compiler-free Python suites, dead-symbol gate (982 declarations), JSON parse/key parity і `git diff --check` PASS. Нові backend header/source та focused test мають 125/582/588 рядків, route — 598, усі ≤ 600. Compile/WSL/NRO/libnx/Switch runtime не запускалися; фоновий `TegraExplorer.bin` не входить у delivery і не валідувався.
+
+## Попередній delivery: v0.13.868 — real DBI restore admission and unified exact route
 
 Приймання save ZIP тепер допускає лише exact DBI root marker `//` з нульовим розміром і directory semantics, повністю перевіряє його читання/CRC, відкидає дублікати та не включає маркер у payload/destination. Архіви лише з reserved metadata відхиляються до mutation; generic ZIP поведінка не змінена.
 

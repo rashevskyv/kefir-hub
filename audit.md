@@ -1,6 +1,12 @@
 # audit.md
 
-Версія коду: **v0.13.868**. Дата: 2026-09-21.
+Версія коду: **v0.13.869**. Дата: 2026-09-21.
+
+Accepted v0.13.869: the previously queued safe create/grow contract is complete. One shared backend plans installed-title Account/User/Primary/index-0 creation from NACP plus validated archive sizing, passes explicit UID/owner/available-size/flags, and accepts create only after exact discovery and extra-data verification. Checked growth is reusable but has no new UI: concrete retained space/ID, live identity/sizes, alignment, non-shrink delta and target capacity are verified before one IPC and again afterward.
+
+Restore-time creation runs full archive/CRC admission in a cancellable `ProgressBox`, reinspects the exact retained member and `BackupGroupKey` before confirmation, and creates only inside the restore worker after source preflight. Unsupported identities fail precisely; failed extraction retains the new slot and does not claim an overwrite recovery archive. Game save creation now uses the same backend. All new/touched modular units remain ≤ 600 lines.
+
+Senior actual-diff/caller review plus 17/17 compiler-free Python suites, dead-symbol gate (982 declarations), JSON parse/key parity and `git diff --check` passed. No compile/WSL/NRO/libnx IPC/Switch hardware proof. The authorized background `TegraExplorer.bin` change is preserved outside this delivery and was not source/model validated. Remaining save-system boundaries are authenticated RAW container support and real-device verification; create/grow is no longer queued.
 
 Accepted v0.13.868: `A1` complete. Exact DBI `//` marker admission is fail-closed and CRC-checked; metadata-only save archives are refused; `/DBISaves` joins `/switch/DBI/saves`; restore UI paths share one exact retained-member route with final identity reinspection and no automatic target creation. Generic ZIP semantics remain unchanged. New route/test files are 454/586 physical lines (≤ 600); oversized legacy save units were reduced rather than expanded.
 

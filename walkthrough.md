@@ -1,4 +1,14 @@
-Актуальний delivery — **v0.13.868** (2026-09-21). History: archive/walkthrough_archive.md.
+Актуальний delivery — **v0.13.869** (2026-09-21). History: archive/walkthrough_archive.md.
+
+## v0.13.869 — shared verified save-slot backend
+
+Sphaira now has one checked save-slot backend shared by the Game create action and restore. Account slot creation is deliberately limited to installed-title User-space Primary/index-0 saves. The request is derived from installed control data, may grow to validated archive metadata sizes, explicitly carries UID, owner, available size and flags, and is accepted only after exact rediscovery plus live extra-data identity and size verification.
+
+The backend also exposes conservative checked growth without adding a speculative UI: it requires a concrete retained target space and save ID, rereads live identity and aligned sizes, forbids shrink, checks only the required delta against that target space, executes one extend IPC and verifies the result. Other save types, ranks, indexes and missing control data fail with precise statuses.
+
+Restore can now create a missing Account target for the user explicitly selected in the UI. Before confirmation it performs the full ZIP/CRC preflight asynchronously with cancellation, plans sizes, and reinspects the exact retained archive and `BackupGroupKey`. Creation occurs in the restore worker after another source preflight. A newly created slot skips meaningless overwrite recovery; if extraction fails, the slot is retained and the UI says so instead of claiming recovery coverage.
+
+Senior reviewed the actual diff, backend callers and restore lifecycle. All 17 compiler-free Python suites passed, as did the dead-symbol gate (982 declarations), JSON parse/key parity and `git diff --check`. New backend header/source and focused test are 125/582/588 lines; the restore route is 598 lines. No configure, compile, WSL/NRO build, compiled C++ test, libnx IPC or Switch hardware run was performed. The unrelated authorized `TegraExplorer.bin` workspace update was preserved but excluded from this delivery and not validated.
 
 ## v0.13.868 — real DBI restore admission and unified exact route
 

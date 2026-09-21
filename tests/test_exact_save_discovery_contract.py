@@ -90,9 +90,9 @@ def test_source_contracts():
 
     check("const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);" in ops_cpp_src,
           "DeleteSaves / DeleteSavesOn must use static_cast<FsSaveDataSpaceId>(e.save_data_space_id) directly")
-    check("if (e.save_data_id != 0) {" in ops_cpp_src and "R_TRY(check_rc);" in ops_cpp_src,
+    check(("if (target_entry.save_data_id != 0) {" in ops_cpp_src or "if (e.save_data_id != 0) {" in ops_cpp_src) and "R_TRY(check_rc);" in ops_cpp_src,
           "RestoreSaveZip must return open failure directly without create when save_data_id != 0")
-    check("(e.save_data_id != 0)\n        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)" in ops_cpp_src,
+    check("static_cast<FsSaveDataSpaceId>(target_entry.save_data_space_id)" in ops_cpp_src or "(e.save_data_id != 0)\n        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)" in ops_cpp_src,
           "RestoreSaveZip must use actual save_data_space_id directly when save_data_id != 0")
 
     # 6. filebrowser_ops.cpp: RestoreSaveFile ZIP vs DISA

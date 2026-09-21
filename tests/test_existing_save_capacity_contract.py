@@ -61,9 +61,11 @@ def test_source_contracts() -> None:
     check(pos_preflight != -1,
           "RestoreSaveZip must execute checked TransferUnzipPreflight (R_TRY) with &summary")
 
-    pos_read_extra = rsz_body.find("R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, e.save_data_id));")
+    pos_read_extra = rsz_body.find("R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, target_save_data_id));")
+    if pos_read_extra == -1:
+        pos_read_extra = rsz_body.find("R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, e.save_data_id));")
     check(pos_read_extra != -1,
-          "RestoreSaveZip must execute exact R_TRY-wrapped fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId using save_data_space_id and e.save_data_id")
+          "RestoreSaveZip must execute exact R_TRY-wrapped fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId using save_data_space_id and target_save_data_id")
 
     pos_capacity_guard = rsz_body.find("summary.file_bytes > live.data_size")
     check(pos_capacity_guard != -1,
@@ -145,9 +147,9 @@ def test_source_contracts() -> None:
     check("total_size % extra.journal_size" not in rsz_body,
           "RestoreSaveZip must NOT perform journal remainder sizing rounding")
 
-    # Verify metadata sizing authority applies only to legacy create branch (e.save_data_id == 0)
-    check("if (e.save_data_id == 0)" in rsz_body,
-          "Metadata sizing authority must be restricted strictly to e.save_data_id == 0")
+    # Verify metadata sizing authority applies only to legacy create branch (save_data_id == 0)
+    check("if (target_entry.save_data_id == 0)" in rsz_body or "if (e.save_data_id == 0)" in rsz_body,
+          "Metadata sizing authority must be restricted strictly to target_entry.save_data_id == 0")
     check("if (e.save_data_id != 0)" not in rsz_body[:pos_probe_scope],
           "e.save_data_id != 0 must not read sizing from archive metadata")
 

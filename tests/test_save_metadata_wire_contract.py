@@ -214,7 +214,9 @@ def test_source_contracts() -> None:
     pos_preflight = rsz_body.find("thread::TransferUnzipPreflight(")
     pos_meta = rsz_body.find("ReadArchiveSaveMetadata(zfile, pbox, archive_meta, &meta_rc)")
     pos_invalid_gate = rsz_body.find("if (meta_status == ArchiveMetaStatus::Invalid)")
-    pos_dest_res = rsz_body.find("if (e.save_data_id == 0) {")
+    pos_dest_res = rsz_body.find("if (target_entry.save_data_id == 0) {")
+    if pos_dest_res == -1:
+        pos_dest_res = rsz_body.find("if (e.save_data_id == 0) {")
     pos_check_fs = rsz_body.find("fs::FsNativeSave check_save_fs")
     pos_rec_meta = rsz_body.find("ReadArchiveSaveMetadata(rec_zfile, pbox, rec_meta, &rec_meta_rc)")
     pos_rec_gate = rsz_body.find("R_UNLESS(rec_meta_status == ArchiveMetaStatus::Valid")
@@ -235,7 +237,7 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(856, 869)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(856, 870)),
           "sphaira/CMakeLists.txt version must be 0.13.856 or later")
 
     print("  -> Static source contracts & gate order checks PASSED.")

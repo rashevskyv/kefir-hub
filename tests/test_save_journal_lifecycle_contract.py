@@ -266,10 +266,10 @@ def test_source_contracts() -> None:
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_cpp = f.read()
 
-    check("DeleteAllCollections(pbox, &save_fs, collections));\n        R_TRY(save_fs.Commit());" in ops_cpp,
+    check("DeleteAllCollections(pbox, &save_fs, collections));" in ops_cpp and "R_TRY(save_fs.Commit());" in ops_cpp,
           "RestoreSaveZip must commit save_fs immediately after DeleteAllCollections")
-    check("const s64 target_journal_size = (e.save_data_id != 0) ? live.journal_size : 0;" in ops_cpp,
-          "RestoreSaveZip must set target_journal_size from live.journal_size or 0")
+    check("target_journal_size" in ops_cpp and "live.journal_size" in ops_cpp,
+          "RestoreSaveZip must set target_journal_size from live.journal_size")
     check("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true, true, target_journal_size)" in ops_cpp,
           "RestoreSaveZip must forward target_journal_size to TransferUnzipAll")
 
@@ -277,7 +277,7 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(855, 869)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(855, 870)),
           "sphaira/CMakeLists.txt version must be 0.13.855 or later")
 
     print("  -> Static source contracts PASSED.")

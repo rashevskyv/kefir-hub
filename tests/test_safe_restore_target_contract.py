@@ -55,6 +55,7 @@ def test_source_contracts():
     check('make_unique<PopupList>("Select restore target slot"_i18n' in menu_cpp_src,
           "ResolveRestoreTarget must present PopupList for multiple candidates")
     check('App::Push<OptionBox>("No compatible live save slot found on console. Automatic save slot creation is not supported in this version."_i18n, "OK"_i18n);' in menu_cpp_src or
+          'App::Push<OptionBox>("No compatible live save slot found on console."_i18n, "OK"_i18n);' in menu_cpp_src or
           'App::Push<OptionBox>("No existing save slot found on console."_i18n, "OK"_i18n);' in menu_cpp_src,
           "ResolveRestoreTarget must show explicit error box when no existing live slots match")
     check("seen_target_keys->insert(key).second" in menu_cpp_src,
@@ -79,15 +80,16 @@ def test_source_contracts():
           "save_menu_ops.cpp must implement 4-arg RestoreSaves")
     check("sources.size() != targets.size()" in ops_cpp_src,
           "RestoreSaves must check for sources and targets count mismatch")
-    check("dst.is_backup || dst.save_data_id == 0" in ops_cpp_src,
-          "RestoreSaves must validate destination targets (not backup and nonzero save_data_id)")
+    target_val_str = "dst.is_backup || (dst.save_data_id == 0 && !dst.is_planned_create)" if "dst.is_planned_create" in ops_cpp_src else "dst.is_backup || dst.save_data_id == 0"
+    check(target_val_str in ops_cpp_src,
+          "RestoreSaves must validate destination targets (not backup and nonzero save_data_id unless planned create)")
     check("i < sources.size() && i < targets.size()" not in ops_cpp_src,
           "RestoreSaves must not silently truncate mismatched sources and targets")
 
     restore_fn_pos = ops_cpp_src.find("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets")
     pbox_pos = ops_cpp_src.find("App::Push<ProgressBox>", restore_fn_pos)
     mismatch_pos = ops_cpp_src.find("sources.size() != targets.size()", restore_fn_pos)
-    target_val_pos = ops_cpp_src.find("dst.is_backup || dst.save_data_id == 0", restore_fn_pos)
+    target_val_pos = ops_cpp_src.find(target_val_str, restore_fn_pos)
     check(mismatch_pos != -1 and mismatch_pos < pbox_pos,
           "Count mismatch check must happen before ProgressBox in RestoreSaves")
     check(target_val_pos != -1 and target_val_pos < pbox_pos,

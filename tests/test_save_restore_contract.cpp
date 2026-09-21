@@ -53,7 +53,7 @@ static int test_preflight_ordering_contract() {
     const auto preflight_pos = rsz_body.find("TransferUnzipPreflight");
     CHECK(preflight_pos != std::string::npos);
 
-    const auto create_pos = rsz_body.find("fsCreateSaveDataFileSystem", preflight_pos);
+    const auto create_pos = rsz_body.find("CreateSaveDataChecked", preflight_pos);
     CHECK(create_pos != std::string::npos);
     CHECK(preflight_pos < create_pos);
 

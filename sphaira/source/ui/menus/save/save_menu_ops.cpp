@@ -25,6 +25,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_slot_backend.hpp"
 
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
@@ -353,7 +354,7 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
     }
 
     for (const auto& dst : targets) {
-        if (dst.is_backup || dst.save_data_id == 0) {
+        if (dst.is_backup || (dst.save_data_id == 0 && !dst.is_planned_create)) {
             App::Push<OptionBox>("Cannot restore directly to backup or invalid save target."_i18n, "OK"_i18n);
             return;
         }
@@ -381,8 +382,9 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
         auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
         auto last_mutation_started = std::make_shared<bool>(false);
         auto last_item_is_raw = std::make_shared<bool>(false);
+        auto last_item_created_slot_retained = std::make_shared<bool>(false);
 
-        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw](auto pbox) mutable -> Result {
+        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](auto pbox) mutable -> Result {
             fs::FsStdio stdio_fs;
             fs::FsNativeSd sd_fs;
 
@@ -406,6 +408,7 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 const bool is_raw = IsDisaSaveFile(probe_fs, file_path);
                 *last_item_is_raw = is_raw;
                 *last_mutation_started = false;
+                *last_item_created_slot_retained = false;
 
                 if (is_raw) {
                     return Result_RawSaveRestoreUnsupported;
@@ -424,21 +427,25 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 pbox->SetActionName("Restore"_i18n);
                 fs::FsPath item_recovery_path;
                 bool item_mutation_started = false;
-                const Result restore_rc = RestoreSaveInternal(pbox, dst, file_path, &item_recovery_path, &item_mutation_started);
+                bool item_created_slot_retained = false;
+                const Result restore_rc = RestoreSaveInternal(pbox, dst, file_path, &item_recovery_path, &item_mutation_started, &item_created_slot_retained);
                 if (!item_recovery_path.empty()) {
                     recovery_paths->push_back(item_recovery_path);
                 }
                 if (R_FAILED(restore_rc)) {
                     *last_mutation_started = item_mutation_started;
+                    *last_item_created_slot_retained = item_created_slot_retained;
                     return restore_rc;
                 }
                 (*restored)++;
             }
 
             R_SUCCEED();
-        }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw](Result rc){
+        }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](Result rc){
             if (R_FAILED(rc)) {
-                if (*last_item_is_raw) {
+                if (*last_item_created_slot_retained) {
+                    App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
+                } else if (*last_item_is_raw) {
                     App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
                 } else {
                     App::PushErrorBox(rc, "Restore failed!"_i18n);
@@ -480,7 +487,7 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 rec_msg += "\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
                 App::Push<OptionBox>(rec_msg, "OK"_i18n);
             } else if (R_FAILED(rc)) {
-                if (!*last_item_is_raw && !*last_mutation_started) {
+                if (!*last_item_is_raw && !*last_mutation_started && !*last_item_created_slot_retained) {
                     App::Push<OptionBox>("Restore stopped before current target save was modified."_i18n, "OK"_i18n);
                 }
             }
@@ -598,28 +605,31 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
         return;
     }
 
-    const std::string prompt = "Restore save data to\n"_i18n + e.GetName() + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
+    const std::string prompt = "Restore save data to\n"_i18n + (e.GetName() ? std::string(e.GetName()) : "") + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
-    App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, e = std::move(e), location, backup_root, chosen = std::move(chosen), is_raw](auto op_index) mutable {
-        if (!op_index || *op_index != 1) return;
-
+    auto start_restore = [this, e = std::move(e), location, backup_root, chosen = std::move(chosen), is_raw]() mutable {
         auto recovery_path = std::make_shared<fs::FsPath>();
         auto mutation_started = std::make_shared<bool>(false);
+        auto created_slot_retained = std::make_shared<bool>(false);
 
-        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen, recovery_path, mutation_started, is_raw](auto pbox) mutable -> Result {
+        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen, recovery_path, mutation_started, created_slot_retained, is_raw](auto pbox) mutable -> Result {
             detail::LoadControlEntry(e);
 
             pbox->SetActionName("Restore"_i18n);
-            R_TRY(RestoreSaveInternal(pbox, e, chosen, recovery_path.get(), mutation_started.get()));
+            R_TRY(RestoreSaveInternal(pbox, e, chosen, recovery_path.get(), mutation_started.get(), created_slot_retained.get()));
             R_SUCCEED();
-        }, [recovery_path, mutation_started, is_raw](Result rc){
+        }, [recovery_path, mutation_started, created_slot_retained, is_raw](Result rc){
             if (R_FAILED(rc)) {
+                if (*created_slot_retained) {
+                    App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
+                    return;
+                }
                 App::PushErrorBox(rc, "Restore failed!"_i18n);
             } else {
                 App::Notify("Restore successful!"_i18n);
             }
 
-            if (!is_raw) {
+            if (!is_raw && !*created_slot_retained) {
                 if (!recovery_path->empty()) {
                     std::string prefix;
                     if (R_SUCCEEDED(rc)) {
@@ -638,6 +648,16 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
                 }
             }
         });
+    };
+
+    if (e.is_planned_create) {
+        start_restore();
+        return;
+    }
+
+    App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [start_restore](auto op_index) mutable {
+        if (!op_index || *op_index != 1) return;
+        start_restore();
     });
 }
 
@@ -1447,21 +1467,32 @@ static Result StageBackupFolderToZip(
 
 } // namespace
 
-Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty);
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty, bool* out_created_slot_retained);
+
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool* out_created_slot_retained) {
+    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started, false, out_created_slot_retained);
+}
 
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started) {
-    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started, false);
+    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started, false, nullptr);
 }
 
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty) {
+    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started, allow_empty, nullptr);
+}
+
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty, bool* out_created_slot_retained) {
     if (out_mutation_started) {
         *out_mutation_started = false;
+    }
+    if (out_created_slot_retained) {
+        *out_created_slot_retained = false;
     }
     if (haze::IsRunning()) {
         return FsError_TargetLocked;
     }
     R_UNLESS(!e.is_backup, FsError_PathNotFound);
-    R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);
+    R_UNLESS(e.save_data_id != 0 || e.is_planned_create, FsError_PathNotFound);
 
     SaveReaderContext source_reader_ctx;
     zlib_filefunc64_def file_func;
@@ -1504,30 +1535,48 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         R_THROW(R_FAILED(meta_rc) ? meta_rc : Result_UnzOpen2_64);
     }
 
-    if (e.save_data_id == 0) {
+    Entry target_entry = e;
+    bool was_newly_created = false;
+    if (e.is_planned_create) {
+        R_TRY(pbox->ShouldExitResult());
+        const auto create_res = CreateSaveDataChecked(e.creation_request, [pbox]() {
+            return pbox && R_FAILED(pbox->ShouldExitResult());
+        });
+        if (create_res.create_succeeded) {
+            if (out_mutation_started) *out_mutation_started = true;
+            if (out_created_slot_retained) *out_created_slot_retained = true;
+        }
+        if (!create_res.verified) {
+            return R_FAILED(create_res.rc) ? create_res.rc : FsError_PathNotFound;
+        }
+        was_newly_created = true;
+        static_cast<FsSaveDataInfo&>(target_entry) = create_res.verified_info;
+        target_entry.is_planned_create = false;
+    }
+
+    if (target_entry.save_data_id == 0) {
         return FsError_PathNotFound;
     }
 
     R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);
 
     FsSaveDataAttribute attr{};
-    attr.application_id = e.application_id;
-    attr.uid = e.uid;
-    attr.system_save_data_id = e.system_save_data_id;
-    attr.save_data_type = e.save_data_type;
-    attr.save_data_rank = e.save_data_rank;
-    attr.save_data_index = e.save_data_index;
+    attr.application_id = target_entry.application_id;
+    attr.uid = target_entry.uid;
+    attr.system_save_data_id = target_entry.system_save_data_id;
+    attr.save_data_type = target_entry.save_data_type;
+    attr.save_data_rank = target_entry.save_data_rank;
+    attr.save_data_index = target_entry.save_data_index;
 
-    const auto save_data_space_id = (e.save_data_id != 0)
-        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)
-        : static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
+    const auto save_data_space_id = static_cast<FsSaveDataSpaceId>(target_entry.save_data_space_id);
+    const u64 target_save_data_id = target_entry.save_data_id;
 
     // Check if save filesystem already exists
     bool save_exists = false;
     {
         fs::FsNativeSave check_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, false};
         const auto check_rc = check_save_fs.GetFsOpenResult();
-        if (e.save_data_id != 0) {
+        if (target_entry.save_data_id != 0) {
             R_TRY(check_rc);
             save_exists = true;
         } else {
@@ -1537,7 +1586,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     R_UNLESS(save_exists, FsError_PathNotFound);
 
     FsSaveDataExtraData live{};
-    R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, e.save_data_id));
+    R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live, sizeof(live), save_data_space_id, target_save_data_id));
 
     if (live.attr.application_id != attr.application_id ||
         live.attr.uid.uid[0] != attr.uid.uid[0] ||
@@ -1566,7 +1615,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         R_TRY(save_fs.GetFsOpenResult());
 
         filebrowser::FsDirCollections collections;
-        if (e.save_data_id != 0) {
+        if (target_entry.save_data_id != 0 && !was_newly_created) {
             filebrowser::FsDirCollections live_collections;
             R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", live_collections, true));
 
@@ -1784,7 +1833,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
             }
 
             collections = std::move(current_collections);
-        } else {
+        } else if (!was_newly_created) {
             R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", collections));
         }
 
@@ -1797,13 +1846,15 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         }
 
         // ponytail: held mount and byte comparison verify correspondence at check time, but do not provide snapshot isolation against concurrent external mutation; true atomic save transactions require filesystem-level snapshot support.
-        R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
-        R_TRY(save_fs.Commit());
+        if (!was_newly_created) {
+            R_TRY(filebrowser::FsView::DeleteAllCollections(pbox, &save_fs, collections));
+            R_TRY(save_fs.Commit());
+        }
 
         log_write("opened save file\n");
         // restore save data from zip.
         pbox->NewTransfer("Restoring save..."_i18n);
-        const s64 target_journal_size = (e.save_data_id != 0) ? live.journal_size : 0;
+        const s64 target_journal_size = live.journal_size;
         if (!allow_empty || !source_inventory.files.empty() || !source_inventory.directories.empty()) {
             R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true, true, target_journal_size));
         }
@@ -1813,9 +1864,9 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     } // End lexical RW scope: save_fs is destroyed here!
 
     // Reread live extra data to verify save identity after restore
-    if (e.save_data_id != 0) {
+    if (target_entry.save_data_id != 0) {
         FsSaveDataExtraData post_live{};
-        R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&post_live, sizeof(post_live), save_data_space_id, e.save_data_id));
+        R_TRY(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&post_live, sizeof(post_live), save_data_space_id, target_save_data_id));
         if (post_live.attr.application_id != attr.application_id ||
             post_live.attr.uid.uid[0] != attr.uid.uid[0] ||
             post_live.attr.uid.uid[1] != attr.uid.uid[1] ||
@@ -2211,11 +2262,14 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
     R_SUCCEED();
 }
 
-Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started) const {
+Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool* out_created_slot_retained) const {
     if (out_mutation_started) {
         *out_mutation_started = false;
     }
-    R_UNLESS(!e.is_backup && e.save_data_id != 0, FsError_PathNotFound);
+    if (out_created_slot_retained) {
+        *out_created_slot_retained = false;
+    }
+    R_UNLESS(!e.is_backup && (e.save_data_id != 0 || e.is_planned_create), FsError_PathNotFound);
     pbox->SetTitle(e.GetName());
     if (e.image) {
         pbox->SetImage(e.image);
@@ -2236,7 +2290,7 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
         return Result_RawSaveRestoreUnsupported;
     }
 
-    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started);
+    return RestoreSaveZip(pbox, e, path, out_recovery_path, out_mutation_started, false, out_created_slot_retained);
 }
 
 Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root) const {

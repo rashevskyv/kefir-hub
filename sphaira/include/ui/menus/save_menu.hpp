@@ -15,6 +15,7 @@
 #include <span>
 #include <unordered_set>
 #include <unordered_map>
+#include "ui/menus/save/save_slot_backend.hpp"
 
 namespace sphaira::ui::menu::save {
 
@@ -47,6 +48,9 @@ struct Entry final : FsSaveDataInfo {
     u64 source_timestamp{};
     u64 commit_id{};
     std::vector<BackupCandidate> backup_members{};
+
+    bool is_planned_create{};
+    SaveCreationRequest creation_request{};
 
     auto GetName() const -> const char* {
         return lang.name;
@@ -92,6 +96,7 @@ enum class SaveOp {
 void SignalChange();
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr);
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty);
+Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty, bool* out_created_slot_retained);
 Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& folder_path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr);
 
 struct Menu final : grid::Menu {
@@ -237,12 +242,14 @@ private:
 
     auto BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath;
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr) const;
+    Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool* out_created_slot_retained) const;
     Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false, const fs::FsPath& backup_root = "/dumps") const;
     bool FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const;
     // every restorable archive for e across all backup formats/locations,
     // newest first. generalises FindLatestBackupPath.
     auto CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate>;
     auto CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root = "/dumps") const -> std::vector<BackupCandidate>;
+    static auto FindLiveRestoreCandidates(const Entry& backup, const AccountUid* explicit_uid) -> std::vector<Entry>;
     static void ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid, std::function<void(std::optional<Entry>)> cb);
     static void ResolveRestoreTarget(const Entry& backup, std::function<void(std::optional<Entry>)> cb) {
         ResolveRestoreTarget(backup, nullptr, std::move(cb));

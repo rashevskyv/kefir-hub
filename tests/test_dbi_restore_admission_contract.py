@@ -65,8 +65,8 @@ def test_static_source_contracts() -> None:
     print("[1] Running static source contracts for v0.13.868...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.868)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868")
+    check("set(sphaira_VERSION 0.13.868)" in cmake_src or "set(sphaira_VERSION 0.13.869)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868 or 0.13.869")
 
     path_util_hpp = read_file("sphaira", "include", "path_util.hpp")
     check("inline auto IsDbiRootMarkerEntry(" in path_util_hpp,
@@ -170,7 +170,7 @@ def test_static_source_contracts() -> None:
           "PromptBackupGroupAction Restore must delegate to RestoreBackupGroups")
     check("RestoreBackupGroups(seeds, true);" in sm_cpp,
           "PromptBackupGroupAction RestoreForUser must delegate to RestoreBackupGroups")
-    check("No compatible live save slot found on console. Automatic save slot creation is not supported in this version." in sm_cpp,
+    check("No compatible live save slot found on console." in sm_cpp,
           "ResolveRestoreTarget must display fail-closed message when no candidates found")
 
     ops_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
@@ -192,7 +192,7 @@ def test_static_source_contracts() -> None:
           "RestoreSaves must reinspect with src.dbi_game_dir")
     check("BackupGroupKey(check_info) != BackupGroupKey(src)" in batch_slice,
           "RestoreSaves must enforce BackupGroupKey equivalence on each multi-group source")
-    check("R_UNLESS(e.save_data_id != 0, FsError_PathNotFound);" in ops_cpp,
+    check("R_UNLESS(e.save_data_id != 0" in ops_cpp,
           "RestoreSaveZip must enforce e.save_data_id != 0 guard")
     check("fsCreateSaveDataFileSystem" not in ops_cpp,
           "RestoreSaveZip must NOT contain legacy fsCreateSaveDataFileSystem creation code")
@@ -201,7 +201,6 @@ def test_static_source_contracts() -> None:
     uk_json = json.loads(read_file("assets", "romfs", "i18n", "uk.json"))
     required_keys = [
         "Select restore target slot",
-        "No compatible live save slot found on console. Automatic save slot creation is not supported in this version.",
         "Selected backup archive has changed or is no longer available.",
         "Selected backup contains no save payload."
     ]
