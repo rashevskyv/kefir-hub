@@ -93,39 +93,6 @@ auto App::GetWebdavUrlName() -> std::string {
     return g_app->m_webdav_url.Get();
 }
 
-auto App::GetWebdavUrl() -> std::string {
-    const auto raw_val = g_app->m_webdav_url.Get();
-    const auto locations = location::Load();
-    for (const auto& loc : locations) {
-        if (loc.name == raw_val) {
-            return NormalizeWebdavUrl(loc.url);
-        }
-    }
-    return NormalizeWebdavUrl(raw_val);
-}
-
-auto App::GetWebdavUser() -> std::string {
-    const auto raw_val = g_app->m_webdav_url.Get();
-    const auto locations = location::Load();
-    for (const auto& loc : locations) {
-        if (loc.name == raw_val) {
-            return loc.user;
-        }
-    }
-    return g_app->m_webdav_user.Get();
-}
-
-auto App::GetWebdavPass() -> std::string {
-    const auto raw_val = g_app->m_webdav_url.Get();
-    const auto locations = location::Load();
-    for (const auto& loc : locations) {
-        if (loc.name == raw_val) {
-            return loc.pass;
-        }
-    }
-    return g_app->m_webdav_pass.Get();
-}
-
 auto App::GetLogEnable() -> bool {
     return g_app->m_log_enabled.Get();
 }

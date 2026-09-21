@@ -1,18 +1,8 @@
 #include "ui/menus/main_menu.hpp"
 
 #include "ui/menus/homebrew.hpp"
-#include "ui/menus/filebrowser.hpp"
 #include "ui/menus/tools_menu.hpp"
 #include "ui/menus/users_menu.hpp"
-#include "ui/menus/settings_menu.hpp"
-#include "ui/menus/themezer.hpp"
-#include "ui/menus/ghdl.hpp"
-#include "ui/menus/dbi_menu.hpp"
-#include "ui/menus/gc_menu.hpp"
-#include "ui/menus/game_menu.hpp"
-#include "ui/menus/save_menu.hpp"
-#include "ui/menus/save/save_hub_menu.hpp"
-#include "ui/menus/appstore.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 
@@ -36,45 +26,6 @@ constexpr const char* GITHUB_URL{"https://api.github.com/repos/rashevskyv/kefir-
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
 constexpr long HTTP_NOT_FOUND{404};
 
-template<typename T>
-auto MiscMenuFuncGenerator(u32 flags) {
-    return std::make_unique<T>(flags);
-}
-
-const MiscMenuEntry MISC_MENU_ENTRIES[] = {
-    { .name = "Appstore", .title = "Appstore", .func = MiscMenuFuncGenerator<ui::menu::appstore::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "Download and update apps.\n\n"\
-        "Internet connection required." },
-
-    { .name = "Games", .title = "Games", .func = MiscMenuFuncGenerator<ui::menu::game::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "View all installed games. "\
-        "In this menu you can launch, backup, create savedata and much more." },
-
-    { .name = "FileBrowser", .title = "FileBrowser", .func = MiscMenuFuncGenerator<ui::menu::filebrowser::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "Browse files on you SD Card. "\
-        "You can move, copy, delete, extract zip, create zip, upload and much more.\n\n"\
-        "A connected USB/HDD can be opened by mounting it in the advanced options." },
-
-    { .name = "Saves", .title = "Saves", .func = MiscMenuFuncGenerator<ui::menu::save::SaveHubMenu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "View save data for each user. "\
-        "You can backup and restore saves.\n\n"\
-        "Experimental support for backing up system saves is possible." },
-
-    { .name = "Themezer", .title = "Themezer", .func = MiscMenuFuncGenerator<ui::menu::themezer::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "Download themes from themezer.net. "\
-        "Themes are downloaded to /themes/sphaira\n"\
-        "To install the themes, NXThemesInstaller needs to be installed (can be downloaded via the AppStore)." },
-
-    { .name = "GitHub", .title = "GitHub", .func = MiscMenuFuncGenerator<ui::menu::gh::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "Download releases directly from GitHub. "\
-        "Custom entries can be added to /config/kefir/github" },
-
-    { .name = "GameCard", .title = "GameCard", .func = MiscMenuFuncGenerator<ui::menu::gc::Menu>, .flag = MiscMenuFlag_Shortcut, .info =
-        "View info on the inserted Game Card (GC). "\
-        "You can backup and install the inserted GC. "\
-        "To swap GC's, simply remove the old GC and insert the new one. "\
-        "You do not need to exit the menu." },
-};
 
 void StartLaunchAccountLink() {
     App::Push<ProgressBox>(0, "Link Nintendo Account"_i18n, "Linking account..."_i18n,
@@ -130,10 +81,6 @@ void CheckLaunchAccountLinkPrompt() {
 }
 
 } // namespace
-
-auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry> {
-    return MISC_MENU_ENTRIES;
-}
 
 MainMenu::MainMenu() {
     // Launch account-link prompt is deferred to OnFocusGained: Push from this

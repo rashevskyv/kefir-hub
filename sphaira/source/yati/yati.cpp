@@ -1,7 +1,6 @@
 #include "yati/yati.hpp"
 #include "path_util.hpp"
 #include "yati/source/file.hpp"
-#include "yati/source/stream_file.hpp"
 #include "yati/container/nsp.hpp"
 #include "yati/container/xci.hpp"
 

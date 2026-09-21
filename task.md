@@ -1,22 +1,33 @@
 # task.md
 
-Версія коду: **v0.13.870**.
+Версія коду: **v0.13.871**.
 
-## Поточний delivery: v0.13.871 — dead-code cleanup
+## Поточний delivery: v0.13.872 — split Save paths and metadata
 
-- [ ] `DEAD-ADVANCED-871` — видалено недосяжний `App::DisplayAdvancedOptions` і залежний misc factory; живі install/forwarder/dump options незмінні.
-- [ ] `DEAD-STREAM-MENU-871` — видалено неінстанційований `stream::Menu`, active-menu pointer/setter/branches; background install і DBI flow збережені.
-- [ ] `DEAD-STREAM-FILE-871` — видалено неінстанційований `yati::source::StreamFile`, header/source/CMake entry.
-- [ ] `DEAD-WEBDAV-871` — видалено невикористані `GetWebdavUrl/User/Pass`; активний named-location flow незмінний.
-- [ ] `SIZE-871` — нових файлів понад 600 рядків немає; oversized legacy files не отримали незалежної нової відповідальності.
-- [ ] `VERIFY-STATIC-871` — Gemini виконав scoped static/dead-symbol/diff checks після implementation.
-- [ ] `VERIFY-BUILD-871` — лише після окремої команди senior-а Gemini виконав WSL `ReleaseWithInstall` і виправив compile/link errors у межах delivery.
-- [ ] `DOCS-BUMP-871` — app version піднято до `0.13.871`, `plan.md` / `task.md` / `walkthrough.md` / `audit.md` синхронізовано.
-- [ ] `COMMIT-871` — focused primary-master commit `v0.13.871: remove unreachable legacy UI` створено без push.
+- [ ] `SPLIT-PATHS-872` — path naming/building лишилося в компактному `save_paths.cpp`.
+- [ ] `SPLIT-META-872` — metadata wire decode/read винесено в cohesive unit ≤600 рядків.
+- [ ] `SPLIT-DISCOVERY-872` — backup search/discovery та inspection/integrity рознесено за стабільними відповідальностями.
+- [ ] `CMAKE-872` — explicit source list оновлено без нового build abstraction.
+- [ ] `CONTRACT-872` — save formats, filters, grouping, paths, restore admission і callers не змінилися.
+- [ ] `SIZE-872` — усі нові source/test/instruction files ≤600 рядків; legacy unit materially reduced.
+- [ ] `VERIFY-872` — 18 suites, dead-symbol, JSON parity, diff check і фінальний WSL `ReleaseWithInstall` PASS.
+- [ ] `DOCS-BUMP-872` — version/docs синхронізовано.
+- [ ] `COMMIT-872` — focused primary-master commit без push.
+
+## Попередній delivery: v0.13.871 — виконано
+
+- [x] `DEAD-ADVANCED-871`
+- [x] `DEAD-STREAM-MENU-871`
+- [x] `DEAD-STREAM-FILE-871`
+- [x] `DEAD-WEBDAV-871`
+- [x] `BUILD-CLOSURE-871` — виправлено accumulated Save compile blockers.
+- [x] `VERIFY-871` — `[100%] Built target sphaira_nro`, 18/18 suites, dead-symbol 981, EN/UK 2549/2549, diff check PASS.
+- [x] `DOCS-BUMP-871`
+- [x] `COMMIT-871`
 
 ## Після v0.13.871
 
-- [ ] `SPLIT-SAVES` — перший behavior-preserving split legacy Save subsystem.
+- [ ] `SPLIT-SAVE-UI-ACTIONS`
 - [ ] `SPLIT-WEB`
 - [ ] `SPLIT-APP`
 - [ ] `SPLIT-TRANSFER-YATI`

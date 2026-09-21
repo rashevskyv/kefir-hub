@@ -4,7 +4,6 @@
 #include "haze.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
-#include "title.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
@@ -274,7 +273,7 @@ void PlanAndConfirmRestoreCreation(
             pbox->SetTransfer("Verifying archive..."_i18n);
             ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
             if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
-            if (pbox->ShouldCancel()) return Result_TransferCancelled;
+            if (pbox->ShouldExit()) return Result_TransferCancelled;
 
             ctx->plan_rc = PlanAccountSaveCreation(
                 group.application_id, dest_uid,

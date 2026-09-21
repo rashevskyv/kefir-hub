@@ -5,7 +5,6 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "log.hpp"
-#include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
@@ -20,13 +19,10 @@ namespace sphaira::ui::menu::stream {
  
 std::atomic<int> INSTALL_STATE{InstallState_None};
  
-Menu* BackgroundInstaller::s_active_menu{nullptr};
 std::shared_ptr<Stream> BackgroundInstaller::s_source{nullptr};
 std::stop_source BackgroundInstaller::s_stop_source{};
 std::atomic<bool> BackgroundInstaller::s_installing{false};
 Mutex BackgroundInstaller::s_mutex{};
-CondVar BackgroundInstaller::s_callback_cond{};
-std::atomic<int> BackgroundInstaller::s_callback_count{0};
 
 static Thread s_install_thread{};
 static bool s_install_thread_created{false};
@@ -345,183 +341,6 @@ void Stream::Disable() {
     condvarWakeOne(&m_can_write);
 }
 
-Menu::Menu(const std::string& title, u32 flags) : MenuBase{title, flags} {
-    SetAction(Button::B, Action{"Back"_i18n, [this](){
-        SetPop();
-    }});
-
-    SetAction(Button::START, Action{"Options"_i18n, [this](){
-        App::DisplayInstallOptions(false);
-    }});
-
-    App::SetAutoSleepDisabled(true);
-    mutexInit(&m_mutex);
-
-    INSTALL_STATE = InstallState_None;
-}
-
-Menu::~Menu() {
-    // signal for thread to exit and wait.
-    m_stop_source.request_stop();
-
-    if (m_source) {
-        m_source->Disable();
-    }
-
-    App::SetAutoSleepDisabled(false);
-}
-
-void Menu::Update(Controller* controller, TouchInfo* touch) {
-    MenuBase::Update(controller, touch);
-
-    SCOPED_MUTEX(&m_mutex);
-
-    if (m_state == State::Connected) {
-        m_state = State::Progress;
-        App::Push<ui::ProgressBox>(0, "Installing "_i18n, m_source->GetPath(), [this](auto pbox) -> Result {
-            INSTALL_STATE = InstallState_Progress;
-            const auto rc = RunInstall(pbox, m_source.get());
-
-            if (R_FAILED(rc)) {
-                // if the source (PC) closed the transfer early the stream is
-                // already disabled and yati failed on truncated data -- surface
-                // that as a friendly "interrupted", not a raw Fs error.
-                const bool source_ended = !m_source->m_active && rc != Result_TransferCancelled;
-                // do NOT enter the Finished "swallow" state; reset to idle and
-                // disable so further writes are rejected and the transport aborts.
-                INSTALL_STATE = InstallState_None;
-                m_source->Disable();
-                R_THROW(source_ended ? Result_TransferInterrupted : rc);
-            }
-
-            // clean finish: the installer read only the ncas it needed and
-            // finished before the host sent the whole file; swallow the tail.
-            INSTALL_STATE = InstallState_Finished;
-            R_SUCCEED();
-        }, [this](Result rc){
-            SCOPED_MUTEX(&m_mutex);
-
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Install success!"_i18n);
-                m_state = State::Done;
-            } else if (rc == Result_TransferCancelled || rc == Result_TransferInterrupted) {
-                // cancelled on the console or by the source (PC): friendly, not scary.
-                App::PlaySoundEffect(SoundEffect_Focus);
-                App::Notify(rc == Result_TransferInterrupted
-                    ? "Install cancelled: the source stopped sending data"_i18n
-                    : "Install cancelled"_i18n);
-                m_state = State::Done;
-            } else {
-                App::PushErrorBox(rc, "Install failed!"_i18n);
-                m_state = State::Failed;
-                OnDisableInstallMode();
-            }
-        });
-    }
-}
-
-void Menu::Draw(NVGcontext* vg, Theme* theme) {
-    MenuBase::Draw(vg, theme);
-
-    SCOPED_MUTEX(&m_mutex);
-
-    switch (m_state) {
-        case State::None:
-        case State::Done:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Drag'n'Drop (NSP, XCI, NSZ, XCZ) to the install folder"_i18n.c_str());
-            break;
-
-        case State::Connected:
-        case State::Progress:
-            break;
-
-        case State::Failed:
-            gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Failed to install, press B to exit..."_i18n.c_str());
-            break;
-    }
-}
-
-bool Menu::OnInstallStart(const char* path) {
-    log_write("[Menu::OnInstallStart] inside\n");
-
-    for (;;) {
-        {
-            SCOPED_MUTEX(&m_mutex);
-
-            if (m_state != State::Progress) {
-                break;
-            }
-
-            if (GetToken().stop_requested()) {
-                return false;
-            }
-        }
-
-        svcSleepThread(1e+6);
-    }
-
-    log_write("[Menu::OnInstallStart] got state: %u\n", (u8)m_state);
-
-    if (m_source) {
-        log_write("[Menu::OnInstallStart] we have source\n");
-        for (;;) {
-            {
-                SCOPED_MUTEX(&m_source->m_mutex);
-
-                if (!m_source->m_active && INSTALL_STATE != InstallState_Progress) {
-                    break;
-                }
-
-                if (GetToken().stop_requested()) {
-                    return false;
-                }
-            }
-
-            svcSleepThread(1e+6);
-        }
-
-        log_write("[Menu::OnInstallStart] stopped polling source\n");
-    }
-
-    SCOPED_MUTEX(&m_mutex);
-
-    m_source = std::make_unique<Stream>(path, GetToken());
-    INSTALL_STATE = InstallState_None;
-    m_state = State::Connected;
-    log_write("[Menu::OnInstallStart] exiting\n");
-
-    return true;
-}
-
-bool Menu::OnInstallWrite(const void* buf, size_t size) {
-    log_write("[Menu::OnInstallWrite] inside\n");
-    return m_source->Push(buf, size);
-}
-
-void Menu::OnInstallClose() {
-    log_write("[Menu::OnInstallClose] inside\n");
-
-    // don't block here waiting for the install to finish: this runs on
-    // haze's single MTP responder thread, and stalling it for the seconds
-    // an install can take makes Windows declare the device unresponsive
-    // and disconnect it (the install itself still completes in the
-    // background - OnInstallStart already waits for INSTALL_STATE to
-    // clear before accepting the next file, so nothing here needs to).
-    m_source->Disable();
-}
- 
-void BackgroundInstaller::SetActiveMenu(Menu* menu) {
-    mutexLock(&s_mutex);
-    s_active_menu = menu;
-    if (menu == nullptr) {
-        while (s_callback_count > 0) {
-            condvarWait(&s_callback_cond, &s_mutex);
-        }
-    }
-    mutexUnlock(&s_mutex);
-    JoinInstallThread();
-}
-
 static std::atomic<bool> s_restart_scheduled{false};
 
 void ScheduleMtpRestart() {
@@ -549,7 +368,6 @@ void BackgroundInstaller::RegisterMtpCallbacks() {
     static bool initialized = false;
     if (!initialized) {
         mutexInit(&s_mutex);
-        condvarInit(&s_callback_cond);
         initialized = true;
     }
 
@@ -574,26 +392,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path) {
 
 bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::TransportOrigin origin) {
     log_write("[BackgroundInstaller::OnInstallStart] inside for path: %s\n", path);
-    Menu* active = nullptr;
-    {
-        mutexLock(&s_mutex);
-        if (s_active_menu) {
-            active = s_active_menu;
-            s_callback_count++;
-        }
-        mutexUnlock(&s_mutex);
-    }
-
-    if (active) {
-        bool res = active->OnInstallStart(path);
-        mutexLock(&s_mutex);
-        s_callback_count--;
-        if (s_callback_count == 0) {
-            condvarWakeAll(&s_callback_cond);
-        }
-        mutexUnlock(&s_mutex);
-        return res;
-    }
 
     const char* ext = std::strrchr(path, '.');
     if (!ext) return false;
@@ -819,9 +617,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
 
                 {
                     mutexLock(&s_mutex);
-                    while (s_callback_count > 0) {
-                        condvarWait(&s_callback_cond, &s_mutex);
-                    }
                     s_source.reset();
                     s_installing = false;
                     mutexUnlock(&s_mutex);
@@ -886,26 +681,6 @@ bool BackgroundInstaller::OnInstallWrite(const void* buf, size_t size) {
         return true;
     }
 
-    Menu* active = nullptr;
-    {
-        mutexLock(&s_mutex);
-        if (s_active_menu) {
-            active = s_active_menu;
-            s_callback_count++;
-        }
-        mutexUnlock(&s_mutex);
-    }
-
-    if (active) {
-        bool res = active->OnInstallWrite(buf, size);
-        mutexLock(&s_mutex);
-        s_callback_count--;
-        if (s_callback_count == 0) {
-            condvarWakeAll(&s_callback_cond);
-        }
-        mutexUnlock(&s_mutex);
-        return res;
-    }
 
     std::shared_ptr<Stream> src;
     {
@@ -919,26 +694,6 @@ bool BackgroundInstaller::OnInstallWrite(const void* buf, size_t size) {
  
 void BackgroundInstaller::OnInstallClose() {
     log_write("[BackgroundInstaller::OnInstallClose] inside\n");
-    Menu* active = nullptr;
-    {
-        mutexLock(&s_mutex);
-        if (s_active_menu) {
-            active = s_active_menu;
-            s_callback_count++;
-        }
-        mutexUnlock(&s_mutex);
-    }
-
-    if (active) {
-        active->OnInstallClose();
-        mutexLock(&s_mutex);
-        s_callback_count--;
-        if (s_callback_count == 0) {
-            condvarWakeAll(&s_callback_cond);
-        }
-        mutexUnlock(&s_mutex);
-        return;
-    }
 
     std::shared_ptr<Stream> src;
     {
@@ -948,10 +703,9 @@ void BackgroundInstaller::OnInstallClose() {
     }
     if (!src) return;
 
-    // don't block the MTP responder thread waiting for the install to
-    // finish - see the comment in Menu::OnInstallClose. s_installing
-    // already guards OnInstallStart against accepting a new file before
-    // this one is done.
+    // don't block the transport callback waiting for the install to finish;
+    // s_installing already guards OnInstallStart against accepting a new file
+    // before the current one is done.
     src->Disable();
 }
  
@@ -963,7 +717,6 @@ namespace sphaira::ui::menu::stream {
 
 void ScheduleMtpRestart() {}
 void BackgroundInstaller::RegisterMtpCallbacks() {}
-void BackgroundInstaller::SetActiveMenu(Menu* menu) {}
 bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::TransportOrigin origin) { return false; }
 bool BackgroundInstaller::OnInstallStart(const char* path) { return false; }
 bool BackgroundInstaller::OnInstallWrite(const void* buf, size_t size) { return false; }

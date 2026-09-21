@@ -88,6 +88,15 @@ bool MatchSaveAttr(const FsSaveDataAttribute& a, const FsSaveDataAttribute& b) {
            a.save_data_index == b.save_data_index;
 }
 
+bool MatchSaveAttr(const FsSaveDataInfo& a, const FsSaveDataAttribute& b) {
+    return a.application_id == b.application_id &&
+           a.uid.uid[0] == b.uid.uid[0] && a.uid.uid[1] == b.uid.uid[1] &&
+           a.system_save_data_id == b.system_save_data_id &&
+           a.save_data_type == b.save_data_type &&
+           a.save_data_rank == b.save_data_rank &&
+           a.save_data_index == b.save_data_index;
+}
+
 auto QuerySaveDataSpaceFreeBytes(FsSaveDataSpaceId space_id, s64* out_free_bytes) -> Result {
     if (!out_free_bytes) return FsError_InvalidSize;
     *out_free_bytes = 0;
@@ -96,18 +105,18 @@ auto QuerySaveDataSpaceFreeBytes(FsSaveDataSpaceId space_id, s64* out_free_bytes
         case FsSaveDataSpaceId_User:
         case FsSaveDataSpaceId_Temporary: {
             fs::FsNativeBis bis(FsBisPartitionId_User);
-            if (R_FAILED(bis.GetOpenResult())) return bis.GetOpenResult();
+            if (R_FAILED(bis.GetFsOpenResult())) return bis.GetFsOpenResult();
             return bis.GetFreeSpace("/", out_free_bytes);
         }
         case FsSaveDataSpaceId_System:
         case FsSaveDataSpaceId_ProperSystem: {
             fs::FsNativeBis bis(FsBisPartitionId_System);
-            if (R_FAILED(bis.GetOpenResult())) return bis.GetOpenResult();
+            if (R_FAILED(bis.GetFsOpenResult())) return bis.GetFsOpenResult();
             return bis.GetFreeSpace("/", out_free_bytes);
         }
         case FsSaveDataSpaceId_SafeMode: {
             fs::FsNativeBis bis(FsBisPartitionId_SafeMode);
-            if (R_FAILED(bis.GetOpenResult())) return bis.GetOpenResult();
+            if (R_FAILED(bis.GetFsOpenResult())) return bis.GetFsOpenResult();
             return bis.GetFreeSpace("/", out_free_bytes);
         }
         case FsSaveDataSpaceId_SdSystem:
@@ -326,7 +335,7 @@ auto InspectSaveArchiveAdmission(
     }
     result.payload_file_count = summary.file_count;
     result.payload_directory_count = summary.directory_count;
-    result.payload_file_bytes = summary.total_bytes;
+    result.payload_file_bytes = summary.file_bytes;
     return result;
 }
 
@@ -387,7 +396,7 @@ auto CreateSaveDataChecked(
     const auto& matched = exact_matches.front();
     FsSaveDataExtraData extra{};
     const auto read_rc = fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(
-        &extra, sizeof(extra), matched.save_data_space_id, matched.save_data_id);
+        &extra, sizeof(extra), static_cast<FsSaveDataSpaceId>(matched.save_data_space_id), matched.save_data_id);
     if (R_FAILED(read_rc)) {
         result.status = SaveBackendStatus::VerificationFailed;
         result.rc = read_rc;
@@ -445,7 +454,7 @@ auto ExtendSaveDataChecked(
         return result;
     }
 
-    if (!MatchSaveAttr(current_extra.attr, request.target_info)) {
+    if (!MatchSaveAttr(request.target_info, current_extra.attr)) {
         result.status = SaveBackendStatus::VerificationFailed;
         result.rc = FsError_PathNotFound;
         return result;
@@ -520,7 +529,7 @@ auto ExtendSaveDataChecked(
         return result;
     }
 
-    if (!MatchSaveAttr(post_extra.attr, request.target_info)) {
+    if (!MatchSaveAttr(request.target_info, post_extra.attr)) {
         result.status = SaveBackendStatus::VerificationFailed;
         result.rc = FsError_PathNotFound;
         return result;

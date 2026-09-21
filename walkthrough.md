@@ -1,6 +1,14 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.870** (2026-09-21).
+Актуальний shipped delivery — **v0.13.871** (2026-09-21).
+
+## v0.13.871 — dead-code cleanup and build closure
+
+Видалено unreachable `App::DisplayAdvancedOptions` і misc-menu factory, неінстанційований install `stream::Menu` разом із active-menu callback route, тестовий `yati::source::StreamFile` та невикористані `GetWebdavUrl/User/Pass`. Живі install/forwarder/dump options, `stream::Stream`, background MTP/FTP installer, DBI session і named WebDAV locations збережені. Product cleanup прибрав приблизно 550 рядків без нової абстракції або dependency.
+
+Фінальний build відкрив накопичені compile blockers попередніх Save deliveries. Виправлено назву `GetFsOpenResult`, поле `UnzipPayloadSummary::file_bytes`, точне порівняння `FsSaveDataInfo` з attribute, явний `FsSaveDataSpaceId` cast, зайвий `title.hpp` include і неіснуючий `ShouldCancel`; обидва Save units лишилися 592/598 рядків.
+
+WSL `ReleaseWithInstall` завершився `[100%] Built target sphaira_nro`. Усі 18 compiler-free contract suites, dead-symbol gate (981 declarations), EN/UK JSON parse та exact 2549/2549 key parity, `git diff --check` пройшли. Device/runtime перевірка не виконувалася; дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.870 — Game Tools save-slot manager
 

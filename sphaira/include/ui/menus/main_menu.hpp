@@ -2,7 +2,6 @@
 
 #include "ui/widget.hpp"
 #include "ui/menus/menu_base.hpp"
-#include <span>
 
 namespace sphaira::ui::menu::main {
 
@@ -16,33 +15,6 @@ enum class UpdateState {
     // there was an error whilst checking for updates.
     Error,
 };
-
-using MiscMenuFunction = std::function<std::unique_ptr<MenuBase>(u32 flags)>;
-
-enum MiscMenuFlag : u8 {
-    // can be set as the rightside menu.
-    MiscMenuFlag_Shortcut = 1 << 0,
-    // needs install option to be enabled.
-    MiscMenuFlag_Install = 1 << 1,
-};
-
-struct MiscMenuEntry {
-    const char* name;
-    const char* title;
-    MiscMenuFunction func;
-    u8 flag;
-    const char* info;
-
-    auto IsShortcut() const -> bool {
-        return flag & MiscMenuFlag_Shortcut;
-    }
-
-    auto IsInstall() const -> bool {
-        return flag & MiscMenuFlag_Install;
-    }
-};
-
-auto GetMiscMenuEntries() -> std::span<const MiscMenuEntry>;
 
 // this holds the Homebrew and Tools pages and allows switching between them.
 struct MainMenu final : Widget {

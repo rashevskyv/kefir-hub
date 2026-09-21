@@ -1,27 +1,27 @@
 # audit.md
 
-Версія коду: **v0.13.870**. Дата аудиту: 2026-09-21.
+Версія коду: **v0.13.871**. Дата аудиту: 2026-09-21.
 
 ## Поточний стан
 
-- 363 product source-файли, 124 761 physical lines.
-- 64 product-файли більші за 600 рядків; 29 більші за 1 000.
-- 71 739 рядків (57,5% product source) знаходяться у файлах понад 600 рядків.
+- v0.13.871 прибрала 540 net tracked lines у delivery diff, включно з 550+ рядками dead product code; два непотрібні StreamFile units видалено.
+- Full WSL `ReleaseWithInstall`, 18/18 Python contracts, dead-symbol gate і EN/UK parity PASS.
+- Save build-closure units лишилися 592/598 рядків.
 - 35 oversized files знаходяться в `sphaira/source/ui/menus`.
-- Graphify: 13 339 nodes, 26 604 edges, 659 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
+- Graphify після delivery: 13 261 nodes, 26 503 edges, 674 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
 - Активні delivery-документи скорочено; попередня історія лишається в Git без потрійного дублювання.
 
 ## Черга — виконувати серійно
 
-### A1 — dead-code cleanup (`v0.13.871`)
+### A1 — dead-code cleanup (`v0.13.871`) — DONE
 
 1. `App::DisplayAdvancedOptions` не має caller-а. Разом із ним мертві `GetMiscMenuEntries`, `MISC_MENU_ENTRIES` і generator.
 2. `stream::Menu` не має subclasses/instances. `SetActiveMenu` не має caller-а; `s_active_menu` branches обслуговують лише цей шлях.
 3. `yati::source::StreamFile` не інстанціюється.
 4. `App::GetWebdavUrl/User/Pass` мають лише declaration + definition; активні callers використовують `GetWebdavUrlName` та `location::Entry`.
-5. Орієнтовний safe cut: 550–750 product lines, 0 dependencies.
+5. Фактичний результат: no new dependencies/abstractions, full build PASS.
 
-### A2 — Saves structural split
+### A2 — Saves structural split — NEXT (`v0.13.872`)
 
 Три legacy units: `save_menu.cpp` 2 788, `save_menu_ops.cpp` 2 696, `save_paths.cpp` 1 794 рядки. Рознести без behavior change:
 

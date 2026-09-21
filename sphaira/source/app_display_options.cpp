@@ -6,7 +6,6 @@
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
-#include "ui/menus/main_menu.hpp"
 #include "ui/steamgriddb_icon.hpp"
 #include "fs.hpp"
 #include "log.hpp"
@@ -29,106 +28,6 @@ void App::ShowTitleModeHelp(const std::string& feature) {
         "until hbmenu opens, then launch Kefir Hub. You can also install Kefir Hub's "
         "HOME Menu forwarder from Tools -> Install & Share -> Web Server.";
     App::Push<ui::OptionBox>(message, "Back"_i18n, "OK"_i18n, 0, [](auto){});
-}
-
-void App::DisplayAdvancedOptions(bool left_side) {
-    auto options = std::make_unique<ui::Sidebar>("Advanced Options"_i18n, left_side ? ui::Sidebar::Side::LEFT : ui::Sidebar::Side::RIGHT);
-    ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-    ui::SidebarEntryArray::Items text_scroll_speed_items;
-    text_scroll_speed_items.push_back("Slow"_i18n);
-    text_scroll_speed_items.push_back("Normal"_i18n);
-    text_scroll_speed_items.push_back("Fast"_i18n);
-
-    std::vector<std::string> menu_names;
-    ui::SidebarEntryArray::Items menu_items;
-    for (auto& e : ui::menu::main::GetMiscMenuEntries()) {
-        if (!e.IsShortcut()) {
-            continue;
-        }
-
-        menu_names.emplace_back(e.name);
-        menu_items.push_back(i18n::get(e.name));
-    }
-
-    options->Add<ui::SidebarEntryBool>("Logging"_i18n, App::GetLogEnable(), [](bool& enable){
-        App::SetLogEnable(enable);
-    }, "Logs to /config/kefir/log.txt"_i18n);
-
-    options->Add<ui::SidebarEntryBool>("Replace hbmenu on exit"_i18n, App::GetReplaceHbmenuEnable(), [](bool& enable){
-        App::SetReplaceHbmenuEnable(enable);
-    }, "When enabled, it replaces /hbmenu.nro with Kefir Hub, creating a backup of hbmenu to /switch/hbmenu.nro\n\n" \
-       "Disabling will give you the option to restore hbmenu."_i18n);
-
-    options->Add<ui::SidebarEntryBool>("Boost CPU during transfer"_i18n, App::GetApp()->m_progress_boost_mode,
-        "Enables boost mode during transfers which can improve transfer speed. "\
-        "This sets the CPU to 1785mhz and lowers the GPU 76mhz"_i18n);
-
-    options->Add<ui::SidebarEntryArray>("Text scroll speed"_i18n, text_scroll_speed_items, [](s64& index_out){
-        App::SetTextScrollSpeed(index_out);
-    }, App::GetTextScrollSpeed(), "Change how fast the scrolling text updates"_i18n);
-
-    options->Add<ui::SidebarEntryArray>("Set left-side menu"_i18n, menu_items, [menu_names](s64& index_out){
-        const auto e = menu_names[index_out];
-        if (g_app->m_left_menu.Get() != e) {
-            // swap menus around.
-            if (g_app->m_right_menu.Get() == e) {
-                g_app->m_right_menu.Set(g_app->m_left_menu.Get());
-            }
-            g_app->m_left_menu.Set(e);
-
-            App::Push<ui::OptionBox>(
-                "Press OK to restart Kefir Hub"_i18n, "OK"_i18n, [](auto){
-                    App::ExitRestart();
-                }
-            );
-        }
-    }, i18n::get(g_app->m_left_menu.Get()), "Set the menu that appears on the left tab."_i18n);
-
-    options->Add<ui::SidebarEntryArray>("Set right-side menu"_i18n, menu_items, [menu_names](s64& index_out){
-        const auto e = menu_names[index_out];
-        if (g_app->m_right_menu.Get() != e) {
-            // swap menus around.
-            if (g_app->m_left_menu.Get() == e) {
-                g_app->m_left_menu.Set(g_app->m_right_menu.Get());
-            }
-            g_app->m_right_menu.Set(e);
-
-            App::Push<ui::OptionBox>(
-                "Press OK to restart Kefir Hub"_i18n, "OK"_i18n, [](auto){
-                    App::ExitRestart();
-                }
-            );
-        }
-    }, i18n::get(g_app->m_right_menu.Get()), "Set the menu that appears on the right tab."_i18n);
-
-    options->Add<ui::SidebarEntryCallback>("Install options"_i18n, [left_side](){
-        App::DisplayInstallOptions(left_side);
-    },  "Change the install options.\n"\
-        "You can enable installing from here."_i18n);
-
-    options->Add<ui::SidebarEntryCallback>("Dump options"_i18n, [left_side](){
-        App::DisplayDumpOptions(left_side);
-    },  "Change the dump options."_i18n);
-
-    static const char* erpt_path = "/atmosphere/erpt_reports";
-    options->Add<ui::SidebarEntryBool>("Disable erpt_reports"_i18n, fs::FsNativeSd().FileExists(erpt_path), [](bool& enable){
-        fs::FsNativeSd fs;
-        if (enable) {
-            Result rc;
-            // it's possible for erpt to generate a report in between deleting the folder and creating the file.
-            for (int i = 0; i < 10; i++) {
-                fs.DeleteDirectoryRecursively(erpt_path);
-                if (R_SUCCEEDED(rc = fs.CreateFile(erpt_path))) {
-                    break;
-                }
-            }
-            enable = R_SUCCEEDED(rc);
-        } else {
-            fs.DeleteFile(erpt_path);
-            fs.CreateDirectory(erpt_path);
-        }
-    }, "Disables error reports generated in /atmosphere/erpt_reports."_i18n);
 }
 
 void App::DisplayInstallOptions(bool left_side) {

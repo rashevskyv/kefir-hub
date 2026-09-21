@@ -160,9 +160,6 @@ public:
     static auto GetHddEnable() -> bool;
     static auto GetWriteProtect() -> bool;
     static auto GetWebdavUrlName() -> std::string;
-    static auto GetWebdavUrl() -> std::string;
-    static auto GetWebdavUser() -> std::string;
-    static auto GetWebdavPass() -> std::string;
     static auto GetLogEnable() -> bool;
     static auto GetAutoUpdateEnable() -> bool;
     static auto GetAutoUpdateMode() -> long;
@@ -272,7 +269,6 @@ public:
 
     static void PlaySoundEffect(SoundEffect effect);
 
-    static void DisplayAdvancedOptions(bool left_side = true);
     static void DisplayInstallOptions(bool left_side = true);
     static void DisplayForwarderOptions(bool left_side = true);
     static void DisplayDumpOptions(bool left_side = true);

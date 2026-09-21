@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.870)
+set(sphaira_VERSION 0.13.871)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -214,7 +214,6 @@ add_executable(sphaira
     source/yati/source/file.cpp
     source/yati/source/usb.cpp
     source/yati/source/stream.cpp
-    source/yati/source/stream_file.cpp
 
     source/yati/nx/es.cpp
     source/yati/nx/keys.cpp
