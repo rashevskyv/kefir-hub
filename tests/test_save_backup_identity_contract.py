@@ -339,8 +339,8 @@ def test_source_contracts() -> None:
     check("R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));" in ops_src,
           "BackupSavesOn and BackupSaves must delegate to BackupSaveInternal")
 
-    # 1.3 Verify CreateBackupIfNewer in sphaira/source/ui/menus/save_menu.cpp
-    menu_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp")
+    # 1.3 Verify CreateBackupIfNewer in sphaira/source/ui/menus/save/save_menu_actions.cpp
+    menu_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp")
     with open(menu_cpp_path, "r", encoding="utf-8") as f:
         menu_src = f.read()
 

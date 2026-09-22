@@ -452,7 +452,7 @@ def test_source_contracts() -> None:
     check("R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));" in ops_src,
           "save_menu_ops.cpp callers must invoke BackupSaveInternal")
 
-    menu_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp")
+    menu_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp")
     with open(menu_cpp_path, "r", encoding="utf-8") as f:
         menu_src = f.read()
     check("R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));" in menu_src,

@@ -1,15 +1,15 @@
 # audit.md
 
-Версія коду: **v0.13.872**. Дата аудиту: 2026-09-21.
+Версія коду: **v0.13.873**. Дата аудиту: 2026-09-22.
 
 ## Поточний стан
 
-- v0.13.872 розклала `save_paths.cpp` з 1 794 до 463 рядків на path/config, discovery, metadata decode, archive admission та backup inspection.
-- Нові C/C++ units: 84, 109, 292, 353 і 555 рядків; public API стабільний, нових abstractions/dependencies немає.
-- Full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
+- v0.13.873 розклала `save_menu.cpp` з 2 788 до 308 рядків на lifecycle, draw, filters, options, scan, target, catalog та actions.
+- Сім нових implementation units: 166–573 рядки; private header 28 рядків; public API стабільний.
+- Gemini: full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
 - Save build-closure units лишилися 591/597 рядків.
 - 35 oversized files знаходяться в `sphaira/source/ui/menus`.
-- Graphify після delivery: 13 279 nodes, 26 515 edges, 662 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
+- Graphify після delivery: 13 309 nodes, 26 551 edges, 657 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
 - Активні delivery-документи скорочено; попередня історія лишається в Git без потрійного дублювання.
 
 ## Черга — виконувати серійно
@@ -24,10 +24,9 @@
 
 ### A2 — Saves structural split — IN PROGRESS
 
-Legacy units: `save_menu.cpp` 2 788 і `save_menu_ops.cpp` 2 696 рядків. `save_paths.cpp` split завершено у v0.13.872. Наступне:
+`save_paths.cpp` split завершено у v0.13.872; `save_menu.cpp` — у v0.13.873. Залишився `save_menu_ops.cpp` 2 696 рядків. Наступне:
 
-- v0.13.873: view/layout, filters і backup catalog зі стабільним `Menu` API;
-- наступний delivery: backup, ZIP/folder restore, remote sync і deletion з `save_menu_ops.cpp`.
+- v0.13.874: backup, ZIP/folder restore, remote sync і deletion зі стабільним `Menu` API та safety ordering.
 
 Не вводити service interfaces/factories. Existing `Menu`/free-function APIs спочатку лишити стабільними.
 

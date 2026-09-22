@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.872** (2026-09-21).
+Актуальний shipped delivery — **v0.13.873** (2026-09-22).
+
+## v0.13.873 — Save menu UI/catalog split
+
+`save_menu.cpp` зменшено з 2 788 до 308 рядків. Draw/layout, filter UI, operation options, installed-save scan, restore-target lookup, backup catalog і action prompts рознесено у сім конкретних implementation units (166–573 рядки). Спільні tab geometry, save-type label і change event винесено у 28-рядковий private header; public `save_menu.hpp` і class state не змінені. CMake має явні source entries; source-location assertions у contracts оновлено без зміни safety models.
+
+Gemini повідомив про WSL `ReleaseWithInstall` exit 0 з `[100%] Built target sphaira_nro`, 18/18 repository contract suites, dead-symbol gate (981 declarations), EN/UK exact 2549/2549 parity і `git diff --check` PASS. Senior перевірив diff, CMake/version, private include paths і line cap; повторної збірки чи runtime/device test не проводив. Дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.872 — Save paths structural split
 

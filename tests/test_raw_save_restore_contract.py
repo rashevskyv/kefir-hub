@@ -916,7 +916,12 @@ def test_bounded_source_code_contracts():
 
     fb_ops_cpp = read_repo_file("sphaira", "source", "ui", "menus", "filebrowser", "filebrowser_ops.cpp")
     save_ops_cpp = read_repo_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    save_menu_cpp = read_repo_file("sphaira", "source", "ui", "menus", "save_menu.cpp")
+    save_menu_units = [
+        read_repo_file("sphaira", "source", "ui", "menus", "save_menu.cpp"),
+        read_repo_file("sphaira", "source", "ui", "menus", "save", "save_menu_filters.cpp"),
+        read_repo_file("sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
+    ]
+    save_menu_cpp = "\n".join(save_menu_units)
     settings_cpp = read_repo_file("sphaira", "source", "ui", "menus", "settings", "settings_categories.cpp")
     save_paths_hpp = read_repo_file("sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
     save_paths_cpp = read_repo_file("sphaira", "source", "ui", "menus", "save", "save_paths.cpp")

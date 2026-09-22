@@ -68,9 +68,16 @@ def test_source_contracts():
           "save_paths.cpp must discard partial records on read failure and continue other spaces")
 
     # 4. save_menu.cpp: ListAccountSaves, ReadSaveEntries, ScanHomebrew, ResolveRestoreTarget, CreateBackupIfNewer
-    save_menu_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp")
-    with open(save_menu_cpp, "r", encoding="utf-8") as f:
-        menu_cpp_src = f.read()
+    save_menu_units = [
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_scan.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_target.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
+    ]
+    menu_cpp_src = ""
+    for unit_path in save_menu_units:
+        with open(unit_path, "r", encoding="utf-8") as f:
+            menu_cpp_src += f.read() + "\n"
 
     check("DiscoverSaveDataInfo(&uid, FsSaveDataType_Account)" in menu_cpp_src,
           "ListAccountSaves must delegate to DiscoverSaveDataInfo")

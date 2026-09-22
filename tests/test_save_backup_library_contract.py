@@ -766,9 +766,17 @@ def test_static_source_contracts() -> None:
           "save_paths.cpp must format explicit rank markers rk:0, rk:1, and rk:?")
 
     # 1.5 save_menu.cpp function-scoped checks
-    sm_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp")
-    with open(sm_cpp_path, "r", encoding="utf-8") as f:
-        sm_cpp = f.read()
+    save_menu_units = [
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_draw.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_catalog.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_target.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
+    ]
+    sm_cpp = ""
+    for unit_path in save_menu_units:
+        with open(unit_path, "r", encoding="utf-8") as f:
+            sm_cpp += f.read() + "\n"
     check("auto FormatBackupRankMarker(const Entry& e) -> std::string" in sm_cpp,
           "save_menu.cpp must define file-local FormatBackupRankMarker")
 

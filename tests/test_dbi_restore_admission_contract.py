@@ -65,8 +65,8 @@ def test_static_source_contracts() -> None:
     print("[1] Running static source contracts for v0.13.868...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)")),
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, or 0.13.872")
+    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)")),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, or 0.13.873")
 
     path_util_hpp = read_file("sphaira", "include", "path_util.hpp")
     check("inline auto IsDbiRootMarkerEntry(" in path_util_hpp,
@@ -163,7 +163,12 @@ def test_static_source_contracts() -> None:
     check("auto MakeBackupGroupFromLiveEntry(const Entry& live" in sm_hpp,
           "save_menu.hpp must declare MakeBackupGroupFromLiveEntry")
 
-    sm_cpp = read_file("sphaira", "source", "ui", "menus", "save_menu.cpp")
+    sm_units = [
+        read_file("sphaira", "source", "ui", "menus", "save_menu.cpp"),
+        read_file("sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
+        read_file("sphaira", "source", "ui", "menus", "save", "save_menu_target.cpp"),
+    ]
+    sm_cpp = "\n".join(sm_units)
     check("Menu::MakeBackupGroupFromLiveEntry" not in sm_cpp,
           "save_menu.cpp must not contain moved MakeBackupGroupFromLiveEntry")
     check("Menu::RestoreSingleBackupGroup" not in sm_cpp,
