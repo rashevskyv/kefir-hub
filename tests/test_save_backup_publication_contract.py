@@ -314,7 +314,7 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(860, 876)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(860, 877)),
           "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.860 or later")
 
     # 1.2 sphaira/source/ui/menus/save/save_backup_writer.cpp & save_backup_pub.cpp

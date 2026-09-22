@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.875** (2026-09-22).
+Актуальний shipped delivery — **v0.13.876** (2026-09-22).
+
+## v0.13.876 — App structural split
+
+`app.cpp` зменшено з 2 111 до 523 рядків, `app_settings.cpp` — до 554. Startup і callbacks, loop/frame, widget stack, USB/auto-MTP, MTP/network/save settings винесено у конкретні source units; `FrameBufferSize` має один приватний header. Усі нові App-файли мають 14–597 рядків. Public `app.hpp` і layout `App` не змінено; header лишається legacy debt на 626 рядків. Деструктор та install-session admission залишено в `app.cpp` для збереження shutdown contract.
+
+Під час фінальної збірки Gemini виправив назву applet performance getter і залишив реалізацію `nanovg_dk.h` лише в одному translation unit. За його звітом WSL `ReleaseWithInstall` завершився exit 0 з `[100%] Built target sphaira_nro`; 18/18 Python contracts після оновлення 11 version allowlists, dead-symbol gate (981 declarations), EN/UK 2549/2549 key parity та whitespace checks пройшли. Senior перевірив фактичний diff, CMake/version і розміри, але не запускав збірку або тести повторно. Device/runtime перевірка не виконувалася; дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.875 — Web structural split
 

@@ -1,11 +1,11 @@
 # audit.md
 
-Версія коду: **v0.13.875**. Дата аудиту: 2026-09-22.
+Версія коду: **v0.13.876**. Дата аудиту: 2026-09-22.
 
 ## Поточний стан
 
-- v0.13.875 розклала `web.cpp` з 2 381 до 538 рядків і `web_pages.hpp` з 1 010 до 5; усі нові Web files ≤576 рядків.
-- mDNS, shared FS, upload/file routes і HTTP router розділені; 10 page payloads збережено byte-for-byte, public API стабільний.
+- v0.13.876 розклала `app.cpp` з 2 111 до 523 рядків, `app_settings.cpp` — до 554; усі нові App files ≤597 рядків.
+- Startup, frame/loop, UI stack, USB/MTP, network і save settings мають окремі конкретні units; `app.hpp` незмінний (626 рядків).
 - Gemini: full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
 - Save build-closure units лишилися 591/597 рядків.
 - 32 C/C++ files понад 600 рядків знаходяться в `sphaira/source/ui/menus`.
@@ -34,11 +34,11 @@
 
 У v0.13.875 `web.cpp` 538 і `web_pages.hpp` 5 рядків; existing constexpr templates розкладено за сторінками без template engine. Full WSL build і 18/18 contracts PASS за звітом Gemini.
 
-### A4 — App — NEXT
+### A4 — App — DONE
 
-`app.cpp` 2 111: runtime loop, widget stack, USB/MTP, platform lifecycle, renderer. `app_settings.cpp` 1 101: доменні implementation units зі стабільним API. `app.hpp` спочатку зменшити видаленням dead declarations.
+У v0.13.876 `app.cpp` 523 і `app_settings.cpp` 554 рядки; public API і shutdown ordering збережені. Gemini повідомив про WSL build та 18/18 contracts PASS. `app.hpp` 626 — окремий борг: `LaunchType` і `m_pop_count` виглядають невикористаними, але member layout та ефекти option-полів треба перевірити перед видаленням; не стискати header механічно.
 
-### A5 — Transfers and installer
+### A5 — Transfers and installer — NEXT
 
 - `threaded_file_transfer.cpp` 1 956: core pipeline, archive paths, ZIP/unzip, verification.
 - `yati.cpp` 1 842: ticket/CNMT analysis, threaded install pipeline, public entry points.

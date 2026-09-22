@@ -1,32 +1,27 @@
 # task.md
 
-Версія коду: **v0.13.875**.
+Версія коду: **v0.13.876**.
 
-## Поточний delivery: v0.13.876 — App structural split
+## Поточний delivery: Transfers/Yati — scoping
 
-- [ ] `MAP-APP-876` — lifecycle/state/callers підтверджені graph + source review.
-- [ ] `DEAD-DECL-876` — dead declarations у `app.hpp` перевірені перед видаленням.
-- [ ] `SPLIT-APP-876` — cohesive App/settings units виділено без behavior change.
-- [ ] `API-CMAKE-876` — public API стабільний; нові units явно зареєстровані.
-- [ ] `SIZE-876` — нові C/C++ files ≤600 рядків; legacy units materially reduced.
-- [ ] `VERIFY-876` — compiler-free gates і фінальний WSL `ReleaseWithInstall` PASS.
-- [ ] `DOCS-BUMP-876` — version/docs синхронізовано.
-- [ ] `COMMIT-876` — focused primary-master commit без push.
+- [ ] `MAP-TRANSFER` — вибрати один pipeline boundary і перевірити callers/safety ordering.
+- [ ] `SPLIT-TRANSFER-YATI` — виконати обмежений structural split після окремого handoff.
 
-## Попередній delivery: v0.13.875 — виконано
+## Попередній delivery: v0.13.876 — виконано
 
-- [x] `MAP-WEB-875`
-- [x] `SPLIT-WEB-875`
-- [x] `API-CMAKE-875`
-- [x] `SIZE-875`
-- [x] `VERIFY-875` — Gemini: `[100%] Built target sphaira_nro`, 18/18 suites, dead-symbol 981, EN/UK 2549/2549, 10/10 page payloads, diff check PASS.
-- [x] `DOCS-BUMP-875`
-- [x] `COMMIT-875`
+- [x] `MAP-APP-876` — lifecycle/state/callers підтверджені graph + source review.
+- [x] `DEAD-DECL-876` — кандидати в `app.hpp` перевірені; layout/ініціалізаційні ефекти залишені для окремого delivery.
+- [x] `SPLIT-APP-876` — App/settings responsibilities винесені без навмисної зміни поведінки.
+- [x] `API-CMAKE-876` — public API стабільний; нові units явно зареєстровані.
+- [x] `SIZE-876` — усі нові App files ≤597 рядків; `app.cpp` 523, `app_settings.cpp` 554.
+- [x] `VERIFY-876` — Gemini: WSL NRO build, 18/18 contracts, dead-symbol 981, EN/UK 2549/2549 і whitespace PASS.
+- [x] `DOCS-BUMP-876` — version/docs синхронізовано.
+- [x] `COMMIT-876` — focused primary-master commit без push.
 
-## Після v0.13.874
+## Подальша черга
 
-- [ ] `SPLIT-TRANSFER-YATI`
 - [ ] `SPLIT-PROVIDER-UI`
 - [ ] `TEST-RUNNER`
+- [ ] `APP-HEADER-DEBT` — оцінити `app.hpp` (626) як окремий вузький refactor.
 
 Історія завершених checklist-ів доступна через Git і тут не дублюється.

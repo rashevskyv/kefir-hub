@@ -1,26 +1,24 @@
 # plan.md
 
-Версія коду: **v0.13.875**.
+Версія коду: **v0.13.876**.
 
-## Поточний delivery: v0.13.876 — App structural split
+## Поточний delivery: Transfers/Yati — scoping
 
-Мета: behavior-preserving зменшення `app.cpp` (2 111 рядків) і `app_settings.cpp` (1 101 рядок) за наявними lifecycle, widget stack, USB/MTP та settings responsibilities. Спочатку перевірити dead declarations у `app.hpp`.
+Мета: вибрати перший вузький, behavior-preserving зріз із `threaded_file_transfer.cpp` (1 956 рядків) або `yati.cpp` (1 842 рядки). Новий product delivery починати лише після підтвердження інтеграції v0.13.876 у `master`.
 
-1. Підтвердити callers і точні state/lifecycle boundaries через graph та source review.
-2. Виділяти конкретні implementation units ≤600 рядків, зберігаючи public `App` API та порядок shutdown/startup.
-3. Не змішувати structural split зі зміною поведінки UI, USB/MTP або settings.
-4. Gemini спочатку робить split і compiler-free checks; WSL build/fixes — тільки після senior review і явного follow-up.
-5. Після прийняття: bump `0.13.875` → `0.13.876`, docs і focused commit без push.
+1. Через graph і source review визначити конкретний pipeline boundary, callers та safety ordering.
+2. Дати Gemini один обмежений зріз із новими units ≤600 рядків, без нової service abstraction.
+3. Після senior review доручити Gemini фінальний WSL build і contracts; лише тоді синхронізувати version/docs та commit.
 
-## Попередній delivery: v0.13.875 — Web structural split
+## Попередній delivery: v0.13.876 — App structural split
 
-`web.cpp` зменшено з 2 381 до 538 рядків; `web_pages.hpp` — з 1 010 до 5. Page templates, mDNS, shared FS helpers, upload/file routes і router розкладено у конкретні units; усі нові файли ≤576 рядків. Public Web API і 10 raw-string payloads збережено. Gemini повідомив про успішний WSL `ReleaseWithInstall`, 18/18 contracts після оновлення version/source-location assertions, dead-symbol gate, EN/UK parity і diff check.
+`app.cpp` зменшено з 2 111 до 523 рядків, `app_settings.cpp` — до 554. Startup, loop/frame, UI stack, USB/MTP, network і save settings розкладено у конкретні units ≤597 рядків; public `app.hpp` лишився незмінним (626 рядків, окремий legacy debt). Gemini повідомив про успішний WSL `ReleaseWithInstall`, 18/18 contracts, dead-symbol gate, EN/UK parity і whitespace checks.
 
 ## Наступні serial deliveries
 
-1. Transfers/Yati: core pipeline, ZIP/unzip/verification та install analysis.
-2. Provider UI: Cheats/AppStore/Themezer/Kefir — API/parsing окремо від меню.
-3. Tests: один discoverable runner; великі suites ділити лише за стабільними сценаріями.
+1. Provider UI: Cheats/AppStore/Themezer/Kefir — API/parsing окремо від меню.
+2. Tests: один discoverable runner; великі suites ділити лише за стабільними сценаріями.
+3. `app.hpp` (626): окремо перевірити dead declarations і layout/ініціалізаційні ефекти перед будь-яким видаленням.
 
 ## Межі
 

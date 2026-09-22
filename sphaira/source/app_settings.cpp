@@ -5,20 +5,14 @@
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "nro.hpp"
-#include "ntp.hpp"
 #include "evman.hpp"
-#include "nxlink.h"
 #include "fs.hpp"
 #include "location.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
-#include "ftpsrv_helper.hpp"
-#include "haze_helper.hpp"
 #include "nacp_util.hpp"
 #include "image.hpp"
 #include "owo.hpp"
-#include "ui/menus/install_stream_menu_base.hpp"
-#include <usbhsfs.h>
 #include <minIni.h>
 #include <switch.h>
 #include <cstring>
@@ -30,34 +24,10 @@
 namespace sphaira {
 
 extern App* g_app;
-void nxlink_callback(const NxlinkCallbackData *data);
 void on_i18n_change();
 bool IsKefirHubNacp(const NacpStruct& nacp);
 
 namespace {
-
-auto NormalizeWebdavUrl(std::string url) -> std::string {
-
-    constexpr const char* whitespace = " \t\r\n";
-    const auto first = url.find_first_not_of(whitespace);
-    if (first == std::string::npos) {
-        return {};
-    }
-    const auto last = url.find_last_not_of(whitespace);
-    url = url.substr(first, last - first + 1);
-
-    if (url.find("://") == std::string::npos) {
-        url.insert(0, "webdav://");
-    } else if (url.starts_with("https://")) {
-        url.replace(0, std::strlen("https"), "webdav");
-    }
-
-    const auto scheme_end = url.find("://");
-    while (url.ends_with('/') && scheme_end != std::string::npos && url.size() > scheme_end + 3) {
-        url.pop_back();
-    }
-    return url;
-}
 
 auto GetNroIcon(const std::vector<u8>& nro_icon) -> std::vector<u8> {
     auto normalized = ImageNormalizeIcon(nro_icon);
@@ -71,26 +41,6 @@ auto GetNroIcon(const std::vector<u8>& nro_icon) -> std::vector<u8> {
 
 auto App::IsHbmenu() -> bool {
     return !strcasecmp(GetExePath().s, "/hbmenu.nro");
-}
-
-auto App::GetNxlinkEnable() -> bool {
-    return g_app->m_nxlink_enabled.Get();
-}
-
-auto App::GetNtpEnable() -> bool {
-    return g_app->m_ntp_enabled.Get();
-}
-
-auto App::GetHddEnable() -> bool {
-    return g_app->m_hdd_enabled.Get();
-}
-
-auto App::GetWriteProtect() -> bool {
-    return g_app->m_hdd_write_protect.Get();
-}
-
-auto App::GetWebdavUrlName() -> std::string {
-    return g_app->m_webdav_url.Get();
 }
 
 auto App::GetLogEnable() -> bool {
@@ -272,88 +222,6 @@ auto App::GetWaveColorLight() -> std::string {
     return g_app->m_wave_color_light.Get();
 }
 
-auto App::GetMtpEnable() -> bool {
-    return g_app->m_mtp_enabled.Get();
-}
-
-auto App::GetMtpShowSd() -> bool {
-    return g_app->m_mtp_show_sd.Get();
-}
-
-auto App::GetMtpShowInstall() -> bool {
-    return g_app->m_mtp_show_install.Get();
-}
-
-auto App::GetMtpShowSaves() -> bool {
-    return g_app->m_mtp_show_saves.Get();
-}
-
-auto App::GetMtpShowRawSaves() -> bool {
-    return g_app->m_mtp_show_raw_saves.Get();
-}
-
-auto App::GetMtpShowRawSystemSaves() -> bool {
-    return g_app->m_mtp_show_raw_system_saves.Get();
-}
-
-auto App::GetMtpShowGames() -> bool {
-    return g_app->m_mtp_show_games.Get();
-}
-
-auto App::GetMtpGamesLayout() -> long {
-    const auto layout = g_app->m_mtp_games_layout.Get();
-    if (layout < 0 || layout > 2) {
-        return 2;
-    }
-    return layout;
-}
-
-auto App::GetMtpNameSd() -> std::string {
-    return g_app->m_mtp_name_sd.Get();
-}
-
-auto App::GetMtpNameInstall() -> std::string {
-    return g_app->m_mtp_name_install.Get();
-}
-
-auto App::GetMtpFolders() -> std::vector<std::string> {
-    std::vector<std::string> out;
-    const auto raw = g_app->m_mtp_folders.Get();
-    size_t start = 0;
-    while (start <= raw.size()) {
-        const auto end = raw.find('|', start);
-        auto part = raw.substr(start, end == std::string::npos ? std::string::npos : end - start);
-        if (!part.empty()) {
-            out.push_back(std::move(part));
-        }
-        if (end == std::string::npos) {
-            break;
-        }
-        start = end + 1;
-    }
-    return out;
-}
-
-auto App::GetFtpEnable() -> bool {
-    return g_app->m_ftp_enabled.Get();
-}
-
-auto App::GetFtpAnon() -> bool {
-    return g_app->m_ftp_anon.Get();
-}
-
-auto App::GetFtpUser() -> std::string {
-    return g_app->m_ftp_user.Get();
-}
-
-auto App::GetFtpPass() -> std::string {
-    return g_app->m_ftp_pass.Get();
-}
-
-auto App::GetFtpPort() -> long {
-    return g_app->m_ftp_port.Get();
-}
-
 auto App::GetLanguage() -> long {
     return g_app->m_language.Get();
 }
@@ -364,74 +232,6 @@ auto App::GetTextScrollSpeed() -> long {
 
 auto App::GetGodModeEnabled() -> bool {
     return g_app->m_god_mode.Get();
-}
-
-auto App::GetSaveSettingsGlobally() -> bool {
-    return g_app->m_save_settings_globally.Get();
-}
-
-auto App::GetSaveShowInstalled() -> bool {
-    return g_app->m_save_show_installed.Get();
-}
-
-void App::SetSaveShowInstalled(bool enable) {
-    g_app->m_save_show_installed.Set(enable);
-}
-
-auto App::GetSaveShowDeleted() -> bool {
-    return g_app->m_save_show_deleted.Get();
-}
-
-void App::SetSaveShowDeleted(bool enable) {
-    g_app->m_save_show_deleted.Set(enable);
-}
-
-auto App::GetSaveShowBackups() -> bool {
-    return g_app->m_save_show_backups.Get();
-}
-
-void App::SetSaveShowBackups(bool enable) {
-    g_app->m_save_show_backups.Set(enable);
-}
-
-auto App::GetSaveAutoBackupOnRestore() -> bool {
-    return g_app->m_save_auto_backup_on_restore.Get();
-}
-
-void App::SetSaveAutoBackupOnRestore(bool enable) {
-    g_app->m_save_auto_backup_on_restore.Set(enable);
-}
-
-auto App::GetSaveCompressBackup() -> bool {
-    return g_app->m_save_compress_backup.Get();
-}
-
-void App::SetSaveCompressBackup(bool enable) {
-    g_app->m_save_compress_backup.Set(enable);
-}
-
-auto App::GetSaveAutosync() -> bool {
-    return g_app->m_save_autosync.Get();
-}
-
-void App::SetSaveAutosync(bool enable) {
-    g_app->m_save_autosync.Set(enable);
-}
-
-auto App::GetSaveRestoreIncludeRemote() -> bool {
-    return g_app->m_save_restore_include_remote.Get();
-}
-
-void App::SetSaveRestoreIncludeRemote(bool enable) {
-    g_app->m_save_restore_include_remote.Set(enable);
-}
-
-auto App::GetSaveDefaultLocation() -> std::string {
-    return g_app->m_save_default_location.Get();
-}
-
-void App::SetSaveDefaultLocation(std::string key) {
-    g_app->m_save_default_location.Set(std::move(key));
 }
 
 static std::atomic<bool> g_progress_active{false};
@@ -446,65 +246,6 @@ void App::SetProgressActive(bool active) {
  
 auto App::Get12HourTimeEnable() -> bool {
     return g_app->m_12hour_time.Get();
-}
-
-void App::SetNxlinkEnable(bool enable) {
-    if (App::GetNxlinkEnable() != enable) {
-        g_app->m_nxlink_enabled.Set(enable);
-        if (enable) {
-            nxlinkInitialize(nxlink_callback);
-        } else {
-            nxlinkExit();
-        }
-    }
-}
-
-void App::SetNtpEnable(bool enable) {
-    if (App::GetNtpEnable() != enable) {
-        g_app->m_ntp_enabled.Set(enable);
-        // the worker keeps running either way and re-checks the option each
-        // cycle, so turning it back on picks up without a restart.
-        if (enable) {
-            ntp::Start();
-        }
-    }
-}
-
-void App::SetHddEnable(bool enable) {
-    if (App::GetHddEnable() != enable) {
-        // MTP and usb host storage both want to own the usb port; only one can.
-        // Turning the drive on turns MTP off so the port is actually free for
-        // usbhsfs to claim, instead of silently doing nothing.
-        if (enable && App::GetMtpEnable()) {
-            App::SetMtpEnable(false);
-            App::Notify("MTP turned off to free the USB port"_i18n);
-        }
-        g_app->m_hdd_enabled.Set(enable);
-        if (enable) {
-            if (App::GetWriteProtect()) {
-                usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
-            }
-            usbHsFsInitialize(1);
-        } else {
-            usbHsFsExit();
-        }
-    }
-}
-
-void App::SetWriteProtect(bool enable) {
-    if (App::GetWriteProtect() != enable) {
-        g_app->m_hdd_write_protect.Set(enable);
-
-        if (enable) {
-            usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
-        } else {
-            usbHsFsSetFileSystemMountFlags(0);
-        }
-    }
-}
-
-void App::SetWebdavUrl(std::string value) {
-    g_app->m_webdav_url.Set(NormalizeWebdavUrl(std::move(value)));
 }
 
 void App::SetLogEnable(bool enable) {
@@ -641,261 +382,6 @@ void App::SetAnimatedWavesEnable(bool enable) {
 
 void App::Set12HourTimeEnable(bool enable) {
     g_app->m_12hour_time.Set(enable);
-}
-
-void App::SetMtpEnable(bool enable) {
-    g_app->ApplyMtpEnable(enable, true);
-}
-
-void App::ApplyMtpEnable(bool enable, bool notify_conflict) {
-    if (App::GetMtpEnable() != enable) {
-        // mutually exclusive with usb host storage -- see SetHddEnable. Free
-        // the port before haze grabs it.
-        if (enable && App::GetHddEnable()) {
-            App::SetHddEnable(false);
-            if (notify_conflict) {
-                App::Notify("USB storage turned off to free the USB port"_i18n);
-            }
-        }
-        g_app->m_mtp_enabled.Set(enable);
-        if (enable) {
-            PsmChargerType charger{PsmChargerType_Unconnected};
-            psmGetChargerType(&charger);
-            // only grab the port as a gadget if a PC is already providing
-            // VBUS. otherwise stay in host mode so a flash drive can mount.
-            if (charger == PsmChargerType_LowPower) {
-                if (haze::Init()) {
-                    ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
-                } else {
-                    g_app->m_mtp_enabled.Set(false);
-                }
-            } else if (!usbHsFsGetStatusChangeUserEvent()) {
-                if (App::GetWriteProtect()) {
-                    usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
-                }
-                usbHsFsInitialize(1);
-            }
-        } else {
-            haze::Exit();
-        }
-    }
-}
-
-void App::SetMtpShowSd(bool enable) {
-    if (App::GetMtpShowSd() != enable) {
-        g_app->m_mtp_show_sd.Set(enable);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpShowInstall(bool enable) {
-    if (App::GetMtpShowInstall() != enable) {
-        g_app->m_mtp_show_install.Set(enable);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpShowSaves(bool enable) {
-    if (App::GetMtpShowSaves() != enable) {
-        g_app->m_mtp_show_saves.Set(enable);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpShowRawSaves(bool enable) {
-    if (App::GetMtpShowRawSaves() != enable) {
-        g_app->m_mtp_show_raw_saves.Set(enable);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpShowRawSystemSaves(bool enable) {
-    if (App::GetMtpShowRawSystemSaves() != enable) {
-        g_app->m_mtp_show_raw_system_saves.Set(enable);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpShowGames(bool enable) {
-    if (App::GetMtpShowGames() != enable) {
-        g_app->m_mtp_show_games.Set(enable);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpGamesLayout(long layout) {
-    if (layout < 0 || layout > 2) {
-        layout = 2;
-    }
-    if (App::GetMtpGamesLayout() != layout) {
-        g_app->m_mtp_games_layout.Set(layout);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpNameSd(std::string value) {
-    if (App::GetMtpNameSd() != value) {
-        g_app->m_mtp_name_sd.Set(std::move(value));
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpNameInstall(std::string value) {
-    if (App::GetMtpNameInstall() != value) {
-        g_app->m_mtp_name_install.Set(std::move(value));
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::SetMtpFolders(const std::vector<std::string>& folders) {
-    std::string joined;
-    for (const auto& f : folders) {
-        if (f.empty()) {
-            continue;
-        }
-        if (!joined.empty()) {
-            joined += '|';
-        }
-        joined += f;
-    }
-
-    if (App::GetMtpFolders() != folders) {
-        g_app->m_mtp_folders.Set(joined);
-        if (App::GetMtpEnable()) {
-            SetMtpEnable(false);
-            SetMtpEnable(true);
-        }
-    }
-}
-
-void App::AddMtpFolder(const std::string& path) {
-    auto folders = App::GetMtpFolders();
-    if (std::find(folders.cbegin(), folders.cend(), path) != folders.cend()) {
-        return;
-    }
-    folders.push_back(path);
-    App::SetMtpFolders(folders);
-}
-
-void App::RemoveMtpFolder(const std::string& path) {
-    auto folders = App::GetMtpFolders();
-    const auto it = std::find(folders.cbegin(), folders.cend(), path);
-    if (it != folders.cend()) {
-        folders.erase(it);
-        App::SetMtpFolders(folders);
-    }
-}
-
-// the one folder every network share exposes next to the microSD card. session
-// state, not a setting -- see the declaration in app.hpp. read by the web
-// server's worker threads on every request, hence the lock: the path is a plain
-// char buffer, so an unguarded read racing a mount would return half of each.
-static std::vector<fs::FsPath> g_mounted_folders{};
-static Mutex g_mounted_folder_mutex{};
-
-auto App::GetMountedFolders() -> std::vector<fs::FsPath> {
-    SCOPED_MUTEX(&g_mounted_folder_mutex);
-    return g_mounted_folders;
-}
-
-void App::SetMountedFolders(std::vector<fs::FsPath> paths) {
-    std::vector<std::string> as_strings;
-    as_strings.reserve(paths.size());
-    for (const auto& p : paths) {
-        as_strings.push_back(p.toString());
-        log_write("[MOUNT] mounted folder: '%s'\n", p.s);
-    }
-
-    if (as_strings.empty()) {
-        log_write("[MOUNT] nothing mounted\n");
-    }
-
-    {
-        SCOPED_MUTEX(&g_mounted_folder_mutex);
-        g_mounted_folders = std::move(paths);
-    }
-
-    // fan out to whichever transports care. ftp rebuilds its root device list
-    // from this (bouncing the server if it is already up); the web server reads
-    // it fresh on every request, so it needs no poking. mounting over one of
-    // them therefore shows up on the others too, which is the whole point.
-    ftpsrv::SetFtpMountedFolders(as_strings);
-}
-
-// restarts the FTP server if it is running, so a config change takes effect.
-static void RestartFtpIfRunning() {
-    if (App::GetFtpEnable()) {
-        ftpsrv::Exit();
-        ftpsrv::Init();
-    }
-}
-
-void App::SetFtpEnable(bool enable) {
-    if (App::GetFtpEnable() != enable) {
-        g_app->m_ftp_enabled.Set(enable);
-        if (enable) {
-            ftpsrv::Init();
-            // enables background install for files dropped into the FTP "install" folder.
-            ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
-        } else {
-            ftpsrv::Exit();
-        }
-    }
-}
-
-void App::SetFtpAnon(bool enable) {
-    if (App::GetFtpAnon() != enable) {
-        g_app->m_ftp_anon.Set(enable);
-        RestartFtpIfRunning();
-    }
-}
-
-void App::SetFtpUser(std::string value) {
-    if (App::GetFtpUser() != value) {
-        g_app->m_ftp_user.Set(std::move(value));
-        RestartFtpIfRunning();
-    }
-}
-
-void App::SetFtpPass(std::string value) {
-    if (App::GetFtpPass() != value) {
-        g_app->m_ftp_pass.Set(std::move(value));
-        RestartFtpIfRunning();
-    }
-}
-
-void App::SetFtpPort(long port) {
-    if (App::GetFtpPort() != port) {
-        g_app->m_ftp_port.Set(port);
-        RestartFtpIfRunning();
-    }
 }
 
 void App::SetLanguage(long index, bool prompt_restart) {
