@@ -1,11 +1,11 @@
 # audit.md
 
-Версія коду: **v0.13.874**. Дата аудиту: 2026-09-22.
+Версія коду: **v0.13.875**. Дата аудиту: 2026-09-22.
 
 ## Поточний стан
 
-- v0.13.874 розклала `save_menu_ops.cpp` з 2 696 до 301 рядка на backup publication/writer, ZIP/folder restore, remote sync і deletion.
-- Шість нових implementation units: 114–544 рядки; чотири приватні headers: 9–92 рядки; public API стабільний.
+- v0.13.875 розклала `web.cpp` з 2 381 до 538 рядків і `web_pages.hpp` з 1 010 до 5; усі нові Web files ≤576 рядків.
+- mDNS, shared FS, upload/file routes і HTTP router розділені; 10 page payloads збережено byte-for-byte, public API стабільний.
 - Gemini: full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
 - Save build-closure units лишилися 591/597 рядків.
 - 32 C/C++ files понад 600 рядків знаходяться в `sphaira/source/ui/menus`.
@@ -30,11 +30,11 @@
 
 Не вводити service interfaces/factories. Existing `Menu`/free-function APIs спочатку лишити стабільними.
 
-### A3 — Web — NEXT
+### A3 — Web — DONE
 
-`web.cpp` 2 381: file routes/upload, server+mDNS, public UI bridge. `web_pages.hpp` 1 010: розкласти існуючі constexpr templates за сторінками; template engine не додавати.
+У v0.13.875 `web.cpp` 538 і `web_pages.hpp` 5 рядків; existing constexpr templates розкладено за сторінками без template engine. Full WSL build і 18/18 contracts PASS за звітом Gemini.
 
-### A4 — App
+### A4 — App — NEXT
 
 `app.cpp` 2 111: runtime loop, widget stack, USB/MTP, platform lifecycle, renderer. `app_settings.cpp` 1 101: доменні implementation units зі стабільним API. `app.hpp` спочатку зменшити видаленням dead declarations.
 

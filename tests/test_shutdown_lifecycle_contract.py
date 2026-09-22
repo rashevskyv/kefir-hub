@@ -29,6 +29,7 @@ HAZE_SOURCE_PATH = os.path.join(REPO_ROOT, "sphaira", "source", "haze_helper.cpp
 APP_SOURCE_PATH = os.path.join(REPO_ROOT, "sphaira", "source", "app.cpp")
 MAIN_SOURCE_PATH = os.path.join(REPO_ROOT, "sphaira", "source", "main.cpp")
 WEB_SOURCE_PATH = os.path.join(REPO_ROOT, "sphaira", "source", "web.cpp")
+WEB_UPLOAD_ROUTES_PATH = os.path.join(REPO_ROOT, "sphaira", "source", "web_upload_routes.cpp")
 DBI_SESSION_PATH = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "dbi", "dbi_session.cpp")
 
 # ---------------------------------------------------------------------------
@@ -226,17 +227,21 @@ def test_main_exit_contracts():
     print("    OK: userAppExit() contracts verified.")
 
 def test_web_prompt_shutdown_contracts():
-    print("[6] Checking web.cpp prompt cancellation loops and fail-closed publication...")
+    print("[6] Checking web prompt cancellation loops and fail-closed publication...")
     with open(WEB_SOURCE_PATH, "r", encoding="utf-8") as f:
+        web_src = f.read()
+
+    check("void WebShareStop() {" in web_src, "WebShareStop must be defined in web.cpp")
+
+    with open(WEB_UPLOAD_ROUTES_PATH, "r", encoding="utf-8") as f:
         src = f.read()
 
-    check("void WebShareStop() {" in src, "WebShareStop must be defined in web.cpp")
     idx_manifest = src.find("void HandleUploadManifest(")
-    check(idx_manifest != -1, "HandleUploadManifest found in web.cpp")
+    check(idx_manifest != -1, "HandleUploadManifest found in web_upload_routes.cpp")
     idx_manifest_end = src.find("void ReceiveUpload(", idx_manifest)
     manifest_body = src[idx_manifest:idx_manifest_end]
-    check("!g_share_running.load()" in manifest_body,
-          "HandleUploadManifest loop must check !g_share_running.load()")
+    check("!WebShareIsRunning()" in manifest_body,
+          "HandleUploadManifest loop must check !WebShareIsRunning()")
 
     # Verify both manifest and direct install check PushInstallSession return value
     check("if (!App::PushInstallSession(session))" in manifest_body,
@@ -246,7 +251,7 @@ def test_web_prompt_shutdown_contracts():
     check("if (!App::PushInstallSession(session))" in recv_body,
           "ReceiveUpload must check return of PushInstallSession")
 
-    print("    OK: web.cpp prompt cancellation loops and fail-closed publication verified.")
+    print("    OK: web prompt cancellation loops and fail-closed publication verified.")
 
 # ---------------------------------------------------------------------------
 # 2. Behavioral Simulation Model (Interleaving Serialization & Safety)

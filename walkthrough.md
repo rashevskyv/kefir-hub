@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.874** (2026-09-22).
+Актуальний shipped delivery — **v0.13.875** (2026-09-22).
+
+## v0.13.875 — Web structural split
+
+`web.cpp` зменшено з 2 381 до 538 рядків; `web_pages.hpp` — з 1 010 до 5. Десять наявних HTML/CSS/JS raw-string payloads без зміни вмісту рознесено за modal, folder і remote headers. mDNS responder, mount/FS helpers, upload handlers, file routes та HTTP router перенесено у п’ять конкретних implementation units із приватними headers; усі нові файли мають 9–576 рядків. Public Web API, route ordering і server shutdown залишені стабільними.
+
+Gemini повідомив про WSL `ReleaseWithInstall` exit 0 з `[100%] Built target sphaira_nro`, 18/18 Python contracts після корекції 11 version allowlists і shutdown source-location assertion, dead-symbol gate (981 declarations), EN/UK 2549/2549 parity, 10/10 byte-identical page payloads та `git diff --check` PASS. Senior перевірив diff, version/CMake, file-size gate і тестові assertions; повторної збірки чи device/browser runtime test не проводив. Дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.874 — Save operations split
 

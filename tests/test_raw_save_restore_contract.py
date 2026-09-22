@@ -929,7 +929,7 @@ def test_bounded_source_code_contracts():
     en_json = json.loads(read_repo_file("assets", "romfs", "i18n", "en.json"))
     uk_json = json.loads(read_repo_file("assets", "romfs", "i18n", "uk.json"))
 
-    assert any(f"set(sphaira_VERSION 0.13.{v})" in cmake_txt for v in range(858, 875)), "sphaira/CMakeLists.txt must be 0.13.858 or later"
+    assert any(f"set(sphaira_VERSION 0.13.{v})" in cmake_txt for v in range(858, 876)), "sphaira/CMakeLists.txt must be 0.13.858 or later"
 
     # 6.2 Sliced Function: FsView::RestoreSaveFile in filebrowser_ops.cpp
     fb_start = fb_ops_cpp.find("void FsView::RestoreSaveFile(const FileEntry& entry)")
