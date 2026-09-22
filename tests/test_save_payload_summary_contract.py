@@ -237,24 +237,24 @@ def test_source_contracts():
     check('inline constexpr const char* DBI_SAVE_EXTRA_NAME = ".dbi_save_extra";' in paths_src,
           "save_paths.hpp must define DBI_SAVE_EXTRA_NAME as .dbi_save_extra")
 
-    # 4. save_menu_ops.cpp: RestoreSaveZip wiring, actual filter rules, and counts/bytes-only diagnostic
-    save_ops = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    with open(save_ops, "r", encoding="utf-8") as f:
-        save_ops_src = f.read()
+    # 4. save_restore_zip.cpp & save_menu_ops.cpp: RestoreSaveZip wiring, actual filter rules, and counts/bytes-only diagnostic
+    save_zip = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(save_zip, "r", encoding="utf-8") as f:
+        save_zip_src = f.read()
 
-    check("IsSaveReservedMetadataRoot(name.s)" in save_ops_src,
+    check("IsSaveReservedMetadataRoot(name.s)" in save_zip_src,
           "RestoreSaveZip save_filter must use shared IsSaveReservedMetadataRoot predicate")
-    check("thread::UnzipPayloadSummary summary{};" in save_ops_src,
+    check("thread::UnzipPayloadSummary summary{};" in save_zip_src,
           "RestoreSaveZip must instantiate UnzipPayloadSummary")
-    check('TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary' in save_ops_src,
+    check('TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary' in save_zip_src,
           "RestoreSaveZip must pass &summary to TransferUnzipPreflight")
-    check('log_write("save preflight payload: %lld bytes, %lld files, %lld dirs\\n",' in save_ops_src,
+    check('log_write("save preflight payload: %lld bytes, %lld files, %lld dirs\\n",' in save_zip_src,
           "RestoreSaveZip must log counts/bytes-only diagnostic after preflight")
 
     # Diagnostic does not leak sensitive identifiers or file names
-    preflight_diag_pos = save_ops_src.find('save preflight payload:')
+    preflight_diag_pos = save_zip_src.find('save preflight payload:')
     check(preflight_diag_pos != -1, "Diagnostic string must exist")
-    diag_snippet = save_ops_src[preflight_diag_pos:preflight_diag_pos + 250]
+    diag_snippet = save_zip_src[preflight_diag_pos:preflight_diag_pos + 250]
     check("name" not in diag_snippet and "AccountUid" not in diag_snippet and "token" not in diag_snippet,
           "Preflight diagnostic must not log filenames, account IDs, or tokens")
 
@@ -262,6 +262,10 @@ def test_source_contracts():
     fb_ops = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "filebrowser", "filebrowser_ops.cpp")
     with open(fb_ops, "r", encoding="utf-8") as f:
         fb_ops_src = f.read()
+
+    save_ops = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
+    with open(save_ops, "r", encoding="utf-8") as f:
+        save_ops_src = f.read()
 
     check("save::RestoreSaveZip(pbox, se, file_path" in fb_ops_src,
           "File Browser restore must delegate to save::RestoreSaveZip")

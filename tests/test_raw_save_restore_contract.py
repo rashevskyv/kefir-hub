@@ -961,8 +961,8 @@ def test_bounded_source_code_contracts():
     # 6.3 Sliced Function: Menu::RestoreSavesPicked in save_menu_ops.cpp
     rsp_start = save_ops_cpp.find("void Menu::RestoreSavesPicked(")
     assert rsp_start != -1, "Menu::RestoreSavesPicked not found"
-    rsp_end = save_ops_cpp.find("auto DownloadOneBackupFile(", rsp_start)
-    assert rsp_end != -1, "DownloadOneBackupFile boundary not found"
+    rsp_end = save_ops_cpp.find("Result Menu::RestoreSaveInternal(", rsp_start)
+    assert rsp_end != -1, "RestoreSaveInternal boundary not found"
     rsp_func = save_ops_cpp[rsp_start:rsp_end]
 
     idx_rsp_disa = rsp_func.find("if (is_raw) {")
@@ -972,11 +972,11 @@ def test_bounded_source_code_contracts():
     assert idx_rsp_disa < idx_rsp_confirm < idx_rsp_worker, "RestoreSavesPicked RAW refusal must precede prompt and worker"
     assert "BackupSaveInternal" not in rsp_func, "RestoreSavesPicked worker must not call BackupSaveInternal"
 
-    # 6.4 Sliced Function: Menu::RestoreSaves (batch) bounded by DeleteSaves
+    # 6.4 Sliced Function: Menu::RestoreSaves (batch) bounded by RestoreSavesPicked
     batch_start = save_ops_cpp.find("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets")
     assert batch_start != -1, "RestoreSaves batch overload not found"
-    batch_end = save_ops_cpp.find("void Menu::DeleteSaves(", batch_start)
-    assert batch_end != -1, "DeleteSaves boundary not found"
+    batch_end = save_ops_cpp.find("void Menu::RestoreSavesPicked(", batch_start)
+    assert batch_end != -1, "RestoreSavesPicked boundary not found"
     batch_func = save_ops_cpp[batch_start:batch_end]
 
     idx_batch_raw = batch_func.find("if (is_raw) {")
@@ -990,8 +990,8 @@ def test_bounded_source_code_contracts():
     # 6.5 Sliced Function: Menu::RestoreSaveInternal in save_menu_ops.cpp
     rsi_start = save_ops_cpp.find("Result Menu::RestoreSaveInternal(")
     assert rsi_start != -1, "RestoreSaveInternal not found"
-    rsi_end = save_ops_cpp.find("Result Menu::BackupSaveInternal(", rsi_start)
-    assert rsi_end != -1, "BackupSaveInternal boundary not found"
+    rsi_end = save_ops_cpp.find("} // namespace sphaira::ui::menu::save", rsi_start)
+    assert rsi_end != -1, "namespace end boundary not found"
     rsi_func = save_ops_cpp[rsi_start:rsi_end]
 
     idx_rsi_raw = rsi_func.find("if (IsDisaSaveFile(probe_fs, path)) {")

@@ -77,27 +77,40 @@ def test_source_contracts() -> None:
     check("Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr) const;" in hpp_src,
           "save_menu.hpp must declare RestoreSaveInternal with out_recovery_path and out_mutation_started")
 
-    # 1.2 save_menu_ops.cpp implementations
+    # 1.2 save_backup_writer.hpp, save_backup_writer.cpp, save_restore_zip.cpp & save_menu_ops.cpp implementations
+    writer_hpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_writer.hpp")
+    with open(writer_hpp_path, "r", encoding="utf-8") as f:
+        writer_hpp = f.read()
+
+    writer_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_writer.cpp")
+    with open(writer_cpp_path, "r", encoding="utf-8") as f:
+        writer_src = f.read()
+
+    zip_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(zip_cpp_path, "r", encoding="utf-8") as f:
+        zip_src = f.read()
+
     ops_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
     with open(ops_path, "r", encoding="utf-8") as f:
         ops_src = f.read()
 
     # Recovery stream context primitive and fail-closed invalid fd
-    check("struct RecoveryStreamContext" in ops_src, "save_menu_ops.cpp must define RecoveryStreamContext")
-    check("RecoveryOpen" in ops_src and "RecoveryWrite" in ops_src and "RecoveryClose" in ops_src,
-          "save_menu_ops.cpp must define custom recovery stream callbacks")
-    check("if (fd == -1)" in ops_src and "ctx->sync_failed = true;" in ops_src,
+    check("struct RecoveryStreamContext" in writer_hpp or "struct RecoveryStreamContext" in writer_src,
+          "save_backup_writer must define RecoveryStreamContext")
+    check("RecoveryOpen" in writer_src and "RecoveryWrite" in writer_src and "RecoveryClose" in writer_src,
+          "save_backup_writer.cpp must define custom recovery stream callbacks")
+    check("if (fd == -1)" in writer_src and "ctx->sync_failed = true;" in writer_src,
           "RecoveryClose must set sync_failed on invalid fd (fail closed)")
-    check("fsync(" in ops_src and "fileno(" in ops_src and "std::fflush(" in ops_src,
-          "save_menu_ops.cpp must perform fflush and fsync in RecoveryClose")
+    check("fsync(" in writer_src and "fileno(" in writer_src and "std::fflush(" in writer_src,
+          "save_backup_writer.cpp must perform fflush and fsync in RecoveryClose")
 
     # Shared WriteSaveBackupZip helper
-    check("static Result WriteSaveBackupZip(" in ops_src,
-          "save_menu_ops.cpp must define static WriteSaveBackupZip helper")
-    wsb_pos = ops_src.find("static Result WriteSaveBackupZip(")
-    wsb_end = ops_src.find("Result RestoreSaveZip(", wsb_pos)
-    check(wsb_end != -1, "RestoreSaveZip must follow WriteSaveBackupZip")
-    wsb_body = ops_src[wsb_pos:wsb_end]
+    check("Result WriteSaveBackupZip(" in writer_hpp and "Result WriteSaveBackupZip(" in writer_src,
+          "save_backup_writer must define WriteSaveBackupZip helper")
+    wsb_pos = writer_src.find("Result WriteSaveBackupZip(")
+    wsb_end = writer_src.find("} // namespace sphaira::ui::menu::save", wsb_pos)
+    check(wsb_end != -1, "WriteSaveBackupZip end boundary must be found")
+    wsb_body = writer_src[wsb_pos:wsb_end]
 
     check("recovery_mode" in wsb_body, "WriteSaveBackupZip must accept recovery_mode option")
     check("zipCloseFileInZip(zfile)" in wsb_body, "WriteSaveBackupZip must close files in zip")
@@ -108,12 +121,12 @@ def test_source_contracts() -> None:
           "WriteSaveBackupZip must fail closed on flush/sync/close failure")
 
     # RestoreSaveZip definition and body
-    rsz_start = ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started)")
-    check(rsz_start != -1, "RestoreSaveZip definition must exist in save_menu_ops.cpp")
+    rsz_start = zip_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started)")
+    check(rsz_start != -1, "RestoreSaveZip definition must exist in save_restore_zip.cpp")
 
-    rsi_start = ops_src.find("Result Menu::RestoreSaveInternal(", rsz_start)
-    check(rsi_start != -1, "Menu::RestoreSaveInternal must follow RestoreSaveZip")
-    rsz_body = ops_src[rsz_start:rsi_start]
+    rsz_end = zip_src.find("} // namespace sphaira::ui::menu::save", rsz_start)
+    check(rsz_end != -1, "namespace end must follow RestoreSaveZip")
+    rsz_body = zip_src[rsz_start:rsz_end]
 
     # Shared MTP refusal in RestoreSaveZip itself
     check("if (haze::IsRunning())" in rsz_body and "return FsError_TargetLocked;" in rsz_body,

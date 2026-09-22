@@ -1,15 +1,15 @@
 # audit.md
 
-Версія коду: **v0.13.873**. Дата аудиту: 2026-09-22.
+Версія коду: **v0.13.874**. Дата аудиту: 2026-09-22.
 
 ## Поточний стан
 
-- v0.13.873 розклала `save_menu.cpp` з 2 788 до 308 рядків на lifecycle, draw, filters, options, scan, target, catalog та actions.
-- Сім нових implementation units: 166–573 рядки; private header 28 рядків; public API стабільний.
+- v0.13.874 розклала `save_menu_ops.cpp` з 2 696 до 301 рядка на backup publication/writer, ZIP/folder restore, remote sync і deletion.
+- Шість нових implementation units: 114–544 рядки; чотири приватні headers: 9–92 рядки; public API стабільний.
 - Gemini: full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
 - Save build-closure units лишилися 591/597 рядків.
-- 35 oversized files знаходяться в `sphaira/source/ui/menus`.
-- Graphify після delivery: 13 309 nodes, 26 551 edges, 657 communities; сім C/C++ файлів розібрано частково через parser syntax limitations.
+- 32 C/C++ files понад 600 рядків знаходяться в `sphaira/source/ui/menus`.
+- Graphify є картою зв’язків; source-level перевірка потрібна для кожного нового delivery.
 - Активні delivery-документи скорочено; попередня історія лишається в Git без потрійного дублювання.
 
 ## Черга — виконувати серійно
@@ -22,15 +22,15 @@
 4. `App::GetWebdavUrl/User/Pass` мають лише declaration + definition; активні callers використовують `GetWebdavUrlName` та `location::Entry`.
 5. Фактичний результат: no new dependencies/abstractions, full build PASS.
 
-### A2 — Saves structural split — IN PROGRESS
+### A2 — Saves structural split — DONE
 
-`save_paths.cpp` split завершено у v0.13.872; `save_menu.cpp` — у v0.13.873. Залишився `save_menu_ops.cpp` 2 696 рядків. Наступне:
+`save_paths.cpp` split завершено у v0.13.872; `save_menu.cpp` — у v0.13.873; `save_menu_ops.cpp` — у v0.13.874.
 
-- v0.13.874: backup, ZIP/folder restore, remote sync і deletion зі стабільним `Menu` API та safety ordering.
+- Backup, ZIP/folder restore, remote sync і deletion винесені зі стабільним `Menu` API та safety ordering.
 
 Не вводити service interfaces/factories. Existing `Menu`/free-function APIs спочатку лишити стабільними.
 
-### A3 — Web
+### A3 — Web — NEXT
 
 `web.cpp` 2 381: file routes/upload, server+mDNS, public UI bridge. `web_pages.hpp` 1 010: розкласти існуючі constexpr templates за сторінками; template engine не додавати.
 
@@ -58,7 +58,7 @@
 - Не мінімізувати embedded HTML заради line count.
 - Не змішувати behavior change з broad file split.
 - Не створювати interfaces з однією реалізацією, registries або speculative config.
-- Не запускати compile/build до фінального Gemini follow-up поточного delivery.
+- Не запускати compile/build до фінального Gemini follow-up наступного delivery.
 
 ## Agent routing
 

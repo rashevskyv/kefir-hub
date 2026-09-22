@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.873** (2026-09-22).
+Актуальний shipped delivery — **v0.13.874** (2026-09-22).
+
+## v0.13.874 — Save operations split
+
+`save_menu_ops.cpp` зменшено з 2 696 до 301 рядка. Backup publication і ZIP writer, ZIP/folder restore, remote sync та deletion перенесено у шість concrete implementation units і чотири приватні headers (9–544 рядки). CMake явно реєструє нові `.cpp`; public `Menu` API та save formats не змінені. Контрактні тести перенаправлено на нові source locations без вилучення safety-перевірок.
+
+Gemini під час фінальної збірки прибрав неіснуючий `types.hpp` include із `save_remote_sync.hpp` і повідомив про WSL `ReleaseWithInstall` exit 0 з `[100%] Built target sphaira_nro`, 18/18 Python contracts, dead-symbol gate (981 declarations), EN/UK 2549/2549 parity та `git diff --check` PASS. Senior перевірив diff, version/CMake, ліміт рядків і safety ordering; повторної збірки чи device/runtime test не проводив. Дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.873 — Save menu UI/catalog split
 

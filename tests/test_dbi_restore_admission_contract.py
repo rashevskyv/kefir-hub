@@ -65,8 +65,8 @@ def test_static_source_contracts() -> None:
     print("[1] Running static source contracts for v0.13.868...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)")),
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, or 0.13.873")
+    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)", "set(sphaira_VERSION 0.13.874)")),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, or 0.13.874")
 
     path_util_hpp = read_file("sphaira", "include", "path_util.hpp")
     check("inline auto IsDbiRootMarkerEntry(" in path_util_hpp,
@@ -189,7 +189,7 @@ def test_static_source_contracts() -> None:
           "save_menu_ops.cpp must not contain moved ShowRestorePickerPopup")
 
     batch_idx = ops_cpp.find("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets")
-    del_idx = ops_cpp.find("void Menu::DeleteSaves(", batch_idx)
+    del_idx = ops_cpp.find("void Menu::RestoreSavesPicked(", batch_idx)
     batch_slice = ops_cpp[batch_idx:del_idx]
     check("FindLatestBackupPath" not in batch_slice,
           "RestoreSaves batch must NOT call FindLatestBackupPath")
@@ -201,9 +201,11 @@ def test_static_source_contracts() -> None:
           "RestoreSaves must reinspect with src.dbi_game_dir")
     check("BackupGroupKey(check_info) != BackupGroupKey(src)" in batch_slice,
           "RestoreSaves must enforce BackupGroupKey equivalence on each multi-group source")
-    check("R_UNLESS(e.save_data_id != 0" in ops_cpp,
+
+    zip_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    check("R_UNLESS(e.save_data_id != 0" in zip_cpp,
           "RestoreSaveZip must enforce e.save_data_id != 0 guard")
-    check("fsCreateSaveDataFileSystem" not in ops_cpp,
+    check("fsCreateSaveDataFileSystem" not in zip_cpp,
           "RestoreSaveZip must NOT contain legacy fsCreateSaveDataFileSystem creation code")
 
     en_json = json.loads(read_file("assets", "romfs", "i18n", "en.json"))

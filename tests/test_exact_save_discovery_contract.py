@@ -90,16 +90,20 @@ def test_source_contracts():
     check("const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);" in menu_cpp_src,
           "CreateBackupIfNewer must use static_cast<FsSaveDataSpaceId>(e.save_data_space_id) directly")
 
-    # 5. save_menu_ops.cpp: DeleteSavesOn, DeleteSaves, RestoreSaveZip
-    save_menu_ops = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    with open(save_menu_ops, "r", encoding="utf-8") as f:
-        ops_cpp_src = f.read()
+    # 5. save_deletion.cpp and save_restore_zip.cpp: DeleteSavesOn, DeleteSaves, RestoreSaveZip
+    del_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_deletion.cpp")
+    with open(del_cpp_path, "r", encoding="utf-8") as f:
+        del_cpp_src = f.read()
 
-    check("const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);" in ops_cpp_src,
+    rsz_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(rsz_cpp_path, "r", encoding="utf-8") as f:
+        rsz_cpp_src = f.read()
+
+    check("const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);" in del_cpp_src,
           "DeleteSaves / DeleteSavesOn must use static_cast<FsSaveDataSpaceId>(e.save_data_space_id) directly")
-    check(("if (target_entry.save_data_id != 0) {" in ops_cpp_src or "if (e.save_data_id != 0) {" in ops_cpp_src) and "R_TRY(check_rc);" in ops_cpp_src,
+    check(("if (target_entry.save_data_id != 0) {" in rsz_cpp_src or "if (e.save_data_id != 0) {" in rsz_cpp_src) and "R_TRY(check_rc);" in rsz_cpp_src,
           "RestoreSaveZip must return open failure directly without create when save_data_id != 0")
-    check("static_cast<FsSaveDataSpaceId>(target_entry.save_data_space_id)" in ops_cpp_src or "(e.save_data_id != 0)\n        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)" in ops_cpp_src,
+    check("static_cast<FsSaveDataSpaceId>(target_entry.save_data_space_id)" in rsz_cpp_src or "(e.save_data_id != 0)\n        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)" in rsz_cpp_src,
           "RestoreSaveZip must use actual save_data_space_id directly when save_data_id != 0")
 
     # 6. filebrowser_ops.cpp: RestoreSaveFile ZIP vs DISA

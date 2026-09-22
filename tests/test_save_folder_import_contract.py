@@ -207,17 +207,25 @@ def test_source_contracts():
     check("bool allow_empty" in van_fpath_body and "allow_empty" in van_fpath_body,
           "VerifyArchiveAgainstNative FsPath overload must declare and forward allow_empty")
 
-    # 1.5 save_menu_ops.cpp scoped checks
-    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    with open(ops_cpp_path, "r", encoding="utf-8") as f:
-        ops_cpp = f.read()
+    # 1.5 save_folder_staging.hpp, save_folder_restore.cpp, and save_restore_zip.cpp scoped checks
+    staging_hpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_folder_staging.hpp")
+    with open(staging_hpp_path, "r", encoding="utf-8") as f:
+        staging_hpp = f.read()
+
+    folder_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_folder_restore.cpp")
+    with open(folder_cpp_path, "r", encoding="utf-8") as f:
+        folder_cpp = f.read()
+
+    zip_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(zip_cpp_path, "r", encoding="utf-8") as f:
+        zip_cpp = f.read()
 
     # CheckedJoinPath helper
-    check("static Result CheckedJoinPath(fs::FsPath& out, std::string_view base, std::string_view rel)" in ops_cpp,
-          "save_menu_ops.cpp must define CheckedJoinPath")
-    cjp_pos = ops_cpp.find("static Result CheckedJoinPath(")
-    cjp_end = ops_cpp.find("static bool IsStagingParentOrRelated(", cjp_pos)
-    cjp_body = ops_cpp[cjp_pos:cjp_end]
+    check("Result CheckedJoinPath(fs::FsPath& out, std::string_view base, std::string_view rel)" in staging_hpp,
+          "save_folder_staging.hpp must define CheckedJoinPath")
+    cjp_pos = staging_hpp.find("Result CheckedJoinPath(")
+    cjp_end = staging_hpp.find("bool IsStagingParentOrRelated(", cjp_pos)
+    cjp_body = staging_hpp[cjp_pos:cjp_end]
     check("total_len >= sizeof(fs::FsPath)" in cjp_body,
           "CheckedJoinPath must verify total length against sizeof(fs::FsPath)")
     check("n <= 0 || static_cast<size_t>(n) >= sizeof(buf)" in cjp_body,
@@ -225,8 +233,8 @@ def test_source_contracts():
 
     # IsStagingParentOrRelated
     ispor_pos = cjp_end
-    ispor_end = ops_cpp.find("static Result StageBackupFolderToZip(", ispor_pos)
-    ispor_body = ops_cpp[ispor_pos:ispor_end]
+    ispor_end = staging_hpp.find("} // namespace sphaira::ui::menu::save", ispor_pos)
+    ispor_body = staging_hpp[ispor_pos:ispor_end]
     check('c == "." || c == ".."' in ispor_body,
           "IsStagingParentOrRelated must check for . or .. traversal components")
     check('equals_ic(comps[0], "dumps")' in ispor_body,
@@ -235,9 +243,9 @@ def test_source_contracts():
           "IsStagingParentOrRelated must check save-import component")
 
     # StageBackupFolderToZip
-    sbf_pos = ispor_end
-    sbf_end = ops_cpp.find("Result RestoreSaveZip(", sbf_pos)
-    sbf_body = ops_cpp[sbf_pos:sbf_end]
+    sbf_pos = folder_cpp.find("Result StageBackupFolderToZip(")
+    sbf_end = folder_cpp.find("Result RestoreSaveFolder(", sbf_pos)
+    sbf_body = folder_cpp[sbf_pos:sbf_end]
     check("Result_ZipClose" not in sbf_body,
           "StageBackupFolderToZip must NOT use undefined Result_ZipClose")
     check("rec_ctx.fp == nullptr" in sbf_body,
@@ -256,9 +264,9 @@ def test_source_contracts():
           "StageBackupFolderToZip must commit sd_fs")
 
     # RestoreSaveZip scoped check
-    rsz_pos = sbf_end
-    rsz_end = ops_cpp.find("Result RestoreSaveFolder(", rsz_pos)
-    rsz_body = ops_cpp[rsz_pos:rsz_end]
+    rsz_pos = zip_cpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty, bool* out_created_slot_retained)")
+    rsz_end = zip_cpp.find("} // namespace sphaira::ui::menu::save", rsz_pos)
+    rsz_body = zip_cpp[rsz_pos:rsz_end]
     check("TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary, &source_inventory, allow_empty)" in rsz_body,
           "RestoreSaveZip must pass allow_empty to TransferUnzipPreflight")
     check("if (!allow_empty || !source_inventory.files.empty() || !source_inventory.directories.empty())" in rsz_body,
@@ -269,9 +277,9 @@ def test_source_contracts():
           "RestoreSaveZip must preserve exact strict default VerifyArchiveAgainstNative call")
 
     # RestoreSaveFolder scoped check
-    rsf_pos = rsz_end
-    rsf_end = ops_cpp.find("Result Menu::RestoreSaveInternal(", rsf_pos)
-    rsf_body = ops_cpp[rsf_pos:rsf_end]
+    rsf_pos = folder_cpp.find("Result RestoreSaveFolder(")
+    rsf_end = folder_cpp.find("} // namespace sphaira::ui::menu::save", rsf_pos)
+    rsf_body = folder_cpp[rsf_pos:rsf_end]
     check("strnlen(folder_path.s, sizeof(folder_path.s))" in rsf_body,
           "RestoreSaveFolder must bound folder_path.s with strnlen")
     check("raw_view.find(\"//\") != std::string_view::npos" in rsf_body,

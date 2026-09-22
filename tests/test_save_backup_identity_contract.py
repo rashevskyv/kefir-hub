@@ -263,16 +263,16 @@ def test_source_contracts() -> None:
     print("[1] Running static source contract & ordering checks...")
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    # 1.1 sphaira/source/ui/menus/save/save_menu_ops.cpp
-    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
+    # 1.1 sphaira/source/ui/menus/save/save_backup_pub.cpp
+    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_pub.cpp")
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_src = f.read()
 
     bsi_start = ops_src.find("Result Menu::BackupSaveInternal(")
-    check(bsi_start != -1, "Menu::BackupSaveInternal definition must exist in save_menu_ops.cpp")
+    check(bsi_start != -1, "Menu::BackupSaveInternal definition must exist in save_backup_pub.cpp")
 
-    sync_start = ops_src.find("void Menu::SyncSavesRemote()", bsi_start)
-    check(sync_start != -1, "Menu::SyncSavesRemote must follow BackupSaveInternal")
+    sync_start = ops_src.find("} // namespace sphaira::ui::menu::save", bsi_start)
+    check(sync_start != -1, "namespace end boundary must follow BackupSaveInternal")
 
     bsi_body = ops_src[bsi_start:sync_start]
 
@@ -335,7 +335,7 @@ def test_source_contracts() -> None:
     pos_rename = bsi_body.find("fs->RenameFile(temp_path, path)", pos_write_zip)
     check(pos_rename != -1, "BackupSaveInternal must rename temp_path to final path")
 
-    # 1.2 Verify callers in save_menu_ops.cpp
+    # 1.2 Verify callers in save_backup_pub.cpp
     check("R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));" in ops_src,
           "BackupSavesOn and BackupSaves must delegate to BackupSaveInternal")
 

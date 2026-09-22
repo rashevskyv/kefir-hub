@@ -29,7 +29,7 @@ def test_source_wiring_contracts() -> None:
     print("[1] Checking static source wiring and route contracts...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src, "CMakeLists.txt must define sphaira_VERSION as 0.13.870, 0.13.871, 0.13.872, or 0.13.873")
+    check("set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src, "CMakeLists.txt must define sphaira_VERSION as 0.13.870, 0.13.871, 0.13.872, 0.13.873, or 0.13.874")
     check("source/ui/menus/game/game_save_manager.cpp" in cmake_src, "CMakeLists.txt must compile game_save_manager.cpp")
 
     hdr_src = read_file("sphaira", "include", "ui", "menus", "game", "game_save_manager.hpp")
@@ -69,7 +69,7 @@ def test_source_wiring_contracts() -> None:
     check("save::CreateSaveDataChecked(req)" in legacy_ops,
           "Legacy CreateSave in game_internal.cpp must call CreateSaveDataChecked")
 
-    restore_route = read_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
+    restore_route = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
     check("CreateSaveDataChecked(e.creation_request" in restore_route,
           "Restore-time slot creation must route through CreateSaveDataChecked")
 

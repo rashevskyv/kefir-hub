@@ -58,8 +58,8 @@ def test_source_wiring_contracts() -> None:
 
     # A. CMakeLists.txt version and source file registration
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.869)" in cmake_src or "set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869, 0.13.870, 0.13.871, 0.13.872, or 0.13.873")
+    check("set(sphaira_VERSION 0.13.869)" in cmake_src or "set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, or 0.13.874")
     check("source/ui/menus/save/save_slot_backend.cpp" in cmake_src,
           "sphaira/CMakeLists.txt must compile save_slot_backend.cpp")
 
@@ -150,14 +150,15 @@ def test_source_wiring_contracts() -> None:
           "game_internal.cpp must reuse CreateSaveDataChecked")
 
     # G. RestoreSaveZip preflight before create, create_succeeded check, and honest recovery
+    zip_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
     ops_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    preflight_pos = ops_cpp.find("thread::TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary, &source_inventory, allow_empty)")
-    create_pos = ops_cpp.find("CreateSaveDataChecked(e.creation_request", preflight_pos)
+    preflight_pos = zip_cpp.find("thread::TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary, &source_inventory, allow_empty)")
+    create_pos = zip_cpp.find("CreateSaveDataChecked(e.creation_request", preflight_pos)
     check(preflight_pos != -1 and create_pos != -1 and preflight_pos < create_pos,
           "RestoreSaveZip must execute TransferUnzipPreflight before CreateSaveDataChecked")
-    check("if (create_res.create_succeeded) {" in ops_cpp,
+    check("if (create_res.create_succeeded) {" in zip_cpp,
           "RestoreSaveZip must check create_succeeded before setting out_mutation_started or out_created_slot_retained")
-    check("if (target_entry.save_data_id != 0 && !was_newly_created)" in ops_cpp,
+    check("if (target_entry.save_data_id != 0 && !was_newly_created)" in zip_cpp,
           "RestoreSaveZip must skip safety recovery archive creation when was_newly_created is true")
     check("if (*created_slot_retained)" in ops_cpp,
           "RestoreSavesPicked must detect retained slot on post-create failure")

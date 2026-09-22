@@ -186,19 +186,19 @@ def test_source_contracts() -> None:
     check("meta_status == ArchiveMetaStatus::Invalid" in iba_body,
           "InspectBackupArchive must fail closed on ArchiveMetaStatus::Invalid without fallback")
 
-    # 1.3 save_menu_ops.cpp RestoreSaveZip admission/clear gates order
-    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
+    # 1.3 save_restore_zip.cpp RestoreSaveZip admission/clear gates order
+    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_src = f.read()
 
     # BLOCKER 2 check: save_filter uses executable IsSaveReservedMetadataRoot without relying on obsolete comment
     check("IsSaveReservedMetadataRoot(name.s)" in ops_src,
-          "save_menu_ops.cpp save_filter must execute IsSaveReservedMetadataRoot")
+          "save_restore_zip.cpp save_filter must execute IsSaveReservedMetadataRoot")
 
     rsz_start = ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started")
     check(rsz_start != -1, "RestoreSaveZip definition must exist")
-    rsi_start = ops_src.find("Result Menu::RestoreSaveInternal(", rsz_start)
-    check(rsi_start != -1, "Menu::RestoreSaveInternal must follow RestoreSaveZip")
+    rsi_start = ops_src.find("} // namespace sphaira::ui::menu::save", rsz_start)
+    check(rsi_start != -1, "namespace end must follow RestoreSaveZip")
     rsz_body = ops_src[rsz_start:rsi_start]
 
     # Admission & Clear Gate Order in RestoreSaveZip:

@@ -147,30 +147,38 @@ def test_source_contracts() -> None:
     check("crc32CalculateWithSeed" in vaan_body, "VerifyArchiveAgainstNative must verify CRC")
     check("post_collections" in vaan_body, "VerifyArchiveAgainstNative must re-enumerate native inventory after byte checks")
 
-    # 1.4 save_menu_ops.cpp implementations
+    # 1.4 save_restore_zip.hpp, save_restore_zip.cpp & save_menu_ops.cpp implementations
+    zip_hpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.hpp")
+    with open(zip_hpp_path, "r", encoding="utf-8") as f:
+        zip_hpp = f.read()
+
+    zip_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(zip_cpp_path, "r", encoding="utf-8") as f:
+        zip_cpp = f.read()
+
     ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_cpp = f.read()
 
-    check("struct SaveReaderContext" in ops_cpp,
-          "save_menu_ops.cpp must define SaveReaderContext")
-    check("res == static_cast<ZPOS64_T>(-1)" in ops_cpp,
+    check("struct SaveReaderContext" in zip_hpp or "struct SaveReaderContext" in zip_cpp,
+          "save_restore_zip.hpp/cpp must define SaveReaderContext")
+    check("res == static_cast<ZPOS64_T>(-1)" in zip_hpp or "res == static_cast<ZPOS64_T>(-1)" in zip_cpp,
           "SaveReaderContext::ztell64_file must check tell result for error")
-    check("source_reader_ctx.InitFileFunc(&file_func);" in ops_cpp,
+    check("source_reader_ctx.InitFileFunc(&file_func);" in zip_cpp,
           "RestoreSaveZip must initialize source_reader_ctx")
-    check("rec_reader_ctx.InitFileFunc(&rec_file_func);" in ops_cpp,
+    check("rec_reader_ctx.InitFileFunc(&rec_file_func);" in zip_cpp,
           "RestoreSaveZip must initialize rec_reader_ctx")
-    check("!source_reader_ctx.HasError()" in ops_cpp,
+    check("!source_reader_ctx.HasError()" in zip_cpp,
           "RestoreSaveZip must verify source reader context had no sticky errors")
-    check("!rec_reader_ctx.HasError()" in ops_cpp,
+    check("!rec_reader_ctx.HasError()" in zip_cpp,
           "RestoreSaveZip must verify recovery reader context had no sticky errors")
 
     # Lexical RW scope destroying save_fs before RO remount
-    rsz_start = ops_cpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started)")
+    rsz_start = zip_cpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started")
     check(rsz_start != -1, "RestoreSaveZip definition must match exact signature")
-    rsi_start = ops_cpp.find("Result Menu::RestoreSaveInternal(", rsz_start)
-    check(rsi_start != -1, "RestoreSaveInternal must follow RestoreSaveZip")
-    rsz_body = ops_cpp[rsz_start:rsi_start]
+    rsz_end = zip_cpp.find("} // namespace sphaira::ui::menu::save", rsz_start)
+    check(rsz_end != -1, "namespace end must follow RestoreSaveZip")
+    rsz_body = zip_cpp[rsz_start:rsz_end]
 
     check("if (target_entry.save_data_id == 0) {" in rsz_body or "if (e.save_data_id == 0) {" in rsz_body,
           "RestoreSaveZip must restrict metadata probes to legacy create")
@@ -217,7 +225,11 @@ def test_source_contracts() -> None:
           "RestoreSaveZip must verify restored contents on fresh read-only mount")
 
     # RAW restore isolation in SaveMenu
-    rsi_body = ops_cpp[rsi_start:ops_cpp.find("Result Menu::BackupSaveInternal(", rsi_start)]
+    rsi_start = ops_cpp.find("Result Menu::RestoreSaveInternal(")
+    check(rsi_start != -1, "RestoreSaveInternal definition must exist")
+    rsi_end = ops_cpp.find("} // namespace sphaira::ui::menu::save", rsi_start)
+    check(rsi_end != -1, "namespace end must follow RestoreSaveInternal")
+    rsi_body = ops_cpp[rsi_start:rsi_end]
     check("*out_mutation_started = true;" not in rsi_body,
           "RestoreSaveInternal RAW DISA branch must not set out_mutation_started")
     check("[recovery_path, mutation_started, created_slot_retained, is_raw](Result rc)" in ops_cpp or "[recovery_path, mutation_started, is_raw](Result rc)" in ops_cpp,

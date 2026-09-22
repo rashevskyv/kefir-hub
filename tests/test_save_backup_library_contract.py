@@ -930,21 +930,25 @@ def test_static_source_contracts() -> None:
     check("to_backup.emplace_back(e);" in cbin_src, "CreateBackupIfNewer must add to to_backup on mismatch or failure")
     check("*to_backup_count = to_backup.size();" in cbin_src, "CreateBackupIfNewer must update to_backup_count")
 
-    # 1.8 save_menu_ops.cpp and users_profile.cpp fail-closed save deletion contracts
-    check("fsDeleteSaveDataFileSystemBySaveDataAttribute" not in ops_cpp,
-          "save_menu_ops.cpp must NOT call fsDeleteSaveDataFileSystemBySaveDataAttribute")
-    check("auto DeleteLiveSaveEntry(const Entry& e) -> Result" in ops_cpp,
-          "save_menu_ops.cpp must define DeleteLiveSaveEntry helper")
-    check("if (e.save_data_id == 0)" in ops_cpp,
+    # 1.8 save_deletion.cpp and users_profile.cpp fail-closed save deletion contracts
+    del_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_deletion.cpp")
+    with open(del_cpp_path, "r", encoding="utf-8") as f:
+        del_cpp = f.read()
+
+    check("fsDeleteSaveDataFileSystemBySaveDataAttribute" not in ops_cpp and "fsDeleteSaveDataFileSystemBySaveDataAttribute" not in del_cpp,
+          "save_menu_ops.cpp and save_deletion.cpp must NOT call fsDeleteSaveDataFileSystemBySaveDataAttribute")
+    check("auto DeleteLiveSaveEntry(const Entry& e) -> Result" in del_cpp,
+          "save_deletion.cpp must define DeleteLiveSaveEntry helper")
+    check("if (e.save_data_id == 0)" in del_cpp,
           "DeleteLiveSaveEntry must validate save_data_id == 0 before any deletion call")
-    check("fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id)" in ops_cpp,
+    check("fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id)" in del_cpp,
           "DeleteLiveSaveEntry must call fsDeleteSaveDataFileSystemBySaveDataSpaceId with exact space and save ID")
-    check(ops_cpp.count("R_TRY(DeleteLiveSaveEntry(e));") == 2,
+    check(del_cpp.count("R_TRY(DeleteLiveSaveEntry(e));") == 2,
           "DeleteSavesOn and DeleteSaves must both call DeleteLiveSaveEntry with R_TRY for fail-fast live deletion")
-    check("R_TRY(sd_fs.DeleteFile(b.path));" in ops_cpp,
+    check("R_TRY(sd_fs.DeleteFile(b.path));" in del_cpp,
           "DeleteSaves must call sd_fs.DeleteFile with R_TRY for fail-fast backup archive deletion")
-    check("first_failure" not in ops_cpp,
-          "save_menu_ops.cpp must not contain first_failure accumulator")
+    check("first_failure" not in del_cpp,
+          "save_deletion.cpp must not contain first_failure accumulator")
     up_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "users", "users_profile.cpp")
     with open(up_cpp_path, "r", encoding="utf-8") as f:
         up_cpp = f.read()

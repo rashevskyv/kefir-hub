@@ -261,8 +261,8 @@ def test_source_contracts() -> None:
     check("checked_save_journal_size" in tua_zfile_body,
           "TransferUnzipAll must pass checked_save_journal_size to TransferUnzipInternal")
 
-    # 1.3 save_menu_ops.cpp
-    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
+    # 1.3 save_restore_zip.cpp
+    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
     with open(ops_cpp_path, "r", encoding="utf-8") as f:
         ops_cpp = f.read()
 

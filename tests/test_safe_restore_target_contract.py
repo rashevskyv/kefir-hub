@@ -74,10 +74,13 @@ def test_source_contracts():
     check("PromptBatchRestoreTargets(\n    std::shared_ptr<std::vector<Entry>> seeds," in menu_cpp_src,
           "save_menu.cpp must implement shared_ptr PromptBatchRestoreTargets overload")
 
-    # 3. save_menu_ops.cpp: RestoreSaves source/target separation and guards
+    # 3. save_menu_ops.cpp & save_restore_zip.cpp: RestoreSaves source/target separation and guards
     save_menu_ops = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
     with open(save_menu_ops, "r", encoding="utf-8") as f:
         ops_cpp_src = f.read()
+    save_restore_zip = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(save_restore_zip, "r", encoding="utf-8") as f:
+        restore_zip_src = f.read()
 
     check("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root)" in ops_cpp_src,
           "save_menu_ops.cpp must implement 4-arg RestoreSaves")
@@ -102,9 +105,9 @@ def test_source_contracts():
           "RestoreSaves must use source entry to locate backup file")
     check("RestoreSaveInternal(pbox, dst, file_path" in ops_cpp_src,
           "RestoreSaves must pass destination target to RestoreSaveInternal")
-    check("R_UNLESS(!e.is_backup && e.save_data_id != 0, FsError_PathNotFound);" in ops_cpp_src,
+    check("R_UNLESS(!e.is_backup && (e.save_data_id != 0 || e.is_planned_create), FsError_PathNotFound);" in ops_cpp_src,
           "RestoreSaveInternal must guard against unresolved backup entries and zero-ID targets")
-    check("R_UNLESS(!e.is_backup, FsError_PathNotFound);" in ops_cpp_src,
+    check("R_UNLESS(!e.is_backup, FsError_PathNotFound);" in restore_zip_src,
           "RestoreSaveZip must guard against unresolved backup entries")
 
     # 4. filebrowser_ops.cpp: File Browser ZIP retained nonzero target guard

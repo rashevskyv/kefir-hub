@@ -43,18 +43,22 @@ def test_source_contracts() -> None:
     print("[1] Running static source contract checks...")
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    # Extract RestoreSaveZip function body from save_menu_ops.cpp
+    # Extract RestoreSaveZip function body from save_restore_zip.cpp
+    rsz_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
+    with open(rsz_path, "r", encoding="utf-8") as f:
+        rsz_src = f.read()
+
     save_ops_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
     with open(save_ops_path, "r", encoding="utf-8") as f:
         save_ops_src = f.read()
 
-    rsz_start = save_ops_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path")
-    check(rsz_start != -1, "RestoreSaveZip definition must exist in save_menu_ops.cpp")
+    rsz_start = rsz_src.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path")
+    check(rsz_start != -1, "RestoreSaveZip definition must exist in save_restore_zip.cpp")
 
-    rsi_start = save_ops_src.find("Result Menu::RestoreSaveInternal(", rsz_start)
-    check(rsi_start != -1, "Menu::RestoreSaveInternal must follow RestoreSaveZip in save_menu_ops.cpp")
+    rsz_end = rsz_src.find("} // namespace sphaira::ui::menu::save", rsz_start)
+    check(rsz_end != -1, "Namespace close must follow RestoreSaveZip in save_restore_zip.cpp")
 
-    rsz_body = save_ops_src[rsz_start:rsi_start]
+    rsz_body = rsz_src[rsz_start:rsz_end]
 
     # 1.1 Ordering: Checked preflight before exact-space live extra read, capacity guard, writable mount, and destructive clear
     pos_preflight = rsz_body.find("R_TRY(thread::TransferUnzipPreflight(pbox, zfile, \"/\", save_filter, true, &summary")

@@ -317,23 +317,31 @@ def test_source_contracts() -> None:
     check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(860, 875)),
           "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.860 or later")
 
-    # 1.2 sphaira/source/ui/menus/save/save_menu_ops.cpp
-    ops_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    with open(ops_cpp_path, "r", encoding="utf-8") as f:
+    # 1.2 sphaira/source/ui/menus/save/save_backup_writer.cpp & save_backup_pub.cpp
+    writer_hpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_writer.hpp")
+    with open(writer_hpp_path, "r", encoding="utf-8") as f:
+        writer_hpp_src = f.read()
+
+    writer_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_writer.cpp")
+    with open(writer_cpp_path, "r", encoding="utf-8") as f:
+        writer_src = f.read()
+
+    pub_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_backup_pub.cpp")
+    with open(pub_cpp_path, "r", encoding="utf-8") as f:
         ops_src = f.read()
 
     # WriteSaveBackupZip signature
-    check("bool checked_stream = false" in ops_src,
+    check("bool checked_stream = false" in writer_hpp_src or "bool checked_stream = false" in writer_src,
           "WriteSaveBackupZip must accept checked_stream parameter")
-    check("const bool use_checked_stream = recovery_mode || checked_stream;" in ops_src,
+    check("const bool use_checked_stream = recovery_mode || checked_stream;" in writer_src,
           "WriteSaveBackupZip must select checked stream when recovery_mode or checked_stream is true")
 
     # RecoveryStreamContext callbacks checks
-    pos_zip_close = ops_src.find('zipClose(zfile, "sphaira v" APP_VERSION_HASH)')
+    pos_zip_close = writer_src.find('zipClose(zfile, "sphaira v" APP_VERSION_HASH)')
     check(pos_zip_close != -1, "WriteSaveBackupZip must close zip archive")
-    pos_rec_check = ops_src.find("if (use_checked_stream) {", pos_zip_close)
+    pos_rec_check = writer_src.find("if (use_checked_stream) {", pos_zip_close)
     check(pos_rec_check != -1, "WriteSaveBackupZip must guard post-zip checks with use_checked_stream")
-    rec_body = ops_src[pos_rec_check:pos_rec_check + 800]
+    rec_body = writer_src[pos_rec_check:pos_rec_check + 800]
     check("!rec_ctx.write_failed" in rec_body, "Must check write_failed")
     check("!rec_ctx.flush_failed" in rec_body, "Must check flush_failed")
     check("!rec_ctx.sync_failed" in rec_body, "Must check sync_failed")
@@ -345,8 +353,8 @@ def test_source_contracts() -> None:
     # BackupSaveInternal SD checked pipeline
     bsi_start = ops_src.find("Result Menu::BackupSaveInternal(")
     check(bsi_start != -1, "Menu::BackupSaveInternal must exist")
-    bsi_end = ops_src.find("void Menu::SyncSavesRemote()", bsi_start)
-    check(bsi_end != -1, "Menu::SyncSavesRemote boundary must exist")
+    bsi_end = ops_src.find("} // namespace sphaira::ui::menu::save", bsi_start)
+    check(bsi_end != -1, "namespace end boundary must exist")
     bsi_body = ops_src[bsi_start:bsi_end]
 
     # Location check
