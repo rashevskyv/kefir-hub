@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.876** (2026-09-22).
+Актуальний shipped delivery — **v0.13.877** (2026-09-23).
+
+## v0.13.877 — Transfer structural split
+
+`threaded_file_transfer.cpp` зменшено з 1 956 до 263 рядків. Transfer engine/wrappers, archive path validation і preflight, native verification та ZIP I/O винесено в чотири конкретні `.cpp` і три мінімальні приватні headers; усі нові файли мають 17–501 рядок. Public transfer API, ZIP/path admission, cancellation і checked-native-save ordering не змінювали навмисно. CMake явно реєструє нові units, а контрактні тести переведено на нові source locations і версію `.877` без вилучення safety assertions.
+
+Gemini повідомив про WSL `cmake --build --preset ReleaseWithInstall --parallel 4` з exit 0 та `[100%] Built target sphaira_nro`, 18/18 Python contracts, dead-symbol gate (981 declarations) і `git diff --check` PASS. Senior перевірив фактичний diff, CMake/version і ліміт рядків, але не запускав збірку чи тести повторно. C++ contract і консольний runtime окремо не підтверджено; дозволений `TegraExplorer.bin` лишився поза delivery.
 
 ## v0.13.876 — App structural split
 

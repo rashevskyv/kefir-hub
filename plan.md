@@ -1,14 +1,12 @@
 # plan.md
 
-Версія коду: **v0.13.876**.
+Версія коду: **v0.13.877**.
 
-## Поточний delivery: Transfers/Yati — scoping
+## Поточний delivery: v0.13.877 — Transfer structural split (завершено)
 
-Мета: вибрати перший вузький, behavior-preserving зріз із `threaded_file_transfer.cpp` (1 956 рядків) або `yati.cpp` (1 842 рядки). Новий product delivery починати лише після підтвердження інтеграції v0.13.876 у `master`.
+`threaded_file_transfer.cpp` зменшено з 1 956 до 263 рядків без зміни public API. Core, archive preflight, native verification і ZIP I/O винесено в чотири конкретні `.cpp` та три приватні headers (17–501 рядок). `yati.cpp` — окремий наступний delivery; дозволена фонова зміна `TegraExplorer.bin` поза цим комітом.
 
-1. Через graph і source review визначити конкретний pipeline boundary, callers та safety ordering.
-2. Дати Gemini один обмежений зріз із новими units ≤600 рядків, без нової service abstraction.
-3. Після senior review доручити Gemini фінальний WSL build і contracts; лише тоді синхронізувати version/docs та commit.
+Gemini повідомив про WSL `ReleaseWithInstall` build `[100%] Built target sphaira_nro`, 18/18 Python contracts, dead-symbol gate (981 declarations) та whitespace PASS. Senior перевірив diff, CMake, version, межі файлів і перенесені source assertions; не запускав тести чи збірку повторно. Консольний runtime ще не перевірено.
 
 ## Попередній delivery: v0.13.876 — App structural split
 
@@ -16,9 +14,10 @@
 
 ## Наступні serial deliveries
 
-1. Provider UI: Cheats/AppStore/Themezer/Kefir — API/parsing окремо від меню.
-2. Tests: один discoverable runner; великі suites ділити лише за стабільними сценаріями.
-3. `app.hpp` (626): окремо перевірити dead declarations і layout/ініціалізаційні ефекти перед будь-яким видаленням.
+1. `yati.cpp` (1 842): installer parsing і pipeline розділити за стабільними межами.
+2. Provider UI: Cheats/AppStore/Themezer/Kefir — API/parsing окремо від меню.
+3. Tests: один discoverable runner; великі suites ділити лише за стабільними сценаріями.
+4. `app.hpp` (626): окремо перевірити dead declarations і layout/ініціалізаційні ефекти перед будь-яким видаленням.
 
 ## Межі
 

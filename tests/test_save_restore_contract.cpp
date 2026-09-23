@@ -112,8 +112,8 @@ static int test_preflight_ordering_contract() {
     CHECK(!fs_code.empty());
     CHECK(fs_code.find("return fsFsCommit(fs);") != std::string::npos);
 
-    // 7. Verify threaded_file_transfer.cpp uses IsSafeExtractionDestination and ResolveArchiveEntryName
-    const std::string tft_code = read_file_to_string("sphaira/source/threaded_file_transfer.cpp");
+    // 7. Verify threaded_file_transfer_preflight.cpp uses IsSafeExtractionDestination and ResolveArchiveEntryName
+    const std::string tft_code = read_file_to_string("sphaira/source/threaded_file_transfer_preflight.cpp");
     CHECK(!tft_code.empty());
     CHECK(tft_code.find("IsSafeExtractionDestination") != std::string::npos);
     CHECK(tft_code.find("ResolveArchiveEntryName") != std::string::npos);

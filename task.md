@@ -1,11 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.876**.
+Версія коду: **v0.13.877**.
 
-## Поточний delivery: Transfers/Yati — scoping
+## Поточний delivery: v0.13.877 — Transfer structural split (завершено)
 
-- [ ] `MAP-TRANSFER` — вибрати один pipeline boundary і перевірити callers/safety ordering.
-- [ ] `SPLIT-TRANSFER-YATI` — виконати обмежений structural split після окремого handoff.
+- [x] `MAP-TRANSFER-877` — transfer core і archive safety boundary підтверджені graph + source review.
+- [x] `SPLIT-CORE-877` — transfer engine/wrappers винесені в 499-рядковий unit; фінальна збірка ще попереду.
+- [x] `SPLIT-ARCHIVE-877` — ZIP/path/preflight/verification розкладені за стабільними межами; збірка ще попереду.
+- [x] `SIZE-877` — нові C/C++ files ≤501 рядка, `threaded_file_transfer.cpp` зменшено до 263 рядків.
+- [x] `VERIFY-877` — Gemini: WSL `sphaira_nro`, 18/18 Python contracts, dead-symbol 981 і whitespace PASS.
+- [x] `DOCS-BUMP-877` — version/docs синхронізовано.
+- [x] `COMMIT-877` — focused primary-master commit без push.
 
 ## Попередній delivery: v0.13.876 — виконано
 
@@ -20,6 +25,7 @@
 
 ## Подальша черга
 
+- [ ] `SPLIT-YATI`
 - [ ] `SPLIT-PROVIDER-UI`
 - [ ] `TEST-RUNNER`
 - [ ] `APP-HEADER-DEBT` — оцінити `app.hpp` (626) як окремий вузький refactor.

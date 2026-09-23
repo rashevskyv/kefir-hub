@@ -123,19 +123,23 @@ def test_source_contracts() -> None:
     check(zfile_decl in tft_hpp, "TransferUnzipAll zfile overload declaration must match exact signature")
     check(path_decl in tft_hpp, "TransferUnzipAll path overload declaration must match exact signature")
 
-    # 1.2 threaded_file_transfer.cpp
+    # 1.2 threaded_file_transfer.cpp & threaded_file_transfer_zip_io.cpp
     tft_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer.cpp")
     with open(tft_cpp_path, "r", encoding="utf-8") as f:
         tft_cpp = f.read()
 
+    zip_io_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_zip_io.cpp")
+    with open(zip_io_cpp_path, "r", encoding="utf-8") as f:
+        zip_io_cpp = f.read()
+
     # CreateDirectoryChecked helper
-    check("static Result CreateDirectoryChecked(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& dir_path)" in tft_cpp,
-          "threaded_file_transfer.cpp must define CreateDirectoryChecked helper")
-    dir_helper_start = tft_cpp.find("static Result CreateDirectoryChecked(")
-    dir_helper_end = tft_cpp.find("static Result TransferUnzipInternal(")
+    check("Result CreateDirectoryChecked(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& dir_path)" in zip_io_cpp,
+          "threaded_file_transfer_zip_io.cpp must define CreateDirectoryChecked helper")
+    dir_helper_start = zip_io_cpp.find("Result CreateDirectoryChecked(")
+    dir_helper_end = zip_io_cpp.find("Result TransferUnzipInternal(")
     check(dir_helper_start != -1 and dir_helper_end != -1 and dir_helper_start < dir_helper_end,
           "CreateDirectoryChecked must precede TransferUnzipInternal")
-    dir_helper_code = tft_cpp[dir_helper_start:dir_helper_end]
+    dir_helper_code = zip_io_cpp[dir_helper_start:dir_helper_end]
 
     check("fsFsCreateDirectory(&native_fs->m_fs, current_path.s)" in dir_helper_code,
           "CreateDirectoryChecked must use native fsFsCreateDirectory primitive")
@@ -152,10 +156,10 @@ def test_source_contracts() -> None:
 
     # TransferUnzipInternal checked lifecycle
     unzip_int_start = dir_helper_end
-    unzip_int_end = tft_cpp.find("Result TransferUnzip(ui::ProgressBox*")
+    unzip_int_end = zip_io_cpp.find("Result TransferUnzip(ui::ProgressBox*")
     check(unzip_int_start != -1 and unzip_int_end != -1 and unzip_int_start < unzip_int_end,
           "TransferUnzipInternal must be bounded properly")
-    unzip_int_code = tft_cpp[unzip_int_start:unzip_int_end]
+    unzip_int_code = zip_io_cpp[unzip_int_start:unzip_int_end]
 
     check("if (checked_native_save)" in unzip_int_code,
           "TransferUnzipInternal must branch on checked_native_save")
@@ -277,7 +281,7 @@ def test_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(855, 877)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(855, 878)),
           "sphaira/CMakeLists.txt version must be 0.13.855 or later")
 
     print("  -> Static source contracts PASSED.")

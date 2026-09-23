@@ -109,36 +109,52 @@ def test_source_contracts() -> None:
     check("Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr) const;" in save_hpp,
           "save_menu.hpp must declare RestoreSaveInternal with out_mutation_started")
 
-    # 1.3 threaded_file_transfer.cpp implementations
+    # 1.3 threaded_file_transfer implementations
     tft_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer.cpp")
     with open(tft_cpp_path, "r", encoding="utf-8") as f:
         tft_cpp = f.read()
 
-    check('#include "ui/menus/filebrowser.hpp"' in tft_cpp,
-          "threaded_file_transfer.cpp must include filebrowser.hpp")
-    check("struct ResolvedDestinationEntry" in tft_cpp,
-          "threaded_file_transfer.cpp must define ResolvedDestinationEntry")
-    check("ResolveArchiveDestinationEntry(" in tft_cpp,
-          "threaded_file_transfer.cpp must define ResolveArchiveDestinationEntry")
-    check("GetParentDirectories(" in tft_cpp,
-          "threaded_file_transfer.cpp must define GetParentDirectories")
+    preflight_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_preflight.cpp")
+    with open(preflight_cpp_path, "r", encoding="utf-8") as f:
+        preflight_cpp = f.read()
+
+    preflight_hpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_preflight.hpp")
+    with open(preflight_hpp_path, "r", encoding="utf-8") as f:
+        preflight_hpp = f.read()
+
+    verify_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_verify.cpp")
+    with open(verify_cpp_path, "r", encoding="utf-8") as f:
+        verify_cpp = f.read()
+
+    zip_io_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_zip_io.cpp")
+    with open(zip_io_cpp_path, "r", encoding="utf-8") as f:
+        zip_io_cpp = f.read()
+
+    check('#include "ui/menus/filebrowser.hpp"' in verify_cpp,
+          "threaded_file_transfer_verify.cpp must include filebrowser.hpp")
+    check("struct ResolvedDestinationEntry" in preflight_hpp,
+          "threaded_file_transfer_preflight.hpp must define ResolvedDestinationEntry")
+    check("ResolveArchiveDestinationEntry(" in preflight_cpp,
+          "threaded_file_transfer_preflight.cpp must define ResolveArchiveDestinationEntry")
+    check("GetParentDirectories(" in preflight_cpp,
+          "threaded_file_transfer_preflight.cpp must define GetParentDirectories")
 
     # Checked native save handling in TransferUnzipInternal
-    check("if (checked_native_save)" in tft_cpp,
+    check("if (checked_native_save)" in zip_io_cpp,
           "TransferUnzipInternal must branch on checked_native_save")
-    check("fsFileFlush(&f.m_native)" in tft_cpp,
+    check("fsFileFlush(&f.m_native)" in zip_io_cpp,
           "TransferUnzipInternal must flush file in checked_native_save mode")
-    check("fsFileClose(&f.m_native)" in tft_cpp,
+    check("fsFileClose(&f.m_native)" in zip_io_cpp,
           "TransferUnzipInternal must close file explicitly in checked_native_save mode")
-    check("f.m_native = {};" in tft_cpp and "f.m_fs = nullptr;" in tft_cpp,
+    check("f.m_native = {};" in zip_io_cpp and "f.m_fs = nullptr;" in zip_io_cpp,
           "TransferUnzipInternal must invalidate file handle so destructor does not double-close")
-    check("fs->Commit()" in tft_cpp,
+    check("fs->Commit()" in zip_io_cpp,
           "TransferUnzipInternal must commit filesystem after file write in checked mode")
 
     # VerifyArchiveAgainstNative implementation
-    vaan_pos = tft_cpp.find("Result VerifyArchiveAgainstNative(")
-    check(vaan_pos != -1, "threaded_file_transfer.cpp must implement VerifyArchiveAgainstNative")
-    vaan_body = tft_cpp[vaan_pos:]
+    vaan_pos = verify_cpp.find("Result VerifyArchiveAgainstNative(")
+    check(vaan_pos != -1, "threaded_file_transfer_verify.cpp must implement VerifyArchiveAgainstNative")
+    vaan_body = verify_cpp[vaan_pos:]
     check("get_collections(" in vaan_body, "VerifyArchiveAgainstNative must enumerate native filesystem")
     check("expected_inventory.files" in vaan_body, "VerifyArchiveAgainstNative must check expected files bijection")
     check("expected_inventory.directories" in vaan_body, "VerifyArchiveAgainstNative must check expected dirs bijection")
@@ -206,7 +222,7 @@ def test_source_contracts() -> None:
     ro_pos = rsz_body.index("fs::FsNativeSave ro_save_fs{")
     close_pos = rsz_body.index("source_reader_open = false;", ro_pos)
     assert commit_pos < post_pos < ro_pos < close_pos < rsz_body.rfind("R_SUCCEED();")
-    copy_body = tft_cpp[tft_cpp.index("static Result TransferUnzipInternal("):tft_cpp.index("Result TransferUnzip(ui::")]
+    copy_body = zip_io_cpp[zip_io_cpp.index("Result TransferUnzipInternal("):zip_io_cpp.index("Result TransferUnzip(ui::")]
     write_pos = copy_body.index("const auto write_rc = fsFileWrite")
     flush_pos = copy_body.index("const auto flush_rc = fsFileFlush", write_pos)
     assert write_pos < flush_pos

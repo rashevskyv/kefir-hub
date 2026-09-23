@@ -134,8 +134,8 @@ def test_source_contracts():
     check("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out, const fs::FsPath& base_path, UnzipAllFilter filter = nullptr, bool save_dbi_compat = false, UnzipPayloadSummary* output = nullptr);" not in hpp_src,
           "threaded_file_transfer.hpp must not declare redundant 6-argument zip_out TransferUnzipPreflight overload")
 
-    # 2. threaded_file_transfer.cpp: open-handle TransferUnzipPreflight body checks
-    tft_cpp = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer.cpp")
+    # 2. threaded_file_transfer_preflight.cpp: open-handle TransferUnzipPreflight body checks
+    tft_cpp = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_preflight.cpp")
     with open(tft_cpp, "r", encoding="utf-8") as f:
         cpp_src = f.read()
 
@@ -143,7 +143,7 @@ def test_source_contracts():
     res_start = cpp_src.find("Result ResolveArchiveDestinationEntry(")
     res_end = cpp_src.find("std::vector<std::string> GetParentDirectories(", res_start)
     check(res_start != -1 and res_end != -1 and res_start < res_end,
-          "threaded_file_transfer.cpp must define ResolveArchiveDestinationEntry before GetParentDirectories")
+          "threaded_file_transfer_preflight.cpp must define ResolveArchiveDestinationEntry before GetParentDirectories")
     res_body = cpp_src[res_start:res_end]
 
     pos_resolve = res_body.find("ResolveArchiveEntryName(info, name_buf, save_dbi_compat, name")
@@ -164,7 +164,7 @@ def test_source_contracts():
     start_idx = cpp_src.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile,")
     end_idx = cpp_src.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out,")
     check(start_idx != -1 and end_idx != -1 and start_idx < end_idx,
-          "threaded_file_transfer.cpp must define zfile TransferUnzipPreflight overload before path overload")
+          "threaded_file_transfer_preflight.cpp must define zfile TransferUnzipPreflight overload before path overload")
     preflight_body = cpp_src[start_idx:end_idx]
 
     check("UnzipPayloadSummary local_summary{};" in preflight_body,

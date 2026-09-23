@@ -1,12 +1,13 @@
 # audit.md
 
-Версія коду: **v0.13.876**. Дата аудиту: 2026-09-22.
+Версія коду: **v0.13.877**. Дата аудиту: 2026-09-23.
 
 ## Поточний стан
 
-- v0.13.876 розклала `app.cpp` з 2 111 до 523 рядків, `app_settings.cpp` — до 554; усі нові App files ≤597 рядків.
-- Startup, frame/loop, UI stack, USB/MTP, network і save settings мають окремі конкретні units; `app.hpp` незмінний (626 рядків).
-- Gemini: full WSL `ReleaseWithInstall`, 18/18 repository contracts, dead-symbol gate і EN/UK parity PASS.
+- v0.13.877 розклала `threaded_file_transfer.cpp` з 1 956 до 263 рядків; усі нові transfer files ≤501 рядка.
+- Transfer core, archive preflight, native verification і ZIP I/O мають окремі concrete units; public header незмінний.
+- Gemini: WSL `ReleaseWithInstall` build, 18/18 Python contracts і dead-symbol gate PASS; runtime на консолі не перевірено.
+- `app.hpp` незмінний (626 рядків), окремий legacy debt.
 - Save build-closure units лишилися 591/597 рядків.
 - 32 C/C++ files понад 600 рядків знаходяться в `sphaira/source/ui/menus`.
 - Graphify є картою зв’язків; source-level перевірка потрібна для кожного нового delivery.
@@ -38,10 +39,10 @@
 
 У v0.13.876 `app.cpp` 523 і `app_settings.cpp` 554 рядки; public API і shutdown ordering збережені. Gemini повідомив про WSL build та 18/18 contracts PASS. `app.hpp` 626 — окремий борг: `LaunchType` і `m_pop_count` виглядають невикористаними, але member layout та ефекти option-полів треба перевірити перед видаленням; не стискати header механічно.
 
-### A5 — Transfers and installer — NEXT
+### A5 — Transfers and installer — IN PROGRESS
 
-- `threaded_file_transfer.cpp` 1 956: core pipeline, archive paths, ZIP/unzip, verification.
-- `yati.cpp` 1 842: ticket/CNMT analysis, threaded install pipeline, public entry points.
+- Transfers — DONE у v0.13.877: `threaded_file_transfer.cpp` 263; core, preflight, verification і ZIP I/O розділено без нових абстракцій.
+- `yati.cpp` 1 842 — NEXT: ticket/CNMT analysis, threaded install pipeline, public entry points.
 
 ### A6 — Provider-heavy UI
 
@@ -66,6 +67,7 @@
 - Save wire/discovery/mutation: `source/ui/menus/save/`
 - Web HTTP/UI: `source/web*.cpp`, `source/web_pages.hpp`
 - App lifecycle/settings: `source/app*.cpp`, `include/app.hpp`
+- Transfer core/archive: `source/threaded_file_transfer*.cpp`, `include/threaded_file_transfer.hpp`
 - Installer: `source/yati/`, `include/yati/`
 - MTP filesystem: `source/utils/devoptab_mtp.cpp`
 - Active work: `plan.md`, `task.md`; shipped outcome: `walkthrough.md`; next cut: this file.

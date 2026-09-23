@@ -65,8 +65,8 @@ def test_static_source_contracts() -> None:
     print("[1] Running static source contracts for v0.13.868...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)", "set(sphaira_VERSION 0.13.874)", "set(sphaira_VERSION 0.13.875)", "set(sphaira_VERSION 0.13.876)")),
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, or 0.13.876")
+    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)", "set(sphaira_VERSION 0.13.874)", "set(sphaira_VERSION 0.13.875)", "set(sphaira_VERSION 0.13.876)", "set(sphaira_VERSION 0.13.877)")),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, or 0.13.877")
 
     path_util_hpp = read_file("sphaira", "include", "path_util.hpp")
     check("inline auto IsDbiRootMarkerEntry(" in path_util_hpp,
@@ -103,13 +103,14 @@ def test_static_source_contracts() -> None:
           "save_paths.cpp must never use '/DBI Saves'")
 
     tft_cpp = read_file("sphaira", "source", "threaded_file_transfer.cpp")
-    check("bool* out_is_dbi_root_marker" in tft_cpp,
+    preflight_cpp = read_file("sphaira", "source", "threaded_file_transfer_preflight.cpp")
+    check("bool* out_is_dbi_root_marker" in preflight_cpp,
           "ResolveArchiveEntryName must accept out_is_dbi_root_marker parameter")
-    check("out.is_dbi_root_marker = true;" in tft_cpp,
+    check("out.is_dbi_root_marker = true;" in preflight_cpp,
           "ResolveArchiveDestinationEntry must set is_dbi_root_marker")
-    check("seen_dbi_root_marker" in tft_cpp,
+    check("seen_dbi_root_marker" in preflight_cpp,
           "TransferUnzipPreflight must detect duplicate DBI root markers")
-    check("save_dbi_compat && local_summary.file_count == 0 && local_summary.directory_count == 0" in tft_cpp,
+    check("save_dbi_compat && local_summary.file_count == 0 && local_summary.directory_count == 0" in preflight_cpp,
           "TransferUnzipPreflight must fail if payload count is 0 only when save_dbi_compat is true and !allow_empty")
     check("seen_dbi_marker" in tft_cpp and "seen_dbi_marker_sizing" in tft_cpp,
           "TransferUnzipAll must detect duplicate DBI root markers in sizing and extraction")

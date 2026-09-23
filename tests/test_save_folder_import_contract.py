@@ -129,7 +129,7 @@ def test_source_contracts():
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(857, 877)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(857, 878)),
           "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.857 or later")
 
     # 1.2 save_menu.hpp declarations
@@ -152,17 +152,25 @@ def test_source_contracts():
     check("bool allow_empty = false" in tft_hpp,
           "threaded_file_transfer.hpp must declare VerifyArchiveAgainstNative with allow_empty = false")
 
-    # 1.4 threaded_file_transfer.cpp implementation
+    # 1.4 threaded_file_transfer implementations
     tft_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer.cpp")
     with open(tft_cpp_path, "r", encoding="utf-8") as f:
         tft_cpp = f.read()
 
+    preflight_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_preflight.cpp")
+    with open(preflight_cpp_path, "r", encoding="utf-8") as f:
+        preflight_cpp = f.read()
+
+    verify_cpp_path = os.path.join(repo_root, "sphaira", "source", "threaded_file_transfer_verify.cpp")
+    with open(verify_cpp_path, "r", encoding="utf-8") as f:
+        verify_cpp = f.read()
+
     # Check TransferUnzipPreflight allow_empty logic
-    preflight_pos = tft_cpp.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile")
+    preflight_pos = preflight_cpp.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, void* zfile")
     check(preflight_pos != -1, "TransferUnzipPreflight void* overload must exist")
-    preflight_end = tft_cpp.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out", preflight_pos)
+    preflight_end = preflight_cpp.find("Result TransferUnzipPreflight(ui::ProgressBox* pbox, const fs::FsPath& zip_out", preflight_pos)
     check(preflight_end != -1, "TransferUnzipPreflight FsPath overload must follow")
-    preflight_body = tft_cpp[preflight_pos:preflight_end]
+    preflight_body = preflight_cpp[preflight_pos:preflight_end]
 
     check("if (ginfo.number_entry == 0) {" in preflight_body,
           "TransferUnzipPreflight must explicitly handle ginfo.number_entry == 0")
@@ -184,11 +192,11 @@ def test_source_contracts():
           "TransferUnzipAll must reject 0-entry archive with FsError_InvalidSize")
 
     # Check VerifyArchiveAgainstNative 0-entry handling and parameter
-    van_pos = tft_cpp.find("Result VerifyArchiveAgainstNative(")
+    van_pos = verify_cpp.find("Result VerifyArchiveAgainstNative(")
     check(van_pos != -1, "VerifyArchiveAgainstNative must exist")
-    van_end = tft_cpp.find("Result VerifyArchiveAgainstNative(", van_pos + 1)
+    van_end = verify_cpp.find("Result VerifyArchiveAgainstNative(", van_pos + 1)
     check(van_end != -1, "VerifyArchiveAgainstNative FsPath overload must follow")
-    van_body = tft_cpp[van_pos:van_end]
+    van_body = verify_cpp[van_pos:van_end]
     check("bool allow_empty" in van_body,
           "VerifyArchiveAgainstNative void* overload must declare bool allow_empty parameter")
     check("if (ginfo.number_entry == 0) {" in van_body,
@@ -203,7 +211,7 @@ def test_source_contracts():
           "if (!allow_empty) {\r\n            R_THROW(FsError_InvalidSize);" in van_body,
           "VerifyArchiveAgainstNative empty branch must throw FsError_InvalidSize if !allow_empty")
 
-    van_fpath_body = tft_cpp[van_end:tft_cpp.find("} // namespace::thread", van_end)]
+    van_fpath_body = verify_cpp[van_end:verify_cpp.find("} // namespace", van_end)]
     check("bool allow_empty" in van_fpath_body and "allow_empty" in van_fpath_body,
           "VerifyArchiveAgainstNative FsPath overload must declare and forward allow_empty")
 
