@@ -29,7 +29,7 @@ def test_source_wiring_contracts() -> None:
     print("[1] Checking static source wiring and route contracts...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src or "set(sphaira_VERSION 0.13.875)" in cmake_src or "set(sphaira_VERSION 0.13.876)" in cmake_src or "set(sphaira_VERSION 0.13.877)" in cmake_src, "CMakeLists.txt must define sphaira_VERSION as 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, or 0.13.877")
+    check("set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src or "set(sphaira_VERSION 0.13.875)" in cmake_src or "set(sphaira_VERSION 0.13.876)" in cmake_src or "set(sphaira_VERSION 0.13.877)" in cmake_src or "set(sphaira_VERSION 0.13.878)" in cmake_src, "CMakeLists.txt must define sphaira_VERSION as 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, or 0.13.878")
     check("source/ui/menus/game/game_save_manager.cpp" in cmake_src, "CMakeLists.txt must compile game_save_manager.cpp")
 
     hdr_src = read_file("sphaira", "include", "ui", "menus", "game", "game_save_manager.hpp")

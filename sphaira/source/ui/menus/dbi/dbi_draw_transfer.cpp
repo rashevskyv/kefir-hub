@@ -1,0 +1,407 @@
+#if ENABLE_NETWORK_INSTALL
+
+#include "ui/menus/dbi/dbi_internal.hpp"
+#include "path_util.hpp"
+#include "app.hpp"
+#include "defines.hpp"
+#include "i18n.hpp"
+#include "ui/nvg_util.hpp"
+#include "utils/utils.hpp"
+
+#include <algorithm>
+#include <cstdio>
+#include <vector>
+
+namespace sphaira::ui::menu::dbi {
+
+void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
+    const auto state = m_state.load();
+    if (state == State::Installing) {
+        // yellow bar = remaining bytes of the package being written, on its dest only.
+        // Label displays cumulative written / total progress without projecting the queue.
+        s64 sd_written{}, nand_written{};
+        s64 sd_total{}, nand_total{};
+        bool show = false;
+        if (m_current_package < m_queue.size()) {
+            const auto& entry = m_queue[m_current_package];
+            if (entry.install_selected && !entry.installed
+                && R_SUCCEEDED(entry.analysis_result) && (!entry.install_result.has_value() || R_SUCCEEDED(*entry.install_result))) {
+                const auto size = PlanSize(entry);
+                const auto written = std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, size);
+                if (size > 0) {
+                    if (entry.install_sd) {
+                        sd_written = written;
+                        sd_total = size;
+                    } else {
+                        nand_written = written;
+                        nand_total = size;
+                    }
+                    show = true;
+                }
+            }
+        }
+        if (show) {
+            SetStorageInstallProgress(nand_written, nand_total, sd_written, sd_total);
+        } else {
+            ClearStorageHighlight();
+        }
+    } else {
+        ClearStorageHighlight();
+    }
+
+    // once the queue has ended the live header, progress bar and graph have
+    // nothing left to say, so that space goes to the session summary instead.
+    if (state == State::Summary || state == State::Cancelled || state == State::Failed) {
+        DrawSummaryPanel(vg, theme, Vec4{70.f, GetY() + 8.f, 1140.f, 214.f});
+        DrawBottomList(vg, theme);
+        return;
+    }
+
+    // Header speed and ETA use the average write rate over the whole graph
+    // history window (~48 s, near a minute), not the instantaneous rate. The
+    // moment-to-moment R/W speeds are shown per line on the graph below, so the
+    // header stays a single stable "how fast is this going overall" number.
+    const s64 avg_write_bps = AvgWriteBps();
+    const double speed_mib = static_cast<double>(avg_write_bps) / (1024.0 * 1024.0);
+
+    bool has_deferred_plan = (m_plan_total_bytes <= 0);
+    for (const auto& e : m_queue) {
+        if (e.selected && (e.analysis_deferred || e.source_size <= 0)) {
+            has_deferred_plan = true;
+            break;
+        }
+    }
+
+    const s64 overall_done = OverallDone();
+    const double overall_ratio = (!has_deferred_plan && m_plan_total_bytes > 0)
+        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+
+    const auto format_eta = [&](s64 bytes_left) -> std::string {
+        // under four samples the rate is still settling and the figure jumps
+        // around by minutes between frames.
+        return m_history_count < 4 ? std::string{} : FormatEta(bytes_left, avg_write_bps);
+    };
+    const auto file_eta = (m_progress_size > 0 && m_progress_size >= m_progress_offset)
+        ? format_eta(m_progress_size - m_progress_offset) : std::string{};
+    const auto total_eta = (!has_deferred_plan && m_plan_total_bytes > overall_done)
+        ? format_eta(m_plan_total_bytes - overall_done) : std::string{};
+
+    char avg_buf[32]{};
+    std::snprintf(avg_buf, sizeof(avg_buf), "%.2f MiB/s", speed_mib);
+    char overall_buf[16]{};
+    if (has_deferred_plan) {
+        std::snprintf(overall_buf, sizeof(overall_buf), "--");
+    } else {
+        std::snprintf(overall_buf, sizeof(overall_buf), "%.0f%%", overall_ratio * 100.0);
+    }
+    const bool known_batch = HasKnownBatchTotals(m_origin);
+    std::vector<StatItem> header;
+    if (known_batch) {
+        header = {
+            {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
+            {"Overall"_i18n, overall_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+            {"Installed"_i18n, std::to_string(m_stats.installed)},
+            {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt},
+            {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+        };
+        if (!file_eta.empty() || !total_eta.empty()) {
+            header.push_back({"Remaining"_i18n,
+                (file_eta.empty() ? "--" : file_eta) + " / " + (total_eta.empty() ? "--" : total_eta)});
+        }
+    } else {
+        const auto mode = m_origin == TransportOrigin::Mtp ? "MTP" : "FTP";
+        header = {
+            {"Mode"_i18n, mode},
+            {"Installed"_i18n, std::to_string(m_stats.installed)},
+            {"Written"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_total_write.load()))},
+            {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+        };
+        if (m_progress_size > 0) {
+            auto remaining = utils::formatSizeStorage(std::max<s64>(0, m_progress_size - m_progress_offset));
+            if (!file_eta.empty()) remaining += " · " + file_eta;
+            header.push_back({"Remaining"_i18n, std::move(remaining)});
+        }
+        if (m_stats.failed) {
+            header.push_back({"Failed"_i18n, std::to_string(m_stats.failed), theme->GetColour(ThemeEntryID_ERROR)});
+        }
+    }
+    DrawStatRow(vg, theme->GetColour(ThemeEntryID_TEXT_INFO), 70.f, GetY() + 10.f, 18.f, header);
+    const auto display_title = !m_current_title.empty()
+        ? m_current_title
+        : (m_current_package < m_queue.size() ? m_queue[m_current_package].file_name : "");
+    if (!display_title.empty()) {
+        std::string title = display_title;
+        if (!m_current_transfer.empty() &&
+            !path::EndsWithIC(m_current_transfer, ".nca") &&
+            !path::EndsWithIC(m_current_transfer, ".ncz") &&
+            m_current_transfer.find(".nca") == std::string::npos &&
+            m_current_transfer.find(".ncz") == std::string::npos) {
+            title += " — " + m_current_transfer;
+        }
+        nvgSave(vg);
+        nvgIntersectScissor(vg, 70.f, GetY() + 38.f, 1140.f, 25.f);
+        gfx::drawTextArgs(vg, 70.f, GetY() + 38.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT), "%s", title.c_str());
+        nvgRestore(vg);
+    }
+    // two bars: the current transfer on top, the whole queue underneath.
+    if (m_progress_size > 0) {
+        const Vec4 bar{70.f, GetY() + 65.f, 1140.f, 10.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
+            theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
+    }
+    if (!has_deferred_plan && m_plan_total_bytes > 0) {
+        const Vec4 bar{70.f, GetY() + 78.f, 1140.f, 10.f};
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(overall_ratio), bar.h,
+            theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 3.f);
+    }
+
+    // R/W speed graph: red = source read, blue = storage write.
+    {
+        const auto red = nvgRGBA(231, 76, 60, 255);
+        const auto blue = nvgRGBA(52, 152, 219, 255);
+        const Vec4 plot{110.f, GetY() + 95.f, 930.f, 125.f};
+        const float pad = 4.f;
+
+        gfx::drawRect(vg, plot, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+
+        // labels to the left of the plot.
+        gfx::drawTextArgs(vg, plot.x - 14.f, plot.y + plot.h * 0.30f, 20.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, red, "R");
+        gfx::drawTextArgs(vg, plot.x - 14.f, plot.y + plot.h * 0.70f, 20.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, blue, "W");
+
+        // readout is averaged over the last few samples so a single idle window
+        // (read waiting on decompress/write) does not make it flicker to 0.
+        const auto avg_mib = [&](const std::array<s64, SPEED_HISTORY>& history) -> double {
+            const size_t n = std::min<size_t>(m_history_count, 4);
+            if (!n) return 0.0;
+            s64 sum = 0;
+            for (size_t i = 0; i < n; i++) {
+                const auto idx = (m_history_index + SPEED_HISTORY - 1 - i) % SPEED_HISTORY;
+                sum += history[idx];
+            }
+            return (double)sum / (double)n / (1024.0 * 1024.0);
+        };
+        // captioned "now" so it reads as the momentary rate, distinct from the
+        // averaged figure in the header line above.
+        gfx::drawTextArgs(vg, plot.x + plot.w + 14.f, plot.y + 2.f, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", "Now"_i18n.c_str());
+        const auto draw_readout = [&](float ry, NVGcolor colour, double mib) {
+            char buf[32]{};
+            std::snprintf(buf, sizeof(buf), "%.1f MiB/s", mib);
+            gfx::drawTextBold(vg, plot.x + plot.w + 14.f, ry, 18.f, colour, buf, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        };
+        draw_readout(plot.y + plot.h * 0.30f, red, avg_mib(m_read_history));
+        draw_readout(plot.y + plot.h * 0.70f, blue, avg_mib(m_write_history));
+
+        if (m_history_count >= 2) {
+            s64 peak = 1;
+            for (size_t i = 0; i < m_history_count; i++) {
+                const auto idx = (m_history_index + SPEED_HISTORY - m_history_count + i) % SPEED_HISTORY;
+                peak = std::max({peak, m_read_history[idx], m_write_history[idx]});
+            }
+            const double peak_mib = (double)peak / (1024.0 * 1024.0);
+
+            // round the gridline step to a "nice" 1/2/5 x 10^n MiB/s, then pick
+            // the top of scale as a whole number of steps that clears the peak.
+            // A 1 MiB/s floor keeps slow transfers from filling the whole plot.
+            const auto nice_step = [](double range) -> double {
+                double s = 1.0;
+                while (true) {
+                    if (range <= s) return s;
+                    if (range <= s * 2.0) return s * 2.0;
+                    if (range <= s * 5.0) return s * 5.0;
+                    s *= 10.0;
+                }
+            };
+            const double step_mib = nice_step(std::max(peak_mib, 1.0) / 4.0);
+            int steps = 1;
+            while (step_mib * steps < peak_mib) steps++;
+            const double top_mib = step_mib * steps;
+            const double top = top_mib * 1024.0 * 1024.0;
+
+            // clip lines and grid to the plot so nothing bleeds past its edges.
+            nvgSave(vg);
+            nvgIntersectScissor(vg, plot.x, plot.y, plot.w, plot.h);
+
+            auto grid_col = theme->GetColour(ThemeEntryID_TEXT);
+            grid_col.a = 0.12f;
+            const auto label_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+            const float inner_h = plot.h - pad * 2.f;
+            for (int k = 0; k <= steps; k++) {
+                const float gy = plot.y + plot.h - pad - inner_h * (float)k / (float)steps;
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, plot.x + pad, gy);
+                nvgLineTo(vg, plot.x + plot.w - pad, gy);
+                nvgStrokeColor(vg, grid_col);
+                nvgStrokeWidth(vg, 1.f);
+                nvgStroke(vg);
+                if (k > 0) {
+                    const double val = step_mib * k;
+                    if (k == steps) {
+                        gfx::drawTextArgs(vg, plot.x + pad + 4.f, gy + 2.f, 12.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, label_col, "%g MiB/s", val);
+                    } else {
+                        gfx::drawTextArgs(vg, plot.x + pad + 4.f, gy + 2.f, 12.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, label_col, "%g", val);
+                    }
+                }
+            }
+
+            const auto draw_line = [&](const std::array<s64, SPEED_HISTORY>& history, NVGcolor colour) {
+                nvgBeginPath(vg);
+                for (size_t i = 0; i < m_history_count; i++) {
+                    const auto idx = (m_history_index + SPEED_HISTORY - m_history_count + i) % SPEED_HISTORY;
+                    // newest sample is pinned to the right edge.
+                    const auto slot = SPEED_HISTORY - m_history_count + i;
+                    const float x = plot.x + pad + (plot.w - pad * 2.f) * slot / (SPEED_HISTORY - 1);
+                    const double frac = std::clamp((double)history[idx] / top, 0.0, 1.0);
+                    const float y = plot.y + plot.h - pad - inner_h * (float)frac;
+                    if (i == 0) nvgMoveTo(vg, x, y);
+                    else nvgLineTo(vg, x, y);
+                }
+                nvgStrokeColor(vg, colour);
+                nvgStrokeWidth(vg, 2.f);
+                nvgStroke(vg);
+            };
+            // additive blend so where the red (R) and blue (W) lines overlap
+            // they sum into a bright mixed colour, making crossings obvious
+            // instead of one line simply hiding the other. Restored with the
+            // enclosing nvgRestore (composite op is part of the saved state).
+            nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
+            draw_line(m_read_history, red);
+            draw_line(m_write_history, blue);
+
+            nvgRestore(vg);
+        }
+    }
+
+    DrawBottomList(vg, theme);
+}
+
+void InstallSession::DrawBottomList(NVGcontext* vg, Theme* theme) {
+    // caller holds m_mutex.
+    if (m_show_errors) {
+        const auto error_col = theme->GetColour(ThemeEntryID_ERROR);
+        const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        m_error_list->Draw(vg, theme, m_errors.size(), m_error_index, [this, error_col, info_col](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+            const auto& error = m_errors[index];
+            if (index == m_error_index) {
+                gfx::drawRectOutline(vg, theme, 2.f, v);
+            }
+            gfx::drawTextArgs(vg, v.x + 10.f, v.y + 5.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, error_col,
+                "%ld. %s — %s", index + 1, error.stage.c_str(), error.name.c_str());
+
+            // second line: the raw code, its symbolic name, and the plain
+            // language explanation when sphaira has one for it.
+            auto text = ResultText(error.rc);
+            if (!error.code_name.empty()) {
+                text += "  " + error.code_name;
+            }
+            if (!error.detail.empty()) {
+                text += "  —  " + error.detail;
+            }
+            gfx::drawTextArgs(vg, v.x + 26.f, v.y + 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", text.c_str());
+        });
+        return;
+    }
+
+    m_log_list->Draw(vg, theme, m_log.size(), List::NO_FOCUS, [this](NVGcontext* vg, Theme* theme, Vec4 v, s64 index) {
+        const auto& entry = m_log[index];
+        NVGcolor colour;
+        switch (entry.kind) {
+            case LogKind::Success: colour = nvgRGB(80, 200, 120); break;
+            case LogKind::Warning: colour = nvgRGB(230, 170, 50); break;
+            case LogKind::Error:   colour = theme->GetColour(ThemeEntryID_ERROR); break;
+            default:               colour = theme->GetColour(ThemeEntryID_TEXT); break;
+        }
+        gfx::drawTextArgs(vg, v.x + 4.f, v.y + 5.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", entry.text.c_str());
+        // no bold font face is loaded, so fake bold for events by over-drawing
+        // with a sub-pixel x offset to thicken the strokes.
+        if (entry.kind == LogKind::Event) {
+            gfx::drawTextArgs(vg, v.x + 4.7f, v.y + 5.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", entry.text.c_str());
+        }
+    });
+}
+
+void InstallSession::DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area) {
+    // caller holds m_mutex.
+    gfx::drawRect(vg, area, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+
+    const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    const auto text_col = theme->GetColour(ThemeEntryID_TEXT);
+    const auto error_col = theme->GetColour(ThemeEntryID_ERROR);
+    const auto good_col = nvgRGB(80, 200, 120);
+    const auto warn_col = nvgRGB(230, 170, 50);
+
+    const float x = area.x + 20.f;
+    float y = area.y + 10.f;
+
+    // headline: what the run ended as.
+    const auto outcome = m_state == State::Cancelled ? "Session cancelled"_i18n
+        : m_session_failed ? "Session failed"_i18n : "Queue finished"_i18n;
+    const auto outcome_col = m_state == State::Cancelled ? warn_col
+        : m_session_failed ? error_col : good_col;
+    gfx::drawTextArgs(vg, x, y, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text_col, "%s", "Session summary"_i18n.c_str());
+    gfx::drawTextArgs(vg, x + 0.7f, y, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, text_col, "%s", "Session summary"_i18n.c_str());
+    gfx::drawTextArgs(vg, area.x + area.w - 20.f, y, 20.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, outcome_col, "%s", outcome.c_str());
+    y += 32.f;
+
+    const auto seconds = m_stats.elapsed_ns / 1000000000ULL;
+    const double avg_mib = seconds
+        ? (double)m_stats.write_bytes / (double)seconds / (1024.0 * 1024.0) : 0.0;
+    const double peak_mib = (double)m_peak_write_bps.load() / (1024.0 * 1024.0);
+    const auto fmt_speed = [](double mib) {
+        char buf[32]{};
+        std::snprintf(buf, sizeof(buf), "%.2f MiB/s", mib);
+        return std::string{buf};
+    };
+
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"Installed"_i18n, std::to_string(m_stats.installed), m_stats.installed ? std::optional{good_col} : std::nullopt},
+        {"Skipped"_i18n, std::to_string(m_stats.skipped)},
+        {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{error_col} : std::nullopt},
+        {"Packages"_i18n, std::to_string(m_queue.size())},
+    });
+    y += 28.f;
+
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"Duration"_i18n, FormatDuration(m_stats.elapsed_ns)},
+        {"Average speed"_i18n, fmt_speed(avg_mib)},
+        {"Peak speed"_i18n, fmt_speed(peak_mib)},
+    });
+    y += 28.f;
+
+    // read is what came off the source (compressed, over usb); written is what
+    // actually landed in storage after decompression, so the two differ for nsz.
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"Received"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.read_bytes))},
+        {"Written"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.write_bytes))},
+    });
+    y += 28.f;
+
+    DrawStatRow(vg, info_col, x, y, 17.f, {
+        {"microSD"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.sd_bytes))},
+        {"System memory"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_stats.nand_bytes))},
+    });
+    y += 30.f;
+
+    if (!m_errors.empty()) {
+        gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, error_col, "%s — %s",
+            (std::to_string(m_errors.size()) + " " + "error(s) recorded"_i18n).c_str(),
+            "press Y to review them, they are also saved to errors.txt"_i18n.c_str());
+    } else {
+        gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good_col, "%s",
+            "No errors recorded."_i18n.c_str());
+    }
+
+    if (!m_compat_warnings.empty()) {
+        y += 24.f;
+        gfx::drawTextArgs(vg, x, y, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn_col, "%s (%zu)",
+            "Compatibility warning: firmware update required to launch"_i18n.c_str(),
+            m_compat_warnings.size());
+    }
+}
+
+} // namespace sphaira::ui::menu::dbi
+
+#endif

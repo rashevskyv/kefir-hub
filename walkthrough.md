@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.877** (2026-09-23).
+Актуальний shipped delivery — **v0.13.878** (2026-09-24).
+
+## v0.13.878 — Yati, menu та tests structural split
+
+`yati.cpp` скорочено до 450 рядків; analysis, приватні installer types, worker pipeline і ticket/CNMT metadata отримали окремі units. Provider-heavy UI та решту 32 oversized menu файлів розділено за API/parsing, UI/draw, operations і storage; усі 152 файли `source/ui/menus` (`.cpp/.hpp`) тепер ≤600 рядків. `app.hpp` зменшено до 590: невикористані поля/типи вилучено, `GetAccountList` винесено в `app.cpp` без зміни логіки. `tests/run.sh` запускає всі 18 Python contracts; 11 великих сценарних suite розкладено на `contract_fixtures` без додаткового framework. Усього 150 змінених/нових source/test файлів ≤600; CMake (754) та 22 інші oversized C/C++/test файли не входили до A5–A7.
+
+Gemini повідомив про успішний WSL `ReleaseWithInstall` (`sphaira_nro` і `kefir-hub_nro`) та `tests/run.sh` all green. Senior незалежно перевірив primary `master`, реєстрацію всіх 53 нових `.cpp` у CMake, розміри, `git diff --check`, dead-symbol gate (1033/1033) і 18/18 Python contracts. У `test_save_restore_contract.cpp` звужено source boundary до конкретних функцій, щоб інший overload не міг випадково задовольнити assertions; C++ test після цього точкового тестового редагування не перезапускався. Консольний runtime не перевірено. Фоновий `TegraExplorer.bin` не входить у delivery.
 
 ## v0.13.877 — Transfer structural split
 

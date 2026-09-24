@@ -34,13 +34,6 @@ enum SoundEffect {
     SoundEffect_Startup,
     SoundEffect_Install,
     SoundEffect_Error,
-    SoundEffect_MAX,
-};
-
-enum class LaunchType {
-    Normal,
-    Forwader_Unknown,
-    Forwader_Sphaira,
 };
 
 struct AmsEmummcPaths {
@@ -284,7 +277,6 @@ public:
     void Update();
     void Poll();
 
-    // void DrawElement(float x, float y, float w, float h, ui::ThemeEntryID id);
     auto LoadElementImage(std::string_view value) -> ElementEntry;
     auto LoadElementColour(std::string_view value) -> ElementEntry;
     auto LoadElement(std::string_view data, ElementType type) -> ElementEntry;
@@ -387,33 +379,8 @@ public:
         }
     }
 
-    static auto GetAccountList() -> std::vector<AccountProfileBase> {
-        std::vector<AccountProfileBase> out;
+    static auto GetAccountList() -> std::vector<AccountProfileBase>;
 
-        AccountUid uids[ACC_USER_LIST_SIZE];
-        s32 account_count;
-        if (R_SUCCEEDED(accountListAllUsers(uids, std::size(uids), &account_count))) {
-            for (s32 i = 0; i < account_count; i++) {
-                AccountProfile profile;
-                if (R_SUCCEEDED(accountGetProfile(&profile, uids[i]))) {
-                    ON_SCOPE_EXIT(accountProfileClose(&profile));
-
-                    AccountProfileBase base;
-                    if (R_SUCCEEDED(accountProfileGet(&profile, nullptr, &base))) {
-                        // sometimes the uid for the acc can differ to the base.
-                        base.uid = uids[i];
-                        log_write("[ACC] found uid: 0x%016lX%016lX\n", uids[i].uid[0], uids[i].uid[1]);
-                        log_write("[ACC] base  uid: 0x%016lX%016lX\n", base.uid.uid[0], base.uid.uid[1]);
-                        out.emplace_back(base);
-                    }
-                }
-            }
-        }
-
-        return out;
-    }
-
-// private:
     static inline const auto CONFIG_PATH = paths::CONFIG.c_str();
     static inline const auto PLAYLOG_PATH = paths::PLAYLOG.c_str();
     static constexpr inline auto INI_SECTION = "config";
@@ -434,7 +401,6 @@ public:
     Vec2 m_scale{1, 1};
 
     std::vector<std::unique_ptr<ui::Widget>> m_widgets;
-    u32 m_pop_count{};
     ui::NotifMananger m_notif_manager{};
     std::unique_ptr<ui::ProgressBox> m_active_transfer_pbox{};
     Mutex m_install_session_mutex{};
@@ -494,8 +460,6 @@ public:
     option::OptionBool m_hdd_enabled{INI_SECTION, "hdd_enabled", true};
     option::OptionBool m_hdd_write_protect{INI_SECTION, "hdd_write_protect", false};
     option::OptionString m_webdav_url{INI_SECTION, "webdav_url", ""};
-    option::OptionString m_webdav_user{INI_SECTION, "webdav_user", ""};
-    option::OptionString m_webdav_pass{INI_SECTION, "webdav_pass", ""};
 
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
     option::OptionLong m_auto_update{INI_SECTION, "auto_update", 1}; // Silent; 0=Off, 2=Ask; old 3 (On demand) maps to Silent

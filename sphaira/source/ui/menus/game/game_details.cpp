@@ -1,32 +1,22 @@
-#include "ui/menus/game/game_details.hpp"
-#include "ui/menus/game/game_internal.hpp"
+#include "ui/menus/game/game_details_internal.hpp"
 #include "ui/menus/game_menu.hpp"
-#include "ui/menus/filebrowser.hpp"
-#include "ui/menus/save_menu.hpp"
-#include "ui/menus/save/save_paths.hpp"
 #include "ui/list.hpp"
-#include "ui/sidebar.hpp"
-#include "ui/option_box.hpp"
-#include "ui/progress_box.hpp"
-#include "ui/popup_list.hpp"
 #include "ui/nvg_util.hpp"
-#include "ui/scrolling_text.hpp"
-#include "ui/error_box.hpp"
-
 #include "app.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
-#include "utils/utils.hpp"
+#include "ui/sidebar.hpp"
+#include "ui/option_box.hpp"
+#include "ui/progress_box.hpp"
+#include "ui/menus/save_menu.hpp"
+#include "ui/menus/save/save_paths.hpp"
 #include "yati/nx/ncm.hpp"
-#include "yati/nx/es.hpp"
+#include "utils/utils.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstring>
-#include <functional>
-#include <memory>
-#include <string>
 #include <vector>
 
 namespace sphaira::ui::menu::game {
@@ -35,10 +25,7 @@ using grid::FormatBytes;
 using title::ContentInfoEntry;
 using title::BuildContentEntry;
 
-struct DbiDetailsMenu final : MenuBase {
-    enum class Tab : u8 { Content, Tickets, Saves };
-
-    DbiDetailsMenu(std::vector<Entry>* entries, s64 index,
+DbiDetailsMenu::DbiDetailsMenu(std::vector<Entry>* entries, s64 index,
         std::function<void(Entry, u32)> dump_callback,
         std::function<void(Entry, u32)> repack_callback,
         std::function<void(s64)> selection_callback)
@@ -65,16 +52,15 @@ struct DbiDetailsMenu final : MenuBase {
         LoadGame();
     }
 
-    auto GetShortTitle() const -> const char* override { return "Game Details"; }
 
-    void OnFocusGained() override {
+void DbiDetailsMenu::OnFocusGained() {
         MenuBase::OnFocusGained();
         // mods may have just been added (or removed) in the file browser this
         // menu pushed, so the folder state is re-read rather than cached.
         ProbeModsFolder(CurrentEntry());
     }
 
-    void Update(Controller* controller, TouchInfo* touch) override {
+void DbiDetailsMenu::Update(Controller* controller, TouchInfo* touch) {
         SyncActionHint();
         MenuBase::Update(controller, touch);
 
@@ -145,7 +131,7 @@ struct DbiDetailsMenu final : MenuBase {
         }, this);
     }
 
-    void Draw(NVGcontext* vg, Theme* theme) override {
+void DbiDetailsMenu::Draw(NVGcontext* vg, Theme* theme) {
         MenuBase::Draw(vg, theme);
 
         const auto& entry = CurrentEntry();
@@ -385,263 +371,24 @@ struct DbiDetailsMenu final : MenuBase {
         });
     }
 
-private:
-    auto CurrentEntry() -> Entry& { return (*m_entries)[m_game_index]; }
-    auto CurrentEntry() const -> const Entry& { return (*m_entries)[m_game_index]; }
-
-    auto CurrentCount() const -> size_t {
-        switch (m_tab) {
-            case Tab::Content: return m_components.size();
-            case Tab::Tickets: return m_tickets.size();
-            case Tab::Saves: return m_saves.size();
-        }
-        return 0;
+auto DbiDetailsMenu::CurrentCount() const -> size_t {
+    switch (m_tab) {
+        case Tab::Content: return m_components.size();
+        case Tab::Tickets: return m_tickets.size();
+        case Tab::Saves: return m_saves.size();
     }
+    return 0;
+}
 
-    void ChangeGame(s64 delta) {
-        if (!m_entries || m_entries->empty()) return;
-        const auto count = static_cast<s64>(m_entries->size());
-        m_game_index = (m_game_index + delta + count) % count;
-        LoadGame();
-        m_selection_callback(m_game_index);
-    }
 
-    void ChangeTab(s64 delta) {
-        constexpr s64 count = 3;
-        SetTab(static_cast<Tab>((static_cast<s64>(m_tab) + delta + count) % count));
-    }
-
-    void SetTab(Tab tab) {
-        m_tab = tab;
-        m_row_index = 0;
-        m_list->SetYoff(0);
-        SetHeaderFocus(false);
-        if (m_tab == Tab::Saves) {
-            SetAction(Button::X, Action{"Create save slot"_i18n, [this](){
-                PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
-            }});
-        } else {
-            RemoveAction(Button::X);
-        }
-    }
-
-    auto TabHeaderItem() const -> u8 {
-        switch (m_tab) {
-            case Tab::Tickets: return HeaderItem_Tickets;
-            case Tab::Saves: return HeaderItem_Saves;
-            default: return HeaderItem_Components;
-        }
-    }
-
-    void SetHeaderFocus(bool focus) {
-        if (m_header_focus != focus) {
-            App::PlaySoundEffect(SoundEffect_Focus);
-        }
-        m_header_focus = focus;
-    }
-
-    void FireA() {
-        if (m_header_focus) {
-            ActivateHeaderItem();
-        } else {
-            ShowCurrentActions();
-        }
-    }
-
-    // A does different things in the two focus regions, so its footer hint
-    // follows the focus. Re-registering the action from inside the action's own
-    // callback would replace the std::function while it is running, so the hint
-    // is synced here instead, before actions are dispatched.
-    void SyncActionHint() {
-        if (m_hint_is_header == m_header_focus) {
-            return;
-        }
-        m_hint_is_header = m_header_focus;
-        SetAction(Button::A, Action{m_header_focus ? "Open"_i18n : "Actions"_i18n, [this](){ FireA(); }});
-    }
-
-    static auto HeaderItemHint(u8 item) -> std::string {
-        switch (item) {
-            case HeaderItem_Languages: return "Show every language this game ships with"_i18n;
-            case HeaderItem_Mods: return "Open /atmosphere/contents/<Title ID>, where LayeredFS loads mods from"_i18n;
-            case HeaderItem_Components: return "Show the installed base, updates and DLC"_i18n;
-            case HeaderItem_Tickets: return "Show the rights IDs and tickets of this game"_i18n;
-            default: return "Show the save data of this game"_i18n;
-        }
-    }
-
-    void ActivateHeaderItem() {
-        switch (m_header_index) {
-            case HeaderItem_Languages: {
-                if (m_language_list.empty()) {
-                    App::Notify("No language data"_i18n);
-                    break;
-                }
-                App::Push<PopupList>("Supported languages"_i18n, m_language_list, [](auto){});
-            }   break;
-            case HeaderItem_Mods: OpenModsFolder(); break;
-            case HeaderItem_Components: SetTab(Tab::Content); break;
-            case HeaderItem_Tickets: SetTab(Tab::Tickets); break;
-            case HeaderItem_Saves: {
-                if (m_tab == Tab::Saves) {
-                    PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
-                } else {
-                    SetTab(Tab::Saves);
-                }
-            } break;
-        }
-    }
-
-    // the mods folder is what LayeredFS reads replacement game files from;
-    // opening it in the file browser is the only way to see (or add) any.
-    void OpenModsFolder() {
-        const auto path = title::GetContentsPath(CurrentEntry().app_id);
-        if (CurrentEntry().mods_folder) {
-            BrowseSdPath(path);
-            return;
-        }
-
-        App::Push<OptionBox>("This game has no mods folder yet. Create it?"_i18n,
-            "Back"_i18n, "Create"_i18n, 1, [this, path](auto op_index){
-                if (!op_index || !*op_index) {
-                    return;
-                }
-                const auto rc = fs::FsNativeSd().CreateDirectory(path);
-                App::PushErrorBox(rc, "Folder create failed!"_i18n);
-                if (R_SUCCEEDED(rc)) {
-                    // an empty folder is not a mod: layeredfs stays off until
-                    // something is actually copied in (OnFocusGained re-reads
-                    // it when the browser is closed).
-                    CurrentEntry().mods_folder = true;
-                    BrowseSdPath(path);
-                }
-            });
-    }
-
-    static void BrowseSdPath(const fs::FsPath& path) {
-        constexpr filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
-        App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
-    }
-
-    void LoadGame() {
-        auto& entry = CurrentEntry();
-        LoadControlEntry(entry, true);
-        LoadGameSummary(entry);
-
-        m_components.clear();
-        m_tickets.clear();
-        m_saves.clear();
-        m_save_allocated_size = 0;
-        m_row_index = 0;
-        m_list->SetYoff(0);
-        m_display_version[0] = '\0';
-        m_languages.clear();
-        m_language_list.clear();
-        m_language_scroll.Reset();
-        for (auto& scroll : m_stat_label_scrolls) {
-            scroll.Reset();
-        }
-        m_save_size = 0;
-        m_save_journal_size = 0;
-
-        auto control = std::make_unique<NsApplicationControlData>();
-        u64 actual_size{};
-        if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_Storage, entry.app_id, control.get(), sizeof(*control), &actual_size))) {
-            std::snprintf(m_display_version, sizeof(m_display_version), "%s", control->nacp.display_version);
-            m_save_size = control->nacp.user_account_save_data_size;
-            m_save_journal_size = control->nacp.user_account_save_data_journal_size;
-
-            constexpr std::array<const char*, 16> language_names{
-                "US English", "UK English", "Japanese", "French", "German", "Latin Spanish", "Spanish", "Italian",
-                "Dutch", "Canadian French", "Portuguese", "Russian", "Korean", "Traditional Chinese", "Simplified Chinese", "Brazilian Portuguese"
-            };
-            for (size_t i = 0; i < language_names.size(); i++) {
-                if (control->nacp.supported_language_flag & (1U << i)) {
-                    if (!m_languages.empty()) m_languages += ", ";
-                    m_languages += language_names[i];
-                    m_language_list.emplace_back(language_names[i]);
-                }
-            }
-        }
-
-        std::vector<FsRightsId> personalized_ids;
-        s32 personalized_count{};
-        if (R_SUCCEEDED(es::CountPersonalizedTicket(&personalized_count)) && personalized_count > 0) {
-            personalized_ids.resize(personalized_count);
-            s32 written{};
-            if (R_FAILED(es::ListPersonalizedTicket(&written, personalized_ids.data(), personalized_ids.size()))) {
-                personalized_ids.clear();
-            } else {
-                personalized_ids.resize(written);
-            }
-        }
-
-        title::MetaEntries entries;
-        m_load_result = GetMetaEntries(entry, entries);
-        if (R_SUCCEEDED(m_load_result)) {
-            for (const auto& status : entries) {
-                ContentInfoEntry info;
-                if (const auto rc = BuildContentEntry(status, info); R_FAILED(rc)) {
-                    m_load_result = rc;
-                    continue;
-                }
-
-                GameComponentRow component{};
-                component.status = status;
-                component.content_count = info.content_infos.size();
-                component.rights_count = info.ncm_rights_id.size();
-                for (const auto& content : info.content_infos) {
-                    u64 size{};
-                    ncmContentInfoSizeToU64(&content, &size);
-                    component.size += size;
-                }
-                m_components.emplace_back(component);
-
-                for (const auto& rights : info.ncm_rights_id) {
-                    const auto duplicate = std::ranges::find_if(m_tickets, [&rights](const auto& ticket){
-                        return !std::memcmp(&ticket.id, &rights.rights_id, sizeof(ticket.id));
-                    });
-                    if (duplicate != m_tickets.end()) continue;
-
-                    GameTicketRow ticket{};
-                    ticket.id = rights.rights_id;
-                    ticket.key_generation = rights.key_generation;
-                    ticket.meta_type = status.meta_type;
-                    es::GetCommonTicketSize(&ticket.ticket_size, &ticket.id);
-                    ticket.personalized = std::ranges::any_of(personalized_ids, [&ticket](const auto& id){
-                        return !std::memcmp(&id, &ticket.id, sizeof(id));
-                    });
-                    m_tickets.emplace_back(ticket);
-                }
-            }
-        }
-
-        LoadSaves(entry.app_id);
-        SetTitleSubHeading(entry.GetName(), true);
-        SetSubHeading(std::to_string(m_game_index + 1) + " / " + std::to_string(m_entries->size()));
-        SetStorageHighlight(entry.nand_size, entry.sd_size);
-    }
-
-    void LoadSaves(u64 app_id) {
+void DbiDetailsMenu::LoadSaves(u64 app_id) {
         LoadGameSaves(app_id, m_saves, m_save_allocated_size);
     }
 
     // mount this component's NCA files as a read-only fs and open them in the
     // real file browser, so they can be navigated (and later exposed over
     // MTP/FTP) - rather than shown in a throwaway popup.
-    void OpenComponentInBrowser(const GameComponentRow& component) {
-        filebrowser::FsEntry entry{};
-        entry.name = ncm::GetMetaTypeStr(component.status.meta_type);
-        entry.root = "/";
-        entry.type = filebrowser::FsType::Content;
-        entry.flags = filebrowser::FsEntryFlag_ReadOnly;
-        entry.content_app_id = component.status.application_id;
-        entry.content_meta_type = component.status.meta_type;
-        entry.content_storage_id = component.status.storageID;
-        App::Push<filebrowser::Menu>(MenuFlag_None, entry, "/");
-    }
-
-    void ShowCurrentActions() {
+void DbiDetailsMenu::ShowCurrentActions() {
         if (!CurrentCount()) {
             if (m_tab == Tab::Saves) {
                 auto options = std::make_unique<Sidebar>("Save Actions"_i18n, Sidebar::Side::RIGHT);
@@ -727,137 +474,78 @@ private:
         }
     }
 
-    void ShowGameActions() {
-        auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
-        options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }, "Launch this game."_i18n)->SetIcon(ActionIcon::Launch);
-
-        const auto& entry = CurrentEntry();
-
-        // only offer the direction that has something to move: a title entirely
-        // on one storage has no "move here" to speak of, and one that is split
-        // gets both entries plus a breakdown of what each one would do.
-        const auto add_move = [this, app_id = entry.app_id, name = entry.GetName(), &options](NcmStorageId target, const std::string& label, const std::string& hint){
-            title::MovePlan plan;
-            if (R_FAILED(title::GetMovePlan(app_id, target, plan)) || plan.move.empty()) {
-                return;
-            }
-
-            options->Add<SidebarEntryCallback>(label, [this, app_id, name, target, plan](){
-                App::Push<OptionBox>(BuildMoveSummary(plan, target), "Back"_i18n, "Move"_i18n, 1, [this, app_id, name, target](auto op_index){
-                    if (!op_index || !*op_index) {
-                        return;
-                    }
-
-                    App::Push<ProgressBox>(0, MovingToLabel(target), name, [app_id, target](auto pbox) -> Result {
-                        DropBoostForMove();
-                        return title::MoveApplication(app_id, target, pbox);
-                    }, [this, target](Result rc){
-                        if (R_SUCCEEDED(rc)) {
-                            App::Notify(MovedToLabel(target));
-                            LoadGame();
-                        } else if (rc != Result_TransferCancelled) {
-                            App::PushErrorBox(rc, "Move failed!"_i18n);
-                        }
-                    }, 1, PRIO_PREEMPTIVE, 1024*128, false);
-                });
-            }, true, hint)->SetIcon(ActionIcon::Move);
-        };
-
-        add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move game components from NAND to SD card."_i18n);
-        add_move(NcmStorageId_BuiltInUser, "Move to NAND"_i18n, "Move game components from SD card to NAND system memory."_i18n);
-
-        options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
-            m_dump_callback(CurrentEntry(), title::ContentFlag_All);
-        }, true, "Export base, updates, DLC and data patches."_i18n)->SetIcon(ActionIcon::Dump);
-        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this](){
-            ShowCreateRepackSidebar();
-        }, true, "Export selected installed components as one merged NSP."_i18n)->SetIcon(ActionIcon::Compress);
-        options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
-            OpenModsFolder();
-        }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n)->SetIcon(ActionIcon::Folder);
+void DbiDetailsMenu::ChangeGame(s64 delta) {
+        if (!m_entries || m_entries->empty()) return;
+        const auto count = static_cast<s64>(m_entries->size());
+        m_game_index = (m_game_index + delta + count) % count;
+        LoadGame();
+        m_selection_callback(m_game_index);
     }
 
-    void ShowCreateRepackSidebar() {
-        const auto& entry = CurrentEntry();
-        const auto flags = entry.content_flags;
+void DbiDetailsMenu::ChangeTab(s64 delta) {
+        constexpr s64 count = 3;
+        SetTab(static_cast<Tab>((static_cast<s64>(m_tab) + delta + count) % count));
+    }
 
-        const bool has_base = flags & title::ContentFlag_Application;
-        const bool has_patch = flags & title::ContentFlag_Patch;
-        const bool has_dlc = flags & title::ContentFlag_AddOnContent;
+void DbiDetailsMenu::SetTab(Tab tab) {
+        m_tab = tab;
+        m_row_index = 0;
+        m_list->SetYoff(0);
+        SetHeaderFocus(false);
+        if (m_tab == Tab::Saves) {
+            SetAction(Button::X, Action{"Create save slot"_i18n, [this](){
+                PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
+            }});
+        } else {
+            RemoveAction(Button::X);
+        }
+    }
 
-        if (!has_base && !has_patch && !has_dlc) {
-            App::Notify("No repackable content available"_i18n);
+auto DbiDetailsMenu::TabHeaderItem() const -> u8 {
+    switch (m_tab) {
+        case Tab::Tickets: return HeaderItem_Tickets;
+        case Tab::Saves: return HeaderItem_Saves;
+        default: return HeaderItem_Components;
+    }
+}
+
+void DbiDetailsMenu::SetHeaderFocus(bool focus) {
+        if (m_header_focus != focus) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+        }
+        m_header_focus = focus;
+    }
+
+void DbiDetailsMenu::FireA() {
+        if (m_header_focus) {
+            ActivateHeaderItem();
+        } else {
+            ShowCurrentActions();
+        }
+    }
+
+    // A does different things in the two focus regions, so its footer hint
+    // follows the focus. Re-registering the action from inside the action's own
+    // callback would replace the std::function while it is running, so the hint
+    // is synced here instead, before actions are dispatched.
+void DbiDetailsMenu::SyncActionHint() {
+        if (m_hint_is_header == m_header_focus) {
             return;
         }
-
-        struct State {
-            bool base{true};
-            bool patch{true};
-            bool dlc{true};
-        };
-        auto state = std::make_shared<State>();
-
-        auto options = std::make_unique<Sidebar>("Create repack"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-        if (has_base) {
-            options->Add<SidebarEntryCheckbox>("Application/BASE"_i18n, [state](){ return state->base; }, [state](bool val){ state->base = val; }, "Include base application."_i18n);
-        }
-        if (has_patch) {
-            options->Add<SidebarEntryCheckbox>("Patch/Update"_i18n, [state](){ return state->patch; }, [state](bool val){ state->patch = val; }, "Include highest installed update."_i18n);
-        }
-        if (has_dlc) {
-            options->Add<SidebarEntryCheckbox>("AddOnContent/DLC"_i18n, [state](){ return state->dlc; }, [state](bool val){ state->dlc = val; }, "Include all installed DLC."_i18n);
-        }
-
-        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this, entry, state, has_base, has_patch, has_dlc](){
-            u32 selected_flags = 0;
-            if (has_base && state->base) {
-                selected_flags |= title::ContentFlag_Application;
-            }
-            if (has_patch && state->patch) {
-                selected_flags |= title::ContentFlag_Patch;
-            }
-            if (has_dlc && state->dlc) {
-                selected_flags |= title::ContentFlag_AddOnContent;
-            }
-
-            if (selected_flags == 0) {
-                App::Notify("No components selected"_i18n);
-                return;
-            }
-
-            m_repack_callback(entry, selected_flags);
-        }, "Start creating the merged NSP."_i18n);
+        m_hint_is_header = m_header_focus;
+        SetAction(Button::A, Action{m_header_focus ? "Open"_i18n : "Actions"_i18n, [this](){ FireA(); }});
     }
 
-private:
-    std::vector<Entry>* m_entries{};
-    s64 m_game_index{};
-    s64 m_row_index{};
-    Tab m_tab{};
-    std::unique_ptr<List> m_list{};
-    std::vector<GameComponentRow> m_components{};
-    std::vector<GameTicketRow> m_tickets{};
-    std::vector<GameSaveRow> m_saves{};
-    std::function<void(Entry, u32)> m_dump_callback{};
-    std::function<void(Entry, u32)> m_repack_callback{};
-    std::function<void(s64)> m_selection_callback{};
-    Result m_load_result{};
-    char m_display_version[sizeof(NacpStruct::display_version) + 1]{};
-    std::string m_languages{};
-    PopupList::Items m_language_list{};
-    ScrollingText m_language_scroll{};
-    std::array<ScrollingText, 10> m_stat_label_scrolls{};
-    // focus lives either in the summary block (m_header_index) or in the list.
-    bool m_header_focus{};
-    bool m_hint_is_header{};
-    u8 m_header_index{};
-    u64 m_save_size{};
-    u64 m_save_journal_size{};
-    u64 m_save_allocated_size{};
-};
+auto DbiDetailsMenu::HeaderItemHint(u8 item) -> std::string {
+        switch (item) {
+            case HeaderItem_Languages: return "Show every language this game ships with"_i18n;
+            case HeaderItem_Mods: return "Open /atmosphere/contents/<Title ID>, where LayeredFS loads mods from"_i18n;
+            case HeaderItem_Components: return "Show the installed base, updates and DLC"_i18n;
+            case HeaderItem_Tickets: return "Show the rights IDs and tickets of this game"_i18n;
+            default: return "Show the save data of this game"_i18n;
+        }
+    }
+
 
 void OpenGameDetails(
     std::vector<Entry>* entries,

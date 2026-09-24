@@ -54,4 +54,15 @@ auto SettingsItemTextX(const SettingsItem& item, float x) -> float;
 void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& item, Vec4 v, bool selected);
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected);
 
+auto ThemeValue() -> std::string;
+auto BuildAutoUpdateItems() -> std::vector<SettingsItem>;
+auto BuildHomebrewSearchPathsItems() -> std::vector<SettingsItem>;
+auto BuildSaveBackupSearchPathsItems() -> std::vector<SettingsItem>;
+auto BuildSavesCategoryItems() -> std::vector<SettingsItem>;
+auto BuildForwarderItems() -> std::vector<SettingsItem>;
+auto BuildScreenOffItems() -> std::vector<SettingsItem>;
+auto BuildMtpStorageItems() -> std::vector<SettingsItem>;
+auto BuildFtpItems() -> std::vector<SettingsItem>;
+auto BuildThemeOptionItems() -> std::vector<SettingsItem>;
+
 } // namespace sphaira::ui::menu::settings

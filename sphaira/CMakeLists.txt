@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.877)
+set(sphaira_VERSION 0.13.878)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -35,34 +35,55 @@ set(sphaira_VERSION_HASH "${sphaira_VERSION} [${GIT_COMMIT}]")
 
 add_executable(sphaira
     source/ui/menus/appstore.cpp
+    source/ui/menus/appstore/appstore_repo.cpp
+    source/ui/menus/appstore/appstore_ops.cpp
+    source/ui/menus/appstore/appstore_entry_menu.cpp
+    source/ui/menus/appstore/appstore_filter.cpp
     source/ui/menus/file_viewer.cpp
     source/ui/menus/file_viewer/file_viewer_internal.cpp
     source/ui/menus/file_viewer/file_viewer_text.cpp
+    source/ui/menus/file_viewer/file_viewer_text_layout.cpp
+    source/ui/menus/file_viewer/file_viewer_text_index.cpp
     source/ui/menus/file_viewer/file_viewer_image.cpp
     source/ui/menus/filebrowser.cpp
     source/ui/menus/filebrowser/filebrowser_internal.cpp
     source/ui/menus/filebrowser/filebrowser_view.cpp
+    source/ui/menus/filebrowser/filebrowser_view_draw.cpp
     source/ui/menus/filebrowser/filebrowser_scan.cpp
     source/ui/menus/filebrowser/filebrowser_metadata.cpp
     source/ui/menus/filebrowser/filebrowser_options.cpp
+    source/ui/menus/filebrowser/filebrowser_options_advanced.cpp
     source/ui/menus/filebrowser/filebrowser_share.cpp
     source/ui/menus/filebrowser/filebrowser_sources.cpp
     source/ui/menus/filebrowser/filebrowser_assoc.cpp
     source/ui/menus/filebrowser/filebrowser_forwarder.cpp
     source/ui/menus/filebrowser/filebrowser_ops.cpp
+    source/ui/menus/filebrowser/filebrowser_ops_archive.cpp
     source/ui/menus/file_picker.cpp
+    source/ui/menus/file_picker_draw.cpp
     source/ui/menus/homebrew.cpp
+    source/ui/menus/homebrew_scan.cpp
+    source/ui/menus/homebrew_ops.cpp
     source/ui/menus/install_share.cpp
 
     source/ui/menus/kefir_menu.cpp
+    source/ui/menus/kefir/kefir_downgrade_box.cpp
+    source/ui/menus/kefir/kefir_links.cpp
+    source/ui/menus/kefir/kefir_draw.cpp
+    source/ui/menus/kefir/kefir_ops.cpp
     source/ui/menus/kefir/kefir_changelog.cpp
+    source/ui/menus/kefir/kefir_changelog_parser.cpp
     source/ui/menus/kefir/kefir_firmware.cpp
+    source/ui/menus/kefir/kefir_firmware_ops.cpp
     source/ui/menus/main_menu.cpp
     source/ui/menus/menu_base.cpp
+    source/ui/menus/menu_base_draw.cpp
 
     source/ui/menus/settings_menu.cpp
+    source/ui/menus/settings/settings_menu_draw.cpp
     source/ui/menus/settings/settings_internal.cpp
     source/ui/menus/settings/settings_categories.cpp
+    source/ui/menus/settings/settings_categories_items.cpp
     source/ui/menus/settings/settings_software.cpp
     source/ui/menus/settings/settings_dbi.cpp
     source/ui/menus/settings/settings_kefir.cpp
@@ -73,6 +94,8 @@ add_executable(sphaira
     source/ui/menus/settings/settings_translations.cpp
     source/ui/menus/settings/settings_tweaks.cpp
     source/ui/menus/settings/settings_fancurve.cpp
+    source/ui/menus/settings/settings_fancurve_draw.cpp
+    source/ui/menus/settings/settings_fancurve_ops.cpp
     source/ui/menus/save_menu.cpp
     source/ui/menus/save/save_hub_menu.cpp
     source/ui/menus/save/save_paths.cpp
@@ -99,20 +122,30 @@ add_executable(sphaira
     source/ui/menus/save/save_restore_zip.cpp
     source/ui/menus/save/save_slot_backend.cpp
     source/ui/menus/themezer.cpp
+    source/ui/menus/themezer/themezer_api.cpp
+    source/ui/menus/themezer/themezer_ops.cpp
+    source/ui/menus/themezer/themezer_dialogs.cpp
     source/ui/menus/theme_creator.cpp
     source/ui/menus/tools_menu.cpp
     source/ui/menus/wifi_menu.cpp
     source/wifi_manager.cpp
     source/ui/menus/uninstaller_menu.cpp
+    source/ui/menus/uninstaller_ops.cpp
     source/ui/menus/users_menu.cpp
     source/ui/menus/users/users_internal.cpp
     source/ui/menus/users/users_profile.cpp
+    source/ui/menus/users/users_profile_dialogs.cpp
     source/ui/menus/users/users_manage.cpp
+    source/ui/menus/users/users_manage_backups.cpp
+    source/ui/menus/users/users_manage_ops.cpp
     source/ui/menus/users/users_restore.cpp
+    source/ui/menus/users/users_restore_worker.cpp
     source/ui/menus/users/users_restore_library.cpp
     source/ui/menus/users/users_restore_remote.cpp
+    source/ui/menus/users/users_restore_remote_parser.cpp
     source/ui/menus/users/users_nand.cpp
     source/ui/menus/users/users_nand_library.cpp
+    source/ui/menus/users/users_nand_library_ops.cpp
     source/account/account_link.cpp
     source/account/account_user.cpp
     source/account/account_playtime.cpp
@@ -120,30 +153,43 @@ add_executable(sphaira
     source/account/nand_transfer.cpp
     source/meminfo.cpp
     source/ui/menus/cheats_menu.cpp
+    source/ui/menus/cheats/cheats_game_scanner.cpp
+    source/ui/menus/cheats/cheats_ops.cpp
     source/ui/menus/cheats/cheats_dmnt.cpp
     source/ui/menus/cheats/cheats_lookup.cpp
     source/ui/menus/cheats/cheats_db.cpp
     source/ui/menus/cheats/cheat_files_menu.cpp
+    source/ui/menus/cheats/cheat_content_menu.cpp
     source/ui/menus/cheats/cheat_game_select_menu.cpp
+    source/ui/menus/cheats/cheat_game_select_scan.cpp
     source/ui/menus/cheats/cheat_download_menu.cpp
+    source/ui/menus/cheats/cheat_download_parsers.cpp
+    source/ui/menus/cheats/cheat_download_net.cpp
+    source/ui/menus/cheats/cheat_download_writer.cpp
     source/ui/menus/ghdl.cpp
+    source/ui/menus/ghdl_api.cpp
     source/ui/menus/dbi_menu.cpp
+    source/ui/menus/dbi/dbi_menu_options.cpp
     source/ui/menus/dbi/dbi_internal.cpp
     source/ui/menus/dbi/dbi_draw.cpp
+    source/ui/menus/dbi/dbi_draw_transfer.cpp
     source/ui/menus/dbi/dbi_usb.cpp
     source/ui/menus/dbi/dbi_local.cpp
     source/ui/menus/dbi/dbi_plan.cpp
     source/ui/menus/dbi/dbi_session.cpp
 
     source/ui/menus/gc_menu.cpp
+    source/ui/menus/gc_menu_ops.cpp
     source/ui/menus/game_menu.cpp
     source/ui/menus/game/game_internal.cpp
     source/ui/menus/game/game_details.cpp
+    source/ui/menus/game/game_details_ops.cpp
     source/ui/menus/game/game_save_manager.cpp
     source/ui/menus/game/game_scan.cpp
     source/ui/menus/game/game_ops.cpp
     source/ui/menus/grid_menu_base.cpp
     source/ui/menus/install_stream_menu_base.cpp
+    source/ui/menus/install_stream.cpp
 
     source/ui/error_box.cpp
     source/ui/about_box.cpp
@@ -179,6 +225,10 @@ add_executable(sphaira
     source/app_theme.cpp
     source/app_display_options.cpp
     source/download.cpp
+    source/download_cache.cpp
+    source/download_curl_callbacks.cpp
+    source/download_curl_transfer.cpp
+    source/download_webdav.cpp
     source/dumper.cpp
     source/option.cpp
     source/evman.cpp
@@ -243,6 +293,9 @@ add_executable(sphaira
     source/usb/usb_uploader.cpp
 
     source/yati/yati.cpp
+    source/yati/yati_analysis.cpp
+    source/yati/yati_pipeline.cpp
+    source/yati/yati_metadata.cpp
     source/yati/container/nsp.cpp
     source/yati/container/xci.cpp
     source/yati/source/file.cpp

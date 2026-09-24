@@ -38,17 +38,15 @@ static int test_preflight_ordering_contract() {
     CHECK(!save_menu_hpp.empty());
     CHECK(save_menu_hpp.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path") != std::string::npos);
 
-    // 2. Shared function existence and ordering in save_menu_ops.cpp
-    const std::string save_menu_code = read_file_to_string("sphaira/source/ui/menus/save/save_menu_ops.cpp");
-    CHECK(!save_menu_code.empty());
+    // 2. Shared function existence and ordering in save_restore_zip.cpp
+    const std::string save_restore_code = read_file_to_string("sphaira/source/ui/menus/save/save_restore_zip.cpp");
+    CHECK(!save_restore_code.empty());
 
-    const auto rsz_pos = save_menu_code.find("Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path");
+    const auto rsz_pos = save_restore_code.find("bool allow_empty, bool* out_created_slot_retained) {");
     CHECK(rsz_pos != std::string::npos);
-
-    const auto rsi_pos = save_menu_code.find("Result Menu::RestoreSaveInternal(", rsz_pos);
-    CHECK(rsi_pos != std::string::npos);
-
-    const std::string rsz_body = save_menu_code.substr(rsz_pos, rsi_pos - rsz_pos);
+    const auto rsz_end = save_restore_code.find("\n}\n", rsz_pos);
+    CHECK(rsz_end != std::string::npos);
+    const std::string rsz_body = save_restore_code.substr(rsz_pos, rsz_end - rsz_pos);
 
     const auto preflight_pos = rsz_body.find("TransferUnzipPreflight");
     CHECK(preflight_pos != std::string::npos);
@@ -74,9 +72,13 @@ static int test_preflight_ordering_contract() {
     CHECK(rsz_body.find("TransferUnzipAll(pbox, zfile, &save_fs, \"/\", save_filter, thread::Mode::SingleThreadedIfSmaller, true") != std::string::npos);
 
     // 4. Menu::RestoreSaveInternal refuses unsafe RAW containers and delegates ZIP restore
-    const auto bsi_pos = save_menu_code.find("Result Menu::BackupSaveInternal(", rsi_pos);
-    CHECK(bsi_pos != std::string::npos);
-    const std::string rsi_body = save_menu_code.substr(rsi_pos, bsi_pos - rsi_pos);
+    const std::string save_menu_code = read_file_to_string("sphaira/source/ui/menus/save/save_menu_ops.cpp");
+    CHECK(!save_menu_code.empty());
+    const auto rsi_pos = save_menu_code.find("Result Menu::RestoreSaveInternal(");
+    CHECK(rsi_pos != std::string::npos);
+    const auto rsi_end = save_menu_code.find("\n}\n", rsi_pos);
+    CHECK(rsi_end != std::string::npos);
+    const std::string rsi_body = save_menu_code.substr(rsi_pos, rsi_end - rsi_pos);
 
     CHECK(rsi_body.find("return RestoreSaveZip(pbox, e, path") != std::string::npos);
 

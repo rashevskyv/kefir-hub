@@ -44,6 +44,7 @@ private:
 
 namespace detail {
     auto WriteCheatFile(u64 title_id, const std::string& build_id, const std::vector<CheatEntry>& cheats) -> Result;
+    auto SanitizeCheatContentForAtmosphere(const std::string& content) -> std::string;
     auto ParseNxDbCheats(const std::string& json_str, const std::string& target_build_id) -> std::vector<CheatEntry>;
     auto ParseCheatslipsCheats(const std::string& json_str, const std::string& target_build_id) -> std::vector<CheatEntry>;
     auto ExtractNxDbBuildIds(const std::string& json_str) -> std::vector<std::string>;

@@ -1,15 +1,16 @@
 # audit.md
 
-Версія коду: **v0.13.877**. Дата аудиту: 2026-09-23.
+Версія коду: **v0.13.878**. Дата аудиту: 2026-09-24.
 
 ## Поточний стан
 
+- v0.13.878 закрила A5–A7: Yati, provider/menu UI та Python contracts розкладені; 150 змінених/нових source/test файлів і всі 152 menu source/header файли ≤600.
 - v0.13.877 розклала `threaded_file_transfer.cpp` з 1 956 до 263 рядків; усі нові transfer files ≤501 рядка.
 - Transfer core, archive preflight, native verification і ZIP I/O мають окремі concrete units; public header незмінний.
 - Gemini: WSL `ReleaseWithInstall` build, 18/18 Python contracts і dead-symbol gate PASS; runtime на консолі не перевірено.
-- `app.hpp` незмінний (626 рядків), окремий legacy debt.
+- `app.hpp` зменшено до 590 рядків після перевірки невикористаних declarations; `GetAccountList` перенесено без зміни алгоритму.
 - Save build-closure units лишилися 591/597 рядків.
-- 32 C/C++ files понад 600 рядків знаходяться в `sphaira/source/ui/menus`.
+- У `sphaira/source/ui/menus` більше немає `.cpp/.hpp` понад 600. Поза A5–A7 лишаються 22 oversized C/C++/test файли, а `sphaira/CMakeLists.txt` має 754 рядки; не вважати це repo-wide лімітом.
 - Graphify є картою зв’язків; source-level перевірка потрібна для кожного нового delivery.
 - Активні delivery-документи скорочено; попередня історія лишається в Git без потрійного дублювання.
 
@@ -39,18 +40,22 @@
 
 У v0.13.876 `app.cpp` 523 і `app_settings.cpp` 554 рядки; public API і shutdown ordering збережені. Gemini повідомив про WSL build та 18/18 contracts PASS. `app.hpp` 626 — окремий борг: `LaunchType` і `m_pop_count` виглядають невикористаними, але member layout та ефекти option-полів треба перевірити перед видаленням; не стискати header механічно.
 
-### A5 — Transfers and installer — IN PROGRESS
+### A5 — Transfers and installer — DONE
 
 - Transfers — DONE у v0.13.877: `threaded_file_transfer.cpp` 263; core, preflight, verification і ZIP I/O розділено без нових абстракцій.
-- `yati.cpp` 1 842 — NEXT: ticket/CNMT analysis, threaded install pipeline, public entry points.
+- `yati.cpp` 450; analysis, threaded pipeline та ticket/CNMT metadata — окремі concrete units ≤512.
 
-### A6 — Provider-heavy UI
+### A6 — Provider-heavy UI — DONE
 
-Відділяти API/parsing/storage від UI в `cheat_download_menu.cpp`, `appstore.cpp`, `kefir_menu.cpp`, `download.cpp`, `themezer.cpp`, `cheats_menu.cpp`, `settings_fancurve.cpp`.
+API/parsing/storage відокремлено від UI в `cheat_download_menu.cpp`, `appstore.cpp`, `kefir_menu.cpp`, `download.cpp`, `themezer.cpp`, `cheats_menu.cpp`, `settings_fancurve.cpp`.
 
-### A7 — Tests/tooling
+Також 32 великі menu targets розкладено за конкретними responsibilities; всі menu source/header files ≤600.
 
-18 Python contract scripts, 17 483 рядки; 11 більші за 600. `tests/run.sh` їх автоматично не запускає. Додати один stdlib/shell runner; великі suites ділити за scenario boundaries, не видаляти safety cases і не додавати framework.
+### A7 — Tests/tooling — DONE
+
+Початково 18 Python contract scripts мали 17 483 рядки, 11 були понад 600, а `tests/run.sh` їх не запускав. Suite розділено за scenario boundaries без додаткового framework.
+
+Тепер runner автоматично запускає всі 18 Python contracts, а великі scenario fixtures рознесені до `tests/contract_fixtures/`; senior повторно отримав 18/18 PASS і 1033/1033 dead-symbol declarations. Gemini повідомив про host suite і WSL build PASS. C++ contract після точкового звуження source boundary senior не компілював повторно.
 
 ## Не чіпати механічно
 

@@ -42,6 +42,17 @@ echo "== nand restore auto script contract check =="
 ./tests/test_nand_restore_auto_contract.sh || fail=1
 
 echo
+echo "== python contract tests =="
+py_pids=""
+for py in tests/test_*_contract.py; do
+    (python3 "$py") &
+    py_pids="$py_pids $!"
+done
+for pid in $py_pids; do
+    wait "$pid" || fail=1
+done
+
+echo
 if [ "$fail" -ne 0 ]; then
     echo "FAILED"
     exit 1

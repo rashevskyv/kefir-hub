@@ -17,5 +17,7 @@ auto StageNandDump(nand_transfer::Report& report) -> Result;
 auto NandDumpLooksComplete(const std::string& dir) -> bool;
 auto FindLiveUidForPack(const account_user::Pack& p) -> std::optional<AccountUid>;
 auto LiveNameForUid(const AccountUid& uid) -> std::string;
+void PickSavesForBackup(std::vector<save::Entry> entries, std::function<void(std::optional<std::vector<save::Entry>>)> cb);
+void PickAvatar(std::function<void(std::vector<u8>)> cb);
 
 } // namespace sphaira::ui::menu::users

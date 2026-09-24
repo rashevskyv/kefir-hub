@@ -5,20 +5,17 @@
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
 #include "ui/menus/settings/settings_fancurve.hpp"
-
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/file_picker.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_paths.hpp"
-
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/about_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/screensaver.hpp"
 #include "ui/steamgriddb_icon.hpp"
-
 #include "app.hpp"
 #include "auto_update.hpp"
 #include "evman.hpp"
@@ -32,209 +29,229 @@
 #include <vector>
 
 namespace sphaira::ui::menu::settings {
-namespace {
 
-auto MakeSaveSyncLocationItem() -> SettingsItem;
-
-auto AutoUpdateModeLabel(long mode) -> std::string {
-    switch (mode) {
-        case 0: return "Off"_i18n;
-        case 1: return "Silent"_i18n;
-        case 2: return "Ask"_i18n;
-        default: return "Silent"_i18n;
+auto MtpGamesLayoutLabel(long layout) -> std::string {
+    switch (layout) {
+        case 0: return "Compatible dump"_i18n;
+        case 1: return "Separate files"_i18n;
+        default: return "Both"_i18n;
     }
 }
 
-auto AutoUpdateModeDescription(long mode) -> std::string {
-    switch (mode) {
-        case 0: return "Don't check for updates."_i18n;
-        case 1: return "Download in the background. Next launch uses the new version."_i18n;
-        case 2: return "Popup when a new version is found. Later, skip this version, or update now."_i18n;
-        default: return AutoUpdateModeDescription(1);
+auto MtpGamesLayoutDescription(long layout) -> std::string {
+    switch (layout) {
+        case 0: return "One NSP per game with base, update and DLC together."_i18n;
+        case 1: return "A folder per game with each component as its own NSP."_i18n;
+        default: return "Merged (one NSP), Separate (folder per game) and Forwarders."_i18n;
     }
 }
 
-auto UpdateNowValue() -> std::string {
-    const auto job = auto_update::GetJob();
-    switch (job.state) {
-        case auto_update::JobState::Downloading:
-        case auto_update::JobState::Installing:
-            return "Updating"_i18n;
-        case auto_update::JobState::Ready:
-            return "Ready — restart"_i18n;
-        case auto_update::JobState::Available:
-            return job.version.empty() ? "Update"_i18n : job.version;
-        case auto_update::JobState::Failed:
-            return "Failed"_i18n;
-        case auto_update::JobState::Checking:
-            return "Checking..."_i18n;
-        default:
-            return "Up to date"_i18n;
-    }
-}
+auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
+    std::vector<SettingsItem> items;
 
-auto BuildAutoUpdateItems() -> std::vector<SettingsItem> {
-    const auto mode = App::GetAutoUpdateMode();
-    std::vector<SettingsItem> items = {
-        { "When to install"_i18n, AutoUpdateModeDescription(mode), [](){
-            return AutoUpdateModeLabel(App::GetAutoUpdateMode());
-        }, [](){
+    items.emplace_back(MakeBoolItem("Show microSD card"_i18n, "Enable or disable microSD card storage in MTP."_i18n, App::GetMtpShowSd, App::SetMtpShowSd));
+    items.emplace_back(MakeBoolItem("Show Install folder"_i18n, "Enable or disable Install folder in MTP."_i18n, App::GetMtpShowInstall, App::SetMtpShowInstall));
+    items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
+    items.emplace_back(MakeBoolItem("Show NAND Saves (USER:/save)"_i18n, "Show a read/write drive with raw NAND user save files (DISA containers)."_i18n, App::GetMtpShowRawSaves, App::SetMtpShowRawSaves));
+    items.emplace_back(MakeBoolItem("Show NAND System Saves (SYSTEM:/save)"_i18n, "Show a read/write drive with raw NAND system save files."_i18n, App::GetMtpShowRawSystemSaves, App::SetMtpShowRawSystemSaves));
+    items.emplace_back(MakeBoolItem("Show Games (read-only)"_i18n, "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
+
+    items.emplace_back(SettingsItem{
+        "Dump format"_i18n,
+        MtpGamesLayoutDescription(App::GetMtpGamesLayout()),
+        [](){ return MtpGamesLayoutLabel(App::GetMtpGamesLayout()); },
+        [](){
             PopupList::Items choices = {
-                "Off"_i18n,
-                "Silent"_i18n,
-                "Ask"_i18n,
+                "Compatible dump"_i18n,
+                "Separate files"_i18n,
+                "Both"_i18n,
             };
-            App::Push<PopupList>("Auto-update"_i18n, std::move(choices), [](std::optional<s64> op_index){
+            App::Push<PopupList>("Dump format"_i18n, std::move(choices), [](std::optional<s64> op_index){
                 if (op_index) {
-                    App::SetAutoUpdateMode(*op_index);
+                    App::SetMtpGamesLayout(*op_index);
                 }
-            }, App::GetAutoUpdateMode());
-        }},
-        { "Update now"_i18n,
-          auto_update::GetJob().state == auto_update::JobState::Ready
-              ? "The new version is installed. Tap to restart."_i18n
-              : "Download a waiting release, or retry a failed download."_i18n,
-          UpdateNowValue, [](){
-            const auto job = auto_update::GetJob();
-            if (job.state == auto_update::JobState::Ready) {
-                App::ExitRestart();
+            }, App::GetMtpGamesLayout());
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "microSD card name"_i18n,
+        "Set custom name for microSD card in MTP."_i18n,
+        [](){ const auto n = App::GetMtpNameSd(); return n.empty() ? "Default"_i18n : n; },
+        [](){
+            std::string value = App::GetMtpNameSd();
+            if (R_SUCCEEDED(swkbd::ShowText(value, "microSD card name"_i18n.c_str(), value.c_str()))) {
+                App::SetMtpNameSd(value);
+            }
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "Install folder name"_i18n,
+        "Set custom name for Install folder in MTP."_i18n,
+        [](){ const auto n = App::GetMtpNameInstall(); return n.empty() ? "Default"_i18n : n; },
+        [](){
+            std::string value = App::GetMtpNameInstall();
+            if (R_SUCCEEDED(swkbd::ShowText(value, "Install folder name"_i18n.c_str(), value.c_str()))) {
+                App::SetMtpNameInstall(value);
+            }
+        }
+    });
+
+    for (const auto& folder : App::GetMtpFolders()) {
+        items.emplace_back(SettingsItem{
+            folder,
+            "Folder exposed over MTP. Select to remove it."_i18n,
+            [](){ return std::string{}; },
+            [folder](){
+                App::Push<OptionBox>(
+                    "Remove this folder from MTP?"_i18n + "\n" + folder,
+                    "Back"_i18n, "Remove"_i18n, 0, [folder](auto op_index){
+                        if (op_index && *op_index) {
+                            App::RemoveMtpFolder(folder);
+                        }
+                    }
+                );
+            }
+        });
+    }
+
+    items.emplace_back(SettingsItem{
+        "Add folder"_i18n,
+        "Pick a folder on the microSD card to expose as its own MTP storage."_i18n,
+        [](){ return std::string{}; },
+        [](){
+            auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
+            browser->SetFolderPicker([](const fs::FsPath& folder){
+                App::AddMtpFolder(folder.toString());
+                App::Notify("Added MTP folder"_i18n);
+            });
+            App::Push(std::move(browser));
+        },
+        SettingsItemKind::Folder,
+    });
+
+    return items;
+}
+
+void ToggleInstallOption(option::OptionBool& option) {
+    if (option.Get()) {
+        option.Set(false);
+        return;
+    }
+
+    App::Push<OptionBox>(
+        "WARNING: Installing apps will lead to a ban!"_i18n,
+        "Back"_i18n,
+        "Enable"_i18n,
+        0,
+        [&option](auto op_index){
+            if (op_index && *op_index) {
+                option.Set(true);
+                App::Notify("Installing enabled!"_i18n);
+            }
+        }
+    );
+}
+
+auto MakeInstallToggle(std::string label, std::string description, option::OptionBool& option) -> SettingsItem {
+    return {
+        std::move(label),
+        std::move(description),
+        [&option](){
+            return OnOff(option.Get());
+        },
+        [&option](){
+            ToggleInstallOption(option);
+        }
+    };
+}
+
+auto LanguageValue() -> std::string {
+    const auto index = ClampIndex(App::GetLanguage(), static_cast<long>(LANGUAGE_ITEMS.size()));
+    return i18n::get(LANGUAGE_ITEMS[index]);
+}
+
+auto TextScrollSpeedValue() -> std::string {
+    const auto index = ClampIndex(App::GetTextScrollSpeed(), static_cast<long>(TEXT_SCROLL_SPEED_ITEMS.size()));
+    return i18n::get(TEXT_SCROLL_SPEED_ITEMS[index]);
+}
+
+auto ThemeValue() -> std::string {
+    const auto themes = App::GetThemeMetaList();
+    if (themes.empty()) {
+        return "None";
+    }
+
+    const auto index = std::clamp<s64>(App::GetThemeIndex(), 0, static_cast<s64>(themes.size() - 1));
+    return themes[index].name;
+}
+
+void AddSaveSyncLocationInteractive() {
+    std::vector<std::string> before;
+    for (const auto& loc : save::GetWebdavLocations()) {
+        before.push_back(loc.name);
+    }
+
+    evman::push(evman::FunctionalEventData{[before](){
+        filebrowser::AddNetworkLocationInteractive([before](){
+            for (const auto& loc : save::GetWebdavLocations()) {
+                if (std::find(before.cbegin(), before.cend(), loc.name) != before.cend()) {
+                    continue;
+                }
+
+                App::SetWebdavUrl(loc.name);
+                App::Push<SourceEditMenu>(loc.name);
                 return;
             }
-            if (job.state == auto_update::JobState::Available || job.state == auto_update::JobState::Failed) {
-                auto_update::StartDownload();
+        });
+    }});
+}
+
+auto MakeSaveSyncLocationItem() -> SettingsItem {
+    return {
+        "Save sync location"_i18n,
+        "Network location that save backups are uploaded to. Only WebDAV locations can be used."_i18n,
+        [](){
+            const auto name = App::GetWebdavUrlName();
+            return name.empty() ? "None"_i18n : name;
+        },
+        [](){
+            const auto locations = save::GetWebdavLocations();
+
+            if (locations.empty()) {
+                AddSaveSyncLocationInteractive();
+                return;
             }
-        }},
+
+            PopupList::Items list;
+            list.push_back("None"_i18n);
+
+            s64 current = 0;
+            for (size_t i = 0; i < locations.size(); i++) {
+                list.push_back(locations[i].name);
+                if (locations[i].name == App::GetWebdavUrlName()) {
+                    current = static_cast<s64>(i) + 1;
+                }
+            }
+
+            const auto add_index = static_cast<s64>(list.size());
+            list.push_back("+ Add network location"_i18n);
+
+            App::Push<PopupList>("Save sync location"_i18n, std::move(list), [locations, add_index](std::optional<s64> op_index){
+                if (!op_index) {
+                    return;
+                }
+                if (*op_index == add_index) {
+                    AddSaveSyncLocationInteractive();
+                } else if (!*op_index) {
+                    App::SetWebdavUrl("");
+                } else {
+                    App::SetWebdavUrl(locations[*op_index - 1].name);
+                }
+            }, current);
+        }
     };
-
-    const auto skipped = App::GetAutoUpdateSkip();
-    if (!skipped.empty()) {
-        items.push_back({
-            "Skipped version"_i18n,
-            "Tap to ask about this version again."_i18n,
-            [](){ return App::GetAutoUpdateSkip(); },
-            [](){ App::SetAutoUpdateSkip(""); },
-        });
-    }
-
-    return items;
-}
-
-auto BuildHomebrewSearchPathsItems() -> std::vector<SettingsItem> {
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(SettingsItem{
-        "Add folder"_i18n,
-        "Pick a folder on the microSD card to add as a homebrew search path."_i18n,
-        [](){ return std::string{}; },
-        [](){
-            App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[](const fs::FsPath& path, const filepicker::FsEntry& fs_entry) -> bool {
-                    if (fs_entry.type != filepicker::FsType::Sd) {
-                        App::Notify("Only microSD folders can be used"_i18n);
-                        return false;
-                    }
-                    if (!homebrew::AddSearchPath(path)) {
-                        App::Notify("Failed to add Homebrew search path"_i18n);
-                        return false;
-                    }
-                    App::Notify("Homebrew search path added."_i18n);
-                    return true;
-                }},
-                std::vector<std::string>{},
-                fs::FsPath{},
-                true
-            );
-        },
-        SettingsItemKind::Folder,
-    });
-
-    for (const auto& path_str : homebrew::GetSearchPaths()) {
-        const fs::FsPath path{path_str};
-        items.emplace_back(SettingsItem{
-            path_str,
-            "Custom Homebrew search path. Select to remove."_i18n,
-            [](){ return std::string{}; },
-            [path](){
-                const auto prompt = "Remove Homebrew Search Path?"_i18n + "\n\n" + path.toString();
-                App::Push<OptionBox>(
-                    prompt,
-                    "Back"_i18n,
-                    "Delete"_i18n,
-                    0,
-                    [path](auto op_index){
-                        if (op_index && *op_index == 1) {
-                            if (homebrew::RemoveSearchPath(path)) {
-                                App::Notify("Homebrew search path removed."_i18n);
-                            } else {
-                                App::Notify("Failed to remove Homebrew search path"_i18n);
-                            }
-                        }
-                    }
-                );
-            }
-        });
-    }
-
-    return items;
-}
-
-auto BuildSaveBackupSearchPathsItems() -> std::vector<SettingsItem> {
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(SettingsItem{
-        "Add folder"_i18n,
-        "Pick a folder on the microSD card to add as a save backup search path."_i18n,
-        [](){ return std::string{}; },
-        [](){
-            App::Push<filepicker::Menu>(
-                filepicker::LocationCallback{[](const fs::FsPath& path, const filepicker::FsEntry& fs_entry) -> bool {
-                    if (fs_entry.type != filepicker::FsType::Sd) {
-                        App::Notify("Only microSD folders can be used"_i18n);
-                        return false;
-                    }
-                    if (!save::AddBackupSearchPath(path)) {
-                        App::Notify("Failed to add save backup search path"_i18n);
-                        return false;
-                    }
-                    App::Notify("Save backup search path added."_i18n);
-                    return true;
-                }},
-                std::vector<std::string>{},
-                fs::FsPath{},
-                true
-            );
-        },
-        SettingsItemKind::Folder,
-    });
-
-    for (const auto& path_str : save::GetBackupSearchPaths()) {
-        const fs::FsPath path{path_str};
-        items.emplace_back(SettingsItem{
-            path_str,
-            "Custom save backup search path. Select to remove."_i18n,
-            [](){ return std::string{}; },
-            [path](){
-                const auto prompt = "Remove Save Backup Search Path?"_i18n + "\n\n" + path.toString();
-                App::Push<OptionBox>(
-                    prompt,
-                    "Back"_i18n,
-                    "Delete"_i18n,
-                    0,
-                    [path](auto op_index){
-                        if (op_index && *op_index == 1) {
-                            if (save::RemoveBackupSearchPath(path)) {
-                                App::Notify("Save backup search path removed."_i18n);
-                            } else {
-                                App::Notify("Failed to remove save backup search path"_i18n);
-                            }
-                        }
-                    }
-                );
-            }
-        });
-    }
-
-    return items;
 }
 
 void PickSaveDefaultLocationFolder() {
@@ -323,559 +340,6 @@ auto BuildSavesCategoryItems() -> std::vector<SettingsItem> {
     return items;
 }
 
-// defaults baked into every forwarder we build. "Ask every time" swaps them
-// for the forwarder editor, see ui/forwarder_editor.hpp.
-auto BuildForwarderItems() -> std::vector<SettingsItem> {
-    static constexpr const char* ADDRESS_SPACE_LABELS[] = { "Automatic", "36-bit", "39-bit" };
-    static constexpr const char* SVC_DEBUG_LABELS[] = { "Automatic", "Enabled", "Disabled" };
-
-    auto app = App::GetApp();
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(MakeOptionItem("Ask every time"_i18n,
-        "Open the forwarder editor when creating a forwarder instead of using the defaults below."_i18n,
-        app->m_forwarder_ask));
-
-    items.emplace_back(MakeHeader("Defaults"_i18n));
-
-    items.emplace_back(SettingsItem{
-        "Address space"_i18n,
-        "Virtual address space given to the forwarder. Automatic uses 36-bit; 39-bit is for homebrew that needs the wider space."_i18n,
-        [](){ return i18n::get(ADDRESS_SPACE_LABELS[App::GetForwarderAddressSpace()]); },
-        [](){
-            PopupList::Items list;
-            for (const auto& label : ADDRESS_SPACE_LABELS) {
-                list.push_back(i18n::get(label));
-            }
-            App::Push<PopupList>("Address space"_i18n, std::move(list), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::SetForwarderAddressSpace(*op_index);
-                }
-            }, App::GetForwarderAddressSpace());
-        }
-    });
-
-    items.emplace_back(MakeOptionItem("Profile selection"_i18n,
-        "Prompt for a user profile when the forwarder is launched."_i18n,
-        app->m_forwarder_profile_select));
-
-    items.emplace_back(MakeOptionItem("Screenshots"_i18n,
-        "Allow the capture button to take screenshots inside the forwarder."_i18n,
-        app->m_forwarder_screenshot));
-
-    // recording rides on the capture button, so denying screenshots kills it
-    // too. say so in the row instead of silently writing a setting that loses.
-    items.emplace_back(SettingsItem{
-        "Video capture"_i18n,
-        "Allow holding the capture button to record video inside the forwarder. Requires screenshots."_i18n,
-        [](){
-            if (!App::GetApp()->m_forwarder_screenshot.Get()) {
-                return "Off (needs screenshots)"_i18n;
-            }
-            return OnOff(App::GetApp()->m_forwarder_video_capture.Get());
-        },
-        [](){
-            if (!App::GetApp()->m_forwarder_screenshot.Get()) {
-                App::Notify("Enable screenshots first"_i18n);
-                return;
-            }
-            auto& option = App::GetApp()->m_forwarder_video_capture;
-            option.Set(!option.Get());
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "svcDebug"_i18n,
-        "Kernel debug permission for the forwarder. Automatic enables it on Atmosphere 1.8.0 and newer."_i18n,
-        [](){ return i18n::get(SVC_DEBUG_LABELS[std::clamp<long>(App::GetApp()->m_forwarder_svc_debug.Get(), 0, 2)]); },
-        [](){
-            PopupList::Items list;
-            for (const auto& label : SVC_DEBUG_LABELS) {
-                list.push_back(i18n::get(label));
-            }
-            App::Push<PopupList>("svcDebug"_i18n, std::move(list), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::GetApp()->m_forwarder_svc_debug.Set(*op_index);
-                }
-            }, std::clamp<long>(App::GetApp()->m_forwarder_svc_debug.Get(), 0, 2));
-        }
-    });
-
-    items.emplace_back(MakeHeader("Icons"_i18n));
-
-    items.emplace_back(SettingsItem{
-        "SteamGridDB API key"_i18n,
-        "Personal key used to look up forwarder icons. Set it from a phone: the console shows a QR code and you paste the key there."_i18n,
-        [](){ return ui::steamgriddb::GetApiKey().empty() ? "Not set"_i18n : "Set"_i18n; },
-        [](){
-            if (ui::steamgriddb::GetApiKey().empty()) {
-                ui::steamgriddb::RequestApiKey();
-                return;
-            }
-
-            App::Push<OptionBox>(
-                "SteamGridDB API key"_i18n, "Remove"_i18n, "Replace"_i18n, 1, [](auto op_index){
-                    if (!op_index) {
-                        return;
-                    }
-                    if (*op_index) {
-                        ui::steamgriddb::RequestApiKey();
-                    } else {
-                        ui::steamgriddb::SetApiKey("");
-                        App::Notify("SteamGridDB key removed"_i18n);
-                    }
-                }
-            );
-        }
-    });
-
-    return items;
-}
-
-// items for the "Screen off" settings page: what Minus does while the install
-// queue runs, and how the screensaver it can raise is laid out.
-auto BuildScreenOffItems() -> std::vector<SettingsItem> {
-    static constexpr const char* MODE_LABELS[] = {
-        "Lower brightness",
-        "Turn off backlight",
-        "Screensaver",
-    };
-    static constexpr long BRIGHTNESS_STEPS[] = { 1, 5, 10, 20, 30, 50 };
-    static constexpr const char* TIMEOUT_LABELS[] = {
-        "Off",
-        "30 s",
-        "1 min",
-        "2 min",
-        "5 min",
-        "10 min",
-    };
-    static constexpr long TIMEOUT_STEPS[] = { 0, 30, 60, 120, 300, 600 };
-
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(SettingsItem{
-        "Minus button"_i18n,
-        "What pressing Minus does while the install queue is running."_i18n,
-        [](){ return i18n::get(MODE_LABELS[App::GetBlankMode()]); },
-        [](){
-            PopupList::Items list;
-            for (const auto& label : MODE_LABELS) {
-                list.push_back(i18n::get(label));
-            }
-            App::Push<PopupList>("Minus button"_i18n, std::move(list), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::SetBlankMode(*op_index);
-                }
-            }, App::GetBlankMode());
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "Inactivity timeout"_i18n,
-        "Automatically start the screen off mode after a period of inactivity during installation."_i18n,
-        [](){
-            const long timeout = App::GetBlankTimeout();
-            for (size_t i = 0; i < std::size(TIMEOUT_STEPS); i++) {
-                if (TIMEOUT_STEPS[i] == timeout) {
-                    return i18n::get(TIMEOUT_LABELS[i]);
-                }
-            }
-            return i18n::get("Off");
-        },
-        [](){
-            PopupList::Items list;
-            s64 index = 0;
-            const long timeout = App::GetBlankTimeout();
-            for (size_t i = 0; i < std::size(TIMEOUT_STEPS); i++) {
-                list.push_back(i18n::get(TIMEOUT_LABELS[i]));
-                if (TIMEOUT_STEPS[i] == timeout) {
-                    index = i;
-                }
-            }
-            App::Push<PopupList>("Inactivity timeout"_i18n, std::move(list), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::SetBlankTimeout(TIMEOUT_STEPS[*op_index]);
-                }
-            }, index);
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "Brightness"_i18n,
-        "Panel brightness while the screen is lowered. Ignored when the backlight is turned off."_i18n,
-        [](){ return std::to_string(App::GetBlankBrightness()) + "%"; },
-        [](){
-            PopupList::Items list;
-            s64 index = 0;
-            for (size_t i = 0; i < std::size(BRIGHTNESS_STEPS); i++) {
-                list.push_back(std::to_string(BRIGHTNESS_STEPS[i]) + "%");
-                if (BRIGHTNESS_STEPS[i] == App::GetBlankBrightness()) {
-                    index = i;
-                }
-            }
-            App::Push<PopupList>("Brightness"_i18n, std::move(list), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::SetBlankBrightness(BRIGHTNESS_STEPS[*op_index]);
-                }
-            }, index);
-        }
-    });
-
-    items.emplace_back(MakeBoolItem("OLED mode"_i18n,
-        "Light only the pixels that carry information: the empty part of the progress bar is left black."_i18n,
-        App::GetSaverOled, App::SetSaverOled));
-
-    items.emplace_back(SettingsItem{
-        "Preview"_i18n,
-        "Show the screensaver at the brightness it will actually run at. Any button exits."_i18n,
-        [](){ return std::string{}; },
-        [](){ App::Push<SaverPreview>(); }
-    });
-
-    // the readout drifts slowly across the panel, so there is nothing to place
-    // by hand -- a pinned layout is exactly what burns into an OLED over a long
-    // queue. ponytail: which rows show, not where; add a drag-to-place editor
-    // (and per-element offsets in the ini) only if the drift proves not enough.
-    items.emplace_back(MakeHeader("Show on screensaver"_i18n));
-
-    const auto field = [&items](SaverField bit, std::string label, std::string description) {
-        items.emplace_back(MakeBoolItem(std::move(label), std::move(description),
-            [bit](){ return (App::GetSaverFields() & bit) != 0; },
-            [bit](bool enable){ App::SetSaverField(bit, enable); }));
-    };
-
-    field(SaverField_Clock, "Clock"_i18n, "Show the current time."_i18n);
-    field(SaverField_Status, "Status"_i18n, "Show what the queue is doing."_i18n);
-    field(SaverField_Counter, "Package counter"_i18n, "Show which package of how many is being installed."_i18n);
-    field(SaverField_File, "Current file"_i18n, "Show the package and file being written."_i18n);
-    field(SaverField_Bar, "Progress bar"_i18n, "Show the whole-queue progress bar and percentage."_i18n);
-    field(SaverField_Speed, "Average speed"_i18n, "Show the average write speed."_i18n);
-    field(SaverField_Eta, "Time remaining"_i18n, "Show the estimated time left for the whole queue."_i18n);
-    field(SaverField_Elapsed, "Elapsed time"_i18n, "Show how long the queue has been running."_i18n);
-    field(SaverField_Battery, "Battery"_i18n, "Show the battery level and whether it is charging."_i18n);
-    field(SaverField_Errors, "Errors"_i18n, "Show the failure count, once anything has failed."_i18n);
-    field(SaverField_Graph, "Speed graph"_i18n, "Show the live installation read/write speed graph."_i18n);
-
-    return items;
-}
-
-auto MtpGamesLayoutLabel(long layout) -> std::string {
-    switch (layout) {
-        case 0: return "Compatible dump"_i18n;
-        case 1: return "Separate files"_i18n;
-        default: return "Both"_i18n;
-    }
-}
-
-auto MtpGamesLayoutDescription(long layout) -> std::string {
-    switch (layout) {
-        case 0: return "One NSP per game with base, update and DLC together."_i18n;
-        case 1: return "A folder per game with each component as its own NSP."_i18n;
-        default: return "Merged (one NSP), Separate (folder per game) and Forwarders."_i18n;
-    }
-}
-
-// items for the "MTP storages" settings page (was a side popup). values read
-// live state, so toggles/names refresh in place without a rebuild.
-auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(MakeBoolItem("Show microSD card"_i18n, "Enable or disable microSD card storage in MTP."_i18n, App::GetMtpShowSd, App::SetMtpShowSd));
-    items.emplace_back(MakeBoolItem("Show Install folder"_i18n, "Enable or disable Install folder in MTP."_i18n, App::GetMtpShowInstall, App::SetMtpShowInstall));
-    items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
-    items.emplace_back(MakeBoolItem("Show NAND Saves (USER:/save)"_i18n, "Show a read/write drive with raw NAND user save files (DISA containers)."_i18n, App::GetMtpShowRawSaves, App::SetMtpShowRawSaves));
-    items.emplace_back(MakeBoolItem("Show NAND System Saves (SYSTEM:/save)"_i18n, "Show a read/write drive with raw NAND system save files."_i18n, App::GetMtpShowRawSystemSaves, App::SetMtpShowRawSystemSaves));
-    items.emplace_back(MakeBoolItem("Show Games (read-only)"_i18n, "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
-
-    items.emplace_back(SettingsItem{
-        "Dump format"_i18n,
-        MtpGamesLayoutDescription(App::GetMtpGamesLayout()),
-        [](){ return MtpGamesLayoutLabel(App::GetMtpGamesLayout()); },
-        [](){
-            PopupList::Items choices = {
-                "Compatible dump"_i18n,
-                "Separate files"_i18n,
-                "Both"_i18n,
-            };
-            App::Push<PopupList>("Dump format"_i18n, std::move(choices), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::SetMtpGamesLayout(*op_index);
-                }
-            }, App::GetMtpGamesLayout());
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "microSD card name"_i18n,
-        "Set custom name for microSD card in MTP."_i18n,
-        [](){ const auto n = App::GetMtpNameSd(); return n.empty() ? "Default"_i18n : n; },
-        [](){
-            std::string value = App::GetMtpNameSd();
-            if (R_SUCCEEDED(swkbd::ShowText(value, "microSD card name"_i18n.c_str(), value.c_str()))) {
-                App::SetMtpNameSd(value);
-            }
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "Install folder name"_i18n,
-        "Set custom name for Install folder in MTP."_i18n,
-        [](){ const auto n = App::GetMtpNameInstall(); return n.empty() ? "Default"_i18n : n; },
-        [](){
-            std::string value = App::GetMtpNameInstall();
-            if (R_SUCCEEDED(swkbd::ShowText(value, "Install folder name"_i18n.c_str(), value.c_str()))) {
-                App::SetMtpNameInstall(value);
-            }
-        }
-    });
-
-    // one row per user-added folder; selecting it offers to remove it.
-    for (const auto& folder : App::GetMtpFolders()) {
-        items.emplace_back(SettingsItem{
-            folder,
-            "Folder exposed over MTP. Select to remove it."_i18n,
-            [](){ return std::string{}; },
-            [folder](){
-                App::Push<OptionBox>(
-                    "Remove this folder from MTP?"_i18n + "\n" + folder,
-                    "Back"_i18n, "Remove"_i18n, 0, [folder](auto op_index){
-                        if (op_index && *op_index) {
-                            App::RemoveMtpFolder(folder);
-                        }
-                    }
-                );
-            }
-        });
-    }
-
-    items.emplace_back(SettingsItem{
-        "Add folder"_i18n,
-        "Pick a folder on the microSD card to expose as its own MTP storage."_i18n,
-        [](){ return std::string{}; },
-        [](){
-            auto browser = std::make_unique<::sphaira::ui::menu::filebrowser::Menu>(MenuFlag_None);
-            browser->SetFolderPicker([](const fs::FsPath& folder){
-                App::AddMtpFolder(folder.toString());
-                App::Notify("Added MTP folder"_i18n);
-            });
-            App::Push(std::move(browser));
-        },
-        SettingsItemKind::Folder,
-    });
-
-    return items;
-}
-
-// login/port for the FTP server. The on/off switch lives on the Network page.
-auto BuildFtpItems() -> std::vector<SettingsItem> {
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(MakeBoolItem("Anonymous (no login)"_i18n, "Allow connecting without a username or password."_i18n, App::GetFtpAnon, App::SetFtpAnon));
-
-    items.emplace_back(SettingsItem{
-        "Username"_i18n,
-        "FTP username (used when anonymous is off)."_i18n,
-        [](){ const auto n = App::GetFtpUser(); return n.empty() ? "Not set"_i18n : n; },
-        [](){
-            std::string value = App::GetFtpUser();
-            if (R_SUCCEEDED(swkbd::ShowText(value, "FTP username"_i18n.c_str(), value.c_str()))) {
-                App::SetFtpUser(value);
-            }
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "Password"_i18n,
-        "FTP password (used when anonymous is off)."_i18n,
-        [](){ return App::GetFtpPass().empty() ? "Not set"_i18n : std::string("********"); },
-        [](){
-            std::string value = App::GetFtpPass();
-            if (R_SUCCEEDED(swkbd::ShowText(value, "FTP password"_i18n.c_str(), value.c_str()))) {
-                App::SetFtpPass(value);
-            }
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "Port"_i18n,
-        "TCP port the FTP server listens on (default 5000)."_i18n,
-        [](){ return std::to_string(App::GetFtpPort()); },
-        [](){
-            s64 value = App::GetFtpPort();
-            if (R_SUCCEEDED(swkbd::ShowNumPad(value, "FTP port"_i18n.c_str(), std::to_string(value).c_str())) && value > 0 && value <= 65535) {
-                App::SetFtpPort(value);
-            }
-        }
-    });
-
-    return items;
-}
-
-void ToggleInstallOption(option::OptionBool& option) {
-    if (option.Get()) {
-        option.Set(false);
-        return;
-    }
-
-    App::Push<OptionBox>(
-        "WARNING: Installing apps will lead to a ban!"_i18n,
-        "Back"_i18n,
-        "Enable"_i18n,
-        0,
-        [&option](auto op_index){
-            if (op_index && *op_index) {
-                option.Set(true);
-                App::Notify("Installing enabled!"_i18n);
-            }
-        }
-    );
-}
-
-auto MakeInstallToggle(std::string label, std::string description, option::OptionBool& option) -> SettingsItem {
-    return {
-        std::move(label),
-        std::move(description),
-        [&option](){
-            return OnOff(option.Get());
-        },
-        [&option](){
-            ToggleInstallOption(option);
-        }
-    };
-}
-
-auto LanguageValue() -> std::string {
-    const auto index = ClampIndex(App::GetLanguage(), static_cast<long>(LANGUAGE_ITEMS.size()));
-    return i18n::get(LANGUAGE_ITEMS[index]);
-}
-
-auto TextScrollSpeedValue() -> std::string {
-    const auto index = ClampIndex(App::GetTextScrollSpeed(), static_cast<long>(TEXT_SCROLL_SPEED_ITEMS.size()));
-    return i18n::get(TEXT_SCROLL_SPEED_ITEMS[index]);
-}
-
-auto ThemeValue() -> std::string {
-    const auto themes = App::GetThemeMetaList();
-    if (themes.empty()) {
-        return "None";
-    }
-
-    const auto index = std::clamp<s64>(App::GetThemeIndex(), 0, static_cast<s64>(themes.size() - 1));
-    return themes[index].name;
-}
-
-// items for the "Kefir Hub theme options" page (was a side popup).
-auto BuildThemeOptionItems() -> std::vector<SettingsItem> {
-    std::vector<SettingsItem> items;
-
-    items.emplace_back(SettingsItem{
-        "Select Theme"_i18n,
-        "Customise the look of Kefir Hub by changing the theme"_i18n,
-        ThemeValue,
-        [](){
-            const auto themes = App::GetThemeMetaList();
-            if (themes.empty()) {
-                return;
-            }
-
-            PopupList::Items list;
-            for (const auto& theme : themes) {
-                list.push_back(theme.name);
-            }
-            App::Push<PopupList>("Select Theme"_i18n, std::move(list), [](std::optional<s64> op_index){
-                if (op_index) {
-                    App::SetTheme(*op_index);
-                }
-            }, App::GetThemeIndex());
-        }
-    });
-
-    items.emplace_back(MakeBoolItem("12 Hour Time"_i18n, "Changes the clock to 12 hour"_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable));
-
-    return items;
-}
-
-// adds a location from the sync picker itself, so an empty list is a dead end
-// no longer: the new WebDAV location becomes the sync target and its edit page
-// opens right away, because a fresh location is only a name and "webdav://".
-void AddSaveSyncLocationInteractive() {
-    std::vector<std::string> before;
-    for (const auto& loc : save::GetWebdavLocations()) {
-        before.push_back(loc.name);
-    }
-
-    // deferred by a frame: the picker that started this is still on the widget
-    // stack and about to pop itself, and pushing over it would draw both.
-    evman::push(evman::FunctionalEventData{[before](){
-        filebrowser::AddNetworkLocationInteractive([before](){
-            // any protocol can be added here; only a WebDAV one can be synced
-            // to, so a new SMB/FTP location is added and simply not selected.
-            for (const auto& loc : save::GetWebdavLocations()) {
-                if (std::find(before.cbegin(), before.cend(), loc.name) != before.cend()) {
-                    continue;
-                }
-
-                App::SetWebdavUrl(loc.name);
-                App::Push<SourceEditMenu>(loc.name);
-                return;
-            }
-        });
-    }});
-}
-
-// picks which of the WebDAV locations added above receives save backups. Not a
-// folder: it is a single choice, and a page holding one row is just a detour.
-auto MakeSaveSyncLocationItem() -> SettingsItem {
-    return {
-        "Save sync location"_i18n,
-        "Network location that save backups are uploaded to. Only WebDAV locations can be used."_i18n,
-        [](){
-            const auto name = App::GetWebdavUrlName();
-            return name.empty() ? "None"_i18n : name;
-        },
-        [](){
-            const auto locations = save::GetWebdavLocations();
-
-            // nothing to choose between yet: go straight to adding one.
-            if (locations.empty()) {
-                AddSaveSyncLocationInteractive();
-                return;
-            }
-
-            PopupList::Items list;
-            list.push_back("None"_i18n);
-
-            s64 current = 0;
-            for (size_t i = 0; i < locations.size(); i++) {
-                list.push_back(locations[i].name);
-                if (locations[i].name == App::GetWebdavUrlName()) {
-                    current = static_cast<s64>(i) + 1;
-                }
-            }
-
-            // last row, the way the Sources category offers it.
-            const auto add_index = static_cast<s64>(list.size());
-            list.push_back("+ Add network location"_i18n);
-
-            App::Push<PopupList>("Save sync location"_i18n, std::move(list), [locations, add_index](std::optional<s64> op_index){
-                if (!op_index) {
-                    return;
-                }
-                if (*op_index == add_index) {
-                    AddSaveSyncLocationInteractive();
-                } else if (!*op_index) {
-                    App::SetWebdavUrl("");
-                } else {
-                    App::SetWebdavUrl(locations[*op_index - 1].name);
-                }
-            }, current);
-        }
-    };
-}
-
-
-} // namespace
-
 void Menu::BuildCategories() {
     auto* app = App::GetApp();
 
@@ -908,8 +372,6 @@ void Menu::BuildCategories() {
                     }, App::GetTextScrollSpeed());
                 }},
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
-                // clock sync sits with the other clock settings rather than
-                // under Network: it is an outbound client, not a server.
                 MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
                 MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
                 { "About"_i18n, "View application version and changelog."_i18n, [](){ return "v" + std::string(APP_VERSION); }, [](){
@@ -960,8 +422,6 @@ void Menu::BuildCategories() {
             }
         },
         {
-            // servers only: things a pc connects *to*. Clients that merely use
-            // the network (clock sync) and file sources (WebDAV) live elsewhere.
             "Network"_i18n,
             "Servers that let a PC reach this console."_i18n,
             {
@@ -1047,8 +507,6 @@ void Menu::BuildCategories() {
                 MakeOptionItem("Skip DLC updates"_i18n, "Skip installing updates for DLC (data patches)."_i18n, app->m_skip_data_patch),
                 MakeOptionItem("Skip tickets"_i18n, "Skip installing tickets."_i18n, app->m_skip_ticket),
 
-                // these used to sit under "Advanced", one category away from
-                // everything else that affects an install.
                 MakeHeader("Verification and conversion"_i18n),
                 MakeOptionItem("Skip NCA hash verify"_i18n, "Skip SHA-256 verification over NCA content."_i18n, app->m_skip_nca_hash_verify),
                 MakeOptionItem("Skip RSA header verify"_i18n, "Skip RSA NCA fixed-key header verification."_i18n, app->m_skip_rsa_header_fixed_key_verify),
@@ -1069,14 +527,10 @@ void Menu::BuildCategories() {
                 MakeOptionItem("Trim XCI"_i18n, "Remove unused data from XCI dumps."_i18n, app->m_dump_trim_xci),
                 MakeOptionItem("Label trimmed XCI"_i18n, "Mark trimmed XCI output names."_i18n, app->m_dump_label_trim_xci),
                 MakeOptionItem("USB transfer stream"_i18n, "Stream dump output over USB."_i18n, app->m_dump_usb_transfer_stream),
-                // deliberately not called "Convert to common ticket": the
-                // install category has a separate option with that meaning and
-                // the two used to share a label.
                 MakeOptionItem("Convert ticket on dump"_i18n, "Convert a personalized ticket to a common one while dumping."_i18n, app->m_dump_convert_to_common_ticket),
             }
         },
     };
 }
-
 
 } // namespace sphaira::ui::menu::settings

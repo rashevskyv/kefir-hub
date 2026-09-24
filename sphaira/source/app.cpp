@@ -520,4 +520,30 @@ void App::recordStaticCommands() {
     this->render_cmdlist = this->cmdbuf.finishList();
 }
 
+auto App::GetAccountList() -> std::vector<AccountProfileBase> {
+    std::vector<AccountProfileBase> out;
+
+    AccountUid uids[ACC_USER_LIST_SIZE];
+    s32 account_count;
+    if (R_SUCCEEDED(accountListAllUsers(uids, std::size(uids), &account_count))) {
+        for (s32 i = 0; i < account_count; i++) {
+            AccountProfile profile;
+            if (R_SUCCEEDED(accountGetProfile(&profile, uids[i]))) {
+                ON_SCOPE_EXIT(accountProfileClose(&profile));
+
+                AccountProfileBase base;
+                if (R_SUCCEEDED(accountProfileGet(&profile, nullptr, &base))) {
+                    // sometimes the uid for the acc can differ to the base.
+                    base.uid = uids[i];
+                    log_write("[ACC] found uid: 0x%016lX%016lX\n", uids[i].uid[0], uids[i].uid[1]);
+                    log_write("[ACC] base  uid: 0x%016lX%016lX\n", base.uid.uid[0], base.uid.uid[1]);
+                    out.emplace_back(base);
+                }
+            }
+        }
+    }
+
+    return out;
+}
+
 } // namespace sphaira

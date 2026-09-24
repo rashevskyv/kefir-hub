@@ -1,8 +1,25 @@
 # task.md
 
-Версія коду: **v0.13.877**.
+Версія коду: **v0.13.878**.
 
-## Поточний delivery: v0.13.877 — Transfer structural split (завершено)
+## Поточний delivery: v0.13.878 — File-size audit closure (завершено)
+
+- [x] `MAP-YATI-878` — graph/source/callers перевірені; analysis/planning seam визначено.
+- [x] `SPLIT-ANALYSIS-878` — NCZ analysis і вибір носія винесені; senior перевірив diff, compile ще попереду.
+- [x] `SPLIT-TYPES-878` — спільні приватні типи інсталятора винесені в `yati_internal.hpp` (387 рядків); compile ще попереду.
+- [x] `SPLIT-PIPELINE-878` — worker read/decompress/write винесені в 512-рядковий unit; compile ще попереду.
+- [x] `SPLIT-INSTALL-878` — ticket/CNMT і threaded pipeline розділені; senior перевірив структуру, compile ще попереду.
+- [x] `SPLIT-PROVIDER-878` — 7 provider-heavy targets розділені на units ≤590; Gemini WSL build PASS, senior structure/CMake review PASS.
+- [x] `SPLIT-UI-878` — 32 oversized menu files розділені; всі 152 menu source/header файли ≤600.
+- [x] `TEST-RUNNER-878` — 18 Python contracts discoverable в existing runner.
+- [x] `SPLIT-TESTS-878` — 11 oversized suites розділені за сценаріями без вилучення safety cases.
+- [x] `APP-HEADER-878` — dead declarations прибрані; `GetAccountList` перенесено без зміни логіки.
+- [x] `SIZE-878` — 150 змінених/нових source/test файлів ≤600; legacy CMake та 22 інші oversized файли поза цим delivery.
+- [x] `VERIFY-878` — Gemini: WSL build і `tests/run.sh` PASS; senior: 18/18 Python, dead-symbol 1033/1033, CMake/розміри/whitespace PASS. C++ test після точкового звуження source boundary не перезапускався.
+- [x] `DOCS-BUMP-878` — version/docs синхронізовано.
+- [x] `COMMIT-878` — focused primary-master commit без push.
+
+## Попередній delivery: v0.13.877 — Transfer structural split (завершено)
 
 - [x] `MAP-TRANSFER-877` — transfer core і archive safety boundary підтверджені graph + source review.
 - [x] `SPLIT-CORE-877` — transfer engine/wrappers винесені в 499-рядковий unit; фінальна збірка ще попереду.
@@ -25,9 +42,6 @@
 
 ## Подальша черга
 
-- [ ] `SPLIT-YATI`
-- [ ] `SPLIT-PROVIDER-UI`
-- [ ] `TEST-RUNNER`
-- [ ] `APP-HEADER-DEBT` — оцінити `app.hpp` (626) як окремий вузький refactor.
+Non-UI файли понад 600 рядків поза A5–A7 — лише за конкретним maintenance outcome, без механічного split.
 
 Історія завершених checklist-ів доступна через Git і тут не дублюється.
