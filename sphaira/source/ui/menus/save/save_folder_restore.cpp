@@ -182,13 +182,20 @@ static Result StageBackupFolderToZip(
 } // namespace
 
 Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& folder_path, fs::FsPath* out_recovery_path, bool* out_mutation_started) {
+    return RestoreSaveFolder(pbox, e, folder_path, out_recovery_path, out_mutation_started, nullptr);
+}
+
+Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& folder_path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool* out_created_slot_retained) {
     if (out_mutation_started) {
         *out_mutation_started = false;
+    }
+    if (out_created_slot_retained) {
+        *out_created_slot_retained = false;
     }
     if (haze::IsRunning()) {
         return FsError_TargetLocked;
     }
-    R_UNLESS(!e.is_backup && e.save_data_id != 0, FsError_PathNotFound);
+    R_UNLESS(!e.is_backup && (e.save_data_id != 0 || e.is_planned_create), FsError_PathNotFound);
 
     // 1. Length bounds check with strnlen
     const size_t raw_len = strnlen(folder_path.s, sizeof(folder_path.s));
@@ -521,7 +528,9 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
     }
 
     // Invoke shared RestoreSaveZip for sole destructive restore ownership
-    const auto restore_rc = RestoreSaveZip(pbox, e, owned_stage_zip, out_recovery_path, out_mutation_started, true);
+    const auto restore_rc = out_created_slot_retained
+        ? RestoreSaveZip(pbox, e, owned_stage_zip, out_recovery_path, out_mutation_started, true, out_created_slot_retained)
+        : RestoreSaveZip(pbox, e, owned_stage_zip, out_recovery_path, out_mutation_started, true);
 
     // Exact owned stage cleanup
     const auto del_file_rc = sd_fs.DeleteFile(owned_stage_zip);

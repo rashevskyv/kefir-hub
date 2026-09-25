@@ -60,6 +60,47 @@ auto Menu::ComputeGridSections() const -> GridSections {
     g.live_count = std::clamp<s64>(m_backup_start, 0, total);
     g.backup_count = total - g.live_count;
 
+    if (m_category == Category::Backups) {
+        if (!m_entries.empty()) {
+            s64 cur_disp = 0;
+            size_t idx = 0;
+            while (idx < m_entries.size()) {
+                const auto src = m_entries[idx].backup_source;
+                size_t end = idx + 1;
+                while (end < m_entries.size() && m_entries[end].backup_source == src) {
+                    end++;
+                }
+                const s64 count = static_cast<s64>(end - idx);
+
+                if (g.sections.empty()) {
+                    cur_disp = g.row;
+                } else {
+                    const s64 rem = cur_disp % g.row;
+                    if (rem != 0) {
+                        cur_disp += (g.row - rem);
+                    }
+                    cur_disp += g.row;
+                }
+
+                GridSections::Section sec;
+                sec.label = i18n::get(GetBackupSourceLabel(src));
+                sec.entry_start = static_cast<s64>(idx);
+                sec.entry_count = count;
+                sec.first_display = cur_disp;
+                sec.has_divider = true;
+
+                cur_disp += count;
+                g.sections.emplace_back(std::move(sec));
+                idx = end;
+            }
+
+            g.has_backups = true;
+            g.first_backup_display = g.sections.empty() ? 0 : g.sections[0].first_display;
+            g.display_count = cur_disp;
+        }
+        return g;
+    }
+
     if (g.backup_count > 0 && g.live_count > 0) {
         g.has_backups = true;
         // fill the remainder of the last live row, then add one empty row that
@@ -70,10 +111,34 @@ auto Menu::ComputeGridSections() const -> GridSections {
 
     g.first_backup_display = g.live_count + g.pad;
     g.display_count = g.live_count + g.pad + g.backup_count;
+
+    if (g.live_count > 0) {
+        GridSections::Section sec;
+        sec.entry_start = 0;
+        sec.entry_count = g.live_count;
+        sec.first_display = 0;
+        sec.has_divider = false;
+        g.sections.emplace_back(std::move(sec));
+    }
+    if (g.backup_count > 0) {
+        GridSections::Section sec;
+        sec.label = "Backups"_i18n;
+        sec.entry_start = g.live_count;
+        sec.entry_count = g.backup_count;
+        sec.first_display = g.first_backup_display;
+        sec.has_divider = (g.live_count > 0);
+        g.sections.emplace_back(std::move(sec));
+    }
+
     return g;
 }
 
 auto Menu::EntryToDisplay(s64 entry, const GridSections& g) const -> s64 {
+    for (const auto& sec : g.sections) {
+        if (entry >= sec.entry_start && entry < sec.entry_start + sec.entry_count) {
+            return sec.first_display + (entry - sec.entry_start);
+        }
+    }
     if (entry < g.live_count) {
         return entry;
     }
@@ -81,14 +146,12 @@ auto Menu::EntryToDisplay(s64 entry, const GridSections& g) const -> s64 {
 }
 
 auto Menu::DisplayToEntry(s64 display, const GridSections& g) const -> s64 {
-    if (display < g.live_count) {
-        return display; // live save
+    for (const auto& sec : g.sections) {
+        if (display >= sec.first_display && display < sec.first_display + sec.entry_count) {
+            return sec.entry_start + (display - sec.first_display);
+        }
     }
-    if (display < g.first_backup_display) {
-        return -1; // filler / divider gap
-    }
-    const auto entry = display - g.pad;
-    return (entry >= 0 && entry < static_cast<s64>(m_entries.size())) ? entry : -1;
+    return -1;
 }
 
 auto Menu::ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64 {
@@ -96,12 +159,26 @@ auto Menu::ResolveDisplay(s64 display, s64 from, const GridSections& g) const ->
     if (entry >= 0) {
         return entry;
     }
-    // filler: hop to the first backup when moving forward, otherwise back to
-    // the last live save (mirrors the settings menu's caption stepping).
-    if (display >= from) {
-        return g.backup_count > 0 ? g.live_count : -1;
+    const auto total = static_cast<s64>(m_entries.size());
+    if (total <= 0) {
+        return -1;
     }
-    return g.live_count > 0 ? g.live_count - 1 : -1;
+
+    if (display >= from) {
+        for (s64 i = 0; i < total; i++) {
+            if (EntryToDisplay(i, g) > display) {
+                return i;
+            }
+        }
+        return total - 1;
+    } else {
+        for (s64 i = total - 1; i >= 0; i--) {
+            if (EntryToDisplay(i, g) < display) {
+                return i;
+            }
+        }
+        return 0;
+    }
 }
 
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
@@ -223,10 +300,13 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         DrawSelectionMark(vg, theme, m_layout.Get(), v, image_v, e.selected, m_selected_count > 0);
 
-        // the "Backups" divider rides above the first backup tile, filling the
+        // the section divider rides above the first tile of a divided section, filling the
         // empty row reserved for it in ComputeGridSections().
-        if (g.has_backups && disp == g.first_backup_display) {
-            DrawSectionDivider(vg, theme, v, g);
+        for (const auto& sec : g.sections) {
+            if (sec.has_divider && disp == sec.first_display) {
+                DrawSectionDivider(vg, theme, v, g, sec.label);
+                break;
+            }
         }
     });
 }
@@ -284,22 +364,21 @@ void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const
     DrawInnerBorder(vg, v, col, thickness, 5.f);
 }
 
-void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const {
-    const auto label = "Backups"_i18n;
+void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label) const {
     const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto line_col = theme->GetColour(ThemeEntryID_LINE_SEPARATOR);
 
     if (g.horizontal) {
         // sideways layout: a vertical rule in the empty column, label on top.
-        const float cx = first_backup_v.x - m_list->GetMaxX() + first_backup_v.w / 2.f;
-        gfx::drawRect(vg, cx - 1.f, first_backup_v.y, 2.f, first_backup_v.h, line_col);
-        gfx::drawText(vg, cx, first_backup_v.y - 8.f, 20.f, text_col, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
+        const float cx = first_v.x - m_list->GetMaxX() + first_v.w / 2.f;
+        gfx::drawRect(vg, cx - 1.f, first_v.y, 2.f, first_v.h, line_col);
+        gfx::drawText(vg, cx, first_v.y - 8.f, 20.f, text_col, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
         return;
     }
 
     // vertical layout: a full-width rule centred in the empty row above the
-    // first backup tile, with the label sitting in a gap in the middle.
-    const float cy = first_backup_v.y - m_list->GetMaxY() + first_backup_v.h / 2.f;
+    // first section tile, with the label sitting in a gap in the middle.
+    const float cy = first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
     const float dl = m_list->GetX();
     const float dr = m_list->GetX() + m_list->GetW();
     const float mid = (dl + dr) / 2.f;

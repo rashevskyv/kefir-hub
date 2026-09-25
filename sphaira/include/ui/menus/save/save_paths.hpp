@@ -24,6 +24,10 @@ namespace sphaira::ui::menu::save {
 inline constexpr const char* DEFAULT_BACKUP_ROOT = "/dumps";
 inline constexpr const char* DBI_SAVES_PATH = "/switch/DBI/saves";
 inline constexpr const char* DBI_SAVES_ROOT_PATH = "/DBISaves";
+inline constexpr const char* JKSV_PATH = "/JKSV";
+inline constexpr const char* JKSV_SWITCH_PATH = "/switch/JKSV";
+inline constexpr const char* CHECKPOINT_SAVES_PATH = "/switch/Checkpoint/saves";
+inline constexpr const char* CHECKPOINT_ROOT_SAVES_PATH = "/Checkpoint/saves";
 inline constexpr const char* DBI_SAVE_INFO_NAME = ".dbi_save_info.ini";
 inline constexpr const char* DBI_SAVE_EXTRA_NAME = ".dbi_save_extra";
 
@@ -93,6 +97,7 @@ struct DecodedSaveMetadata {
     bool has_nx_meta{false};
     bool has_dbi_extra{false};
     bool has_dbi_info{false};
+    bool has_kefir_comment{false};
     s64 payload_count{0};
 };
 
@@ -114,6 +119,8 @@ struct BackupArchiveInfo {
     u64 commit_id{};
     u64 source_timestamp{};
     s64 payload_count{0};
+    BackupSource backup_source{BackupSource::Other};
+    bool is_directory{false};
 };
 
 auto ParseDbiTypeLetter(char c) -> u8;
@@ -139,6 +146,20 @@ auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileB
 auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;
 auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string;
 auto BackupGroupKey(const Entry& e) -> std::string;
+inline auto MatchesRestoreDestination(const BackupArchiveInfo& info, const Entry& dst) -> bool {
+    const bool rank_matches = (!info.rank_known || info.save_data_rank == dst.save_data_rank);
+    if (info.application_id != dst.application_id ||
+        info.system_save_data_id != dst.system_save_data_id ||
+        info.save_data_type != dst.save_data_type ||
+        !rank_matches ||
+        info.save_data_index != dst.save_data_index) {
+        return false;
+    }
+    if (info.save_data_type == FsSaveDataType_Account) {
+        return (dst.uid.uid[0] != 0 || dst.uid.uid[1] != 0);
+    }
+    return (info.uid.uid[0] == dst.uid.uid[0] && info.uid.uid[1] == dst.uid.uid[1]);
+}
 
 auto GetSaveFolder(u8 data_type) -> fs::FsPath;
 auto GetSaveFolder(const Entry& e) -> fs::FsPath;

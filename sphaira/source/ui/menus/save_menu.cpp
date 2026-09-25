@@ -192,6 +192,9 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     const auto g = ComputeGridSections();
     const auto start_disp = EntryToDisplay(m_index, g);
     m_list->OnUpdate(controller, touch, start_disp, g.display_count, [this, g, start_disp](bool touch, s64 disp) {
+        if (touch && DisplayToEntry(disp, g) < 0) {
+            return;
+        }
         const auto entry = ResolveDisplay(disp, start_disp, g);
         if (entry < 0) {
             return; // landed on the empty divider gap; nothing to focus there.

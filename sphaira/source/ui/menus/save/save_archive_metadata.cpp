@@ -26,6 +26,14 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
         return ArchiveMetaStatus::Invalid;
     }
 
+    if (ginfo.size_comment >= 9) {
+        char comment[64]{};
+        const int comment_len = unzGetGlobalComment(zfile, comment, sizeof(comment));
+        if (comment_len >= 9 && std::strncmp(comment, "sphaira v", 9) == 0) {
+            out.has_kefir_comment = true;
+        }
+    }
+
     if (ginfo.number_entry == 0) {
         return ArchiveMetaStatus::NoMetadata;
     }
@@ -304,6 +312,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
 
     DecodedSaveMetadata local_out{};
     local_out.payload_count = out.payload_count;
+    local_out.has_kefir_comment = out.has_kefir_comment;
 
     if (has_valid_nx && has_valid_dbi_extra) {
         if (!CompareCommonSourceFields(nx_meta, dbi_extra_meta)) {

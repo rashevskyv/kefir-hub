@@ -1,18 +1,23 @@
 # task.md
 
-Версія коду: **v0.13.881**.
+Версія коду: **v0.13.882**.
 
-## Поточний delivery: v0.13.881 — відновлення сейву без встановленої гри (завершено)
+## Поточний delivery: v0.13.882 — походження та папкові бекапи (завершено)
+
+- [x] `MAP-882` — знайдено групування за identity, розділювач live/backup, наявний folder-stage/restore і обмеження створення нового слота.
+- [x] `SOURCE-882` — достовірне походження, окремі групи/розділювачі DBI, JKSV, Checkpoint, Kefir Hub та інших джерел.
+- [x] `FOLDER-882` — безпечна видимість і restore папкових бекапів JKSV/Checkpoint, включно з перевіркою відсутньої цілі.
+- [x] `VERIFY-882` — WSL `ReleaseWithInstall` (`sphaira_nro`), цільові контракти, EN/UK parity, diff і розміри; консольний runtime окремо.
+- [x] `DOCS-BUMP-882` — patch version і документи.
+- [x] `COMMIT-882` — focused primary-master commit без ROMFS binary.
+
+## Попередній delivery: v0.13.881 — відновлення сейву без встановленої гри (завершено)
 
 - [x] `MAP-881` — знайдено NACP-only gate у `PlanAccountSaveCreation`; ZIP уже несе metadata owner/size.
 - [x] `RESTORE-881` — безпечне планування слота з валідних метаданих архіву за відсутності NACP.
 - [x] `VERIFY-881` — Gemini: Python contract, EN/UK parity, whitespace; senior: diff/межі/CMake/розміри; консольний runtime окремо.
 - [x] `DOCS-BUMP-881` — patch version і delivery-документи.
 - [x] `COMMIT-881` — focused commit на primary master без ROMFS binary.
-
-## Наступний серійний delivery — джерела DBI, JKSV, Checkpoint, Kefir Hub та інші (очікує)
-
-- [ ] `SOURCE` — достовірно визначити походження, згрупувати плитки й намалювати підписані розділювачі без зламу навігації.
 
 ## Попередній delivery: v0.13.880 — DBI-бекапи в каталозі (завершено)
 

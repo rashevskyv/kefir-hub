@@ -2548,5 +2548,11 @@
   "Proper System": "Власне система",
   "Safe Mode": "Безпечний режим",
   "Rank: %s · Index: %u": "Ранг: %s · Індекс: %u",
-  "Save ID: %016lX": "ID збереження: %016lX"
+  "Save ID: %016lX": "ID збереження: %016lX",
+  "Kefir Hub": "Kefir Hub",
+  "JKSV": "JKSV",
+  "Checkpoint": "Checkpoint",
+  "Other": "Інші",
+  "Backup folder metadata is missing or incomplete for save slot creation.": "Метадані папки бекапу відсутні або неповні для створення слота збереження.",
+  "Selected backup archive does not match destination save slot.": "Вибраний бекап не відповідає цільовому слоту збереження."
 }

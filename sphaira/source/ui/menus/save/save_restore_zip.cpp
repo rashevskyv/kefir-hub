@@ -97,6 +97,33 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     bool was_newly_created = false;
     if (e.is_planned_create) {
         R_TRY(pbox->ShouldExitResult());
+
+        if (meta_status == ArchiveMetaStatus::Valid && (archive_meta.has_nx_meta || archive_meta.has_dbi_extra)) {
+            if (archive_meta.meta.attr.application_id != e.creation_request.attr.application_id ||
+                archive_meta.meta.attr.save_data_type != FsSaveDataType_Account ||
+                e.creation_request.attr.save_data_type != FsSaveDataType_Account ||
+                archive_meta.meta.attr.save_data_rank != FsSaveDataRank_Primary ||
+                e.creation_request.attr.save_data_rank != FsSaveDataRank_Primary ||
+                archive_meta.meta.attr.save_data_index != 0 ||
+                e.creation_request.attr.save_data_index != 0 ||
+                archive_meta.meta.owner_id != e.creation_request.owner_id) {
+                log_write("Archive metadata identity mismatch with planned save creation request\n");
+                return FsError_PathNotFound;
+            }
+            if (archive_meta.meta.data_size <= 0 ||
+                archive_meta.meta.data_size > e.creation_request.data_size ||
+                (archive_meta.meta.data_size % 0x4000 != 0) ||
+                archive_meta.meta.journal_size < 0 ||
+                archive_meta.meta.journal_size > e.creation_request.journal_size ||
+                (archive_meta.meta.journal_size % 0x4000 != 0)) {
+                log_write("Archive metadata sizing mismatch with planned save creation request\n");
+                return FsError_InvalidSize;
+            }
+        } else if (allow_empty || e.creation_request.provenance == SizingProvenance::ArchiveMetadata) {
+            log_write("Planned save creation requires valid archive metadata\n");
+            return FsError_PathNotFound;
+        }
+
         const auto create_res = CreateSaveDataChecked(e.creation_request, [pbox]() {
             return pbox && R_FAILED(pbox->ShouldExitResult());
         });

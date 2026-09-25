@@ -10,6 +10,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_slot_backend.hpp"
+#include "ui/menus/save/save_folder_discovery.hpp"
 #include "minizip_helper.hpp"
 #include <minizip/unzip.h>
 #include <algorithm>
@@ -57,10 +58,11 @@ auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocat
         const auto slash = std::strrchr(c.path.s, '/');
         const auto fname = slash ? (slash + 1) : c.path.s;
         BackupArchiveInfo info{};
-        if (InspectBackupArchive(probe_fs, c.path, fname, group.dbi_game_dir, info)) {
-            if (BackupGroupKey(info) == target_key) {
-                retained.emplace_back(c);
-            }
+        bool inspected = c.is_directory
+            ? InspectBackupFolder(probe_fs, c.path, fname, group.dbi_game_dir, info)
+            : InspectBackupArchive(probe_fs, c.path, fname, group.dbi_game_dir, info);
+        if (inspected && BackupGroupKey(info) == target_key) {
+            retained.emplace_back(c);
         }
     }
 
@@ -213,24 +215,15 @@ void Menu::ShowRestorePickerPopup(Entry e, const Entry& group, const dump::DumpL
 namespace {
 
 void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, std::function<void(std::optional<fs::FsPath>)> cb) {
-    if (candidates.empty()) {
-        cb(std::nullopt);
-        return;
-    }
-    if (candidates.size() == 1) {
-        cb(candidates.front().path);
-        return;
-    }
+    if (candidates.empty()) { cb(std::nullopt); return; }
+    if (candidates.size() == 1) { cb(candidates.front().path); return; }
     PopupList::Items items;
     for (const auto& c : candidates) {
         const auto name = std::strrchr(c.path.s, '/');
         items.emplace_back(name ? name + 1 : c.path.s);
     }
     auto popup = std::make_unique<PopupList>("Select backup"_i18n, items, [candidates, cb](auto op_index) {
-        if (!op_index || *op_index >= static_cast<s64>(candidates.size())) {
-            cb(std::nullopt);
-            return;
-        }
+        if (!op_index || *op_index >= static_cast<s64>(candidates.size())) { cb(std::nullopt); return; }
         cb(candidates[*op_index].path);
     });
     App::Push(std::move(popup));
@@ -244,18 +237,15 @@ void PlanAndConfirmRestoreCreation(
 
     if (group.save_data_type != FsSaveDataType_Account) {
         App::Push<OptionBox>("Save slot creation is only supported for Account saves."_i18n, "OK"_i18n);
-        cb(std::nullopt);
-        return;
+        cb(std::nullopt); return;
     }
     if (group.save_data_rank != FsSaveDataRank_Primary || group.save_data_index != 0) {
         App::Push<OptionBox>("Save slot creation is only supported for primary save slots."_i18n, "OK"_i18n);
-        cb(std::nullopt);
-        return;
+        cb(std::nullopt); return;
     }
     if (group.application_id == 0) {
         App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
-        cb(std::nullopt);
-        return;
+        cb(std::nullopt); return;
     }
 
     struct PlanContext {
@@ -264,6 +254,8 @@ void PlanAndConfirmRestoreCreation(
         SaveBackendStatus status{SaveBackendStatus::Success};
         Result plan_rc{0};
         bool reinspect_ok{false};
+        bool is_folder{false};
+        bool folder_meta_missing{false};
     };
     auto ctx = std::make_shared<PlanContext>();
 
@@ -271,8 +263,25 @@ void PlanAndConfirmRestoreCreation(
         [archive_path, group, dest_uid, ctx](auto pbox) -> Result {
             pbox->SetHideSpeed(true);
             pbox->SetTransfer("Verifying archive..."_i18n);
-            ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
-            if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
+
+            fs::FsStdio stdio_fs;
+            fs::FsNativeSd sd_fs;
+            fs::Fs* probe_fs = archive_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+
+            FsDirEntryType ptype{};
+            ctx->is_folder = (R_SUCCEEDED(probe_fs->GetEntryType(archive_path, &ptype)) && ptype == FsDirEntryType_Dir);
+
+            if (ctx->is_folder) {
+                ctx->admission = InspectSaveFolderAdmission(archive_path, pbox, false);
+                if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
+                if (!ctx->admission.sizing.has_metadata) {
+                    ctx->folder_meta_missing = true;
+                    return 0;
+                }
+            } else {
+                ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
+                if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
+            }
             if (pbox->ShouldExit()) return Result_TransferCancelled;
 
             ctx->plan_rc = PlanAccountSaveCreation(
@@ -283,14 +292,16 @@ void PlanAndConfirmRestoreCreation(
                 return ctx->plan_rc ? ctx->plan_rc : FsError_InvalidSize;
             }
 
-            fs::FsStdio stdio_fs;
-            fs::FsNativeSd sd_fs;
-            fs::Fs* probe_fs = archive_path.starts_with("sdmc:/") ? static_cast<fs::Fs*>(&sd_fs) : static_cast<fs::Fs*>(&stdio_fs);
             const char* filename = std::strrchr(archive_path.s, '/');
             filename = filename ? filename + 1 : archive_path.s;
             BackupArchiveInfo check_info{};
-            if (InspectBackupArchive(probe_fs, archive_path, filename, group.dbi_game_dir, check_info) &&
-                BackupGroupKey(check_info) == BackupGroupKey(group)) {
+            bool reinspect_ok = false;
+            if (ctx->is_folder) {
+                reinspect_ok = InspectBackupFolder(probe_fs, archive_path, filename, group.dbi_game_dir, check_info);
+            } else {
+                reinspect_ok = InspectBackupArchive(probe_fs, archive_path, filename, group.dbi_game_dir, check_info);
+            }
+            if (reinspect_ok && BackupGroupKey(check_info) == BackupGroupKey(group)) {
                 ctx->reinspect_ok = true;
             }
             return 0;
@@ -300,20 +311,21 @@ void PlanAndConfirmRestoreCreation(
                 cb(std::nullopt);
                 return;
             }
+            if (ctx->folder_meta_missing) {
+                App::Push<OptionBox>("Backup folder metadata is missing or incomplete for save slot creation."_i18n, "OK"_i18n);
+                cb(std::nullopt); return;
+            }
             if (!ctx->admission.admitted) {
                 App::Push<OptionBox>("Invalid or corrupt save backup archive."_i18n, "OK"_i18n);
-                cb(std::nullopt);
-                return;
+                cb(std::nullopt); return;
             }
             if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
                 App::Push<OptionBox>(GetBackendStatusMessage(ctx->status), "OK"_i18n);
-                cb(std::nullopt);
-                return;
+                cb(std::nullopt); return;
             }
             if (!ctx->reinspect_ok) {
                 App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-                cb(std::nullopt);
-                return;
+                cb(std::nullopt); return;
             }
 
             std::string user_nickname = "User";
@@ -477,11 +489,9 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
 void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker) {
     RestoreBackupGroups(std::move(groups), force_user_picker, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
-
 void Menu::RestoreForUser(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
     RestoreSingleBackupGroup(std::move(e), nullptr, true, location, backup_root);
 }
-
 void Menu::RestoreForUser(Entry e) {
     RestoreSingleBackupGroup(std::move(e), nullptr, true);
 }
@@ -559,38 +569,23 @@ void Menu::PromptBatchRestoreTargets(
 }
 
 void Menu::PromptBatchRestoreTargets(
-    std::vector<Entry> seeds,
-    size_t step,
-    std::vector<AccountProfileBase> accounts,
-    std::shared_ptr<std::vector<Entry>> resolved_targets,
-    std::shared_ptr<std::set<std::string>> seen_target_keys,
-    const dump::DumpLocation& location,
-    const fs::FsPath& backup_root) {
-    PromptBatchRestoreTargets(
-        std::make_shared<std::vector<Entry>>(std::move(seeds)),
-        step,
+    std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts,
+    std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys,
+    const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+    PromptBatchRestoreTargets(std::make_shared<std::vector<Entry>>(std::move(seeds)), step,
         std::make_shared<std::vector<AccountProfileBase>>(std::move(accounts)),
-        resolved_targets,
-        seen_target_keys,
-        location,
-        backup_root);
+        resolved_targets, seen_target_keys, location, backup_root);
 }
 
 void Menu::PromptBatchRestoreTargets(
-    std::shared_ptr<std::vector<Entry>> seeds,
-    size_t step,
-    std::shared_ptr<std::vector<AccountProfileBase>> accounts,
-    std::shared_ptr<std::vector<Entry>> resolved_targets,
-    std::shared_ptr<std::set<std::string>> seen_target_keys) {
+    std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts,
+    std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys) {
     PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
 void Menu::PromptBatchRestoreTargets(
-    std::vector<Entry> seeds,
-    size_t step,
-    std::vector<AccountProfileBase> accounts,
-    std::shared_ptr<std::vector<Entry>> resolved_targets,
-    std::shared_ptr<std::set<std::string>> seen_target_keys) {
+    std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts,
+    std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys) {
     PromptBatchRestoreTargets(std::move(seeds), step, std::move(accounts), resolved_targets, seen_target_keys, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 

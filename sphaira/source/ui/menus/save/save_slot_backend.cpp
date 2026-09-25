@@ -1,4 +1,5 @@
 #include "ui/menus/save/save_slot_backend.hpp"
+#include "ui/menus/save/save_paths.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"

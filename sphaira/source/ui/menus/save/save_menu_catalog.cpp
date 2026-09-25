@@ -4,6 +4,8 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_folder_discovery.hpp"
+#include "path_util.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -26,7 +28,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
     std::vector<Entry> groups;
     std::unordered_set<std::string> seen_paths;
 
-    const auto process_archive = [&](const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, int source_prio) {
+    const auto process_candidate = [&](const fs::FsPath& path, std::string_view name, std::string_view dbi_game_dir_name, int source_prio, bool is_dir) {
         std::string lower_path = path.s;
         for (char& c : lower_path) {
             c = std::tolower(static_cast<unsigned char>(c));
@@ -36,12 +38,18 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
         }
 
         BackupArchiveInfo info{};
-        if (!InspectBackupArchive(&fs, path, filename, dbi_game_dir_name, info)) {
+        bool ok = false;
+        if (is_dir) {
+            ok = InspectBackupFolder(&fs, path, name, dbi_game_dir_name, info);
+        } else {
+            ok = InspectBackupArchive(&fs, path, name, dbi_game_dir_name, info);
+        }
+        if (!ok) {
             return;
         }
 
         info.source = source_prio;
-        const auto key = BackupGroupKey(info);
+        const auto key = std::to_string(static_cast<int>(info.backup_source)) + ":" + BackupGroupKey(info);
         auto it = group_map.find(key);
         if (it == group_map.end()) {
             Entry e{};
@@ -53,13 +61,19 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
             e.save_data_rank = info.save_data_rank;
             e.backup_rank_known = info.rank_known;
             e.is_backup = true;
+            e.backup_source = info.backup_source;
             e.backup_timestamp = info.timestamp;
             e.backup_count = 1;
             e.backup_path = path;
+            e.backup_is_directory = is_dir;
             e.dbi_game_dir = info.dbi_game_dir;
             e.source_timestamp = info.source_timestamp;
             e.commit_id = info.commit_id;
-            e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
+            if (is_dir) {
+                e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio, true});
+            } else {
+                e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
+            }
 
             if (IsSystemLikeSave(e.save_data_type)) {
                 detail::FakeNacpEntryForSystem(e);
@@ -73,7 +87,11 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
         } else {
             auto& meta = it->second;
             auto& existing = groups[meta.index];
-            existing.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
+            if (is_dir) {
+                existing.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio, true});
+            } else {
+                existing.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
+            }
             existing.backup_count = existing.backup_members.size();
 
             bool is_newer = false;
@@ -88,6 +106,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
             if (is_newer) {
                 existing.backup_timestamp = info.timestamp;
                 existing.backup_path = path;
+                existing.backup_is_directory = is_dir;
                 existing.source_timestamp = info.source_timestamp;
                 existing.commit_id = info.commit_id;
                 meta.rep_source = source_prio;
@@ -101,6 +120,14 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
                 }
             }
         }
+    };
+
+    const auto process_archive = [&](const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, int source_prio) {
+        process_candidate(path, filename, dbi_game_dir_name, source_prio, false);
+    };
+
+    const auto process_folder = [&](const fs::FsPath& path, std::string_view folder_name, std::string_view dbi_game_dir_name, int source_prio) {
+        process_candidate(path, folder_name, dbi_game_dir_name, source_prio, true);
     };
 
     // 1. Scan DBI-format game backups: /switch/DBI/saves, /DBISaves, and custom paths
@@ -165,8 +192,88 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
         custom_prio += 5;
     }
 
-    // Sort backups newest first by default
+    // 3. Scan JKSV folder backups: /JKSV and /switch/JKSV
+    const auto scan_jksv_root = [&](const fs::FsPath& root_path, int prio_base) {
+        const auto jksv_root = fs::AppendPath(fs.Root(), root_path);
+        filebrowser::FsDirCollection l1{};
+        filebrowser::FsView::get_collection(&fs, jksv_root, "", l1, false, true, false);
+        for (const auto& d1 : l1.dirs) {
+            const auto d1_path = fs::AppendPath(jksv_root, d1.name);
+            const bool is_category = path::EqualsIC(d1.name, "Device Saves") ||
+                                     path::EqualsIC(d1.name, "System Saves") ||
+                                     path::EqualsIC(d1.name, "BCAT Saves");
+            if (is_category) {
+                filebrowser::FsDirCollection games{};
+                filebrowser::FsView::get_collection(&fs, d1_path, "", games, false, true, false);
+                for (const auto& game : games.dirs) {
+                    const auto game_dir = fs::AppendPath(d1_path, game.name);
+                    filebrowser::FsDirCollection backups{};
+                    filebrowser::FsView::get_collection(&fs, game_dir, "", backups, false, true, false);
+                    for (const auto& b : backups.dirs) {
+                        process_folder(fs::AppendPath(game_dir, b.name), b.name, game.name, prio_base + 2);
+                    }
+                }
+            } else {
+                filebrowser::FsDirCollection backups{};
+                filebrowser::FsView::get_collection(&fs, d1_path, "", backups, false, true, false);
+                for (const auto& b : backups.dirs) {
+                    process_folder(fs::AppendPath(d1_path, b.name), b.name, d1.name, prio_base + 1);
+                }
+            }
+        }
+    };
+
+    scan_jksv_root(fs::FsPath{JKSV_PATH}, 2);
+    scan_jksv_root(fs::FsPath{JKSV_SWITCH_PATH}, 2);
+
+    // 4. Scan Checkpoint folder backups: /switch/Checkpoint/saves and /Checkpoint/saves
+    const auto scan_checkpoint_root = [&](const fs::FsPath& root_path, int prio_base) {
+        const auto cp_root = fs::AppendPath(fs.Root(), root_path);
+        filebrowser::FsDirCollection games{};
+        filebrowser::FsView::get_collection(&fs, cp_root, "", games, false, true, false);
+        for (const auto& game : games.dirs) {
+            const auto game_dir = fs::AppendPath(cp_root, game.name);
+            filebrowser::FsDirCollection backups{};
+            filebrowser::FsView::get_collection(&fs, game_dir, "", backups, false, true, false);
+            for (const auto& b : backups.dirs) {
+                process_folder(fs::AppendPath(game_dir, b.name), b.name, game.name, prio_base + 1);
+            }
+        }
+    };
+
+    scan_checkpoint_root(fs::FsPath{CHECKPOINT_SAVES_PATH}, 3);
+    scan_checkpoint_root(fs::FsPath{CHECKPOINT_ROOT_SAVES_PATH}, 3);
+
+    // 5. Scan custom search paths for folder backups
+    const auto scan_custom_folder_root = [&](const fs::FsPath& root_path, int prio_base) {
+        const auto root = fs::AppendPath(fs.Root(), root_path);
+        filebrowser::FsDirCollection l1{};
+        filebrowser::FsView::get_collection(&fs, root, "", l1, false, true, false);
+        for (const auto& d1 : l1.dirs) {
+            const auto d1_path = fs::AppendPath(root, d1.name);
+            filebrowser::FsDirCollection l2{};
+            filebrowser::FsView::get_collection(&fs, d1_path, "", l2, false, true, false);
+            if (!l2.dirs.empty()) {
+                for (const auto& d2 : l2.dirs) {
+                    process_folder(fs::AppendPath(d1_path, d2.name), d2.name, d1.name, prio_base + 2);
+                }
+            } else {
+                process_folder(d1_path, d1.name, "", prio_base + 1);
+            }
+        }
+    };
+
+    int folder_custom_prio = 10;
+    for (const auto& custom_path_str : GetBackupSearchPaths()) {
+        scan_custom_folder_root(fs::FsPath{custom_path_str}, folder_custom_prio);
+        folder_custom_prio += 5;
+    }
+
+    // Sort backups by source precedence first, then newest first
     std::ranges::sort(groups, [](const Entry& a, const Entry& b) {
+        if (a.backup_source != b.backup_source) {
+            return static_cast<u8>(a.backup_source) < static_cast<u8>(b.backup_source);
+        }
         if (a.backup_timestamp != b.backup_timestamp) {
             return a.backup_timestamp > b.backup_timestamp;
         }
@@ -193,11 +300,21 @@ void Menu::Sort() {
     const bool want_reversed = order == OrderType_Ascending;
 
     if (want_reversed != m_is_reversed) {
-        // reverse the live-save and backup sections independently so the two
-        // stay partitioned (live first, backups after) regardless of order.
-        const auto mid = std::clamp<s64>(m_backup_start, 0, static_cast<s64>(m_entries.size()));
-        std::reverse(m_entries.begin(), m_entries.begin() + mid);
-        std::reverse(m_entries.begin() + mid, m_entries.end());
+        if (m_category == Category::Backups) {
+            const auto g = ComputeGridSections();
+            for (const auto& sec : g.sections) {
+                if (sec.entry_count > 1) {
+                    std::reverse(m_entries.begin() + sec.entry_start,
+                                 m_entries.begin() + sec.entry_start + sec.entry_count);
+                }
+            }
+        } else {
+            // reverse the live-save and backup sections independently so the two
+            // stay partitioned (live first, backups after) regardless of order.
+            const auto mid = std::clamp<s64>(m_backup_start, 0, static_cast<s64>(m_entries.size()));
+            std::reverse(m_entries.begin(), m_entries.begin() + mid);
+            std::reverse(m_entries.begin() + mid, m_entries.end());
+        }
         m_is_reversed = want_reversed;
     }
 }
@@ -259,7 +376,13 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
             const auto slash = std::strrchr(m.path.s, '/');
             const auto fname = slash ? (slash + 1) : m.path.s;
             BackupArchiveInfo info{};
-            if (!InspectBackupArchive(fs, m.path, fname, group.dbi_game_dir, info)) {
+            bool inspected = false;
+            if (m.is_directory) {
+                inspected = InspectBackupFolder(fs, m.path, fname, group.dbi_game_dir, info);
+            } else {
+                inspected = InspectBackupArchive(fs, m.path, fname, group.dbi_game_dir, info);
+            }
+            if (!inspected) {
                 continue;
             }
 
@@ -268,7 +391,7 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
                 continue;
             }
 
-            out.emplace_back(BackupCandidate{info.timestamp, m.path, m.source});
+            out.emplace_back(BackupCandidate{info.timestamp, m.path, m.source, m.is_directory});
         }
 
         std::ranges::sort(out, [](const BackupCandidate& a, const BackupCandidate& b) {
@@ -292,15 +415,19 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
         const auto slash = std::strrchr(c.path.s, '/');
         const auto fname = slash ? (slash + 1) : c.path.s;
         BackupArchiveInfo info{};
-        if (InspectBackupArchive(fs, c.path, fname, group.dbi_game_dir, info)) {
-            if (BackupGroupKey(info) == target_key) {
-                out.emplace_back(c);
-            }
+        bool inspected = false;
+        if (c.is_directory) {
+            inspected = InspectBackupFolder(fs, c.path, fname, group.dbi_game_dir, info);
+        } else {
+            inspected = InspectBackupArchive(fs, c.path, fname, group.dbi_game_dir, info);
+        }
+        if (inspected && BackupGroupKey(info) == target_key) {
+            out.emplace_back(c);
         }
     }
 
     if (out.empty() && !group.backup_path.empty()) {
-        out.emplace_back(BackupCandidate{group.backup_timestamp, group.backup_path, 0});
+        out.emplace_back(BackupCandidate{group.backup_timestamp, group.backup_path, 0, group.backup_is_directory});
     }
 
     return out;

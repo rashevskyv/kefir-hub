@@ -311,6 +311,20 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
                 out.save_data_index = ParseDbiBackupIndex(filename);
             }
         }
+
+        if (archive_meta.has_kefir_comment) {
+            out.backup_source = BackupSource::KefirHub;
+        } else if (archive_meta.has_dbi_extra || archive_meta.has_dbi_info ||
+                   path::HasPathDirComponentIC(path.s, "dbi") ||
+                   path::HasPathDirComponentIC(path.s, "dbisaves")) {
+            out.backup_source = BackupSource::Dbi;
+        } else if (archive_meta.has_nx_meta || path::HasPathDirComponentIC(path.s, "jksv")) {
+            out.backup_source = BackupSource::Jksv;
+        } else if (path::HasPathDirComponentIC(path.s, "checkpoint")) {
+            out.backup_source = BackupSource::Checkpoint;
+        } else {
+            out.backup_source = BackupSource::Other;
+        }
     }
 
     if (!loaded) {
@@ -372,6 +386,19 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
             out.save_data_type = FsSaveDataType_System;
         } else {
             out.save_data_type = FsSaveDataType_Account;
+        }
+    }
+
+    if (!is_zip) {
+        if (path::HasPathDirComponentIC(path.s, "dbi") ||
+            path::HasPathDirComponentIC(path.s, "dbisaves")) {
+            out.backup_source = BackupSource::Dbi;
+        } else if (path::HasPathDirComponentIC(path.s, "jksv")) {
+            out.backup_source = BackupSource::Jksv;
+        } else if (path::HasPathDirComponentIC(path.s, "checkpoint")) {
+            out.backup_source = BackupSource::Checkpoint;
+        } else {
+            out.backup_source = BackupSource::Other;
         }
     }
 
@@ -445,7 +472,7 @@ auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileB
     if (e.backup_count > 1) {
         cols.archive_count = "  •  " + std::to_string(e.backup_count) + " archives";
     }
-    if (!e.dbi_game_dir.empty()) {
+    if (e.backup_source == BackupSource::Dbi) {
         cols.archive_count += "  •  DBI";
     }
     return cols;
@@ -460,7 +487,7 @@ auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileB
     if (e.backup_count > 1) {
         out += " (" + std::to_string(e.backup_count) + ")";
     }
-    if (!e.dbi_game_dir.empty()) {
+    if (e.backup_source == BackupSource::Dbi) {
         out += "  •  DBI";
     }
     return out;

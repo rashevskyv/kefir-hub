@@ -10,6 +10,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_folder_discovery.hpp"
 #include <vector>
 #include <string>
 #include <memory>
@@ -82,9 +83,14 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 pbox->UpdateTransfer(i + 1, sources.size());
 
                 const fs::FsPath file_path = src.backup_members.front().path;
+                const auto& member = src.backup_members.front();
                 fs::Fs* probe_fs = file_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
 
-                const bool is_raw = IsDisaSaveFile(probe_fs, file_path);
+                FsDirEntryType entry_type{};
+                const bool is_dir_on_disk = (R_SUCCEEDED(probe_fs->GetEntryType(file_path, &entry_type)) && entry_type == FsDirEntryType_Dir);
+                const bool is_folder = member.is_directory || is_dir_on_disk;
+
+                const bool is_raw = !is_folder && IsDisaSaveFile(probe_fs, file_path);
                 *last_item_is_raw = is_raw;
                 *last_mutation_started = false;
                 *last_item_created_slot_retained = false;
@@ -96,9 +102,25 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
                 const char* filename = std::strrchr(file_path.s, '/');
                 filename = filename ? filename + 1 : file_path.s;
                 BackupArchiveInfo check_info{};
-                if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                    BackupGroupKey(check_info) != BackupGroupKey(src)) {
-                    log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
+
+                if (is_folder) {
+                    if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
+                        check_info.backup_source != src.backup_source ||
+                        BackupGroupKey(check_info) != BackupGroupKey(src)) {
+                        log_write("Backup folder reinspection failed or identity mismatch for %s\n", file_path.s);
+                        return FsError_PathNotFound;
+                    }
+                } else {
+                    if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
+                        check_info.backup_source != src.backup_source ||
+                        BackupGroupKey(check_info) != BackupGroupKey(src)) {
+                        log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
+                        return FsError_PathNotFound;
+                    }
+                }
+
+                if (!MatchesRestoreDestination(check_info, dst)) {
+                    log_write("Destination slot identity mismatch for %s\n", file_path.s);
                     return FsError_PathNotFound;
                 }
 
@@ -175,10 +197,10 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
 }
 
 void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen) {
-    const bool in_retained = std::ranges::any_of(group.backup_members, [&](const auto& m) {
+    auto it = std::ranges::find_if(group.backup_members, [&](const auto& m) {
         return m.path == chosen;
     });
-    if (!in_retained) {
+    if (it == group.backup_members.end()) {
         App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
         return;
     }
@@ -186,7 +208,12 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
     fs::FsStdio stdio_fs;
     fs::FsNativeSd sd_fs;
     fs::Fs* probe_fs = chosen.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
-    const bool is_raw = IsDisaSaveFile(probe_fs, chosen);
+
+    FsDirEntryType entry_type{};
+    const bool is_dir_on_disk = (R_SUCCEEDED(probe_fs->GetEntryType(chosen, &entry_type)) && entry_type == FsDirEntryType_Dir);
+    const bool is_folder = it->is_directory || is_dir_on_disk;
+
+    const bool is_raw = !is_folder && IsDisaSaveFile(probe_fs, chosen);
 
     if (is_raw) {
         App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
@@ -196,13 +223,29 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
     const char* filename = std::strrchr(chosen.s, '/');
     filename = filename ? filename + 1 : chosen.s;
     BackupArchiveInfo check_info{};
-    if (!InspectBackupArchive(probe_fs, chosen, filename, group.dbi_game_dir, check_info)) {
-        App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-        return;
+
+    if (is_folder) {
+        if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, chosen, filename, group.dbi_game_dir, check_info)) {
+            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+            return;
+        }
+        if (check_info.backup_source != group.backup_source || BackupGroupKey(check_info) != BackupGroupKey(group)) {
+            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+            return;
+        }
+    } else {
+        if (!InspectBackupArchive(probe_fs, chosen, filename, group.dbi_game_dir, check_info)) {
+            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+            return;
+        }
+        if (check_info.backup_source != group.backup_source || BackupGroupKey(check_info) != BackupGroupKey(group)) {
+            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+            return;
+        }
     }
 
-    if (BackupGroupKey(check_info) != BackupGroupKey(group)) {
-        App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+    if (!MatchesRestoreDestination(check_info, e)) {
+        App::Push<OptionBox>("Selected backup archive does not match destination save slot."_i18n, "OK"_i18n);
         return;
     }
 
@@ -289,6 +332,24 @@ Result Menu::RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::Fs
     fs::FsStdio stdio_fs;
     fs::FsNativeSd sd_fs;
     fs::Fs* probe_fs = path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+
+    FsDirEntryType path_type{};
+    const bool is_folder = (R_SUCCEEDED(probe_fs->GetEntryType(path, &path_type)) && path_type == FsDirEntryType_Dir);
+
+    if (is_folder) {
+        const char* filename = std::strrchr(path.s, '/');
+        filename = filename ? filename + 1 : path.s;
+        BackupArchiveInfo check_info{};
+        if (!InspectBackupFolder(probe_fs, path, filename, e.dbi_game_dir, check_info)) {
+            log_write("Folder backup reinspection failed for %s\n", path.s);
+            return FsError_PathNotFound;
+        }
+        if (!MatchesRestoreDestination(check_info, e)) {
+            log_write("Folder backup destination identity mismatch for %s\n", path.s);
+            return FsError_PathNotFound;
+        }
+        return RestoreSaveFolder(pbox, e, path, out_recovery_path, out_mutation_started, out_created_slot_retained);
+    }
 
     if (IsDisaSaveFile(probe_fs, path)) {
         log_write("refusing unsupported raw DISA save restore: %s\n", path.s);

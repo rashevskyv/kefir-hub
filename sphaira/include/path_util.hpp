@@ -11,6 +11,8 @@
 // Nothing here includes switch.h, so it is testable on the host. fs::FsPath
 // converts to std::string_view implicitly, so FsPath callers need no change.
 
+#include <algorithm>
+#include <cctype>
 #include <charconv>
 #include <cstdint>
 #include <cstring>
@@ -36,6 +38,40 @@ inline auto StartsWithIC(std::string_view s, std::string_view prefix) -> bool {
         return false;
     }
     return !strncasecmp(s.data(), prefix.data(), prefix.size());
+}
+
+// True when `path` contains a directory component (excluding trailing filename/leaf)
+// that case-insensitively equals `target`.
+inline auto HasPathDirComponentIC(std::string_view path, std::string_view target) -> bool {
+    if (StartsWithIC(path, "sdmc:")) {
+        path.remove_prefix(5);
+    }
+    while (!path.empty() && (path.back() == '/' || path.back() == '\\')) {
+        path.remove_suffix(1);
+    }
+    const auto last_slash = path.find_last_of("/\\");
+    if (last_slash == path.npos) {
+        return false;
+    }
+    std::string_view dir_part = path.substr(0, last_slash);
+
+    size_t start = 0;
+    while (start < dir_part.size()) {
+        while (start < dir_part.size() && (dir_part[start] == '/' || dir_part[start] == '\\')) {
+            start++;
+        }
+        if (start >= dir_part.size()) break;
+        const auto next_slash = dir_part.find_first_of("/\\", start);
+        const auto comp = (next_slash == dir_part.npos)
+            ? dir_part.substr(start)
+            : dir_part.substr(start, next_slash - start);
+        if (EqualsIC(comp, target)) {
+            return true;
+        }
+        if (next_slash == dir_part.npos) break;
+        start = next_slash + 1;
+    }
+    return false;
 }
 
 // True when `s` ends with `suffix`, ignoring case. An empty suffix always

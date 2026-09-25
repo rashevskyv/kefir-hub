@@ -259,7 +259,7 @@ def test_source_contracts() -> None:
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
 
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(859, 880)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(859, 890)),
           "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.859 or later")
 
     print("  -> Static source contract & ordering checks PASSED.")

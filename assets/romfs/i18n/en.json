@@ -2548,5 +2548,11 @@
   "Proper System": "Proper System",
   "Safe Mode": "Safe Mode",
   "Rank: %s · Index: %u": "Rank: %s · Index: %u",
-  "Save ID: %016lX": "Save ID: %016lX"
+  "Save ID: %016lX": "Save ID: %016lX",
+  "Kefir Hub": "Kefir Hub",
+  "JKSV": "JKSV",
+  "Checkpoint": "Checkpoint",
+  "Other": "Other",
+  "Backup folder metadata is missing or incomplete for save slot creation.": "Backup folder metadata is missing or incomplete for save slot creation.",
+  "Selected backup archive does not match destination save slot.": "Selected backup archive does not match destination save slot."
 }

@@ -19,6 +19,25 @@
 
 namespace sphaira::ui::menu::save {
 
+enum class BackupSource : u8 {
+    KefirHub = 0,
+    Dbi,
+    Jksv,
+    Checkpoint,
+    Other,
+};
+
+inline auto GetBackupSourceLabel(BackupSource s) -> const char* {
+    switch (s) {
+        case BackupSource::KefirHub:   return "Kefir Hub";
+        case BackupSource::Dbi:        return "DBI";
+        case BackupSource::Jksv:       return "JKSV";
+        case BackupSource::Checkpoint: return "Checkpoint";
+        case BackupSource::Other:      return "Other";
+        default:                       return "Other";
+    }
+}
+
 // one restorable backup archive found for a save, used to build the restore
 // picker. ts is the YYYYMMDDHHMMSS key parsed from the file name (for sorting
 // and display); source is a stable tie-break for equal timestamps (lower
@@ -28,6 +47,7 @@ struct BackupCandidate {
     u64 ts{};
     fs::FsPath path{};
     int source{};
+    bool is_directory{false};
 };
 
 struct Entry final : FsSaveDataInfo {
@@ -44,10 +64,12 @@ struct Entry final : FsSaveDataInfo {
     u64 backup_timestamp{};
     size_t backup_count{};
     fs::FsPath backup_path{};
+    bool backup_is_directory{false};
     std::string dbi_game_dir{};
     u64 source_timestamp{};
     u64 commit_id{};
     std::vector<BackupCandidate> backup_members{};
+    BackupSource backup_source{BackupSource::Other};
 
     bool is_planned_create{};
     SaveCreationRequest creation_request{};
@@ -98,6 +120,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty);
 Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool allow_empty, bool* out_created_slot_retained);
 Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& folder_path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr);
+Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& folder_path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool* out_created_slot_retained);
 
 struct Menu final : grid::Menu {
     // app_id_filter limits the grid to one game's saves (entered from the game
@@ -156,6 +179,14 @@ private:
     // as extra "display" slots the cursor steps over; the helpers below map
     // between entry indices (into m_entries) and those display slots.
     struct GridSections {
+        struct Section {
+            std::string label;
+            s64 entry_start{};
+            s64 entry_count{};
+            s64 first_display{};
+            bool has_divider{false};
+        };
+
         s64 row{1};
         s64 live_count{};
         s64 backup_count{};
@@ -165,13 +196,14 @@ private:
         s64 display_count{};
         bool has_backups{};
         bool horizontal{};          // HOME (HbMenu) layout scrolls sideways
+        std::vector<Section> sections{};
     };
     auto ComputeGridSections() const -> GridSections;
     auto EntryToDisplay(s64 entry, const GridSections& g) const -> s64;
     auto DisplayToEntry(s64 display, const GridSections& g) const -> s64; // -1 == filler
     auto ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64;
     void DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e);
-    void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_backup_v, const GridSections& g) const;
+    void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label) const;
     struct BackupColumnLayout {
         float max_title_w{0.f};
         float max_account_w{0.f};
