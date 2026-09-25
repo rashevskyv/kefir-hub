@@ -5,6 +5,7 @@ project(hbl
 
 add_executable(hbl
     source/main.c
+    source/env.c
     source/trampoline.s
 )
 

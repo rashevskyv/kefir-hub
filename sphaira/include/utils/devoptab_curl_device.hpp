@@ -11,6 +11,30 @@
 
 namespace sphaira::devoptab::common {
 
+inline const char* curl_url_strerror_wrap(CURLUcode code) {
+    switch (code) {
+        case CURLUE_OK: return "No error";
+        case CURLUE_BAD_HANDLE: return "Invalid handle";
+        case CURLUE_BAD_PARTPOINTER: return "Invalid pointer to a part of the URL";
+        case CURLUE_MALFORMED_INPUT: return "Malformed input";
+        case CURLUE_BAD_PORT_NUMBER: return "Bad port number";
+        case CURLUE_UNSUPPORTED_SCHEME: return "Unsupported scheme";
+        case CURLUE_URLDECODE: return "URL decode error";
+        case CURLUE_OUT_OF_MEMORY: return "Out of memory";
+        case CURLUE_USER_NOT_ALLOWED: return "User not allowed";
+        case CURLUE_UNKNOWN_PART: return "Unknown part";
+        case CURLUE_NO_SCHEME: return "No scheme";
+        case CURLUE_NO_USER: return "No user";
+        case CURLUE_NO_PASSWORD: return "No password";
+        case CURLUE_NO_OPTIONS: return "No options";
+        case CURLUE_NO_HOST: return "No host";
+        case CURLUE_NO_PORT: return "No port";
+        case CURLUE_NO_QUERY: return "No query";
+        case CURLUE_NO_FRAGMENT: return "No fragment";
+        default: return "Unknown error";
+    }
+}
+
 struct CurlFileState {
     CURL* curl{};
     PushThreadData* push_data{};

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.878)
+set(sphaira_VERSION 0.13.879)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -147,10 +147,18 @@ add_executable(sphaira
     source/ui/menus/users/users_nand_library.cpp
     source/ui/menus/users/users_nand_library_ops.cpp
     source/account/account_link.cpp
+    source/account/account_link_users.cpp
+    source/account/account_link_donor.cpp
+    source/account/account_link_pkg.cpp
     source/account/account_user.cpp
+    source/account/account_user_export.cpp
+    source/account/account_user_packs.cpp
     source/account/account_playtime.cpp
     source/account/account_restore.cpp
+    source/account/account_restore_safety.cpp
     source/account/nand_transfer.cpp
+    source/account/nand_transfer_archive.cpp
+    source/account/nand_transfer_users.cpp
     source/meminfo.cpp
     source/ui/menus/cheats_menu.cpp
     source/ui/menus/cheats/cheats_game_scanner.cpp
@@ -195,21 +203,27 @@ add_executable(sphaira
     source/ui/about_box.cpp
     source/ui/notification.cpp
     source/ui/nvg_util.cpp
+    source/ui/image_viewport.cpp
+    source/ui/action_icon.cpp
     source/ui/option_box.cpp
     source/ui/popup_list.cpp
     source/ui/zip_extract_box.cpp
     source/ui/progress_box.cpp
+    source/ui/progress_box_draw.cpp
     source/ui/screensaver.cpp
     source/ui/scrollable_text.cpp
     source/ui/hold_confirm_box.cpp
     source/ui/sidebar.cpp
+    source/ui/sidebar_entries.cpp
     source/ui/widget.cpp
     source/ui/list.cpp
+    source/ui/list_draw.cpp
     source/ui/scrolling_text.cpp
     source/ui/forwarder_editor.cpp
     source/ui/image_crop.cpp
     source/ui/file_icon.cpp
     source/ui/steamgriddb_icon.cpp
+    source/ui/steamgriddb_widgets.cpp
     source/ui/remote_input.cpp
 
     source/app.cpp
@@ -233,6 +247,7 @@ add_executable(sphaira
     source/option.cpp
     source/evman.cpp
     source/fs.cpp
+    source/fs_file_dir.cpp
     source/image.cpp
     source/location.cpp
     source/log.cpp
@@ -244,6 +259,8 @@ add_executable(sphaira
     source/ntp.cpp
     source/nxlink.cpp
     source/owo.cpp
+    source/owo_romfs.cpp
+    source/owo_nca.cpp
     source/forwarder_auto_install.cpp
     source/auto_update.cpp
     source/swkbd.cpp
@@ -260,11 +277,13 @@ add_executable(sphaira
     source/hasher.cpp
     source/i18n.cpp
     source/ftpsrv_helper.cpp
+    source/ftpsrv_vfs.cpp
     source/haze_helper.cpp
     source/haze/haze_internal.cpp
     source/haze/haze_fs_proxy.cpp
     source/haze/haze_install_proxy.cpp
     source/haze/haze_save_proxy.cpp
+    source/haze/haze_save_proxy_scan.cpp
     source/haze/haze_game_proxy.cpp
     source/threaded_file_transfer.cpp
     source/threaded_file_transfer_core.cpp
@@ -272,20 +291,30 @@ add_executable(sphaira
     source/threaded_file_transfer_verify.cpp
     source/threaded_file_transfer_zip_io.cpp
     source/title_info.cpp
+    source/title_move.cpp
+    source/title_nacp.cpp
     source/title_nsp.cpp
     source/minizip_helper.cpp
     source/fs_zip.cpp
     source/fs_ncm.cpp
     source/utils/utils.cpp
+    source/utils/utils_payload.cpp
+    source/utils/utils_reboot.cpp
     source/utils/devoptab_common.cpp
+    source/utils/devoptab_common_ops.cpp
     source/utils/devoptab_buffered.cpp
     source/utils/devoptab_curl_thread.cpp
     source/utils/devoptab_curl_device.cpp
+    source/utils/devoptab_curl_file.cpp
+    source/utils/devoptab_curl_dir.cpp
     source/utils/devoptab_romfs.cpp
     source/utils/devoptab_nca.cpp
     source/utils/devoptab_smb2.cpp
     source/utils/devoptab_nfs.cpp
     source/utils/devoptab_mtp.cpp
+    source/utils/devoptab_mtp_usb.cpp
+    source/utils/devoptab_mtp_proto.cpp
+    source/utils/devoptab_mtp_ops.cpp
 
     source/usb/base.cpp
     source/usb/usbds.cpp
@@ -300,6 +329,7 @@ add_executable(sphaira
     source/yati/container/xci.cpp
     source/yati/source/file.cpp
     source/yati/source/usb.cpp
+    source/yati/source/usb_dbi.cpp
     source/yati/source/stream.cpp
 
     source/yati/nx/es.cpp
@@ -359,249 +389,7 @@ target_compile_options(sphaira PRIVATE
     -fdiagnostics-all-candidates
 )
 
-include(FetchContent)
-set(FETCHCONTENT_QUIET FALSE)
-
-FetchContent_Declare(ftpsrv
-    GIT_REPOSITORY https://github.com/ITotalJustice/ftpsrv.git
-    GIT_TAG 85b3cf0
-    SOURCE_SUBDIR NONE
-    # allow anonymous (no login) FTP access with any/empty username - see script.
-    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_ftpsrv.cmake
-)
-
-FetchContent_Declare(libhaze
-    GIT_REPOSITORY https://github.com/ITotalJustice/libhaze.git
-    GIT_TAG 0be1523
-    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_libhaze.cmake
-)
-
-FetchContent_Declare(nanovg
-    GIT_REPOSITORY https://github.com/ITotalJustice/nanovg-deko3d.git
-    GIT_TAG 845c9fc
-)
-
-FetchContent_Declare(stb
-    GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG 5c20573
-)
-
-FetchContent_Declare(yyjson
-    GIT_REPOSITORY https://github.com/ibireme/yyjson.git
-    GIT_TAG 0.11.1
-)
-
-FetchContent_Declare(minIni
-    GIT_REPOSITORY https://github.com/ITotalJustice/minIni-nx.git
-    GIT_TAG 6e952b6
-)
-
-FetchContent_Declare(zstd
-    GIT_REPOSITORY https://github.com/facebook/zstd.git
-    GIT_TAG v1.5.7
-    SOURCE_SUBDIR build/cmake
-)
-
-FetchContent_Declare(libusbhsfs
-    GIT_REPOSITORY https://github.com/ITotalJustice/libusbhsfs.git
-    GIT_TAG d0a973e
-)
-
-FetchContent_Declare(libnxtc
-    GIT_REPOSITORY https://github.com/ITotalJustice/libnxtc.git
-    GIT_TAG 0d369b8
-)
-
-FetchContent_Declare(nvjpg
-    GIT_REPOSITORY https://github.com/ITotalJustice/oss-nvjpg.git
-    GIT_TAG 45680e7
-    # NvMap::free() frees the decode buffer while it is still marked uncached - see script.
-    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_nvjpg.cmake
-)
-
-FetchContent_Declare(libsmb2
-    GIT_REPOSITORY https://github.com/sahlberg/libsmb2.git
-    GIT_TAG v4.0.0
-    PATCH_COMMAND patch -p1 -N -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/patches/libsmb2.patch || true
-)
-
-FetchContent_Declare(libnfs
-    GIT_REPOSITORY https://github.com/ITotalJustice/libnfs.git
-    GIT_TAG 65f3e11
-)
-
-set(USE_NEW_ZSTD ON)
-# has issues with some homebrew and game icons (oxenfree, overwatch2).
-set(USE_NVJPG ON)
-
-set(ZSTD_BUILD_STATIC ON)
-set(ZSTD_BUILD_SHARED OFF)
-set(ZSTD_BUILD_COMPRESSION OFF)
-set(ZSTD_BUILD_DECOMPRESSION ON)
-set(ZSTD_BUILD_DICTBUILDER OFF)
-set(ZSTD_LEGACY_SUPPORT OFF)
-set(ZSTD_MULTITHREAD_SUPPORT OFF)
-set(ZSTD_BUILD_PROGRAMS OFF)
-set(ZSTD_BUILD_TESTS OFF)
-
-set(MININI_LIB_NAME minIni)
-set(MININI_USE_STDIO ON)
-set(MININI_USE_NX OFF)
-set(MININI_USE_FLOAT OFF)
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set(NANOVG_DEBUG ON)
-endif()
-set(NANOVG_NO_JPEG OFF)
-set(NANOVG_NO_PNG OFF)
-set(NANOVG_NO_BMP ON)
-set(NANOVG_NO_PSD ON)
-set(NANOVG_NO_TGA ON)
-set(NANOVG_NO_GIF ON)
-set(NANOVG_NO_HDR ON)
-set(NANOVG_NO_PIC ON)
-set(NANOVG_NO_PNM ON)
-
-set(YYJSON_DISABLE_READER OFF)
-set(YYJSON_DISABLE_WRITER OFF)
-set(YYJSON_DISABLE_UTILS ON)
-set(YYJSON_DISABLE_FAST_FP_CONV ON)
-set(YYJSON_DISABLE_NON_STANDARD ON)
-set(YYJSON_DISABLE_UTF8_VALIDATION ON)
-set(YYJSON_DISABLE_UNALIGNED_MEMORY_ACCESS OFF)
-
-# enable this if you want ntfs and ext4 support, at the cost of a huge final binary size.
-set(USBHSFS_GPL OFF)
-set(USBHSFS_SXOS_DISABLE ON)
-
-set(ENABLE_DOCUMENTATION OFF CACHE BOOL "Build documentation" FORCE)
-set(ENABLE_EXAMPLES OFF CACHE BOOL "Build example programs" FORCE)
-set(ENABLE_TESTS OFF CACHE BOOL "Build tests" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-set(CMAKE_DISABLE_FIND_PACKAGE_OpenSSL ON)
-set(CMAKE_DISABLE_FIND_PACKAGE_GSSAPI ON)
-set(OPENSSL_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR})
-add_compile_definitions(__SWITCH__)
-
-FetchContent_MakeAvailable(
-    ftpsrv
-    libhaze
-    nanovg
-    stb
-    minIni
-    yyjson
-    zstd
-    libusbhsfs
-    libnxtc
-    nvjpg
-    libsmb2
-    libnfs
-)
-
-target_compile_definitions(libhaze PRIVATE -DSPHAIRA_VERSION="${sphaira_VERSION}")
-target_compile_definitions(smb2 PRIVATE -D__SWITCH__)
-target_sources(smb2 PRIVATE ${libsmb2_SOURCE_DIR}/lib/compat.c)
-
-if (EXISTS "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h")
-    file(READ "$ENV{DEVKITPRO}/libnx/include/switch/nacp.h" LIBNX_NACP_HEADER)
-    if (LIBNX_NACP_HEADER MATCHES "NacpLanguageEntryData[ \t\r\n]+lang_data")
-        file(READ "${libnxtc_SOURCE_DIR}/source/nxtc.c" LIBNXTC_SOURCE)
-        string(REPLACE "nacp->lang_data.lang_data.lang" "nacp->lang_data.lang" LIBNXTC_SOURCE "${LIBNXTC_SOURCE}")
-        string(REPLACE "nacp->lang[" "nacp->lang_data.lang[" LIBNXTC_SOURCE "${LIBNXTC_SOURCE}")
-        file(WRITE "${libnxtc_SOURCE_DIR}/source/nxtc.c" "${LIBNXTC_SOURCE}")
-    endif()
-endif()
-
-# PATCH_COMMAND only runs when the dependency is (re)populated, so an existing
-# _deps checkout never picks up a newly added patch. the script is idempotent,
-# so just run it again at configure time.
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_ftpsrv.cmake
-    WORKING_DIRECTORY ${ftpsrv_SOURCE_DIR}
-    RESULT_VARIABLE ftpsrv_patch_result
-)
-if (NOT ftpsrv_patch_result EQUAL 0)
-    message(FATAL_ERROR "failed to patch ftpsrv: ${ftpsrv_patch_result}")
-endif()
-
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_libhaze.cmake
-    WORKING_DIRECTORY ${libhaze_SOURCE_DIR}
-    RESULT_VARIABLE libhaze_patch_result
-)
-if (NOT libhaze_patch_result EQUAL 0)
-    message(FATAL_ERROR "failed to patch libhaze: ${libhaze_patch_result}")
-endif()
-
-if (USE_NVJPG)
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_nvjpg.cmake
-        WORKING_DIRECTORY ${nvjpg_SOURCE_DIR}
-        RESULT_VARIABLE nvjpg_patch_result
-    )
-    if (NOT nvjpg_patch_result EQUAL 0)
-        message(FATAL_ERROR "failed to patch nvjpg: ${nvjpg_patch_result}")
-    endif()
-endif()
-
-set(FTPSRV_LIB_BUILD TRUE)
-set(FTPSRV_LIB_VFS_CUSTOM ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs_nx.h)
-set(FTPSRV_LIB_PATH_SIZE 0x301)
-set(FTPSRV_LIB_SESSIONS 16)
-# the transfer loop moves at most one buffer per poll, so a bigger buffer means
-# fewer round trips (and fewer LED/progress callbacks) per megabyte. upstream's
-# sysmod build uses the same 512 KiB.
-set(FTPSRV_LIB_BUF_SIZE 1024*512)
-
-set(FTPSRV_LIB_CUSTOM_DEFINES
-    USE_VFS_SAVE=$<BOOL:FALSE>
-    USE_VFS_STORAGE=$<BOOL:TRUE>
-    # disabled as it may conflict with the gamecard menu.
-    USE_VFS_GC=$<BOOL:FALSE>
-    USE_VFS_USBHSFS=$<BOOL:TRUE>
-    VFS_NX_BUFFER_IO=$<BOOL:TRUE>
-    # let sphaira handle init / closing of the hdd.
-    USE_VFS_USBHSFS_INIT=$<BOOL:FALSE>
-    # disable romfs mounting as otherwise we cannot write / modify sphaira.nro
-    USE_VFS_ROMFS=$<BOOL:FALSE>
-    FTP_SOCKET_HEADER="${ftpsrv_SOURCE_DIR}/src/platform/nx/socket_nx.h"
-)
-
-add_subdirectory(${ftpsrv_SOURCE_DIR} binary_dir)
-
-add_library(ftpsrv_helper
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs_nx.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs/vfs_nx_none.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs/vfs_nx_root.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs/vfs_nx_fs.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs/vfs_nx_storage.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs/vfs_nx_stdio.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/vfs/vfs_nx_hdd.c
-    ${ftpsrv_SOURCE_DIR}/src/platform/nx/utils.c
-)
-
-target_link_libraries(ftpsrv_helper PUBLIC ftpsrv libusbhsfs)
-target_include_directories(ftpsrv_helper PUBLIC ${ftpsrv_SOURCE_DIR}/src/platform)
-
-add_library(stb INTERFACE)
-target_include_directories(stb INTERFACE ${stb_SOURCE_DIR})
-
-add_library(libnxtc
-    ${libnxtc_SOURCE_DIR}/source/nxtc.c
-    ${libnxtc_SOURCE_DIR}/source/nxtc_log.c
-    ${libnxtc_SOURCE_DIR}/source/nxtc_utils.c
-)
-target_include_directories(libnxtc PUBLIC ${libnxtc_SOURCE_DIR}/include)
-
-if (USE_NVJPG)
-    add_library(nvjpg
-        ${nvjpg_SOURCE_DIR}/lib/decoder.cpp
-        ${nvjpg_SOURCE_DIR}/lib/image.cpp
-        ${nvjpg_SOURCE_DIR}/lib/surface.cpp
-    )
-    target_include_directories(nvjpg PUBLIC ${nvjpg_SOURCE_DIR}/include)
-    set_target_properties(nvjpg PROPERTIES CXX_STANDARD 26)
-endif()
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/sphaira_dependencies.cmake)
 
 find_package(ZLIB REQUIRED)
 find_library(minizip_lib minizip REQUIRED)
@@ -660,6 +448,7 @@ endif()
 
 target_include_directories(sphaira PRIVATE
     include
+    source
     ${minizip_inc}
     ${mbedtls_inc}
     ${libsmb2_SOURCE_DIR}/include
@@ -668,87 +457,4 @@ target_include_directories(sphaira PRIVATE
     ${libnfs_SOURCE_DIR}/nfs
 )
 
-# copy the romfs
-file(COPY ${CMAKE_SOURCE_DIR}/assets/romfs DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-# create assets target
-dkp_add_asset_target(sphaira_romfs ${CMAKE_CURRENT_BINARY_DIR}/romfs)
-
-file(GLOB_RECURSE sphaira_romfs_source_files CONFIGURE_DEPENDS
-    LIST_DIRECTORIES false
-    ${CMAKE_SOURCE_DIR}/assets/romfs/*
-)
-add_custom_target(sphaira_romfs_sync
-    COMMAND ${CMAKE_COMMAND} -E remove_directory
-        ${CMAKE_CURRENT_BINARY_DIR}/romfs/avatars
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/assets/romfs
-        ${CMAKE_CURRENT_BINARY_DIR}/romfs
-    DEPENDS ${sphaira_romfs_source_files}
-)
-add_dependencies(sphaira_romfs sphaira_romfs_sync)
-set_property(TARGET sphaira_romfs APPEND PROPERTY DKP_ASSET_FILES ${sphaira_romfs_source_files})
-
-# embed the fan sysmodule so the fan curve menu can install it on demand
-set(sphaira_fan_romfs_dir ${CMAKE_CURRENT_BINARY_DIR}/romfs/sysmodule)
-add_custom_command(
-    OUTPUT ${sphaira_fan_romfs_dir}/exefs.nsp ${sphaira_fan_romfs_dir}/toolbox.json
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${sphaira_fan_romfs_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${SPHAIRA_FAN_EXEFS_NSP} ${sphaira_fan_romfs_dir}/exefs.nsp
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/sysmodule/toolbox.json ${sphaira_fan_romfs_dir}/toolbox.json
-    DEPENDS sphaira_fan_exefs ${CMAKE_SOURCE_DIR}/sysmodule/toolbox.json
-    COMMENT "Embedding fan sysmodule into romfs"
-    VERBATIM
-)
-add_custom_target(sphaira_fan_romfs DEPENDS ${sphaira_fan_romfs_dir}/exefs.nsp)
-add_dependencies(sphaira_romfs sphaira_fan_romfs)
-set_property(TARGET sphaira_romfs APPEND PROPERTY DKP_ASSET_FILES
-    ${sphaira_fan_romfs_dir}/exefs.nsp
-    ${sphaira_fan_romfs_dir}/toolbox.json
-)
-
-# wait until hbl is built first as we need the exefs to embed
-add_dependencies(sphaira hbl_nso hbl_npdm)
-
-# set the embed path for assets and hbl
-target_compile_options(sphaira PRIVATE
-    --embed-dir=${CMAKE_SOURCE_DIR}/assets/embed
-    --embed-dir=${CMAKE_BINARY_DIR}/hbl
-)
-
-# add nanovg shaders to romfs
-dkp_install_assets(sphaira_romfs
-    DESTINATION shaders
-    TARGETS
-        fill_aa_fsh
-        fill_fsh
-        fill_vsh
-)
-
-# create nacp
-nx_generate_nacp(
-    OUTPUT kefir-hub.nacp
-    NAME "Kefir Hub"
-    AUTHOR Kefir
-    VERSION ${sphaira_VERSION}
-)
-
-# create nro
-nx_create_nro(sphaira
-    OUTPUT ${CMAKE_BINARY_DIR}/kefir-hub.nro
-    ICON ${CMAKE_SOURCE_DIR}/assets/icon.jpg
-    NACP kefir-hub.nacp
-    ROMFS sphaira_romfs
-)
-
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/switch/kefir-hub)
-
-add_custom_command(
-    TARGET sphaira_nro POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_BINARY_DIR}/kefir-hub.nro
-        ${CMAKE_BINARY_DIR}/switch/kefir-hub/kefir-hub.nro
-)
-
-message(STATUS "generating nro in: ${CMAKE_BINARY_DIR}/kefir-hub.nro")
-message(STATUS "run nxlink -s ${CMAKE_BINARY_DIR}/kefir-hub.nro")
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/sphaira_packaging.cmake)

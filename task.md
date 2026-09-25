@@ -1,8 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.878**.
+Версія коду: **v0.13.879**.
 
-## Поточний delivery: v0.13.878 — File-size audit closure (завершено)
+## Поточний delivery: v0.13.879 — remaining file-size audit (завершено)
+
+- [x] `SPLIT-879` — 25 remaining oversized first-party targets розділено на когезивні units; 53 нові файли.
+- [x] `SIZE-879` — усі 620 перевірених code/build/test файлів у `sphaira`, `hbl`, `tests` ≤600 рядків.
+- [x] `VERIFY-879` — Gemini: WSL `tests/run.sh` all green, save-restore C++ 40/40, dead-symbol 1033/1033, `ReleaseWithInstall` і whitespace PASS; senior: diff/CMake/size/source review, без повторної компіляції.
+- [x] `DOCS-BUMP-879` — версію й delivery-документи синхронізовано.
+- [x] `COMMIT-879` — focused primary-master commit без push; ROMFS binary виключено.
+
+## Попередній delivery: v0.13.878 — File-size audit closure (завершено)
 
 - [x] `MAP-YATI-878` — graph/source/callers перевірені; analysis/planning seam визначено.
 - [x] `SPLIT-ANALYSIS-878` — NCZ analysis і вибір носія винесені; senior перевірив diff, compile ще попереду.
@@ -42,6 +50,6 @@
 
 ## Подальша черга
 
-Non-UI файли понад 600 рядків поза A5–A7 — лише за конкретним maintenance outcome, без механічного split.
+Ручний device/runtime тест save/restore та MTP; structural size queue для перевіреної області закрита.
 
 Історія завершених checklist-ів доступна через Git і тут не дублюється.

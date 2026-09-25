@@ -65,8 +65,8 @@ def test_static_source_contracts() -> None:
     print("[1] Running static source contracts for v0.13.868...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)", "set(sphaira_VERSION 0.13.874)", "set(sphaira_VERSION 0.13.875)", "set(sphaira_VERSION 0.13.876)", "set(sphaira_VERSION 0.13.877)", "set(sphaira_VERSION 0.13.878)")),
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, or 0.13.878")
+    check(any(v in cmake_src for v in ("set(sphaira_VERSION 0.13.868)", "set(sphaira_VERSION 0.13.869)", "set(sphaira_VERSION 0.13.870)", "set(sphaira_VERSION 0.13.871)", "set(sphaira_VERSION 0.13.872)", "set(sphaira_VERSION 0.13.873)", "set(sphaira_VERSION 0.13.874)", "set(sphaira_VERSION 0.13.875)", "set(sphaira_VERSION 0.13.876)", "set(sphaira_VERSION 0.13.877)", "set(sphaira_VERSION 0.13.878)", "set(sphaira_VERSION 0.13.879)")),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.868, 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, 0.13.878, or 0.13.879")
 
     path_util_hpp = read_file("sphaira", "include", "path_util.hpp")
     check("inline auto IsDbiRootMarkerEntry(" in path_util_hpp,

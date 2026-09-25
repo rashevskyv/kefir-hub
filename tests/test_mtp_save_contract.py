@@ -54,10 +54,14 @@ def extract_method_body(class_src, method_name):
 def test_source_contracts():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     save_proxy_path = os.path.join(repo_root, "sphaira", "source", "haze", "haze_save_proxy.cpp")
+    save_scan_path = os.path.join(repo_root, "sphaira", "source", "haze", "haze_save_proxy_scan.cpp")
     with open(save_proxy_path, "r", encoding="utf-8") as f:
         src = f.read()
 
     proxy_body = extract_scoped_class(src, "FsSaveProxy")
+    if os.path.exists(save_scan_path):
+        with open(save_scan_path, "r", encoding="utf-8") as f:
+            proxy_body += "\n" + f.read()
 
     # =========================================================================
     # 1. Deterministic total order and sorting before name allocation
@@ -278,7 +282,7 @@ def test_source_contracts():
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(865, 879)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(865, 880)),
           "CMakeLists.txt must define sphaira_VERSION as 0.13.865 or later")
 
     # =========================================================================

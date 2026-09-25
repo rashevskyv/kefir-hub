@@ -58,8 +58,8 @@ def test_source_wiring_contracts() -> None:
 
     # A. CMakeLists.txt version and source file registration
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.869)" in cmake_src or "set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src or "set(sphaira_VERSION 0.13.875)" in cmake_src or "set(sphaira_VERSION 0.13.876)" in cmake_src or "set(sphaira_VERSION 0.13.877)" in cmake_src or "set(sphaira_VERSION 0.13.878)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, or 0.13.878")
+    check("set(sphaira_VERSION 0.13.869)" in cmake_src or "set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src or "set(sphaira_VERSION 0.13.875)" in cmake_src or "set(sphaira_VERSION 0.13.876)" in cmake_src or "set(sphaira_VERSION 0.13.877)" in cmake_src or "set(sphaira_VERSION 0.13.878)" in cmake_src or "set(sphaira_VERSION 0.13.879)" in cmake_src,
+          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, 0.13.878, or 0.13.879")
     check("source/ui/menus/save/save_slot_backend.cpp" in cmake_src,
           "sphaira/CMakeLists.txt must compile save_slot_backend.cpp")
 

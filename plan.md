@@ -1,8 +1,14 @@
 # plan.md
 
-Версія коду: **v0.13.878**.
+Версія коду: **v0.13.879**.
 
-## Поточний delivery: v0.13.878 — File-size audit closure (завершено)
+## Поточний delivery: v0.13.879 — repo-wide file-size closure (завершено)
+
+Решту 25 first-party файлів понад 600 рядків розділено за конкретними обов’язками: account/restore і NAND, FS/FTP/MTP/Curl adapters, Haze save scan, title/owo, UI primitives, HBL environment, path-util security tests і CMake. Нові 53 файли та всі 620 перевірених code/build/test файлів у `sphaira`, `hbl`, `tests` мають ≤600 фізичних рядків. Публічні контракти та перевірки save-restore лишилися в обсязі; `test_save_restore_contract` тепер пройшов заявлені Gemini 40/40. Версія збільшена один раз до `0.13.879`.
+
+Gemini повідомив про WSL `tests/run.sh` all green, dead-symbol 1033/1033, `git diff --check` і `ReleaseWithInstall` (`sphaira_nro`) PASS. Senior перевірив первинний `master`, ліміт розміру, CMake-реєстрацію нових translation units, source-level межі save/MTP та тестові зміни; збірку й тести повторно не запускав. Device/runtime save-flow ще потребує ручної перевірки. `TegraExplorer.bin` — дозволена фонова зміна, не частина delivery.
+
+## Попередній delivery: v0.13.878 — File-size audit closure (завершено)
 
 Одна безперервна Gemini-передача для решти size/checks аудиту: завершити й перевірити Yati split, розкласти provider-heavy UI за API/parsing/storage/UI, пройти 32 oversized `source/ui/menus` файли за когезивними межами, дати 18 Python contracts discoverable запуск у `tests/run.sh`, зменшити 11 oversized test scripts без втрати safety cases, окремо перевірити `app.hpp` на безпечні dead declarations. Не робити механічних поділів заради числа; неподоланні винятки документувати фактично. Один patch-version `0.13.878`, фінальні host contracts + WSL build після всіх змін. Senior перевіряє весь diff, оновлює delivery-документи й комітить; Gemini не чіпає docs/бінарний ROMFS і не комітить.
 
@@ -20,7 +26,7 @@ Gemini повідомив про WSL `ReleaseWithInstall` build `[100%] Built ta
 
 ## Поза поточним delivery
 
-Інші non-UI files понад 600 рядків не входять в A5–A7 чергу: не розкладати platform adapters, CMake, embedded templates чи табличні дані механічно. Повернутися лише з конкретним maintenance outcome після прийняття поточного delivery.
+Device/runtime перевірка save/restore і MTP. Ліміт 600 рядків застосовано до first-party code/build/test файлів у `sphaira`, `hbl`, `tests`, але не до табличних даних і згенерованих артефактів.
 
 ## Межі
 

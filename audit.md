@@ -1,8 +1,11 @@
 # audit.md
 
-Версія коду: **v0.13.878**. Дата аудиту: 2026-09-24.
+Версія коду: **v0.13.879**. Дата аудиту: 2026-09-25.
 
 ## Поточний стан
+
+- v0.13.879 закрила залишковий file-size gap: 25 oversized targets розділено, 53 нові файли; усі 620 перевірених first-party code/build/test файлів у `sphaira`, `hbl`, `tests` ≤600 рядків. `sphaira/CMakeLists.txt` тепер 461.
+- Gemini повідомив про WSL host suite (`test_save_restore_contract` 40/40), `sphaira_nro`, dead-symbol 1033/1033 і whitespace PASS; senior перевірив diff/структуру, але не повторював збірку. Консольні save/restore і MTP flows лишаються для ручного тесту.
 
 - v0.13.878 закрила A5–A7: Yati, provider/menu UI та Python contracts розкладені; 150 змінених/нових source/test файлів і всі 152 menu source/header файли ≤600.
 - v0.13.877 розклала `threaded_file_transfer.cpp` з 1 956 до 263 рядків; усі нові transfer files ≤501 рядка.
@@ -10,11 +13,15 @@
 - Gemini: WSL `ReleaseWithInstall` build, 18/18 Python contracts і dead-symbol gate PASS; runtime на консолі не перевірено.
 - `app.hpp` зменшено до 590 рядків після перевірки невикористаних declarations; `GetAccountList` перенесено без зміни алгоритму.
 - Save build-closure units лишилися 591/597 рядків.
-- У `sphaira/source/ui/menus` більше немає `.cpp/.hpp` понад 600. Поза A5–A7 лишаються 22 oversized C/C++/test файли, а `sphaira/CMakeLists.txt` має 754 рядки; не вважати це repo-wide лімітом.
+- У `sphaira/source/ui/menus` більше немає `.cpp/.hpp` понад 600. Поза перевіреною областю лишаються табличні дані/згенеровані артефакти; ліміт не накладати на них механічно.
 - Graphify є картою зв’язків; source-level перевірка потрібна для кожного нового delivery.
 - Активні delivery-документи скорочено; попередня історія лишається в Git без потрійного дублювання.
 
 ## Черга — виконувати серійно
+
+### A8 — remaining first-party file-size audit (`v0.13.879`) — DONE
+
+Account/NAND, filesystem і transport adapters, Haze save scan, title/owo, UI, HBL, CMake та path-util test split завершені. Наступний крок — ручний device/runtime тест save/restore та MTP, не новий structural split.
 
 ### A1 — dead-code cleanup (`v0.13.871`) — DONE
 
@@ -60,7 +67,7 @@ API/parsing/storage відокремлено від UI в `cheat_download_menu.c
 ## Не чіпати механічно
 
 - i18n JSON — табличні дані, line cap не застосовувати.
-- `hbl/source/main.c`, patch CMake, platform adapters — ділити лише з конкретним maintenance outcome.
+- Platform adapters і CMake після цього delivery не ділити знову без конкретного maintenance outcome.
 - Не мінімізувати embedded HTML заради line count.
 - Не змішувати behavior change з broad file split.
 - Не створювати interfaces з однією реалізацією, registries або speculative config.
@@ -74,7 +81,7 @@ API/parsing/storage відокремлено від UI в `cheat_download_menu.c
 - App lifecycle/settings: `source/app*.cpp`, `include/app.hpp`
 - Transfer core/archive: `source/threaded_file_transfer*.cpp`, `include/threaded_file_transfer.hpp`
 - Installer: `source/yati/`, `include/yati/`
-- MTP filesystem: `source/utils/devoptab_mtp.cpp`
+- MTP filesystem: `source/utils/devoptab_mtp*.cpp`
 - Active work: `plan.md`, `task.md`; shipped outcome: `walkthrough.md`; next cut: this file.
 
 Історичні accepted-delivery докази доступні через Git і не є активною чергою.

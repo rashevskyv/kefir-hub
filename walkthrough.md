@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.878** (2026-09-24).
+Актуальний shipped delivery — **v0.13.879** (2026-09-25).
+
+## v0.13.879 — remaining file-size audit closure
+
+25 remaining first-party code/build/test files понад 600 рядків розділено за відповідальністю, а не за довільними діапазонами. Нові 53 файли покривають account/NAND restore, FS/FTP/MTP/Curl, Haze save scan, title/owo, UI, HBL environment, CMake та path-util security tests. Усі 620 перевірених файлів у `sphaira`, `hbl`, `tests` тепер ≤600 рядків; `sphaira/CMakeLists.txt` має 461. C++ save-restore contract лишився незміненим і, за звітом Gemini, пройшов 40/40. Нові translation units зареєстровані в CMake; окремий security test підхоплює наявний `tests/run.sh` glob.
+
+Gemini повідомив про WSL `tests/run.sh` all green, dead-symbol gate 1033/1033, `git diff --check` і `ReleaseWithInstall` `[100%] Built target sphaira_nro` PASS. Senior незалежно перевірив primary `master`, фактичні file sizes, реєстрацію 32 нових `.cpp/.c`, source-level save/MTP contracts, тестовий diff і staged whitespace; не запускав збірку чи тести повторно. Ручна консольна перевірка save/restore та MTP ще попереду. Дозволений `TegraExplorer.bin` не входить у delivery.
 
 ## v0.13.878 — Yati, menu та tests structural split
 
