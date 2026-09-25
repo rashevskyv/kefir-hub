@@ -73,7 +73,9 @@ auto Menu::ComputeGridSections() const -> GridSections {
                 const s64 count = static_cast<s64>(end - idx);
 
                 if (g.sections.empty()) {
-                    cur_disp = g.row;
+                    // The grid already starts below the tabs, leaving room for
+                    // the first label without a whole empty row.
+                    cur_disp = (m_layout.Get() == grid::LayoutType_Grid && !m_app_id_filter) ? 0 : g.row;
                 } else {
                     const s64 rem = cur_disp % g.row;
                     if (rem != 0) {
@@ -300,11 +302,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         DrawSelectionMark(vg, theme, m_layout.Get(), v, image_v, e.selected, m_selected_count > 0);
 
-        // the section divider rides above the first tile of a divided section, filling the
-        // empty row reserved for it in ComputeGridSections().
+        // The divider rides above the first tile; later sections use an empty row.
         for (const auto& sec : g.sections) {
             if (sec.has_divider && disp == sec.first_display) {
-                DrawSectionDivider(vg, theme, v, g, sec.label);
+                DrawSectionDivider(vg, theme, v, g, sec.label, sec.entry_start == 0 && sec.first_display == 0);
                 break;
             }
         }
@@ -364,7 +365,7 @@ void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const
     DrawInnerBorder(vg, v, col, thickness, 5.f);
 }
 
-void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label) const {
+void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool compact_first) const {
     const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto line_col = theme->GetColour(ThemeEntryID_LINE_SEPARATOR);
 
@@ -376,9 +377,9 @@ void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v,
         return;
     }
 
-    // vertical layout: a full-width rule centred in the empty row above the
-    // first section tile, with the label sitting in a gap in the middle.
-    const float cy = first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
+    // In the grid's first section, use the space below the tabs; later
+    // sections centre the rule in their reserved empty row.
+    const float cy = compact_first ? first_v.y - 22.f : first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
     const float dl = m_list->GetX();
     const float dr = m_list->GetX() + m_list->GetW();
     const float mid = (dl + dr) / 2.f;
