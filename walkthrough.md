@@ -1,6 +1,12 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.879** (2026-09-25).
+Актуальний shipped delivery — **v0.13.880** (2026-09-25).
+
+## v0.13.880 — DBI-бекапи в каталозі
+
+`ReadArchiveSaveMetadata` тепер переносить уже порахований `payload_count` разом із метаданими. Раніше лічильник обнулявся, і `InspectBackupArchive` відкидав DBI ZIP як порожній. На SD виявлено 21 ZIP із payload; ще 9 ZIP містять лише метадані й залишаються відхиленими. Змінено один рядок коду, версію піднято до `0.13.880`.
+
+Gemini повідомив про `git diff --check` PASS; senior перевірив diff, усі гілки перенесення результату та розміри файлів. Збірку й консольний runtime не виконували. Потрібна перевірка зібраної версії в Saves → Backups на Switch. Фоновий `TegraExplorer.bin` не включено.
 
 ## v0.13.879 — remaining file-size audit closure
 

@@ -1,9 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.879**. Дата аудиту: 2026-09-25.
+Версія коду: **v0.13.880**. Дата аудиту: 2026-09-25.
 
 ## Поточний стан
 
+- v0.13.880 виправила втрату `payload_count` для DBI ZIP із метаданими; на SD є 21 архів із payload для перевірки на консолі. Ще 9 metadata-only архівів відсікає чинна safety policy. Build/runtime не запускали.
 - v0.13.879 закрила залишковий file-size gap: 25 oversized targets розділено, 53 нові файли; усі 620 перевірених first-party code/build/test файлів у `sphaira`, `hbl`, `tests` ≤600 рядків. `sphaira/CMakeLists.txt` тепер 461.
 - Gemini повідомив про WSL host suite (`test_save_restore_contract` 40/40), `sphaira_nro`, dead-symbol 1033/1033 і whitespace PASS; senior перевірив diff/структуру, але не повторював збірку. Консольні save/restore і MTP flows лишаються для ручного тесту.
 

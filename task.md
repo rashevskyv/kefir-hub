@@ -1,8 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.879**.
+Версія коду: **v0.13.880**.
 
-## Поточний delivery: v0.13.879 — remaining file-size audit (завершено)
+## Поточний delivery: v0.13.880 — DBI-бекапи в каталозі (завершено)
+
+- [x] `MAP-880` — перевірено реальні DBI ZIP на SD, сканер, інспектор архівів і втрату `payload_count`.
+- [x] `FIX-880` — збережено кількість payload під час копіювання розібраних метаданих; metadata-only і invalid лишаються відхиленими.
+- [x] `VERIFY-880` — Gemini: `git diff --check`; senior: diff, source flow, file-size та primary-master review; без збірки й device test.
+- [x] `DOCS-BUMP-880` — версію та delivery-документи синхронізовано.
+- [x] `COMMIT-880` — focused primary-master commit без push; ROMFS binary виключено.
+
+## Попередній delivery: v0.13.879 — remaining file-size audit (завершено)
 
 - [x] `SPLIT-879` — 25 remaining oversized first-party targets розділено на когезивні units; 53 нові файли.
 - [x] `SIZE-879` — усі 620 перевірених code/build/test файлів у `sphaira`, `hbl`, `tests` ≤600 рядків.

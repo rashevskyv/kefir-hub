@@ -1,8 +1,14 @@
 # plan.md
 
-Версія коду: **v0.13.879**.
+Версія коду: **v0.13.880**.
 
-## Поточний delivery: v0.13.879 — repo-wide file-size closure (завершено)
+## Поточний delivery: v0.13.880 — DBI-бекапи в каталозі (завершено)
+
+У `ReadArchiveSaveMetadata` збережено `payload_count` під час перенесення розібраних метаданих у результат. Це прибирає хибне відхилення DBI ZIP із файлами сейву в каталозі Backups. На змонтованій SD-картці знайдено 30 DBI ZIP: 21 із payload і 9 лише з метаданими; останні залишаються відхиленими чинною перевіркою безпеки. Зміна охоплює один рядок коду та patch version `0.13.880`.
+
+Gemini виконав `git diff --check`; senior перевірив diff, гілки присвоєння результату, розміри файлів і стан основного `master`. Компіляцію та runtime на консолі не виконували за політикою звичайних змін. Наступна перевірка: зібрати нову версію та відкрити Saves → Backups на Switch. Фоновий `TegraExplorer.bin` поза delivery.
+
+## Попередній delivery: v0.13.879 — repo-wide file-size closure (завершено)
 
 Решту 25 first-party файлів понад 600 рядків розділено за конкретними обов’язками: account/restore і NAND, FS/FTP/MTP/Curl adapters, Haze save scan, title/owo, UI primitives, HBL environment, path-util security tests і CMake. Нові 53 файли та всі 620 перевірених code/build/test файлів у `sphaira`, `hbl`, `tests` мають ≤600 фізичних рядків. Публічні контракти та перевірки save-restore лишилися в обсязі; `test_save_restore_contract` тепер пройшов заявлені Gemini 40/40. Версія збільшена один раз до `0.13.879`.
 

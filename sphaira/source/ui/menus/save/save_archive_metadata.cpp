@@ -303,6 +303,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
     }
 
     DecodedSaveMetadata local_out{};
+    local_out.payload_count = out.payload_count;
 
     if (has_valid_nx && has_valid_dbi_extra) {
         if (!CompareCommonSourceFields(nx_meta, dbi_extra_meta)) {
