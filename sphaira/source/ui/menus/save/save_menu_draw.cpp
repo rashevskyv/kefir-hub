@@ -258,6 +258,15 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
         auto& e = m_entries[entry];
 
+        // Paint the section rule first so the selected title label stays above it.
+        for (const auto& sec : g.sections) {
+            if (sec.has_divider && disp == sec.first_display) {
+                DrawSectionDivider(vg, theme, v, g, sec.label,
+                    m_category == Category::Backups && m_layout.Get() == grid::LayoutType_Grid);
+                break;
+            }
+        }
+
         if (e.status == title::NacpLoadStatus::None) {
             if (!IsSystemLikeSave(e.save_data_type)) {
                 title::PushAsync(e.application_id);
@@ -302,13 +311,6 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         DrawSelectionMark(vg, theme, m_layout.Get(), v, image_v, e.selected, m_selected_count > 0);
 
-        // The divider rides above the first tile; later sections use an empty row.
-        for (const auto& sec : g.sections) {
-            if (sec.has_divider && disp == sec.first_display) {
-                DrawSectionDivider(vg, theme, v, g, sec.label, sec.entry_start == 0 && sec.first_display == 0);
-                break;
-            }
-        }
     });
 }
 
@@ -365,7 +367,7 @@ void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const
     DrawInnerBorder(vg, v, col, thickness, 5.f);
 }
 
-void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool compact_first) const {
+void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool align_above_tile) const {
     const auto text_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto line_col = theme->GetColour(ThemeEntryID_LINE_SEPARATOR);
 
@@ -377,9 +379,8 @@ void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v,
         return;
     }
 
-    // In the grid's first section, use the space below the tabs; later
-    // sections centre the rule in their reserved empty row.
-    const float cy = compact_first ? first_v.y - 22.f : first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
+    // Keep every backup grid label the same distance above its first tile.
+    const float cy = align_above_tile ? first_v.y - 22.f : first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
     const float dl = m_list->GetX();
     const float dr = m_list->GetX() + m_list->GetW();
     const float mid = (dl + dr) / 2.f;

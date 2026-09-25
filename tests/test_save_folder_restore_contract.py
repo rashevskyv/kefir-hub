@@ -25,6 +25,7 @@ Verifies:
 """
 
 import os
+import re
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,9 +46,10 @@ def read_file(*parts: str) -> str:
 def test_static_review_blockers() -> None:
     print("[1] Verifying static review blocker fixes...")
 
-    # 1. Version must be 0.13.882
+    # 1. Version must be 0.13.882 or later.
     cmake_txt = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.882)" in cmake_txt, "CMakeLists.txt must be 0.13.882")
+    version = re.search(r"set\(sphaira_VERSION 0\.13\.(\d+)\)", cmake_txt)
+    check(version is not None and int(version.group(1)) >= 882, "CMakeLists.txt must be 0.13.882+")
 
     # 2. Blocker 1: No member.source / it->source provenance comparison in save_menu_ops.cpp
     ops_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")

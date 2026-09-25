@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Suite: Backup Source Provenance and Section Divider Contract (v0.13.883)
+Test Suite: Backup Source Provenance and Section Divider Contract (v0.13.884)
 
 Target chat: Походження бекапів і папкові бекапи
 Verifies:
@@ -42,7 +42,7 @@ def test_static_source_wiring() -> None:
     cmake_path = os.path.join(REPO_ROOT, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.883)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.883")
+    check("set(sphaira_VERSION 0.13.884)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.884")
 
     # 1.2 BackupSource enum in save_menu.hpp
     sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -53,7 +53,7 @@ def test_static_source_wiring() -> None:
     check("BackupSource backup_source{BackupSource::Other};" in sm_hpp, "Entry must contain backup_source member")
     check("struct Section {" in sm_hpp and "std::vector<Section> sections" in sm_hpp,
           "GridSections must declare struct Section and sections vector")
-    check("void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool compact_first) const;" in sm_hpp,
+    check("void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool align_above_tile) const;" in sm_hpp,
           "save_menu.hpp must declare DrawSectionDivider with label parameter")
 
     # 1.3 save_paths.hpp declarations
@@ -109,10 +109,14 @@ def test_static_source_wiring() -> None:
     check("m_category == Category::Backups" in smd_cpp, "ComputeGridSections must branch on Category::Backups")
     check("sec.has_divider && disp == sec.first_display" in smd_cpp,
           "Draw must draw divider when disp matches section first_display")
-    check("DrawSectionDivider(vg, theme, v, g, sec.label, sec.entry_start == 0 && sec.first_display == 0);" in smd_cpp,
+    check("DrawSectionDivider(vg, theme, v, g, sec.label," in smd_cpp,
           "Draw must pass sec.label to DrawSectionDivider")
     check("cur_disp = (m_layout.Get() == grid::LayoutType_Grid && !m_app_id_filter) ? 0 : g.row;" in smd_cpp,
           "first grid backup section must not reserve a full empty row")
+    check("m_category == Category::Backups && m_layout.Get() == grid::LayoutType_Grid" in smd_cpp,
+          "every backup grid divider must align above its first tile")
+    check(smd_cpp.index("DrawSectionDivider(vg, theme, v, g, sec.label,") < smd_cpp.index("image_v = DrawEntry(vg, theme"),
+          "the selected title label must paint above the section divider")
 
     # 1.8 save_menu.cpp non-interactive touch
     sm_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save_menu.cpp")
