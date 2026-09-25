@@ -2497,6 +2497,7 @@
   "Sizing source: ": "Джерело розміру: ",
   "Installed control data and backup metadata": "Дані керування та метадані резервної копії",
   "Installed control data": "Дані керування встановленої гри",
+  "Backup metadata": "Метадані резервної копії",
   "No compatible live save slot found on console.": "На консолі не знайдено сумісного слота збереження.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Слот збереження було створено, але відновлення не завершилося.\nСлот залишається доступним для повторної спроби або керування вручну.\nРезервну копію безпеки не створено, оскільки слот новий.",
   "Cannot restore directly to backup or invalid save target.": "Неможливо відновити безпосередньо в резервну копію або недійсний цільовий слот.",

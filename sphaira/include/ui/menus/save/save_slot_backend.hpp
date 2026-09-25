@@ -14,6 +14,7 @@ namespace sphaira::ui::menu::save {
 enum class SizingProvenance {
     InstalledControlData,
     InstalledControlDataAndArchiveMetadata,
+    ArchiveMetadata,
 };
 
 enum class SaveBackendStatus {
@@ -59,6 +60,9 @@ struct SaveArchiveSizing {
     bool has_sizing{false};
     s64 data_size{0};
     s64 journal_size{0};
+    bool has_metadata{false};
+    u64 owner_id{0};
+    FsSaveDataAttribute attr{};
 };
 
 struct SaveArchiveAdmissionResult {

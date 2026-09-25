@@ -2497,6 +2497,7 @@
   "Sizing source: ": "Sizing source: ",
   "Installed control data and backup metadata": "Installed control data and backup metadata",
   "Installed control data": "Installed control data",
+  "Backup metadata": "Backup metadata",
   "No compatible live save slot found on console.": "No compatible live save slot found on console.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.",
   "Cannot restore directly to backup or invalid save target.": "Cannot restore directly to backup or invalid save target.",

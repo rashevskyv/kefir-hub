@@ -2,11 +2,6 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
-#include "minizip_helper.hpp"
-#include "ui/menus/save/save_paths.hpp"
-#include "threaded_file_transfer.hpp"
-#include "ui/progress_box.hpp"
-#include <minizip/unzip.h>
 #include <sys/statvfs.h>
 #include <algorithm>
 #include <cstring>
@@ -16,58 +11,6 @@
 namespace sphaira::ui::menu::save {
 
 namespace {
-
-struct SaveReaderContext {
-    zlib_filefunc64_def base_funcs{};
-    bool io_error{false};
-    bool close_error{false};
-
-    [[nodiscard]] bool HasError() const { return io_error || close_error; }
-
-    void InitFileFunc(zlib_filefunc64_def* funcs) {
-        mz::FileFuncStdio(&base_funcs);
-        *funcs = base_funcs;
-        funcs->opaque = this;
-        funcs->zopen64_file = [](voidpf opaque, const void* filename, int mode) -> voidpf {
-            auto self = static_cast<SaveReaderContext*>(opaque);
-            return self->base_funcs.zopen64_file(self->base_funcs.opaque, filename, mode);
-        };
-        funcs->zread_file = [](voidpf opaque, voidpf stream, void* buf, uLong size) -> uLong {
-            auto self = static_cast<SaveReaderContext*>(opaque);
-            const auto res = self->base_funcs.zread_file(self->base_funcs.opaque, stream, buf, size);
-            if (res < size && self->base_funcs.zerror_file && self->base_funcs.zerror_file(self->base_funcs.opaque, stream)) {
-                self->io_error = true;
-            }
-            return res;
-        };
-        funcs->zseek64_file = [](voidpf opaque, voidpf stream, ZPOS64_T offset, int origin) -> long {
-            auto self = static_cast<SaveReaderContext*>(opaque);
-            const auto res = self->base_funcs.zseek64_file(self->base_funcs.opaque, stream, offset, origin);
-            if (res != 0) self->io_error = true;
-            return res;
-        };
-        funcs->ztell64_file = [](voidpf opaque, voidpf stream) -> ZPOS64_T {
-            auto self = static_cast<SaveReaderContext*>(opaque);
-            const auto res = self->base_funcs.ztell64_file(self->base_funcs.opaque, stream);
-            if (res == static_cast<ZPOS64_T>(-1) || (self->base_funcs.zerror_file && self->base_funcs.zerror_file(self->base_funcs.opaque, stream))) {
-                self->io_error = true;
-            }
-            return res;
-        };
-        funcs->zclose_file = [](voidpf opaque, voidpf stream) -> int {
-            auto self = static_cast<SaveReaderContext*>(opaque);
-            int res = self->base_funcs.zclose_file ? self->base_funcs.zclose_file(self->base_funcs.opaque, stream) : 0;
-            if (res != 0) self->close_error = true;
-            return res;
-        };
-        funcs->zerror_file = [](voidpf opaque, voidpf stream) -> int {
-            auto self = static_cast<SaveReaderContext*>(opaque);
-            int res = self->base_funcs.zerror_file ? self->base_funcs.zerror_file(self->base_funcs.opaque, stream) : 0;
-            if (res != 0) self->io_error = true;
-            return res;
-        };
-    }
-};
 
 constexpr bool IsConcreteSaveDataSpace(FsSaveDataSpaceId space_id) {
     return space_id == FsSaveDataSpaceId_System ||
@@ -181,6 +124,11 @@ auto PlanAccountSaveCreation(
         return FsError_PathNotFound;
     }
 
+    s64 final_data = 0;
+    s64 final_journal = 0;
+    u64 owner_id = 0;
+    SizingProvenance provenance = SizingProvenance::InstalledControlData;
+
     u64 actual_size = 0;
     auto control_data = std::make_unique<NsApplicationControlData>();
     const auto rc = nsGetApplicationControlData(
@@ -190,34 +138,71 @@ auto PlanAccountSaveCreation(
         sizeof(NsApplicationControlData),
         &actual_size
     );
-    if (R_FAILED(rc) || actual_size < sizeof(NacpStruct)) {
-        if (out_status) *out_status = SaveBackendStatus::MissingControlData;
-        return R_FAILED(rc) ? rc : FsError_PathNotFound;
-    }
 
-    const u64 base_data_u64 = control_data->nacp.user_account_save_data_size ? control_data->nacp.user_account_save_data_size : control_data->nacp.user_account_save_data_size_max;
-    const u64 base_journal_u64 = control_data->nacp.user_account_save_data_journal_size ? control_data->nacp.user_account_save_data_journal_size : control_data->nacp.user_account_save_data_journal_size_max;
-    const u64 owner_id = control_data->nacp.save_data_owner_id;
+    if (R_SUCCEEDED(rc) && actual_size >= sizeof(NacpStruct)) {
+        const u64 base_data_u64 = control_data->nacp.user_account_save_data_size
+            ? control_data->nacp.user_account_save_data_size
+            : control_data->nacp.user_account_save_data_size_max;
+        const u64 base_journal_u64 = control_data->nacp.user_account_save_data_journal_size
+            ? control_data->nacp.user_account_save_data_journal_size
+            : control_data->nacp.user_account_save_data_journal_size_max;
+        owner_id = control_data->nacp.save_data_owner_id;
 
-    if (owner_id == 0) {
-        if (out_status) *out_status = SaveBackendStatus::MissingOwnerId;
-        return FsError_PathNotFound;
-    }
+        if (owner_id == 0) {
+            if (out_status) *out_status = SaveBackendStatus::MissingOwnerId;
+            return FsError_PathNotFound;
+        }
 
-    if (base_data_u64 == 0 || base_data_u64 > static_cast<u64>(std::numeric_limits<s64>::max()) || (base_data_u64 % 0x4000 != 0)) {
-        if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
-        return FsError_InvalidSize;
-    }
-    if (base_journal_u64 > static_cast<u64>(std::numeric_limits<s64>::max()) || (base_journal_u64 % 0x4000 != 0)) {
-        if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
-        return FsError_InvalidSize;
-    }
+        if (base_data_u64 == 0 || base_data_u64 > static_cast<u64>(std::numeric_limits<s64>::max()) || (base_data_u64 % 0x4000 != 0)) {
+            if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
+            return FsError_InvalidSize;
+        }
+        if (base_journal_u64 > static_cast<u64>(std::numeric_limits<s64>::max()) || (base_journal_u64 % 0x4000 != 0)) {
+            if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
+            return FsError_InvalidSize;
+        }
 
-    s64 final_data = static_cast<s64>(base_data_u64);
-    s64 final_journal = static_cast<s64>(base_journal_u64);
-    SizingProvenance provenance = SizingProvenance::InstalledControlData;
+        final_data = static_cast<s64>(base_data_u64);
+        final_journal = static_cast<s64>(base_journal_u64);
 
-    if (archive_sizing && archive_sizing->has_sizing) {
+        if (archive_sizing && archive_sizing->has_sizing) {
+            const s64 arch_data = archive_sizing->data_size;
+            const s64 arch_journal = archive_sizing->journal_size;
+            if (arch_data <= 0 || arch_data > std::numeric_limits<s64>::max() || (arch_data % 0x4000 != 0) ||
+                arch_journal < 0 || arch_journal > std::numeric_limits<s64>::max() || (arch_journal % 0x4000 != 0)) {
+                if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
+                return FsError_InvalidSize;
+            }
+            final_data = std::max(final_data, arch_data);
+            final_journal = std::max(final_journal, arch_journal);
+            provenance = SizingProvenance::InstalledControlDataAndArchiveMetadata;
+        }
+    } else {
+        if (!archive_sizing || !archive_sizing->has_metadata) {
+            if (out_status) *out_status = SaveBackendStatus::MissingControlData;
+            return R_FAILED(rc) ? rc : FsError_PathNotFound;
+        }
+        if (archive_sizing->attr.application_id != application_id) {
+            if (out_status) *out_status = SaveBackendStatus::InvalidApplicationId;
+            return FsError_PathNotFound;
+        }
+        if (archive_sizing->attr.save_data_type != FsSaveDataType_Account ||
+            archive_sizing->attr.system_save_data_id != 0) {
+            if (out_status) *out_status = SaveBackendStatus::UnsupportedSaveType;
+            return FsError_PathNotFound;
+        }
+        if (archive_sizing->attr.save_data_rank != FsSaveDataRank_Primary) {
+            if (out_status) *out_status = SaveBackendStatus::UnsupportedRank;
+            return FsError_PathNotFound;
+        }
+        if (archive_sizing->attr.save_data_index != 0) {
+            if (out_status) *out_status = SaveBackendStatus::UnsupportedIndex;
+            return FsError_PathNotFound;
+        }
+        if (archive_sizing->owner_id == 0) {
+            if (out_status) *out_status = SaveBackendStatus::MissingOwnerId;
+            return FsError_PathNotFound;
+        }
         const s64 arch_data = archive_sizing->data_size;
         const s64 arch_journal = archive_sizing->journal_size;
         if (arch_data <= 0 || arch_data > std::numeric_limits<s64>::max() || (arch_data % 0x4000 != 0) ||
@@ -225,9 +210,11 @@ auto PlanAccountSaveCreation(
             if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
             return FsError_InvalidSize;
         }
-        final_data = std::max(final_data, arch_data);
-        final_journal = std::max(final_journal, arch_journal);
-        provenance = SizingProvenance::InstalledControlDataAndArchiveMetadata;
+
+        final_data = arch_data;
+        final_journal = arch_journal;
+        owner_id = archive_sizing->owner_id;
+        provenance = SizingProvenance::ArchiveMetadata;
     }
 
     out_request = SaveCreationRequest{};
@@ -254,89 +241,6 @@ auto PlanAccountSaveCreation(
 
     if (out_status) *out_status = SaveBackendStatus::Success;
     return 0;
-}
-
-auto InspectSaveArchiveAdmission(
-    const fs::FsPath& archive_path,
-    ProgressBox* pbox,
-    bool allow_empty
-) -> SaveArchiveAdmissionResult {
-    SaveArchiveAdmissionResult result{};
-
-    SaveReaderContext reader_ctx;
-    zlib_filefunc64_def file_func;
-    reader_ctx.InitFileFunc(&file_func);
-
-    auto zfile = unzOpen2_64(archive_path.s, &file_func);
-    if (!zfile) {
-        result.rc = Result_UnzOpen2_64;
-        return result;
-    }
-
-    bool zfile_closed = false;
-    const auto close_zfile = [&]() {
-        if (!zfile_closed && zfile) {
-            const int close_res = unzClose(zfile);
-            zfile_closed = true;
-            if (close_res != UNZ_OK || reader_ctx.close_error) {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
-        return !IsSaveReservedMetadataRoot(name.s);
-    };
-
-    thread::UnzipPayloadSummary summary{};
-    thread::UnzipPayloadInventory inventory{};
-    const auto preflight_rc = thread::TransferUnzipPreflight(
-        pbox, zfile, "/", save_filter, true, &summary, &inventory, allow_empty);
-
-    if (R_FAILED(preflight_rc)) {
-        close_zfile();
-        result.rc = preflight_rc;
-        return result;
-    }
-
-    if (reader_ctx.HasError()) {
-        close_zfile();
-        result.rc = Result_UnzOpen2_64;
-        return result;
-    }
-
-    if (!allow_empty && summary.file_count == 0) {
-        close_zfile();
-        result.rc = FsError_PathNotFound;
-        return result;
-    }
-
-    DecodedSaveMetadata meta{};
-    Result meta_rc = 0;
-    const auto meta_status = ReadArchiveSaveMetadata(zfile, pbox, meta, &meta_rc);
-    if (meta_status == ArchiveMetaStatus::Invalid) {
-        close_zfile();
-        result.rc = R_FAILED(meta_rc) ? meta_rc : Result_UnzOpen2_64;
-        return result;
-    }
-
-    if (!close_zfile() || reader_ctx.HasError()) {
-        result.rc = Result_UnzOpen2_64;
-        return result;
-    }
-
-    result.admitted = true;
-    result.rc = 0;
-    if (meta_status == ArchiveMetaStatus::Valid && (meta.has_nx_meta || meta.has_dbi_extra)) {
-        result.sizing.has_sizing = true;
-        result.sizing.data_size = meta.meta.data_size;
-        result.sizing.journal_size = meta.meta.journal_size;
-    }
-    result.payload_file_count = summary.file_count;
-    result.payload_directory_count = summary.directory_count;
-    result.payload_file_bytes = summary.file_bytes;
-    return result;
 }
 
 auto CreateSaveDataChecked(
@@ -584,7 +488,9 @@ auto FormatSaveCreationPrompt(
     prompt += "Journal size: "_i18n + std::to_string(req.journal_size / 1024) + " KB (" + std::to_string(req.journal_size) + " bytes)" + "\n";
     prompt += "Sizing source: "_i18n + ((req.provenance == SizingProvenance::InstalledControlDataAndArchiveMetadata)
         ? "Installed control data and backup metadata"_i18n
-        : "Installed control data"_i18n);
+        : ((req.provenance == SizingProvenance::ArchiveMetadata)
+            ? "Backup metadata"_i18n
+            : "Installed control data"_i18n));
     return prompt;
 }
 

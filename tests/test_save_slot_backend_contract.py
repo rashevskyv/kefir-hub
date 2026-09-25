@@ -56,84 +56,52 @@ FsSaveDataRank_Primary = 0
 def test_source_wiring_contracts() -> None:
     print("[1] Running static source wiring contracts...")
 
-    # A. CMakeLists.txt version and source file registration
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.869)" in cmake_src or "set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src or "set(sphaira_VERSION 0.13.875)" in cmake_src or "set(sphaira_VERSION 0.13.876)" in cmake_src or "set(sphaira_VERSION 0.13.877)" in cmake_src or "set(sphaira_VERSION 0.13.878)" in cmake_src or "set(sphaira_VERSION 0.13.879)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.869, 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, 0.13.878, or 0.13.879")
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(869, 885)),
+          "sphaira/CMakeLists.txt must define valid sphaira_VERSION")
     check("source/ui/menus/save/save_slot_backend.cpp" in cmake_src,
           "sphaira/CMakeLists.txt must compile save_slot_backend.cpp")
+    check("source/ui/menus/save/save_slot_admission.cpp" in cmake_src,
+          "sphaira/CMakeLists.txt must compile save_slot_admission.cpp")
 
     # B. Header declarations and decoupling in save_slot_backend.hpp
     backend_hpp = read_file("sphaira", "include", "ui", "menus", "save", "save_slot_backend.hpp")
-    check("save_paths.hpp" not in backend_hpp,
-          "save_slot_backend.hpp must not include save_paths.hpp (avoid cycle)")
-    check("threaded_file_transfer.hpp" not in backend_hpp,
-          "save_slot_backend.hpp must not include threaded_file_transfer.hpp (avoid cycle)")
-    check("struct SaveArchiveSizing {" in backend_hpp,
-          "save_slot_backend.hpp must define SaveArchiveSizing DTO")
-    check("DecodedSaveMetadata" not in backend_hpp,
-          "save_slot_backend.hpp must not leak DecodedSaveMetadata")
-    check("UnzipPayloadSummary" not in backend_hpp,
-          "save_slot_backend.hpp must not leak UnzipPayloadSummary")
-    check("struct ProgressBox;" in backend_hpp,
-          "save_slot_backend.hpp must forward-declare ProgressBox")
-    check("auto ValidateCreationRequest(const SaveCreationRequest& req) -> SaveBackendStatus;" in backend_hpp,
-          "save_slot_backend.hpp must declare ValidateCreationRequest")
-    check("auto PlanAccountSaveCreation(" in backend_hpp,
-          "save_slot_backend.hpp must declare PlanAccountSaveCreation")
-    check("auto InspectSaveArchiveAdmission(" in backend_hpp,
-          "save_slot_backend.hpp must declare InspectSaveArchiveAdmission")
-    check("auto CreateSaveDataChecked(" in backend_hpp,
-          "save_slot_backend.hpp must declare CreateSaveDataChecked")
-    check("auto ExtendSaveDataChecked(" in backend_hpp,
-          "save_slot_backend.hpp must declare ExtendSaveDataChecked")
-    check("auto FormatSaveCreationPrompt(" in backend_hpp,
-          "save_slot_backend.hpp must declare FormatSaveCreationPrompt")
-    check("bool create_succeeded{false};" in backend_hpp,
-          "SaveCreationResult must explicitly declare create_succeeded boolean")
+    for forbidden in ["save_paths.hpp", "threaded_file_transfer.hpp", "DecodedSaveMetadata", "UnzipPayloadSummary"]:
+        check(forbidden not in backend_hpp, f"save_slot_backend.hpp must not include/leak {forbidden}")
+    for required in [
+        "struct SaveArchiveSizing {", "struct ProgressBox;", "bool create_succeeded{false};",
+        "ArchiveMetadata", "bool has_metadata{false};",
+        "auto ValidateCreationRequest(const SaveCreationRequest& req) -> SaveBackendStatus;",
+        "auto PlanAccountSaveCreation(", "auto InspectSaveArchiveAdmission(",
+        "auto CreateSaveDataChecked(", "auto ExtendSaveDataChecked(", "auto FormatSaveCreationPrompt("
+    ]:
+        check(required in backend_hpp, f"save_slot_backend.hpp must declare {required}")
 
     # C. Explicit flags copy, cancellation, and concrete grow guards in save_slot_backend.cpp
     backend_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_slot_backend.cpp")
-    check("info.flags = request.flags;" in backend_cpp,
-          "save_slot_backend.cpp must explicitly copy info.flags = request.flags;")
-    check("result.rc = Result_TransferCancelled;" in backend_cpp,
-          "save_slot_backend.cpp must use Result_TransferCancelled for cancellation")
-    check("IsConcreteSaveDataSpace" in backend_cpp,
-          "save_slot_backend.cpp must define IsConcreteSaveDataSpace guard")
-    check("QuerySaveDataSpaceFreeBytes" in backend_cpp,
-          "save_slot_backend.cpp must query free space before extend")
-    check("additional_required_bytes" in backend_cpp,
-          "save_slot_backend.cpp must calculate additional_required_bytes")
-    check("target_free_bytes < additional_required_bytes" in backend_cpp,
-          "save_slot_backend.cpp must refuse extend when free space is insufficient")
-    check("result.status = SaveBackendStatus::IpcFailed;" in backend_cpp,
-          "save_slot_backend.cpp must handle IPC failure")
+    for pattern, msg in [
+        ("info.flags = request.flags;", "save_slot_backend.cpp must explicitly copy info.flags"),
+        ("result.rc = Result_TransferCancelled;", "save_slot_backend.cpp must use Result_TransferCancelled"),
+        ("IsConcreteSaveDataSpace", "save_slot_backend.cpp must define IsConcreteSaveDataSpace"),
+        ("QuerySaveDataSpaceFreeBytes", "save_slot_backend.cpp must query free space"),
+        ("additional_required_bytes", "save_slot_backend.cpp must calculate additional_required_bytes"),
+        ("target_free_bytes < additional_required_bytes", "save_slot_backend.cpp must refuse extend"),
+        ("result.status = SaveBackendStatus::IpcFailed;", "save_slot_backend.cpp must handle IPC failure"),
+        ("fsCreateSaveDataFileSystem(&request.attr, &info, &meta)", "save_slot_backend.cpp must call fsCreateSaveDataFileSystem"),
+        ("fsExtendSaveDataFileSystem(", "save_slot_backend.cpp must call fsExtendSaveDataFileSystem"),
+        ('"Backup metadata"_i18n', "save_slot_backend.cpp must localize Backup metadata in FormatSaveCreationPrompt"),
+    ]:
+        check(pattern in backend_cpp, msg)
 
     for root, _, files in os.walk(os.path.join(REPO_ROOT, "sphaira")):
         for f in files:
             if f.endswith((".cpp", ".hpp", ".h", ".c")):
-                p = os.path.join(root, f)
-                with open(p, "r", encoding="utf-8", errors="ignore") as sf:
+                with open(os.path.join(root, f), "r", encoding="utf-8", errors="ignore") as sf:
                     src = sf.read()
-                check("FsError_Cancelled" not in src,
-                      f"Undefined FsError_Cancelled must not exist in {f}")
-
-    # D. Raw fsCreateSaveDataFileSystem and fsExtendSaveDataFileSystem isolation
-    check("fsCreateSaveDataFileSystem(&request.attr, &info, &meta)" in backend_cpp,
-          "save_slot_backend.cpp must call fsCreateSaveDataFileSystem")
-    check("fsExtendSaveDataFileSystem(" in backend_cpp,
-          "save_slot_backend.cpp must call fsExtendSaveDataFileSystem")
-
-    for root, _, files in os.walk(os.path.join(REPO_ROOT, "sphaira", "source")):
-        for f in files:
-            if f.endswith((".cpp", ".hpp")) and f != "save_slot_backend.cpp":
-                p = os.path.join(root, f)
-                with open(p, "r", encoding="utf-8") as sf:
-                    src = sf.read()
-                check("fsCreateSaveDataFileSystem" not in src,
-                      f"Raw fsCreateSaveDataFileSystem found outside backend in {f}")
-                check("fsExtendSaveDataFileSystem" not in src,
-                      f"Raw fsExtendSaveDataFileSystem found outside backend in {f}")
+                check("FsError_Cancelled" not in src, f"Undefined FsError_Cancelled in {f}")
+                if root.startswith(os.path.join(REPO_ROOT, "sphaira", "source")) and f.endswith((".cpp", ".hpp")) and f != "save_slot_backend.cpp":
+                    check("fsCreateSaveDataFileSystem" not in src and "fsExtendSaveDataFileSystem" not in src,
+                          f"Raw fsCreate/ExtendSaveDataFileSystem found in {f}")
 
     # E. create_succeeded set only on IPC success
     ipc_pos = backend_cpp.find("const auto create_rc = fsCreateSaveDataFileSystem(&request.attr, &info, &meta);")
@@ -278,10 +246,7 @@ class SyntheticSaveSlotBackend:
             return "UnsupportedIndex"
         if req["app_id"] == 0:
             return "InvalidApplicationId"
-        if req["app_id"] not in self.installed_titles:
-            return "MissingControlData"
-        ctrl = self.installed_titles[req["app_id"]]
-        if ctrl.get("owner", 0) == 0:
+        if req.get("owner", 0) == 0:
             return "MissingOwnerId"
         if req["data_size"] <= 0 or req["data_size"] % self.ALIGNMENT != 0 or req["data_size"] > self.INT64_MAX:
             return "InvalidSizes"
@@ -296,25 +261,52 @@ class SyntheticSaveSlotBackend:
     def plan_creation(self, app_id, selected_uid, archive_sizing=None):
         if app_id == 0:
             return None, "InvalidApplicationId"
-        if app_id not in self.installed_titles:
-            return None, "MissingControlData"
-        ctrl = self.installed_titles[app_id]
-        if ctrl.get("owner", 0) == 0:
-            return None, "MissingOwnerId"
-        data = ctrl["data"]
-        journal = ctrl["journal"]
-        prov = "InstalledControlData"
-        if archive_sizing and archive_sizing.get("has_sizing"):
+        if selected_uid not in self.local_uids or selected_uid == (0, 0):
+            return None, "InvalidAccountUid"
+
+        if app_id in self.installed_titles:
+            ctrl = self.installed_titles[app_id]
+            if ctrl.get("owner", 0) == 0:
+                return None, "MissingOwnerId"
+            data = ctrl["data"]
+            journal = ctrl["journal"]
+            prov = "InstalledControlData"
+            if archive_sizing and archive_sizing.get("has_sizing"):
+                m_data = archive_sizing.get("data_size", 0)
+                m_journal = archive_sizing.get("journal_size", 0)
+                if m_data <= 0 or m_data % self.ALIGNMENT != 0 or m_data > self.INT64_MAX:
+                    return None, "InvalidSizes"
+                if m_journal < 0 or m_journal % self.ALIGNMENT != 0 or m_journal > self.INT64_MAX:
+                    return None, "InvalidSizes"
+                if m_data > data or m_journal > journal:
+                    data = max(data, m_data)
+                    journal = max(journal, m_journal)
+                    prov = "InstalledControlDataAndArchiveMetadata"
+            owner = ctrl["owner"]
+        else:
+            if not archive_sizing or not archive_sizing.get("has_metadata"):
+                return None, "MissingControlData"
+            if archive_sizing.get("app_id") != app_id:
+                return None, "InvalidApplicationId"
+            if archive_sizing.get("type") != FsSaveDataType_Account or archive_sizing.get("system_save_data_id", 0) != 0:
+                return None, "UnsupportedSaveType"
+            if archive_sizing.get("rank") != FsSaveDataRank_Primary:
+                return None, "UnsupportedRank"
+            if archive_sizing.get("index") != 0:
+                return None, "UnsupportedIndex"
+            if archive_sizing.get("owner", 0) == 0:
+                return None, "MissingOwnerId"
             m_data = archive_sizing.get("data_size", 0)
             m_journal = archive_sizing.get("journal_size", 0)
             if m_data <= 0 or m_data % self.ALIGNMENT != 0 or m_data > self.INT64_MAX:
                 return None, "InvalidSizes"
             if m_journal < 0 or m_journal % self.ALIGNMENT != 0 or m_journal > self.INT64_MAX:
                 return None, "InvalidSizes"
-            if m_data > data or m_journal > journal:
-                data = max(data, m_data)
-                journal = max(journal, m_journal)
-                prov = "InstalledControlDataAndArchiveMetadata"
+            data = m_data
+            journal = m_journal
+            owner = archive_sizing["owner"]
+            prov = "ArchiveMetadata"
+
         req = {
             "type": FsSaveDataType_Account,
             "space": FsSaveDataSpaceId_User,
@@ -322,7 +314,7 @@ class SyntheticSaveSlotBackend:
             "index": 0,
             "app_id": app_id,
             "uid": selected_uid,
-            "owner": ctrl["owner"],
+            "owner": owner,
             "data_size": data,
             "journal_size": journal,
             "provenance": prov,
@@ -412,15 +404,11 @@ def test_behavioral_regressions() -> None:
     # 3. Source UID never copied into destination
     check(req["uid"] != foreign_uid, "Source foreign UID must never leak into destination")
 
-    # 4. Missing/bad/zero/overflowed/unaligned creation fields
-    check(backend.validate_creation(dict(req, data_size=0)) == "InvalidSizes", "Zero data size refused")
-    check(backend.validate_creation(dict(req, data_size=0x4001)) == "InvalidSizes", "Unaligned data size refused")
-    check(backend.validate_creation(dict(req, data_size=0x8000000000000000)) == "InvalidSizes", "Overflowed data size refused")
-
-    # 5. Account wrong space/rank/index refusal
-    check(backend.validate_creation(dict(req, space=FsSaveDataSpaceId_SdUser)) == "UnsupportedSpace", "Wrong space refused")
-    check(backend.validate_creation(dict(req, rank=1)) == "UnsupportedRank", "Wrong rank refused")
-    check(backend.validate_creation(dict(req, index=1)) == "UnsupportedIndex", "Wrong index refused")
+    # 4-5. Missing/bad/zero/overflowed/unaligned fields and wrong space/rank/index refusal
+    for sz in [0, 0x4001, 0x8000000000000000]:
+        check(backend.validate_creation(dict(req, data_size=sz)) == "InvalidSizes", "Bad size refused")
+    for k, v, exp in [("space", FsSaveDataSpaceId_SdUser, "UnsupportedSpace"), ("rank", 1, "UnsupportedRank"), ("index", 1, "UnsupportedIndex")]:
+        check(backend.validate_creation(dict(req, **{k: v})) == exp, f"Wrong {k} refused")
 
     # 6. Explicit unsupported matrix for non-Account save types
     for ut in [FsSaveDataType_System, FsSaveDataType_Bcat, FsSaveDataType_Device,
@@ -428,9 +416,8 @@ def test_behavioral_regressions() -> None:
         check(backend.validate_creation(dict(req, type=ut)) == "UnsupportedSaveType", f"Type {ut} refused")
 
     # 7. Corrupt ZIP, traversal ZIP, CRC failure, and metadata-only ZIP refusal before create
-    check(not backend.inspect_archive_admission({"corrupt_zip": True})["admitted"], "Corrupt ZIP refused")
-    check(not backend.inspect_archive_admission({"path_traversal": True})["admitted"], "Path traversal refused")
-    check(not backend.inspect_archive_admission({"crc_failure": True})["admitted"], "CRC failure refused")
+    for k in ["corrupt_zip", "path_traversal", "crc_failure"]:
+        check(not backend.inspect_archive_admission({k: True})["admitted"], f"{k} refused")
     check(not backend.inspect_archive_admission({"file_count": 0, "allow_empty": False})["admitted"], "Metadata-only refused")
     check(not backend.inspect_archive_admission({"metadata_status": "Invalid"})["admitted"], "Invalid metadata refused")
 
@@ -536,21 +523,14 @@ def test_behavioral_regressions() -> None:
     check(noop_res["verified"] and not noop_res["ipc_executed"] and noop_res["is_noop"],
           "Equal/equal is verified no-op with no IPC")
 
-    # 24. Grow data shrink refusal
-    check(backend.extend_save_data(existing_key, FsSaveDataSpaceId_User, 0x40000, 0x40000)["status"] == "DataShrinkRefused",
-          "Data shrink refused")
-
-    # 25. Grow journal shrink refusal
-    check(backend.extend_save_data(existing_key, FsSaveDataSpaceId_User, 0x80000, 0x20000)["status"] == "JournalShrinkRefused",
-          "Journal shrink refused")
-
-    # 26. Grow overflow refusal
-    check(backend.extend_save_data(existing_key, FsSaveDataSpaceId_User, 0x8000000000000000, 0x40000)["status"] == "OverflowRefused",
-          "Overflow refused")
-
-    # 27. Grow alignment refusal
-    check(backend.extend_save_data(existing_key, FsSaveDataSpaceId_User, 0x80001, 0x40000)["status"] == "AlignmentRefused",
-          "Alignment refused")
+    # 24-27. Grow shrink, overflow, and alignment refusal
+    for d, j, exp in [
+        (0x40000, 0x40000, "DataShrinkRefused"),
+        (0x80000, 0x20000, "JournalShrinkRefused"),
+        (0x8000000000000000, 0x40000, "OverflowRefused"),
+        (0x80001, 0x40000, "AlignmentRefused"),
+    ]:
+        check(backend.extend_save_data(existing_key, FsSaveDataSpaceId_User, d, j)["status"] == exp, f"{exp} check")
 
     # 28. Cancellation before extend IPC returns Result_TransferCancelled
     res_ext_cancel = backend.extend_save_data(existing_key, FsSaveDataSpaceId_User, 0xC0000, 0x40000, cancelled=True)
@@ -572,6 +552,33 @@ def test_behavioral_regressions() -> None:
     # 31. Exact space read and no fallback
     check(res_ok["slot"].save_data_space_id == FsSaveDataSpaceId_User,
           "Verified exact-space read confirms User space (1)")
+
+    # 32. Valid uninstalled title restore fallback creates missing Account save slot
+    uninstalled_app = 0x0100000000020000
+    valid_archive = {
+        "has_sizing": True, "has_metadata": True, "app_id": uninstalled_app,
+        "type": FsSaveDataType_Account, "rank": FsSaveDataRank_Primary, "index": 0,
+        "owner": 0x0100000000020000, "data_size": 0x60000, "journal_size": 0x40000,
+    }
+    req_uninst, st_uninst = backend.plan_creation(uninstalled_app, local_uid, valid_archive)
+    check(st_uninst == "Success" and req_uninst["provenance"] == "ArchiveMetadata", "Fallback must set ArchiveMetadata")
+    check(req_uninst["uid"] == local_uid and req_uninst["owner"] == 0x0100000000020000, "Fallback attributes mismatch")
+    res_uninst = backend.create_save_data(req_uninst)
+    check(res_uninst["verified"] and res_uninst["create_succeeded"], "Uninstalled slot must verify after create")
+
+    # 33. Uninstalled fallback fails closed on missing/invalid metadata
+    _, st_no_meta = backend.plan_creation(uninstalled_app, local_uid, None)
+    check(st_no_meta == "MissingControlData", "Missing metadata on uninstalled title must fail closed")
+    for k, v, exp in [
+        ("app_id", 0x0100000000099999, "InvalidApplicationId"),
+        ("type", FsSaveDataType_Device, "UnsupportedSaveType"),
+        ("rank", 1, "UnsupportedRank"),
+        ("index", 1, "UnsupportedIndex"),
+        ("owner", 0, "MissingOwnerId"),
+        ("data_size", 0x4001, "InvalidSizes"),
+    ]:
+        _, st_err = backend.plan_creation(uninstalled_app, local_uid, dict(valid_archive, **{k: v}))
+        check(st_err == exp, f"Uninstalled archive with bad {k} must return {exp}")
 
     print("  -> Synthetic behavioral regressions PASSED.")
 

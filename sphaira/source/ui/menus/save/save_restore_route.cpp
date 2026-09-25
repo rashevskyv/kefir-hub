@@ -277,7 +277,7 @@ void PlanAndConfirmRestoreCreation(
 
             ctx->plan_rc = PlanAccountSaveCreation(
                 group.application_id, dest_uid,
-                ctx->admission.sizing.has_sizing ? &ctx->admission.sizing : nullptr,
+                &ctx->admission.sizing,
                 ctx->req, &ctx->status);
             if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
                 return ctx->plan_rc ? ctx->plan_rc : FsError_InvalidSize;
