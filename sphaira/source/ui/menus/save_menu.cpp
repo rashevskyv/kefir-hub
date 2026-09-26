@@ -284,7 +284,8 @@ void Menu::OnLayoutChange() {
             }   break;
 
             case grid::LayoutType_Grid: {
-                const Vec2 pad{10, 10};
+                // Room for a source label between adjacent backup rows.
+                const Vec2 pad{10, m_category == Category::Backups ? 34.f : 10.f};
                 const Vec4 v{93, 202, 174, 174};
                 m_list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
             }   break;

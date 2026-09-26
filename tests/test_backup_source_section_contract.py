@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Suite: Backup Source Provenance and Section Divider Contract (v0.13.884)
+Test Suite: Backup Source Provenance and Section Divider Contract (v0.13.885)
 
 Target chat: Походження бекапів і папкові бекапи
 Verifies:
@@ -42,7 +42,7 @@ def test_static_source_wiring() -> None:
     cmake_path = os.path.join(REPO_ROOT, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.884)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.884")
+    check("set(sphaira_VERSION 0.13.885)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.885")
 
     # 1.2 BackupSource enum in save_menu.hpp
     sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -111,8 +111,8 @@ def test_static_source_wiring() -> None:
           "Draw must draw divider when disp matches section first_display")
     check("DrawSectionDivider(vg, theme, v, g, sec.label," in smd_cpp,
           "Draw must pass sec.label to DrawSectionDivider")
-    check("cur_disp = (m_layout.Get() == grid::LayoutType_Grid && !m_app_id_filter) ? 0 : g.row;" in smd_cpp,
-          "first grid backup section must not reserve a full empty row")
+    check("cur_disp = compact_grid ? 0 : g.row;" in smd_cpp and "if (!compact_grid)" in smd_cpp,
+          "backup grid sections must not reserve full empty rows")
     check("m_category == Category::Backups && m_layout.Get() == grid::LayoutType_Grid" in smd_cpp,
           "every backup grid divider must align above its first tile")
     check(smd_cpp.index("DrawSectionDivider(vg, theme, v, g, sec.label,") < smd_cpp.index("image_v = DrawEntry(vg, theme"),
@@ -122,6 +122,8 @@ def test_static_source_wiring() -> None:
     sm_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save_menu.cpp")
     with open(sm_cpp_path, "r", encoding="utf-8") as f:
         sm_cpp_src = f.read()
+    check("m_category == Category::Backups ? 34.f : 10.f" in sm_cpp_src,
+          "backup grid rows must leave just enough room for the section label")
     check("touch && DisplayToEntry(disp, g) < 0" in sm_cpp_src,
           "save_menu.cpp must guard against touch on empty divider slots")
 
@@ -282,12 +284,13 @@ def test_behavioral_provenance_model() -> None:
                         end += 1
                     count = end - idx
                     if not self.sections:
-                        cur_disp = self.row
+                        cur_disp = self.row if horizontal else 0
                     else:
                         rem = cur_disp % self.row
                         if rem != 0:
                             cur_disp += (self.row - rem)
-                        cur_disp += self.row
+                        if horizontal:
+                            cur_disp += self.row
                     self.sections.append({
                         "label": src,
                         "entry_start": idx,
@@ -342,25 +345,21 @@ def test_behavioral_provenance_model() -> None:
     grid = GridModel(grid_entries, row=6, is_backups=True, horizontal=False)
 
     check(len(grid.sections) == 2, "Expected 2 sections")
-    # Section 0 (Kefir Hub): divider row at 0..5, items at 6, 7
-    check(grid.sections[0]["first_display"] == 6, "Section 0 must start at display 6")
-    check(grid.entry_to_display(0) == 6, "Entry 0 must map to display 6")
-    check(grid.entry_to_display(1) == 7, "Entry 1 must map to display 7")
-    check(grid.display_to_entry(0) == -1, "Display 0 (divider) must map to -1")
-    check(grid.display_to_entry(5) == -1, "Display 5 (divider) must map to -1")
+    # Section 0 (Kefir Hub) starts in the first grid row.
+    check(grid.sections[0]["first_display"] == 0, "Section 0 must start at display 0")
+    check(grid.entry_to_display(0) == 0, "Entry 0 must map to display 0")
+    check(grid.entry_to_display(1) == 1, "Entry 1 must map to display 1")
 
-    # Section 1 (DBI): row 1 padded (8..11), divider row at 12..17, items at 18..20
-    check(grid.sections[1]["first_display"] == 18, "Section 1 must start at display 18")
-    check(grid.entry_to_display(2) == 18, "Entry 2 must map to display 18")
-    check(grid.entry_to_display(4) == 20, "Entry 4 must map to display 20")
-    check(grid.display_to_entry(12) == -1, "Display 12 (divider) must map to -1")
-    check(grid.display_to_entry(17) == -1, "Display 17 (divider) must map to -1")
+    # Section 1 (DBI) starts in the next row, without a spacer row.
+    check(grid.sections[1]["first_display"] == 6, "Section 1 must start at display 6")
+    check(grid.entry_to_display(2) == 6, "Entry 2 must map to display 6")
+    check(grid.entry_to_display(4) == 8, "Entry 4 must map to display 8")
+    check(grid.display_to_entry(2) == -1, "Unused cell must map to -1")
 
     # Stepping / navigation over dividers
-    # Step Down from display 7 into row filler/divider: hops forward to Entry 2 (display 18)
-    check(grid.resolve_display(13, 7, len(grid_entries)) == 2, "Stepping forward over divider must hop to Entry 2")
-    # Step Up from display 18 into divider: hops backward to Entry 1 (display 7)
-    check(grid.resolve_display(12, 18, len(grid_entries)) == 1, "Stepping backward over divider must hop to Entry 1")
+    # Step Down/Up through unused cells at the end of the Kefir Hub row.
+    check(grid.resolve_display(2, 1, len(grid_entries)) == 2, "Stepping forward must hop to Entry 2")
+    check(grid.resolve_display(5, 6, len(grid_entries)) == 1, "Stepping backward must hop to Entry 1")
 
     # Test HOME horizontal grid (row=1)
     home_grid = GridModel(grid_entries, row=1, is_backups=True, horizontal=True)

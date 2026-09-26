@@ -84,6 +84,9 @@ void Menu::SetCategory(Category category) {
     }
 
     m_category = category;
+    if (!m_app_id_filter && m_layout.Get() == grid::LayoutType_Grid) {
+        OnLayoutChange();
+    }
     if (m_app_id_filter) {
         SetTitle(
             (m_category == Category::Installed) ? "Installed Games"_i18n :

@@ -62,6 +62,7 @@ auto Menu::ComputeGridSections() const -> GridSections {
 
     if (m_category == Category::Backups) {
         if (!m_entries.empty()) {
+            const bool compact_grid = m_layout.Get() == grid::LayoutType_Grid && !m_app_id_filter;
             s64 cur_disp = 0;
             size_t idx = 0;
             while (idx < m_entries.size()) {
@@ -75,13 +76,15 @@ auto Menu::ComputeGridSections() const -> GridSections {
                 if (g.sections.empty()) {
                     // The grid already starts below the tabs, leaving room for
                     // the first label without a whole empty row.
-                    cur_disp = (m_layout.Get() == grid::LayoutType_Grid && !m_app_id_filter) ? 0 : g.row;
+                    cur_disp = compact_grid ? 0 : g.row;
                 } else {
                     const s64 rem = cur_disp % g.row;
                     if (rem != 0) {
                         cur_disp += (g.row - rem);
                     }
-                    cur_disp += g.row;
+                    if (!compact_grid) {
+                        cur_disp += g.row;
+                    }
                 }
 
                 GridSections::Section sec;
