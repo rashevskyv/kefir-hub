@@ -321,6 +321,7 @@ private:
     std::unordered_set<u64> m_installed_app_ids{};
     std::vector<u64> m_installed_apps{};
     std::unique_ptr<List> m_list{};
+    ScrollingText m_hb_title_scroll{};
     bool m_is_reversed{};
     bool m_dirty{};
 

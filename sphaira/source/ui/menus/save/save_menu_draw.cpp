@@ -400,7 +400,7 @@ void Menu::DrawHbMenuTitle(NVGcontext* vg, const Vec4& v, bool selected, const c
     nvgIntersectScissor(vg, v.x, v.y, v.w, 28.f);
 
     if (text_w > avail_w) {
-        m_scroll_name.Draw(vg, selected, v.x + pad, text_y, avail_w, font_size,
+        m_hb_title_scroll.Draw(vg, selected, v.x + pad, text_y, avail_w, font_size,
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text_col, name);
     } else {
         const float text_x = v.x + (v.w - text_w) * 0.5f;
