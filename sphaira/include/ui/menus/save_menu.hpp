@@ -204,6 +204,7 @@ private:
     auto ResolveDisplay(s64 display, s64 from, const GridSections& g) const -> s64;
     void DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e);
     void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool align_above_tile) const;
+    void DrawHbMenuTitle(NVGcontext* vg, const Vec4& v, bool selected, const char* name);
     struct BackupColumnLayout {
         float max_title_w{0.f};
         float max_account_w{0.f};

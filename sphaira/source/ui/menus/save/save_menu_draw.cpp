@@ -299,10 +299,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             ? std::string{}
             : (e.is_backup ? FormatBackupSecondaryText(e, m_accounts) : std::string{e.GetAuthor()});
 
+        const char* entry_name = (m_layout.Get() == grid::LayoutType_HbMenu) ? "" : e.GetName();
+
         if (!IsSystemLikeSave(e.save_data_type)) {
-            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, e.GetName(), author_str.c_str(), info.c_str(), e.selected);
+            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, entry_name, author_str.c_str(), info.c_str(), e.selected);
         } else {
-            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, e.GetName(), author_str.c_str(), info.c_str(), e.selected);
+            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, entry_name, author_str.c_str(), info.c_str(), e.selected);
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
         }
@@ -314,6 +316,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         // grey for deleted-game saves, yellow for backups, nothing otherwise.
         // framed on the whole tile so it reads in every layout.
         DrawCategoryBorder(vg, theme, v, e);
+
+        if (m_layout.Get() == grid::LayoutType_HbMenu) {
+            DrawHbMenuTitle(vg, v, selected, e.GetName());
+        }
 
         DrawSelectionMark(vg, theme, m_layout.Get(), v, image_v, e.selected, m_selected_count > 0);
 
@@ -360,17 +366,48 @@ void Menu::DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& 
 void Menu::DrawCategoryBorder(NVGcontext* vg, Theme* theme, const Vec4& v, const Entry& e) {
     NVGcolor col;
     if (e.is_backup) {
-        col = nvgRGB(0xF2, 0xC5, 0x22); // yellow: backup archive
+        col = nvgRGBA(0xF2, 0xC5, 0x22, 160); // yellow: backup archive
     } else if (IsSystemLikeSave(e.save_data_type)) {
         return; // system saves are not games; leave them unframed
     } else if (m_installed_app_ids.contains(e.application_id)) {
         return; // installed game: ordinary save, no border
     } else {
-        col = nvgRGB(0x9A, 0x9A, 0x9A); // grey: deleted-game save
+        col = nvgRGBA(0x9A, 0x9A, 0x9A, 160); // grey: deleted-game save
     }
 
-    const float thickness = (m_layout.Get() == grid::LayoutType_List) ? 2.f : 12.f;
+    const float thickness = (m_layout.Get() == grid::LayoutType_List) ? 2.f : 6.f;
     DrawInnerBorder(vg, v, col, thickness, 5.f);
+}
+
+void Menu::DrawHbMenuTitle(NVGcontext* vg, const Vec4& v, bool selected, const char* name) {
+    if (!name || !*name) {
+        return;
+    }
+
+    constexpr float pad = 6.f;
+    const float avail_w = v.w - pad * 2.f;
+    const float text_y = v.y + 14.f;
+    constexpr float font_size = 15.f;
+    const auto text_col = nvgRGB(32, 32, 32);
+
+    float bounds[4]{};
+    nvgFontSize(vg, font_size);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT);
+    nvgTextBounds(vg, 0, 0, name, nullptr, bounds);
+    const float text_w = bounds[2] - bounds[0];
+
+    nvgSave(vg);
+    nvgIntersectScissor(vg, v.x, v.y, v.w, 28.f);
+
+    if (text_w > avail_w) {
+        m_scroll_name.Draw(vg, selected, v.x + pad, text_y, avail_w, font_size,
+            NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text_col, name);
+    } else {
+        const float text_x = v.x + (v.w - text_w) * 0.5f;
+        gfx::drawText(vg, text_x, text_y, font_size, text_col, name, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    }
+
+    nvgRestore(vg);
 }
 
 void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool align_above_tile) const {

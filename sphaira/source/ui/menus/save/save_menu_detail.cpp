@@ -3,8 +3,16 @@
 #include "image.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_paths.hpp"
+#include "app_paths.hpp"
+#include "download.hpp"
+#include "fs.hpp"
 #include <cstring>
 #include <cstdio>
+#include <unordered_set>
+#include <unordered_map>
+#include <vector>
+#include <span>
+#include <string>
 
 namespace sphaira::ui::menu::save::detail {
 
@@ -123,15 +131,185 @@ void FakeNacpEntryForSystem(Entry& e) {
     std::strcpy(e.lang.author, "Nintendo");
 }
 
+auto IsValidGameTitleId(u64 id) -> bool {
+    if (id == 0) {
+        return false;
+    }
+    // Standard Nintendo Switch game application IDs are in 0x0100... range.
+    const u64 prefix = id >> 48;
+    return prefix >= 0x0100 && prefix <= 0x01FF;
+}
+
+auto FormatTitleIdHex(u64 id) -> std::string {
+    char buf[17];
+    std::snprintf(buf, sizeof(buf), "%016lX", id);
+    return std::string(buf);
+}
+
+auto IsValidBoundedJpeg(std::span<const u8> data) -> bool {
+    // Bounded: minimum ~100 bytes, maximum bounded to 1 MB (256x256 jpeg is ~20-50 KB).
+    if (data.size() < 100 || data.size() > 1024 * 1024) {
+        return false;
+    }
+    // JPEG SOI marker: 0xFF, 0xD8, 0xFF.
+    if (data[0] != 0xFF || data[1] != 0xD8 || data[2] != 0xFF) {
+        return false;
+    }
+    return true;
+}
+
+auto BuildRemoteIconUrl(u64 app_id) -> std::string {
+    return "https://api.nlib.cc/nx/" + FormatTitleIdHex(app_id) + "/icon/256";
+}
+
+auto GetTitleIconCachePath(u64 app_id) -> fs::FsPath {
+    return paths::DATA_ROOT + "/cache/icons/" + FormatTitleIdHex(app_id) + ".jpg";
+}
+
+namespace {
+std::unordered_set<u64> s_missing_session_ids;
+std::unordered_set<u64> s_in_flight_ids;
+std::unordered_set<u64> s_checked_cache_ids;
+std::unordered_map<u64, std::vector<u8>> s_session_icon_cache;
+} // namespace
+
 bool LoadControlImage(Entry& e, title::ThreadResultData* result) {
-    if (!e.image && result && !result->icon.empty()) {
+    if (e.image) {
+        return false;
+    }
+
+    // 1. Keep local/NXTC/sys-tweak icon loading first.
+    if (result && !result->icon.empty()) {
         TimeStamp ts;
         const auto image = ImageLoadFromMemory(result->icon, ImageFlag_JPEG);
         if (!image.data.empty()) {
-            e.image = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
-            log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
-            return true;
+            const int img = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
+            if (img > 0) {
+                e.image = img;
+                log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
+                return true;
+            }
         }
+    }
+
+    // Do not attempt network/cache fallback for system saves or empty IDs.
+    if (IsSystemLikeSave(e.save_data_type) || e.application_id == 0) {
+        return false;
+    }
+
+    // Do not fetch remote icon while local icon retrieval is still in progress.
+    if (e.status == title::NacpLoadStatus::Progress) {
+        return false;
+    }
+
+    const u64 id = e.application_id;
+    if (!IsValidGameTitleId(id)) {
+        return false;
+    }
+
+    // Check session icon cache first. Holds validated compressed JPEG bytes per Title ID (~25 KiB)
+    // rather than decoded RGBA (256 KiB). For multiple entries sharing the same Title ID
+    // (e.g. several backup archives of one game), each entry decodes and obtains its own independent
+    // NanoVG texture handle so FreeEntry can delete safely.
+    auto it = s_session_icon_cache.find(id);
+    if (it != s_session_icon_cache.end()) {
+        const auto image = ImageLoadIcon(it->second);
+        if (!image.data.empty()) {
+            const int img = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
+            if (img > 0) {
+                e.image = img;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 2. If determined missing/unavailable in this session, skip immediately (no repeated SD reads).
+    if (s_missing_session_ids.contains(id)) {
+        return false;
+    }
+
+    // 3. If currently downloading, skip immediately without SD access.
+    if (s_in_flight_ids.contains(id)) {
+        return false;
+    }
+
+    // 4. Check persistent disk cache at most once per session.
+    const bool need_cache_read = !s_checked_cache_ids.contains(id);
+    if (!need_cache_read) {
+        return false;
+    }
+
+    s_checked_cache_ids.insert(id);
+
+    const auto cache_path = GetTitleIconCachePath(id);
+    fs::FsNativeSd sd;
+    if (sd.FileExists(cache_path)) {
+        std::vector<u8> icon_data;
+        if (R_SUCCEEDED(sd.read_entire_file(cache_path, icon_data)) && !icon_data.empty()) {
+            if (IsValidBoundedJpeg(icon_data)) {
+                const auto image = ImageLoadIcon(icon_data);
+                if (!image.data.empty()) {
+                    s_session_icon_cache[id] = std::move(icon_data);
+                    const int img = nvgCreateImageRGBA(App::GetVg(), image.w, image.h, 0, image.data.data());
+                    if (img > 0) {
+                        e.image = img;
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+        // Corrupt or invalid cached file: delete bad file so remote fetch proceeds and recovers it.
+        // Do not mark missing! Record checked so we don't re-read corrupt file before download completes.
+        sd.DeleteFile(cache_path);
+    }
+
+    // 5. Download asynchronously so drawing and navigation never wait on the network.
+    s_in_flight_ids.insert(id);
+    const auto url = BuildRemoteIconUrl(id);
+
+    const bool enqueued = curl::Api().ToMemoryAsync(
+        curl::Url{url},
+        curl::Priority{curl::Priority::Normal},
+        curl::StopToken{},
+        curl::OnComplete{[id, cache_path](auto& res) {
+            // On network failure, 404, or non-JPEG response: keep placeholder and avoid repeating in session.
+            // Note: The post-transfer check validates that the completed response is a valid bounded JPEG
+            // before saving to persistent storage; network transmission buffering is handled by libcurl/download engine.
+            if (!res.success || res.code != 200 || res.data.empty() || !IsValidBoundedJpeg(res.data)) {
+                s_in_flight_ids.erase(id);
+                s_missing_session_ids.insert(id);
+                return;
+            }
+
+            // Decode and validate the completed JPEG before caching or marking it available.
+            const auto decoded = ImageLoadIcon(res.data);
+            if (decoded.data.empty()) {
+                s_in_flight_ids.erase(id);
+                s_missing_session_ids.insert(id);
+                return;
+            }
+
+            // Cache successful result persistently by Title ID. Overwrites any previous corrupt file.
+            fs::FsNativeSd fs_write;
+            const auto dir = paths::DATA_ROOT + "/cache/icons";
+            fs_write.CreateDirectoryRecursively(dir);
+            if (R_FAILED(fs_write.write_entire_file(cache_path, res.data))) {
+                s_in_flight_ids.erase(id);
+                s_missing_session_ids.insert(id);
+                return;
+            }
+
+            // Store validated compressed JPEG bytes in session cache.
+            s_session_icon_cache[id] = res.data;
+            s_in_flight_ids.erase(id);
+        }}
+    );
+
+    if (!enqueued) {
+        s_in_flight_ids.erase(id);
+        s_missing_session_ids.insert(id);
     }
 
     return false;

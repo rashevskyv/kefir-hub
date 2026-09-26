@@ -1,8 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.888**.
+Версія коду: **v0.13.889**.
 
-## Поточний delivery: v0.13.888 — один пункт сітки в макетах Saves (завершено)
+## Поточний delivery: v0.13.889 — назви плиток та іконки Backups (завершено)
+
+- [x] `TITLE-889` — назва HB Menu поверх світіння, центрована або прокручувана; Inner Glow послаблено.
+- [x] `ICON-889` — локальна іконка має пріоритет; асинхронний fallback за Title ID, перевірений JPEG і SD/session кеш для повторних бекапів.
+- [x] `VERIFY-889` — Gemini: цільові Python контракти й diff check PASS; senior: source/diff/file-size review; без збірки й Switch runtime.
+- [x] `DOCS-BUMP-889` — patch version і delivery-документи синхронізовано.
+- [x] `COMMIT-889` — focused commit на primary master без ROMFS binary.
+
+## Попередній delivery: v0.13.888 — один пункт сітки в макетах Saves (завершено)
 
 - [x] `LAYOUT-888` — «Іконки» прибрано; «Сітка», «HB Menu» і «Список» мають правильні індекси.
 - [x] `VERIFY-888` — два цільові Python контракти й diff check пройдено; збірка та Switch runtime окремо.
