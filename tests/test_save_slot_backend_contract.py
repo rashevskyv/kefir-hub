@@ -57,7 +57,7 @@ def test_source_wiring_contracts() -> None:
     print("[1] Running static source wiring contracts...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(869, 885)),
+    check("set(sphaira_VERSION 0.13.886)" in cmake_src,
           "sphaira/CMakeLists.txt must define valid sphaira_VERSION")
     check("source/ui/menus/save/save_slot_backend.cpp" in cmake_src,
           "sphaira/CMakeLists.txt must compile save_slot_backend.cpp")
@@ -73,7 +73,7 @@ def test_source_wiring_contracts() -> None:
         "ArchiveMetadata", "bool has_metadata{false};",
         "auto ValidateCreationRequest(const SaveCreationRequest& req) -> SaveBackendStatus;",
         "auto PlanAccountSaveCreation(", "auto InspectSaveArchiveAdmission(",
-        "auto CreateSaveDataChecked(", "auto ExtendSaveDataChecked(", "auto FormatSaveCreationPrompt("
+        "auto CreateSaveDataChecked(", "auto ExtendSaveDataChecked("
     ]:
         check(required in backend_hpp, f"save_slot_backend.hpp must declare {required}")
 
@@ -89,7 +89,6 @@ def test_source_wiring_contracts() -> None:
         ("result.status = SaveBackendStatus::IpcFailed;", "save_slot_backend.cpp must handle IPC failure"),
         ("fsCreateSaveDataFileSystem(&request.attr, &info, &meta)", "save_slot_backend.cpp must call fsCreateSaveDataFileSystem"),
         ("fsExtendSaveDataFileSystem(", "save_slot_backend.cpp must call fsExtendSaveDataFileSystem"),
-        ('"Backup metadata"_i18n', "save_slot_backend.cpp must localize Backup metadata in FormatSaveCreationPrompt"),
     ]:
         check(pattern in backend_cpp, msg)
 
@@ -133,7 +132,7 @@ def test_source_wiring_contracts() -> None:
 
     # H. Async admission with ProgressBox, BackupGroupKey reinspection in save_restore_route.cpp
     route_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp")
-    plan_func_pos = route_cpp.find("void PlanAndConfirmRestoreCreation(")
+    plan_func_pos = route_cpp.find("void PlanRestoreCreation(")
     check("InspectSaveArchiveAdmission(archive_path, nullptr" not in route_cpp,
           "save_restore_route.cpp must not perform synchronous admission with nullptr")
     pbox_push_pos = route_cpp.find("App::Push<ProgressBox>(0, \"Checking backup...\"_i18n", plan_func_pos)
@@ -141,15 +140,17 @@ def test_source_wiring_contracts() -> None:
     plan_call_pos = route_cpp.find("PlanAccountSaveCreation(", adm_call_pos)
     reinspect_pos = route_cpp.find("InspectBackupArchive(probe_fs, archive_path", plan_call_pos)
     key_match_pos = route_cpp.find("BackupGroupKey(check_info) == BackupGroupKey(group)", reinspect_pos)
-    confirm_popup_pos = route_cpp.find("App::Push<OptionBox>(prompt,", key_match_pos)
+    target_pos = route_cpp.find("target.is_planned_create = true;", key_match_pos)
 
     check(plan_func_pos != -1 and pbox_push_pos != -1 and adm_call_pos != -1 and plan_call_pos != -1 and
-          reinspect_pos != -1 and key_match_pos != -1 and confirm_popup_pos != -1,
-          "PlanAndConfirmRestoreCreation must run async admission -> plan -> reinspect -> confirm in sequence")
+          reinspect_pos != -1 and key_match_pos != -1 and target_pos != -1,
+          "PlanRestoreCreation must run async admission -> plan -> reinspect -> target in sequence")
+    check("FormatSaveCreationPrompt" not in route_cpp and 'App::Push<OptionBox>(prompt,' not in route_cpp,
+          "Restore must not ask again to create the planned save slot")
     check("Selected backup archive has changed or is no longer available." in route_cpp,
           "save_restore_route.cpp must show exact abort message if archive reinspection fails")
     check("group.save_data_space_id != FsSaveDataSpaceId_User" not in route_cpp,
-          "PlanAndConfirmRestoreCreation must not reject backup group based on its source space_id")
+          "PlanRestoreCreation must not reject backup group based on its source space_id")
     check("is_local_account" not in route_cpp,
           "save_restore_route.cpp must not bypass account picker for local backup UIDs")
 

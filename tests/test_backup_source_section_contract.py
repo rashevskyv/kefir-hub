@@ -42,7 +42,7 @@ def test_static_source_wiring() -> None:
     cmake_path = os.path.join(REPO_ROOT, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.885)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.885")
+    check("set(sphaira_VERSION 0.13.886)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.886")
 
     # 1.2 BackupSource enum in save_menu.hpp
     sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -574,9 +574,9 @@ def test_review_findings_and_restore_routing() -> None:
 
     route_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp")
     check("InspectSaveFolderAdmission(archive_path, pbox, false)" in route_cpp,
-          "PlanAndConfirmRestoreCreation must inspect folder backup admission")
+          "PlanRestoreCreation must inspect folder backup admission")
     check("Backup folder metadata is missing or incomplete for save slot creation." in route_cpp,
-          "PlanAndConfirmRestoreCreation must stop missing metadata folder restore before mutation")
+          "PlanRestoreCreation must stop missing metadata folder restore before mutation")
 
     folder_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_folder_restore.cpp")
     check("e.save_data_id != 0 || e.is_planned_create" in folder_cpp,

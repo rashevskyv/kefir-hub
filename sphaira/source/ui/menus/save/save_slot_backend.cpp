@@ -475,24 +475,4 @@ auto GetBackendStatusMessage(SaveBackendStatus status) -> std::string {
     }
 }
 
-auto FormatSaveCreationPrompt(
-    const SaveCreationRequest& req,
-    const std::string& game_name,
-    const std::string& user_nickname
-) -> std::string {
-    std::string prompt = "Create save slot and restore?"_i18n + "\n\n";
-    prompt += "Game: "_i18n + game_name + "\n";
-    prompt += "User: "_i18n + user_nickname + "\n";
-    prompt += "Type: "_i18n + "Account"_i18n + "\n";
-    prompt += "Space: "_i18n + "User"_i18n + "\n";
-    prompt += "Data size: "_i18n + std::to_string(req.data_size / 1024) + " KB (" + std::to_string(req.data_size) + " bytes)" + "\n";
-    prompt += "Journal size: "_i18n + std::to_string(req.journal_size / 1024) + " KB (" + std::to_string(req.journal_size) + " bytes)" + "\n";
-    prompt += "Sizing source: "_i18n + ((req.provenance == SizingProvenance::InstalledControlDataAndArchiveMetadata)
-        ? "Installed control data and backup metadata"_i18n
-        : ((req.provenance == SizingProvenance::ArchiveMetadata)
-            ? "Backup metadata"_i18n
-            : "Installed control data"_i18n));
-    return prompt;
-}
-
 } // namespace sphaira::ui::menu::save

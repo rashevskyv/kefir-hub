@@ -229,7 +229,7 @@ void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, s
     App::Push(std::move(popup));
 }
 
-void PlanAndConfirmRestoreCreation(
+void PlanRestoreCreation(
     const Entry& group,
     const AccountUid& dest_uid,
     const fs::FsPath& archive_path,
@@ -306,7 +306,7 @@ void PlanAndConfirmRestoreCreation(
             }
             return 0;
         },
-        [group, dest_uid, ctx, cb](Result rc) mutable {
+        [group, ctx, cb](Result rc) mutable {
             if (rc == Result_TransferCancelled) {
                 cb(std::nullopt);
                 return;
@@ -328,35 +328,18 @@ void PlanAndConfirmRestoreCreation(
                 cb(std::nullopt); return;
             }
 
-            std::string user_nickname = "User";
-            for (const auto& acc : App::GetAccountList()) {
-                if (!std::memcmp(&acc.uid, &dest_uid, sizeof(AccountUid))) {
-                    user_nickname = acc.nickname;
-                    break;
-                }
-            }
-
-            const std::string game_name = (group.GetName() && group.GetName()[0] != '\0') ? group.GetName() : std::to_string(group.application_id);
-            const std::string prompt = FormatSaveCreationPrompt(ctx->req, game_name, user_nickname);
-
-            App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [group, req = ctx->req, cb](auto op_index) mutable {
-                if (!op_index || *op_index != 1) {
-                    cb(std::nullopt);
-                    return;
-                }
-                Entry target = group;
-                target.is_backup = false;
-                target.is_planned_create = true;
-                target.creation_request = req;
-                target.uid = req.attr.uid;
-                target.save_data_id = 0;
-                target.save_data_space_id = req.space_id;
-                target.save_data_type = req.attr.save_data_type;
-                target.save_data_rank = req.attr.save_data_rank;
-                target.save_data_index = req.attr.save_data_index;
-                target.size = req.data_size;
-                cb(std::move(target));
-            });
+            Entry target = group;
+            target.is_backup = false;
+            target.is_planned_create = true;
+            target.creation_request = ctx->req;
+            target.uid = ctx->req.attr.uid;
+            target.save_data_id = 0;
+            target.save_data_space_id = ctx->req.space_id;
+            target.save_data_type = ctx->req.attr.save_data_type;
+            target.save_data_rank = ctx->req.attr.save_data_rank;
+            target.save_data_index = ctx->req.attr.save_data_index;
+            target.size = ctx->req.data_size;
+            cb(std::move(target));
         }
     );
 }
@@ -387,7 +370,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
         const auto candidates = FindLiveRestoreCandidates(group, explicit_uid);
         if (candidates.empty()) {
             const auto on_archive_selected = [this, group, explicit_uid, location, backup_root](const fs::FsPath& chosen_archive) {
-                PlanAndConfirmRestoreCreation(group, explicit_uid ? *explicit_uid : AccountUid{}, chosen_archive,
+                PlanRestoreCreation(group, explicit_uid ? *explicit_uid : AccountUid{}, chosen_archive,
                     [this, group, location, backup_root, chosen_archive](std::optional<Entry> target) mutable {
                         if (!target) return;
                         RestoreSavesPicked(std::move(*target), group, location, backup_root, chosen_archive);
@@ -532,7 +515,7 @@ void Menu::PromptBatchRestoreTargets(
             const auto archive_path = current_seed.backup_members.empty()
                 ? current_seed.backup_path
                 : current_seed.backup_members.front().path;
-            PlanAndConfirmRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved);
+            PlanRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved);
             return;
         }
         ResolveRestoreTarget(current_seed, uid, on_target_resolved);

@@ -120,10 +120,4 @@ auto ExtendSaveDataChecked(
 
 auto GetBackendStatusMessage(SaveBackendStatus status) -> std::string;
 
-auto FormatSaveCreationPrompt(
-    const SaveCreationRequest& req,
-    const std::string& game_name,
-    const std::string& user_nickname
-) -> std::string;
-
 } // namespace sphaira::ui::menu::save
