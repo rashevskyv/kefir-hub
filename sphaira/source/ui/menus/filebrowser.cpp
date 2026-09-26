@@ -109,7 +109,7 @@ Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuB
     }});
 
     if (!IsTab()) {
-        SetAction(Button::SELECT, Action{App::HandleMinus});
+        SetAction(Button::SELECT, Action{"Back"_i18n, [this](){ PromptIfShouldExit(); }});
     }
 
     view_left = std::make_unique<FsView>(this, ViewSide::Left);
