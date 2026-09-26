@@ -26,7 +26,7 @@ Scope & Verification Boundary:
        - Deduplicates exact paths.
        - Sorts candidates (-ts, +source, +path).
        - Returns empty list on no matches without fallback.
-     - Menu::PromptBackupGroupAction & Menu::RestoreForUser:
+     - Menu::PromptBackupGroupAction & Menu::RestoreSingleBackupGroup:
        - } else if (e.is_backup) { precedes old fallback.
        - Displays "No backups found for selected saves." without stale backup_path fallback.
      - Menu::CreateBackupIfNewer:
@@ -191,7 +191,7 @@ def test_static_source_contracts() -> None:
     cmake_path = os.path.join(repo_root, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(863, 890)),
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(863, 1000)),
           "sphaira/CMakeLists.txt must define sphaira_VERSION as 0.13.863 or later")
 
     # 1.2 save_menu.hpp declarations
@@ -323,11 +323,9 @@ def test_static_source_contracts() -> None:
     check("backup_path" not in rsbg_src[on_ready_idx:on_ready_end],
           "RestoreSingleBackupGroup on_account_ready callback must not retain loose backup_path fallback")
 
-    # Scope D: RestoreForUser
-    p_rfu = impl_cpp.find("void Menu::RestoreForUser(Entry e) {")
-    check(p_rfu != -1, "Menu::RestoreForUser must exist")
-    check("RestoreSingleBackupGroup(" in impl_cpp[p_rfu:p_rfu + 200],
-          "RestoreForUser must delegate to RestoreSingleBackupGroup")
+    # Scope D: Restore uses the shared account picker without a duplicate action.
+    check("Restore for user" in rsbg_src,
+          "RestoreSingleBackupGroup must offer an account picker")
 
     # Scope E: Menu::Draw HbMenu layout header
     p_draw = sm_cpp.find("void Menu::Draw(NVGcontext* vg, Theme* theme) {")

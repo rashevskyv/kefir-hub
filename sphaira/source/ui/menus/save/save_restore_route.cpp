@@ -346,7 +346,7 @@ void PlanRestoreCreation(
 
 } // namespace
 
-void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions) {
     if (group.backup_members.empty()) {
         fs::FsStdio stdio_fs;
         fs::FsNativeSd sd_fs;
@@ -425,6 +425,13 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
             const auto chosen_uid = accounts[*op_index].uid;
             RestoreSingleBackupGroup(std::move(group), &chosen_uid, false, location, backup_root);
         });
+        if (return_to_actions) {
+            auto* picker = popup.get();
+            popup->SetAction(Button::B, Action{"Back"_i18n, [this, picker, group](){
+                picker->SetPop();
+                PromptBackupGroupAction({group});
+            }});
+        }
         App::Push(std::move(popup));
         return;
     }
@@ -436,7 +443,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
     RestoreSingleBackupGroup(std::move(group), explicit_dest_uid, force_user_picker, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
-void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions) {
     if (groups.empty()) {
         return;
     }
@@ -459,24 +466,18 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
     }
 
     if (groups.size() == 1) {
-        RestoreSingleBackupGroup(std::move(groups.front()), nullptr, force_user_picker, location, backup_root);
+        RestoreSingleBackupGroup(std::move(groups.front()), nullptr, force_user_picker, location, backup_root, return_to_actions);
         return;
     }
 
     const auto accounts = App::GetAccountList();
     auto resolved_targets = std::make_shared<std::vector<Entry>>(groups.size());
     auto seen_target_keys = std::make_shared<std::set<std::string>>();
-    PromptBatchRestoreTargets(std::move(groups), 0, accounts, resolved_targets, seen_target_keys, location, backup_root);
+    PromptBatchRestoreTargets(std::move(groups), 0, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
 }
 
-void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker) {
-    RestoreBackupGroups(std::move(groups), force_user_picker, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
-}
-void Menu::RestoreForUser(Entry e, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
-    RestoreSingleBackupGroup(std::move(e), nullptr, true, location, backup_root);
-}
-void Menu::RestoreForUser(Entry e) {
-    RestoreSingleBackupGroup(std::move(e), nullptr, true);
+void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, bool return_to_actions) {
+    RestoreBackupGroups(std::move(groups), force_user_picker, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT, return_to_actions);
 }
 
 void Menu::PromptBatchRestoreTargets(
@@ -486,14 +487,15 @@ void Menu::PromptBatchRestoreTargets(
     std::shared_ptr<std::vector<Entry>> resolved_targets,
     std::shared_ptr<std::set<std::string>> seen_target_keys,
     const dump::DumpLocation& location,
-    const fs::FsPath& backup_root) {
+    const fs::FsPath& backup_root,
+    bool return_to_actions) {
 
     if (step >= seeds->size()) {
         RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root);
         return;
     }
 
-    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root](std::optional<Entry> target) {
+    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions](std::optional<Entry> target) {
         if (!target) {
             return;
         }
@@ -505,7 +507,7 @@ void Menu::PromptBatchRestoreTargets(
         }
 
         (*resolved_targets)[step] = std::move(*target);
-        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root);
+        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
     };
 
     const auto& current_seed = (*seeds)[step];
@@ -548,6 +550,13 @@ void Menu::PromptBatchRestoreTargets(
         const auto chosen_uid = (*accounts)[*op_index].uid;
         resolve_for_uid(&chosen_uid);
     });
+    if (return_to_actions) {
+        auto* picker = popup.get();
+        popup->SetAction(Button::B, Action{"Back"_i18n, [this, picker, seeds](){
+            picker->SetPop();
+            PromptBackupGroupAction(*seeds);
+        }});
+    }
     App::Push(std::move(popup));
 }
 

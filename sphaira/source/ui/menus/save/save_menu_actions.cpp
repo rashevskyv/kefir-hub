@@ -243,7 +243,6 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
         VerifyIntegrity,
         DeleteOlder,
         Restore,
-        RestoreForUser,
         OpenFileBrowser,
         Delete,
         SelectUser,
@@ -257,10 +256,6 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
 
     std::vector<ActionItem> actions;
     actions.push_back({ActionType::Restore, "Restore"_i18n});
-
-    if (seeds.size() == 1 && seeds.front().save_data_type == FsSaveDataType_Account) {
-        actions.push_back({ActionType::RestoreForUser, "Restore for user…"_i18n});
-    }
 
     actions.push_back({ActionType::VerifyIntegrity, "Verify integrity"_i18n});
     actions.push_back({ActionType::DeleteOlder, "Delete older backups"_i18n});
@@ -296,11 +291,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                 break;
 
             case ActionType::Restore:
-                RestoreBackupGroups(seeds, false);
-                break;
-
-            case ActionType::RestoreForUser:
-                RestoreBackupGroups(seeds, true);
+                RestoreBackupGroups(seeds, false, true);
                 break;
 
             case ActionType::OpenFileBrowser: {

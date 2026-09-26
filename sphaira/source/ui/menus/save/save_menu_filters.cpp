@@ -298,15 +298,19 @@ void Menu::DisplaySaveOptions() {
 
     if (!m_entries.empty()) {
         options->Add<SidebarEntryHeader>("ACTIONS"_i18n);
-        options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
-            PromptSaveTypeOptions(SaveOp::Backup);
-        }, "Backup selected saves."_i18n)->SetIcon(ActionIcon::Save);
+        if (m_category != Category::Backups) {
+            options->Add<SidebarEntryCallback>("Backup"_i18n, [this](){
+                PromptSaveTypeOptions(SaveOp::Backup);
+            }, "Backup selected saves."_i18n)->SetIcon(ActionIcon::Save);
+        }
         options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
             PromptSaveTypeOptions(SaveOp::Restore);
         }, "Restore selected saves."_i18n)->SetIcon(ActionIcon::Refresh);
-        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
-            PromptSaveTypeOptions(SaveOp::Delete);
-        }, true, "Permanently delete save data for selected games."_i18n)->SetIcon(ActionIcon::Delete);
+        if (m_category != Category::Backups) {
+            options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+                PromptSaveTypeOptions(SaveOp::Delete);
+            }, true, "Permanently delete save data for selected games."_i18n)->SetIcon(ActionIcon::Delete);
+        }
     }
 
     SidebarEntryArray::Items layout_items;

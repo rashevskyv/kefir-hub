@@ -44,8 +44,8 @@ def read_file(*parts: str) -> str:
 def test_version_bump() -> None:
     print("[1] Verifying version bump in CMakeLists.txt...")
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.889)" in cmake_src,
-          "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.889")
+    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(889, 900)),
+          "sphaira/CMakeLists.txt must define sphaira_VERSION 0.13.889 or later")
     print("  -> Version bump PASSED.")
 
 def test_save_menu_detail_contract() -> None:
