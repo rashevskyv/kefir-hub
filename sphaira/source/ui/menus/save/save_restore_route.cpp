@@ -473,7 +473,9 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
     const auto accounts = App::GetAccountList();
     auto resolved_targets = std::make_shared<std::vector<Entry>>(groups.size());
     auto seen_target_keys = std::make_shared<std::set<std::string>>();
-    PromptBatchRestoreTargets(std::move(groups), 0, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
+    PromptBatchRestoreTargets(std::make_shared<std::vector<Entry>>(std::move(groups)), 0,
+        std::make_shared<std::vector<AccountProfileBase>>(accounts), resolved_targets, seen_target_keys,
+        location, backup_root, return_to_actions);
 }
 
 void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, bool return_to_actions) {

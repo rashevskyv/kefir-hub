@@ -1,8 +1,15 @@
 # task.md
 
-Версія коду: **v0.13.891**.
+Версія коду: **v0.13.892**.
 
-## Поточний delivery: v0.13.891 — спрощення дій Backups (завершено)
+## Поточний delivery: v0.13.892 — виправлено виклик batch restore (завершено)
+
+- [x] `BUILD-892` — виклик `PromptBatchRestoreTargets` використовує перевантаження з прапорцем `return_to_actions`.
+- [x] `VERIFY-892` — звірено помилку компілятора з сигнатурами; цільовий Python контракт і diff check пройшли. Повторна збірка та Switch runtime очікують користувача.
+- [x] `DOCS-BUMP-892` — patch version і delivery-документи синхронізовано.
+- [x] `COMMIT-892` — focused commit на primary master без ROMFS binary.
+
+## Попередній delivery: v0.13.891 — спрощення дій Backups (завершено)
 
 - [x] `NAV-891` — B зі списку користувачів після A → Restore повертає меню дій для тієї самої вибірки.
 - [x] `MENU-891` — прибрано дубль «Restore for user…»; у + → ACTIONS вкладки Backups залишено лише Restore.
