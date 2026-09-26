@@ -42,7 +42,7 @@ def test_static_source_wiring() -> None:
     cmake_path = os.path.join(REPO_ROOT, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.887)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.887")
+    check("set(sphaira_VERSION 0.13.888)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.888")
 
     # 1.2 BackupSource enum in save_menu.hpp
     sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")

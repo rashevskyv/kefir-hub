@@ -310,18 +310,15 @@ void Menu::DisplaySaveOptions() {
     }
 
     SidebarEntryArray::Items layout_items;
-    layout_items.push_back("Icon"_i18n);
     layout_items.push_back("Grid"_i18n);
     layout_items.push_back("HB Menu"_i18n);
     layout_items.push_back("List"_i18n);
 
-    // sidebar row -> LayoutType and back. Saves have no separate Icon layout,
-    // so both of the first two rows map onto the grid.
     static const int layout_map_inv[] = {
-        3, // LayoutType_List -> index 3
+        2, // LayoutType_List -> index 2
         0, // LayoutType_Grid -> index 0
         0, // LayoutType_GridDetail -> index 0
-        2, // LayoutType_HbMenu -> index 2
+        1, // LayoutType_HbMenu -> index 1
     };
     const auto cur_layout = m_layout.Get();
     const auto cur_idx = (cur_layout >= 0 && cur_layout < 4) ? layout_map_inv[cur_layout] : 0;
@@ -329,11 +326,10 @@ void Menu::DisplaySaveOptions() {
     options->Add<SidebarEntryArray>("Layout"_i18n, layout_items, [this](s64& index_out){
         const int layout_map_local[] = {
             grid::LayoutType_Grid,
-            grid::LayoutType_Grid,
             grid::LayoutType_HbMenu,
             grid::LayoutType_List,
         };
-        const auto new_layout = layout_map_local[std::clamp<s64>(index_out, 0, 3)];
+        const auto new_layout = layout_map_local[std::clamp<s64>(index_out, 0, 2)];
         m_layout.Set(new_layout);
         OnLayoutChange();
     }, cur_idx, "Choose how saves are displayed on screen."_i18n)->SetIcon(ActionIcon::Layout);
