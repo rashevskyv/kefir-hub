@@ -57,7 +57,7 @@ def test_source_wiring_contracts() -> None:
     print("[1] Running static source wiring contracts...")
 
     cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.886)" in cmake_src,
+    check("set(sphaira_VERSION 0.13.887)" in cmake_src,
           "sphaira/CMakeLists.txt must define valid sphaira_VERSION")
     check("source/ui/menus/save/save_slot_backend.cpp" in cmake_src,
           "sphaira/CMakeLists.txt must compile save_slot_backend.cpp")

@@ -168,6 +168,9 @@ auto Menu::ResolveDisplay(s64 display, s64 from, const GridSections& g) const ->
     if (total <= 0) {
         return -1;
     }
+    if (from == EntryToDisplay(0, g) && display < from) {
+        return total - 1;
+    }
 
     if (display >= from) {
         for (s64 i = 0; i < total; i++) {

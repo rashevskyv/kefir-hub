@@ -42,7 +42,7 @@ def test_static_source_wiring() -> None:
     cmake_path = os.path.join(REPO_ROOT, "sphaira", "CMakeLists.txt")
     with open(cmake_path, "r", encoding="utf-8") as f:
         cmake_src = f.read()
-    check("set(sphaira_VERSION 0.13.886)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.886")
+    check("set(sphaira_VERSION 0.13.887)" in cmake_src, "CMakeLists.txt must set sphaira_VERSION to 0.13.887")
 
     # 1.2 BackupSource enum in save_menu.hpp
     sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")
@@ -111,6 +111,8 @@ def test_static_source_wiring() -> None:
           "Draw must draw divider when disp matches section first_display")
     check("DrawSectionDivider(vg, theme, v, g, sec.label," in smd_cpp,
           "Draw must pass sec.label to DrawSectionDivider")
+    check("from == EntryToDisplay(0, g) && display < from" in smd_cpp,
+          "UP from the first item must wrap past the leading divider")
     check("cur_disp = compact_grid ? 0 : g.row;" in smd_cpp and "if (!compact_grid)" in smd_cpp,
           "backup grid sections must not reserve full empty rows")
     check("m_category == Category::Backups && m_layout.Get() == grid::LayoutType_Grid" in smd_cpp,
@@ -322,6 +324,8 @@ def test_behavioral_provenance_model() -> None:
                 return e
             if total <= 0:
                 return -1
+            if from_disp == self.entry_to_display(0) and display < from_disp:
+                return total - 1
             if display >= from_disp:
                 for i in range(total):
                     if self.entry_to_display(i) > display:
@@ -367,6 +371,8 @@ def test_behavioral_provenance_model() -> None:
     check(home_grid.sections[1]["first_display"] == 4, "HOME Section 1 starts at col 4 (col 3 is divider)")
     check(home_grid.display_to_entry(0) == -1, "HOME col 0 is divider (-1)")
     check(home_grid.display_to_entry(3) == -1, "HOME col 3 is divider (-1)")
+    check(home_grid.resolve_display(0, 1, len(grid_entries)) == len(grid_entries) - 1,
+          "UP from the first item must wrap to the last item")
 
     print("  -> Behavioral provenance & grid section model PASSED.")
 
