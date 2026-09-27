@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.894)
+set(sphaira_VERSION 0.13.895)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -59,6 +59,7 @@ add_executable(sphaira
     source/ui/menus/filebrowser/filebrowser_forwarder.cpp
     source/ui/menus/filebrowser/filebrowser_ops.cpp
     source/ui/menus/filebrowser/filebrowser_ops_archive.cpp
+    source/ui/menus/filebrowser/filebrowser_recursive_install.cpp
     source/ui/menus/file_picker.cpp
     source/ui/menus/file_picker_draw.cpp
     source/ui/menus/homebrew.cpp

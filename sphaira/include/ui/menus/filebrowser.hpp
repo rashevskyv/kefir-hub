@@ -74,6 +74,7 @@ private:
     void ShowNoLauncherHint();
 
     void InstallFiles();
+    void InstallFolderRecursively();
     void RestoreSaveFile(const FileEntry& entry);
     void UnzipFiles(fs::FsPath folder);
     void ZipFiles(fs::FsPath zip_path);
@@ -175,6 +176,8 @@ private:
 
         return out;
     }
+
+    auto GetRecursiveInstallTargets() const -> std::vector<fs::FsPath>;
 
     auto IsReadOnly(const fs::FsPath& path) const -> bool;
     auto AnySelectedReadOnly() const -> bool;

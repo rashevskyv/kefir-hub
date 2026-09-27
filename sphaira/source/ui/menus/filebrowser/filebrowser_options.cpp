@@ -174,6 +174,13 @@ void FsView::DisplayOptions() {
             }, "Install the selected NSP/XCI file(s) to the console."_i18n);
             entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
         }
+#if ENABLE_NETWORK_INSTALL
+        if (!GetRecursiveInstallTargets().empty()) {
+            auto entry = options->Add<SidebarEntryCallback>("Install recursively"_i18n, [this](){ InstallFolderRecursively(); },
+                "Scan selected folder(s) recursively for packages and open the install queue."_i18n);
+            entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+        }
+#endif
     }
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {

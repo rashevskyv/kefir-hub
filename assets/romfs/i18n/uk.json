@@ -2582,5 +2582,9 @@
   "Item ": "Елемент ",
   "Restore selected save?": "Відновити вибране збереження?",
   "Checking backup...": "Перевірка резервної копії...",
-  "Verifying archive...": "Перевірка архіву..."
+  "Verifying archive...": "Перевірка архіву...",
+  "Install recursively": "Встановити рекурсивно",
+  "Scan selected folder(s) recursively for packages and open the install queue.": "Рекурсивно просканувати вибрані папки на наявність пакетів та відкрити чергу встановлення.",
+  "No packages found.": "Пакети не знайдено.",
+  "Failed to scan folder": "Не вдалося просканувати папку"
 }

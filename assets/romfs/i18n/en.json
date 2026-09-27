@@ -2582,5 +2582,9 @@
   "Item ": "Item ",
   "Restore selected save?": "Restore selected save?",
   "Checking backup...": "Checking backup...",
-  "Verifying archive...": "Verifying archive..."
+  "Verifying archive...": "Verifying archive...",
+  "Install recursively": "Install recursively",
+  "Scan selected folder(s) recursively for packages and open the install queue.": "Scan selected folder(s) recursively for packages and open the install queue.",
+  "No packages found.": "No packages found.",
+  "Failed to scan folder": "Failed to scan folder"
 }
