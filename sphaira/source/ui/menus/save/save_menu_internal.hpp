@@ -3,7 +3,10 @@
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 #include "ui/menus/save/save_paths.hpp"
+#include "ui/menus/save_menu.hpp"
 #include <string>
+#include <functional>
+#include <optional>
 
 namespace sphaira::ui::menu::save {
 
@@ -24,5 +27,11 @@ inline auto FormatSaveTypeLabel(u8 data_type) -> std::string {
     }
     return i18n::get(GetSaveTypeLabel(data_type));
 }
+
+void PlanRestoreCreation(
+    const Entry& group,
+    const AccountUid& dest_uid,
+    const fs::FsPath& archive_path,
+    std::function<void(std::optional<Entry>)> cb);
 
 } // namespace sphaira::ui::menu::save

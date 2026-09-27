@@ -16,6 +16,7 @@
 #include <memory>
 #include <algorithm>
 #include <cstring>
+#include <functional>
 
 namespace sphaira::ui::menu::save {
 
@@ -30,6 +31,11 @@ void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& lo
 void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
     if (sources.size() != targets.size()) {
         App::Push<OptionBox>("Source and target count mismatch."_i18n, "OK"_i18n);
+        return;
+    }
+
+    if (sources.empty()) {
+        App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
         return;
     }
 
@@ -52,147 +58,246 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
         return;
     }
 
-    const std::string prompt = "Restore selected saves?"_i18n + "\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
+    auto src_ptr = std::make_shared<std::vector<Entry>>(std::move(sources));
+    auto dst_ptr = std::make_shared<std::vector<Entry>>(std::move(targets));
 
-    App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, 0, [this, sources = std::move(sources), targets = std::move(targets), location, backup_root](auto op_index) mutable {
-        if (!op_index || *op_index != 1) return;
+    ShowRestoreConfirmPage(src_ptr, dst_ptr, location, backup_root, 0, src_ptr->size());
+}
 
-        auto restored = std::make_shared<size_t>(0);
-        auto skipped = std::make_shared<size_t>(0);
-        auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
-        auto last_mutation_started = std::make_shared<bool>(false);
-        auto last_item_is_raw = std::make_shared<bool>(false);
-        auto last_item_created_slot_retained = std::make_shared<bool>(false);
+void Menu::ShowRestoreConfirmPage(
+    std::shared_ptr<std::vector<Entry>> sources,
+    std::shared_ptr<std::vector<Entry>> targets,
+    const dump::DumpLocation& location,
+    const fs::FsPath& backup_root,
+    size_t page,
+    size_t num_pages) {
 
-        App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources = std::move(sources), targets = std::move(targets), location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](auto pbox) mutable -> Result {
-            fs::FsStdio stdio_fs;
-            fs::FsNativeSd sd_fs;
+    const auto& src = (*sources)[page];
+    const auto& dst = (*targets)[page];
+    const auto accounts = App::GetAccountList();
 
-            for (size_t i = 0; i < sources.size(); i++) {
-                auto& src = sources[i];
-                auto& dst = targets[i];
-                detail::LoadControlEntry(dst);
-                pbox->SetTitle(dst.GetName());
-                if (dst.image) {
-                    pbox->SetImage(dst.image);
-                } else if (auto data = title::Get(dst.application_id); data && !data->icon.empty()) {
-                    pbox->SetImageDataConst(data->icon);
-                } else {
-                    pbox->SetImage(0);
-                }
-                pbox->UpdateTransfer(i + 1, sources.size());
+    const auto& newest = src.backup_members.front();
+    std::string type_str = GetSaveTypeLabel(src.save_data_type);
+    std::string source_str = GetBackupSourceLabel(src.backup_source);
+    std::string date_str = FormatBackupTimestamp(newest.ts, false);
+    std::string acc_str;
+    if (src.save_data_type == FsSaveDataType_Account) {
+        acc_str = this->GetAccountName(dst.uid);
+        if (acc_str.empty()) acc_str = FormatBackupAccount(src, accounts);
+    }
+    const char* slash = std::strrchr(newest.path.s, '/');
+    const std::string filename = slash ? (slash + 1) : newest.path.s;
 
-                const fs::FsPath file_path = src.backup_members.front().path;
-                const auto& member = src.backup_members.front();
-                fs::Fs* probe_fs = file_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+    std::string dest_str;
+    if (dst.is_planned_create) {
+        dest_str = "New slot ("_i18n + acc_str + ")";
+    } else if (dst.save_data_type == FsSaveDataType_Account) {
+        dest_str = "Account: "_i18n + acc_str;
+        if (dst.save_data_index != 0) {
+            dest_str += " [slot "_i18n + std::to_string(dst.save_data_index) + "]";
+        }
+    } else {
+        dest_str = GetSaveTypeLabel(dst.save_data_type);
+    }
 
-                FsDirEntryType entry_type{};
-                const bool is_dir_on_disk = (R_SUCCEEDED(probe_fs->GetEntryType(file_path, &entry_type)) && entry_type == FsDirEntryType_Dir);
-                const bool is_folder = member.is_directory || is_dir_on_disk;
+    std::string prompt;
+    if (num_pages > 1) {
+        prompt = "Restore selected saves?"_i18n + "\n\n";
+        prompt += "Item "_i18n + std::to_string(page + 1) + " of "_i18n + std::to_string(num_pages) + "\n\n";
+    } else {
+        prompt = "Restore selected save?"_i18n + "\n\n";
+    }
 
-                const bool is_raw = !is_folder && IsDisaSaveFile(probe_fs, file_path);
-                *last_item_is_raw = is_raw;
-                *last_mutation_started = false;
-                *last_item_created_slot_retained = false;
+    prompt += "• [" + type_str + "] ";
+    if (!acc_str.empty()) {
+        prompt += acc_str;
+        if (src.save_data_index != 0) {
+            prompt += " (slot "_i18n + std::to_string(src.save_data_index) + ")";
+        }
+        prompt += " • ";
+    }
+    prompt += source_str + " (" + date_str + ")\n";
+    prompt += "  " + "Archive: "_i18n + filename + "\n";
+    prompt += "  " + "Target: "_i18n + dest_str + "\n\n";
 
-                if (is_raw) {
-                    return Result_RawSaveRestoreUnsupported;
-                }
+    if (num_pages > 1) {
+        prompt += "Restores are performed individually (not atomic: later items may fail if an error occurs).\n"_i18n;
+    }
+    prompt += "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
-                const char* filename = std::strrchr(file_path.s, '/');
-                filename = filename ? filename + 1 : file_path.s;
-                BackupArchiveInfo check_info{};
-
-                if (is_folder) {
-                    if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                        check_info.backup_source != src.backup_source ||
-                        BackupGroupKey(check_info) != BackupGroupKey(src)) {
-                        log_write("Backup folder reinspection failed or identity mismatch for %s\n", file_path.s);
-                        return FsError_PathNotFound;
-                    }
-                } else {
-                    if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                        check_info.backup_source != src.backup_source ||
-                        BackupGroupKey(check_info) != BackupGroupKey(src)) {
-                        log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
-                        return FsError_PathNotFound;
-                    }
-                }
-
-                if (!MatchesRestoreDestination(check_info, dst)) {
-                    log_write("Destination slot identity mismatch for %s\n", file_path.s);
-                    return FsError_PathNotFound;
-                }
-
-                *last_mutation_started = false;
-                pbox->SetActionName("Restore"_i18n);
-                fs::FsPath item_recovery_path;
-                bool item_mutation_started = false;
-                bool item_created_slot_retained = false;
-                const Result restore_rc = RestoreSaveInternal(pbox, dst, file_path, &item_recovery_path, &item_mutation_started, &item_created_slot_retained);
-                if (!item_recovery_path.empty()) {
-                    recovery_paths->push_back(item_recovery_path);
-                }
-                if (R_FAILED(restore_rc)) {
-                    *last_mutation_started = item_mutation_started;
-                    *last_item_created_slot_retained = item_created_slot_retained;
-                    return restore_rc;
-                }
-                (*restored)++;
-            }
-
-            R_SUCCEED();
-        }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](Result rc){
-            if (R_FAILED(rc)) {
-                if (*last_item_created_slot_retained) {
-                    App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
-                } else if (*last_item_is_raw) {
-                    App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
-                } else {
-                    App::PushErrorBox(rc, "Restore failed!"_i18n);
-                }
-            } else {
-                if (*restored) {
-                    App::Notify("Restore successful!"_i18n);
-                } else {
-                    App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
-                }
-
-                if (*skipped) {
-                    App::Notify(std::to_string(*skipped) + " saves skipped");
-                }
-            }
-
-            if (!recovery_paths->empty()) {
-                std::string prefix;
-                if (R_SUCCEEDED(rc)) {
-                    prefix = (recovery_paths->size() == 1)
-                        ? "Restore completed.\nSafety recovery archive:\n"_i18n
-                        : "Restore completed.\nSafety recovery archive(s):\n"_i18n;
-                } else if (*last_item_is_raw) {
-                    prefix = "Restore stopped.\nSafety recovery archive(s) retained:\n"_i18n;
-                } else if (!*last_item_is_raw && *last_mutation_started) {
-                    prefix = (recovery_paths->size() == 1)
-                        ? "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n"_i18n
-                        : "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n"_i18n;
-                } else {
-                    prefix = (recovery_paths->size() == 1)
-                        ? "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n
-                        : "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n"_i18n;
-                }
-                std::string rec_msg = prefix;
-                for (const auto& rp : *recovery_paths) {
-                    rec_msg += rp.s;
-                    rec_msg += "\n";
-                }
-                rec_msg += "\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
-                App::Push<OptionBox>(rec_msg, "OK"_i18n);
-            } else if (R_FAILED(rc)) {
-                if (!*last_item_is_raw && !*last_mutation_started && !*last_item_created_slot_retained) {
-                    App::Push<OptionBox>("Restore stopped before current target save was modified."_i18n, "OK"_i18n);
-                }
+    if (num_pages == 1) {
+        App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, [this, sources, targets, location, backup_root](auto choice) {
+            if (choice && *choice == 1) {
+                ExecuteRestore(sources, targets, location, backup_root);
             }
         });
+        return;
+    }
+
+    const bool is_first = (page == 0);
+    const bool is_last = (page + 1 == num_pages);
+
+    std::string btn_left = is_first ? "Cancel"_i18n : "Back"_i18n;
+    std::string btn_right = is_last ? "Restore"_i18n : "Next"_i18n;
+
+    App::Push<OptionBox>(prompt, btn_left, btn_right, [this, sources, targets, location, backup_root, page, num_pages, is_first, is_last](auto choice) {
+        if (!choice) return;
+        if (*choice == 1) {
+            if (is_last) {
+                ExecuteRestore(sources, targets, location, backup_root);
+            } else {
+                ShowRestoreConfirmPage(sources, targets, location, backup_root, page + 1, num_pages);
+            }
+        } else if (*choice == 0) {
+            if (!is_first) {
+                ShowRestoreConfirmPage(sources, targets, location, backup_root, page - 1, num_pages);
+            }
+        }
+    });
+}
+
+void Menu::ExecuteRestore(
+    std::shared_ptr<std::vector<Entry>> sources,
+    std::shared_ptr<std::vector<Entry>> targets,
+    const dump::DumpLocation& location,
+    const fs::FsPath& backup_root) {
+
+    App::PopToMenu();
+    auto restored = std::make_shared<size_t>(0);
+    auto skipped = std::make_shared<size_t>(0);
+    auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
+    auto last_mutation_started = std::make_shared<bool>(false);
+    auto last_item_is_raw = std::make_shared<bool>(false);
+    auto last_item_created_slot_retained = std::make_shared<bool>(false);
+
+    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources, targets, location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](auto pbox) mutable -> Result {
+        fs::FsStdio stdio_fs;
+        fs::FsNativeSd sd_fs;
+
+        for (size_t i = 0; i < sources->size(); i++) {
+            auto& src = (*sources)[i];
+            auto& dst = (*targets)[i];
+            detail::LoadControlEntry(dst);
+            pbox->SetTitle(dst.GetName());
+            if (dst.image) {
+                pbox->SetImage(dst.image);
+            } else if (auto data = title::Get(dst.application_id); data && !data->icon.empty()) {
+                pbox->SetImageDataConst(data->icon);
+            } else {
+                pbox->SetImage(0);
+            }
+            pbox->UpdateTransfer(i + 1, sources->size());
+
+            const fs::FsPath file_path = src.backup_members.front().path;
+            const auto& member = src.backup_members.front();
+            fs::Fs* probe_fs = file_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+
+            FsDirEntryType entry_type{};
+            const bool is_dir_on_disk = (R_SUCCEEDED(probe_fs->GetEntryType(file_path, &entry_type)) && entry_type == FsDirEntryType_Dir);
+            const bool is_folder = member.is_directory || is_dir_on_disk;
+
+            const bool is_raw = !is_folder && IsDisaSaveFile(probe_fs, file_path);
+            *last_item_is_raw = is_raw;
+            *last_mutation_started = false;
+            *last_item_created_slot_retained = false;
+
+            if (is_raw) {
+                return Result_RawSaveRestoreUnsupported;
+            }
+
+            const char* filename = std::strrchr(file_path.s, '/');
+            filename = filename ? filename + 1 : file_path.s;
+            BackupArchiveInfo check_info{};
+
+            if (is_folder) {
+                if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
+                    check_info.backup_source != src.backup_source ||
+                    BackupGroupKey(check_info) != BackupGroupKey(src)) {
+                    log_write("Backup folder reinspection failed or identity mismatch for %s\n", file_path.s);
+                    return FsError_PathNotFound;
+                }
+            } else {
+                if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
+                    check_info.backup_source != src.backup_source ||
+                    BackupGroupKey(check_info) != BackupGroupKey(src)) {
+                    log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
+                    return FsError_PathNotFound;
+                }
+            }
+
+            if (!MatchesRestoreDestination(check_info, dst)) {
+                log_write("Destination slot identity mismatch for %s\n", file_path.s);
+                return FsError_PathNotFound;
+            }
+
+            *last_mutation_started = false;
+            pbox->SetActionName("Restore"_i18n);
+            fs::FsPath item_recovery_path;
+            bool item_mutation_started = false;
+            bool item_created_slot_retained = false;
+            const Result restore_rc = RestoreSaveInternal(pbox, dst, file_path, &item_recovery_path, &item_mutation_started, &item_created_slot_retained);
+            if (!item_recovery_path.empty()) {
+                recovery_paths->push_back(item_recovery_path);
+            }
+            if (R_FAILED(restore_rc)) {
+                *last_mutation_started = item_mutation_started;
+                *last_item_created_slot_retained = item_created_slot_retained;
+                return restore_rc;
+            }
+            (*restored)++;
+        }
+
+        R_SUCCEED();
+    }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](Result rc){
+        if (R_FAILED(rc)) {
+            if (*last_item_created_slot_retained) {
+                App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
+            } else if (*last_item_is_raw) {
+                App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
+            } else {
+                App::PushErrorBox(rc, "Restore failed!"_i18n);
+            }
+        } else {
+            if (*restored) {
+                App::Notify("Restore successful!"_i18n);
+            } else {
+                App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+            }
+
+            if (*skipped) {
+                App::Notify(std::to_string(*skipped) + " saves skipped");
+            }
+        }
+
+        if (!recovery_paths->empty()) {
+            std::string prefix;
+            if (R_SUCCEEDED(rc)) {
+                prefix = (recovery_paths->size() == 1)
+                    ? "Restore completed.\nSafety recovery archive:\n"_i18n
+                    : "Restore completed.\nSafety recovery archive(s):\n"_i18n;
+            } else if (*last_item_is_raw) {
+                prefix = "Restore stopped.\nSafety recovery archive(s) retained:\n"_i18n;
+            } else if (!*last_item_is_raw && *last_mutation_started) {
+                prefix = (recovery_paths->size() == 1)
+                    ? "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n"_i18n
+                    : "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n"_i18n;
+            } else {
+                prefix = (recovery_paths->size() == 1)
+                    ? "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n
+                    : "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n"_i18n;
+            }
+            std::string rec_msg = prefix;
+            for (const auto& rp : *recovery_paths) {
+                rec_msg += rp.s;
+                rec_msg += "\n";
+            }
+            rec_msg += "\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+            App::Push<OptionBox>(rec_msg, "OK"_i18n);
+        } else if (R_FAILED(rc)) {
+            if (!*last_item_is_raw && !*last_mutation_started && !*last_item_created_slot_retained) {
+                App::Push<OptionBox>("Restore stopped before current target save was modified."_i18n, "OK"_i18n);
+            }
+        }
     });
 }
 

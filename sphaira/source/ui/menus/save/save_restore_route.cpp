@@ -11,6 +11,7 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_slot_backend.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
+#include "save_menu_internal.hpp"
 #include "minizip_helper.hpp"
 #include <minizip/unzip.h>
 #include <algorithm>
@@ -86,6 +87,7 @@ auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& bac
 }
 
 void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+    entries = ExpandGameGroups(entries);
     if (entries.empty()) {
         return;
     }
@@ -229,6 +231,8 @@ void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, s
     App::Push(std::move(popup));
 }
 
+} // namespace
+
 void PlanRestoreCreation(
     const Entry& group,
     const AccountUid& dest_uid,
@@ -344,8 +348,6 @@ void PlanRestoreCreation(
     );
 }
 
-} // namespace
-
 void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions) {
     if (group.backup_members.empty()) {
         fs::FsStdio stdio_fs;
@@ -426,9 +428,9 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
             RestoreSingleBackupGroup(std::move(group), &chosen_uid, false, location, backup_root);
         });
         if (return_to_actions) {
-            auto* picker = popup.get();
-            popup->SetAction(Button::B, Action{"Back"_i18n, [this, picker, group](){
-                picker->SetPop();
+            auto* raw = popup.get();
+            popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, group]() {
+                raw->SetPop();
                 PromptBackupGroupAction({group});
             }});
         }
@@ -444,6 +446,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
 }
 
 void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions) {
+    groups = ExpandGameGroups(groups);
     if (groups.empty()) {
         return;
     }
@@ -553,9 +556,9 @@ void Menu::PromptBatchRestoreTargets(
         resolve_for_uid(&chosen_uid);
     });
     if (return_to_actions) {
-        auto* picker = popup.get();
-        popup->SetAction(Button::B, Action{"Back"_i18n, [this, picker, seeds](){
-            picker->SetPop();
+        auto* raw = popup.get();
+        popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, seeds]() {
+            raw->SetPop();
             PromptBackupGroupAction(*seeds);
         }});
     }

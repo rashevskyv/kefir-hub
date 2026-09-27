@@ -54,6 +54,10 @@ void Menu::PromptSaveAction() {
     if (has_live) {
         PromptLiveSaveAction(seeds);
     } else {
+        if (seeds.size() == 1 && seeds.front().is_game_parent) {
+            OpenGameBackupGroup(seeds.front());
+            return;
+        }
         PromptBackupGroupAction(seeds);
     }
 }
@@ -237,7 +241,10 @@ void Menu::CreateBackupIfNewer(const std::vector<Entry>& seeds) {
 }
 
 void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
-    const auto& focused = (m_index < m_entries.size()) ? m_entries[m_index] : seeds.front();
+    if (seeds.empty()) {
+        return;
+    }
+    const auto& focused = seeds.front();
 
     enum class ActionType {
         VerifyIntegrity,
@@ -261,7 +268,8 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
     actions.push_back({ActionType::DeleteOlder, "Delete older backups"_i18n});
     actions.push_back({ActionType::OpenFileBrowser, "Open in file browser"_i18n});
 
-    const bool has_user_select = focused.is_backup &&
+    const bool has_user_select = (m_category != Category::Backups) &&
+        focused.is_backup &&
         focused.save_data_type == FsSaveDataType_Account &&
         (focused.uid.uid[0] != 0 || focused.uid.uid[1] != 0);
     if (has_user_select) {
@@ -281,21 +289,22 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
             return;
         }
 
+        const auto actual_seeds = ExpandGameGroups(seeds);
         switch (actions[*op_index].type) {
             case ActionType::VerifyIntegrity:
-                VerifyIntegrity(seeds);
+                VerifyIntegrity(actual_seeds);
                 break;
 
             case ActionType::DeleteOlder:
-                DeleteOlderBackups(seeds);
+                DeleteOlderBackups(actual_seeds);
                 break;
 
             case ActionType::Restore:
-                RestoreBackupGroups(seeds, false, true);
+                RestoreBackupGroups(actual_seeds, false, true);
                 break;
 
             case ActionType::OpenFileBrowser: {
-                const auto& target = seeds.front();
+                const auto& target = actual_seeds.empty() ? seeds.front() : actual_seeds.front();
                 const auto slash = std::strrchr(target.backup_path.s, '/');
                 if (slash) {
                     std::string dir(target.backup_path.s, slash - target.backup_path.s);
@@ -307,7 +316,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
             }
 
             case ActionType::Delete:
-                DeleteBackupGroups(seeds);
+                DeleteBackupGroups(actual_seeds);
                 break;
 
             case ActionType::SelectUser: {
@@ -330,11 +339,9 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                         const bool match = is_sys
                             ? (IsSystemLikeSave(e.save_data_type) && e.system_save_data_id == focused.system_save_data_id)
                             : (!IsSystemLikeSave(e.save_data_type) && e.application_id == focused.application_id);
-                        if (match) {
-                            if (!e.selected) {
-                                e.selected = true;
-                                m_selected_count++;
-                            }
+                        if (match && !e.selected) {
+                            e.selected = true;
+                            m_selected_count++;
                         }
                     }
                 }
@@ -342,6 +349,26 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
             }
         }
     });
+
+    if (m_category == Category::Backups && seeds.size() == 1 && !seeds.front().is_game_parent) {
+        const auto& first = seeds.front();
+        for (const auto& entry : m_entries) {
+            if (entry.is_game_parent) {
+                const bool match = IsSystemLikeSave(first.save_data_type)
+                    ? (entry.system_save_data_id == first.system_save_data_id)
+                    : (entry.application_id == first.application_id);
+                if (match) {
+                    auto* raw = popup.get();
+                    popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, entry]() {
+                        raw->SetPop();
+                        OpenGameBackupGroup(entry);
+                    }});
+                    break;
+                }
+            }
+        }
+    }
+
     popup->SetMenuStyle(true);
     App::Push(std::move(popup));
 }

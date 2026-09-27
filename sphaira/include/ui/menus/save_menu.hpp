@@ -73,6 +73,8 @@ struct Entry final : FsSaveDataInfo {
 
     bool is_planned_create{};
     SaveCreationRequest creation_request{};
+    bool is_game_parent{};
+    std::vector<Entry> children{};
 
     auto GetName() const -> const char* {
         return lang.name;
@@ -82,6 +84,7 @@ struct Entry final : FsSaveDataInfo {
         return lang.author;
     }
 };
+auto ExpandGameGroups(const std::vector<Entry>& entries) -> std::vector<Entry>;
 
 enum SortType {
     SortType_Updated,
@@ -240,6 +243,18 @@ private:
     void RestoreSaves(std::vector<Entry> entries);
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void ShowRestoreConfirmPage(
+        std::shared_ptr<std::vector<Entry>> sources,
+        std::shared_ptr<std::vector<Entry>> targets,
+        const dump::DumpLocation& location,
+        const fs::FsPath& backup_root,
+        size_t page,
+        size_t num_pages);
+    void ExecuteRestore(
+        std::shared_ptr<std::vector<Entry>> sources,
+        std::shared_ptr<std::vector<Entry>> targets,
+        const dump::DumpLocation& location,
+        const fs::FsPath& backup_root);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
     void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
@@ -255,6 +270,17 @@ private:
     void PromptSaveAction();
     void PromptLiveSaveAction(const std::vector<Entry>& seeds);
     void PromptBackupGroupAction(const std::vector<Entry>& seeds);
+    void OpenGameBackupGroup(const Entry& game);
+    void RestoreAllForGame(const Entry& game);
+    void PromptRestoreAllDestinations(
+        std::shared_ptr<std::vector<Entry>> seeds,
+        size_t step,
+        std::shared_ptr<std::vector<AccountProfileBase>> accounts,
+        std::shared_ptr<std::vector<Entry>> resolved_targets,
+        std::shared_ptr<std::set<std::string>> seen_target_keys,
+        const dump::DumpLocation& location,
+        const fs::FsPath& backup_root,
+        const std::string& game_name);
     void CreateBackupIfNewer(const std::vector<Entry>& seeds);
     void VerifyIntegrity(const std::vector<Entry>& seeds);
     void DeleteOlderBackups(const std::vector<Entry>& seeds);

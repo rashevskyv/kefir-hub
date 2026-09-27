@@ -232,25 +232,123 @@ void Menu::ScanHomebrew() {
     }
 
     if (show_backups) {
-        for (auto& b : backups) {
-            if (m_app_id_filter && b.application_id != m_app_id_filter) {
-                continue;
+        if (m_category == Category::Backups && !m_app_id_filter) {
+            std::vector<u64> app_order;
+            std::unordered_map<u64, std::vector<Entry>> app_groups;
+            std::vector<Entry> system_entries;
+
+            for (auto& b : backups) {
+                if (!m_all_accounts && b.save_data_type == FsSaveDataType_Account) {
+                    bool match = false;
+                    for (const auto idx : account_indexes) {
+                        if (idx >= 0 && idx < static_cast<s64>(m_accounts.size())) {
+                            if (!std::memcmp(&b.uid, &m_accounts[idx].uid, sizeof(AccountUid))) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!match) {
+                        continue;
+                    }
+                }
+
+                if (IsSystemLikeSave(b.save_data_type)) {
+                    system_entries.emplace_back(std::move(b));
+                } else if (b.application_id != 0) {
+                    auto& group = app_groups[b.application_id];
+                    if (group.empty()) {
+                        app_order.push_back(b.application_id);
+                    }
+                    group.emplace_back(std::move(b));
+                } else {
+                    system_entries.emplace_back(std::move(b));
+                }
             }
-            if (!m_all_accounts && b.save_data_type == FsSaveDataType_Account) {
-                bool match = false;
-                for (const auto idx : account_indexes) {
-                    if (idx >= 0 && idx < static_cast<s64>(m_accounts.size())) {
-                        if (!std::memcmp(&b.uid, &m_accounts[idx].uid, sizeof(AccountUid))) {
-                            match = true;
+
+            for (const auto app_id : app_order) {
+                auto& children = app_groups[app_id];
+                if (children.empty()) {
+                    continue;
+                }
+
+                Entry parent{};
+                parent.application_id = app_id;
+                parent.save_data_type = FsSaveDataType_Account;
+                parent.is_backup = true;
+                parent.is_game_parent = true;
+                parent.backup_count = children.size();
+
+                const auto it = backup_name_lookup.find(app_id);
+                if (it != backup_name_lookup.end() && !it->second.empty()) {
+                    std::strncpy(parent.lang.name, it->second.c_str(), sizeof(parent.lang.name) - 1);
+                    parent.lang.name[sizeof(parent.lang.name) - 1] = '\0';
+                } else {
+                    for (const auto& c : children) {
+                        if (c.lang.name[0] != '\0' && !title::IsPlaceholderName(c.lang.name)) {
+                            std::strncpy(parent.lang.name, c.lang.name, sizeof(parent.lang.name) - 1);
+                            parent.lang.name[sizeof(parent.lang.name) - 1] = '\0';
                             break;
                         }
                     }
+                    if (parent.lang.name[0] == '\0') {
+                        std::snprintf(parent.lang.name, sizeof(parent.lang.name), "Title %016lX", app_id);
+                    }
                 }
-                if (!match) {
+
+                u64 newest_ts = 0;
+                bool first_child = true;
+                bool multi_source = false;
+                BackupSource common_source = BackupSource::Other;
+
+                for (auto& c : children) {
+                    if (c.lang.name[0] == '\0') {
+                        std::strncpy(c.lang.name, parent.lang.name, sizeof(c.lang.name) - 1);
+                        c.lang.name[sizeof(c.lang.name) - 1] = '\0';
+                    }
+                    if (c.backup_timestamp > newest_ts) {
+                        newest_ts = c.backup_timestamp;
+                        parent.backup_path = c.backup_path;
+                        parent.backup_is_directory = c.backup_is_directory;
+                    }
+                    if (first_child) {
+                        common_source = c.backup_source;
+                        first_child = false;
+                    } else if (c.backup_source != common_source) {
+                        multi_source = true;
+                    }
+                }
+                parent.backup_timestamp = newest_ts;
+                parent.backup_source = multi_source ? BackupSource::Other : common_source;
+
+                parent.children = std::move(children);
+                m_entries.emplace_back(std::move(parent));
+            }
+
+            for (auto& sys : system_entries) {
+                m_entries.emplace_back(std::move(sys));
+            }
+        } else {
+            for (auto& b : backups) {
+                if (m_app_id_filter && b.application_id != m_app_id_filter) {
                     continue;
                 }
+                if (!m_all_accounts && b.save_data_type == FsSaveDataType_Account) {
+                    bool match = false;
+                    for (const auto idx : account_indexes) {
+                        if (idx >= 0 && idx < static_cast<s64>(m_accounts.size())) {
+                            if (!std::memcmp(&b.uid, &m_accounts[idx].uid, sizeof(AccountUid))) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!match) {
+                        continue;
+                    }
+                }
+                m_entries.emplace_back(std::move(b));
             }
-            m_entries.emplace_back(std::move(b));
         }
     }
 

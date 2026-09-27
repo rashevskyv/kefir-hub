@@ -137,7 +137,7 @@ void Menu::SyncSavesRemote() {
         return;
     }
 
-    const auto seeds = GetSelectedEntries();
+    const auto seeds = ExpandGameGroups(GetSelectedEntries());
     if (seeds.empty()) {
         App::Push<OptionBox>("No saves selected for sync."_i18n, "OK"_i18n);
         return;
@@ -161,7 +161,7 @@ void Menu::SyncSavesRemote() {
 }
 
 void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
-    const auto seeds = GetSelectedEntries();
+    const auto seeds = ExpandGameGroups(GetSelectedEntries());
     if (seeds.empty()) {
         return;
     }

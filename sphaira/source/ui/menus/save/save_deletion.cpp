@@ -41,6 +41,7 @@ auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Resul
 }
 
 void Menu::DeleteSaves(std::vector<Entry> entries) {
+    entries = ExpandGameGroups(entries);
     if (entries.empty()) {
         return;
     }

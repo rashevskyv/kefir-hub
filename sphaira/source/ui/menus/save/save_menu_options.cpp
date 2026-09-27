@@ -93,7 +93,7 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
         App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [this, seeds](auto choice) {
             if (choice && *choice == 1) {
                 App::PopToMenu();
-                DeleteSaves(seeds);
+                DeleteSaves(ExpandGameGroups(seeds));
             }
         }, seeds.front().image);
         return;
@@ -108,7 +108,7 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
     auto available_entries = CollectActionEntries(seeds, all_types, all_account_indexes);
     if (available_entries.empty()) {
         if (op == SaveOp::Restore && !seeds.empty()) {
-            available_entries = seeds;
+            available_entries = ExpandGameGroups(seeds);
         } else {
             App::Push<OptionBox>("No matching saves found."_i18n, "OK"_i18n);
             return;
@@ -247,7 +247,7 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
         auto entries = CollectActionEntries(seeds, selected_types, selected_accounts);
         if (entries.empty()) {
             if (op == SaveOp::Restore && (m_category == Category::Backups || std::ranges::all_of(seeds, [](const auto& e){ return e.is_backup; }))) {
-                entries = seeds;
+                entries = ExpandGameGroups(seeds);
             } else {
                 App::Push<OptionBox>("No matching saves found."_i18n, "OK"_i18n);
                 return;
@@ -262,7 +262,7 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
             App::Push<OptionBox>(prompt, "Back"_i18n, "Delete"_i18n, 0, [this, entries](auto choice) {
                 if (choice && *choice == 1) {
                     App::PopToMenu();
-                    DeleteSaves(entries);
+                    DeleteSaves(ExpandGameGroups(entries));
                 }
             }, seeds.front().image);
             return;
@@ -274,7 +274,7 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
 
         App::PopToMenu();
         if (op == SaveOp::Restore) {
-            StartRestore(entries, location, backup_root);
+            StartRestore(ExpandGameGroups(entries), location, backup_root);
         } else {
             BackupSaves(entries, location, backup_root);
         }

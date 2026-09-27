@@ -182,6 +182,9 @@ from contract_fixtures.save_backup_library_suites_7_to_8 import (
 from contract_fixtures.save_backup_library_suite_9 import (
     test_suite_9_connected_save_and_backup_deletion_fail_closed
 )
+from contract_fixtures.save_backup_library_suite_10 import (
+    test_suite_10_game_grouping_and_batch_admission
+)
 
 def test_static_source_contracts() -> None:
     print("[1] Verifying static source contracts in Sphaira codebase (scoped to functions)...")
@@ -235,6 +238,7 @@ def test_static_source_contracts() -> None:
         os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_catalog.cpp"),
         os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_target.cpp"),
         os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
+        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_game_group.cpp"),
     ]
     sm_cpp = ""
     for unit_path in save_menu_units:
@@ -242,6 +246,14 @@ def test_static_source_contracts() -> None:
             sm_cpp += f.read() + "\n"
     check("auto FormatBackupRankMarker(const Entry& e) -> std::string" in sm_cpp,
           "save_menu.cpp must define file-local FormatBackupRankMarker")
+    check("auto ExpandGameGroups(const std::vector<Entry>& entries) -> std::vector<Entry>" in sm_cpp,
+          "save_game_group.cpp must define ExpandGameGroups")
+    check("void Menu::OpenGameBackupGroup(const Entry& game)" in sm_cpp,
+          "save_game_group.cpp must define OpenGameBackupGroup")
+    check("void Menu::RestoreAllForGame(const Entry& game)" in sm_cpp,
+          "save_game_group.cpp must define RestoreAllForGame")
+    check("void Menu::PromptRestoreAllDestinations(" in sm_cpp,
+          "save_game_group.cpp must define PromptRestoreAllDestinations")
 
     # Scope A: ReadBackupEntries
     p_rbe = sm_cpp.find("void Menu::ReadBackupEntries(")
@@ -436,7 +448,8 @@ def main():
     test_suite_7_source_anchors_and_model_lifetimes()
     test_suite_8_connected_create_backup_if_newer_conservative_freshness()
     test_suite_9_connected_save_and_backup_deletion_fail_closed()
-    print("ALL TESTS PASSED SUCCESSFULLY (v0.13.866 contract verified)")
+    test_suite_10_game_grouping_and_batch_admission()
+    print("ALL TESTS PASSED SUCCESSFULLY (v0.13.894 contract verified)")
 
 if __name__ == "__main__":
     main()

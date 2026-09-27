@@ -35,6 +35,9 @@ void DrawInnerBorder(NVGcontext* vg, const Vec4& v, const NVGcolor& col, float t
 // right-hand column of a list row, DBI-style: save category in brackets, then
 // its allocated size (backup rows show archive count when > 1).
 auto FormatListInfo(const Entry& e) -> std::string {
+    if (e.is_game_parent) {
+        return e.children.size() > 1 ? std::to_string(e.children.size()) + " backups"_i18n : "1 backup"_i18n;
+    }
     const std::string label = "[" + FormatSaveTypeLabel(e.save_data_type) + "]";
     if (e.is_backup) {
         return e.backup_count > 1 ? label + "  " + std::to_string(e.backup_count) + " archives" : label;
@@ -66,9 +69,10 @@ auto Menu::ComputeGridSections() const -> GridSections {
             s64 cur_disp = 0;
             size_t idx = 0;
             while (idx < m_entries.size()) {
+                const bool is_game = m_entries[idx].is_game_parent;
                 const auto src = m_entries[idx].backup_source;
                 size_t end = idx + 1;
-                while (end < m_entries.size() && m_entries[end].backup_source == src) {
+                while (end < m_entries.size() && m_entries[end].is_game_parent == is_game && (is_game || m_entries[end].backup_source == src)) {
                     end++;
                 }
                 const s64 count = static_cast<s64>(end - idx);
@@ -77,22 +81,27 @@ auto Menu::ComputeGridSections() const -> GridSections {
                     // The grid already starts below the tabs, leaving room for
                     // the first label without a whole empty row.
                     cur_disp = compact_grid ? 0 : g.row;
+                    if (is_game) {
+                        cur_disp = 0;
+                    }
                 } else {
                     const s64 rem = cur_disp % g.row;
                     if (rem != 0) {
                         cur_disp += (g.row - rem);
                     }
                     if (!compact_grid) {
-                        cur_disp += g.row;
+                        if (!is_game) {
+                            cur_disp += g.row;
+                        }
                     }
                 }
 
                 GridSections::Section sec;
-                sec.label = i18n::get(GetBackupSourceLabel(src));
+                sec.label = is_game ? "" : i18n::get(GetBackupSourceLabel(src));
                 sec.entry_start = static_cast<s64>(idx);
                 sec.entry_count = count;
                 sec.first_display = cur_disp;
-                sec.has_divider = true;
+                sec.has_divider = !is_game;
 
                 cur_disp += count;
                 g.sections.emplace_back(std::move(sec));
@@ -208,10 +217,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         char title_id[33];
         std::snprintf(title_id, sizeof(title_id), "%016lX", id);
 
-        const auto account = e.is_backup ?
-            FormatBackupAccount(e, m_accounts) + "  •  " + FormatBackupRankMarker(e) :
-            ((e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
-                GetAccountName(e.uid) : GetAccountSummary());
+        const auto account = e.is_game_parent ?
+            (e.children.size() > 1 ? std::to_string(e.children.size()) + " backup groups"_i18n : "1 backup group"_i18n) :
+            (e.is_backup ?
+                FormatBackupAccount(e, m_accounts) + "  •  " + FormatBackupRankMarker(e) :
+                ((e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
+                    GetAccountName(e.uid) : GetAccountSummary()));
 
         const auto author_text = e.is_backup ?
             FormatBackupTimestamp(e.backup_timestamp) : std::string{e.GetAuthor()};
@@ -237,7 +248,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         float bounds[4]{};
 
         for (const auto& e : m_entries) {
-            if (!e.is_backup) {
+            if (!e.is_backup || e.is_game_parent) {
                 continue;
             }
             const auto cols = GetBackupSecondaryColumns(e, m_accounts);
@@ -297,7 +308,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const bool is_list = (m_layout.Get() == grid::LayoutType_List);
         const auto author_str = (e.is_backup && is_list)
             ? std::string{}
-            : (e.is_backup ? FormatBackupSecondaryText(e, m_accounts) : std::string{e.GetAuthor()});
+            : (e.is_backup ? (e.is_game_parent ? FormatBackupTimestamp(e.backup_timestamp) : FormatBackupSecondaryText(e, m_accounts)) : std::string{e.GetAuthor()});
 
         const char* entry_name = (m_layout.Get() == grid::LayoutType_HbMenu) ? "" : e.GetName();
 
@@ -309,7 +320,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
         }
 
-        if (e.is_backup && is_list) {
+        if (e.is_backup && !e.is_game_parent && is_list) {
             DrawBackupSecondaryColumns(vg, theme, v, image_v, e, backup_cols, info.c_str());
         }
 
