@@ -305,6 +305,15 @@ auto Sidebar::Add(std::unique_ptr<SidebarEntryBase>&& _entry) -> SidebarEntryBas
     return entry.get();
 }
 
+void Sidebar::SetDefaultEntry(const SidebarEntryBase* entry) {
+    for (s64 i = 0; i < static_cast<s64>(m_items.size()); i++) {
+        if (m_items[i].get() == entry) {
+            SetIndex(i);
+            break;
+        }
+    }
+}
+
 auto Sidebar::IsFocusable(s64 index) const -> bool {
     if (index < 0 || index >= (s64)m_items.size()) {
         return false;

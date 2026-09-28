@@ -261,6 +261,9 @@ Result Yati::ShouldSkip(const CnmtCollection& cnmt, bool& skip) {
         if (!(cnmt.key.type & 0x80)) {
             log_write("\tskipping: invalid: %u\n", cnmt.key.type);
             skip = true;
+        } else if (!config.title_ids.empty() && std::ranges::find(config.title_ids, cnmt.key.id) == config.title_ids.end()) {
+            log_write("\tskipping: not selected: %016lX\n", cnmt.key.id);
+            skip = true;
         } else if (config.skip_base && cnmt.key.type == NcmContentMetaType_Application) {
             log_write("\tskipping: [NcmContentMetaType_Application]\n");
             skip = true;

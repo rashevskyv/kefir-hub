@@ -27,12 +27,12 @@ auto ProgressCallbackFunc1(void *clientp, curl_off_t dltotal, curl_off_t dlnow, 
 
 auto ProgressCallbackFunc2(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) -> int {
     auto api = static_cast<Api*>(clientp);
-    if (!g_running || api->GetToken().stop_requested()) {
+    if (!g_running || (api && api->GetToken().stop_requested())) {
         return 1;
     }
 
     // log_write("pcall called %u %u %u %u\n", dltotal, dlnow, ultotal, ulnow);
-    if (!api->GetOnProgress()(dltotal, dlnow, ultotal, ulnow)) {
+    if (api && api->GetOnProgress() && !api->GetOnProgress()(dltotal, dlnow, ultotal, ulnow)) {
         return 1;
     }
 

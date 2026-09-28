@@ -11,6 +11,7 @@ class PopupList final : public Widget {
 public:
     using Items = std::vector<std::string>;
     using Callback = std::function<void(std::optional<s64>)>;
+    using DisabledCallback = std::function<bool(s64 index)>;
 
 public:
     explicit PopupList(std::string title, Items items, Callback cb, s64 index = 0);
@@ -38,6 +39,12 @@ public:
 
     auto SetIcons(std::vector<std::optional<ActionIcon>> icons) -> PopupList& { m_icons = std::move(icons); return *this; }
 
+    // greys out the rows this returns true for, which A then leaves alone. asked
+    // as the list is drawn, so it follows whatever it reads at the time.
+    void SetDisabled(const DisabledCallback& disabled) {
+        m_disabled = disabled;
+    }
+
 private:
     void SetIndex(s64 index);
 
@@ -50,6 +57,7 @@ private:
     std::string m_title{};
     Items m_items{};
     Callback m_callback{};
+    DisabledCallback m_disabled{};
     s64 m_index{}; // index in list array
     s64 m_starting_index{};
     bool m_menu_style{};

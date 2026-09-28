@@ -155,9 +155,9 @@ SidebarEntryArray::SidebarEntryArray(const std::string& title, const Items& item
     }
 
     m_list_callback = [&index, this]() {
-        App::Push<PopupList>(
-            m_title, m_items, index, m_index
-        );
+        auto list = std::make_unique<PopupList>(m_title, m_items, index, m_index);
+        list->SetDisabled(m_disabled);
+        App::Push(std::move(list));
     };
 }
 
@@ -177,14 +177,14 @@ SidebarEntryArray::SidebarEntryArray(const std::string& title, const Items& item
 , m_index{index} {
 
     m_list_callback = [this]() {
-        App::Push<PopupList>(
-            m_title, m_items, [this](auto op_idx){
-                if (op_idx) {
-                    m_index = *op_idx;
-                    m_callback(m_index);
-                }
-            }, m_index
-        );
+        auto list = std::make_unique<PopupList>(m_title, m_items, [this](auto op_idx){
+            if (op_idx) {
+                m_index = *op_idx;
+                m_callback(m_index);
+            }
+        }, m_index);
+        list->SetDisabled(m_disabled);
+        App::Push(std::move(list));
     };
 
     SetAction(Button::A, Action{"OK"_i18n, [this](){

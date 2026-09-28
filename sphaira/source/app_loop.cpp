@@ -134,7 +134,7 @@ void App::Loop() {
                     }
                 } else if constexpr(std::is_same_v<T, evman::FunctionalEventData>) {
                     log_write("[FunctionalEventData] got event\n");
-                    if (arg.callback) {
+                    if (arg.callback && !arg.stoken.stop_requested()) {
                         arg.callback();
                     }
                 } else {

@@ -23,7 +23,10 @@ struct ExitEventData {
 
 struct FunctionalEventData {
     std::function<void()> callback;
+    std::stop_token stoken{};
 };
+
+using CallbackEventData = FunctionalEventData;
 
 using EventData = std::variant<
     LaunchNroEventData,

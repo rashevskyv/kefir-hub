@@ -175,6 +175,7 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_NtpRecvFailed: return "SphairaError_NtpRecvFailed";
         case Result_NtpBadReply: return "SphairaError_NtpBadReply";
         case Result_NtpSetTimeFailed: return "SphairaError_NtpSetTimeFailed";
+        case Result_YatiHttpReadFailed: return "SphairaError_YatiHttpReadFailed";
     }
 
     return "";

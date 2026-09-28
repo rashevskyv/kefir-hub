@@ -10,7 +10,7 @@ void SetCommonCurlOptions(CURL* curl, const Api& e) {
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_FOLLOWLOCATION, 1L);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-    CURL_EASY_SETOPT_LOG(curl, CURLOPT_FAILONERROR, 1L);
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_FAILONERROR, (e.GetFlags() & Flag_KeepErrorBody) ? 0L : 1L);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_NOPROGRESS, 0L);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_SHARE, g_curl_share);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_BUFFERSIZE, 1024*512);
@@ -62,6 +62,9 @@ void SetCommonCurlOptions(CURL* curl, const Api& e) {
 
     // set auth.
     if (!e.GetUserPass().m_user.empty()) {
+        if (e.GetPreemptiveAuth() && e.GetBearer().empty()) {
+            CURL_EASY_SETOPT_LOG(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_BASIC);
+        }
         CURL_EASY_SETOPT_LOG(curl, CURLOPT_USERPWD, e.GetUserPass().m_user.c_str());
     }
     if (!e.GetUserPass().m_pass.empty()) {
@@ -73,13 +76,10 @@ void SetCommonCurlOptions(CURL* curl, const Api& e) {
         CURL_EASY_SETOPT_LOG(curl, CURLOPT_PORT, (long)e.GetPort());
     }
 
-    // progress calls.
-    if (e.GetOnProgress()) {
-        CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFODATA, &e);
-        CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallbackFunc2);
-    } else {
-        CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallbackFunc1);
-    }
+    // progress calls, with or without a callback: they are also where a stop token
+    // cancels the request.
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFODATA, &e);
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallbackFunc2);
 
 }
 auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
@@ -472,48 +472,65 @@ auto WebdavCreateFolder(CURL* curl, const Api& e) -> bool {
 }
 
 
+namespace {
+
+// runs on g_curl_single when it is free, and on a handle of its own rather than
+// waiting when it isn't: a long download would otherwise hold up every other
+// blocking request. the two behave alike, since what a handle reuses -
+// connections, dns, tls sessions - lives in g_curl_share.
+auto RunBlocking(const Api& e, bool upload) -> ApiResult {
+    if (!g_running) {
+        return {};
+    }
+    const auto run = [&e, upload](CURL* curl) {
+        return upload ? UploadInternal(curl, e) : DownloadInternal(curl, e);
+    };
+
+    if (mutexTryLock(&g_mutex_single)) {
+        ON_SCOPE_EXIT(mutexUnlock(&g_mutex_single));
+        if (!g_running || !g_curl_single) {
+            return {};
+        }
+        return run(g_curl_single);
+    }
+
+    log_write("[CURL] blocking handle busy, using one of its own\n");
+    const auto curl = curl_easy_init();
+    if (!curl) {
+        return {};
+    }
+    ON_SCOPE_EXIT(curl_easy_cleanup(curl));
+    return run(curl);
+}
+
+} // namespace
+
 auto ToMemory(const Api& e) -> ApiResult {
     if (!g_running || !e.GetPath().empty()) {
         return {};
     }
-    SCOPED_MUTEX(&g_mutex_single);
-    if (!g_running || !g_curl_single) {
-        return {};
-    }
-    return DownloadInternal(g_curl_single, e);
+    return RunBlocking(e, false);
 }
 
 auto ToFile(const Api& e) -> ApiResult {
     if (!g_running || e.GetPath().empty()) {
         return {};
     }
-    SCOPED_MUTEX(&g_mutex_single);
-    if (!g_running || !g_curl_single) {
-        return {};
-    }
-    return DownloadInternal(g_curl_single, e);
+    return RunBlocking(e, false);
 }
 
 auto FromMemory(const Api& e) -> ApiResult {
     if (!g_running || !e.GetPath().empty()) {
         return {};
     }
-    SCOPED_MUTEX(&g_mutex_single);
-    if (!g_running || !g_curl_single) {
-        return {};
-    }
-    return UploadInternal(g_curl_single, e);
+    return RunBlocking(e, true);
 }
 
 auto FromFile(const Api& e) -> ApiResult {
     if (!g_running || e.GetPath().empty()) {
         return {};
     }
-    SCOPED_MUTEX(&g_mutex_single);
-    if (!g_running || !g_curl_single) {
-        return {};
-    }
-    return UploadInternal(g_curl_single, e);
+    return RunBlocking(e, true);
 }
 
 auto Probe(const Api& api, ProbeType type) -> ApiResult {

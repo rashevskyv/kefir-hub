@@ -479,24 +479,47 @@ Result GetMetaEntries(u64 id, MetaEntries& out, u32 flags) {
     R_SUCCEED();
 }
 
+Result ForEachApplicationRecord(const std::function<void(std::span<const NsApplicationRecord>)>& callback) {
+    constexpr s32 ENTRY_CHUNK_COUNT = 1000;
+    std::vector<NsApplicationRecord> records(ENTRY_CHUNK_COUNT);
+    s32 offset{};
+
+    while (true) {
+        s32 count{};
+        if (const auto rc = nsListApplicationRecord(records.data(), records.size(), offset, &count); R_FAILED(rc)) {
+            log_write("failed to list application records at offset: %d\n", offset);
+            return rc;
+        }
+
+        // finished parsing all entries.
+        if (!count) {
+            R_SUCCEED();
+        }
+
+        callback(std::span(records.data(), count));
+        offset += count;
+    }
+}
+
 Result GetControlPathFromStatus(const NsApplicationContentMetaStatus& status, u64* out_program_id, fs::FsPath* out_path) {
     const auto& ee = status;
     if (ee.storageID != NcmStorageId_SdCard && ee.storageID != NcmStorageId_BuiltInUser && ee.storageID != NcmStorageId_GameCard) {
         return 0x1;
     }
 
-    auto& db = GetNcmDb(ee.storageID);
-    auto& cs = GetNcmCs(ee.storageID);
+    return GetControlPath(&GetNcmDb(ee.storageID), &GetNcmCs(ee.storageID), ee.application_id, out_program_id, out_path);
+}
 
+Result GetControlPath(NcmContentMetaDatabase* db, NcmContentStorage* cs, u64 id, u64* out_program_id, fs::FsPath* out_path) {
     NcmContentMetaKey key;
-    R_TRY(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, ee.application_id));
+    R_TRY(ncmContentMetaDatabaseGetLatestContentMetaKey(db, &key, id));
 
     NcmContentId content_id;
-    R_TRY(ncmContentMetaDatabaseGetContentIdByType(&db, &content_id, &key, NcmContentType_Control));
+    R_TRY(ncmContentMetaDatabaseGetContentIdByType(db, &content_id, &key, NcmContentType_Control));
 
-    R_TRY(ncmContentStorageGetProgramId(&cs, out_program_id, &content_id, FsContentAttributes_All));
+    R_TRY(ncmContentStorageGetProgramId(cs, out_program_id, &content_id, FsContentAttributes_All));
 
-    R_TRY(ncmContentStorageGetPath(&cs, out_path->s, sizeof(*out_path), &content_id));
+    R_TRY(ncmContentStorageGetPath(cs, out_path->s, sizeof(*out_path), &content_id));
     R_SUCCEED();
 }
 

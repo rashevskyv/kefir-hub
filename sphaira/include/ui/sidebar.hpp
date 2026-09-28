@@ -63,6 +63,12 @@ public:
         m_icon.reset();
     }
 
+    // for an entry whose label says what pressing it would do, which can change
+    // while the sidebar is up.
+    void SetTitle(const std::string& title) {
+        m_title = title;
+    }
+
 protected:
     auto IsEnabled() const -> bool {
         if (m_depends_callback) {
@@ -170,6 +176,7 @@ public:
     using Items = std::vector<std::string>;
     using ListCallback = std::function<void()>;
     using Callback = std::function<void(s64& index)>;
+    using DisabledCallback = std::function<bool(s64 index)>;
 
 public:
     explicit SidebarEntryArray(const std::string& title, const Items& items, Callback cb, s64 index = 0, const std::string& info = "");
@@ -177,11 +184,17 @@ public:
     explicit SidebarEntryArray(const std::string& title, const Items& items, std::string& index, const std::string& info = "");
     void Draw(NVGcontext* vg, Theme* theme, const Vec4& root_pos, bool left) override;
 
+    // greys out the items this returns true for in the list the entry opens.
+    void SetDisabled(const DisabledCallback& disabled) {
+        m_disabled = disabled;
+    }
+
 private:
     Items m_items;
     ListCallback m_list_callback;
     Callback m_callback;
     s64 m_index;
+    DisabledCallback m_disabled{};
 };
 
 // single text entry.
@@ -267,6 +280,11 @@ public:
     auto Add(Args&&... args) -> T* {
         return (T*)Add(std::make_unique<T>(std::forward<Args>(args)...));
     }
+
+    // opens on this entry rather than the first, for a menu whose whole point is
+    // one of them. the list is left at the top, so it suits one short enough not
+    // to scroll.
+    void SetDefaultEntry(const SidebarEntryBase* entry);
 
 private:
     void SetIndex(s64 index);

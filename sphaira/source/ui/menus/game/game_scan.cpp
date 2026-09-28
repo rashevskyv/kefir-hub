@@ -78,22 +78,8 @@ void Menu::ScanHomebrew() {
     FreeEntries();
     m_entries.reserve(ENTRY_CHUNK_COUNT);
 
-    std::vector<NsApplicationRecord> record_list(ENTRY_CHUNK_COUNT);
-    s32 offset{};
-    while (true) {
-        s32 record_count{};
-        if (R_FAILED(nsListApplicationRecord(record_list.data(), record_list.size(), offset, &record_count))) {
-            log_write("failed to list application records at offset: %d\n", offset);
-        }
-
-        // finished parsing all entries.
-        if (!record_count) {
-            break;
-        }
-
-        for (s32 i = 0; i < record_count; i++) {
-            const auto& e = record_list[i];
-
+    title::ForEachApplicationRecord([&](std::span<const NsApplicationRecord> records) {
+        for (const auto& e : records) {
             if (hide_forwarders && (e.application_id & 0x0500000000000000) == 0x0500000000000000) {
                 continue;
             }
@@ -107,9 +93,7 @@ void Menu::ScanHomebrew() {
 
             m_entries.emplace_back(e.application_id, e.last_event, e.last_updated);
         }
-
-        offset += record_count;
-    }
+    });
 
     AppendGameCardEntries();
     LoadPlayStats();

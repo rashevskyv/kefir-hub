@@ -206,7 +206,7 @@ size_t PushPullThreadData::PullData(char* data, size_t total_size, bool curl_mod
     } else {
         // if we are not in a curl callback, then we can block until we have data.
         size_t bytes_read = 0;
-        while (bytes_read < total_size && !error) {
+        while (bytes_read < total_size && !error && !(external_cancel && external_cancel->load())) {
             if (buffer.empty()) {
                 if (finished) {
                     break;
@@ -243,7 +243,7 @@ size_t PushPullThreadData::PushData(const char* data, size_t total_size, bool cu
         // block until the consumer makes space (see PullData above for why
         // blocking beats pausing). The short return on cancel/finish makes
         // curl report a write error, which ends the transfer thread.
-        while (!error && !cancelled && !finished) {
+        while (!error && !cancelled && !finished && !(external_cancel && external_cancel->load())) {
             if (buffer.size() + total_size <= MAX_BUFFER_SIZE) {
                 buffer.insert(buffer.end(), data, data + total_size);
                 return total_size;
@@ -320,6 +320,9 @@ size_t PushPullThreadData::progress_callback(void *clientp, curl_off_t dltotal, 
     // transferred its first byte (the data callbacks are not called then).
     if (data->cancelled) {
         log_write("[PUSH:PULL] progress_callback: aborting cancelled transfer\n");
+        return 1;
+    }
+    if (data->external_cancel && data->external_cancel->load()) {
         return 1;
     }
 

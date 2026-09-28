@@ -85,6 +85,8 @@ public:
     std::atomic_bool finished{};
     std::atomic_bool cancelled{};
     std::atomic_bool started{};
+    // Optional owner cancellation for a single transfer.
+    const std::atomic_bool* external_cancel{};
     // one-shot: logs the first payload chunk so a stalled server (delivers a
     // little then goes silent) can be told apart from one that never replies.
     std::atomic_bool first_chunk_logged{};

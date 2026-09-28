@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.895)
+set(sphaira_VERSION 0.13.896)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -66,6 +66,13 @@ add_executable(sphaira
     source/ui/menus/homebrew_scan.cpp
     source/ui/menus/homebrew_ops.cpp
     source/ui/menus/install_share.cpp
+    source/ui/menus/ownfoil.cpp
+    source/ui/menus/ownfoil_servers.cpp
+    source/ui/menus/ownfoil_catalog.cpp
+    source/ui/menus/ownfoil_screenshot_viewer.cpp
+    source/ui/menus/ownfoil_title.cpp
+    source/ui/menus/ownfoil_title_install.cpp
+    source/ui/menus/ownfoil_title_draw.cpp
 
     source/ui/menus/kefir_menu.cpp
     source/ui/menus/kefir/kefir_downgrade_box.cpp
@@ -211,6 +218,7 @@ add_executable(sphaira
     source/ui/action_icon.cpp
     source/ui/option_box.cpp
     source/ui/popup_list.cpp
+    source/ui/popup_multi_select.cpp
     source/ui/zip_extract_box.cpp
     source/ui/progress_box.cpp
     source/ui/progress_box_draw.cpp
@@ -319,6 +327,11 @@ add_executable(sphaira
     source/utils/devoptab_mtp_usb.cpp
     source/utils/devoptab_mtp_proto.cpp
     source/utils/devoptab_mtp_ops.cpp
+    source/utils/ownfoil.cpp
+    source/utils/ownfoil_discovery.cpp
+    source/utils/ownfoil_api.cpp
+    source/utils/ownfoil_api_details.cpp
+    source/utils/ownfoil_installed.cpp
 
     source/usb/base.cpp
     source/usb/usbds.cpp
@@ -332,6 +345,7 @@ add_executable(sphaira
     source/yati/container/nsp.cpp
     source/yati/container/xci.cpp
     source/yati/source/file.cpp
+    source/yati/source/http.cpp
     source/yati/source/usb.cpp
     source/yati/source/usb_dbi.cpp
     source/yati/source/stream.cpp

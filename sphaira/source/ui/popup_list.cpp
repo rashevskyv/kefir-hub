@@ -93,6 +93,9 @@ PopupList::PopupList(std::string title, Items items, Callback cb, s64 index)
 , m_index{index} {
     this->SetActions(
         std::make_pair(Button::A, Action{"Select"_i18n, [this](){
+            if (m_disabled && m_disabled(m_index)) {
+                return;
+            }
             if (m_callback) {
                 m_callback(m_index);
             }
@@ -187,6 +190,10 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
         } else if (m_starting_index == i) {
             colour = ThemeEntryID_TEXT_SELECTED;
             gfx::drawText(vg, x + w - m_text_xoffset, mid_y, 20.f, "\uE14B", NULL, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(colour));
+        }
+
+        if (m_disabled && m_disabled(i)) {
+            colour = ThemeEntryID_TEXT_INFO;
         }
 
         // cloud marker sits in the reserved left gutter so text stays aligned.

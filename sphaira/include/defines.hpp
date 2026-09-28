@@ -245,6 +245,9 @@ enum class SphairaResult : Result {
     // the ui turns this into a plain "your internet is off" message instead of
     // showing a raw nifm code.
     NetNoConnection,
+
+    // an http source's transfer ended before a read was filled.
+    YatiHttpReadFailed,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -381,6 +384,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(NtpBadReply),
     MAKE_SPHAIRA_RESULT_ENUM(NtpSetTimeFailed),
     MAKE_SPHAIRA_RESULT_ENUM(NetNoConnection),
+    MAKE_SPHAIRA_RESULT_ENUM(YatiHttpReadFailed),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

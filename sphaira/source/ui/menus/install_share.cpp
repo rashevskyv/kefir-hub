@@ -5,6 +5,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/ownfoil.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -333,6 +334,10 @@ void AddInstallShareOptions(Sidebar* options) {
         App::Push<ui::menu::dbi::Menu>(MenuFlag_None);
     }, "Install games from a PC over USB: DBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy."_i18n);
 #endif
+
+    options->Add<SidebarEntryCallback>("Ownfoil"_i18n, [](){
+        App::Push<ui::menu::ownfoil::Menu>(MenuFlag_None);
+    }, "Browse and install titles from a self-hosted Ownfoil server."_i18n);
 }
 
 void AddSettingsOption(Sidebar* options) {
