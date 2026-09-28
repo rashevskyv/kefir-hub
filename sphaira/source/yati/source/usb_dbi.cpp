@@ -151,6 +151,9 @@ Result Usb::DbiRead(void* buf, s64 off, s64 size, u64* bytes_read) {
     R_TRY(m_usb->TransferAll(true, buf, response.data_size, timeout));
 
     *bytes_read = response.data_size;
+    if (m_dbi_selection_sync && m_post_read_hook) {
+        m_post_read_hook();
+    }
     R_SUCCEED();
 }
 

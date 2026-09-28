@@ -7,6 +7,7 @@
 #include "usb/usbds.hpp"
 
 #include <array>
+#include <functional>
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -55,6 +56,11 @@ struct Usb final : Base {
 
     bool HasSelectionSync() const {
         return m_dbi_selection_sync;
+    }
+
+    using PostReadHook = std::function<void()>;
+    void SetPostReadHook(PostReadHook hook) {
+        m_post_read_hook = std::move(hook);
     }
 
     struct LiveQueueItem {
@@ -109,6 +115,7 @@ private:
     u8 m_flags{};
     UsbProtocol m_protocol{UsbProtocol::None};
     bool m_dbi_selection_sync{false};
+    PostReadHook m_post_read_hook{};
 
     // goldleaf request blocks are built in m_gl_req and replies land in
     // m_gl_res. Both live here rather than on the stack: Read() runs on

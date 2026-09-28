@@ -87,9 +87,40 @@ def test_live_queue_dbi_usb_delegation_and_size_limit():
     assert line_count < 600, f"dbi_usb.cpp has {line_count} lines, which exceeds the 600 line limit!"
 
 
+def test_live_queue_active_transfer_polling_contract():
+    usb_hpp = USB_HPP.read_text(encoding="utf-8")
+    usb_dbi = USB_DBI.read_text(encoding="utf-8")
+    plan_cpp = DBI_PLAN.read_text(encoding="utf-8")
+    usb_cpp = DBI_USB.read_text(encoding="utf-8")
+
+    # PostReadHook defined and registered on Usb
+    assert "using PostReadHook = std::function<void()>" in usb_hpp
+    assert "void SetPostReadHook(PostReadHook hook)" in usb_hpp
+    assert "PostReadHook m_post_read_hook" in usb_hpp
+
+    # Invoked in DbiRead between range chunks under selection sync
+    assert "if (m_dbi_selection_sync && m_post_read_hook)" in usb_dbi
+    assert "m_post_read_hook();" in usb_dbi
+
+    # Newly discovered future items during active install must defer analysis rather than calling AnalyzeSource over USB
+    installing_section = plan_cpp.split("// Installing mode", 1)[1]
+    assert "entry.analysis_deferred = true;" in installing_section
+    assert "entry.analysis_result = 0;" in installing_section
+    assert "yati::AnalyzeSource" not in installing_section
+
+    # dbi_usb sets PostReadHook during InstallFromCollections and analyzes deferred items before installing
+    assert "m_usb_source->SetPostReadHook" in usb_cpp
+    assert "m_usb_source->SetPostReadHook(nullptr)" in usb_cpp
+    assert "if (analysis_deferred)" in usb_cpp
+    assert "yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, analysis)" in usb_cpp
+    deferred_section = usb_cpp.split("if (analysis_deferred)", 1)[1]
+    assert deferred_section.index("yati::AnalyzeSource") < deferred_section.index("plan_sd = RefreshAutoInstallTarget(i)")
+
+
 if __name__ == "__main__":
     test_live_queue_protocol_constants_and_types()
     test_live_queue_transport_parsing_and_ack()
     test_live_queue_plan_reconciliation_and_immutability()
     test_live_queue_dbi_usb_delegation_and_size_limit()
+    test_live_queue_active_transfer_polling_contract()
     print("All live queue contracts verified successfully.")

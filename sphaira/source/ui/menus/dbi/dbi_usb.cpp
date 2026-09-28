@@ -36,9 +36,17 @@ void Menu::ThreadFunction() {
     }
 
     const auto finish_cancelled = [this]() {
+        if (m_usb_source) {
+            m_usb_source->SetPostReadHook(nullptr);
+        }
         m_state = State::Cancelled;
         m_actions_dirty = true;
     };
+    ON_SCOPE_EXIT({
+        if (m_usb_source) {
+            m_usb_source->SetPostReadHook(nullptr);
+        }
+    });
 
     for (;;) {
         m_session_failed = false;
@@ -203,12 +211,14 @@ void Menu::ThreadFunction() {
                 bool selected{};
                 yati::InstallAnalysis analysis{};
                 bool plan_sd{};
+                bool analysis_deferred{};
                 std::string name{};
                 {
                     SCOPED_MUTEX(&m_mutex);
                     selected = m_queue[i].install_selected;
                     analysis = m_queue[i].analysis;
                     plan_sd = m_queue[i].install_sd;
+                    analysis_deferred = m_queue[i].analysis_deferred;
                     name = m_queue[i].file_name;
                     if (selected) {
                         m_skip_requested = false;
@@ -225,7 +235,33 @@ void Menu::ThreadFunction() {
                 if (!selected) continue;
                 if (m_cancel_requested) break;
 
-                // Auto re-picks from live usable space; pinned Sd/Nand stay frozen.
+                if (analysis_deferred) {
+                    m_usb_source->SetFileNameForTranfser(name);
+                    const auto a_rc = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, analysis);
+                    {
+                        SCOPED_MUTEX(&m_mutex);
+                        m_queue[i].analysis = analysis;
+                        m_queue[i].analysis_result = a_rc;
+                        m_queue[i].analysis_deferred = false;
+                        m_plan_total_bytes = m_plan_done_bytes;
+                        for (size_t j = i; j < m_queue.size(); j++) {
+                            if (m_queue[j].install_selected) {
+                                AddSizeSaturated(m_plan_total_bytes, PlanSize(m_queue[j]));
+                            }
+                        }
+                        m_actions_dirty = true;
+                    }
+                    if (R_FAILED(a_rc)) {
+                        AddError(name, "Analysis"_i18n, a_rc);
+                        RecordPackageResult(i, a_rc, false, false, plan_sd, 0, 0);
+                        if (m_usb_source && m_usb_source->HasSelectionSync()) {
+                            m_usb_source->SendPackageStatus(name, 3, a_rc);
+                        }
+                        continue;
+                    }
+                }
+
+                // Pick Auto after deferred analysis supplies the actual install size.
                 plan_sd = RefreshAutoInstallTarget(i);
 
                 AddLog("Starting: "_i18n + name, LogKind::Event);
@@ -245,9 +281,30 @@ void Menu::ThreadFunction() {
                 // already dropped the half-written placeholders -- instead of
                 // losing the rest of the queue to a one second blip.
                 Result install_rc{};
+                TimeStamp hook_poll{};
                 for (u32 attempt = 0; ; attempt++) {
                     m_usb_source->SetFileNameForTranfser(name);
+                    if (sync_supported) {
+                        m_usb_source->SetPostReadHook([this, i, &hook_poll]() {
+                            if (hook_poll.GetNs() >= 500'000'000) {
+                                hook_poll.Update();
+                                std::vector<yati::source::Usb::LiveQueueItem> items;
+                                u32 revision = 0;
+                                if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {
+                                    ApplyLiveQueue(items, i, true);
+                                    if (revision > 0 && revision != m_last_acked_revision) {
+                                        if (R_SUCCEEDED(m_usb_source->SendQueueAck(revision))) {
+                                            m_last_acked_revision = revision;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
                     install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                    if (sync_supported) {
+                        m_usb_source->SetPostReadHook(nullptr);
+                    }
                     if ((!usb::IsLinkError(install_rc) && !IsDbiSessionError(install_rc)) || attempt >= MAX_LINK_RETRIES) {
                         break;
                     }

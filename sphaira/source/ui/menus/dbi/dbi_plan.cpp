@@ -265,20 +265,19 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
         } else {
             QueueEntry entry{};
             entry.file_name = item.name;
-            if (m_usb_source) {
-                m_usb_source->SetFileNameForTranfser(item.name);
-                entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{item.name}, entry.analysis);
-                s64 pc_size = m_usb_source->GetFileSize(item.name);
-                if (pc_size > 0) {
-                    entry.analysis.source_size = pc_size;
-                }
+            entry.analysis_deferred = true;
+            entry.analysis_result = 0;
+            s64 sz = item.size;
+            if (sz <= 0 && m_usb_source) {
+                sz = m_usb_source->GetFileSize(item.name);
             }
+            entry.source_size = sz;
+            entry.analysis.source_size = sz;
             entry.target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
-            entry.selected = item.selected && R_SUCCEEDED(entry.analysis_result);
-            if (R_FAILED(entry.analysis_result)) {
-                AddError(item.name, "Analysis"_i18n, entry.analysis_result);
-                entry.install_selected = false;
-            }
+            entry.selected = item.selected;
+            entry.install_selected = item.selected;
+            entry.planned_sd = (entry.target == InstallTarget::Sd);
+            entry.install_sd = entry.planned_sd;
             new_future.emplace_back(std::move(entry));
             changed = true;
         }
