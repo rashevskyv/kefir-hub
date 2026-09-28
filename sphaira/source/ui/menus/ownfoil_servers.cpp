@@ -297,7 +297,7 @@ void Menu::DeleteSelected() {
 
     const auto uid = candidate.config.uid;
     App::Push<OptionBox>(
-        i18n::Reorder("Delete ", candidate.config.name) + '?',
+        "Delete "_i18n + candidate.config.name + '?',
         "No"_i18n, "Yes"_i18n, 0, [this, uid](std::optional<s64> op_index) {
             if (op_index && *op_index) {
                 sphaira::ownfoil::DeleteConfig(uid);

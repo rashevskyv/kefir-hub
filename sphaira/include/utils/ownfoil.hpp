@@ -47,7 +47,7 @@ void DeleteConfig(const std::string& uid);
 auto FindByUid(Configs& configs, const std::string& uid) -> Config*;
 
 // the one way a saved entry is ever created or changed.
-struct OwnfoilForm final : public ui::FormSidebar {
+struct OwnfoilForm final : public ui::Sidebar {
     using OnSaved = std::function<void(const Config&)>;
 
     explicit OwnfoilForm(const Config& config = {}, const OnSaved& on_saved = {});

@@ -32,7 +32,7 @@ void ScreenshotViewer::Update(Controller* controller, TouchInfo* touch) {
     }
 
     if (m_index != index) {
-        App::PlaySoundEffect(SoundEffect::Scroll);
+        App::PlaySoundEffect(SoundEffect_Scroll);
     }
 }
 

@@ -1,6 +1,20 @@
 # walkthrough.md
 
-Актуальний shipped delivery — **v0.13.899** (2026-09-28).
+Актуальний shipped delivery — **v0.13.900** (2026-09-28).
+
+## v0.13.900 — виправлення помилок компіляції C++ та верифікація збірки
+
+Усунено помилки компіляції C++ після додавання клієнта Ownfoil та оновлення USB-черги:
+- У [sidebar.hpp](file:///D:/git/dev/sphaira/sphaira/include/ui/sidebar.hpp) видалено дублююче визначення методу `SidebarEntryBase::SetTitle`.
+- У [ownfoil.hpp](file:///D:/git/dev/sphaira/sphaira/include/utils/ownfoil.hpp) та [ownfoil.cpp](file:///D:/git/dev/sphaira/sphaira/source/utils/ownfoil.cpp) виправлено спадкування `OwnfoilForm` від `ui::Sidebar` з передачею `Side::RIGHT` у конструктор.
+- У [ownfoil.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil.cpp), [ownfoil_screenshot_viewer.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_screenshot_viewer.cpp), [ownfoil_title.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_title.cpp), [ownfoil_title_draw.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_title_draw.cpp) та [popup_multi_select.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/popup_multi_select.cpp) замінено помилковий синтаксис `SoundEffect::*` на unscoped enum значення `SoundEffect_Focus` та `SoundEffect_Scroll`.
+- У [ownfoil.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil.cpp), [ownfoil_servers.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_servers.cpp), [ownfoil_title_draw.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_title_draw.cpp) та [ownfoil_title_install.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_title_install.cpp) замінено неіснуючий `i18n::Reorder` на конкатенацію рядків.
+- У [ownfoil_catalog.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_catalog.cpp) виправлено сигнатуру виклику `swkbd::ShowText`.
+- У [ownfoil_title_install.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil_title_install.cpp) прибрано неіснуючий прапорець `ProgressBoxOption::ScreenToggle`.
+- У [ownfoil.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/menus/ownfoil.cpp) та [popup_multi_select.cpp](file:///D:/git/dev/sphaira/sphaira/source/ui/popup_multi_select.cpp) виправлено виклики `List::Draw` (передано `focus_index` та `Vec4 v`).
+- У [ownfoil_installed.cpp](file:///D:/git/dev/sphaira/sphaira/source/utils/ownfoil_installed.cpp) замінено `ns::Initialize()` / `ns::Exit()` на глобальні libnx виклики `nsInitialize()` / `nsExit()`.
+
+Повна WSL-збірка `ReleaseWithInstall` успішно побудувала `sphaira_nro` (100%). Всі контрактні тести Sphaira та 36 тестів DBI Backend Qt пройдено.
 
 ## v0.13.899 — жива USB черга
 

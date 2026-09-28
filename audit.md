@@ -1,9 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.899**. Дата аудиту: 2026-09-28.
+Версія коду: **v0.13.900**. Дата аудиту: 2026-09-28.
 
 ## Поточний стан
 
+- v0.13.900 усунула помилки компіляції C++ після додавання Ownfoil та оновлення USB-черги: дублювання `SetTitle` у `sidebar.hpp`, базовий клас `OwnfoilForm` (`ui::Sidebar`), `SoundEffect` константи, `i18n::Reorder`, `swkbd::ShowText`, `ProgressBox`, виклики `List::Draw` та libnx `nsInitialize`/`nsExit`. WSL `ReleaseWithInstall` завершився генерацією `sphaira_nro` (100%). Контрактні тести та тести backend пройшли. `TegraExplorer.bin` поза delivery.
 - v0.13.899 додає впорядковані ревізії SPHQ, динамічне додавання/вилучення й перестановку майбутніх пакетів та ACK після застосування. Активний і завершений префікс зберігається. Шість цільових Python контрактів Sphaira і 36 тестів backend пройшли; C++ збірку та Switch runtime не виконано. `TegraExplorer.bin` поза delivery.
 - v0.13.898 приймає точний маркер `::SPHQ::\n` для порожньої черги й не додає його як файл. Backend надсилає цей маркер лише для SPHQ; нульова legacy-відповідь лишається відхиленою. Два цільові Python контракти та diff check пройшли; C++ збірка і Switch runtime не виконані. `TegraExplorer.bin` поза delivery.
 - v0.13.897 відновила початковий List/SPHQ request у `Usb::WaitForConnection` перед читанням DBI відповіді. Цільовий Python контракт і diff check пройшли; C++ збірка та Switch runtime не виконані.

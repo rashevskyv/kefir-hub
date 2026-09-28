@@ -1,8 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.899**.
+Версія коду: **v0.13.900**.
 
-## Поточний delivery: v0.13.899 — жива USB черга
+## Поточний delivery: v0.13.900 — виправлення помилок збірки C++ та верифікація
+
+- [x] `BUILD-900` — усунено дублювання `SetTitle` у `sidebar.hpp`, виправлено базовий клас `OwnfoilForm` (`ui::Sidebar`), енуми `SoundEffect`, виклики `List::Draw`, `swkbd::ShowText`, `ProgressBox` та глобальні libnx виклики `nsInitialize`/`nsExit`.
+- [x] `VERIFY-900` — повна чиста збірка WSL `ReleaseWithInstall` успішно завершилась генерацією `sphaira_nro` (100%); чотири контрактні Python тести Sphaira та 36 тестів DBI Backend пройшли паралельно; whitespace/diff check чистий.
+- [x] `DOCS-BUMP-900` — версія 0.13.900 та документи оновлено.
+- [x] `COMMIT-900` — сфокусований коміт на primary master без ROMFS binary.
+- [ ] Перевірити повний USB цикл на фізичному Switch.
+
+## Попередній delivery: v0.13.899 — жива USB черга
 
 - [x] `QUEUE-899` — застосовувати впорядкований SPHQ список під час ReviewQueue та лише до майбутніх пакетів під час Installing.
 - [x] `ACK-899` — надсилати підтвердження застосованої ревізії; повторювати після помилки відправки.

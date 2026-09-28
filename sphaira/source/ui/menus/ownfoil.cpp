@@ -256,7 +256,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
     if (m_focus_discover) {
         if (controller->GotDown(Button::UP)) {
-            App::PlaySoundEffect(SoundEffect::Focus);
+            App::PlaySoundEffect(SoundEffect_Focus);
             m_focus_discover = false;
             return;
         }
@@ -267,7 +267,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             return;
         }
     } else if (controller->GotDown(Button::DOWN) && m_index == static_cast<s64>(m_candidates.size()) - 1) {
-        App::PlaySoundEffect(SoundEffect::Focus);
+        App::PlaySoundEffect(SoundEffect_Focus);
         m_focus_discover = true;
         return;
     }
@@ -300,7 +300,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     if (m_connecting) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, LIST_POS.y + LIST_POS.h / 2.f, 24.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s",
-            (i18n::Reorder("Connecting to ", m_connecting_name) + "...").c_str());
+            ("Connecting to "_i18n + m_connecting_name + "...").c_str());
         return;
     }
 
@@ -308,7 +308,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, LIST_POS.y + LIST_POS.h / 2.f, 24.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s",
             "No Ownfoil servers saved.\n\nPress X to add one by hand, or search the network below."_i18n.c_str());
     } else {
-        m_list->Draw(vg, theme, m_candidates.size(), [this](NVGcontext* vg, Theme* theme, const Vec4& v, s64 index) {
+        m_list->Draw(vg, theme, m_candidates.size(), m_focus_discover ? List::NO_FOCUS : m_index, [this](NVGcontext* vg, Theme* theme, const Vec4& v, s64 index) {
             const auto& [x, y, w, h] = v;
             const auto& candidate = m_candidates[index];
             const auto& config = candidate.config;
@@ -365,7 +365,7 @@ void Menu::DrawHome(NVGcontext* vg, Theme* theme) {
     int budget = 2;
     const auto view = m_view.Get();
 
-    m_list->Draw(vg, theme, m_entries.size(), [this, view, &budget](NVGcontext* vg, Theme* theme, const Vec4& v, s64 index) {
+    m_list->Draw(vg, theme, m_entries.size(), m_entry_index, [this, view, &budget](NVGcontext* vg, Theme* theme, const Vec4& v, s64 index) {
         const auto& [x, y, w, h] = v;
         auto& e = m_entries[index];
         const auto selected = index == m_entry_index;

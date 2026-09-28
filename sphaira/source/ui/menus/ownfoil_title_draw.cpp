@@ -81,7 +81,7 @@ auto TitleMenu::GetRowRect(s64 index) const -> Vec4 {
 void TitleMenu::StepDown() {
     if (m_focus >= 0) {
         if (m_focus + 1 < static_cast<s64>(m_rows.size())) {
-            App::PlaySoundEffect(SoundEffect::Scroll);
+            App::PlaySoundEffect(SoundEffect_Scroll);
             SetFocus(m_focus + 1);
         }
         return;
@@ -91,7 +91,7 @@ void TitleMenu::StepDown() {
     // of them, wherever the stick left the page. at the bottom of the page the
     // last row always is.
     if (const auto first = FirstRowInView(); first >= 0) {
-        App::PlaySoundEffect(SoundEffect::Scroll);
+        App::PlaySoundEffect(SoundEffect_Scroll);
         SetFocus(first);
         return;
     }
@@ -99,7 +99,7 @@ void TitleMenu::StepDown() {
     // a step at a time, until the page can go no further.
     const auto target = std::min(m_scroll_target + SCROLL_STEP, GetMaxScroll());
     if (target > m_scroll_target) {
-        App::PlaySoundEffect(SoundEffect::Scroll);
+        App::PlaySoundEffect(SoundEffect_Scroll);
         m_stick_scroll = false;
         ScrollTo(target);
     }
@@ -107,14 +107,14 @@ void TitleMenu::StepDown() {
 
 void TitleMenu::StepUp() {
     if (m_focus > 0) {
-        App::PlaySoundEffect(SoundEffect::Scroll);
+        App::PlaySoundEffect(SoundEffect_Scroll);
         SetFocus(m_focus - 1);
         return;
     }
 
     // up off the first row is back to the text, which is already on screen.
     if (m_focus == 0) {
-        App::PlaySoundEffect(SoundEffect::Scroll);
+        App::PlaySoundEffect(SoundEffect_Scroll);
         SetFocus(-1);
         return;
     }
@@ -122,7 +122,7 @@ void TitleMenu::StepUp() {
     // the stick left the page past the first row, so up takes the highlight at the
     // first on screen and walks up from there.
     if (const auto first = FirstRowInView(); first > 0) {
-        App::PlaySoundEffect(SoundEffect::Scroll);
+        App::PlaySoundEffect(SoundEffect_Scroll);
         SetFocus(first);
         return;
     }
@@ -131,7 +131,7 @@ void TitleMenu::StepUp() {
         return;
     }
 
-    App::PlaySoundEffect(SoundEffect::Scroll);
+    App::PlaySoundEffect(SoundEffect_Scroll);
     m_stick_scroll = false;
     ScrollTo(m_scroll_target - SCROLL_STEP);
 }
@@ -341,7 +341,7 @@ void TitleMenu::DrawColumn(NVGcontext* vg, Theme* theme) {
     if (m_page.dlc && !m_page.game_name.empty()) {
         constexpr float icon_size = 44.f;
         gfx::drawImage(vg, COLUMN_X, y, icon_size, icon_size, m_icon ? m_icon : App::GetDefaultImage(), 6.f);
-        gfx::drawTextArgs(vg, COLUMN_X + icon_size + 12.f, y + icon_size / 2.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", i18n::Reorder("Requires ", m_page.game_name).c_str());
+        gfx::drawTextArgs(vg, COLUMN_X + icon_size + 12.f, y + icon_size / 2.f, 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", ("Requires "_i18n + m_page.game_name).c_str());
         y += icon_size + 16.f;
     }
 

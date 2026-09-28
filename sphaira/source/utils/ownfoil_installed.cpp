@@ -32,11 +32,11 @@ auto Scan(bool content) -> Inventory {
 
     // ns is only open while the games or saves menu exists, and nothing in the
     // shop holds it, so every query here opens it for itself.
-    if (R_FAILED(ns::Initialize())) {
+    if (R_FAILED(nsInitialize())) {
         log_write("[OWNFOIL] failed to open ns\n");
         return out;
     }
-    ON_SCOPE_EXIT(ns::Exit());
+    ON_SCOPE_EXIT(nsExit());
 
     title::ForEachApplicationRecord([&](std::span<const NsApplicationRecord> records) {
         for (const auto& record : records) {
@@ -86,10 +86,10 @@ auto InstalledVersionOf(const std::string& title_id) -> InstalledVersion {
     InstalledVersion out{};
 
     // opened for the query, as Scan does.
-    if (R_FAILED(ns::Initialize())) {
+    if (R_FAILED(nsInitialize())) {
         return out;
     }
-    ON_SCOPE_EXIT(ns::Exit());
+    ON_SCOPE_EXIT(nsExit());
 
     title::MetaEntries metas;
     if (R_FAILED(title::GetMetaEntries(ParseId(title_id), metas, title::ContentFlag_Nacp)) || metas.empty()) {
@@ -132,10 +132,10 @@ auto InstalledVersionOf(const std::string& title_id) -> InstalledVersion {
 
 auto HasDlc(const std::string& title_id, const std::string& dlc_id) -> bool {
     // opened for the query, as Scan does.
-    if (R_FAILED(ns::Initialize())) {
+    if (R_FAILED(nsInitialize())) {
         return false;
     }
-    ON_SCOPE_EXIT(ns::Exit());
+    ON_SCOPE_EXIT(nsExit());
 
     title::MetaEntries metas;
     if (R_FAILED(title::GetMetaEntries(ParseId(title_id), metas, title::ContentFlag_AddOnContent))) {
@@ -152,10 +152,10 @@ auto InstalledDlcIds(const std::string& title_id) -> std::vector<std::string> {
     std::vector<std::string> out;
 
     // opened for the query, as Scan does.
-    if (R_FAILED(ns::Initialize())) {
+    if (R_FAILED(nsInitialize())) {
         return out;
     }
-    ON_SCOPE_EXIT(ns::Exit());
+    ON_SCOPE_EXIT(nsExit());
 
     title::MetaEntries metas;
     if (R_SUCCEEDED(title::GetMetaEntries(ParseId(title_id), metas, title::ContentFlag_AddOnContent))) {

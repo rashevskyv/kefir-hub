@@ -34,7 +34,7 @@ auto GeneratePlaceholderUid() -> std::string {
 } // namespace
 
 OwnfoilForm::OwnfoilForm(const Config& config, const OnSaved& on_saved)
-: FormSidebar{"Ownfoil Server"_i18n}
+: Sidebar{"Ownfoil Server"_i18n, Side::RIGHT}
 , m_config{config}
 , m_on_saved{on_saved} {
     SetupButtons();

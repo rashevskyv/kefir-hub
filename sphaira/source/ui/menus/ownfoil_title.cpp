@@ -212,12 +212,12 @@ void TitleMenu::Update(Controller* controller, TouchInfo* touch) {
         StepUp();
     } else if (m_focus < 0 && ImagesInView() && controller->GotDown(Button::DPAD_LEFT | Button::LS_LEFT)) {
         if (m_image_index > 0) {
-            App::PlaySoundEffect(SoundEffect::Scroll);
+            App::PlaySoundEffect(SoundEffect_Scroll);
             SetImageIndex(m_image_index - 1);
         }
     } else if (m_focus < 0 && ImagesInView() && controller->GotDown(Button::DPAD_RIGHT | Button::LS_RIGHT)) {
         if (m_image_index + 1 < GetImageCount()) {
-            App::PlaySoundEffect(SoundEffect::Scroll);
+            App::PlaySoundEffect(SoundEffect_Scroll);
             SetImageIndex(m_image_index + 1);
         }
     } else if (touch->is_scroll && (m_dragging || (touch->initial.x >= PAGE_X && touch->initial.x <= PAGE_X + PAGE_W && touch->initial.y >= CLIP_Y && touch->initial.y <= CLIP_BOTTOM))) {

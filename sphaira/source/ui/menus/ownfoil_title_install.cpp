@@ -223,7 +223,7 @@ void TitleMenu::Install() {
     }, [this](Result rc) {
         App::PushErrorBox(rc, "Install failed!"_i18n);
         if (R_SUCCEEDED(rc)) {
-            App::Notify(i18n::Reorder("Installed ", GetName()));
+            App::Notify("Installed "_i18n + GetName());
         }
 
         // even a failed install can have put some of it on the console, so the
@@ -233,7 +233,7 @@ void TitleMenu::Install() {
         m_console = std::make_unique<utils::Async>([this, token](){
             LoadInstalled(token);
         });
-    }, ProgressBoxOption::ScreenToggle);
+    });
 }
 
 void TitleMenu::ShowAddons(const std::function<void()>& changed) {

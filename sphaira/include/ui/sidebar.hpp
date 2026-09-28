@@ -63,12 +63,6 @@ public:
         m_icon.reset();
     }
 
-    // for an entry whose label says what pressing it would do, which can change
-    // while the sidebar is up.
-    void SetTitle(const std::string& title) {
-        m_title = title;
-    }
-
 protected:
     auto IsEnabled() const -> bool {
         if (m_depends_callback) {

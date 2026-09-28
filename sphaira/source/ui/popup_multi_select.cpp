@@ -82,7 +82,7 @@ auto PopupMultiSelect::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::drawRect(vg, 30.f, m_line_bottom, m_line_width, 1.f, theme->GetColour(ThemeEntryID_LINE));
     gfx::drawTextArgs(vg, 80, 675, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%ld / %zu", m_index + 1, m_items.size());
 
-    m_list->Draw(vg, theme, m_items.size(), [this](auto* vg, auto* theme, auto& v, auto i) {
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& [x, y, w, h] = v;
         const auto focused = m_index == i;
         const auto ticked = IsSelected(i);
@@ -161,7 +161,7 @@ auto PopupMultiSelect::IsSelected(s64 index) const -> bool {
 }
 
 void PopupMultiSelect::OnChanged() {
-    App::PlaySoundEffect(SoundEffect::Focus);
+    App::PlaySoundEffect(SoundEffect_Focus);
     if (m_callback) {
         m_callback();
     }

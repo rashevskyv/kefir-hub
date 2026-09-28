@@ -239,7 +239,7 @@ void Menu::ShowSearch(s64 index) {
 
     // the term on screen is the initial text: narrowing a search that came back
     // too wide is far more common than starting an unrelated one.
-    if (R_FAILED(swkbd::ShowText(term, "Search"_i18n.c_str(), "Name or id"_i18n.c_str(), m_search.c_str(), 1, SEARCH_MAX)) || term.empty()) {
+    if (R_FAILED(swkbd::ShowText(term, "Name or id"_i18n.c_str(), m_search.c_str(), 1, SEARCH_MAX)) || term.empty()) {
         // backing out of the keyboard leaves the catalog that was up, up.
         return;
     }
