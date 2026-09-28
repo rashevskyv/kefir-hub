@@ -66,6 +66,14 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_CloseSession:
             log_write("[LIBHAZE] Closing Session\n");
             App::Notify("MTP disconnected"_i18n);
+            {
+                SCOPED_MUTEX(&g_mtp_ui_mutex);
+                g_mtp_transfer_active = false;
+                if (g_mtp_pbox) {
+                    g_mtp_pbox->RequestExit();
+                }
+            }
+            ueventSignal(&g_mtp_done_event);
             if (auto session = App::GetActiveInstallSession()) {
                 if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Mtp
                     && session->GetState() == ui::menu::dbi::State::Installing
@@ -102,11 +110,14 @@ void haze_callback(const ::haze::CallbackData *data) {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                 g_mtp_current_filename = e.file.filename;
                 g_mtp_new_transfer = true;
+                g_mtp_transfer_active = true;
+                g_mtp_transfer_seq++;
                 if (!g_mtp_ui_alive) {
                     g_mtp_ui_alive = true;
                     trigger_ui = true;
                 }
             }
+            ueventSignal(&g_mtp_done_event);
 
             if (trigger_ui) {
                 ueventClear(&g_mtp_done_event);
@@ -118,65 +129,77 @@ void haze_callback(const ::haze::CallbackData *data) {
                             SCOPED_MUTEX(&g_mtp_ui_mutex);
                             init_filename = g_mtp_current_filename;
                         }
-                        App::PushTransfer(std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, MtpParentDir(init_filename), [init_filename](auto pbox) -> Result {
+                        auto pbox_ptr = std::make_unique<ui::ProgressBox>(0, "Copying via MTP"_i18n, MtpParentDir(init_filename), [](auto pbox) -> Result {
                             std::string current_filename;
+                            u64 last_seq = 0;
+                            bool is_active = false;
                             {
                                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                                 g_mtp_pbox = pbox;
                                 current_filename = g_mtp_current_filename;
-                                if (current_filename == init_filename) {
-                                    g_mtp_new_transfer = false;
-                                }
+                                last_seq = g_mtp_transfer_seq;
+                                is_active = g_mtp_transfer_active;
+                                g_mtp_new_transfer = false;
                             }
-                            pbox->SetTitle(MtpParentDir(current_filename));
-                            pbox->NewTransferForce(GetLastComponent(current_filename.c_str()));
-                            
+                            if (!current_filename.empty()) {
+                                pbox->SetTitle(MtpParentDir(current_filename));
+                                pbox->NewTransferForce(GetLastComponent(current_filename.c_str()));
+                            }
+
+                            u64 idle_start = is_active ? 0 : armTicksToNs(armGetSystemTick());
+                            constexpr u64 IDLE_TIMEOUT_NS = 1500000000ULL; // 1.5s
+
                             while (!pbox->ShouldExit() && !g_should_exit) {
-                                auto rc = waitSingle(waiterForUEvent(&g_mtp_done_event), 100000000ULL); // 100ms
-                                if (R_SUCCEEDED(rc)) {
-                                    bool has_new = false;
-                                    for (int i = 0; i < 15; i++) {
-                                        if (pbox->ShouldExit() || g_should_exit) break;
-                                        if (g_mtp_new_transfer) {
-                                            has_new = true;
-                                            g_mtp_new_transfer = false;
-                                            break;
-                                        }
-                                        svcSleepThread(100000000ULL); // 100ms
-                                    }
-                                    if (has_new) {
-                                        ueventClear(&g_mtp_done_event);
-                                        std::string next_filename;
-                                        {
-                                            SCOPED_MUTEX(&g_mtp_ui_mutex);
-                                            next_filename = g_mtp_current_filename;
-                                        }
-                                        // address line = folder, current line = file name.
-                                        pbox->SetTitle(MtpParentDir(next_filename));
-                                        pbox->NewTransferForce(GetLastComponent(next_filename.c_str()));
-                                        continue;
-                                    }
+                                waitSingle(waiterForUEvent(&g_mtp_done_event), 50000000ULL); // 50ms
+                                if (pbox->ShouldExit() || g_should_exit) {
                                     break;
                                 }
-                                
-                                if (g_mtp_new_transfer) {
-                                    std::string next_filename;
-                                    {
-                                        SCOPED_MUTEX(&g_mtp_ui_mutex);
+
+                                bool update_label = false;
+                                std::string filename;
+
+                                {
+                                    SCOPED_MUTEX(&g_mtp_ui_mutex);
+                                    if (g_mtp_transfer_seq != last_seq) {
+                                        last_seq = g_mtp_transfer_seq;
+                                        filename = g_mtp_current_filename;
+                                        update_label = true;
                                         g_mtp_new_transfer = false;
-                                        next_filename = g_mtp_current_filename;
                                     }
-                                    pbox->SetTitle(MtpParentDir(next_filename));
-                                    pbox->NewTransferForce(GetLastComponent(next_filename.c_str()));
+                                    is_active = g_mtp_transfer_active;
+                                }
+
+                                if (update_label && !filename.empty()) {
+                                    pbox->SetTitle(MtpParentDir(filename));
+                                    pbox->NewTransferForce(GetLastComponent(filename.c_str()));
+                                }
+
+                                if (is_active) {
+                                    idle_start = 0;
+                                } else {
+                                    const u64 now = armTicksToNs(armGetSystemTick());
+                                    if (idle_start == 0) {
+                                        idle_start = now;
+                                    } else if (now - idle_start >= IDLE_TIMEOUT_NS) {
+                                        SCOPED_MUTEX(&g_mtp_ui_mutex);
+                                        if (!g_mtp_transfer_active && g_mtp_transfer_seq == last_seq) {
+                                            break;
+                                        }
+                                    }
                                 }
                             }
-                            
+
                             R_SUCCEED();
                         }, [](Result rc) {
                             SCOPED_MUTEX(&g_mtp_ui_mutex);
                             g_mtp_pbox = nullptr;
                             g_mtp_ui_alive = false;
-                        }));
+                        });
+
+                        if (!App::PushTransfer(std::move(pbox_ptr))) {
+                            SCOPED_MUTEX(&g_mtp_ui_mutex);
+                            g_mtp_ui_alive = false;
+                        }
                     }
                 }, false);
             }
@@ -199,6 +222,10 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_ReadEnd:
         case ::haze::CallbackType_WriteEnd: {
             log_write("[LIBHAZE] Transfer Finished: %s\n", e.file.filename);
+            {
+                SCOPED_MUTEX(&g_mtp_ui_mutex);
+                g_mtp_transfer_active = false;
+            }
             ueventSignal(&g_mtp_done_event);
             break;
         }
@@ -330,6 +357,10 @@ bool Init() {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
         g_mtp_ui_alive = false;
         g_mtp_pbox = nullptr;
+        g_mtp_transfer_active = false;
+        g_mtp_transfer_seq = 0;
+        g_mtp_new_transfer = false;
+        g_mtp_current_filename.clear();
     }
 
     g_should_exit = false;
@@ -363,6 +394,7 @@ void Exit(bool reinit_usb_host) {
     ueventSignal(&g_mtp_done_event);
     {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
+        g_mtp_transfer_active = false;
         if (g_mtp_pbox) {
             g_mtp_pbox->RequestExit();
         }

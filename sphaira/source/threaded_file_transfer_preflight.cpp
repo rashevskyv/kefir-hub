@@ -78,7 +78,7 @@ Result ResolveArchiveEntryName(const unz_file_info64& info, const char* name_buf
     if (save_dbi_compat) {
         if (raw == "//") {
             if (!path::IsDbiRootMarkerEntry(raw, info.uncompressed_size, info.external_fa)) {
-                log_write("invalid DBI root marker: %s (size %llu, fa 0x%08x)\n", name_buf, static_cast<unsigned long long>(info.uncompressed_size), info.external_fa);
+                log_write("invalid DBI root marker: %s (size %llu, fa 0x%08x)\n", name_buf, static_cast<unsigned long long>(info.uncompressed_size), static_cast<unsigned int>(info.external_fa));
                 R_THROW(FsError_InvalidCharacter);
             }
             if (out_is_dbi_root_marker) {

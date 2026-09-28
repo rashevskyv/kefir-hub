@@ -1,6 +1,15 @@
 # walkthrough.md
 
-Актуальний delivery у коді — **v0.13.902** (2026-09-28).
+Актуальний delivery у коді — **v0.13.903** (2026-09-28).
+
+## v0.13.903 — виправлення життєвого циклу UI передачі MTP та попереджень компіляції
+
+- Усунено зависання банера передачі MTP (`ProgressBox`) з іменем останнього скопійованого файла після завершення передачі:
+  - У `sphaira/include/haze/haze_internal.hpp` та `sphaira/source/haze/haze_internal.cpp` додано змінні стану `g_mtp_transfer_active` та `g_mtp_transfer_seq`.
+  - У `sphaira/source/haze_helper.cpp` стан передачі синхронізується під м'ютексом `g_mtp_ui_mutex`; вилучено небезпечний виклик `ueventClear(&g_mtp_done_event)` всередині циклу очікування, через який втрачався сигнал завершення останнього файла під час швидкої передачі пачок дрібних файлів.
+  - Виправлено компіляцію виклику макроса `R_SUCCEED()` замість помилкового `return R_SUCCEED()`.
+  - У `sphaira/source/threaded_file_transfer_preflight.cpp` додано явний `static_cast<unsigned int>` для форматування `external_fa` у `log_write`.
+  - Додано та верифіковано поведінковий контракт `tests/test_mtp_transfer_lifecycle_contract.py`.
 
 ## v0.13.902 — синхронізація README та документації/вікі до релізу
 

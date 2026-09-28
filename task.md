@@ -1,8 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.902**.
+Версія коду: **v0.13.903**.
 
-## Поточний delivery: v0.13.902 — синхронізація README та документації/вікі до релізу
+## Поточний delivery: v0.13.903 — виправлення життєвого циклу UI передачі MTP та попереджень компіляції
+
+- [x] `MTP-UI-903` — відстежувати `g_mtp_transfer_active` та `g_mtp_transfer_seq` під м'ютексом, усунути втрату сигналів завершення та зависання ProgressBox.
+- [x] `BUILD-FIX-903` — виправити синтаксис виклику макроса `R_SUCCEED()` у `haze_helper.cpp` та `static_cast<unsigned int>` для `external_fa` у `threaded_file_transfer_preflight.cpp`.
+- [x] `TEST-903` — додати поведінковий контракт `tests/test_mtp_transfer_lifecycle_contract.py` та перевірити проходження.
+- [x] `DOCS-BUMP-903` — оновити версію 0.13.903 у CMakeLists.txt та документах супроводу.
+- [x] `COMMIT-903` — сфокусований коміт без бінарників ROMFS.
+
+## Попередній delivery: v0.13.902 — синхронізація README та документації/вікі до релізу
 
 - [x] `DOCS-AUDIT-902` — перевірити всі зміни від релізу 0.13.601 до 0.13.901 і додати їх до README та вікі.
 - [x] `WIKI-902` — створити повну модульну вікі в `docs/wiki/` (Home, Installation-and-USB, Save-Management, User-Profiles, Console-Transfer, Firmware-and-Downgrades, Network, System-and-Tools).
