@@ -78,6 +78,7 @@ Result Usb::WaitForConnection(u64 timeout, std::vector<std::string>& out_names) 
     //    each other: a host that is running but has not been started by its
     //    user yet is not reading, so this never leaves the console and the
     //    round ends here rather than going on to push a goldleaf block at it.
+    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, DBI_LIST_QUEUE_EXT, DETECT_TIMEOUT));
 
     dbi::CmdHeader header{};
     u32 transferred{};
