@@ -40,13 +40,25 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
         std::vector<char> names(list_len);
         R_TRY(m_usb->TransferAll(true, names.data(), names.size(), timeout));
 
-        bool has_sync_data = false;
+        // An empty SPHQ queue has a distinct whole-payload marker. A marker
+        // mixed into a normal list must not grant selection-sync capability.
+        bool has_sync_data = std::string_view{names.data(), names.size()} == DBI_SPHQ_EMPTY_PAYLOAD;
         for (const auto& part : std::views::split(names, '\n')) {
             if (part.empty()) {
                 continue;
             }
 
             std::string entry(part.data(), part.size());
+            if (!entry.empty() && entry.back() == '\r') {
+                entry.pop_back();
+            }
+            if (entry.empty()) {
+                continue;
+            }
+            if (entry == DBI_SPHQ_EMPTY_MARKER) {
+                continue;
+            }
+
             // backends that understand the 'SPHA' or 'SPHQ' request append "|<size>" and optionally "|<selected>".
             const auto pipe1 = entry.find('|');
             if (pipe1 == std::string::npos) {
@@ -167,6 +179,13 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
             }
 
             std::string entry(part.data(), part.size());
+            if (!entry.empty() && entry.back() == '\r') {
+                entry.pop_back();
+            }
+            if (entry.empty() || entry == DBI_SPHQ_EMPTY_MARKER) {
+                continue;
+            }
+
             const auto pipe1 = entry.find('|');
             if (pipe1 == std::string::npos) {
                 continue;
