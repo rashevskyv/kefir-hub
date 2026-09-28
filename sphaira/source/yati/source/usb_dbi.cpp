@@ -43,6 +43,8 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
         // An empty SPHQ queue has a distinct whole-payload marker. A marker
         // mixed into a normal list must not grant selection-sync capability.
         bool has_sync_data = std::string_view{names.data(), names.size()} == DBI_SPHQ_EMPTY_PAYLOAD;
+        bool has_empty_marker = false;
+        bool has_rev_header = false;
         for (const auto& part : std::views::split(names, '\n')) {
             if (part.empty()) {
                 continue;
@@ -56,6 +58,11 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
                 continue;
             }
             if (entry == DBI_SPHQ_EMPTY_MARKER) {
+                has_empty_marker = true;
+                continue;
+            }
+            if (entry.starts_with(DBI_SPHQ_REV_PREFIX)) {
+                has_rev_header = true;
                 continue;
             }
 
@@ -86,6 +93,9 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
                 m_file_targets[name] = 0;
                 out_names.emplace_back(std::move(name));
             }
+        }
+        if (has_rev_header && has_empty_marker && out_names.empty()) {
+            has_sync_data = true;
         }
         m_dbi_selection_sync = has_sync_data;
     }
@@ -152,7 +162,7 @@ int Usb::GetFileTarget(const std::string& name) const {
     return 0;
 }
 
-Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, std::unordered_map<std::string, int>& out_targets, u64 timeout) {
+Result Usb::FetchLiveQueue(std::vector<LiveQueueItem>& out_items, u32& out_revision, u64 timeout) {
     R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
 
     R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::List, DBI_LIST_QUEUE_EXT, timeout));
@@ -164,8 +174,8 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
     R_UNLESS(response.type == dbi::CmdType::Response, Result_UsbBadMagic);
 
     const u32 list_len = response.data_size;
-    out_selections.clear();
-    out_targets.clear();
+    out_items.clear();
+    out_revision = 0;
 
     if (list_len > 0) {
         R_TRY(SendDbiCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, list_len, timeout));
@@ -185,6 +195,10 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
             if (entry.empty() || entry == DBI_SPHQ_EMPTY_MARKER) {
                 continue;
             }
+            if (entry.starts_with(DBI_SPHQ_REV_PREFIX)) {
+                out_revision = std::strtoul(entry.c_str() + DBI_SPHQ_REV_PREFIX.size(), nullptr, 10);
+                continue;
+            }
 
             const auto pipe1 = entry.find('|');
             if (pipe1 == std::string::npos) {
@@ -196,9 +210,9 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
             }
 
             auto name = entry.substr(0, pipe1);
-            m_file_sizes[name] = std::strtoll(entry.c_str() + pipe1 + 1, nullptr, 10);
+            s64 size = std::strtoll(entry.c_str() + pipe1 + 1, nullptr, 10);
+            m_file_sizes[name] = size;
             bool selected = (std::strtol(entry.c_str() + pipe2 + 1, nullptr, 10) != 0);
-            out_selections[name] = selected;
 
             int target = 0;
             const auto pipe3 = entry.find('|', pipe2 + 1);
@@ -206,10 +220,34 @@ Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_select
                 target = std::strtol(entry.c_str() + pipe3 + 1, nullptr, 10);
             }
             m_file_targets[name] = target;
-            out_targets[name] = target;
+
+            out_items.push_back({
+                .name = std::move(name),
+                .size = size,
+                .selected = selected,
+                .target = target,
+            });
         }
     }
 
+    R_SUCCEED();
+}
+
+Result Usb::SendQueueAck(u32 revision, u64 timeout) {
+    R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
+    return SendDbiCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, revision, timeout);
+}
+
+Result Usb::FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, std::unordered_map<std::string, int>& out_targets, u64 timeout) {
+    std::vector<LiveQueueItem> items;
+    u32 rev = 0;
+    R_TRY(FetchLiveQueue(items, rev, timeout));
+    out_selections.clear();
+    out_targets.clear();
+    for (const auto& it : items) {
+        out_selections[it.name] = it.selected;
+        out_targets[it.name] = it.target;
+    }
     R_SUCCEED();
 }
 

@@ -27,6 +27,8 @@
 #include <cstdio>
 #include <optional>
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace sphaira::ui::menu::dbi {
 void Menu::StartInstall() {
@@ -145,98 +147,236 @@ bool Menu::RefreshAutoInstallTarget(size_t index) {
     return pick;
 }
 
-bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections, const std::unordered_map<std::string, int>& targets) {
+bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& items, size_t active_index, bool is_installing) {
     bool changed = false;
-    {
-        SCOPED_MUTEX(&m_mutex);
-        for (auto& entry : m_queue) {
-            if (entry.selected) {
-                auto it = selections.find(entry.file_name);
-                if (it != selections.end() && !it->second) {
-                    entry.selected = false;
+
+    if (!is_installing) {
+        // ReviewQueue mode: entire queue can be reordered, items added, removed, target/selected updated
+        std::unordered_map<std::string, QueueEntry> existing_map;
+        {
+            SCOPED_MUTEX(&m_mutex);
+            for (const auto& entry : m_queue) {
+                existing_map.emplace(entry.file_name, entry);
+            }
+        }
+
+        std::vector<QueueEntry> new_queue;
+        new_queue.reserve(items.size());
+
+        for (const auto& item : items) {
+            auto it = existing_map.find(item.name);
+            if (it != existing_map.end()) {
+                QueueEntry entry = std::move(it->second);
+                existing_map.erase(it);
+
+                bool new_sel = item.selected && R_SUCCEEDED(entry.analysis_result);
+                if (entry.selected != new_sel) {
+                    entry.selected = new_sel;
                     changed = true;
                 }
-            }
-            auto tit = targets.find(entry.file_name);
-            if (tit != targets.end()) {
-                InstallTarget new_target = InstallTarget::Auto;
-                if (tit->second == 1) new_target = InstallTarget::Sd;
-                else if (tit->second == 2) new_target = InstallTarget::Nand;
+
+                InstallTarget new_target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
                 if (entry.target != new_target) {
                     entry.target = new_target;
                     changed = true;
                 }
-            }
-        }
-    }
-
-    std::vector<std::string> new_names;
-    {
-        SCOPED_MUTEX(&m_mutex);
-        for (const auto& [name, selected] : selections) {
-            if (!selected) continue;
-            bool exists = false;
-            for (const auto& entry : m_queue) {
-                if (entry.file_name == name) {
-                    exists = true;
-                    break;
+                new_queue.emplace_back(std::move(entry));
+            } else {
+                // New item added from host
+                QueueEntry entry{};
+                entry.file_name = item.name;
+                if (m_usb_source) {
+                    m_usb_source->SetFileNameForTranfser(item.name);
+                    entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{item.name}, entry.analysis);
+                    s64 pc_size = m_usb_source->GetFileSize(item.name);
+                    if (pc_size > 0) {
+                        entry.analysis.source_size = pc_size;
+                    }
                 }
-            }
-            if (!exists) {
-                new_names.push_back(name);
-            }
-        }
-    }
-
-    for (const auto& name : new_names) {
-        QueueEntry entry{};
-        entry.file_name = name;
-        if (m_usb_source) {
-            m_usb_source->SetFileNameForTranfser(name);
-            entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
-            s64 pc_size = m_usb_source->GetFileSize(name);
-            if (pc_size > 0) {
-                entry.analysis.source_size = pc_size;
-            }
-        }
-        int pc_target = 0;
-        auto tit = targets.find(name);
-        if (tit != targets.end()) {
-            pc_target = tit->second;
-        } else if (m_usb_source) {
-            pc_target = m_usb_source->GetFileTarget(name);
-        }
-        if (pc_target == 1) entry.target = InstallTarget::Sd;
-        else if (pc_target == 2) entry.target = InstallTarget::Nand;
-        else entry.target = InstallTarget::Auto;
-
-        entry.selected = R_SUCCEEDED(entry.analysis_result);
-        if (R_FAILED(entry.analysis_result)) {
-            AddError(name, "Analysis"_i18n, entry.analysis_result);
-        }
-        {
-            SCOPED_MUTEX(&m_mutex);
-            bool exists = false;
-            for (const auto& existing : m_queue) {
-                if (existing.file_name == name) {
-                    exists = true;
-                    break;
+                entry.target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
+                entry.selected = item.selected && R_SUCCEEDED(entry.analysis_result);
+                if (R_FAILED(entry.analysis_result)) {
+                    AddError(item.name, "Analysis"_i18n, entry.analysis_result);
                 }
-            }
-            if (!exists) {
-                entry.source_index = m_queue.size();
-                m_queue.emplace_back(std::move(entry));
+                new_queue.emplace_back(std::move(entry));
                 changed = true;
             }
         }
+
+        if (!existing_map.empty()) {
+            changed = true;
+        }
+
+        {
+            SCOPED_MUTEX(&m_mutex);
+            m_queue = std::move(new_queue);
+            for (size_t i = 0; i < m_queue.size(); i++) {
+                m_queue[i].source_index = i;
+            }
+            RecomputePlan();
+            m_actions_dirty = true;
+        }
+        return changed;
     }
 
-    if (changed) {
+    // Installing mode: indices 0..active_index are frozen (completed or active package).
+    // Future packages (after active_index) follow wire order, can be added or removed.
+    std::unordered_set<std::string> frozen_names;
+    std::unordered_map<std::string, QueueEntry> future_map;
+    {
         SCOPED_MUTEX(&m_mutex);
-        RecomputePlan();
+        if (active_index >= m_queue.size()) {
+            return false;
+        }
+        for (size_t k = 0; k <= active_index; k++) {
+            frozen_names.insert(m_queue[k].file_name);
+        }
+        for (size_t k = active_index + 1; k < m_queue.size(); k++) {
+            future_map.emplace(m_queue[k].file_name, m_queue[k]);
+        }
+    }
+
+    std::vector<QueueEntry> new_future;
+    for (const auto& item : items) {
+        if (frozen_names.contains(item.name)) {
+            continue; // Frozen prefix stays intact
+        }
+        auto it = future_map.find(item.name);
+        if (it != future_map.end()) {
+            QueueEntry entry = std::move(it->second);
+            future_map.erase(it);
+
+            if (entry.selected != item.selected) {
+                entry.selected = item.selected;
+                if (!item.selected) {
+                    entry.install_selected = false;
+                }
+                changed = true;
+            }
+
+            InstallTarget new_target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
+            if (entry.target != new_target) {
+                entry.target = new_target;
+                entry.planned_sd = (new_target == InstallTarget::Sd);
+                entry.install_sd = entry.planned_sd;
+                changed = true;
+            }
+            new_future.emplace_back(std::move(entry));
+        } else {
+            QueueEntry entry{};
+            entry.file_name = item.name;
+            if (m_usb_source) {
+                m_usb_source->SetFileNameForTranfser(item.name);
+                entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{item.name}, entry.analysis);
+                s64 pc_size = m_usb_source->GetFileSize(item.name);
+                if (pc_size > 0) {
+                    entry.analysis.source_size = pc_size;
+                }
+            }
+            entry.target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
+            entry.selected = item.selected && R_SUCCEEDED(entry.analysis_result);
+            if (R_FAILED(entry.analysis_result)) {
+                AddError(item.name, "Analysis"_i18n, entry.analysis_result);
+                entry.install_selected = false;
+            }
+            new_future.emplace_back(std::move(entry));
+            changed = true;
+        }
+    }
+
+    if (!future_map.empty()) {
+        changed = true;
+    }
+
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (active_index >= m_queue.size()) {
+            return false;
+        }
+        m_queue.resize(active_index + 1);
+        for (auto& entry : new_future) {
+            entry.source_index = m_queue.size();
+            m_queue.emplace_back(std::move(entry));
+        }
+
+        const auto spaces = GetPolledData();
+        const bool global = App::GetSaveSettingsGlobally();
+        const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
+        const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
+        const long loc = global ? App::GetInstallLocation() : m_session_install_location;
+
+        s64 avail_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
+        s64 avail_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
+
+        if (m_queue[active_index].install_selected && !IsTitleAlreadyInstalled(GetQueueEntryTitleId(m_queue[active_index]))) {
+            const auto asize = PlanSize(m_queue[active_index]);
+            if (m_queue[active_index].install_sd) {
+                PlanTake(avail_sd, asize);
+            } else {
+                PlanTake(avail_nand, asize);
+            }
+        }
+
+        for (size_t j = active_index + 1; j < m_queue.size(); j++) {
+            auto& entry = m_queue[j];
+            if (!entry.selected || R_FAILED(entry.analysis_result)) {
+                entry.install_selected = false;
+                continue;
+            }
+            if (entry.target == InstallTarget::Sd) {
+                entry.planned_sd = true;
+                entry.install_sd = true;
+                entry.install_selected = true;
+                PlanTake(avail_sd, PlanSize(entry));
+            } else if (entry.target == InstallTarget::Nand) {
+                entry.planned_sd = false;
+                entry.install_sd = false;
+                entry.install_selected = true;
+                PlanTake(avail_nand, PlanSize(entry));
+            } else if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(entry))) {
+                entry.planned_sd = PlanPickSd(loc, PlanSize(entry), avail_sd, avail_nand);
+                entry.install_sd = entry.planned_sd;
+                entry.install_selected = true;
+            } else {
+                const auto size = PlanSize(entry);
+                const auto cand = PlanEvaluateCandidate(loc, size, avail_sd, avail_nand);
+                if (cand.fits) {
+                    entry.planned_sd = cand.is_sd;
+                    entry.install_sd = cand.is_sd;
+                    entry.install_selected = true;
+                    PlanTake(cand.is_sd ? avail_sd : avail_nand, size);
+                } else {
+                    entry.planned_sd = cand.is_sd;
+                    entry.install_sd = cand.is_sd;
+                    entry.install_selected = false;
+                    entry.selected = false;
+                    entry.rejected_no_space = true;
+                }
+            }
+        }
+
+        m_plan_total_bytes = m_plan_done_bytes;
+        for (size_t j = active_index; j < m_queue.size(); j++) {
+            if (m_queue[j].install_selected) {
+                AddSizeSaturated(m_plan_total_bytes, PlanSize(m_queue[j]));
+            }
+        }
         m_actions_dirty = true;
     }
+
     return changed;
+}
+
+bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections, const std::unordered_map<std::string, int>& targets) {
+    std::vector<yati::source::Usb::LiveQueueItem> items;
+    items.reserve(selections.size());
+    for (const auto& [name, sel] : selections) {
+        int tgt = 0;
+        auto tit = targets.find(name);
+        if (tit != targets.end()) tgt = tit->second;
+        items.push_back({name, 0, sel, tgt});
+    }
+    return ApplyLiveQueue(items, 0, false);
 }
 
 void Menu::ConfirmInstallPlan() {

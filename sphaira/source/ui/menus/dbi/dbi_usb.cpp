@@ -68,6 +68,7 @@ void Menu::ThreadFunction() {
         if (R_FAILED(list_rc)) continue;
 
                 AddLog(std::string{"Connected: "_i18n} + yati::source::GetUsbProtocolName(m_usb_source->GetProtocol()), LogKind::Event);
+        m_last_acked_revision = 0;
         if (m_usb_source && m_usb_source->HasSelectionSync()) {
             const auto spaces = GetPolledData();
             m_usb_source->SendStorageInfo(spaces.nand_free, spaces.nand_total, spaces.sd_free, spaces.sd_total);
@@ -142,10 +143,15 @@ void Menu::ThreadFunction() {
             while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) {
                 if (sync_supported && last_poll.GetNs() >= 300'000'000) {
                     last_poll.Update();
-                    std::unordered_map<std::string, bool> selections;
-                    std::unordered_map<std::string, int> targets;
-                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections, targets))) {
-                        ApplyLiveSelection(selections, targets);
+                    std::vector<yati::source::Usb::LiveQueueItem> items;
+                    u32 revision = 0;
+                    if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {
+                        ApplyLiveQueue(items, 0, false);
+                        if (revision > 0 && revision != m_last_acked_revision) {
+                            if (R_SUCCEEDED(m_usb_source->SendQueueAck(revision))) {
+                                m_last_acked_revision = revision;
+                            }
+                        }
                     }
                 }
                 svcSleepThread(10'000'000);
@@ -155,10 +161,10 @@ void Menu::ThreadFunction() {
             }
 
             if (sync_supported) {
-                std::unordered_map<std::string, bool> selections;
-                std::unordered_map<std::string, int> targets;
-                if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections, targets))) {
-                    if (ApplyLiveSelection(selections, targets)) {
+                std::vector<yati::source::Usb::LiveQueueItem> items;
+                u32 revision = 0;
+                if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {
+                    if (ApplyLiveQueue(items, 0, false)) {
                         SCOPED_MUTEX(&m_mutex);
                         m_plan_total_bytes = 0;
                         for (auto& entry : m_queue) {
@@ -167,6 +173,11 @@ void Menu::ThreadFunction() {
                             if (entry.install_selected) {
                                 AddSizeSaturated(m_plan_total_bytes, PlanSize(entry));
                             }
+                        }
+                    }
+                    if (revision > 0 && revision != m_last_acked_revision) {
+                        if (R_SUCCEEDED(m_usb_source->SendQueueAck(revision))) {
+                            m_last_acked_revision = revision;
                         }
                     }
                 }
@@ -178,162 +189,14 @@ void Menu::ThreadFunction() {
             bool session_failed{};
             for (size_t i = 0; i < m_queue.size(); i++) {
                 if (sync_supported) {
-                    std::unordered_map<std::string, bool> selections;
-                    std::unordered_map<std::string, int> targets;
-                    if (R_SUCCEEDED(m_usb_source->FetchLiveSelection(selections, targets))) {
-                        bool changed = false;
-                        {
-                            SCOPED_MUTEX(&m_mutex);
-                            for (size_t j = i; j < m_queue.size(); j++) {
-                                if (m_queue[j].selected || m_queue[j].install_selected) {
-                                    auto it = selections.find(m_queue[j].file_name);
-                                    if (it != selections.end() && !it->second) {
-                                        m_queue[j].selected = false;
-                                        m_queue[j].install_selected = false;
-                                        changed = true;
-                                    }
-                                }
-                                auto tit = targets.find(m_queue[j].file_name);
-                                if (tit != targets.end()) {
-                                    InstallTarget new_target = InstallTarget::Auto;
-                                    if (tit->second == 1) new_target = InstallTarget::Sd;
-                                    else if (tit->second == 2) new_target = InstallTarget::Nand;
-                                    if (m_queue[j].target != new_target) {
-                                        m_queue[j].target = new_target;
-                                        m_queue[j].planned_sd = (new_target == InstallTarget::Sd);
-                                        m_queue[j].install_sd = m_queue[j].planned_sd;
-                                        changed = true;
-                                    }
-                                }
+                    std::vector<yati::source::Usb::LiveQueueItem> items;
+                    u32 revision = 0;
+                    if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {
+                        ApplyLiveQueue(items, i, true);
+                        if (revision > 0 && revision != m_last_acked_revision) {
+                            if (R_SUCCEEDED(m_usb_source->SendQueueAck(revision))) {
+                                m_last_acked_revision = revision;
                             }
-                        }
-
-                        std::vector<std::string> new_names;
-                        {
-                            SCOPED_MUTEX(&m_mutex);
-                            for (const auto& [name, selected] : selections) {
-                                if (!selected) continue;
-                                bool exists = false;
-                                for (const auto& entry : m_queue) {
-                                    if (entry.file_name == name) {
-                                        exists = true;
-                                        break;
-                                    }
-                                }
-                                if (!exists) {
-                                    new_names.push_back(name);
-                                }
-                            }
-                        }
-
-                        for (const auto& name : new_names) {
-                            QueueEntry entry{};
-                            entry.file_name = name;
-                            if (m_usb_source) {
-                                m_usb_source->SetFileNameForTranfser(name);
-                                entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
-                                s64 pc_size = m_usb_source->GetFileSize(name);
-                                if (pc_size > 0) {
-                                    entry.analysis.source_size = pc_size;
-                                }
-                            }
-                            int pc_target = 0;
-                            auto tit = targets.find(name);
-                            if (tit != targets.end()) {
-                                pc_target = tit->second;
-                            } else if (m_usb_source) {
-                                pc_target = m_usb_source->GetFileTarget(name);
-                            }
-                            if (pc_target == 1) entry.target = InstallTarget::Sd;
-                            else if (pc_target == 2) entry.target = InstallTarget::Nand;
-                            else entry.target = InstallTarget::Auto;
-
-                            entry.selected = R_SUCCEEDED(entry.analysis_result);
-                            if (R_FAILED(entry.analysis_result)) {
-                                AddError(name, "Analysis"_i18n, entry.analysis_result);
-                                entry.install_selected = false;
-                            }
-
-                            {
-                                SCOPED_MUTEX(&m_mutex);
-                                bool exists = false;
-                                for (const auto& existing : m_queue) {
-                                    if (existing.file_name == name) {
-                                        exists = true;
-                                        break;
-                                    }
-                                }
-                                if (exists) continue;
-                                entry.source_index = m_queue.size();
-
-                                if (entry.selected) {
-                                    const auto spaces = GetPolledData();
-                                    const bool global = App::GetSaveSettingsGlobally();
-                                    const auto reserve_nand = static_cast<s64>(global ? App::GetInstallReserveMb() : m_session_reserve_mb) * 1024 * 1024;
-                                    const auto reserve_sd = static_cast<s64>(global ? App::GetInstallReserveSdMb() : m_session_reserve_sd_mb) * 1024 * 1024;
-                                    const long loc = global ? App::GetInstallLocation() : m_session_install_location;
-
-                                    s64 avail_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
-                                    s64 avail_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
-
-                                    // Subtract packages still planned from index i onward
-                                    for (size_t k = i; k < m_queue.size(); k++) {
-                                        if (m_queue[k].install_selected && !IsTitleAlreadyInstalled(GetQueueEntryTitleId(m_queue[k]))) {
-                                            const auto ksize = PlanSize(m_queue[k]);
-                                            if (m_queue[k].install_sd) {
-                                                PlanTake(avail_sd, ksize);
-                                            } else {
-                                                PlanTake(avail_nand, ksize);
-                                            }
-                                        }
-                                    }
-
-                                    if (entry.target == InstallTarget::Sd) {
-                                        entry.planned_sd = true;
-                                        entry.install_sd = true;
-                                        entry.install_selected = true;
-                                        PlanTake(avail_sd, PlanSize(entry));
-                                    } else if (entry.target == InstallTarget::Nand) {
-                                        entry.planned_sd = false;
-                                        entry.install_sd = false;
-                                        entry.install_selected = true;
-                                        PlanTake(avail_nand, PlanSize(entry));
-                                    } else if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(entry))) {
-                                        entry.planned_sd = PlanPickSd(loc, PlanSize(entry), avail_sd, avail_nand);
-                                        entry.install_sd = entry.planned_sd;
-                                        entry.install_selected = true;
-                                    } else {
-                                        const auto size = PlanSize(entry);
-                                        const auto cand = PlanEvaluateCandidate(loc, size, avail_sd, avail_nand);
-                                        if (cand.fits) {
-                                            entry.planned_sd = cand.is_sd;
-                                            entry.install_sd = cand.is_sd;
-                                            entry.install_selected = true;
-                                            PlanTake(cand.is_sd ? avail_sd : avail_nand, size);
-                                        } else {
-                                            entry.planned_sd = cand.is_sd;
-                                            entry.install_sd = cand.is_sd;
-                                            entry.install_selected = false;
-                                            entry.selected = false;
-                                            entry.rejected_no_space = true;
-                                        }
-                                    }
-                                }
-
-                                m_queue.emplace_back(std::move(entry));
-                                changed = true;
-                            }
-                        }
-
-                        if (changed) {
-                            SCOPED_MUTEX(&m_mutex);
-                            m_plan_total_bytes = m_plan_done_bytes;
-                            for (size_t j = i; j < m_queue.size(); j++) {
-                                if (m_queue[j].install_selected) {
-                                    AddSizeSaturated(m_plan_total_bytes, PlanSize(m_queue[j]));
-                                }
-                            }
-                            m_actions_dirty = true;
                         }
                     }
                 }

@@ -272,11 +272,14 @@ private:
     void ConfirmInstallPlan();
     void RecomputePlan(bool force_refresh = false);
     bool RefreshAutoInstallTarget(size_t index);
+    bool ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& items, size_t active_index = 0, bool is_installing = false);
     bool ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections, const std::unordered_map<std::string, int>& targets = {});
     void SetIndex(s64 index);
     void CycleSelectedTarget();
     void DisplayQueueOptions(bool left_side = false);
     void SortQueue();
+
+    u32 m_last_acked_revision{0};
 
     std::unique_ptr<yati::source::Usb> m_usb_source{};
     fs::Fs* m_local_fs{};

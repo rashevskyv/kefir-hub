@@ -57,6 +57,16 @@ struct Usb final : Base {
         return m_dbi_selection_sync;
     }
 
+    struct LiveQueueItem {
+        std::string name;
+        s64 size{0};
+        bool selected{false};
+        int target{0};
+    };
+
+    Result FetchLiveQueue(std::vector<LiveQueueItem>& out_items, u32& out_revision, u64 timeout = 1e+9);
+    Result SendQueueAck(u32 revision, u64 timeout = 1e+9);
+
     Result FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, std::unordered_map<std::string, int>& out_targets, u64 timeout = 1e+9);
     Result FetchLiveSelection(std::unordered_map<std::string, bool>& out_selections, u64 timeout = 1e+9);
 
