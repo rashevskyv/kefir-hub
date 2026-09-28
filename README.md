@@ -27,6 +27,18 @@ Please include:
 - FW version;
 - The bug itself and how to reproduce it.
 
+## Documentation & Wiki
+
+Full technical guides, protocols, and documentation are available in the [Documentation Wiki](docs/wiki/Home.md):
+- [Installation & USB Protocols Guide](docs/wiki/Installation-and-USB.md) — USB PC install, DBI SPHQ live queue sync, recursive folder install, screensaver.
+- [Save Data Management Guide](docs/wiki/Save-Management.md) — Multi-source backups (Kefir Hub, DBI, JKSV, Checkpoint), folder-based restore, uninstalled game save creation, Game Tools save slot manager, MTP read-only saves, WebDAV sync.
+- [User Profiles & Account Linking Guide](docs/wiki/User-Profiles-and-Account-Link.md) — Profile management, RomFS donor offline Nintendo Account linking, Official vs Fake status, custom avatars, portable backups.
+- [Console Transfer & TegraExplorer Guide](docs/wiki/Console-Transfer.md) — Over-the-air (OTA) Wi-Fi migration of profiles, playtime, and saves, automated TegraExplorer staging.
+- [System Firmware & Downgrade Recovery Guide](docs/wiki/Firmware-and-Downgrades.md) — Firmware installation from ZIP/folders, automated post-downgrade fix (`downgrade_fix.te`), automatic themes/translations cleanup.
+- [Network & Web Services Guide](docs/wiki/Network-and-Web-Services.md) — Web File Manager (SPA, queue, direct install, gallery), Ownfoil client, NX-Link, FTP, Wi-Fi Manager.
+- [System Utilities & Customization Guide](docs/wiki/System-and-Tools.md) — Module Manager with RAM telemetry, Fan Curves, Interface Translations, Forwarder Editor, Theme Creator.
+- [Profile & Playtime Migration Deep Dive](docs/account-transfer.md) — Technical reference on Horizon save crypto (0010, 00F0, 0041).
+
 ## FTP
 
 FTP can be enabled via the network menu. It uses the same config as ftpsrv `/config/ftpsrv/config.ini`. [See here for the full list
@@ -46,11 +58,13 @@ MTP can be enabled via the Network menu. You can configure which MTP storages ar
 - **Robust Repack Installations:** The installation engine features enhanced error recovery when installing repacked or trimmed NSP/NSZ files via USB MTP. If a file is slightly truncated or missing non-critical padding bytes at the end of a stream (common in repacked titles), the installer automatically handles the EOF condition gracefully instead of failing with `Unexpected EOF` or `Invalid Read Size` errors, completing the installation successfully.
 - **Streamlined Streaming Installation Controls (MTP, FTP, HTTP):** While installing via MTP, FTP, or HTTP Web Install, press **X** to cancel the installation session (protected by a confirmation prompt). Button **B** is unused during streaming installations to prevent interrupting in-flight network/USB host streams. When all packages conclude and no incoming transfer is active, a 3-second grace period allows the installer to settle before transitioning to the Summary screen.
 - **Background Minimization & Quick Expand (USB & Transports):** Press **L3** (Left Stick Click) during USB PC Install (or MTP/FTP/Web transfers) to minimize the installation screen into a compact top-right status badge (`USB · 1/3 (45%)  Expand`). While minimized, you can freely browse file directories, tools, and games while transfers continue uninterrupted in the background. Press **L3** or tap the badge via touchscreen at any time to instantly expand back into the full installation menu. Minimize/Expand is also available during the USB connection wait and review queue stages.
-- **Enhanced DBI USB Protocol & Live Client Sync:** Extended the DBI USB communication protocol for bidirectional integration with PC installer clients:
+- **Enhanced DBI USB Protocol & SPHQ Live Queue Sync:** Extended the DBI USB communication protocol for bidirectional integration with PC installer clients (such as DBI Backend Qt):
+  - **Live Bidirectional Queue Sync (SPHQ):** Host PC clients can push an updated queue list (`SPHQ` packet with a revision counter) in real time both while reviewing the queue and during active package installation. Sphaira checks for updates at safe `FileRange` boundaries without interrupting active transfers, applying additions, removals, or re-ordering dynamically to upcoming packages and returning revision acknowledgements (ACK). Empty queues are cleanly confirmed via the `::SPHQ::\n` marker.
+  - **Dynamic Per-Package Storage Re-evaluation:** In `Auto` storage mode, Sphaira re-evaluates the destination (NAND vs microSD) immediately before installing each individual package, verifying the actual uncompressed size against real-time free capacity.
   - **Live Storage Target Selection:** Supports receiving target destination preferences (`Auto`, `microSD`, or `NAND`) per queue entry from PC client list descriptors (`file|size|selected|target`), adjusting planned installation targets and storage allocations dynamically.
   - **Live Package Status Reporting:** Sends discrete package completion status notifications (`Installed`, `User Skipped`, `Already Installed`, or `Failed`) alongside exact Horizon Result codes back to the PC client via `CmdId::PackageStatus` (`0x04`).
   - **Dynamic Storage Info Reporting:** Continuously transmits current NAND and microSD free/total capacities via `CmdId::StorageInfo` (`0x05`) to update client storage gauges in real time.
-- **Quick Return to Main Screen (Minus Button):** The main screen of the application is the Homebrew screen. Pressing **Minus (-)** dynamically detects the current location: if already on the Homebrew screen, it exits the application; if pressed from any other screen, tool, submenu, or sidebar (e.g. Tools, Settings, File Browser, or Cheats), it immediately navigates straight back to the Homebrew screen in a single press. Subsequent press on the Homebrew screen then closes the application.
+- **Dynamic Navigation & Minus Button:** Pressing **Minus (-)** dynamically detects the current location: if already on the Homebrew screen, it exits the application; if inside any nested file or folder picker (such as avatar or path selection), it cleanly cancels the picker and returns to the calling menu; if pressed from any other screen, tool, submenu, or sidebar, it immediately navigates straight back to the Homebrew screen in a single press.
 
 ### Web File Manager
 
@@ -81,14 +95,6 @@ Sphaira provides an interactive **Remote Input** system that allows users to sen
 - **Dual Input Modes:** Prompts offer **Manual (Keyboard)** for typing on the Switch's on-screen keyboard, or **From Phone / PC** for scanning a QR code or visiting a local web link (e.g. `http://kefir.local/input` or `http://<ip>/input`, with automatic 8080–8090 fallback).
 - **Web Input Interface:** The mobile-responsive `/input` page features clipboard paste integration, live configuration reflection, and support for multiline text payloads.
 - **Direct NRO & ZIP Downloads:** The **Custom Link / Direct Download** utility accepts both `.zip` archives (extracted to root with prompt to keep/delete) and standalone `.nro` binaries (saved directly to `/switch/` with an instant launch prompt).
-
-## File Browser & Vector Iconography
-
-Sphaira features an integrated File Browser for navigating console filesystems, microSD cards, USB mass storage drives, and external MTP devices:
-- **View Options & Layout:** The file browser's layout toggle (**List** vs **Icon** / thumbnail preview mode) is consolidated inside the **View** options submenu alongside sorting (by size or alphabetical), display order, and visibility toggles (hidden files and folders-first sorting), keeping the top-level File Options sidebar focused on filesystem operations.
-- **Unified Vector Folder Icons:** In grid view mode, folder entries render a sharp, resolution-independent vector silhouette featuring a classic tab arch on top and a clean rounded body contour, eliminating stray interior tab lines while neatly framing embedded mosaic previews and thumbnails across all theme palettes.
-- **Interactive Image Viewer & On-the-Fly Rotation:** Opening images (PNG, JPG/JPEG) launches the built-in image viewer supporting zoom, pan, fullscreen display, and instant rotation. Press **L** to rotate counter-clockwise (90°) or **R** to rotate clockwise (90°). Rotation is strictly an in-memory preview operation: it dynamically adapts viewport framing, zoom, and panning bounds without altering image files or their metadata on disk.
-
 ## Interface Translation & Diagnostics
 
 Sphaira features integrated management for Nintendo Switch system interface translations powered by upstream `NX-Family/NX-Translation`:
@@ -127,14 +133,12 @@ Sphaira / Kefir Hub provides full user profile and play activity transfer betwee
 
 ## System Firmware Updates & Automated Downgrade Fix
 
-Sphaira / Kefir Hub manages Nintendo Switch system firmware updates and downgrades:
-- **Automated Post-Downgrade Fix via TegraExplorer:** When downgrading system firmware, system save `8000000000000073` cannot be removed from within running Horizon OS due to system service locks (`FsError_TargetLocked`). Sphaira automatically stages an automated TegraExplorer script (`assets/romfs/tegra/downgrade_fix.te` -> `sd:/startup.te`), configures the target NAND (`emu` or `sys` based on the running environment via `App::IsEmummc()`), and reboots to TegraExplorer via Hekate's payload launch API.
-- **Zero Button Presses Required:** The downgrade fix script mounts the target SYSTEM partition, deletes save `8000000000000073`, displays status feedback, and automatically reboots back into Hekate via `goHekate()` without waiting for user input.
-- **Maintenance Mode Warning & Recovery Guide:** Before downloading or installing a downgrade firmware, Sphaira presents a detailed warning dialog explaining how to enter Maintenance Mode if the console encounters boot issues:
-  - Boot the firmware and wait until Nintendo and Kefir boot logos pass.
-  - Press and hold both Volume buttons (+ and -) until Maintenance Mode opens.
-  - Choose «Initialize Console Without Deleting Save Data» (resets installed games and system settings while preserving game saves).
-- **Manual Downgrade Guide & QR Code:** The downgrade warning dialog embeds a scan-ready QR code linking directly to the manual downgrade instructions at `https://switch.customfw.xyz/downgrade_fw`.
+Sphaira provides full support for managing and installing Nintendo Switch system firmware updates and downgrades directly through **Kefir Updater**:
+- **Automated Post-Downgrade Fix (`downgrade_fix.te`):** When installing an older system firmware version (downgrade), Sphaira automatically stages an automated recovery script (`sd:/startup.te`) and launches TegraExplorer upon rebooting. The script disarms itself immediately to prevent bootloops, mounts the appropriate `SYSTEM` partition (EmuNAND or SysNAND), deletes system save `8000000000000073` to prevent Horizon OS downgrade panic errors, removes conflicting custom themes (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) and system translations (`0100000000000803`...`0100000000001015`), and reboots smoothly back into Hekate without requiring user button presses.
+- **Automatic Themes and Translations Removal on All Updates:** To prevent fatal crashes (`2162-0002`) and qlaunch incompatibilities after upgrading or changing system firmware, Sphaira unconditionally cleans all installed custom themes and interface translations from the microSD card (`/atmosphere/contents/`) immediately after applying any firmware installation, ensuring a smooth and crash-free reboot. Application-specific homebrew files (such as DBI translations) are safely preserved.
+- **Comprehensive Maintenance Mode Instructions:** The pre-downgrade warning dialog explains how to enter Horizon's Recovery / Maintenance Mode (`Volume +` and `Volume -` held after the bootlogos) and choose "Initialize Console Without Deleting Save Data". It also clarifies that after initialization, the SD card's `Nintendo` folder will become invalid and the console will prompt to delete it, reassuring the user that agreeing to delete it will NOT affect their saved games.
+- **Manual Guide Link & QR Code:** Features a scan-ready QR code and direct URL pointing to the official downgrade documentation (`https://switch.customfw.xyz/downgrade_fw`).
+- **Fully Localized Update & Reboot Notifications:** All firmware update confirmation prompts, validation error messages, downgrade recovery notices, theme/translation cleanup warnings, and post-installation reboot requests are fully localized through Sphaira's `i18n` translation engine across supported languages.
 
 ## File association
 
@@ -257,8 +261,12 @@ Manage installed Atmosphere background sysmodules directly from the console inte
 
 Manage Nintendo Switch user profiles directly from **Tools -> Tools -> Users**:
 - **Profile Customization & Avatars:** Create, rename, delete, backup, and link user profiles. Set custom profile avatars from existing profiles, SD card images (`/config/kefir/avatars` or file picker), or SteamGridDB search.
+- **RomFS Donor Offline Nintendo Account Linking:** Sphaira embeds verified Nintendo Account donor templates directly in RomFS (`romfs:/kefir/donor/`), eliminating the need to install third-party utilities (such as Linkalho) to enable offline account features.
+- **Official vs Fake Status Classification:** Profile link status and NAS ID are queried directly through Horizon's BaaS Administrator interface (`GetBaasAccountAdministrator` and `IsLinkedWithNintendoAccount`). Sphaira accurately detects and visually differentiates genuine **Official** Nintendo Accounts from **Fake / Offline** linked accounts with clear, color-coded status badges.
+- **Safety Rollback Snapshots & Overwrite Protection:** Before modifying the account system save (`8000000000000010`), Sphaira takes an emergency rollback snapshot to protect against corruption. Official accounts are safeguarded from accidental overwrite unless explicitly confirmed.
+- **Dedicated Unlink Action:** Safely remove offline Nintendo Account link tokens from any profile directly via **Unlink** in the options sidebar without deleting the user profile or any associated game saves.
+- **Portable User Backups:** Export individual user profile definitions (UID, nickname, avatar, linkage metadata) to standalone, human-readable portable backup archives in `/config/kefir/user_backups/` for archiving or wireless transfer.
 - **Reboot Prompt on Avatar Change:** Because Horizon OS only updates profile avatars system-wide (HOME menu and system applets) after a reboot, changing a profile avatar displays a prompt to reboot immediately or reboot later.
-- **Accurate Nintendo Account Link Detection:** Profile link status and NAS ID are queried directly through Horizon's Baas Administrator interface (`GetBaasAccountAdministrator` and `IsLinkedWithNintendoAccount`), ensuring unlinked profiles are accurately detected (matching Linkalho and system settings) and correctly prompted for offline linking using built-in RomFS donors.
 - **One-Time TegraExplorer Restore Notification:** When restoring user profiles & play hours packs through TegraExplorer, if restoration does not complete, a concise status notification is presented once upon returning to Kefir Hub, cleanly persisting the applied state so it does not repeat on subsequent launches.
 
 ## Wi-Fi Connection Manager
@@ -297,10 +305,14 @@ Sphaira provides an integrated image viewer with dedicated legend and controls:
 - **Custom Legend & Standard Chrome:** Clear bottom-bar indicators (unified `Prev / Next Image` with `\uE0ED / \uE0EE` for D-Pad Left/Right, `Zoom Up / Down` for ZL + Stick Up/Down, and `Full Screen` for ZR). Normal view preserves standard screen header/footer chrome above image content, while Full Screen mode expands to full display without chrome.
 - **Zoom & Navigation:** Holding ZL with Analog Stick / D-Pad Up or Down zooms in or out without accidentally changing images.
 - **Stick Panning:** Releasing ZL while zoomed in enables smooth pan/scroll across the zoomed image using analog sticks or D-Pad without scale changes or switching files.
+- **On-the-Fly Rotation:** Press **L** to rotate counter-clockwise (90°) or **R** to rotate clockwise (90°). Rotation dynamically adapts viewport framing, zoom, and panning bounds in memory without modifying image files on disk.
 
 ## File Browser
 
 Sphaira includes a robust file manager with standard operations (Cut, Paste, Rename, Delete, Create File/Folder, Extract/Compress zip, Install/Forwarder) and write protection handling:
+- **Recursive Folder Installation ("Install recursively"):** In the folder options sidebar (or when multiple folders are selected), select **Install recursively** to automatically traverse all subdirectories, aggregate every discovered NSP, NSZ, XCI, and XCZ package, and open the Review Queue for batch installation.
+- **Nested File Browser Cancel (Minus Button):** When the File Browser is launched as an in-app file or folder picker (such as selecting custom avatar images, firmware directories, or backup search paths), pressing **Minus (-)** cleanly cancels the picker and returns to the previous menu rather than exiting the application.
+- **View Options & Vector Iconography:** Toggle between **List** and **Icon** / thumbnail preview mode in the **View** submenu alongside sorting (by size or name) and visibility settings. In grid view mode, folder entries render a sharp, resolution-independent vector silhouette with consistent label centering under tiles in all hover states.
 - **Network Storage Sources (SMB, WebDAV, FTP, HTTP):** Mount and browse network folders directly in the file manager. Select "+ Add network location" in the "Sources" settings category or directly in the file browser sources picker. Supported protocols include Samba (SMB), WebDAV (HTTPS/HTTP), FTP, and HTTP. Connection is established asynchronously using a progress screen and locations are saved to `/config/kefir/locations.ini` (Note: credentials are saved in plain text for compatibility with NXMP). You can browse network folders as native directories, perform file operations (Copy, Paste, Delete, Rename, Create Folder), play audio or video files from them using NXMP, and upload files to them.
   - **Hierarchical System Root Navigation:** Pressing **Back (B)** at the root of microSD card or any mounted storage navigates one level up to a virtual **System Root** view instead of exiting the file browser. This view lists the microSD card, system partitions (NAND/SD Image if God Mode is enabled), and all configured network locations.
   - **Connection Status Badges:** Configured network locations in the System Root view display a visual connection status indicator in the bottom-right of their folder icon: Green (connected/mounted), Grey (unknown/disconnected), and Red (failed/error). Selecting a disconnected location automatically triggers a connection attempt and mounts it.
@@ -316,10 +328,15 @@ Sphaira includes a robust file manager with standard operations (Cut, Paste, Ren
 
 ## Saves
 
-Backup, restore, and delete save data.
+Kefir Hub provides a full-featured save data management subsystem to backup, inspect, restore, synchronize, and delete save data:
 - **L/R Tab Switching:** Seamlessly navigate between "Installed Games", "Deleted Games", and "Backups" tabs using the **L** (previous tab) and **R** (next tab) shoulder buttons.
+- **Multi-Source Backup Grouping:** In the "Backups" tab, saves are categorized by their originating backup utility with clear visual section dividers: **Kefir Hub** (`sphaira v` ZIP archives), **DBI** (DBI save archives and metadata), **JKSV** (ZIP archives and directory backups), **Checkpoint**, and **Other**. Navigation wraps seamlessly between the first and last entries.
+- **Unpacked Folder Backup Restoration:** Natively detects unpacked folder backups created by JKSV and Checkpoint. When selected, Sphaira stages the folder structure into a verified in-memory ZIP package, validates its metadata and payload, and safely writes the save data to NAND.
+- **Automatic Save Creation for Uninstalled Games:** When restoring a backup for a game that is not currently installed on the console, Sphaira reads the Title ID, save type (Account/Device/BCAT), rank, and byte-aligned journal/save capacities directly from the archive metadata, creating a proper save container on NAND before extracting files without requiring separate confirmation prompts.
+- **Batch Restore ("Restore All"):** Selecting a game in Backups opens grouped save types (Account, Device, BCAT) partitioned by user profile and slot. Selecting **Restore All** performs pre-flight verification across all source archives and target slots, presents a unified target overview, and restores all saves sequentially.
+- **Game Tools Save Slot Manager:** Under **Games -> Options -> Saves** for any installed game, manage individual save slots: view exact `FsSaveDataInfo` attributes (space, rank, index, save ID, data/journal sizes), create new primary or secondary save slots for local user profiles, and safely extend/grow save slot capacity (`ExtendSaveDataChecked`) if a title requires more storage.
 - **Save Deletion:** Delete save data directly for installed and deleted games with safety confirmation dialogues, account filtering, and save type selection. For orphaned saves in the "Deleted Games" category, deleting the save completely removes the leftover game entry. In the "Backups" category, deleting removes backup files and archives from microSD storage.
-- **Automatic Save Creation on Restore:** When restoring backups on newly installed games or clean/rebuilt EmuNAND partitions where a live save filesystem does not exist yet on console, Sphaira automatically creates the save filesystem using metadata from the backup archive before extracting files.
+- **Read-Only MTP Saves Protection:** Exposing saves over USB MTP (**Show NAND Saves**) mounts saves in a clean hierarchy (`Game [TitleID] / User / ...`) in **read-only** mode to prevent host operating systems from inadvertently corrupting raw save containers.
 - **WebDAV Save Synchronization:** Synchronize your save game backups with a remote WebDAV server. Select "Sync with remote" from the save actions menu to upload local backups that are missing remotely, and download remote backups that are missing locally. The backup folder structure (e.g. `sphaira-saves/Save/Super Mario Odyssey`) is created automatically.
 - **Auto-Sync after Backup:** Enable "Auto-sync saves after backup" in Advanced Options. When active, Sphaira will automatically upload your newly created ZIP backup to the configured remote WebDAV server right after the local backup completes.
 
@@ -368,23 +385,6 @@ The project includes a developer-focused Python utility (`tools/module_catalog/u
 - **Evidence Verification:** Automatically verifies `tid_evidence` links to ensure they return a valid HTTP status and contain the exact 16-character Title ID.
 - **Runtime Generation:** Generates the offline modules catalog (`assets/romfs/modules/homebrew_sysmodules.json`) and localization key suggestions for the main application.
 - **Runtime Integration:** Module Manager loads the embedded catalog immediately, refreshes a validated SD index directly from ndeadly's maintained list in the background, and resolves descriptions through the regular i18n files with an English fallback.
-
-## System Interface Translations
-
-Sphaira features an integrated system interface translation manager located in Settings -> Translate Interface:
-- **Direct Upstream Integration:** Fetches release packages and metadata directly from the official `NX-Family/NX-Translation` repository, ensuring fast and up-to-date downloads without intermediary proxies or third-party mirrors.
-- **Firmware Matching & Safe Metadata Fallback:** Automatically matches installed Horizon OS (HOS) firmware versions (16.0.0 through 22.5.0) to corresponding release packages. For firmware revisions prior to 17.0.1 where upstream releases omit `api.json`, language and replacement metadata are seamlessly retrieved from the earliest versioned specification (`FW17.0.1-TR1.18`) while strictly respecting the assets available in the target release.
-- **Dual Scheme Asset Handling:** Seamlessly resolves modern (`NX-Translation_<id>.zip`) and legacy (`TR..._<id>_FW...zip`) archive filenames and unpacks into their appropriate internal folder structures.
-- **Safe Installation & Replacement:** Automatically uninstalls existing translation overlays before applying new ones to avoid filesystem conflicts, prompts for target replacement language variations matching the console's active language and region, and triggers an automated reboot to apply changes cleanly.
-
-## System Firmware Updates & Automated Downgrade Fix
-
-Sphaira provides full support for managing and installing Nintendo Switch system firmware updates and downgrades directly through **Kefir Updater**:
-- **Automated Post-Downgrade Fix (`downgrade_fix.te`):** When installing an older system firmware version (downgrade), Sphaira automatically stages an automated recovery script (`sd:/startup.te`) and launches TegraExplorer upon rebooting. The script disarms itself immediately to prevent bootloops, mounts the appropriate `SYSTEM` partition (EmuNAND or SysNAND), deletes system save `8000000000000073` to prevent Horizon OS downgrade panic errors, removes conflicting custom themes (`0100000000001000`, `0100000000001013`, `0100000000001007`, `00FF007468656D65`) and system translations (`0100000000000803`...`0100000000001015`), and reboots smoothly back into Hekate without requiring user button presses.
-- **Automatic Themes and Translations Removal on All Updates:** To prevent fatal crashes (`2162-0002`) and qlaunch incompatibilities after upgrading or changing system firmware, Sphaira unconditionally cleans all installed custom themes and interface translations from the microSD card (`/atmosphere/contents/`) immediately after applying any firmware installation, ensuring a smooth and crash-free reboot. Application-specific homebrew files (such as DBI translations) are safely preserved.
-- **Comprehensive Maintenance Mode Instructions:** The pre-downgrade warning dialog explains how to enter Horizon's Recovery / Maintenance Mode (`Volume +` and `Volume -` held after the bootlogos) and choose "Initialize Console Without Deleting Save Data". It also clarifies that after initialization, the SD card's `Nintendo` folder will become invalid and the console will prompt to delete it, reassuring the user that agreeing to delete it will NOT affect their saved games.
-- **Manual Guide Link & QR Code:** Features a scan-ready QR code and direct URL pointing to the official downgrade documentation (`https://switch.customfw.xyz/downgrade_fw`).
-- **Fully Localized Update & Reboot Notifications:** All firmware update confirmation prompts, validation error messages, downgrade recovery notices, theme/translation cleanup warnings, and post-installation reboot requests are fully localized through Sphaira's `i18n` translation engine across supported languages.
 
 ## Building from source
 
