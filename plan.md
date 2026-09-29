@@ -1,8 +1,16 @@
 # plan.md
 
-Версія коду: **v0.13.911**.
+Версія коду: **v0.13.912**.
 
-## Поточний delivery: v0.13.911 — скасування MTP передачі на microSD
+## Поточний delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
+
+Виправлено помилки компіляції та лінкування `libhaze`:
+1. У `include/haze/results.hpp` додано перевантаження `operator==` для `ams::Result` (порівняння двох `Result`, з `u32` та `int`), що забезпечило успішне порівняння `parse_res == 0x748C` у `usb_session.cpp` та `m_reactor->GetResult() == haze::ResultCancelled()` у `ptp_responder.cpp` і `ptp_responder_ptp_operations.cpp`.
+2. У `patch_libhaze_cancel.cmake` заміну `ops_read_ok` обмежено виключно методом `GetObject` (із контекстом `mode\n        ));`), усунувши помилкову підстановку `transfer_success = true;` у метод `GetObjectHandles`.
+3. Забезпечено повну ідемпотентність та дедуплікацію в секції 17 `patch_libhaze_cancel.cmake` для запобігання дублюванню скидання `m_reactor` при повторних конфігураціях CMake.
+Повна збірка `ReleaseWithInstall` у WSL успішно завершилася генерацією `sphaira_nro` (100%). Цільові Python контракти MTP та `git diff --check` пройшли. `TegraExplorer.bin` поза delivery.
+
+## Попередній delivery: v0.13.911 — скасування MTP передачі на microSD
 
 Підтвердження B → «Так» під час копіювання передає сигнал скасування в libhaze й закриває ProgressBox без повторного відкриття. Неповний файл і його MTP об'єкт видаляються після перерваного SendObject. Натискання B після завершення файла не скасовує наступну передачу. Для обриву URB обробляється результат 0x748C; момент надходження цього результату від ПК не гарантований. Патч libhaze перевірено на чистому HEAD і повторним запуском; MTP Python контракти, перевірка патча та `git diff --check` пройшли. C++ збірку та перевірку на Switch/ПК не виконано. `TegraExplorer.bin` поза delivery.
 

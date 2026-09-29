@@ -1,6 +1,18 @@
 # walkthrough.md
 
-Актуальний delivery у коді — **v0.13.911** (2026-09-29).
+Актуальний delivery у коді — **v0.13.912** (2026-09-29).
+
+## v0.13.912 — виправлення збірки C++ та патча libhaze
+
+- Усунено помилки компіляції `operator==` у `libhaze`:
+  - У `include/haze/results.hpp` додано inline перевантаження `operator==` для `ams::Result` (порівняння `Result` з `Result`, `u32` та `int`), що дозволило коректно порівнювати `parse_res == 0x748C` у `usb_session.cpp` та `m_reactor->GetResult() == haze::ResultCancelled()` у `ptp_responder.cpp` і `ptp_responder_ptp_operations.cpp`.
+- Усунено помилку `'transfer_success' was not declared in this scope` у `ptp_responder_ptp_operations.cpp`:
+  - Заміну `ops_read_ok` у `sphaira/cmake/patch_libhaze_cancel.cmake` звужено контекстом `}, mode\n        ));`, щоб вона застосовувалася виключно до операції `GetObject`, не зачіпаючи `GetObjectHandles`.
+- Виправлено ідемпотентність патча `patch_libhaze_cancel.cmake`:
+  - Усунено багаторазове дублювання перевірки `if (m_reactor && m_reactor->GetResult() == haze::ResultCancelled())` при повторних запусках конфігурації CMake, додано автоматичну дедуплікацію.
+- Виконано повну компіляцію у WSL через `cmake --build --preset ReleaseWithInstall --parallel $(nproc)`: таргет `sphaira_nro` побудовано успішно (100%).
+- Проведено паралельну валідацію цільових MTP Python контрактів (`test_mtp_cancellation_contract.py`, `test_mtp_routing_and_minibadge_contract.py`, `test_mtp_transfer_lifecycle_contract.py`) та скрипта `test_patch_libhaze.sh` — усі тести пройшли.
+- `git diff --check` перевірено — чисто. `TegraExplorer.bin` залишено поза delivery.
 
 ## v0.13.911 — скасування MTP передачі на microSD
 

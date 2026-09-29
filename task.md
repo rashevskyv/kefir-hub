@@ -1,8 +1,19 @@
 # task.md
 
-Версія коду: **v0.13.911**.
+Версія коду: **v0.13.912**.
 
-## Поточний delivery: v0.13.911 — скасування MTP передачі на microSD
+## Поточний delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
+
+- [x] `BUILD-OPERATOR-912` — додати перевантаження `operator==` для `ams::Result` у `include/haze/results.hpp`.
+- [x] `BUILD-SCOPE-912` — звузити заміну `ops_read_ok` до `GetObject` у `patch_libhaze_cancel.cmake` без зачіпання `GetObjectHandles`.
+- [x] `BUILD-IDEMPOTENT-912` — усунути дублювання блоків перевірки `m_reactor` та надати безпечну дедуплікацію.
+- [x] `BUILD-VERIFY-912` — повна збірка `ReleaseWithInstall` у WSL з генерацією `sphaira_nro` (100%).
+- [x] `TESTS-PARALLEL-912` — паралельний запуск цільових MTP контрактів та перевірки патча libhaze.
+- [x] `DOCS-BUMP-912` — оновити версію й delivery-документи.
+- [x] `COMMIT-912` — сфокусований commit на primary master без ROMFS binary.
+- [ ] Перевірити бінарник `sphaira_nro` та скасування MTP на Switch/ПК.
+
+## Попередній delivery: v0.13.911 — скасування MTP передачі на microSD
 
 - [x] `MTP-CANCEL-911` — передати підтверджене скасування в libhaze, завершити UI без повторного відкриття та видалити неповний файл.
 - [x] `MTP-LIFECYCLE-911` — захистити наступний файл і вихід MTP від запізнілого сигналу та взаємного блокування.
