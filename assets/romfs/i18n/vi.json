@@ -2051,5 +2051,12 @@
   "Sep": "thg9",
   "Oct": "thg10",
   "Nov": "thg11",
-  "Dec": "thg12"
+  "Dec": "thg12",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Không gian địa chỉ ảo được cấp cho forwarder. Tự động sử dụng 39-bit; 36-bit khả dụng cho tính tương thích.",
+  "CPU cores": "Số lõi CPU",
+  "CPU Cores": "Số lõi CPU",
+  "3 cores": "3 lõi",
+  "4 cores": "4 lõi",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "Số lõi CPU khả dụng cho forwarder. Mặc định là 3 lõi; 4 lõi mở khóa lõi 3 cho homebrew nặng.",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "Lõi 3 được chia sẻ với các dịch vụ hệ thống. Homebrew không có thread affinity phù hợp có thể gây giật lag hoặc mất ổn định."
 }

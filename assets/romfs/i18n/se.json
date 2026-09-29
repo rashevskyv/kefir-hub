@@ -2051,5 +2051,12 @@
   "Sep": "sep",
   "Oct": "okt",
   "Nov": "nov",
-  "Dec": "dec"
+  "Dec": "dec",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Virtuellt adressutrymme som tilldelas forwardern. Automatiskt används 39-bitars; 36-bitars är tillgängligt för kompatibilitet.",
+  "CPU cores": "CPU-kärnor",
+  "CPU Cores": "CPU-kärnor",
+  "3 cores": "3 kärnor",
+  "4 cores": "4 kärnor",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "CPU-kärnor tillgängliga för forwardern. Standard är 3 kärnor; 4 kärnor låser upp kärna 3 för krävande homebrew.",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "Kärna 3 delas med systemtjänster. Homebrew utan korrekt trådaffinitet kan orsaka lagg eller instabilitet."
 }

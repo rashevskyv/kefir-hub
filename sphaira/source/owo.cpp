@@ -99,7 +99,8 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
         npdm_patch.tid = tid;
         npdm_patch.address_space = options.address_space;
         npdm_patch.svc_debug_mode = options.svc_debug_mode;
-        patch_npdm(exefs[1].data, npdm_patch);
+        npdm_patch.core_mode = options.core_mode;
+        R_UNLESS(patch_npdm(exefs[1].data, npdm_patch), Result_OwoBadArgs);
 
         nca_entries.emplace_back(
             create_program_nca(tid, keys, exefs, romfs, logo)

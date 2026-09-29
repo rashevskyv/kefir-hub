@@ -44,7 +44,22 @@ auto npdm_patch_kc(std::vector<u8>& npdm, u32 off, u32 size, u32 bitmask, u32 va
     return false;
 }
 
-void patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) {
+constexpr auto npdm_kernel_flags(CpuCoreMode mode) -> u32 {
+    const u32 lowest_priority = mode == CpuCoreMode::Four ? 63 : 59;
+    const u32 highest_priority = 28;
+    const u32 lowest_cpu = 0;
+    const u32 highest_cpu = mode == CpuCoreMode::Four ? 3 : 2;
+    const u32 descriptor = (((highest_cpu << 8) | lowest_cpu) << 6 | highest_priority) << 6 | lowest_priority;
+    return descriptor << 4;
+}
+
+static_assert((npdm_kernel_flags(CpuCoreMode::Three) | 0x7) == 0x020073B7);
+static_assert((npdm_kernel_flags(CpuCoreMode::Four) | 0x7) == 0x030073F7);
+
+auto patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) -> bool {
+    constexpr u8 ADDRESS_SPACE_SHIFT = 1;
+    constexpr u8 ADDRESS_SPACE_MASK = 0x7 << ADDRESS_SPACE_SHIFT;
+
     npdm::Meta meta{};
     npdm::Aci0 aci0{};
     npdm::Acid acid{};
@@ -56,10 +71,14 @@ void patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) {
     std::memcpy(meta.title_name, &patch.title_name, sizeof(meta.title_name));
     std::memcpy(meta.product_code, &patch.product_code, sizeof(patch.product_code));
     // ProcessAddressSpace lives in bits 1-3 of the meta flags.
-    meta.flags = (meta.flags & ~0x0E) | (static_cast<u8>(patch.address_space) << 1);
+    meta.flags = (meta.flags & ~ADDRESS_SPACE_MASK) | (static_cast<u8>(patch.address_space) << ADDRESS_SPACE_SHIFT);
     aci0.program_id = patch.tid;
     acid.program_id_min = patch.tid;
     acid.program_id_max = patch.tid;
+
+    const auto kernel_flags = npdm_kernel_flags(patch.core_mode);
+    const auto aci0_core_patched = npdm_patch_kc(npdm, meta.aci0_offset + aci0.kac_offset, aci0.kac_size, 3, kernel_flags);
+    const auto acid_core_patched = npdm_patch_kc(npdm, meta.acid_offset + acid.kac_offset, acid.kac_size, 3, kernel_flags);
 
     // patch debug flags based on ams version
     // SEE: https://github.com/ITotalJustice/sphaira/issues/67
@@ -85,6 +104,7 @@ void patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) {
     std::memcpy(npdm.data(), &meta, sizeof(meta));
     std::memcpy(npdm.data() + meta.aci0_offset, &aci0, sizeof(aci0));
     std::memcpy(npdm.data() + meta.acid_offset, &acid, sizeof(acid));
+    return aci0_core_patched && acid_core_patched;
 }
 
 void patch_nacp(NacpStruct& nacp, const NcapPatch& patch) {

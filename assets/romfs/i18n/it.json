@@ -2051,5 +2051,12 @@
   "Sep": "set",
   "Oct": "ott",
   "Nov": "nov",
-  "Dec": "dic"
+  "Dec": "dic",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Spazio di indirizzamento virtuale assegnato al forwarder. Automatico usa 39 bit; 36 bit è disponibile per compatibilità.",
+  "CPU cores": "Core della CPU",
+  "CPU Cores": "Core della CPU",
+  "3 cores": "3 core",
+  "4 cores": "4 core",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "Core della CPU disponibili per il forwarder. Il valore predefinito è 3 core; 4 core sblocca il core 3 per homebrew esigenti.",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "Il core 3 è condiviso con i servizi di sistema. Gli homebrew senza corretta affinità di thread possono causare rallentamenti o instabilità."
 }

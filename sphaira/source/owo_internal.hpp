@@ -105,8 +105,9 @@ struct NpdmPatch {
     char title_name[0x10]{"Application"};
     char product_code[0x10]{};
     u64 tid;
-    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit36};
+    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit39};
     ForwarderSvcDebugMode svc_debug_mode{ForwarderSvcDebugMode::Automatic};
+    CpuCoreMode core_mode{CpuCoreMode::Three};
 };
 
 struct NcapPatch {
@@ -122,7 +123,7 @@ auto write_padding(BufHelper& buf, u64 off, u64 block) -> u64;
 auto romfs_build(const FileEntries& entries, u64 *out_size) -> std::vector<u8>;
 void build_romfs_into_file(const FileEntries& entries, BufHelper& buf);
 
-void patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch);
+auto patch_npdm(std::vector<u8>& npdm, const NpdmPatch& patch) -> bool;
 void patch_nacp(NacpStruct& nacp, const NcapPatch& patch);
 void add_file_entry(FileEntries& entries, const char* name, const void* data, u64 size);
 void add_file_entry(FileEntries& entries, const char* name, std::span<const u8> data);

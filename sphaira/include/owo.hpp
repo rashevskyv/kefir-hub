@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "ui/progress_box.hpp"
+#include "utils/core.hpp"
 
 namespace sphaira {
 
@@ -23,7 +24,8 @@ enum class ForwarderSvcDebugMode : u8 {
 
 struct ForwarderOptions {
     bool profile_selection{};
-    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit36};
+    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit39};
+    CpuCoreMode core_mode{CpuCoreMode::Three};
     bool screenshot{true};
     bool video_capture{true};
     ForwarderSvcDebugMode svc_debug_mode{ForwarderSvcDebugMode::Automatic};

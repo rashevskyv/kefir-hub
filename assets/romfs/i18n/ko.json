@@ -2051,5 +2051,12 @@
   "Sep": "9월",
   "Oct": "10월",
   "Nov": "11월",
-  "Dec": "12월"
+  "Dec": "12월",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "포워더에 할당된 가상 주소 공간. 자동은 39비트를 사용하며, 호환성을 위해 36비트를 사용할 수 있습니다.",
+  "CPU cores": "CPU 코어",
+  "CPU Cores": "CPU 코어",
+  "3 cores": "코어 3개",
+  "4 cores": "코어 4개",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "포워더에서 사용할 수 있는 CPU 코어입니다. 기본값은 3개이며, 4개는 고사양 홈브루를 위해 코어 3을 활성화합니다.",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "코어 3은 시스템 서비스와 공유됩니다. 적절한 스레드 선호도가 없는 홈브루는 지연이나 불안정성을 유발할 수 있습니다."
 }

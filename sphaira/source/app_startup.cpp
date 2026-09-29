@@ -305,6 +305,7 @@ App::App(const char* argv0) {
             else if (app->m_forwarder_screenshot.LoadFrom(Key, Value)) {}
             else if (app->m_forwarder_video_capture.LoadFrom(Key, Value)) {}
             else if (app->m_forwarder_svc_debug.LoadFrom(Key, Value)) {}
+            else if (app->m_forwarder_cpu_cores.LoadFrom(Key, Value)) {}
             else if (app->m_forwarder_ask.LoadFrom(Key, Value)) {}
             else if (app->m_install_reserve_mb.LoadFrom(Key, Value)) {}
             else if (app->m_install_reserve_sd_mb.LoadFrom(Key, Value)) {}

@@ -274,6 +274,7 @@ auto BuildFtpItems() -> std::vector<SettingsItem> {
 
 auto BuildForwarderItems() -> std::vector<SettingsItem> {
     static constexpr const char* ADDRESS_SPACE_LABELS[] = { "Automatic", "36-bit", "39-bit" };
+    static constexpr const char* CPU_CORE_LABELS[] = { "3 cores", "4 cores" };
     static constexpr const char* SVC_DEBUG_LABELS[] = { "Automatic", "Enabled", "Disabled" };
 
     auto app = App::GetApp();
@@ -287,7 +288,7 @@ auto BuildForwarderItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(SettingsItem{
         "Address space"_i18n,
-        "Virtual address space given to the forwarder. Automatic uses 36-bit; 39-bit is for homebrew that needs the wider space."_i18n,
+        "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility."_i18n,
         [](){ return i18n::get(ADDRESS_SPACE_LABELS[App::GetForwarderAddressSpace()]); },
         [](){
             PopupList::Items list;
@@ -299,6 +300,36 @@ auto BuildForwarderItems() -> std::vector<SettingsItem> {
                     App::SetForwarderAddressSpace(*op_index);
                 }
             }, App::GetForwarderAddressSpace());
+        }
+    });
+
+    items.emplace_back(SettingsItem{
+        "CPU cores"_i18n,
+        "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew."_i18n,
+        [](){ return i18n::get(CPU_CORE_LABELS[App::GetForwarderCpuCores() == 4 ? 1 : 0]); },
+        [](){
+            PopupList::Items list;
+            for (const auto& label : CPU_CORE_LABELS) {
+                list.push_back(i18n::get(label));
+            }
+            App::Push<PopupList>("CPU cores"_i18n, std::move(list), [](std::optional<s64> op_index){
+                if (!op_index) {
+                    return;
+                }
+                if (*op_index == 1) {
+                    App::Push<OptionBox>(
+                        "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability."_i18n,
+                        "Cancel"_i18n, "Enable"_i18n, 0,
+                        [](std::optional<s64> opt) {
+                            if (opt && *opt == 1) {
+                                App::SetForwarderCpuCores(4);
+                            }
+                        }
+                    );
+                } else {
+                    App::SetForwarderCpuCores(3);
+                }
+            }, App::GetForwarderCpuCores() == 4 ? 1 : 0);
         }
     });
 

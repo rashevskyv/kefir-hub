@@ -2051,5 +2051,12 @@
   "Sep": "9月",
   "Oct": "10月",
   "Nov": "11月",
-  "Dec": "12月"
+  "Dec": "12月",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "フォワーダーに割り当てられた仮想アドレス空間。自動では39ビットを使用します。互換性のために36ビットも利用可能です。",
+  "CPU cores": "CPUコア",
+  "CPU Cores": "CPUコア",
+  "3 cores": "3コア",
+  "4 cores": "4コア",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "フォワーダーで利用可能なCPUコア。デフォルトは3コア。4コアは負荷の高い自作ソフト向けにコア3を解放します。",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "コア3はシステムサービスと共有されます。適切なスレッドアフィニティを持たないHomebrewは遅延や不安定性を引き起こす可能性があります。"
 }

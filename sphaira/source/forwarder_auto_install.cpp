@@ -247,6 +247,7 @@ auto InstallKefirHubForwarder(u64 kefirhub_tid) -> bool {
 
     ForwarderOptions options{};
     options.address_space = ForwarderAddressSpace::Bit39;
+    options.core_mode = CpuCoreMode::Three;
     options.screenshot = true;
     options.video_capture = true;
     options.profile_selection = false;

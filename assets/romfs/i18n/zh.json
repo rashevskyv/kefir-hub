@@ -2105,5 +2105,12 @@
   "Sep": "9月",
   "Oct": "10月",
   "Nov": "11月",
-  "Dec": "12月"
+  "Dec": "12月",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "分配给转发器的虚拟地址空间。自动模式使用 39 位；36 位用于兼容性。",
+  "CPU cores": "CPU 核心",
+  "CPU Cores": "CPU 核心",
+  "3 cores": "3 个核心",
+  "4 cores": "4 个核心",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "转发器可用的 CPU 核心。默认为 3 个核心；4 个核心可为高负载自制软件解锁核心 3。",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "核心 3 与系统服务共享。未正确设置线程亲和性的自制软件可能会导致卡顿或不稳定。"
 }

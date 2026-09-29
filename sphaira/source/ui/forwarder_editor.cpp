@@ -34,6 +34,7 @@ enum class Row {
     Version,
     ProfileSelection,
     AddressSpace,
+    CpuCores,
     Screenshot,
     VideoCapture,
     SvcDebug,
@@ -72,6 +73,7 @@ public:
         if (m_show_forwarder_options) {
             m_rows.emplace_back(Row::ProfileSelection);
             m_rows.emplace_back(Row::AddressSpace);
+            m_rows.emplace_back(Row::CpuCores);
             m_rows.emplace_back(Row::Screenshot);
             m_rows.emplace_back(Row::VideoCapture);
             m_rows.emplace_back(Row::SvcDebug);
@@ -286,6 +288,23 @@ private:
                 m_values.options.address_space = m_values.options.address_space == ForwarderAddressSpace::Bit36
                     ? ForwarderAddressSpace::Bit39 : ForwarderAddressSpace::Bit36;
                 break;
+            case Row::CpuCores:
+                if (m_values.options.core_mode == CpuCoreMode::Three) {
+                    App::Push<OptionBox>(
+                        "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability."_i18n,
+                        "Cancel"_i18n, "Enable"_i18n, 0,
+                        [weak_alive = std::weak_ptr<bool>(m_alive), this](auto opt) {
+                            if (auto alive = weak_alive.lock(); alive && *alive) {
+                                if (opt && *opt == 1) {
+                                    m_values.options.core_mode = CpuCoreMode::Four;
+                                }
+                            }
+                        }
+                    );
+                } else {
+                    m_values.options.core_mode = CpuCoreMode::Three;
+                }
+                break;
             case Row::Screenshot:
                 m_values.options.screenshot = !m_values.options.screenshot;
                 break;
@@ -444,6 +463,7 @@ private:
             case Row::Version: return "Version (optional)"_i18n;
             case Row::ProfileSelection: return "Profile Selection"_i18n;
             case Row::AddressSpace: return "Address Space"_i18n;
+            case Row::CpuCores: return "CPU Cores"_i18n;
             case Row::Screenshot: return "Screenshots"_i18n;
             case Row::VideoCapture: return "Video Capture"_i18n;
             case Row::Create: return {};
@@ -460,6 +480,7 @@ private:
             case Row::Version: return m_values.version;
             case Row::ProfileSelection: return m_values.options.profile_selection ? "Enabled"_i18n : "Disabled"_i18n;
             case Row::AddressSpace: return m_values.options.address_space == ForwarderAddressSpace::Bit36 ? "36-bit"_i18n : "39-bit"_i18n;
+            case Row::CpuCores: return m_values.options.core_mode == CpuCoreMode::Four ? "4 cores"_i18n : "3 cores"_i18n;
             case Row::Screenshot: return m_values.options.screenshot ? "Enabled"_i18n : "Disabled"_i18n;
             case Row::VideoCapture:
                 if (!m_values.options.screenshot) {

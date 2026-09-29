@@ -173,6 +173,8 @@ public:
     static auto GetForwarderAsk() -> bool;
     static auto GetForwarderAddressSpace() -> long;
     static void SetForwarderAddressSpace(long mode);
+    static auto GetForwarderCpuCores() -> long;
+    static void SetForwarderCpuCores(long cores);
     static auto GetAnimatedWavesEnable() -> bool;
     static auto GetWaveColorDark() -> std::string;
     static auto GetWaveColorLight() -> std::string;
@@ -496,6 +498,8 @@ public:
     option::OptionBool m_forwarder_video_capture{INI_SECTION, "forwarder_video_capture", true};
     // svcDebug kac bit: 0 = auto (follow the ams version), 1 = on, 2 = off.
     option::OptionLong m_forwarder_svc_debug{INI_SECTION, "forwarder_svc_debug", 0};
+    // forwarder cpu cores: 3 = 3 cores (default), 4 = 4 cores.
+    option::OptionLong m_forwarder_cpu_cores{INI_SECTION, "forwarder_cpu_cores", 3};
     // when set, forwarder creation opens the editor instead of using the defaults above.
     option::OptionBool m_forwarder_ask{INI_SECTION, "forwarder_ask", false};
     // free space kept back on each target; NAND and SD are set separately.

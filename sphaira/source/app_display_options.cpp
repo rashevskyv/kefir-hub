@@ -14,6 +14,7 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
+#include <memory>
 
 namespace sphaira {
 
@@ -175,7 +176,38 @@ void App::DisplayForwarderOptions(bool left_side) {
     options->Add<ui::SidebarEntryArray>("Address space"_i18n, address_space_items, [](s64& index_out){
         g_app->m_forwarder_address_space.Set(index_out);
     }, std::clamp<s64>(g_app->m_forwarder_address_space.Get(), 0, 2),
-        "Virtual address space given to the forwarder. Automatic uses 36-bit; 39-bit is for homebrew that needs the wider space."_i18n);
+        "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility."_i18n);
+
+    struct CpuEntryCtx {
+        ui::SidebarEntryArray* entry{};
+    };
+    auto cpu_ctx = std::make_shared<CpuEntryCtx>();
+    ui::SidebarEntryArray::Items cpu_items;
+    cpu_items.push_back("3 cores"_i18n);
+    cpu_items.push_back("4 cores"_i18n);
+    const s64 initial_cpu_idx = App::GetForwarderCpuCores() == 4 ? 1 : 0;
+    cpu_ctx->entry = options->Add<ui::SidebarEntryArray>("CPU cores"_i18n, cpu_items, [cpu_ctx](s64& index_out){
+        if (index_out == 1) {
+            index_out = 0;
+            App::Push<ui::OptionBox>(
+                "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability."_i18n,
+                "Cancel"_i18n, "Enable"_i18n, 0,
+                [weak_ctx = std::weak_ptr<CpuEntryCtx>(cpu_ctx)](std::optional<s64> opt) {
+                    if (opt && *opt == 1) {
+                        App::SetForwarderCpuCores(4);
+                        if (auto ctx = weak_ctx.lock()) {
+                            if (ctx->entry) {
+                                ctx->entry->SetIndex(1);
+                            }
+                        }
+                    }
+                }
+            );
+        } else {
+            App::SetForwarderCpuCores(3);
+        }
+    }, initial_cpu_idx,
+        "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew."_i18n);
 
     options->Add<ui::SidebarEntryBool>("Profile selection"_i18n, g_app->m_forwarder_profile_select,
         "Prompt for a user profile when the forwarder is launched."_i18n);

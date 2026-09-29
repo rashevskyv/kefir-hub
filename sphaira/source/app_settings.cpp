@@ -140,11 +140,11 @@ auto App::GetInstallReserveSdMb() -> long {
 auto App::GetForwarderOptions() -> ForwarderOptions {
     ForwarderOptions out{};
     out.profile_selection = g_app->m_forwarder_profile_select.Get();
-    // ponytail: 0 = auto, 1 = 36-bit, 2 = 39-bit. auto is identical to 36-bit
-    // until we have a list of nros known to need the wider space; once that
-    // list exists, auto should look up nro_path and pick 39-bit for matches.
-    out.address_space = GetForwarderAddressSpace() == 2
-        ? ForwarderAddressSpace::Bit39 : ForwarderAddressSpace::Bit36;
+    // 0 = auto (39-bit), 1 = 36-bit (explicit compatibility), 2 = 39-bit.
+    out.address_space = GetForwarderAddressSpace() == 1
+        ? ForwarderAddressSpace::Bit36 : ForwarderAddressSpace::Bit39;
+    out.core_mode = GetForwarderCpuCores() == 4
+        ? CpuCoreMode::Four : CpuCoreMode::Three;
     out.screenshot = g_app->m_forwarder_screenshot.Get();
     out.video_capture = g_app->m_forwarder_video_capture.Get();
     switch (g_app->m_forwarder_svc_debug.Get()) {
@@ -165,6 +165,14 @@ auto App::GetForwarderAddressSpace() -> long {
 
 void App::SetForwarderAddressSpace(long mode) {
     g_app->m_forwarder_address_space.Set(std::clamp<long>(mode, 0, 2));
+}
+
+auto App::GetForwarderCpuCores() -> long {
+    return g_app->m_forwarder_cpu_cores.Get() == 4 ? 4 : 3;
+}
+
+void App::SetForwarderCpuCores(long cores) {
+    g_app->m_forwarder_cpu_cores.Set(cores == 4 ? 4 : 3);
 }
 
 auto App::GetBlankMode() -> long {

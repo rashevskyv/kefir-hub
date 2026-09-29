@@ -41,7 +41,7 @@ Manage custom system interface localizations under **Settings -> Translate Inter
 Create custom HOME Menu forwarder NSPs for homebrew applications via **Tools -> Create Forwarder**:
 - **SteamGridDB Integration:** Search SteamGridDB directly from the console for high-resolution vertical cover art. Paste an API key manually or use the built-in mobile handoff (`/apikey`) via QR code.
 - **Automatic Forwarder Detection & EmuNAND Safeguard:** On startup, Kefir Hub checks if a forwarder is installed. If missing, it installs one silently in the background on EmuNAND. To protect clean setups, automatic forwarder installation is strictly suppressed on SysNAND and Semi-Stock.
-- **Custom Launch Flags:** Configure address space limits (Automatic / 36-bit / 39-bit), video capture, and `svcDebug` flags per forwarder.
+- **Custom Launch Flags:** New forwarders use 39-bit address space and 3 CPU cores by default. Choose 36-bit for compatibility, or explicitly enable 4 cores after a warning that core 3 is shared with system services. Configure these defaults in Forwarder Options, or enable **Ask every time** to adjust them per forwarder. Profile selection, screenshots, video capture, and `svcDebug` are also available. Changing defaults does not update forwarders already installed on the HOME Menu; recreate those forwarders to apply new settings.
 
 ---
 

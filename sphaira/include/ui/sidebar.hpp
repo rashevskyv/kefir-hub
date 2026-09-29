@@ -183,6 +183,10 @@ public:
         m_disabled = disabled;
     }
 
+    void SetIndex(s64 index) {
+        m_index = index;
+    }
+
 private:
     Items m_items;
     ListCallback m_list_callback;

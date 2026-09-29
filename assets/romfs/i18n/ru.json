@@ -2465,5 +2465,12 @@
   "Sep": "сент.",
   "Oct": "окт.",
   "Nov": "нояб.",
-  "Dec": "дек."
+  "Dec": "дек.",
+  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Виртуальное адресное пространство форвардера. Автоматически — 39-бит; 36-бит для совместимости.",
+  "CPU cores": "Ядра ЦП",
+  "CPU Cores": "Ядра ЦП",
+  "3 cores": "3 ядра",
+  "4 cores": "4 ядра",
+  "CPU cores available to the forwarder. Default is 3 cores; 4 cores unlocks core 3 for demanding homebrew.": "Количество ядер ЦП для форвардера. По умолчанию 3 ядра; 4 ядра открывают ядро 3 для ресурсоёмких Homebrew.",
+  "Core 3 is shared with system services. Homebrew without proper thread affinity may cause lag or instability.": "Ядро 3 разделяется с системными службами. Homebrew без правильного thread affinity может вызвать лаги или нестабильность."
 }
