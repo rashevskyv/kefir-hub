@@ -55,9 +55,9 @@ extern ui::ProgressBox* g_mtp_pbox;
 extern UEvent g_mtp_done_event;
 extern bool g_mtp_ui_alive;
 extern std::string g_mtp_current_filename;
-extern std::atomic<bool> g_mtp_new_transfer;
 extern bool g_mtp_transfer_active;
 extern u64 g_mtp_transfer_seq;
+extern u64 g_mtp_handled_seq;
 
 extern std::vector<PinnedMount> g_pinned;
 extern ::haze::FsEntries g_fs_entries;

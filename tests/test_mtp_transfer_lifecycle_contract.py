@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
 """
-Regression contract and behavioral state-machine test for MTP transfer UI lifecycle.
+Regression contract and static analysis verification for MTP transfer UI lifecycle.
 
-Verifies the fix for the MTP progress banner hang where the banner lingered
-on-screen displaying the name of the final file after Windows finished copying.
-
-Root Cause:
-In the legacy implementation:
-1. The worker loop used ueventClear(&g_mtp_done_event) upon detecting a new file
-   (has_new == true) during the post-completion grace period.
-2. For rapid file transfers (common in firmware packs with many small NCAs/metadata),
-   a file's WriteBegin AND WriteEnd could occur while the worker was sleeping or
-   transitioning.
-3. The subsequent ueventClear destroyed the WriteEnd completion signal for that file.
-4. When this occurred on the final file in a batch, no further WriteEnd ever arrived,
-   and waitSingle waited indefinitely, hanging the ProgressBox with the final filename.
-
-The fix replaces fragile event-clearing with explicit state tracking under g_mtp_ui_mutex:
-- g_mtp_transfer_active (bool: true during active transfer, false once ended)
-- g_mtp_transfer_seq (u64 sequence counter incremented on every ReadBegin/WriteBegin)
-- The worker loop relies on g_mtp_transfer_active and sequence checks rather than manual
-  event clears, ensuring no completion signal is ever lost.
+Verifies the fix for:
+1. MTP banner lingering after transfers complete.
+2. Edge Case 1: Post-transfer idle countdown reset on new transfer sequence so
+   rapid/short files that start and finish between worker polls receive a full 1.5s
+   display window instead of inheriting stale timestamps.
+3. Edge Case 2: Window between worker exit and ProgressBox done callback elimination.
+   Ensures Begin in this window does not lose the banner for an active transfer,
+   maintains a single ProgressBox, prevents double PushTransfer, and fails closed
+   without hanging on PushTransfer refusal.
+4. Clean termination on CloseSession and Exit.
 """
 
-import os
+import re
 import sys
 from pathlib import Path
 
@@ -39,183 +30,166 @@ def check(condition: bool, msg: str) -> None:
         sys.exit(1)
 
 
-def test_source_contracts() -> None:
+def load_sources() -> tuple[str, str, str]:
     hpp_src = INTERNAL_HPP.read_text(encoding="utf-8")
     cpp_src = INTERNAL_CPP.read_text(encoding="utf-8")
     helper_src = HELPER_CPP.read_text(encoding="utf-8")
+    return hpp_src, cpp_src, helper_src
 
-    # 1. State declarations & definitions
+
+def extract_block(source: str, start_marker: str, end_marker: str) -> str:
+    start_idx = source.find(start_marker)
+    check(start_idx != -1, f"Start marker not found: {start_marker}")
+    end_idx = source.find(end_marker, start_idx + len(start_marker))
+    check(end_idx != -1, f"End marker not found: {end_marker}")
+    return source[start_idx : end_idx + len(end_marker)]
+
+
+def test_state_contracts(hpp_src: str, cpp_src: str, helper_src: str) -> None:
+    # 1. State declarations in header
     check("extern bool g_mtp_transfer_active;" in hpp_src, "g_mtp_transfer_active missing in haze_internal.hpp")
     check("extern u64 g_mtp_transfer_seq;" in hpp_src, "g_mtp_transfer_seq missing in haze_internal.hpp")
-    check("bool g_mtp_transfer_active{false};" in cpp_src, "g_mtp_transfer_active missing in haze_internal.cpp")
-    check("u64 g_mtp_transfer_seq{0};" in cpp_src, "g_mtp_transfer_seq missing in haze_internal.cpp")
+    check("extern u64 g_mtp_handled_seq;" in hpp_src, "g_mtp_handled_seq missing in haze_internal.hpp")
+    check("extern bool g_mtp_ui_alive;" in hpp_src, "g_mtp_ui_alive missing in haze_internal.hpp")
 
-    # 2. Begin handler sets active & increments seq
-    check("g_mtp_transfer_active = true;" in helper_src, "g_mtp_transfer_active = true missing in haze_helper.cpp")
-    check("g_mtp_transfer_seq++;" in helper_src, "g_mtp_transfer_seq++ missing in haze_helper.cpp")
+    # 2. State definitions in translation unit
+    check("bool g_mtp_transfer_active{false};" in cpp_src, "g_mtp_transfer_active definition missing in haze_internal.cpp")
+    check("u64 g_mtp_transfer_seq{0};" in cpp_src, "g_mtp_transfer_seq definition missing in haze_internal.cpp")
+    check("u64 g_mtp_handled_seq{0};" in cpp_src, "g_mtp_handled_seq definition missing in haze_internal.cpp")
+    check("bool g_mtp_ui_alive{false};" in cpp_src, "g_mtp_ui_alive definition missing in haze_internal.cpp")
 
-    # 3. End handler sets active to false
-    check("g_mtp_transfer_active = false;" in helper_src, "g_mtp_transfer_active = false missing in haze_helper.cpp")
-
-    # 4. Disconnect handling resets active and requests exit
-    check("g_mtp_pbox->RequestExit();" in helper_src, "RequestExit missing in haze_helper.cpp")
-
-    # 5. Worker thread loop must NOT manually clear g_mtp_done_event inside the loop
-    # (ueventClear inside while loop was the direct cause of dropped completion events)
-    worker_loop_start = helper_src.find("while (!pbox->ShouldExit() && !g_should_exit)")
-    check(worker_loop_start != -1, "Worker while loop not found in haze_helper.cpp")
-    worker_loop_end = helper_src.find("R_SUCCEED();", worker_loop_start)
-    check(worker_loop_end != -1, "Worker loop end not found in haze_helper.cpp")
-    worker_loop_body = helper_src[worker_loop_start:worker_loop_end]
-
-    check("ueventClear" not in worker_loop_body, "ueventClear must NOT be called inside worker while loop")
-
-    # 6. Idle timeout check requires inactive transfer and stable sequence
-    check("!g_mtp_transfer_active && g_mtp_transfer_seq == last_seq" in worker_loop_body,
-          "Worker loop must verify !g_mtp_transfer_active and stable sequence before exit")
+    # 3. State initialization in Init()
+    init_block = extract_block(helper_src, "bool Init()", "return g_is_running = true;")
+    check("g_mtp_transfer_active = false;" in init_block, "Init() must reset g_mtp_transfer_active")
+    check("g_mtp_transfer_seq = 0;" in init_block, "Init() must reset g_mtp_transfer_seq")
+    check("g_mtp_handled_seq = 0;" in init_block, "Init() must reset g_mtp_handled_seq")
+    check("g_mtp_ui_alive = false;" in init_block, "Init() must reset g_mtp_ui_alive")
 
 
-class LegacyMtpUiSimulation:
-    """Simulates the legacy UI loop behavior."""
-    def __init__(self):
-        self.done_event = False
-        self.new_transfer = False
-        self.should_exit = False
-        self.hung = False
+def test_single_file_contract(helper_src: str) -> None:
+    # Begin handler
+    begin_block = extract_block(helper_src, "case ::haze::CallbackType_ReadBegin:", "break;\n        }")
+    check("g_mtp_transfer_active = true;" in begin_block, "Begin must set g_mtp_transfer_active = true")
+    check("g_mtp_transfer_seq++;" in begin_block, "Begin must increment g_mtp_transfer_seq++")
+    check("!g_mtp_ui_alive" in begin_block, "Begin must check !g_mtp_ui_alive before triggering UI")
+    check("ueventSignal(&g_mtp_done_event);" in begin_block, "Begin must signal g_mtp_done_event")
+    check("StartMtpProgressBox();" in begin_block, "Begin must call StartMtpProgressBox on trigger_ui")
 
-    def simulate_rapid_batch(self, file_count=5):
-        # File 1 begins
-        self.new_transfer = True
-        self.done_event = False
+    # End handler
+    end_block = extract_block(helper_src, "case ::haze::CallbackType_ReadEnd:", "break;\n        }")
+    check("g_mtp_transfer_active = false;" in end_block, "End must set g_mtp_transfer_active = false")
+    check("ueventSignal(&g_mtp_done_event);" in end_block, "End must signal g_mtp_done_event")
 
-        for f in range(file_count):
-            # File transfer finishes
-            self.done_event = True
-            # Check worker handling
-            if self.done_event:
-                # 15-iteration grace check
-                has_new = False
-                for _ in range(15):
-                    # Next file begins while worker is waiting
-                    if f + 1 < file_count:
-                        self.new_transfer = True
-                    if self.new_transfer:
-                        has_new = True
-                        self.new_transfer = False
-                        break
-                if has_new:
-                    # In legacy code: ueventClear was called here!
-                    # If the next file already completed (rapid transfer),
-                    # its done_event was wiped out!
-                    self.done_event = False
-                    continue
-                else:
-                    return "closed_cleanly"
-
-        # Final file completed before ueventClear was reached
-        # If done_event was cleared and no more files arrive:
-        if not self.done_event:
-            self.hung = True
-            return "hung"
-        return "closed_cleanly"
+    # Worker thread loop
+    worker_block = extract_block(helper_src, "auto pbox_ptr = std::make_unique<ui::ProgressBox>", "}, [push_state](Result rc)")
+    check("waitSingle(waiterForUEvent(&g_mtp_done_event), 50000000ULL);" in worker_block,
+          "Worker must poll done event with 50ms timeout")
+    check("!g_mtp_transfer_active && g_mtp_transfer_seq == last_seq" in worker_block,
+          "Worker exit check must verify inactive transfer and sequence match")
+    check(re.search(r"if\s*\(g_mtp_handled_seq < last_seq\)\s*\{\s*g_mtp_handled_seq = last_seq;", worker_block),
+          "Worker must not overwrite a newer CloseSession handled sequence")
+    check("g_mtp_pbox = nullptr;" in worker_block,
+          "Worker must detach g_mtp_pbox upon loop exit")
 
 
-class FixedMtpUiSimulation:
-    """Simulates the fixed state-machine UI loop behavior."""
-    def __init__(self):
-        self.transfer_active = False
-        self.transfer_seq = 0
-        self.current_filename = ""
-        self.ui_alive = False
+def test_rapid_sequence_contract(helper_src: str) -> None:
+    # In rapid transfers (like firmware packs with many small NCAs), files can begin and
+    # finish between 50ms polls. When g_mtp_transfer_seq != last_seq, idle countdown
+    # must reset to now if the file already ended, granting full 1.5s post-completion display.
+    worker_block = extract_block(helper_src, "auto pbox_ptr = std::make_unique<ui::ProgressBox>", "}, [push_state](Result rc)")
+    check("IDLE_TIMEOUT_NS = 1500000000ULL;" in worker_block, "Worker must use 1.5s idle timeout")
 
-    def begin(self, filename: str):
-        self.current_filename = filename
-        self.transfer_active = True
-        self.transfer_seq += 1
-        if not self.ui_alive:
-            self.ui_alive = True
+    worker_loop = extract_block(worker_block, "while (!pbox->ShouldExit() && !g_should_exit)", "R_SUCCEED();")
 
-    def end(self):
-        self.transfer_active = False
+    # No ueventClear inside the while loop (was root cause of dropped WriteEnd signals)
+    check("ueventClear" not in worker_loop, "ueventClear must NOT be called inside worker while loop")
 
-    def run_worker_tick(self, last_seq: int, idle_start_ns: int, now_ns: int, timeout_ns: int = 1500000000):
-        update_label = False
-        if self.transfer_seq != last_seq:
-            last_seq = self.transfer_seq
-            update_label = True
+    # Sequence change must reset idle_start:
+    # idle_start = is_active ? 0 : now;
+    expected_idle_reset = re.search(
+        r"if\s*\(\s*update_label\s*\)\s*\{\s*idle_start\s*=\s*is_active\s*\?\s*0\s*:\s*now\s*;",
+        worker_loop,
+    )
+    check(expected_idle_reset is not None,
+          "Worker loop must reset idle_start = is_active ? 0 : now when update_label is true")
 
-        if self.transfer_active:
-            idle_start_ns = 0
-            should_close = False
-        else:
-            if idle_start_ns == 0:
-                idle_start_ns = now_ns
-                should_close = False
-            elif (now_ns - idle_start_ns) >= timeout_ns:
-                should_close = (not self.transfer_active and self.transfer_seq == last_seq)
-            else:
-                should_close = False
-
-        return last_seq, idle_start_ns, update_label, should_close
+    # When update_label is false, idle_start is zeroed during activity or counts from first idle timestamp
+    check("else if (is_active)" in worker_loop, "Worker loop must handle is_active branch when update_label is false")
+    check("idle_start = 0;" in worker_loop, "Worker loop must keep idle_start = 0 while active")
 
 
-def test_behavioral_model() -> None:
-    # 1. Verify legacy simulation reproduces the hang on rapid last file
-    legacy = LegacyMtpUiSimulation()
-    # In legacy, if next file begins and ends during the loop transition, it clears event
-    # and hangs on final file:
-    legacy.new_transfer = True
-    legacy.done_event = True  # Last file already finished
-    # Legacy worker in has_new clears done_event:
-    legacy.done_event = False
-    # Now waitSingle will never succeed because done_event is False and no more files arrive
-    check(not legacy.done_event, "Legacy simulation must demonstrate cleared done_event")
+def test_window_elimination_and_relaunch_contract(helper_src: str) -> None:
+    start_pbox_block = extract_block(helper_src, "void StartMtpProgressBox()", "} // namespace\n\nvoid haze_callback")
 
-    # 2. Verify fixed simulation handles rapid file transfers cleanly
-    sim = FixedMtpUiSimulation()
+    # 1. StartMtpProgressBox queues via evman::push (ensures clean lifecycle on main UI loop)
+    check("evman::push(evman::FunctionalEventData" in start_pbox_block,
+          "StartMtpProgressBox must use evman::push")
 
-    # File 1 begins & ends
-    sim.begin("00000001.nca")
-    sim.end()
+    # 2. StartMtpProgressBox checks exit / terminal state under mutex before creating box
+    check("g_should_exit || (!g_mtp_transfer_active && g_mtp_transfer_seq == g_mtp_handled_seq)" in start_pbox_block,
+          "StartMtpProgressBox must abort gracefully if session exited/ended while event was queued")
 
-    last_seq = 0
-    idle_start = 0
-    now = 1000000
+    # 3. Worker waits for ownership; refusal releases it before destruction joins.
+    check("push_state = std::make_shared<std::atomic<int>>(0);" in start_pbox_block,
+          "StartMtpProgressBox must track PushTransfer acceptance")
+    check("while (push_state->load() == 0 && !pbox->ShouldExit())" in start_pbox_block,
+          "Worker must wait for PushTransfer decision")
 
-    # Worker starts and ticks
-    last_seq, idle_start, updated, closed = sim.run_worker_tick(last_seq, idle_start, now)
-    check(updated and last_seq == 1, "Worker should pick up file 1 sequence")
-    check(not closed, "Worker should not close immediately (grace period)")
+    # 4. Push refusal safety: does NOT hang or loop; fails closed
+    push_check = re.search(
+        r"if\s*\(!App::PushTransfer\(std::move\(pbox_ptr\)\)\)\s*\{\s*push_state->store\(-1\);\s*SCOPED_MUTEX\(&g_mtp_ui_mutex\);\s*g_mtp_ui_alive\s*=\s*false;\s*\}\s*else\s*\{\s*push_state->store\(1\);\s*\}",
+        start_pbox_block,
+    )
+    check(push_check is not None,
+          "StartMtpProgressBox must release worker on refusal and start it only on success")
 
-    # Rapid sequence of 50 files
-    for i in range(2, 52):
-        now += 10000000  # 10ms later
-        sim.begin(f"000000{i:02d}.nca")
-        sim.end()
-        last_seq, idle_start, updated, closed = sim.run_worker_tick(last_seq, idle_start, now)
-        check(updated and last_seq == i, f"Worker should update to sequence {i}")
-        check(not closed, "Worker should stay open during active sequence")
+    # 5. Done callback bridges the window between worker exit and old ProgressBox destruction:
+    # If a new transfer started while worker was exiting/destroyed, relaunch a new box
+    done_callback = extract_block(start_pbox_block, "[push_state](Result rc)", "if (!App::PushTransfer")
+    check("push_state->load() == 1 && !g_should_exit && (g_mtp_transfer_active || g_mtp_transfer_seq != g_mtp_handled_seq)" in done_callback,
+          "Done callback must check accepted push, !g_should_exit, and transfer activity or unhandled sequence difference")
+    check("g_mtp_ui_alive = true;\n                        relaunch = true;" in done_callback or
+          ("relaunch = true;" in done_callback and "g_mtp_ui_alive = true;" in done_callback),
+          "Done callback must set relaunch and keep ui_alive")
+    check("StartMtpProgressBox();" in done_callback,
+          "Done callback must call StartMtpProgressBox() on relaunch")
 
-    # After the 51st file (final file), simulate passage of 1.5 seconds
-    now += 500000000  # 0.5s later
-    last_seq, idle_start, updated, closed = sim.run_worker_tick(last_seq, idle_start, now)
-    check(not closed, "Worker should not close at 0.5s")
 
-    now += 1100000000  # 1.6s total since final file end
-    last_seq, idle_start, updated, closed = sim.run_worker_tick(last_seq, idle_start, now)
-    check(closed, "Worker MUST close cleanly after 1.5s idle period post-final file")
+def test_close_session_contract(helper_src: str) -> None:
+    close_block = extract_block(helper_src, "case ::haze::CallbackType_CloseSession:", "break;\n")
+    check("g_mtp_transfer_active = false;" in close_block,
+          "CloseSession must set g_mtp_transfer_active = false")
+    check("g_mtp_handled_seq = g_mtp_transfer_seq;" in close_block,
+          "CloseSession must synchronize g_mtp_handled_seq = g_mtp_transfer_seq to prevent stale relaunch")
+    check("g_mtp_pbox->RequestExit();" in close_block,
+          "CloseSession must request exit on active progress box")
+    check("ueventSignal(&g_mtp_done_event);" in close_block,
+          "CloseSession must signal g_mtp_done_event")
 
-    # 3. Disconnect handling
-    sim.begin("large_firmware.nca")
-    sim.transfer_active = False  # Disconnect closes transfer
-    # Immediate exit requested
-    check(not sim.transfer_active, "Disconnect marks transfer inactive")
+
+def test_exit_contract(helper_src: str) -> None:
+    exit_block = extract_block(helper_src, "void Exit(bool reinit_usb_host)", "::haze::Exit();")
+    check("g_should_exit = true;" in exit_block,
+          "Exit must set g_should_exit = true")
+    check("g_mtp_transfer_active = false;" in exit_block,
+          "Exit must set g_mtp_transfer_active = false")
+    check("g_mtp_handled_seq = g_mtp_transfer_seq;" in exit_block,
+          "Exit must synchronize g_mtp_handled_seq = g_mtp_transfer_seq")
+    check("g_mtp_pbox->RequestExit();" in exit_block,
+          "Exit must request exit on active progress box")
+    check("ueventSignal(&g_mtp_done_event);" in exit_block,
+          "Exit must signal g_mtp_done_event")
 
 
 def main() -> None:
-    test_source_contracts()
-    test_behavioral_model()
-    print("PASS: test_mtp_transfer_lifecycle_contract passed successfully.")
+    hpp_src, cpp_src, helper_src = load_sources()
+    test_state_contracts(hpp_src, cpp_src, helper_src)
+    test_single_file_contract(helper_src)
+    test_rapid_sequence_contract(helper_src)
+    test_window_elimination_and_relaunch_contract(helper_src)
+    test_close_session_contract(helper_src)
+    test_exit_contract(helper_src)
+    print("PASS: all MTP transfer lifecycle contracts verified successfully.")
 
 
 if __name__ == "__main__":

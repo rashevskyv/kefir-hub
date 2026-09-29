@@ -38,9 +38,9 @@ ui::ProgressBox* g_mtp_pbox{nullptr};
 UEvent g_mtp_done_event;
 bool g_mtp_ui_alive{false};
 std::string g_mtp_current_filename;
-std::atomic<bool> g_mtp_new_transfer{false};
 bool g_mtp_transfer_active{false};
 u64 g_mtp_transfer_seq{0};
+u64 g_mtp_handled_seq{0};
 
 std::vector<PinnedMount> g_pinned{};
 ::haze::FsEntries g_fs_entries{};
