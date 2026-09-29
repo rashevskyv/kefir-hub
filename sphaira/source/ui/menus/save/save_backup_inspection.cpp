@@ -69,7 +69,7 @@ auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool {
     return true;
 }
 
-auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath> {
+auto CollectDbiBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) -> std::vector<fs::FsPath> {
     std::vector<fs::FsPath> out;
 
     const auto sort_desc = [](std::vector<FsDirectoryEntry>& entries) {
@@ -129,6 +129,10 @@ auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath> {
         }
         dbi_roots.emplace_back(r);
     };
+    if (!backup_root.empty()) {
+        add_root(backup_root.s);
+    }
+    add_root(DEFAULT_BACKUP_ROOT);
     add_root(DBI_SAVES_PATH);
     add_root(DBI_SAVES_ROOT_PATH);
     for (const auto& custom : GetBackupSearchPaths()) {

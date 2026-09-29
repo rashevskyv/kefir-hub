@@ -87,7 +87,7 @@ Result Menu::DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::En
         local_names.insert(f.name);
     }
     if (!IsSystemLikeSave(e.save_data_type)) {
-        for (const auto& p : CollectDbiBackups(fs.get(), e)) {
+        for (const auto& p : CollectDbiBackups(fs.get(), e, backup_root)) {
             const auto name = std::strrchr(p.s, '/');
             local_names.insert(name ? name + 1 : p.s);
         }
@@ -229,7 +229,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
                 local_files.emplace_back(f.name, fs::AppendPath(local_col.path, f.name));
             }
             if (!IsSystemLikeSave(e.save_data_type)) {
-                for (const auto& p : CollectDbiBackups(&sd_fs, e)) {
+                for (const auto& p : CollectDbiBackups(&sd_fs, e, backup_root)) {
                     const auto name = std::strrchr(p.s, '/');
                     local_files.emplace_back(name ? name + 1 : p.s, p);
                 }

@@ -11,6 +11,8 @@ Entering **Saves** from the Tools tab presents 3 dedicated categories navigable 
 2. **Deleted Games:** Orphaned saves remaining on NAND for games that have been uninstalled. Deleting a save here cleanly cleans up unused space.
 3. **Backups:** Discovered backup archives and directory structures stored across the microSD card (`/dumps`, `/switch/DBI/saves`, `/JKSV/`, `/switch/Checkpoint/`, and custom paths configured in settings).
 
+**Backup destination:** **Saves → Backup → Default location** sets the folder preselected in Backup Options; you can choose another folder for an individual run. Game saves are written beneath the selected folder as DBI-compatible ZIP archives. `/switch/DBI/saves` and `/DBISaves` remain sources for restoring existing backups.
+
 ---
 
 ## 2. Multi-Source Backup Catalog & Grouping

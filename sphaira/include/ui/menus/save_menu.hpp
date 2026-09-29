@@ -41,8 +41,7 @@ inline auto GetBackupSourceLabel(BackupSource s) -> const char* {
 // one restorable backup archive found for a save, used to build the restore
 // picker. ts is the YYYYMMDDHHMMSS key parsed from the file name (for sorting
 // and display); source is a stable tie-break for equal timestamps (lower
-// wins: dbi format beats sphaira new/legacy, matching the old single-best
-// FindLatestBackupPath behaviour; path is the final tie-break in the sorter).
+// wins: dbi format beats sphaira new/legacy; path is the final tie-break).
 struct BackupCandidate {
     u64 ts{};
     fs::FsPath path{};
@@ -300,10 +299,9 @@ private:
     auto BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath;
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path = nullptr, bool* out_mutation_started = nullptr) const;
     Result RestoreSaveInternal(ProgressBox* pbox, const Entry& e, const fs::FsPath& path, fs::FsPath* out_recovery_path, bool* out_mutation_started, bool* out_created_slot_retained) const;
-    Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false, const fs::FsPath& backup_root = "/dumps") const;
-    bool FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const;
+    Result BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto = false, const fs::FsPath& backup_root = "/dumps", fs::FsPath* out_path = nullptr) const;
     // every restorable archive for e across all backup formats/locations,
-    // newest first. generalises FindLatestBackupPath.
+    // newest first.
     auto CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate>;
     auto CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root = "/dumps") const -> std::vector<BackupCandidate>;
     static auto FindLiveRestoreCandidates(const Entry& backup, const AccountUid* explicit_uid) -> std::vector<Entry>;

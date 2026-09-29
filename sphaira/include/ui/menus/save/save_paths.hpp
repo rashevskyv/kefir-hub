@@ -16,9 +16,9 @@ struct ProgressBox;
 
 namespace sphaira::ui::menu::save {
 
-// default sphaira backup library root on the SD card. system-save backups and
-// legacy-format scans live under it; non-system (game) backups are written in
-// DBI format under DBI_SAVES_PATH instead. note: the default argument of
+// default sphaira backup library root on the SD card. Game backups use DBI ZIP
+// format beneath the selected root; legacy DBI folders are restore sources.
+// Note: the default argument of
 // Menu::BackupSaveInternal in save_menu.hpp repeats this literal, as that
 // header cannot include this one (include cycle).
 inline constexpr const char* DEFAULT_BACKUP_ROOT = "/dumps";
@@ -184,10 +184,10 @@ auto BuildSavePathName(const Entry& e, bool force_id_path) -> fs::FsPath;
 auto BuildSaveBasePathLegacy(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath;
 auto BuildSaveBasePath(const Entry& e, bool force_id_path, const fs::FsPath& backup_root) -> fs::FsPath;
 auto BuildDbiGameFolderName(const Entry& e) -> fs::FsPath;
-auto BuildDbiSavePath(const Entry& e, const struct tm& tm, const fs::FsPath& base = DBI_SAVES_PATH) -> fs::FsPath;
+auto BuildDbiSavePath(const Entry& e, const struct tm& tm, const fs::FsPath& base) -> fs::FsPath;
 auto IsDbiBackupName(const Entry& e, const char* name) -> bool;
 auto DbiBackupMatchesEntry(const fs::FsPath& zip_path, const Entry& e) -> bool;
-auto CollectDbiBackups(fs::Fs* fs, const Entry& e) -> std::vector<fs::FsPath>;
+auto CollectDbiBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) -> std::vector<fs::FsPath>;
 auto IsDisaSaveFile(fs::Fs* fs, const fs::FsPath& path) -> bool;
 auto IsRawSaveCandidate(fs::Fs* fs, const fs::FsPath& path, std::string_view name) -> bool;
 inline constexpr Result Result_RawSaveRestoreUnsupported = Result_FsInvalidType;

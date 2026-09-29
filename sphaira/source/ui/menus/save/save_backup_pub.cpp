@@ -48,14 +48,16 @@ auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs
 }
 
 void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
-    App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root](auto pbox) mutable -> Result {
-        for (auto& e : entries) {
+    auto created_paths = std::make_shared<std::vector<fs::FsPath>>(entries.size());
+    App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root, created_paths](auto pbox) mutable -> Result {
+        for (size_t i = 0; i < entries.size(); i++) {
+            auto& e = entries[i];
             // the entry may not have loaded yet.
             detail::LoadControlEntry(e);
-            R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));
+            R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root, &(*created_paths)[i]));
         }
         R_SUCCEED();
-    }, [this, entries, location, backup_root](Result rc){
+    }, [this, entries, location, created_paths](Result rc){
         App::PushErrorBox(rc, "Backup failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
@@ -73,15 +75,12 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                         }
                     }
                     const auto loc = target_loc;
-                    App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, location, backup_root](auto pbox) mutable -> Result {
+                    App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, location, created_paths](auto pbox) mutable -> Result {
                         // the bar runs on synthetic per-file units, so a byte-rate
                         // readout would be nonsense - show only percentage/ETA.
                         pbox->SetHideSpeed(true);
                         R_TRY(ProbeWebdavLocation(loc));
-                        // scan the same fs the backup was just written to - a
-                        // backup made to a stdio location (usb hdd) must not
-                        // fall back to scanning the sd card, as that would
-                        // silently upload a stale (or no) archive.
+                        // Read from the storage that received this backup.
                         const auto fs = MakeFsForLocation(location);
                         const auto total_units = static_cast<s64>(entries.size()) * SYNC_PROGRESS_SCALE;
                         if (total_units) {
@@ -96,8 +95,8 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
 
                             auto& e = entries[i];
                             detail::LoadControlEntry(e);
-                            fs::FsPath latest_path;
-                            if (FindLatestBackupPath(fs.get(), e, backup_root, latest_path)) {
+                            const auto& latest_path = (*created_paths)[i];
+                            if (!latest_path.empty()) {
                                 std::string latest_path_str = latest_path.toString();
                                 size_t last_slash = latest_path_str.find_last_of('/');
                                 std::string filename = (last_slash != std::string::npos) ? latest_path_str.substr(last_slash + 1) : latest_path_str;
@@ -195,14 +194,14 @@ auto Menu::CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_r
         out.emplace_back(BackupCandidate{ts, path, source});
     };
 
-    // dbi-format backups (sphaira now writes these as well). source 0: wins
-    // ties against sphaira-format archives sharing the same timestamp, same
-    // as the old single-best FindLatestBackupPath did.
+    // DBI-format backups: prefer the selected root when timestamps match.
     if (!IsSystemLikeSave(e.save_data_type)) {
-        for (const auto& path : CollectDbiBackups(fs, e)) {
+        const auto target_root = fs::AppendPath(fs->Root(), backup_root);
+        for (const auto& path : CollectDbiBackups(fs, e, backup_root)) {
             if (DbiBackupMatchesEntry(path, e)) {
                 const auto name = std::strrchr(path.s, '/');
-                offer(ParseBackupNameTimestamp(name ? name + 1 : path.s), 0, path);
+                const bool is_target_root = !backup_root.empty() && path::IsSubpathOf(path.s, target_root.s);
+                offer(ParseBackupNameTimestamp(name ? name + 1 : path.s), is_target_root ? 0 : 5, path);
             }
         }
     }
@@ -271,16 +270,6 @@ auto Menu::CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_r
     return out;
 }
 
-bool Menu::FindLatestBackupPath(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root, fs::FsPath& path_out) const {
-    const auto all = CollectBackups(fs, e, backup_root);
-    if (all.empty()) {
-        return false;
-    }
-
-    path_out = all.front().path;
-    return true;
-}
-
 auto Menu::BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_root) const -> fs::FsPath {
     const auto t = std::time(NULL);
     const auto tm = std::localtime(&t);
@@ -309,7 +298,8 @@ auto Menu::BuildSavePath(const Entry& e, bool is_auto, const fs::FsPath& backup_
     return path;
 }
 
-Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root) const {
+Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& location, const Entry& e, bool compressed, bool is_auto, const fs::FsPath& backup_root, fs::FsPath* out_path) const {
+    if (out_path) *out_path = {};
     if (e.save_data_id == 0) {
         return 0;
     }
@@ -367,12 +357,8 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     const auto now = std::time(NULL);
     const auto now_tm = *std::localtime(&now);
 
-    const auto dbi_base = (backup_root == "/dumps" || backup_root == DEFAULT_BACKUP_ROOT)
-        ? fs::FsPath{DBI_SAVES_PATH}
-        : backup_root;
-
     const auto path = dbi_format
-        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm, dbi_base))
+        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm, backup_root))
         : fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
     const bool is_sd = (location.entry.type == dump::DumpLocationType_SdCard);
     if (is_sd) {
@@ -477,6 +463,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
         }
 
         pub_state = BackupPubState::Published;
+        if (out_path) *out_path = path;
         R_SUCCEED();
     } else {
         const auto temp_path = path + ".temp";
@@ -489,6 +476,7 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
         fs->DeleteFile(path);
         R_TRY(fs->RenameFile(temp_path, path));
 
+        if (out_path) *out_path = path;
         R_SUCCEED();
     }
 }

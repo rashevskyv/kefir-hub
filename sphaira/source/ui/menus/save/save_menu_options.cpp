@@ -282,7 +282,7 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
 
     if (op != SaveOp::Delete) {
         options->Add<SidebarEntryHeader>("LOCATION"_i18n);
-        auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the storage and folder for backups. Game saves are always written in DBI format to /switch/DBI/saves on the selected storage; the chosen folder is used for system save backups and for finding older backups during Restore."_i18n);
+        auto* location_entry = options->Add<SidebarEntryTextBase>("Location"_i18n, state->location_items[state->location_index], [](){}, "Choose the storage and folder for backups. Game saves are written beneath the chosen folder in DBI format, while existing DBI folders remain discoverable during Restore."_i18n);
         location_entry->SetCallback([this, state, location_entry]() {
             auto items = state->location_items;
             const auto picker_index = static_cast<s64>(items.size());
