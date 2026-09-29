@@ -1,8 +1,12 @@
 # plan.md
 
-Версія коду: **v0.13.906**.
+Версія коду: **v0.13.907**.
 
-## Поточний delivery: v0.13.906 — стабільний шлях форвардера Kefir Hub
+## Поточний delivery: v0.13.907 — усунення колізії імен у CollectBackups та верифікація збірки C++
+
+Виправлено помилку компіляції у `sphaira/source/ui/menus/save/save_backup_pub.cpp`: додано `#include "path_util.hpp"` та явно кваліфіковано виклик `sphaira::path::IsSubpathOf`, що усунуло колізію з локальною змінною `path` у циклі `CollectBackups`. Повна збірка `ReleaseWithInstall` у WSL успішно завершилася побудовою артефакту `sphaira_nro` (100%). Цільовий контракт збережень `test_save_backup_destination_contract.py` та `git diff --check` пройшли. `TegraExplorer.bin` поза delivery.
+
+## Попередній delivery: v0.13.906 — стабільний шлях форвардера Kefir Hub
 
 Автоматичне та ручне створення HOME Menu форвардера використовує `/hbmenu.nro`, коли ввімкнено «Replace hbmenu on exit»; інакше ціллю лишається поточний шлях NRO. Текст ручного підтвердження показує відповідну ціль. NACP та іконка беруться з поточного Kefir Hub. `git diff --check` пройшов; C++ збірку та перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
 

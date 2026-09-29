@@ -17,6 +17,7 @@
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_slot_backend.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "path_util.hpp"
 #include <utility>
 #include <cstring>
 #include <algorithm>
@@ -200,7 +201,7 @@ auto Menu::CollectBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_r
         for (const auto& path : CollectDbiBackups(fs, e, backup_root)) {
             if (DbiBackupMatchesEntry(path, e)) {
                 const auto name = std::strrchr(path.s, '/');
-                const bool is_target_root = !backup_root.empty() && path::IsSubpathOf(path.s, target_root.s);
+                const bool is_target_root = !backup_root.empty() && sphaira::path::IsSubpathOf(path.s, target_root.s);
                 offer(ParseBackupNameTimestamp(name ? name + 1 : path.s), is_target_root ? 0 : 5, path);
             }
         }

@@ -1,8 +1,17 @@
 # task.md
 
-Версія коду: **v0.13.906**.
+Версія коду: **v0.13.907**.
 
-## Поточний delivery: v0.13.906 — стабільний шлях форвардера Kefir Hub
+## Поточний delivery: v0.13.907 — усунення колізії імен у CollectBackups та верифікація збірки C++
+
+- [x] `BUILD-FIX-907` — додати `#include "path_util.hpp"` та кваліфікувати `sphaira::path::IsSubpathOf` у `save_backup_pub.cpp`.
+- [x] `BUILD-VERIFY-907` — перевірити збірку `ReleaseWithInstall` у WSL до успішного створення `sphaira_nro` (100%).
+- [x] `TEST-907` — запустити контрактний тест `test_save_backup_destination_contract.py`.
+- [x] `DOCS-BUMP-907` — підняти версію й оновити delivery-документи.
+- [x] `COMMIT-907` — сфокусований коміт на primary master без ROMFS binary.
+- [ ] Перевірити бінарник `sphaira_nro` на фізичному Switch.
+
+## Попередній delivery: v0.13.906 — стабільний шлях форвардера Kefir Hub
 
 - [x] `FORWARDER-PATH-906` — обирати `/hbmenu.nro` для автоматичного й ручного форвардера за ввімкненої заміни HB Menu.
 - [x] `FORWARDER-PROMPT-906` — показувати обрану ціль у ручному підтвердженні.

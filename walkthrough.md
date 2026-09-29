@@ -1,6 +1,15 @@
 # walkthrough.md
 
-Актуальний delivery у коді — **v0.13.906** (2026-09-29).
+Актуальний delivery у коді — **v0.13.907** (2026-09-29).
+
+## v0.13.907 — усунення колізії імен у CollectBackups та верифікація збірки C++
+
+- Усунено помилку компіляції `'path' is not a class, namespace, or enumeration` у `sphaira/source/ui/menus/save/save_backup_pub.cpp`:
+  - Додано відсутній `#include "path_util.hpp"`.
+  - Явно вказано простір імен `sphaira::path::IsSubpathOf`, оскільки некваліфіковане ім'я `path` затінювалося локальною змінною `path` у циклі `CollectDbiBackups`.
+- Виконано повну компіляцію у WSL через `cmake --build --preset ReleaseWithInstall --parallel $(nproc)`: ціль `sphaira_nro` зібрано успішно (100%).
+- Перевірено регресійний контракт `tests/test_save_backup_destination_contract.py` — PASS.
+- Перевірено `git diff --check` — чисто.
 
 ## v0.13.906 — стабільний шлях форвардера Kefir Hub
 
