@@ -350,6 +350,10 @@ void AddInstallShareOptions(Sidebar* options) {
 void AddSettingsOption(Sidebar* options) {
     options->Add<SidebarEntryHeader>("SETTINGS"_i18n);
 
+    options->Add<SidebarEntryCallback>("Install Title Mode forwarder"_i18n, [](){
+        InstallTitleModeForwarder();
+    }, "Install a HOME Menu icon for the current Kefir Hub NRO. Confirmation is required."_i18n);
+
     options->Add<SidebarEntryCallback>("Settings"_i18n, [](){
         App::Push<ui::menu::settings::Menu>();
     }, "Open Kefir Hub application settings."_i18n);
