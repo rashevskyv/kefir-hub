@@ -14,8 +14,17 @@
 # 7. include/haze/ptp_data_parser.hpp: UTF-16 to UTF-8 decoding
 # 8. include/haze/ptp_data_builder.hpp: UTF-8 to UTF-16 encoding
 # 9. source/threaded_file_transfer.cpp: resize read buffer before EOF break
+# 10. include/haze/results.hpp: ResultCancelled definition
+# 11. include/haze.h: aborted flag in CallbackDataFile and CancelTransfer declaration
+# 12. include/haze/console_main_loop.hpp: transfer cancellation consumer and CancelTransfer
+# 13. source/haze.cpp: CancelTransfer implementation
+# 14. include/haze/ptp_responder.hpp: m_reactor and WriteCallbackFile aborted parameter
+# 15. source/ptp_responder.cpp: HandleRequest ResultCancelled handling and WriteCallbackFile forwarding
+# 16. source/usb_session.cpp: UsbError_UrbCancelled to ResultCancelled translation
+# 17. source/ptp_responder_ptp_operations.cpp: incomplete file deletion and aborted callback
 
 include("${CMAKE_CURRENT_LIST_DIR}/patch_libhaze_base.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/patch_libhaze_ptp.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/patch_libhaze_mtp.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/patch_libhaze_data.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/patch_libhaze_cancel.cmake")

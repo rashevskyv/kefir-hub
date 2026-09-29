@@ -56,6 +56,7 @@ extern UEvent g_mtp_done_event;
 extern bool g_mtp_ui_alive;
 extern std::string g_mtp_current_filename;
 extern bool g_mtp_transfer_active;
+extern bool g_mtp_transfer_aborted;
 extern u64 g_mtp_transfer_seq;
 extern u64 g_mtp_handled_seq;
 

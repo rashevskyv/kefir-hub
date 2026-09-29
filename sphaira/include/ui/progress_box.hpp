@@ -14,6 +14,7 @@ namespace sphaira::ui {
 struct ProgressBox;
 using ProgressBoxCallback = std::function<Result(ProgressBox*)>;
 using ProgressBoxDoneCallback = std::function<void(Result rc)>;
+using ProgressBoxCancelCallback = std::function<void()>;
 
 struct ProgressBox final : Widget, InstallProgress {
     ProgressBox(
@@ -62,6 +63,10 @@ struct ProgressBox final : Widget, InstallProgress {
 
     void RequestExit();
     void ShowCancelConfirmation();
+    auto SetCancelCallback(ProgressBoxCancelCallback cancel_cb) -> ProgressBox& {
+        m_cancel_cb = std::move(cancel_cb);
+        return *this;
+    }
     auto ShouldExit() -> bool;
     auto ShouldExitResult() -> Result;
 
@@ -131,6 +136,7 @@ private:
     Thread m_thread{};
     ThreadData m_thread_data{};
     ProgressBoxDoneCallback m_done{};
+    ProgressBoxCancelCallback m_cancel_cb{};
 
     // shared data start.
     std::string m_action{};

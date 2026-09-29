@@ -112,6 +112,7 @@ void StartMtpProgressBox() {
 
                     bool update_label = false;
                     std::string filename;
+                    bool is_aborted = false;
 
                     {
                         SCOPED_MUTEX(&g_mtp_ui_mutex);
@@ -121,6 +122,11 @@ void StartMtpProgressBox() {
                             update_label = true;
                         }
                         is_active = g_mtp_transfer_active;
+                        is_aborted = g_mtp_transfer_aborted;
+                    }
+
+                    if (is_aborted) {
+                        break;
                     }
 
                     if (update_label && !filename.empty()) {
@@ -145,12 +151,37 @@ void StartMtpProgressBox() {
                     }
                 }
 
+                const bool user_cancelled = pbox->ShouldExit() && !g_should_exit;
+                bool should_cancel_worker = false;
+                if (user_cancelled) {
+                    {
+                        SCOPED_MUTEX(&g_mtp_ui_mutex);
+                        if (g_mtp_transfer_active) {
+                            g_mtp_transfer_active = false;
+                            g_mtp_transfer_aborted = true;
+                            should_cancel_worker = true;
+                        }
+
+                        if (g_mtp_handled_seq < last_seq) {
+                            g_mtp_handled_seq = last_seq;
+                        }
+                    }
+                    if (should_cancel_worker) {
+                        ::haze::CancelTransfer();
+                    }
+                    ueventSignal(&g_mtp_done_event);
+                }
+
                 {
                     SCOPED_MUTEX(&g_mtp_ui_mutex);
                     if (g_mtp_handled_seq < last_seq) {
                         g_mtp_handled_seq = last_seq;
                     }
                     g_mtp_pbox = nullptr;
+                }
+
+                if (user_cancelled) {
+                    R_THROW(Result_TransferCancelled);
                 }
 
                 R_SUCCEED();
@@ -170,6 +201,24 @@ void StartMtpProgressBox() {
                 if (relaunch) {
                     StartMtpProgressBox();
                 }
+            });
+
+            pbox_ptr->SetCancelCallback([]() {
+                bool should_cancel = false;
+                {
+                    SCOPED_MUTEX(&g_mtp_ui_mutex);
+                    if (g_mtp_transfer_active) {
+                        g_mtp_transfer_active = false;
+                        g_mtp_transfer_aborted = true;
+                        should_cancel = true;
+                    }
+
+                    g_mtp_handled_seq = g_mtp_transfer_seq;
+                }
+                if (should_cancel) {
+                    ::haze::CancelTransfer();
+                }
+                ueventSignal(&g_mtp_done_event);
             });
 
             if (!App::PushTransfer(std::move(pbox_ptr))) {
@@ -206,6 +255,7 @@ void haze_callback(const ::haze::CallbackData *data) {
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                 g_mtp_transfer_active = false;
+                g_mtp_transfer_aborted = false;
                 g_mtp_handled_seq = g_mtp_transfer_seq;
                 if (g_mtp_pbox) {
                     g_mtp_pbox->RequestExit();
@@ -257,6 +307,7 @@ void haze_callback(const ::haze::CallbackData *data) {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                 g_mtp_current_filename = e.file.filename;
                 g_mtp_transfer_active = true;
+                g_mtp_transfer_aborted = false;
                 g_mtp_transfer_seq++;
                 if (!g_mtp_ui_alive) {
                     g_mtp_ui_alive = true;
@@ -290,6 +341,9 @@ void haze_callback(const ::haze::CallbackData *data) {
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                 g_mtp_transfer_active = false;
+                if (e.file.aborted) {
+                    g_mtp_transfer_aborted = true;
+                }
             }
             ueventSignal(&g_mtp_done_event);
             break;
@@ -304,6 +358,11 @@ bool Init() {
     if (g_is_running) {
         log_write("[MTP] already enabled, cannot open\n");
         return false;
+    }
+
+    {
+        SCOPED_MUTEX(&g_mtp_ui_mutex);
+        g_mtp_transfer_aborted = false;
     }
 
     struct MtpStorageDef {
@@ -460,11 +519,13 @@ void Exit(bool reinit_usb_host) {
     {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
         g_mtp_transfer_active = false;
+        g_mtp_transfer_aborted = false;
         g_mtp_handled_seq = g_mtp_transfer_seq;
         if (g_mtp_pbox) {
             g_mtp_pbox->RequestExit();
         }
     }
+    ::haze::CancelTransfer();
     ::haze::Exit();
     g_fs_entries.clear();
 

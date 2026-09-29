@@ -39,6 +39,7 @@ UEvent g_mtp_done_event;
 bool g_mtp_ui_alive{false};
 std::string g_mtp_current_filename;
 bool g_mtp_transfer_active{false};
+bool g_mtp_transfer_aborted{false};
 u64 g_mtp_transfer_seq{0};
 u64 g_mtp_handled_seq{0};
 
