@@ -110,8 +110,9 @@ void StartConsoleTransferShare(const std::vector<std::string>& roots) {
 }
 
 void InstallTitleModeForwarder() {
+    const bool replace_hbmenu = App::GetReplaceHbmenuEnable();
     OwoConfig config{};
-    config.nro_path = App::GetExePath().toString();
+    config.nro_path = replace_hbmenu ? "/hbmenu.nro" : App::GetExePath().toString();
     config.title_id = forwarder_auto::KEFIR_HUB_FORWARDER_TID;
 
     const auto rc = nro_get_nacp(App::GetExePath(), config.nacp);
@@ -128,10 +129,16 @@ void InstallTitleModeForwarder() {
     config.name = nacp_util::GetName(config.nacp);
     config.author = nacp_util::GetAuthor(config.nacp);
 
+    const auto prompt = replace_hbmenu
+        ? "Install a HOME Menu forwarder for Kefir Hub?\n\n"
+          "This creates a Title Mode entry for /hbmenu.nro. After installation, "
+          "return to HOME and launch the new icon manually."_i18n
+        : "Install a HOME Menu forwarder for Kefir Hub?\n\n"
+          "This creates a Title Mode entry for the current NRO. After installation, "
+          "return to HOME and launch the new icon manually."_i18n;
+
     App::Push<OptionBox>(
-        "Install a HOME Menu forwarder for Kefir Hub?\n\n"
-        "This creates a Title Mode entry for the current NRO. After installation, "
-        "return to HOME and launch the new icon manually."_i18n,
+        prompt,
         "Back"_i18n, "Install"_i18n, 0, [config = std::move(config)](auto op_index) mutable {
             if (op_index && *op_index) {
                 App::Install(config);

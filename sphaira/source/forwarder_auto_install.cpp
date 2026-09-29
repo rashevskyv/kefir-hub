@@ -226,7 +226,7 @@ auto InstallKefirHubForwarder(u64 kefirhub_tid) -> bool {
 
     const auto exe_path = App::GetExePath();
     OwoConfig config{};
-    config.nro_path = exe_path.toString();
+    config.nro_path = App::GetReplaceHbmenuEnable() ? "/hbmenu.nro" : exe_path.toString();
     config.title_id = kefirhub_tid;
     nro_get_nacp(exe_path, config.nacp);
     config.icon = nro_get_icon(exe_path);
