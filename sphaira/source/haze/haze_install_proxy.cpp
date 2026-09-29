@@ -22,6 +22,7 @@
 #include <string>
 #include <functional>
 #include <haze.h>
+#include <haze/results.hpp>
 
 namespace sphaira::haze {
 
@@ -119,7 +120,7 @@ struct FsInstallProxy final : FsProxyVfs {
 
         if (!g_shared_data.on_write || !g_shared_data.on_write(buf, write_size)) {
             log_write("[MTP] failing as not written\n");
-            R_THROW(FsError_NotImplemented);
+            R_THROW(::haze::ResultCancelled());
         }
 
         R_TRY(FsProxyVfs::WriteFile(file, off, buf, write_size, option));

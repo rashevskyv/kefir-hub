@@ -29,6 +29,7 @@
 #include <ranges>
 
 #include "ui/menus/install_stream_menu_base.hpp"
+#include "haze_helper.hpp"
 
 namespace sphaira::ui::menu::dbi {
 void InstallSession::CancelSession() {
@@ -36,6 +37,9 @@ void InstallSession::CancelSession() {
     ueventSignal(&m_cancel_event);
     if (m_stream) {
         m_stream->Disable();
+    }
+    if (m_origin == TransportOrigin::Mtp) {
+        sphaira::haze::CancelTransfer();
     }
     m_should_exit = true;
     SetPop();

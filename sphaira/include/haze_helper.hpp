@@ -40,5 +40,6 @@ using OnInstallClose = std::function<void()>;
 void InitInstallMode(OnInstallStart on_start, OnInstallWrite on_write, OnInstallClose on_close);
 void DisableInstallMode();
 bool HasActiveTransfer();
+void CancelTransfer();
 
 } // namespace sphaira::haze

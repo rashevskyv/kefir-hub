@@ -40,12 +40,18 @@ void BackgroundInstaller::TeardownWorker() {
 static std::atomic<bool> s_restart_scheduled{false};
 
 void ScheduleMtpRestart() {
+    if (App::IsExiting()) {
+        return;
+    }
     if (s_restart_scheduled.exchange(true)) {
         return;
     }
     evman::push(evman::FunctionalEventData{
         []() {
             s_restart_scheduled.store(false);
+            if (App::IsExiting()) {
+                return;
+            }
             log_write("[MTP] Restarting haze after install cancellation\n");
             BackgroundInstaller::TeardownWorker();
             if (haze::IsRunning()) {
@@ -325,7 +331,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                     }
                 }
 
-                if (needs_mtp_restart) {
+                if (needs_mtp_restart && !App::IsExiting()) {
                     c->session->AddLog("Restarting MTP service..."_i18n, ui::menu::dbi::LogKind::Event);
                     if (source_interrupted) {
                         c->session->RequestExit();

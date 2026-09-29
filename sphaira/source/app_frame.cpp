@@ -137,6 +137,7 @@ void App::Update() {
         session = m_active_install_session;
     }
 
+    const bool has_modal = !m_widgets.empty() && m_widgets.back()->IsModal() && !m_widgets.back()->IsMinimized();
     bool block_background_update = false;
     const bool active_install = session && !session->ShouldExit() && !session->ShouldPop()
         && (!m_active_transfer_pbox || (session->GetState() == ui::menu::dbi::State::Installing && !session->AllPackagesTerminal()));
@@ -144,13 +145,12 @@ void App::Update() {
     if (m_active_transfer_pbox) {
         // An install session is the sole input owner even while minimized; the
         // server box's worker keeps running without calling its input method.
-        if (!active_install) {
+        if (!active_install && !has_modal) {
             if (m_controller.GotDown(Button::L3)) {
                 m_active_transfer_pbox->ToggleMinimized();
                 App::PlaySoundEffect(SoundEffect_Focus);
-            }
-
-            if (!m_active_transfer_pbox->IsMinimized()) {
+                block_background_update = true;
+            } else if (!m_active_transfer_pbox->IsMinimized()) {
                 if (m_widgets.back()->IsMenu()) {
                     block_background_update = true;
                     m_active_transfer_pbox->Update(&m_controller, &m_touch_info);
@@ -171,14 +171,15 @@ void App::Update() {
         constexpr float bh = 40.f;
         constexpr float bx = SCREEN_WIDTH - bw - 20.f;
         constexpr float by = 12.f;
-        const bool touch_badge = session->IsMinimized() && m_touch_info.is_clicked &&
+        const bool touch_badge = !has_modal && session->IsMinimized() && m_touch_info.is_clicked &&
                                  m_touch_info.in_range(Vec4(bx, by, bw, bh));
 
-        if (m_controller.GotDown(Button::L3) || touch_badge) {
+        if (!has_modal && (m_controller.GotDown(Button::L3) || touch_badge)) {
             session->ToggleMinimized();
             App::PlaySoundEffect(SoundEffect_Focus);
             session->Update(nullptr, nullptr);
-        } else if (!session->IsMinimized()) {
+            block_background_update = true;
+        } else if (!has_modal && !session->IsMinimized()) {
             block_background_update = true;
             session->Update(&m_controller, &m_touch_info);
         } else {
@@ -203,24 +204,26 @@ void App::Update() {
             constexpr float bh = 40.f;
             constexpr float bx = SCREEN_WIDTH - bw - 20.f;
             constexpr float by = 12.f;
-            const bool touch_badge = m_touch_info.is_clicked &&
+            const bool touch_badge = !has_modal && m_touch_info.is_clicked &&
                                      m_touch_info.in_range(Vec4(bx, by, bw, bh));
 
-            if (m_controller.GotDown(Button::L3) || touch_badge) {
+            if (!has_modal && (m_controller.GotDown(Button::L3) || touch_badge)) {
                 m_widgets.back()->ToggleMinimized();
                 App::PlaySoundEffect(SoundEffect_Focus);
-            }
-            m_widgets.back()->Update(nullptr, nullptr);
+                m_widgets.back()->Update(nullptr, nullptr);
+            } else {
+                m_widgets.back()->Update(nullptr, nullptr);
 
-            ui::Widget* target = nullptr;
-            for (auto it = m_widgets.rbegin(); it != m_widgets.rend(); ++it) {
-                if (!(*it)->IsMinimized()) {
-                    target = it->get();
-                    break;
+                ui::Widget* target = nullptr;
+                for (auto it = m_widgets.rbegin(); it != m_widgets.rend(); ++it) {
+                    if (!(*it)->IsMinimized()) {
+                        target = it->get();
+                        break;
+                    }
                 }
-            }
-            if (target) {
-                target->Update(&m_controller, &m_touch_info);
+                if (target) {
+                    target->Update(&m_controller, &m_touch_info);
+                }
             }
         } else {
             m_widgets.back()->Update(&m_controller, &m_touch_info);

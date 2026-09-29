@@ -43,6 +43,31 @@ bool g_mtp_transfer_aborted{false};
 u64 g_mtp_transfer_seq{0};
 u64 g_mtp_handled_seq{0};
 
+void CancelTransfer() {
+    bool should_cancel = false;
+    {
+        SCOPED_MUTEX(&g_mtp_ui_mutex);
+        if (g_mtp_transfer_active) {
+            g_mtp_transfer_active = false;
+            g_mtp_transfer_aborted = true;
+            should_cancel = true;
+        }
+        g_mtp_handled_seq = g_mtp_transfer_seq;
+        if (g_mtp_pbox) {
+            g_mtp_pbox->RequestExit();
+        }
+    }
+#if ENABLE_NETWORK_INSTALL
+    if (HasActiveTransfer()) {
+        should_cancel = true;
+    }
+#endif
+    if (should_cancel) {
+        ::haze::CancelTransfer();
+    }
+    ueventSignal(&g_mtp_done_event);
+}
+
 std::vector<PinnedMount> g_pinned{};
 ::haze::FsEntries g_fs_entries{};
 

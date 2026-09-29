@@ -255,6 +255,9 @@ App::~App() {
 
     log_write_error("[SHUTDOWN] begin mtp");
     TimeStamp mtp_phase;
+#if ENABLE_NETWORK_INSTALL
+    ui::menu::stream::BackgroundInstaller::TeardownWorker();
+#endif
     if (haze::IsRunning()) {
         log_write("closing mtp\n");
         haze::Exit(false);
