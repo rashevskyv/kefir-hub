@@ -180,6 +180,9 @@ public:
     static auto GetWaveColorLight() -> std::string;
     static auto Get12HourTimeEnable() -> bool;
     static auto GetLanguage() -> long;
+    static auto NeedsLanguageSelection() -> bool;
+    static void ShowInitialLanguageSelection();
+    static void MarkLanguageChosen();
     static auto GetTextScrollSpeed() -> long;
     static auto GetGodModeEnabled() -> bool;
     static auto GetProgressActive() -> bool;
@@ -473,7 +476,8 @@ public:
     option::OptionString m_wave_color_dark{INI_SECTION, "wave_color_dark", ""};
     option::OptionString m_wave_color_light{INI_SECTION, "wave_color_light", ""};
     option::OptionBool m_12hour_time{INI_SECTION, "12hour_time", false};
-    option::OptionLong m_language{INI_SECTION, "language", 0}; // auto
+    option::OptionLong m_language{INI_SECTION, "language", -1};
+    bool m_language_chosen{false};
     option::OptionString m_left_menu{INI_SECTION, "left_side_menu", "FileBrowser"};
     option::OptionString m_right_menu{INI_SECTION, "right_side_menu", "Appstore"};
     option::OptionBool m_progress_boost_mode{INI_SECTION, "progress_boost_mode", true};

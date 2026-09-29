@@ -168,8 +168,11 @@ auto MakeInstallToggle(std::string label, std::string description, option::Optio
 }
 
 auto LanguageValue() -> std::string {
-    const auto index = ClampIndex(App::GetLanguage(), static_cast<long>(LANGUAGE_ITEMS.size()));
-    return i18n::get(LANGUAGE_ITEMS[index]);
+    const auto* def = i18n::FindLanguage(App::GetLanguage());
+    if (def) {
+        return def->name_native;
+    }
+    return "English";
 }
 
 auto TextScrollSpeedValue() -> std::string {
@@ -350,15 +353,24 @@ void Menu::BuildCategories() {
             {
                 MakeFolderItem("Auto-update"_i18n, "When and how new versions are installed."_i18n, BuildAutoUpdateItems),
                 { "Language"_i18n, "Select the active interface language."_i18n, LanguageValue, [](){
+                    const auto languages = i18n::GetSupportedLanguages();
                     PopupList::Items items;
-                    for (const auto& lang : LANGUAGE_ITEMS) {
-                        items.push_back(i18n::get(lang));
-                    }
-                    App::Push<PopupList>("Language"_i18n, std::move(items), [](std::optional<s64> op_index){
-                        if (op_index) {
-                            App::SetLanguage(*op_index);
+                    items.reserve(languages.size());
+                    s64 current_index = 0;
+                    const long current_id = App::GetLanguage();
+
+                    for (size_t i = 0; i < languages.size(); ++i) {
+                        items.push_back(std::string(languages[i].name_native));
+                        if (languages[i].id == current_id) {
+                            current_index = static_cast<s64>(i);
                         }
-                    }, App::GetLanguage());
+                    }
+
+                    App::Push<PopupList>("Language"_i18n, std::move(items), [languages](std::optional<s64> op_index){
+                        if (op_index && *op_index >= 0 && *op_index < static_cast<s64>(languages.size())) {
+                            App::SetLanguage(languages[*op_index].id);
+                        }
+                    }, current_index);
                 }},
                 { "Text scroll speed"_i18n, "Select how fast long labels scroll."_i18n, TextScrollSpeedValue, [](){
                     PopupList::Items items;

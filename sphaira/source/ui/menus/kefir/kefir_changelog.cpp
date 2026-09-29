@@ -76,7 +76,7 @@ auto ParseKefirChangelogVersion(const std::string& version) -> int {
 }
 
 auto IsUkrainianLanguage() -> bool {
-    return App::GetLanguage() == 14;
+    return i18n::IsUkrainian();
 }
 
 auto MergeDirectory(ProgressBox* pbox, fs::FsNativeSd& fs, const fs::FsPath& src_dir, const fs::FsPath& dst_dir) -> Result {

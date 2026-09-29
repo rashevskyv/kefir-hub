@@ -11,24 +11,6 @@
 
 namespace sphaira::ui::menu::settings {
 
-inline constexpr std::array LANGUAGE_ITEMS{
-    "Auto",
-    "English",
-    "Japanese",
-    "French",
-    "German",
-    "Italian",
-    "Spanish",
-    "Chinese",
-    "Korean",
-    "Dutch",
-    "Portuguese",
-    "Russian",
-    "Swedish",
-    "Vietnamese",
-    "Ukrainian",
-};
-
 inline constexpr std::array TEXT_SCROLL_SPEED_ITEMS{
     "Slow",
     "Normal",

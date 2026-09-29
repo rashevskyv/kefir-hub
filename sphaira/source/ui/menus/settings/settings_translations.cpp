@@ -425,39 +425,31 @@ auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) 
 }
 
 void TryAutoSwitchLanguage(const std::string& entry_name) {
-    static constexpr std::array<const char*, 15> languages{
-        "Auto",
-        "English",
-        "Japanese",
-        "French",
-        "German",
-        "Italian",
-        "Spanish",
-        "Chinese",
-        "Korean",
-        "Dutch",
-        "Portuguese",
-        "Russian",
-        "Swedish",
-        "Vietnamese",
-        "Ukrainian"
-    };
-
     std::string entry_lower = entry_name;
     std::transform(entry_lower.begin(), entry_lower.end(), entry_lower.begin(), [](unsigned char c) {
         return std::tolower(c);
     });
 
-    for (size_t i = 1; i < languages.size(); ++i) {
-        std::string lang_lower = languages[i];
+    const auto languages = i18n::GetSupportedLanguages();
+    const i18n::LanguageDef* match = nullptr;
+    size_t match_length = 0;
+    for (const auto& lang : languages) {
+        std::string lang_lower = lang.name_en;
         std::transform(lang_lower.begin(), lang_lower.end(), lang_lower.begin(), [](unsigned char c) {
             return std::tolower(c);
         });
 
-        if (entry_lower == lang_lower || entry_lower.find(lang_lower) != std::string::npos || lang_lower.find(entry_lower) != std::string::npos) {
-            App::SetLanguage(i, false);
+        if (entry_lower == lang_lower) {
+            match = &lang;
             break;
         }
+        if (entry_lower.find(lang_lower) != std::string::npos && lang_lower.size() > match_length) {
+            match = &lang;
+            match_length = lang_lower.size();
+        }
+    }
+    if (match) {
+        App::SetLanguage(match->id, false);
     }
 }
 

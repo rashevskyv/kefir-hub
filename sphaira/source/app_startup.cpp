@@ -351,8 +351,19 @@ App::App(const char* argv0) {
         }
     }
 
+    const bool has_language_in_ini = ini_haskey(INI_SECTION, "language", CONFIG_PATH) != 0;
+    if (has_language_in_ini) {
+        m_language_chosen = true;
+        const long saved_lang = m_language.Get();
+        const long migrated_lang = i18n::MigrateLegacyLanguage(saved_lang, true);
+        if (migrated_lang != saved_lang) {
+            m_language.Set(migrated_lang);
+        }
+    } else {
+        m_language_chosen = false;
+    }
 
-    i18n::init(GetLanguage());
+    i18n::init(has_language_in_ini ? GetLanguage() : i18n::MatchSystemLanguage());
 
     if (App::GetLogEnable()) {
         log_file_init();
@@ -592,6 +603,9 @@ App::App(const char* argv0) {
     forwarder_auto::StartCheck();
 
     App::Push<ui::menu::main::MainMenu>();
+    if (App::NeedsLanguageSelection()) {
+        App::ShowInitialLanguageSelection();
+    }
     log_write("\n\tfinished app constructor, time taken: %.2fs %zums\n\n", ts.GetSecondsD(), ts.GetMs());
 }
 

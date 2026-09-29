@@ -21,7 +21,8 @@ Tag and title: `0.13.X` and `Kefir Hub 0.13.X`. Never `v0.13.X` — old 563–56
 1. Confirm `git rev-parse --show-toplevel` is `D:\git\dev\sphaira`.
 2. Working tree clean. If product work is unfinished, bump + docs + commit per `AGENTS.md` first.
 3. `kForceUpdateForTest` in `sphaira/source/ui/menus/main_menu.cpp` must be `false`. If it is `true`, set it false, bump, docs, commit — do not ship a test hook.
-4. Last GitHub release: `gh release view --repo rashevskyv/kefir-hub` (or `gh release list`). Changelog covers **that tag → HEAD**, not only the last commit.
+4. Run `python3 tests/test_i18n_deployment_contract.py`; stop if any shipped language is missing or incomplete.
+5. Last GitHub release: `gh release view --repo rashevskyv/kefir-hub` (or `gh release list`). Changelog covers **that tag → HEAD**, not only the last commit.
 
 ## Build the NRO
 

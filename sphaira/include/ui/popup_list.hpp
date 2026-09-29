@@ -45,6 +45,8 @@ public:
         m_disabled = disabled;
     }
 
+    auto SetAllowCancel(bool allow) -> PopupList&;
+
 private:
     void SetIndex(s64 index);
 
@@ -61,6 +63,7 @@ private:
     s64 m_index{}; // index in list array
     s64 m_starting_index{};
     bool m_menu_style{};
+    bool m_allow_cancel{true};
     std::vector<bool> m_markers{};
     std::vector<std::optional<ActionIcon>> m_icons{};
 

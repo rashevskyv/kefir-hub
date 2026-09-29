@@ -264,7 +264,7 @@ void MainMenu::OnFocusGained() {
     Widget::OnFocusGained();
     m_current_menu->OnFocusGained();
 
-    if (!m_launch_link_prompt_checked) {
+    if (!m_launch_link_prompt_checked && !App::NeedsLanguageSelection()) {
         m_launch_link_prompt_checked = true;
         if (!users::OfferPendingRestore()) {
             CheckLaunchAccountLinkPrompt();

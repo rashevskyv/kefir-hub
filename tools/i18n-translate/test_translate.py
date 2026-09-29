@@ -1,6 +1,6 @@
-"""Tests for the i18n translation pipeline.
+"""Tests for the i18n translation pipeline and deployment validation.
 
-    python test_translate.py          offline only
+    python test_translate.py          offline and deployment tests
     python test_translate.py --live   also sends real requests to the proxy
 
 Live tests print every translation they get back so the output can be eyeballed.
@@ -39,23 +39,23 @@ def raises(exc, fn):
 # ── offline ──────────────────────────────────────────────────────────
 
 def test_extract_plain():
-    assert t.extract_json('{"ru": "Привет"}') == {"ru": "Привет"}
+    assert t.extract_json('{"uk": "Привіт"}') == {"uk": "Привіт"}
 
 
 def test_extract_fenced():
-    assert t.extract_json('```json\n{"ru": "Привет"}\n```') == {"ru": "Привет"}
+    assert t.extract_json('```json\n{"uk": "Привіт"}\n```') == {"uk": "Привіт"}
 
 
 def test_extract_with_prose():
-    assert t.extract_json('Sure, here you go:\n{"ru": "a", "uk": "b"}\nHope that helps!') == {"ru": "a", "uk": "b"}
+    assert t.extract_json('Sure, here you go:\n{"uk": "a", "pl": "b"}\nHope that helps!') == {"uk": "a", "pl": "b"}
 
 
 def test_extract_trailing_comma():
-    assert t.extract_json('{"ru": "a", "uk": "b",}') == {"ru": "a", "uk": "b"}
+    assert t.extract_json('{"uk": "a", "pl": "b",}') == {"uk": "a", "pl": "b"}
 
 
 def test_extract_keeps_braces_in_value():
-    assert t.extract_json('{"ru": "a {x} b"}') == {"ru": "a {x} b"}
+    assert t.extract_json('{"uk": "a {x} b"}') == {"uk": "a {x} b"}
 
 
 def test_extract_rejects_garbage():
@@ -112,19 +112,20 @@ def test_style_roundtrip_is_byte_identical():
 
 
 def test_style_detection():
-    assert t._STYLE["ru"][0] == 4, "ru.json is indented with 4 spaces"
-    assert all(s[0] == 2 for c, s in t._STYLE.items() if c != "ru"), "the rest use 2"
+    for c in t.LANGS:
+        t.load(c)
+    assert all(s[0] == 2 for c, s in t._STYLE.items()), "all translation files use 2 spaces"
 
 
 def test_save_appends_without_touching_existing():
     with tempfile.TemporaryDirectory() as tmp:
         real, t.I18N = t.I18N, Path(tmp)
         try:
-            (t.I18N / "ru.json").write_bytes('{\r\n    "old": "старий"\r\n}\r\n'.encode("utf-8"))
-            data = t.load("ru")
+            (t.I18N / "uk.json").write_bytes('{\r\n    "old": "старий"\r\n}\r\n'.encode("utf-8"))
+            data = t.load("uk")
             data["new"] = "новий"
-            t.save("ru", data)
-            raw = (t.I18N / "ru.json").read_bytes().decode("utf-8")
+            t.save("uk", data)
+            raw = (t.I18N / "uk.json").read_bytes().decode("utf-8")
             assert raw == '{\r\n    "old": "старий",\r\n    "new": "новий"\r\n}\r\n', repr(raw)
         finally:
             t.I18N = real
@@ -163,10 +164,10 @@ def offline_args(**kw):
 
 
 def test_rate_limit_is_waited_out_not_retried_away():
-    ok = FakeResponse(200, '{"ru": "Привіт"}')
+    ok = FakeResponse(200, '{"uk": "Привіт"}')
     s = FakeSession(FakeResponse(429), FakeResponse(429), FakeResponse(429), FakeResponse(429), ok)
     # 4 x 429 with only 2 retries allowed: a 429 must not consume the retry budget
-    assert t.translate(s, offline_args(retries=2), "Hi", ["ru"]) == {"ru": "Привіт"}
+    assert t.translate(s, offline_args(retries=2), "Hi", ["uk"]) == {"uk": "Привіт"}
     assert s.calls == 5
 
 
@@ -175,8 +176,8 @@ def test_rate_limit_honours_retry_after():
     real_sleep, t.time.sleep = t.time.sleep, slept.append
     try:
         s = FakeSession(FakeResponse(429, headers={"Retry-After": "900"}),
-                        FakeResponse(200, '{"ru": "Привіт"}'))
-        assert t.translate(s, offline_args(retries=0), "Hi", ["ru"]) == {"ru": "Привіт"}
+                        FakeResponse(200, '{"uk": "Привіт"}'))
+        assert t.translate(s, offline_args(retries=0), "Hi", ["uk"]) == {"uk": "Привіт"}
         assert slept == [900], f"waited {slept} instead of the 900s the proxy asked for"
     finally:
         t.time.sleep = real_sleep
@@ -193,7 +194,7 @@ def test_retry_after_never_exceeds_the_wait_budget():
     real_sleep, t.time.sleep = t.time.sleep, slept.append
     try:
         s = FakeSession(FakeResponse(429, headers={"Retry-After": "9000"}), FakeResponse(429))
-        raises(RuntimeError, lambda: t.translate(s, offline_args(retries=0, max_wait=100), "Hi", ["ru"]))
+        raises(RuntimeError, lambda: t.translate(s, offline_args(retries=0, max_wait=100), "Hi", ["uk"]))
         assert slept == [100], f"slept {slept}, past the budget"
     finally:
         t.time.sleep = real_sleep
@@ -201,20 +202,20 @@ def test_retry_after_never_exceeds_the_wait_budget():
 
 def test_rate_limit_gives_up_once_the_wait_budget_is_spent():
     s = FakeSession(*[FakeResponse(429) for _ in range(10)])
-    raises(RuntimeError, lambda: t.translate(s, offline_args(retries=0, cooldown=1, max_wait=2), "Hi", ["ru"]))
+    raises(RuntimeError, lambda: t.translate(s, offline_args(retries=0, cooldown=1, max_wait=2), "Hi", ["uk"]))
 
 
 def test_server_error_does_consume_retries():
     s = FakeSession(FakeResponse(500), FakeResponse(500), FakeResponse(500))
-    raises(RuntimeError, lambda: t.translate(s, offline_args(retries=2), "Hi", ["ru"]))
+    raises(RuntimeError, lambda: t.translate(s, offline_args(retries=2), "Hi", ["uk"]))
     assert s.calls == 3
 
 
 def test_bad_translation_is_retried_then_accepted():
-    bad = FakeResponse(200, '{"ru": "Сторінка 1"}')   # dropped both %zu
-    good = FakeResponse(200, '{"ru": "Сторінка %zu / %zu"}')
+    bad = FakeResponse(200, '{"uk": "Сторінка 1"}')   # dropped both %zu
+    good = FakeResponse(200, '{"uk": "Сторінка %zu / %zu"}')
     s = FakeSession(bad, good)
-    assert t.translate(s, offline_args(retries=2), "Page %zu / %zu", ["ru"]) == {"ru": "Сторінка %zu / %zu"}
+    assert t.translate(s, offline_args(retries=2), "Page %zu / %zu", ["uk"]) == {"uk": "Сторінка %zu / %zu"}
     assert s.calls == 2
 
 
@@ -240,9 +241,9 @@ def test_every_translation_on_disk_is_safe():
 
 def test_jobs_only_cover_missing_keys():
     en = {"a": "A", "b": "B", "no value": ""}
-    data = {"ru": {"a": "А"}, "uk": {"a": "А", "b": "Б", "no value": "-"}}
+    data = {"pl": {"a": "A_pl"}, "uk": {"a": "А", "b": "Б", "no value": "-"}}
     # only the gaps, and a key with no English value is its own source text
-    assert t.build_jobs(en, data, ["ru", "uk"]) == [("b", "B", ["ru"]), ("no value", "no value", ["ru"])]
+    assert t.build_jobs(en, data, ["pl", "uk"]) == [("b", "B", ["pl"]), ("no value", "no value", ["pl"])]
 
 
 def test_source_literals_are_extracted():
@@ -273,8 +274,7 @@ def test_sync_adds_only_what_the_code_uses():
 
 
 def test_every_source_literal_reaches_en_json():
-    """A literal the code uses but en.json lacks is untranslatable in all thirteen
-    languages at once - and silently, because the app falls back to raw English."""
+    """A literal the code uses but en.json lacks is untranslatable in all languages at once."""
     en = t.load("en")
     missing = sorted(t.source_strings() - set(en))
     for key in missing[:10]:
@@ -291,9 +291,9 @@ def test_a_blank_translation_counts_as_missing():
 
 def test_force_rebuilds_every_key():
     en = {"a": "A", "b": "B"}
-    data = {"ru": {"a": "А", "b": "Б"}}
-    assert t.build_jobs(en, data, ["ru"]) == []
-    assert t.build_jobs(en, data, ["ru"], force=True) == [("a", "A", ["ru"]), ("b", "B", ["ru"])]
+    data = {"uk": {"a": "А", "b": "Б"}}
+    assert t.build_jobs(en, data, ["uk"]) == []
+    assert t.build_jobs(en, data, ["uk"], force=True) == [("a", "A", ["uk"]), ("b", "B", ["uk"])]
 
 
 def test_jobs_resume_a_finished_corpus_as_a_no_op():
@@ -302,6 +302,125 @@ def test_jobs_resume_a_finished_corpus_as_a_no_op():
     for key, _text, todo in t.build_jobs(en, data, list(t.LANGS)):
         for c in todo:
             assert not data[c].get(key, "").strip(), f"{key!r} queued for {c}, which has it"
+
+
+# ── deployment validation ─────────────────────────────────────────────
+
+def test_deployment_ru_json_absent():
+    assert not (t.I18N / "ru.json").exists(), "ru.json must not exist in assets/romfs/i18n"
+
+
+def test_deployment_all_25_languages_present():
+    assert len(t.LANGS) == 25, f"expected 25 target languages, found {len(t.LANGS)}"
+    for code in t.LANGS:
+        file_path = t.I18N / f"{code}.json"
+        assert file_path.exists(), f"missing translation file: {code}.json"
+
+
+def test_deployment_en_json_valid():
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+    assert len(en) >= 2810, f"en.json has {len(en)} keys, expected >= 2810"
+    for k, v in en.items():
+        assert isinstance(k, str) and k.strip(), "empty or non-string key in en.json"
+        assert isinstance(v, str), f"non-string value for key '{k}' in en.json"
+
+
+def test_deployment_key_completeness():
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+    missing_report = {}
+    for code in t.LANGS:
+        data = t.load(code)
+        missing_keys = [k for k in en if not data.get(k, "").strip()]
+        if missing_keys:
+            missing_report[code] = len(missing_keys)
+    assert not missing_report, f"Languages with missing or empty keys: {missing_report}"
+
+
+def test_deployment_printf_specifiers():
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+    mismatches = []
+    for code in t.LANGS:
+        data = t.load(code)
+        for k in en:
+            v = data.get(k, "")
+            if v and t.SPEC.findall(k) != t.SPEC.findall(v):
+                mismatches.append(f"{code} '{k}': {t.SPEC.findall(k)} vs {t.SPEC.findall(v)}")
+    assert not mismatches, f"{len(mismatches)} specifier mismatches found: {mismatches[:5]}"
+
+
+def test_deployment_newlines():
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+    mismatches = []
+    for code in t.LANGS:
+        data = t.load(code)
+        for k in en:
+            v = data.get(k, "")
+            if v and k.count("\n") != v.count("\n"):
+                mismatches.append(f"{code} '{k}': {k.count(chr(10))} vs {v.count(chr(10))}")
+    assert not mismatches, f"{len(mismatches)} newline mismatches found: {mismatches[:5]}"
+
+
+def test_deployment_not_identical_fallback():
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+    for code in t.LANGS:
+        if code == "engb":
+            continue
+        data = t.load(code)
+        identical_count = sum(1 for k, v in en.items() if data.get(k) == v and len(k) > 4)
+        pct = identical_count / len(en)
+        assert pct < 0.60, f"{code}.json appears to be an untranslated copy of English ({pct:.1%})"
+
+
+def test_deployment_no_untranslated_sentences():
+    """Ensure no long English sentences or natural language messages are left identical in non-English locales."""
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+
+    allowed_identical = {
+        'USB 2.0 High Speed (480 Mbps)',
+        'USB 3.0 SuperSpeed (5 Gbps)',
+        'USB 3.0 Enabled · Link: USB 2.0 High Speed (480 Mbps)',
+        'USB 3.0 Enabled Â· Link: USB 2.0 High Speed (480 Mbps)',
+        'USB 3.0 Enabled',
+        'USB 2.0',
+        'USB 3.0',
+        'Rank: %s · Index: %u',
+        'Rank: %s Â· Index: %u',
+        'Save ID: %016lX',
+        'Page %zu / %zu',
+        'Page %ld / %ld',
+        'Homebrew App Store',
+        'UAModDownloader',
+        'SimpleModDownloader',
+        'SteamGridDB',
+        'Kefir Cheats',
+        'Kefir Settings',
+        'Ownfoil Server',
+        '/dev/null (Speed Test)',
+        'microSD card (/dumps/)',
+        'WebDAV → SD',
+        'Local → WebDAV',
+        'WebDAV â\x86\x92 SD',
+        '60FPS/GFX Cheats',
+        'Switch-Handheld!',
+        'Switch-Docked!'
+    }
+
+    offenders = []
+    for code in t.LANGS:
+        if code == "engb":
+            continue
+        data = t.load(code)
+        for k, v in data.items():
+            if k in en and v == en[k]:
+                if k in allowed_identical:
+                    continue
+                words = [w for w in k.split() if len(w) > 1]
+                if len(k) >= 40 or (len(words) >= 4 and any(p in k for p in '.!?')):
+                    offenders.append(f"{code}: [{len(k)}] {k[:70]!r}")
+
+    assert not offenders, f"Found {len(offenders)} untranslated English sentences in non-English locales:\n" + "\n".join(offenders[:10])
+
+
 
 
 # ── live: real requests through the proxy ────────────────────────────
@@ -330,8 +449,7 @@ def test_live_all_languages_answer():
     out = live("Delete this file?")
     assert list(out) == list(t.LANGS), f"got {list(out)}"
     assert all(v.strip() for v in out.values())
-    # a real translation, not the English echoed back
-    for code in ("ru", "uk", "ja", "zh", "ko"):
+    for code in ("uk", "ja", "zh", "ko", "pl"):
         assert out[code] != "Delete this file?", f"{code} was not translated"
         assert not out[code].isascii(), f"{code} came back as ASCII: {out[code]!r}"
 
@@ -373,13 +491,12 @@ def test_live_keeps_technical_terms():
 
 
 def test_live_leaves_bare_tokens_alone():
-    out = live("FTP", ["ru", "ja", "zh", "uk"])
+    out = live("FTP", ["uk", "ja", "zh", "pl"])
     for code, value in out.items():
         assert value.upper().startswith("FTP"), f"{code}: {value!r}"
 
 
 def test_live_rejects_a_broken_reply():
-    # the retry path must trigger on a reply that drops a specifier, not silently accept it
     assert t.problems("Page %zu / %zu", "Сторінка 1 / 2") is not None
 
 
@@ -387,7 +504,7 @@ def test_live_survives_a_long_string():
     text = ("Only for consoles with physically soldered 8GB RAM. Other consoles will not boot correctly.\n"
             "To disable it if the console does not boot:\n"
             "hekate > payloads > TegraExplorer > Remove_8GB-RAM_config.te")
-    out = live(text, ["ru", "de", "ja"])
+    out = live(text, ["uk", "de", "ja"])
     for code, value in out.items():
         assert value.count("\n") == 2, f"{code}: {value!r}"
         assert "Remove_8GB-RAM_config.te" in value, f"{code} mangled the filename: {value!r}"
@@ -398,7 +515,7 @@ def test_live_unknown_model_fails_loudly():
     args.model = "definitely-not-a-model"
     args.retries = 0
     with requests.Session() as s:
-        raises(RuntimeError, lambda: t.translate(s, args, "Hello", ["ru"]))
+        raises(RuntimeError, lambda: t.translate(s, args, "Hello", ["uk"]))
 
 
 def main():

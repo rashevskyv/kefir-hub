@@ -59,52 +59,140 @@ std::string get_internal(std::string_view str) {
 
 } // namespace
 
+constexpr LanguageDef SUPPORTED_LANGUAGES[] = {
+    { 1,  "en",    "en",    "English",                   "English",                   SetLanguage_ENUS },
+    { 2,  "ja",    "jp",    "Japanese",                  "日本語",                     SetLanguage_JA },
+    { 3,  "fr",    "fr",    "French",                    "Français",                  SetLanguage_FR },
+    { 4,  "de",    "de",    "German",                    "Deutsch",                   SetLanguage_DE },
+    { 5,  "it",    "it",    "Italian",                   "Italiano",                  SetLanguage_IT },
+    { 6,  "es",    "es",    "Spanish",                   "Español",                   SetLanguage_ES },
+    { 7,  "zh",    "zhcn",  "Chinese (Simplified)",       "简体中文",                   SetLanguage_ZHCN },
+    { 8,  "ko",    "kr",    "Korean",                    "한국어",                     SetLanguage_KO },
+    { 9,  "nl",    "nl",    "Dutch",                     "Nederlands",                SetLanguage_NL },
+    { 10, "pt",    "pt",    "Portuguese (Portugal)",     "Português",                 SetLanguage_PT },
+    { 12, "se",    "se",    "Swedish",                   "Svenska",                   (SetLanguage)-1 },
+    { 13, "vi",    "vi",    "Vietnamese",                "Tiếng Việt",                (SetLanguage)-1 },
+    { 14, "uk",    "ua",    "Ukrainian",                 "Українська",                (SetLanguage)-1 },
+    { 15, "be",    "be",    "Belarusian",                "Беларуская",                (SetLanguage)-1 },
+    { 16, "engb",  "engb",  "English (UK)",              "English (UK)",              SetLanguage_ENGB },
+    { 17, "es419", "es419", "Spanish (Latin America)",   "Español (Latinoamérica)",   SetLanguage_ES419 },
+    { 18, "et",    "et",    "Estonian",                  "Eesti",                     (SetLanguage)-1 },
+    { 19, "frca",  "frca",  "French (Canada)",           "Français (Canada)",         SetLanguage_FRCA },
+    { 20, "id",    "id",    "Indonesian",                "Bahasa Indonesia",          (SetLanguage)-1 },
+    { 21, "kk",    "kk",    "Kazakh",                    "Қазақша (Qazaqsha)",        (SetLanguage)-1 },
+    { 22, "lt",    "lt",    "Lithuanian",                "Lietuvių",                  (SetLanguage)-1 },
+    { 23, "lv",    "lv",    "Latvian",                   "Latviešu",                  (SetLanguage)-1 },
+    { 24, "pl",    "pl",    "Polish",                    "Polski",                    (SetLanguage)-1 },
+    { 25, "ptbr",  "ptbr",  "Portuguese (Brazil)",       "Português (Brasil)",        SetLanguage_PTBR },
+    { 26, "tr",    "tr",    "Turkish",                   "Türkçe",                    (SetLanguage)-1 },
+    { 27, "zhtw",  "zhtw",  "Chinese (Traditional)",      "繁體中文",                   SetLanguage_ZHTW },
+};
+
+static std::string g_current_lang_code = "en";
+static long g_current_lang_id = 1;
+
+std::span<const LanguageDef> GetSupportedLanguages() {
+    return SUPPORTED_LANGUAGES;
+}
+
+const LanguageDef* FindLanguage(long id) {
+    for (const auto& def : SUPPORTED_LANGUAGES) {
+        if (def.id == id) {
+            return &def;
+        }
+    }
+    return nullptr;
+}
+
+const LanguageDef* FindLanguageByCode(std::string_view code) {
+    for (const auto& def : SUPPORTED_LANGUAGES) {
+        if (code == def.code) {
+            return &def;
+        }
+    }
+    for (const auto& def : SUPPORTED_LANGUAGES) {
+        if (code == def.dbi_code) {
+            return &def;
+        }
+    }
+    return nullptr;
+}
+
+const LanguageDef* FindLanguageByDbiCode(std::string_view dbi_code) {
+    for (const auto& def : SUPPORTED_LANGUAGES) {
+        if (dbi_code == def.dbi_code || dbi_code == def.code) {
+            return &def;
+        }
+    }
+    return nullptr;
+}
+
+long MatchSystemLanguage() {
+    u64 languageCode = 0;
+    SetLanguage setLanguage = SetLanguage_ENUS;
+    if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
+        setMakeLanguage(languageCode, &setLanguage);
+    }
+
+    switch (setLanguage) {
+        case SetLanguage_JA: return 2; // Japanese
+        case SetLanguage_ENUS: return 1; // English
+        case SetLanguage_ENGB: return 16; // English (UK)
+        case SetLanguage_FR: return 3; // French
+        case SetLanguage_FRCA: return 19; // French (Canada)
+        case SetLanguage_DE: return 4; // German
+        case SetLanguage_IT: return 5; // Italian
+        case SetLanguage_ES: return 6; // Spanish
+        case SetLanguage_ES419: return 17; // Spanish (Latin America)
+        case SetLanguage_ZHCN:
+        case SetLanguage_ZHHANS: return 7; // Chinese (Simplified)
+        case SetLanguage_ZHTW:
+        case SetLanguage_ZHHANT: return 27; // Chinese (Traditional)
+        case SetLanguage_KO: return 8; // Korean
+        case SetLanguage_NL: return 9; // Dutch
+        case SetLanguage_PT: return 10; // Portuguese (Portugal)
+        case SetLanguage_PTBR: return 25; // Portuguese (Brazil)
+        case SetLanguage_RU: return 1; // Russian maps to English
+        default: return 1; // Default to English
+    }
+}
+
+long MigrateLegacyLanguage(long old_index, bool has_saved_key) {
+    if (!has_saved_key) {
+        return MatchSystemLanguage();
+    }
+    if (old_index == 0) { // Legacy Auto
+        return MatchSystemLanguage();
+    }
+    if (old_index == 11) { // Legacy Russian
+        return 1; // English
+    }
+    if (FindLanguage(old_index) != nullptr) {
+        return old_index;
+    }
+    return 1;
+}
+
 bool init(long index) {
     g_tr_cache.clear();
     R_TRY_RESULT(romfsInit(), false);
     ON_SCOPE_EXIT( romfsExit() );
 
-    u64 languageCode;
-    SetLanguage setLanguage = SetLanguage_ENGB;
-    std::string lang_name = "en";
-
-    switch (index) {
-        case 0: // auto
-            if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
-                setMakeLanguage(languageCode, &setLanguage);
-            }
-            break;
-
-        case 1: setLanguage = SetLanguage_ENGB; break; // "English"
-        case 2: setLanguage = SetLanguage_JA; break; // "Japanese"
-        case 3: setLanguage = SetLanguage_FR; break; // "French"
-        case 4: setLanguage = SetLanguage_DE; break; // "German"
-        case 5: setLanguage = SetLanguage_IT; break; // "Italian"
-        case 6: setLanguage = SetLanguage_ES; break; // "Spanish"
-        case 7: setLanguage = SetLanguage_ZHCN; break; // "Chinese"
-        case 8: setLanguage = SetLanguage_KO; break; // "Korean"
-        case 9: setLanguage = SetLanguage_NL; break; // "Dutch"
-        case 10: setLanguage = SetLanguage_PT; break; // "Portuguese"
-        case 11: setLanguage = SetLanguage_RU; break; // "Russian"
-        case 12: lang_name = "se"; break; // "Swedish"
-        case 13: lang_name = "vi"; break; // "Vietnamese"
-        case 14: lang_name = "uk"; break; // "Ukrainian"
+    if (index == 0) {
+        index = MatchSystemLanguage();
+    } else if (index == 11) {
+        index = 1;
     }
 
-    switch (setLanguage) {
-        case SetLanguage_JA: lang_name = "ja"; break;
-        case SetLanguage_FR: lang_name = "fr"; break;
-        case SetLanguage_DE: lang_name = "de"; break;
-        case SetLanguage_IT: lang_name = "it"; break;
-        case SetLanguage_ES: lang_name = "es"; break;
-        case SetLanguage_ZHCN: lang_name = "zh"; break; 
-        case SetLanguage_KO: lang_name = "ko"; break;
-        case SetLanguage_NL: lang_name = "nl"; break;
-        case SetLanguage_PT: lang_name = "pt"; break;
-        case SetLanguage_RU: lang_name = "ru"; break;
-        case SetLanguage_ZHTW: lang_name = "zh"; break;
-        default: break;
+    const auto* def = FindLanguage(index);
+    if (!def) {
+        def = FindLanguage(1);
+        index = 1;
     }
+
+    g_current_lang_id = index;
+    g_current_lang_code = def ? def->code : "en";
+    const std::string lang_name = g_current_lang_code;
 
     const fs::FsPath sdmc_path = paths::I18N + lang_name + ".json";
     const fs::FsPath romfs_path = "romfs:/i18n/" + lang_name + ".json";
@@ -164,6 +252,14 @@ void exit() {
 
 std::string get(std::string_view str) {
     return get_internal(str);
+}
+
+std::string_view GetCurrentLanguageCode() {
+    return g_current_lang_code;
+}
+
+bool IsUkrainian() {
+    return g_current_lang_id == 14 || g_current_lang_code == "uk";
 }
 
 } // namespace sphaira::i18n

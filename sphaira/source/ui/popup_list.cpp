@@ -102,9 +102,12 @@ PopupList::PopupList(std::string title, Items items, Callback cb, s64 index)
             SetPop();
         }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
-            SetPop();
+            if (m_allow_cancel) {
+                SetPop();
+            }
         }})
     );
+
 
     m_starting_index = m_index;
 
@@ -225,6 +228,14 @@ auto PopupList::OnFocusLost() noexcept -> void {
 
 void PopupList::SetIndex(s64 index) {
     m_index = index;
+}
+
+auto PopupList::SetAllowCancel(bool allow) -> PopupList& {
+    m_allow_cancel = allow;
+    if (!allow) {
+        RemoveAction(Button::B);
+    }
+    return *this;
 }
 
 } // namespace sphaira::ui

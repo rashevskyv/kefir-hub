@@ -2,6 +2,7 @@
 #include "auto_update.hpp"
 #include "log.hpp"
 #include "ui/option_box.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "nro.hpp"
@@ -234,6 +235,52 @@ auto App::GetLanguage() -> long {
     return g_app->m_language.Get();
 }
 
+auto App::NeedsLanguageSelection() -> bool {
+    return g_app ? !g_app->m_language_chosen : false;
+}
+
+void App::MarkLanguageChosen() {
+    if (g_app) {
+        g_app->m_language_chosen = true;
+    }
+}
+
+void App::ShowInitialLanguageSelection() {
+    const auto languages = i18n::GetSupportedLanguages();
+    ui::PopupList::Items items;
+    items.reserve(languages.size());
+
+    s64 initial_idx = 0;
+    const long system_match = i18n::MatchSystemLanguage();
+
+    for (size_t i = 0; i < languages.size(); ++i) {
+        items.push_back(std::string(languages[i].name_native));
+        if (languages[i].id == system_match) {
+            initial_idx = static_cast<s64>(i);
+        }
+    }
+
+    auto popup = std::make_unique<ui::PopupList>(
+        "Select Language / Оберіть мову",
+        std::move(items),
+        [](std::optional<s64> op_index){
+            if (!op_index) {
+                return;
+            }
+            const auto languages = i18n::GetSupportedLanguages();
+            const s64 idx = *op_index;
+            if (idx >= 0 && idx < static_cast<s64>(languages.size())) {
+                const auto& def = languages[idx];
+                App::SetLanguage(def.id, false);
+                App::MarkLanguageChosen();
+            }
+        },
+        initial_idx
+    );
+    popup->SetAllowCancel(false);
+    App::Push(std::move(popup));
+}
+
 auto App::GetTextScrollSpeed() -> long {
     return g_app->m_text_scroll_speed.Get();
 }
@@ -393,11 +440,12 @@ void App::Set12HourTimeEnable(bool enable) {
 }
 
 void App::SetLanguage(long index, bool prompt_restart) {
-    if (App::GetLanguage() != index) {
+    const bool changed = (App::GetLanguage() != index);
+    if (changed || !g_app->m_language_chosen) {
         g_app->m_language.Set(index);
         on_i18n_change();
 
-        if (prompt_restart) {
+        if (prompt_restart && changed) {
             App::Push<ui::OptionBox>(
                 "Restart Kefir Hub?"_i18n,
                 "Back"_i18n, "Restart"_i18n, 1, [](auto op_index){
