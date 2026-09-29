@@ -31,6 +31,7 @@ Navigate to **Tools -> Install & Share -> PC Install (USB)**. Sphaira automatica
 
 ### MTP file destinations
 
+- Copy directly to the **Nintendo Switch device** in Windows Explorer to install NSP, NSZ, XCI, or XCZ files; other files and folders are copied to the microSD card. The matching Install or microSD storage must be enabled.
 - Copy NSP, NSZ, XCI, or XCZ files to the microSD storage to keep the files on the card. This applies to its root and subfolders; ordinary MTP copy progress is shown.
 - Copy a package to the separate virtual **Install** storage to stream it to the installer without storing the package file on the microSD card. The minimized installation badge shows progress for the current package when its size is known.
 

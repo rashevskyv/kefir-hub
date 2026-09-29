@@ -6,23 +6,133 @@ if(EXISTS "source/ptp_responder_mtp_operations.cpp")
     file(READ "source/ptp_responder_mtp_operations.cpp" src)
 
     # 6a. storage_id in SendObjectPropList
-    string(FIND "${src}" "new_object_info.storage_id       = parentobj->GetStorageId();" find_mtp_storage_id)
-    if(NOT find_mtp_storage_id EQUAL -1)
+    string(FIND "${src}" "/* sphaira: resolve parent object for device root" find_mtp_device_root)
+    if(NOT find_mtp_device_root EQUAL -1)
         message(STATUS "[libhaze-patch] ptp_responder_mtp_operations.cpp storage_id already patched")
     else()
-        set(mtp_storage_old
-"        /* Make a new object with the intended name. */
-        PtpNewObjectInfo new_object_info;
-        new_object_info.storage_id       = parentobj->GetObjectId();
-        new_object_info.parent_object_id = parent_object == storage_id ? 0 : parent_object;")
-        set(mtp_storage_new
-"        /* Make a new object with the intended name. */
+        set(mtp_early_lookup
+"        R_TRY(rdp.Read(std::addressof(object_size_lsb)));
+        R_TRY(rdp.Finalize());
+
+        /* Rewrite requests for creating in storage directories. */
+        if (parent_object == PtpGetObjectHandles_RootParent) {
+            parent_object = storage_id;
+        }
+
+        /* Check if we know about the parent object. If we don't, it's an error. */
+        auto * const parentobj = m_object_database.GetObjectById(parent_object);
+        R_UNLESS(parentobj != nullptr, haze::ResultInvalidObjectId());
+
+        PtpDataParser dp(m_buffers->usb_bulk_read_buffer, std::addressof(m_usb_server));")
+
+        set(mtp_deferred_lookup
+"        R_TRY(rdp.Read(std::addressof(object_size_lsb)));
+        R_TRY(rdp.Finalize());
+
+        PtpDataParser dp(m_buffers->usb_bulk_read_buffer, std::addressof(m_usb_server));")
+
+        set(mtp_create_patched
+"        /* Ensure we can actually process the new name. */
+        const bool is_empty         = m_buffers->filename_string_buffer[0] == '\\x00';
+        const bool contains_slashes = std::strchr(m_buffers->filename_string_buffer, '/') != nullptr;
+        R_UNLESS(!is_empty && !contains_slashes, haze::ResultInvalidPropertyValue());
+
+        /* Add a new object in the database with the new name. */
+        PtpObject *newobj;
+        R_TRY(m_object_database.CreateOrFindObject(parentobj->GetName(), m_buffers->filename_string_buffer, parentobj->GetObjectId(), parentobj->GetStorageId(), std::addressof(newobj)));
+
+        /* Create prop list. */
+        ObjectPropList prop_list{};
+        prop_list.size = ((u64)object_size_msb << 32) | object_size_lsb;
+        m_send_prop_list = prop_list;
+
+        /* Make a new object with the intended name. */
         PtpNewObjectInfo new_object_info;
         /* sphaira: fix storage_id to use parent storage ID instead of parent object handle. */
         new_object_info.storage_id       = parentobj->GetStorageId();
         new_object_info.parent_object_id = parent_object == storage_id ? 0 : parent_object;")
-        string(REPLACE "${mtp_storage_old}" "${mtp_storage_new}" src "${src}")
-        string(FIND "${src}" "new_object_info.storage_id       = parentobj->GetStorageId();" find_mtp_storage_after)
+
+        set(mtp_create_unpatched
+"        /* Ensure we can actually process the new name. */
+        const bool is_empty         = m_buffers->filename_string_buffer[0] == '\\x00';
+        const bool contains_slashes = std::strchr(m_buffers->filename_string_buffer, '/') != nullptr;
+        R_UNLESS(!is_empty && !contains_slashes, haze::ResultInvalidPropertyValue());
+
+        /* Add a new object in the database with the new name. */
+        PtpObject *newobj;
+        R_TRY(m_object_database.CreateOrFindObject(parentobj->GetName(), m_buffers->filename_string_buffer, parentobj->GetObjectId(), parentobj->GetStorageId(), std::addressof(newobj)));
+
+        /* Create prop list. */
+        ObjectPropList prop_list{};
+        prop_list.size = ((u64)object_size_msb << 32) | object_size_lsb;
+        m_send_prop_list = prop_list;
+
+        /* Make a new object with the intended name. */
+        PtpNewObjectInfo new_object_info;
+        new_object_info.storage_id       = parentobj->GetObjectId();
+        new_object_info.parent_object_id = parent_object == storage_id ? 0 : parent_object;")
+
+        set(mtp_create_new
+"        /* Ensure we can actually process the new name. */
+        const bool is_empty         = m_buffers->filename_string_buffer[0] == '\\x00';
+        const bool contains_slashes = std::strchr(m_buffers->filename_string_buffer, '/') != nullptr;
+        R_UNLESS(!is_empty && !contains_slashes, haze::ResultInvalidPropertyValue());
+
+        /* sphaira: resolve parent object for device root (drag & drop / Send To) or storage directory. */
+        const bool is_device_root = (storage_id == 0 || storage_id == PtpGetObjectHandles_AllStorage) &&
+                                    (parent_object == 0 || parent_object == PtpGetObjectHandles_RootParent);
+        if (is_device_root) {
+            bool is_install_package = false;
+            if (format_code != PtpObjectFormatCode_Association) {
+                const char* ext = std::strrchr(m_buffers->filename_string_buffer, '.');
+                if (ext != nullptr) {
+                    if (strcasecmp(ext, \".nsp\") == 0 || strcasecmp(ext, \".nsz\") == 0 ||
+                        strcasecmp(ext, \".xci\") == 0 || strcasecmp(ext, \".xcz\") == 0) {
+                        is_install_package = true;
+                    }
+                }
+            }
+
+            if (is_install_package) {
+                const auto it = std::find_if(m_fs_entries.cbegin(), m_fs_entries.cend(), [](const auto& e) {
+                    return std::strcmp(e.impl->GetName(), \"install\") == 0;
+                });
+                R_UNLESS(it != m_fs_entries.cend(), haze::ResultInvalidStorageId());
+                parent_object = it->storage_id;
+            } else {
+                const auto it = std::find_if(m_fs_entries.cbegin(), m_fs_entries.cend(), [](const auto& e) {
+                    return e.impl->GetName()[0] == '\\0';
+                });
+                R_UNLESS(it != m_fs_entries.cend(), haze::ResultInvalidStorageId());
+                parent_object = it->storage_id;
+            }
+        } else if (parent_object == PtpGetObjectHandles_RootParent || parent_object == 0) {
+            parent_object = storage_id;
+        }
+
+        /* Check if we know about the parent object. If we don't, it's an error. */
+        auto * const parentobj = m_object_database.GetObjectById(parent_object);
+        R_UNLESS(parentobj != nullptr, haze::ResultInvalidObjectId());
+
+        /* Add a new object in the database with the new name. */
+        PtpObject *newobj;
+        R_TRY(m_object_database.CreateOrFindObject(parentobj->GetName(), m_buffers->filename_string_buffer, parentobj->GetObjectId(), parentobj->GetStorageId(), std::addressof(newobj)));
+
+        /* Create prop list. */
+        ObjectPropList prop_list{};
+        prop_list.size = ((u64)object_size_msb << 32) | object_size_lsb;
+        m_send_prop_list = prop_list;
+
+        /* Make a new object with the intended name. */
+        PtpNewObjectInfo new_object_info;
+        /* sphaira: fix storage_id to use parent storage ID instead of parent object handle. */
+        new_object_info.storage_id       = parentobj->GetStorageId();
+        new_object_info.parent_object_id = (parent_object == storage_id || parent_object == parentobj->GetStorageId()) ? 0 : parent_object;")
+
+        string(REPLACE "${mtp_early_lookup}" "${mtp_deferred_lookup}" src "${src}")
+        string(REPLACE "${mtp_create_patched}" "${mtp_create_new}" src "${src}")
+        string(REPLACE "${mtp_create_unpatched}" "${mtp_create_new}" src "${src}")
+        string(FIND "${src}" "/* sphaira: resolve parent object for device root" find_mtp_storage_after)
         if(find_mtp_storage_after EQUAL -1)
             message(FATAL_ERROR "[libhaze-patch] failed to apply storage_id patch to ptp_responder_mtp_operations.cpp")
         endif()

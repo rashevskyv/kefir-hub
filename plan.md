@@ -1,8 +1,12 @@
 # plan.md
 
-Версія коду: **v0.13.912**.
+Версія коду: **v0.13.913**.
 
-## Поточний delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
+## Поточний delivery: v0.13.913 — MTP копіювання в корінь пристрою
+
+У PTP SendObjectInfo та MTP SendObjectPropList запити до кореня пристрою спрямовано за типом об'єкта: NSP/NSZ/XCI/XCZ до Install, інші файли й папки до microSD. Копіювання безпосередньо у сховище microSD лишається звичайним записом файла. Якщо потрібне сховище вимкнено, повертається помилка. Перевірено застосування й повторне застосування патча libhaze, Python контракт і `git diff --check`; NRO збірку та Windows/Switch перевірку не виконано. `TegraExplorer.bin` поза delivery.
+
+## Попередній delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
 
 Виправлено помилки компіляції та лінкування `libhaze`:
 1. У `include/haze/results.hpp` додано перевантаження `operator==` для `ams::Result` (порівняння двох `Result`, з `u32` та `int`), що забезпечило успішне порівняння `parse_res == 0x748C` у `usb_session.cpp` та `m_reactor->GetResult() == haze::ResultCancelled()` у `ptp_responder.cpp` і `ptp_responder_ptp_operations.cpp`.

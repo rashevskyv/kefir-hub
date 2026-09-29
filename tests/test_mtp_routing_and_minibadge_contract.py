@@ -19,10 +19,28 @@ DBI_DRAW_CPP = ROOT / "sphaira/source/ui/menus/dbi/dbi_draw.cpp"
 README_MD = ROOT / "README.md"
 
 
+PATCH_PTP = ROOT / "sphaira/cmake/patch_libhaze_ptp.cmake"
+PATCH_MTP = ROOT / "sphaira/cmake/patch_libhaze_mtp.cmake"
+
+
 def check(condition: bool, msg: str) -> None:
     if not condition:
         print(f"FAIL: {msg}")
         sys.exit(1)
+
+
+def test_device_root_vs_storage_routing() -> None:
+    # The patch application test exercises the actual libhaze sources; this
+    # contract catches accidental removal of routing from either PTP entry point.
+    for name, path in [("SendObjectInfo", PATCH_PTP), ("SendObjectPropList", PATCH_MTP)]:
+        src = path.read_text(encoding="utf-8")
+        check("const bool is_device_root" in src, f"{name} must distinguish the device root")
+        check("PtpObjectFormatCode_Association" in src, f"{name} must keep folders on microSD")
+        check(all(ext in src for ext in (".nsp", ".nsz", ".xci", ".xcz")),
+              f"{name} must recognize supported packages")
+        check("install" in src and "GetName()[0]" in src,
+              f"{name} must select Install and microSD storages")
+        check("ResultInvalidStorageId()" in src, f"{name} must fail if the selected storage is disabled")
 
 
 def test_routing_contracts() -> None:
@@ -83,6 +101,7 @@ def test_readme_docs() -> None:
 
 def main() -> None:
     print("Running MTP routing, residual cleanup, and MiniBadge source contracts...")
+    test_device_root_vs_storage_routing()
     test_routing_contracts()
     test_residual_session_contracts()
     test_minibadge_contracts()

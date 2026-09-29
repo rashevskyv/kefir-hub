@@ -1,8 +1,16 @@
 # task.md
 
-Версія коду: **v0.13.912**.
+Версія коду: **v0.13.913**.
 
-## Поточний delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
+## Поточний delivery: v0.13.913 — MTP копіювання в корінь пристрою
+
+- [x] `MTP-ROOT-913` — маршрутизувати файли й папки з кореня пристрою до Install або microSD без зміни прямого копіювання у сховища.
+- [x] `VERIFY-913` — перевірити патч libhaze, MTP контракт і `git diff --check` без збірки.
+- [x] `DOCS-BUMP-913` — оновити версію, README, wiki та delivery-документи.
+- [x] `COMMIT-913` — сфокусований commit на primary master без ROMFS binary.
+- [ ] Скомпілювати NRO та перевірити копіювання на вузол Nintendo Switch у Windows і на консолі.
+
+## Попередній delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
 
 - [x] `BUILD-OPERATOR-912` — додати перевантаження `operator==` для `ams::Result` у `include/haze/results.hpp`.
 - [x] `BUILD-SCOPE-912` — звузити заміну `ops_read_ok` до `GetObject` у `patch_libhaze_cancel.cmake` без зачіпання `GetObjectHandles`.
