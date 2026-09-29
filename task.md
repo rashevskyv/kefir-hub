@@ -1,8 +1,18 @@
 # task.md
 
-Версія коду: **v0.13.915**.
+Версія коду: **v0.13.916**.
 
-## Поточний delivery: v0.13.915 — перший вибір мови та 26 локалізацій
+## Поточний delivery: v0.13.916 — виправлення компіляції проксі haze та верифікація збірки
+
+- [x] `BUILD-HAZE-MACRO-916` — усунути конфлікт макросів `R_SUCCEED`, `R_THROW`, `R_TRY` та типів `ams::Result` шляхом вилучення `#include <haze/results.hpp>` з `haze_fs_proxy.cpp` та `haze_install_proxy.cpp`.
+- [x] `BUILD-HAZE-CANCEL-916` — визначити функцію `::haze::ResultCancelled()` з поверненням `MAKERESULT(420, 19)` типу `Result` (`u32`) у `sphaira/include/haze/haze_internal.hpp`.
+- [x] `BUILD-VERIFY-916` — повна збірка `ReleaseWithInstall` у WSL з успішною генерацією таргету `sphaira_nro` (100%).
+- [x] `TESTS-PARALLEL-916` — паралельна перевірка тестів контрактів MTP скасування (`test_modal_priority_and_mtp_cancel_contract.py` та `test_mtp_cancellation_contract.py`).
+- [x] `DOCS-BUMP-916` — оновити версію й delivery-документи (plan.md, task.md, walkthrough.md, audit.md).
+- [x] `COMMIT-916` — сфокусований commit на primary master без ROMFS binary.
+- [ ] Перевірити бінарник `sphaira_nro` та скасування MTP на Switch/ПК.
+
+## Попередній delivery: v0.13.915 — перший вибір мови та 26 локалізацій
 
 - [x] `LANG-FIRST-915` — вимагати підтвердження мови при першому запуску й зберігати її після вибору.
 - [x] `LANG-LEGACY-915` — зберегти старі ідентифікатори, мігрувати Auto та Russian і виключити російську з інтерфейсу.

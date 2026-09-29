@@ -1,6 +1,14 @@
 # walkthrough.md
 
-Актуальний delivery у коді — **v0.13.915** (2026-09-29).
+Актуальний delivery у коді — **v0.13.916** (2026-09-29).
+
+## v0.13.916 — виправлення компіляції проксі haze та верифікація збірки
+
+- Усунено помилки компіляції `cannot convert 'const ams::Result' to 'Result'` у `haze_fs_proxy.cpp` та `haze_install_proxy.cpp`. Пряме включення `<haze/results.hpp>` перезаписувало стандартні для Sphaira макроси `R_SUCCEED()`, `R_THROW()` та `R_TRY()` макросами Atmosphère vapours, які неявно повертають об'єкти `ams::Result`, несумісні з типом повернення `Result` (`u32`) методів `FileSystemProxyImpl`.
+- Вилучено зайві директиви `#include <haze/results.hpp>` з `haze_fs_proxy.cpp` та `haze_install_proxy.cpp`.
+- У `sphaira/include/haze/haze_internal.hpp` оголошено функцію `::haze::ResultCancelled()`, яка повертає `MAKERESULT(420, 19)` з нативним для libnx типом `Result` (`u32`). Це дозволяє коректно сигналізувати libhaze про скасування MTP передачі та одночасно задовольняє контрактні перевірки.
+- Збірка `ReleaseWithInstall` у WSL успішно виконана до 100% із генерацією вихідного `.nro` (`sphaira_nro`).
+- Паралельно перевірено Python тести `test_modal_priority_and_mtp_cancel_contract.py` та `test_mtp_cancellation_contract.py` — усі перевірки пройдено. `TegraExplorer.bin` поза delivery.
 
 ## v0.13.915 — перший вибір мови та 26 локалізацій
 

@@ -22,7 +22,6 @@
 #include <string>
 #include <functional>
 #include <haze.h>
-#include <haze/results.hpp>
 
 namespace sphaira::haze {
 

@@ -23,6 +23,15 @@
 #include <haze.h>
 #include <usbhsfs.h>
 
+namespace haze {
+
+// Result cancelled for MTP transfers (module 420, description 19)
+inline constexpr Result ResultCancelled() {
+    return MAKERESULT(420, 19);
+}
+
+} // namespace haze
+
 namespace sphaira::haze {
 
 #if ENABLE_NETWORK_INSTALL
