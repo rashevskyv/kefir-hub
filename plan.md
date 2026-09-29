@@ -1,8 +1,12 @@
 # plan.md
 
-Версія коду: **v0.13.907**.
+Версія коду: **v0.13.908**.
 
-## Поточний delivery: v0.13.907 — усунення колізії імен у CollectBackups та верифікація збірки C++
+## Поточний delivery: v0.13.908 — MTP копіювання пакетів на SD та прогрес згорнутого встановлення
+
+При копіюванні NSP/NSZ/XCI/XCZ на microSD через MTP файл лишається на картці; потокове встановлення запускає лише окремий віртуальний носій Install. Згорнута плашка показує прогрес поточного пакунка, коли загальний план відкладено й розмір пакунка відомий. Наступне копіювання після завершеного MTP встановлення закриває його залишкову сесію та показує ProgressBox. Оновлено README і wiki. Три цільові Python контракти та `git diff --check` пройшли; C++ збірку й перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
+
+## Попередній delivery: v0.13.907 — усунення колізії імен у CollectBackups та верифікація збірки C++
 
 Виправлено помилку компіляції у `sphaira/source/ui/menus/save/save_backup_pub.cpp`: додано `#include "path_util.hpp"` та явно кваліфіковано виклик `sphaira::path::IsSubpathOf`, що усунуло колізію з локальною змінною `path` у циклі `CollectBackups`. Повна збірка `ReleaseWithInstall` у WSL успішно завершилася побудовою артефакту `sphaira_nro` (100%). Цільовий контракт збережень `test_save_backup_destination_contract.py` та `git diff --check` пройшли. `TegraExplorer.bin` поза delivery.
 

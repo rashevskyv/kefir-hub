@@ -308,14 +308,19 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     }
 
     const s64 overall_done = OverallDone();
-    const double ratio = (!has_deferred_plan && m_plan_total_bytes > 0)
-        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+    const bool has_known_overall = !has_deferred_plan && m_plan_total_bytes > 0;
+    const bool has_known_package = (m_progress_size > 0);
+
+    const double ratio = has_known_overall
+        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0)
+        : (has_known_package ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0);
+
     char right_buf[64]{};
     if (state == State::Installing) {
-        if (has_deferred_plan) {
-            std::snprintf(right_buf, sizeof(right_buf), "--   %s", "Expand"_i18n.c_str());
-        } else {
+        if (has_known_overall || has_known_package) {
             std::snprintf(right_buf, sizeof(right_buf), "%.0f%%   %s", ratio * 100.0, "Expand"_i18n.c_str());
+        } else {
+            std::snprintf(right_buf, sizeof(right_buf), "--   %s", "Expand"_i18n.c_str());
         }
     } else {
         std::snprintf(right_buf, sizeof(right_buf), " %s", "Expand"_i18n.c_str());
@@ -325,7 +330,7 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     // Mini progress bar
     const Vec4 bar{bx + 10.f, by + 28.f, bw - 20.f, 4.f};
     gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 2.f);
-    if (!has_deferred_plan && ratio > 0.0) {
+    if ((has_known_overall || has_known_package) && ratio > 0.0) {
         gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(ratio), bar.h, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 2.f);
     }
 }

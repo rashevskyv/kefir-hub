@@ -138,11 +138,13 @@ void App::Update() {
     }
 
     bool block_background_update = false;
+    const bool active_install = session && !session->ShouldExit() && !session->ShouldPop()
+        && (!m_active_transfer_pbox || (session->GetState() == ui::menu::dbi::State::Installing && !session->AllPackagesTerminal()));
 
     if (m_active_transfer_pbox) {
         // An install session is the sole input owner even while minimized; the
         // server box's worker keeps running without calling its input method.
-        if (!session) {
+        if (!active_install) {
             if (m_controller.GotDown(Button::L3)) {
                 m_active_transfer_pbox->ToggleMinimized();
                 App::PlaySoundEffect(SoundEffect_Focus);
@@ -164,7 +166,7 @@ void App::Update() {
         }
     }
 
-    if (session) {
+    if (session && active_install) {
         constexpr float bw = 320.f;
         constexpr float bh = 40.f;
         constexpr float bx = SCREEN_WIDTH - bw - 20.f;
@@ -182,17 +184,17 @@ void App::Update() {
         } else {
             session->Update(nullptr, nullptr);
         }
+    }
 
-        if (session->ShouldExit() || session->ShouldPop()) {
-            {
-                SCOPED_MUTEX(&m_install_session_mutex);
-                if (m_active_install_session == session) {
-                    m_active_install_session.reset();
-                }
+    if (session && (session->ShouldExit() || session->ShouldPop())) {
+        {
+            SCOPED_MUTEX(&m_install_session_mutex);
+            if (m_active_install_session == session) {
+                m_active_install_session.reset();
             }
-            session.reset();
-            block_background_update = false;
         }
+        session.reset();
+        block_background_update = false;
     }
 
     if (!block_background_update) {
@@ -335,7 +337,9 @@ void App::Draw() {
             }
         }
 
-        if (session) {
+        const bool draw_session = session && !session->ShouldExit() && !session->ShouldPop()
+            && (!m_active_transfer_pbox || (session->GetState() == ui::menu::dbi::State::Installing && !session->AllPackagesTerminal()));
+        if (draw_session) {
             session->Draw(vg, &m_theme);
             if (session->WantsChrome()) {
                 session->DrawChrome(vg, &m_theme);
@@ -364,7 +368,9 @@ void App::Draw() {
 
     // no menu on the stack to anchor it to, so it just goes on top.
     if (!transfer_drawn) {
-        if (session) {
+        const bool draw_session = session && !session->ShouldExit() && !session->ShouldPop()
+            && (!m_active_transfer_pbox || (session->GetState() == ui::menu::dbi::State::Installing && !session->AllPackagesTerminal()));
+        if (draw_session) {
             session->Draw(vg, &m_theme);
             if (session->WantsChrome()) {
                 session->DrawChrome(vg, &m_theme);

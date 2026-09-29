@@ -29,6 +29,11 @@ Navigate to **Tools -> Install & Share -> PC Install (USB)**. Sphaira automatica
 3. **GoldLeaf (GLCI / GLCO):**
    - Sphaira browses the remote virtual drive (`VIRT:/`) exposed by ns-usbloader (GoldLeaf v0.10+ mode) and queues selected packages.
 
+### MTP file destinations
+
+- Copy NSP, NSZ, XCI, or XCZ files to the microSD storage to keep the files on the card. This applies to its root and subfolders; ordinary MTP copy progress is shown.
+- Copy a package to the separate virtual **Install** storage to stream it to the installer without storing the package file on the microSD card. The minimized installation badge shows progress for the current package when its size is known.
+
 ---
 
 ## 2. Review Queue Controls

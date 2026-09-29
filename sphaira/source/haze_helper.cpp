@@ -14,6 +14,7 @@
 #include <haze.h>
 #if ENABLE_NETWORK_INSTALL
 #include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/install_stream_menu_base.hpp"
 #endif
 
 namespace sphaira::haze {
@@ -63,6 +64,17 @@ void StartMtpProgressBox() {
                 }
                 init_filename = g_mtp_current_filename;
             }
+
+#if ENABLE_NETWORK_INSTALL
+            if (auto session = App::GetActiveInstallSession()) {
+                if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Mtp
+                    && !ui::menu::stream::BackgroundInstaller::IsInstalling()
+                    && (session->AllPackagesTerminal() || session->GetState() == ui::menu::dbi::State::Summary
+                        || session->GetState() == ui::menu::dbi::State::Cancelled || session->GetState() == ui::menu::dbi::State::Failed)) {
+                    session->RequestExit();
+                }
+            }
+#endif
 
             // The ProgressBox worker starts in its constructor, before PushTransfer
             // decides whether the app can own it.
@@ -228,6 +240,15 @@ void haze_callback(const ::haze::CallbackData *data) {
                     if (std::strstr(e.file.filename, g_shared_data.current_file.c_str()) != nullptr) {
                         break;
                     }
+                }
+            }
+
+            if (auto session = App::GetActiveInstallSession()) {
+                if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Mtp
+                    && !ui::menu::stream::BackgroundInstaller::IsInstalling()
+                    && (session->AllPackagesTerminal() || session->GetState() == ui::menu::dbi::State::Summary
+                        || session->GetState() == ui::menu::dbi::State::Cancelled || session->GetState() == ui::menu::dbi::State::Failed)) {
+                    session->RequestExit();
                 }
             }
 #endif

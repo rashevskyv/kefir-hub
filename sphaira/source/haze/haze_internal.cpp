@@ -46,9 +46,6 @@ std::vector<PinnedMount> g_pinned{};
 ::haze::FsEntries g_fs_entries{};
 
 const RootDropRule ROOT_DROP_RULES[] = {
-#if ENABLE_NETWORK_INSTALL
-    { SUPPORTED_EXT, RootDropAction::Install, nullptr, false },
-#endif
     { NRO_EXT, RootDropAction::RedirectDir, "/switch", true },
 };
 
