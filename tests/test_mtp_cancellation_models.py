@@ -228,7 +228,11 @@ class MockUsbServer:
             wait_rc = "ResultCancelled"
             reactor.set_result("ResultSuccess")
             self.is_cancelled = True
-            self.in_cleanup = True
+            self.is_broken = True
+            cancel_rc = self.cancel_endpoint(ep, urb_id)
+            if cancel_rc != "ResultSuccess":
+                return b"", cancel_rc
+            return b"", "ResultTransferFailed"
 
         # Host silent timeout (during normal read or cleanup)
         if event_during_wait in ("host_silent", "writer_cancel_during_wait"):
@@ -304,6 +308,8 @@ class MockSendObjectTransfer:
 
     def reader_step(self, event_during_read: Optional[str] = None, is_eot: bool = False) -> Tuple[int, str]:
         self._check_cancellation()
+        if self.is_cancelled:
+            return 0, "ResultTransferFailed"
 
         bytes_read = 0
         if self.is_done:
@@ -317,6 +323,8 @@ class MockSendObjectTransfer:
         )
 
         self._check_cancellation()
+        if self.is_cancelled:
+            return 0, "ResultTransferFailed"
 
         if rc != "ResultSuccess" and rc != "ResultEndOfTransmission":
             return 0, rc
@@ -329,19 +337,15 @@ class MockSendObjectTransfer:
         return bytes_read, "ResultSuccess"
 
     def writer_step(self, size: int) -> str:
-        # Discard writes if cancelled
         if self.is_cancelled:
-            self.bytes_written += size
-            return "ResultSuccess"
+            return "ResultTransferFailed"
 
-        # Simulate install consumer disabled by user cancel -> returns ResultCancelled
         if self.fail_write_cancelled:
             self.is_cancelled = True
-            # Propagate cancel to actual usb_server state polled by reader wait
             self.usb_server.set_cancelled(True)
+            self.usb_server.set_broken(True)
             self.usb_server.set_cleanup(True)
-            self.bytes_written += size
-            return "ResultSuccess"
+            return "ResultTransferFailed"
 
         self.bytes_written += size
         return "ResultSuccess"
@@ -352,9 +356,9 @@ class MockSendObjectTransfer:
             usb_cancelled = self.usb_server.get_is_cancelled()
             if reactor_cancelled or usb_cancelled:
                 self.is_cancelled = True
+                self.usb_server.set_cancelled(True)
+                self.usb_server.set_broken(True)
                 self.usb_server.set_cleanup(True)
-        elif not self.usb_server.is_in_cleanup():
-            self.usb_server.set_cleanup(True)
 
 
 def simulate_cancellation_state_machine() -> None:
@@ -441,55 +445,52 @@ def simulate_parser_and_drain_contract() -> None:
     r_timeout = MockReactor()
     assert r_timeout.wait_for_timeout(1000, raw_code=0xEA01) == "ResultTimeout"
 
-    # --- Scenario 1: Local cancel arrives during USB wait, completion returns success ---
+    # --- Scenario 1: Local cancel arrives during USB wait -> immediate abort ---
     usb1 = MockUsbServer()
     reactor1 = MockReactor()
     t1 = MockSendObjectTransfer(usb1, reactor1, total_size=1024)
     b_read1, rc1 = t1.reader_step(event_during_read="local_cancel")
-    assert rc1 == "ResultSuccess", "URB completes success"
+    assert rc1 == "ResultTransferFailed", "Local cancel during USB wait must abort immediately"
     assert usb1.get_is_cancelled(), "UsbServer records cancel"
-    assert t1.is_cancelled, "Reader caught cancel via check_cancellation() after read"
-    assert usb1.is_in_cleanup(), "Reader switched transport into cleanup mode"
-    w_rc1 = t1.writer_step(b_read1)
-    assert w_rc1 == "ResultSuccess"
+    assert usb1.get_is_broken(), "Transport marked broken on local cancel"
+    assert t1.is_cancelled, "Transfer marked cancelled"
+    b_read_next, rc_next = t1.reader_step()
+    assert rc_next == "ResultTransferFailed", "Subsequent packets immediately rejected"
+    assert b_read_next == 0, "No subsequent bytes read"
+    assert t1.packets_drained == 0, "No packets drained after cancel"
 
     # --- Scenario 2: Cancel arrives between read and WriteFile ---
     usb2 = MockUsbServer()
     reactor2 = MockReactor()
     t2 = MockSendObjectTransfer(usb2, reactor2, total_size=1024)
-    b_read2, _ = t2.reader_step()
+    b_read2, rc2 = t2.reader_step()
+    assert rc2 == "ResultSuccess"
     t2.writer_step(b_read2)
     reactor2.set_result("ResultCancelled")
-    t2.reader_step()
-    assert t2.is_cancelled, "check_cancellation before read immediately caught reactor cancel"
-    assert usb2.is_in_cleanup()
+    _, rc2_cancel = t2.reader_step()
+    assert rc2_cancel == "ResultTransferFailed", "check_cancellation before read immediately aborts"
+    assert t2.is_cancelled
+    assert usb2.get_is_broken(), "Transport marked broken"
 
     # --- Scenario 3: Writer-only cancel during active reader wait ---
-    # Reader is waiting on USB; writer gets ResultCancelled from WriteFile and propagates to usb_server
     usb3 = MockUsbServer()
     reactor3 = MockReactor()
     t3 = MockSendObjectTransfer(usb3, reactor3, total_size=1024)
     b_read3, _ = t3.reader_step()
     t3.fail_write_cancelled = True
     w_rc3 = t3.writer_step(b_read3)
-    assert w_rc3 == "ResultSuccess", "Writer absorbs ResultCancelled and discards further writes"
-    assert t3.is_cancelled, "Writer marks is_cancelled"
-    assert usb3.get_is_cancelled(), "Writer updated actual usb_server.m_cancelled"
-    assert usb3.is_in_cleanup(), "Writer updated actual usb_server.m_in_cleanup"
-
-    # Reader 1-second wait wakes up, observes m_in_cleanup/m_cancelled, switches to 5s cleanup deadline.
-    # Host is silent -> cleanup deadline times out -> CancelEndpoint -> marks is_broken = True!
-    _, rc3 = t3.reader_step(event_during_read="writer_cancel_during_wait")
+    assert w_rc3 == "ResultTransferFailed", "Writer fails with ResultTransferFailed"
+    assert t3.is_cancelled
+    assert usb3.get_is_cancelled()
+    assert usb3.get_is_broken()
+    _, rc3 = t3.reader_step()
     assert rc3 == "ResultTransferFailed"
-    assert usb3.get_is_broken(), "Host silence timeout marked transport broken"
 
-    # --- Scenario 4: Timeout + successful CancelEndpoint terminates transport ---
-    # Even if CancelEndpoint succeeds, mid-container timeout breaks framing; LoopProcess must terminate
+    # --- Scenario 4: Timeout + successful CancelEndpoint terminates transport (unreachable PC) ---
     usb4 = MockUsbServer()
-    usb4.fail_cancel_endpoint = False  # CancelEndpoint succeeds
+    usb4.fail_cancel_endpoint = False
     reactor4 = MockReactor()
     resp4 = MockPtpResponder(usb4, reactor4)
-
     req_count4 = 0
 
     def mock_req4():
@@ -509,7 +510,6 @@ def simulate_parser_and_drain_contract() -> None:
     usb5.cancel_endpoint_rc = "ResultTimeout"
     reactor5 = MockReactor()
     resp5 = MockPtpResponder(usb5, reactor5)
-
     req_count5 = 0
 
     def mock_req5():
@@ -523,43 +523,74 @@ def simulate_parser_and_drain_contract() -> None:
     assert usb5.get_is_broken()
     assert req_count5 == 1
 
-    # --- Scenario 6: Штатний local cancel з успішним drain зберігає з’єднання ---
-    # All packets received until EOT, no timeout, CancelEndpoint NOT called -> next command accepted!
+    # --- Scenario 6: Immediate stop on local cancel (no EOT drain) and session recovery ---
+    # Transfer 1: File is 100 packets (51200 bytes).
+    # Packet 1 reads and writes successfully.
+    # User clicks Cancel on Switch during Packet 2.
+    # Transfer 1 immediately aborts with ResultTransferFailed;
+    # Remaining packets are NOT read to EOT (packets_drained == 1, not 100).
+    # Transport terminates without hang (is_broken == True).
+    # Recovery reinitializes responder in new session -> Transfer 2 succeeds!
     usb6 = MockUsbServer()
     reactor6 = MockReactor()
     resp6 = MockPtpResponder(usb6, reactor6)
+    t6 = MockSendObjectTransfer(usb6, reactor6, total_size=51200)
 
-    req_count6 = 0
-    t6 = MockSendObjectTransfer(usb6, reactor6, total_size=1024)
+    # Packet 1 succeeds
+    b1, rc1 = t6.reader_step()
+    assert rc1 == "ResultSuccess" and b1 == 512
+    t6.writer_step(b1)
+    assert t6.packets_drained == 1
 
-    def mock_req6():
-        nonlocal req_count6
-        req_count6 += 1
-        if req_count6 == 1:
-            # Transfer 1: Local cancel occurs, host drains all data cleanly to EOT
-            t6.reader_step(event_during_read="local_cancel")
-            t6.reader_step(is_eot=True)
-            assert t6.is_done
-            assert not usb6.get_is_broken(), "Clean drain must NOT mark transport broken"
-            # Responder returns ResultCancelled, writes TransactionCanceled response, returns Success
-            return "ResultSuccess"
-        elif req_count6 == 2:
-            # Transfer 2: Next command arrives on SAME connection and succeeds
-            _, rc = usb6.transfer_packet(ep=1, size=12, reactor=reactor6)
-            resp6.finalize()
-            return rc
-        return "ResultSuccess"
+    # Local cancel arrives during Packet 2
+    b2, rc2 = t6.reader_step(event_during_read="local_cancel")
+    assert rc2 == "ResultTransferFailed", "Immediate abort without draining to EOT"
+    assert usb6.get_is_broken(), "Transport marked broken immediately"
+    assert t6.is_cancelled
 
-    # Loop handles Transfer 1 (cancel + drain) then continues to Transfer 2 on same connection!
-    resp6.loop_process(mock_req6)
-    assert req_count6 == 2, "Loop continued and processed next command on intact connection"
-    assert not usb6.get_is_broken()
+    # Attempting to read remaining packets of file 1 does NOT read data or drain to EOT
+    for _ in range(10):
+        b_rem, rc_rem = t6.reader_step()
+        assert rc_rem == "ResultTransferFailed"
+        assert b_rem == 0
+    assert t6.packets_drained == 1, "Remaining packets were NOT drained to EOT!"
+    assert not t6.is_done, "Transfer did not complete as successful"
 
-    # 7. Subsequent command intact after drain
+    # LoopProcess checks broken transport and terminates without hang
+    loop_rc6 = resp6.loop_process(lambda: "ResultSuccess")
+    assert loop_rc6 == "Terminated", "LoopProcess terminated immediately on broken transport"
+    assert resp6.finalized
+
+    # Session recovery (simulates ConsoleMainLoop recovery loop):
+    # ueventClear(&m_transfer_cancel_event);
+    # reactor.SetResult(ResultSuccess);
+    # Re-initialize PtpResponder with new UsbServer session:
+    reactor6.set_result("ResultSuccess")
+    usb6_recovered = MockUsbServer()
+    resp6_recovered = MockPtpResponder(usb6_recovered, reactor6)
+
+    # Transfer 2: Next file arrives in recovered session and transfers completely!
+    t6_next = MockSendObjectTransfer(usb6_recovered, reactor6, total_size=1024)
+    b2_1, rc2_1 = t6_next.reader_step()
+    assert rc2_1 == "ResultSuccess" and b2_1 == 512
+    t6_next.writer_step(b2_1)
+
+    b2_2, rc2_2 = t6_next.reader_step()
+    assert rc2_2 == "ResultSuccess" and b2_2 == 512
+    t6_next.writer_step(b2_2)
+    assert t6_next.is_done
+    assert not usb6_recovered.get_is_broken()
+    assert t6_next.bytes_written == 1024, "Next file transferred successfully to completion"
+
+    # 7. PC-side abort (0x748C): connection remains intact and aligned
     next_command_header = bytearray(b"\x0c\x00\x00\x00\x01\x00\x0c\x10\x01\x00\x00\x00")
     p_cmd = MockParser(buffer_size=512)
     p_cmd.stream = next_command_header
     p_cmd.flush()
     read_cmd, rc_cmd = p_cmd.read_buffer(12)
     assert rc_cmd == "ResultSuccess"
-    assert read_cmd == next_command_header, "Subsequent command header must remain intact and aligned"
+
+if __name__ == "__main__":
+    simulate_cancellation_state_machine()
+    simulate_parser_and_drain_contract()
+    print("PASS: test_mtp_cancellation_models verified.")

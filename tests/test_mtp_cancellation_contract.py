@@ -1,34 +1,8 @@
 #!/usr/bin/env python3
-"""Regression test contract for MTP file transfer cancellation and recovery.
-
-Validates that:
-1. Switch-side cancellation (B -> Yes) triggers cancel callback immediately,
-   marks transfer aborted, sets active=false, calls CancelTransfer() only once,
-   prevents ProgressBox relaunch flickering, and returns Result_TransferCancelled.
-2. If B is pressed during the 1.5s idle window after transfer completion,
-   CancelTransfer() is NOT called, so the signal never lingers into the next file.
-3. Worker thread does not redundantly call CancelTransfer() if SetCancelCallback
-   already executed it.
-4. ClearTransferCancel is completely eliminated from haze_helper.cpp and libhaze API.
-5. Exit() in haze.cpp releases g_mutex before blocking on thread exit, avoiding deadlock.
-6. HandleRequest and SendObject/GetObject only reset ResultCancelled, preserving ResultStopRequested.
-7. MicroSD partial/corrupted files are deleted on abort and not left behind.
-8. PC-side cancel / URB abort (0x748C) translates to ResultCancelled and
-   responds with PtpResponseCode_TransactionCanceled without session force-close.
-9. All 3 patch scenarios verified:
-   - Clean upstream -> latest
-   - Previous intermediate patched sources (prev2 and prev3) -> latest
-   - Latest -> latest idempotency (already patched)
-10. All senior review blockers verified:
-    - No duplicate waiter_idx in AsyncUsbServer::TransferPacketImpl.
-    - PtpDataParser uses haze::ResultInvalidArgument() (not invalid ResultInvalidParameter).
-    - ResultTransferFailed() used on failure paths.
-    - UsbSession::CancelEndpoint validates cancel, 1s eventWait, and report reaping.
-    - AsyncUsbServer::m_in_cleanup uses std::atomic<bool>; reader only sets cleanup.
-    - Local cancel signal preserved during USB wait via m_cancelled and check_cancellation.
-    - WriteFile ResultCancelled absorbed by writer, setting is_cancelled and discarding data.
-    - Broken transport (CancelEndpoint failure) terminates LoopProcess and rejects further transfers.
-    - File length limits: all patch and test files strictly <= 600 lines.
+"""Regression test contract for MTP file transfer cancellation, recovery, and review findings.
+Validates: Switch-side cancel, idle-window guard, single cancel invocation, Clean Exit deadlock-free,
+MicroSD partial delete, URB abort/PC cancel, clean drain, bounded recovery retries, exit reason filtering,
+and multi-scenario upgrade paths (clean, prev2, prev3, prev4, 09c04c20, idempotency). Limits <= 600 lines.
 """
 
 from pathlib import Path
@@ -152,6 +126,7 @@ def check_patch_libhaze_contract() -> None:
     assert "R_THROW(haze::ResultCancelled());" in combined_text
     assert "!transfer_success" in combined_text
     assert "sphaira: clean transport drain without mid-transfer deletion" in combined_text
+    assert "sphaira: immediate cancellation without draining to EOT" in combined_text
     assert "bool HasEot() const" in combined_text
     assert "read_count == sizeof(T)" in combined_text
     assert "WaitForTimeout" in combined_text
@@ -210,6 +185,16 @@ def check_senior_review_findings_contract() -> None:
     assert "m_usb_server.IsBroken()" in c_text
     assert "check_cancellation();" in cl_text
     assert "m_usb_server.SetCancelled(true);" in cl_text
+    assert "m_usb_server.SetBroken(true);" in cl_text
+
+    # Finding 7: Bounded recovery, exit reason filtering, and pre-read cancellation check
+    assert "MaxInitRetries" in c_text
+    assert "loop_rc == haze::ResultFocusLost()" in c_text
+    assert "local_cancel" in c_text
+    assert "CallbackType_CloseSession" in c_text
+    assert "find_check_before_read_top" in cl_text
+    assert "find_check_before_read_after" in cl_text
+    assert "ops_so_drain_read_09c_old" in cl_text
 
     # Generated source verification if libhaze-src is present
     libhaze_dir = REPO_ROOT / "build" / "ReleaseWithInstall" / "_deps" / "libhaze-src"
@@ -250,6 +235,18 @@ def check_senior_review_findings_contract() -> None:
         assert "ResultInvalidArgument" in gen_parser_h
         assert "ResultInvalidParameter" not in gen_parser_h
 
+    if (libhaze_dir / "include" / "haze" / "console_main_loop.hpp").exists():
+        gen_cml = (libhaze_dir / "include" / "haze" / "console_main_loop.hpp").read_text(encoding="utf-8")
+        if "MaxInitRetries" in gen_cml:
+            assert "loop_rc == haze::ResultFocusLost" in gen_cml
+            assert "local_cancel" in gen_cml
+            assert "CallbackType_CloseSession" in gen_cml
+
+    if (libhaze_dir / "include" / "haze" / "ptp_responder.hpp").exists():
+        gen_resp = (libhaze_dir / "include" / "haze" / "ptp_responder.hpp").read_text(encoding="utf-8")
+        if "bool IsBroken() const" in gen_resp:
+            assert "bool IsCancelled() const" in gen_resp
+
     if (libhaze_dir / "source" / "ptp_responder.cpp").exists():
         gen_ptp_cpp = (libhaze_dir / "source" / "ptp_responder.cpp").read_text(encoding="utf-8")
         assert "m_usb_server.IsBroken()" in gen_ptp_cpp
@@ -258,6 +255,8 @@ def check_senior_review_findings_contract() -> None:
         gen_ops_cpp = (libhaze_dir / "source" / "ptp_responder_ptp_operations.cpp").read_text(encoding="utf-8")
         assert "write_res == haze::ResultCancelled()" in gen_ops_cpp
         assert "check_cancellation();" in gen_ops_cpp
+        if "log_write(\"[LIBHAZE] local cancel detected" in gen_ops_cpp:
+            assert "check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }\n\n                /* Read as many bytes as we can. */" in gen_ops_cpp
 
 
 def test_patch_application_scenarios() -> None:
@@ -398,6 +397,53 @@ def test_patch_application_scenarios() -> None:
         ops_text3 = (temp_dir / "source" / "ptp_responder_ptp_operations.cpp").read_text(encoding="utf-8")
         assert "m_usb_server.SetCancelled(true);" in ops_text3
 
+        # Test 09c04c20 drain shape upgrade -> latest
+        log_cancel_new = 'log_write("[LIBHAZE] local cancel detected for transfer: %s\\n", obj->GetName());'
+        log_drain_old = 'log_write("[LIBHAZE] starting transport cleanup for cancelled transfer: %s\\n", obj->GetName());'
+        log_end_new = 'log_write("[LIBHAZE] cancelled transfer completed: %s\\n", obj->GetName());'
+        log_end_old = 'log_write("[LIBHAZE] transport cleanup finished for cancelled transfer: %s\\n", obj->GetName());'
+        r_pre_new = (
+            "check_cancellation();\n"
+            "                if (is_cancelled.load(std::memory_order_acquire)) {\n"
+            "                    R_THROW(haze::ResultTransferFailed());\n"
+            "                }\n\n"
+            "                /* Read as many bytes as we can. */\n"
+            "                u32 bytes_received = 0;\n"
+            "                Result read_res = dp.ReadBuffer((u8*)data, size, std::addressof(bytes_received));\n\n"
+            "                check_cancellation();"
+        )
+        r_pre_old = (
+            "check_cancellation();\n\n"
+            "                /* Read as many bytes as we can. */\n"
+            "                u32 bytes_received = 0;\n"
+            "                Result read_res = dp.ReadBuffer((u8*)data, size, std::addressof(bytes_received));\n\n"
+            "                check_cancellation();"
+        )
+        w_throw_new = "if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }"
+        w_throw_old = "if (is_cancelled.load(std::memory_order_acquire)) {\n                    offset += size;\n                    R_SUCCEED();\n                }"
+
+        inter_09c = ops_text3.replace(log_cancel_new, log_drain_old).replace(log_end_new, log_end_old).replace(r_pre_new, r_pre_old).replace(w_throw_new, w_throw_old)
+        assert inter_09c != ops_text3, "Failed to craft 09c04c20 drain shape"
+        (temp_dir / "source" / "ptp_responder_ptp_operations.cpp").write_text(inter_09c, encoding="utf-8")
+
+        res2d = subprocess.run(patch_cmd, capture_output=True, text=True)
+        assert res2d.returncode == 0, f"Upgrade from 09c04c20 drain shape failed: {res2d.stderr}"
+        assert "applied ptp_responder_ptp_operations.cpp cancel patch" in res2d.stdout
+
+        ops_text_09c = (temp_dir / "source" / "ptp_responder_ptp_operations.cpp").read_text(encoding="utf-8")
+        assert log_drain_old not in ops_text_09c and log_end_old not in ops_text_09c
+        assert "local cancel detected for transfer" in ops_text_09c and "cancelled transfer completed" in ops_text_09c
+        assert "check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }\n\n                /* Read as many bytes as we can. */" in ops_text_09c
+
+        # Also test upgrading from 09c mid-shape (missing pre-read check)
+        inter_09c_mid = ops_text_09c.replace(r_pre_new, r_pre_old)
+        assert inter_09c_mid != ops_text_09c
+        (temp_dir / "source" / "ptp_responder_ptp_operations.cpp").write_text(inter_09c_mid, encoding="utf-8")
+        res2e = subprocess.run(patch_cmd, capture_output=True, text=True)
+        assert res2e.returncode == 0, f"Upgrade from 09c mid-shape failed: {res2e.stderr}"
+        ops_text_09c_mid = (temp_dir / "source" / "ptp_responder_ptp_operations.cpp").read_text(encoding="utf-8")
+        assert "check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }\n\n                /* Read as many bytes as we can. */" in ops_text_09c_mid
+
         # USB source from the preceding review must also upgrade, even though
         # it already contains cancellation, timeout and broken-state markers.
         async_path = temp_dir / "source" / "async_usb_server.cpp"
@@ -427,12 +473,110 @@ def test_patch_application_scenarios() -> None:
         assert "applied" not in res3.stdout
 
 
+def check_cml_recovery_and_failure_contract() -> None:
+    """Verifies ConsoleMainLoop::RunApplication:
+    - Recovers USB ONLY on broken transport caused by local cancellation.
+    - Preserves immediate clean exit for ResultStopRequested, ResultFocusLost,
+      unbroken transport, or non-cancel transport break.
+    - Observes exact recovery order: Finalize -> ClearCancel -> 100ms delay -> Initialize.
+    - Safely cleans up partial initialization (Finalize) on failure.
+    - Bounds recovery retries (MaxInitRetries = 3).
+    - Transitions to CallbackType_CloseSession and waits on cancel event on permanent failure.
+    """
+    c_patch = REPO_ROOT / "sphaira" / "cmake" / "patch_libhaze_cancel.cmake"
+    c_text = c_patch.read_text(encoding="utf-8", errors="ignore")
+
+    assert "constexpr int MaxInitRetries = 3;" in c_text
+    assert "loop_rc == haze::ResultFocusLost()" in c_text
+    assert "loop_rc == haze::ResultStopRequested()" in c_text
+    assert "if (!ptp_responder.IsBroken() || !local_cancel)" in c_text
+    assert "const bool local_cancel = ptp_responder.IsCancelled();" in c_text
+    assert "m_transfer_cancelled" not in c_text
+    assert "CallbackType_CloseSession" in c_text
+    assert "waiterForUEvent(&m_cancel_event)" in c_text
+
+    def run_cml(loop_rc="ResultSuccess", reactor="ResultSuccess", is_broken=False, local_cancel=False, startup_fails=0, recovery_fails=0):
+        events, closed_session, is_recovery = [], False, False
+        while reactor != "ResultStopRequested":
+            fails = recovery_fails if is_recovery else startup_fails
+            events.append("init")
+            if fails == 0:
+                init_ok = True
+            else:
+                fails -= 1
+                events.append("finalize_partial")
+                init_ok = False
+                for r in range(3):
+                    if reactor == "ResultStopRequested":
+                        break
+                    events.append("sleep_100ms_retry")
+                    events.append(f"init_retry_{r+1}")
+                    if fails == 0:
+                        init_ok = True
+                        break
+                    fails -= 1
+                    events.append("finalize_partial")
+                if not init_ok:
+                    closed_session = True
+                    events.extend(["emit_close_session", "wait_cancel_event"])
+                    break
+
+            events.append("loop_process")
+            if reactor == "ResultStopRequested" or loop_rc in ("ResultStopRequested", "ResultFocusLost"):
+                events.extend([f"exit_{loop_rc}", "finalize"])
+                break
+
+            if not is_broken or not local_cancel:
+                events.extend(["exit_preserve_prev", "finalize"])
+                break
+
+            events.extend(["recovery_finalize", "clear_cancel", "sleep_100ms_detached"])
+            is_recovery, is_broken, local_cancel, loop_rc = True, False, False, "ResultStopRequested"
+
+        return events, closed_session
+
+    evs1, cs1 = run_cml(loop_rc="ResultFocusLost", is_broken=True, local_cancel=True)
+    assert evs1 == ["init", "loop_process", "exit_ResultFocusLost", "finalize"] and not cs1
+
+    evs2, cs2 = run_cml(loop_rc="ResultStopRequested", is_broken=True, local_cancel=True)
+    assert evs2 == ["init", "loop_process", "exit_ResultStopRequested", "finalize"] and not cs2
+
+    evs3, cs3 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=False)
+    assert evs3 == ["init", "loop_process", "exit_preserve_prev", "finalize"] and not cs3
+
+    evs4, cs4 = run_cml(loop_rc="ResultSuccess", is_broken=False, local_cancel=True)
+    assert evs4 == ["init", "loop_process", "exit_preserve_prev", "finalize"] and not cs4
+
+    evs5, cs5 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=True)
+    assert evs5 == [
+        "init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached",
+        "init", "loop_process", "exit_ResultStopRequested", "finalize"
+    ] and not cs5
+
+    evs6, cs6 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=True, recovery_fails=1)
+    assert evs6 == [
+        "init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached",
+        "init", "finalize_partial", "sleep_100ms_retry", "init_retry_1", "loop_process", "exit_ResultStopRequested", "finalize"
+    ] and not cs6
+
+    evs7, cs7 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=True, recovery_fails=4)
+    assert cs7 and evs7 == [
+        "init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached",
+        "init", "finalize_partial",
+        "sleep_100ms_retry", "init_retry_1", "finalize_partial",
+        "sleep_100ms_retry", "init_retry_2", "finalize_partial",
+        "sleep_100ms_retry", "init_retry_3", "finalize_partial",
+        "emit_close_session", "wait_cancel_event"
+    ]
+
+
 def main() -> None:
     check_progress_box_contract()
     check_haze_internal_contract()
     check_haze_helper_contract()
     check_patch_libhaze_contract()
     check_senior_review_findings_contract()
+    check_cml_recovery_and_failure_contract()
     test_patch_application_scenarios()
     simulate_cancellation_state_machine()
     simulate_parser_and_drain_contract()

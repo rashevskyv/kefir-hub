@@ -11,35 +11,8 @@ if(EXISTS "include/haze/ptp_data_parser.hpp")
     if(NOT find_has_eot EQUAL -1 AND NOT find_read_t_check EQUAL -1)
         message(STATUS "[libhaze-patch] ptp_data_parser.hpp EOT semantics already patched")
     else()
-        set(parser_flush_old
-"                m_received_size = 0;
-                m_offset = 0;
-
-                ON_SCOPE_EXIT {
-                    /* End of transmission occurs when receiving a bulk transfer less than the buffer size. */
-                    /* PTP uses zero-length termination, so zero is a possible size to receive. */
-                    m_eot = m_received_size < haze::UsbBulkPacketBufferSize;
-                };
-
-                R_RETURN(m_server->ReadPacket(m_data, haze::UsbBulkPacketBufferSize, std::addressof(m_received_size)));
-            }
-        public:
-            constexpr explicit PtpDataParser(void *data, AsyncUsbServer *server) : m_server(server), m_received_size(), m_offset(), m_data(static_cast<u8 *>(data)), m_eot() { /* ... */ }
-
-            Result Finalize() {")
-        set(parser_flush_old2
-"                ON_SCOPE_EXIT {
-                    /* End of transmission occurs when receiving a bulk transfer less than the buffer size. */
-                    /* PTP uses zero-length termination, so zero is a possible size to receive. */
-                    m_eot = m_received_size < haze::UsbBulkPacketBufferSize;
-                };
-
-                R_RETURN(m_server->ReadPacket(m_data, haze::UsbBulkPacketBufferSize, std::addressof(m_received_size)));
-            }
-        public:
-            constexpr explicit PtpDataParser(void *data, AsyncUsbServer *server) : m_server(server), m_received_size(), m_offset(), m_data(static_cast<u8 *>(data)), m_eot() { /* ... */ }
-
-            Result Finalize() {")
+        set(parser_flush_old "                m_received_size = 0;\n                m_offset = 0;\n\n                ON_SCOPE_EXIT {\n                    /* End of transmission occurs when receiving a bulk transfer less than the buffer size. */\n                    /* PTP uses zero-length termination, so zero is a possible size to receive. */\n                    m_eot = m_received_size < haze::UsbBulkPacketBufferSize;\n                };\n\n                R_RETURN(m_server->ReadPacket(m_data, haze::UsbBulkPacketBufferSize, std::addressof(m_received_size)));\n            }\n        public:\n            constexpr explicit PtpDataParser(void *data, AsyncUsbServer *server) : m_server(server), m_received_size(), m_offset(), m_data(static_cast<u8 *>(data)), m_eot() { /* ... */ }\n\n            Result Finalize() {")
+        set(parser_flush_old2 "                ON_SCOPE_EXIT {\n                    /* End of transmission occurs when receiving a bulk transfer less than the buffer size. */\n                    /* PTP uses zero-length termination, so zero is a possible size to receive. */\n                    m_eot = m_received_size < haze::UsbBulkPacketBufferSize;\n                };\n\n                R_RETURN(m_server->ReadPacket(m_data, haze::UsbBulkPacketBufferSize, std::addressof(m_received_size)));\n            }\n        public:\n            constexpr explicit PtpDataParser(void *data, AsyncUsbServer *server) : m_server(server), m_received_size(), m_offset(), m_data(static_cast<u8 *>(data)), m_eot() { /* ... */ }\n\n            Result Finalize() {")
 
         set(parser_flush_new
 "                u32 received = 0;
@@ -294,9 +267,10 @@ if(EXISTS "include/haze/async_usb_server.hpp" AND EXISTS "source/async_usb_serve
     string(FIND "${cpp_src}" "m_broken.store(true" find_broken_check)
     string(FIND "${cpp_src}" "m_cancelled.store(true" find_cancelled_check)
     string(FIND "${cpp_src}" "haze::ResultTimeout()" find_timeout_check)
-    set(retirement_guard "const Result cancel_rc = g_usb_session.CancelEndpoint(ep, urb_id);\n                m_broken.store(true, std::memory_order_release);")
+    set(retirement_guard "const Result cancel_rc = g_usb_session.CancelEndpoint(ep, urb_id);\n            m_broken.store(true, std::memory_order_release);")
     string(FIND "${cpp_src}" "${retirement_guard}" find_retirement_guard)
-    if(NOT find_tf_check EQUAL -1 AND NOT find_ce_check EQUAL -1 AND find_dup_waiter EQUAL -1 AND NOT find_broken_check EQUAL -1 AND NOT find_cancelled_check EQUAL -1 AND NOT find_timeout_check EQUAL -1 AND NOT find_retirement_guard EQUAL -1)
+    string(FIND "${cpp_src}" "m_broken.load(std::memory_order_acquire) || m_cancelled.load(std::memory_order_acquire)" find_entry_cancel)
+    if(NOT find_tf_check EQUAL -1 AND NOT find_ce_check EQUAL -1 AND find_dup_waiter EQUAL -1 AND NOT find_broken_check EQUAL -1 AND NOT find_cancelled_check EQUAL -1 AND NOT find_timeout_check EQUAL -1 AND NOT find_retirement_guard EQUAL -1 AND NOT find_entry_cancel EQUAL -1)
         message(STATUS "[libhaze-patch] async_usb_server.cpp cancel already patched")
     else()
         string(FIND "${cpp_src}" "void log_write(" find_lw_async)
@@ -318,147 +292,8 @@ if(EXISTS "include/haze/async_usb_server.hpp" AND EXISTS "source/async_usb_serve
         /* Return what we transferred. */
         R_RETURN(g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred));")
 
-        # Previous intermediate shape 2
-        set(async_transfer_prev2
-"        /* Select the appropriate endpoint and begin a transfer. */
-        UsbSessionEndpoint ep = read ? UsbSessionEndpoint_Read : UsbSessionEndpoint_Write;
-        R_TRY(g_usb_session.TransferAsync(ep, page, size, std::addressof(urb_id)));
-
-        /* Try to wait for the event. */
-        s32 waiter_idx = -1;
-        Result wait_rc = ResultSuccess();
-        if (m_in_cleanup && read) {
-            wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 5000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-        } else {
-            wait_rc = m_reactor->WaitFor(std::addressof(waiter_idx), waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-        }
-
-        /* sphaira: reap in-flight URB on cancel and bound cleanup wait */
-        if (wait_rc == haze::ResultCancelled() && read) {
-            if (m_reactor && m_reactor->GetResult() == haze::ResultCancelled()) {
-                m_reactor->SetResult(ResultSuccess());
-            }
-            wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 5000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-            if (R_SUCCEEDED(wait_rc)) {
-                wait_rc = g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred);
-                if (R_SUCCEEDED(wait_rc)) {
-                    R_SUCCEED();
-                }
-            } else {
-                g_usb_session.CancelEndpoint(ep, urb_id);
-                if (wait_rc == haze::ResultStopRequested()) {
-                    R_THROW(haze::ResultStopRequested());
-                }
-                log_write(\"[LIBHAZE] host silence during cleanup timeout: 0x%08X\\n\", wait_rc.GetValue());
-                R_THROW(haze::ResultOperationFailed());
-            }
-        }
-
-        if (R_FAILED(wait_rc)) {
-            g_usb_session.CancelEndpoint(ep, urb_id);
-            if (wait_rc == haze::ResultStopRequested()) {
-                R_THROW(haze::ResultStopRequested());
-            }
-            if (m_in_cleanup) {
-                log_write(\"[LIBHAZE] host silence during cleanup timeout: 0x%08X\\n\", wait_rc.GetValue());
-                R_THROW(haze::ResultOperationFailed());
-            }
-            R_RETURN(wait_rc);
-        }
-
-        /* Return what we transferred. */
-        R_RETURN(g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred));")
-
-        # Previous intermediate shape 3 (from review 4)
+        # Previous intermediate shape 3 (from 09c04c20: bound cleanup wait)
         set(async_transfer_prev3
-"        if (m_broken.load(std::memory_order_acquire)) {
-            R_THROW(haze::ResultTransferFailed());
-        }
-
-        /* Select the appropriate endpoint and begin a transfer. */
-        UsbSessionEndpoint ep = read ? UsbSessionEndpoint_Read : UsbSessionEndpoint_Write;
-        R_TRY(g_usb_session.TransferAsync(ep, page, size, std::addressof(urb_id)));
-
-        /* Try to wait for the event. */
-        waiter_idx = -1;
-        Result wait_rc = ResultSuccess();
-        if (m_in_cleanup.load(std::memory_order_acquire) && read) {
-            wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 5000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-        } else if (read) {
-            while (true) {
-                wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 1000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-                if (wait_rc != haze::ResultTimeout()) {
-                    break;
-                }
-                if (m_reactor) {
-                    if (m_reactor->GetResult() == haze::ResultStopRequested()) {
-                        wait_rc = haze::ResultStopRequested();
-                        break;
-                    }
-                    if (m_reactor->GetResult() == haze::ResultCancelled()) {
-                        wait_rc = haze::ResultCancelled();
-                        break;
-                    }
-                }
-                if (m_in_cleanup.load(std::memory_order_acquire) || m_cancelled.load(std::memory_order_acquire)) {
-                    wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 5000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-                    break;
-                }
-            }
-        } else {
-            wait_rc = m_reactor->WaitFor(std::addressof(waiter_idx), waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-        }
-
-        /* sphaira: reap in-flight URB on cancel and bound cleanup wait */
-        if (wait_rc == haze::ResultCancelled() && read) {
-            m_cancelled.store(true, std::memory_order_release);
-            m_in_cleanup.store(true, std::memory_order_release);
-            if (m_reactor && m_reactor->GetResult() == haze::ResultCancelled()) {
-                m_reactor->SetResult(ResultSuccess());
-            }
-            wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 5000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
-            if (R_SUCCEEDED(wait_rc)) {
-                wait_rc = g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred);
-                if (R_SUCCEEDED(wait_rc)) {
-                    R_SUCCEED();
-                }
-            } else {
-                const Result cancel_rc = g_usb_session.CancelEndpoint(ep, urb_id);
-                if (R_FAILED(cancel_rc)) {
-                    m_broken.store(true, std::memory_order_release);
-                    log_write(\"[LIBHAZE] failed to cancel endpoint %d for urb %u: 0x%08X\\n\", ep, urb_id, cancel_rc.GetValue());
-                    R_RETURN(cancel_rc);
-                }
-                if (wait_rc == haze::ResultStopRequested() || (m_reactor && m_reactor->GetResult() == haze::ResultStopRequested())) {
-                    R_THROW(haze::ResultStopRequested());
-                }
-                log_write(\"[LIBHAZE] host silence during cleanup timeout: 0x%08X\\n\", wait_rc.GetValue());
-                R_THROW(haze::ResultTransferFailed());
-            }
-        }
-
-        if (R_FAILED(wait_rc)) {
-            const Result cancel_rc = g_usb_session.CancelEndpoint(ep, urb_id);
-            if (R_FAILED(cancel_rc)) {
-                m_broken.store(true, std::memory_order_release);
-                log_write(\"[LIBHAZE] failed to cancel endpoint %d for urb %u: 0x%08X\\n\", ep, urb_id, cancel_rc.GetValue());
-                R_RETURN(cancel_rc);
-            }
-            if (wait_rc == haze::ResultStopRequested() || (m_reactor && m_reactor->GetResult() == haze::ResultStopRequested())) {
-                R_THROW(haze::ResultStopRequested());
-            }
-            if (m_in_cleanup.load(std::memory_order_acquire)) {
-                log_write(\"[LIBHAZE] host silence during cleanup timeout: 0x%08X\\n\", wait_rc.GetValue());
-                R_THROW(haze::ResultTransferFailed());
-            }
-            R_RETURN(wait_rc);
-        }
-
-        /* Return what we transferred. */
-        R_RETURN(g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred));")
-
-        # Latest verified shape
-        set(async_transfer_new
 "        if (m_broken.load(std::memory_order_acquire)) {
             R_THROW(haze::ResultTransferFailed());
         }
@@ -545,8 +380,79 @@ if(EXISTS "include/haze/async_usb_server.hpp" AND EXISTS "source/async_usb_serve
         /* Return what we transferred. */
         R_RETURN(g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred));")
 
+        # Latest verified shape
+        set(async_transfer_new
+"        if (m_broken.load(std::memory_order_acquire) || m_cancelled.load(std::memory_order_acquire)) {
+            R_THROW(haze::ResultTransferFailed());
+        }
+
+        /* Select the appropriate endpoint and begin a transfer. */
+        UsbSessionEndpoint ep = read ? UsbSessionEndpoint_Read : UsbSessionEndpoint_Write;
+        R_TRY(g_usb_session.TransferAsync(ep, page, size, std::addressof(urb_id)));
+
+        /* Try to wait for the event. */
+        waiter_idx = -1;
+        Result wait_rc = ResultSuccess();
+        if (m_in_cleanup.load(std::memory_order_acquire) && read) {
+            wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 5000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
+        } else if (read) {
+            while (true) {
+                wait_rc = m_reactor->WaitForTimeout(std::addressof(waiter_idx), 1000000000ULL, waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
+                if (wait_rc != haze::ResultTimeout() && !svc::ResultTimedOut::Includes(wait_rc) && wait_rc.GetValue() != 0xEA01) {
+                    break;
+                }
+                if (m_reactor) {
+                    if (m_reactor->GetResult() == haze::ResultStopRequested()) {
+                        wait_rc = haze::ResultStopRequested();
+                        break;
+                    }
+                    if (m_reactor->GetResult() == haze::ResultCancelled()) {
+                        wait_rc = haze::ResultCancelled();
+                        break;
+                    }
+                }
+                if (m_cancelled.load(std::memory_order_acquire)) {
+                    wait_rc = haze::ResultCancelled();
+                    break;
+                }
+            }
+        } else {
+            wait_rc = m_reactor->WaitFor(std::addressof(waiter_idx), waiterForEvent(g_usb_session.GetCompletionEvent(ep)));
+        }
+
+        /* sphaira: reap in-flight URB on cancel and immediately abort */
+        if (wait_rc == haze::ResultCancelled() && read) {
+            m_cancelled.store(true, std::memory_order_release);
+            m_broken.store(true, std::memory_order_release);
+            const Result cancel_rc = g_usb_session.CancelEndpoint(ep, urb_id);
+            if (R_FAILED(cancel_rc)) {
+                log_write(\"[LIBHAZE] failed to cancel endpoint %d for urb %u: 0x%08X\\n\", ep, urb_id, cancel_rc.GetValue());
+                R_RETURN(cancel_rc);
+            }
+            R_THROW(haze::ResultTransferFailed());
+        }
+
+        if (R_FAILED(wait_rc)) {
+            const Result cancel_rc = g_usb_session.CancelEndpoint(ep, urb_id);
+            m_broken.store(true, std::memory_order_release);
+            if (R_FAILED(cancel_rc)) {
+                log_write(\"[LIBHAZE] failed to cancel endpoint %d for urb %u: 0x%08X\\n\", ep, urb_id, cancel_rc.GetValue());
+                R_RETURN(cancel_rc);
+            }
+            if (wait_rc == haze::ResultStopRequested() || (m_reactor && m_reactor->GetResult() == haze::ResultStopRequested())) {
+                R_THROW(haze::ResultStopRequested());
+            }
+            if (m_in_cleanup.load(std::memory_order_acquire)) {
+                log_write(\"[LIBHAZE] host silence during cleanup timeout: 0x%08X\\n\", wait_rc.GetValue());
+                R_THROW(haze::ResultTransferFailed());
+            }
+            R_RETURN(wait_rc);
+        }
+
+        /* Return what we transferred. */
+        R_RETURN(g_usb_session.GetTransferResult(ep, urb_id, out_size_transferred));")
+
         string(REPLACE "${async_transfer_prev3}" "${async_transfer_new}" cpp_src "${cpp_src}")
-        string(REPLACE "${async_transfer_prev2}" "${async_transfer_new}" cpp_src "${cpp_src}")
         string(REPLACE "${async_transfer_clean}" "${async_transfer_new}" cpp_src "${cpp_src}")
 
         string(FIND "${cpp_src}" "ResultTransferFailed" find_tf_after)
@@ -556,7 +462,8 @@ if(EXISTS "include/haze/async_usb_server.hpp" AND EXISTS "source/async_usb_serve
         string(FIND "${cpp_src}" "m_cancelled.store(true" find_cancelled_after)
         string(FIND "${cpp_src}" "haze::ResultTimeout()" find_timeout_after)
         string(FIND "${cpp_src}" "${retirement_guard}" find_retirement_after)
-        if(find_tf_after EQUAL -1 OR find_ce_after EQUAL -1 OR NOT find_dup_after EQUAL -1 OR find_broken_after EQUAL -1 OR find_cancelled_after EQUAL -1 OR find_timeout_after EQUAL -1 OR find_retirement_after EQUAL -1)
+        string(FIND "${cpp_src}" "m_broken.load(std::memory_order_acquire) || m_cancelled.load(std::memory_order_acquire)" find_entry_after)
+        if(find_tf_after EQUAL -1 OR find_ce_after EQUAL -1 OR NOT find_dup_after EQUAL -1 OR find_broken_after EQUAL -1 OR find_cancelled_after EQUAL -1 OR find_timeout_after EQUAL -1 OR find_retirement_after EQUAL -1 OR find_entry_after EQUAL -1)
             message(FATAL_ERROR "[libhaze-patch] failed to apply cancel patch to async_usb_server.cpp")
         endif()
         file(WRITE "source/async_usb_server.cpp" "${cpp_src}")

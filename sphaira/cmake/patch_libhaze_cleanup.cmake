@@ -1,7 +1,4 @@
 # libhaze patch cleanup: section 17 (SendObject & GetObject clean drain, no UAF, >4GB & ZLP)
-# 17. source/ptp_responder_ptp_operations.cpp: clean drain, no UAF, *bytes_read=0, >4GB & ZLP
-
-# --- 17. source/ptp_responder_ptp_operations.cpp : clean drain, no UAF, >4GB & ZLP ---
 if(EXISTS "source/ptp_responder_ptp_operations.cpp")
     file(READ "source/ptp_responder_ptp_operations.cpp" src)
 
@@ -23,7 +20,10 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
     string(FIND "${src}" "write_res == haze::ResultCancelled()" find_write_cancel)
     string(FIND "${src}" "m_usb_server.IsCancelled()" find_usb_cancel)
     string(FIND "${src}" "m_usb_server.SetCancelled(true);" find_writer_set_cancelled)
-    if(NOT find_bytes_read_top EQUAL -1 AND NOT find_set_cleanup EQUAL -1 AND NOT find_write_cancel EQUAL -1 AND NOT find_usb_cancel EQUAL -1 AND NOT find_writer_set_cancelled EQUAL -1)
+    string(FIND "${src}" "m_usb_server.SetBroken(true);" find_broken_cancelled)
+    string(FIND "${src}" "R_THROW(haze::ResultTransferFailed());\n                }\n                R_TRY(write_res);" find_writer_throw)
+    string(FIND "${src}" "check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }\n\n                /* Read as many bytes as we can. */" find_check_before_read_top)
+    if(NOT find_bytes_read_top EQUAL -1 AND NOT find_set_cleanup EQUAL -1 AND NOT find_write_cancel EQUAL -1 AND NOT find_usb_cancel EQUAL -1 AND NOT find_writer_set_cancelled EQUAL -1 AND NOT find_broken_cancelled EQUAL -1 AND NOT find_writer_throw EQUAL -1 AND NOT find_check_before_read_top EQUAL -1)
         message(STATUS "[libhaze-patch] ptp_responder_ptp_operations.cpp cancel already patched")
     else()
         string(FIND "${src}" "void log_write(" find_lw_ops)
@@ -137,7 +137,7 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             m_usb_server.SetCancelled(false);
         };
 
-        /* sphaira: clean transport drain without mid-transfer deletion */
+        /* sphaira: immediate cancellation without draining to EOT */
         const Result transfer_res = sphaira::thread::Transfer(file_size,
             [this, &dp, &is_done, &is_cancelled, obj](void* data, s64 off, s64 size, u64* bytes_read) -> Result {
                 *bytes_read = 0;
@@ -155,21 +155,27 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
                         const bool usb_cancelled = m_usb_server.IsCancelled();
                         if (reactor_cancelled || usb_cancelled) {
                             is_cancelled.store(true, std::memory_order_release);
+                            m_usb_server.SetCancelled(true);
+                            m_usb_server.SetBroken(true);
                             m_usb_server.SetCleanup(true);
-                            log_write(\"[LIBHAZE] starting transport cleanup for cancelled transfer: %s\\n\", obj->GetName());
+                            log_write(\"[LIBHAZE] local cancel detected for transfer: %s\\n\", obj->GetName());
                         }
-                    } else if (!m_usb_server.IsInCleanup()) {
-                        m_usb_server.SetCleanup(true);
                     }
                 };
 
                 check_cancellation();
+                if (is_cancelled.load(std::memory_order_acquire)) {
+                    R_THROW(haze::ResultTransferFailed());
+                }
 
                 /* Read as many bytes as we can. */
                 u32 bytes_received = 0;
                 Result read_res = dp.ReadBuffer((u8*)data, size, std::addressof(bytes_received));
 
                 check_cancellation();
+                if (is_cancelled.load(std::memory_order_acquire)) {
+                    R_THROW(haze::ResultTransferFailed());
+                }
 
                 if (read_res == haze::ResultCancelled()) {
                     /* Host URB abort (0x748C) - host aborted transfer from PC side */
@@ -200,8 +206,7 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             },
             [this, &file, &obj, &offset, total_size, &is_cancelled](const void* data, s64 off, s64 size) -> Result {
                 if (is_cancelled.load(std::memory_order_acquire)) {
-                    offset += size;
-                    R_SUCCEED();
+                    R_THROW(haze::ResultTransferFailed());
                 }
 
                 /* Write to the file. */
@@ -209,9 +214,9 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
                 if (write_res == haze::ResultCancelled()) {
                     is_cancelled.store(true, std::memory_order_release);
                     m_usb_server.SetCancelled(true);
+                    m_usb_server.SetBroken(true);
                     m_usb_server.SetCleanup(true);
-                    offset += size;
-                    R_SUCCEED();
+                    R_THROW(haze::ResultTransferFailed());
                 }
                 R_TRY(write_res);
 
@@ -236,7 +241,7 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
         }
 
         if (is_cancelled.load(std::memory_order_acquire)) {
-            log_write(\"[LIBHAZE] transport cleanup finished for cancelled transfer: %s\\n\", obj->GetName());
+            log_write(\"[LIBHAZE] cancelled transfer completed: %s\\n\", obj->GetName());
             R_THROW(haze::ResultCancelled());
         }
 
@@ -248,7 +253,6 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
         # Full latest body
         set(ops_so_body_new "${ops_so_body_head}\n\n${ops_so_body_new_tail}")
 
-        # Intermediate shape 3 tail (from 3rd review: has SetCleanup, lacks SetCancelled / check_cancellation / write cancel)
         set(ops_so_body_prev3
 "        bool is_done = false;
         std::atomic<bool> is_cancelled{false};
@@ -523,7 +527,6 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
 
         /* Write the success response. */
         R_RETURN(this->WriteResponse(PtpResponseCode_Ok));")
-
         set(ops_so_body_prev4
 "                /* Write to the file. */
                 const Result write_res = Fs(obj).WriteFile(std::addressof(file), off, data, size, 0);
@@ -533,34 +536,52 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
                     R_SUCCEED();
                 }
                 R_TRY(write_res);")
-
         set(ops_so_body_wfunc_new
 "                /* Write to the file. */
                 const Result write_res = Fs(obj).WriteFile(std::addressof(file), off, data, size, 0);
                 if (write_res == haze::ResultCancelled()) {
                     is_cancelled.store(true, std::memory_order_release);
                     m_usb_server.SetCancelled(true);
+                    m_usb_server.SetBroken(true);
                     m_usb_server.SetCleanup(true);
-                    offset += size;
-                    R_SUCCEED();
+                    R_THROW(haze::ResultTransferFailed());
                 }
                 R_TRY(write_res);")
+        # 09c04c20 drain shape upgrade replacements
+        set(ops_so_drain_09c_old "log_write(\"[LIBHAZE] starting transport cleanup for cancelled transfer: %s\\n\", obj->GetName());")
+        set(ops_so_drain_09c_new "m_usb_server.SetCancelled(true);\n                            m_usb_server.SetBroken(true);\n                            log_write(\"[LIBHAZE] local cancel detected for transfer: %s\\n\", obj->GetName());")
+        set(ops_so_drain_log_09c_old "log_write(\"[LIBHAZE] transport cleanup finished for cancelled transfer: %s\\n\", obj->GetName());")
+        set(ops_so_drain_log_09c_new "log_write(\"[LIBHAZE] cancelled transfer completed: %s\\n\", obj->GetName());")
+        set(ops_so_drain_read_09c_old "check_cancellation();\n\n                /* Read as many bytes as we can. */\n                u32 bytes_received = 0;\n                Result read_res = dp.ReadBuffer((u8*)data, size, std::addressof(bytes_received));\n\n                check_cancellation();")
+        set(ops_so_drain_read_09c_mid "check_cancellation();\n\n                /* Read as many bytes as we can. */\n                u32 bytes_received = 0;\n                Result read_res = dp.ReadBuffer((u8*)data, size, std::addressof(bytes_received));\n\n                check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }")
+        set(ops_so_drain_read_09c_new "check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }\n\n                /* Read as many bytes as we can. */\n                u32 bytes_received = 0;\n                Result read_res = dp.ReadBuffer((u8*)data, size, std::addressof(bytes_received));\n\n                check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }")
+        set(ops_so_drain_write_09c_old "if (is_cancelled.load(std::memory_order_acquire)) {\n                    offset += size;\n                    R_SUCCEED();\n                }")
+        set(ops_so_drain_write_09c_new "if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }")
 
         string(REPLACE "${ops_so_body_prev4}" "${ops_so_body_wfunc_new}" src "${src}")
         string(REPLACE "${ops_so_body_prev3}" "${ops_so_body_new_tail}" src "${src}")
         string(REPLACE "${ops_so_body_prev2}" "${ops_so_body_new_tail}" src "${src}")
         string(REPLACE "${ops_so_body_clean}" "${ops_so_body_new}" src "${src}")
+        string(FIND "${src}" "starting transport cleanup for cancelled transfer" find_09c_drain)
+        if(NOT find_09c_drain EQUAL -1)
+            string(REPLACE "${ops_so_drain_09c_old}" "${ops_so_drain_09c_new}" src "${src}")
+            string(REPLACE "${ops_so_drain_log_09c_old}" "${ops_so_drain_log_09c_new}" src "${src}")
+            string(REPLACE "${ops_so_drain_read_09c_old}" "${ops_so_drain_read_09c_new}" src "${src}")
+            string(REPLACE "${ops_so_drain_write_09c_old}" "${ops_so_drain_write_09c_new}" src "${src}")
+        endif()
+        string(REPLACE "${ops_so_drain_read_09c_mid}" "${ops_so_drain_read_09c_new}" src "${src}")
 
         string(FIND "${src}" "!transfer_success" find_transfer_success_after)
         string(FIND "${src}" "transfer_success && offset != file_size" find_trunc_check_after)
         string(FIND "${src}" "WriteCallbackFile(CallbackType_WriteEnd, obj->GetName(), !transfer_success);" find_write_end_aborted_after)
         string(FIND "${src}" "WriteCallbackFile(CallbackType_ReadEnd, obj->GetName(), !transfer_success);" find_read_end_aborted_after)
         string(FIND "${src}" "*bytes_read = 0;\n                if (is_done)" find_bytes_read_after)
-        string(FIND "${src}" "m_usb_server.SetCleanup(true);" find_cleanup_after)
+        string(FIND "${src}" "m_usb_server.SetBroken(true);" find_broken_after)
         string(FIND "${src}" "write_res == haze::ResultCancelled()" find_write_cancel_after)
         string(FIND "${src}" "m_usb_server.IsCancelled()" find_usb_cancel_after)
         string(FIND "${src}" "m_usb_server.SetCancelled(true);" find_writer_set_cancelled_after)
-        if(find_transfer_success_after EQUAL -1 OR find_trunc_check_after EQUAL -1 OR find_write_end_aborted_after EQUAL -1 OR find_read_end_aborted_after EQUAL -1 OR find_bytes_read_after EQUAL -1 OR find_cleanup_after EQUAL -1 OR find_write_cancel_after EQUAL -1 OR find_usb_cancel_after EQUAL -1 OR find_writer_set_cancelled_after EQUAL -1)
+        string(FIND "${src}" "check_cancellation();\n                if (is_cancelled.load(std::memory_order_acquire)) {\n                    R_THROW(haze::ResultTransferFailed());\n                }\n\n                /* Read as many bytes as we can. */" find_check_before_read_after)
+        if(find_transfer_success_after EQUAL -1 OR find_trunc_check_after EQUAL -1 OR find_write_end_aborted_after EQUAL -1 OR find_read_end_aborted_after EQUAL -1 OR find_bytes_read_after EQUAL -1 OR find_broken_after EQUAL -1 OR find_write_cancel_after EQUAL -1 OR find_usb_cancel_after EQUAL -1 OR find_writer_set_cancelled_after EQUAL -1 OR find_check_before_read_after EQUAL -1)
             message(FATAL_ERROR "[libhaze-patch] source does not match supported shapes for ptp_responder_ptp_operations.cpp")
         endif()
         file(WRITE "source/ptp_responder_ptp_operations.cpp" "${src}")
