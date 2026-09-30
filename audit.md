@@ -1,8 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.921**. Дата аудиту: 2026-09-30.
+Версія коду: **v0.13.922**. Дата аудиту: 2026-09-30.
 
 ## Поточний стан
+
+- v0.13.922 захищає контрольовану паузу USB після локального MTP cancel від переходу в host mode, розрізняє стару та нову USB-сесію при скиданні recovery і дозволяє повторне ввімкнення MTP за наявності VBUS, навіть якщо збережене налаштування вже true. Python контракти/моделі, CMake patch scenarios та diff check пройшли. NRO й Switch/Windows runtime ще потребують перевірки; `TegraExplorer.bin` поза delivery.
 
 - v0.13.921 усуває помилку компіляції в patch_libhaze_cancel.cmake при заміні блоків обробки скасування транзакції у source/ptp_responder.cpp. Повна збірка ReleaseWithInstall у WSL успішно побудувала sphaira_nro (100%). Чисте та ідемпотентне застосування патча, Python тести контрактів і моделей MTP скасування та git diff --check пройшли. TegraExplorer.bin поза delivery.
 

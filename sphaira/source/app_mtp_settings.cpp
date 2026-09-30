@@ -84,7 +84,7 @@ void App::SetMtpEnable(bool enable) {
 }
 
 void App::ApplyMtpEnable(bool enable, bool notify_conflict) {
-    if (App::GetMtpEnable() != enable) {
+    if (App::GetMtpEnable() != enable || (enable != haze::IsRunning())) {
         // mutually exclusive with usb host storage -- see SetHddEnable. Free
         // the port before haze grabs it.
         if (enable && App::GetHddEnable()) {
@@ -97,9 +97,8 @@ void App::ApplyMtpEnable(bool enable, bool notify_conflict) {
         if (enable) {
             PsmChargerType charger{PsmChargerType_Unconnected};
             psmGetChargerType(&charger);
-            // only grab the port as a gadget if a PC is already providing
-            // VBUS. otherwise stay in host mode so a flash drive can mount.
-            if (charger == PsmChargerType_LowPower) {
+            // only grab the port as a gadget when VBUS is present.
+            if (charger != PsmChargerType_Unconnected) {
                 if (haze::Init()) {
                     ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
                 } else {

@@ -14,6 +14,7 @@ import tempfile
 from test_mtp_cancellation_models import (
     simulate_cancellation_state_machine,
     simulate_parser_and_drain_contract,
+    simulate_usb_watcher_and_remount_contracts,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -324,6 +325,7 @@ def test_patch_application_scenarios() -> None:
         assert res1.returncode == 0, f"Clean upstream patch failed: {res1.stderr}"
         assert "applied ptp_responder_ptp_operations.cpp cancel patch" in res1.stdout
         assert "applied usb_session.cpp cancel patch" in res1.stdout
+        assert "#include <atomic>" in (temp_dir / "include" / "haze" / "console_main_loop.hpp").read_text(encoding="utf-8")
 
         ops_text = (temp_dir / "source" / "ptp_responder_ptp_operations.cpp").read_text(encoding="utf-8")
         assert "*bytes_read = 0;" in ops_text
@@ -474,15 +476,6 @@ def test_patch_application_scenarios() -> None:
 
 
 def check_cml_recovery_and_failure_contract() -> None:
-    """Verifies ConsoleMainLoop::RunApplication:
-    - Recovers USB ONLY on broken transport caused by local cancellation.
-    - Preserves immediate clean exit for ResultStopRequested, ResultFocusLost,
-      unbroken transport, or non-cancel transport break.
-    - Observes exact recovery order: Finalize -> ClearCancel -> 100ms delay -> Initialize.
-    - Safely cleans up partial initialization (Finalize) on failure.
-    - Bounds recovery retries (MaxInitRetries = 3).
-    - Transitions to CallbackType_CloseSession and waits on cancel event on permanent failure.
-    """
     c_patch = REPO_ROOT / "sphaira" / "cmake" / "patch_libhaze_cancel.cmake"
     c_text = c_patch.read_text(encoding="utf-8", errors="ignore")
 
@@ -537,37 +530,44 @@ def check_cml_recovery_and_failure_contract() -> None:
 
     evs1, cs1 = run_cml(loop_rc="ResultFocusLost", is_broken=True, local_cancel=True)
     assert evs1 == ["init", "loop_process", "exit_ResultFocusLost", "finalize"] and not cs1
-
     evs2, cs2 = run_cml(loop_rc="ResultStopRequested", is_broken=True, local_cancel=True)
     assert evs2 == ["init", "loop_process", "exit_ResultStopRequested", "finalize"] and not cs2
-
     evs3, cs3 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=False)
     assert evs3 == ["init", "loop_process", "exit_preserve_prev", "finalize"] and not cs3
-
     evs4, cs4 = run_cml(loop_rc="ResultSuccess", is_broken=False, local_cancel=True)
     assert evs4 == ["init", "loop_process", "exit_preserve_prev", "finalize"] and not cs4
-
     evs5, cs5 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=True)
-    assert evs5 == [
-        "init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached",
-        "init", "loop_process", "exit_ResultStopRequested", "finalize"
-    ] and not cs5
-
+    assert not cs5 and evs5 == ["init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached", "init", "loop_process", "exit_ResultStopRequested", "finalize"]
     evs6, cs6 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=True, recovery_fails=1)
-    assert evs6 == [
-        "init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached",
-        "init", "finalize_partial", "sleep_100ms_retry", "init_retry_1", "loop_process", "exit_ResultStopRequested", "finalize"
-    ] and not cs6
-
+    assert not cs6 and evs6 == ["init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached", "init", "finalize_partial", "sleep_100ms_retry", "init_retry_1", "loop_process", "exit_ResultStopRequested", "finalize"]
     evs7, cs7 = run_cml(loop_rc="ResultTransferFailed", is_broken=True, local_cancel=True, recovery_fails=4)
-    assert cs7 and evs7 == [
-        "init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached",
-        "init", "finalize_partial",
-        "sleep_100ms_retry", "init_retry_1", "finalize_partial",
-        "sleep_100ms_retry", "init_retry_2", "finalize_partial",
-        "sleep_100ms_retry", "init_retry_3", "finalize_partial",
-        "emit_close_session", "wait_cancel_event"
-    ]
+    assert cs7 and evs7 == ["init", "loop_process", "recovery_finalize", "clear_cancel", "sleep_100ms_detached", "init", "finalize_partial", "sleep_100ms_retry", "init_retry_1", "finalize_partial", "sleep_100ms_retry", "init_retry_2", "finalize_partial", "sleep_100ms_retry", "init_retry_3", "finalize_partial", "emit_close_session", "wait_cancel_event"]
+
+
+def check_watcher_recovery_and_remount_contract() -> None:
+    app_usb = (REPO_ROOT / "sphaira" / "source" / "app_usb.cpp").read_text(encoding="utf-8")
+    app_mtp = (REPO_ROOT / "sphaira" / "source" / "app_mtp_settings.cpp").read_text(encoding="utf-8")
+    h_hpp = (REPO_ROOT / "sphaira" / "include" / "haze_helper.hpp").read_text(encoding="utf-8")
+    h_cpp = (REPO_ROOT / "sphaira" / "source" / "haze_helper.cpp").read_text(encoding="utf-8")
+    c_patch = (REPO_ROOT / "sphaira" / "cmake" / "patch_libhaze_cancel.cmake").read_text(encoding="utf-8")
+
+    assert "const bool is_recovering = haze::IsRecovering();" in app_usb
+    assert "const bool genuinely_unplugged = (charger == PsmChargerType_Unconnected);" in app_usb
+    assert "if (haze::IsRunning() && (!is_recovering || genuinely_unplugged) && (!usbds_up || usb_state == UsbState_Detached))" in app_usb
+    assert "haze::ClearRecovering();" in app_usb
+    assert "enable != haze::IsRunning()" in app_mtp
+    assert "charger != PsmChargerType_Unconnected" in app_mtp
+    assert "bool IsRecovering();" in h_hpp and "void ClearRecovering();" in h_hpp
+    assert "return g_is_running && ::haze::IsRecovering();" in h_cpp
+    assert "::haze::ClearRecovering();" in h_cpp
+    assert "bool IsRecovering()" in c_patch and "void ClearRecovering()" in c_patch
+    assert "recovery_start_ns" in c_patch and "3000000000ULL" in c_patch
+    assert "std::atomic<int> m_recovery_phase{0};" in c_patch
+    assert "std::atomic<u64> m_recovery_start_ns{0};" in c_patch
+    assert "m_recovery_phase.compare_exchange_strong(ready, 0" in c_patch
+    assert "m_recovery_phase.store(2, std::memory_order_release);" in c_patch
+    assert "if (charger != PsmChargerType_Unconnected)" in app_mtp
+    assert "haze::ClearRecovering();" not in h_cpp.split("void haze_callback(", 1)[1].split("bool IsRunning()", 1)[0]
 
 
 def main() -> None:
@@ -577,9 +577,11 @@ def main() -> None:
     check_patch_libhaze_contract()
     check_senior_review_findings_contract()
     check_cml_recovery_and_failure_contract()
+    check_watcher_recovery_and_remount_contract()
     test_patch_application_scenarios()
     simulate_cancellation_state_machine()
     simulate_parser_and_drain_contract()
+    simulate_usb_watcher_and_remount_contracts()
     print("PASS: all MTP cancellation and recovery contracts verified successfully.")
 
 

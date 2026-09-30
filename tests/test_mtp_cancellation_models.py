@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""Behavioral simulation models for MTP cancellation and recovery contracts.
-
-Simulates:
-1. MTP UI & cancellation state machine (switch-side cancel, idle window guard, UI relaunch prevention).
-2. PtpDataParser exact Read<T>, EOT packet semantics, and timeout normalization.
-3. AsyncUsbServer URB lifecycle, mutable atomic state, and transport termination on broken endpoint.
-4. Writer-only cancel during reader wait notifying actual USB wait state via m_cancelled/m_in_cleanup.
-5. Timeout + CancelEndpoint transport termination vs. clean drain on unmolested connection.
-"""
+"""Behavioral simulation models for MTP cancellation, watcher, and recovery contracts."""
 
 from typing import Dict, Any, Tuple, Optional, List
 
@@ -42,33 +34,24 @@ class MockMtpSystem:
         self.transfer_active = False
 
     def user_cancels_on_switch(self, name: str) -> None:
-        should_cancel = False
         if self.transfer_active:
             self.transfer_active = False
             self.transfer_aborted = True
-            should_cancel = True
-        self.handled_seq = self.transfer_seq
-
-        if should_cancel:
             self.cancel_haze_calls += 1
             self.reactor_result = "Cancelled"
             self.event_signaled = True
             self.files_on_disk.discard(name)
+        self.handled_seq = self.transfer_seq
 
     def worker_exit(self, user_cancelled: bool) -> None:
-        should_cancel_worker = False
         if user_cancelled and self.transfer_active:
             self.transfer_active = False
             self.transfer_aborted = True
-            should_cancel_worker = True
-
-        if self.handled_seq < self.transfer_seq:
-            self.handled_seq = self.transfer_seq
-
-        if should_cancel_worker:
             self.cancel_haze_calls += 1
             self.reactor_result = "Cancelled"
             self.event_signaled = True
+        if self.handled_seq < self.transfer_seq:
+            self.handled_seq = self.transfer_seq
 
     def pbox_done(self) -> None:
         relaunch = self.transfer_active or (self.transfer_seq != self.handled_seq)
@@ -174,23 +157,12 @@ class MockUsbServer:
         self.cancel_endpoint_rc = "ResultSuccess"
 
     # Const-compatible methods simulating mutable atomic state
-    def set_cleanup(self, cleanup: bool) -> None:
-        self.in_cleanup = cleanup
-
-    def is_in_cleanup(self) -> bool:
-        return self.in_cleanup
-
-    def set_cancelled(self, cancelled: bool) -> None:
-        self.is_cancelled = cancelled
-
-    def get_is_cancelled(self) -> bool:
-        return self.is_cancelled
-
-    def set_broken(self, broken: bool) -> None:
-        self.is_broken = broken
-
-    def get_is_broken(self) -> bool:
-        return self.is_broken
+    def set_cleanup(self, cleanup: bool) -> None: self.in_cleanup = cleanup
+    def is_in_cleanup(self) -> bool: return self.in_cleanup
+    def set_cancelled(self, cancelled: bool) -> None: self.is_cancelled = cancelled
+    def get_is_cancelled(self) -> bool: return self.is_cancelled
+    def set_broken(self, broken: bool) -> None: self.is_broken = broken
+    def get_is_broken(self) -> bool: return self.is_broken
 
     def cancel_endpoint(self, ep: int, urb_id: int) -> str:
         if self.fail_cancel_endpoint:
@@ -362,76 +334,53 @@ class MockSendObjectTransfer:
 
 
 def simulate_cancellation_state_machine() -> None:
-    """Verifies that cancel events prevent UI relaunch, do not double-cancel,
-    and do not linger into subsequent operations if B is pressed during idle window.
-    """
     s = MockMtpSystem()
-
     # Scenario 1: Normal completed transfer
     s.transfer_begin("/switch/file1.nsp")
     assert s.ui_alive and s.transfer_active
     s.transfer_end_success()
-    assert not s.transfer_active
-    assert "/switch/file1.nsp" in s.files_on_disk
+    assert not s.transfer_active and "/switch/file1.nsp" in s.files_on_disk
     s.worker_exit(user_cancelled=False)
     s.pbox_done()
-    assert not s.ui_alive
-    assert s.relaunch_count == 0
-    assert s.cancel_haze_calls == 0
+    assert not s.ui_alive and s.relaunch_count == 0 and s.cancel_haze_calls == 0
 
     # Scenario 2: User presses B -> Yes during 1.5s idle window AFTER transfer 1 finished
     s.user_cancels_on_switch("/switch/file1.nsp")
-    assert s.cancel_haze_calls == 0, "CancelTransfer must NOT be called if transfer already finished"
-    assert not s.event_signaled, "Signal must not be set for already-finished transfer"
-    assert "/switch/file1.nsp" in s.files_on_disk, "Completed file must not be deleted"
+    assert s.cancel_haze_calls == 0 and not s.event_signaled and "/switch/file1.nsp" in s.files_on_disk
     s.worker_exit(user_cancelled=True)
-    assert s.cancel_haze_calls == 0, "Worker must NOT call CancelTransfer after idle cancel"
+    assert s.cancel_haze_calls == 0
     s.pbox_done()
-    assert not s.ui_alive
-    assert s.relaunch_count == 0
+    assert not s.ui_alive and s.relaunch_count == 0
 
     # Scenario 3: Next transfer starts -> must NOT be aborted by previous idle cancel!
     s.transfer_begin("/switch/file2.nsp")
-    assert s.transfer_active and not s.transfer_aborted
-    assert not s.event_signaled
-    # User cancels WHILE transfer 2 IS active
+    assert s.transfer_active and not s.transfer_aborted and not s.event_signaled
     s.user_cancels_on_switch("/switch/file2.nsp")
-    assert s.cancel_haze_calls == 1, "CancelTransfer MUST be called once when active"
-    assert s.transfer_aborted and not s.transfer_active
-    assert "/switch/file2.nsp" not in s.files_on_disk, "Partial file must be deleted"
-    # Worker exits after user cancel
+    assert s.cancel_haze_calls == 1 and s.transfer_aborted and not s.transfer_active
+    assert "/switch/file2.nsp" not in s.files_on_disk
     s.worker_exit(user_cancelled=True)
-    assert s.cancel_haze_calls == 1, "Worker must NOT call CancelTransfer a second time"
+    assert s.cancel_haze_calls == 1
     s.pbox_done()
-    assert not s.ui_alive, "UI must NOT relaunch on cancelled transfer"
-    assert s.relaunch_count == 0
+    assert not s.ui_alive and s.relaunch_count == 0
 
     # Scenario 4: Subsequent transfer 3 starts cleanly (responder clears cancelled state)
     s.transfer_begin("/switch/file3.nsp")
-    assert s.transfer_active and not s.transfer_aborted
-    assert s.reactor_result == "Success"
-    assert not s.event_signaled
+    assert s.transfer_active and not s.transfer_aborted and s.reactor_result == "Success"
     s.transfer_end_success()
     s.worker_exit(user_cancelled=False)
     s.pbox_done()
-    assert not s.ui_alive
-    assert s.relaunch_count == 0
-    assert "/switch/file3.nsp" in s.files_on_disk
+    assert not s.ui_alive and s.relaunch_count == 0 and "/switch/file3.nsp" in s.files_on_disk
     assert s.cancel_haze_calls == 1
 
 
 def simulate_parser_and_drain_contract() -> None:
-    """Simulate PtpDataParser EOT semantics, exact Read<T>, partial buffer preservation,
-    and all core senior review cancellation and error propagation scenarios.
-    """
     # 1. Truncated Read<T> must fail with ResultInvalidArgument
     p_trunc = MockParser(buffer_size=2)
     p_trunc.stream = bytearray(b"AB")
     p_trunc.flush()
     p_trunc.persistent_error = "ResultEndOfTransmission"
     val, rc = p_trunc.read_scalar(size=4)
-    assert rc != "ResultSuccess", "Truncated Read<T> must NOT return ResultSuccess"
-    assert rc == "ResultInvalidArgument" or rc == "ResultEndOfTransmission", f"Got: {rc}"
+    assert rc != "ResultSuccess" and (rc == "ResultInvalidArgument" or rc == "ResultEndOfTransmission")
 
     # 2. Partial streaming read preserves bytes and propagates error on next call
     p_stream = MockParser(buffer_size=100)
@@ -445,152 +394,199 @@ def simulate_parser_and_drain_contract() -> None:
     r_timeout = MockReactor()
     assert r_timeout.wait_for_timeout(1000, raw_code=0xEA01) == "ResultTimeout"
 
-    # --- Scenario 1: Local cancel arrives during USB wait -> immediate abort ---
-    usb1 = MockUsbServer()
-    reactor1 = MockReactor()
+    # 4. Local cancel arrives during USB wait -> immediate abort
+    usb1, reactor1 = MockUsbServer(), MockReactor()
     t1 = MockSendObjectTransfer(usb1, reactor1, total_size=1024)
     b_read1, rc1 = t1.reader_step(event_during_read="local_cancel")
-    assert rc1 == "ResultTransferFailed", "Local cancel during USB wait must abort immediately"
-    assert usb1.get_is_cancelled(), "UsbServer records cancel"
-    assert usb1.get_is_broken(), "Transport marked broken on local cancel"
-    assert t1.is_cancelled, "Transfer marked cancelled"
+    assert rc1 == "ResultTransferFailed" and usb1.get_is_cancelled() and usb1.get_is_broken() and t1.is_cancelled
     b_read_next, rc_next = t1.reader_step()
-    assert rc_next == "ResultTransferFailed", "Subsequent packets immediately rejected"
-    assert b_read_next == 0, "No subsequent bytes read"
-    assert t1.packets_drained == 0, "No packets drained after cancel"
+    assert rc_next == "ResultTransferFailed" and b_read_next == 0 and t1.packets_drained == 0
 
-    # --- Scenario 2: Cancel arrives between read and WriteFile ---
-    usb2 = MockUsbServer()
-    reactor2 = MockReactor()
+    # 5. Cancel arrives between read and WriteFile
+    usb2, reactor2 = MockUsbServer(), MockReactor()
     t2 = MockSendObjectTransfer(usb2, reactor2, total_size=1024)
     b_read2, rc2 = t2.reader_step()
     assert rc2 == "ResultSuccess"
     t2.writer_step(b_read2)
     reactor2.set_result("ResultCancelled")
     _, rc2_cancel = t2.reader_step()
-    assert rc2_cancel == "ResultTransferFailed", "check_cancellation before read immediately aborts"
-    assert t2.is_cancelled
-    assert usb2.get_is_broken(), "Transport marked broken"
+    assert rc2_cancel == "ResultTransferFailed" and t2.is_cancelled and usb2.get_is_broken()
 
-    # --- Scenario 3: Writer-only cancel during active reader wait ---
-    usb3 = MockUsbServer()
-    reactor3 = MockReactor()
+    # 6. Writer-only cancel during active reader wait
+    usb3, reactor3 = MockUsbServer(), MockReactor()
     t3 = MockSendObjectTransfer(usb3, reactor3, total_size=1024)
     b_read3, _ = t3.reader_step()
     t3.fail_write_cancelled = True
-    w_rc3 = t3.writer_step(b_read3)
-    assert w_rc3 == "ResultTransferFailed", "Writer fails with ResultTransferFailed"
-    assert t3.is_cancelled
-    assert usb3.get_is_cancelled()
-    assert usb3.get_is_broken()
+    assert t3.writer_step(b_read3) == "ResultTransferFailed"
+    assert t3.is_cancelled and usb3.get_is_cancelled() and usb3.get_is_broken()
     _, rc3 = t3.reader_step()
     assert rc3 == "ResultTransferFailed"
 
-    # --- Scenario 4: Timeout + successful CancelEndpoint terminates transport (unreachable PC) ---
-    usb4 = MockUsbServer()
-    usb4.fail_cancel_endpoint = False
-    reactor4 = MockReactor()
+    # 7. Timeout + successful CancelEndpoint terminates transport (unreachable PC)
+    usb4, reactor4 = MockUsbServer(), MockReactor()
     resp4 = MockPtpResponder(usb4, reactor4)
     req_count4 = 0
-
     def mock_req4():
         nonlocal req_count4
         req_count4 += 1
         _, rc = usb4.transfer_packet(ep=1, size=512, reactor=reactor4, event_during_wait="host_silent")
         return rc
+    assert resp4.loop_process(mock_req4) == "Terminated" and usb4.get_is_broken() and req_count4 == 1
 
-    loop_rc4 = resp4.loop_process(mock_req4)
-    assert loop_rc4 == "Terminated", "LoopProcess must terminate immediately on timeout + CancelEndpoint"
-    assert usb4.get_is_broken(), "Transport marked broken despite successful CancelEndpoint"
-    assert req_count4 == 1, "Next command read was NOT executed on lost boundary"
-
-    # --- Scenario 5: CancelEndpoint failure marks is_broken and terminates LoopProcess ---
-    usb5 = MockUsbServer()
+    # 8. CancelEndpoint failure marks is_broken and terminates LoopProcess
+    usb5, reactor5 = MockUsbServer(), MockReactor()
     usb5.fail_cancel_endpoint = True
     usb5.cancel_endpoint_rc = "ResultTimeout"
-    reactor5 = MockReactor()
     resp5 = MockPtpResponder(usb5, reactor5)
     req_count5 = 0
-
     def mock_req5():
         nonlocal req_count5
         req_count5 += 1
         _, rc = usb5.transfer_packet(ep=1, size=512, reactor=reactor5, event_during_wait="host_silent")
         return rc
+    assert resp5.loop_process(mock_req5) == "Terminated" and usb5.get_is_broken() and req_count5 == 1
 
-    loop_rc5 = resp5.loop_process(mock_req5)
-    assert loop_rc5 == "Terminated"
-    assert usb5.get_is_broken()
-    assert req_count5 == 1
-
-    # --- Scenario 6: Immediate stop on local cancel (no EOT drain) and session recovery ---
-    # Transfer 1: File is 100 packets (51200 bytes).
-    # Packet 1 reads and writes successfully.
-    # User clicks Cancel on Switch during Packet 2.
-    # Transfer 1 immediately aborts with ResultTransferFailed;
-    # Remaining packets are NOT read to EOT (packets_drained == 1, not 100).
-    # Transport terminates without hang (is_broken == True).
-    # Recovery reinitializes responder in new session -> Transfer 2 succeeds!
-    usb6 = MockUsbServer()
-    reactor6 = MockReactor()
+    # 9. Immediate stop on local cancel (no EOT drain) and session recovery
+    usb6, reactor6 = MockUsbServer(), MockReactor()
     resp6 = MockPtpResponder(usb6, reactor6)
     t6 = MockSendObjectTransfer(usb6, reactor6, total_size=51200)
-
-    # Packet 1 succeeds
     b1, rc1 = t6.reader_step()
     assert rc1 == "ResultSuccess" and b1 == 512
     t6.writer_step(b1)
     assert t6.packets_drained == 1
 
-    # Local cancel arrives during Packet 2
     b2, rc2 = t6.reader_step(event_during_read="local_cancel")
-    assert rc2 == "ResultTransferFailed", "Immediate abort without draining to EOT"
-    assert usb6.get_is_broken(), "Transport marked broken immediately"
-    assert t6.is_cancelled
+    assert rc2 == "ResultTransferFailed" and usb6.get_is_broken() and t6.is_cancelled
 
-    # Attempting to read remaining packets of file 1 does NOT read data or drain to EOT
     for _ in range(10):
         b_rem, rc_rem = t6.reader_step()
-        assert rc_rem == "ResultTransferFailed"
-        assert b_rem == 0
-    assert t6.packets_drained == 1, "Remaining packets were NOT drained to EOT!"
-    assert not t6.is_done, "Transfer did not complete as successful"
+        assert rc_rem == "ResultTransferFailed" and b_rem == 0
+    assert t6.packets_drained == 1 and not t6.is_done
 
-    # LoopProcess checks broken transport and terminates without hang
-    loop_rc6 = resp6.loop_process(lambda: "ResultSuccess")
-    assert loop_rc6 == "Terminated", "LoopProcess terminated immediately on broken transport"
-    assert resp6.finalized
+    assert resp6.loop_process(lambda: "ResultSuccess") == "Terminated" and resp6.finalized
 
-    # Session recovery (simulates ConsoleMainLoop recovery loop):
-    # ueventClear(&m_transfer_cancel_event);
-    # reactor.SetResult(ResultSuccess);
-    # Re-initialize PtpResponder with new UsbServer session:
+    # Session recovery: re-initialize PtpResponder with new UsbServer session
     reactor6.set_result("ResultSuccess")
     usb6_recovered = MockUsbServer()
     resp6_recovered = MockPtpResponder(usb6_recovered, reactor6)
-
-    # Transfer 2: Next file arrives in recovered session and transfers completely!
     t6_next = MockSendObjectTransfer(usb6_recovered, reactor6, total_size=1024)
     b2_1, rc2_1 = t6_next.reader_step()
     assert rc2_1 == "ResultSuccess" and b2_1 == 512
     t6_next.writer_step(b2_1)
-
     b2_2, rc2_2 = t6_next.reader_step()
     assert rc2_2 == "ResultSuccess" and b2_2 == 512
     t6_next.writer_step(b2_2)
-    assert t6_next.is_done
-    assert not usb6_recovered.get_is_broken()
-    assert t6_next.bytes_written == 1024, "Next file transferred successfully to completion"
+    assert t6_next.is_done and not usb6_recovered.get_is_broken() and t6_next.bytes_written == 1024
 
-    # 7. PC-side abort (0x748C): connection remains intact and aligned
-    next_command_header = bytearray(b"\x0c\x00\x00\x00\x01\x00\x0c\x10\x01\x00\x00\x00")
+    # 10. PC-side abort (0x748C): connection remains intact and aligned
+    next_cmd = bytearray(b"\x0c\x00\x00\x00\x01\x00\x0c\x10\x01\x00\x00\x00")
     p_cmd = MockParser(buffer_size=512)
-    p_cmd.stream = next_command_header
+    p_cmd.stream = next_cmd
     p_cmd.flush()
     read_cmd, rc_cmd = p_cmd.read_buffer(12)
     assert rc_cmd == "ResultSuccess"
 
+
+class MockUsbWatcherSystem:
+    def __init__(self):
+        self.haze_running, self.recovery_phase, self.recovery_start_ns = True, 0, 0
+        self.charger, self.usb_state, self.usbds_up = "Standard", "Configured", True
+        self.usb_host_active, self.mtp_enabled, self.haze_exits, self.haze_inits = False, True, 0, 0
+
+    def start_recovery(self, now_ns: int):
+        self.recovery_phase, self.recovery_start_ns = 1, now_ns
+        self.usbds_up, self.usb_state = False, "Detached"
+
+    def initialize_recovered_usb(self):
+        self.recovery_phase = 2
+
+    def clear_recovering(self):
+        if self.recovery_phase == 2:
+            self.recovery_phase = 0
+
+    def poll_usb_storage(self, now_ns: int):
+        is_recovering = self.recovery_phase != 0 and now_ns - self.recovery_start_ns <= 3_000_000_000
+        if self.usbds_up and self.usb_state == "Configured" and is_recovering:
+            self.clear_recovering()
+            is_recovering = self.recovery_phase != 0
+        genuinely_unplugged = (self.charger == "Unconnected")
+        if self.haze_running and not (is_recovering and not genuinely_unplugged):
+            if not self.usbds_up or self.usb_state == "Detached":
+                self.haze_running, self.usb_host_active, self.haze_exits = False, True, self.haze_exits + 1
+                self.clear_recovering()
+
+    def apply_mtp_enable(self, enable: bool) -> bool:
+        if enable == self.haze_running and self.mtp_enabled == enable:
+            return True
+        self.mtp_enabled = enable
+        if enable:
+            if self.charger == "Unconnected":
+                return False
+            self.usb_host_active, self.haze_running, self.haze_inits = False, True, self.haze_inits + 1
+            self.usbds_up, self.usb_state = True, "Configured"
+            self.clear_recovering()
+            return True
+        if self.haze_running:
+            self.haze_running, self.usb_host_active, self.haze_exits = False, True, self.haze_exits + 1
+            self.clear_recovering()
+        return True
+
+
+def simulate_usb_watcher_and_remount_contracts() -> None:
+    # Cancel flag starts before the transport detaches, and old enumeration cannot clear it.
+    w1 = MockUsbWatcherSystem()
+    w1.start_recovery(1000)
+    w1.usbds_up, w1.usb_state = True, "Configured"
+    w1.poll_usb_storage(2000)
+    assert w1.recovery_phase == 1
+    w1.usbds_up, w1.usb_state = False, "Detached"
+    w1.poll_usb_storage(2500)
+    assert w1.haze_running and not w1.usb_host_active and w1.haze_exits == 0
+    w1.initialize_recovered_usb()
+    w1.usbds_up, w1.usb_state = True, "Configured"
+    w1.poll_usb_storage(3000)
+    assert w1.recovery_phase == 0 and w1.haze_running
+
+    # 2. Genuine physical unplug during recovery: watcher exits haze immediately
+    w2 = MockUsbWatcherSystem()
+    w2.start_recovery(1000)
+    w2.charger = "Unconnected"
+    w2.poll_usb_storage(2000)
+    assert not w2.haze_running and w2.usb_host_active and w2.haze_exits == 1
+
+    # 3. Recovery timeout safeguard (>3s): exits haze if PC never responds
+    w3 = MockUsbWatcherSystem()
+    w3.start_recovery(0)
+    w3.poll_usb_storage(3_500_000_001)
+    assert not w3.haze_running and w3.usb_host_active and w3.haze_exits == 1
+
+    # 4. Repeated cancel & recovery sequence
+    w4 = MockUsbWatcherSystem()
+    for seq in range(3):
+        w4.start_recovery(seq * 10_000_000)
+        w4.poll_usb_storage(seq * 10_000_000 + 1000)
+        assert w4.haze_running
+        w4.initialize_recovered_usb()
+        w4.usbds_up, w4.usb_state = True, "Configured"
+        w4.poll_usb_storage(seq * 10_000_000 + 2000)
+        assert w4.recovery_phase == 0 and w4.haze_running
+    assert w4.haze_exits == 0
+
+    # 5. Failed initialize handling in recovery
+    w5 = MockUsbWatcherSystem()
+    w5.start_recovery(1000)
+    w5.clear_recovering()
+    w5.haze_running, w5.usb_host_active = False, True
+    assert not w5.haze_running
+
+    # 6. Manual remount with stale mtp_enabled=True and PC charger (PsmChargerType_Standard)
+    w6 = MockUsbWatcherSystem()
+    w6.haze_running, w6.mtp_enabled, w6.charger, w6.usb_host_active = False, True, "Standard", True
+    assert w6.apply_mtp_enable(True) and w6.haze_running and not w6.usb_host_active and w6.haze_inits == 1
+
+
 if __name__ == "__main__":
     simulate_cancellation_state_machine()
     simulate_parser_and_drain_contract()
+    simulate_usb_watcher_and_remount_contracts()
     print("PASS: test_mtp_cancellation_models verified.")

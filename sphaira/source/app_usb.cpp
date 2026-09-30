@@ -41,6 +41,9 @@ void App::PollUsbStorage() {
     UsbState usb_state{};
     const bool usbds_up = R_SUCCEEDED(usbDsGetState(&usb_state));
     const bool pc_enumerated = usbds_up && usb_state == UsbState_Configured;
+    if (pc_enumerated && haze::IsRecovering()) {
+        haze::ClearRecovering();
+    }
     // USB install owns usb:ds without haze while a PC is sending files.
     if (usbds_up && !haze::IsRunning() && pc_enumerated) {
         return;
@@ -48,9 +51,14 @@ void App::PollUsbStorage() {
 
     // PC unplugged: usb:ds drops off Configured even if VBUS lags. Free the
     // port immediately so a flash drive can enumerate as a host device.
-    if (haze::IsRunning() && (!usbds_up || usb_state == UsbState_Detached)) {
-        log_write("[USB] MTP session gone (state=%u); releasing port to host\n",
-            static_cast<unsigned>(usb_state));
+    // Controlled MTP recovery tears down usb:ds briefly to force Windows
+    // to discard dead transfer data; do not treat this intentional Detached
+    // as a physical disconnect unless the cable is genuinely unplugged.
+    const bool is_recovering = haze::IsRecovering();
+    const bool genuinely_unplugged = (charger == PsmChargerType_Unconnected);
+    if (haze::IsRunning() && (!is_recovering || genuinely_unplugged) && (!usbds_up || usb_state == UsbState_Detached)) {
+        log_write("[USB] MTP session gone (state=%u recovering=%d unplugged=%d); releasing port to host\n",
+            static_cast<unsigned>(usb_state), is_recovering ? 1 : 0, genuinely_unplugged ? 1 : 0);
         haze::Exit();
     }
 

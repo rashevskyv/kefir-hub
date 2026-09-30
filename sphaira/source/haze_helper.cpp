@@ -545,6 +545,18 @@ bool IsRunning() {
     return g_is_running;
 }
 
+bool IsRecovering() {
+    SCOPED_MUTEX(&g_mutex);
+    return g_is_running && ::haze::IsRecovering();
+}
+
+void ClearRecovering() {
+    SCOPED_MUTEX(&g_mutex);
+    if (g_is_running) {
+        ::haze::ClearRecovering();
+    }
+}
+
 bool MountFs(std::vector<PinnedMount> mounts) {
     // stop any running session, install the pinned storages, then (re)start so
     // the PC re-enumerates with the new storages present.
