@@ -1,6 +1,14 @@
 # walkthrough.md
 
-Актуальний delivery у коді — **v0.13.917** (2026-09-30).
+Актуальний delivery у коді — **v0.13.918** (2026-09-30).
+
+## v0.13.918 — завершення MTP транзакції після скасування
+
+- Після вимкнення install stream libhaze зберігає cancel, дочитує залишок поточної передачі та відкидає дані. Відповідь TransactionCanceled надсилається після cleanup; completion-лог записується після успішної відповіді.
+- Parser не трактує помилку як EOT та перевіряє точність читання заголовків. Додано обробку sentinel довжини, cleanup timeout із reactor consumers, атомарний стан cancel та безпечне припинення command loop при несправному transport.
+- Відтворювані CMake patches розділено на cancel, cleanup та USB/parser. Senior додатково виправив перевірку актуальності USB patch: попередня форма мала спільні маркери та помилково пропускала безумовне позначення broken transport. Тест тепер порівнює результат такого upgrade з latest source.
+- Цільові Python контракти й моделі, clean/intermediate patch application, ідемпотентність, patch-check та git diff --check пройшли. NRO не компілювали, Windows WPD та фізичні тести 2.1–2.3 не перевірені. Дренаж може затримати наступну передачу до завершення залишку файла.
+- Фізичний лог v0.13.917 підтвердив CloseFile/OnInstallClose та працездатний UI після cancel; нового install callback до від’єднання кабелю не було. Точну поведінку USB/WPD цей лог не доводить. TegraExplorer.bin поза delivery.
 
 ## v0.13.917 — безпечне скасування MTP встановлення
 

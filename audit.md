@@ -1,8 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.917**. Дата аудиту: 2026-09-30.
+Версія коду: **v0.13.918**. Дата аудиту: 2026-09-30.
 
 ## Поточний стан
+
+- v0.13.918 додає transport drain після MTP install cancel, збереження сигналу cancel, перевірене завершення URB та припинення transport при невстановленій межі транзакції. Виправлено upgrade старої форми USB patch. Python контракти/моделі, patch application/idempotency, patch-check і diff check пройшли. NRO збірка та Switch/Windows тести 2.1–2.3 відкриті; апаратне усунення регресії ще не підтверджене. TegraExplorer.bin поза delivery.
 
 - v0.13.917 прибирає перезапуск MTP після підтвердженого скасування встановлення; при незалежному обриві джерела відновлення MTP не переводить USB у host mode. Цільові Python контракти й `git diff --check` пройшли; NRO збірка та перевірка Switch/Windows відкриті. `TegraExplorer.bin` поза delivery.
 - v0.13.916 усуває помилки компіляції проксі Haze (`haze_fs_proxy.cpp`, `haze_install_proxy.cpp`): вилучено пряме включення `<haze/results.hpp>`, що запобігає макро-колізіям `R_SUCCEED`/`R_THROW`/`R_TRY` та підстановці несумісного `ams::Result`. У `sphaira/include/haze/haze_internal.hpp` додано inline constexpr `::haze::ResultCancelled()` із значенням `MAKERESULT(420, 19)` типу `Result` (`u32`). Повна збірка `ReleaseWithInstall` у WSL успішно побудувала `sphaira_nro` (100%). Паралельні MTP контракти скасування пройдено. `TegraExplorer.bin` поза delivery.
