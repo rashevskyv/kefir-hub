@@ -137,6 +137,8 @@ def run_group(codes, url, model, threads, batch_size, limit=None):
 
     needed_keys = []
     for k in en:
+        if k.startswith("__"):
+            continue
         if any(not data[c].get(k, "").strip() for c in codes):
             needed_keys.append(k)
 

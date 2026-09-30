@@ -434,12 +434,18 @@ void TryAutoSwitchLanguage(const std::string& entry_name) {
     const i18n::LanguageDef* match = nullptr;
     size_t match_length = 0;
     for (const auto& lang : languages) {
-        std::string lang_lower = lang.name_en;
+        std::string name_en = lang.name;
+        const auto delim = name_en.find(" — ");
+        if (delim != std::string::npos) {
+            name_en = name_en.substr(0, delim);
+        }
+
+        std::string lang_lower = name_en;
         std::transform(lang_lower.begin(), lang_lower.end(), lang_lower.begin(), [](unsigned char c) {
             return std::tolower(c);
         });
 
-        if (entry_lower == lang_lower) {
+        if (entry_lower == lang_lower || entry_lower == lang.code) {
             match = &lang;
             break;
         }
@@ -449,7 +455,7 @@ void TryAutoSwitchLanguage(const std::string& entry_name) {
         }
     }
     if (match) {
-        App::SetLanguage(match->id, false);
+        App::SetLanguage(match->code, false);
     }
 }
 

@@ -168,9 +168,9 @@ auto MakeInstallToggle(std::string label, std::string description, option::Optio
 }
 
 auto LanguageValue() -> std::string {
-    const auto* def = i18n::FindLanguage(App::GetLanguage());
+    const auto* def = i18n::FindLanguageByCode(App::GetLanguage());
     if (def) {
-        return def->name_native;
+        return def->name;
     }
     return "English";
 }
@@ -353,24 +353,7 @@ void Menu::BuildCategories() {
             {
                 MakeFolderItem("Auto-update"_i18n, "When and how new versions are installed."_i18n, BuildAutoUpdateItems),
                 { "Language"_i18n, "Select the active interface language."_i18n, LanguageValue, [](){
-                    const auto languages = i18n::GetSupportedLanguages();
-                    PopupList::Items items;
-                    items.reserve(languages.size());
-                    s64 current_index = 0;
-                    const long current_id = App::GetLanguage();
-
-                    for (size_t i = 0; i < languages.size(); ++i) {
-                        items.push_back(std::string(languages[i].name_native));
-                        if (languages[i].id == current_id) {
-                            current_index = static_cast<s64>(i);
-                        }
-                    }
-
-                    App::Push<PopupList>("Language"_i18n, std::move(items), [languages](std::optional<s64> op_index){
-                        if (op_index && *op_index >= 0 && *op_index < static_cast<s64>(languages.size())) {
-                            App::SetLanguage(languages[*op_index].id);
-                        }
-                    }, current_index);
+                    App::OpenLanguageSelectDialog(false);
                 }},
                 { "Text scroll speed"_i18n, "Select how fast long labels scroll."_i18n, TextScrollSpeedValue, [](){
                     PopupList::Items items;

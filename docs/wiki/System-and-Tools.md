@@ -2,7 +2,7 @@
 
 Kefir Hub includes an extensive collection of system utilities, diagnostics, and customization tools to tune and personalize your Nintendo Switch.
 
-On first launch, choose an interface language from 26 bundled options. Kefir Hub remembers the choice; it can be changed later under **Settings -> General -> Language**. Russian is not offered as an interface language. This setting is separate from the system interface translation tools below.
+On first launch, choose an interface language from the bundled translation JSON files. Kefir Hub lists their language names alphabetically, saves the selected language code, and opens the picker again if the saved language is missing or unavailable. The same picker is available under **Settings -> General -> Language**. The current bundle has 26 languages; Russian is not offered. This setting is separate from the system interface translation tools below.
 
 ---
 

@@ -179,9 +179,10 @@ public:
     static auto GetWaveColorDark() -> std::string;
     static auto GetWaveColorLight() -> std::string;
     static auto Get12HourTimeEnable() -> bool;
-    static auto GetLanguage() -> long;
+    static auto GetLanguage() -> std::string;
     static auto NeedsLanguageSelection() -> bool;
     static void ShowInitialLanguageSelection();
+    static void OpenLanguageSelectDialog(bool is_initial_setup = false);
     static void MarkLanguageChosen();
     static auto GetTextScrollSpeed() -> long;
     static auto GetGodModeEnabled() -> bool;
@@ -258,7 +259,7 @@ public:
     static void SetInstallReserveSdMb(long reserve_mb);
     static void SetAnimatedWavesEnable(bool enable);
     static void Set12HourTimeEnable(bool enable);
-    static void SetLanguage(long index, bool prompt_restart = true);
+    static void SetLanguage(const std::string& code, bool prompt_restart = true);
     static void SetTextScrollSpeed(long index);
     static void SetProgressActive(bool active);
 
@@ -476,7 +477,7 @@ public:
     option::OptionString m_wave_color_dark{INI_SECTION, "wave_color_dark", ""};
     option::OptionString m_wave_color_light{INI_SECTION, "wave_color_light", ""};
     option::OptionBool m_12hour_time{INI_SECTION, "12hour_time", false};
-    option::OptionLong m_language{INI_SECTION, "language", -1};
+    option::OptionString m_language{INI_SECTION, "language", ""};
     bool m_language_chosen{false};
     option::OptionString m_left_menu{INI_SECTION, "left_side_menu", "FileBrowser"};
     option::OptionString m_right_menu{INI_SECTION, "right_side_menu", "Appstore"};

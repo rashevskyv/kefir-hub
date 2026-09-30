@@ -64,6 +64,16 @@ def test_key_completeness():
     assert not missing_report, f"Languages with missing or empty keys: {missing_report}"
 
 
+def test_language_name_metadata_present():
+    en = json.loads((I18N / "en.json").read_text(encoding="utf-8"))
+    assert "__language_name" in en and en["__language_name"].strip()
+    langs = json.loads(LANGUAGES_JSON.read_text(encoding="utf-8"))
+    for code in langs:
+        data = json.loads((I18N / f"{code}.json").read_text(encoding="utf-8"))
+        assert "__language_name" in data, f"Missing __language_name in {code}.json"
+        assert isinstance(data["__language_name"], str) and data["__language_name"].strip(), f"Empty __language_name in {code}.json"
+
+
 def test_printf_specifiers_and_newlines():
     en = json.loads((I18N / "en.json").read_text(encoding="utf-8"))
     langs = json.loads(LANGUAGES_JSON.read_text(encoding="utf-8"))
@@ -72,6 +82,8 @@ def test_printf_specifiers_and_newlines():
     for code in langs:
         data = json.loads((I18N / f"{code}.json").read_text(encoding="utf-8"))
         for k in en:
+            if k.startswith("__"):
+                continue
             v = data.get(k, "")
             if v:
                 if SPEC.findall(k) != SPEC.findall(v):
@@ -91,6 +103,8 @@ def test_no_untranslated_english_sentences():
             continue
         data = json.loads((I18N / f"{code}.json").read_text(encoding="utf-8"))
         for k, v in data.items():
+            if k.startswith("__"):
+                continue
             if k in en and v == en[k]:
                 if k in ALLOWED_IDENTICAL:
                     continue
@@ -103,6 +117,7 @@ def test_no_untranslated_english_sentences():
 if __name__ == "__main__":
     test_ru_json_absent()
     test_all_25_languages_present()
+    test_language_name_metadata_present()
     test_key_completeness()
     test_printf_specifiers_and_newlines()
     test_no_untranslated_english_sentences()

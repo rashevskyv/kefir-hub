@@ -8,22 +8,17 @@
 namespace sphaira::i18n {
 
 struct LanguageDef {
-    long id;
-    const char* code;         // e.g. "en", "uk", "ja", ... (JSON file: romfs:/i18n/<code>.json)
-    const char* dbi_code;     // e.g. "en", "ua", "jp", ... (matching DBI patcher codes)
-    const char* name_en;      // English display name
-    const char* name_native;  // Autonym in native script
-    SetLanguage set_language; // Matching Switch system language (or (SetLanguage)-1 if none)
+    std::string code;         // e.g. "en", "uk", "ja", ... (JSON file: romfs:/i18n/<code>.json)
+    std::string name;         // Display name from __language_name in JSON (e.g. "Ukrainian — Українська")
 };
 
+void ScanAvailableLanguages();
 std::span<const LanguageDef> GetSupportedLanguages();
-const LanguageDef* FindLanguage(long id);
 const LanguageDef* FindLanguageByCode(std::string_view code);
-const LanguageDef* FindLanguageByDbiCode(std::string_view dbi_code);
-long MatchSystemLanguage();
-long MigrateLegacyLanguage(long old_index, bool has_saved_key);
+std::string MatchSystemLanguage();
+std::string MigrateLegacyLanguage(std::string_view saved_val, bool has_saved_key);
 
-bool init(long index);
+bool init(std::string_view code);
 void exit();
 
 std::string get(std::string_view str);

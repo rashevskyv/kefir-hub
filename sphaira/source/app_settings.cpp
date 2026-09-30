@@ -231,8 +231,8 @@ auto App::GetWaveColorLight() -> std::string {
     return g_app->m_wave_color_light.Get();
 }
 
-auto App::GetLanguage() -> long {
-    return g_app->m_language.Get();
+auto App::GetLanguage() -> std::string {
+    return g_app ? g_app->m_language.Get() : "";
 }
 
 auto App::NeedsLanguageSelection() -> bool {
@@ -245,25 +245,54 @@ void App::MarkLanguageChosen() {
     }
 }
 
-void App::ShowInitialLanguageSelection() {
+void App::OpenLanguageSelectDialog(bool is_initial_setup) {
     const auto languages = i18n::GetSupportedLanguages();
     ui::PopupList::Items items;
     items.reserve(languages.size());
 
     s64 initial_idx = 0;
-    const long system_match = i18n::MatchSystemLanguage();
 
-    for (size_t i = 0; i < languages.size(); ++i) {
-        items.push_back(std::string(languages[i].name_native));
-        if (languages[i].id == system_match) {
-            initial_idx = static_cast<s64>(i);
+    if (is_initial_setup) {
+        const std::string sys_match = i18n::MatchSystemLanguage();
+        bool found = false;
+        if (!sys_match.empty()) {
+            for (size_t i = 0; i < languages.size(); ++i) {
+                if (languages[i].code == sys_match) {
+                    initial_idx = static_cast<s64>(i);
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            for (size_t i = 0; i < languages.size(); ++i) {
+                if (languages[i].code == "en") {
+                    initial_idx = static_cast<s64>(i);
+                    break;
+                }
+            }
+        }
+    } else {
+        const std::string current_code = App::GetLanguage();
+        for (size_t i = 0; i < languages.size(); ++i) {
+            if (languages[i].code == current_code) {
+                initial_idx = static_cast<s64>(i);
+                break;
+            }
         }
     }
 
+    for (const auto& lang : languages) {
+        items.push_back(lang.name);
+    }
+
+    const char* title = is_initial_setup ? "Select Language / Оберіть мову" : "Language";
+    std::string title_str = is_initial_setup ? title : i18n::get(title);
+
     auto popup = std::make_unique<ui::PopupList>(
-        "Select Language / Оберіть мову",
+        std::move(title_str),
         std::move(items),
-        [](std::optional<s64> op_index){
+        [is_initial_setup](std::optional<s64> op_index){
             if (!op_index) {
                 return;
             }
@@ -271,14 +300,24 @@ void App::ShowInitialLanguageSelection() {
             const s64 idx = *op_index;
             if (idx >= 0 && idx < static_cast<s64>(languages.size())) {
                 const auto& def = languages[idx];
-                App::SetLanguage(def.id, false);
-                App::MarkLanguageChosen();
+                App::SetLanguage(def.code, !is_initial_setup);
+                if (is_initial_setup) {
+                    App::MarkLanguageChosen();
+                }
             }
         },
         initial_idx
     );
-    popup->SetAllowCancel(false);
+
+    if (is_initial_setup) {
+        popup->SetAllowCancel(false);
+    }
+
     App::Push(std::move(popup));
+}
+
+void App::ShowInitialLanguageSelection() {
+    OpenLanguageSelectDialog(true);
 }
 
 auto App::GetTextScrollSpeed() -> long {
@@ -439,10 +478,10 @@ void App::Set12HourTimeEnable(bool enable) {
     g_app->m_12hour_time.Set(enable);
 }
 
-void App::SetLanguage(long index, bool prompt_restart) {
-    const bool changed = (App::GetLanguage() != index);
+void App::SetLanguage(const std::string& code, bool prompt_restart) {
+    const bool changed = (App::GetLanguage() != code);
     if (changed || !g_app->m_language_chosen) {
-        g_app->m_language.Set(index);
+        g_app->m_language.Set(code);
         on_i18n_change();
 
         if (prompt_restart && changed) {

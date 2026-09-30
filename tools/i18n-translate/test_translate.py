@@ -342,6 +342,8 @@ def test_deployment_printf_specifiers():
     for code in t.LANGS:
         data = t.load(code)
         for k in en:
+            if k.startswith("__"):
+                continue
             v = data.get(k, "")
             if v and t.SPEC.findall(k) != t.SPEC.findall(v):
                 mismatches.append(f"{code} '{k}': {t.SPEC.findall(k)} vs {t.SPEC.findall(v)}")
@@ -354,6 +356,8 @@ def test_deployment_newlines():
     for code in t.LANGS:
         data = t.load(code)
         for k in en:
+            if k.startswith("__"):
+                continue
             v = data.get(k, "")
             if v and k.count("\n") != v.count("\n"):
                 mismatches.append(f"{code} '{k}': {k.count(chr(10))} vs {v.count(chr(10))}")
@@ -366,7 +370,7 @@ def test_deployment_not_identical_fallback():
         if code == "engb":
             continue
         data = t.load(code)
-        identical_count = sum(1 for k, v in en.items() if data.get(k) == v and len(k) > 4)
+        identical_count = sum(1 for k, v in en.items() if not k.startswith("__") and data.get(k) == v and len(k) > 4)
         pct = identical_count / len(en)
         assert pct < 0.60, f"{code}.json appears to be an untranslated copy of English ({pct:.1%})"
 
@@ -411,6 +415,8 @@ def test_deployment_no_untranslated_sentences():
             continue
         data = t.load(code)
         for k, v in data.items():
+            if k.startswith("__"):
+                continue
             if k in en and v == en[k]:
                 if k in allowed_identical:
                     continue

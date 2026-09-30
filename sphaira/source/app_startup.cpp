@@ -351,19 +351,25 @@ App::App(const char* argv0) {
         }
     }
 
+    i18n::ScanAvailableLanguages();
+
     const bool has_language_in_ini = ini_haskey(INI_SECTION, "language", CONFIG_PATH) != 0;
+    std::string validated_code;
     if (has_language_in_ini) {
+        const std::string saved_lang = m_language.Get();
+        validated_code = i18n::MigrateLegacyLanguage(saved_lang, true);
+    }
+
+    if (!validated_code.empty()) {
         m_language_chosen = true;
-        const long saved_lang = m_language.Get();
-        const long migrated_lang = i18n::MigrateLegacyLanguage(saved_lang, true);
-        if (migrated_lang != saved_lang) {
-            m_language.Set(migrated_lang);
+        if (m_language.Get() != validated_code) {
+            m_language.Set(validated_code);
         }
     } else {
         m_language_chosen = false;
     }
 
-    i18n::init(has_language_in_ini ? GetLanguage() : i18n::MatchSystemLanguage());
+    i18n::init(m_language_chosen ? m_language.Get() : "en");
 
     if (App::GetLogEnable()) {
         log_file_init();

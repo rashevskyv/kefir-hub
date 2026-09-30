@@ -205,6 +205,8 @@ def build_jobs(en, data, codes, force=False):
     that way (201 of them in nl.json alone)."""
     jobs = []
     for key in en:
+        if key.startswith("__"):
+            continue
         todo = [c for c in codes if force or not data[c].get(key, "").strip()]
         if todo:
             jobs.append((key, en[key] or key, todo))
