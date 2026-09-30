@@ -1,6 +1,14 @@
 # walkthrough.md
 
-Актуальний delivery у коді — **v0.13.920** (2026-09-30).
+Актуальний delivery у коді — **v0.13.921** (2026-09-30).
+
+## v0.13.921 — виправлення збірки libhaze та верифікація NRO
+
+- У `sphaira/cmake/patch_libhaze_cancel.cmake` виправлено заміну застарілих блоків обробки скасування транзакції (`resp_cpp_handle_prev`, `prev2`, `prev3`) у `source/ptp_responder.cpp`: замість заміни на повний блок `resp_cpp_handle_new` (який дублював зовнішній виклик `R_TRY_CATCH(this->HandleRequestImpl())`), запроваджено підстановку виключно цільового блоку `R_CATCH(haze::ResultCancelled)` через змінну `resp_cpp_catch_cancel_new`.
+- Ліквідовано синтаксичну помилку подвійного `R_TRY_CATCH` та незбалансованих дужок у згенерованому `source/ptp_responder.cpp`.
+- Збірка `ReleaseWithInstall` через WSL (`cmake --preset ReleaseWithInstall && cmake --build --preset ReleaseWithInstall --parallel $(nproc)`) успішно виконана до 100% із побудовою кінцевого артефакту `sphaira_nro`.
+- Підтверджено чистоту застосування патча на чистий upstream libhaze та його повну ідемпотентність.
+- Усі цільові Python контракти скасування MTP (`test_mtp_cancellation_contract.py`, `test_mtp_cancellation_models.py`) та `git diff --check` пройшли без зауважень. `TegraExplorer.bin` збережено поза delivery.
 
 ## v0.13.920 — негайне переривання MTP передачі
 

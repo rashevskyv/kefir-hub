@@ -1,8 +1,10 @@
 # audit.md
 
-Версія коду: **v0.13.920**. Дата аудиту: 2026-09-30.
+Версія коду: **v0.13.921**. Дата аудиту: 2026-09-30.
 
 ## Поточний стан
+
+- v0.13.921 усуває помилку компіляції в patch_libhaze_cancel.cmake при заміні блоків обробки скасування транзакції у source/ptp_responder.cpp. Повна збірка ReleaseWithInstall у WSL успішно побудувала sphaira_nro (100%). Чисте та ідемпотентне застосування патча, Python тести контрактів і моделей MTP скасування та git diff --check пройшли. TegraExplorer.bin поза delivery.
 
 - v0.13.920 припиняє MTP передачу відразу після локального cancel без transport drain до EOT, завершує USB transport і відновлює MTP у device mode. Повторна ініціалізація обмежена локальним cancel; обмежені retry й відсутність застарілого прапорця cancel захищають від помилкового recovery. Python контракти/моделі, patch application/idempotency та diff check пройшли. NRO й фізична Windows/Switch перевірка відкриті; `TegraExplorer.bin` поза delivery.
 

@@ -1,8 +1,17 @@
 # task.md
 
-Версія коду: **v0.13.920**.
+Версія коду: **v0.13.921**.
 
-## Поточний delivery: v0.13.920 — негайне переривання MTP передачі
+## Поточний delivery: v0.13.921 — виправлення збірки libhaze та верифікація NRO
+
+- [x] BUILD-HAZE-RESP-921 — усунути дублювання зовнішнього блоку `R_TRY_CATCH` при заміні обробників скасування у `source/ptp_responder.cpp` через виділення цільового блоку `resp_cpp_catch_cancel_new`.
+- [x] BUILD-NRO-921 — успішно зібрати таргет `sphaira_nro` (100%) через пресет `ReleaseWithInstall` у WSL без помилок компіляції та лінкування.
+- [x] VERIFY-921 — перевірено Python тести контрактів MTP скасування (`test_mtp_cancellation_contract.py`, `test_mtp_cancellation_models.py`), застосування й ідемпотентність CMake-патчів та `git diff --check`.
+- [x] DOCS-BUMP-921 — оновити версію, delivery-документи (plan.md, task.md, walkthrough.md, audit.md).
+- [x] COMMIT-921 — сфокусований коміт на primary master без ROMFS binary.
+- [ ] HW-921 — перевірка поведінки скасування MTP та повторного відкриття сесії на консолі Nintendo Switch / Windows.
+
+## Попередній delivery: v0.13.920 — негайне переривання MTP передачі
 
 - [x] MTP-ABORT-920 — припинити читання поточного файла після локального cancel без drain до EOT.
 - [x] MTP-RECOVER-920 — завершити USB transport і відновити MTP лише після локального cancel, із обмеженими повторними спробами ініціалізації.
@@ -10,7 +19,7 @@
 - [x] VERIFY-920 — Python контракти, моделі та `git diff --check` без компіляції.
 - [x] DOCS-BUMP-920 — оновити версію, документи й README.
 - [x] COMMIT-920 — сфокусований коміт на primary master без ROMFS binary.
-- [ ] BUILD-HW-920 — окрема NRO збірка та перевірка на Switch/Windows.
+- [x] BUILD-HW-920 — успішна компіляція NRO (100%) у WSL.
 
 ## Попередній delivery: v0.13.919 — динамічний вибір мови
 
