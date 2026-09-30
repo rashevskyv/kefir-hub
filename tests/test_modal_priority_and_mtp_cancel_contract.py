@@ -45,5 +45,11 @@ assert shutdown.index("BackgroundInstaller::TeardownWorker();") < shutdown.index
 restart = source("source/ui/menus/install_stream_menu_base.cpp")
 assert "needs_mtp_restart && !App::IsExiting()" in restart
 assert restart.count("if (App::IsExiting())") >= 2
+assert "haze::Exit(false);" in restart
+assert "ui::menu::dbi::ShouldRestartMtp(" in restart
+assert "c->origin, source_interrupted, true" in restart
+assert "R_FAILED(rc) && !user_cancelled" in restart
+assert "if (needs_mtp_restart && !App::IsExiting()) {\n                    c->session->AddLog" in restart
+assert "c->session->RequestExit();\n                    ScheduleMtpRestart();" in restart
 
 print("modal input and MTP cancellation contracts: PASS")

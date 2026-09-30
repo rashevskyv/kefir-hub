@@ -1,8 +1,17 @@
 # task.md
 
-Версія коду: **v0.13.916**.
+Версія коду: **v0.13.917**.
 
-## Поточний delivery: v0.13.916 — виправлення компіляції проксі haze та верифікація збірки
+## Поточний delivery: v0.13.917 — безпечне скасування MTP встановлення
+
+- [x] `MTP-CANCEL-917` — не перезапускати MTP після підтвердженого скасування; зберегти відновлення при незалежному обриві джерела.
+- [x] `MTP-USB-917` — зупиняти MTP для відновлення без перемикання USB у host mode.
+- [x] `VERIFY-917` — цільові Python контракти й `git diff --check` без компіляції.
+- [x] `DOCS-BUMP-917` — оновити версію й delivery-документи.
+- [x] `COMMIT-917` — сфокусований commit на primary master без ROMFS binary.
+- [ ] Зібрати NRO та перевірити скасування, повторну передачу й вихід Start на Switch/Windows.
+
+## Попередній delivery: v0.13.916 — виправлення компіляції проксі haze та верифікація збірки
 
 - [x] `BUILD-HAZE-MACRO-916` — усунути конфлікт макросів `R_SUCCEED`, `R_THROW`, `R_TRY` та типів `ams::Result` шляхом вилучення `#include <haze/results.hpp>` з `haze_fs_proxy.cpp` та `haze_install_proxy.cpp`.
 - [x] `BUILD-HAZE-CANCEL-916` — визначити функцію `::haze::ResultCancelled()` з поверненням `MAKERESULT(420, 19)` типу `Result` (`u32`) у `sphaira/include/haze/haze_internal.hpp`.

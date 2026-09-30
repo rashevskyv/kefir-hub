@@ -52,10 +52,10 @@ void ScheduleMtpRestart() {
             if (App::IsExiting()) {
                 return;
             }
-            log_write("[MTP] Restarting haze after install cancellation\n");
+            log_write("[MTP] Restarting haze after source interruption\n");
             BackgroundInstaller::TeardownWorker();
             if (haze::IsRunning()) {
-                haze::Exit();
+                haze::Exit(false);
             }
             if (App::GetMtpEnable() && !App::IsExiting()) {
                 if (haze::Init()) {
@@ -272,7 +272,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                 c->session->MarkPackageComplete(cur_pkg, rc);
 
                 const bool user_cancelled = c->session->IsCancelRequested();
-                const bool was_cancelled = rc == Result_TransferCancelled || user_cancelled;
                 const bool source_interrupted = R_FAILED(rc) && !user_cancelled
                     && (!c->src->m_active || rc == Result_TransferInterrupted || rc == Result_TransferCancelled);
 
@@ -314,8 +313,10 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
 
                 App::SetAutoSleepDisabled(false);
 
+                // A user-cancelled PTP transaction stays on the same USB connection.
+                // Restart MTP only when the source failed independently.
                 const bool needs_mtp_restart = ui::menu::dbi::ShouldRestartMtp(
-                    c->origin, was_cancelled || source_interrupted || rc == Result_TransferInterrupted, true);
+                    c->origin, source_interrupted, true);
 
                 {
                     mutexLock(&s_mutex);
@@ -333,9 +334,7 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
 
                 if (needs_mtp_restart && !App::IsExiting()) {
                     c->session->AddLog("Restarting MTP service..."_i18n, ui::menu::dbi::LogKind::Event);
-                    if (source_interrupted) {
-                        c->session->RequestExit();
-                    }
+                    c->session->RequestExit();
                     ScheduleMtpRestart();
                 }
 
