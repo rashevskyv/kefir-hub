@@ -43,7 +43,6 @@ __pycache__/
 remote_log.txt
 .codex-tmp/
 .grok/
-.agents/
 tools/i18n-translate/*.log
 .pytest_cache/
 sphaira/graphify-out/

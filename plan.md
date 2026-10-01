@@ -26,7 +26,7 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
       `.agents/`, `tools/i18n-translate/*.log`, `.pytest_cache/`, `sphaira/graphify-out/`, `build/`.
       Delete `sphaira/graphify-out/` from disk (35 MB duplicate; canonical graph is repo-root `graphify-out/`).
       **Done when:** `git ls-files | grep -E 'remote_log|\.codex-tmp|\.grok|\.agents|run[0-9]*\.log'` is empty.
-- [x] 0.3 **One test-build skill.** *(done by audit session)* `git mv .agents/skills/test-build/SKILL.md .claude/skills/test-build/SKILL.md`
+- [x] 0.3 **One test-build skill.** *(done; canonical moved to `.agents/skills/` for Codex/Gemini, `.claude/skills/` is a stub)* `git mv .agents/skills/test-build/SKILL.md .claude/skills/test-build/SKILL.md`
       (the `.grok` copy is identical — drop it). Rewrite its step 5 to the AGENTS.md delivery ritual
       (CHANGELOG + plan.md checkbox; no plan/task/walkthrough/audit quartet). Keep steps 1–4 as is.
       **Done when:** exactly one `SKILL.md` named test-build exists under `.claude/skills/`; it mentions `CHANGELOG.md`.

@@ -1,6 +1,6 @@
 # Kefir Hub (sphaira fork) — agent rules
 
-Single source of truth for any AI agent working here. Keep this file under 100 lines.
+Single source of truth for any AI agent working here (Claude Code reads it via `CLAUDE.md`, Gemini via `GEMINI.md`, Codex natively). Keep this file under 100 lines.
 Reports to the user are in Ukrainian; code, commits and this file are in English.
 
 ## Workspace
@@ -31,7 +31,7 @@ Do **not** read `README.md`, `docs/wiki/`, `docs/dev/AUDIT-*.md` or the whole `G
 
 ## Build and test policy
 - **No NRO build during normal edit turns.** Work in batches: several commits, then one build checkpoint.
-- Build checkpoint = run the `test-build` skill (`.claude/skills/test-build/SKILL.md`) in WSL. Mandatory at the
+- Build checkpoint = run the `test-build` skill (`.agents/skills/test-build/SKILL.md` (canonical; `.claude/skills/test-build/` is a stub pointing there)) in WSL. Mandatory at the
   end of every plan phase and after at most 5 unbuilt commits. Fix errors surgically, bump, commit.
 - Host tests are cheap and **required** after touching pure logic, headers, tests or patches:
   `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` (≈1 min; no devkitPro needed).
