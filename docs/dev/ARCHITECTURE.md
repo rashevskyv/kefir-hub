@@ -96,7 +96,7 @@ Phase 3.1 of `plan.md` tracks the remaining plain globals.
 | `fs::Fs`, `FsNativeSd` (`fs.hpp`) | Behaviour changes here reach every menu; change only with a task that names them |
 | `InstallSession` (`dbi_menu.hpp`) | All install transports go through it; change with a hardware check |
 
-`docs/dev/CHANGELOG.md` also shows up as a large graph node; it is a document, not code.
+`docs/dev/CHANGELOG.md` is kept out of the graph by `.graphifyignore` (it linked every symbol and skewed god nodes).
 
 ## Build and test
 

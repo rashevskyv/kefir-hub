@@ -17,6 +17,7 @@ Entries without a detail line are commit titles only; their verification state w
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 - chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
+- chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
 ## v0.13.932 — bounded string copies
 45 strcpy/strcat/sprintf sites: 14 literal-into-large-buffer tagged `// literal, bounded`; 30 replaced (snprintf with sizeof(dst) / NAME_MAX+1 for devoptab dirnext; FsPath From/+= now truncate at FS_MAX_PATH via memmove/strncat; fs.cpp trailing "/" via bounded strncat); 1 dead commented strcat removed. Not compiled on host (needs libnx; host g++ 11 lacks if consteval) — FsPath/hasher/tik-path logic checked in a scratch copy only. host tests: pass (--quick) · nro: not built · switch: pending

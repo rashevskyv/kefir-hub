@@ -179,7 +179,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 - [x] 5.2 `tools/dev/check.ps1`: PowerShell wrapper that calls the WSL `tests/run.sh --quick` so it works from a
       Windows shell with one command.
 - [ ] 5.3 Final build checkpoint; `[USER]` full checklist; the user decides on `git push`.
-- [ ] 5.4 **Graphify noise.** `docs/dev/CHANGELOG.md` is indexed as a god node (640 edges) and skews the report. Exclude it (and `docs/dev/history`, `graphify-out`) via graphify's ignore mechanism (`graphify --help`, look for ignore/exclude; else a `.graphifyignore` or `.gitignore`-style config) and re-run `graphify update .`. **Done when:** CHANGELOG is absent from `## God Nodes`.
+- [x] 5.4 **Graphify noise.** `docs/dev/CHANGELOG.md` is indexed as a god node (640 edges) and skews the report. Exclude it (and `docs/dev/history`, `graphify-out`) via graphify's ignore mechanism (`graphify --help`, look for ignore/exclude; else a `.graphifyignore` or `.gitignore`-style config) and re-run `graphify update .`. **Done when:** CHANGELOG is absent from `## God Nodes`.
 
 ---
 
