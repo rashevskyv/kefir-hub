@@ -22,10 +22,10 @@ Do **not** read `README.md`, `docs/wiki/`, `docs/dev/AUDIT-*.md` or the whole `G
 - Before reading code: `graphify explain "<symbol>"`, `graphify path "A" "B"`. Then open only the files it names,
   with line ranges. Never `cat` a file over 300 lines whole.
 - `GRAPH_REPORT.md`: read only `## Summary` and `## God Nodes` (first ~60 lines + the god-node block).
-- 21 classes are named `Menu` in different namespaces. Always qualify: `<path>::Menu` in graphify, `-l` + path in grep.
+- 19 structs are named `Menu` in different namespaces (table: `docs/dev/ARCHITECTURE.md`). Always qualify: `<path>::Menu` in graphify, `-l` + path in grep.
 - God nodes (`App` 841 edges, `Result`, `log_write`, `Fs`): a change there has blast radius — say so, keep it minimal.
 - Do not add new static/global state to `App`. New logic goes into free functions in the owning module.
-- Module routing: `docs/dev/ARCHITECTURE.md` (once it exists). Until then: Save UI `source/ui/menus/save*`,
+- Module routing: `docs/dev/ARCHITECTURE.md` (directories, Menu table, thread map). Quick list: Save UI `source/ui/menus/save*`,
   Web `source/web*`, App lifecycle `source/app*.cpp`, Transfers `source/threaded_file_transfer*`,
   Installer `source/yati/`, MTP/USB `source/haze*`, `source/app_usb.cpp`, `source/utils/devoptab_mtp*`.
 

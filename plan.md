@@ -157,7 +157,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 
 ## Phase 4 — Documentation for humans and models
 
-- [ ] 4.1 **`docs/dev/ARCHITECTURE.md`** (≤ 200 lines, English): directory → responsibility table; the 21 `Menu`
+- [x] 4.1 **`docs/dev/ARCHITECTURE.md`** (≤ 200 lines, English): directory → responsibility table; the 21 `Menu`
       classes as a table `namespace | header | what it shows`; thread map (every thread: who starts it, which
       globals/mutex it shares); god nodes and the rule for each; build/test commands; where i18n keys live and how
       parity is checked. Generate from `graphify explain` + `GRAPH_REPORT.md` God Nodes, then verify against code.
