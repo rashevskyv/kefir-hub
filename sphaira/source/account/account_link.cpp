@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace sphaira::account_link {
-bool g_daemons_terminated = false;
+std::atomic<bool> g_daemons_terminated{false};
 
 auto UidDashedLinkalho(const AccountUid& uid) -> std::string {
     char buf[40]{};
@@ -302,7 +302,7 @@ auto HasSuspendedApplication() -> bool {
     return QueryBackgroundApplication(pid, program_id);
 }
 
-bool g_launch_link_prompted = false;
+bool g_launch_link_prompted = false; // main thread only
 
 
 auto ConsumeAccountDaemonsTerminated() -> bool {

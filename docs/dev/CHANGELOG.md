@@ -17,6 +17,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 - chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 
+## v0.13.924 — atomic account-daemon flag
+account_link: `g_daemons_terminated` -> std::atomic<bool> (written on ProgressBox workers, consumed on the main thread); `g_launch_link_prompted` annotated main-thread only. host tests: pass · nro: not built · switch: pending
 ## v0.13.923 — atomic network cache flags
 net.cpp: `g_cache_value`/`g_cache_valid` -> std::atomic<bool> (TryConnect workers clear them while the UI reads); `g_request_open`, `g_cache_ts` annotated. host tests: pass · nro: not built · switch: pending
 ## v0.13.922 — keep MTP active during USB recovery
