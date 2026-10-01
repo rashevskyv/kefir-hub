@@ -13,6 +13,8 @@ Entering **Saves** from the Tools tab presents 3 dedicated categories navigable 
 
 **Backup destination:** **Saves → Backup → Default location** sets the folder preselected in Backup Options; you can choose another folder for an individual run. Game saves are written beneath the selected folder as DBI-compatible ZIP archives. `/switch/DBI/saves` and `/DBISaves` remain sources for restoring existing backups.
 
+- **Custom Save Backup Search Paths:** Configure additional folders to scan for save backups under **Settings -> Saves -> Save Backup Search Paths** using the folder picker. Discovered backups in these folders are indexed alongside standard paths (`/dumps` and `/switch/DBI/saves`).
+
 ---
 
 ## 2. Multi-Source Backup Catalog & Grouping
@@ -73,5 +75,18 @@ Under **Games -> Options -> Saves** for any installed game:
 
 - **Read-Only MTP Saves:** When exposing save partitions over USB MTP (**Show NAND Saves**), saves are presented in a structured hierarchy (`Game Name [TitleID] / User Profile / ...`) in **read-only** mode to prevent host operating systems from inadvertently corrupting raw save containers.
 - **WebDAV Cloud Synchronization:**
-  - Synchronize backups with remote WebDAV servers via **Sync with remote**.
+  - Synchronize backups with remote WebDAV servers via **Sync with remote**: local backups missing remotely are uploaded and remote backups missing locally are downloaded. The backup folder structure (e.g. `sphaira-saves/Save/Super Mario Odyssey`) is created automatically.
   - Enable **Auto-sync saves after backup** in Advanced Options to upload new backups immediately upon creation.
+
+---
+
+## 8. Save Deletion
+
+- **Save Deletion:** Delete save data directly for installed and deleted games with safety confirmation dialogues, account filtering, and save type selection. For orphaned saves in the "Deleted Games" category, deleting the save completely removes the leftover game entry. In the "Backups" category, deleting removes backup files and archives from microSD storage.
+
+---
+
+## 9. Raw NAND Save Drives & Packed Save Restore
+
+- **NAND Saves Drives (raw DISA saves over MTP):** Enabling **Show NAND Saves (USER:/save)** and **Show NAND System Saves (SYSTEM:/save)** exposes the raw internal save partition files (`000000000000001e`, etc.) over USB with full read and write capabilities, matching DBI Explorer format for direct save backup and restoration.
+- **Packed / Raw Save Restoration (DISA containers):** Sphaira supports restoring both unpacked ZIP backup archives and packed monolithic save files (`000000000000001e`, `.disa`, `.bin`) directly to the console's NAND save partition from the Save Menu or via the **Restore save data** action in the File Browser.

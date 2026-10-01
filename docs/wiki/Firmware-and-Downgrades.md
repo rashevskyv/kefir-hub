@@ -21,7 +21,7 @@ When installing an older system firmware version than the one currently active (
 1. **Detection:** Sphaira detects that the target firmware version is lower than the active running firmware.
 2. **Script Staging:** Automatically stages `/assets/romfs/tegra/downgrade_fix.te` to the SD root as `/startup.te`.
 3. **Automated Payload Boot:** Automatically configures target partition pointers (`SYSTEM` on EmuNAND or SysNAND) and reboots into TegraExplorer via Hekate.
-4. **Execution & Auto-Reboot:** The script mounts the target partition, deletes save `8000000000000073`, verifies removal, cleans up temporary files, and reboots cleanly back into Hekate without requiring any manual button presses.
+4. **Execution & Auto-Reboot:** The script disarms itself immediately to prevent bootloops, mounts the target partition, deletes save `8000000000000073`, verifies removal, cleans up temporary files, and reboots cleanly back into Hekate without requiring any manual button presses.
 
 ---
 
@@ -38,5 +38,11 @@ Installing a system firmware update over existing Atmosphere custom themes or sy
 If boot issues arise following a downgrade, the downgrade warning dialog provides detailed instructions for entering Horizon Recovery / Maintenance Mode:
 1. Turn on the console and wait for Nintendo and Kefir boot logos to pass.
 2. Press and hold both **Volume (+)** and **Volume (-)** buttons simultaneously until Maintenance Mode opens.
-3. Select **Initialize Console Without Deleting Save Data** (resets installed game titles and system settings while strictly preserving your game save files).
+3. Select **Initialize Console Without Deleting Save Data** (resets installed game titles and system settings while strictly preserving your game save files). After initialization the SD card's `Nintendo` folder becomes invalid and the console prompts to delete it; agreeing does NOT affect saved games.
 4. Direct guide access is available via the scan-ready QR code pointing to `https://switch.customfw.xyz/downgrade_fw`.
+
+---
+
+## 5. Localization
+
+- **Fully Localized Update & Reboot Notifications:** All firmware update confirmation prompts, validation error messages, downgrade recovery notices, theme/translation cleanup warnings, and post-installation reboot requests are fully localized through Sphaira's `i18n` translation engine across supported languages.

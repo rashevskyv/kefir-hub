@@ -25,12 +25,9 @@ compile_commands.json
 out
 
 usb_test/
-plan.md
 graphify-out/
 scratch/
 build.sh
-walkthrough.md
-task.md
 build_output.txt
 tools/module_catalog/cache/
 __pycache__/
@@ -41,3 +38,13 @@ __pycache__/
 /[[:space:]]
 
 
+
+# agent/tool noise
+remote_log.txt
+.codex-tmp/
+.grok/
+.agents/
+tools/i18n-translate/*.log
+.pytest_cache/
+sphaira/graphify-out/
+.claude/settings.local.json

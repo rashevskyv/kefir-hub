@@ -21,7 +21,7 @@ Many Nintendo Switch games require a linked Nintendo Account to enable features 
 
 - **Integrated RomFS Donor Pool:** Sphaira embeds verified Nintendo Account donor templates directly in RomFS (`romfs:/kefir/donor/`), eliminating the need to install third-party homebrew utilities (such as Linkalho).
 - **Official vs Fake Status Classification:**
-  - Accurately inspects the console's account database (`8000000000000010`) using Horizon's native BaaS Administrator IPC (`GetBaasAccountAdministrator` and `IsLinkedWithNintendoAccount`).
+  - Accurately inspects the console's account database (`8000000000000010`) using Horizon's native BaaS Administrator IPC (`GetBaasAccountAdministrator` and `IsLinkedWithNintendoAccount`); profile link status and NAS ID are queried the same way.
   - Clearly differentiates between **Official** Nintendo Accounts and **Fake / Offline** linked accounts, displaying distinct color-coded status badges in the UI.
 - **Safe Linking & Emergency Rollbacks:**
   - Before modifying account system save `8000000000000010`, Sphaira takes an emergency rollback snapshot to protect against corruption or boot issues.
@@ -35,3 +35,4 @@ Many Nintendo Switch games require a linked Nintendo Account to enable features 
 
 - Export individual user profile definitions (UID, nickname, avatar, linkage metadata) to standalone, human-readable portable backup archives stored in `/config/kefir/user_backups/`.
 - Backups can be shared wirelessly with other consoles or restored cleanly onto newly formatted NANDs.
+- **One-Time TegraExplorer Restore Notification:** When restoring user profiles & play hours packs through TegraExplorer, if restoration does not complete, a concise status notification is presented once upon returning to Kefir Hub, cleanly persisting the applied state so it does not repeat on subsequent launches.

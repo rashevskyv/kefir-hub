@@ -13,6 +13,7 @@ Welcome to the **Kefir Hub** documentation wiki. Kefir Hub is a high-performance
 - [Console Transfer & TegraExplorer](Console-Transfer.md) — Over-the-Air (OTA) wireless migration of user profiles, playtime hours, and save packs between Nintendo Switch consoles
 - [System Firmware & Downgrade Recovery](Firmware-and-Downgrades.md) — System firmware updates, ZIP/folder manual installs, automated post-downgrade recovery script, and theme/translation cleanup
 - [Network & Web Services](Network-and-Web-Services.md) — Web File Manager, Ownfoil client, NX-Link, FTP server, and Wi-Fi connection manager
+- [Interface & Navigation](Interface-and-Navigation.md) — Tools hub, layouts, header, image viewer, file browser and network sources
 - [System Utilities & Customization](System-and-Tools.md) — Module Manager with RAM tracking, custom Fan Curves, System Interface Translations, Forwarder Editor, and Theme Creator
 
 ---

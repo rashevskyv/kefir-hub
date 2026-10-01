@@ -2,7 +2,7 @@
 name: test-build
 description: >
   Test building Sphaira / Kefir Hub via WSL, fix compilation/linker errors iteratively,
-  bump version in sphaira/CMakeLists.txt, update plan/task/walkthrough/audit, and commit fixes.
+  bump version in sphaira/CMakeLists.txt, add a CHANGELOG entry, tick plan.md, and commit fixes.
   Triggers: /test-build, /протестуй-збірку, "Протестуй збірку", "протестуй збірку",
   "test build", "перевір збірку", "виправ помилки збірки".
 ---
@@ -11,7 +11,7 @@ description: >
 
 Workflow for testing project compilation, diagnosing build/link errors, applying surgical fixes, and shipping a clean build commit with a version bump.
 
-> **Note on Workspace Policy**: While `AGENTS.md` forbids routine compilation during normal editing turns to conserve resources, this skill is the dedicated procedure specifically authorized to compile, verify, and resolve build errors.
+> **Note on Workspace Policy**: `AGENTS.md` forbids NRO compilation during normal edit turns; this skill is the build checkpoint that is authorized to compile, verify and resolve build errors. Host tests (`tests/run.sh`) are separate and always allowed.
 
 ## Build Environment & Requirements
 
@@ -49,20 +49,14 @@ Alternatively run `./build.sh`.
 
 Re-run the build command from Step 1. Repeat Steps 2 and 3 until the build completes with code 0 and `sphaira_nro` is built.
 
-### 5. Bump Version, Update Docs & Commit
+### 5. Bump Version, Changelog & Commit
 
-Once all compilation errors are resolved:
+Once all compilation errors are resolved (follow the delivery ritual in `AGENTS.md`):
 
-1. **Bump Version**:
-   - Increment patch version in `sphaira/CMakeLists.txt`: `set(sphaira_VERSION 0.13.X)`.
-
-2. **Update Plan & Tracking Files** (in Ukrainian):
-   - `plan.md`: Add new «Поточний delivery: v0.13.X» at the top; previous becomes «Попередній».
-   - `task.md`: Add checkboxes for the build fixes, version bump, and docs bump. Mark completed.
-   - `walkthrough.md`: Add entry detailing which compilation errors were fixed and verification status.
-   - `audit.md`: Update version header and notes.
-
-3. **Commit**:
-   - Stage modified source files, `sphaira/CMakeLists.txt`, `plan.md`, `task.md`, `walkthrough.md`, `audit.md`, and skill files.
-   - Commit message format: `v0.13.X: fix compilation errors and verify build`.
-   - Do not `git push` unless explicitly asked by the user.
+1. **Bump Version**: increment patch in `sphaira/CMakeLists.txt`: `set(sphaira_VERSION 0.13.X)`.
+2. **Changelog**: prepend to `docs/dev/CHANGELOG.md`:
+   `## v0.13.X — build fix` + 1–2 lines: which compile/link errors were fixed, and
+   `host tests: pass|not run · nro: built · switch: pending`.
+3. **plan.md**: tick the build-checkpoint checkbox of the current phase. Add nothing else.
+4. **Commit**: stage the fixed sources, `sphaira/CMakeLists.txt`, `docs/dev/CHANGELOG.md`, `plan.md`.
+   Message: `v0.13.X: fix compilation errors and verify build`. Do not `git push`.

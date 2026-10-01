@@ -27,12 +27,15 @@ No manual SD card swapping or PC intervention is required to move data between t
 Certain system saves—notably `8000000000000010` (Account definitions) and `80000000000000F0` (Play History & Play Events)—are locked by active Horizon OS system services (`FsError_TargetLocked`) while the operating system is running. Kefir Hub bypasses this limitation safely using an automated TegraExplorer payload handoff.
 
 ### Key Capabilities:
-- **Embedded RomFS Payload:** Bundles the latest verified TegraExplorer binary directly in RomFS (`romfs:/tegra/TegraExplorer.bin`).
-- **Automatic Payload Version Sync:** On launch, Sphaira inspects `/bootloader/payloads/TegraExplorer.bin`. If missing or older than the embedded version (verified by the `KFRP` binary footer), it is updated in-place automatically.
-- **Automated Script Staging:** Sphaira stages a non-interactive `/startup.te` script to the root of the microSD card and requests an automated reboot to the payload.
-- **Hekate Payload Launch & Swap Fallback:** Communicates with Hekate's one-shot payload launch API (`/config/kefir/hekate-payload-request.ini`). If running under older bootloader configurations, it seamlessly executes a safe payload swap (`/payload.bin` <-> `/bootloader/update.bin`) and configures temporary autoboot in `hekate_ipl.ini` before rebooting.
-- **Diagnostic Dashboard UI:** TegraExplorer scripts run inside an animated full-screen diagnostic dashboard displaying hardware spinners, partition mounts, individual save states (`0010`, `0011`, `00F0`, `0041`), files processed, and rolling event logs.
-- **5-Second Auto-Reboot:** Upon successful dump or restore, the script cleans up temporary files, disarms the swap, restores the original `payload.bin` and `hekate_ipl.ini`, and reboots back into Hekate automatically after a 5-second countdown.
+- **Embedded RomFS TegraExplorer & Version Synchronization:** Sphaira bundles the latest compiled TegraExplorer payload in its RomFS (`romfs:/tegra/TegraExplorer.bin`). Before launching any payload operation (`ensureTegraExplorerPayload`), Sphaira checks `/bootloader/payloads/`:
+  - If TegraExplorer is missing from the SD card, it is automatically installed from RomFS.
+  - If a copy exists, Sphaira reads and parses the binary payload footer (`KFRP`). If the SD card copy is older than the RomFS version, it is safely upgraded in-place.
+  - If the SD card already contains a matching or newer version, it remains untouched.
+- **Seamless Automated Reboot to TegraExplorer:** When performing **Backup profiles & play hours**, Sphaira automatically stages the dump package metadata and writes the automation script to the root of the SD card as `/startup.te`. Without requiring intermediate confirmation dialogs, it automatically executes a clean reboot into TegraExplorer.
+- **Hekate Payload Launch & Swap Fallback:** Payload launching (`utils::rebootToPayload`) natively communicates with Hekate's one-shot payload launch API (`/config/kefir/hekate-payload-request.ini`). If the capability marker is missing or writing fails, Sphaira seamlessly falls back to swapping `/payload.bin` with the target payload while safely preserving Hekate in `/bootloader/update.bin`, alongside configuring temporary autoboot in `hekate_ipl.ini` (safely backed up to `.bak`) before requesting a system reboot via `appletRequestToReboot`/`spsm`/`bpc`.
+- **Diagnostic Dashboard UI & Live Spinner:** Both dump and restore automation scripts in TegraExplorer run inside a full-screen diagnostic dashboard featuring a custom pixel-rendered header banner (`setpixels`), an animated hardware spinner (`spinner(1, 77, 0)`), real-time status tables (Source NAND, Target Pack, individual save status for `0010`, `0011`, `00F0`, `0041`, files written, and error counts), safe line-length protected activity tickers, and rolling event logs (`Event Log`).
+- **Result Verification, Payload Restore & 5-Second Auto-Reboot:** When dump or restore scripts run in TegraExplorer, they immediately disarm the swap and restore Hekate from `sd:/bootloader/update.bin` back to `sd:/payload.bin`, as well as restoring `hekate_ipl.ini`. Upon completion (or failure), they display a clear color-coded summary, cleanly clean up temporary files, ensure `/payload.bin` is restored, and automatically reboot back into Hekate (`sd:/bootloader/update.bin`, `sd:/payload.bin` on Kefir builds) after a 5-second countdown grace period without requiring manual button presses.
+- **Flushed SD Synchronization & Automatic Cleanup:** Staged `/startup.te` scripts are flushed via `fflush`, `fsdevCommitDevice("sdmc")`, and native filesystem commits before reboot commands are issued, ensuring zero-byte corruption is prevented even during sudden hardware restarts. Upon completion in TegraExplorer or cleanup inside Kefir Hub, temporary `/startup.te` and handshake files are automatically purged and the original `hekate_ipl.ini` is restored.
 
 ---
 
@@ -40,3 +43,16 @@ Certain system saves—notably `8000000000000010` (Account definitions) and `800
 
 For technical details on Nintendo Switch system save encryption (BIS partition encryption vs save MAC keys) and why Horizon OS internal file extraction is used instead of raw blob cloning, consult the technical guide:
 - [account-transfer.md](../account-transfer.md)
+
+---
+
+## 4. Manage Backups Context Menu
+
+- **Manage Backups Context Menu, Remote Transfer & Legend Parity:** Entering **Manage Backups** (for both individual user backups and NAND profiles & play hours packs) provides full context menu support via **Plus (+)** (or tapping **Options** on the touch bar), mirroring all legend actions with clean vector iconography:
+  - **Open & Direct Restore:** Open pack details to inspect accounts or trigger a direct **Restore** immediately from the context menu (with profile only or profile + playtime options).
+  - **Custom Renaming:** Easily rename backup folders or archives with on-screen keyboard (`swkbd`) validation and sanitization.
+  - **Send to Another Console:** Start the Console Transfer share server directly from the backup menu to transfer user backups or profiles & playtime packs to another Nintendo Switch or PC over local Wi-Fi.
+  - **Receive & Restore from Another Console (Over-the-Air Console Move):** Transfer profiles and playtime packs directly between consoles over local Wi-Fi without manual SD swapping:
+    - **Receive from another console:** In **Manage Backups** (`+` Options) or the Tools -> Users sidebar, enter the sending console's IP address to browse remote packs and download selected backups (or all backups at once) to `/config/kefir/nand_transfer/`.
+    - **Restore from another console:** In **Restore profiles & play hours** (`+` Options), individual pack details, or the Tools -> Users sidebar, enter the sender's IP address to select a remote backup. Sphaira downloads the pack locally to SD first, then immediately prompts to restore profiles (or profiles + play hours) via automated TegraExplorer staging.
+  - **Complete Selection & Legend Parity:** Full access to **Select / Deselect** (toggling focused item, mirroring Button **X**), **Select All**, **Clear selection** (mirroring Button **B**), **Invert** (mirroring Button **Y**), and **Delete** (mirroring Button **Minus** / Select) directly from the options menu for inattentive users who prefer using the context menu over gamepad button shortcuts.

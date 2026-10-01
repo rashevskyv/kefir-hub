@@ -1,237 +1,166 @@
-# plan.md
-
-Версія коду: **v0.13.922**.
-
-## Поточний delivery: v0.13.922 — відновлення MTP без перепідключення кабелю
-
-Після локального скасування встановлення наглядач USB не переводить порт у host mode під час контрольованого завершення та повторної ініціалізації libhaze. Стан recovery встановлюється до сигналу скасування, а скидається лише після нової ініціалізації та `UsbState_Configured`; справжнє фізичне від'єднання і таймаут лишаються окремими шляхами виходу. У налаштуваннях повторне ввімкнення MTP виправляє розбіжність між збереженим прапорцем і фактично запущеним haze за наявності VBUS. Виклики з callback, що могли блокувати вихід MTP, прибрано.
-
-Пройшли Python контракти й моделі MTP, застосування CMake-патча до чистого upstream та проміжних форм, ідемпотентність і `git diff --check`. NRO не компілювали за звичайним режимом роботи проєкту. Потрібна перевірка скасування, повторної передачі та PC-side cancel на Switch/Windows без від'єднання кабелю. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.921 — виправлення збірки libhaze та верифікація NRO
-
-Усунено помилку компіляції в `libhaze`: виправлено заміну обробників скасування транзакції `source/ptp_responder.cpp` у `patch_libhaze_cancel.cmake`, запобігши дублюванню зовнішнього блоку `R_TRY_CATCH(this->HandleRequestImpl())`.
-
-Повна збірка `ReleaseWithInstall` у WSL успішно завершилася побудовою артефакту `sphaira_nro` (100%). Перевірено чисте та повторне ідемпотентне застосування CMake-патчів, Python тести контрактів і моделей MTP скасування (`test_mtp_cancellation_contract.py`, `test_mtp_cancellation_models.py`) та `git diff --check`. Перевірка на реальному залізі Nintendo Switch лишається відкритою. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.920 — негайне переривання MTP передачі
-
-Після скасування MTP встановлення на консолі libhaze більше не дочитує решту пакунка до EOT: припиняє USB читання, завершує поточний transport і повторно піднімає MTP у device mode. Відновлення застосовується лише до локального cancel; скасування на ПК та незалежні збої зберігають окремі шляхи. Зайвий прапорець локального cancel вилучено, щоб пізніший обрив не успадкував старий стан.
-
-Перевірено цільові Python контракти й моделі, застосування патча до чистого та проміжних libhaze source, повторне застосування й `git diff --check`. NRO не компілювали; Windows/Switch перевірка негайного закриття прогресу, повторної передачі та PC-side cancel відкрита. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.919 — динамічний вибір мови
-
-Доступні мови читаються з придатних `romfs:/i18n/*.json`; назва для спільного алфавітного списку першого запуску й налаштувань береться з `__language_name`. У `config.ini` зберігається код локалі. Чинні старі числові значення мігрують у код; відсутнє, невідоме або недоступне значення відкриває обов'язковий вибір. Російської локалі немає. Метадані не потрапляють у переклад UI.
-
-Перевірити цільові Python тести та `git diff --check`. NRO не компілювати в цьому delivery; після окремого запиту на збірку перевірити старт, міграцію й перемикання на Switch. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.918 — завершення MTP транзакції після скасування
-
-Ручне скасування припиняє install consumer, а libhaze дочитує та відкидає залишок поточної передачі перед відповіддю TransactionCanceled. Cancel зберігається під час USB wait та передається з writer до reader. Cleanup має обмеження бездіяльності; при втраті межі транзакції або неможливості завершити URB transport припиняється. Штатний cancel не запускає звичайний restart; наявний recovery з haze::Exit(false) збережено.
-
-Перевірено цільові Python контракти/моделі, застосування patch на чистий та проміжний source, повторну ідемпотентність і git diff --check. Senior виправив пропуск оновлення попередньої форми async_usb_server.cpp і додав регресійну перевірку. NRO не компілювали; тести 2.1–2.3 та Windows WPD на залізі відкриті. TegraExplorer.bin поза delivery.
-
-## Попередній delivery: v0.13.917 — безпечне скасування MTP встановлення
-
-Після підтвердженого користувачем скасування libhaze завершує PTP транзакцію без перезапуску MTP. При незалежному обриві джерела перезапуск збережено, але зупинка MTP більше не переводить USB у host mode. Цільові Python контракти й `git diff --check` пройшли; NRO збірка та перевірка Switch/Windows лишаються відкритими. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.916 — виправлення компіляції проксі haze та верифікація збірки
-
-Усунено конфлікт макросів і типів результатів при включенні `<haze/results.hpp>` у `haze_fs_proxy.cpp` та `haze_install_proxy.cpp`:
-1. Вилучено включення `<haze/results.hpp>` з файлів реалізації проксі файлової системи Haze, що ліквідувало перезапис макросів `R_SUCCEED`, `R_THROW`, `R_TRY` та підстановку несумісного типу `ams::Result` замість `Result` (`u32`).
-2. У `sphaira/include/haze/haze_internal.hpp` визначено функцію `::haze::ResultCancelled()`, яка повертає код скасування передачі `MAKERESULT(420, 19)` з типом `Result` (`u32`), забезпечуючи коректне повернення статусу скасування з `WriteFile` та проходження всіх перевірок тест-контрактів.
-3. Повна збірка `ReleaseWithInstall` у WSL успішно завершилася побудовою артефакту `sphaira_nro` (100%). Паралельно перевірено тести контрактів MTP скасування (`test_modal_priority_and_mtp_cancel_contract.py` та `test_mtp_cancellation_contract.py`). `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.915 — перший вибір мови та 26 локалізацій
-
-Перший запуск показує обов'язковий вибір мови з 26 вбудованих локалізацій; вибір зберігається в `config.ini`, а старі значення Auto та Russian мігрують без зміни інших збережених мов. Російський JSON видалено. Переклади охоплюють усі 2810 англійських ключів; перед релізом перевіряються наявність локалей, плейсхолдери, переноси та незмінені англійські речення. Три цільові Python набори (контракт деплою, 8 перевірок мовної логіки й 39 тестів перекладача) та `git diff --check` пройшли. NRO збірку й перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.914 — скасування MTP встановлення та безпечне завершення
-
-Модальне підтвердження скасування отримує ввід поверх активної сесії встановлення; сама сесія продовжує оновлювати стан без вводу. Підтверджене скасування MTP встановлення сигналізує libhaze, а проксі повертають `ResultCancelled` для перерваного запису. Під час виходу зупиняється worker встановлення та не планується перезапуск MTP. П'ять цільових Python контрактів і `git diff --check` пройшли. NRO збірку та перевірку на Switch/ПК не виконано; причина збою системного `usb` без символів лишається непідтвердженою. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.913 — MTP копіювання в корінь пристрою
-
-У PTP SendObjectInfo та MTP SendObjectPropList запити до кореня пристрою спрямовано за типом об'єкта: NSP/NSZ/XCI/XCZ до Install, інші файли й папки до microSD. Копіювання безпосередньо у сховище microSD лишається звичайним записом файла. Якщо потрібне сховище вимкнено, повертається помилка. Перевірено застосування й повторне застосування патча libhaze, Python контракт і `git diff --check`; NRO збірку та Windows/Switch перевірку не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.912 — виправлення збірки C++ та патча libhaze
-
-Виправлено помилки компіляції та лінкування `libhaze`:
-1. У `include/haze/results.hpp` додано перевантаження `operator==` для `ams::Result` (порівняння двох `Result`, з `u32` та `int`), що забезпечило успішне порівняння `parse_res == 0x748C` у `usb_session.cpp` та `m_reactor->GetResult() == haze::ResultCancelled()` у `ptp_responder.cpp` і `ptp_responder_ptp_operations.cpp`.
-2. У `patch_libhaze_cancel.cmake` заміну `ops_read_ok` обмежено виключно методом `GetObject` (із контекстом `mode\n        ));`), усунувши помилкову підстановку `transfer_success = true;` у метод `GetObjectHandles`.
-3. Забезпечено повну ідемпотентність та дедуплікацію в секції 17 `patch_libhaze_cancel.cmake` для запобігання дублюванню скидання `m_reactor` при повторних конфігураціях CMake.
-Повна збірка `ReleaseWithInstall` у WSL успішно завершилася генерацією `sphaira_nro` (100%). Цільові Python контракти MTP та `git diff --check` пройшли. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.911 — скасування MTP передачі на microSD
-
-Підтвердження B → «Так» під час копіювання передає сигнал скасування в libhaze й закриває ProgressBox без повторного відкриття. Неповний файл і його MTP об'єкт видаляються після перерваного SendObject. Натискання B після завершення файла не скасовує наступну передачу. Для обриву URB обробляється результат 0x748C; момент надходження цього результату від ПК не гарантований. Патч libhaze перевірено на чистому HEAD і повторним запуском; MTP Python контракти, перевірка патча та `git diff --check` пройшли. C++ збірку та перевірку на Switch/ПК не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.910 — 39-бітний форвардер за замовчуванням і вибір CPU-ядер
-
-Нові форвардери Homebrew та ROM отримують 39-бітний адресний простір і 3 CPU-ядра; явний вибір 36 біт збережено. Четверте ядро можна ввімкнути у Forwarder Options або редакторі окремого форвардера після попередження про спільне із системою ядро. Генератор патчить NPDM у ACI0 та ACID і відхиляє встановлення, якщо права не вдалося записати. Оновлено локалізації, README та wiki. JSON локалізацій і `git diff --check` перевірено; C++ збірку та перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.909 — ручне встановлення форвардера поточного додатка в меню «+»
-
-У спільному меню «+» для HB Menu та Tools над «Налаштуваннями» додано прямий пункт встановлення форвардера поточного Kefir Hub. Він викликає вже наявне ручне підтвердження та встановлення для запущеного NRO, незалежно від виділеного homebrew. Ключі локалізації вже існували. Статичну перевірку викликів і `git diff --check` пройдено; C++ збірку та перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.908 — MTP копіювання пакетів на SD та прогрес згорнутого встановлення
-
-При копіюванні NSP/NSZ/XCI/XCZ на microSD через MTP файл лишається на картці; потокове встановлення запускає лише окремий віртуальний носій Install. Згорнута плашка показує прогрес поточного пакунка, коли загальний план відкладено й розмір пакунка відомий. Наступне копіювання після завершеного MTP встановлення закриває його залишкову сесію та показує ProgressBox. Оновлено README і wiki. Три цільові Python контракти та `git diff --check` пройшли; C++ збірку й перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.907 — усунення колізії імен у CollectBackups та верифікація збірки C++
-
-Виправлено помилку компіляції у `sphaira/source/ui/menus/save/save_backup_pub.cpp`: додано `#include "path_util.hpp"` та явно кваліфіковано виклик `sphaira::path::IsSubpathOf`, що усунуло колізію з локальною змінною `path` у циклі `CollectBackups`. Повна збірка `ReleaseWithInstall` у WSL успішно завершилася побудовою артефакту `sphaira_nro` (100%). Цільовий контракт збережень `test_save_backup_destination_contract.py` та `git diff --check` пройшли. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.906 — стабільний шлях форвардера Kefir Hub
-
-Автоматичне та ручне створення HOME Menu форвардера використовує `/hbmenu.nro`, коли ввімкнено «Replace hbmenu on exit»; інакше ціллю лишається поточний шлях NRO. Текст ручного підтвердження показує відповідну ціль. NACP та іконка беруться з поточного Kefir Hub. `git diff --check` пройшов; C++ збірку та перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.905 — власна папка для дампів сейвів
-
-Ігрові сейви у форматі DBI ZIP пишуться у вибрану папку резервних копій; типовий шлях — `/dumps`. Каталоги `/switch/DBI/saves` і `/DBISaves` залишаються джерелами відновлення. Пошук охоплює нову папку, а автосинхронізація отримує точний шлях щойно створеного архіву. Опис вибору папки, EN/UK локалізації та сторінку Save Management оновлено. Цільові Python контракти й `git diff --check` пройшли; C++ збірку та перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.904 — завершення MTP плашки після останнього файла
-
-Таймер бездіяльності починається заново після кожного нового файла, навіть якщо коротка передача повністю пройшла між опитуваннями. Якщо наступний файл почався під час закриття попередньої плашки, після її знищення планується нова. Стан завершеної сесії не перезаписується старішим станом потоку; відмова `PushTransfer` не затримує UI на час передачі. Прибрано більше не потрібний прапорець нового файла та ручне очищення події. Цільовий Python контракт пройшов; C++ збірку та перевірку на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.903 — виправлення життєвого циклу UI передачі MTP та попереджень компіляції
-
-
-Усунено зависання банера прогресу MTP після копіювання файлів: замість скидання події `ueventClear` всередині циклу реалізовано явне відстеження активного стану (`g_mtp_transfer_active`) та лічильника послідовності (`g_mtp_transfer_seq`) під м'ютексом `g_mtp_ui_mutex`, що унеможливлює втрату сигналів завершення при швидкій передачі дрібних файлів. Виправлено макрос `R_SUCCEED()` у `haze_helper.cpp` та попередження специфікатора формату в `threaded_file_transfer_preflight.cpp`. Додано контрактний тест `test_mtp_transfer_lifecycle_contract.py`.
-
-## Попередній delivery: v0.13.902 — синхронізація README та документації/вікі до релізу
-
-Всі зміни від релізу 0.13.601 до 0.13.901 повністю відображені в `README.md` та структурованій вікі `docs/wiki/`. Усунено застарілі дублювання розділів у `README.md`. Здійснено перевірку валідності синтаксису, відступів (`git diff --check`) та посилань. Готовність до релізу та збірки NRO.
-
-## Попередній delivery: v0.13.901 — оновлення USB черги під час пакунка
-
-SPHQ опитується між завершеними USB FileRange читаннями під час активного встановлення; нові майбутні пакунки додаються до черги й підтверджуються ACK лише після застосування. Аналіз нових пакунків відкладено до початку їх встановлення, після чого Auto обирає носій за фактичним розміром. Сім цільових Python контрактів пройшли; C++ збірку і перевірку на Switch для цього delivery не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.900 — виправлення помилок збірки C++ та верифікація
-
-Виправлено помилки компіляції після додавання Ownfoil та оновлення USB-черги: усунено дублювання методу `SidebarEntryBase::SetTitle` у `sidebar.hpp`, виправлено базовий клас `OwnfoilForm` (`ui::Sidebar`), приведено до правильного вигляду константи звукових ефектів `SoundEffect`, сигнатуру `swkbd::ShowText`, аргументи `ProgressBox`, виклики `List::Draw` з передачею фокусного індексу та глобальні виклики libnx `nsInitialize`/`nsExit`. Повна збірка `ReleaseWithInstall` успішно побудувала `sphaira_nro` (100%). Контрактні тести та тести backend пройшли. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.899 — жива USB черга (завершено в коді)
-
-SPHQ тепер передає порядок, вибір, ціль і ревізію черги; Sphaira узгоджує ReviewQueue і майбутні записи під час встановлення, зберігаючи активний та завершений префікс. Після застосування ревізії консоль надсилає ACK. Порожній старт і вилучення останнього файла підтримуються. У DBI Backend Qt залишаються незакомічені зміни. Шість цільових Python контрактів Sphaira та 36 тестів backend пройшли; C++ збірку і Switch runtime не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.898 — порожня черга SPHQ (завершено в коді)
-
-Точна відповідь `::SPHQ::\n` тепер позначає порожню SPHQ чергу, вмикає синхронізацію та не створює фіктивного файлу. Зміна узгоджена з DBI Backend Qt; нульову legacy-відповідь Sphaira й далі відхиляє. Цільові Python контракти й diff check пройшли. C++ збірку та USB цикл на Switch не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.897 — початковий DBI USB запит (завершено)
-
-Після прослуховування Awoo консоль знову надсилає DBI List request із SPHQ перед читанням відповіді. Це прибирає взаємне очікування з DBI Backend Qt; fallback Goldleaf і приймання Awoo залишилися в наявному порядку. Цільовий статичний контракт і `git diff --check` пройшли. C++ збірку та Switch runtime не виконано. Порожня початкова черга SPHQ залишається неузгодженою: нульова відповідь не відрізняється від legacy DBI, тому потрібен окремий маркер можливостей між клієнтом і backend. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.896 — клієнт Ownfoil (завершено)
-
-Додано збережені сервери Ownfoil, виявлення в локальній мережі, авторизацію, каталог із пошуком та сторінками, перегляд гри й вибір версії та DLC. Yati встановлює вибрані content IDs із NSP/NSZ/XCI/XCZ через HTTP Range, відновлює обірване читання й реагує на скасування. Senior виправив сумісність форми з чинним UI та відхилення відповіді без Range. Дев'ять статичних Python контрактів, JSON локалізацій і `git diff --check` пройшли. C++ збірку й Switch runtime не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.895 — рекурсивне встановлення з папок (завершено)
-
-У файловому браузері дія «Встановити рекурсивно» для однієї чи кількох папок сканує вкладені NSP, NSZ, XCI та XCZ і відкриває наявну чергу встановлення для перегляду й вибору. Сканування можна скасувати; порожній результат і помилки показуються без старту встановлення. Дію приховано у збірці без DBI черги. Gemini повідомив про успішний короткий Python контракт, EN/UK JSON і `git diff --check`; senior перевірив diff, виклики, версію та ліміти рядків. C++ збірку й Switch runtime не виконано. `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.894 — групи бекапів за грою (завершено)
-
-У Backups бекапи згруповано за грою: всередині окремі Account (користувач/слот), Device, BCAT та архіви різних джерел. Дочірній бекап зберігає окремий restore шлях. «Відновити все» показує тип, архів, дату й ціль кожного елемента перед фінальним підтвердженням; відсутній архів або Device/BCAT слот блокує пакет до запису. Підтвердження повідомляє про неатомарність. Gemini повідомив про проходження п'яти Python контрактів; senior звірив diff, навігацію, i18n, межу 600 рядків і `git diff --check`. Збірку та Switch runtime не виконано.
-
-## Попередній delivery: v0.13.893 — повернення з вкладеного файлового браузера (завершено)
-
-Кнопка «−» у файловому браузері, відкритому з іншого меню, викликає наявний `PromptIfShouldExit()` і закриває лише цей браузер. Перевірено всі місця створення браузера, відмінність вкладки від вкладеного екземпляра та `git diff --check`. Збірку й Switch runtime не виконано.
-
-## Попередній delivery: v0.13.892 — виправлено виклик batch restore (завершено)
-
-Виклик `PromptBatchRestoreTargets` для кількох вибраних бекапів передає `shared_ptr` до вже наявного восьмиаргументного перевантаження. Це усуває єдину помилку компіляції з наданого логу v0.13.891. Цільовий Python контракт і `git diff --check` пройшли; повторну NRO-збірку та Switch runtime не виконано.
-
-## Попередній delivery: v0.13.891 — спрощення дій Backups (завершено)
-
-Для A → Restore у Backups кнопка B зі списку користувачів знову відкриває меню дій тієї самої вибірки. Дубльований пункт «Restore for user…» прибрано, бо Restore уже запитує користувача. У розділі ACTIONS меню + для Backups залишено лише Restore. Перевірено шість цільових Python контрактів і `git diff --check`; NRO-збірку та Switch runtime не виконано. Наявні правки трьох тестів з діапазонами версій збережено, ще два застарілі діапазони виправлено.
-
-## Попередній delivery: v0.13.890 — виправлення доступу до прокручування назви HB Menu (завершено)
-
-Для назви плитки Saves додано власний стан `ScrollingText`: попередній виклик звертався до приватного поля базового `grid::Menu` і зупиняв WSL-збірку v0.13.889. Перевірено джерела, єдину помилку в наданому логу та `git diff --check`. Повторну збірку й Switch runtime не виконано за політикою звичайних змін; користувачеві потрібно повторити збірку.
-
-## Попередній delivery: v0.13.889 — назви плиток та іконки Backups (завершено)
-
-У макеті HB Menu назву гри намальовано над внутрішнім світінням: коротка назва центрована, довга прокручується на вибраній плитці. Жовте й сіре світіння зроблено тоншим і прозорішим. Коли локальної іконки немає, для ігрового Title ID запускається асинхронне завантаження з NLib; JPEG перевіряється через `ImageLoadIcon`, кешується на SD та в пам’яті для кількох бекапів однієї гри. Цільові Python контракти і `git diff --check` пройшли за звітом Gemini; senior перевірив diff. Збірку та Switch runtime ще не виконано.
-
-## Попередній delivery: v0.13.888 — один пункт сітки в макетах Saves (завершено)
-
-Із перемикача макетів Saves прибрано пункт «Іконки», який дублював «Сітку» та вибирав той самий `LayoutType_Grid`. Індекси «HB Menu» та «Список» оновлено; збережені значення макетів лишаються сумісними. Два цільові Python контракти й `git diff --check` пройдено; збірку та перевірку на Switch ще не виконано.
-
-## Попередній delivery: v0.13.887 — циклічна навігація UP у Backups (завершено)
-
-У списку, детальному та горизонтальному макетах Backups натискання UP/LEFT на першому елементі переходить до останнього, минаючи службову позицію підпису джерела. Сітка/іконки зберігає свою навігацію. Два цільові Python контракти й `git diff --check` пройдено; збірку та перевірку на Switch ще не виконано.
-
-## Попередній delivery: v0.13.886 — відновлення без повторного запиту про слот (завершено)
-
-Якщо для відновлення бекапа потрібен новий Account save slot, після перевірки архіву й планування цілі відновлення починається без окремого вікна «Create save slot and restore?». Слот створюється в перевіреному restore шляху перед записом даних. Два цільові Python контракти й `git diff --check` пройдено; збірку та перевірку на Switch ще не виконано.
-
-## Попередній delivery: v0.13.885 — прибрано порожній ряд між джерелами (завершено)
-
-У плитковому Backups більше не резервується цілий ряд перед DBI та наступними джерелами. Між сусідніми рядами джерел є 34 px для підпису й лінії; звичайні вкладки зберігають свій відступ. При зміні вкладки список перебудовується з відповідним кроком. Контракти секцій і folder restore, `git diff --check` та межа 600 рядків пройдені; збірку й runtime на Switch ще не виконано.
-
-## Попередній delivery: v0.13.884 — вирівняні підписи секцій Backups (завершено)
-
-У плитковому Backups лінії всіх джерел ставляться однаково близько до першої плитки секції. Розділювач малюється перед плиткою, тому хмаринка вибраної гри перекриває лінію. Попередні незавершені правки `save_menu.hpp` і folder-restore контракту включено за вказівкою користувача; фоновий ROMFS binary виключено. Два цільові Python контракти, `git diff --check` і ліміт 600 рядків пройдено. Збірку й runtime на Switch ще не виконано.
-
-## Попередній delivery: v0.13.883 — компактний перший розділювач бекапів (завершено)
-
-У плитковому вигляді Backups перша секція більше не займає цілий порожній ряд: лінія з назвою джерела стоїть у проміжку під вкладками, а плитки піднімаються на один ряд. Проміжки між наступними секціями та інші вигляди залишено без змін. Контрактний тест секцій пройшов; перевірено diff, межу 600 рядків і whitespace. Збірку та консольний runtime ще не виконано.
-
-## Попередній delivery: v0.13.882 — походження та папкові бекапи (завершено)
-
-Позначити секції бекапів за достовірним походженням, зберігши навігацію в усіх layout. Власні ZIP Kefir Hub визначати за записаним програмою ZIP-коментарем; сторонні DBI за типовими коренями й відсутністю власного маркера; JKSV/Checkpoint за їх коренями або підтвердженими metadata/path evidence. Підтримати папкові бекапи JKSV/Checkpoint у каталозі та провести вибраний каталог через існуючий безпечний folder-stage/restore шлях. Перед будь-якою мутацією перевіряти джерело, identity, метадані й ціль. Якщо папковий бекап не містить даних для створення слота невстановленої гри, відмовити зрозуміло; не вигадувати owner/size. Верифікація: Python contracts, diff, WSL-збірка за запитом користувача; далі консольний тест.
-
-Реалізовано секції Kefir Hub, DBI, JKSV, Checkpoint та «Інші», каталог і restore папкових бекапів. Для невстановленої гри створення Account слота з папки допускається лише з валідними owner ID і розмірами JKSV metadata; Checkpoint без таких даних відхиляється до мутації. За явним запитом користувача виконано WSL `ReleaseWithInstall`: після виправлення виклику `i18n::get` і відсутнього include збірка завершилась `[100%] Built target sphaira_nro`. Цільові Python контракти, EN/UK parity (2556 ключів), розміри файлів і `git diff --check` пройдено. Runtime на Switch ще не перевірено; фоновий `TegraExplorer.bin` поза комітом.
-
-## Попередній delivery: v0.13.881 — відновлення сейву без встановленої гри (завершено)
-
-Після перевірки архіву створення Account save slot для локального користувача використовує валідні owner ID і вирівняні розміри з ZIP, коли NACP гри недоступний. Перевіряються title ID, тип, ранг, індекс, підтвердження перед створенням і сам створений слот; архів без потрібних метаданих відхиляється. Інспекцію архіву винесено в `save_slot_admission.cpp`, щоб не перевищувати 600 рядків. Версія `0.13.881`.
-
-Gemini повідомив про PASS локального `test_save_slot_backend_contract.py`, EN/UK parity (2550 keys) і `git diff --check`; senior перевірив diff, межі метаданих, CMake, розміри та primary `master`. Збірку й runtime не виконували. На Switch потрібно перевірити відновлення з DBI ZIP для невстановленої гри та користувача, якого обрано в UI. ROMFS binary не входить у delivery.
-
-Наступний окремий серійний delivery: розділювачі походження в Backups. Власні DBI-сумісні архіви Kefir Hub потрібно відрізняти за наявним ZIP-коментарем `sphaira v`, а сторонні джерела позначати лише тоді, коли їх походження можна визначити достовірно.
-
-## Попередній delivery: v0.13.880 — DBI-бекапи в каталозі (завершено)
-
-У `ReadArchiveSaveMetadata` збережено `payload_count` під час перенесення розібраних метаданих у результат. Це прибирає хибне відхилення DBI ZIP із файлами сейву в каталозі Backups. На змонтованій SD-картці знайдено 30 DBI ZIP: 21 із payload і 9 лише з метаданими; останні залишаються відхиленими чинною перевіркою безпеки. Зміна охоплює один рядок коду та patch version `0.13.880`.
-
-Gemini виконав `git diff --check`; senior перевірив diff, гілки присвоєння результату, розміри файлів і стан основного `master`. Компіляцію та runtime на консолі не виконували за політикою звичайних змін. Наступна перевірка: зібрати нову версію та відкрити Saves → Backups на Switch. Фоновий `TegraExplorer.bin` поза delivery.
-
-## Попередній delivery: v0.13.879 — repo-wide file-size closure (завершено)
-
-Решту 25 first-party файлів понад 600 рядків розділено за конкретними обов’язками: account/restore і NAND, FS/FTP/MTP/Curl adapters, Haze save scan, title/owo, UI primitives, HBL environment, path-util security tests і CMake. Нові 53 файли та всі 620 перевірених code/build/test файлів у `sphaira`, `hbl`, `tests` мають ≤600 фізичних рядків. Публічні контракти та перевірки save-restore лишилися в обсязі; `test_save_restore_contract` тепер пройшов заявлені Gemini 40/40. Версія збільшена один раз до `0.13.879`.
-
-Gemini повідомив про WSL `tests/run.sh` all green, dead-symbol 1033/1033, `git diff --check` і `ReleaseWithInstall` (`sphaira_nro`) PASS. Senior перевірив первинний `master`, ліміт розміру, CMake-реєстрацію нових translation units, source-level межі save/MTP та тестові зміни; збірку й тести повторно не запускав. Device/runtime save-flow ще потребує ручної перевірки. `TegraExplorer.bin` — дозволена фонова зміна, не частина delivery.
-
-## Попередній delivery: v0.13.878 — File-size audit closure (завершено)
-
-Одна безперервна Gemini-передача для решти size/checks аудиту: завершити й перевірити Yati split, розкласти provider-heavy UI за API/parsing/storage/UI, пройти 32 oversized `source/ui/menus` файли за когезивними межами, дати 18 Python contracts discoverable запуск у `tests/run.sh`, зменшити 11 oversized test scripts без втрати safety cases, окремо перевірити `app.hpp` на безпечні dead declarations. Не робити механічних поділів заради числа; неподоланні винятки документувати фактично. Один patch-version `0.13.878`, фінальні host contracts + WSL build після всіх змін. Senior перевіряє весь diff, оновлює delivery-документи й комітить; Gemini не чіпає docs/бінарний ROMFS і не комітить.
-
-Результат: 150 змінених/нових source/test файлів ≤600 рядків; усі 152 menu `.cpp/.hpp` ≤600. Yati, provider UI, інші menu units, test fixtures і `app.hpp` пройдені. Gemini повідомив про `tests/run.sh` і WSL `ReleaseWithInstall` PASS; senior повторно виконав 18 Python contracts, dead-symbol gate та перевірив CMake/розміри/whitespace. C++ contract після точкового звуження source boundary окремо не перезапускався. Це закриває A5–A7, а не всі oversized файли репозиторію: 22 інші C/C++/test файли та `sphaira/CMakeLists.txt` (754 рядки) лишаються поза поточним обсягом.
-
-## Попередній delivery: v0.13.877 — Transfer structural split (завершено)
-
-`threaded_file_transfer.cpp` зменшено з 1 956 до 263 рядків без зміни public API. Core, archive preflight, native verification і ZIP I/O винесено в чотири конкретні `.cpp` та три приватні headers (17–501 рядок). `yati.cpp` — окремий наступний delivery; дозволена фонова зміна `TegraExplorer.bin` поза цим комітом.
-
-Gemini повідомив про WSL `ReleaseWithInstall` build `[100%] Built target sphaira_nro`, 18/18 Python contracts, dead-symbol gate (981 declarations) та whitespace PASS. Senior перевірив diff, CMake, version, межі файлів і перенесені source assertions; не запускав тести чи збірку повторно. Консольний runtime ще не перевірено.
-
-## Попередній delivery: v0.13.876 — App structural split
-
-`app.cpp` зменшено з 2 111 до 523 рядків, `app_settings.cpp` — до 554. Startup, loop/frame, UI stack, USB/MTP, network і save settings розкладено у конкретні units ≤597 рядків; public `app.hpp` лишився незмінним (626 рядків, окремий legacy debt). Gemini повідомив про успішний WSL `ReleaseWithInstall`, 18/18 contracts, dead-symbol gate, EN/UK parity і whitespace checks.
-
-## Поза поточним delivery
-
-Device/runtime перевірка save/restore і MTP. Ліміт 600 рядків застосовано до first-party code/build/test файлів у `sphaira`, `hbl`, `tests`, але не до табличних даних і згенерованих артефактів.
-
-## Межі
-
-- Один product delivery за раз на primary `master`.
-- Нові source/test/instruction files — не більше 600 physical lines.
-- Не додавати abstraction або dependency заради самого поділу.
-- Не запускати compile/build до завершення всіх code/test edits поточного delivery.
-- `assets/romfs/tegra/TegraExplorer.bin` — дозволена фонова зміна, поза delivery.
-
-Історія попередніх delivery доступна через Git; активні документи її не дублюють.
+# plan.md — work queue
+
+Source: `docs/dev/AUDIT-2026-10-01.md` (findings F1–F10). Baseline v0.13.922, commit `0c80cdd4`.
+Rules: `AGENTS.md`. One task ≈ one session ≈ one commit. Do tasks in order inside a phase; phases in order.
+Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x]` when done; write nothing else here.
+`[USER]` tasks are for the human (hardware). Build checkpoint (`test-build` skill) closes every phase.
+
+---
+
+## Phase 0 — Context diet and repo hygiene (no product code, no version bump)
+
+- [x] 0.0 Audit report, new `AGENTS.md`, `CLAUDE.md`, this plan. Old `plan/task/walkthrough/audit.md` moved
+      to `docs/dev/history/` (staged as renames). *(done by the audit session; commit it with 0.1)*
+- [ ] 0.1 **CHANGELOG from history.** Create `docs/dev/CHANGELOG.md`. For every version in
+      `git log --oneline | grep -oE 'v0\.13\.[0-9]+' | sort -uV` (and v0.13.871–922 described in
+      `docs/dev/history/walkthrough.md`) write one entry: `## v0.13.X — <title>` + ≤2 lines (what shipped;
+      verification state: host tests / nro / switch). Newest first. Then `git rm -r docs/dev/history`.
+      **Done when:** every version number from git log appears exactly once; file ≤ 150 lines; history/ deleted.
+      **Verify:** `for v in $(git log --oneline | grep -oE 'v0\.13\.[0-9]+' | sort -u); do grep -q "## $v " docs/dev/CHANGELOG.md || echo MISSING $v; done`
+      <!-- blocked: git log has 638 distinct versions, so one heading each cannot fit 150 lines; CHANGELOG has all 638 (683 lines), history/ deleted -->
+- [x] 0.2 **Untrack junk.** *(done by audit session: untracked, .gitignore updated, sphaira/graphify-out deleted)* `git rm --cached -r remote_log.txt .codex-tmp .grok .agents tools/i18n-translate/*.log`
+      (only those that `git ls-files` lists). Append to `.gitignore`: `remote_log.txt`, `.codex-tmp/`, `.grok/`,
+      `.agents/`, `tools/i18n-translate/*.log`, `.pytest_cache/`, `sphaira/graphify-out/`, `build/`.
+      Delete `sphaira/graphify-out/` from disk (35 MB duplicate; canonical graph is repo-root `graphify-out/`).
+      **Done when:** `git ls-files | grep -E 'remote_log|\.codex-tmp|\.grok|\.agents|run[0-9]*\.log'` is empty.
+- [x] 0.3 **One test-build skill.** *(done by audit session)* `git mv .agents/skills/test-build/SKILL.md .claude/skills/test-build/SKILL.md`
+      (the `.grok` copy is identical — drop it). Rewrite its step 5 to the AGENTS.md delivery ritual
+      (CHANGELOG + plan.md checkbox; no plan/task/walkthrough/audit quartet). Keep steps 1–4 as is.
+      **Done when:** exactly one `SKILL.md` named test-build exists under `.claude/skills/`; it mentions `CHANGELOG.md`.
+- [x] 0.4 **Graphify session hook.** *(done by audit session; verify once in Git Bash on Windows)* Add `.claude/hooks/graphify-session.sh`:
+      if `graphify-out/GRAPH_REPORT.md` missing → `graphify .`; else if any file under `sphaira/ hbl/ sysmodule/ tests/`
+      is newer than it → `graphify update .`; else print `Graphify: current`. Always `exit 0`.
+      Register in `.claude/settings.json` as `SessionStart` hook (matcher `startup`, timeout 600).
+      **Verify:** run the script by hand from repo root in Git Bash; second run prints `Graphify: current`.
+- [x] 0.5 **README diet.** `README.md` (435 lines, 72 KB) → ≤ 150 lines: what it is, screenshots, install, feature
+      list as one-liners linking to `docs/wiki/*.md` pages. Move any paragraph not already in the wiki into the matching
+      wiki page (do not drop content; do not duplicate). **Done when:** `wc -l README.md` ≤ 150 and every removed
+      heading's content is findable in `docs/wiki/` (`grep -ril "<key phrase>" docs/wiki`).
+- [x] 0.6 Commit `chore: context diet — agent rules, changelog, untrack junk, README split`. No version bump.
+
+## Phase 1 — Build truth and warning baseline
+
+- [ ] 1.1 **Build v0.13.922.** Run the `test-build` skill (WSL, preset `ReleaseWithInstall`). 922 was never built.
+      Fix compile errors surgically if any. **Done when:** `[100%] Built target sphaira_nro`.
+- [ ] 1.2 **Warning inventory.** Rebuild from clean (`rm -rf build/ReleaseWithInstall`), capture
+      `cmake --build ... 2>&1 | grep -E 'warning:' | grep -E 'sphaira/|hbl/|sysmodule/' | sort -u > /tmp/warn.txt`.
+      Record the count in the CHANGELOG entry. Fix every first-party warning (not `libs/`). Then enable `-Werror`
+      for first-party sources only: in `sphaira/CMakeLists.txt` uncomment `-Werror` **inside the first-party
+      compile-options block** (line ~376); if it also hits `libs/` targets, scope it with
+      `set_source_files_properties(<first-party sources> PROPERTIES COMPILE_OPTIONS -Werror)` instead.
+      Keep existing `-Wno-*` lines. **Done when:** clean build passes with `-Werror`; `/tmp/warn.txt` empty for first-party.
+- [ ] 1.3 **Host suite green in WSL.** `tests/run.sh` must pass end to end (all `tests/test_*.cpp`, dead-symbol
+      guard, patch shape checks, Python contracts as they still exist). Fix only what is broken; do not delete tests here.
+      **Verify:** `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` exits 0.
+- [ ] 1.4 `[USER]` **Hardware baseline.** Flash the 1.1 NRO and run `docs/dev/HARDWARE-CHECKLIST.md` sections A–C.
+      Record pass/fail per item in the checklist file. This is the baseline for Phase 3.2 — do not start 3.2 before it.
+- [ ] 1.5 Build checkpoint + commit(s) `v0.13.9XX: warning-free first-party build with -Werror`.
+
+## Phase 2 — Tests that test (see audit F2)
+
+Keep as is: `tests/*.cpp`, `tests/check_dead_symbols.py`, `tests/test_patch_libhaze.sh`, `tests/test_patch_ftpsrv.sh`.
+Working rule: a test is kept only if it executes project C++ (`#include` of a project header, compiled with g++) or
+validates real data files (i18n JSON, cmake patch files). Everything that asserts on C++ *source text* is deleted.
+
+- [ ] 2.1 **Delete static-review contracts.** For each `tests/test_*.py`: if it contains `read_text` / `in c_text` /
+      `in h_text` / `test_static_review_*` style assertions on `.cpp/.hpp` text, delete those functions. If nothing
+      remains but `main()`, delete the file and its `contract_fixtures/` modules that no other test imports.
+      Known all-static: `test_live_queue_contract.py`, `test_mtp_routing_and_minibadge_contract.py`,
+      `test_sphq_empty_queue_contract.py`, `test_save_backup_destination_contract.py`,
+      `test_modal_priority_and_mtp_cancel_contract.py`, `test_dbi_usb_connection_contract.py`, the
+      `check_*_contract()` functions of `test_mtp_cancellation_contract.py`.
+      Exception: `test_i18n_deployment_contract.py` — keep the parts that read `assets/romfs/i18n/*.json`
+      (real data); delete its source-text asserts. Update `tests/run.sh` so it only runs what exists.
+      **Done when:** `grep -lE 'read_text\(|in [chs]_text' tests/*.py` returns only `check_dead_symbols.py` (if at all).
+- [ ] 2.2 **Map Python behavioral models to real C++.** For each remaining `tests/test_*.py` (and its
+      `contract_fixtures/*_models.py`) fill the table below (edit this task in place): which C++ function it mirrors
+      (`graphify explain "<name>"`), and the verdict: `PURE` (function already in a libnx-free header → write
+      `tests/test_<name>.cpp` against it), `SEAM` (logic inside libnx-dependent code → extract the decision logic into
+      `sphaira/include/<module>/<name>_logic.hpp` or a libnx-free `.cpp`, call it from the original site, then test),
+      `DROP` (mirrors nothing real, or scenario is hardware-only).
+      | py test | C++ mirror | verdict |
+      |---|---|---|
+      | test_mtp_cancellation_models.py | haze_helper.cpp StartMtpProgressBox / haze_callback state | SEAM → Phase 3.2 |
+      | test_safe_restore_target_contract.py | ui/menus/save/ `MatchesRestoreDestination`, restore target checks | SEAM |
+      | test_save_backup_library_contract.py | save backup grouping / `backup_group_key` | SEAM |
+      | test_save_backup_identity_contract.py | save identity matching | SEAM |
+      | test_dbi_restore_admission_contract.py | DBI ZIP admission (`payload_count`, metadata) | SEAM |
+      | test_raw_save_restore_contract.py | raw save header parse (`DISF`, remap) | SEAM or DROP if parse lives in libnx fs |
+      | test_recursive_install_contract.py | recursive NSP/NSZ/XCI/XCZ scan filter | PURE? check `homebrew_scan.cpp`/`filebrowser_scan.cpp` |
+      | test_ownfoil_contract.py | `utils/ownfoil.hpp` URL/Range handling | PURE? |
+      | others (save_*_contract.py, shutdown_lifecycle, game_save_manager, exact_save_discovery, existing_save_capacity) | fill in | |
+      **Done when:** every row has a verdict and the table is in this file.
+- [ ] 2.3 **Host test harness can link `.cpp` units.** Extend `tests/run.sh`: a test file may declare
+      `// LINK: sphaira/source/foo_logic.cpp` lines at the top; the runner adds them to the g++ command.
+      Rule: only libnx-free sources may be listed. **Verify:** existing tests still pass; add one test using `LINK:`.
+- [ ] 2.4 **Convert PURE rows** (one task per row, one commit each, in table order). Each new `tests/test_<name>.cpp`
+      reproduces the scenarios from the Python model (same inputs/expectations), then the Python file + its fixtures
+      are deleted. **Done when:** the py file is gone and the cpp test is in `run.sh` and passes.
+- [ ] 2.5 **Convert SEAM rows** (one task per row). Extract decision logic into a header/libnx-free unit with
+      **no behavior change** (same inputs → same outputs; keep call sites one-line thin), add the cpp test, delete the py.
+      Build checkpoint after every 2–3 seams (these touch product code).
+- [ ] 2.6 **Delete `tests/contract_fixtures/`** once nothing imports it. **Verify:** `grep -rl contract_fixtures tests` empty;
+      `find tests -name '*.py' | xargs wc -l | tail -1` < 3000 lines.
+- [ ] 2.7 Build checkpoint + commit.
+
+## Phase 3 — Stability (audit F3, F6, F7)
+
+- [ ] 3.1 **Cross-thread globals.** For each of the 45 plain `bool/u64/int g_*` globals
+      (`grep -rnE '^(extern|static)?\s*(bool|u64|u32|int|size_t)\s+g_[a-z_0-9]+' sphaira/source sphaira/include`):
+      list every reader/writer with `graphify explain` + grep; decide `single-thread` (leave, add a comment
+      `// main thread only`) or `shared` (→ `std::atomic<T>` or move under the module's existing mutex).
+      Known shared: `haze/haze_internal.cpp:33 g_is_running` (read by `IsRunning/IsRecovering` from UI thread, written
+      in `Init/Exit`), `ftpsrv_helper.cpp:144 g_is_running`, `log.cpp g_thread_running/g_thread_stop`,
+      `net.cpp g_cache_valid/g_cache_value/g_request_open`, `account_link.cpp g_daemons_terminated`.
+      **Done when:** the grep above returns 0 unannotated non-atomic globals. One commit per module.
+- [ ] 3.2 **MTP transfer state machine** (requires 1.4 baseline). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
+      `struct MtpTransferState { bool active, aborted, ui_alive; u64 seq, handled_seq; }` plus pure transition
+      functions, each returning the actions to perform: `OnFileStart(state, seq)`, `OnFileDone(state)`,
+      `OnUserCancel(state) -> {cancel_worker, signal}`, `OnUiClosed(state) -> {relaunch}`, `OnExit(state)`.
+      Move the logic now spread over `haze_helper.cpp` L54–235 (ProgressBox lambda, cancel callback, completion
+      callback), `haze_callback` L237–350, `Init` L356–507, `Exit` L510–540 into those functions; the call sites keep
+      the mutex and only apply returned actions. **No behavior change** vs. the 1.4 baseline.
+      Write `tests/test_mtp_transfer_state.cpp` from `tests/test_mtp_cancellation_models.py` scenarios
+      (Switch-side cancel, PC cancel/URB abort, cancel during idle window, relaunch after late file, exit during
+      transfer, double cancel is a no-op). Then delete the py model. `[USER]` re-runs checklist section A.
+- [ ] 3.3 **Thread lifecycle parity.** For each `threadCreate` (19) confirm a matching `threadWaitForExit` +
+      `threadClose` on every exit path (normal, error, `Exit()` while running). Fix leaks. Start with
+      `haze_helper.cpp`, `ftpsrv_helper.cpp`, `log.cpp`. **Done when:** a table thread→create/wait/close sites is in
+      the CHANGELOG entry and no path lacks a wait.
+- [ ] 3.4 **Bounded string ops.** `grep -rnE '\b(strcpy|strcat|sprintf)\(' sphaira/source sphaira/include` (45).
+      Skip calls whose source is a string literal into a buffer sized ≥ literal. Replace the rest with
+      `snprintf`/`strncpy`+terminator/`std::string`. **Done when:** every remaining call has a `// literal, bounded`
+      comment or is replaced.
+- [ ] 3.5 **Graph holes.** `defines.hpp` L255, `net.hpp` L32, `nxlink.h` L47, `ams_su.h` L36, `hbl/source/main.c` L27
+      break the tree-sitter parser (macro-heavy). If a trivial rewrite (e.g. a macro used as a type, a missing
+      semicolon in a macro) fixes extraction without changing semantics, do it; otherwise note `// graphify: parse stop`
+      and move on. **Verify:** `graphify update .` warning count drops.
+- [ ] 3.6 Build checkpoint + `[USER]` checklist sections A–C again. Commit.
+
+## Phase 4 — Documentation for humans and models
+
+- [ ] 4.1 **`docs/dev/ARCHITECTURE.md`** (≤ 200 lines, English): directory → responsibility table; the 21 `Menu`
+      classes as a table `namespace | header | what it shows`; thread map (every thread: who starts it, which
+      globals/mutex it shares); god nodes and the rule for each; build/test commands; where i18n keys live and how
+      parity is checked. Generate from `graphify explain` + `GRAPH_REPORT.md` God Nodes, then verify against code.
+      Add the path to AGENTS.md routing line.
+- [ ] 4.2 **Wiki parity.** For every feature heading removed from README in 0.5, confirm the wiki page covers it;
+      add a `docs/wiki/Developer-Guide.md` that links `ARCHITECTURE.md`, `CHANGELOG.md`, test commands, test-build skill.
+- [ ] 4.3 **Tooling docs.** `tools/i18n-translate/README.md` (how to add a language, run parity test) and
+      confirm `tools/module_catalog/README.md` is current.
+- [ ] 4.4 Commit `docs: architecture, developer guide, tooling`.
+
+## Phase 5 — Executor ergonomics (small, do last)
+
+- [ ] 5.1 `tests/run.sh --quick`: host C++ tests + dead-symbol guard only (< 60 s). Document in AGENTS.md.
+- [ ] 5.2 `tools/dev/check.ps1`: PowerShell wrapper that calls the WSL `tests/run.sh --quick` so it works from a
+      Windows shell with one command.
+- [ ] 5.3 Final build checkpoint; `[USER]` full checklist; the user decides on `git push`.
+
+---
+
+## Not to do (from audit)
+- No refactor of `App`; no new abstractions, registries, interfaces with one implementation.
+- No file splits for their own sake; the 600-line cap is already met.
+- No line cap on i18n JSON, tables, embedded HTML.
+- No `git push`, no `--force`, no worktrees. Deleting junk is fine.
