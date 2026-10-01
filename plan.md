@@ -72,7 +72,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       Exception: `test_i18n_deployment_contract.py` — keep the parts that read `assets/romfs/i18n/*.json`
       (real data); delete its source-text asserts. Update `tests/run.sh` so it only runs what exists.
       **Done when:** `grep -lE 'read_text\(|in [chs]_text' tests/*.py` returns only `check_dead_symbols.py` (if at all).
-- [ ] 2.2 **Map Python behavioral models to real C++.** For each remaining `tests/test_*.py` (and its
+- [x] 2.2 **Map Python behavioral models to real C++.** For each remaining `tests/test_*.py` (and its
       `contract_fixtures/*_models.py`) fill the table below (edit this task in place): which C++ function it mirrors
       (`graphify explain "<name>"`), and the verdict: `PURE` (function already in a libnx-free header → write
       `tests/test_<name>.cpp` against it), `SEAM` (logic inside libnx-dependent code → extract the decision logic into
@@ -80,15 +80,32 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       `DROP` (mirrors nothing real, or scenario is hardware-only).
       | py test | C++ mirror | verdict |
       |---|---|---|
-      | test_mtp_cancellation_models.py | haze_helper.cpp StartMtpProgressBox / haze_callback state | SEAM → Phase 3.2 |
-      | test_safe_restore_target_contract.py | ui/menus/save/ `MatchesRestoreDestination`, restore target checks | SEAM |
-      | test_save_backup_library_contract.py | save backup grouping / `backup_group_key` | SEAM |
-      | test_save_backup_identity_contract.py | save identity matching | SEAM |
-      | test_dbi_restore_admission_contract.py | DBI ZIP admission (`payload_count`, metadata) | SEAM |
-      | test_raw_save_restore_contract.py | raw save header parse (`DISF`, remap) | SEAM or DROP if parse lives in libnx fs |
-      | test_recursive_install_contract.py | recursive NSP/NSZ/XCI/XCZ scan filter | PURE? check `homebrew_scan.cpp`/`filebrowser_scan.cpp` |
-      | test_ownfoil_contract.py | `utils/ownfoil.hpp` URL/Range handling | PURE? |
-      | others (save_*_contract.py, shutdown_lifecycle, game_save_manager, exact_save_discovery, existing_save_capacity) | fill in | |
+      | test_mtp_cancellation_models.py + `simulate_*` in test_mtp_cancellation_contract.py | haze_helper.cpp StartMtpProgressBox / haze_callback; libhaze cancel patches | SEAM → Phase 3.2 |
+      | test_mtp_cancellation_contract.py `test_patch_application_scenarios` | sphaira/cmake/patch_libhaze*.cmake applied to upstream libhaze (needs cmake + build/_deps) | KEEP (real patch files) |
+      | test_dbi_restore_admission_contract.py marker/malformed matrix | path_util.hpp `IsDbiRootMarkerEntry`, `NormalizeSaveArchiveEntry` | PURE (part) |
+      | test_dbi_restore_admission_contract.py preflight/unzip/sources | threaded_file_transfer_preflight.cpp `TransferUnzipPreflight`, `ResolveArchiveEntryName`; save_paths `BackupGroupKey` | SEAM |
+      | test_safe_restore_target_contract.py | save_menu_target.cpp `ResolveRestoreTarget`; save_paths.hpp `MatchesRestoreDestination` (fs.hpp → libnx) | SEAM |
+      | test_save_backup_library_contract.py (+ save_backup_library_* fixtures) | save_backup_inspection.cpp `BackupGroupKey`; save_game_group.cpp `CollectGroupArchives`; `CreateBackupIfNewer` | SEAM |
+      | test_save_backup_identity_contract.py | save_backup_pub.cpp `BackupSaveInternal` identity guard, `WriteSaveBackupZip` | SEAM |
+      | test_raw_save_restore_contract.py (+ raw_save_restore_* fixtures) | save_backup_inspection.cpp DISF header check; filebrowser_ops.cpp `RestoreSaveFile` refusal | SEAM |
+      | test_recursive_install_contract.py | filebrowser_recursive_install.cpp | deleted in 2.1 (static only) |
+      | test_ownfoil_contract.py (now `TestI18nCompleteness` only) | assets/romfs/i18n/*.json Ownfoil keys | KEEP (real data) |
+      | test_i18n_deployment_contract.py | assets/romfs/i18n/*.json | KEEP (real data) |
+      | test_backup_source_section_contract.py | save_backup_inspection.cpp source classification (uses `HasPathDirComponentIC`); save_menu_draw.cpp grid sections; save_folder_discovery.cpp `InspectBackupFolder` | SEAM |
+      | test_exact_save_discovery_contract.py | save_discovery.cpp `DiscoverSaveDataInfo` (fsOpenSaveDataInfoReader) | SEAM |
+      | test_existing_save_capacity_contract.py | save_restore_zip.cpp `RestoreSaveZip` capacity admission | SEAM |
+      | test_game_save_manager_contract.py | game_save_manager.cpp inventory/create/grow; `test_localization_parity` reads en/uk JSON | SEAM (i18n part KEEP) |
+      | test_mtp_save_contract.py (+ mtp_save_* fixtures) | haze_save_proxy.cpp / haze_save_proxy_scan.cpp naming and read-only enforcement | SEAM |
+      | test_save_backup_publication_contract.py (+ fixtures) | save_backup_writer.cpp / save_backup_pub.cpp checked publication | SEAM |
+      | test_save_folder_import_contract.py (+ fixtures) | save_folder_restore.cpp `RestoreSaveFolder`, save_folder_staging.hpp `CheckedJoinPath` | SEAM |
+      | test_save_folder_restore_contract.py | save_restore_route.cpp; `MatchesRestoreDestination` | SEAM |
+      | test_save_journal_lifecycle_contract.py (+ fixtures) | threaded_file_transfer_zip_io.cpp `TransferUnzipAll` checked commit loop | SEAM |
+      | test_save_metadata_wire_contract.py (+ fixtures) | save_metadata_decoders.cpp / save_archive_metadata.cpp `ReadArchiveSaveMetadata` | SEAM |
+      | test_save_payload_summary_contract.py (+ fixtures) | threaded_file_transfer_preflight.cpp `TransferUnzipPreflight` accounting and overflow guards | SEAM |
+      | test_save_post_restore_verification_contract.py (+ fixtures) | threaded_file_transfer_verify.cpp `VerifyArchiveAgainstNative` | SEAM |
+      | test_save_recovery_contract.py (+ fixtures) | save_restore_zip.cpp `RestoreSaveZip` recovery stream | SEAM |
+      | test_save_slot_backend_contract.py | save_slot_backend.cpp / save_slot_admission.cpp `CreateSaveDataChecked`, `ExtendSaveDataChecked` | SEAM |
+      | test_shutdown_lifecycle_contract.py | app/main/haze_helper/web exit ordering, modelled by MockSystem threads | DROP (hardware-only interleavings; no callable C++ unit) |
       **Done when:** every row has a verdict and the table is in this file.
 - [ ] 2.3 **Host test harness can link `.cpp` units.** Extend `tests/run.sh`: a test file may declare
       `// LINK: sphaira/source/foo_logic.cpp` lines at the top; the runner adds them to the g++ command.
