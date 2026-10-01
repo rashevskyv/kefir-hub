@@ -17,6 +17,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 - chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 
+## v0.13.930 — atomic web share counters
+web.cpp: `g_share_ip`, `g_share_resume_gen`, `g_share_thread_count` -> std::atomic (written by StartShareServer on the main thread, read/written by the server ProgressBox worker in TickShareNetwork/WebShareStop). Not compiled on host (needs libnx). host tests: pass (--quick) · nro: not built · switch: pending
 ## v0.13.929 — annotate remaining single-thread and mutex-guarded globals
 Comment-only: nxlink `g_is_running` (g_mutex), i18n `g_languages_scanned` (main thread, startup), auto_update `g_notify_shown` (g_job_mutex), title_info `g_ref_count` (g_mutex), filebrowser `g_smb_ref_count` (main thread), remote_input `g_*` (g_mutex), steamgriddb `g_api_key_cache_loaded` (g_api_key_mutex), wifi `g_connect_request_active` (main thread); per-line tags on haze `g_mtp_*` (g_mtp_ui_mutex). Every use checked. host tests: pass (--quick) · nro: not built · switch: pending
 ## v0.13.928 — build checkpoint (ReleaseWithInstall)

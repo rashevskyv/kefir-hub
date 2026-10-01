@@ -55,15 +55,15 @@ constexpr size_t SHARE_WORKER_COUNT = 3;
 constexpr unsigned SHARE_OFFLINE_GIVEUP = 30;
 
 Thread g_share_threads[SHARE_WORKER_COUNT]{};
-size_t g_share_thread_count{};
+std::atomic<size_t> g_share_thread_count{};
 std::atomic_bool g_share_running{false};
 std::atomic_bool g_share_self_test{false};
 std::atomic<Socket> g_share_socket{-1};
 u16 g_share_port{};
 // the ip the listener was bound under, and the applet-hook resume counter it
 // was last checked against. see TickShareNetwork().
-u32 g_share_ip{};
-u32 g_share_resume_gen{};
+std::atomic<u32> g_share_ip{};
+std::atomic<u32> g_share_resume_gen{};
 
 // The advertised TCP window equals the socket buffer size, and the default
 // initial buffer (64K, see SocketInitConfig in main.cpp) caps throughput at
@@ -156,7 +156,7 @@ auto TickShareNetwork() -> bool {
     g_share_offline = 0;
 
     if (ip != g_share_ip) {
-        log_write("[WEB] ip changed %08X -> %08X, stopping server\n", g_share_ip, ip);
+        log_write("[WEB] ip changed %08X -> %08X, stopping server\n", g_share_ip.load(), ip);
         App::Notify("Web server stopped: the console's IP address changed"_i18n);
         return false;
     }
@@ -264,7 +264,9 @@ auto StartShareServer() -> Result {
         g_share_offline = 0;
         g_share_resume_gen = net::ResumeGeneration();
         g_share_net_ts.Update();
-        nifmGetCurrentIpAddress(&g_share_ip);
+        u32 share_ip{};
+        nifmGetCurrentIpAddress(&share_ip);
+        g_share_ip = share_ip;
         g_share_running = true;
 
         const size_t target_worker_count = App::IsApplet() ? 2 : SHARE_WORKER_COUNT;
