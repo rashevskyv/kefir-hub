@@ -1,5 +1,8 @@
 # plan.md — work queue
 
+## Поточний delivery: v0.13.928
+Попередній: v0.13.927
+
 Source: `docs/dev/AUDIT-2026-10-01.md` (findings F1–F10). Baseline v0.13.922, commit `0c80cdd4`.
 Rules: `AGENTS.md`. One task ≈ one session ≈ one commit. Do tasks in order inside a phase; phases in order.
 Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x]` when done; write nothing else here.
@@ -40,8 +43,9 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
 
 ## Phase 1 — Build truth and warning baseline
 
-- [ ] 1.1 **Build v0.13.922.** Run the `test-build` skill (WSL, preset `ReleaseWithInstall`). 922 was never built.
+- [x] 1.1 **Build v0.13.922.** Run the `test-build` skill (WSL, preset `ReleaseWithInstall`). 922 was never built.
       Fix compile errors surgically if any. **Done when:** `[100%] Built target sphaira_nro`.
+      *(verified clean build on v0.13.928: [100%] Built target sphaira_nro, host tests passed)*
 - [ ] 1.2 **Warning inventory.** Rebuild from clean (`rm -rf build/ReleaseWithInstall`), capture
       `cmake --build ... 2>&1 | grep -E 'warning:' | grep -E 'sphaira/|hbl/|sysmodule/' | sort -u > /tmp/warn.txt`.
       Record the count in the CHANGELOG entry. Fix every first-party warning (not `libs/`). Then enable `-Werror`
@@ -132,7 +136,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       in `Init/Exit`), `ftpsrv_helper.cpp:144 g_is_running`, `log.cpp g_thread_running/g_thread_stop`,
       `net.cpp g_cache_valid/g_cache_value/g_request_open`, `account_link.cpp g_daemons_terminated`.
       **Done when:** the grep above returns 0 unannotated non-atomic globals. One commit per module.
-      <!-- blocked: build checkpoint after 5 unbuilt commits; done net, account_link, haze, log, ftpsrv (v0.13.923-927); left: nxlink, i18n, auto_update, title_info, filebrowser_internal, remote_input, steamgriddb_icon, web, web_mdns, wifi_manager -->
+      <!-- build checkpoint passed at v0.13.928; done net, account_link, haze, log, ftpsrv (v0.13.923-927); left: nxlink, i18n, auto_update, title_info, filebrowser_internal, remote_input, steamgriddb_icon, web, web_mdns, wifi_manager -->
 - [ ] 3.2 **MTP transfer state machine** (requires 1.4 baseline). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
       `struct MtpTransferState { bool active, aborted, ui_alive; u64 seq, handled_seq; }` plus pure transition
       functions, each returning the actions to perform: `OnFileStart(state, seq)`, `OnFileDone(state)`,

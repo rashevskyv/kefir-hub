@@ -17,6 +17,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 - chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 
+## v0.13.928 — build checkpoint (ReleaseWithInstall)
+Verified clean build for v0.13.923-927 global-lock annotations; [100%] Built target sphaira_nro in WSL. host tests: pass · nro: built · switch: pending
 ## v0.13.927 — annotate FTP running flag
 ftpsrv_helper.cpp: `g_is_running` is only touched under `g_mutex`; comment added, no code change. host tests: pass · nro: not built · switch: pending
 ## v0.13.926 — annotate log globals
