@@ -24,14 +24,15 @@ constexpr u64 POLL_INTERVAL_NS = 250'000'000;
 // that we want the network up. created lazily, on the first gate that finds the
 // console offline.
 NifmRequest g_request{};
-bool g_request_open{};
+bool g_request_open{}; // guarded by g_mutex
 std::mutex g_mutex{};
 
 // IsConnectedCached() is called once per entry per frame while drawing a menu,
-// so the ipc behind it is rate limited.
-TimeStamp g_cache_ts{};
-bool g_cache_value{};
-bool g_cache_valid{};
+// so the ipc behind it is rate limited. TryConnect() workers clear g_cache_valid
+// while the main thread reads the cache, so the flags are atomic.
+TimeStamp g_cache_ts{}; // main thread only (IsConnectedCached)
+std::atomic<bool> g_cache_value{};
+std::atomic<bool> g_cache_valid{};
 
 // see NotifyResume() in the header.
 std::atomic<u32> g_resume_generation{};
