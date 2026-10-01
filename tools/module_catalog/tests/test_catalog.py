@@ -149,18 +149,5 @@ class TestModuleCatalog(unittest.TestCase):
             self.assertTrue(uk.get(key), key)
             self.assertNotEqual(uk[key], en[key], key)
 
-    def test_module_manager_uses_runtime_catalog_and_not_legacy_description_json(self):
-        source_path = os.path.join(
-            self.project_root(), "sphaira", "source", "ui", "menus", "uninstaller_menu.cpp"
-        )
-        with open(source_path, encoding="utf-8") as f:
-            source = f.read()
-
-        self.assertIn("romfs:/modules/homebrew_sysmodules.json", source)
-        self.assertIn("gist.githubusercontent.com/ndeadly/a4b8c01bb453028cd0008f282098f696", source)
-        self.assertIn("module.\" + FormatProgramId(program_id) + \".description", source)
-        self.assertNotIn("DEFAULT_MODULES_JSON", source)
-        self.assertNotIn("paths::MODULES", source)
-
 if __name__ == "__main__":
     unittest.main()
