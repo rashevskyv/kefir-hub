@@ -10,6 +10,7 @@ Entries without a detail line are commit titles only; their verification state w
 - docs: plan 2.2 table — every remaining Python test mapped to its C++ mirror (1 PURE part, 1 DROP, rest SEAM/KEEP).
 - test: tests/run.sh honours `// LINK: <libnx-free .cpp>` lines in host C++ tests.
 - test: DBI root-marker and save-entry matrix moved from Python model to tests/test_dbi_root_marker.cpp (real path_util.hpp).
+- test: drop test_shutdown_lifecycle_contract.py (Python MockSystem of exit interleavings; mirrors no callable C++, hardware-only).
 
 ## v0.13.922 — keep MTP active during USB recovery
 Recovery flag set before local cancel; no haze::Exit during controlled USB detach; MTP restarts if enabled but stopped. host tests: py contracts pass · nro: not built · switch: pending
