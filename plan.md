@@ -121,10 +121,12 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 - [ ] 2.5 **Convert SEAM rows** (one task per row). Extract decision logic into a header/libnx-free unit with
       **no behavior change** (same inputs → same outputs; keep call sites one-line thin), add the cpp test, delete the py.
       Build checkpoint after every 2–3 seams (these touch product code).
+      <!-- blocked: build checkpoint needed (v0.13.929-933 unbuilt; AGENTS.md cap is 5); next: test_dbi_restore_admission_contract.py preflight/unzip/sources seam (2.2 table order, MTP row waits for 3.2) -->
 - [ ] 2.6 **Delete `tests/contract_fixtures/`** once nothing imports it. **Verify:** `grep -rl contract_fixtures tests` empty;
       `find tests -name '*.py' | xargs wc -l | tail -1` < 3000 lines.
 - [ ] 2.7 Build checkpoint + commit.
 - [ ] 2.8 **C++ tests that test copies.** Executor found 11 `tests/*.cpp` (incl. `test_save_restore_contract.cpp`) that re-implement project logic locally instead of including the project header, plus `test_save_restore_contract.cpp` and `tools/module_catalog/tests/test_catalog.py` asserting on C++ source text (catalog test currently fails 1/9). List them (`grep -L '#include "' tests/test_*.cpp` is a start; then read each), and for each: include the real header (PURE), extract a seam (SEAM, same rules as 2.5), or delete (DROP). Fix or delete the failing catalog test. **Done when:** every `tests/test_*.cpp` includes at least one project header and no test greps C++ source.
+      <!-- blocked: build checkpoint needed; done: test_save_restore_contract.cpp deleted (source greps only), test_catalog.py text check removed (8/8 pass); next: 10 copy tests, all SEAM (no real function of that name exists): hbl_nro_reader, header_network_layout, header_service_indicators, list_null_safety, mtp_progress_calc (with 3.2), queue_outcome, screensaver_title, tico_assoc, title_scaling, usb3_indicator; test_transport_install_queue already includes a project header (<...>) -->
 
 ## Phase 3 — Stability (audit F3, F6, F7)
 
