@@ -19,111 +19,6 @@ def check(condition, msg):
         print(f"FAIL: {msg}")
         sys.exit(1)
 
-def test_source_contracts():
-    repo_root = os.path.join(os.path.dirname(__file__), "..")
-
-    # 1. fs.hpp: FsNativeSave system-ID RW branch
-    fs_hpp_path = os.path.join(repo_root, "sphaira", "include", "fs.hpp")
-    with open(fs_hpp_path, "r", encoding="utf-8") as f:
-        fs_hpp_src = f.read()
-
-    check("m_open_result = fsOpenSaveDataFileSystemBySystemSaveDataId(&m_fs, save_data_space_id, attr);" in fs_hpp_src,
-          "FsNativeSave system RW branch must pass caller-supplied save_data_space_id, not hardcoded System space")
-
-    # 2. save_paths.hpp: DiscoverSaveDataInfo declaration
-    save_paths_hpp = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
-    with open(save_paths_hpp, "r", encoding="utf-8") as f:
-        paths_hpp_src = f.read()
-
-    check("auto DiscoverSaveDataInfo(const AccountUid* uid_filter = nullptr, const std::optional<u8>& type_filter = std::nullopt) -> std::vector<FsSaveDataInfo>;" in paths_hpp_src,
-          "save_paths.hpp must declare DiscoverSaveDataInfo with optional uid_filter and type_filter")
-
-    # 3. save_discovery.cpp: DiscoverSaveDataInfo implementation and probe spaces
-    save_paths_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_discovery.cpp")
-    with open(save_paths_cpp, "r", encoding="utf-8") as f:
-        paths_cpp_src = f.read()
-
-    for space_sym in [
-        "FsSaveDataSpaceId_System",
-        "FsSaveDataSpaceId_User",
-        "FsSaveDataSpaceId_SdSystem",
-        "FsSaveDataSpaceId_Temporary",
-        "FsSaveDataSpaceId_SdUser",
-        "FsSaveDataSpaceId_ProperSystem",
-        "FsSaveDataSpaceId_SafeMode",
-    ]:
-        check(space_sym in paths_cpp_src, f"save_paths.cpp must probe concrete space {space_sym}")
-
-    check("fsOpenSaveDataInfoReader(&reader, space)" in paths_cpp_src,
-          "save_paths.cpp must use fsOpenSaveDataInfoReader with concrete space")
-    check("fsSaveDataInfoReaderClose(&reader)" in paths_cpp_src,
-          "save_paths.cpp must close reader on successful open")
-    check("fsOpenSaveDataInfoReaderWithFilter" not in paths_cpp_src,
-          "save_paths.cpp DiscoverSaveDataInfo must not use filtered reader")
-    check("seen_keys.insert(key).second" in paths_cpp_src,
-          "save_paths.cpp must deduplicate exact slots using SaveEntryKey")
-    check("staged.insert(staged.end(), chunk.begin(), chunk.begin() + count);" in paths_cpp_src,
-          "save_paths.cpp must stage records until EOF")
-    check("if (read_failed) {" in paths_cpp_src and "continue;" in paths_cpp_src,
-          "save_paths.cpp must discard partial records on read failure and continue other spaces")
-
-    # 4. save_menu.cpp: ListAccountSaves, ReadSaveEntries, ScanHomebrew, ResolveRestoreTarget, CreateBackupIfNewer
-    save_menu_units = [
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp"),
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_scan.cpp"),
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_target.cpp"),
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
-    ]
-    menu_cpp_src = ""
-    for unit_path in save_menu_units:
-        with open(unit_path, "r", encoding="utf-8") as f:
-            menu_cpp_src += f.read() + "\n"
-
-    check("DiscoverSaveDataInfo(&uid, FsSaveDataType_Account)" in menu_cpp_src,
-          "ListAccountSaves must delegate to DiscoverSaveDataInfo")
-    check("DiscoverSaveDataInfo(&m_accounts[index].uid, FsSaveDataType_Account)" in menu_cpp_src,
-          "ReadSaveEntries must delegate account saves to DiscoverSaveDataInfo")
-    check("DiscoverSaveDataInfo(nullptr, data_type)" in menu_cpp_src,
-          "ReadSaveEntries must delegate non-account saves to DiscoverSaveDataInfo")
-    check("!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)" in menu_cpp_src,
-          "ResolveRestoreTarget must fast-path existing non-backup live seed with nonzero save ID and no UID change")
-    check("const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);" in menu_cpp_src,
-          "CreateBackupIfNewer must use static_cast<FsSaveDataSpaceId>(e.save_data_space_id) directly")
-
-    # 5. save_deletion.cpp and save_restore_zip.cpp: DeleteSavesOn, DeleteSaves, RestoreSaveZip
-    del_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_deletion.cpp")
-    with open(del_cpp_path, "r", encoding="utf-8") as f:
-        del_cpp_src = f.read()
-
-    rsz_cpp_path = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
-    with open(rsz_cpp_path, "r", encoding="utf-8") as f:
-        rsz_cpp_src = f.read()
-
-    check("const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);" in del_cpp_src,
-          "DeleteSaves / DeleteSavesOn must use static_cast<FsSaveDataSpaceId>(e.save_data_space_id) directly")
-    check(("if (target_entry.save_data_id != 0) {" in rsz_cpp_src or "if (e.save_data_id != 0) {" in rsz_cpp_src) and "R_TRY(check_rc);" in rsz_cpp_src,
-          "RestoreSaveZip must return open failure directly without create when save_data_id != 0")
-    check("static_cast<FsSaveDataSpaceId>(target_entry.save_data_space_id)" in rsz_cpp_src or "(e.save_data_id != 0)\n        ? static_cast<FsSaveDataSpaceId>(e.save_data_space_id)" in rsz_cpp_src,
-          "RestoreSaveZip must use actual save_data_space_id directly when save_data_id != 0")
-
-    # 6. filebrowser_ops.cpp: RestoreSaveFile ZIP vs DISA
-    fb_ops_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "filebrowser", "filebrowser_ops.cpp")
-    with open(fb_ops_cpp, "r", encoding="utf-8") as f:
-        fb_src = f.read()
-
-    check("if (is_disa) {" in fb_src,
-          "RestoreSaveFile must branch on is_disa to preserve legacy DISA discovery")
-    check("save::DiscoverSaveDataInfo(&acc.uid, FsSaveDataType_Account)" in fb_src,
-          "RestoreSaveFile ZIP picker must query Account saves per local UID via shared discovery")
-    check("save::DiscoverSaveDataInfo(nullptr, type)" in fb_src,
-          "RestoreSaveFile ZIP picker must query non-account saves once total via shared discovery")
-    check("save::SaveEntryKey(info)" in fb_src,
-          "RestoreSaveFile ZIP picker must deduplicate candidates using SaveEntryKey")
-    check('App::Push<PopupList>("Select Target Save"_i18n' in fb_src,
-          "RestoreSaveFile ZIP/folder must always present explicit target picker")
-
-    print("Source contracts: ALL PASS (6 anchor groups)")
-
 
 # ==============================================================================
 # Synthetic Behavioral Model (Algorithmic Invariance & Regression Verification)
@@ -313,7 +208,6 @@ def test_behavioral_model():
 
 
 def main():
-    test_source_contracts()
     test_behavioral_model()
     print("ALL EXACT SAVE DISCOVERY CONTRACT AND BEHAVIORAL REGRESSIONS PASSED")
 

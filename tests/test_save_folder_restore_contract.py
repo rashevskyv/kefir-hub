@@ -37,70 +37,6 @@ def check(condition: bool, msg: str) -> None:
         sys.exit(1)
 
 
-def read_file(*parts: str) -> str:
-    path = os.path.join(REPO_ROOT, *parts)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
-
-
-def test_static_review_blockers() -> None:
-    print("[1] Verifying static review blocker fixes...")
-
-    # 1. Version must be 0.13.882 or later.
-    cmake_txt = read_file("sphaira", "CMakeLists.txt")
-    version = re.search(r"set\(sphaira_VERSION 0\.13\.(\d+)\)", cmake_txt)
-    check(version is not None and int(version.group(1)) >= 882, "CMakeLists.txt must be 0.13.882+")
-
-    # 2. Blocker 1: No member.source / it->source provenance comparison in save_menu_ops.cpp
-    ops_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    check("check_info.backup_source != member.source" not in ops_cpp,
-          "member.source comparison must be removed from save_menu_ops.cpp")
-    check("check_info.backup_source != it->source" not in ops_cpp,
-          "it->source comparison must be removed from save_menu_ops.cpp")
-    check("check_info.backup_source != src.backup_source" in ops_cpp,
-          "RestoreSaves must compare check_info.backup_source against src.backup_source")
-    check("check_info.backup_source != group.backup_source" in ops_cpp,
-          "RestoreSavesPicked must compare check_info.backup_source against group.backup_source")
-
-    # 3. Blocker 2: MatchesRestoreDestination helper and usage
-    paths_hpp = read_file("sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
-    check("MatchesRestoreDestination" in paths_hpp,
-          "save_paths.hpp must declare MatchesRestoreDestination")
-    check("info.save_data_type == FsSaveDataType_Account" in paths_hpp,
-          "MatchesRestoreDestination must check Account save type")
-    check("dst.uid.uid[0] != 0 || dst.uid.uid[1] != 0" in paths_hpp,
-          "MatchesRestoreDestination must permit valid non-zero destination Account UID")
-
-    check("BackupGroupKey(check_info) != BackupGroupKey(e)" not in ops_cpp,
-          "RestoreSaveInternal must not compare BackupGroupKey(check_info) with destination e")
-    check("MatchesRestoreDestination(check_info, e)" in ops_cpp,
-          "RestoreSaveInternal and RestoreSavesPicked must use MatchesRestoreDestination")
-    check("MatchesRestoreDestination(check_info, dst)" in ops_cpp,
-          "RestoreSaves must use MatchesRestoreDestination for batch restore")
-
-    # 4. Blocker 3: Probe FS selection in save_restore_route.cpp
-    route_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp")
-    check('archive_path.starts_with("sdmc:/") ? static_cast<fs::Fs*>(&sd_fs)' not in route_cpp,
-          "save_restore_route.cpp must not check starts_with('sdmc:/') for probe_fs")
-    check('archive_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs)' in route_cpp,
-          "save_restore_route.cpp must use ums check matching save_menu_ops.cpp")
-
-    # 5. Blocker 4: Staged ZIP revalidation before CreateSaveDataChecked in save_restore_zip.cpp
-    zip_cpp = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
-    check("archive_meta.meta.owner_id != e.creation_request.owner_id" in zip_cpp,
-          "RestoreSaveZip must validate owner_id against creation_request")
-    check("archive_meta.meta.attr.application_id != e.creation_request.attr.application_id" in zip_cpp,
-          "RestoreSaveZip must validate application_id against creation_request")
-    check("archive_meta.meta.data_size > e.creation_request.data_size" in zip_cpp,
-          "RestoreSaveZip must validate data_size against creation_request")
-    check("archive_meta.meta.journal_size > e.creation_request.journal_size" in zip_cpp,
-          "RestoreSaveZip must validate journal_size against creation_request")
-    check("archive_meta.meta.attr.uid" not in zip_cpp,
-          "RestoreSaveZip must preserve source-user to selected-local-user remapping")
-
-    print("  -> Static review blocker checks PASSED.")
-
-
 def test_behavioral_provenance_and_dest_match() -> None:
     print("[2] Running behavioral provenance & destination match models...")
 
@@ -304,7 +240,6 @@ def test_behavioral_staged_zip_revalidation() -> None:
 
 
 def main() -> None:
-    test_static_review_blockers()
     test_behavioral_provenance_and_dest_match()
     test_behavioral_staged_zip_revalidation()
     print("ALL SAVE FOLDER RESTORE CONTRACT TESTS PASSED.")

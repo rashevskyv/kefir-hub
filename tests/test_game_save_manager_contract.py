@@ -16,76 +16,11 @@ def check(condition: bool, message: str) -> None:
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def read_file(*parts: str) -> str:
-    path = os.path.join(REPO_ROOT, *parts)
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        return f.read()
 
 # ==============================================================================
 # 1. Static Source Wiring & C++ Route Contracts
 # ==============================================================================
 
-def test_source_wiring_contracts() -> None:
-    print("[1] Checking static source wiring and route contracts...")
-
-    cmake_src = read_file("sphaira", "CMakeLists.txt")
-    check("set(sphaira_VERSION 0.13.870)" in cmake_src or "set(sphaira_VERSION 0.13.871)" in cmake_src or "set(sphaira_VERSION 0.13.872)" in cmake_src or "set(sphaira_VERSION 0.13.873)" in cmake_src or "set(sphaira_VERSION 0.13.874)" in cmake_src or "set(sphaira_VERSION 0.13.875)" in cmake_src or "set(sphaira_VERSION 0.13.876)" in cmake_src or "set(sphaira_VERSION 0.13.877)" in cmake_src or "set(sphaira_VERSION 0.13.878)" in cmake_src or "set(sphaira_VERSION 0.13.879)" in cmake_src, "CMakeLists.txt must define sphaira_VERSION as 0.13.870, 0.13.871, 0.13.872, 0.13.873, 0.13.874, 0.13.875, 0.13.876, 0.13.877, 0.13.878, or 0.13.879")
-    check("source/ui/menus/game/game_save_manager.cpp" in cmake_src, "CMakeLists.txt must compile game_save_manager.cpp")
-
-    hdr_src = read_file("sphaira", "include", "ui", "menus", "game", "game_save_manager.hpp")
-    for symbol in ["struct GameSaveRow {", "FsSaveDataInfo info{};", "FsSaveDataExtraData extra{};",
-                   "bool has_extra{false};", "void LoadGameSaves(", "void PromptCreateSaveSlot(", "void PromptIncreaseSaveSize("]:
-        check(symbol in hdr_src, f"game_save_manager.hpp missing required symbol: {symbol}")
-
-    mgr_src = read_file("sphaira", "source", "ui", "menus", "game", "game_save_manager.cpp")
-    check("using grid::FormatBytes;" in mgr_src, "game_save_manager.cpp must bring FormatBytes into scope")
-    for req_call in ["save::DiscoverSaveDataInfo(nullptr, std::nullopt)",
-                     "fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(",
-                     "save::PlanAccountSaveCreation(", "save::CreateSaveDataChecked(",
-                     "save::ExtendSaveDataChecked(", "save::GetBackendStatusMessage("]:
-        check(req_call in mgr_src, f"game_save_manager.cpp missing required backend call: {req_call}")
-
-    # Authoritative identity retention in grow request
-    check("grow_req.target_info = row.info;" in mgr_src, "SaveGrowRequest must retain full discovered row.info")
-    check("grow_req.space_id = static_cast<FsSaveDataSpaceId>(row.info.save_data_space_id);" in mgr_src,
-          "SaveGrowRequest must use row.info.save_data_space_id")
-    check("if (!row.has_extra)" in mgr_src, "PromptIncreaseSaveSize must refuse locally if extra data was not readable")
-    check("user_items.emplace_back(acc.nickname);" in mgr_src, "User picker must populate items with nickname only")
-    check('user_items.emplace_back(acc.uid' not in mgr_src, "User picker must never display raw AccountUid")
-
-    # Creation execution order: plan -> preset -> confirmation -> progress worker -> CreateSaveDataChecked
-    p_plan = mgr_src.find("save::PlanAccountSaveCreation")
-    p_preset = mgr_src.find("Select initial save size", p_plan)
-    p_conf = mgr_src.find("Create save slot?", p_preset)
-    p_worker = mgr_src.find("App::Push<ProgressBox>", p_conf)
-    p_create = mgr_src.find("save::CreateSaveDataChecked", p_worker)
-    check(all(p != -1 for p in [p_plan, p_preset, p_conf, p_worker, p_create]),
-          "Create flow must follow plan -> preset -> confirmation -> ProgressBox -> CreateSaveDataChecked")
-
-    # Legacy callers remain routed through shared backend
-    legacy_ops = read_file("sphaira", "source", "ui", "menus", "game", "game_internal.cpp")
-    check("save::PlanAccountSaveCreation(app_id, uid, nullptr, req, &status)" in legacy_ops,
-          "Legacy CreateSave in game_internal.cpp must call PlanAccountSaveCreation")
-    check("save::CreateSaveDataChecked(req)" in legacy_ops,
-          "Legacy CreateSave in game_internal.cpp must call CreateSaveDataChecked")
-
-    restore_route = read_file("sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
-    check("CreateSaveDataChecked(e.creation_request" in restore_route,
-          "Restore-time slot creation must route through CreateSaveDataChecked")
-
-    # game_details.cpp integration and localized strings
-    details_src = read_file("sphaira", "source", "ui", "menus", "game", "game_details.cpp")
-    check("fsOpenSaveDataInfoReader" not in details_src, "game_details.cpp must not contain local FsSaveDataInfoReader")
-    check("LoadGameSaves(app_id, m_saves, m_save_allocated_size);" in details_src,
-          "game_details.cpp LoadSaves must delegate to LoadGameSaves")
-    check("Create save slot" in details_src and "Increase save size" in details_src,
-          "game_details.cpp must expose Create and Increase save actions")
-    check('"rk:%u' not in details_src, "game_details.cpp must not contain raw unlocalized 'rk:%u'")
-    check('"Save ID %016lX"' not in details_src, "game_details.cpp must not contain raw unlocalized 'Save ID %016lX'")
-    check('("Rank: %s · Index: %u"_i18n).c_str()' in details_src, "game_details.cpp must use localized Rank/Index template")
-    check('("Save ID: %016lX"_i18n).c_str()' in details_src, "game_details.cpp must use localized Save ID template")
-
-    print("  -> Static source wiring contracts PASSED.")
 
 # ==============================================================================
 # 2. Localization & Key Parity Contracts
@@ -464,7 +399,6 @@ def main() -> None:
     print("=" * 80)
     print("Sphaira v0.13.870: Game Tools Save-Slot Manager Contract & Regressions")
     print("=" * 80)
-    test_source_wiring_contracts()
     test_localization_parity()
     test_inventory_behavior()
     test_creation_flow()

@@ -20,108 +20,6 @@ def check(condition, msg):
         print(f"FAIL: {msg}")
         sys.exit(1)
 
-def test_source_contracts():
-    repo_root = os.path.join(os.path.dirname(__file__), "..")
-
-    # 1. save_menu.hpp: RestoreSaves 4-arg overload, PromptBatchRestoreTargets, ResolveRestoreTarget callback
-    save_menu_hpp = os.path.join(repo_root, "sphaira", "include", "ui", "menus", "save_menu.hpp")
-    with open(save_menu_hpp, "r", encoding="utf-8") as f:
-        menu_hpp_src = f.read()
-
-    check("void RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root);" in menu_hpp_src,
-          "save_menu.hpp must declare 4-arg RestoreSaves with separate sources and targets")
-    check("void PromptBatchRestoreTargets(" in menu_hpp_src,
-          "save_menu.hpp must declare PromptBatchRestoreTargets")
-    check("static void ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_uid, std::function<void(std::optional<Entry>)> cb);" in menu_hpp_src,
-          "save_menu.hpp must declare callback-based ResolveRestoreTarget")
-
-    # 2. save_menu.cpp: ResolveRestoreTarget, FormatTargetSlotLabel, PromptBatchRestoreTargets, ActionType::Restore
-    save_menu_units = [
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save_menu.cpp"),
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_target.cpp"),
-        os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp"),
-    ]
-    menu_cpp_src = ""
-    for unit_path in save_menu_units:
-        if os.path.exists(unit_path):
-            with open(unit_path, "r", encoding="utf-8") as f:
-                menu_cpp_src += f.read() + "\n"
-
-    check("FormatTargetSlotLabel(" in menu_cpp_src,
-          "save_menu.cpp must define FormatTargetSlotLabel helper")
-    check("!backup.is_backup && backup.save_data_id != 0 && (!explicit_uid || std::memcmp(explicit_uid, &backup.uid, sizeof(AccountUid)) == 0)" in menu_cpp_src,
-          "ResolveRestoreTarget must retain P2-A exact identity fast path for live seed with unchanged UID")
-    check("static_cast<FsSaveDataInfo&>(target) = info;" in menu_cpp_src,
-          "ResolveRestoreTarget must assign target strictly from discovered FsSaveDataInfo authority")
-    check('App::Push<OptionBox>("Restore save data to\\n" + label + "?", "No"_i18n, "Yes"_i18n' in menu_cpp_src,
-          "ResolveRestoreTarget must visibly confirm single candidate via OptionBox")
-    check('make_unique<PopupList>("Select restore target slot"_i18n' in menu_cpp_src,
-          "ResolveRestoreTarget must present PopupList for multiple candidates")
-    check('App::Push<OptionBox>("No compatible live save slot found on console. Automatic save slot creation is not supported in this version."_i18n, "OK"_i18n);' in menu_cpp_src or
-          'App::Push<OptionBox>("No compatible live save slot found on console."_i18n, "OK"_i18n);' in menu_cpp_src or
-          'App::Push<OptionBox>("No existing save slot found on console."_i18n, "OK"_i18n);' in menu_cpp_src,
-          "ResolveRestoreTarget must show explicit error box when no existing live slots match")
-    check("seen_target_keys->insert(key).second" in menu_cpp_src,
-          "PromptBatchRestoreTargets must detect and reject duplicate targets via SaveEntryKey")
-    check('App::Push<OptionBox>("Duplicate restore target slot selected."_i18n, "OK"_i18n);' in menu_cpp_src,
-          "PromptBatchRestoreTargets must show OptionBox on duplicate target selection")
-    check("RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root);" in menu_cpp_src,
-          "PromptBatchRestoreTargets must pass resolved targets and original seeds to RestoreSaves")
-    check("seeds = std::move(seeds)" not in menu_cpp_src,
-          "save_menu.cpp must not prematurely move seeds in PromptBatchRestoreTargets")
-    check("accounts = std::move(accounts)" not in menu_cpp_src,
-          "save_menu.cpp must not prematurely move accounts in PromptBatchRestoreTargets")
-    check("PromptBatchRestoreTargets(\n    std::shared_ptr<std::vector<Entry>> seeds," in menu_cpp_src,
-          "save_menu.cpp must implement shared_ptr PromptBatchRestoreTargets overload")
-
-    # 3. save_menu_ops.cpp & save_restore_zip.cpp: RestoreSaves source/target separation and guards
-    save_menu_ops = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    with open(save_menu_ops, "r", encoding="utf-8") as f:
-        ops_cpp_src = f.read()
-    save_restore_zip = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "save", "save_restore_zip.cpp")
-    with open(save_restore_zip, "r", encoding="utf-8") as f:
-        restore_zip_src = f.read()
-
-    check("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root)" in ops_cpp_src,
-          "save_menu_ops.cpp must implement 4-arg RestoreSaves")
-    check("sources.size() != targets.size()" in ops_cpp_src,
-          "RestoreSaves must check for sources and targets count mismatch")
-    target_val_str = "dst.is_backup || (dst.save_data_id == 0 && !dst.is_planned_create)" if "dst.is_planned_create" in ops_cpp_src else "dst.is_backup || dst.save_data_id == 0"
-    check(target_val_str in ops_cpp_src,
-          "RestoreSaves must validate destination targets (not backup and nonzero save_data_id unless planned create)")
-    check("i < sources.size() && i < targets.size()" not in ops_cpp_src,
-          "RestoreSaves must not silently truncate mismatched sources and targets")
-
-    restore_fn_pos = ops_cpp_src.find("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets")
-    pbox_pos = ops_cpp_src.find("App::Push<ProgressBox>", restore_fn_pos)
-    mismatch_pos = ops_cpp_src.find("sources.size() != targets.size()", restore_fn_pos)
-    target_val_pos = ops_cpp_src.find(target_val_str, restore_fn_pos)
-    check(mismatch_pos != -1 and mismatch_pos < pbox_pos,
-          "Count mismatch check must happen before ProgressBox in RestoreSaves")
-    check(target_val_pos != -1 and target_val_pos < pbox_pos,
-          "Destination target validation must happen before ProgressBox in RestoreSaves")
-
-    check("src.backup_members.front().path" in ops_cpp_src or "FindLatestBackupPath(fs.get(), src, backup_root, file_path)" in ops_cpp_src,
-          "RestoreSaves must use source entry to locate backup file")
-    check("RestoreSaveInternal(pbox, dst, file_path" in ops_cpp_src,
-          "RestoreSaves must pass destination target to RestoreSaveInternal")
-    check("R_UNLESS(!e.is_backup && (e.save_data_id != 0 || e.is_planned_create), FsError_PathNotFound);" in ops_cpp_src,
-          "RestoreSaveInternal must guard against unresolved backup entries and zero-ID targets")
-    check("R_UNLESS(!e.is_backup, FsError_PathNotFound);" in restore_zip_src,
-          "RestoreSaveZip must guard against unresolved backup entries")
-
-    # 4. filebrowser_ops.cpp: File Browser ZIP retained nonzero target guard
-    fb_ops_cpp = os.path.join(repo_root, "sphaira", "source", "ui", "menus", "filebrowser", "filebrowser_ops.cpp")
-    with open(fb_ops_cpp, "r", encoding="utf-8") as f:
-        fb_src = f.read()
-
-    check("save::DiscoverSaveDataInfo(&acc.uid, FsSaveDataType_Account)" in fb_src,
-          "RestoreSaveFile ZIP picker must query Account saves per local UID via shared discovery")
-    check("return save::RestoreSaveZip(pbox, se, file_path" in fb_src,
-          "RestoreSaveFile must pass discovered live entry se to RestoreSaveZip")
-
-    print("Source contracts: ALL PASS (4 anchor groups)")
-
 
 # ==============================================================================
 # Synthetic Behavioral Model (Target Selection, Verification, and Regression)
@@ -524,7 +422,6 @@ def test_behavioral_model():
 
 
 def main():
-    test_source_contracts()
     test_behavioral_model()
     print("ALL SAFE RESTORE TARGET CONTRACT AND BEHAVIORAL REGRESSIONS PASSED")
 

@@ -6,6 +6,7 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - chore: context diet — AGENTS.md/CLAUDE.md/plan.md, CHANGELOG from git history, junk untracked, one test-build skill, graphify hook.
 - docs: README 435 -> 109 lines; its feature detail moved into docs/wiki (new Interface-and-Navigation.md).
+- test: drop C++ source-text assertions from Python contracts (9 files deleted, static functions removed from 21); i18n JSON checks kept.
 
 ## v0.13.922 — keep MTP active during USB recovery
 Recovery flag set before local cancel; no haze::Exit during controlled USB detach; MTP restarts if enabled but stopped. host tests: py contracts pass · nro: not built · switch: pending

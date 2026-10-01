@@ -62,7 +62,7 @@ Keep as is: `tests/*.cpp`, `tests/check_dead_symbols.py`, `tests/test_patch_libh
 Working rule: a test is kept only if it executes project C++ (`#include` of a project header, compiled with g++) or
 validates real data files (i18n JSON, cmake patch files). Everything that asserts on C++ *source text* is deleted.
 
-- [ ] 2.1 **Delete static-review contracts.** For each `tests/test_*.py`: if it contains `read_text` / `in c_text` /
+- [x] 2.1 **Delete static-review contracts.** For each `tests/test_*.py`: if it contains `read_text` / `in c_text` /
       `in h_text` / `test_static_review_*` style assertions on `.cpp/.hpp` text, delete those functions. If nothing
       remains but `main()`, delete the file and its `contract_fixtures/` modules that no other test imports.
       Known all-static: `test_live_queue_contract.py`, `test_mtp_routing_and_minibadge_contract.py`,

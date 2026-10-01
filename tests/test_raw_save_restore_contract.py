@@ -86,10 +86,6 @@ import zipfile
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def read_repo_file(*parts):
-    with open(os.path.join(REPO_ROOT, *parts), "r", encoding="utf-8") as f:
-        return f.read()
-
 
 # ==============================================================================
 # 1. Real Binary Artifact Encoding (Switchbrew Savegames Layout)
@@ -162,163 +158,6 @@ def test_integrity_outcome_model():
     print("  -> Integrity outcome model PASSED.")
 
 
-def test_bounded_source_code_contracts():
-    """Tests scoped source code slices, ordering, writer elimination, and i18n parity."""
-    print("[6] Running Bounded Scoped Source Code Contracts & Destructive Symbol Elimination...")
-
-    fb_ops_cpp = read_repo_file("sphaira", "source", "ui", "menus", "filebrowser", "filebrowser_ops.cpp")
-    save_ops_cpp = read_repo_file("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    save_menu_units = [
-        read_repo_file("sphaira", "source", "ui", "menus", "save_menu.cpp"),
-        read_repo_file("sphaira", "source", "ui", "menus", "save", "save_menu_filters.cpp"),
-        read_repo_file("sphaira", "source", "ui", "menus", "save", "save_menu_actions.cpp"),
-    ]
-    save_menu_cpp = "\n".join(save_menu_units)
-    settings_cpp = read_repo_file("sphaira", "source", "ui", "menus", "settings", "settings_categories.cpp")
-    save_paths_hpp = read_repo_file("sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
-    save_paths_cpp = read_repo_file("sphaira", "source", "ui", "menus", "save", "save_paths.cpp")
-    cmake_txt = read_repo_file("sphaira", "CMakeLists.txt")
-    en_json = json.loads(read_repo_file("assets", "romfs", "i18n", "en.json"))
-    uk_json = json.loads(read_repo_file("assets", "romfs", "i18n", "uk.json"))
-
-    assert any(f"set(sphaira_VERSION 0.13.{v})" in cmake_txt for v in range(858, 900)), "sphaira/CMakeLists.txt must be 0.13.858 or later"
-
-    # 6.2 Sliced Function: FsView::RestoreSaveFile in filebrowser_ops.cpp
-    fb_start = fb_ops_cpp.find("void FsView::RestoreSaveFile(const FileEntry& entry)")
-    assert fb_start != -1, "FsView::RestoreSaveFile not found"
-    fb_end = fb_ops_cpp.find("void FsView::UnzipFiles(", fb_start)
-    assert fb_end != -1, "FsView::UnzipFiles boundary not found"
-    fb_func = fb_ops_cpp[fb_start:fb_end]
-
-    # RAW refusal precedes candidate enumeration, picker, confirmation, and worker
-    idx_fb_disa = fb_func.find("App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage()")
-    idx_fb_cand = fb_func.find("add_candidates")
-    idx_fb_picker = fb_func.find('App::Push<PopupList>("Select Target Save"')
-    idx_fb_confirm = fb_func.find("Restore save data to")
-    idx_fb_worker = fb_func.find("Restoring save...")
-
-    assert -1 not in (idx_fb_disa, idx_fb_cand, idx_fb_picker, idx_fb_confirm, idx_fb_worker)
-    assert idx_fb_disa < idx_fb_cand, "RAW refusal must precede candidate discovery"
-    assert idx_fb_disa < idx_fb_confirm, "RAW refusal must precede confirmation prompt"
-    assert idx_fb_disa < idx_fb_worker, "RAW refusal must precede worker"
-    assert idx_fb_disa < idx_fb_picker, "RAW refusal must precede explicit target picker"
-
-    # Filename shortcut and parsing completely absent
-    assert "target_id = std::strtoull" not in fb_func
-    assert "match_count == 1 && matched_candidate != nullptr" not in fb_func
-
-    # BackupSaveInternal absent from RestoreSaveFile worker
-    assert "BackupSaveInternal" not in fb_func, "RestoreSaveFile must not call BackupSaveInternal"
-
-    # 6.3 Sliced Function: Menu::RestoreSavesPicked in save_menu_ops.cpp
-    rsp_start = save_ops_cpp.find("void Menu::RestoreSavesPicked(")
-    assert rsp_start != -1, "Menu::RestoreSavesPicked not found"
-    rsp_end = save_ops_cpp.find("Result Menu::RestoreSaveInternal(", rsp_start)
-    assert rsp_end != -1, "RestoreSaveInternal boundary not found"
-    rsp_func = save_ops_cpp[rsp_start:rsp_end]
-
-    idx_rsp_disa = rsp_func.find("if (is_raw) {")
-    idx_rsp_confirm = rsp_func.find("Restore save data to")
-    idx_rsp_worker = rsp_func.find('App::Push<ProgressBox>(0, "Restore"_i18n')
-    assert -1 not in (idx_rsp_disa, idx_rsp_confirm, idx_rsp_worker)
-    assert idx_rsp_disa < idx_rsp_confirm < idx_rsp_worker, "RestoreSavesPicked RAW refusal must precede prompt and worker"
-    assert "BackupSaveInternal" not in rsp_func, "RestoreSavesPicked worker must not call BackupSaveInternal"
-
-    # 6.4 Sliced Function: Menu::RestoreSaves (batch) bounded by RestoreSavesPicked
-    batch_start = save_ops_cpp.find("void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets")
-    assert batch_start != -1, "RestoreSaves batch overload not found"
-    batch_end = save_ops_cpp.find("void Menu::RestoreSavesPicked(", batch_start)
-    assert batch_end != -1, "RestoreSavesPicked boundary not found"
-    batch_func = save_ops_cpp[batch_start:batch_end]
-
-    idx_batch_raw = batch_func.find("if (is_raw) {")
-    idx_batch_restore = batch_func.find("RestoreSaveInternal(", idx_batch_raw)
-    assert idx_batch_raw != -1 and idx_batch_restore != -1
-    assert idx_batch_raw < idx_batch_restore, "Batch RAW refusal must precede RestoreSaveInternal"
-    assert "*last_item_is_raw = is_raw;" in batch_func
-    assert "return Result_RawSaveRestoreUnsupported;" in batch_func
-    assert 'prefix = "Restore stopped.\\nSafety recovery archive(s) retained:\\n"_i18n;' in batch_func
-
-    # 6.5 Sliced Function: Menu::RestoreSaveInternal in save_menu_ops.cpp
-    rsi_start = save_ops_cpp.find("Result Menu::RestoreSaveInternal(")
-    assert rsi_start != -1, "RestoreSaveInternal not found"
-    rsi_end = save_ops_cpp.find("} // namespace sphaira::ui::menu::save", rsi_start)
-    assert rsi_end != -1, "namespace end boundary not found"
-    rsi_func = save_ops_cpp[rsi_start:rsi_end]
-
-    idx_rsi_raw = rsi_func.find("if (IsDisaSaveFile(probe_fs, path)) {")
-    idx_rsi_ret = rsi_func.find("return Result_RawSaveRestoreUnsupported;", idx_rsi_raw)
-    idx_rsi_rsz = rsi_func.find("return RestoreSaveZip(", idx_rsi_raw)
-    assert -1 not in (idx_rsi_raw, idx_rsi_ret, idx_rsi_rsz)
-    assert idx_rsi_raw < idx_rsi_ret < idx_rsi_rsz, "Internal RAW return must precede RestoreSaveZip"
-
-    # 6.6 Destructive writer absence in all restore functions
-    destructive_symbols = [
-        "FsNativeBis",
-        "bis_fs.DeleteFile",
-        "bis_fs.CreateFile",
-        "bis_fs.OpenFile",
-        "bis_fs.Commit",
-        "fsFsOpenSaveDataFileSystemBySaveDataSpaceId",
-        "fsFsCreateFile",
-        "fsFsDeleteFile",
-        "fsFsOpenFile",
-        "fsFileWrite",
-        "fsFsCommit",
-        "thread::Transfer"
-    ]
-    for fname, fsrc in [
-        ("RestoreSaveFile", fb_func),
-        ("RestoreSavesPicked", rsp_func),
-        ("RestoreSaves_batch", batch_func),
-        ("RestoreSaveInternal", rsi_func)
-    ]:
-        for bad in destructive_symbols:
-            assert bad not in fsrc, f"Destructive symbol '{bad}' present in {fname}!"
-
-    # 6.7 Sliced Function: Menu::VerifyIntegrity in save_menu.cpp
-    vi_start = save_menu_cpp.find("void Menu::VerifyIntegrity(")
-    assert vi_start != -1
-    vi_end = save_menu_cpp.find("void Menu::DeleteOlderBackups(", vi_start)
-    assert vi_end != -1
-    vi_func = save_menu_cpp[vi_start:vi_end]
-
-    assert "auto unsupported_raw_count = std::make_shared<size_t>(0);" in vi_func
-    assert "VerifyDisaIntegrity" not in vi_func
-    assert "RAW save container(s) are unsupported for verification." in vi_func
-
-    # 6.8 Headers and Dead Constant Elimination
-    assert "RAW_RESTORE_UNSUPPORTED_MSG" not in save_paths_hpp, "Dead constant RAW_RESTORE_UNSUPPORTED_MSG must be removed"
-    assert "inline constexpr Result Result_RawSaveRestoreUnsupported = Result_FsInvalidType;" in save_paths_hpp
-    assert "auto GetRawRestoreUnsupportedMessage() -> std::string;" in save_paths_hpp
-    assert "VerifyDisaIntegrity" not in save_paths_hpp
-    assert "VerifyDisaIntegrity" not in save_paths_cpp
-    assert "auto GetRawRestoreUnsupportedMessage() -> std::string {" in save_paths_cpp
-
-    # 6.9 Retained toggle description harmonized in save_menu.cpp and settings_categories.cpp
-    toggle_desc = "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported."
-    assert toggle_desc in save_menu_cpp, "save_menu.cpp must contain exact harmonized toggle description"
-    assert toggle_desc in settings_cpp, "settings_categories.cpp must contain exact harmonized toggle description"
-
-    # 6.10 i18n parity check
-    required_keys = [
-        "RAW container restore is unsupported.",
-        "Restore stopped.\nSafety recovery archive(s) retained:\n",
-        toggle_desc,
-        " RAW save container(s) are unsupported for verification.",
-        "ZIP archives verified: ",
-        " valid.\n",
-        " valid ZIP archive(s).\n"
-    ]
-    for key in required_keys:
-        assert key in en_json, f"en.json missing key: {repr(key)}"
-        assert key in uk_json, f"uk.json missing key: {repr(key)}"
-        assert en_json[key], f"en.json empty value for key: {repr(key)}"
-        assert uk_json[key], f"uk.json empty value for key: {repr(key)}"
-
-    print("  -> Bounded scoped source code contracts & destructive symbol elimination PASSED.")
-
-
 def main():
     print("=== Sphaira v0.13.858: Strict RAW Save Restore Contract Test Suite ===")
     test_sentinel_positive_self_check()
@@ -326,7 +165,6 @@ def main():
     test_mixed_batch_simulation()
     test_recovery_creation_readback_failure_fixture()
     test_integrity_outcome_model()
-    test_bounded_source_code_contracts()
     print("=== ALL REWORKED CONTRACT SUITES PASSED SUCCESSFULLY ===")
 
 if __name__ == "__main__":

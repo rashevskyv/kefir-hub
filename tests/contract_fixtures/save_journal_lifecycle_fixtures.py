@@ -333,17 +333,6 @@ def test_behavioral_fixtures() -> None:
           "Failure has no retry, reopen, progress or auto-commit")
     print("  -> Fixture 20 (Connected lifecycle/fault/cancel/recovery checks) PASSED.")
 
-    # Fixture 21: Generic path defaults and zero-ID fallback intact
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    tft_hpp_path = os.path.join(repo_root, "sphaira", "include", "threaded_file_transfer.hpp")
-    with open(tft_hpp_path, "r", encoding="utf-8") as f:
-        tft_hpp_content = f.read()
-    check("bool checked_native_save = false" in tft_hpp_content,
-          "Generic callers must default checked_native_save to false")
-    check("s64 checked_save_journal_size = 0" in tft_hpp_content,
-          "checked_save_journal_size must default to 0")
-    print("  -> Fixture 21 (Generic path defaults and zero-ID fallback intact) PASSED.")
-
     print("=== ALL SYNTHETIC BEHAVIORAL FIXTURES PASSED SUCCESSFULLY ===")
 
 

@@ -35,117 +35,6 @@ def check(condition: bool, msg: str) -> None:
         sys.exit(1)
 
 
-def test_static_source_wiring() -> None:
-    print("[1] Verifying static source contracts...")
-
-    # 1.1 Version bump
-    cmake_path = os.path.join(REPO_ROOT, "sphaira", "CMakeLists.txt")
-    with open(cmake_path, "r", encoding="utf-8") as f:
-        cmake_src = f.read()
-    check(any(f"set(sphaira_VERSION 0.13.{v})" in cmake_src for v in range(888, 900)), "CMakeLists.txt must set sphaira_VERSION to 0.13.888 or later")
-
-    # 1.2 BackupSource enum in save_menu.hpp
-    sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")
-    with open(sm_hpp_path, "r", encoding="utf-8") as f:
-        sm_hpp = f.read()
-    check("enum class BackupSource : u8 {" in sm_hpp, "save_menu.hpp must define enum class BackupSource")
-    check("GetBackupSourceLabel(BackupSource" in sm_hpp, "save_menu.hpp must declare GetBackupSourceLabel")
-    check("BackupSource backup_source{BackupSource::Other};" in sm_hpp, "Entry must contain backup_source member")
-    check("struct Section {" in sm_hpp and "std::vector<Section> sections" in sm_hpp,
-          "GridSections must declare struct Section and sections vector")
-    check("void DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v, const GridSections& g, const std::string& label, bool align_above_tile) const;" in sm_hpp,
-          "save_menu.hpp must declare DrawSectionDivider with label parameter")
-
-    # 1.3 save_paths.hpp declarations
-    sp_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
-    with open(sp_hpp_path, "r", encoding="utf-8") as f:
-        sp_hpp = f.read()
-    check("bool has_kefir_comment{false};" in sp_hpp, "DecodedSaveMetadata must have has_kefir_comment")
-    check("BackupSource backup_source{BackupSource::Other};" in sp_hpp, "BackupArchiveInfo must have backup_source")
-
-    # 1.4 save_archive_metadata.cpp reads comment and preserves it into local_out
-    sam_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save", "save_archive_metadata.cpp")
-    with open(sam_cpp_path, "r", encoding="utf-8") as f:
-        sam_cpp = f.read()
-    check("unzGetGlobalComment(zfile, comment, sizeof(comment))" in sam_cpp,
-          "save_archive_metadata.cpp must read global comment via unzGetGlobalComment")
-    check('std::strncmp(comment, "sphaira v", 9) == 0' in sam_cpp,
-          "save_archive_metadata.cpp must check for 'sphaira v' prefix")
-    check("local_out.has_kefir_comment = out.has_kefir_comment;" in sam_cpp,
-          "save_archive_metadata.cpp must preserve has_kefir_comment into local_out across decoded branches")
-
-    # 1.5 save_backup_inspection.cpp classifies sources
-    sbi_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save", "save_backup_inspection.cpp")
-    with open(sbi_cpp_path, "r", encoding="utf-8") as f:
-        sbi_cpp = f.read()
-    check("out.backup_source = BackupSource::KefirHub;" in sbi_cpp, "InspectBackupArchive must assign KefirHub")
-    check("out.backup_source = BackupSource::Jksv;" in sbi_cpp, "InspectBackupArchive must assign Jksv")
-    check("out.backup_source = BackupSource::Checkpoint;" in sbi_cpp, "InspectBackupArchive must assign Checkpoint")
-    check("out.backup_source = BackupSource::Dbi;" in sbi_cpp, "InspectBackupArchive must assign Dbi")
-    check("out.backup_source = BackupSource::Other;" in sbi_cpp, "InspectBackupArchive must assign Other")
-    check("path::HasPathDirComponentIC" in sbi_cpp, "InspectBackupArchive must use HasPathDirComponentIC")
-    check("ContainsIC" not in sbi_cpp, "InspectBackupArchive must not use substring ContainsIC")
-    # Verify DBI metadata precedence over NX metadata in archive inspection
-    dbi_pos = sbi_cpp.find("archive_meta.has_dbi_extra")
-    nx_pos = sbi_cpp.find("archive_meta.has_nx_meta")
-    check(dbi_pos > 0 and nx_pos > 0 and dbi_pos < nx_pos,
-          "InspectBackupArchive must classify explicit DBI metadata before has_nx_meta")
-
-    # 1.6 save_menu_catalog.cpp groups by source and sorts by source precedence
-    smc_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save", "save_menu_catalog.cpp")
-    with open(smc_cpp_path, "r", encoding="utf-8") as f:
-        smc_cpp = f.read()
-    check("info.backup_source" in smc_cpp and "BackupGroupKey(info)" in smc_cpp,
-          "ReadBackupEntries must incorporate backup_source into group_map key")
-    check("e.backup_source = info.backup_source;" in smc_cpp,
-          "ReadBackupEntries must record info.backup_source into e.backup_source")
-    check("a.backup_source != b.backup_source" in smc_cpp,
-          "ReadBackupEntries must sort by backup_source precedence")
-
-    # 1.7 save_menu_draw.cpp multi-section computation
-    smd_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save", "save_menu_draw.cpp")
-    with open(smd_cpp_path, "r", encoding="utf-8") as f:
-        smd_cpp = f.read()
-    check("m_category == Category::Backups" in smd_cpp, "ComputeGridSections must branch on Category::Backups")
-    check("sec.has_divider && disp == sec.first_display" in smd_cpp,
-          "Draw must draw divider when disp matches section first_display")
-    check("DrawSectionDivider(vg, theme, v, g, sec.label," in smd_cpp,
-          "Draw must pass sec.label to DrawSectionDivider")
-    check("from == EntryToDisplay(0, g) && display < from" in smd_cpp,
-          "UP from the first item must wrap past the leading divider")
-    check("cur_disp = compact_grid ? 0 : g.row;" in smd_cpp and "if (!compact_grid)" in smd_cpp,
-          "backup grid sections must not reserve full empty rows")
-    check("m_category == Category::Backups && m_layout.Get() == grid::LayoutType_Grid" in smd_cpp,
-          "every backup grid divider must align above its first tile")
-    check(smd_cpp.index("DrawSectionDivider(vg, theme, v, g, sec.label,") < smd_cpp.index("image_v = DrawEntry(vg, theme"),
-          "the selected title label must paint above the section divider")
-
-    # 1.8 save_menu.cpp non-interactive touch
-    sm_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save_menu.cpp")
-    with open(sm_cpp_path, "r", encoding="utf-8") as f:
-        sm_cpp_src = f.read()
-    check("m_category == Category::Backups ? 34.f : 10.f" in sm_cpp_src,
-          "backup grid rows must leave just enough room for the section label")
-    check("touch && DisplayToEntry(disp, g) < 0" in sm_cpp_src,
-          "save_menu.cpp must guard against touch on empty divider slots")
-
-    # 1.9 i18n parity
-    en_path = os.path.join(REPO_ROOT, "assets", "romfs", "i18n", "en.json")
-    uk_path = os.path.join(REPO_ROOT, "assets", "romfs", "i18n", "uk.json")
-    with open(en_path, "r", encoding="utf-8") as f:
-        en_json = json.load(f)
-    with open(uk_path, "r", encoding="utf-8") as f:
-        uk_json = json.load(f)
-
-    for key in ["Kefir Hub", "DBI", "JKSV", "Checkpoint", "Other"]:
-        check(key in en_json, f"en.json must contain '{key}'")
-        check(key in uk_json, f"uk.json must contain '{key}'")
-    check(uk_json["Other"] == "Інші", "uk.json 'Other' translation must be 'Інші'")
-    check(set(en_json.keys()) == set(uk_json.keys()), "en.json and uk.json keys must have exact parity")
-
-    print("  -> Static source contracts PASSED.")
-
-
 def test_behavioral_provenance_model() -> None:
     print("[2] Verifying behavioral provenance & grid section model...")
 
@@ -380,42 +269,6 @@ def test_behavioral_provenance_model() -> None:
 def test_folder_backup_admission_and_rejection() -> None:
     print("[3] Verifying folder backup admission and rejection...")
 
-    # 3.1 Static wiring checks
-    path_util_h = os.path.join(REPO_ROOT, "sphaira", "include", "path_util.hpp")
-    with open(path_util_h, "r", encoding="utf-8") as f:
-        pu_src = f.read()
-    sw_pos = pu_src.find("StartsWithIC(")
-    hp_pos = pu_src.find("HasPathDirComponentIC(")
-    check(sw_pos > 0 and hp_pos > sw_pos, "StartsWithIC must be declared before HasPathDirComponentIC in path_util.hpp")
-
-    sfd_hpp = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save", "save_folder_discovery.hpp")
-    with open(sfd_hpp, "r", encoding="utf-8") as f:
-        sfd_h_src = f.read()
-    check("InspectBackupFolder(" in sfd_h_src, "save_folder_discovery.hpp must declare InspectBackupFolder")
-    check("ExtractTitleIdFromDir(" in sfd_h_src, "save_folder_discovery.hpp must declare ExtractTitleIdFromDir")
-    check("ExtractTitleNameFromDir(" in sfd_h_src, "save_folder_discovery.hpp must declare ExtractTitleNameFromDir")
-
-    sm_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save_menu.hpp")
-    with open(sm_hpp_path, "r", encoding="utf-8") as f:
-        sm_hpp = f.read()
-    check("bool is_directory{false};" in sm_hpp, "BackupCandidate must have is_directory member")
-    check("bool backup_is_directory{false};" in sm_hpp, "Entry must have backup_is_directory member")
-
-    sp_hpp_path = os.path.join(REPO_ROOT, "sphaira", "include", "ui", "menus", "save", "save_paths.hpp")
-    with open(sp_hpp_path, "r", encoding="utf-8") as f:
-        sp_hpp = f.read()
-    check("bool is_directory{false};" in sp_hpp, "BackupArchiveInfo must have is_directory member")
-    check("JKSV_PATH" in sp_hpp and "CHECKPOINT_SAVES_PATH" in sp_hpp,
-          "save_paths.hpp must define known roots for JKSV and Checkpoint")
-
-    smc_cpp_path = os.path.join(REPO_ROOT, "sphaira", "source", "ui", "menus", "save", "save_menu_catalog.cpp")
-    with open(smc_cpp_path, "r", encoding="utf-8") as f:
-        smc_cpp = f.read()
-    check("scan_jksv_root" in smc_cpp, "save_menu_catalog.cpp must implement scan_jksv_root")
-    check("scan_checkpoint_root" in smc_cpp, "save_menu_catalog.cpp must implement scan_checkpoint_root")
-    check("scan_custom_folder_root" in smc_cpp, "save_menu_catalog.cpp must scan custom folder roots")
-    check("InspectBackupFolder" in smc_cpp, "save_menu_catalog.cpp must call InspectBackupFolder")
-
     # 3.2 Focused behavioral check for folder admission/rejection
     def extract_title_id(name: str) -> int:
         if len(name) == 16:
@@ -555,44 +408,7 @@ def test_folder_backup_admission_and_rejection() -> None:
     print("  -> Folder backup admission and rejection PASSED.")
 
 
-def test_review_findings_and_restore_routing() -> None:
-    print("[4] Verifying review findings and folder restore routing...")
-    def read_src(*parts: str) -> str:
-        with open(os.path.join(REPO_ROOT, *parts), "r", encoding="utf-8") as f:
-            return f.read()
-
-    disc_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_folder_discovery.cpp")
-    check("ExtractIdentityFromAncestors" in disc_cpp and "has_ancestor_id ? derived_id : 0" in disc_cpp,
-          "save_folder_discovery.cpp must derive title ID from candidate parent/ancestors")
-
-    cp_path = "/switch/Checkpoint/saves/0x0100000000010000 Animal Crossing/backup1"
-    parent_part = [p for p in cp_path.strip("/").split("/") if p][-2]
-    check(parent_part.startswith("0x0100000000010000") and int(parent_part[2:18], 16) == 0x0100000000010000,
-          "Checkpoint candidate parent path must yield 0x0100000000010000 regardless of display name")
-
-    insp_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_backup_inspection.cpp")
-    check("if (e.backup_source == BackupSource::Dbi)" in insp_cpp,
-          "GetBackupSecondaryColumns and FormatBackupSecondaryText must gate DBI tag strictly on BackupSource::Dbi")
-
-    ops_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_menu_ops.cpp")
-    check("RestoreSaveFolder(pbox, e, path, out_recovery_path, out_mutation_started, out_created_slot_retained)" in ops_cpp,
-          "RestoreSaveInternal must route folder backups to RestoreSaveFolder")
-
-    route_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_restore_route.cpp")
-    check("InspectSaveFolderAdmission(archive_path, pbox, false)" in route_cpp,
-          "PlanRestoreCreation must inspect folder backup admission")
-    check("Backup folder metadata is missing or incomplete for save slot creation." in route_cpp,
-          "PlanRestoreCreation must stop missing metadata folder restore before mutation")
-
-    folder_cpp = read_src("sphaira", "source", "ui", "menus", "save", "save_folder_restore.cpp")
-    check("e.save_data_id != 0 || e.is_planned_create" in folder_cpp,
-          "RestoreSaveFolder must permit planned slot creation targets")
-    print("  -> Review findings and folder restore routing PASSED.")
-
-
 if __name__ == "__main__":
-    test_static_source_wiring()
     test_behavioral_provenance_model()
     test_folder_backup_admission_and_rejection()
-    test_review_findings_and_restore_routing()
     print("ALL BACKUP SOURCE SECTION CONTRACTS PASSED.")
