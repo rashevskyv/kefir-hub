@@ -17,6 +17,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 - chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 
+## v0.13.931 — atomic mDNS address
+web_mdns.cpp: `g_mdns_ip` -> std::atomic<u32> (set by StartMdnsResponder from the main thread or the web ProgressBox worker, read by the mDNS thread). Plan 3.1 closed: the task grep has 0 unannotated non-atomic globals. Not compiled on host (needs libnx). host tests: pass (--quick) · nro: not built · switch: pending
 ## v0.13.930 — atomic web share counters
 web.cpp: `g_share_ip`, `g_share_resume_gen`, `g_share_thread_count` -> std::atomic (written by StartShareServer on the main thread, read/written by the server ProgressBox worker in TickShareNetwork/WebShareStop). Not compiled on host (needs libnx). host tests: pass (--quick) · nro: not built · switch: pending
 ## v0.13.929 — annotate remaining single-thread and mutex-guarded globals

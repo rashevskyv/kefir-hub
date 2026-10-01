@@ -27,7 +27,7 @@ std::atomic_bool g_mdns_thread_created{false};
 std::atomic_bool g_mdns_running{false};
 std::atomic_bool g_mdns_active{false};
 std::atomic<Socket> g_mdns_socket{-1};
-u32 g_mdns_ip{0};
+std::atomic<u32> g_mdns_ip{0}; // set by StartMdnsResponder (main/web worker), read by the mDNS thread
 
 // Safely parse a DNS name with strict bounds, hops limit, and compression pointer support.
 bool ParseDnsName(const u8* buf, size_t buf_len, size_t& offset, std::string& out_name) {
@@ -233,7 +233,8 @@ void MdnsThreadFunc(void*) {
         resp[rlen++] = 0x04;
 
         // RDATA: local IPv4 address
-        std::memcpy(&resp[rlen], &g_mdns_ip, 4);
+        const u32 local_ip = g_mdns_ip;
+        std::memcpy(&resp[rlen], &local_ip, 4);
         rlen += 4;
 
         sockaddr_in dest{};

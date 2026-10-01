@@ -128,7 +128,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 
 ## Phase 3 — Stability (audit F3, F6, F7)
 
-- [ ] 3.1 **Cross-thread globals.** For each of the 45 plain `bool/u64/int g_*` globals
+- [x] 3.1 **Cross-thread globals.** For each of the 45 plain `bool/u64/int g_*` globals
       (`grep -rnE '^(extern|static)?\s*(bool|u64|u32|int|size_t)\s+g_[a-z_0-9]+' sphaira/source sphaira/include`):
       list every reader/writer with `graphify explain` + grep; decide `single-thread` (leave, add a comment
       `// main thread only`) or `shared` (→ `std::atomic<T>` or move under the module's existing mutex).
@@ -136,7 +136,6 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       in `Init/Exit`), `ftpsrv_helper.cpp:144 g_is_running`, `log.cpp g_thread_running/g_thread_stop`,
       `net.cpp g_cache_valid/g_cache_value/g_request_open`, `account_link.cpp g_daemons_terminated`.
       **Done when:** the grep above returns 0 unannotated non-atomic globals. One commit per module.
-      <!-- build checkpoint passed at v0.13.928; done net, account_link, haze, log, ftpsrv (v0.13.923-927); left: nxlink, i18n, auto_update, title_info, filebrowser_internal, remote_input, steamgriddb_icon, web, web_mdns, wifi_manager -->
 - [ ] 3.2 **MTP transfer state machine** (requires 1.4 baseline). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
       `struct MtpTransferState { bool active, aborted, ui_alive; u64 seq, handled_seq; }` plus pure transition
       functions, each returning the actions to perform: `OnFileStart(state, seq)`, `OnFileDone(state)`,
