@@ -17,6 +17,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 - chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 
+## v0.13.926 — annotate log globals
+log.cpp: `g_file_open`, `g_buffer_len`, `g_thread_running`, `g_thread_stop` are only touched under `mutex` (checked at every use, incl. the flush thread); comments added, no code change. host tests: pass · nro: not built · switch: pending
 ## v0.13.925 — annotate MTP shared state
 haze: `g_is_running` is only touched under `g_mutex` and the `g_mtp_*` state only under `g_mtp_ui_mutex` (checked at every use); comments added, no code change. Audit F3's g_is_running race claim does not hold. host tests: pass · nro: not built · switch: pending
 ## v0.13.924 — atomic account-daemon flag

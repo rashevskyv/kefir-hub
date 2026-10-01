@@ -22,19 +22,19 @@ const auto& errorpath = sphaira::paths::ERROR_LOG;
 constexpr off_t MAX_ERROR_LOG_BYTES = 256u * 1024u;
 
 int nxlink_socket = -1;
-bool g_file_open{};
+bool g_file_open{}; // guarded by mutex
 std::mutex mutex{};
 
 // Static zero-heap-allocation asynchronous logging buffer.
 // Avoids malloc/realloc/free churn from background threads during graphics/game loading.
 constexpr size_t STATIC_LOG_CAPACITY = 64u * 1024u;
 char g_buffer_data[STATIC_LOG_CAPACITY];
-size_t g_buffer_len{};
+size_t g_buffer_len{}; // guarded by mutex
 char g_flush_batch[STATIC_LOG_CAPACITY];
 
 Thread g_flush_thread{};
-bool g_thread_running{};
-bool g_thread_stop{};
+bool g_thread_running{}; // guarded by mutex
+bool g_thread_stop{}; // guarded by mutex (read by the flush thread under it)
 
 // flush interval. short enough that a crash loses little, long enough that
 // writes are well batched.
@@ -120,6 +120,7 @@ void stop_thread() {
     g_thread_running = false;
 }
 
+// caller must hold `mutex`.
 void log_write_arg_internal(const char* s, std::va_list* v) {
     const auto t = std::time(nullptr);
     struct tm tm{};
