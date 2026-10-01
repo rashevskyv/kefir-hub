@@ -15,6 +15,7 @@ Entries without a detail line are commit titles only; their verification state w
 - docs: wiki Developer-Guide.md (architecture, changelog, build, host tests); README feature headings verified in wiki.
 - docs: tools/i18n-translate/README.md (translate, add a language, parity check); module_catalog README checked (its test_catalog has 1 stale source-text test).
 - test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
+- chore: tools/dev/check.ps1 runs `tests/run.sh --quick` (or `-Full`) in WSL from Windows (not executed here: no PowerShell/WSL in this environment).
 
 ## v0.13.922 — keep MTP active during USB recovery
 Recovery flag set before local cancel; no haze::Exit during controlled USB detach; MTP restarts if enabled but stopped. host tests: py contracts pass · nro: not built · switch: pending
