@@ -27,7 +27,7 @@ yyjson_val* en_root = nullptr;
 std::unordered_map<std::string, std::string> g_tr_cache;
 
 std::vector<LanguageDef> g_available_languages;
-bool g_languages_scanned = false;
+bool g_languages_scanned = false; // main thread only (written by ScanAvailableLanguages at startup; ProgressBox workers only read it later)
 std::string g_current_lang_code = "en";
 
 std::string get_internal(std::string_view str) {

@@ -64,7 +64,7 @@ private:
 
 Mutex g_mutex{};
 Thread g_thread{};
-u32 g_ref_count{};
+u32 g_ref_count{}; // guarded by g_mutex (Init/Exit)
 std::unique_ptr<ThreadData> g_thread_data{};
 
 struct NcmEntry {

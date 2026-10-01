@@ -63,12 +63,12 @@ extern Mutex g_mutex;
 extern Mutex g_mtp_ui_mutex;
 extern ui::ProgressBox* g_mtp_pbox;
 extern UEvent g_mtp_done_event;
-extern bool g_mtp_ui_alive;
+extern bool g_mtp_ui_alive; // guarded by g_mtp_ui_mutex
 extern std::string g_mtp_current_filename;
-extern bool g_mtp_transfer_active;
-extern bool g_mtp_transfer_aborted;
-extern u64 g_mtp_transfer_seq;
-extern u64 g_mtp_handled_seq;
+extern bool g_mtp_transfer_active; // guarded by g_mtp_ui_mutex
+extern bool g_mtp_transfer_aborted; // guarded by g_mtp_ui_mutex
+extern u64 g_mtp_transfer_seq; // guarded by g_mtp_ui_mutex
+extern u64 g_mtp_handled_seq; // guarded by g_mtp_ui_mutex
 
 extern std::vector<PinnedMount> g_pinned;
 extern ::haze::FsEntries g_fs_entries;

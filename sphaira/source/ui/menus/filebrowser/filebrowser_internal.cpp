@@ -32,7 +32,7 @@ std::string MakeNetworkRoot(std::string_view url) {
 
 
 #ifdef BUILD_SMB2
-int g_smb_ref_count = 0;
+int g_smb_ref_count = 0; // main thread only (FsView::SetFs, ~FsView)
 
 void ParseSmbUrl(const std::string& url, std::string& server, std::string& share) {
     if (url.rfind("smb://", 0) != 0) return;

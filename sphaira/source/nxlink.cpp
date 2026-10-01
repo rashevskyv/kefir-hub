@@ -37,7 +37,7 @@ constexpr const char UDP_MAGIC_CLIENT[] = {"bootnx"};
 Thread g_thread{};
 std::mutex g_mutex{};
 std::atomic_bool g_quit{false};
-bool g_is_running{false};
+bool g_is_running{false}; // guarded by g_mutex (nxlinkInitialize/nxlinkExit)
 NxlinkCallback g_callback{};
 
 struct SocketWrapper {

@@ -18,7 +18,7 @@ namespace {
 
 std::mutex g_job_mutex;
 Job g_job{};
-bool g_notify_shown{};
+bool g_notify_shown{}; // guarded by g_job_mutex
 
 } // namespace
 

@@ -11,7 +11,7 @@ namespace sphaira::wifi {
 namespace {
 
 NifmRequest g_connect_request{};
-bool g_connect_request_active = false;
+bool g_connect_request_active = false; // main thread only (wifi menu Update/OptionBox callbacks)
 
 void CloseConnectRequest() {
     if (g_connect_request_active) {

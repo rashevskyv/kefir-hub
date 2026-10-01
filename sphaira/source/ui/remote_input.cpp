@@ -15,15 +15,15 @@ namespace sphaira::ui::remote_input {
 namespace {
 
 std::mutex g_mutex;
-bool g_active{false};
-bool g_received{false};
-bool g_has_draft{false};
-bool g_has_commit{false};
-bool g_closing{false};
-bool g_client_seen{false};
-bool g_client_closed{false};
-bool g_client_closed_discard{false};
-u32 g_draft_seq{0};
+bool g_active{false}; // guarded by g_mutex
+bool g_received{false}; // guarded by g_mutex
+bool g_has_draft{false}; // guarded by g_mutex
+bool g_has_commit{false}; // guarded by g_mutex
+bool g_closing{false}; // guarded by g_mutex
+bool g_client_seen{false}; // guarded by g_mutex
+bool g_client_closed{false}; // guarded by g_mutex
+bool g_client_closed_discard{false}; // guarded by g_mutex
+u32 g_draft_seq{0}; // guarded by g_mutex
 std::string g_received_text;
 std::string g_draft_text;
 std::string g_commit_text;

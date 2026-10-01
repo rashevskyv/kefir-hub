@@ -18,7 +18,7 @@ option::OptionString g_api_key{"steamgriddb", "api_key", ""};
 // the web handoff writes the key from the server thread, the ui polls it.
 Mutex g_api_key_mutex;
 std::string g_api_key_cache{};
-bool g_api_key_cache_loaded{};
+bool g_api_key_cache_loaded{}; // guarded by g_api_key_mutex
 std::atomic_bool g_web_request_active{false};
 
 } // namespace

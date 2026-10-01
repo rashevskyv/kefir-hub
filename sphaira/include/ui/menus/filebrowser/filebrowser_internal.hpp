@@ -24,7 +24,7 @@ auto MakeNetworkDeviceName(std::string_view url) -> std::string;
 auto MakeNetworkRoot(std::string_view url) -> std::string;
 
 #ifdef BUILD_SMB2
-extern int g_smb_ref_count;
+extern int g_smb_ref_count; // main thread only (FsView::SetFs, ~FsView)
 void ParseSmbUrl(const std::string& url, std::string& server, std::string& share);
 auto UrlEncode(const std::string& value, bool keep_slash = false) -> std::string;
 #endif
