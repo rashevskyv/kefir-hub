@@ -19,6 +19,9 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.934 — build checkpoint (ReleaseWithInstall)
+Verified clean build for v0.13.929-933 (safe string copies, thread lifecycle parity, test cleanup); [100%] Built target sphaira_nro in WSL. host tests: pass · nro: built · switch: pending
+
 ## v0.13.933 — thread lifecycle parity
 Audit of all 19 threadCreate sites (+ utils::CreateThread users): create → threadWaitForExit → threadClose on normal, error and Exit paths. Fixed 4 error-path defects: ftpsrv Init and utils::CreateThread leaked the created thread when svcSetThreadCoreMask failed; title_info Init leaked it when threadStart failed; nxlinkExit joined/closed even when not running (stale handle after a failed re-init). Not compiled on host (needs libnx). host tests: pass (--quick) · nro: not built · switch: pending (FTP/NX-Link toggle, title icons)
 | thread (site) | create | wait + close | result |
