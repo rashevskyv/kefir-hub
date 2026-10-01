@@ -150,11 +150,10 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       `threadClose` on every exit path (normal, error, `Exit()` while running). Fix leaks. Start with
       `haze_helper.cpp`, `ftpsrv_helper.cpp`, `log.cpp`. **Done when:** a table thread→create/wait/close sites is in
       the CHANGELOG entry and no path lacks a wait.
-- [ ] 3.4 **Bounded string ops.** `grep -rnE '\b(strcpy|strcat|sprintf)\(' sphaira/source sphaira/include` (45).
+- [x] 3.4 **Bounded string ops.** `grep -rnE '\b(strcpy|strcat|sprintf)\(' sphaira/source sphaira/include` (45).
       Skip calls whose source is a string literal into a buffer sized ≥ literal. Replace the rest with
       `snprintf`/`strncpy`+terminator/`std::string`. **Done when:** every remaining call has a `// literal, bounded`
       comment or is replaced.
-      <!-- blocked: not started; waits for the build checkpoint of v0.13.923-927 -->
 - [ ] 3.5 **Graph holes.** `defines.hpp` L255, `net.hpp` L32, `nxlink.h` L47, `ams_su.h` L36, `hbl/source/main.c` L27
       break the tree-sitter parser (macro-heavy). If a trivial rewrite (e.g. a macro used as a type, a missing
       semicolon in a macro) fixes extraction without changing semantics, do it; otherwise note `// graphify: parse stop`

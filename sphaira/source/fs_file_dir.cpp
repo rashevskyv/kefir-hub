@@ -331,7 +331,7 @@ Result Dir::Read(s64 *total_entries, size_t max_entries, FsDirectoryEntry *buf) 
                 continue;
             }
 
-            std::strcpy(entry.name, d->d_name);
+            std::snprintf(entry.name, sizeof(entry.name), "%s", d->d_name);
             std::memcpy(&buf[*total_entries], &entry, sizeof(*buf));
             *total_entries = *total_entries + 1;
             if (*total_entries >= max_entries) {
@@ -391,7 +391,7 @@ Result Dir::ReadAll(std::vector<FsDirectoryEntry>& buf) {
                 continue;
             }
 
-            std::strcpy(entry.name, d->d_name);
+            std::snprintf(entry.name, sizeof(entry.name), "%s", d->d_name);
             buf.emplace_back(entry);
         }
     }

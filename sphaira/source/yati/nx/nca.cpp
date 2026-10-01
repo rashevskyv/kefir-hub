@@ -5,6 +5,8 @@
 #include "utils/utils.hpp"
 #include "log.hpp"
 
+#include <cstdio>
+
 namespace sphaira::nca {
 namespace {
 
@@ -320,7 +322,7 @@ Result GetDecryptedTitleKey(fs::Fs* fs, const fs::FsPath& path, Header& header, 
             // try and get ticket from path as it may not be installed yet.
             fs::FsPath tik_path = path;
             if (auto dilem = std::strrchr(tik_path, '/')) {
-                std::sprintf(dilem, "/%s.tik", utils::hexIdToStr(header.rights_id).str);
+                std::snprintf(dilem, sizeof(tik_path) - (dilem - tik_path.s), "/%s.tik", utils::hexIdToStr(header.rights_id).str);
                 log_write("[NCA] trying to read local ticket file: %s\n", tik_path.s);
                 std::vector<u8> tik_data;
                 if (R_SUCCEEDED(fs->read_entire_file(tik_path, tik_data))) {

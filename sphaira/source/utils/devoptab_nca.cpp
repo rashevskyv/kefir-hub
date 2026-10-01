@@ -15,6 +15,7 @@
 #include "yati/container/nsp.hpp"
 #include "yati/source/file.hpp"
 
+#include <cstdio>
 #include <cstring>
 #include <cerrno>
 #include <array>
@@ -276,7 +277,7 @@ int Device::devoptab_dirnext(void* fd, char *filename, struct stat *filestat) {
 
         filestat->st_nlink = 1;
         filestat->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH;
-        std::strcpy(filename, this->collections[dir->index].name.c_str());
+        std::snprintf(filename, NAME_MAX + 1, "%s", this->collections[dir->index].name.c_str());
     } else {
         if (entry.fs_type == nca::FileSystemType_RomFS) {
             if (!romfs::dirnext(entry.romfs, filename, filestat)) {
@@ -291,7 +292,7 @@ int Device::devoptab_dirnext(void* fd, char *filename, struct stat *filestat) {
             filestat->st_nlink = 1;
             filestat->st_size = collection.size;
             filestat->st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
-            std::strcpy(filename, collection.name.c_str());
+            std::snprintf(filename, NAME_MAX + 1, "%s", collection.name.c_str());
         }
     }
 

@@ -96,7 +96,7 @@ struct HashMd5 final : HashSource {
 
         char str[CalculateHashStrLen(sizeof(hash))];
         for (u32 i = 0; i < sizeof(hash); i++) {
-            std::sprintf(str + i * 2, "%02x", hash[i]);
+            std::snprintf(str + i * 2, sizeof(str) - i * 2, "%02x", hash[i]);
         }
 
         out = str;
@@ -121,7 +121,7 @@ struct HashSha1 final : HashSource {
 
         char str[CalculateHashStrLen(sizeof(hash))];
         for (u32 i = 0; i < sizeof(hash); i++) {
-            std::sprintf(str + i * 2, "%02x", hash[i]);
+            std::snprintf(str + i * 2, sizeof(str) - i * 2, "%02x", hash[i]);
         }
 
         out = str;
@@ -146,7 +146,7 @@ struct HashSha256 final : HashSource {
 
         char str[CalculateHashStrLen(sizeof(hash))];
         for (u32 i = 0; i < sizeof(hash); i++) {
-            std::sprintf(str + i * 2, "%02x", hash[i]);
+            std::snprintf(str + i * 2, sizeof(str) - i * 2, "%02x", hash[i]);
         }
 
         out = str;

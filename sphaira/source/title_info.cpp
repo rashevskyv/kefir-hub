@@ -238,8 +238,8 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
         }
 
         result->status = NacpLoadStatus::Loaded;
-        std::strcpy(result->lang.name, data->name);
-        std::strcpy(result->lang.author, data->publisher);
+        std::snprintf(result->lang.name, sizeof(result->lang.name), "%s", data->name);
+        std::snprintf(result->lang.author, sizeof(result->lang.author), "%s", data->publisher);
         result->icon.resize(data->icon_size);
         std::memcpy(result->icon.data(), data->icon_data, result->icon.size());
     } else {
@@ -348,12 +348,12 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
 
             if (!overrides.name.empty() && overrides.name.length() < sizeof(result->lang.name)) {
                 log_write("[TITLE] overriding name: %s -> %s\n", result->lang.name, overrides.name.c_str());
-                std::strcpy(result->lang.name, overrides.name.c_str());
+                std::snprintf(result->lang.name, sizeof(result->lang.name), "%s", overrides.name.c_str());
             }
 
             if (!overrides.author.empty() && overrides.author.length() < sizeof(result->lang.author)) {
                 log_write("[TITLE] overriding author: %s -> %s\n", result->lang.author, overrides.author.c_str());
-                std::strcpy(result->lang.author, overrides.author.c_str());
+                std::snprintf(result->lang.author, sizeof(result->lang.author), "%s", overrides.author.c_str());
             }
         }
     }

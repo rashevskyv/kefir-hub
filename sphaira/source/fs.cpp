@@ -170,7 +170,7 @@ Result CreateDirectoryRecursively(FsFileSystem* fs, const FsPath& _path, bool ig
         }
 
         // log_write("created_directory: %s\n", path);
-        std::strcat(path, "/");
+        std::strncat(path, "/", sizeof(path) - std::strlen(path) - 1);
     }
     R_SUCCEED();
 }

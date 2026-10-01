@@ -59,8 +59,8 @@ auto nro_parse_internal(fs::Fs* fs, const fs::FsPath& path, NroEntry& entry) -> 
         const auto file_name = std::strrchr(path, '/') + 1;
         const auto file_name_len = std::strlen(file_name);
         std::strncpy(nacp.lang.name, file_name, file_name_len - 4);
-        std::strcpy(nacp.lang.author, "Unknown");
-        std::strcpy(nacp.display_version, "Unknown");
+        std::strcpy(nacp.lang.author, "Unknown"); // literal, bounded
+        std::strcpy(nacp.display_version, "Unknown"); // literal, bounded
 
         entry.icon_offset = entry.icon_size = 0;
         entry.is_nacp_valid = false;

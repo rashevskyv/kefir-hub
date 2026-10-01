@@ -300,7 +300,7 @@ Result PatchTicket(std::vector<u8>& ticket, std::span<const u8> cert_chain, u8 k
     TicketRsa2048 out{};
     out.signature_block.sig_type = SigType_Rsa2048Sha256;
     std::memset(out.signature_block.sign, 0xFF, sizeof(out.signature_block.sign));
-    std::strcpy(out.data.issuer, "Root-CA00000003-XS00000020");
+    std::strcpy(out.data.issuer, "Root-CA00000003-XS00000020"); // literal, bounded
     std::memcpy(out.data.title_key_block, title_key.key, sizeof(title_key.key));
     out.data.format_version = 0x2;
     out.data.master_key_revision = key_gen;

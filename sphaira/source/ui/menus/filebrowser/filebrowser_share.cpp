@@ -276,8 +276,8 @@ void FsView::MountUsbStorage() {
     // open the drive straight away: mounting it was the point.
     const auto& e = devices.front();
     FsEntry entry{};
-    std::strcpy(entry.name, e.name.c_str());
-    std::strcpy(entry.root, e.mount.c_str());
+    std::snprintf(entry.name, sizeof(entry.name), "%s", e.name.c_str());
+    std::snprintf(entry.root, sizeof(entry.root), "%s", e.mount.c_str());
     entry.type = FsType::Stdio;
     entry.flags = e.flags;
 

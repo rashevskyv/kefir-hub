@@ -28,7 +28,12 @@ struct FsPath {
                 s[i] = str[i];
             }
         } else {
-            std::strcpy(s, str);
+            auto len = std::strlen(str);
+            if (len >= sizeof(s)) {
+                len = sizeof(s) - 1;
+            }
+            std::memmove(s, str, len);
+            s[len] = '\0';
         }
     }
 
@@ -112,12 +117,12 @@ struct FsPath {
     }
 
     constexpr FsPath& operator+=(const FsPath& v) noexcept {
-        std::strcat(*this, v);
+        std::strncat(s, v, sizeof(s) - std::strlen(s) - 1);
         return *this;
     }
 
     constexpr FsPath& operator+=(const char* v) noexcept {
-        std::strcat(*this, v);
+        std::strncat(s, v, sizeof(s) - std::strlen(s) - 1);
         return *this;
     }
 

@@ -128,7 +128,7 @@ void FakeNacpEntryForSystem(Entry& e) {
 
     // fake the nacp entry
     std::snprintf(e.lang.name, sizeof(e.lang.name), "%s | %016lX", GetSystemSaveName(e.system_save_data_id), e.system_save_data_id);
-    std::strcpy(e.lang.author, "Nintendo");
+    std::strcpy(e.lang.author, "Nintendo"); // literal, bounded
 }
 
 auto IsValidGameTitleId(u64 id) -> bool {

@@ -139,7 +139,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
         std::vector<FsDirectoryEntry> dir_entries;
 
         FsDirectoryEntry sd{};
-        std::strcpy(sd.name, "microSD card");
+        std::strcpy(sd.name, "microSD card"); // literal, bounded
         sd.type = FsDirEntryType_Dir;
         dir_entries.push_back(sd);
 
@@ -175,12 +175,12 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
 
         if (App::GetGodModeEnabled()) {
             FsDirectoryEntry nand{};
-            std::strcpy(nand.name, "Image System memory");
+            std::strcpy(nand.name, "Image System memory"); // literal, bounded
             nand.type = FsDirEntryType_Dir;
             dir_entries.push_back(nand);
 
             FsDirectoryEntry sdimag{};
-            std::strcpy(sdimag.name, "Image microSD card");
+            std::strcpy(sdimag.name, "Image microSD card"); // literal, bounded
             sdimag.type = FsDirEntryType_Dir;
             dir_entries.push_back(sdimag);
         }
@@ -192,7 +192,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             }
 
             FsDirectoryEntry net{};
-            std::strcpy(net.name, e.name.c_str());
+            std::snprintf(net.name, sizeof(net.name), "%s", e.name.c_str());
             net.type = FsDirEntryType_Dir;
             dir_entries.push_back(net);
         }
@@ -208,30 +208,30 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             m_entries_index.emplace_back(i);
 
             FileEntry fe{};
-            std::strcpy(fe.name, e.name);
+            std::snprintf(fe.name, sizeof(fe.name), "%s", e.name);
             fe.type = e.type;
 
             if (std::strcmp(e.name, "microSD card") == 0) {
                 fe.virtual_target_entry = FS_ENTRY_DEFAULT;
             } else if (std::strcmp(e.name, "Image System memory") == 0) {
                 fe.virtual_target_entry.type = FsType::ImageNand;
-                std::strcpy(fe.virtual_target_entry.name, "Image System memory");
-                std::strcpy(fe.virtual_target_entry.root, "/");
+                std::strcpy(fe.virtual_target_entry.name, "Image System memory"); // literal, bounded
+                std::strcpy(fe.virtual_target_entry.root, "/"); // literal, bounded
             } else if (std::strcmp(e.name, "Image microSD card") == 0) {
                 fe.virtual_target_entry.type = FsType::ImageSd;
-                std::strcpy(fe.virtual_target_entry.name, "Image microSD card");
-                std::strcpy(fe.virtual_target_entry.root, "/");
+                std::strcpy(fe.virtual_target_entry.name, "Image microSD card"); // literal, bounded
+                std::strcpy(fe.virtual_target_entry.root, "/"); // literal, bounded
             } else if (const auto hdd = std::ranges::find_if(stdio_locations,
                 [&e](const auto& loc) { return loc.name == e.name; }); hdd != stdio_locations.end()) {
                 fe.virtual_target_entry.type = FsType::Stdio;
-                std::strcpy(fe.virtual_target_entry.name, hdd->name.c_str());
-                std::strcpy(fe.virtual_target_entry.root, hdd->mount.c_str());
+                std::snprintf(fe.virtual_target_entry.name, sizeof(fe.virtual_target_entry.name), "%s", hdd->name.c_str());
+                std::snprintf(fe.virtual_target_entry.root, sizeof(fe.virtual_target_entry.root), "%s", hdd->mount.c_str());
                 fe.virtual_target_entry.flags = hdd->flags;
             } else if (const auto mtp = std::ranges::find_if(mtp_locations,
                 [&e](const auto& loc) { return loc.name == e.name; }); mtp != mtp_locations.end()) {
                 fe.virtual_target_entry.type = FsType::Stdio;
-                std::strcpy(fe.virtual_target_entry.name, mtp->name.c_str());
-                std::strcpy(fe.virtual_target_entry.root, mtp->mount.c_str());
+                std::snprintf(fe.virtual_target_entry.name, sizeof(fe.virtual_target_entry.name), "%s", mtp->name.c_str());
+                std::snprintf(fe.virtual_target_entry.root, sizeof(fe.virtual_target_entry.root), "%s", mtp->mount.c_str());
                 fe.virtual_target_entry.flags = mtp->flags;
             } else {
                 for (const auto& loc : network_locations) {
@@ -285,7 +285,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
             }
 
             FileEntry fe{};
-            std::strcpy(fe.name, e.name);
+            std::snprintf(fe.name, sizeof(fe.name), "%s", e.name);
             fe.type = e.type;
             fe.file_size = e.file_size;
             // a mount that opts out of stat never gets a second pass, so the
@@ -305,7 +305,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_has_parent_entry = false;
     if (!m_menu->IsFolderPicker() && m_fs_entry.type != FsType::Root && m_path != m_fs->Root()) {
         FileEntry up{};
-        std::strcpy(up.name, "..");
+        std::strcpy(up.name, ".."); // literal, bounded
         up.type = FsDirEntryType_Dir;
         up.metadata_loaded = true;
         up.file_count = 0;

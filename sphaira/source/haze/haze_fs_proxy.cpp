@@ -153,7 +153,7 @@ struct FsProxy final : FsProxyBase {
                 });
                 if (it == m_virtual_entries.end()) {
                     FsDirectoryEntry entry{};
-                    std::strcpy(entry.name, file_name);
+                    std::snprintf(entry.name, sizeof(entry.name), "%s", file_name);
                     entry.type = FsDirEntryType_File;
                     entry.file_size = size;
                     m_virtual_entries.emplace_back(entry);

@@ -16,8 +16,8 @@ namespace sphaira::title {
 void FakeNacpEntry(ThreadResultData* e) {
     e->status = NacpLoadStatus::Error;
     // fake the nacp entry
-    std::strcpy(e->lang.name, "Corrupted");
-    std::strcpy(e->lang.author, "Corrupted");
+    std::strcpy(e->lang.name, "Corrupted"); // literal, bounded
+    std::strcpy(e->lang.author, "Corrupted"); // literal, bounded
 }
 
 // NACP format v2 (Nintendo FW 20.0+): titles section is zlib-deflated at offset 0x3215.

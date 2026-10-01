@@ -343,7 +343,6 @@ auto InstallApp(ProgressBox* pbox, const Entry& entry) -> Result {
 
             if (!found) {
                 const auto safe_buf = fs::AppendPath("/", old_entry.path);
-                // std::strcat(safe_buf, old_entry.path);
                 if (R_FAILED(fs.DeleteFile(safe_buf))) {
                     log_write("failed to delete: %s\n", safe_buf.s);
                 } else {

@@ -107,7 +107,7 @@ struct FsProxyBase : ::haze::FileSystemProxyImpl {
         if (len && !strncasecmp(path + 1, GetName(), len)) {
             std::snprintf(stripped, sizeof(stripped), "/%s", path + 1 + len);
         } else {
-            std::strcpy(stripped, path);
+            std::snprintf(stripped, sizeof(stripped), "%s", path);
         }
 
         // root the storage at m_base_path when set (e.g. a specific folder):
@@ -116,7 +116,7 @@ struct FsProxyBase : ::haze::FileSystemProxyImpl {
         if (!m_base_path.empty()) {
             std::snprintf(buf, sizeof(buf), "%s%s", m_base_path.c_str(), stripped.s);
         } else {
-            std::strcpy(buf, stripped);
+            std::snprintf(buf, sizeof(buf), "%s", stripped.s);
         }
 
         // log_write("[FixPath] %s -> %s\n", path, buf.s);
@@ -173,7 +173,7 @@ struct FsProxyVfs : FsProxyBase {
         R_UNLESS(it == m_entries.end(), FsError_PathAlreadyExists);
 
         FsDirectoryEntry entry{};
-        std::strcpy(entry.name, file_name);
+        std::snprintf(entry.name, sizeof(entry.name), "%s", file_name);
         entry.type = FsDirEntryType_File;
         entry.file_size = size;
 
@@ -209,7 +209,7 @@ struct FsProxyVfs : FsProxyBase {
         });
         R_UNLESS(new_it == m_entries.end(), FsError_PathAlreadyExists);
 
-        std::strcpy(it->name, file_name_new);
+        std::snprintf(it->name, sizeof(it->name), "%s", file_name_new);
         R_SUCCEED();
     }
     virtual Result OpenFile(const char *path, u32 mode, FsFile *out_file) {
