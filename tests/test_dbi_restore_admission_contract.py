@@ -59,7 +59,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # ==============================================================================
-# 2. Behavioral Fixtures: Exact DBI Marker & Malformed Matrix (A & B)
+# 2. DBI marker model used by the preflight simulation (A/B scenarios: tests/test_dbi_root_marker.cpp)
 # ==============================================================================
 
 def is_dbi_root_marker_model(raw: str, uncompressed_size: int, external_fa: int) -> bool:
@@ -75,64 +75,6 @@ def is_dbi_root_marker_model(raw: str, uncompressed_size: int, external_fa: int)
     if (dos_attrs & 0x10) == 0 and dos_attrs != 0:
         return False
     return True
-
-def normalize_archive_entry_model(raw: str, save_dbi_compat: bool, uncompressed_size: int = 0, external_fa: int = 0) -> tuple[bool, str, bool]:
-    """
-    Models ResolveArchiveEntryName -> (valid, normalized_path, is_marker).
-    Reflects the exact production evaluation order.
-    """
-    if save_dbi_compat and is_dbi_root_marker_model(raw, uncompressed_size, external_fa):
-        return True, "", True
-
-    if raw.startswith("//"):
-        return False, "", False
-
-    norm = raw[1:] if raw.startswith("/") else raw
-
-    # IsSafeArchiveEntry checks
-    if not norm or norm == "." or norm == "..":
-        return False, "", False
-    if "\\" in norm or ":" in norm or "\0" in norm:
-        return False, "", False
-    for c in norm:
-        if ord(c) < 0x20 or ord(c) == 0x7F:
-            return False, "", False
-
-    parts = norm.split("/")
-    for p in parts:
-        if p == "." or p == "..":
-            return False, "", False
-
-    return True, norm, False
-
-def test_dbi_marker_and_malformed_matrix():
-    print("[2] Running DBI marker and malformed matrix fixtures (A & B)...")
-
-    S_IFDIR = 0o040000 << 16
-    S_IFREG = 0o100000 << 16
-    MSDOS_DIR = 0x10
-
-    # A. Exact DBI marker
-    check(is_dbi_root_marker_model("//", 0, S_IFDIR | MSDOS_DIR), "Marker with POSIX dir + DOS dir accepted")
-    check(is_dbi_root_marker_model("//", 0, S_IFDIR), "Marker with POSIX dir accepted")
-    check(is_dbi_root_marker_model("//", 0, MSDOS_DIR), "Marker with DOS dir accepted")
-    check(is_dbi_root_marker_model("//", 0, 0), "Marker with 0 attrs accepted (minizip name-based directory)")
-
-    # B. Malformed matrix
-    malformed_raws = ["//evil", "///", "//../evil", "\\\\evil", "c:/evil", "evil\x01", "foo/../bar", "foo/./bar"]
-    for m in malformed_raws:
-        val, path, is_m = normalize_archive_entry_model(m, True)
-        check(not val, f"Malformed raw entry '{m}' must be rejected")
-
-    # Non-zero data or regular file on //
-    check(not is_dbi_root_marker_model("//", 1, S_IFDIR), "Non-zero uncompressed size rejected")
-    check(not is_dbi_root_marker_model("//", 0, S_IFREG), "Regular-file attribute rejected")
-
-    # One leading slash payload remains accepted
-    val, path, is_m = normalize_archive_entry_model("/savedata.bin", True)
-    check(val and path == "savedata.bin" and not is_m, "One-leading-slash payload accepted")
-
-    print("  -> DBI marker and malformed matrix fixtures PASSED.")
 
 
 # ==============================================================================
@@ -418,7 +360,6 @@ def main():
     print("================================================================================")
     print("Sphaira v0.13.868: Real DBI Restore Admission & Unified Exact Route Contract")
     print("================================================================================")
-    test_dbi_marker_and_malformed_matrix()
     test_metadata_only_vs_payload()
     test_sources_and_priority()
     test_unified_route_and_reinspection()

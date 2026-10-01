@@ -111,7 +111,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       `// LINK: sphaira/source/foo_logic.cpp` lines at the top; the runner adds them to the g++ command.
       Rule: only libnx-free sources may be listed. **Verify:** existing tests still pass; add one test using `LINK:`.
       <!-- blocked: runner supports LINK: (checked with a scratch unit); no libnx-free .cpp exists yet, first LINK test arrives with the first 2.5 seam -->
-- [ ] 2.4 **Convert PURE rows** (one task per row, one commit each, in table order). Each new `tests/test_<name>.cpp`
+- [x] 2.4 **Convert PURE rows** (one task per row, one commit each, in table order). Each new `tests/test_<name>.cpp`
       reproduces the scenarios from the Python model (same inputs/expectations), then the Python file + its fixtures
       are deleted. **Done when:** the py file is gone and the cpp test is in `run.sh` and passes.
 - [ ] 2.5 **Convert SEAM rows** (one task per row). Extract decision logic into a header/libnx-free unit with
