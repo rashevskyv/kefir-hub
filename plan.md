@@ -146,7 +146,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       Write `tests/test_mtp_transfer_state.cpp` from `tests/test_mtp_cancellation_models.py` scenarios
       (Switch-side cancel, PC cancel/URB abort, cancel during idle window, relaunch after late file, exit during
       transfer, double cancel is a no-op). Then delete the py model. `[USER]` re-runs checklist section A.
-- [ ] 3.3 **Thread lifecycle parity.** For each `threadCreate` (19) confirm a matching `threadWaitForExit` +
+- [x] 3.3 **Thread lifecycle parity.** For each `threadCreate` (19) confirm a matching `threadWaitForExit` +
       `threadClose` on every exit path (normal, error, `Exit()` while running). Fix leaks. Start with
       `haze_helper.cpp`, `ftpsrv_helper.cpp`, `log.cpp`. **Done when:** a table thread→create/wait/close sites is in
       the CHANGELOG entry and no path lacks a wait.

@@ -19,6 +19,25 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.933 — thread lifecycle parity
+Audit of all 19 threadCreate sites (+ utils::CreateThread users): create → threadWaitForExit → threadClose on normal, error and Exit paths. Fixed 4 error-path defects: ftpsrv Init and utils::CreateThread leaked the created thread when svcSetThreadCoreMask failed; title_info Init leaked it when threadStart failed; nxlinkExit joined/closed even when not running (stale handle after a failed re-init). Not compiled on host (needs libnx). host tests: pass (--quick) · nro: not built · switch: pending (FTP/NX-Link toggle, title icons)
+| thread (site) | create | wait + close | result |
+|---|---|---|---|
+| download queue + workers (`download.cpp` 28, 86) | `Init` | `Exit` → `ThreadEntry::Close` | ok; start/core-mask failure → Close waits on an unstarted thread (noted, not changed) |
+| forwarder check (`forwarder_auto_install.cpp` 339) | `StartCheck` | `StopCheck` (app exit) | ok |
+| FTP (`ftpsrv_helper.cpp` 277) | `Init` | `Exit` | fixed: core-mask failure path |
+| log flush (`log.cpp` 98) | `ensure_thread_started` | `stop_thread` (log_file_exit / log_nxlink_exit) | ok |
+| NTP (`ntp.cpp` 411) | `Start` | `Stop` | ok |
+| NX-Link (`nxlink.cpp` 511) | `nxlinkInitialize` | `nxlinkExit` | fixed: no join/close unless running |
+| transfer read/write (`threaded_file_transfer_core.cpp` 411, 415) | `TransferInternal` | ON_SCOPE_EXIT | ok; t_write start failure → waits on unstarted thread (noted) |
+| title info (`title_info.cpp` 393) | `Init` (ref-counted) | `Exit` | fixed: threadStart failure path |
+| install session (`dbi_menu.cpp` 93, 123) | `Menu::Menu` | `~Menu` (m_thread_created) | ok |
+| FS metadata (`filebrowser_view.cpp` 81) | `FsView::FsView` | `~FsView` | ok |
+| stream installer (`install_stream_menu_base.cpp` 266) | `OnInstallStart` | `JoinInstallThread` (next start, TeardownWorker) | ok |
+| ProgressBox (`progress_box.cpp` 53) | ctor | dtor | ok; create/start failure → dtor waits on unstarted thread, box never completes (noted) |
+| yati read/decompress/write (`yati.cpp` 129-137) | `InstallNcaInternal` | ON_SCOPE_EXIT after each start | ok |
+| `utils::CreateThread` (`utils/thread.hpp` 12): web workers, mDNS, upload writer, curl push/pull, Async | callers | `WebShareStop`, `StopMdnsResponder`, `finish_writer`, `~PushPullThreadData`, `~Async` | fixed: core-mask failure path |
+| MTP responder | libhaze (`haze::Initialize`) | `haze::Exit` | not a sphaira threadCreate |
 ## v0.13.932 — bounded string copies
 45 strcpy/strcat/sprintf sites: 14 literal-into-large-buffer tagged `// literal, bounded`; 30 replaced (snprintf with sizeof(dst) / NAME_MAX+1 for devoptab dirnext; FsPath From/+= now truncate at FS_MAX_PATH via memmove/strncat; fs.cpp trailing "/" via bounded strncat); 1 dead commented strcat removed. Not compiled on host (needs libnx; host g++ 11 lacks if consteval) — FsPath/hasher/tik-path logic checked in a scratch copy only. host tests: pass (--quick) · nro: not built · switch: pending
 ## v0.13.931 — atomic mDNS address

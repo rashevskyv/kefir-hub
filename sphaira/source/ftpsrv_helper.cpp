@@ -281,6 +281,7 @@ bool Init() {
 
     if (R_FAILED(rc = svcSetThreadCoreMask(g_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE)))) {
         log_write("[FTP] failed to set core mask: 0x%X\n", rc);
+        threadClose(&g_thread);
         return false;
     }
 

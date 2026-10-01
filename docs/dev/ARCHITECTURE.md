@@ -84,7 +84,12 @@ Main thread: `App` loop (input, draw, widget stack). Every other thread and what
 
 Network state (`net.cpp`: `g_mutex`, `g_cache_*`, `g_request_open`) is read from several of these.
 Rule: a global touched by more than one row above is `std::atomic` or used only under that module's mutex.
-Phase 3.1 of `plan.md` tracks the remaining plain globals.
+Every plain `g_*` scalar carries `// main thread only` or `// guarded by <mutex>`; the rest are `std::atomic` (plan 3.1).
+
+Lifecycle (plan 3.3, table in CHANGELOG v0.13.933): every thread above is joined (`threadWaitForExit`) and closed by its
+module's `Exit`/`Stop`/destructor, or by ON_SCOPE_EXIT for the transfer/installer workers. Error paths that create a thread
+and then fail must `threadClose` it (`utils::CreateThread` does this itself). Known gap: if `threadStart` fails in
+`ProgressBox` or `download.cpp`, teardown still waits on the unstarted thread.
 
 ## God nodes
 

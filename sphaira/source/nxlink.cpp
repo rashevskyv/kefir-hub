@@ -524,9 +524,10 @@ bool nxlinkInitialize(NxlinkCallback callback) {
 
 void nxlinkExit() {
     std::scoped_lock lock{g_mutex};
-    if (g_is_running) {
-        g_is_running = false;
+    if (!g_is_running) {
+        return;
     }
+    g_is_running = false;
     g_quit = true;
     threadWaitForExit(&g_thread);
     threadClose(&g_thread);

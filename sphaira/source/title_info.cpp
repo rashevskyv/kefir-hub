@@ -392,7 +392,10 @@ Result Init() {
         g_thread_data = std::make_unique<ThreadData>(true);
         R_TRY(threadCreate(&g_thread, ThreadFunc, g_thread_data.get(), nullptr, 1024*32, THREAD_PRIO, THREAD_CORE));
         svcSetThreadCoreMask(g_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE));
-        R_TRY(threadStart(&g_thread));
+        if (const auto rc = threadStart(&g_thread); R_FAILED(rc)) {
+            threadClose(&g_thread);
+            return rc;
+        }
     }
 
     g_ref_count++;

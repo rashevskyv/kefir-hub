@@ -10,7 +10,10 @@ static inline Result CreateThread(Thread *t, ThreadFunc entry, void *arg, size_t
     u64 core_mask = 0;
     R_TRY(svcGetInfo(&core_mask, InfoType_CoreMask, CUR_PROCESS_HANDLE, 0));
     R_TRY(threadCreate(t, entry, arg, nullptr, stack_sz, prio, -2));
-    R_TRY(svcSetThreadCoreMask(t->handle, -1, core_mask));
+    if (const auto rc = svcSetThreadCoreMask(t->handle, -1, core_mask); R_FAILED(rc)) {
+        threadClose(t);
+        return rc;
+    }
     R_SUCCEED();
 }
 
