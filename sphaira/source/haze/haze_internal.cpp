@@ -30,9 +30,11 @@ InstallSharedData g_shared_data{};
 #endif
 
 std::atomic_bool g_should_exit = false;
-bool g_is_running{false};
+bool g_is_running{false}; // guarded by g_mutex (Init/Exit/IsRunning/IsRecovering)
 Mutex g_mutex{};
 
+// The g_mtp_* state below is shared by the libhaze callback thread, the MTP
+// ProgressBox worker and the main thread; touch it only under g_mtp_ui_mutex.
 Mutex g_mtp_ui_mutex;
 ui::ProgressBox* g_mtp_pbox{nullptr};
 UEvent g_mtp_done_event;

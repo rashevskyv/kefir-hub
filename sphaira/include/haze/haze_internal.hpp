@@ -56,9 +56,10 @@ void on_thing();
 constexpr int THREAD_PRIO = 0x20;
 constexpr int THREAD_CORE = 2;
 extern std::atomic_bool g_should_exit;
-extern bool g_is_running;
+extern bool g_is_running; // guarded by g_mutex
 extern Mutex g_mutex;
 
+// g_mtp_* below: guarded by g_mtp_ui_mutex (libhaze callback, MTP ProgressBox worker, main thread).
 extern Mutex g_mtp_ui_mutex;
 extern ui::ProgressBox* g_mtp_pbox;
 extern UEvent g_mtp_done_event;
