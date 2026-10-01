@@ -11,7 +11,7 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
 
 - [x] 0.0 Audit report, new `AGENTS.md`, `CLAUDE.md`, this plan. Old `plan/task/walkthrough/audit.md` moved
       to `docs/dev/history/` (staged as renames). *(done by the audit session; commit it with 0.1)*
-- [ ] 0.1 **CHANGELOG from history.** Create `docs/dev/CHANGELOG.md`. For every version in
+- [x] 0.1 **CHANGELOG from history.** *(accepted by senior: 638 versions → one line each; only `head -20` is read per session, so size is fine)* Create `docs/dev/CHANGELOG.md`. For every version in
       `git log --oneline | grep -oE 'v0\.13\.[0-9]+' | sort -uV` (and v0.13.871–922 described in
       `docs/dev/history/walkthrough.md`) write one entry: `## v0.13.X — <title>` + ≤2 lines (what shipped;
       verification state: host tests / nro / switch). Newest first. Then `git rm -r docs/dev/history`.
@@ -107,7 +107,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       | test_save_slot_backend_contract.py | save_slot_backend.cpp / save_slot_admission.cpp `CreateSaveDataChecked`, `ExtendSaveDataChecked` | SEAM |
       | test_shutdown_lifecycle_contract.py | app/main/haze_helper/web exit ordering, modelled by MockSystem threads | DROP (hardware-only interleavings; no callable C++ unit) |
       **Done when:** every row has a verdict and the table is in this file.
-- [ ] 2.3 **Host test harness can link `.cpp` units.** Extend `tests/run.sh`: a test file may declare
+- [x] 2.3 **Host test harness can link `.cpp` units.** *(runner verified with a scratch unit; first real LINK user arrives with 2.5)* Extend `tests/run.sh`: a test file may declare
       `// LINK: sphaira/source/foo_logic.cpp` lines at the top; the runner adds them to the g++ command.
       Rule: only libnx-free sources may be listed. **Verify:** existing tests still pass; add one test using `LINK:`.
       <!-- blocked: runner supports LINK: (checked with a scratch unit); no libnx-free .cpp exists yet, first LINK test arrives with the first 2.5 seam -->
@@ -120,6 +120,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 - [ ] 2.6 **Delete `tests/contract_fixtures/`** once nothing imports it. **Verify:** `grep -rl contract_fixtures tests` empty;
       `find tests -name '*.py' | xargs wc -l | tail -1` < 3000 lines.
 - [ ] 2.7 Build checkpoint + commit.
+- [ ] 2.8 **C++ tests that test copies.** Executor found 11 `tests/*.cpp` (incl. `test_save_restore_contract.cpp`) that re-implement project logic locally instead of including the project header, plus `test_save_restore_contract.cpp` and `tools/module_catalog/tests/test_catalog.py` asserting on C++ source text (catalog test currently fails 1/9). List them (`grep -L '#include "' tests/test_*.cpp` is a start; then read each), and for each: include the real header (PURE), extract a seam (SEAM, same rules as 2.5), or delete (DROP). Fix or delete the failing catalog test. **Done when:** every `tests/test_*.cpp` includes at least one project header and no test greps C++ source.
 
 ## Phase 3 — Stability (audit F3, F6, F7)
 
@@ -176,6 +177,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 - [x] 5.2 `tools/dev/check.ps1`: PowerShell wrapper that calls the WSL `tests/run.sh --quick` so it works from a
       Windows shell with one command.
 - [ ] 5.3 Final build checkpoint; `[USER]` full checklist; the user decides on `git push`.
+- [ ] 5.4 **Graphify noise.** `docs/dev/CHANGELOG.md` is indexed as a god node (640 edges) and skews the report. Exclude it (and `docs/dev/history`, `graphify-out`) via graphify's ignore mechanism (`graphify --help`, look for ignore/exclude; else a `.graphifyignore` or `.gitignore`-style config) and re-run `graphify update .`. **Done when:** CHANGELOG is absent from `## God Nodes`.
 
 ---
 
