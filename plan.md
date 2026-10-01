@@ -164,9 +164,9 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       Add the path to AGENTS.md routing line.
 - [x] 4.2 **Wiki parity.** For every feature heading removed from README in 0.5, confirm the wiki page covers it;
       add a `docs/wiki/Developer-Guide.md` that links `ARCHITECTURE.md`, `CHANGELOG.md`, test commands, test-build skill.
-- [ ] 4.3 **Tooling docs.** `tools/i18n-translate/README.md` (how to add a language, run parity test) and
+- [x] 4.3 **Tooling docs.** `tools/i18n-translate/README.md` (how to add a language, run parity test) and
       confirm `tools/module_catalog/README.md` is current.
-- [ ] 4.4 Commit `docs: architecture, developer guide, tooling`.
+- [x] 4.4 Commit `docs: architecture, developer guide, tooling`.
 
 ## Phase 5 — Executor ergonomics (small, do last)
 
