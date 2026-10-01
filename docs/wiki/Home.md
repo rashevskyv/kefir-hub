@@ -15,6 +15,7 @@ Welcome to the **Kefir Hub** documentation wiki. Kefir Hub is a high-performance
 - [Network & Web Services](Network-and-Web-Services.md) — Web File Manager, Ownfoil client, NX-Link, FTP server, and Wi-Fi connection manager
 - [Interface & Navigation](Interface-and-Navigation.md) — Tools hub, layouts, header, image viewer, file browser and network sources
 - [System Utilities & Customization](System-and-Tools.md) — Module Manager with RAM tracking, custom Fan Curves, System Interface Translations, Forwarder Editor, and Theme Creator
+- [Developer Guide](Developer-Guide.md) — Architecture, changelog, build, host tests and tooling
 
 ---
 

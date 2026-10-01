@@ -162,7 +162,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       globals/mutex it shares); god nodes and the rule for each; build/test commands; where i18n keys live and how
       parity is checked. Generate from `graphify explain` + `GRAPH_REPORT.md` God Nodes, then verify against code.
       Add the path to AGENTS.md routing line.
-- [ ] 4.2 **Wiki parity.** For every feature heading removed from README in 0.5, confirm the wiki page covers it;
+- [x] 4.2 **Wiki parity.** For every feature heading removed from README in 0.5, confirm the wiki page covers it;
       add a `docs/wiki/Developer-Guide.md` that links `ARCHITECTURE.md`, `CHANGELOG.md`, test commands, test-build skill.
 - [ ] 4.3 **Tooling docs.** `tools/i18n-translate/README.md` (how to add a language, run parity test) and
       confirm `tools/module_catalog/README.md` is current.

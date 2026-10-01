@@ -14,3 +14,5 @@
   - [Firmware & Downgrades](Firmware-and-Downgrades.md)
   - [System Utilities & Tools](System-and-Tools.md)
   - [Interface & Navigation](Interface-and-Navigation.md)
+- **Development**
+  - [Developer Guide](Developer-Guide.md)

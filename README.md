@@ -61,7 +61,7 @@ Full guides live in the [Documentation Wiki](docs/wiki/Home.md). One line per fe
 - Tools hub, display layouts (Grid, HB Menu, List), status header, image viewer, file browser with SMB/WebDAV/FTP/HTTP sources.
 
 Technical references: [Profile & Playtime Migration Deep Dive](docs/account-transfer.md).
-Developers: [docs/dev/CHANGELOG.md](docs/dev/CHANGELOG.md), [AGENTS.md](AGENTS.md).
+Developers: [Developer Guide](docs/wiki/Developer-Guide.md), [CHANGELOG](docs/dev/CHANGELOG.md), [AGENTS.md](AGENTS.md).
 
 ## Building from source
 
