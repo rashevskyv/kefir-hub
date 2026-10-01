@@ -160,6 +160,14 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       break the tree-sitter parser (macro-heavy). If a trivial rewrite (e.g. a macro used as a type, a missing
       semicolon in a macro) fixes extraction without changing semantics, do it; otherwise note `// graphify: parse stop`
       and move on. **Verify:** `graphify update .` warning count drops.
+- [ ] 3.7 **Follow-ups found by the executor in batch 2** (product code; one commit each, after the v0.13.933 build checkpoint):
+      (a) `FsPath::From(std::string)` and `operator+=(std::string)` copy without a bound — add a bound, truncate with NUL, log on truncation.
+      (b) `nro.cpp:61` `strncpy(..., len-4)`: no destination bound and `len < 4` underflows — guard `len >= 4` and bound by `sizeof(dst)-1`.
+      (c) `fs.cpp:157` `strncat` without a bound.
+      (d) `ProgressBox`, `download`, transfer core: if `threadStart` fails they still `threadWaitForExit` on a never-started thread — check the Result of `threadStart` and skip wait/close on failure.
+      (e) `s_install_thread_created` is a plain `static bool` crossing threads — make it atomic or guard it.
+      (f) `web.cpp`: restart while an old worker is still in `WebShareStop` races on `g_share_threads`; `g_share_port`/`g_share_offline` cross threads unguarded — serialize stop/start under one mutex or an atomic generation counter (no new abstractions).
+      **Done when:** each item has a commit or a one-line `wontfix: reason` here.
 - [ ] 3.6 Build checkpoint + `[USER]` checklist sections A–C again. Commit.
 
 ## Phase 4 — Documentation for humans and models
