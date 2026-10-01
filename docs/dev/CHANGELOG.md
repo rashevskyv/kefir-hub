@@ -14,6 +14,7 @@ Entries without a detail line are commit titles only; their verification state w
 - docs: docs/dev/ARCHITECTURE.md — directory map, 19 Menu structs, thread map, god-node rules, build/test, i18n.
 - docs: wiki Developer-Guide.md (architecture, changelog, build, host tests); README feature headings verified in wiki.
 - docs: tools/i18n-translate/README.md (translate, add a language, parity check); module_catalog README checked (its test_catalog has 1 stale source-text test).
+- test: `tests/run.sh --quick` runs host C++ tests + dead-symbol guard only (~20 s).
 
 ## v0.13.922 — keep MTP active during USB recovery
 Recovery flag set before local cancel; no haze::Exit during controlled USB detach; MTP restarts if enabled but stopped. host tests: py contracts pass · nro: not built · switch: pending

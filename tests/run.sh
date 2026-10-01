@@ -2,9 +2,13 @@
 # Everything here runs on the host -- no Switch, no devkitPro, no build dir.
 # The on-device build is its own check; these cover the parts that can be run.
 #
-#     tests/run.sh
+#     tests/run.sh            everything below
+#     tests/run.sh --quick    host C++ tests + dead-symbol guard only
 set -e
 cd "$(dirname "$0")/.."
+
+quick=0
+[ "${1:-}" = "--quick" ] && quick=1
 
 fail=0
 
@@ -33,6 +37,16 @@ rm -rf "$tmpdir"
 echo
 echo "== dead symbol guard =="
 python3 tests/check_dead_symbols.py || fail=1
+
+if [ "$quick" -eq 1 ]; then
+    echo
+    if [ "$fail" -ne 0 ]; then
+        echo "FAILED (quick)"
+        exit 1
+    fi
+    echo "quick: green"
+    exit 0
+fi
 
 echo
 echo "== libhaze patch shape check =="

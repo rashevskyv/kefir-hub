@@ -170,7 +170,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 
 ## Phase 5 — Executor ergonomics (small, do last)
 
-- [ ] 5.1 `tests/run.sh --quick`: host C++ tests + dead-symbol guard only (< 60 s). Document in AGENTS.md.
+- [x] 5.1 `tests/run.sh --quick`: host C++ tests + dead-symbol guard only (< 60 s). Document in AGENTS.md.
 - [ ] 5.2 `tools/dev/check.ps1`: PowerShell wrapper that calls the WSL `tests/run.sh --quick` so it works from a
       Windows shell with one command.
 - [ ] 5.3 Final build checkpoint; `[USER]` full checklist; the user decides on `git push`.
