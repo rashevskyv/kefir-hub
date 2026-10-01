@@ -11,10 +11,15 @@ fail=0
 echo "== host unit tests =="
 pids=""
 tmpdir="$(mktemp -d)"
+# A test may list extra translation units, one per line, at the top of the file:
+#     // LINK: sphaira/source/foo_logic.cpp
+# Only libnx-free sources may be listed (they are compiled with the host g++).
 for src in tests/test_*.cpp; do
     (
         out="$tmpdir/$(basename "$src" .cpp)"
-        g++ -std=c++20 -Wall -Wextra -Werror -I sphaira/include "$src" -o "$out"
+        links=$(sed -n 's#^// LINK: *\([^[:space:]]*\).*#\1#p' "$src" | tr -d '\r')
+        # shellcheck disable=SC2086
+        g++ -std=c++20 -Wall -Wextra -Werror -I sphaira/include "$src" $links -o "$out"
         "$out"
     ) &
     pids="$pids $!"
