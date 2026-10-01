@@ -65,6 +65,7 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
 Priority order. Each H task: investigate with `graphify explain` + the console log, fix surgically, bump + CHANGELOG,
 and name the checklist item the user must re-run. Console log: `/config/kefir/log.txt` (Settings → Logging on);
 the user drops logs into `scratch/` (git-ignored) as `scratch/<item>.log`. Do not guess when a log is missing — ask.
+Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v934.txt` (console log of the B-section run, 19:15–19:20), `scratch/errors-v934.txt` (append-only error log, all launches), `scratch/kefir-config.ini`, `scratch/dbi.config`. The MTP cancel runs (A3/A4) happened in earlier launches whose `log.txt` was overwritten — those logs are still pending from the user.
 
 - [ ] H1 **MTP drops after a Switch-side cancel (A3, A6, A7 note) — critical.** After B → «+» cancel, the console
       disconnects from MTP; the user must remount or re-plug. Expected: stay connected; if the transport really died,
@@ -85,7 +86,7 @@ the user drops logs into `scratch/` (git-ignored) as `scratch/<item>.log`. Do no
 - [ ] H4 **New ZIP backup not listed in «Бекапи» (B2).** Backup written to `/dumps` (user's dump folder, v0.13.905)
       and visible in the file browser, but the Backups tab does not show it. Check the library scanner roots
       (`source/ui/menus/save/save_locations.cpp`, `save_backup_library*`): does it scan the configured dump folder or a
-      hard-coded path? Is there a cache that is not invalidated after a backup? **Re-run:** B1 → B2.
+      hard-coded path? Is there a cache that is not invalidated after a backup? Facts: the backup in question is `/dumps/12Switch/20261001/01000320000CC000_D_20261001191222_0.zip` (892 bytes, type `_D_` = Device save; the other backups are `_A_`), `kefir-config.ini` has `[saves] show_backups=0` and `default_backup_location=sd||/dumps`. Check whether Device-type backups are filtered out of the Backups tab and what `show_backups` gates. **Re-run:** B1 → B2.
 - [ ] H5 **Restore to an uninstalled game fails (B4).** Dialog shows target as «Corrupted (Account: nin10do)
       [idx:0 rk:0 sp:1 …]» — the title-name fallback for a not-installed title should use the archive metadata name,
       not «Corrupted». After «Так»: «Вибраний архів резервної копії змінився або більше не доступний» — the staged-ZIP
@@ -98,10 +99,11 @@ the user drops logs into `scratch/` (git-ignored) as `scratch/<item>.log`. Do no
 - [ ] H7 **Grouping by origin not visible (B3) + DBI save path from DBI config.** v0.13.882 claims sections by source
       (Kefir Hub/DBI/JKSV/Checkpoint); the user sees none. Check the condition that shows section labels (maybe only
       when ≥2 sources are found) and the DBI/JKSV/Checkpoint roots being scanned. Then read DBI's own config for its
-      saves directory instead of a hard-coded path — ask the user for the path and contents of his DBI config file first.
+      saves directory instead of a hard-coded path — DBI config is `/switch/DBI/dbi.config` (INI-like, `;` comments), key `SavesFolder=sdmc:/switch/DBI/saves/` (copy in `scratch/dbi.config`); fall back to `/switch/DBI/saves` when the file or key is missing. The user's DBI saves dir holds both title-ID-named and game-name-named subfolders.
       **Re-run:** B3.
 - [ ] H8 `[USER decision]` **MTP routing NSP → Install / other → SD (A9) does not work.** The user said this was
       deliberately dropped. Decide: fix it, or delete the routing code (less code, fewer states). Until decided — no work.
+- [ ] H10 **Log spam + suspicious result in save scan.** `scratch/log-saves-session-v934.txt` shows `[SAVE] fsOpenSaveDataInfoReader failed for space 100: 0x…ee202` ~70 times in 5 minutes (twice per UI action), and the result value **increments by 0x00400000 on every call** (0xc22ee202, 0xc26ee202, …) — a Result should not change like that; check whether the logged value is actually a Result or a leaked handle/session id, and whether something is opened and never closed per call. Space 100 = `FsSaveDataSpaceId_ProperSystem`; it needs permissions the app does not have — skip it (or probe once and remember). Also `[SAVE] account uid is not found: 0x0` appears right before the B4/B5 flows — a uid-0 (Device) entry is being resolved as an account; likely the same root as H5/H6.
 - [ ] H9 Build checkpoint after H1–H2, then again after H4–H6; `[USER]` re-runs the listed items; then `[USER]` section C.
 
 ## Phase 2 — Tests that test (see audit F2)
