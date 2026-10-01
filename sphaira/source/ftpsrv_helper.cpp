@@ -141,7 +141,7 @@ constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
 constexpr int THREAD_CORE = 2;
 FtpSrvConfig g_ftpsrv_config = {0};
 std::atomic_bool g_should_exit = false;
-bool g_is_running{false};
+bool g_is_running{false}; // guarded by g_mutex (Init/Exit/IsRunning)
 Thread g_thread;
 Mutex g_mutex{};
 
