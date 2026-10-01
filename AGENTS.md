@@ -55,6 +55,7 @@ Do **not** read `README.md`, `docs/wiki/`, `docs/dev/AUDIT-*.md` or the whole `G
    (`host tests: pass|not run`, `nro: built|not built`, `switch: verified|pending`).
 3. Tick the task's checkbox in `plan.md`; add nothing else there.
 4. Commit: `v0.13.X: <short description>`. Stage code, i18n, tests, CMakeLists, CHANGELOG, plan.md.
+`task.md`, `walkthrough.md`, `audit.md` are retired — never create them; the CHANGELOG line is the walkthrough.
 Docs-only or tooling-only commits: no bump, prefix `docs:` / `chore:`, still note in CHANGELOG under `## unreleased`.
 
 ## Graphify
