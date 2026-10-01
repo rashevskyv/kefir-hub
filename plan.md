@@ -56,9 +56,53 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
 - [ ] 1.3 **Host suite green in WSL.** `tests/run.sh` must pass end to end (all `tests/test_*.cpp`, dead-symbol
       guard, patch shape checks, Python contracts as they still exist). Fix only what is broken; do not delete tests here.
       **Verify:** `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` exits 0.
-- [ ] 1.4 `[USER]` **Hardware baseline.** Flash the 1.1 NRO and run `docs/dev/HARDWARE-CHECKLIST.md` sections A–C.
+- [x] 1.4 `[USER]` **Hardware baseline.** *(done on v0.13.934, 2026-10-01 — results in the checklist; failures became Phase H)* Flash the 1.1 NRO and run `docs/dev/HARDWARE-CHECKLIST.md` sections A–C.
       Record pass/fail per item in the checklist file. This is the baseline for Phase 3.2 — do not start 3.2 before it.
 - [ ] 1.5 Build checkpoint + commit(s) `v0.13.9XX: warning-free first-party build with -Werror`.
+
+## Phase H — bugs found on hardware (baseline v0.13.934, see `docs/dev/HARDWARE-CHECKLIST.md`)
+
+Priority order. Each H task: investigate with `graphify explain` + the console log, fix surgically, bump + CHANGELOG,
+and name the checklist item the user must re-run. Console log: `/config/kefir/log.txt` (Settings → Logging on);
+the user drops logs into `scratch/` (git-ignored) as `scratch/<item>.log`. Do not guess when a log is missing — ask.
+
+- [ ] H1 **MTP drops after a Switch-side cancel (A3, A6, A7 note) — critical.** After B → «+» cancel, the console
+      disconnects from MTP; the user must remount or re-plug. Expected: stay connected; if the transport really died,
+      re-init MTP automatically in device mode (never host mode). This is what v0.13.911–922 tried to fix blind.
+      Investigate: who calls `haze::Exit()` / USB reinit after `::haze::CancelTransfer()` (`graphify explain "Exit"`
+      scoped to `sphaira/source/haze_helper.cpp`, `app_usb.cpp` `IsRecovering`/`pc_enumerated` path, `app_mtp_settings.cpp`),
+      and what `patch_libhaze_cancel.cmake` makes libhaze do on cancel (does it close the USB interface?).
+      Need `scratch/A3.log` from the user. **Re-run:** A3, A6, A7, A5, A11.
+- [ ] H2 **PC-side cancel leaves the ProgressBox decaying to 0 B/s (A4).** Windows closes its dialog; the console box
+      stays until speed hits zero. The box loop (`haze_helper.cpp` StartMtpProgressBox) only exits on `is_aborted`/seq
+      change; a PC cancel (URB abort 0x748C) evidently never reaches `haze_callback` as an abort. Fix: surface the abort
+      from libhaze (callback event) and close the box at once; as a fallback, if `is_active` and no bytes for >1.5 s and
+      the USB transaction is gone, treat as aborted. Need `scratch/A4.log`. **Re-run:** A4, A1, A8.
+- [ ] H3 **Dropping a folder onto microSD via MTP does nothing (A2) — feature the user needs for translation packs.**
+      Four files dropped at once work; a folder does not. MTP sends `SendObjectInfo` with format Association (0x3001)
+      for the directory, then children. Check the device-root/SD route (`haze_fs_proxy.cpp`, `haze_game_proxy.cpp`,
+      v0.13.913 routing) for missing directory creation / parent-handle mapping. **Re-run:** A2 (nested folder, 3+ files).
+- [ ] H4 **New ZIP backup not listed in «Бекапи» (B2).** Backup written to `/dumps` (user's dump folder, v0.13.905)
+      and visible in the file browser, but the Backups tab does not show it. Check the library scanner roots
+      (`source/ui/menus/save/save_locations.cpp`, `save_backup_library*`): does it scan the configured dump folder or a
+      hard-coded path? Is there a cache that is not invalidated after a backup? **Re-run:** B1 → B2.
+- [ ] H5 **Restore to an uninstalled game fails (B4).** Dialog shows target as «Corrupted (Account: nin10do)
+      [idx:0 rk:0 sp:1 …]» — the title-name fallback for a not-installed title should use the archive metadata name,
+      not «Corrupted». After «Так»: «Вибраний архів резервної копії змінився або більше не доступний» — the staged-ZIP
+      revalidation (v0.13.882 blocker 4) rejects a valid archive; likely compares path/size/mtime after staging or after
+      slot creation changed the catalog entry. Find the exact failing comparison and log it. **Re-run:** B4.
+- [ ] H6 **Restore picker: duplicate users, wrong game name, «дублікат цільового слота» (B5).** «Бекапи» → Real Boxing 2
+      → the dialog is titled «Відновити для користувача (Minecraft)» (stale title from another entry), lists «nin10do»
+      twice (same uid, not deduplicated — probably accounts + save owners merged), and selecting one yields the
+      duplicate-slot error. Fix: dedupe targets by uid, take the title from the selected group. **Re-run:** B5.
+- [ ] H7 **Grouping by origin not visible (B3) + DBI save path from DBI config.** v0.13.882 claims sections by source
+      (Kefir Hub/DBI/JKSV/Checkpoint); the user sees none. Check the condition that shows section labels (maybe only
+      when ≥2 sources are found) and the DBI/JKSV/Checkpoint roots being scanned. Then read DBI's own config for its
+      saves directory instead of a hard-coded path — ask the user for the path and contents of his DBI config file first.
+      **Re-run:** B3.
+- [ ] H8 `[USER decision]` **MTP routing NSP → Install / other → SD (A9) does not work.** The user said this was
+      deliberately dropped. Decide: fix it, or delete the routing code (less code, fewer states). Until decided — no work.
+- [ ] H9 Build checkpoint after H1–H2, then again after H4–H6; `[USER]` re-runs the listed items; then `[USER]` section C.
 
 ## Phase 2 — Tests that test (see audit F2)
 
@@ -138,7 +182,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       in `Init/Exit`), `ftpsrv_helper.cpp:144 g_is_running`, `log.cpp g_thread_running/g_thread_stop`,
       `net.cpp g_cache_valid/g_cache_value/g_request_open`, `account_link.cpp g_daemons_terminated`.
       **Done when:** the grep above returns 0 unannotated non-atomic globals. One commit per module.
-- [ ] 3.2 **MTP transfer state machine** (requires 1.4 baseline). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
+- [ ] 3.2 **MTP transfer state machine** (after H1/H2 are fixed and re-verified — refactor the behavior that works, not the one that is broken). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
       `struct MtpTransferState { bool active, aborted, ui_alive; u64 seq, handled_seq; }` plus pure transition
       functions, each returning the actions to perform: `OnFileStart(state, seq)`, `OnFileDone(state)`,
       `OnUserCancel(state) -> {cancel_worker, signal}`, `OnUiClosed(state) -> {relaunch}`, `OnExit(state)`.
