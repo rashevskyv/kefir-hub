@@ -40,7 +40,7 @@ MTP і USB-накопичувачі використовують той сами
 
 Натисніть **L3** ([[Minimize]]), щоб сховати екран під час встановлення, і **−** ([[Screen off]]), щоб вимкнути екран, як у [черзі встановлення](sd-card.md#minimize).
 
-<!-- TODO(verify): on Windows, does the copy dialog finish at the same time as the install, or earlier/later? -->
+У Windows вікно копіювання закривається приблизно тоді, коли завершується встановлення.
 
 ## Скасуйте {#cancel}
 
@@ -50,7 +50,7 @@ MTP і USB-накопичувачі використовують той сами
 
 В обох випадках завершені файли лишаються встановленими, а файл, що встановлювався, видаляється.
 
-<!-- TODO(verify): what error does Windows show when the install is cancelled on the console? -->
+Якщо скасувати на консолі, Windows не покаже помилки: вікно копіювання просто закриється.
 
 ## Що працює інакше через MTP {#differences}
 
@@ -80,4 +80,4 @@ MTP і USB-накопичувачі використовують той сами
 
 **Файли NSZ не встановлюються.** У режимі аплету пам'яті мало; коли ПК під'єднується, консоль про це попереджає. Запустіть Kefir Hub у режимі тайтлу (див. [Підтримувані файли](index.md#formats)).
 
-**Копіювання відхилено з проханням спершу відкрити меню MTP-встановлення.** <!-- TODO(verify): there is no MTP install menu any more; when can this message still appear, and what should the user do? -->
+**Копіювання відхилено з повідомленням «Please launch MTP install menu before trying to install».** Таке буває лише на мить одразу після запуску MTP. Зачекайте кілька секунд або вимкніть і знову ввімкніть MTP, а тоді скопіюйте ще раз.

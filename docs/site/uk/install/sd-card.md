@@ -75,9 +75,9 @@ Kefir Hub може знайти пакети в папці та всіх її п
 ## Користуйтеся консоллю під час встановлення {#minimize}
 
 1. Натисніть **L3** ([[Minimize]]). Черга працює далі, а у правому верхньому куті екрана лишається невеликий значок із ходом встановлення.
-2. Щоб повернути чергу ([[Expand]]), знову натисніть **L3** або торкніться значка.
+2. Щоб повернути чергу ([[Expand]]), знову натисніть **L3** у будь-якому меню або торкніться значка.
 
-<!-- TODO(verify): which menus can be opened while the queue is minimized, and does L3 still restore it from a menu opened on top (the File Browser uses L3 for Split)? -->
+<!-- TODO(verify): the File Browser also uses L3 (Split); which one wins while the queue is minimized there? -->
 
 <!-- shot: install-sd-card-minimized-badge | Main menu with the minimized install badge at the top right -->
 

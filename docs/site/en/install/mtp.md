@@ -40,7 +40,7 @@ The PC does not tell the console how big the file is, so the console cannot show
 
 You can press **L3** ([[Minimize]]) to hide the screen while it installs, and **−** ([[Screen off]]) to turn the screen off, as in the [install queue](sd-card.md#minimize).
 
-<!-- TODO(verify): on Windows, does the copy dialog finish at the same time as the install, or earlier/later? -->
+On Windows the copy window closes at about the time the install finishes.
 
 ## Cancel {#cancel}
 
@@ -50,7 +50,7 @@ You can press **L3** ([[Minimize]]) to hide the screen while it installs, and **
 
 In both cases files that finished stay installed, and the file that was being installed is removed.
 
-<!-- TODO(verify): what error does Windows show when the install is cancelled on the console? -->
+When you cancel on the console, Windows shows no error: the copy window closes.
 
 ## Things that work differently over MTP {#differences}
 
@@ -80,4 +80,4 @@ The other drives on this page (saves, games) are described in [Sharing](../shari
 
 **NSZ files fail.** In Applet Mode memory is limited; when the PC connects, the console warns about it. Start Kefir Hub in Title Mode (see [Supported files](index.md#formats)).
 
-**The copy is refused with "Please launch MTP install menu before trying to install".** <!-- TODO(verify): there is no MTP install menu any more; when can this message still appear, and what should the user do? -->
+**The copy is refused with "Please launch MTP install menu before trying to install".** This can only appear for a moment right after MTP starts. Wait a few seconds, or turn MTP off and on, then copy again.

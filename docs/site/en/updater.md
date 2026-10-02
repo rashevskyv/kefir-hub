@@ -43,8 +43,8 @@ If it is not connected yet, the list loads by itself once it connects. Press **X
 - Custom system themes and system interface translations are **deleted** on every firmware install, update or downgrade. Re-install them afterwards ([Themes](themes.md), [Kefir Settings](kefir-settings.md#translate-the-system-interface)).
 - Do not keep your own files in the `/firmware` folder on the memory card. A downloaded firmware replaces that folder and it is deleted after the install.
 - If the firmware is tagged **Unsupported**, update Kefir first (the Updater offers this).
-- Leave enough free space on the memory card for the firmware archive and its unpacked copy.
-  <!-- TODO(verify): typical firmware archive size, to give a concrete free-space number -->
+- Leave enough free space on the memory card for the firmware archive and its unpacked copy: at least 300 MB
+  free in addition to the archive.
 
 ## Update Kefir
 
@@ -116,20 +116,23 @@ What happens next depends on the [[Downgrade fix]] option (press **+** in the Up
 
 The downgrade fix deletes the system save `8000000000000073` after the install. It runs in TegraExplorer:
 after a downgrade with the fix, the reboot prompt starts TegraExplorer instead of a normal reboot.
-<!-- TODO(verify): what the user sees in TegraExplorer during the downgrade fix, and whether it returns to Kefir by itself -->
+After the reboot the TegraExplorer screen appears, does its work by itself and returns to the firmware.
+The fix is not guaranteed to work.
 
 You can also run the fix on its own: **+** → [[Apply downgrade fix]] → [[Apply]]. The console reboots into TegraExplorer.
 
 ### If the console does not boot after a downgrade
 
-These steps come from the warning box:
+If the firmware still does not boot, Maintenance Mode is the only way:
 
-1. Start the firmware and wait for the Nintendo and Kefir boot logos to pass.
-2. Press and hold both volume buttons (**+** and **−**) until Maintenance Mode opens.
-3. Select "Initialize Console Without Deleting Save Data".
+1. Turn the console on. After the Kefir logo, the trident appears.
+2. From the trident, press and hold both volume buttons (**+** and **−**) and keep holding them. The Atmosphère
+   logo (blue and yellow) appears, then the sloth logo, then Maintenance Mode.
+3. Select "Initialize Console Without Deleting Save Data". The wording depends on the console's system language.
 
-All installed games and system settings are wiped; saves are kept. The console then reports that the
-`Nintendo` folder on the memory card is invalid and offers to delete it. Agree; this does not affect your saves.
+All games are removed and must be installed again. Profiles, most settings and all saves stay. The console then
+reports that the `Nintendo` folder on the memory card is invalid and offers to delete it. Agree; this does not
+affect your saves.
 
 The warning box also has a QR code that opens a manual downgrade guide.
 

@@ -19,28 +19,27 @@ so it shows the real state, not what you last chose.
 
 ## Settings
 
-| Setting | What it does | Shown as On when |
-|---|---|---|
-| [[Overclock status]] | Turns the Kefir overclock files on or off. Off removes the sys-clk module, its overlay and the overclock kips, and keeps a backup of the sys-clk config in `/config/oc_bkp`. On copies them back from `/config/oc`. Reboots. | `/atmosphere/kips/kefir.kip` exists |
-| [[40MB Memory]] | Toggles the 40MB applet memory patch (`force_40mb_applet` in Atmosphère's `system_settings.ini`). Reboots. <!-- TODO(verify): what the 40MB applet patch is for, in user terms --> | the patch is set |
-| [[USB 3.0]] | Force-enables USB 3.0 in Atmosphère. Turning it on warns that it can cause crashes, instability or problems with some USB devices (hold **A** to confirm). The change takes effect only after a reboot; Kefir Hub asks [[Later]] or [[Reboot]]. | the setting is not explicitly off |
-| [[Redirect Emunand saves to SD]] | Experimental. Stores emuMMC saves on the memory card. Shown only when emuMMC is enabled. Turning it off also deletes `/config/redirect.bin`. Reboots. | the setting is on |
-| [[8GB DRAM status]] | Only for consoles with physically soldered 8GB RAM. Reboots into TegraExplorer to apply or remove the 8GB configuration. | `/tegraexplorer/scripts/Remove_8GB-RAM_config.te` exists <!-- TODO(verify): this file looks like it ships with Kefir; does the status really reflect whether the 8GB config is active? --> |
-| [[Translate Interface]] | Opens the system translation tools. See below. | — |
-
-<!-- TODO(verify): Kefir's out-of-the-box value for each switch -->
+| Setting | What it does | Shown as On when | Default |
+|---|---|---|---|
+| [[Overclock status]] | Turns the Kefir overclock files on or off. Off removes the sys-clk module, its overlay and the overclock kips, and keeps a backup of the sys-clk config in `/config/oc_bkp`. On copies them back from `/config/oc`. Reboots. | `/atmosphere/kips/kefir.kip` exists | Off |
+| [[40MB Memory]] | Newer Atmosphère versions leave less memory for applets (homebrew started from the Album) and for LayeredFS game mods. This patch gives that memory back (`force_40mb_applet` in Atmosphère's `system_settings.ini`). Some games do not work properly with it on: if a game misbehaves, turn it off. Reboots. | the patch is set | Off |
+| [[USB 3.0]] | Force-enables USB 3.0 in Atmosphère. Turning it on warns that it can cause crashes, instability or problems with some USB devices (hold **A** to confirm). The change takes effect only after a reboot; Kefir Hub asks [[Later]] or [[Reboot]]. | the setting is not explicitly off | Off |
+| [[Redirect Emunand saves to SD]] | Experimental. Stores emuMMC saves on the memory card. Shown only when emuMMC is enabled. Turning it off also deletes `/config/redirect.bin`. Reboots. | the setting is on | Off |
+| [[8GB DRAM status]] | Only for consoles with physically soldered 8GB RAM. Reboots into TegraExplorer to apply or remove the 8GB configuration. If the console boots with it On, the 8GB RAM is there and works. | `/tegraexplorer/scripts/Remove_8GB-RAM_config.te` exists. A console without 8GB RAM does not boot with it on, so On shows only on a real 8GB console. | Off |
+| [[Translate Interface]] | Opens the system translation tools. See below. | — | — |
 
 !!! warning
     [[Redirect Emunand saves to SD]] changes where emuMMC saves are read from. Saves can look missing until you turn it off again.
 
 !!! warning
     [[8GB DRAM status]] is only for consoles with 8GB RAM soldered on the board. Any other console will not boot correctly.
-    To undo it if the console does not boot: in hekate open **Payloads** → **TegraExplorer** and run `Remove_8GB-RAM_config.te`.
+    To undo it if the console does not boot: in hekate open **Payloads** → **TegraExplorer** and run the script `Remove_8GB-RAM_config.te`.
 
 ## Translate the system interface
 
 [[Translate Interface]] replaces one of the console's own system languages (Home menu, System Settings and other
-system screens) with a community translation. It does not change the Kefir Hub language.
+system screens) with a community translation. If Kefir Hub has the same language, it switches its own interface
+to it as well, without asking, and then reboots.
 
 1. Open [[Kefir Settings]] → [[Translate Interface]].
 2. Select [[Load translations]] and hold **A** to download the list for your firmware. Later the item is called [[Refresh translations]].
@@ -49,7 +48,7 @@ system screens) with a community translation. It does not change the Kefir Hub l
 5. If the translation was made for a different firmware, a warning says some text may be missing or wrong. Choose [[Continue]] or [[Cancel]].
 6. Hold **A** to confirm. The translation is installed and the console reboots.
 7. After the reboot, set the replaced language in the console's System Settings, if it is not already active.
-   <!-- TODO(verify): does the user need to switch the system language manually after install? -->
+   <!-- TODO(verify): does the user need to switch the system language by hand after install? (Kefir Hub's own language switches automatically.) -->
 
 <!-- shot: kefir-settings-translate | Translate Interface list: Refresh translations, Remove installed translation, one translation entry -->
 

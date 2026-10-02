@@ -33,7 +33,7 @@
 1. Виберіть профіль, натисніть **A**, виберіть [[Rename]].
 2. Введіть нове ім'я на клавіатурі й підтвердьте.
 
-<!-- TODO(verify): the keyboard accepts up to 31 characters, but the system stores the name in 32 bytes; what is the safe maximum, especially for Cyrillic names? -->
+Ім'я вміщує до 31 латинського символу або до 15 кириличних літер. Довше ім'я обрізається без попередження.
 
 ## Змінити аватар {#change-the-avatar}
 1. Виберіть профіль, натисніть **A**, виберіть [[Change avatar]].
@@ -61,10 +61,8 @@
 Видалити всі профілі не можна: хоча б один має лишитися.
 
 !!! warning
-    Видалення профілю не можна скасувати. У Kefir Hub немає пункту, який відновлює резервну копію профілю з кроку 3.
+    Видалення профілю не можна скасувати. Відновлення резервної копії профілю з кроку 3 поки що недоступне.
     Збережіть ігрові збереження, які хочете залишити.
-
-<!-- TODO(verify): profile backups in /config/kefir/account_backups can be created (Delete user) and shared (Console Transfer → Share User Backups), but no menu restores them. Is this intended? -->
 
 <!-- shot: users-delete-hold | Hold-to-confirm dialog for deleting one user -->
 
@@ -88,9 +86,10 @@ Kefir Hub може створити таку прив'язку без інтер
 
 <!-- shot: users-link-confirm | Confirmation dialog for Link Nintendo Account with Link and reboot button -->
 
-!!! warning
+!!! danger
+    Користуйтеся цим лише на emuMMC (emuNAND), ізольованому від серверів Nintendo. Прив'язка донора несе ризик
+    бана; вона працює лише тому, що консоль не з'єднується із серверами Nintendo.
     Прив'язка донора — це не ваш Nintendo Account. Ті самі донори вбудовані в кожну копію Kefir Hub.
-    <!-- TODO(verify): what happens with eShop, online play and cloud saves on a donor-linked profile? Is there a ban risk if the console goes online? State it here once confirmed. -->
 
 ## Зняти прив'язку Nintendo Account {#remove-a-nintendo-account-link}
 1. Позначте кнопкою **X** прив'язані профілі, з яких треба зняти прив'язку. Якщо нічого не позначено, прив'язку
@@ -100,7 +99,8 @@ Kefir Hub може створити таку прив'язку без інтер
 
 Знімається будь-яка прив'язка, зокрема справжнього Nintendo Account, а не лише прив'язки донорів.
 
-<!-- TODO(verify): after unlinking a real Nintendo Account, can it be linked again through System Settings as usual? -->
+Якщо ви зняли прив'язку справжнього Nintendo Account на emuMMC, прив'яжіть профіль знову через
+[[Link Nintendo Account]] у Kefir Hub, а не через системні налаштування.
 
 ## Нагадування про прив'язку під час запуску {#the-link-reminder-at-startup}
 Коли Kefir Hub запускається і хоча б один профіль має стан [[Not linked]], програма пропонує їх прив'язати:

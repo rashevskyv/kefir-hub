@@ -75,9 +75,9 @@ If [[Skip if already installed]] is set to [[Prompt]], the queue stops at each i
 ## Keep using the console while it installs {#minimize}
 
 1. Press **L3** ([[Minimize]]). The queue keeps running and a small badge with the progress stays at the top right of the screen.
-2. Press **L3** again or tap the badge to bring the queue back ([[Expand]]).
+2. Press **L3** again from any menu, or tap the badge, to bring the queue back ([[Expand]]).
 
-<!-- TODO(verify): which menus can be opened while the queue is minimized, and does L3 still restore it from a menu opened on top (the File Browser uses L3 for Split)? -->
+<!-- TODO(verify): the File Browser also uses L3 (Split); which one wins while the queue is minimized there? -->
 
 <!-- shot: install-sd-card-minimized-badge | Main menu with the minimized install badge at the top right -->
 

@@ -111,9 +111,12 @@ time left. It shows:
 Shrunk to a badge with **L3**, it shows `--` instead of a percent. When the FTP program has nothing more to send,
 the screen changes to [[Session summary]] (see [When the queue finishes](sd-card.md#summary)).
 
-To cancel, stop the upload in the FTP program. The console shows
+To cancel on the console, press **X** ([[Cancel installation]]) and confirm [[Cancel installation?]].
+**B** does nothing during the install. Files still waiting in the FTP program's queue keep coming, so stop the
+queue in the FTP program too.
+
+To cancel in the FTP program, stop the upload. The console shows
 [[Install cancelled: the source stopped sending data]].
-<!-- TODO(verify): can the FTP install also be cancelled from the console (B on the install screen)? -->
 
 ## Install from an Ownfoil server {#ownfoil}
 

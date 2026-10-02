@@ -17,7 +17,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 <!-- shot: install-index-enable-warning | Ban warning dialog with Back and Enable buttons -->
 
-<!-- TODO(verify): the switch is checked by the File Browser and Ownfoil; PC Install (USB) and MTP/FTP/web installs do not check it in code. Is that intended? -->
+<!-- TODO(verify): plan D.2 removes this switch -->
 
 ## Виберіть спосіб {#methods}
 
@@ -77,7 +77,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 | Параметр | Що робить | Типово |
 |---|---|---|
-| [[Install tickets only]] | Встановлює лише тікети (ліцензії), без даних гри. Знадобиться, коли гра встановлена, а її тікет зник або пошкоджений. | Вимк. |
+| [[Install tickets only]] | Встановлює лише тікети (ліцензії). Вміст, якого бракує, все одно записується. Знадобиться, коли гра встановлена, а її тікет зник або пошкоджений, див. [Відновити тікети](#repair-tickets). | Вимк. |
 | [[Skip base game]] | Не встановлює основну гру. | Вимк. |
 | [[Skip game updates]] | Не встановлює оновлення. | Вимк. |
 | [[Skip DLC]] | Не встановлює DLC. | Вимк. |
@@ -100,6 +100,17 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 У меню [[Options]] черги (натисніть **+** у черзі) є [[Skip if already installed]], [[Install location]] і налаштування резерву, тож їх можна змінити для одного сеансу. Див. [Параметри черги](sd-card.md#queue-options).
 
 Встановлення через MTP, FTP і браузер не використовують [[Skip if already installed]], [[Convert to standard crypto]] і [[Re-encrypt to master key 0]]: вміст завжди встановлюється заново, а гра не конвертується.
+
+### Відновити тікети {#repair-tickets}
+Під час встановлення з карти пам'яті, USB-накопичувача або з ПК через USB параметр [[Skip if already installed]]
+у значенні [[Skip]] пропускає весь пакет уже встановленої гри разом із тікетом. Тому сам лише
+[[Install tickets only]] для встановленої гри нічого не робить.
+
+1. Увімкніть [[Install tickets only]].
+2. Для [[Skip if already installed]] виберіть [[Reinstall]].
+3. Встановіть пакет гри ще раз.
+
+Встановлення через MTP, FTP і браузер завжди імпортують тікети.
 
 ## Проблеми {#problems}
 

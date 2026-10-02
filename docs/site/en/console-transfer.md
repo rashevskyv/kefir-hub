@@ -23,10 +23,10 @@ What is **not** moved:
 
 - Installed games. Console Transfer shares files, not installed titles. Install the games on the new console
   from your files, see [Install games](install/index.md).
-- Game saves themselves. Back them up first in [[Saves]], then move the backups.
-- [[Share User Backups]] shares the profile backups in `/config/kefir/account_backups/`, but Kefir Hub has no
-  menu that restores them on the receiving console.
-  <!-- TODO(verify): is Share User Backups meant to stay, given the per-profile restore was removed from the Users menu? -->
+- Game saves. Copying them with the profiles would take too long. Back them up in [[Saves]] and move the
+  backups with [[Share Save Backups]], see [Move save backups](#move-save-backups).
+- [[Share User Backups]] shares the profile backups in `/config/kefir/account_backups/`. Restoring them on the
+  receiving console is not available yet.
 
 ## Before you start
 - Both consoles are on the same local network (the same Wi-Fi, not a guest network).
@@ -52,12 +52,13 @@ The server stops by itself when the console loses its network or its IP address 
 
 ## Move profiles and play hours
 This copies every profile on the sending console, with the same user IDs, and optionally its play hours.
+Game saves are not copied: move them separately, see [Move save backups](#move-save-backups).
 Because the user IDs stay the same, save backups from the old console restore to the same profiles on the new one.
 
 !!! warning
     The receiving console loses all its own profiles: they are replaced by the ones from the sending console.
     With play hours, its play history is replaced too. Make a SYSTEM backup in hekate first.
-    <!-- TODO(verify): what happens to game saves of profiles that existed only on the receiving console? Tell the reader to back them up first if they become unreachable. -->
+    <!-- TODO(verify): what happens to game saves of profiles that existed only on the receiving console? If they become unreachable, tell the reader to back them up first. -->
 
 On the sending console:
 

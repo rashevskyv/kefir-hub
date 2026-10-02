@@ -23,10 +23,10 @@
 
 - Встановлені ігри. [[Console Transfer]] передає файли, а не встановлені тайтли. Встановіть ігри на новій консолі
   зі своїх файлів, див. [Встановлення ігор](install/index.md).
-- Самі ігрові збереження. Спершу зробіть їхні копії в [[Saves]], а потім переносьте копії.
-- [[Share User Backups]] відкриває доступ до копій профілів у `/config/kefir/account_backups/`, але в Kefir Hub немає
-  пункту, який відновлює їх на консолі-отримувачі.
-  <!-- TODO(verify): is Share User Backups meant to stay, given the per-profile restore was removed from the Users menu? -->
+- Ігрові збереження. Копіювати їх разом із профілями було б надто довго. Зробіть їхні копії в [[Saves]] і
+  перенесіть копії через [[Share Save Backups]], див. [Перенести копії збережень](#move-save-backups).
+- [[Share User Backups]] відкриває доступ до копій профілів у `/config/kefir/account_backups/`. Відновити їх на
+  консолі-отримувачі поки що не можна.
 
 ## Перед початком {#before-you-start}
 - Обидві консолі в одній локальній мережі (та сама Wi-Fi, не гостьова мережа).
@@ -51,12 +51,13 @@
 
 ## Перенести профілі та години {#move-profiles-and-play-hours}
 Копіюються всі профілі консолі-відправника з тими самими ID користувачів і, за бажанням, наіграні години.
+Ігрові збереження не копіюються: перенесіть їх окремо, див. [Перенести копії збережень](#move-save-backups).
 Оскільки ID лишаються ті самі, копії збережень зі старої консолі відновлюються до тих самих профілів на новій.
 
 !!! warning
     Консоль-отримувач втрачає всі свої профілі: їх замінюють профілі з консолі-відправника.
     Якщо відновлювати години, її журнал гри теж замінюється. Спершу зробіть резервну копію SYSTEM у hekate.
-    <!-- TODO(verify): what happens to game saves of profiles that existed only on the receiving console? Tell the reader to back them up first if they become unreachable. -->
+    <!-- TODO(verify): what happens to game saves of profiles that existed only on the receiving console? If they become unreachable, tell the reader to back them up first. -->
 
 На консолі-відправнику:
 

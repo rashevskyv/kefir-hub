@@ -33,7 +33,7 @@ A console holds at most 8 profiles. With 8 profiles, Kefir Hub shows a message a
 1. Select the profile, press **A**, choose [[Rename]].
 2. Type the new name on the keyboard and confirm.
 
-<!-- TODO(verify): the keyboard accepts up to 31 characters, but the system stores the name in 32 bytes; what is the safe maximum, especially for Cyrillic names? -->
+A name holds up to 31 Latin characters or up to 15 Cyrillic letters. A longer name is cut without a warning.
 
 ## Change the avatar
 1. Select the profile, press **A**, choose [[Change avatar]].
@@ -61,10 +61,8 @@ A console holds at most 8 profiles. With 8 profiles, Kefir Hub shows a message a
 You cannot delete every profile: at least one must stay.
 
 !!! warning
-    Deleting a profile cannot be undone. Kefir Hub has no menu item to restore the profile backup made in step 3.
+    Deleting a profile cannot be undone. Restoring the profile backup made in step 3 is not available yet.
     Back up the game saves you want to keep.
-
-<!-- TODO(verify): profile backups in /config/kefir/account_backups can be created (Delete user) and shared (Console Transfer → Share User Backups), but no menu restores them. Is this intended? -->
 
 <!-- shot: users-delete-hold | Hold-to-confirm dialog for deleting one user -->
 
@@ -88,9 +86,10 @@ Steps:
 
 <!-- shot: users-link-confirm | Confirmation dialog for Link Nintendo Account with Link and reboot button -->
 
-!!! warning
+!!! danger
+    Use this only on emuMMC (emuNAND) that is isolated from Nintendo servers. A donor link carries a ban risk;
+    it works only because the console does not talk to Nintendo servers.
     The donor link is not your Nintendo Account. The same donor accounts are built into every copy of Kefir Hub.
-    <!-- TODO(verify): what happens with eShop, online play and cloud saves on a donor-linked profile? Is there a ban risk if the console goes online? State it here once confirmed. -->
 
 ## Remove a Nintendo Account link
 1. Mark the linked profiles to unlink with **X**. With nothing marked, all linked profiles are unlinked.
@@ -99,7 +98,8 @@ Steps:
 
 This removes any link, including a real Nintendo Account, not only donor links.
 
-<!-- TODO(verify): after unlinking a real Nintendo Account, can it be linked again through System Settings as usual? -->
+If you unlinked a real Nintendo Account on emuMMC, link the profile again through [[Link Nintendo Account]] in
+Kefir Hub, not through System Settings.
 
 ## The link reminder at startup
 When Kefir Hub starts and at least one profile is [[Not linked]], it offers to link them:

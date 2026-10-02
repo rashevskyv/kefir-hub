@@ -92,7 +92,10 @@ Create a Home menu theme from any image on the memory card.
 ## Remove a theme
 
 Kefir Hub has no button to remove an installed system theme. Use NXThemes Installer for that.
-<!-- TODO(verify): name of the NXThemes Installer option that restores the default theme -->
+In NXThemes Installer open "Uninstall theme" in the left column:
+
+- "Remove the current theme" brings back the default theme;
+- "Uninstall everything" removes all installed theme parts.
 
 Installing any firmware from the [Updater](updater.md) removes custom themes automatically, because themes made
 for another firmware can stop the console from booting (Atmosphère error 2162-0002). Install the theme again after the update.

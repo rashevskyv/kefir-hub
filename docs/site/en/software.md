@@ -51,7 +51,6 @@ On the app page:
 | **B** | [[Back]] |
 
 [[Visit Website]] is shown only when the app has a website and Kefir Hub runs as a full application (not from the Album).
-<!-- TODO(verify): confirm that App::IsApplication() is false when started from the Album applet, so this wording is right -->
 
 ### Find an app
 
@@ -126,5 +125,4 @@ In [[Extract Options]]:
 
 **"Failed to download application".** The App Store server could not be reached. Check the internet connection and try again.
 
-**An app shows as installed but its files are gone.** For apps without a single launchable file (for example sysmodules), the App Store trusts its own install record. Choose [[Remove]], then [[Install]] again.
-<!-- TODO(verify): does Remove succeed when the files are already gone? -->
+**An app shows as installed but its files are gone.** For apps without a single launchable file (for example sysmodules), the App Store trusts its own install record. Choose [[Remove]] (it works even when the files are already gone), then [[Install]] again.

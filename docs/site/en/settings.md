@@ -42,11 +42,14 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 
 | Option | What it does | Default |
 |---|---|---|
-| [[When to install]] | [[Off]]: never check. [[Silent]]: download in the background, the next start uses the new version. [[Ask]]: show a window when a new version is found, with a choice to update now, later or skip that version. | [[Silent]] |
+| [[When to install]] | [[Off]]: never check. [[Silent]]: download in the background, the next start uses the new version. [[Ask]]: show a window when a new version is found, with [[Later]], [[Skip this update]] and [[Update]]. | [[Silent]] |
 | [[Update now]] | The value shows the state: [[Up to date]], [[Checking...]], a version number when one is waiting, [[Updating]], [[Failed]], or [[Ready — restart]]. Press **A** to download a waiting version, retry a failed one, or restart into a downloaded one. | |
 | [[Skipped version]] | Appears only after you skipped a version. Press **A** to be asked about it again. | |
 
-<!-- TODO(verify): when does the background check run (each start, or periodically) and does Silent need an internet connection at start? -->
+Kefir Hub checks for a new version once per launch, at start. It does not check again when the network connects
+later. With [[Silent]], a new version found at start (with internet) downloads in the background right away. The
+header shows an [[Updating]] bar; no window opens. The new version is used on the next launch, and [[Update now]]
+then shows [[Ready — restart]].
 
 The [[About]] window shows the version, the release notes, and a button to [[Update Kefir Hub]] or [[Restart Kefir Hub]] when a newer version is available or already downloaded. Press **X** ([[Refresh notes]]) if the notes did not load.
 

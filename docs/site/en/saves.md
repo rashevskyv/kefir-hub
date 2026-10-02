@@ -135,7 +135,14 @@ Select several saves (or several backup groups), then choose [[Restore]]. You co
 ## Undo a restore
 The safety copy from `/dumps/recovery/` is an ordinary save ZIP of the save as it was before the restore.
 
-<!-- TODO(verify): how the user restores recovery.zip in practice. The dialog says "open File Browser -> select recovery.zip -> Restore", but the file browser only offers "Restore save data" for .disa/.bin/16-character file names, not for .zip files. Does the recovery folder show up in the Backups tab instead? -->
+It shows up on the [[Backups]] tab as one more archive in the [[Kefir Hub]] group of that game.
+
+1. Open the [[Backups]] tab and press **A** on the game.
+2. Find the safety copy in the [[Kefir Hub]] group. Its date is when the save was last written before the restore,
+   not the time of the restore, so it may not be at the top.
+3. Restore it as any other backup, see [Restore from the Backups tab](#restore-from-the-backups-tab).
+
+<!-- TODO(verify): the recovery restore flow is being finished; recheck these steps. -->
 
 ## Delete a save from the console
 !!! warning

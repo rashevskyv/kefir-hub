@@ -17,7 +17,7 @@ If you start an install from the File Browser while installing is off, Kefir Hub
 
 <!-- shot: install-index-enable-warning | Ban warning dialog with Back and Enable buttons -->
 
-<!-- TODO(verify): the switch is checked by the File Browser and Ownfoil; PC Install (USB) and MTP/FTP/web installs do not check it in code. Is that intended? -->
+<!-- TODO(verify): plan D.2 removes this switch -->
 
 ## Choose a method {#methods}
 
@@ -77,7 +77,7 @@ In the install queue you can also set the target of one package: highlight it an
 
 | Option | What it does | Default |
 |---|---|---|
-| [[Install tickets only]] | Installs only the tickets (licences), no game data. Use it when a game is installed but its ticket is missing or damaged. | Off |
+| [[Install tickets only]] | Installs only the tickets (licences). Content that is missing is still written. Use it when a game is installed but its ticket is missing or damaged, see [Repair tickets](#repair-tickets). | Off |
 | [[Skip base game]] | Does not install the base game. | Off |
 | [[Skip game updates]] | Does not install updates. | Off |
 | [[Skip DLC]] | Does not install DLC. | Off |
@@ -100,6 +100,17 @@ In the install queue you can also set the target of one package: highlight it an
 The queue's [[Options]] menu (press **+** in the queue) has [[Skip if already installed]], [[Install location]] and the reserve settings, so you can change them for one session. See [Queue options](sd-card.md#queue-options).
 
 MTP, FTP and web-browser installs do not use [[Skip if already installed]], [[Convert to standard crypto]] or [[Re-encrypt to master key 0]]: content is always installed again, and the game is not converted.
+
+### Repair tickets {#repair-tickets}
+For installs from the microSD card, a USB drive or a PC over USB, [[Skip if already installed]] set to [[Skip]]
+skips the whole package of a game that is already installed, ticket included. [[Install tickets only]] alone
+therefore does nothing for an installed game.
+
+1. Set [[Install tickets only]] to On.
+2. Set [[Skip if already installed]] to [[Reinstall]].
+3. Install the game's package again.
+
+MTP, FTP and web-browser installs always import the tickets.
 
 ## Problems {#problems}
 

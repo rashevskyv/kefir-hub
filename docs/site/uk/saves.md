@@ -135,7 +135,14 @@
 ## Скасувати відновлення
 Страхувальна копія з `/dumps/recovery/` — це звичайний ZIP збереження в тому стані, який був до відновлення.
 
-<!-- TODO(verify): how the user restores recovery.zip in practice. The dialog says "open File Browser -> select recovery.zip -> Restore", but the file browser only offers "Restore save data" for .disa/.bin/16-character file names, not for .zip files. Does the recovery folder show up in the Backups tab instead? -->
+Вона з'являється на вкладці [[Backups]] як ще один архів у групі [[Kefir Hub]] цієї гри.
+
+1. Відкрийте вкладку [[Backups]] і натисніть **A** на грі.
+2. Знайдіть страхувальну копію в групі [[Kefir Hub]]. Її дата — це час, коли збереження востаннє записувалося
+   перед відновленням, а не час самого відновлення, тож вона може бути не вгорі.
+3. Відновіть її, як будь-яку іншу копію, див. [Відновити з вкладки копій](#restore-from-the-backups-tab).
+
+<!-- TODO(verify): the recovery restore flow is being finished; recheck these steps. -->
 
 ## Видалити збереження з консолі
 !!! warning

@@ -13,8 +13,7 @@ Each game's cheats are a text file named after the game's **Build ID** — a cod
 
 A cheat file only works for the exact game version it was made for. After a game update, the old file no longer matches; see [Fix cheats after a game update](#fix-cheats-after-a-game-update).
 
-Kefir Hub installs, shows and deletes cheat files. It does not turn single cheats on or off: do that in the game with a cheat overlay.
-<!-- TODO(verify): which overlay Kefir ships for toggling cheats in game (EdiZon / Breeze / other), so the page can name it. -->
+Kefir Hub installs, shows and deletes cheat files. It does not turn single cheats on or off: do that in the game with the EdiZon overlay in the Tesla menu. Kefir opens the Tesla menu with **L** + **R3** + **D-pad** down.
 
 ## Install a complete cheat pack
 1. Choose [[Download Kefir Cheats]] (cheats for many games) or [[Download 60FPS/GFX Cheats]] (frame rate, resolution and graphics cheats).

@@ -92,7 +92,10 @@ Kefir Hub завантажує файли тем (`.nxtheme`). Застосов�
 ## Видаліть тему
 
 У Kefir Hub немає кнопки для видалення встановленої системної теми. Скористайтеся для цього NXThemes Installer.
-<!-- TODO(verify): name of the NXThemes Installer option that restores the default theme -->
+У NXThemes Installer відкрийте в лівій колонці «Uninstall theme»:
+
+- «Remove the current theme» повертає стандартну тему;
+- «Uninstall everything» видаляє все встановлене.
 
 Будь-яке встановлення прошивки через [Оновлення](updater.md) автоматично видаляє власні теми, бо теми для
 іншої прошивки можуть завадити консолі завантажитися (помилка Atmosphère 2162-0002). Після оновлення встановіть тему знову.
