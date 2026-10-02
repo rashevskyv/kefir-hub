@@ -207,89 +207,89 @@ Y shows the pack's screenshots, R and L turn pages.
 Press A to download a pack, then install it the same way.
 
 53
-00:02:59,067 --> 00:03:04,467
-Pressing the right stick, R3, stars the pack: it then appears in the Themes menu.
+00:02:59,067 --> 00:03:04,400
+Pressing the left stick, L3, stars the pack: it then appears in the Themes menu.
 
 54
-00:03:04,467 --> 00:03:07,333
+00:03:04,400 --> 00:03:07,267
 You can make your own theme from a picture.
 
 55
-00:03:07,333 --> 00:03:12,533
+00:03:07,267 --> 00:03:12,467
 Open File Browser, select an image, press Plus and choose Create Switch Theme.
 
 56
-00:03:12,533 --> 00:03:14,533
+00:03:12,467 --> 00:03:14,467
 Frame the picture.
 
 57
-00:03:14,533 --> 00:03:20,000
+00:03:14,467 --> 00:03:19,933
 The D-pad or a stick moves it, holding ZL with up and down zooms, and A resets the
 
 58
-00:03:20,000 --> 00:03:22,000
+00:03:19,933 --> 00:03:21,933
 view.
 
 59
-00:03:22,000 --> 00:03:26,533
+00:03:21,933 --> 00:03:26,467
 L picks which screen the theme is for; the default is the HOME Menu.
 
 60
-00:03:26,533 --> 00:03:28,533
+00:03:26,467 --> 00:03:28,467
 X sets the name, Y the author.
 
 61
-00:03:28,533 --> 00:03:30,533
+00:03:28,467 --> 00:03:30,467
 Press Plus, Generate Theme.
 
 62
-00:03:30,533 --> 00:03:33,200
+00:03:30,467 --> 00:03:33,133
 The theme is saved to the themes folder.
 
 63
-00:03:33,200 --> 00:03:35,467
+00:03:33,133 --> 00:03:35,400
 On the Theme Created Successfully!
 
 64
-00:03:35,467 --> 00:03:40,467
+00:03:35,400 --> 00:03:40,400
 screen, hold A for three seconds to install it, or Y to install and reboot.
 
 65
-00:03:40,467 --> 00:03:46,000
+00:03:40,400 --> 00:03:45,933
 Remove an installed theme in NXThemes Installer: in the left column open "Uninstall
 
 66
-00:03:46,000 --> 00:03:48,000
+00:03:45,933 --> 00:03:47,933
 theme".
 
 67
-00:03:48,000 --> 00:03:53,600
+00:03:47,933 --> 00:03:53,533
 "Remove the current theme" brings back the default theme, and "Uninstall everything"
 
 68
-00:03:53,600 --> 00:03:55,600
+00:03:53,533 --> 00:03:55,533
 removes it all.
 
 69
-00:03:55,600 --> 00:04:00,867
+00:03:55,533 --> 00:04:00,800
 And remember: every firmware install removes custom themes, because a theme for
 
 70
-00:04:00,867 --> 00:04:04,267
+00:04:00,800 --> 00:04:04,200
 another firmware can stop the console from booting.
 
 71
-00:04:04,267 --> 00:04:07,000
+00:04:04,200 --> 00:04:06,933
 Install the theme again after the update.
 
 72
-00:04:07,000 --> 00:04:12,067
+00:04:06,933 --> 00:04:12,000
 The look of Kefir Hub itself is set separately: Settings, Appearance, Theme.
 
 73
-00:04:12,067 --> 00:04:15,067
+00:04:12,000 --> 00:04:15,000
 This does not change the console's HOME Menu.
 
 74
-00:04:15,067 --> 00:04:19,267
+00:04:15,000 --> 00:04:19,200
 Read more on the Cheats and Themes pages of the Kefir Hub docs.

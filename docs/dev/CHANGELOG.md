@@ -23,6 +23,10 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.964 — Star/Unstar on L3
+- Homebrew, Themes and Themezer: Star/Unstar moves from R3 to L3, so it no longer overlaps with R3 (expand a minimized task). Docs EN+UK, wiki and video scripts 08/09 updated.
+- host tests: pass; nro: not built (built with v0.13.965); switch: pending.
+
 ## v0.13.963 — Batch save restore: one account question, one confirmation
 - Restoring several selected saves asks "Restore for user" once for the whole batch (new item "Choose for each save" keeps the per-save question; the batch asks per save by itself when two selected backups would land in the same slot of one account). `CanShareAccount` in `save_batch_util.hpp`, host-tested.
 - The paged confirmation (Item 1 of N, Next/Back/Restore) is replaced by one dialog that lists every save and its target (first 6, then "+N"). Three unused `PromptBatchRestoreTargets` overloads removed. New string translated in all 26 locales by hand (the translation proxy was down); docs EN+UK updated.

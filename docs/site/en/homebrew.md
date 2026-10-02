@@ -37,7 +37,7 @@ When you exit the app, the Homebrew Menu (`/hbmenu.nro`) opens again.
 Starred apps show a ★ before the name and stay at the top of the list.
 Stars work only while [[Sort]] is one of the `(Star)` variants.
 
-- Press **R3** on an app to [[Star]] or [[Unstar]] it.
+- Press **L3** on an app to [[Star]] or [[Unstar]] it.
 - Or press **+** and choose [[Star]] or [[Unstar]]. This also works for several selected apps.
 
 ## Select several apps

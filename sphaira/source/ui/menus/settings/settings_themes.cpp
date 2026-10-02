@@ -162,7 +162,7 @@ void ThemesMenu::Draw(NVGcontext* vg, Theme* theme) {
 void ThemesMenu::SetIndex(s64 index) {
     if (m_items.empty()) {
         m_index = 0;
-        RemoveAction(Button::R3);
+        RemoveAction(Button::L3);
         return;
     }
     m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
@@ -174,7 +174,7 @@ void ThemesMenu::SetIndex(s64 index) {
 
     const auto& item = m_items[m_index];
     if (item.kind == SettingsItemKind::Favorite) {
-        SetAction(Button::R3, Action{"Unstar"_i18n, [this, id = item.id](){
+        SetAction(Button::L3, Action{"Unstar"_i18n, [this, id = item.id](){
             ini_puts("themezer_favorites", id.c_str(), nullptr, App::CONFIG_PATH);
             ini_puts("themezer_favorites", (id + "_name").c_str(), nullptr, App::CONFIG_PATH);
             ini_puts("themezer_favorites", (id + "_creator").c_str(), nullptr, App::CONFIG_PATH);
@@ -185,7 +185,7 @@ void ThemesMenu::SetIndex(s64 index) {
             SetIndex(m_index);
         }});
     } else {
-        RemoveAction(Button::R3);
+        RemoveAction(Button::L3);
     }
 }
 

@@ -205,7 +205,7 @@ void Menu::SetIndex(s64 index) {
     if (m_entries_current.empty()) {
         m_index = 0;
         m_list->SetYoff(0);
-        RemoveAction(Button::R3);
+        RemoveAction(Button::L3);
         SetTitleSubHeading("");
         this->SetSubHeading("0 / 0");
         return;
@@ -219,20 +219,20 @@ void Menu::SetIndex(s64 index) {
     if (IsStarEnabled() && !IsKefirUpdaterStub(GetEntry())) {
         const auto star_path = GenerateStarPath(GetEntry().path);
         if (fs::FsNativeSd().FileExists(star_path)) {
-            SetAction(Button::R3, Action{"Unstar"_i18n, [this](){
+            SetAction(Button::L3, Action{"Unstar"_i18n, [this](){
                 fs::FsNativeSd().DeleteFile(GenerateStarPath(GetEntry().path));
                 App::Notify("Unstarred "_i18n + GetEntry().GetName());
                 SortAndFindLastFile();
             }});
         } else {
-            SetAction(Button::R3, Action{"Star"_i18n, [this](){
+            SetAction(Button::L3, Action{"Star"_i18n, [this](){
                 fs::FsNativeSd().CreateFile(GenerateStarPath(GetEntry().path));
                 App::Notify("Starred "_i18n + GetEntry().GetName());
                 SortAndFindLastFile();
             }});
         }
     } else {
-        RemoveAction(Button::R3);
+        RemoveAction(Button::L3);
     }
 
     // TimeCalendarTime caltime;

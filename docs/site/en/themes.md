@@ -46,7 +46,7 @@ Kefir Hub downloads theme files (`.nxtheme`). The NXThemes Installer app applies
 | **Y** | [[Screenshot]] |
 | **R** / **L** | [[Next Page]] / [[Previous Page]] |
 | **ZR** / **ZL** | Jump 10 pages forward / back |
-| **R3** | [[Star]] / [[Unstar]] — add the pack to favorites or remove it |
+| **L3** | [[Star]] / [[Unstar]] — add the pack to favorites or remove it |
 | **+** | [[Options]] |
 | **B** | [[Back]] |
 
@@ -66,8 +66,8 @@ Press **+** ([[Themezer Options]]).
 
 ### Favorites
 
-Press **R3** ([[Star]]) on a Themezer pack. It then appears in the [[Themes]] menu, so you can download it again without searching.
-To remove it, select it in the [[Themes]] menu and press **R3** ([[Unstar]]).
+Press **L3** ([[Star]]) on a Themezer pack. It then appears in the [[Themes]] menu, so you can download it again without searching.
+To remove it, select it in the [[Themes]] menu and press **L3** ([[Unstar]]).
 
 ## Make a theme from a picture
 

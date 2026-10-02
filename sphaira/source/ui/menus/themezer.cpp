@@ -54,19 +54,19 @@ void Menu::ToggleFavorite() {
 
 void Menu::UpdateFavoriteAction() {
     if (m_pages.empty() || m_page_index < 0 || m_page_index >= static_cast<s64>(m_pages.size())) {
-        RemoveAction(Button::R3);
+        RemoveAction(Button::L3);
         return;
     }
     const auto& page = m_pages[m_page_index];
     if (page.m_ready != PageLoadState::Done || m_index < 0 || m_index >= static_cast<s64>(page.m_packList.size())) {
-        RemoveAction(Button::R3);
+        RemoveAction(Button::L3);
         return;
     }
     const auto& entry = page.m_packList[m_index];
     if (IsFavorite(entry.id)) {
-        SetAction(Button::R3, Action{"Unstar"_i18n, [this](){ ToggleFavorite(); }});
+        SetAction(Button::L3, Action{"Unstar"_i18n, [this](){ ToggleFavorite(); }});
     } else {
-        SetAction(Button::R3, Action{"Star"_i18n, [this](){ ToggleFavorite(); }});
+        SetAction(Button::L3, Action{"Star"_i18n, [this](){ ToggleFavorite(); }});
     }
 }
 

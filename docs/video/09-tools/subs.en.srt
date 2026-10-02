@@ -107,257 +107,257 @@ It lists every app in the switch folder.
 A launches the selected app.
 
 28
-00:01:27,267 --> 00:01:32,000
-The right stick, R3, stars an app: it gets a star and stays at the top.
+00:01:27,267 --> 00:01:31,933
+The left stick, L3, stars an app: it gets a star and stays at the top.
 
 29
-00:01:32,000 --> 00:01:35,133
+00:01:31,933 --> 00:01:35,067
 Plus opens the options: sort, order and layout.
 
 30
-00:01:35,133 --> 00:01:39,400
+00:01:35,067 --> 00:01:39,333
 Install Forwarder adds the app to the HOME Menu as its own icon.
 
 31
-00:01:39,400 --> 00:01:45,000
+00:01:39,333 --> 00:01:44,933
 Careful: a forwarder is installed like a game, and installing unofficial content can
 
 32
-00:01:45,000 --> 00:01:47,867
+00:01:44,933 --> 00:01:47,800
 get the console banned when it goes online.
 
 33
-00:01:47,867 --> 00:01:50,733
+00:01:47,800 --> 00:01:50,667
 New apps are easiest to get from the store.
 
 34
-00:01:50,733 --> 00:01:54,467
+00:01:50,667 --> 00:01:54,400
 On the Tools tab open Software, then Homebrew App Store.
 
 35
-00:01:54,467 --> 00:02:00,000
+00:01:54,400 --> 00:01:59,933
 The icon on a tile shows whether the app is installed and whether an update exists.
 
 36
-00:02:00,000 --> 00:02:02,000
+00:01:59,933 --> 00:02:01,933
 Select an app and press A.
 
 37
-00:02:02,000 --> 00:02:06,133
+00:02:01,933 --> 00:02:06,067
 On its page choose Install, or Update if a new version is out.
 
 38
-00:02:06,133 --> 00:02:10,867
+00:02:06,067 --> 00:02:10,800
 Remove deletes its files, and works even if the files are already gone.
 
 39
-00:02:10,867 --> 00:02:14,800
+00:02:10,800 --> 00:02:14,733
 Visit Website is hidden when Kefir Hub runs from the Album.
 
 40
-00:02:14,800 --> 00:02:19,133
+00:02:14,733 --> 00:02:19,067
 To find an app by name, press Plus in the list and choose Search.
 
 41
-00:02:19,133 --> 00:02:21,133
+00:02:19,067 --> 00:02:21,067
 Next, sysmodules.
 
 42
-00:02:21,133 --> 00:02:23,133
+00:02:21,067 --> 00:02:23,067
 Open Tools, Module Manager.
 
 43
-00:02:23,133 --> 00:02:27,267
+00:02:23,067 --> 00:02:27,200
 A green dot means the module runs now, grey means it does not.
 
 44
-00:02:27,267 --> 00:02:30,867
+00:02:27,200 --> 00:02:30,800
 On the right you see whether it starts after a reboot.
 
 45
-00:02:30,867 --> 00:02:33,400
+00:02:30,800 --> 00:02:33,333
 A starts or stops the selected module.
 
 46
-00:02:33,400 --> 00:02:37,333
+00:02:33,333 --> 00:02:37,267
 Y turns autostart on or off; this applies on the next boot.
 
 47
-00:02:37,333 --> 00:02:42,467
+00:02:37,267 --> 00:02:42,400
 Careful: stopping a module the system or a game depends on can make it crash.
 
 48
-00:02:42,467 --> 00:02:44,467
+00:02:42,400 --> 00:02:44,400
 Then reboot the console.
 
 49
-00:02:44,467 --> 00:02:47,800
+00:02:44,400 --> 00:02:47,733
 Fan curve sets the fan speed for each temperature.
 
 50
-00:02:47,800 --> 00:02:52,133
+00:02:47,733 --> 00:02:52,067
 The first time, Kefir Hub offers to install the Kefir fan module.
 
 51
-00:02:52,133 --> 00:02:55,867
+00:02:52,067 --> 00:02:55,800
 Choose Install: the curve then applies without a reboot.
 
 52
-00:02:55,867 --> 00:02:59,400
+00:02:55,800 --> 00:02:59,333
 X switches between the handheld and the docked curve.
 
 53
-00:02:59,400 --> 00:03:04,533
+00:02:59,333 --> 00:03:04,467
 Select a point, press A, and change the temperature and speed with the D-pad.
 
 54
-00:03:04,533 --> 00:03:06,600
+00:03:04,467 --> 00:03:06,533
 Plus, Apply, saves both curves.
 
 55
-00:03:06,600 --> 00:03:09,867
+00:03:06,533 --> 00:03:09,800
 ZL loads a preset, for example Quiet or Balanced.
 
 56
-00:03:09,867 --> 00:03:15,467
+00:03:09,800 --> 00:03:15,400
 Be careful with Fan off: the fan does not spin at any temperature, so watch the heat
 
 57
-00:03:15,467 --> 00:03:17,467
+00:03:15,400 --> 00:03:17,400
 while you play.
 
 58
-00:03:17,467 --> 00:03:20,533
+00:03:17,400 --> 00:03:20,467
 Wi-Fi lists the networks saved on the console.
 
 59
-00:03:20,533 --> 00:03:22,600
+00:03:20,467 --> 00:03:22,533
 A connects to the selected one.
 
 60
-00:03:22,600 --> 00:03:26,333
+00:03:22,533 --> 00:03:26,267
 New networks are added in the console's System Settings.
 
 61
-00:03:26,333 --> 00:03:31,533
+00:03:26,267 --> 00:03:31,467
 Plus on a network opens its actions: Change password, Delete network and more.
 
 62
-00:03:31,533 --> 00:03:37,133
+00:03:31,467 --> 00:03:37,067
 View password & details shows the password in plain text, so do not open it in front
 
 63
-00:03:37,133 --> 00:03:39,133
+00:03:37,067 --> 00:03:39,067
 of others.
 
 64
-00:03:39,133 --> 00:03:41,867
+00:03:39,067 --> 00:03:41,800
 Finally, Kefir Settings on the Tools tab.
 
 65
-00:03:41,867 --> 00:03:46,800
+00:03:41,800 --> 00:03:46,733
 These are switches for Kefir and Atmosphère that change files on the card.
 
 66
-00:03:46,800 --> 00:03:50,200
+00:03:46,733 --> 00:03:50,133
 The value on the right always shows the real state.
 
 67
-00:03:50,200 --> 00:03:52,533
+00:03:50,133 --> 00:03:52,467
 Out of the box every switch is Off.
 
 68
-00:03:52,533 --> 00:03:57,667
+00:03:52,467 --> 00:03:57,600
 40MB Memory: newer Atmosphère versions leave less memory for applets, that is
 
 69
-00:03:57,667 --> 00:04:01,400
+00:03:57,600 --> 00:04:01,333
 homebrew started from the Album, and for LayeredFS mods.
 
 70
-00:04:01,400 --> 00:04:03,667
+00:04:01,333 --> 00:04:03,600
 This patch gives that memory back.
 
 71
-00:04:03,667 --> 00:04:08,667
+00:04:03,600 --> 00:04:08,600
 Some games do not work properly with it: if a game misbehaves, turn it off.
 
 72
-00:04:08,667 --> 00:04:10,667
+00:04:08,600 --> 00:04:10,600
 Select a setting and press A.
 
 73
-00:04:10,667 --> 00:04:12,667
+00:04:10,600 --> 00:04:12,600
 The box explains what happens.
 
 74
-00:04:12,667 --> 00:04:16,000
+00:04:12,600 --> 00:04:15,933
 To confirm, hold A until the bar fills; B cancels.
 
 75
-00:04:16,000 --> 00:04:20,667
+00:04:15,933 --> 00:04:20,600
 Most settings reboot the console right away, while USB 3.0 asks first.
 
 76
-00:04:20,667 --> 00:04:26,067
+00:04:20,600 --> 00:04:26,000
 Careful: 8GB DRAM status is only for consoles with 8GB of RAM physically soldered
 
 77
-00:04:26,067 --> 00:04:28,067
+00:04:26,000 --> 00:04:28,000
 on.
 
 78
-00:04:28,067 --> 00:04:30,467
+00:04:28,000 --> 00:04:30,400
 A console without 8GB will not boot.
 
 79
-00:04:30,467 --> 00:04:34,667
+00:04:30,400 --> 00:04:34,600
 To undo it, in hekate open Payloads, TegraExplorer, and run the
 
 80
-00:04:34,667 --> 00:04:36,667
+00:04:34,600 --> 00:04:36,600
 Remove_8GB-RAM_config script.
 
 81
-00:04:36,667 --> 00:04:41,933
+00:04:36,600 --> 00:04:41,867
 So the status reads On only on a real 8GB console: if it booted with it on, the
 
 82
-00:04:41,933 --> 00:04:43,933
+00:04:41,867 --> 00:04:43,867
 memory is there and works.
 
 83
-00:04:43,933 --> 00:04:49,467
+00:04:43,867 --> 00:04:49,400
 Translate Interface replaces one of the console's system languages with a community
 
 84
-00:04:49,467 --> 00:04:51,467
+00:04:49,400 --> 00:04:51,400
 translation.
 
 85
-00:04:51,467 --> 00:04:56,133
+00:04:51,400 --> 00:04:56,067
 Choose Load translations and hold A to get the list for your firmware.
 
 86
-00:04:56,133 --> 00:05:00,333
+00:04:56,067 --> 00:05:00,267
 Select a translation and the language it replaces, then hold A.
 
 87
-00:05:00,333 --> 00:05:05,933
+00:05:00,267 --> 00:05:05,867
 Kefir Hub switches its own language to the matching one by itself, if it has it, and
 
 88
-00:05:05,933 --> 00:05:07,933
+00:05:05,867 --> 00:05:07,867
 the console reboots.
 
 89
-00:05:07,933 --> 00:05:13,200
+00:05:07,867 --> 00:05:13,133
 Every firmware install removes the translation, so install it again afterwards.
 
 90
-00:05:13,200 --> 00:05:18,667
+00:05:13,133 --> 00:05:18,600
 Read more on the File Browser, Homebrew, Software, System tools and Kefir Settings
 
 91
-00:05:18,667 --> 00:05:20,667
+00:05:18,600 --> 00:05:20,600
 pages of the Kefir Hub docs.
