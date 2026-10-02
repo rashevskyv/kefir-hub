@@ -118,6 +118,10 @@ None of it has been verified on hardware, and line numbers are as of v0.13.936. 
   without asking. Is that the intended default?
 - **"Tickets only" with "Skip if already installed = Skip".** Is the ticket still installed? The site's troubleshooting page relies on it.
 
+## Found while taking screenshots (Eden, v0.13.954)
+- The File Browser screen title is "FileBrowser" (no space), while the Tools tile says "File Browser". The App Store screen title is "AppStore".
+- The grey Install entries in File Options still name the old path "Menu (Y) -> Advanced -> Install options -> Enable" (INSTALL_DEPENDS_STR, see above).
+
 ## Dead code (unreachable from any menu)
 - Per-profile backup/restore and the user backup library: `users_profile.cpp:78` ConfirmBackup,
   `users_restore.cpp:353`, `users_manage.cpp:122`, `users_restore_remote*`, `users_manage_backups/ops`.
