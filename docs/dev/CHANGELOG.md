@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.949 — serialize web server stop/start (3.7f)
+web.cpp: StartShareServer (main thread) could run while WebShareStop (the server's ProgressBox worker) was still joining workers — both wrote g_share_threads/count/port. Start and stop now take one lifecycle mutex; `g_share_port` and `g_share_offline` are atomics. Closes plan 3.7 (a–f). host tests: pass (--quick) · nro: not built · switch: pending (C4; stop the web server and start it again at once)
 ## v0.13.948 — atomic install-thread flag (3.7e)
 install_stream_menu_base.cpp: `s_install_thread_created` is written by the transport thread that starts the background install worker and read on teardown from another thread; it is now std::atomic<bool>. host tests: pass (--quick) · nro: not built · switch: pending (A1, A6)
 ## v0.13.947 — no join on a thread that never started (3.7d)

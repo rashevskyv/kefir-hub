@@ -59,7 +59,10 @@ std::atomic<size_t> g_share_thread_count{};
 std::atomic_bool g_share_running{false};
 std::atomic_bool g_share_self_test{false};
 std::atomic<Socket> g_share_socket{-1};
-u16 g_share_port{};
+std::atomic<u16> g_share_port{};
+// StartShareServer() and WebShareStop() run on different threads (main / the server's
+// ProgressBox worker): a restart must not touch g_share_threads while a stop still joins them.
+Mutex g_share_lifecycle_mutex{};
 // the ip the listener was bound under, and the applet-hook resume counter it
 // was last checked against. see TickShareNetwork().
 std::atomic<u32> g_share_ip{};
@@ -133,7 +136,7 @@ auto CreateShareListener(u16 port) -> Socket {
 // point here and a fresh bind() is enough. A different address (or none at all)
 // means they do not, and there is nothing worth keeping alive.
 TimeStamp g_share_net_ts{};
-unsigned g_share_offline{};
+std::atomic<unsigned> g_share_offline{};
 
 auto TickShareNetwork() -> bool {
     if (g_share_net_ts.GetMs() < 1000) {
@@ -149,7 +152,7 @@ auto TickShareNetwork() -> bool {
             return true;
         }
 
-        log_write("[WEB] no ip for %us, stopping server\n", g_share_offline);
+        log_write("[WEB] no ip for %us, stopping server\n", g_share_offline.load());
         App::Notify("Web server stopped: the console went offline"_i18n);
         return false;
     }
@@ -176,12 +179,12 @@ auto TickShareNetwork() -> bool {
     // same port, so the url and qr code already on screen stay valid.
     const auto sock = CreateShareListener(g_share_port);
     if (sock < 0) {
-        log_write("[WEB] rebind failed on port %u, stopping server\n", g_share_port);
+        log_write("[WEB] rebind failed on port %u, stopping server\n", g_share_port.load());
         return false;
     }
 
     g_share_socket = sock;
-    log_write("[WEB] listener rebound on port %u after resume\n", g_share_port);
+    log_write("[WEB] listener rebound on port %u after resume\n", g_share_port.load());
     StartMdnsResponder(g_share_ip);
     return true;
 }
@@ -244,6 +247,7 @@ auto TestShareServerLoopback(u16 port) -> bool {
 }
 
 auto StartShareServer() -> Result {
+    SCOPED_MUTEX(&g_share_lifecycle_mutex);
     if (g_share_running) {
         R_SUCCEED();
     }
@@ -404,7 +408,7 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
         if (g_share_port == 80) {
             std::snprintf(url, sizeof(url), "http://kefir.local");
         } else {
-            std::snprintf(url, sizeof(url), "http://kefir.local:%u", g_share_port);
+            std::snprintf(url, sizeof(url), "http://kefir.local:%u", g_share_port.load());
         }
     } else {
         if (g_share_port == 80) {
@@ -412,7 +416,7 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
                 ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
         } else {
             std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
-                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port);
+                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port.load());
         }
     }
 
@@ -440,6 +444,7 @@ auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result {
 }
 
 void WebShareStop() {
+    SCOPED_MUTEX(&g_share_lifecycle_mutex);
     const auto was_running = g_share_running.exchange(false);
 
     if (was_running) {

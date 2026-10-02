@@ -214,7 +214,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       break the tree-sitter parser (macro-heavy). If a trivial rewrite (e.g. a macro used as a type, a missing
       semicolon in a macro) fixes extraction without changing semantics, do it; otherwise note `// graphify: parse stop`
       and move on. **Verify:** `graphify update .` warning count drops.
-- [ ] 3.7 **Follow-ups found by the executor in batch 2** (product code; one commit each, after the v0.13.933 build checkpoint):
+- [x] 3.7 **Follow-ups found by the executor in batch 2** (product code; one commit each, after the v0.13.933 build checkpoint):
       (a) `FsPath::From(std::string)` and `operator+=(std::string)` copy without a bound — add a bound, truncate with NUL, log on truncation.
       (b) `nro.cpp:61` `strncpy(..., len-4)`: no destination bound and `len < 4` underflows — guard `len >= 4` and bound by `sizeof(dst)-1`.
       (c) `fs.cpp:157` `strncat` without a bound.
