@@ -1,0 +1,69 @@
+# Kefir Hub user documentation. Build all languages: docs/site/build.sh.
+# Preview English: (cd docs/site && mkdocs serve). Writing rules: docs/site/STYLE.md.
+# Double-bracket labels = UI strings from assets/romfs/i18n/en.json, shown in the build language (hooks/ui_labels.py).
+site_name: Kefir Hub
+docs_dir: !ENV [DOCS_STAGE, en]
+site_dir: !ENV [DOCS_OUT, ../../build/docs-site]
+hooks:
+  - hooks/ui_labels.py
+validation:
+  links:
+    anchors: warn
+
+theme:
+  name: material
+  language: !ENV [DOCS_THEME_LANG, en]
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle: {icon: material/brightness-7, name: Dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle: {icon: material/brightness-4, name: Light mode}
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc: {permalink: true}
+  - pymdownx.details
+  - pymdownx.superfences
+
+extra:
+  alternate:
+    - {name: English, link: /, lang: en}
+    - {name: Українська, link: /uk/, lang: uk}
+
+nav:
+  - index.md
+  - getting-started.md
+  - homebrew.md
+  - file-browser.md
+  - "[[Install]]":
+      - install/index.md
+      - install/sd-card.md
+      - install/usb.md
+      - install/mtp.md
+      - install/network.md
+      - install/gamecard.md
+  - "[[Game Tools]]":
+      - games.md
+      - saves.md
+      - cheats.md
+  - users.md
+  - console-transfer.md
+  - updater.md
+  - software.md
+  - themes.md
+  - system-tools.md
+  - kefir-settings.md
+  - settings.md
+  - sharing.md
+  - troubleshooting.md

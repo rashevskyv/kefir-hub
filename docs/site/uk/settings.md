@@ -1,0 +1,234 @@
+# [[Settings]]
+
+Налаштування визначають, як працює сам Kefir Hub: мова, оновлення, мережеві сервери, типові параметри встановлення і дампу.
+Перемикачі Kefir для всієї консолі — окремий екран, див. [Налаштування Kefir](kefir-settings.md).
+
+**Де:** [[Tools]] → [[Settings]]. Також: у розділі [[Tools]] натисніть **+** ([[Install & Share]]) → [[Settings]].
+
+<!-- shot: settings-overview | Settings screen, General category selected on the left, its options on the right -->
+
+## Як пересуватися екраном налаштувань {#move-around-the-settings-screen}
+
+У лівій колонці — категорії, у правій — параметри вибраної категорії.
+Кожен параметр має назву, короткий опис під нею і поточне значення праворуч.
+
+1. Натискайте **D-pad** вгору і вниз, щоб вибрати категорію.
+2. Натисніть **D-pad** вправо (або **A**), щоб перейти до параметрів.
+3. Натисніть **A** на параметрі. Перемикач «увімк./вимк.» змінюється одразу; інші параметри відкривають список або клавіатуру.
+4. Параметри-папки відкривають підсторінку в правій колонці. **B** повертає на рівень вище.
+5. **D-pad** вліво або **B** повертає до категорій, ще одне **B** закриває [[Settings]].
+
+**L** і **R** гортають сторінку, **ZL** і **ZR** переходять до першого й останнього пункту. Сенсорний екран теж працює.
+
+Зміни записуються на карту пам'яті одразу. Кнопки «Зберегти» немає.
+
+## [[General]] {#general}
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[Auto-update]] | Підсторінка: як встановлюються нові версії Kefir Hub. Див. [Оновлення Kefir Hub](#update-kefir-hub). | |
+| [[Language]] | Мова інтерфейсу. Після зміни Kefir Hub питає [[Restart Kefir Hub?]]; виберіть [[Restart]], щоб мова змінилася всюди. | Питає під час першого запуску |
+| [[Text scroll speed]] | Як швидко прокручуються довгі написи: [[Slow]], [[Normal]], [[Fast]]. | [[Normal]] |
+| [[12 Hour Time]] | Показує годинник у 12-годинному форматі. | Вимк. |
+| [[Clock sync]] | У фоні звіряє годинник консолі з сервером точного часу в інтернеті. | Увімк. |
+| [[Logging]] | Записує журнал у `/config/kefir/log.txt`. Сповільнює Kefir Hub; вмикайте лише для звіту про проблему. Див. [Як отримати журнал](troubleshooting.md#get-the-log). | Вимк. |
+| [[About]] | Показує встановлену версію і примітки до найновішого випуску. | |
+| [[Restart Kefir Hub]] | Закриває і знову відкриває Kefir Hub. | |
+| [[Exit]] | Закриває Kefir Hub. | |
+
+### Оновлення Kefir Hub {#update-kefir-hub}
+
+**Де:** [[Settings]] → [[General]] → [[Auto-update]]
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[When to install]] | [[Off]]: не перевіряти. [[Silent]]: завантажити у фоні, наступний запуск відкриє нову версію. [[Ask]]: коли знайдено нову версію, показати вікно з вибором — оновити зараз, пізніше чи пропустити цю версію. | [[Silent]] |
+| [[Update now]] | Значення показує стан: [[Up to date]], [[Checking...]], номер версії, якщо вона чекає, [[Updating]], [[Failed]] або [[Ready — restart]]. Натисніть **A**, щоб завантажити версію, що чекає, повторити невдале завантаження або перезапуститися в уже завантажену. | |
+| [[Skipped version]] | З'являється лише після пропуску версії. Натисніть **A**, щоб Kefir Hub знову про неї запитав. | |
+
+<!-- TODO(verify): when does the background check run (each start, or periodically) and does Silent need an internet connection at start? -->
+
+Вікно [[About]] показує версію, примітки до випуску і кнопку [[Update Kefir Hub]] або [[Restart Kefir Hub]], коли є новіша версія або її вже завантажено. Якщо примітки не завантажилися, натисніть **X** ([[Refresh notes]]).
+
+<!-- shot: settings-about | About Kefir Hub window with version and release notes -->
+
+## [[Homebrew]] {#homebrew}
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[Homebrew Search Paths]] | Підсторінка: додаткові папки на карті пам'яті, де шукати homebrew-програми, окрім `/switch`. [[Add folder]] додає папку; виберіть папку, щоб її прибрати. Див. [Homebrew](homebrew.md). | немає |
+| [[Forwarders]] | Підсторінка: типові параметри форвардерів для HOME Menu. Див. [Типові параметри форвардерів](#forwarder-defaults). | |
+| [[Replace hbmenu on exit]] | Під час виходу Kefir Hub копіює себе замість `/hbmenu.nro`, тож Альбом відкриває Kefir Hub. Коли ви вимикаєте параметр, Kefir Hub пропонує [[Restore hbmenu?]]; виберіть [[Restore]], щоб повернути оригінальне hbmenu з `/switch/hbmenu.nro`. | Вимк. |
+
+### Типові параметри форвардерів {#forwarder-defaults}
+
+**Де:** [[Settings]] → [[Homebrew]] → [[Forwarders]]
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[Ask every time]] | Відкриває редактор форвардера щоразу, замість типових параметрів нижче. | Вимк. |
+| [[Address space]] | [[Automatic]] (39 біт), [[36-bit]] для сумісності або [[39-bit]]. | [[Automatic]] |
+| [[CPU cores]] | [[3 cores]] або [[4 cores]]. Вибір 4 ядер показує попередження: ядро 3 спільне із системними службами, деякі програми можуть гальмувати. | [[3 cores]] |
+| [[Profile selection]] | Питає профіль користувача під час запуску форвардера. | Вимк. |
+| [[Screenshots]] | Дозволяє кнопці Capture робити знімки екрана у форвардері. | Увімк. |
+| [[Video capture]] | Дозволяє записувати відео утриманням Capture. Потрібен увімкнений [[Screenshots]]. | Увімк. |
+| [[svcDebug]] | Дозвіл налагодження ядра: [[Automatic]] (вмикається з Atmosphère 1.8.0 і новіших), [[Enabled]], [[Disabled]]. | [[Automatic]] |
+| [[SteamGridDB API key]] | Ваш ключ для пошуку іконок форвардерів. Консоль показує QR-код; відкрийте його на телефоні й вставте ключ. Коли ключ уже є, **A** пропонує [[Remove]] або [[Replace]]. | [[Not set]] |
+
+## [[Saves]] {#saves}
+
+Параметри екрана [[Saves]]: що він показує, куди йдуть резервні копії і синхронізація через WebDAV.
+Усі вони описані на сторінці [Збереження](saves.md).
+
+| Параметр | Типово |
+|---|---|
+| [[Installed game saves]] | Увімк. |
+| [[Deleted game saves]] | Увімк. |
+| [[Backups]] | Вимк. |
+| [[Default location]] | перше сховище у списку |
+| [[Compress backup]] | Увімк. |
+| [[Auto backup on restore]] | Увімк. |
+| [[Save Backup Search Paths]] (підсторінка) | немає |
+| [[Auto-sync after backup]] | Увімк. |
+| [[Include remote backups]] | Вимк. |
+| [[Save sync location]] | [[None]] |
+
+## [[Appearance]] {#appearance}
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[Theme]] | Вибір теми Kefir Hub зі встановлених. Див. [Теми](themes.md). | Default |
+| [[Animated waves]] | Анімовані хвилі в нижній панелі. | Увімк. |
+| [[Kefir Hub theme options]] | Підсторінка з [[Select Theme]] і [[12 Hour Time]] — ті самі параметри, що [[Theme]] вище і в [[General]]. | |
+
+## [[Network]] {#network}
+
+Сервери, через які комп'ютер бачить консоль. Докладно: [Обмін файлами з ПК](sharing.md).
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[FTP]] | Запускає FTP-сервер у фоні. | Вимк. |
+| [[FTP settings]] | Підсторінка: [[Anonymous (no login)]] (типово увімк.), [[Username]], [[Password]], [[Port]] (типово 5000). Див. [Обмін файлами](sharing.md). | |
+| [[MTP]] | Запускає MTP-сервер (USB-кабель до ПК) у фоні. Вмикання MTP вимикає [[USB storage]], бо обом потрібен USB-порт. | Вимк. |
+| [[MTP storages]] | Підсторінка: які диски бачить ПК через MTP, їхні назви, формат дампу ігор і додаткові папки. Див. [Обмін файлами](sharing.md). | |
+| [[Nxlink]] | Дозволяє надсилати файли `.nro` з ПК програмою nxlink (для розробників homebrew). | Увімк. |
+
+## [[Sources]] {#sources}
+
+Мережеві розташування і USB-диски, з яких можна переглядати файли і встановлювати. Докладно: [Файловий менеджер](file-browser.md).
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[+ Add network location]] | Додає розташування SMB, NFS, WebDAV, FTP або HTTP. | |
+| *кожне збережене розташування* | **A** відкриває його у файловому менеджері (або сторінку редагування, якщо його ще не налаштовано). **+** ([[Options]]) пропонує [[Enter/Connect]], [[Edit]], [[Test Connection]], [[Rename]], [[Properties]], [[Delete]]. | |
+| [[USB storage]] | Підключає USB-диски, вставлені в консоль, поруч із картою пам'яті. Вмикання вимикає [[MTP]]. | Увімк. |
+| [[USB storage read-only]] | Захищає підключені USB-диски від змін. Вимкніть, щоб записувати, перейменовувати, видаляти і встановлювати на них. | Вимк. |
+| *кожен підключений диск* | Показує, чи диск підключено лише для читання, чи з записом. | |
+
+<!-- TODO(verify): does changing USB storage read-only apply to a drive that is already connected, or only after reconnecting it? -->
+
+<!-- shot: settings-sources | Sources category with one network location and one USB drive listed -->
+
+## [[Install]] {#install}
+
+Поведінка встановлення і запобіжники. Що робить кожен параметр — на сторінці [Встановлення](install/index.md).
+
+!!! warning
+    Встановлення ігор може призвести до бану консолі. [[Enable sysMMC]] і [[Enable emuMMC]] вимкнені, доки ви
+    не підтвердите [[WARNING: Installing apps will lead to a ban!]] кнопкою [[Enable]].
+
+| Параметр | Типово |
+|---|---|
+| [[Enable sysMMC]] | Вимк. |
+| [[Enable emuMMC]] | Вимк. |
+| [[Install location]] | [[Automatic]] |
+| [[Allow downgrade]] | Вимк. |
+| [[Skip if already installed]] | [[Skip]] |
+| [[Save options globally]] | Увімк. |
+| [[Boost CPU during transfer]] | Увімк. |
+| [[Screen off (Minus)]] (підсторінка) | див. [нижче](#screen-off-during-installs) |
+| [[Install tickets only]] | Вимк. |
+| [[Skip base game]] | Вимк. |
+| [[Skip game updates]] | Вимк. |
+| [[Skip DLC]] | Вимк. |
+| [[Skip DLC updates]] | Вимк. |
+| [[Skip tickets]] | Вимк. |
+| [[Skip NCA hash verify]] | Увімк. |
+| [[Skip RSA header verify]] | Увімк. |
+| [[Skip RSA NPDM verify]] | Увімк. |
+| [[Ignore origin flag]] | Вимк. |
+| [[Convert ticket on install]] | Увімк. |
+| [[Convert to standard crypto]] | Вимк. |
+| [[Re-encrypt to master key 0]] | Вимк. |
+| [[Lower required firmware]] | Увімк. |
+
+[[Boost CPU during transfer]] пришвидшує встановлення, але знижує частоту графіки, тож під час передачі екран
+може здаватися завислим. Див. [Kefir Hub ніби завис](troubleshooting.md#kefir-hub-looks-frozen-during-a-transfer).
+
+### Вимкнення екрана під час встановлення {#screen-off-during-installs}
+
+**Де:** [[Settings]] → [[Install]] → [[Screen off (Minus)]]
+
+Поки працює черга встановлення, натисніть **−**, щоб пригасити екран. Ці параметри визначають, що станеться.
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[Minus button]] | [[Lower brightness]], [[Turn off backlight]] або [[Screensaver]] (чорний екран з невеликим рухомим табло). | [[Screensaver]] |
+| [[Inactivity timeout]] | Сам вмикає режим вимкненого екрана, якщо під час встановлення ви нічого не натискали: [[Off]], 30 с, 1, 2, 5 або 10 хвилин. | [[Off]] |
+| [[Brightness]] | Яскравість панелі в пригашеному режимі: 1–50 %. Не діє, коли підсвітку вимкнено. | 10 % |
+| [[OLED mode]] | Порожня частина смуги прогресу лишається чорною, світяться лише корисні пікселі. | Увімк. |
+| [[Preview]] | Показує заставку з реальною яскравістю. Будь-яка кнопка закриває. | |
+| [[Show on screensaver]] | Окремий перемикач для кожного пункту: [[Clock]], [[Status]], [[Package counter]], [[Current file]], [[Progress bar]], [[Average speed]], [[Time remaining]], [[Elapsed time]], [[Battery]], [[Errors]], [[Speed graph]]. | усі увімк. |
+
+## [[Dump]] {#dump}
+
+Як називаються і передаються дампи ігор. Сам дамп описано на сторінці [Ігри](games.md).
+
+| Параметр | Що робить | Типово |
+|---|---|---|
+| [[Create nested folder]] | Кладе дамп кожної гри в окрему папку. | Увімк. |
+| [[Name XCI folder like the file]] | Додає `.xci` до назви папки дампу; деякі пристрої читають дамп, лише коли назви папки й файла збігаються. | Увімк. |
+| [[Trim XCI]] | Вирізає невикористаний простір з дампів XCI. | Вимк. |
+| [[Label trimmed XCI]] | Позначає обрізані XCI у назві файла. | Вимк. |
+| [[USB transfer stream]] | Передає дамп потоком через USB. Цей параметр не зберігається: після кожного запуску він знову увімкнений. | Увімк. |
+| [[Convert ticket on dump]] | Під час дампу перетворює персоналізований квиток на загальний. | Увімк. |
+
+## Де зберігаються налаштування {#where-settings-are-stored}
+
+Усі параметри з цієї сторінки записано в один файл на карті пам'яті: `/config/kefir/config.ini`.
+Інші файли в `/config/kefir/`:
+
+| Файл або папка | Що містить |
+|---|---|
+| `locations.ini` | Ваші мережеві розташування з [[Sources]]. |
+| `themes/`, `i18n/` | Встановлені теми і переклади. |
+| `log.txt`, `errors.txt` | Журнали, див. [Усунення проблем](troubleshooting.md#get-the-log). |
+
+Якщо раніше ви користувалися Sphaira, під час першого запуску Kefir Hub перенесе стару папку `/config/sphaira/` у `/config/kefir/`,
+якщо `/config/kefir/` ще не існує.
+
+## Скидання налаштувань {#reset-settings-to-defaults}
+
+Кнопки скидання немає. Замість неї видаліть файл налаштувань.
+
+1. Відкрийте [[Settings]] → [[General]] → [[Exit]].
+2. Вимкніть консоль, вставте карту пам'яті в комп'ютер і видаліть `/config/kefir/config.ini`.
+3. Поверніть карту в консоль і запустіть Kefir Hub. Він знову запитає мову; решта параметрів повернеться до типових значень.
+
+Мережеві розташування залишаться, бо вони зберігаються в `locations.ini`.
+
+!!! warning
+    Видаляйте лише `config.ini`. Не видаляйте всю папку `/config/kefir/`: у ній також лежать дані,
+    потрібні для відновлення облікових записів і профілів.
+
+Видалення файла через файловий менеджер самого Kefir Hub ненадійне: Kefir Hub записує `config.ini` під час закриття.
+
+## Проблеми {#problems}
+
+**Параметр не діє після зміни.** [[Language]] потребує перезапуску; коли Kefir Hub запитає, виберіть [[Restart]].
+[[MTP]] і [[USB storage]] вимикають одне одного: Kefir Hub показує [[MTP turned off to free the USB port]] або
+[[USB storage turned off to free the USB port]]. Виберіть те, що вам потрібно.
+
+**Нічого не встановлюється.** Для системи, яку ви запустили, вимкнено [[Enable sysMMC]] або [[Enable emuMMC]]. Див. [Встановлення](install/index.md).
+
+*Під час кожного запуску Kefir Hub показує [[Warning! Logs are enabled, Kefir Hub will run slowly!]]* Вимкніть [[Logging]].

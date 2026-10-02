@@ -1,0 +1,71 @@
+# Kefir Hub
+
+Kefir Hub — це homebrew-застосунок, що постачається з Kefir. Він запускає ваші homebrew, встановлює ігри, керує
+сейвами, читами, темами й профілями користувачів, а також оновлює Kefir і прошивку — усе в одному місці на консолі.
+
+<!-- shot: index-main-screen | Homebrew tab right after launch, header and footer visible -->
+
+## Запуск Kefir Hub
+Kefir Hub — це homebrew-застосунок (`.nro`), тому він запускається з Homebrew Menu, як і будь-який інший homebrew.
+На карті пам'яті він шукає себе за шляхами `/switch/kefir-hub/kefir-hub.nro` та `/switch/kefir-hub.nro`.
+
+1. Відкрийте Homebrew Menu: відкрийте Альбом або затисніть **R**, коли запускаєте будь-яку встановлену гру,
+   і тримайте, доки не відкриється Homebrew Menu.
+2. Виберіть Kefir Hub і натисніть **A**.
+
+<!-- TODO(verify): does the Kefir package install Kefir Hub as /hbmenu.nro, so that the Homebrew Menu itself is Kefir Hub? -->
+
+Спосіб запуску має значення:
+
+- **З Альбому (режим аплета).** Kefir Hub отримує мало пам'яті. Великі стиснені ігри (NSZ), найімовірніше,
+  не встановляться, а вебсервер працює повільніше.
+- **З гри із затиснутою R (режим тайтла) або з іконки в HOME Menu.** Kefir Hub отримує всю пам'ять.
+  Для встановлення ігор користуйтеся цим режимом.
+
+!!! tip
+    Щоб мати в HOME Menu іконку, яка завжди запускає Kefir Hub у режимі тайтла, перейдіть на вкладку [[Tools]],
+    натисніть **+** і виберіть [[Install Title Mode forwarder]]. Коли встановлення завершиться, поверніться в HOME
+    і запустіть нову іконку.
+
+### Відкривати Kefir Hub замість Homebrew Menu
+[[Settings]] → [[Homebrew]] → [[Replace hbmenu on exit]]. Коли цей перемикач увімкнено, Kefir Hub копіює себе в
+`/hbmenu.nro` під час кожного виходу, тож Альбом і гра із затиснутою R відкривають одразу Kefir Hub.
+Вимкніть його, щоб повернути старе Homebrew Menu: Kefir Hub спитає [[Restore hbmenu?]] і відновить його з
+`/switch/hbmenu.nro`. Типово: вимкнено.
+
+## Перший запуск
+1. Виберіть мову. Список відкривається на мові консолі. Згодом мову можна змінити, див.
+   [Початок роботи](getting-started.md#change-the-language).
+2. Якщо деякі профілі користувачів на консолі не прив'язані до облікового запису Nintendo, Kefir Hub запропонує
+   їх прив'язати. Див. [Користувачі](users.md).
+
+## Дві вкладки
+У Kefir Hub є дві вкладки. Натисніть **R**, щоб перейти на [[Tools]], натисніть **L** або **B**, щоб повернутися на
+[[Homebrew]].
+
+- **[[Homebrew]]** — список homebrew-застосунків на карті пам'яті. Див. [Homebrew](homebrew.md).
+- **[[Tools]]** — сітка з усім іншим:
+
+| Плитка | Що відкриває |
+|---|---|
+| [[File Browser]] | Файли на карті пам'яті, USB-накопичувачах і в мережевих папках. [Файловий браузер](file-browser.md) |
+| [[Game Tools]] | [[Games]], [[Saves]] і [[Cheats]]. [Ігри](games.md), [Сейви](saves.md), [Чити](cheats.md) |
+| [[Themes]] | Пакети тем для HOME Menu. [Теми](themes.md) |
+| [[Updater]] | Оновлення Kefir і прошивки. [Оновлювач](updater.md) |
+| [[Software]] | App Store, DBI та інші програми. [Програми](software.md) |
+| [[Tools]] | [[Module Manager]], [[Fan curve]], [[Wi-Fi]], [[Users]]. [Системні інструменти](system-tools.md), [Користувачі](users.md) |
+| [[Kefir Settings]] | Налаштування консолі, що належать до Kefir. [Налаштування Kefir](kefir-settings.md) |
+| [[Settings]] | Налаштування самого Kefir Hub. [Налаштування](settings.md) |
+| [[Console Transfer]] | Обмін файлами й резервними копіями з іншим пристроєм. [Передача між консолями](console-transfer.md) |
+
+<!-- shot: index-tools-tab | Tools tab grid, File Browser tile selected -->
+
+## Що можна робити
+- Запускати, сортувати й видаляти homebrew: [Homebrew](homebrew.md)
+- Копіювати, переміщувати, розпаковувати й редагувати файли: [Файловий браузер](file-browser.md)
+- Встановлювати ігри з карти пам'яті, ПК, USB-накопичувача, мережі чи картриджа: [Встановлення ігор](install/index.md)
+- Створювати й відновлювати резервні копії сейвів: [Сейви](saves.md)
+- Завантажувати чити: [Чити](cheats.md)
+- Оновлювати Kefir і прошивку: [Оновлювач](updater.md)
+- Відкривати карту пам'яті на ПК через MTP, FTP чи браузер: [Спільний доступ](sharing.md)
+- Розв'язувати проблеми: [Усунення проблем](troubleshooting.md)

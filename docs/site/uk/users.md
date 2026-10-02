@@ -1,0 +1,192 @@
+# [[Users]]
+
+Керування профілями користувачів на консолі: створення, перейменування, зміна аватара, видалення, офлайн-прив'язка
+профілів до Nintendo Account і резервна копія всіх профілів разом з наіграними годинами.
+
+**Де:** [[Tools]] → [[Tools]] → [[Users]]
+
+<!-- shot: users-list | Users screen in the default Grid layout, three profiles: two Linked (green), one Not linked (red) -->
+
+## Список профілів {#the-profile-list}
+Для кожного профілю видно аватар, ім'я, стан прив'язки та ID користувача. Стан буває такий:
+
+| Стан | Що означає |
+|---|---|
+| [[Linked]] (зелений) | Профіль прив'язаний до Nintendo Account. Це може бути справжній обліковий запис або прив'язка, зроблена Kefir Hub; у списку їх не розрізнити. |
+| [[Not linked]] (червоний) | Профіль не прив'язаний до Nintendo Account. |
+| [[Link status unavailable]] (сірий) | Kefir Hub не зміг прочитати стан прив'язки цього профілю. |
+
+Кнопки на цьому екрані:
+
+- **A** або **+** відкриває [[Options]] для вибраного профілю.
+- **X** позначає профіль, **Y** інвертує позначки. Позначені профілі використовують [[Delete user]] та [[Unlink Nintendo Account]].
+- **B** знімає позначки; якщо нічого не позначено — повертає назад.
+
+## Створити профіль {#create-a-profile}
+1. Натисніть **A** і виберіть [[Create user]].
+2. Відкриється системне вікно створення користувача. Задайте там ім'я та іконку й завершіть.
+3. Новий профіль з'явиться у списку.
+
+На консолі може бути щонайбільше 8 профілів. Якщо їх уже 8, Kefir Hub покаже повідомлення і не відкриє вікно створення.
+
+## Перейменувати профіль {#rename-a-profile}
+1. Виберіть профіль, натисніть **A**, виберіть [[Rename]].
+2. Введіть нове ім'я на клавіатурі й підтвердьте.
+
+<!-- TODO(verify): the keyboard accepts up to 31 characters, but the system stores the name in 32 bytes; what is the safe maximum, especially for Cyrillic names? -->
+
+## Змінити аватар {#change-the-avatar}
+1. Виберіть профіль, натисніть **A**, виберіть [[Change avatar]].
+2. У [[Choose an avatar]] виберіть одне з:
+    - аватар іншого профілю на цій консолі;
+    - зображення з `/config/kefir/avatars/` (`.jpg`, `.jpeg`, `.png`, `.bmp`) — вони показані як плитки;
+    - [[From SD]] — будь-яке зображення на карті пам'яті, яке потім можна обрізати;
+    - **SteamGridDB** — введіть назву гри й виберіть іконку. Потрібні інтернет і ключ API SteamGridDB;
+      якщо ключа немає, Kefir Hub покаже QR-код, щоб вставити ключ із телефона.
+3. Kefir Hub запише аватар і запропонує перезавантаження. Новий аватар з'явиться в меню HOME після перезавантаження.
+   Натисніть [[Reboot]] зараз або [[Later]].
+
+<!-- shot: users-avatar-picker | Choose an avatar screen: profile avatars, From SD tile and SteamGridDB tile -->
+
+## Видалити профіль {#delete-a-profile}
+1. Виберіть профіль (або позначте кілька кнопкою **X**), натисніть **A**, виберіть [[Delete user]].
+2. Утримуйте **A** для підтвердження. Ігрові збереження видалених профілів теж видаляються.
+3. Kefir Hub спершу запропонує зробити резервну копію всіх профілів консолі (ім'я, аватар, прив'язка Nintendo Account).
+   Виберіть [[Backup all accounts]] або [[Skip]]. Копія зберігається в `/config/kefir/account_backups/`.
+4. Якщо в профілів є ігрові збереження, Kefir Hub запропонує їх зберегти. Виберіть [[Choose saves]], позначте ігри
+   кнопкою **X** і натисніть **A**, щоб зберегти позначені, або виберіть [[Skip]].
+   Збереження потрапляють у вашу теку резервних копій, див. [Збереження](saves.md).
+5. Профілі та їхні збереження видаляються.
+
+Видалити всі профілі не можна: хоча б один має лишитися.
+
+!!! warning
+    Видалення профілю не можна скасувати. У Kefir Hub немає пункту, який відновлює резервну копію профілю з кроку 3.
+    Збережіть ігрові збереження, які хочете залишити.
+
+<!-- TODO(verify): profile backups in /config/kefir/account_backups can be created (Delete user) and shared (Console Transfer → Share User Backups), but no menu restores them. Is this intended? -->
+
+<!-- shot: users-delete-hold | Hold-to-confirm dialog for deleting one user -->
+
+## Прив'язати профілі до Nintendo Account офлайн {#link-profiles-to-a-nintendo-account-offline}
+Деякі ігри не запускаються, якщо профіль не прив'язаний до Nintendo Account. Вони перевіряють лише сам факт прив'язки.
+Kefir Hub може створити таку прив'язку без інтернету, використовуючи облікові записи, вбудовані в Kefir Hub («донори»).
+
+Що відбувається:
+
+- Кожен профіль зі станом [[Not linked]] отримує прив'язку. Кожен — від окремого донора. Уже прив'язані профілі
+  не змінюються.
+- Ігрові збереження не видаляються і не змінюються.
+- Одразу після прив'язки консоль перезавантажується.
+- Перед записом Kefir Hub копіює файли прив'язки, які замінює, у `/config/kefir/account_link_rollback/`.
+
+Кроки:
+
+1. Натисніть **A** і виберіть [[Link Nintendo Account]].
+2. Підтвердьте кнопкою [[Link and reboot]].
+3. Після перезавантаження профілі матимуть стан [[Linked]].
+
+<!-- shot: users-link-confirm | Confirmation dialog for Link Nintendo Account with Link and reboot button -->
+
+!!! warning
+    Прив'язка донора — це не ваш Nintendo Account. Ті самі донори вбудовані в кожну копію Kefir Hub.
+    <!-- TODO(verify): what happens with eShop, online play and cloud saves on a donor-linked profile? Is there a ban risk if the console goes online? State it here once confirmed. -->
+
+## Зняти прив'язку Nintendo Account {#remove-a-nintendo-account-link}
+1. Позначте кнопкою **X** прив'язані профілі, з яких треба зняти прив'язку. Якщо нічого не позначено, прив'язку
+   знімуть з усіх прив'язаних профілів.
+2. Натисніть **A**, виберіть [[Unlink Nintendo Account]], підтвердьте кнопкою [[Unlink and reboot]].
+3. Консоль перезавантажиться.
+
+Знімається будь-яка прив'язка, зокрема справжнього Nintendo Account, а не лише прив'язки донорів.
+
+<!-- TODO(verify): after unlinking a real Nintendo Account, can it be linked again through System Settings as usual? -->
+
+## Нагадування про прив'язку під час запуску {#the-link-reminder-at-startup}
+Коли Kefir Hub запускається і хоча б один профіль має стан [[Not linked]], програма пропонує їх прив'язати:
+
+- [[Link and reboot]] прив'язує всі неприв'язані профілі, як описано вище.
+- [[Later]] закриває нагадування. Воно з'явиться під час наступного запуску Kefir Hub.
+- [[Don't remind again]] вимикає нагадування. Прив'язати можна й далі через [[Users]].
+
+Нагадування не показується, якщо Kefir Hub запущено в режимі аплета поверх згорнутої гри, або якщо чекає
+незавершене відновлення профілів (тоді Kefir Hub показує повідомлення про відновлення).
+
+Окремого перемикача, щоб знову ввімкнути нагадування, немає. Для цього відкрийте `/config/kefir/config.ini` і в
+розділі `[config]` задайте `account_link_prompt_skip=0`.
+
+<!-- shot: users-launch-reminder | Startup dialog "Some user profiles are not linked" with Later, Don't remind again, Link and reboot -->
+
+## Резервна копія і відновлення профілів та годин {#back-up-and-restore-profiles-play-hours}
+Розділ [[CONSOLE MOVE]] в [[Options]] копіює всі профілі консолі разом з наіграними годинами (час гри, який показують
+меню HOME і журнал активності). Головне призначення — переїзд на іншу консоль, див.
+[Перенесення між консолями](console-transfer.md#move-profiles-and-play-hours). Також це резервна копія цієї консолі.
+
+### Резервна копія {#back-up}
+1. Натисніть **A**, виберіть [[Backup profiles & play hours]], підтвердьте кнопкою [[Backup]].
+2. Kefir Hub копіює профілі та години в `/config/kefir/nand_transfer/` у файл `.kefir-nand.zip`.
+3. Якщо система саме використовує ці файли, консоль сама перезапуститься в TegraExplorer, скопіює їх там і
+   повернеться в hekate. Запустіть Kefir і відкрийте Kefir Hub: він повідомить, що копію зроблено.
+
+### Відновлення {#restore}
+!!! warning
+    Відновлення замінює **всі** профілі на цій консолі профілями з копії. Якщо відновлювати й години, журнал гри
+    цієї консолі теж замінюється. Спершу зробіть резервну копію SYSTEM у hekate.
+
+1. Натисніть **A**, виберіть [[Restore profiles & play hours]].
+2. Виберіть копію й натисніть **A**.
+3. Виберіть [[Profiles only]] або [[Profiles + play hours]]. Для копії без годин буде лише [[Restore profiles]].
+4. Kefir Hub підготує відновлення й покаже, що станеться. Натисніть [[Launch TegraExplorer]].
+5. Консоль перезапуститься в TegraExplorer, запише копію й повернеться в hekate. Не чіпайте консоль, поки
+   TegraExplorer працює.
+6. Запустіть Kefir і відкрийте Kefir Hub. Він покаже, чи завершилося відновлення.
+
+Відновлення записується в ту систему, з якої запущено Kefir Hub (emuMMC або sysMMC).
+Якщо після цього консоль не завантажується, див. [Скасувати відновлення профілів](console-transfer.md#undo-a-profiles-restore).
+
+<!-- shot: users-restore-mode-dialog | Restore dialog with Cancel, Profiles only, Profiles + play hours -->
+
+### Керування копіями {#manage-backups}
+[[Manage Backups]] показує копії з `/config/kefir/nand_transfer/`. У кожному рядку — назва, дата, кількість
+профілів і чи є всередині години.
+
+- **A** відкриває копію: профілі в ній з іменами та аватарами. **A** там відновлює її.
+- **X** позначає копії, **−** видаляє позначені (або вибрану) після підтвердження.
+- **+** відкриває [[Options]]: [[Open]], [[Restore]], [[Receive from another console]], [[Rename]], [[Delete]],
+  [[Send to another console]] і команди виділення.
+
+<!-- shot: users-nand-library | Manage Backups list with two .kefir-nand.zip packs, one marked -->
+
+## Параметри {#options}
+| Параметр | Що робить |
+|---|---|
+| [[Create user]] | Відкриває системне вікно створення користувача. До 8 профілів. |
+| [[Rename]] | Змінює ім'я профілю. |
+| [[Change avatar]] | Задає новий аватар; діє після перезавантаження. |
+| [[Delete user]] | Видаляє вибрані або позначені профілі та їхні ігрові збереження. |
+| [[Backup profiles & play hours]] | Копіює всі профілі та години на карту пам'яті. |
+| [[Restore profiles & play hours]] | Записує копію на цю консоль через TegraExplorer. |
+| [[Manage Backups]] | Показує, відкриває, перейменовує, видаляє й надсилає копії профілів. |
+| [[Receive from another console]] | Завантажує копії з іншої консолі, див. [Перенесення між консолями](console-transfer.md). |
+| [[Restore from another console]] | Завантажує одну копію з іншої консолі та відновлює її. |
+| [[Link Nintendo Account]] | Прив'язує всі неприв'язані профілі вбудованими донорами; перезавантажує консоль. |
+| [[Unlink Nintendo Account]] | Знімає прив'язку з позначених (або всіх) прив'язаних профілів; перезавантажує консоль. |
+| [[Layout]] | [[List]], [[Icon]] або [[Grid]]. Типово: [[Grid]]. |
+
+<!-- shot: users-options | Options sidebar of the Users screen: PROFILE, CONSOLE MOVE, NINTENDO ACCOUNT, VIEW -->
+
+## Проблеми {#problems}
+**«Linking is unavailable in applet mode while a game is suspended».** Закрийте гру або запустіть Kefir Hub як
+встановлений тайтл і спробуйте знову.
+
+**«Failed to link Nintendo Account.»** Прив'язка зупиняється, якщо якийсь профіль має стан [[Link status unavailable]]
+або якщо вільних донорів менше, ніж неприв'язаних профілів. Перегляньте `/config/kefir/log.txt` (рядки з `[ACC]`).
+
+**Новий аватар не видно.** Перезавантажте консоль.
+
+**«Cannot delete every user profile. Keep at least one.»** Спершу створіть ще один профіль або видаляйте менше.
+
+**«Could not start TegraExplorer».** Kefir Hub сам кладе свою копію `TegraExplorer.bin` у `/bootloader/payloads/`.
+Якщо це не вдалося, скопіюйте `TegraExplorer.bin` туди вручну й спробуйте знову.
+
+**Консоль не завантажується після відновлення.** Див. [Скасувати відновлення профілів](console-transfer.md#undo-a-profiles-restore).
