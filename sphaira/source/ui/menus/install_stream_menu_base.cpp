@@ -23,7 +23,7 @@ std::atomic<bool> BackgroundInstaller::s_installing{false};
 Mutex BackgroundInstaller::s_mutex{};
 
 static Thread s_install_thread{};
-static bool s_install_thread_created{false};
+static std::atomic<bool> s_install_thread_created{false}; // set by the transport thread that starts a worker, read on teardown
 
 static void JoinInstallThread() {
     if (s_install_thread_created) {
