@@ -99,321 +99,325 @@ Reboot now?".
 Choose Reboot, or Later if you want to restart yourself.
 
 26
-00:01:27,733 --> 00:01:29,733
-Now the firmware.
+00:01:27,733 --> 00:01:33,000
+After the reboot the update finishes by itself, you do not need to do anything.
 
 27
-00:01:29,733 --> 00:01:35,067
-A firmware install writes to the console's system storage, so first a few rules.
+00:01:33,000 --> 00:01:35,000
+Now the firmware.
 
 28
-00:01:35,067 --> 00:01:40,067
-Keep the console on the charger and do not power it off during the install.
+00:01:35,000 --> 00:01:40,333
+A firmware install writes to the console's system storage, so first a few rules.
 
 29
-00:01:40,067 --> 00:01:42,067
-Back up your saves first.
+00:01:40,333 --> 00:01:45,333
+Keep the console on the charger and do not power it off during the install.
 
 30
-00:01:42,067 --> 00:01:47,467
-Do not keep your own files in the firmware folder on the card: it is replaced and
+00:01:45,333 --> 00:01:47,333
+Back up your saves first.
 
 31
-00:01:47,467 --> 00:01:49,467
-then deleted.
+00:01:47,333 --> 00:01:52,733
+Do not keep your own files in the firmware folder on the card: it is replaced and
 
 32
-00:01:49,467 --> 00:01:54,600
-On top of the firmware archive, keep at least 300 MB free on the memory card.
+00:01:52,733 --> 00:01:54,733
+then deleted.
 
 33
-00:01:54,600 --> 00:02:00,200
-Custom system themes and system interface translations are deleted on every firmware
+00:01:54,733 --> 00:01:59,867
+On top of the firmware archive, keep at least 300 MB free on the memory card.
 
 34
-00:02:00,200 --> 00:02:02,200
-install.
+00:01:59,867 --> 00:02:05,467
+Custom system themes and system interface translations are deleted on every firmware
 
 35
-00:02:02,200 --> 00:02:04,600
-Install them again after the update.
+00:02:05,467 --> 00:02:07,467
+install.
 
 36
-00:02:04,600 --> 00:02:08,133
-In the FIRMWARE section select a version and press A.
+00:02:07,467 --> 00:02:09,867
+Install them again after the update.
 
 37
-00:02:08,133 --> 00:02:12,867
-If your Kefir does not support it, Kefir Hub first offers Update Kefir.
+00:02:09,867 --> 00:02:13,400
+In the FIRMWARE section select a version and press A.
 
 38
-00:02:12,867 --> 00:02:16,733
-Accept it, and the firmware download continues afterwards.
+00:02:13,400 --> 00:02:18,133
+If your Kefir does not support it, Kefir Hub first offers Update Kefir.
 
 39
-00:02:16,733 --> 00:02:18,733
-Confirm Download.
+00:02:18,133 --> 00:02:22,000
+Accept it, and the firmware download continues afterwards.
 
 40
-00:02:18,733 --> 00:02:22,400
-After the download Kefir Hub checks the firmware files.
+00:02:22,000 --> 00:02:24,000
+Confirm Download.
 
 41
-00:02:22,400 --> 00:02:25,133
-If the check fails, nothing is installed.
+00:02:24,000 --> 00:02:27,667
+After the download Kefir Hub checks the firmware files.
 
 42
-00:02:25,133 --> 00:02:30,600
-The install prompt shows the version and the target: sysMMC, the internal storage,
+00:02:27,667 --> 00:02:30,400
+If the check fails, nothing is installed.
 
 43
-00:02:30,600 --> 00:02:32,600
-or emuMMC.
+00:02:30,400 --> 00:02:35,867
+The install prompt shows the version and the target: sysMMC, the internal storage,
 
 44
-00:02:32,600 --> 00:02:36,067
-The firmware goes to the system you are running now.
+00:02:35,867 --> 00:02:37,867
+or emuMMC.
 
 45
-00:02:36,067 --> 00:02:38,067
-Check this line.
+00:02:37,867 --> 00:02:41,333
+The firmware goes to the system you are running now.
 
 46
-00:02:38,067 --> 00:02:40,067
-Choose Install and wait.
+00:02:41,333 --> 00:02:43,333
+Check this line.
 
 47
-00:02:40,067 --> 00:02:42,067
-Do not power off the console.
+00:02:43,333 --> 00:02:45,333
+Choose Install and wait.
 
 48
-00:02:42,067 --> 00:02:47,400
-At the end Kefir Hub tells you that custom themes and translations were removed.
+00:02:45,333 --> 00:02:47,333
+Do not power off the console.
 
 49
-00:02:47,400 --> 00:02:49,400
-Choose Reboot.
+00:02:47,333 --> 00:02:52,667
+At the end Kefir Hub tells you that custom themes and translations were removed.
 
 50
-00:02:49,400 --> 00:02:52,933
-The downloaded firmware files are deleted afterwards.
+00:02:52,667 --> 00:02:54,667
+Choose Reboot.
 
 51
-00:02:52,933 --> 00:02:57,667
-If the firmware is already on the memory card, select Install manually.
+00:02:54,667 --> 00:02:58,200
+The downloaded firmware files are deleted afterwards.
 
 52
-00:02:57,667 --> 00:03:01,600
-A file browser opens with the title Select firmware folder.
+00:02:58,200 --> 00:03:02,933
+If the firmware is already on the memory card, select Install manually.
 
 53
-00:03:01,600 --> 00:03:06,133
-For a folder, open it and select the top row, Select current folder.
+00:03:02,933 --> 00:03:06,867
+A file browser opens with the title Select firmware folder.
 
 54
-00:03:06,133 --> 00:03:09,933
-For a zip archive, select the archive itself and press A.
+00:03:06,867 --> 00:03:11,400
+For a folder, open it and select the top row, Select current folder.
 
 55
-00:03:09,933 --> 00:03:11,933
-Confirm with Select.
+00:03:11,400 --> 00:03:15,200
+For a zip archive, select the archive itself and press A.
 
 56
-00:03:11,933 --> 00:03:15,067
-Then the same check and the same prompt follow.
+00:03:15,200 --> 00:03:17,200
+Confirm with Select.
 
 57
-00:03:15,067 --> 00:03:20,600
-After an install from an archive Kefir Hub asks what to do with it: Keep or Delete.
+00:03:17,200 --> 00:03:20,333
+Then the same check and the same prompt follow.
 
 58
-00:03:20,600 --> 00:03:22,800
-Your own folder is never deleted.
+00:03:20,333 --> 00:03:25,867
+After an install from an archive Kefir Hub asks what to do with it: Keep or Delete.
 
 59
-00:03:22,800 --> 00:03:27,267
-A downgrade means installing a lower firmware than the current one.
+00:03:25,867 --> 00:03:28,067
+Your own folder is never deleted.
 
 60
-00:03:27,267 --> 00:03:32,600
-When you select a version tagged DOWNGRADE, the Firmware downgrade warning opens
+00:03:28,067 --> 00:03:32,533
+A downgrade means installing a lower firmware than the current one.
 
 61
-00:03:32,600 --> 00:03:34,600
-first.
+00:03:32,533 --> 00:03:37,867
+When you select a version tagged DOWNGRADE, the Firmware downgrade warning opens
 
 62
-00:03:34,600 --> 00:03:38,800
-Careful: in this window the confirm button is already selected.
+00:03:37,867 --> 00:03:39,867
+first.
 
 63
-00:03:38,800 --> 00:03:41,133
-Pressing A continues the downgrade.
+00:03:39,867 --> 00:03:44,067
+Careful: in this window the confirm button is already selected.
 
 64
-00:03:41,133 --> 00:03:43,133
-Press B to cancel.
+00:03:44,067 --> 00:03:46,400
+Pressing A continues the downgrade.
 
 65
-00:03:43,133 --> 00:03:47,533
-What happens after a downgrade is set by the Downgrade fix option.
+00:03:46,400 --> 00:03:48,400
+Press B to cancel.
 
 66
-00:03:47,533 --> 00:03:49,533
-Press Plus in the Updater.
+00:03:48,400 --> 00:03:52,800
+What happens after a downgrade is set by the Downgrade fix option.
 
 67
-00:03:49,533 --> 00:03:55,133
-Automatic prepares the fix without asking, Optional (ask) asks every time, Off never
+00:03:52,800 --> 00:03:54,800
+Press Plus in the Updater.
 
 68
-00:03:55,133 --> 00:03:57,133
-applies it.
+00:03:54,800 --> 00:04:00,400
+Automatic prepares the fix without asking, Optional (ask) asks every time, Off never
 
 69
-00:03:57,133 --> 00:04:02,133
-The fix deletes the system save 8000000000000073 and runs in TegraExplorer.
+00:04:00,400 --> 00:04:02,400
+applies it.
 
 70
-00:04:02,133 --> 00:04:07,733
-So after a downgrade with the fix the console restarts into TegraExplorer instead of
+00:04:02,400 --> 00:04:07,400
+The fix deletes the system save 8000000000000073 and runs in TegraExplorer.
 
 71
-00:04:07,733 --> 00:04:09,733
-a normal reboot.
+00:04:07,400 --> 00:04:13,000
+So after a downgrade with the fix the console restarts into TegraExplorer instead of
 
 72
-00:04:09,733 --> 00:04:15,067
-The TegraExplorer screen appears, does its work by itself and returns you to the
+00:04:13,000 --> 00:04:15,000
+a normal reboot.
 
 73
-00:04:15,067 --> 00:04:17,067
-firmware.
+00:04:15,000 --> 00:04:20,333
+The TegraExplorer screen appears, does its work by itself and returns you to the
 
 74
-00:04:17,067 --> 00:04:19,067
-But this is not guaranteed.
+00:04:20,333 --> 00:04:22,333
+firmware.
 
 75
-00:04:19,067 --> 00:04:21,067
-Warning!
+00:04:22,333 --> 00:04:24,333
+But this is not guaranteed.
 
 76
-00:04:21,067 --> 00:04:26,600
-If the firmware still does not boot after a downgrade, Maintenance Mode is the only
+00:04:24,333 --> 00:04:26,333
+Warning!
 
 77
-00:04:26,600 --> 00:04:28,600
-way.
+00:04:26,333 --> 00:04:31,867
+If the firmware still does not boot after a downgrade, Maintenance Mode is the only
 
 78
-00:04:28,600 --> 00:04:31,133
-The steps are also in the warning box.
+00:04:31,867 --> 00:04:33,867
+way.
 
 79
-00:04:31,133 --> 00:04:33,133
-Power on the console.
+00:04:33,867 --> 00:04:36,400
+The steps are also in the warning box.
 
 80
-00:04:33,133 --> 00:04:35,867
-After the Kefir logo the trident appears.
+00:04:36,400 --> 00:04:38,400
+Power on the console.
 
 81
-00:04:35,867 --> 00:04:41,067
-As soon as it does, hold both volume buttons and keep holding: the blue-yellow
+00:04:38,400 --> 00:04:41,133
+After the Kefir logo the trident appears.
 
 82
-00:04:41,067 --> 00:04:45,600
-Atmosphère logo appears, then the sloth logo, then Maintenance Mode.
+00:04:41,133 --> 00:04:46,333
+As soon as it does, hold both volume buttons and keep holding: the blue-yellow
 
 83
-00:04:45,600 --> 00:04:49,267
-Choose "Initialize Console Without Deleting Save Data".
+00:04:46,333 --> 00:04:50,867
+Atmosphère logo appears, then the sloth logo, then Maintenance Mode.
 
 84
-00:04:49,267 --> 00:04:52,133
-The wording depends on the system language.
+00:04:50,867 --> 00:04:54,533
+Choose "Initialize Console Without Deleting Save Data".
 
 85
-00:04:52,133 --> 00:04:55,267
-All games are gone and must be installed again.
+00:04:54,533 --> 00:04:57,400
+The wording depends on the system language.
 
 86
-00:04:55,267 --> 00:04:58,133
-Profiles, most settings and all saves stay.
+00:04:57,400 --> 00:05:00,533
+All games are gone and must be installed again.
 
 87
-00:04:58,133 --> 00:05:03,000
-When the console offers to delete the Nintendo folder on the card, agree.
+00:05:00,533 --> 00:05:03,400
+Profiles, most settings and all saves stay.
 
 88
-00:05:03,000 --> 00:05:06,600
-The QR code in the box opens a manual downgrade guide.
+00:05:03,400 --> 00:05:08,267
+When the console offers to delete the Nintendo folder on the card, agree.
 
 89
-00:05:06,600 --> 00:05:09,400
-What is left is updating Kefir Hub itself.
+00:05:08,267 --> 00:05:11,867
+The QR code in the box opens a manual downgrade guide.
 
 90
-00:05:09,400 --> 00:05:14,600
-It checks for a new version once, when it starts, so it needs internet at that
+00:05:11,867 --> 00:05:14,667
+What is left is updating Kefir Hub itself.
 
 91
-00:05:14,600 --> 00:05:16,600
-moment.
+00:05:14,667 --> 00:05:19,867
+It checks for a new version once, when it starts, so it needs internet at that
 
 92
-00:05:16,600 --> 00:05:20,267
-The behaviour is set in Settings, General, Auto-update.
+00:05:19,867 --> 00:05:21,867
+moment.
 
 93
-00:05:20,267 --> 00:05:22,467
-When to install has three values.
+00:05:21,867 --> 00:05:25,533
+The behaviour is set in Settings, General, Auto-update.
 
 94
-00:05:22,467 --> 00:05:24,467
-Off never checks.
+00:05:25,533 --> 00:05:27,733
+When to install has three values.
 
 95
-00:05:24,467 --> 00:05:30,000
-Silent downloads in the background, and the next launch opens the new version; this
+00:05:27,733 --> 00:05:29,733
+Off never checks.
 
 96
-00:05:30,000 --> 00:05:32,000
-is the default.
+00:05:29,733 --> 00:05:35,267
+Silent downloads in the background, and the next launch opens the new version; this
 
 97
-00:05:32,000 --> 00:05:34,000
-Ask shows a prompt.
+00:05:35,267 --> 00:05:37,267
+is the default.
 
 98
-00:05:34,000 --> 00:05:38,133
-With Ask, this appears at launch: "A new version is available.
+00:05:37,267 --> 00:05:39,267
+Ask shows a prompt.
 
 99
-00:05:38,133 --> 00:05:40,133
-Update now?".
+00:05:39,267 --> 00:05:43,400
+With Ask, this appears at launch: "A new version is available.
 
 100
-00:05:40,133 --> 00:05:42,133
-Later asks again next time.
+00:05:43,400 --> 00:05:45,400
+Update now?".
 
 101
-00:05:42,133 --> 00:05:45,400
-Skip this update stops asking about this version.
+00:05:45,400 --> 00:05:47,400
+Later asks again next time.
 
 102
-00:05:45,400 --> 00:05:47,867
-Update downloads and installs it now.
+00:05:47,400 --> 00:05:50,667
+Skip this update stops asking about this version.
 
 103
-00:05:47,867 --> 00:05:50,267
-When it finishes, restart Kefir Hub.
+00:05:50,667 --> 00:05:53,133
+Update downloads and installs it now.
 
 104
-00:05:50,267 --> 00:05:54,133
-The Update now item in the settings does the same by hand.
+00:05:53,133 --> 00:05:55,533
+When it finishes, restart Kefir Hub.
 
 105
-00:05:54,133 --> 00:05:58,533
+00:05:55,533 --> 00:05:59,400
+The Update now item in the settings does the same by hand.
+
+106
+00:05:59,400 --> 00:06:03,800
 Read more on the Updater and Settings pages of the Kefir Hub docs.

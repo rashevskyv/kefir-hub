@@ -55,7 +55,7 @@ If it is not connected yet, the list loads by itself once it connects. Press **X
 5. Kefir Hub downloads the package and unpacks it to `/kefir` on the memory card. It also updates `payload.bin` and the bootloader files.
 6. When it finishes, the message "[[Kefir package installed.]] [[Reboot now?]]" appears. Choose [[Reboot]] to restart now, or [[Later]].
 
-<!-- TODO(verify): what the user sees on the reboot after "Kefir package installed" (does the Kefir updater payload finish the install automatically?) -->
+After the reboot the update finishes by itself. You do not need to do anything.
 
 <!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
 
@@ -178,7 +178,14 @@ Press **+** in the Updater.
 
 **A downgrade stops with "Firmware update failed" before installing.** With the downgrade fix on, the install stops if a file `/startup.te` already exists in the root of the memory card (another TegraExplorer job is pending, for example from [[8GB DRAM status]]). Let that job finish or remove the file, then try again. Or set [[Downgrade fix]] to [[Off]].
 
-**A message warns that themes and translations could not be removed.** Incompatible themes or translations can cause Atmosphère error 2162-0002 on the next boot. Delete them by hand before you boot the new firmware.
-<!-- TODO(verify): which folders the user must delete by hand (the code removes /atmosphere/contents/0100000000001000, ...1013, ...1007, 00FF007468656D65 and the translation title folders) -->
+**A message warns that themes and translations could not be removed.** This should not normally happen. Incompatible
+themes or translations can cause Atmosphère error 2162-0002 on the next boot, so remove them before you boot the new firmware:
+
+1. Start TegraExplorer (hekate → **Payloads** → `TegraExplorer.bin`) and run **Kefir Helper**. It removes them at a lower
+   level.
+2. After Kefir Helper, reinstall Kefir. Kefir Helper turns off many Kefir parts to prevent errors.
+3. If Kefir Helper fails too, check the memory card for errors.
+
+<!-- TODO(verify): exact place of Kefir Helper in the TegraExplorer menu; link a page on checking the memory card for errors -->
 
 **The console does not boot after a downgrade.** Follow [If the console does not boot after a downgrade](#if-the-console-does-not-boot-after-a-downgrade).

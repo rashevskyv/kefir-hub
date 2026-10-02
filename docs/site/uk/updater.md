@@ -55,7 +55,7 @@
 5. Kefir Hub завантажить пакет і розпакує його в `/kefir` на карті пам'яті. Також він оновить `payload.bin` і файли завантажувача.
 6. Наприкінці з'явиться повідомлення «[[Kefir package installed.]] [[Reboot now?]]». Виберіть [[Reboot]], щоб перезавантажити консоль зараз, або [[Later]].
 
-<!-- TODO(verify): what the user sees on the reboot after "Kefir package installed" (does the Kefir updater payload finish the install automatically?) -->
+Після перезавантаження оновлення завершується саме. Нічого робити не потрібно.
 
 <!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
 
@@ -179,7 +179,14 @@ Kefir Hub перевіряє наявність власної нової вер
 
 **Даунгрейд зупиняється з «Firmware update failed» ще до встановлення.** Коли виправлення даунгрейду ввімкнено, встановлення зупиняється, якщо в корені карти пам'яті вже є файл `/startup.te` (чекає інше завдання TegraExplorer, наприклад від [[8GB DRAM status]]). Дайте цьому завданню завершитися або видаліть файл і спробуйте знову. Або встановіть [[Downgrade fix]] у [[Off]].
 
-**Повідомлення попереджає, що теми й переклади не вдалося видалити.** Несумісні теми чи переклади можуть спричинити помилку Atmosphère 2162-0002 під час наступного завантаження. Видаліть їх вручну, перш ніж завантажувати нову прошивку.
-<!-- TODO(verify): which folders the user must delete by hand (the code removes /atmosphere/contents/0100000000001000, ...1013, ...1007, 00FF007468656D65 and the translation title folders) -->
+**Повідомлення попереджає, що теми й переклади не вдалося видалити.** Зазвичай такого не буває. Несумісні теми чи
+переклади можуть спричинити помилку Atmosphère 2162-0002 під час наступного запуску, тож приберіть їх, перш ніж запускати нову прошивку:
+
+1. Запустіть TegraExplorer (hekate → **Payloads** → `TegraExplorer.bin`) і виберіть **Kefir Helper**. Він прибере їх на
+   нижчому рівні.
+2. Після Kefir Helper перевстановіть Kefir. Kefir Helper вимикає багато складових Kefir, щоб запобігти помилкам.
+3. Якщо і Kefir Helper не допоміг, перевірте карту пам'яті на помилки.
+
+<!-- TODO(verify): exact place of Kefir Helper in the TegraExplorer menu; link a page on checking the memory card for errors -->
 
 **Консоль не завантажується після даунгрейду.** Виконайте кроки з розділу [Якщо консоль не завантажується після даунгрейду](#if-the-console-does-not-boot-after-a-downgrade).
