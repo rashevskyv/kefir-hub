@@ -155,7 +155,7 @@ struct Menu final : grid::Menu {
 
 private:
     void SetIndex(s64 index);
-    void ScanHomebrew();
+    void ScanHomebrew(bool keep_backup_cache = false); // true only when nothing but the tab changed
     void Sort();
     void SortAndFindLastFile(bool scan);
     void FreeEntries();
@@ -343,6 +343,8 @@ private:
     ScrollingText m_hb_title_scroll{};
     bool m_is_reversed{};
     bool m_dirty{};
+    std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()
+    bool m_backup_cache_valid{};
 
     std::vector<AccountProfileBase> m_accounts{};
     s64 m_account_index{};

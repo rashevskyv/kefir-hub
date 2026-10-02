@@ -95,7 +95,7 @@ void Menu::SetCategory(Category category) {
         );
     }
     App::PlaySoundEffect(SoundEffect_Focus);
-    ScanHomebrew();
+    ScanHomebrew(true); // only the tab changed: keep the scanned backup library
 }
 
 auto Menu::GetAccountSummary() const -> std::string {

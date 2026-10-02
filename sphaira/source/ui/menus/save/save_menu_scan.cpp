@@ -53,8 +53,12 @@ void Menu::ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& 
     }
 }
 
-void Menu::ScanHomebrew() {
+void Menu::ScanHomebrew(bool keep_backup_cache) {
     TimeStamp ts;
+
+    if (!keep_backup_cache) {
+        m_backup_cache_valid = false;
+    }
 
     FreeEntries();
     ClearSelection();
@@ -215,9 +219,18 @@ void Menu::ScanHomebrew() {
         }
     }
 
+    // the library scan opens every archive on the card (about 1 s for 20 backups), so a
+    // tab switch reuses the last one. backups is a copy: its entries are moved out below.
+    // ponytail: files added behind the menu's back (MTP/FTP while it stays open and focused)
+    // show up after the next action or reopening the screen; add an fs watch if that matters.
     std::vector<Entry> backups;
     if (show_backups || has_uninstalled) {
-        ReadBackupEntries(backups);
+        if (!m_backup_cache_valid) {
+            m_backup_cache.clear();
+            ReadBackupEntries(m_backup_cache);
+            m_backup_cache_valid = true;
+        }
+        backups = m_backup_cache;
     }
 
     std::unordered_map<u64, std::string> backup_name_lookup;

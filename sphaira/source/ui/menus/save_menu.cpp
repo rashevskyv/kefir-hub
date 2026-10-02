@@ -184,6 +184,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    m_backup_cache_valid = false; // a dialog, a transfer or another screen may have changed the backups
     if (m_entries.empty()) {
         ScanHomebrew();
     }
