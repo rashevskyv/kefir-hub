@@ -423,7 +423,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
 
         const auto items = AccountPickerItems(accounts);
 
-        auto popup = std::make_unique<PopupList>("Restore for user"_i18n, items, [this, group, accounts, location, backup_root](auto op_index) mutable {
+        auto popup = std::make_unique<PopupList>(BackupPickerTitle(group, accounts), items, [this, group, accounts, location, backup_root](auto op_index) mutable {
             if (!op_index || *op_index >= static_cast<s64>(accounts.size())) {
                 return;
             }

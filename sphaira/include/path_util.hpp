@@ -263,6 +263,31 @@ inline auto SdFolderFromConfigValue(std::string_view value) -> std::optional<std
     return normalized;
 }
 
+// The "Account=" value of a DBI/Kefir Hub ".dbi_save_info.ini": the nickname of the user the
+// backup was made for, also when that user is not on this console. Empty when absent.
+inline auto IniAccountName(std::string_view ini) -> std::string {
+    constexpr std::string_view spaces = " \t\r";
+    while (!ini.empty()) {
+        const auto eol = ini.find('\n');
+        auto line = ini.substr(0, eol);
+        ini = eol == std::string_view::npos ? std::string_view{} : ini.substr(eol + 1);
+        const auto eq = line.find('=');
+        if (eq == std::string_view::npos) {
+            continue;
+        }
+        auto key = line.substr(0, eq);
+        key.remove_prefix(std::min(key.find_first_not_of(spaces), key.size()));
+        key = key.substr(0, key.find_last_not_of(spaces) + 1);
+        if (!EqualsIC(key, "Account")) {
+            continue;
+        }
+        auto value = line.substr(eq + 1);
+        value.remove_prefix(std::min(value.find_first_not_of(spaces), value.size()));
+        return std::string{value.substr(0, value.find_last_not_of(spaces) + 1)};
+    }
+    return {};
+}
+
 // Returns true if the content type or filename/URL indicates a ZIP archive.
 // - Content type contains "zip" (case-insensitive)
 // - Filename or URL path ends with ".zip" (case-insensitive, URL query/fragment ignored)

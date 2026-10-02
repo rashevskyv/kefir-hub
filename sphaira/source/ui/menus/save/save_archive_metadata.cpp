@@ -279,6 +279,9 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
                 return ArchiveMetaStatus::Invalid;
             }
             has_valid_dbi_extra = true;
+        } else if (reserved_kind == SaveReservedMetaKind::DbiInfo) {
+            const auto shown = static_cast<size_t>(std::min<u64>(bytes_drained, sizeof(meta_read_buf)));
+            out.account_name = path::IniAccountName({reinterpret_cast<const char*>(meta_read_buf), shown});
         }
     }
 
@@ -313,6 +316,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
     DecodedSaveMetadata local_out{};
     local_out.payload_count = out.payload_count;
     local_out.has_kefir_comment = out.has_kefir_comment;
+    local_out.account_name = out.account_name;
 
     if (has_valid_nx && has_valid_dbi_extra) {
         if (!CompareCommonSourceFields(nx_meta, dbi_extra_meta)) {

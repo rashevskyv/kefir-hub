@@ -67,6 +67,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
             e.backup_path = path;
             e.backup_is_directory = is_dir;
             e.dbi_game_dir = info.dbi_game_dir;
+            e.backup_owner_name = info.owner_name;
             e.source_timestamp = info.source_timestamp;
             e.commit_id = info.commit_id;
             if (is_dir) {
@@ -112,6 +113,9 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
                 meta.rep_source = source_prio;
             }
 
+            if (existing.backup_owner_name.empty()) {
+                existing.backup_owner_name = info.owner_name;
+            }
             if (existing.dbi_game_dir.empty() && !info.dbi_game_dir.empty()) {
                 existing.dbi_game_dir = info.dbi_game_dir;
                 if (existing.lang.name[0] == '\0' && !IsHex16(existing.dbi_game_dir)) {

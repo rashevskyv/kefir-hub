@@ -283,6 +283,7 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
         }
 
         out.payload_count = archive_meta.payload_count;
+        out.owner_name = archive_meta.account_name;
 
         if (meta_status == ArchiveMetaStatus::Valid) {
             const auto& meta = archive_meta.meta;
@@ -418,6 +419,9 @@ auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& 
         if (!std::memcmp(&e.uid, &acc.uid, sizeof(e.uid))) {
             return acc.nickname;
         }
+    }
+    if (!e.backup_owner_name.empty()) {
+        return e.backup_owner_name; // a user of another console: the name saved in the archive
     }
 
     if (e.uid.uid[0] != 0 || e.uid.uid[1] != 0) {

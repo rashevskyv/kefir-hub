@@ -100,6 +100,7 @@ struct DecodedSaveMetadata {
     bool has_dbi_info{false};
     bool has_kefir_comment{false};
     s64 payload_count{0};
+    std::string account_name{}; // "Account=" of .dbi_save_info.ini, see path::IniAccountName()
 };
 
 auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMetadata& out, Result* out_rc = nullptr) -> ArchiveMetaStatus;
@@ -122,6 +123,7 @@ struct BackupArchiveInfo {
     s64 payload_count{0};
     BackupSource backup_source{BackupSource::Other};
     bool is_directory{false};
+    std::string owner_name{}; // user nickname stored in the archive (shown when the user is not on this console)
 };
 
 auto ParseDbiTypeLetter(char c) -> u8;

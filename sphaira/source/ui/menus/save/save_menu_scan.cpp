@@ -295,6 +295,7 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 Entry parent{};
                 parent.application_id = app_id;
                 parent.uid = children.front().uid;
+                parent.backup_owner_name = children.front().backup_owner_name;
                 parent.save_data_type = children.front().save_data_type;
                 parent.is_backup = true;
                 parent.is_game_parent = true;

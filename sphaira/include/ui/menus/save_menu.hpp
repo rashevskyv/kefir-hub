@@ -65,6 +65,7 @@ struct Entry final : FsSaveDataInfo {
     fs::FsPath backup_path{};
     bool backup_is_directory{false};
     std::string dbi_game_dir{};
+    std::string backup_owner_name{}; // nickname stored in the archive, for users not on this console
     u64 source_timestamp{};
     u64 commit_id{};
     std::vector<BackupCandidate> backup_members{};

@@ -312,6 +312,14 @@ static int test_collapse_repeated_http_schemes() {
 
 // DBI's dbi.config: "SavesFolder=sdmc:/switch/DBI/saves/" (plan H7).
 static int test_sd_folder_from_config_value() {
+    // .dbi_save_info.ini from the user's card (DBI) and as Kefir Hub writes it (no trailing newline)
+    CHECK(path::IniAccountName("TitleId=0100C3C015738000\r\nTitleName=Fall Guys\r\nBackupDate=2026-09-04 13:35:00\r\nAccount=Shark\r\nSpace=User\r\n") == "Shark");
+    CHECK(path::IniAccountName("TitleId=0100C3C015738000\nTitleName=\nAccount=nin10do\nSpace=User") == "nin10do");
+    CHECK(path::IniAccountName("account = Big Boss \nSpace=User") == "Big Boss");
+    CHECK(path::IniAccountName("Account=") == "");
+    CHECK(path::IniAccountName("TitleId=0100C3C015738000\nSpace=Device") == "");
+    CHECK(path::IniAccountName("") == "");
+    CHECK(path::IniAccountName("AccountId=7\nAccount=Kid") == "Kid");
     CHECK(path::SdFolderFromConfigValue("sdmc:/switch/DBI/saves/") == std::string{"/switch/DBI/saves"});
     CHECK(path::SdFolderFromConfigValue("SDMC:/DBISaves") == std::string{"/DBISaves"});
     CHECK(path::SdFolderFromConfigValue("/backups//dbi/") == std::string{"/backups/dbi"});
