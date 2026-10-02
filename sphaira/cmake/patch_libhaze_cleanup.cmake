@@ -245,6 +245,12 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             R_THROW(haze::ResultCancelled());
         }
 
+        /* sphaira: the host ended the data phase early (PC-side cancel); drop the partial file. */
+        if (has_known_size && offset < file_size) {
+            log_write(\"[LIBHAZE] host cancelled transfer: %s\\n\", obj->GetName());
+            R_RETURN(this->WriteResponse(PtpResponseCode_IncompleteTransfer));
+        }
+
         transfer_success = true;
 
         /* Write the success response. */

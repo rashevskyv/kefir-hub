@@ -80,7 +80,7 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       Also `failed to cancel endpoint 0 … 0x828C` happens on every cancel and at every shutdown (`errors-v934.txt`) — check whether `usbDsEndpoint_Cancel` is called on an endpoint with no in-flight URB (harmless) or on the wrong endpoint. **Re-run:** A3, A6, A7, A5, A11.
       <!-- v0.13.935: fix (2) shipped (re-enumeration in device mode); fix (1) not viable without STALL + Get_Device_Status handling in libhaze — see CHANGELOG -->
 
-- [ ] H2 **PC-side cancel leaves the ProgressBox decaying to 0 B/s (A4).** Windows closes its dialog; the console box
+- [x] H2 **PC-side cancel leaves the ProgressBox decaying to 0 B/s (A4).** Windows closes its dialog; the console box
       stays until speed hits zero. The box loop (`haze_helper.cpp` StartMtpProgressBox) only exits on `is_aborted`/seq
       change; a PC cancel (URB abort 0x748C) evidently never reaches `haze_callback` as an abort. Fix: surface the abort
       from libhaze (callback event) and close the box at once; as a fallback, if `is_active` and no bytes for >1.5 s and

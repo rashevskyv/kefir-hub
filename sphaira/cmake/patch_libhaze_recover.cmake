@@ -1,4 +1,4 @@
-# libhaze patch recover: sections 21 to 22 (a local abort re-enumerates MTP in device mode)
+# libhaze patch recover: sections 21 to 23 (local abort re-enumerates MTP in device mode; host cancel drops the partial file)
 
 # Replace `old` with `new` in `file` unless `marker` (a string only the new shape has) is present.
 function(haze_patch_once file marker old new label)
@@ -42,3 +42,11 @@ haze_patch_once("source/usb_session.cpp"
     "if (res == haze::ResultCancelled() || R_SUCCEEDED(res)) {"
     "/* sphaira: 0x828C reports the URB cancelled by usbDsEndpoint_Cancel above, which is what we asked for. */\n        if (res == haze::ResultCancelled() || R_SUCCEEDED(res) || res.GetValue() == 0x828C) {"
     "usb_session.cpp cancelled-urb status")
+
+# --- 23. source/ptp_responder_ptp_operations.cpp : upgrade trees patched before the early-EOT check ---
+# (fresh trees get it from ops_so_body_new_tail in patch_libhaze_cleanup.cmake)
+haze_patch_once("source/ptp_responder_ptp_operations.cpp"
+    "[LIBHAZE] host cancelled transfer"
+    "            R_THROW(haze::ResultCancelled());\n        }\n\n        transfer_success = true;"
+    "            R_THROW(haze::ResultCancelled());\n        }\n\n        /* sphaira: the host ended the data phase early (PC-side cancel); drop the partial file. */\n        if (has_known_size && offset < file_size) {\n            log_write(\"[LIBHAZE] host cancelled transfer: %s\\n\", obj->GetName());\n            R_RETURN(this->WriteResponse(PtpResponseCode_IncompleteTransfer));\n        }\n\n        transfer_success = true;"
+    "ptp_responder_ptp_operations.cpp early-EOT abort")
