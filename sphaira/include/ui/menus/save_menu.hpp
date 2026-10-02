@@ -270,16 +270,6 @@ private:
     void PromptLiveSaveAction(const std::vector<Entry>& seeds);
     void PromptBackupGroupAction(const std::vector<Entry>& seeds);
     void OpenGameBackupGroup(const Entry& game);
-    void RestoreAllForGame(const Entry& game);
-    void PromptRestoreAllDestinations(
-        std::shared_ptr<std::vector<Entry>> seeds,
-        size_t step,
-        std::shared_ptr<std::vector<AccountProfileBase>> accounts,
-        std::shared_ptr<std::vector<Entry>> resolved_targets,
-        std::shared_ptr<std::set<std::string>> seen_target_keys,
-        const dump::DumpLocation& location,
-        const fs::FsPath& backup_root,
-        const std::string& game_name);
     void CreateBackupIfNewer(const std::vector<Entry>& seeds);
     void VerifyIntegrity(const std::vector<Entry>& seeds);
     void DeleteOlderBackups(const std::vector<Entry>& seeds);

@@ -223,93 +223,89 @@ Search Paths".
 Each user has a separate tile for the game, with the name at the bottom of the tile.
 
 57
-00:03:12,467 --> 00:03:14,467
-Highlight it and press A.
+00:03:12,467 --> 00:03:16,533
+Highlight it and press A to open the actions for this backup.
 
 58
-00:03:14,467 --> 00:03:19,133
-"Restore all" restores every save on the tile from the newest backups.
+00:03:16,533 --> 00:03:21,000
+To restore several games or users at once, select the tiles with X.
 
 59
-00:03:19,133 --> 00:03:23,267
-Below are rows with the source app and the number of archives.
+00:03:21,000 --> 00:03:25,400
+Choose Restore and continue as before: user, backup, confirmation.
 
 60
-00:03:23,267 --> 00:03:28,533
-Select a row, then Restore, and continue as before: user, backup, confirmation.
-
-61
-00:03:28,533 --> 00:03:33,133
+00:03:25,400 --> 00:03:30,000
 In the same menu, "Verify integrity" checks the group's ZIP archives.
 
-62
-00:03:33,133 --> 00:03:37,533
+61
+00:03:30,000 --> 00:03:34,400
 "Delete older backups" keeps only the newest backup in each group.
 
-63
-00:03:37,533 --> 00:03:41,267
+62
+00:03:34,400 --> 00:03:38,133
 Backups on a USB drive do not appear on the Backups tab.
 
-64
-00:03:41,267 --> 00:03:46,267
+63
+00:03:38,133 --> 00:03:43,133
 To restore one, start from the Installed Games tab and pick the drive under
 
-65
-00:03:46,267 --> 00:03:48,267
+64
+00:03:43,133 --> 00:03:45,133
 Location.
 
-66
-00:03:48,267 --> 00:03:52,733
+65
+00:03:45,133 --> 00:03:49,600
 Delete erases the save from the console and does not make a backup.
 
-67
-00:03:52,733 --> 00:03:55,067
+66
+00:03:49,600 --> 00:03:51,933
 Make a backup before you choose it.
 
-68
-00:03:55,067 --> 00:03:58,067
+67
+00:03:51,933 --> 00:03:54,933
 You can also keep backups on a WebDAV server.
 
-69
-00:03:58,067 --> 00:04:03,000
+68
+00:03:54,933 --> 00:03:59,867
 Add it in Settings, Saves, "Save sync location", "+ Add network location".
 
-70
-00:04:03,000 --> 00:04:06,933
+69
+00:03:59,867 --> 00:04:03,800
 Select the games, press plus and choose "Sync with remote".
 
-71
-00:04:06,933 --> 00:04:12,200
+70
+00:04:03,800 --> 00:04:09,067
 Backups missing on the server are uploaded, and backups missing on the card are
 
-72
-00:04:12,200 --> 00:04:14,200
+71
+00:04:09,067 --> 00:04:11,067
 downloaded.
 
-73
-00:04:14,200 --> 00:04:17,333
+72
+00:04:11,067 --> 00:04:14,200
 Files with the same name are never overwritten.
 
-74
-00:04:17,333 --> 00:04:21,200
+73
+00:04:14,200 --> 00:04:18,067
 On the server the backups are in the sphaira-saves folder.
 
-75
-00:04:21,200 --> 00:04:26,533
+74
+00:04:18,067 --> 00:04:23,400
 Downloaded backups are not applied by themselves; restore them as shown earlier.
 
-76
-00:04:26,533 --> 00:04:31,400
+75
+00:04:23,400 --> 00:04:28,267
 "Auto-sync after backup" uploads every new backup right after it is made.
 
-77
-00:04:31,400 --> 00:04:37,000
+76
+00:04:28,267 --> 00:04:33,867
 "Include remote backups" in Restore Options downloads the backups that exist only on
 
-78
-00:04:37,000 --> 00:04:39,067
+77
+00:04:33,867 --> 00:04:35,933
 the server before you pick one.
 
-79
-00:04:39,067 --> 00:04:42,467
+78
+00:04:35,933 --> 00:04:39,333
 For more, read the Saves page in the documentation.

@@ -23,6 +23,10 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.968 — Backups tab: no "Restore all", a one-save tile opens its actions
+- User decision: a tile now holds one owner, so "Restore all" had nothing to combine. Removed (`RestoreAllForGame`, `PromptRestoreAllDestinations`); a tile with one backup group opens Backup Action directly, as DBI does; a tile with several (slots, Device + BCAT) lists them first. Several saves at once = select tiles with X. Back from Backup Action returns to the list only when there is one.
+- host tests: pass; nro: built; switch: pending (B5).
+
 ## v0.13.967 — Backups tab: one tile per game and user
 - User decision after the Fall Guys report: backups of one game from different users are no longer one tile with a cross-user "Restore all". The Backups tab groups by game + owner uid (device/BCAT backups of a game share an owner-less tile); the owner is drawn on a strip at the bottom of the icon (grid), after the name (list) and in the header. Back navigation finds the tile by game and owner.
 - Compared in Eden with DBI 810 on the user's own `/switch/DBI/saves` (DBI v119 from the card does not start in Eden: OpenBisFileSystem is not implemented): DBI lists one row per backup with the owner nickname from `.dbi_save_info.ini`; we show an id code for users not on the console (not changed yet).

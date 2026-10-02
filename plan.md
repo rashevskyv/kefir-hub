@@ -1,6 +1,6 @@
 # plan.md — work queue
 
-## Поточний delivery: v0.13.967
+## Поточний delivery: v0.13.968
 Попередній: v0.13.958
 
 Source: `docs/dev/AUDIT-2026-10-01.md` (findings F1–F10). Baseline v0.13.922, commit `0c80cdd4`.

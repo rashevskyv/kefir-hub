@@ -357,7 +357,8 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                 const bool match = IsSystemLikeSave(first.save_data_type)
                     ? (entry.system_save_data_id == first.system_save_data_id)
                     : (entry.application_id == first.application_id && !std::memcmp(&entry.uid, &first.uid, sizeof(AccountUid)));
-                if (match) {
+                // a tile with one backup group has no list to go back to (OpenGameBackupGroup skips it).
+                if (match && entry.children.size() > 1) {
                     auto* raw = popup.get();
                     popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, entry]() {
                         raw->SetPop();

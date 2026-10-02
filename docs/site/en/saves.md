@@ -101,12 +101,10 @@ Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps
 
 ## Restore from the Backups tab
 1. Open the [[Backups]] tab. A game has one tile for each user whose backups it holds; the user's name is on the tile. Device and BCAT backups of a game share a tile of their own.
-2. Focus a tile and press **A**. A list opens:
-    - [[Restore all]] — restores every save in this tile, newest backup of each.
-    - One line per save type or slot, with the source app, number of archives and the newest date. Choose a line for more actions.
+2. Focus a tile and press **A**. [[Backup Action]] opens. If the tile holds more than one save (several slots, or Device and BCAT), a list comes first: one line per save with the source app, number of archives and the newest date; choose one.
 3. In [[Backup Action]] choose [[Restore]] and continue as in [Restore a save](#restore-a-save) from step 3.
 
-<!-- shot: saves-backup-group | Backup group list for one game: Restore all, Account line with DBI source and archive count -->
+<!-- shot: saves-backup-group | Backups tab: game tiles with the owner name at the bottom, one game shown twice for two users -->
 
 [[Backup Action]] also has:
 
