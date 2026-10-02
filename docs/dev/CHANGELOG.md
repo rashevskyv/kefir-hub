@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.935 — MTP survives a Switch-side cancel (H1)
+libhaze patch 21–22: SendObject cleared the cancel flag in its scope exit, so the main loop never saw a local cancel, left the thread with usb:ds closed and app_usb handed the port to host mode (the v0.13.922 recovery was unreachable). Now every broken transport re-enumerates in device mode (log: `[USB] MTP re-enumerated in device mode after a local abort`); Exit during recovery skips the re-init; `0x828C` (status of the URB we cancel ourselves) is no longer reported as a failed cancel. Keeping the PTP session open without re-enumeration is not done: the host is mid data phase and libhaze has no STALL/Get_Device_Status path; drain-to-EOT (v0.13.918) breaks the ≤2 s goal on large files. host tests: pass · nro: not built · switch: pending (A3, A6, A7, A5, A11)
 ## v0.13.934 — build checkpoint (ReleaseWithInstall)
 Verified clean build for v0.13.929-933 (safe string copies, thread lifecycle parity, test cleanup); [100%] Built target sphaira_nro in WSL. host tests: pass · nro: built · switch: pending
 

@@ -43,6 +43,9 @@ void App::PollUsbStorage() {
     const bool pc_enumerated = usbds_up && usb_state == UsbState_Configured;
     if (pc_enumerated && haze::IsRecovering()) {
         haze::ClearRecovering();
+        if (!haze::IsRecovering()) {
+            log_write("[USB] MTP re-enumerated in device mode after a local abort\n");
+        }
     }
     // USB install owns usb:ds without haze while a PC is sending files.
     if (usbds_up && !haze::IsRunning() && pc_enumerated) {

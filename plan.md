@@ -67,7 +67,7 @@ and name the checklist item the user must re-run. Console log: `/config/kefir/lo
 the user drops logs into `scratch/` (git-ignored) as `scratch/<item>.log`. Do not guess when a log is missing — ask.
 Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v934.txt` (console log of the B-section run, 19:15–19:20), `scratch/errors-v934.txt` (append-only error log, all launches), `scratch/kefir-config.ini`, `scratch/dbi.config`. The MTP cancel runs (A3/A4) happened in earlier launches whose `log.txt` was overwritten — those logs are still pending from the user.
 
-- [ ] H1 **MTP drops after a Switch-side cancel (A3, A6, A7 note) — critical.** After B → «+» cancel, the console
+- [x] H1 **MTP drops after a Switch-side cancel (A3, A6, A7 note) — critical.** After B → «+» cancel, the console
       disconnects from MTP; the user must remount or re-plug. Expected: stay connected; if the transport really died,
       re-init MTP automatically in device mode (never host mode). This is what v0.13.911–922 tried to fix blind.
       Investigate: who calls `haze::Exit()` / USB reinit after `::haze::CancelTransfer()` (`graphify explain "Exit"`
@@ -78,6 +78,8 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       (1) preferred — on local cancel do NOT `SetBroken(true)`: abort only the object transfer, respond to the host with a PTP cancel/incomplete-transfer response, keep the session open (verify what the responder does after `SetCancelled` without `SetBroken`; the host sends `GetObjectHandles` next and the session must still answer);
       (2) safety net — if the transport must be reset, set the haze recovering flag *before* `SetBroken` so `app_usb.cpp` takes the recovery branch (L44) and re-inits MTP in device mode (v0.13.922 path), never host mode; add a log line on that branch.
       Also `failed to cancel endpoint 0 … 0x828C` happens on every cancel and at every shutdown (`errors-v934.txt`) — check whether `usbDsEndpoint_Cancel` is called on an endpoint with no in-flight URB (harmless) or on the wrong endpoint. **Re-run:** A3, A6, A7, A5, A11.
+      <!-- v0.13.935: fix (2) shipped (re-enumeration in device mode); fix (1) not viable without STALL + Get_Device_Status handling in libhaze — see CHANGELOG -->
+
 - [ ] H2 **PC-side cancel leaves the ProgressBox decaying to 0 B/s (A4).** Windows closes its dialog; the console box
       stays until speed hits zero. The box loop (`haze_helper.cpp` StartMtpProgressBox) only exits on `is_aborted`/seq
       change; a PC cancel (URB abort 0x748C) evidently never reaches `haze_callback` as an abort. Fix: surface the abort

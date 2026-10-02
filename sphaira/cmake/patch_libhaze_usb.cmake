@@ -472,3 +472,5 @@ if(EXISTS "include/haze/async_usb_server.hpp" AND EXISTS "source/async_usb_serve
 else()
     message(FATAL_ERROR "[libhaze-patch] async_usb_server.hpp or async_usb_server.cpp not found")
 endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/patch_libhaze_recover.cmake")
