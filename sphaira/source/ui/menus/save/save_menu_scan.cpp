@@ -229,6 +229,19 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
             m_backup_cache.clear();
             ReadBackupEntries(m_backup_cache);
             m_backup_cache_valid = true;
+            // archives without a stored name (safety copies) take it from another backup of the same user.
+            std::unordered_map<std::string, std::string> owner_names;
+            for (const auto& b : m_backup_cache) {
+                if (!b.backup_owner_name.empty()) {
+                    owner_names.try_emplace(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)), b.backup_owner_name);
+                }
+            }
+            for (auto& b : m_backup_cache) {
+                const auto it = owner_names.find(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)));
+                if (b.backup_owner_name.empty() && it != owner_names.end()) {
+                    b.backup_owner_name = it->second;
+                }
+            }
         }
         backups = m_backup_cache;
     }

@@ -23,6 +23,11 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.970 — Backup owner names: safety copies and two users with one nickname
+- Found in Eden on the user's `/dumps` + DBI saves: safety copies (`recovery.zip`, no `.dbi_save_info.ini`) showed an id code; they now take the name from another backup of the same uid. The user's console has two accounts named "nin10do": tiles and rows now add the same `(XXXX)` tag the user picker already uses, so the two are told apart.
+- Also seen, not changed: same game + owner from Kefir Hub and DBI is one tile (in the first source's section) with one row per source; backups that hold only metadata (Celeste, 1-2-Switch from v0.13.907) are left out of the library as before.
+- host tests: pass; nro: built; switch: pending.
+
 ## v0.13.969 — Backups show the owner's name from the archive
 - A backup of a user who is not on this console showed an id code (C37BD4AE); DBI shows the nickname. The metadata reader now keeps "Account=" from `.dbi_save_info.ini` (DBI and Kefir Hub archives both write it; `path::IniAccountName`, host-tested on the user's files) and `FormatBackupAccount` uses it when the uid is not a console account, so tiles, rows, the header, the user question and the confirmation say "Shark". The single-backup "Restore for user" question now also names the game, owner and date. Folder backups are not covered.
 - host tests: pass; nro: built; switch: pending (Backups tab names).

@@ -417,7 +417,14 @@ auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& 
 
     for (const auto& acc : accounts) {
         if (!std::memcmp(&e.uid, &acc.uid, sizeof(e.uid))) {
-            return acc.nickname;
+            // two users with one nickname get the same tag as in the "Restore for user" list.
+            const auto same_name = std::ranges::count_if(accounts, [&](const auto& a) { return !std::strncmp(a.nickname, acc.nickname, sizeof(acc.nickname)); });
+            if (same_name < 2) {
+                return acc.nickname;
+            }
+            char tagged[64];
+            std::snprintf(tagged, sizeof(tagged), "%.32s (%04X)", acc.nickname, static_cast<unsigned>(acc.uid.uid[1] & 0xFFFF));
+            return tagged;
         }
     }
     if (!e.backup_owner_name.empty()) {
