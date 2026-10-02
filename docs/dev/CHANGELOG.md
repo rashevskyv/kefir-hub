@@ -23,6 +23,11 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.961 — File Browser Split on R3; minimized install badge shows Finished (A10)
+- File Browser: Split moved from L3 to R3, because L3 expands a minimized background task from any menu.
+- Minimized install badge: after the last package (Summary, or an MTP/FTP session still waiting for more files) it shows "Finished" and a full bar instead of N/N with an empty bar; "Cancelled" for a cancelled session. Docs (EN+UK), video script 09 and subtitles updated. Screenshots `file-browser-list` and `file-browser-picker` still show the L3 glyph next to Split: retake pending.
+- Hardware: section A re-run by the user after v0.13.960 — all PASS (3.2 and H3 closed). host tests: pass; nro: built; switch: pending (A10: R3 Split, Finished badge).
+
 ## v0.13.960 — MTP progress-box state machine (3.2), no behaviour change
 - The five `g_mtp_*` flags are one `MtpTransferState g_mtp_state`; every change goes through pure transitions in `include/haze/mtp_transfer_state.hpp` (`OnFileStart`, `OnFileDone`, `OnUserCancel`, `OnWorkerCancel`, `OnUiLaunch`, `OnUiClosed`, `OnSessionEnd`, `OnInit`, `TransferredBytes`). Call sites in `haze_helper.cpp` / `haze_internal.cpp` keep the mutex and apply the returned action.
 - New `tests/test_mtp_transfer_state.cpp` (79 checks on the real header: Switch cancel, PC cancel, idle-window cancel, late-file relaunch, exit during transfer, repeated cancel). Deleted: `tests/test_mtp_cancellation_models.py` (Python model of itself; the contract test keeps the real patch-chain scenarios) and `tests/test_mtp_progress_calc.cpp` (local copies; its one real function is now tested through the header).

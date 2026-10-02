@@ -104,7 +104,8 @@ Menu::Menu(u32 flags, const ::sphaira::location::Entry* launch_location) : MenuB
         }
     }});
 
-    SetAction(Button::L3, Action{"Split"_i18n, [this](){
+    // R3, not L3: L3 expands a minimized background task from any menu.
+    SetAction(Button::R3, Action{"Split"_i18n, [this](){
         SetSplitScreen(IsSplitScreen() ^ 1);
     }});
 

@@ -20,7 +20,7 @@ The File Browser opens in the last folder you used on the memory card.
 | **Y** | Invert the selection |
 | **+** | [[File Options]] |
 | hold **ZR** + **+** | [[Advanced Options]] |
-| **L3** | Split the screen into two panes |
+| **R3** | Split the screen into two panes |
 
 The first row of every folder is `..`. Press **A** on it to go up, like **B**.
 At the top folder of the memory card, **B** opens the [list of sources](#switch-sources), or closes the
@@ -100,10 +100,10 @@ Press **+** and choose [[View]].
 | [[Hidden Last]] | Put hidden items at the end of the list | Off |
 
 ## Use two panes
-1. Press **L3**. The screen splits; the new pane shows the same folder.
+1. Press **R3** (press the right stick in). The screen splits; the new pane shows the same folder.
 2. Press **Left** or **Right** on the **D-pad** to switch between the panes.
 3. Each pane can show its own source. Copy in one pane, then paste in the other.
-4. Press **L3** again to go back to one pane.
+4. Press **R3** again to go back to one pane.
 
 <!-- shot: file-browser-split | Split screen: microSD card on the left, USB drive on the right -->
 

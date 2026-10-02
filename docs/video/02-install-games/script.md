@@ -52,4 +52,3 @@
 - install/index.md: plan D.2 removes the Enable sysMMC / Enable emuMMC switch. Scenes 5–6 stay until then; cut them and re-record when D.2 ships. (TODO(verify))
 - install/usb.md: does Windows need a USB driver (for example libusbK via Zadig) for DBI Backend / ns-usbloader? Not mentioned in the voiceover. (TODO(verify))
 - install/usb.md: which DBI Backend Qt version supports the live queue (scene 24), and where to download it? (TODO(verify))
-- install/sd-card.md: L3 restores the minimized queue from any menu, but the File Browser uses L3 for Split. Which one wins there? Scene 15 stays on the Tools tab. (TODO(verify))

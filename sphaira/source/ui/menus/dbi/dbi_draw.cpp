@@ -277,12 +277,18 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
 
     std::string pkg_str;
     const auto state = m_state.load();
+    // MTP/FTP sessions stay in Installing after the last package, waiting for more files.
+    const bool finished = state == State::Summary || (state == State::Installing && AllQueueEntriesTerminal(m_queue));
     if (state == State::WaitingForUsb || state == State::WaitingForList) {
         pkg_str = origin_str + " · " + "Waiting for PC"_i18n;
     } else if (state == State::Analysing) {
         pkg_str = origin_str + " · " + "Analysing"_i18n;
     } else if (state == State::ReviewQueue) {
         pkg_str = origin_str + " · " + "Ready to install"_i18n;
+    } else if (finished) {
+        pkg_str = origin_str + " · " + "Finished"_i18n;
+    } else if (state == State::Cancelled) {
+        pkg_str = origin_str + " · " + "Cancelled"_i18n;
     } else if (m_queue.empty()) {
         pkg_str = origin_str;
     } else {
@@ -307,7 +313,7 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
         : (has_known_package ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0);
 
     char right_buf[64]{};
-    if (state == State::Installing) {
+    if (state == State::Installing && !finished) {
         if (has_known_overall || has_known_package) {
             std::snprintf(right_buf, sizeof(right_buf), "%.0f%%   %s", ratio * 100.0, "Expand"_i18n.c_str());
         } else {
@@ -321,7 +327,10 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     // Mini progress bar
     const Vec4 bar{bx + 10.f, by + 28.f, bw - 20.f, 4.f};
     gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 2.f);
-    if ((has_known_overall || has_known_package) && ratio > 0.0) {
+    if (finished) {
+        // everything is done: a full bar, whatever the byte counters were reset to.
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 2.f);
+    } else if ((has_known_overall || has_known_package) && ratio > 0.0) {
         gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(ratio), bar.h, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 2.f);
     }
 }

@@ -1,6 +1,6 @@
 # plan.md — work queue
 
-## Поточний delivery: v0.13.960
+## Поточний delivery: v0.13.961
 Попередній: v0.13.958
 
 Source: `docs/dev/AUDIT-2026-10-01.md` (findings F1–F10). Baseline v0.13.922, commit `0c80cdd4`.
@@ -85,11 +85,11 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       change; a PC cancel (URB abort 0x748C) evidently never reaches `haze_callback` as an abort. Fix: surface the abort
       from libhaze (callback event) and close the box at once; as a fallback, if `is_active` and no bytes for >1.5 s and
       the USB transaction is gone, treat as aborted. Need `scratch/A4.log`. **Re-run:** A4, A1, A8.
-- [ ] H3 **Dropping a folder onto microSD via MTP does nothing (A2) — feature the user needs for translation packs.**
+- [x] H3 **Dropping a folder onto microSD via MTP does nothing (A2) — feature the user needs for translation packs.**
       Four files dropped at once work; a folder does not. MTP sends `SendObjectInfo` with format Association (0x3001)
       for the directory, then children. Check the device-root/SD route (`haze_fs_proxy.cpp`, `haze_game_proxy.cpp`,
       v0.13.913 routing) for missing directory creation / parent-handle mapping. **Re-run:** A2 (nested folder, 3+ files).
-      <!-- blocked: needs scratch/A2.log (console log of a folder drop on v0.13.943+, which logs `[LIBHAZE] SendObjectPropList …` and `[HAZE] CreateDirectory(…) 0x…`); code path reads correct, v0.13.913 routing removed in H8 -->
+      <!-- A2 reported PASS by the user after v0.13.960; no separate fix: the folder drop works since the v0.13.913 routing was removed in H8 -->
 
 - [x] H4 **New ZIP backup not listed in «Бекапи» (B2).** Backup written to `/dumps` (user's dump folder, v0.13.905)
       and visible in the file browser, but the Backups tab does not show it. Check the library scanner roots
@@ -192,7 +192,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       in `Init/Exit`), `ftpsrv_helper.cpp:144 g_is_running`, `log.cpp g_thread_running/g_thread_stop`,
       `net.cpp g_cache_valid/g_cache_value/g_request_open`, `account_link.cpp g_daemons_terminated`.
       **Done when:** the grep above returns 0 unannotated non-atomic globals. One commit per module.
-- [ ] 3.2 **MTP transfer state machine** (after H1/H2 are fixed and re-verified — refactor the behavior that works, not the one that is broken). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
+- [x] 3.2 **MTP transfer state machine** (after H1/H2 are fixed and re-verified — refactor the behavior that works, not the one that is broken). Create `sphaira/include/haze/mtp_transfer_state.hpp`:
       `struct MtpTransferState { bool active, aborted, ui_alive; u64 seq, handled_seq; }` plus pure transition
       functions, each returning the actions to perform: `OnFileStart(state, seq)`, `OnFileDone(state)`,
       `OnUserCancel(state) -> {cancel_worker, signal}`, `OnUiClosed(state) -> {relaunch}`, `OnExit(state)`.
@@ -202,7 +202,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       Write `tests/test_mtp_transfer_state.cpp` from `tests/test_mtp_cancellation_models.py` scenarios
       (Switch-side cancel, PC cancel/URB abort, cancel during idle window, relaunch after late file, exit during
       transfer, double cancel is a no-op). Then delete the py model. `[USER]` re-runs checklist section A.
-      <!-- blocked: code + host test shipped in v0.13.960; needs the user to re-run checklist section A on v0.13.960 -->
+      <!-- shipped in v0.13.960; the user re-ran checklist section A afterwards: all PASS, A10 remarks fixed in v0.13.961 -->
 - [x] 3.3 **Thread lifecycle parity.** For each `threadCreate` (19) confirm a matching `threadWaitForExit` +
       `threadClose` on every exit path (normal, error, `Exit()` while running). Fix leaks. Start with
       `haze_helper.cpp`, `ftpsrv_helper.cpp`, `log.cpp`. **Done when:** a table thread→create/wait/close sites is in
