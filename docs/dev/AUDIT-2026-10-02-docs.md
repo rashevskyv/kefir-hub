@@ -116,7 +116,6 @@ None of it has been verified on hardware, and line numbers are as of v0.13.936. 
 - **Not `_i18n`.** The "Import" button (`cheat_game_select_menu.cpp:367,375`); the Updater badges UPDATE/DOWNGRADE/Unsupported.
 - **Auto-sync after backup defaults to On** (`m_save_autosync`). Once a WebDAV location exists, every backup uploads
   without asking. Is that the intended default?
-- **Kefir 921 still ships Sphaira as `/hbmenu.nro`** and does not ship Kefir Hub. The docs describe launching Hub from the Homebrew Menu.
 - **"Tickets only" with "Skip if already installed = Skip".** Is the ticket still installed? The site's troubleshooting page relies on it.
 
 ## Dead code (unreachable from any menu)

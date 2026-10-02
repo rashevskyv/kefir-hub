@@ -13,7 +13,6 @@ It looks for itself at `/switch/kefir-hub/kefir-hub.nro` and `/switch/kefir-hub.
    it until the Homebrew Menu opens. (This is Kefir's setting. On plain Atmosphère the Album opens it without **R**.)
 2. Select Kefir Hub and press **A**.
 
-<!-- TODO(verify): Kefir 921 still ships Sphaira as /hbmenu.nro and no Kefir Hub. Update these steps when Kefir ships Kefir Hub (and whether as /hbmenu.nro). -->
 
 The way you start it matters:
 
