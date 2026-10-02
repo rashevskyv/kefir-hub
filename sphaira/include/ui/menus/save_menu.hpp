@@ -84,6 +84,8 @@ struct Entry final : FsSaveDataInfo {
     }
 };
 auto ExpandGameGroups(const std::vector<Entry>& entries) -> std::vector<Entry>;
+// batch restore: groups that differ only by backup source target one save slot; keep the newest.
+void KeepNewestPerSlot(std::vector<Entry>& groups);
 
 enum SortType {
     SortType_Updated,

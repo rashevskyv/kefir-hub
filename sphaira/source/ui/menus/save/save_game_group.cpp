@@ -7,11 +7,13 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_slot_backend.hpp"
+#include "ui/menus/save/save_batch_util.hpp"
 #include "save_menu_internal.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <memory>
 #include <set>
@@ -32,6 +34,25 @@ auto ExpandGameGroups(const std::vector<Entry>& entries) -> std::vector<Entry> {
         }
     }
     return out;
+}
+
+void KeepNewestPerSlot(std::vector<Entry>& groups) {
+    KeepNewestPerKey(groups,
+        [](const Entry& e) { return BackupGroupKey(e); },
+        [](const Entry& e) { return e.backup_timestamp; });
+}
+
+auto AccountPickerItems(const std::vector<AccountProfileBase>& accounts) -> std::vector<std::string> {
+    std::vector<std::string> items;
+    std::vector<std::string> tags;
+    for (const auto& acc : accounts) {
+        char tag[8];
+        std::snprintf(tag, sizeof(tag), "%04X", static_cast<unsigned>(acc.uid.uid[1] & 0xFFFF));
+        items.emplace_back(acc.nickname);
+        tags.emplace_back(tag);
+    }
+    DisambiguateLabels(items, tags);
+    return items;
 }
 
 void Menu::OpenGameBackupGroup(const Entry& game) {
@@ -133,6 +154,7 @@ void Menu::RestoreAllForGame(const Entry& game) {
         child.backup_is_directory = child.backup_members.front().is_directory;
         valid_children.emplace_back(std::move(child));
     }
+    KeepNewestPerSlot(valid_children);
 
     // Check Device/Bcat children for live targets FIRST.
     // If any lacks a compatible live target, explain which one is missing and block the batch before any save mutation.
@@ -235,10 +257,7 @@ void Menu::PromptRestoreAllDestinations(
         return;
     }
 
-    PopupList::Items items;
-    for (const auto& acc : *accounts) {
-        items.emplace_back(acc.nickname);
-    }
+    const auto items = AccountPickerItems(*accounts);
 
     std::string prompt = "Restore for user"_i18n;
     if (current_seed.save_data_index != 0) {

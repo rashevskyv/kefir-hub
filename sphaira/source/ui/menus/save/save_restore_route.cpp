@@ -421,10 +421,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
             return;
         }
 
-        PopupList::Items items;
-        for (const auto& acc : accounts) {
-            items.emplace_back(acc.nickname);
-        }
+        const auto items = AccountPickerItems(accounts);
 
         auto popup = std::make_unique<PopupList>("Restore for user"_i18n, items, [this, group, accounts, location, backup_root](auto op_index) mutable {
             if (!op_index || *op_index >= static_cast<s64>(accounts.size())) {
@@ -473,6 +470,7 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
             }
         }
     }
+    KeepNewestPerSlot(groups);
 
     if (groups.size() == 1) {
         RestoreSingleBackupGroup(std::move(groups.front()), nullptr, force_user_picker, location, backup_root, return_to_actions);
@@ -544,10 +542,7 @@ void Menu::PromptBatchRestoreTargets(
         return;
     }
 
-    PopupList::Items items;
-    for (const auto& acc : *accounts) {
-        items.emplace_back(acc.nickname);
-    }
+    const auto items = AccountPickerItems(*accounts);
 
     std::string prompt = "Restore for user"_i18n;
     if (current_seed.GetName() && current_seed.GetName()[0] != '\0') {

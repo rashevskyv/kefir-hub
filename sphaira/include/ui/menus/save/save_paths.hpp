@@ -141,6 +141,8 @@ struct BackupSecondaryColumns {
 };
 
 auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;
+// nicknames for a "pick a user" list; accounts that share a nickname get a uid suffix.
+auto AccountPickerItems(const std::vector<AccountProfileBase>& accounts) -> std::vector<std::string>;
 auto FormatBackupTimestamp(u64 ts, bool compact = false) -> std::string;
 auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> BackupSecondaryColumns;
 auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;

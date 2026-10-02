@@ -98,7 +98,7 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       not «Corrupted». After «Так»: «Вибраний архів резервної копії змінився або більше не доступний» — the staged-ZIP
       revalidation (v0.13.882 blocker 4) rejects a valid archive; likely compares path/size/mtime after staging or after
       slot creation changed the catalog entry. Find the exact failing comparison and log it. **Re-run:** B4.
-- [ ] H6 **Restore picker: duplicate users, wrong game name, «дублікат цільового слота» (B5).** «Бекапи» → Real Boxing 2
+- [x] H6 **Restore picker: duplicate users, wrong game name, «дублікат цільового слота» (B5).** «Бекапи» → Real Boxing 2
       → the dialog is titled «Відновити для користувача (Minecraft)» (stale title from another entry), lists «nin10do»
       twice (same uid, not deduplicated — probably accounts + save owners merged), and selecting one yields the
       duplicate-slot error. Fix: dedupe targets by uid, take the title from the selected group. **Re-run:** B5.
