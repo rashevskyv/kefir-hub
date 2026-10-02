@@ -4,7 +4,15 @@ Map of user-visible features to the page in `docs/site/en/` that documents them.
 in October 2026 (agents read `sphaira/source/ui/menus/*` and the `"..."_i18n` strings).
 Status values: **doc** = documented, **partial** = documented with gaps (see TODO(verify) in the page),
 **none** = not documented, with the reason.
-When a feature ships or changes, update its row and its page.
+When a feature ships or changes, update its row and its page (skill `.agents/skills/update-docs/SKILL.md`).
+
+## Features under review
+The owner may remove these. Keep them documented as they are, but do not expand them or build other pages
+around them. When a decision is made, follow the skill: "removed" or drop it from this list.
+
+| Feature | Pages and places that mention it | Since |
+|---|---|---|
+| Console Transfer (Tools hub tile, Install & Share entries, profile packs) | console-transfer, index (Tools tile table), users (Manage Backups, receive), saves (Share Save Backups), video 07, site /usage, /hbl | 2026-10-02 |
 
 ## Settings, troubleshooting
 | Feature | UI | Code | Page | Status |
