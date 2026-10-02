@@ -280,11 +280,11 @@ Some tasks can run in the background, for example the web server.
 
 71
 00:04:03,600 --> 00:04:08,067
-Press L3 and the window shrinks to a badge in the top right corner.
+Press R3 and the window shrinks to a badge in the top right corner.
 
 72
 00:04:08,067 --> 00:04:11,867
-Press L3 again or tap the badge to bring the window back.
+Press R3 again or tap the badge to bring the window back.
 
 73
 00:04:11,867 --> 00:04:14,733

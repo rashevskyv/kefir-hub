@@ -10,7 +10,7 @@
 namespace sphaira::ui {
 namespace {
 
-// small corner badge shown while a detached transfer is minimised via L3.
+// small corner badge shown while a detached transfer is minimised via R3.
 // speed_str may be empty if no sample has landed yet.
 void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 offset, s64 size, const std::string& speed_str) {
     // clamp the displayed fraction: see the note in ProgressBox::Draw().
@@ -43,7 +43,7 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
     }
 
     char expand_buf[64];
-    std::snprintf(expand_buf, sizeof(expand_buf), " %s", "Expand"_i18n.c_str());
+    std::snprintf(expand_buf, sizeof(expand_buf), " %s", "Expand"_i18n.c_str());
 
     float bounds[4];
     nvgFontSize(vg, 15.f);
@@ -296,7 +296,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     if (m_detached) {
-        const auto minimize_hint = " " + "Minimize"_i18n;
+        const auto minimize_hint = " " + "Minimize"_i18n;
         // Home suspends the whole console (all threads, including this transfer)
         // rather than just this app - we can't intercept the press itself, only warn.
         gfx::drawTextArgs(vg, center_x, end_y - 20.f, 14.f, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),

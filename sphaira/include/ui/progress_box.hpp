@@ -76,7 +76,7 @@ struct ProgressBox final : Widget, InstallProgress {
     // a "detached" box lives outside the widget stack (see App::PushTransfer()):
     // it still runs its worker thread and can be Draw()n, but never receives
     // Update() and thus never blocks input to whatever menu is on screen.
-    // it can be minimised into a small corner badge via L3 (see App::Update()).
+    // it can be minimised into a small corner badge via R3 (see App::Update()).
     void SetDetached(bool detached) { m_detached = detached; }
     auto IsDetached() const { return m_detached; }
     void ToggleMinimized() override { m_minimized = !m_minimized; }

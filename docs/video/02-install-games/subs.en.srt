@@ -128,7 +128,7 @@ You cannot select it.
 
 33
 00:01:52,933 --> 00:01:56,400
-R3 switches the storage for the highlighted package.
+L3 switches the storage for the highlighted package.
 
 34
 00:01:56,400 --> 00:02:00,200
@@ -152,7 +152,7 @@ Want to keep using Kefir Hub?
 
 39
 00:02:13,400 --> 00:02:15,400
-Press L3.
+Press R3.
 
 40
 00:02:15,400 --> 00:02:20,933
@@ -160,7 +160,7 @@ The queue keeps working in the background and a progress badge stays in the corn
 
 41
 00:02:20,933 --> 00:02:23,000
-L3 again brings the queue back.
+R3 again brings the queue back.
 
 42
 00:02:23,000 --> 00:02:25,000

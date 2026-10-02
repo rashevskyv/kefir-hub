@@ -75,8 +75,8 @@ the microSD card, or the album of the emuMMC you booted.
 
 ### Stop the web server {#web-stop}
 
-Press **B** on the [[Web Sharing Server]] window. Press **L3** to shrink the window to a badge and keep using
-Kefir Hub while the server runs; press **L3** again to bring it back.
+Press **B** on the [[Web Sharing Server]] window. Press **R3** to shrink the window to a badge and keep using
+Kefir Hub while the server runs; press **R3** again to bring it back.
 
 The server also stops by itself when the console goes offline or gets a new IP address
 ([[Web server stopped: the console went offline]], [[Web server stopped: the console's IP address changed]]).

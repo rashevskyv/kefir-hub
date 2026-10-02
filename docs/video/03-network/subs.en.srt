@@ -172,7 +172,7 @@ When you are done, press B in the server window on the console.
 
 44
 00:02:37,067 --> 00:02:42,533
-L3 shrinks the window to a badge, and the server keeps running while you use Kefir
+R3 shrinks the window to a badge, and the server keeps running while you use Kefir
 
 45
 00:02:42,533 --> 00:02:44,533

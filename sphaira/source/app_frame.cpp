@@ -146,7 +146,7 @@ void App::Update() {
         // An install session is the sole input owner even while minimized; the
         // server box's worker keeps running without calling its input method.
         if (!active_install && !has_modal) {
-            if (m_controller.GotDown(Button::L3)) {
+            if (m_controller.GotDown(Button::R3)) {
                 m_active_transfer_pbox->ToggleMinimized();
                 App::PlaySoundEffect(SoundEffect_Focus);
                 block_background_update = true;
@@ -174,7 +174,7 @@ void App::Update() {
         const bool touch_badge = !has_modal && session->IsMinimized() && m_touch_info.is_clicked &&
                                  m_touch_info.in_range(Vec4(bx, by, bw, bh));
 
-        if (!has_modal && (m_controller.GotDown(Button::L3) || touch_badge)) {
+        if (!has_modal && (m_controller.GotDown(Button::R3) || touch_badge)) {
             session->ToggleMinimized();
             App::PlaySoundEffect(SoundEffect_Focus);
             session->Update(nullptr, nullptr);
@@ -207,7 +207,7 @@ void App::Update() {
             const bool touch_badge = !has_modal && m_touch_info.is_clicked &&
                                      m_touch_info.in_range(Vec4(bx, by, bw, bh));
 
-            if (!has_modal && (m_controller.GotDown(Button::L3) || touch_badge)) {
+            if (!has_modal && (m_controller.GotDown(Button::R3) || touch_badge)) {
                 m_widgets.back()->ToggleMinimized();
                 App::PlaySoundEffect(SoundEffect_Focus);
                 m_widgets.back()->Update(nullptr, nullptr);

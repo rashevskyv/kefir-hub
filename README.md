@@ -42,7 +42,7 @@ Full guides live in the [Documentation Wiki](docs/wiki/Home.md). One line per fe
 - PC Install (USB): DBI Backend with live SPHQ queue sync, Awoo/TinFoil and GoldLeaf, one screen for all of them.
 - MTP: install by copying to the console, Games drive for NSP dumping, external MTP devices, storage names and visibility.
 - Game installer: NSP/NSZ/XCI/XCZ from SD, gamecard, USB, MTP, FTP, Web and Ownfoil; storage priority and reserve threshold.
-- Recursive folder install, review queue controls, L3 minimize badge, Minus screensaver with drifting readout.
+- Recursive folder install, review queue controls, R3 minimize badge, Minus screensaver with drifting readout.
 - Web File Manager at `http://kefir.local`: SPA, transfer queue, direct install, ZIP download, screenshot gallery.
 - Ownfoil client, FTP server, NX-Link, Remote Input from phone or PC, Wi-Fi connection manager.
 

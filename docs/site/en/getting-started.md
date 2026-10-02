@@ -33,7 +33,7 @@ How to move around Kefir Hub: buttons, the screen layout, option panels, dialogs
 | **Y** | Invert the selection |
 | **L** / **R** | Switch tabs on the main screen. In other lists: one page up / down |
 | **ZL** / **ZR** | Jump to the first / last item of a list |
-| **L3** | Minimize or expand a running background task |
+| **R3** | Minimize or expand a running background task |
 
 A screen can give a button another job. The footer always shows what each button does right now.
 In the [File Browser](file-browser.md), for example, **−** goes back one screen.
@@ -105,8 +105,8 @@ Press **B** to stop. Kefir Hub asks [[Are you sure you wish to cancel?]] first.
 Some tasks can run in the background while you keep using Kefir Hub: the install queue, MTP and web
 transfers, and the download of a Kefir Hub update.
 
-1. Press **L3**. The task shrinks to a badge in the top right corner with its progress.
-2. Press **L3** again, or tap the badge, to bring the window back.
+1. Press **R3**. The task shrinks to a badge in the top right corner with its progress.
+2. Press **R3** again, or tap the badge, to bring the window back.
 
 !!! warning
     Pressing HOME pauses the transfer. The console suspends Kefir Hub while you are in the HOME Menu.

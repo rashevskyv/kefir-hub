@@ -23,6 +23,12 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.962 — Minimize/Expand on R3; File Browser Split back on L3
+- User decision after v0.13.961: the background-task badge (install queue, MTP/FTP/web transfers) is minimized and expanded with R3 from any menu; File Browser Split returns to L3. In the install review queue "Package target" moves from R3 to L3 to free the button. L3 Launch in Games no longer collides.
+- Known overlap: while a task is minimized, R3 expands it instead of Star/Unstar in Homebrew, Themes and Themezer.
+- Docs (EN+UK), wiki, README, video scripts 01/02/03 and the guide site updated; script 09 restored. Screenshots with the stick glyph in the footer or badge still show the old button: retake pending.
+- host tests: pass; nro: built; switch: pending (A10).
+
 ## v0.13.961 — File Browser Split on R3; minimized install badge shows Finished (A10)
 - File Browser: Split moved from L3 to R3, because L3 expands a minimized background task from any menu.
 - Minimized install badge: after the last package (Summary, or an MTP/FTP session still waiting for more files) it shows "Finished" and a full bar instead of N/N with an empty bar; "Cancelled" for a cancelled session. Docs (EN+UK), video script 09 and subtitles updated. Screenshots `file-browser-list` and `file-browser-picker` still show the L3 glyph next to Split: retake pending.

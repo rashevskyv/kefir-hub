@@ -60,7 +60,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Install options (3 groups) | Settings → Install | settings_categories.cpp:436-514 | install/index#install-options | doc |
 | Install one/several files, recursive folder | File Browser | filebrowser_view.cpp, filebrowser_recursive_install.cpp | install/sd-card | doc |
 | Install queue: review, buttons, progress, skip, cancel, summary, errors.txt | Install queue | dbi_*.cpp | install/sd-card#queue | doc |
-| Minimize to badge | L3 | app_frame.cpp:169-230 | install/sd-card#minimize | L3 from any menu; File Browser Split moved to R3 in v0.13.961 |
+| Minimize to badge | R3 | app_frame.cpp:169-230 | install/sd-card#minimize | R3 from any menu since v0.13.962 (was L3); Package target moved to L3 |
 | Screen off during install | − | dbi_menu_options.cpp:249-334, screensaver.cpp | install/sd-card#screen-off | doc |
 | PC Install (USB): DBI Backend/Qt, ns-usbloader, Fluffy; live queue; USB speed badge | Tools + → PC Install (USB) | dbi_usb.cpp, yati/source/usb.cpp, dbi_plan.cpp | install/usb | partial: backend version for live queue |
 | MTP install: auto start, storages, progress, cancel, .nro → /switch | PC Explorer | app_usb.cpp, install_stream*.cpp, haze_helper.cpp | install/mtp | partial: Windows-side behaviour |

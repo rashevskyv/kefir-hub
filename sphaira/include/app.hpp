@@ -67,7 +67,7 @@ public:
     }
 
     // owns a single ProgressBox outside of the widget stack: it keeps running
-    // and drawing (as a corner badge or, expanded via L3, a non-blocking
+    // and drawing (as a corner badge or, expanded via R3, a non-blocking
     // dialog) without ever consuming Update() from the active menu. used for
     // transfers triggered from outside the UI (e.g. MTP installs), where the
     // user should be able to keep navigating while it runs in the background.

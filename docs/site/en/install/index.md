@@ -52,7 +52,7 @@ Each package goes either to the microSD card or to the system memory (NAND). [[I
 
 Kefir Hub keeps 500 MB free on each storage when it plans where packages go. Change this in the queue's [[Options]] with [[Reserve free space (system)]] and [[Reserve free space (microSD)]] (see [Queue options](sd-card.md#queue-options)). If the selected packages do not fit after the reserve, the queue asks [[Selected packages may not fit after the configured reserve. Continue?]].
 
-In the install queue you can also set the target of one package: highlight it and press **R3** ([[Package target]]) to switch between [[Auto]], [[microSD]] and [[System memory]].
+In the install queue you can also set the target of one package: highlight it and press **L3** ([[Package target]]) to switch between [[Auto]], [[microSD]] and [[System memory]].
 
 ## Install options {#install-options}
 

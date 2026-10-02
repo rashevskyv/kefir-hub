@@ -52,7 +52,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 Плануючи, куди піде пакет, Kefir Hub залишає вільними 500 МБ на кожному сховищі. Змінити це можна в [[Options]] черги: [[Reserve free space (system)]] і [[Reserve free space (microSD)]] (див. [Параметри черги](sd-card.md#queue-options)). Якщо вибрані пакети з урахуванням резерву не вміщаються, черга запитає [[Selected packages may not fit after the configured reserve. Continue?]].
 
-У черзі встановлення можна задати сховище й для окремого пакета: виділіть його й натисніть **R3** ([[Package target]]), щоб перемикати [[Auto]], [[microSD]] і [[System memory]].
+У черзі встановлення можна задати сховище й для окремого пакета: виділіть його й натисніть **L3** ([[Package target]]), щоб перемикати [[Auto]], [[microSD]] і [[System memory]].
 
 ## Параметри встановлення {#install-options}
 

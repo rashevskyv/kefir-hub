@@ -315,12 +315,12 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     char right_buf[64]{};
     if (state == State::Installing && !finished) {
         if (has_known_overall || has_known_package) {
-            std::snprintf(right_buf, sizeof(right_buf), "%.0f%%   %s", ratio * 100.0, "Expand"_i18n.c_str());
+            std::snprintf(right_buf, sizeof(right_buf), "%.0f%%   %s", ratio * 100.0, "Expand"_i18n.c_str());
         } else {
-            std::snprintf(right_buf, sizeof(right_buf), "--   %s", "Expand"_i18n.c_str());
+            std::snprintf(right_buf, sizeof(right_buf), "--   %s", "Expand"_i18n.c_str());
         }
     } else {
-        std::snprintf(right_buf, sizeof(right_buf), " %s", "Expand"_i18n.c_str());
+        std::snprintf(right_buf, sizeof(right_buf), " %s", "Expand"_i18n.c_str());
     }
     gfx::drawText(vg, bx + bw - 10.f, by + 10.f, 13.f, info_col, right_buf, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
 

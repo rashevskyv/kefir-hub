@@ -86,9 +86,9 @@ You can install all packages inside a directory hierarchy in one step:
 ## 4. Background Minimization & Multitasking
 
 During USB PC installations or network streaming transfers:
-- **Press L3 (Left Stick Click):** Minimizes the installation screen into a compact top-right status badge (e.g. `USB · 2/5 (68%)  Expand`).
+- **Press R3 (Right Stick Click):** Minimizes the installation screen into a compact top-right status badge (e.g. `USB · 2/5 (68%)  Expand`).
 - While minimized, you can freely browse file directories, inspect game libraries, view system information, and adjust settings.
-- **Tap or Press L3:** Instantly restores the full-screen installation interface.
+- **Tap or Press R3:** Instantly restores the full-screen installation interface.
 - Minimize/Expand is also available during the USB connection wait and review queue stages.
 
 ---

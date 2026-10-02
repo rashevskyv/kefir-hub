@@ -50,9 +50,9 @@ For files on a network share the install size is not checked in advance; the que
 | **A** | [[Install selected]]. If nothing is selected, installs the highlighted package. |
 | **X** | [[Select]] or unselect the highlighted package. |
 | **Y** | [[Invert]] the selection. |
-| **R3** | [[Package target]]: switch the highlighted package between [[Auto]], [[microSD]] and [[System memory]]. |
+| **L3** | [[Package target]]: switch the highlighted package between [[Auto]], [[microSD]] and [[System memory]]. |
 | **+** | [[Options]], see [Queue options](#queue-options). |
-| **L3** | [[Minimize]], see [Keep using the console while it installs](#minimize). |
+| **R3** | [[Minimize]], see [Keep using the console while it installs](#minimize). |
 | **−** | [[Screen off]], see [Turn the screen off](#screen-off). |
 | **B** | [[Cancel session]]: close the queue without installing. |
 
@@ -67,15 +67,15 @@ While the queue runs, the top row shows the [[Package]] number, [[Overall]] prog
 | **B** | [[Skip package]]: stop the current package and go on to the next. Asks [[Skip this package?]] first. |
 | **X** | [[Cancel queue]]: stop everything. Asks [[Cancel installation queue?]] first. |
 | **+** | [[Options]]. |
-| **L3** | [[Minimize]]. |
+| **R3** | [[Minimize]]. |
 | **−** | [[Screen off]]. |
 
 If [[Skip if already installed]] is set to [[Prompt]], the queue stops at each installed title and asks [[Already installed. Reinstall?]].
 
 ## Keep using the console while it installs {#minimize}
 
-1. Press **L3** ([[Minimize]]). The queue keeps running and a small badge with the progress stays at the top right of the screen.
-2. Press **L3** again from any menu, or tap the badge, to bring the queue back ([[Expand]]).
+1. Press **R3** ([[Minimize]]). The queue keeps running and a small badge with the progress stays at the top right of the screen.
+2. Press **R3** again from any menu, or tap the badge, to bring the queue back ([[Expand]]).
 
 When everything is installed, the badge shows [[Finished]] and a full bar.
 
@@ -140,7 +140,7 @@ All other install options are in Settings, see [Install options](index.md#instal
 
 **A package is shown in red.** It reads [[Analysis failed]]: the file is damaged, incomplete or not a game package. Check the file on a PC.
 
-**The queue warns about free space.** You see [[Selected packages may not fit after the configured reserve. Continue?]]. Unselect some packages, move some to the other storage with **R3**, or lower the reserve in [[Options]].
+**The queue warns about free space.** You see [[Selected packages may not fit after the configured reserve. Continue?]]. Unselect some packages, move some to the other storage with **L3**, or lower the reserve in [[Options]].
 
 **The screen seems to freeze during a long install.** The install keeps going. If this bothers you, turn off [[Boost CPU during transfer]] in [[Tools]] → [[Settings]] → [[Install]].
 

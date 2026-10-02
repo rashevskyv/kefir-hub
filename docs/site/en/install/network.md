@@ -61,7 +61,7 @@ What happens to each file:
 | Any other file | Saves it into the folder that is open in the browser. If a file with that name exists, the new one gets a number: `name (1).ext`. |
 
 !!! tip
-    Press **L3** to shrink the server window to a badge in the corner and keep using Kefir Hub. Press **L3** again
+    Press **R3** to shrink the server window to a badge in the corner and keep using Kefir Hub. Press **R3** again
     to bring it back. In Applet Mode keep the window open: the server has less memory there.
 
 The server stops by itself when the console loses its network ([[Web server stopped: the console went offline]])
@@ -108,7 +108,7 @@ time left. It shows:
 - [[Written]]: how much data has been written so far.
 - [[Average speed]].
 
-Shrunk to a badge with **L3**, it shows `--` instead of a percent. When the FTP program has nothing more to send,
+Shrunk to a badge with **R3**, it shows `--` instead of a percent. When the FTP program has nothing more to send,
 the screen changes to [[Session summary]] (see [When the queue finishes](sd-card.md#summary)).
 
 To cancel on the console, press **X** ([[Cancel installation]]) and confirm [[Cancel installation?]].

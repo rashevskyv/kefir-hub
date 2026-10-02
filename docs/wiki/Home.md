@@ -22,7 +22,7 @@ Welcome to the **Kefir Hub** documentation wiki. Kefir Hub is a high-performance
 ## Core Architecture & Highlights
 
 1. **Non-Blocking Multitasking:**
-   - Background USB and network installations can be minimized to a compact badge (**L3**) while navigating file systems, game libraries, or settings.
+   - Background USB and network installations can be minimized to a compact badge (**R3**) while navigating file systems, game libraries, or settings.
    - Built-in drift-capable screensaver (**Minus (-)**) protecting OLED panels and battery during long transfers.
 
 2. **Bidirectional Protocol Integration (SPHQ):**

@@ -37,8 +37,8 @@ void Menu::UpdateActions() {
                 }
             }}),
             std::make_pair(Button::A, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),
-            std::make_pair(Button::R3, Action{"Package target"_i18n, [this]() { CycleSelectedTarget(); }}),
-            std::make_pair(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }}),
+            std::make_pair(Button::L3, Action{"Package target"_i18n, [this]() { CycleSelectedTarget(); }}),
+            std::make_pair(Button::R3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }}),
             std::make_pair(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }}),
             std::make_pair(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }})
         );

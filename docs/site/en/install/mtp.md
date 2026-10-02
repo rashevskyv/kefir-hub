@@ -38,7 +38,7 @@ If you copy a game file to the microSD card drive instead, it is only stored on 
 
 The PC does not tell the console how big the file is, so the console cannot show a percentage for the whole copy. The top row shows [[Mode]] MTP, how many files are [[Installed]], how much was [[Written]] and the [[Average speed]]. [[Remaining]] appears only when the size is known. Use the copy window on the PC to see how far the copy is.
 
-You can press **L3** ([[Minimize]]) to hide the screen while it installs, and **−** ([[Screen off]]) to turn the screen off, as in the [install queue](sd-card.md#minimize).
+You can press **R3** ([[Minimize]]) to hide the screen while it installs, and **−** ([[Screen off]]) to turn the screen off, as in the [install queue](sd-card.md#minimize).
 
 On Windows the copy window closes at about the time the install finishes.
 

@@ -203,7 +203,7 @@ void InstallSession::UpdateActions() {
                 }});
             }
         }
-        SetAction(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
+        SetAction(Button::R3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
     } else if (state == State::Summary || state == State::Cancelled) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
             m_should_exit = true;
@@ -230,7 +230,7 @@ void InstallSession::UpdateActions() {
             SetAction(Button::X, Action{"Cancel installation"_i18n, [this]() { CancelSession(); }});
         } else {
             SetAction(Button::B, Action{"Cancel session"_i18n, [this]() { CancelSession(); }});
-            SetAction(Button::L3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
+            SetAction(Button::R3, Action{m_minimized ? "Expand"_i18n : "Minimize"_i18n, [this]() { ToggleMinimized(); }});
         }
     }
 
@@ -273,7 +273,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         m_screensaver.FlushPendingBrightness();
     }
 
-    if (controller && controller->GotDown(Button::L3)) {
+    if (controller && controller->GotDown(Button::R3)) {
         ToggleMinimized();
         App::PlaySoundEffect(SoundEffect_Focus);
     }

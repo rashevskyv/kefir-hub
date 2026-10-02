@@ -490,7 +490,7 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
     App::PopToMenu();
     // Route the server box through the detached-transfer path (like MTP) instead
     // of pushing it as a blocking widget. This grants it the same UX as other
-    // transfers: L3 minimises it to a corner badge (so the menu stays usable
+    // transfers: R3 minimises it to a corner badge (so the menu stays usable
     // while the server / an install runs) and B / Stop cancels it.
     App::PushTransfer(std::make_unique<ui::ProgressBox>(qr_image, title, url,
         [url](ui::ProgressBox* pbox) -> Result {
