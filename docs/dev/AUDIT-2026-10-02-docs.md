@@ -105,6 +105,20 @@ None of it has been verified on hardware, and line numbers are as of v0.13.936. 
   - «Теки» vs «папка».
 - **Stale "Sphaira" keys in en.json** (logs warning, hbmenu restore, replace hbmenu). Probably dead.
 
+## Found later (site and video pass)
+- **uk.json wrong meanings.**
+  - "Target" = «Макет» (that is Layout); it shows in the USB/DBI queue and in Themezer.
+  - "Legacy" = «Доступні оновлення».
+  - "Install" is the noun «Встановлення» on buttons.
+  - "Enable sysMMC" is the imperative «Увімкніть sysMMC».
+  - "Cheats" «Чіти» vs «чити» elsewhere.
+  - "Kefir Settings" «Налаштування кефіру» (brand in lowercase).
+- **Not `_i18n`.** The "Import" button (`cheat_game_select_menu.cpp:367,375`); the Updater badges UPDATE/DOWNGRADE/Unsupported.
+- **Auto-sync after backup defaults to On** (`m_save_autosync`). Once a WebDAV location exists, every backup uploads
+  without asking. Is that the intended default?
+- **Kefir 921 still ships Sphaira as `/hbmenu.nro`** and does not ship Kefir Hub. The docs describe launching Hub from the Homebrew Menu.
+- **"Tickets only" with "Skip if already installed = Skip".** Is the ticket still installed? The site's troubleshooting page relies on it.
+
 ## Dead code (unreachable from any menu)
 - Per-profile backup/restore and the user backup library: `users_profile.cpp:78` ConfirmBackup,
   `users_restore.cpp:353`, `users_manage.cpp:122`, `users_restore_remote*`, `users_manage_backups/ops`.

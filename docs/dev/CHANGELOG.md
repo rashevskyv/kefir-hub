@@ -4,6 +4,7 @@ Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
 ## unreleased
+- docs: video tutorial scripts `docs/video/01..09` (scene table, UK+EN voiceover, draft subtitles via `docs/video/srt.py`); docs fixes from the site pass (Album needs R on Kefir, assoc ini, /firmware is cleared), uk docs use «папка».
 - docs: user docs site `docs/site` (MkDocs, EN+UK, 23 pages written from code); UI names as `[[en.json key]]` resolved from prod i18n per language (`tests/test_doc_labels_contract.py`); `shot` markers + `docs/site/shotlist.py` for screenshots; coverage map `docs/dev/DOCS-COVERAGE.md`, code findings `docs/dev/AUDIT-2026-10-02-docs.md`. docs build: pass; host tests: pass.
 - chore: context diet — AGENTS.md/CLAUDE.md/plan.md, CHANGELOG from git history, junk untracked, one test-build skill, graphify hook.
 - docs: README 435 -> 109 lines; its feature detail moved into docs/wiki (new Interface-and-Navigation.md).
