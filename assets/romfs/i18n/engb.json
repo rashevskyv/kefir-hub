@@ -2503,7 +2503,7 @@
   "No compatible live save slot found on console.": "No compatible live save slot found on console.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.",
   "Cannot restore directly to backup or invalid save target.": "Cannot restore directly to backup or invalid save target.",
-  "Duplicate restore target slot selected.": "Duplicate restore target slot selected.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "This user already gets another backup of this game. Choose another user, or restore one backup on its own.",
   "Source and target count mismatch.": "Source and target count mismatch.",
   "Validating save...": "Validating save...",
   "User": "User",

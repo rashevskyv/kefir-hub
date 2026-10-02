@@ -2427,7 +2427,7 @@
   "No compatible live save slot found on console.": "На кансолі не знойдзена сумяшчальнага актыўнага слота захавання.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Слот захавання быў створаны, але аднаўленне не завяршылася.\nСлот захавання застаецца даступным для паўторнай спробы або ручнога кіравання.\nАрхіў бяспечнага аднаўлення не быў створаны, бо слот быў толькі што створаны.",
   "Cannot restore directly to backup or invalid save target.": "Немагчыма аднавіць наўпрост у рэзервовую копію або няправільную мэтавую зону захавання.",
-  "Duplicate restore target slot selected.": "Выбраны дублікаты мэтавага слота для аднаўлення.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Гэты карыстальнік ужо атрымлівае іншую копію гэтай гульні. Выберыце іншага карыстальніка або аднавіце адну копію асобна.",
   " corrupt archive(s) found:\n": " знойдзены(-ыя) пашкоджаны(-ыя) архіў(-ы):\n",
   "No older backups to delete.": "Няма старых рэзервовых копій для выдалення.",
   "Delete ": "Выдаліць ",

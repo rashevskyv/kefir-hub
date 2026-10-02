@@ -2679,7 +2679,7 @@
   "No compatible live save slot found on console.": "Geen compatibel live opslagslot gevonden op console.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Opslagslot is aangemaakt, maar herstel is niet voltooid.\nHet opslagslot blijft beschikbaar om opnieuw te proberen of handmatig te beheren.\nEr is geen veiligheidsherstelarchief aangemaakt omdat het slot pas is aangemaakt.",
   "Cannot restore directly to backup or invalid save target.": "Kan niet rechtstreeks herstellen naar back-up of ongeldig opslagdoel.",
-  "Duplicate restore target slot selected.": "Dubbel hersteldoelslot geselecteerd.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Deze gebruiker krijgt al een andere back-up van deze game. Kies een andere gebruiker of herstel één back-up apart.",
   "Source and target count mismatch.": "Aantal bronnen en doelen komt niet overeen.",
   "Validating save...": "Opslag valideren...",
   "User": "Gebruiker",

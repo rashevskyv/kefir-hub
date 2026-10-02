@@ -2401,7 +2401,7 @@
   "No compatible live save slot found on console.": "Konsolē nav atrasta neviena saderīga aktīvā saglabāšanas vieta.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Saglabāšanas vieta tika izveidota, bet atjaunošana nebeidzās.\nSaglabāšanas vieta paliek pieejama atkārtotam mēģinājumam vai manuālai pārvaldīšanai.\nDrošības atkopšanas arhīvs netika izveidots, jo vieta tika izveidota no jauna.",
   "Cannot restore directly to backup or invalid save target.": "Nevar atjaunot tieši uz dublējumu vai nederīgu saglabāšanas mērķi.",
-  "Duplicate restore target slot selected.": "Atlasīts dublēts atjaunošanas mērķa slots.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Šis lietotājs jau saņem citu šīs spēles dublējumu. Izvēlieties citu lietotāju vai atjaunojiet vienu dublējumu atsevišķi.",
   " corrupt archive(s) found:\n": " atrasti bojāti arhīvi:\n",
   "No older backups to delete.": "Nav vecāku dublējumu, ko dzēst.",
   "Delete ": "Dzēst ",

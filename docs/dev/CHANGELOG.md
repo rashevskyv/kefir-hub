@@ -23,6 +23,10 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.966 — Restore: say whose backup the user question is about; a clash asks again
+- User report (Fall Guys, "Duplicate restore target slot selected"): the card holds two DBI backups of the game from two users (Shark, not on this console; nin10do). "Restore all" asked "Restore for user" twice with nothing telling the backups apart, so both went to one user. The question now reads "Restore for user (game · backup owner · date)" (`BackupPickerTitle`), and a clash explains itself and asks that save again instead of ending the restore (stops if the console has one user).
+- The old message key is replaced in all 26 locales (translated by hand). host tests: pass; nro: built; switch: pending (B5 with Fall Guys).
+
 ## v0.13.965 — Saves: tab switch reuses the scanned backup library
 - Evidence (`scratch/log-saves-session-v934.txt`): Installed tab scans in ~20 ms, Deleted and Backups in ~980 ms each time, all of it in `ReadBackupEntries` (opens every archive). `ScanHomebrew(true)` on a tab switch reuses the last result; any other rescan and every `OnFocusGained` (dialog, transfer or another screen closed) drops the cache.
 - Still ~1 s: the first visit to Deleted/Backups after opening the screen or after any action. Known limit: files added over MTP/FTP while the screen stays open and focused appear after the next action.

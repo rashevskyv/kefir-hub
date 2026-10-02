@@ -2427,7 +2427,7 @@
   "No compatible live save slot found on console.": "Nie znaleziono kompatybilnego aktywnego gniazda zapisu na konsoli.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Gniazdo zapisu zostało utworzone, ale przywracanie nie zostało ukończone.\nGniazdo zapisu pozostaje dostępne do ponownej próby lub ręcznego zarządzania.\nNie utworzono archiwum odzyskiwania bezpieczeństwa, ponieważ gniazdo zostało dopiero utworzone.",
   "Cannot restore directly to backup or invalid save target.": "Nie można przywrócić bezpośrednio do kopii zapasowej lub nieprawidłowego celu zapisu.",
-  "Duplicate restore target slot selected.": "Wybrano zduplikowane docelowe gniazdo przywracania.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Ten użytkownik otrzymuje już inną kopię zapasową tej gry. Wybierz innego użytkownika albo przywróć jedną kopię osobno.",
   " corrupt archive(s) found:\n": " znaleziono uszkodzone archiwum(-a):\n",
   "No older backups to delete.": "Brak starszych kopii zapasowych do usunięcia.",
   "Delete ": "Usunąć ",

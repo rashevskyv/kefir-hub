@@ -2374,7 +2374,7 @@
   "No compatible live save slot found on console.": "Konsolda uyumlu canlı kayıt yuvası bulunamadı.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Kayıt yuvası oluşturuldu, ancak geri yükleme tamamlanmadı.\nKayıt yuvası yeniden deneme veya manuel yönetim için kullanılabilir durumda kalır.\nYuva yeni oluşturulduğu için güvenlik kurtarma arşivi oluşturulmadı.",
   "Cannot restore directly to backup or invalid save target.": "Yedeğe veya geçersiz kayıt hedefine doğrudan geri yüklenemez.",
-  "Duplicate restore target slot selected.": "Yinelenen geri yükleme hedef yuvası seçildi.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Bu kullanıcı bu oyunun başka bir yedeğini zaten alıyor. Başka bir kullanıcı seçin veya tek bir yedeği ayrı olarak geri yükleyin.",
   " corrupt archive(s) found:\n": " bozuk arşiv(ler) bulundu:\n",
   "No older backups to delete.": "Silinecek daha eski yedek yok.",
   "Delete ": "Sil: ",

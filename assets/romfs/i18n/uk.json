@@ -2503,7 +2503,7 @@
   "No compatible live save slot found on console.": "На консолі не знайдено сумісного слота збереження.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Слот збереження було створено, але відновлення не завершилося.\nСлот залишається доступним для повторної спроби або керування вручну.\nРезервну копію безпеки не створено, оскільки слот новий.",
   "Cannot restore directly to backup or invalid save target.": "Неможливо відновити безпосередньо в резервну копію або недійсний цільовий слот.",
-  "Duplicate restore target slot selected.": "Вибрано дублікат цільового слота для відновлення.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Цей користувач уже отримує іншу копію цієї гри. Виберіть іншого користувача або відновіть одну копію окремо.",
   "Source and target count mismatch.": "Невідповідність кількості вихідних і цільових елементів.",
   "Validating save...": "Перевірка збереження...",
   "User": "Користувач",

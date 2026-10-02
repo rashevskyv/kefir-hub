@@ -2479,7 +2479,7 @@
   "No compatible live save slot found on console.": "Ingen kompatibel aktiv sparfilslucka hittades på konsolen.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Sparfilsluckan skapades, men återställningen slutfördes inte.\nSparfilsluckan finns kvar för nytt försök eller manuell hantering.\nInget säkerhetsåterställningsarkiv skapades eftersom luckan nyss skapades.",
   "Cannot restore directly to backup or invalid save target.": "Kan inte återställa direkt till backup eller ogiltigt sparmål.",
-  "Duplicate restore target slot selected.": "Duplicerat återställningsmål har valts.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Den här användaren får redan en annan säkerhetskopia av spelet. Välj en annan användare eller återställ en säkerhetskopia för sig.",
   "Source and target count mismatch.": "Antalet källor och mål matchar inte.",
   "Validating save...": "Validerar sparfil...",
   "User": "Användare",

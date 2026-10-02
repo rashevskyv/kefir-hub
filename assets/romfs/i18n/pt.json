@@ -2707,7 +2707,7 @@
   "No compatible live save slot found on console.": "Nenhum espaço de gravação ativo compatível encontrado na consola.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "O espaço de gravação foi criado, mas a>(-1) restauração não terminou.\nO espaço de gravação permanece disponível para nova tentativa ou gestão manual.\nNão foi criada nenhuma(-1) cópia de segurança de recuperação de segurança porque o espaço foi criado de novo.",
   "Cannot restore directly to backup or invalid save target.": "Não é possível restaurar diretamente para uma cópia de segurança ou para um destino de gravação inválido.",
-  "Duplicate restore target slot selected.": "Espaço de destino de restauração duplicado selecionado.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Este utilizador já recebe outra cópia de segurança deste jogo. Escolha outro utilizador ou restaure uma só cópia em separado.",
   "Source and target count mismatch.": "Incompatibilidade entre a contagem de origem e de destino.",
   "Validating save...": "A validar gravação...",
   "User": "Utilizador",

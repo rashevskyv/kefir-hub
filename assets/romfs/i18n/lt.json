@@ -2453,7 +2453,7 @@
   "No compatible live save slot found on console.": "Konsolėje nerasta suderinamo aktyvaus išsaugojimo lizdo.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Išsaugojimo lizdas buvo sukurtas, tačiau atkūrimas nepasibaigė.\nIšsaugojimo lizdas lieka prieinamas pakartotiniam bandymui arba rankiniam valdymui.\nNebuvo sukurtas joks apsauginis atkūrimo archyvas, nes lizdas buvo ką tik sukurtas.",
   "Cannot restore directly to backup or invalid save target.": "Negalima atkurti tiesiogiai į atsarginę kopiją arba netinkamą išsaugojimo tikslą.",
-  "Duplicate restore target slot selected.": "Pasirinktas pasikartojantis atkūrimo tikslo lizdas.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Šis naudotojas jau gauna kitą šio žaidimo atsarginę kopiją. Pasirinkite kitą naudotoją arba atkurkite vieną kopiją atskirai.",
   "Source and target count mismatch.": "Šaltinio ir paskirties elementų skaičius nesutampa.",
   "Validating save...": "Tikrinamas išsaugojimas...",
   "User": "Naudotojas",

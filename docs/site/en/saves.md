@@ -130,7 +130,7 @@ Device and BCAT saves are not created automatically: start the game once so it c
 To restore a save for a game you have uninstalled, either keep the console's save (it stays under [[Deleted Games]] and can be restored there), or install the game again first.
 
 ## Restore several saves at once
-Select several saves (or several backup groups), then choose [[Restore]]. [[Restore for user]] asks once which user gets all of them; pick [[Choose for each save]] there to answer for every save separately. If two of the selected backups are the same game from different users, it asks for each save. Then one dialog lists every save and where it goes; confirm it with [[Yes]]. The saves are restored one by one: if one fails, the ones before it stay restored.
+Select several saves (or several backup groups), then choose [[Restore]]. [[Restore for user]] asks once which user gets all of them; pick [[Choose for each save]] there to answer for every save separately. If two of the selected backups are the same game from different users, it asks for each save; the question names the game, whose backup it is and its date. Give each backup a different user, or restore just one of them. Then one dialog lists every save and where it goes; confirm it with [[Yes]]. The saves are restored one by one: if one fails, the ones before it stay restored.
 
 ## Undo a restore
 The safety copy from `/dumps/recovery/` is an ordinary save ZIP of the save as it was before the restore.

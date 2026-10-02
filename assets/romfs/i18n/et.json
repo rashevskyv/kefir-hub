@@ -2477,7 +2477,7 @@
   "No compatible live save slot found on console.": "Konsoolilt ei leitud ühtegi ühilduvat aktiivset salvestuskohta.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Salvestuskoht loodi, kuid taastamine ei lõppenud.\nSalvestuskoht on endiselt saadaval uuesti proovimiseks või käsitsi haldamiseks.\nTurvataaste arhiivi ei loodud, kuna koht oli äsja loodud.",
   "Cannot restore directly to backup or invalid save target.": "Otse varukoopiasse või vigasesse salvestussihtmärki ei saa taastada.",
-  "Duplicate restore target slot selected.": "Valitud on duplikaat taastamise sihtkoht.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "See kasutaja saab juba selle mängu teise varukoopia. Vali teine kasutaja või taasta üks varukoopia eraldi.",
   "Other": "Muu",
   "Backup folder metadata is missing or incomplete for save slot creation.": "Varukoopia kausta metaandmed puuduvad või on salvestuskoha loomiseks puudulikud.",
   "Selected backup archive does not match destination save slot.": "Valitud varukoopia arhiiv ei vasta sihtkoha salvestuskohale.",

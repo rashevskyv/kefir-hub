@@ -2655,7 +2655,7 @@
   "No compatible live save slot found on console.": "Kein kompatibler aktiver Speicherstand-Slot auf der Konsole gefunden.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Speicherstand-Slot wurde erstellt, aber die Wiederherstellung wurde nicht abgeschlossen.\nDer Speicherstand-Slot bleibt für einen erneuten Versuch oder die manuelle Verwaltung verfügbar.\nEs wurde kein Sicherheitswiederherstellungsarchiv erstellt, da der Slot neu erstellt wurde.",
   "Cannot restore directly to backup or invalid save target.": "Kann nicht direkt auf ein Backup oder ein ungültiges Speicherziel wiederherstellen.",
-  "Duplicate restore target slot selected.": "Dupliziertes Wiederherstellungsziel-Slot ausgewählt.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Dieser Benutzer erhält bereits eine andere Sicherung dieses Spiels. Wähle einen anderen Benutzer oder stelle eine Sicherung einzeln wieder her.",
   "Source and target count mismatch.": "Anzahl von Quelle und Ziel stimmt nicht überein.",
   "Validating save...": "Speicherstand wird validiert...",
   "User": "Benutzer",

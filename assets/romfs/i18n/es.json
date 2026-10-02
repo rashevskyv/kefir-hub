@@ -2530,7 +2530,7 @@
   "No compatible live save slot found on console.": "No se encontró ninguna ranura de partida guardada activa compatible en la consola.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Se creó la ranura de partida guardada, pero la restauración no finalizó.\nLa ranura sigue disponible para reintentarla o gestionarla manualmente.\nNo se creó ningún archivo de recuperación de seguridad porque la ranura era nueva.",
   "Cannot restore directly to backup or invalid save target.": "No se puede restaurar directamente a una copia de seguridad o a un destino de guardado no válido.",
-  "Duplicate restore target slot selected.": "Se ha seleccionado una ranura de destino de restauración duplicada.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Este usuario ya recibe otra copia de seguridad de este juego. Elige otro usuario o restaura una sola copia por separado.",
   "Source and target count mismatch.": "El recuento de origen y destino no coincide.",
   "Validating save...": "Validando datos guardados...",
   "User": "Usuario",

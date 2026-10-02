@@ -2733,7 +2733,7 @@
   "No compatible live save slot found on console.": "在主機上未找到相容的有效存檔槽。",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "存檔槽已建立，但還原未完成。\n該存檔槽仍可用於重試或手動管理。\n由於是新建的槽位，未建立安全復原存檔。",
   "Cannot restore directly to backup or invalid save target.": "無法直接還原到備份或無效的存檔目標。",
-  "Duplicate restore target slot selected.": "選擇了重複的還原目標槽。",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "此使用者已在接收此遊戲的另一個備份。請選擇其他使用者，或單獨還原一個備份。",
   "Source and target count mismatch.": "來源和目標數量不符。",
   "Validating save...": "正在驗證存檔...",
   "User": "使用者",

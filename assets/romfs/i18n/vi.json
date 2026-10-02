@@ -2529,7 +2529,7 @@
   "No compatible live save slot found on console.": "Không tìm thấy ô lưu trữ trực tiếp tương thích nào trên máy.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Ô lưu trữ đã được tạo, nhưng quá trình khôi phục chưa hoàn tất.\nÔ lưu trữ vẫn khả dụng để thử lại hoặc quản lý thủ công.\nKhông có tệp lưu trữ khôi phục an toàn nào được tạo vì ô này vừa mới được tạo.",
   "Cannot restore directly to backup or invalid save target.": "Không thể khôi phục trực tiếp vào bản sao lưu hoặc mục tiêu lưu trữ không hợp lệ.",
-  "Duplicate restore target slot selected.": "Đã chọn ô mục tiêu khôi phục bị trùng lặp.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Người dùng này đã nhận một bản sao lưu khác của trò chơi này. Hãy chọn người dùng khác hoặc khôi phục riêng một bản sao lưu.",
   "Source and target count mismatch.": "Số lượng nguồn và mục tiêu không khớp.",
   "Validating save...": "Đang xác thực dữ liệu lưu trữ...",
   "User": "Người dùng",

@@ -2554,7 +2554,7 @@
   "No compatible live save slot found on console.": "Nessuno slot di salvataggio attivo compatibile trovato sulla console.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Lo slot di salvataggio è stato creato, ma il ripristino non è completato.\nLo slot di salvataggio rimane disponibile per un nuovo tentativo o per la gestione manuale.\nNon è stato creato alcun archivio di recupero di sicurezza poiché lo slot è stato appena creato.",
   "Cannot restore directly to backup or invalid save target.": "Impossibile ripristinare direttamente su un backup o su una destinazione di salvataggio non valida.",
-  "Duplicate restore target slot selected.": "È stato selezionato uno slot di destinazione del ripristino duplicato.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Questo utente riceve già un altro backup di questo gioco. Scegli un altro utente o ripristina un solo backup separatamente.",
   "Source and target count mismatch.": "Discrepanza nel conteggio tra origine e destinazione.",
   "Validating save...": "Convalida del salvataggio in corso...",
   "User": "Utente",

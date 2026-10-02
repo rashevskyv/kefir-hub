@@ -521,7 +521,11 @@ void Menu::PromptBatchRestoreTargets(
 
         const auto key = SaveEntryKey(*target);
         if (!seen_target_keys->insert(key).second) {
-            App::Push<OptionBox>("Duplicate restore target slot selected."_i18n, "OK"_i18n);
+            // ask this save again, one by one (a shared answer would just repeat the clash).
+            App::Push<OptionBox>("This user already gets another backup of this game. Choose another user, or restore one backup on its own."_i18n, "OK"_i18n,
+                [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions](auto) {
+                    if ((*seeds)[step].save_data_type == FsSaveDataType_Account) PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
+                });
             return;
         }
 
@@ -560,11 +564,9 @@ void Menu::PromptBatchRestoreTargets(
 
     auto items = AccountPickerItems(*accounts);
 
-    std::string prompt = "Restore for user"_i18n;
+    const std::string prompt = shared_uid ? "Restore for user"_i18n : BackupPickerTitle(current_seed, *accounts);
     if (shared_uid) {
         items.emplace_back("Choose for each save"_i18n);
-    } else if (current_seed.GetName() && current_seed.GetName()[0] != '\0') {
-        prompt += " (" + std::string(current_seed.GetName()) + ")";
     }
 
     auto popup = std::make_unique<PopupList>(prompt, items, [this, resolve_for_uid, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid](auto op_index) {

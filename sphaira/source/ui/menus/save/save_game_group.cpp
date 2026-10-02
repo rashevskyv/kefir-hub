@@ -55,6 +55,19 @@ auto AccountPickerItems(const std::vector<AccountProfileBase>& accounts) -> std:
     return items;
 }
 
+auto BackupPickerTitle(const Entry& seed, const std::vector<AccountProfileBase>& accounts) -> std::string {
+    // two backups of one game from different users look the same otherwise.
+    std::string title = "Restore for user"_i18n + " (";
+    if (seed.GetName() && seed.GetName()[0] != '\0') {
+        title += std::string(seed.GetName()) + " · ";
+    }
+    title += FormatBackupAccount(seed, accounts) + " · " + FormatBackupTimestamp(seed.backup_timestamp, false);
+    if (seed.save_data_index != 0) {
+        title += " · #" + std::to_string(seed.save_data_index);
+    }
+    return title + ")";
+}
+
 void Menu::OpenGameBackupGroup(const Entry& game) {
     if (game.children.empty()) {
         App::Push<OptionBox>("No backups found for this game."_i18n, "OK"_i18n);
@@ -205,7 +218,14 @@ void Menu::PromptRestoreAllDestinations(
 
         const auto key = SaveEntryKey(*target);
         if (!seen_target_keys->insert(key).second) {
-            App::Push<OptionBox>("Duplicate restore target slot selected."_i18n, "OK"_i18n);
+            // with one user on the console the answer cannot change: stop instead of asking again.
+            const bool can_choose = accounts->size() > 1 && (*seeds)[step].save_data_type == FsSaveDataType_Account;
+            App::Push<OptionBox>("This user already gets another backup of this game. Choose another user, or restore one backup on its own."_i18n, "OK"_i18n,
+                [this, can_choose, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, game_name](auto) {
+                    if (can_choose) {
+                        PromptRestoreAllDestinations(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, game_name);
+                    }
+                });
             return;
         }
 
@@ -258,11 +278,7 @@ void Menu::PromptRestoreAllDestinations(
     }
 
     const auto items = AccountPickerItems(*accounts);
-
-    std::string prompt = "Restore for user"_i18n;
-    if (current_seed.save_data_index != 0) {
-        prompt += " (slot "_i18n + std::to_string(current_seed.save_data_index) + ")";
-    }
+    const auto prompt = BackupPickerTitle(current_seed, *accounts);
 
     auto popup = std::make_unique<PopupList>(prompt, items, [resolve_for_uid, accounts](auto op_index) {
         if (!op_index || *op_index >= static_cast<s64>(accounts->size())) {

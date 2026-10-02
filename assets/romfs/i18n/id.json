@@ -2528,7 +2528,7 @@
   "No compatible live save slot found on console.": "Tidak ada slot simpan langsung yang kompatibel yang ditemukan di konsol.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Slot simpan berhasil dibuat, tetapi pemulihan tidak selesai.\nSlot simpan tetap tersedia untuk dicoba lagi atau dikelola secara manual.\nTidak ada arsip pemulihan keselamatan yang dibuat karena slot baru saja dibuat.",
   "Cannot restore directly to backup or invalid save target.": "Tidak dapat memulihkan secara langsung ke cadangan atau target simpan yang tidak valid.",
-  "Duplicate restore target slot selected.": "Slot target pemulihan duplikat dipilih.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Pengguna ini sudah menerima cadangan lain dari game ini. Pilih pengguna lain, atau pulihkan satu cadangan secara terpisah.",
   "Rank: ": "Peringkat: ",
   "Index: ": "Indeks: ",
   "Save ID: ": "ID Simpanan: ",

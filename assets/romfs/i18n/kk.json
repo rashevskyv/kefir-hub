@@ -2553,7 +2553,7 @@
   "No compatible live save slot found on console.": "Консольде үйлесімді белсенді сақтау ұяшығы табылмады.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "Сақтау ұяшығы жасалды, бірақ қалпына келтіру аяқталмады.\nСақтау ұяшығы қайта әрекет жасау немесе қолмен басқару үшін қолжетімді болып қалады.\nҰяшық жаңадан жасалғандықтан, ешқандай қауіпсіздік қалпына келтіру мұрағаты жасалмады.",
   "Cannot restore directly to backup or invalid save target.": "Сақтық көшірмеге немесе жарамсыз сақтау мақсатына тікелей қалпына келтіру мүмкін емес.",
-  "Duplicate restore target slot selected.": "Қайталанатын қалпына келтіру мақсатты ұяшығы таңдалды.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "Бұл пайдаланушы осы ойынның басқа сақтық көшірмесін алып қойған. Басқа пайдаланушыны таңдаңыз немесе бір көшірмені бөлек қалпына келтіріңіз.",
   "Local address": "Жергілікті мекенжай",
   "Remote address": "Қашықтағы мекенжай",
   "Ownfoil server saved.": "Ownfoil сервері сақталды.",

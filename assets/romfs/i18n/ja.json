@@ -2629,7 +2629,7 @@
   "No compatible live save slot found on console.": "互換性のある有効なセーブスロットが本体に見つかりませんでした。",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "セーブスロットは作成されましたが、復元が完了しませんでした。\nセーブスロットは再試行または手動管理のために保持されます。\n新しく作成されたスロットのため、安全回復アーカイブは作成されませんでした。",
   "Cannot restore directly to backup or invalid save target.": "バックアップまたは無効なセーブ先へ直接復元することはできません。",
-  "Duplicate restore target slot selected.": "重複した復元先スロットが選択されています。",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "このユーザーには、このゲームの別のバックアップがすでに割り当てられています。別のユーザーを選ぶか、バックアップを1つずつ復元してください。",
   "Source and target count mismatch.": "ソースとターゲットの数が一致しません。",
   "Validating save...": "セーブを検証中...",
   "User": "ユーザー",

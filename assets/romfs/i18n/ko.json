@@ -2604,7 +2604,7 @@
   "No compatible live save slot found on console.": "본문에서 호환되는 활성 세이브 슬롯을 찾을 수 없습니다.",
   "Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created.": "세이브 슬롯이 생성되었으나 복원이 완료되지 않았습니다.\n세이브 슬롯은 재시도 또는 수동 관리를 위해 계속 사용할 수 있습니다.\n새로 생성된 슬롯이므로 안전 복구 아카이브가 생성되지 않았습니다.",
   "Cannot restore directly to backup or invalid save target.": "백업 또는 잘못된 세이브 대상에 직접 복원할 수 없습니다.",
-  "Duplicate restore target slot selected.": "중복된 복원 대상 슬롯이 선택되었습니다.",
+  "This user already gets another backup of this game. Choose another user, or restore one backup on its own.": "이 사용자는 이미 이 게임의 다른 백업을 받습니다. 다른 사용자를 선택하거나 백업 하나만 따로 복원하세요.",
   "Source and target count mismatch.": "소스와 대상 수가 일치하지 않습니다.",
   "Validating save...": "세이브 유효성 검사 중...",
   "User": "사용자",
