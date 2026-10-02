@@ -1,6 +1,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "defines.hpp"
 #include "log.hpp"
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <set>
@@ -31,11 +32,19 @@ auto DiscoverSaveDataInfo(const AccountUid* uid_filter, const std::optional<u8>&
     std::vector<FsSaveDataInfo> out;
     std::set<std::string> seen_keys;
 
-    for (const auto space : CONCRETE_SAVE_DATA_SPACES) {
+    for (size_t i = 0; i < CONCRETE_SAVE_DATA_SPACES.size(); i++) {
+        const auto space = CONCRETE_SAVE_DATA_SPACES[i];
         FsSaveDataInfoReader reader;
         const auto open_rc = fsOpenSaveDataInfoReader(&reader, space);
         if (R_FAILED(open_rc)) {
-            log_write("[SAVE] fsOpenSaveDataInfoReader failed for space %d: 0x%x\n", static_cast<int>(space), open_rc);
+            // a space this console refuses (ProperSystem: 2002-6001) fails on every scan, twice
+            // per UI action: log it once per run. R_VALUE drops the reserved bits, which fs
+            // fills with a per-call counter (the value looked like it grew by 0x400000).
+            static std::atomic<u32> s_logged_spaces{0};
+            const u32 bit = 1u << i;
+            if (!(s_logged_spaces.fetch_or(bit) & bit)) {
+                log_write("[SAVE] fsOpenSaveDataInfoReader failed for space %d: 0x%x (logged once)\n", static_cast<int>(space), R_VALUE(open_rc));
+            }
             continue;
         }
 
