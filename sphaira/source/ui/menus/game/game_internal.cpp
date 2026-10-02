@@ -158,7 +158,7 @@ Result CreateSave(u64 app_id, AccountUid uid) {
 
     const auto res = save::CreateSaveDataChecked(req);
     if (!res.verified) {
-        return R_FAILED(res.rc) ? res.rc : FsError_PathNotFound;
+        return R_FAILED(res.rc) ? res.rc : static_cast<Result>(FsError_PathNotFound);
     }
 
     R_SUCCEED();

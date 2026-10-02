@@ -88,7 +88,7 @@ Result ThreadData::Read(void* buf, s64 size, u64* bytes_read) {
     size = std::min<s64>(size, nca->size - read_offset);
     const auto rc = yati->source->Read(buf, nca->offset + read_offset, size, bytes_read);
     if (R_FAILED(rc) || *bytes_read == 0) {
-        log_write("[YATI] ThreadData::Read: off=%lld, size=%lld, read=%lld, rc=0x%X\n", nca->offset + read_offset, size, *bytes_read, rc);
+        log_write("[YATI] ThreadData::Read: off=%ld, size=%ld, read=%lu, rc=0x%X\n", nca->offset + read_offset, size, *bytes_read, rc);
     }
     R_TRY(rc);
 

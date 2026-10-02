@@ -272,6 +272,8 @@ void Menu::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
         case FsType::Stdio:
             m_fs = std::make_unique<fs::FsStdio>(true, new_entry.root);
             break;
+        default: // the picker only offers the storages above
+            break;
     }
 
     if (HasFocus()) {

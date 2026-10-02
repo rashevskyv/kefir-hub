@@ -20,36 +20,6 @@ constinit UEvent g_change_uevent;
 
 namespace {
 
-void GetFsSaveAttr(const AccountProfileBase& acc, u8 data_type, FsSaveDataSpaceId& space_id, FsSaveDataFilter& filter) {
-    std::memset(&filter, 0, sizeof(filter));
-
-    space_id = FsSaveDataSpaceId_User;
-    filter.attr.save_data_type = data_type;
-    filter.filter_by_save_data_type = true;
-
-    switch (data_type) {
-        case FsSaveDataType_System:
-        case FsSaveDataType_SystemBcat:
-            space_id = FsSaveDataSpaceId_System;
-            break;
-        case FsSaveDataType_Account:
-            space_id = FsSaveDataSpaceId_User;
-            filter.attr.uid = acc.uid;
-            filter.filter_by_user_id = true;
-            break;
-        case FsSaveDataType_Bcat:
-        case FsSaveDataType_Device:
-            space_id = FsSaveDataSpaceId_User;
-            break;
-        case FsSaveDataType_Temporary:
-            space_id = FsSaveDataSpaceId_Temporary;
-            break;
-        case FsSaveDataType_Cache:
-            space_id = FsSaveDataSpaceId_SdUser;
-            break;
-    }
-}
-
 void FreeEntry(NVGcontext* vg, Entry& e) {
     nvgDeleteImage(vg, e.image);
     e.image = 0;

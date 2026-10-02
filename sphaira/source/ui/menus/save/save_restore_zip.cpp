@@ -135,7 +135,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
             if (out_created_slot_retained) *out_created_slot_retained = true;
         }
         if (!create_res.verified) {
-            return R_FAILED(create_res.rc) ? create_res.rc : FsError_PathNotFound;
+            return R_FAILED(create_res.rc) ? create_res.rc : static_cast<Result>(FsError_PathNotFound);
         }
         was_newly_created = true;
         static_cast<FsSaveDataInfo&>(target_entry) = create_res.verified_info;

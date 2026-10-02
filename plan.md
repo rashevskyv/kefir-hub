@@ -46,14 +46,14 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
 - [x] 1.1 **Build v0.13.922.** Run the `test-build` skill (WSL, preset `ReleaseWithInstall`). 922 was never built.
       Fix compile errors surgically if any. **Done when:** `[100%] Built target sphaira_nro`.
       *(verified clean build on v0.13.928: [100%] Built target sphaira_nro, host tests passed)*
-- [ ] 1.2 **Warning inventory.** Rebuild from clean (`rm -rf build/ReleaseWithInstall`), capture
+- [x] 1.2 **Warning inventory.** Rebuild from clean (`rm -rf build/ReleaseWithInstall`), capture
       `cmake --build ... 2>&1 | grep -E 'warning:' | grep -E 'sphaira/|hbl/|sysmodule/' | sort -u > /tmp/warn.txt`.
       Record the count in the CHANGELOG entry. Fix every first-party warning (not `libs/`). Then enable `-Werror`
       for first-party sources only: in `sphaira/CMakeLists.txt` uncomment `-Werror` **inside the first-party
       compile-options block** (line ~376); if it also hits `libs/` targets, scope it with
       `set_source_files_properties(<first-party sources> PROPERTIES COMPILE_OPTIONS -Werror)` instead.
       Keep existing `-Wno-*` lines. **Done when:** clean build passes with `-Werror`; `/tmp/warn.txt` empty for first-party.
-- [ ] 1.3 **Host suite green in WSL.** `tests/run.sh` must pass end to end (all `tests/test_*.cpp`, dead-symbol
+- [x] 1.3 **Host suite green in WSL.** `tests/run.sh` must pass end to end (all `tests/test_*.cpp`, dead-symbol
       guard, patch shape checks, Python contracts as they still exist). Fix only what is broken; do not delete tests here.
       **Verify:** `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` exits 0.
 - [x] 1.4 `[USER]` **Hardware baseline.** *(done on v0.13.934, 2026-10-01 — results in the checklist; failures became Phase H)* Flash the 1.1 NRO and run `docs/dev/HARDWARE-CHECKLIST.md` sections A–C.

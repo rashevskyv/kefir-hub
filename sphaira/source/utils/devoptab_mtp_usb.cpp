@@ -37,7 +37,7 @@ void CloseUsbLocked(const char* why) {
 Result GetEndpointStatusLocked(UsbHsClientEpSession* ep, bool* out_halted) {
     u32 transferred{};
     R_TRY(usbHsIfCtrlXfer(&g_session.iface,
-        USB_ENDPOINT_IN | USB_REQUEST_TYPE_STANDARD | USB_RECIPIENT_ENDPOINT,
+        u8(USB_ENDPOINT_IN) | u8(USB_REQUEST_TYPE_STANDARD) | u8(USB_RECIPIENT_ENDPOINT),
         USB_REQUEST_GET_STATUS, 0, ep->desc.bEndpointAddress,
         sizeof(u16), g_ctrl_buf, &transferred));
 
@@ -50,7 +50,7 @@ Result GetEndpointStatusLocked(UsbHsClientEpSession* ep, bool* out_halted) {
 Result ClearEndpointHaltLocked(UsbHsClientEpSession* ep) {
     u32 transferred{};
     return usbHsIfCtrlXfer(&g_session.iface,
-        USB_ENDPOINT_OUT | USB_REQUEST_TYPE_STANDARD | USB_RECIPIENT_ENDPOINT,
+        u8(USB_ENDPOINT_OUT) | u8(USB_REQUEST_TYPE_STANDARD) | u8(USB_RECIPIENT_ENDPOINT),
         USB_REQUEST_CLEAR_FEATURE, USB_FEATURE_ENDPOINT_HALT,
         ep->desc.bEndpointAddress, 0, nullptr, &transferred);
 }

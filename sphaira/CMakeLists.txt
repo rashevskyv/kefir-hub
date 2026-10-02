@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.955)
+set(sphaira_VERSION 0.13.956)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -371,9 +371,9 @@ target_compile_options(sphaira PRIVATE
     -Wall
     -Wextra
 
-    # unsure if it's a good idea to enable these by default as
-    # it may cause breakage upon compiler updates.
-    # -Werror
+    # first-party sources build warning-free (plan 1.2); keep it that way.
+    # a compiler update may add new warnings: fix them, or drop this line for that build.
+    -Werror
     # -Wfatal-errors
 
     # disabled as nx uses s64 for size and offset, however stl uses size_t instead, thus

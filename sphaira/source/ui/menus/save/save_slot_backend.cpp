@@ -181,7 +181,7 @@ auto PlanAccountSaveCreation(
     } else {
         if (!archive_sizing || !archive_sizing->has_metadata) {
             if (out_status) *out_status = SaveBackendStatus::MissingControlData;
-            return R_FAILED(rc) ? rc : FsError_PathNotFound;
+            return R_FAILED(rc) ? rc : static_cast<Result>(FsError_PathNotFound);
         }
         if (archive_sizing->attr.application_id != application_id) {
             if (out_status) *out_status = SaveBackendStatus::InvalidApplicationId;

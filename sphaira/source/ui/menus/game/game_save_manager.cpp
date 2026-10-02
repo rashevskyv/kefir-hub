@@ -213,7 +213,7 @@ void PromptCreateSaveSlot(
                             return pbox && R_FAILED(pbox->ShouldExitResult());
                         });
                         if (!wr->result.verified) {
-                            return R_FAILED(wr->result.rc) ? wr->result.rc : FsError_PathNotFound;
+                            return R_FAILED(wr->result.rc) ? wr->result.rc : static_cast<Result>(FsError_PathNotFound);
                         }
                         return 0;
                     },
@@ -341,7 +341,7 @@ void PromptIncreaseSaveSize(
                         return pbox && R_FAILED(pbox->ShouldExitResult());
                     });
                     if (!wr->result.verified) {
-                        return R_FAILED(wr->result.rc) ? wr->result.rc : FsError_PathNotFound;
+                        return R_FAILED(wr->result.rc) ? wr->result.rc : static_cast<Result>(FsError_PathNotFound);
                     }
                     return 0;
                 },

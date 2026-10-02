@@ -125,7 +125,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
             }
             const int close_res = unzCloseCurrentFile(zfile);
             if (close_res != UNZ_OK) {
-                if (out_rc) *out_rc = (close_res == UNZ_CRCERROR) ? 0x8 : Result_UnzOpenCurrentFile;
+                if (out_rc) *out_rc = (close_res == UNZ_CRCERROR) ? Result{0x8} : static_cast<Result>(Result_UnzOpenCurrentFile);
                 return ArchiveMetaStatus::Invalid;
             }
             continue;
@@ -285,7 +285,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
     // After declared entry count require expected end-of-list; unexpected extra entry/error -> Invalid
     const int end_rc = unzGoToNextFile(zfile);
     if (end_rc != UNZ_END_OF_LIST_OF_FILE) {
-        if (out_rc) *out_rc = (end_rc < 0) ? Result_UnzGoToNextFile : FsError_InvalidSize;
+        if (out_rc) *out_rc = (end_rc < 0) ? static_cast<Result>(Result_UnzGoToNextFile) : static_cast<Result>(FsError_InvalidSize);
         return ArchiveMetaStatus::Invalid;
     }
 

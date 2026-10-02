@@ -455,7 +455,7 @@ void ConnectConsoleTransfer(std::function<void(const std::string& base_url)> on_
                     }
                 }
 
-                return (*probed_ok && !responding_url->empty()) ? 0 : Result_FsEmpty;
+                return (*probed_ok && !responding_url->empty()) ? Result{0} : static_cast<Result>(Result_FsEmpty);
             },
             [responding_url, probed_ok, on_connected](Result rc) {
                 if (rc == Result_TransferCancelled) {

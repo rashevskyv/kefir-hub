@@ -283,14 +283,14 @@ void PlanRestoreCreation(
 
             if (ctx->is_folder) {
                 ctx->admission = InspectSaveFolderAdmission(archive_path, pbox, false);
-                if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
+                if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : static_cast<Result>(FsError_PathNotFound);
                 if (!ctx->admission.sizing.has_metadata) {
                     ctx->folder_meta_missing = true;
                     return 0;
                 }
             } else {
                 ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
-                if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : FsError_PathNotFound;
+                if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : static_cast<Result>(FsError_PathNotFound);
             }
             if (pbox->ShouldExit()) return Result_TransferCancelled;
 
@@ -299,7 +299,7 @@ void PlanRestoreCreation(
                 &ctx->admission.sizing,
                 ctx->req, &ctx->status);
             if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
-                return ctx->plan_rc ? ctx->plan_rc : FsError_InvalidSize;
+                return ctx->plan_rc ? ctx->plan_rc : static_cast<Result>(FsError_InvalidSize);
             }
 
             const char* filename = std::strrchr(archive_path.s, '/');
