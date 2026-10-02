@@ -12,6 +12,7 @@ Fills `assets/romfs/i18n/<code>.json` from `en.json` with an LLM behind a local 
 | `batch_translate.py` | Same, but many strings per request (`--batch-size`); for filling a new language quickly. |
 | `run.bat` / `run_tests.bat` | Windows wrappers: create `.venv` (needs `requests`), check the proxy, run `translate.py` / the tests. |
 | `test_translate.py`, `test_language_logic.py` | Offline tests of the tool (`--live` also hits the proxy). |
+| `context.json` | Translator notes for ambiguous keys (`"Install"` is a verb, `"Target"` is a destination). `translate.py` sends the note with the string. `batch_translate.py` does not. |
 
 ## Translate new strings
 
@@ -20,6 +21,10 @@ Fills `assets/romfs/i18n/<code>.json` from `en.json` with an LLM behind a local 
    `sphaira/` missing from `en.json` is added (`--no-sync` skips this). Then it translates the missing keys.
 3. Useful flags: `--langs uk,de` (subset), `--limit 20` (smoke test), `--force` (re-translate existing keys),
    `--threads N`, `--model`, `--url`. Failures go to `failures.log` (git-ignored); re-run to retry them.
+
+## Ambiguous strings
+When a short key can be read two ways, add a note to `context.json` with the key and where it appears. Then re-translate
+just those keys in every language: `python translate.py --only-context --force` (add `--langs uk` for one language).
 
 ## Add a language
 

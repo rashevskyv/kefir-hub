@@ -29,6 +29,9 @@ I18N = ROOT.parent.parent / "assets" / "romfs" / "i18n"
 SRC = ROOT.parent.parent / "sphaira"
 LANGS = json.loads((ROOT / "languages.json").read_text(encoding="utf-8"))
 FAIL_LOG = ROOT / "failures.log"
+# Where an ambiguous key appears in the UI; sent with the string, never translated itself.
+CONTEXT = {k: v for k, v in json.loads((ROOT / "context.json").read_text(encoding="utf-8")).items()
+           if not k.startswith("__")}
 
 PROMPT = """You are a translation engine for the UI of a Nintendo Switch homebrew app called sphaira.
 
@@ -48,7 +51,9 @@ RULES:
 6. These are short UI labels, buttons and dialogs: translate naturally and concisely, the way a
    native app would word it, not literally. Keep them roughly as short as the English.
 7. If the text is a bare technical token, file extension or path, return it unchanged.
-8. Punctuate the way the target language does: the existing zh/ja files use fullwidth 。！（）."""
+8. Punctuate the way the target language does: the existing zh/ja files use fullwidth 。！（）.
+9. If the input has a "context" field, it says where the string appears in the UI. Use it to pick the
+   right meaning (verb or noun, which screen), but translate only "text"."""
 
 
 def build_prompt(codes):
@@ -90,12 +95,14 @@ def retry_after(resp, default):
         return default
 
 
-def translate(session, args, text, codes):
+def translate(session, args, text, codes, context=None):
     payload = {
         "model": args.model,
         "messages": [
             {"role": "system", "content": build_prompt(codes)},
-            {"role": "user", "content": json.dumps({"text": text, "languages": codes}, ensure_ascii=True)},
+            {"role": "user", "content": json.dumps(dict({"text": text, "languages": codes},
+                                                        **({"context": context} if context else {})),
+                                                   ensure_ascii=True)},
         ],
         "stream": False,
     }
@@ -221,6 +228,8 @@ def build_parser():
     p.add_argument("--langs", help="comma separated subset, e.g. ru,uk")
     p.add_argument("--limit", type=int, help="only the first N strings (smoke test)")
     p.add_argument("--force", action="store_true", help="re-translate keys that already exist")
+    p.add_argument("--only-context", action="store_true",
+                   help="only keys listed in context.json (with --force: re-translate them with their context)")
     p.add_argument("--retries", type=int, default=2)
     p.add_argument("--retry-delay", type=float, default=2.0)
     p.add_argument("--cooldown", type=float, default=60.0, help="how long to sit out a 429")
@@ -254,6 +263,8 @@ def main():
     data = {c: load(c) for c in codes}
 
     jobs = build_jobs(en, data, codes, args.force)
+    if args.only_context:
+        jobs = [j for j in jobs if j[0] in CONTEXT]
     if args.limit:
         jobs = jobs[:args.limit]
 
@@ -273,7 +284,7 @@ def main():
         key, text, todo = job
         session = requests.Session()
         try:
-            return job, translate(session, args, text, todo), None
+            return job, translate(session, args, text, todo, CONTEXT.get(key)), None
         except Exception as e:  # noqa: BLE001
             return job, None, e
         finally:

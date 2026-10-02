@@ -21,6 +21,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.950 — uk translation fixes; translator context notes
+uk.json: Target «Ціль» (was «Макет»), Legacy «Застарілі», HB Menu kept as is, Options «Параметри» (was the same word as Settings), Install «Встановити» (verb), Enable sysMMC/emuMMC as toggle labels, «Налаштування Kefir», «чити», «папка» instead of «тека». tools/i18n-translate/context.json gives translate.py notes for ambiguous keys (`--only-context --force` re-translates them). host tests: pass (--quick + translator tests) · nro: not built · switch: pending (look at the strings in the UI)
 ## v0.13.949 — serialize web server stop/start (3.7f)
 web.cpp: StartShareServer (main thread) could run while WebShareStop (the server's ProgressBox worker) was still joining workers — both wrote g_share_threads/count/port. Start and stop now take one lifecycle mutex; `g_share_port` and `g_share_offline` are atomics. Closes plan 3.7 (a–f). host tests: pass (--quick) · nro: built (checkpoint v0.13.949) · switch: pending (C4; stop the web server and start it again at once)
 ## v0.13.948 — atomic install-thread flag (3.7e)

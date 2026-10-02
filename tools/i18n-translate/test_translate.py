@@ -163,6 +163,31 @@ def offline_args(**kw):
     return args
 
 
+class RecordingSession(FakeSession):
+    def post(self, *a, **kw):
+        self.body = json.loads(kw["data"])
+        return super().post(*a, **kw)
+
+
+def test_context_is_sent_with_the_string():
+    s = RecordingSession(FakeResponse(200, '{"uk": "Ціль"}'))
+    t.translate(s, offline_args(), "Target", ["uk"], "install destination")
+    user = json.loads(s.body["messages"][1]["content"])
+    assert user == {"text": "Target", "languages": ["uk"], "context": "install destination"}, user
+
+
+def test_no_context_field_without_context():
+    s = RecordingSession(FakeResponse(200, '{"uk": "Привіт"}'))
+    t.translate(s, offline_args(), "Hi", ["uk"])
+    assert "context" not in json.loads(s.body["messages"][1]["content"])
+
+
+def test_context_keys_exist_in_en():
+    en = json.loads((t.I18N / "en.json").read_text(encoding="utf-8"))
+    missing = [k for k in t.CONTEXT if k not in en]
+    assert not missing, missing
+
+
 def test_rate_limit_is_waited_out_not_retried_away():
     ok = FakeResponse(200, '{"uk": "Привіт"}')
     s = FakeSession(FakeResponse(429), FakeResponse(429), FakeResponse(429), FakeResponse(429), ok)
