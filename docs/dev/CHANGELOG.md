@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.945 — bounded fallback NRO name (3.7b)
+nro.cpp: the name of an NRO without a valid NACP was copied with `strncpy(..., len - 4)` — no destination bound and an underflow for names shorter than 4 chars; now clamped to sizeof(name)-1 and `len >= 4` is checked. host tests: pass (--quick) · nro: not built · switch: pending (smoke: homebrew list)
 ## v0.13.944 — bounded FsPath copies (3.7a)
 FsPath::From(std::string/string_view) copied without a bound or terminator and operator+=(string/string_view) appended the whole source; both now clamp to FS_MAX_PATH-1, terminate and log a truncation, and operator+=(char) no longer writes past a full buffer. Not compilable on host (libnx). host tests: pass (--quick) · nro: not built · switch: pending (smoke: file browser, long paths)
 ## v0.13.943 — log MTP object creation to diagnose the folder drop (H3, diagnostics only)

@@ -7,6 +7,7 @@
 #include "path_util.hpp"
 
 #include <switch.h>
+#include <algorithm>
 #include <vector>
 #include <cstring>
 #include <string_view>
@@ -57,8 +58,11 @@ auto nro_parse_internal(fs::Fs* fs, const fs::FsPath& path, NroEntry& entry) -> 
 
         // get the name without the .nro
         const auto file_name = std::strrchr(path, '/') + 1;
+        // drop ".nro" when the name is long enough to have it; nacp was zeroed above,
+        // so a copy bounded by size-1 stays terminated.
         const auto file_name_len = std::strlen(file_name);
-        std::strncpy(nacp.lang.name, file_name, file_name_len - 4);
+        const auto name_len = file_name_len >= 4 ? file_name_len - 4 : file_name_len;
+        std::memcpy(nacp.lang.name, file_name, std::min(name_len, sizeof(nacp.lang.name) - 1));
         std::strcpy(nacp.lang.author, "Unknown"); // literal, bounded
         std::strcpy(nacp.display_version, "Unknown"); // literal, bounded
 
