@@ -243,129 +243,145 @@ There is no percentage: the FTP program does not tell the console the file size.
 You see how many files are installed, how much is written, and the average speed.
 
 62
-00:03:46,733 --> 00:03:52,133
-Careful: a game file copied to the top level of the server is also installed, not
+00:03:46,733 --> 00:03:51,800
+To cancel, press X on the console, choose "Cancel installation" and confirm.
 
 63
-00:03:52,133 --> 00:03:54,133
-saved.
+00:03:51,800 --> 00:03:53,800
+B does nothing here.
 
 64
-00:03:54,133 --> 00:03:58,333
-To keep a game on the card as a file, copy it into a subfolder.
+00:03:53,800 --> 00:03:59,333
+Files still queued in the FTP program keep coming, so stop the queue in the program
 
 65
-00:03:58,333 --> 00:04:03,133
-Over FTP you can also copy any other files to and from the microSD card.
+00:03:59,333 --> 00:04:01,333
+too.
 
 66
-00:04:03,133 --> 00:04:06,600
-The console's system memory is not visible over FTP.
+00:04:01,333 --> 00:04:06,733
+Careful: a game file copied to the top level of the server is also installed, not
 
 67
-00:04:06,600 --> 00:04:11,133
-Ownfoil is a game library server that you run on your own PC or NAS.
+00:04:06,733 --> 00:04:08,733
+saved.
 
 68
-00:04:11,133 --> 00:04:14,267
-On the Tools tab press plus and choose Ownfoil.
+00:04:08,733 --> 00:04:12,933
+To keep a game on the card as a file, copy it into a subfolder.
 
 69
-00:04:14,267 --> 00:04:16,400
-Choose "Discover local servers".
+00:04:12,933 --> 00:04:17,733
+Over FTP you can also copy any other files to and from the microSD card.
 
 70
-00:04:16,400 --> 00:04:20,333
-A server that was found but is not saved yet is tagged New.
+00:04:17,733 --> 00:04:21,200
+The console's system memory is not visible over FTP.
 
 71
-00:04:20,333 --> 00:04:22,333
-Select it.
+00:04:21,200 --> 00:04:25,733
+Ownfoil is a game library server that you run on your own PC or NAS.
 
 72
-00:04:22,333 --> 00:04:26,200
-Kefir Hub tells you whether the shop is public or private.
+00:04:25,733 --> 00:04:28,867
+On the Tools tab press plus and choose Ownfoil.
 
 73
-00:04:26,200 --> 00:04:29,333
-Yes opens the form where you can enter a login.
+00:04:28,867 --> 00:04:31,000
+Choose "Discover local servers".
 
 74
-00:04:29,333 --> 00:04:32,600
-No saves the server without a login and connects.
+00:04:31,000 --> 00:04:34,933
+A server that was found but is not saved yet is tagged New.
 
 75
-00:04:32,600 --> 00:04:36,600
-If the server is not found, press X and choose "Add server".
+00:04:34,933 --> 00:04:36,933
+Select it.
 
 76
-00:04:36,600 --> 00:04:42,200
-Enter a name and the local address with its port, for example 192.168.1.10:8465, and
+00:04:36,933 --> 00:04:40,800
+Kefir Hub tells you whether the shop is public or private.
 
 77
-00:04:42,200 --> 00:04:44,200
-choose Save.
+00:04:40,800 --> 00:04:43,933
+Yes opens the form where you can enter a login.
 
 78
-00:04:44,200 --> 00:04:48,867
-The catalog opens on New games: games that are not on the console yet.
+00:04:43,933 --> 00:04:47,200
+No saves the server without a login and connects.
 
 79
-00:04:48,867 --> 00:04:52,067
-Y switches to Updates, DLC, All games or Search.
+00:04:47,200 --> 00:04:51,200
+If the server is not found, press X and choose "Add server".
 
 80
-00:04:52,067 --> 00:04:54,067
-Pick a game and press A.
+00:04:51,200 --> 00:04:56,800
+Enter a name and the local address with its port, for example 192.168.1.10:8465, and
 
 81
-00:04:54,067 --> 00:04:59,533
-In the panel, choose the version and tick the DLC you want under "Add-on content".
+00:04:56,800 --> 00:04:58,800
+choose Save.
 
 82
-00:04:59,533 --> 00:05:01,800
-The last entry starts the install.
+00:04:58,800 --> 00:05:03,467
+The catalog opens on New games: games that are not on the console yet.
 
 83
-00:05:01,800 --> 00:05:07,000
-It is called Install, Update or Downgrade, depending on the version you chose.
+00:05:03,467 --> 00:05:06,667
+Y switches to Updates, DLC, All games or Search.
 
 84
-00:05:07,000 --> 00:05:10,533
-A progress window shows the download and the install.
+00:05:06,667 --> 00:05:08,667
+Pick a game and press A.
 
 85
-00:05:10,533 --> 00:05:13,133
-Finally, you can share a single folder.
+00:05:08,667 --> 00:05:14,133
+In the panel, choose the version and tick the DLC you want under "Add-on content".
 
 86
-00:05:13,133 --> 00:05:17,667
-In the File Browser highlight a folder, press plus and choose Mount.
+00:05:14,133 --> 00:05:16,400
+The last entry starts the install.
 
 87
-00:05:17,667 --> 00:05:19,667
-Then pick MTP, FTP or HTTP.
+00:05:16,400 --> 00:05:21,600
+It is called Install, Update or Downgrade, depending on the version you chose.
 
 88
-00:05:19,667 --> 00:05:25,067
-Mounting does not hide the rest of the card: the web page and FTP can still reach
+00:05:21,600 --> 00:05:25,133
+A progress window shows the download and the install.
 
 89
-00:05:25,067 --> 00:05:27,067
-every folder.
+00:05:25,133 --> 00:05:27,733
+Finally, you can share a single folder.
 
 90
-00:05:27,067 --> 00:05:30,400
-To stop sharing, choose Unmount in the same panel.
+00:05:27,733 --> 00:05:32,267
+In the File Browser highlight a folder, press plus and choose Mount.
 
 91
-00:05:30,400 --> 00:05:34,800
-You can also install from a network share over SMB, NFS or WebDAV.
+00:05:32,267 --> 00:05:34,267
+Then pick MTP, FTP or HTTP.
 
 92
-00:05:34,800 --> 00:05:40,400
-For that and more, read the Install over the network and Share files with a PC pages
+00:05:34,267 --> 00:05:39,667
+Mounting does not hide the rest of the card: the web page and FTP can still reach
 
 93
-00:05:40,400 --> 00:05:42,400
+00:05:39,667 --> 00:05:41,667
+every folder.
+
+94
+00:05:41,667 --> 00:05:45,000
+To stop sharing, choose Unmount in the same panel.
+
+95
+00:05:45,000 --> 00:05:49,400
+You can also install from a network share over SMB, NFS or WebDAV.
+
+96
+00:05:49,400 --> 00:05:55,000
+For that and more, read the Install over the network and Share files with a PC pages
+
+97
+00:05:55,000 --> 00:05:57,000
 in the documentation.

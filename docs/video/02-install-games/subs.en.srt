@@ -291,85 +291,105 @@ If the console does not appear on the PC, press plus on the Tools tab and choose
 MTP does not start by itself while a USB drive is connected to the console.
 
 74
-00:04:10,533 --> 00:04:13,200
-On the PC, open the console in Explorer.
+00:04:10,533 --> 00:04:15,933
+Right after MTP starts, "Please launch MTP install menu before trying to install"
 
 75
-00:04:13,200 --> 00:04:18,133
-There are two drives: the microSD card and "Install (NSP, XCI, NSZ, XCZ)".
+00:04:15,933 --> 00:04:17,933
+can show for a moment.
 
 76
-00:04:18,133 --> 00:04:20,667
-Copy a game file to the Install drive.
+00:04:17,933 --> 00:04:22,533
+Wait a few seconds, or turn MTP off and on, then copy the file again.
 
 77
-00:04:20,667 --> 00:04:26,200
-The console installs it while it is being copied, so the file itself is not kept on
+00:04:22,533 --> 00:04:25,200
+On the PC, open the console in Explorer.
 
 78
-00:04:26,200 --> 00:04:28,200
-the card.
+00:04:25,200 --> 00:04:30,133
+There are two drives: the microSD card and "Install (NSP, XCI, NSZ, XCZ)".
 
 79
-00:04:28,200 --> 00:04:30,333
-The console opens "MTP Install".
+00:04:30,133 --> 00:04:32,667
+Copy a game file to the Install drive.
 
 80
-00:04:30,333 --> 00:04:35,600
-There is no percentage, because the PC does not tell the console the file size.
+00:04:32,667 --> 00:04:38,200
+The console installs it while it is being copied, so the file itself is not kept on
 
 81
-00:04:35,600 --> 00:04:39,133
-Watch the copy window on the PC to see how far it is.
+00:04:38,200 --> 00:04:40,200
+the card.
 
 82
-00:04:39,133 --> 00:04:42,667
-When the file is done you see "MTP install success!".
+00:04:40,200 --> 00:04:42,333
+The console opens "MTP Install".
 
 83
-00:04:42,667 --> 00:04:45,733
-A few seconds later the Session summary opens.
+00:04:42,333 --> 00:04:47,600
+There is no percentage, because the PC does not tell the console the file size.
 
 84
-00:04:45,733 --> 00:04:47,733
-B closes it.
+00:04:47,600 --> 00:04:51,133
+Watch the copy window on the PC to see how far it is.
 
 85
-00:04:47,733 --> 00:04:53,000
-Note: if you copy a game to the microSD card drive, it is only saved as a file.
+00:04:51,133 --> 00:04:54,400
+It closes at about the time the install finishes.
 
 86
-00:04:53,000 --> 00:04:56,133
-You can install it later from the File Browser.
+00:04:54,400 --> 00:04:57,933
+When the file is done you see "MTP install success!".
 
 87
-00:04:56,133 --> 00:05:00,333
-To cancel, press X on the console or cancel the copy on the PC.
+00:04:57,933 --> 00:05:01,000
+A few seconds later the Session summary opens.
 
 88
-00:05:00,333 --> 00:05:05,200
-Files that are already installed stay, and the unfinished one is removed.
+00:05:01,000 --> 00:05:03,000
+B closes it.
 
 89
-00:05:05,200 --> 00:05:10,600
-If a game installed but the console says it cannot be started yet, the game needs
+00:05:03,000 --> 00:05:08,267
+Note: if you copy a game to the microSD card drive, it is only saved as a file.
 
 90
-00:05:10,600 --> 00:05:12,600
-newer firmware.
+00:05:08,267 --> 00:05:11,400
+You can install it later from the File Browser.
 
 91
-00:05:12,600 --> 00:05:14,600
-Update the firmware and Kefir.
+00:05:11,400 --> 00:05:15,600
+To cancel, press X on the console or cancel the copy on the PC.
 
 92
-00:05:14,600 --> 00:05:17,133
-You do not need to reinstall the game.
+00:05:15,600 --> 00:05:20,467
+Files that are already installed stay, and the unfinished one is removed.
 
 93
-00:05:17,133 --> 00:05:21,267
-For more, read the Installing games page in the documentation.
+00:05:20,467 --> 00:05:25,933
+If you cancel on the console, Windows shows no error: the copy window just closes.
 
 94
-00:05:21,267 --> 00:05:25,000
+00:05:25,933 --> 00:05:31,333
+If a game installed but the console says it cannot be started yet, the game needs
+
+95
+00:05:31,333 --> 00:05:33,333
+newer firmware.
+
+96
+00:05:33,333 --> 00:05:35,333
+Update the firmware and Kefir.
+
+97
+00:05:35,333 --> 00:05:37,867
+You do not need to reinstall the game.
+
+98
+00:05:37,867 --> 00:05:42,000
+For more, read the Installing games page in the documentation.
+
+99
+00:05:42,000 --> 00:05:45,733
 It has separate pages for the microSD card, USB and MTP.

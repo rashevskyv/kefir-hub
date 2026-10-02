@@ -59,285 +59,321 @@ To change a name, select the profile, press A and choose Rename.
 Type the new name and confirm.
 
 16
-00:00:49,933 --> 00:00:52,467
-For a new avatar choose Change avatar.
+00:00:49,933 --> 00:00:54,200
+A name holds at most 15 Cyrillic letters or 31 Latin characters.
 
 17
-00:00:52,467 --> 00:00:57,667
-You can take another profile's avatar, a picture from the config/kefir/avatars
+00:00:54,200 --> 00:00:56,800
+A longer name is cut without a warning.
 
 18
-00:00:57,667 --> 00:01:00,933
-folder, or any image on the card through From SD.
+00:00:56,800 --> 00:00:59,333
+For a new avatar choose Change avatar.
 
 19
-00:01:00,933 --> 00:01:06,267
-The SteamGridDB tile finds icons by game name; it needs internet and an API key.
+00:00:59,333 --> 00:01:04,533
+You can take another profile's avatar, a picture from the config/kefir/avatars
 
 20
-00:01:06,267 --> 00:01:09,800
-The new avatar shows on the HOME Menu after a reboot.
+00:01:04,533 --> 00:01:07,800
+folder, or any image on the card through From SD.
 
 21
-00:01:09,800 --> 00:01:11,800
-Choose Reboot or Later.
+00:01:07,800 --> 00:01:13,133
+The SteamGridDB tile finds icons by game name; it needs internet and an API key.
 
 22
-00:01:11,800 --> 00:01:15,200
-To delete a profile, choose Delete user and hold A.
+00:01:13,133 --> 00:01:16,667
+The new avatar shows on the HOME Menu after a reboot.
 
 23
-00:01:15,200 --> 00:01:18,200
-The profile's game saves are deleted with it.
+00:01:16,667 --> 00:01:18,667
+Choose Reboot or Later.
 
 24
-00:01:18,200 --> 00:01:20,267
-At least one profile must stay.
+00:01:18,667 --> 00:01:22,067
+To delete a profile, choose Delete user and hold A.
 
 25
-00:01:20,267 --> 00:01:25,067
-Kefir Hub offers to back up all profiles first, and then the game saves.
+00:01:22,067 --> 00:01:25,067
+The profile's game saves are deleted with it.
 
 26
-00:01:25,067 --> 00:01:28,733
-Choose Choose saves, mark the games with X and press A.
+00:01:25,067 --> 00:01:27,133
+At least one profile must stay.
 
 27
-00:01:28,733 --> 00:01:33,867
-Deleting cannot be undone, and no menu restores the profile from that backup.
+00:01:27,133 --> 00:01:31,933
+Kefir Hub offers to back up all profiles first, and then the game saves.
 
 28
-00:01:33,867 --> 00:01:37,667
-So make sure you back up the game saves you want to keep.
+00:01:31,933 --> 00:01:35,600
+Choose Choose saves, mark the games with X and press A.
 
 29
-00:01:37,667 --> 00:01:39,667
-Now the link.
+00:01:35,600 --> 00:01:40,667
+Deleting cannot be undone, and restoring the profile from that backup is not
 
 30
-00:01:39,667 --> 00:01:44,867
-Some games refuse to start unless the profile is linked to a Nintendo Account.
+00:01:40,667 --> 00:01:42,667
+available yet.
 
 31
-00:01:44,867 --> 00:01:47,200
-They only check that a link exists.
+00:01:42,667 --> 00:01:46,467
+So make sure you back up the game saves you want to keep.
 
 32
-00:01:47,200 --> 00:01:52,067
-Kefir Hub can create one without internet, using built-in donor accounts.
+00:01:46,467 --> 00:01:48,467
+Now the link.
 
 33
-00:01:52,067 --> 00:01:55,000
-Every Not linked profile gets its own donor.
+00:01:48,467 --> 00:01:53,667
+Some games refuse to start unless the profile is linked to a Nintendo Account.
 
 34
-00:01:55,000 --> 00:02:00,133
-Profiles that are already linked are not changed, and neither are game saves.
+00:01:53,667 --> 00:01:56,000
+They only check that a link exists.
 
 35
-00:02:00,133 --> 00:02:03,933
-Before writing, Kefir Hub keeps a copy of the link files.
+00:01:56,000 --> 00:02:00,867
+Kefir Hub can create one without internet, using built-in donor accounts.
 
 36
-00:02:03,933 --> 00:02:08,667
-Press A, choose Link Nintendo Account and confirm with Link and reboot.
+00:02:00,867 --> 00:02:03,800
+Every Not linked profile gets its own donor.
 
 37
-00:02:08,667 --> 00:02:13,467
-The console reboots right away, and afterwards the profiles show Linked.
+00:02:03,800 --> 00:02:08,933
+Profiles that are already linked are not changed, and neither are game saves.
 
 38
-00:02:13,467 --> 00:02:17,000
-Important: a donor link is not your Nintendo Account.
+00:02:08,933 --> 00:02:12,733
+Before writing, Kefir Hub keeps a copy of the link files.
 
 39
-00:02:17,000 --> 00:02:21,200
-The same donor accounts are built into every copy of Kefir Hub.
+00:02:12,733 --> 00:02:17,467
+Press A, choose Link Nintendo Account and confirm with Link and reboot.
 
 40
-00:02:21,200 --> 00:02:26,733
-To remove a link, mark the profiles with X and choose Unlink Nintendo Account, then
+00:02:17,467 --> 00:02:22,267
+The console reboots right away, and afterwards the profiles show Linked.
 
 41
-00:02:26,733 --> 00:02:28,733
-Unlink and reboot.
+00:02:22,267 --> 00:02:25,800
+Important: a donor link is not your Nintendo Account.
 
 42
-00:02:28,733 --> 00:02:31,267
-With nothing marked, all are unlinked.
+00:02:25,800 --> 00:02:30,000
+The same donor accounts are built into every copy of Kefir Hub.
 
 43
-00:02:31,267 --> 00:02:34,667
-Careful: this removes any link, a real account too.
+00:02:30,000 --> 00:02:32,533
+Warning: this link carries a ban risk.
 
 44
-00:02:34,667 --> 00:02:38,933
-If there are unlinked profiles at launch, Kefir Hub reminds you.
+00:02:32,533 --> 00:02:37,200
+It works only because the console is isolated from Nintendo's servers.
 
 45
-00:02:38,933 --> 00:02:44,400
-Link and reboot links them, Later asks next time, and Don't remind again turns the
+00:02:37,200 --> 00:02:41,600
+Use it only on an emuMMC that is isolated from Nintendo's servers.
 
 46
-00:02:44,400 --> 00:02:46,400
-reminder off.
+00:02:41,600 --> 00:02:47,133
+To remove a link, mark the profiles with X and choose Unlink Nintendo Account, then
 
 47
-00:02:46,400 --> 00:02:48,400
-Now moving to another console.
+00:02:47,133 --> 00:02:49,133
+Unlink and reboot.
 
 48
-00:02:48,400 --> 00:02:53,467
-All profiles move with the same user IDs and, if you want, their play hours.
+00:02:49,133 --> 00:02:51,667
+With nothing marked, all are unlinked.
 
 49
-00:02:53,467 --> 00:02:58,867
-So save backups from the old console restore to the same profiles on the new one.
+00:02:51,667 --> 00:02:55,067
+Careful: this removes any link, a real account too.
 
 50
-00:02:58,867 --> 00:03:04,467
-On the old console open Users, press A and choose Backup profiles & play hours, then
+00:02:55,067 --> 00:03:00,533
+If you unlinked a real account on emuMMC, link the profile again through Kefir Hub
 
 51
-00:03:04,467 --> 00:03:06,467
-Backup.
+00:03:00,533 --> 00:03:04,267
+with Link Nintendo Account, not through System Settings.
 
 52
-00:03:06,467 --> 00:03:11,733
-If the console restarts into TegraExplorer, let it finish, start Kefir and open
+00:03:04,267 --> 00:03:08,533
+If there are unlinked profiles at launch, Kefir Hub reminds you.
 
 53
-00:03:11,733 --> 00:03:13,733
-Kefir Hub again.
+00:03:08,533 --> 00:03:14,000
+Link and reboot links them, Later asks next time, and Don't remind again turns the
 
 54
-00:03:13,733 --> 00:03:19,267
-Then on the Tools tab open Console Transfer and choose Share Profiles & Play Hours.
+00:03:14,000 --> 00:03:16,000
+reminder off.
 
 55
-00:03:19,267 --> 00:03:22,400
-A screen with an address and a QR code appears.
+00:03:16,000 --> 00:03:18,000
+Now moving to another console.
 
 56
-00:03:22,400 --> 00:03:26,267
-Write down the IP address: you type it on the new console.
+00:03:18,000 --> 00:03:23,067
+All profiles move with the same user IDs and, if you want, their play hours.
 
 57
-00:03:26,267 --> 00:03:29,533
-Keep this screen open until the transfer is done.
+00:03:23,067 --> 00:03:28,467
+So save backups from the old console restore to the same profiles on the new one.
 
 58
-00:03:29,533 --> 00:03:31,533
-A warning.
+00:03:28,467 --> 00:03:34,067
+On the old console open Users, press A and choose Backup profiles & play hours, then
 
 59
-00:03:31,533 --> 00:03:37,000
-The new console loses all its own profiles: they are replaced by the ones from the
+00:03:34,067 --> 00:03:36,067
+Backup.
 
 60
-00:03:37,000 --> 00:03:39,000
-old console.
+00:03:36,067 --> 00:03:41,333
+If the console restarts into TegraExplorer, let it finish, start Kefir and open
 
 61
-00:03:39,000 --> 00:03:42,333
-With play hours, its play history is replaced too.
+00:03:41,333 --> 00:03:43,333
+Kefir Hub again.
 
 62
-00:03:42,333 --> 00:03:44,800
-Make a SYSTEM backup in hekate first.
+00:03:43,333 --> 00:03:48,867
+Then on the Tools tab open Console Transfer and choose Share Profiles & Play Hours.
 
 63
-00:03:44,800 --> 00:03:50,067
-On the new console open Users, press A and choose Restore from another console.
+00:03:48,867 --> 00:03:52,000
+A screen with an address and a QR code appears.
 
 64
-00:03:50,067 --> 00:03:52,333
-Type the old console's IP address.
+00:03:52,000 --> 00:03:55,867
+Write down the IP address: you type it on the new console.
 
 65
-00:03:52,333 --> 00:03:56,333
-The first part of your network address is already filled in.
+00:03:55,867 --> 00:03:59,133
+Keep this screen open until the transfer is done.
 
 66
-00:03:56,333 --> 00:04:01,133
-Kefir Hub tests the connection and lists the backups on the old console.
+00:03:59,133 --> 00:04:01,133
+A warning.
 
 67
-00:04:01,133 --> 00:04:03,133
-Choose one.
+00:04:01,133 --> 00:04:06,600
+The new console loses all its own profiles: they are replaced by the ones from the
 
 68
-00:04:03,133 --> 00:04:06,133
-It is saved to the new console's memory card.
+00:04:06,600 --> 00:04:08,600
+old console.
 
 69
-00:04:06,133 --> 00:04:10,667
-Now choose what to restore: Profiles only, or Profiles + play hours.
+00:04:08,600 --> 00:04:11,933
+With play hours, its play history is replaced too.
 
 70
-00:04:10,667 --> 00:04:12,667
-Press Launch TegraExplorer.
+00:04:11,933 --> 00:04:14,400
+Make a SYSTEM backup in hekate first.
 
 71
-00:04:12,667 --> 00:04:18,067
-The console restarts into TegraExplorer, writes the backup and returns to hekate.
+00:04:14,400 --> 00:04:19,667
+On the new console open Users, press A and choose Restore from another console.
 
 72
-00:04:18,067 --> 00:04:20,733
-Do not touch the console while it works.
+00:04:19,667 --> 00:04:21,933
+Type the old console's IP address.
 
 73
-00:04:20,733 --> 00:04:22,800
-Start Kefir and open Kefir Hub.
+00:04:21,933 --> 00:04:25,933
+The first part of your network address is already filled in.
 
 74
-00:04:22,800 --> 00:04:25,333
-It shows whether the restore finished.
+00:04:25,933 --> 00:04:30,733
+Kefir Hub tests the connection and lists the backups on the old console.
 
 75
-00:04:25,333 --> 00:04:30,400
-The restore goes to the system you started Kefir Hub from, emuMMC or sysMMC.
+00:04:30,733 --> 00:04:32,733
+Choose one.
 
 76
-00:04:30,400 --> 00:04:33,867
-Games and the saves themselves do not move this way.
+00:04:32,733 --> 00:04:35,733
+It is saved to the new console's memory card.
 
 77
-00:04:33,867 --> 00:04:39,267
-Back up the saves in Saves, move the backups with Share Save Backups, and install
+00:04:35,733 --> 00:04:40,267
+Now choose what to restore: Profiles only, or Profiles + play hours.
 
 78
-00:04:39,267 --> 00:04:41,600
-the games on the new console again.
+00:04:40,267 --> 00:04:42,267
+Press Launch TegraExplorer.
 
 79
-00:04:41,600 --> 00:04:44,400
-All profile backups are in Manage Backups.
+00:04:42,267 --> 00:04:47,667
+The console restarts into TegraExplorer, writes the backup and returns to hekate.
 
 80
-00:04:44,400 --> 00:04:49,867
-Without a network, copy the backup file from the config/kefir/nand_transfer folder
+00:04:47,667 --> 00:04:50,333
+Do not touch the console while it works.
 
 81
-00:04:49,867 --> 00:04:55,133
-to the same folder on the new console and choose Restore profiles & play hours.
+00:04:50,333 --> 00:04:52,400
+Start Kefir and open Kefir Hub.
 
 82
-00:04:55,133 --> 00:05:00,133
-If the console does not boot after a restore, open Payloads in hekate, then
+00:04:52,400 --> 00:04:54,933
+It shows whether the restore finished.
 
 83
-00:05:00,133 --> 00:05:04,133
-TegraExplorer, and run the script Undo_restore_if_wont_boot.
+00:04:54,933 --> 00:05:00,000
+The restore goes to the system you started Kefir Hub from, emuMMC or sysMMC.
 
 84
-00:05:04,133 --> 00:05:06,133
-It puts the old profiles back.
+00:05:00,000 --> 00:05:05,333
+Games and the saves themselves do not move this way: moving saves would take too
 
 85
-00:05:06,133 --> 00:05:10,067
-If that does not help, restore the SYSTEM backup in hekate.
+00:05:05,333 --> 00:05:07,333
+long.
 
 86
-00:05:10,067 --> 00:05:14,867
+00:05:07,333 --> 00:05:12,733
+Back up the saves in Saves, move the backups with Share Save Backups, and install
+
+87
+00:05:12,733 --> 00:05:15,067
+the games on the new console again.
+
+88
+00:05:15,067 --> 00:05:17,867
+All profile backups are in Manage Backups.
+
+89
+00:05:17,867 --> 00:05:23,333
+Without a network, copy the backup file from the config/kefir/nand_transfer folder
+
+90
+00:05:23,333 --> 00:05:28,600
+to the same folder on the new console and choose Restore profiles & play hours.
+
+91
+00:05:28,600 --> 00:05:33,600
+If the console does not boot after a restore, open Payloads in hekate, then
+
+92
+00:05:33,600 --> 00:05:37,600
+TegraExplorer, and run the script Undo_restore_if_wont_boot.
+
+93
+00:05:37,600 --> 00:05:39,600
+It puts the old profiles back.
+
+94
+00:05:39,600 --> 00:05:43,533
+If that does not help, restore the SYSTEM backup in hekate.
+
+95
+00:05:43,533 --> 00:05:48,333
 Read more on the Users and Console Transfer pages of the Kefir Hub docs.
