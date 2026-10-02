@@ -55,12 +55,4 @@ int main() {
     assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, false, true));
     assert(ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, false, false));
     assert(ShouldStartSummaryGracePeriod(TransportOrigin::Ftp, true, false, false));
-
-    assert(ShouldRestartMtp(TransportOrigin::Mtp, true, true));
-    assert(!ShouldRestartMtp(TransportOrigin::Mtp, false, true));
-    assert(!ShouldRestartMtp(TransportOrigin::Mtp, true, false));
-    assert(!ShouldRestartMtp(TransportOrigin::Ftp, true, true));
-    assert(!ShouldRestartMtp(TransportOrigin::Web, true, true));
-    assert(!ShouldRestartMtp(TransportOrigin::Dbi, true, true));
-    assert(!ShouldRestartMtp(TransportOrigin::Usb, true, true));
 }

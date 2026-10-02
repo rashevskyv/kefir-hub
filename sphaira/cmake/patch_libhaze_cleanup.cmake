@@ -130,12 +130,8 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
 "        bool is_done = false;
         std::atomic<bool> is_cancelled{false};
 
-        m_usb_server.SetCleanup(false);
-        m_usb_server.SetCancelled(false);
-        ON_SCOPE_EXIT {
-            m_usb_server.SetCleanup(false);
-            m_usb_server.SetCancelled(false);
-        };
+        m_usb_server.BeginObjectTransfer();
+        ON_SCOPE_EXIT { m_usb_server.EndObjectTransfer(); };
 
         /* sphaira: immediate cancellation without draining to EOT */
         const Result transfer_res = sphaira::thread::Transfer(file_size,
@@ -245,9 +241,10 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
             R_THROW(haze::ResultCancelled());
         }
 
-        /* sphaira: the host ended the data phase early (PC-side cancel); drop the partial file. */
+        /* sphaira: PC-side cancel: drop the partial file. A class Cancel Request has no response phase. */
         if (has_known_size && offset < file_size) {
             log_write(\"[LIBHAZE] host cancelled transfer: %s\\n\", obj->GetName());
+            R_SUCCEED_IF(m_usb_server.ConsumeHostCancel());
             R_RETURN(this->WriteResponse(PtpResponseCode_IncompleteTransfer));
         }
 

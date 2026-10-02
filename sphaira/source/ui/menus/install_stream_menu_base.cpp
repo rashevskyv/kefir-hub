@@ -37,35 +37,6 @@ void BackgroundInstaller::TeardownWorker() {
     JoinInstallThread();
 }
 
-static std::atomic<bool> s_restart_scheduled{false};
-
-void ScheduleMtpRestart() {
-    if (App::IsExiting()) {
-        return;
-    }
-    if (s_restart_scheduled.exchange(true)) {
-        return;
-    }
-    evman::push(evman::FunctionalEventData{
-        []() {
-            s_restart_scheduled.store(false);
-            if (App::IsExiting()) {
-                return;
-            }
-            log_write("[MTP] Restarting haze after source interruption\n");
-            BackgroundInstaller::TeardownWorker();
-            if (haze::IsRunning()) {
-                haze::Exit(false);
-            }
-            if (App::GetMtpEnable() && !App::IsExiting()) {
-                if (haze::Init()) {
-                    BackgroundInstaller::RegisterMtpCallbacks();
-                }
-            }
-        }
-    }, false);
-}
-
 void BackgroundInstaller::RegisterMtpCallbacks() {
     static bool initialized = false;
     if (!initialized) {
@@ -313,10 +284,9 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
 
                 App::SetAutoSleepDisabled(false);
 
-                // A user-cancelled PTP transaction stays on the same USB connection.
-                // Restart MTP only when the source failed independently.
-                const bool needs_mtp_restart = ui::menu::dbi::ShouldRestartMtp(
-                    c->origin, source_interrupted, true);
+                // No MTP restart here: libhaze returns to its command loop after a host-side
+                // cancel and re-enumerates by itself after a local abort (a restart at this
+                // point killed the copy Windows started next).
 
                 {
                     mutexLock(&s_mutex);
@@ -330,12 +300,6 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                     if (ui::menu::dbi::CanTransitionToSummary(c->origin, false, false, queued)) {
                         c->session->TransitionToSummary();
                     }
-                }
-
-                if (needs_mtp_restart && !App::IsExiting()) {
-                    c->session->AddLog("Restarting MTP service..."_i18n, ui::menu::dbi::LogKind::Event);
-                    c->session->RequestExit();
-                    ScheduleMtpRestart();
                 }
 
                 delete c;
@@ -415,7 +379,6 @@ void BackgroundInstaller::OnInstallClose() {
 
 namespace sphaira::ui::menu::stream {
 
-void ScheduleMtpRestart() {}
 void BackgroundInstaller::RegisterMtpCallbacks() {}
 bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::TransportOrigin origin) { return false; }
 bool BackgroundInstaller::OnInstallStart(const char* path) { return false; }

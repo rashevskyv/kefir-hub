@@ -59,8 +59,4 @@ inline bool ShouldStartSummaryGracePeriod(TransportOrigin origin, bool all_termi
     return all_terminal && !install_in_progress && !transport_busy;
 }
 
-inline bool ShouldRestartMtp(TransportOrigin origin, bool was_cancelled, bool worker_torn_down) {
-    return origin == TransportOrigin::Mtp && was_cancelled && worker_torn_down;
-}
-
 } // namespace sphaira::ui::menu::dbi

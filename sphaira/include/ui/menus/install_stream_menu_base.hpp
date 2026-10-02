@@ -53,7 +53,6 @@ enum class TransportOrigin;
 namespace sphaira::ui::menu::stream {
 
 Result RunInstall(ui::InstallProgress* pbox, Stream* source);
-void ScheduleMtpRestart();
 
 class BackgroundInstaller {
 public:
