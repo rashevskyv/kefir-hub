@@ -5,8 +5,8 @@
 if(EXISTS "source/ptp_responder_mtp_operations.cpp")
     file(READ "source/ptp_responder_mtp_operations.cpp" src)
 
-    # 6a. storage_id in SendObjectPropList
-    string(FIND "${src}" "/* sphaira: resolve parent object for device root" find_mtp_device_root)
+    # 6a. storage_id in SendObjectPropList (the v0.13.913 device-root routing is removed, plan H8)
+    string(FIND "${src}" "/* sphaira: the storage root is the parent (no device-root routing). */" find_mtp_device_root)
     if(NOT find_mtp_device_root EQUAL -1)
         message(STATUS "[libhaze-patch] ptp_responder_mtp_operations.cpp storage_id already patched")
     else()
@@ -78,6 +78,36 @@ if(EXISTS "source/ptp_responder_mtp_operations.cpp")
         const bool contains_slashes = std::strchr(m_buffers->filename_string_buffer, '/') != nullptr;
         R_UNLESS(!is_empty && !contains_slashes, haze::ResultInvalidPropertyValue());
 
+        /* sphaira: the storage root is the parent (no device-root routing). */
+        if (parent_object == PtpGetObjectHandles_RootParent || parent_object == 0) {
+            parent_object = storage_id;
+        }
+
+        /* Check if we know about the parent object. If we don't, it's an error. */
+        auto * const parentobj = m_object_database.GetObjectById(parent_object);
+        R_UNLESS(parentobj != nullptr, haze::ResultInvalidObjectId());
+
+        /* Add a new object in the database with the new name. */
+        PtpObject *newobj;
+        R_TRY(m_object_database.CreateOrFindObject(parentobj->GetName(), m_buffers->filename_string_buffer, parentobj->GetObjectId(), parentobj->GetStorageId(), std::addressof(newobj)));
+
+        /* Create prop list. */
+        ObjectPropList prop_list{};
+        prop_list.size = ((u64)object_size_msb << 32) | object_size_lsb;
+        m_send_prop_list = prop_list;
+
+        /* Make a new object with the intended name. */
+        PtpNewObjectInfo new_object_info;
+        /* sphaira: fix storage_id to use parent storage ID instead of parent object handle. */
+        new_object_info.storage_id       = parentobj->GetStorageId();
+        new_object_info.parent_object_id = (parent_object == storage_id || parent_object == parentobj->GetStorageId()) ? 0 : parent_object;")
+
+        set(mtp_create_routed
+"        /* Ensure we can actually process the new name. */
+        const bool is_empty         = m_buffers->filename_string_buffer[0] == '\\x00';
+        const bool contains_slashes = std::strchr(m_buffers->filename_string_buffer, '/') != nullptr;
+        R_UNLESS(!is_empty && !contains_slashes, haze::ResultInvalidPropertyValue());
+
         /* sphaira: resolve parent object for device root (drag & drop / Send To) or storage directory. */
         const bool is_device_root = (storage_id == 0 || storage_id == PtpGetObjectHandles_AllStorage) &&
                                     (parent_object == 0 || parent_object == PtpGetObjectHandles_RootParent);
@@ -130,9 +160,10 @@ if(EXISTS "source/ptp_responder_mtp_operations.cpp")
         new_object_info.parent_object_id = (parent_object == storage_id || parent_object == parentobj->GetStorageId()) ? 0 : parent_object;")
 
         string(REPLACE "${mtp_early_lookup}" "${mtp_deferred_lookup}" src "${src}")
+        string(REPLACE "${mtp_create_routed}" "${mtp_create_new}" src "${src}")
         string(REPLACE "${mtp_create_patched}" "${mtp_create_new}" src "${src}")
         string(REPLACE "${mtp_create_unpatched}" "${mtp_create_new}" src "${src}")
-        string(FIND "${src}" "/* sphaira: resolve parent object for device root" find_mtp_storage_after)
+        string(FIND "${src}" "/* sphaira: the storage root is the parent (no device-root routing). */" find_mtp_storage_after)
         if(find_mtp_storage_after EQUAL -1)
             message(FATAL_ERROR "[libhaze-patch] failed to apply storage_id patch to ptp_responder_mtp_operations.cpp")
         endif()

@@ -43,7 +43,6 @@ The queue reviews every package before it installs any of them, so a host in **s
 
 MTP can be enabled via the Network menu. You can configure which MTP storages are visible and set custom display names for them under **Settings -> Network -> MTP storages**. This allows you to toggle the visibility of the microSD card or the Install folder, and customize how they appear on your PC (e.g. setting a custom label instead of the default "microSD card"). If all storages are disabled, the MTP server will refuse to start and notify you.
 
-- Copy directly to the **Nintendo Switch device** in Windows Explorer to install NSP, NSZ, XCI, or XCZ files; other files and folders are copied to the microSD card. The matching Install or microSD storage must be enabled.
 - Copy NSP, NSZ, XCI, or XCZ files to the microSD storage to keep the files on the card. This applies to its root and subfolders; ordinary MTP copy progress is shown.
 - Copy a package to the separate virtual **Install** storage to stream it to the installer without storing the package file on the microSD card. The minimized installation badge shows progress for the current package when its size is known.
 - If another installation or storage operation is already in progress, an MTP install transfer is rejected with a notification.

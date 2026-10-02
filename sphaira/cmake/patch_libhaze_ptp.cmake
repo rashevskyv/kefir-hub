@@ -168,7 +168,8 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
     endif()
 
     # --- 5. source/ptp_responder_ptp_operations.cpp : fix storage_id in SendObjectInfo ---
-    string(FIND "${src}" "/* sphaira: resolve parent object for device root" find_ptp_device_root)
+    # v0.13.913 routed device-root uploads (packages -> Install, the rest -> microSD); removed (plan H8).
+    string(FIND "${src}" "/* sphaira: the storage root is the parent (no device-root routing). */" find_ptp_device_root)
     if(NOT find_ptp_device_root EQUAL -1)
         message(STATUS "[libhaze-patch] ptp_responder_ptp_operations.cpp storage_id already patched")
     else()
@@ -204,6 +205,22 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
         new_object_info.parent_object_id = parent_object == storage_id ? 0 : parent_object;")
 
         set(ptp_storage_new
+"        /* sphaira: the storage root is the parent (no device-root routing). */
+        if (parent_object == PtpGetObjectHandles_RootParent || parent_object == 0) {
+            parent_object = storage_id;
+        }
+
+        /* Check if we know about the parent object. If we don't, it's an error. */
+        auto * const parentobj = m_object_database.GetObjectById(parent_object);
+        R_UNLESS(parentobj != nullptr, haze::ResultInvalidObjectId());
+
+        /* Make a new object with the intended name. */
+        PtpNewObjectInfo new_object_info;
+        /* sphaira: fix storage_id to use parent storage ID instead of parent object handle. */
+        new_object_info.storage_id       = parentobj->GetStorageId();
+        new_object_info.parent_object_id = (parent_object == storage_id || parent_object == parentobj->GetStorageId()) ? 0 : parent_object;")
+
+        set(ptp_storage_routed
 "        /* sphaira: resolve parent object for device root (drag & drop / Send To) or storage directory. */
         const bool is_device_root = (storage_id == 0 || storage_id == PtpGetObjectHandles_AllStorage) &&
                                     (parent_object == 0 || parent_object == PtpGetObjectHandles_RootParent);
@@ -246,9 +263,10 @@ if(EXISTS "source/ptp_responder_ptp_operations.cpp")
         new_object_info.storage_id       = parentobj->GetStorageId();
         new_object_info.parent_object_id = (parent_object == storage_id || parent_object == parentobj->GetStorageId()) ? 0 : parent_object;")
 
+        string(REPLACE "${ptp_storage_routed}" "${ptp_storage_new}" src "${src}")
         string(REPLACE "${ptp_storage_patched}" "${ptp_storage_new}" src "${src}")
         string(REPLACE "${ptp_storage_unpatched}" "${ptp_storage_new}" src "${src}")
-        string(FIND "${src}" "/* sphaira: resolve parent object for device root" find_ptp_storage_after)
+        string(FIND "${src}" "/* sphaira: the storage root is the parent (no device-root routing). */" find_ptp_storage_after)
         if(find_ptp_storage_after EQUAL -1)
             message(FATAL_ERROR "[libhaze-patch] failed to apply storage_id patch to ptp_responder_ptp_operations.cpp")
         endif()

@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.941 — remove MTP device-root routing (H8)
+User decision: delete it. libhaze patches 5 and 6a no longer route uploads addressed to the device root (packages -> Install, the rest -> microSD, v0.13.913); SendObjectInfo/SendObjectPropList resolve the storage root only, and trees patched with the routed shape are upgraded in place. Wiki line about copying to the «Nintendo Switch device» removed. The Install storage and copying into microSD are unchanged. host tests: pass · nro: not built · switch: pending (A1, A2 file copy)
 ## v0.13.940 — save scan logs an unreadable space once (H10)
 `fsOpenSaveDataInfoReader` for space 100 (ProperSystem) fails on every scan with 2002-6001; the value only looked like it grew by 0x00400000 per call because fs sets the reserved upper bits of the Result — the low 22 bits are constant and nothing is left open (a failed open returns no reader). The line is now logged once per run per space with `R_VALUE`. `account uid is not found: 0x0` is the default-user lookup on a console with two users (no preselected user), unrelated to H5/H6. host tests: pass · nro: built (checkpoint v0.13.940) · switch: pending (log check only)
 ## v0.13.939 — batch restore asks once per save slot; same-named accounts are distinguishable (H6)
