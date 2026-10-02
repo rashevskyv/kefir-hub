@@ -2433,6 +2433,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " vanemat varukoopia arhiivi? Iga rühma uusim varukoopia säilitatakse.",
   "No user accounts found on this console.": "Sellel konsoolil ei leitud kasutajakontosid.",
   "Restore for user": "Taasta kasutajale",
+  "Choose for each save": "Vali iga salvestuse jaoks",
   "Are you sure you want to delete all backups for ": "Kas olete kindel, et soovite kustutada kõik varukoopiad kasutajale ",
   "Are you sure you want to delete all backups for the selected games?": "Kas olete kindel, et soovite kustutada kõik valitud mängude varukoopiad?",
   "Delete backups": "Kustuta varukoopiad",

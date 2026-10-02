@@ -2434,6 +2434,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " старэйшы(-ыя) архіў(-ы) рэзервовых копій? Самая свежая рэзервовая копія для кожнай групы захаваецца.",
   "No user accounts found on this console.": "На гэтай кансолі не знойдзена ўліковых запісаў карыстальнікаў.",
   "Restore for user": "Аднаўленне для карыстальніка",
+  "Choose for each save": "Выбраць для кожнага захавання",
   "Are you sure you want to delete all backups for ": "Вы ўпэўненыя, што хочаце выдаліць усе рэзервовыя копіі для ",
   "Are you sure you want to delete all backups for the selected games?": "Вы ўпэўненыя, што хочаце выдаліць усе рэзервовыя копіі для абраных гульняў?",
   "Delete backups": "Выдаліць рэзервовыя копіі",

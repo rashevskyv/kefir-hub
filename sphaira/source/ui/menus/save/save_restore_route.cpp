@@ -6,6 +6,7 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/menus/save/save_batch_util.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_slot_backend.hpp"
@@ -476,12 +477,21 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
         return;
     }
 
+    // ask "which user?" once for the whole batch, unless two saves would collide in one account.
+    std::vector<std::string> account_slots;
+    for (const auto& g : groups) {
+        if (g.save_data_type == FsSaveDataType_Account) {
+            account_slots.emplace_back(std::to_string(g.application_id) + ':' + std::to_string(g.save_data_index) + ':' + std::to_string(g.save_data_rank));
+        }
+    }
+    auto shared_uid = CanShareAccount(account_slots) ? std::make_shared<std::optional<AccountUid>>() : nullptr;
+
     const auto accounts = App::GetAccountList();
     auto resolved_targets = std::make_shared<std::vector<Entry>>(groups.size());
     auto seen_target_keys = std::make_shared<std::set<std::string>>();
     PromptBatchRestoreTargets(std::make_shared<std::vector<Entry>>(std::move(groups)), 0,
         std::make_shared<std::vector<AccountProfileBase>>(accounts), resolved_targets, seen_target_keys,
-        location, backup_root, return_to_actions);
+        location, backup_root, return_to_actions, shared_uid);
 }
 
 void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, bool return_to_actions) {
@@ -496,14 +506,15 @@ void Menu::PromptBatchRestoreTargets(
     std::shared_ptr<std::set<std::string>> seen_target_keys,
     const dump::DumpLocation& location,
     const fs::FsPath& backup_root,
-    bool return_to_actions) {
+    bool return_to_actions,
+    std::shared_ptr<std::optional<AccountUid>> shared_uid) {
 
     if (step >= seeds->size()) {
         RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root);
         return;
     }
 
-    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions](std::optional<Entry> target) {
+    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid](std::optional<Entry> target) {
         if (!target) {
             return;
         }
@@ -515,7 +526,7 @@ void Menu::PromptBatchRestoreTargets(
         }
 
         (*resolved_targets)[step] = std::move(*target);
-        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
+        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid);
     };
 
     const auto& current_seed = (*seeds)[step];
@@ -541,18 +552,36 @@ void Menu::PromptBatchRestoreTargets(
         return;
     }
 
-    const auto items = AccountPickerItems(*accounts);
+    // shared_uid: null = ask for every save; empty = ask once now; set = the user already answered.
+    if (shared_uid && shared_uid->has_value()) {
+        resolve_for_uid(&shared_uid->value());
+        return;
+    }
+
+    auto items = AccountPickerItems(*accounts);
 
     std::string prompt = "Restore for user"_i18n;
-    if (current_seed.GetName() && current_seed.GetName()[0] != '\0') {
+    if (shared_uid) {
+        items.emplace_back("Choose for each save"_i18n);
+    } else if (current_seed.GetName() && current_seed.GetName()[0] != '\0') {
         prompt += " (" + std::string(current_seed.GetName()) + ")";
     }
 
-    auto popup = std::make_unique<PopupList>(prompt, items, [resolve_for_uid, accounts](auto op_index) {
-        if (!op_index || *op_index >= static_cast<s64>(accounts->size())) {
+    auto popup = std::make_unique<PopupList>(prompt, items, [this, resolve_for_uid, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid](auto op_index) {
+        if (!op_index) {
+            return;
+        }
+        if (shared_uid && *op_index == static_cast<s64>(accounts->size())) {
+            PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
+            return;
+        }
+        if (*op_index >= static_cast<s64>(accounts->size())) {
             return;
         }
         const auto chosen_uid = (*accounts)[*op_index].uid;
+        if (shared_uid) {
+            *shared_uid = chosen_uid;
+        }
         resolve_for_uid(&chosen_uid);
     });
     if (return_to_actions) {
@@ -563,27 +592,6 @@ void Menu::PromptBatchRestoreTargets(
         }});
     }
     App::Push(std::move(popup));
-}
-
-void Menu::PromptBatchRestoreTargets(
-    std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts,
-    std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys,
-    const dump::DumpLocation& location, const fs::FsPath& backup_root) {
-    PromptBatchRestoreTargets(std::make_shared<std::vector<Entry>>(std::move(seeds)), step,
-        std::make_shared<std::vector<AccountProfileBase>>(std::move(accounts)),
-        resolved_targets, seen_target_keys, location, backup_root);
-}
-
-void Menu::PromptBatchRestoreTargets(
-    std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts,
-    std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys) {
-    PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
-}
-
-void Menu::PromptBatchRestoreTargets(
-    std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts,
-    std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys) {
-    PromptBatchRestoreTargets(std::move(seeds), step, std::move(accounts), resolved_targets, seen_target_keys, MakeSdCardDumpLocation(), DEFAULT_BACKUP_ROOT);
 }
 
 } // namespace sphaira::ui::menu::save

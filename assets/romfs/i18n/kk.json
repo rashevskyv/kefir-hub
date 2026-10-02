@@ -2334,6 +2334,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " ескі сақтық көшірме мұрағатын(арын) жою керек пе? Әр топтың ең жаңа сақтық көшірмесі сақталады.",
   "No user accounts found on this console.": "Бұл консольде пайдаланушы тіркелгілері табылмады.",
   "Restore for user": "Пайдаланушы үшін қалпына келтіру",
+  "Choose for each save": "Әр сақтау файлы үшін таңдау",
   "Are you sure you want to delete all backups for ": "Барлық сақтық көшірмелерін жойғыңыз келетініне сенімдісіз бе: ",
   "Are you sure you want to delete all backups for the selected games?": "Таңдалған ойындардың барлық сақтық көшірмелерін жойғыңыз келетініне сенімдісіз бе?",
   "Delete backups": "Сақтық көшірмелерін жою",

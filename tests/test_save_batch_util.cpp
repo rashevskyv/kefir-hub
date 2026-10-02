@@ -102,7 +102,19 @@ static int test_unique_labels_unchanged() {
     return 0;
 }
 
+// Batch restore asks for the user once only when that cannot make two saves collide.
+static int test_can_share_account() {
+    CHECK(CanShareAccount({"minecraft:0:0", "zelda:0:0", "boxing:0:0"})); // three games: one question
+    CHECK(CanShareAccount({"minecraft:0:0", "minecraft:1:0"}));           // two slots of one game
+    CHECK(!CanShareAccount({"minecraft:0:0", "minecraft:0:0"}));          // one game from two users: ask per save
+    CHECK(!CanShareAccount({"minecraft:0:0", "zelda:0:0", "minecraft:0:0"}));
+    CHECK(!CanShareAccount({"minecraft:0:0"}));                           // a single user save: nothing to share
+    CHECK(!CanShareAccount({}));
+    return 0;
+}
+
 int main() {
+    if (test_can_share_account()) return 1;
     if (test_same_slot_two_sources()) return 1;
     if (test_newest_wins_keeps_position()) return 1;
     if (test_tie_keeps_first()) return 1;

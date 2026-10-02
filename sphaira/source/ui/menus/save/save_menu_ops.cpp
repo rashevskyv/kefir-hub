@@ -61,97 +61,79 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
     auto src_ptr = std::make_shared<std::vector<Entry>>(std::move(sources));
     auto dst_ptr = std::make_shared<std::vector<Entry>>(std::move(targets));
 
-    ShowRestoreConfirmPage(src_ptr, dst_ptr, location, backup_root, 0, src_ptr->size());
+    ShowRestoreConfirm(src_ptr, dst_ptr, location, backup_root);
 }
 
-void Menu::ShowRestoreConfirmPage(
+// One confirmation for the whole restore: what is restored and where it goes.
+void Menu::ShowRestoreConfirm(
     std::shared_ptr<std::vector<Entry>> sources,
     std::shared_ptr<std::vector<Entry>> targets,
     const dump::DumpLocation& location,
-    const fs::FsPath& backup_root,
-    size_t page,
-    size_t num_pages) {
+    const fs::FsPath& backup_root) {
 
-    const auto& src = (*sources)[page];
-    const auto& dst = (*targets)[page];
     const auto accounts = App::GetAccountList();
-
-    const auto& newest = src.backup_members.front();
-    std::string type_str = GetSaveTypeLabel(src.save_data_type);
-    std::string source_str = GetBackupSourceLabel(src.backup_source);
-    std::string date_str = FormatBackupTimestamp(newest.ts, false);
-    std::string acc_str;
-    if (src.save_data_type == FsSaveDataType_Account) {
-        acc_str = this->GetAccountName(dst.uid);
-        if (acc_str.empty()) acc_str = FormatBackupAccount(src, accounts);
-    }
-    const char* slash = std::strrchr(newest.path.s, '/');
-    const std::string filename = slash ? (slash + 1) : newest.path.s;
-
-    std::string dest_str;
-    if (dst.is_planned_create) {
-        dest_str = "New slot ("_i18n + acc_str + ")";
-    } else if (dst.save_data_type == FsSaveDataType_Account) {
-        dest_str = "Account: "_i18n + acc_str;
+    const auto account_of = [this, &accounts](const Entry& src, const Entry& dst) -> std::string {
+        if (src.save_data_type != FsSaveDataType_Account) {
+            return {};
+        }
+        auto name = this->GetAccountName(dst.uid);
+        return name.empty() ? FormatBackupAccount(src, accounts) : name;
+    };
+    const auto dest_of = [](const Entry& dst, const std::string& acc_str) -> std::string {
+        if (dst.is_planned_create) {
+            return "New slot ("_i18n + acc_str + ")";
+        }
+        if (dst.save_data_type != FsSaveDataType_Account) {
+            return GetSaveTypeLabel(dst.save_data_type);
+        }
+        std::string dest_str = "Account: "_i18n + acc_str;
         if (dst.save_data_index != 0) {
             dest_str += " [slot "_i18n + std::to_string(dst.save_data_index) + "]";
         }
-    } else {
-        dest_str = GetSaveTypeLabel(dst.save_data_type);
-    }
+        return dest_str;
+    };
 
     std::string prompt;
-    if (num_pages > 1) {
+    if (sources->size() > 1) {
         prompt = "Restore selected saves?"_i18n + "\n\n";
-        prompt += "Item "_i18n + std::to_string(page + 1) + " of "_i18n + std::to_string(num_pages) + "\n\n";
-    } else {
-        prompt = "Restore selected save?"_i18n + "\n\n";
-    }
-
-    prompt += "• [" + type_str + "] ";
-    if (!acc_str.empty()) {
-        prompt += acc_str;
-        if (src.save_data_index != 0) {
-            prompt += " (slot "_i18n + std::to_string(src.save_data_index) + ")";
+        constexpr size_t MAX_LINES = 6; // the box has no scrolling
+        for (size_t i = 0; i < sources->size() && i < MAX_LINES; i++) {
+            const auto& src = (*sources)[i];
+            const auto& dst = (*targets)[i];
+            const std::string name = (src.GetName() && src.GetName()[0] != '\0') ? src.GetName() : GetSaveTypeLabel(src.save_data_type);
+            prompt += "• " + name + " → " + dest_of(dst, account_of(src, dst)) + "\n";
         }
-        prompt += " • ";
-    }
-    prompt += source_str + " (" + date_str + ")\n";
-    prompt += "  " + "Archive: "_i18n + filename + "\n";
-    prompt += "  " + "Target: "_i18n + dest_str + "\n\n";
-
-    if (num_pages > 1) {
+        if (sources->size() > MAX_LINES) {
+            prompt += "… +" + std::to_string(sources->size() - MAX_LINES) + "\n";
+        }
+        prompt += "\n";
         prompt += "Restores are performed individually (not atomic: later items may fail if an error occurs).\n"_i18n;
+    } else {
+        const auto& src = sources->front();
+        const auto& dst = targets->front();
+        const auto& newest = src.backup_members.front();
+        const std::string acc_str = account_of(src, dst);
+        const char* slash = std::strrchr(newest.path.s, '/');
+        const std::string filename = slash ? (slash + 1) : newest.path.s;
+
+        prompt = "Restore selected save?"_i18n + "\n\n";
+        prompt += "• [" + std::string(GetSaveTypeLabel(src.save_data_type)) + "] ";
+        if (!acc_str.empty()) {
+            prompt += acc_str;
+            if (src.save_data_index != 0) {
+                prompt += " (slot "_i18n + std::to_string(src.save_data_index) + ")";
+            }
+            prompt += " • ";
+        }
+        prompt += std::string(GetBackupSourceLabel(src.backup_source)) + " (" + FormatBackupTimestamp(newest.ts, false) + ")\n";
+        prompt += "  " + "Archive: "_i18n + filename + "\n";
+        prompt += "  " + "Target: "_i18n + dest_of(dst, acc_str) + "\n\n";
     }
     prompt += "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
-    if (num_pages == 1) {
-        App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, [this, sources, targets, location, backup_root](auto choice) {
-            if (choice && *choice == 1) {
-                ExecuteRestore(sources, targets, location, backup_root);
-            }
-        });
-        return;
-    }
-
-    const bool is_first = (page == 0);
-    const bool is_last = (page + 1 == num_pages);
-
-    std::string btn_left = is_first ? "Cancel"_i18n : "Back"_i18n;
-    std::string btn_right = is_last ? "Restore"_i18n : "Next"_i18n;
-
-    App::Push<OptionBox>(prompt, btn_left, btn_right, [this, sources, targets, location, backup_root, page, num_pages, is_first, is_last](auto choice) {
-        if (!choice) return;
-        if (*choice == 1) {
-            if (is_last) {
-                ExecuteRestore(sources, targets, location, backup_root);
-            } else {
-                ShowRestoreConfirmPage(sources, targets, location, backup_root, page + 1, num_pages);
-            }
-        } else if (*choice == 0) {
-            if (!is_first) {
-                ShowRestoreConfirmPage(sources, targets, location, backup_root, page - 1, num_pages);
-            }
+    App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, [this, sources, targets, location, backup_root](auto choice) {
+        if (choice && *choice == 1) {
+            ExecuteRestore(sources, targets, location, backup_root);
         }
     });
 }

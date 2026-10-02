@@ -2408,6 +2408,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " vecāku dublējuma arhīvu(-us)? Jaunākais dublējums katrai grupai tiks saglabāts.",
   "No user accounts found on this console.": "Šajā konsolē nav atrasts neviens lietotāja konts.",
   "Restore for user": "Atjaunot lietotājam",
+  "Choose for each save": "Izvēlēties katram ierakstam",
   "Are you sure you want to delete all backups for ": "Vai tiešām vēlaties dzēst visus dublējumus priekš ",
   "Are you sure you want to delete all backups for the selected games?": "Vai tiešām vēlaties dzēst visus dublējumus atlasītajām spēlēm?",
   "Delete backups": "Dzēst dublējumus",

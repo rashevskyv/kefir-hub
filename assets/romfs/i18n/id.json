@@ -2459,6 +2459,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " arsip cadangan lama? Cadangan terbaru untuk setiap grup akan disimpan.",
   "No user accounts found on this console.": "Tidak ada akun pengguna yang ditemukan di konsol ini.",
   "Restore for user": "Pulihkan untuk pengguna",
+  "Choose for each save": "Pilih untuk setiap penyimpanan",
   "Are you sure you want to delete all backups for ": "Apakah Anda yakin ingin menghapus semua cadangan untuk ",
   "Are you sure you want to delete all backups for the selected games?": "Apakah Anda yakin ingin menghapus semua cadangan untuk game yang dipilih?",
   "Delete backups": "Hapus cadangan",

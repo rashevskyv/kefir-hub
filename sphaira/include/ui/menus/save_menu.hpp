@@ -244,13 +244,11 @@ private:
     void RestoreSaves(std::vector<Entry> entries);
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root);
-    void ShowRestoreConfirmPage(
+    void ShowRestoreConfirm(
         std::shared_ptr<std::vector<Entry>> sources,
         std::shared_ptr<std::vector<Entry>> targets,
         const dump::DumpLocation& location,
-        const fs::FsPath& backup_root,
-        size_t page,
-        size_t num_pages);
+        const fs::FsPath& backup_root);
     void ExecuteRestore(
         std::shared_ptr<std::vector<Entry>> sources,
         std::shared_ptr<std::vector<Entry>> targets,
@@ -289,10 +287,7 @@ private:
     void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
     void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker = false, bool return_to_actions = false);
     void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
-    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys);
-    void PromptBatchRestoreTargets(std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys);
-    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
-    void PromptBatchRestoreTargets(std::vector<Entry> seeds, size_t step, std::vector<AccountProfileBase> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false, std::shared_ptr<std::optional<AccountUid>> shared_uid = nullptr);
     void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();

@@ -1959,6 +1959,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " äldre säkerhetskopieringsarkiv? Den nyaste säkerhetskopian för varje grupp behålls.",
   "No user accounts found on this console.": "Inga användarkonton hittades på denna konsol.",
   "Restore for user": "Återställ för användare",
+  "Choose for each save": "Välj för varje sparfil",
   "Are you sure you want to delete all backups for ": "Är du säker på att du vill radera alla säkerhetskopior för ",
   "Are you sure you want to delete all backups for the selected games?": "Är du säker på att du vill ta bort alla säkerhetskopior för de valda spelen?",
   "Delete backups": "Ta bort säkerhetskopior",

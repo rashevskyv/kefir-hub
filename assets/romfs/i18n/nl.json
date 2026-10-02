@@ -1959,6 +1959,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " oudere reservekopie-archief(-ven)? De nieuwste reservekopie voor elke groep wordt bewaard.",
   "No user accounts found on this console.": "Geen gebruikersaccounts gevonden op deze console.",
   "Restore for user": "Terugzetten voor gebruiker",
+  "Choose for each save": "Per save kiezen",
   "Are you sure you want to delete all backups for ": "Weet je zeker dat je alle back-ups wilt verwijderen voor ",
   "Are you sure you want to delete all backups for the selected games?": "Weet je zeker dat je alle reservekopieën voor de geselecteerde spellen wilt verwijderen?",
   "Delete backups": "Back-ups verwijderen",

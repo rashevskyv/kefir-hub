@@ -27,6 +27,22 @@ void KeepNewestPerKey(std::vector<T>& items, KeyFn key_of, RankFn rank_of) {
     items = std::move(out);
 }
 
+// A batch restore can ask "which user?" once for all of its user saves when there are at
+// least two of them and no two would land in the same save slot of that user.
+// slot_keys: one key per user save, the slot identity without the account (game, index, rank).
+inline bool CanShareAccount(const std::vector<std::string>& slot_keys) {
+    if (slot_keys.size() < 2) {
+        return false;
+    }
+    std::unordered_map<std::string, int> seen;
+    for (const auto& key : slot_keys) {
+        if (!seen.try_emplace(key, 0).second) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Appends " (tag)" to every label that occurs more than once, so two entries with the
 // same text (e.g. two accounts with one nickname) stay distinguishable.
 inline void DisambiguateLabels(std::vector<std::string>& labels, const std::vector<std::string>& tags) {

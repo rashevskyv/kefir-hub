@@ -1960,6 +1960,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " ältere Backup-Archiv(e)? Das neueste Backup für jede Gruppe wird behalten.",
   "No user accounts found on this console.": "Keine Benutzerkonten auf dieser Konsole gefunden.",
   "Restore for user": "Wiederherstellen für Benutzer",
+  "Choose for each save": "Für jeden Spielstand wählen",
   "Are you sure you want to delete all backups for ": "Mistest du wirklich alle Backups löschen für ",
   "Are you sure you want to delete all backups for the selected games?": "Möchten Sie wirklich alle Backups für die ausgewählten Spiele löschen?",
   "Delete backups": "Backups löschen",

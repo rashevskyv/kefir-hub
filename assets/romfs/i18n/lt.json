@@ -2409,6 +2409,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " senesnę(-ių) atsarginę(-ių) kopijų archyvą(-ų)? Naujausia atsarginė kopija kiekvienai grupei bus išsaugota.",
   "No user accounts found on this console.": "Šioje konsolėje nerasta naudotojų paskyrų.",
   "Restore for user": "Atkurti naudotojui",
+  "Choose for each save": "Pasirinkti kiekvienam išsaugojimui",
   "Are you sure you want to delete all backups for ": "Ar tikrai norite ištrinti visas atsargines kopijas, skirtas ",
   "Are you sure you want to delete all backups for the selected games?": "Ar tikrai norite ištrinti visas pasirinktų žaidimų atsargines kopijas?",
   "Delete backups": "Ištrinti atsargines kopijas",

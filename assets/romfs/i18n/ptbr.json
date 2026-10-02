@@ -1987,6 +1987,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " arquivo(s) de backup mais antigo(s)? O backup mais recente para cada grupo será mantido.",
   "No user accounts found on this console.": "Nenhuma conta de usuário encontrada neste console.",
   "Restore for user": "Restaurar para o usuário",
+  "Choose for each save": "Escolher para cada save",
   "Are you sure you want to delete all backups for ": "Tem certeza de que deseja excluir todos os backups de ",
   "Are you sure you want to delete all backups for the selected games?": "Tem certeza de que deseja excluir todos os backups para os jogos selecionados?",
   "Delete backups": "Excluir backups",

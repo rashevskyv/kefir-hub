@@ -2434,6 +2434,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " starsze archiwa kopii zapasowych? Najnowsza kopia zapasowa dla każdej grupy zostanie zachowana.",
   "No user accounts found on this console.": "Nie znaleziono kont użytkowników na tej konsoli.",
   "Restore for user": "Przywróć dla użytkownika",
+  "Choose for each save": "Wybierz dla każdego zapisu",
   "Are you sure you want to delete all backups for ": "Czy na pewno chcesz usunąć wszystkie kopie zapasowe dla ",
   "Are you sure you want to delete all backups for the selected games?": "Czy na pewno chcesz usunąć wszystkie kopie zapasowe dla wybranych gier?",
   "Delete backups": "Usuń kopie zapasowe",

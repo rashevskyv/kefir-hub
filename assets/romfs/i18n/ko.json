@@ -1959,6 +1959,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": "이전 백업 아카이브를 삭제하시겠습니까? 각 그룹의 최신 백업이 유지됩니다.",
   "No user accounts found on this console.": "이 콘솔에서 사용자 계정을 찾을 수 없습니다.",
   "Restore for user": "사용자 복원",
+  "Choose for each save": "세이브마다 선택",
   "Are you sure you want to delete all backups for ": "의 모든 백업을 삭제하시겠습니까?",
   "Are you sure you want to delete all backups for the selected games?": "선택한 게임의 모든 백업을 삭제하시겠습니까?",
   "Delete backups": "백업 삭제",

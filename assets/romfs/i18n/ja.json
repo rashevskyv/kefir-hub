@@ -1959,6 +1959,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": "古いバックアップアーカイブですか？各グループの最新のバックアップが保持されます。",
   "No user accounts found on this console.": "この本体にユーザーアカウントが見つかりません。",
   "Restore for user": "ユーザーの復元",
+  "Choose for each save": "セーブデータごとに選択",
   "Are you sure you want to delete all backups for ": "次のすべてのバックアップを削除してもよろしいですか: ",
   "Are you sure you want to delete all backups for the selected games?": "選択したゲームのすべてのバックアップを削除してもよろしいですか？",
   "Delete backups": "バックアップを削除",

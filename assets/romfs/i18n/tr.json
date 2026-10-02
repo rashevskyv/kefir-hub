@@ -2381,6 +2381,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " daha eski yedek arşiv(ler)? Her grubun en yeni yedeği saklanacaktır.",
   "No user accounts found on this console.": "Bu konsolda kullanıcı hesabı bulunamadı.",
   "Restore for user": "Kullanıcı için geri yükle",
+  "Choose for each save": "Her kayıt için seç",
   "Are you sure you want to delete all backups for ": "şunun için tüm yedekleri silmek istediğinizden emin misiniz: ",
   "Are you sure you want to delete all backups for the selected games?": "Seçilen oyunlar için tüm yedekleri silmek istediğinizden emin misiniz?",
   "Delete backups": "Yedekleri sil",

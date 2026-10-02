@@ -2013,6 +2013,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": "個較舊的備份存檔？將保留每個組中最新的備份。",
   "No user accounts found on this console.": "在本主機上未找到使用者帳戶。",
   "Restore for user": "為使用者還原",
+  "Choose for each save": "為每個存檔選擇",
   "Are you sure you want to delete all backups for ": "確定要刪除以下對象的所有備份嗎：",
   "Are you sure you want to delete all backups for the selected games?": "確定要刪除所選遊戲的所有備份嗎？",
   "Delete backups": "刪除備份",

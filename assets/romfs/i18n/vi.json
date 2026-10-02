@@ -1959,6 +1959,7 @@
   " older backup archive(s)? The newest backup for each group will be kept.": " kho lưu trữ sao lưu cũ hơn? Bản sao lưu mới nhất cho mỗi nhóm sẽ được giữ lại.",
   "No user accounts found on this console.": "Không tìm thấy tài khoản người dùng nào trên máy console này.",
   "Restore for user": "Khôi phục cho người dùng",
+  "Choose for each save": "Chọn cho từng bản lưu",
   "Are you sure you want to delete all backups for ": "Bạn có chắc chắn muốn xóa tất cả các bản sao lưu cho ",
   "Are you sure you want to delete all backups for the selected games?": "Bạn có chắc chắn muốn xóa tất cả các bản sao lưu cho các trò chơi đã chọn không?",
   "Delete backups": "Xóa bản sao lưu",
