@@ -24,6 +24,7 @@ static u8 g_savedTls[0x100] = {0};
 u64 g_nroAddr = 0;
 Result g_lastRet = 0;
 
+// graphify: parse stop (attribute macro between the return type and the name)
 void NX_NORETURN nroEntrypointTrampoline(const ConfigEntry* entries, u64 handle, u64 entrypoint);
 
 static void fix_nro_path(char* path) {

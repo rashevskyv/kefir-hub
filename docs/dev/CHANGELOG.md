@@ -21,6 +21,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.957 — graph holes: net.hpp parses, the rest are marked (3.5)
+net.hpp: the braced default argument `= {}` stopped the tree-sitter parser for the whole header; `= nullptr` is the same empty std::function and parses. defines.hpp (macro-generated enumerators), nxlink.h / ams_su.h (extern "C" brace under #ifdef in a C header) and hbl/source/main.c (attribute macro before the name) have no trivial rewrite and carry a `// graphify: parse stop` note. host tests: pass (--quick) · nro: not built · switch: pending (no behaviour change)
 ## v0.13.956 — warning-free first-party build with -Werror (1.2)
 Inventory after recompiling every first-party object: 21 warnings in sphaira/ (0 in hbl/, sysmodule/). Fixed all: 11 ternaries mixing Result with an FsError/Result_ enumerator (cast to Result), 4 missing switch cases in file_picker (default), unused GetFsSaveAttr deleted, enum|enum in devoptab_mtp_usb (u8 casts), a %lld/s64 format in yati_pipeline. `-Werror` is now on for the sphaira target (dependencies are separate targets and unaffected). 1.3: `tests/run.sh` exits 0 in WSL. host tests: pass · nro: not built · switch: pending (no behaviour change)
 ## v0.13.955 — starts in the Eden emulator

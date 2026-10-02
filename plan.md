@@ -210,7 +210,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       Skip calls whose source is a string literal into a buffer sized ≥ literal. Replace the rest with
       `snprintf`/`strncpy`+terminator/`std::string`. **Done when:** every remaining call has a `// literal, bounded`
       comment or is replaced.
-- [ ] 3.5 **Graph holes.** `defines.hpp` L255, `net.hpp` L32, `nxlink.h` L47, `ams_su.h` L36, `hbl/source/main.c` L27
+- [x] 3.5 **Graph holes.** `defines.hpp` L255, `net.hpp` L32, `nxlink.h` L47, `ams_su.h` L36, `hbl/source/main.c` L27
       break the tree-sitter parser (macro-heavy). If a trivial rewrite (e.g. a macro used as a type, a missing
       semicolon in a macro) fixes extraction without changing semantics, do it; otherwise note `// graphify: parse stop`
       and move on. **Verify:** `graphify update .` warning count drops.

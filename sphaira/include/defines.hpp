@@ -252,6 +252,7 @@ enum class SphairaResult : Result {
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
 
+// graphify: parse stop (macro-generated enumerators; symbols below are not extracted)
 enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(TransferCancelled),
     MAKE_SPHAIRA_RESULT_ENUM(StreamBadSeek),

@@ -44,6 +44,7 @@ bool nxlinkInitialize(NxlinkCallback callback);
 // signal for the event to close and then join the thread.
 void nxlinkExit();
 
+// graphify: parse stop (extern "C" closing brace under #ifdef; the header parses as C)
 #ifdef __cplusplus
 }
 #endif

@@ -29,7 +29,8 @@ auto IsConnectedCached() -> bool;
 // only thing in the way (needs nifm:a, see main.cpp) and asks nifm to bring the
 // configured network up, then waits for an ip. blocks for up to timeout_ms, so
 // call it from a worker thread. cancelled() is polled while waiting.
-auto TryConnect(u64 timeout_ms, const std::function<bool()>& cancelled = {}) -> bool;
+// (nullptr, not {}: same empty std::function, but the graph's parser stops at a braced default.)
+auto TryConnect(u64 timeout_ms, const std::function<bool()>& cancelled = nullptr) -> bool;
 
 // the gate itself. runs on_connected right away when there already is a
 // connection; otherwise tries to connect behind a progress box and either runs

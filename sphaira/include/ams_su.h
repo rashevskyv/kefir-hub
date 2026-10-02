@@ -33,6 +33,7 @@ Result amssuGetPrepareUpdateProgress(NsSystemUpdateProgress* out);
 Result amssuHasPreparedUpdate(bool* out);
 Result amssuApplyPreparedUpdate(void);
 
+// graphify: parse stop (extern "C" closing brace under #ifdef; the header parses as C)
 #ifdef __cplusplus
 }
 #endif
