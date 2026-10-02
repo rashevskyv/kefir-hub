@@ -133,7 +133,7 @@ auto CollectDbiBackups(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root
         add_root(backup_root.s);
     }
     add_root(DEFAULT_BACKUP_ROOT);
-    add_root(DBI_SAVES_PATH);
+    add_root(GetDbiSavesPath());
     add_root(DBI_SAVES_ROOT_PATH);
     for (const auto& custom : GetBackupSearchPaths()) {
         add_root(custom);

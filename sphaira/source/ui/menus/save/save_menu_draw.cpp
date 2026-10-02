@@ -72,7 +72,8 @@ auto Menu::ComputeGridSections() const -> GridSections {
                 const bool is_game = m_entries[idx].is_game_parent;
                 const auto src = m_entries[idx].backup_source;
                 size_t end = idx + 1;
-                while (end < m_entries.size() && m_entries[end].is_game_parent == is_game && (is_game || m_entries[end].backup_source == src)) {
+                // games and loose (system) backups are both grouped by where the backup came from.
+                while (end < m_entries.size() && m_entries[end].is_game_parent == is_game && m_entries[end].backup_source == src) {
                     end++;
                 }
                 const s64 count = static_cast<s64>(end - idx);
@@ -81,27 +82,22 @@ auto Menu::ComputeGridSections() const -> GridSections {
                     // The grid already starts below the tabs, leaving room for
                     // the first label without a whole empty row.
                     cur_disp = compact_grid ? 0 : g.row;
-                    if (is_game) {
-                        cur_disp = 0;
-                    }
                 } else {
                     const s64 rem = cur_disp % g.row;
                     if (rem != 0) {
                         cur_disp += (g.row - rem);
                     }
                     if (!compact_grid) {
-                        if (!is_game) {
-                            cur_disp += g.row;
-                        }
+                        cur_disp += g.row;
                     }
                 }
 
                 GridSections::Section sec;
-                sec.label = is_game ? "" : i18n::get(GetBackupSourceLabel(src));
+                sec.label = i18n::get(GetBackupSourceLabel(src));
                 sec.entry_start = static_cast<s64>(idx);
                 sec.entry_count = count;
                 sec.first_display = cur_disp;
-                sec.has_divider = !is_game;
+                sec.has_divider = true;
 
                 cur_disp += count;
                 g.sections.emplace_back(std::move(sec));

@@ -77,7 +77,7 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
 
                 // Also clean up empty game directories in DBI and dumps
                 if (!IsSystemLikeSave(e.save_data_type)) {
-                    const auto dbi_game_dir = fs::AppendPath(sd_fs.Root(), fs::AppendPath(fs::FsPath{DBI_SAVES_PATH}, BuildDbiGameFolderName(e)));
+                    const auto dbi_game_dir = fs::AppendPath(sd_fs.Root(), fs::AppendPath(fs::FsPath{GetDbiSavesPath()}, BuildDbiGameFolderName(e)));
                     sd_fs.DeleteDirectory(dbi_game_dir);
                 }
                 const auto sphaira_dir = fs::AppendPath(sd_fs.Root(), BuildSaveBasePath(e, false, backup_root));

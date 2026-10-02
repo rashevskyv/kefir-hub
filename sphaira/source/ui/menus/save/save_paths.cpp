@@ -323,13 +323,19 @@ auto NormalizeBackupSearchPath(std::string_view path) -> std::optional<std::stri
     if (!normalized) {
         return std::nullopt;
     }
-    if (*normalized == "/" || path::EqualsIC(*normalized, DEFAULT_BACKUP_ROOT) || path::EqualsIC(*normalized, DBI_SAVES_PATH) || path::EqualsIC(*normalized, DBI_SAVES_ROOT_PATH)) {
+    if (*normalized == "/" || path::EqualsIC(*normalized, DEFAULT_BACKUP_ROOT) || path::EqualsIC(*normalized, GetDbiSavesPath()) || path::EqualsIC(*normalized, DBI_SAVES_ROOT_PATH)) {
         return std::nullopt;
     }
     if (normalized->size() >= FS_MAX_PATH) {
         return std::nullopt;
     }
     return normalized;
+}
+
+auto GetDbiSavesPath() -> std::string {
+    char value[FS_MAX_PATH]{};
+    ini_gets("General", "SavesFolder", "", value, sizeof(value), "/switch/DBI/dbi.config");
+    return path::SdFolderFromConfigValue(value).value_or(DBI_SAVES_PATH);
 }
 
 auto GetBackupSearchPaths() -> std::vector<std::string> {
@@ -369,7 +375,7 @@ auto GetShareableSaveBackupRoots() -> std::vector<std::string> {
     };
 
     add_unique(DEFAULT_BACKUP_ROOT);
-    add_unique(DBI_SAVES_PATH);
+    add_unique(GetDbiSavesPath());
     add_unique(DBI_SAVES_ROOT_PATH);
     for (const auto& extra : GetBackupSearchPaths()) {
         add_unique(extra);

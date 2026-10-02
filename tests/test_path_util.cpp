@@ -310,6 +310,22 @@ static int test_collapse_repeated_http_schemes() {
     return 0;
 }
 
+// DBI's dbi.config: "SavesFolder=sdmc:/switch/DBI/saves/" (plan H7).
+static int test_sd_folder_from_config_value() {
+    CHECK(path::SdFolderFromConfigValue("sdmc:/switch/DBI/saves/") == std::string{"/switch/DBI/saves"});
+    CHECK(path::SdFolderFromConfigValue("SDMC:/DBISaves") == std::string{"/DBISaves"});
+    CHECK(path::SdFolderFromConfigValue("/backups//dbi/") == std::string{"/backups/dbi"});
+
+    // missing key, the SD root, relative paths and other devices fall back to the default.
+    CHECK(!path::SdFolderFromConfigValue(""));
+    CHECK(!path::SdFolderFromConfigValue("sdmc:/"));
+    CHECK(!path::SdFolderFromConfigValue("sdmc:"));
+    CHECK(!path::SdFolderFromConfigValue("switch/DBI/saves"));
+    CHECK(!path::SdFolderFromConfigValue("ums0:/saves"));
+    CHECK(!path::SdFolderFromConfigValue("sdmc:/switch/../saves"));
+    return 0;
+}
+
 static int test_is_subpath_of() {
     // Exact match and trailing slashes
     CHECK(path::IsSubpathOf("/switch", "/switch"));
@@ -416,6 +432,7 @@ int main() {
         test_is_valid_direct_nro_url() ||
         test_is_valid_direct_download_url() ||
         test_collapse_repeated_http_schemes() ||
+        test_sd_folder_from_config_value() ||
         test_is_subpath_of() ||
         test_is_nro_path() ||
         test_path_affects_homebrew()) {

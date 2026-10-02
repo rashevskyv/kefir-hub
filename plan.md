@@ -102,7 +102,7 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       → the dialog is titled «Відновити для користувача (Minecraft)» (stale title from another entry), lists «nin10do»
       twice (same uid, not deduplicated — probably accounts + save owners merged), and selecting one yields the
       duplicate-slot error. Fix: dedupe targets by uid, take the title from the selected group. **Re-run:** B5.
-- [ ] H7 **Grouping by origin not visible (B3) + DBI save path from DBI config.** v0.13.882 claims sections by source
+- [x] H7 **Grouping by origin not visible (B3) + DBI save path from DBI config.** v0.13.882 claims sections by source
       (Kefir Hub/DBI/JKSV/Checkpoint); the user sees none. Check the condition that shows section labels (maybe only
       when ≥2 sources are found) and the DBI/JKSV/Checkpoint roots being scanned. Then read DBI's own config for its
       saves directory instead of a hard-coded path — DBI config is `/switch/DBI/dbi.config` (INI-like, `;` comments), key `SavesFolder=sdmc:/switch/DBI/saves/` (copy in `scratch/dbi.config`); fall back to `/switch/DBI/saves` when the file or key is missing. The user's DBI saves dir holds both title-ID-named and game-name-named subfolders.

@@ -22,6 +22,7 @@ namespace sphaira::ui::menu::save {
 // Menu::BackupSaveInternal in save_menu.hpp repeats this literal, as that
 // header cannot include this one (include cycle).
 inline constexpr const char* DEFAULT_BACKUP_ROOT = "/dumps";
+// DBI's default saves folder; use GetDbiSavesPath(), which honours DBI's own config.
 inline constexpr const char* DBI_SAVES_PATH = "/switch/DBI/saves";
 inline constexpr const char* DBI_SAVES_ROOT_PATH = "/DBISaves";
 inline constexpr const char* JKSV_PATH = "/JKSV";
@@ -195,6 +196,8 @@ auto IsRawSaveCandidate(fs::Fs* fs, const fs::FsPath& path, std::string_view nam
 inline constexpr Result Result_RawSaveRestoreUnsupported = Result_FsInvalidType;
 auto GetRawRestoreUnsupportedMessage() -> std::string;
 auto GetBackupSearchPaths() -> std::vector<std::string>;
+// "SavesFolder" from /switch/DBI/dbi.config, or DBI_SAVES_PATH when the file or key is missing.
+auto GetDbiSavesPath() -> std::string;
 auto GetShareableSaveBackupRoots() -> std::vector<std::string>;
 auto AddBackupSearchPath(const fs::FsPath& path) -> bool;
 auto RemoveBackupSearchPath(const fs::FsPath& path) -> bool;

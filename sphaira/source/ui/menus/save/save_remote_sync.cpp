@@ -41,7 +41,7 @@ auto DownloadOneBackupFile(fs::Fs* fs, ProgressBox* pbox, const location::Entry&
     if (!IsSystemLikeSave(e.save_data_type) && IsDbiBackupName(e, name.c_str()) && ParseDbiBackupNameTimestamp(name)) {
         fs::FsPath dbi_dir;
         std::snprintf(dbi_dir, sizeof(dbi_dir), "%s/%s/%.8s",
-            DBI_SAVES_PATH, BuildDbiGameFolderName(e).s, name.c_str() + 19);
+            GetDbiSavesPath().c_str(), BuildDbiGameFolderName(e).s, name.c_str() + 19);
         local_file = fs::AppendPath(fs::AppendPath(fs->Root(), dbi_dir), name);
     } else {
         local_file = fs::AppendPath(local_path, name);

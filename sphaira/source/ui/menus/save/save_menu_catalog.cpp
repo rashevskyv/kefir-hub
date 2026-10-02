@@ -152,7 +152,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
         }
     };
 
-    scan_dbi_root(fs::FsPath{DBI_SAVES_PATH}, 0);
+    scan_dbi_root(fs::FsPath{GetDbiSavesPath()}, 0);
     scan_dbi_root(fs::FsPath{DBI_SAVES_ROOT_PATH}, 0);
     for (const auto& custom_path_str : GetBackupSearchPaths()) {
         scan_dbi_root(fs::FsPath{custom_path_str}, 10);

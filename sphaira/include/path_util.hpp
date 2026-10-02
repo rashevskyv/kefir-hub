@@ -250,6 +250,19 @@ inline auto NormalizeAbsoluteSdPath(std::string_view path) -> std::optional<std:
     return normalized;
 }
 
+// A folder value from another app's config (DBI: "SavesFolder=sdmc:/switch/DBI/saves/")
+// as an absolute SD path. nullopt when it is missing, relative, the SD root or not on the SD.
+inline auto SdFolderFromConfigValue(std::string_view value) -> std::optional<std::string> {
+    if (StartsWithIC(value, "sdmc:")) {
+        value.remove_prefix(5);
+    }
+    auto normalized = NormalizeAbsoluteSdPath(value);
+    if (!normalized || *normalized == "/") {
+        return std::nullopt;
+    }
+    return normalized;
+}
+
 // Returns true if the content type or filename/URL indicates a ZIP archive.
 // - Content type contains "zip" (case-insensitive)
 // - Filename or URL path ends with ".zip" (case-insensitive, URL query/fragment ignored)

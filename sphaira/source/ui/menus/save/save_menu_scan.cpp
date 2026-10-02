@@ -297,10 +297,6 @@ void Menu::ScanHomebrew() {
                 }
 
                 u64 newest_ts = 0;
-                bool first_child = true;
-                bool multi_source = false;
-                BackupSource common_source = BackupSource::Other;
-
                 for (auto& c : children) {
                     if (c.lang.name[0] == '\0') {
                         std::strncpy(c.lang.name, parent.lang.name, sizeof(c.lang.name) - 1);
@@ -311,15 +307,11 @@ void Menu::ScanHomebrew() {
                         parent.backup_path = c.backup_path;
                         parent.backup_is_directory = c.backup_is_directory;
                     }
-                    if (first_child) {
-                        common_source = c.backup_source;
-                        first_child = false;
-                    } else if (c.backup_source != common_source) {
-                        multi_source = true;
-                    }
                 }
                 parent.backup_timestamp = newest_ts;
-                parent.backup_source = multi_source ? BackupSource::Other : common_source;
+                // section key on the Backups tab. backups arrive sorted by source, so the first
+                // child is the game's highest-precedence source and games of one source stay adjacent.
+                parent.backup_source = children.front().backup_source;
 
                 parent.children = std::move(children);
                 m_entries.emplace_back(std::move(parent));
