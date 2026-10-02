@@ -9,11 +9,11 @@ Kefir Hub — це homebrew-застосунок, що постачається 
 Kefir Hub — це homebrew-застосунок (`.nro`), тому він запускається з Homebrew Menu, як і будь-який інший homebrew.
 На карті пам'яті він шукає себе за шляхами `/switch/kefir-hub/kefir-hub.nro` та `/switch/kefir-hub.nro`.
 
-1. Відкрийте Homebrew Menu: відкрийте Альбом або затисніть **R**, коли запускаєте будь-яку встановлену гру,
-   і тримайте, доки не відкриється Homebrew Menu.
+1. Відкрийте Homebrew Menu: затисніть **R**, коли відкриваєте Альбом або запускаєте будь-яку встановлену гру,
+   і тримайте, доки не відкриється Homebrew Menu. (Так налаштовано в Kefir. На чистій Atmosphère Альбом відкриває його без **R**.)
 2. Виберіть Kefir Hub і натисніть **A**.
 
-<!-- TODO(verify): does the Kefir package install Kefir Hub as /hbmenu.nro, so that the Homebrew Menu itself is Kefir Hub? -->
+<!-- TODO(verify): Kefir 921 still ships Sphaira as /hbmenu.nro and no Kefir Hub. Update these steps when Kefir ships Kefir Hub (and whether as /hbmenu.nro). -->
 
 Спосіб запуску має значення:
 

@@ -92,7 +92,7 @@ Use this when you already copied a firmware to the memory card, as a folder or a
 
 <!-- shot: updater-manual-picker | File browser in firmware picker mode, "Select current folder" row at the top -->
 
-Your own folder is never deleted; only the temporary unpacked copy is.
+Your own folder is not deleted, unless it is `/firmware` itself: that is the download folder and is cleared after every install. Do not keep a firmware you want to keep in `/firmware`.
 
 ## Downgrade the firmware
 

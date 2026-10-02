@@ -227,9 +227,10 @@ For video and audio files, **+** also has [[Play with NXMP]]. If NXMP is not ins
 App Store.
 
 !!! tip
-    You can add your own rules. Put an `.ini` file in `/config/kefir/assoc/` with these lines:
-    `path=` (the app's `.nro`), `supported_extensions=` (for example `smc|sfc`) and, for emulators,
-    `database=` (the system name). The app must be on the memory card.
+    You can add your own rules. Put an `.ini` file in `/config/kefir/assoc/`, named after the app's `.nro`
+    (for example `mgba.ini` for `mgba.nro`), with `supported_extensions=` (for example `smc|sfc`) and, for emulators,
+    `database=` (the system name). `path=` is needed only when the `.nro` has another name or place. The app must be
+    on the memory card.
 
 ## Make a forwarder
 A forwarder is a HOME Menu icon that starts an app, or an emulator with one game.

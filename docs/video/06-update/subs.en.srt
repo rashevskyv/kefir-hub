@@ -1,0 +1,371 @@
+1
+00:00:00,000 --> 00:00:05,067
+In this video you will update Kefir, the Kefir Hub app itself and the system
+
+2
+00:00:05,067 --> 00:00:08,467
+firmware, and see how to handle a downgrade safely.
+
+3
+00:00:08,467 --> 00:00:11,933
+Press R to switch to the Tools tab and open Updater.
+
+4
+00:00:11,933 --> 00:00:17,533
+The console needs an internet connection: the version list is downloaded every time.
+
+5
+00:00:17,533 --> 00:00:19,667
+At the top there are four lines.
+
+6
+00:00:19,667 --> 00:00:24,200
+Current Kefir and Latest Kefir show your version and the newest one.
+
+7
+00:00:24,200 --> 00:00:27,667
+Current Firmware is the system the console runs now.
+
+8
+00:00:27,667 --> 00:00:29,667
+Console says Erista or Mariko.
+
+9
+00:00:29,667 --> 00:00:32,533
+Below are two sections, KEFIR and FIRMWARE.
+
+10
+00:00:32,533 --> 00:00:37,000
+A version newer than yours is tagged UPDATE, a lower one DOWNGRADE.
+
+11
+00:00:37,000 --> 00:00:40,667
+A firmware your Kefir cannot run is tagged Unsupported.
+
+12
+00:00:40,667 --> 00:00:43,867
+If the list did not load, press X to refresh it.
+
+13
+00:00:43,867 --> 00:00:45,867
+Let's start with Kefir.
+
+14
+00:00:45,867 --> 00:00:50,267
+In the KEFIR section select the version tagged UPDATE and press A.
+
+15
+00:00:50,267 --> 00:00:55,200
+A window opens with the changes between your version and the selected one.
+
+16
+00:00:55,200 --> 00:00:57,467
+Scroll to the end with D-pad down.
+
+17
+00:00:57,467 --> 00:00:59,467
+L and R scroll a page.
+
+18
+00:00:59,467 --> 00:01:03,133
+The install button unlocks only when you reach the end.
+
+19
+00:01:03,133 --> 00:01:06,400
+Press down once more, select Install and press A.
+
+20
+00:01:06,400 --> 00:01:10,867
+If you change your mind, press B: nothing is downloaded until then.
+
+21
+00:01:10,867 --> 00:01:15,267
+Kefir Hub downloads the package and unpacks it to the memory card.
+
+22
+00:01:15,267 --> 00:01:19,067
+The payload and the bootloader files are updated with it.
+
+23
+00:01:19,067 --> 00:01:22,000
+At the end you see "Kefir package installed.
+
+24
+00:01:22,000 --> 00:01:24,000
+Reboot now?".
+
+25
+00:01:24,000 --> 00:01:27,733
+Choose Reboot, or Later if you want to restart yourself.
+
+26
+00:01:27,733 --> 00:01:29,733
+Now the firmware.
+
+27
+00:01:29,733 --> 00:01:35,067
+A firmware install writes to the console's system storage, so first a few rules.
+
+28
+00:01:35,067 --> 00:01:40,067
+Keep the console on the charger and do not power it off during the install.
+
+29
+00:01:40,067 --> 00:01:42,067
+Back up your saves first.
+
+30
+00:01:42,067 --> 00:01:47,467
+Do not keep your own files in the firmware folder on the card: it is replaced and
+
+31
+00:01:47,467 --> 00:01:49,467
+then deleted.
+
+32
+00:01:49,467 --> 00:01:55,067
+Custom system themes and system interface translations are deleted on every firmware
+
+33
+00:01:55,067 --> 00:01:57,067
+install.
+
+34
+00:01:57,067 --> 00:01:59,467
+Install them again after the update.
+
+35
+00:01:59,467 --> 00:02:03,000
+In the FIRMWARE section select a version and press A.
+
+36
+00:02:03,000 --> 00:02:07,733
+If your Kefir does not support it, Kefir Hub first offers Update Kefir.
+
+37
+00:02:07,733 --> 00:02:11,600
+Accept it, and the firmware download continues afterwards.
+
+38
+00:02:11,600 --> 00:02:13,600
+Confirm Download.
+
+39
+00:02:13,600 --> 00:02:17,267
+After the download Kefir Hub checks the firmware files.
+
+40
+00:02:17,267 --> 00:02:20,000
+If the check fails, nothing is installed.
+
+41
+00:02:20,000 --> 00:02:25,467
+The install prompt shows the version and the target: sysMMC, the internal storage,
+
+42
+00:02:25,467 --> 00:02:27,467
+or emuMMC.
+
+43
+00:02:27,467 --> 00:02:30,933
+The firmware goes to the system you are running now.
+
+44
+00:02:30,933 --> 00:02:32,933
+Check this line.
+
+45
+00:02:32,933 --> 00:02:34,933
+Choose Install and wait.
+
+46
+00:02:34,933 --> 00:02:36,933
+Do not power off the console.
+
+47
+00:02:36,933 --> 00:02:42,267
+At the end Kefir Hub tells you that custom themes and translations were removed.
+
+48
+00:02:42,267 --> 00:02:44,267
+Choose Reboot.
+
+49
+00:02:44,267 --> 00:02:47,800
+The downloaded firmware files are deleted afterwards.
+
+50
+00:02:47,800 --> 00:02:52,533
+If the firmware is already on the memory card, select Install manually.
+
+51
+00:02:52,533 --> 00:02:56,467
+A file browser opens with the title Select firmware folder.
+
+52
+00:02:56,467 --> 00:03:01,000
+For a folder, open it and select the top row, Select current folder.
+
+53
+00:03:01,000 --> 00:03:04,800
+For a zip archive, select the archive itself and press A.
+
+54
+00:03:04,800 --> 00:03:06,800
+Confirm with Select.
+
+55
+00:03:06,800 --> 00:03:09,933
+Then the same check and the same prompt follow.
+
+56
+00:03:09,933 --> 00:03:15,467
+After an install from an archive Kefir Hub asks what to do with it: Keep or Delete.
+
+57
+00:03:15,467 --> 00:03:17,667
+Your own folder is never deleted.
+
+58
+00:03:17,667 --> 00:03:22,133
+A downgrade means installing a lower firmware than the current one.
+
+59
+00:03:22,133 --> 00:03:27,467
+When you select a version tagged DOWNGRADE, the Firmware downgrade warning opens
+
+60
+00:03:27,467 --> 00:03:29,467
+first.
+
+61
+00:03:29,467 --> 00:03:33,667
+Careful: in this window the confirm button is already selected.
+
+62
+00:03:33,667 --> 00:03:36,000
+Pressing A continues the downgrade.
+
+63
+00:03:36,000 --> 00:03:38,000
+Press B to cancel.
+
+64
+00:03:38,000 --> 00:03:42,400
+What happens after a downgrade is set by the Downgrade fix option.
+
+65
+00:03:42,400 --> 00:03:44,400
+Press Plus in the Updater.
+
+66
+00:03:44,400 --> 00:03:50,000
+Automatic prepares the fix without asking, Optional (ask) asks every time, Off never
+
+67
+00:03:50,000 --> 00:03:52,000
+applies it.
+
+68
+00:03:52,000 --> 00:03:57,000
+The fix deletes the system save 8000000000000073 and runs in TegraExplorer.
+
+69
+00:03:57,000 --> 00:04:02,600
+So after a downgrade with the fix the console restarts into TegraExplorer instead of
+
+70
+00:04:02,600 --> 00:04:04,600
+a normal reboot.
+
+71
+00:04:04,600 --> 00:04:10,000
+If the console does not boot after a downgrade, the steps are in the warning box.
+
+72
+00:04:10,000 --> 00:04:13,067
+Wait for the Nintendo and Kefir logos to pass.
+
+73
+00:04:13,067 --> 00:04:16,667
+Hold both volume buttons until Maintenance Mode opens.
+
+74
+00:04:16,667 --> 00:04:20,333
+Choose "Initialize Console Without Deleting Save Data".
+
+75
+00:04:20,333 --> 00:04:23,800
+Games and system settings are wiped, saves are kept.
+
+76
+00:04:23,800 --> 00:04:28,667
+When the console offers to delete the Nintendo folder on the card, agree.
+
+77
+00:04:28,667 --> 00:04:32,267
+The QR code in the box opens a manual downgrade guide.
+
+78
+00:04:32,267 --> 00:04:35,067
+What is left is updating Kefir Hub itself.
+
+79
+00:04:35,067 --> 00:04:37,933
+It checks for a new version when it starts.
+
+80
+00:04:37,933 --> 00:04:41,600
+The behaviour is set in Settings, General, Auto-update.
+
+81
+00:04:41,600 --> 00:04:43,800
+When to install has three values.
+
+82
+00:04:43,800 --> 00:04:45,800
+Off never checks.
+
+83
+00:04:45,800 --> 00:04:51,333
+Silent downloads in the background, and the next launch opens the new version; this
+
+84
+00:04:51,333 --> 00:04:53,333
+is the default.
+
+85
+00:04:53,333 --> 00:04:55,333
+Ask shows a prompt.
+
+86
+00:04:55,333 --> 00:04:59,467
+With Ask, this appears at launch: "A new version is available.
+
+87
+00:04:59,467 --> 00:05:01,467
+Update now?".
+
+88
+00:05:01,467 --> 00:05:03,467
+Later asks again next time.
+
+89
+00:05:03,467 --> 00:05:06,733
+Skip this update stops asking about this version.
+
+90
+00:05:06,733 --> 00:05:09,200
+Update downloads and installs it now.
+
+91
+00:05:09,200 --> 00:05:11,600
+When it finishes, restart Kefir Hub.
+
+92
+00:05:11,600 --> 00:05:15,467
+The Update now item in the settings does the same by hand.
+
+93
+00:05:15,467 --> 00:05:19,867
+Read more on the Updater and Settings pages of the Kefir Hub docs.

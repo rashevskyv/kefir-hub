@@ -9,11 +9,11 @@ cheats, themes and user profiles, and updates Kefir and the firmware, all from o
 Kefir Hub is a homebrew app (`.nro`), so it starts from the Homebrew Menu like any other homebrew.
 It looks for itself at `/switch/kefir-hub/kefir-hub.nro` and `/switch/kefir-hub.nro` on the memory card.
 
-1. Open the Homebrew Menu: open the Album, or hold **R** while you start any installed game and keep holding
-   it until the Homebrew Menu opens.
+1. Open the Homebrew Menu: hold **R** while you open the Album or start any installed game, and keep holding
+   it until the Homebrew Menu opens. (This is Kefir's setting. On plain Atmosphère the Album opens it without **R**.)
 2. Select Kefir Hub and press **A**.
 
-<!-- TODO(verify): does the Kefir package install Kefir Hub as /hbmenu.nro, so that the Homebrew Menu itself is Kefir Hub? -->
+<!-- TODO(verify): Kefir 921 still ships Sphaira as /hbmenu.nro and no Kefir Hub. Update these steps when Kefir ships Kefir Hub (and whether as /hbmenu.nro). -->
 
 The way you start it matters:
 

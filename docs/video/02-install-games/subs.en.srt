@@ -1,0 +1,375 @@
+1
+00:00:00,000 --> 00:00:05,467
+In this video you will install a game three ways: from the microSD card, from a PC
+
+2
+00:00:05,467 --> 00:00:09,533
+over a USB cable, and over MTP by copying a file in Explorer.
+
+3
+00:00:09,533 --> 00:00:11,533
+First, a warning.
+
+4
+00:00:11,533 --> 00:00:17,067
+Installing games you did not buy can get your console banned from Nintendo's online
+
+5
+00:00:17,067 --> 00:00:19,067
+services.
+
+6
+00:00:19,067 --> 00:00:22,200
+Kefir Hub installs NSP, NSZ, XCI and XCZ files.
+
+7
+00:00:22,200 --> 00:00:27,400
+NSZ and XCZ are compressed; they are unpacked during the install and need more
+
+8
+00:00:27,400 --> 00:00:29,400
+memory.
+
+9
+00:00:29,400 --> 00:00:34,800
+So start Kefir Hub in Title Mode: hold R while you start a game, or use the Kefir
+
+10
+00:00:34,800 --> 00:00:36,800
+Hub icon on the HOME Menu.
+
+11
+00:00:36,800 --> 00:00:39,200
+The first video shows how to add it.
+
+12
+00:00:39,200 --> 00:00:41,200
+Installing is off at first.
+
+13
+00:00:41,200 --> 00:00:43,200
+Open Tools, Settings, Install.
+
+14
+00:00:43,200 --> 00:00:48,667
+Choose "Enable sysMMC" or "Enable emuMMC", depending on which one you are running.
+
+15
+00:00:48,667 --> 00:00:51,000
+Read the warning and choose Enable.
+
+16
+00:00:51,000 --> 00:00:56,333
+"Install location" decides where a game goes: the microSD card or system memory.
+
+17
+00:00:56,333 --> 00:01:01,800
+The default, Automatic, picks the storage that keeps free space on both as even as
+
+18
+00:01:01,800 --> 00:01:03,800
+possible.
+
+19
+00:01:03,800 --> 00:01:06,067
+Let's start with the microSD card.
+
+20
+00:01:06,067 --> 00:01:10,267
+Open Tools, File Browser, and go to the folder with your games.
+
+21
+00:01:10,267 --> 00:01:13,333
+To install one file, highlight it and press A.
+
+22
+00:01:13,333 --> 00:01:15,333
+The Install queue opens.
+
+23
+00:01:15,333 --> 00:01:19,267
+It checks the file first and does not install anything yet.
+
+24
+00:01:19,267 --> 00:01:24,133
+For several files, select each one with X, press plus and choose Install.
+
+25
+00:01:24,133 --> 00:01:29,667
+For a whole folder, the same panel has "Install recursively": it finds the packages
+
+26
+00:01:29,667 --> 00:01:32,133
+in the folder and all its subfolders.
+
+27
+00:01:32,133 --> 00:01:37,733
+At the top of the queue you see how much space is needed and how much is free on the
+
+28
+00:01:37,733 --> 00:01:39,733
+card and in system memory.
+
+29
+00:01:39,733 --> 00:01:43,600
+Each package shows its size and the storage it will go to.
+
+30
+00:01:43,600 --> 00:01:48,933
+A red package marked "Analysis failed" could not be read: the file is damaged or
+
+31
+00:01:48,933 --> 00:01:50,933
+incomplete.
+
+32
+00:01:50,933 --> 00:01:52,933
+You cannot select it.
+
+33
+00:01:52,933 --> 00:01:56,400
+R3 switches the storage for the highlighted package.
+
+34
+00:01:56,400 --> 00:02:00,200
+When everything looks right, press A, "Install selected".
+
+35
+00:02:00,200 --> 00:02:05,467
+During the install you see the package number, overall progress, speed and time
+
+36
+00:02:05,467 --> 00:02:07,467
+remaining.
+
+37
+00:02:07,467 --> 00:02:11,400
+B skips the current package, and X cancels the whole queue.
+
+38
+00:02:11,400 --> 00:02:13,400
+Want to keep using Kefir Hub?
+
+39
+00:02:13,400 --> 00:02:15,400
+Press L3.
+
+40
+00:02:15,400 --> 00:02:20,933
+The queue keeps working in the background and a progress badge stays in the corner.
+
+41
+00:02:20,933 --> 00:02:23,000
+L3 again brings the queue back.
+
+42
+00:02:23,000 --> 00:02:25,000
+For a long queue, press minus.
+
+43
+00:02:25,000 --> 00:02:28,933
+By default a screensaver with a clock and progress appears.
+
+44
+00:02:28,933 --> 00:02:32,733
+Any button wakes the screen, and the install keeps going.
+
+45
+00:02:32,733 --> 00:02:38,267
+At the end, the Session summary shows how many packages were installed, skipped and
+
+46
+00:02:38,267 --> 00:02:40,267
+failed.
+
+47
+00:02:40,267 --> 00:02:43,467
+If something failed, Y shows the list of errors.
+
+48
+00:02:43,467 --> 00:02:49,000
+If you cancel the queue, finished packages stay installed and the unfinished one is
+
+49
+00:02:49,000 --> 00:02:51,000
+removed.
+
+50
+00:02:51,000 --> 00:02:53,533
+No half-installed game is left behind.
+
+51
+00:02:53,533 --> 00:02:55,933
+Next, installing from a PC over USB.
+
+52
+00:02:55,933 --> 00:03:00,400
+You need a cable and a PC app: DBI Backend, ns-usbloader or Fluffy.
+
+53
+00:03:00,400 --> 00:03:02,400
+We will use DBI Backend Qt.
+
+54
+00:03:02,400 --> 00:03:04,400
+On the Tools tab press plus.
+
+55
+00:03:04,400 --> 00:03:06,533
+The Install & Share panel opens.
+
+56
+00:03:06,533 --> 00:03:08,533
+Choose "PC Install (USB)".
+
+57
+00:03:08,533 --> 00:03:12,333
+The console shows "Waiting for PC" and a USB speed badge.
+
+58
+00:03:12,333 --> 00:03:14,933
+Connect the cable and start the PC app.
+
+59
+00:03:14,933 --> 00:03:20,400
+In the PC app, stream mode must be off, or the console shows "USB session failed".
+
+60
+00:03:20,400 --> 00:03:22,867
+Add the files and start the transfer.
+
+61
+00:03:22,867 --> 00:03:28,000
+The console receives the list, checks every package and opens the same queue.
+
+62
+00:03:28,000 --> 00:03:30,000
+Check the storage and press A.
+
+63
+00:03:30,000 --> 00:03:35,467
+With DBI Backend Qt, the selection, order and storage you set on the PC show up on
+
+64
+00:03:35,467 --> 00:03:37,467
+the console.
+
+65
+00:03:37,467 --> 00:03:41,133
+This also works for packages that have not started yet.
+
+66
+00:03:41,133 --> 00:03:43,600
+While PC Install is open, MTP is off.
+
+67
+00:03:43,600 --> 00:03:46,600
+When you close this screen, it turns back on.
+
+68
+00:03:46,600 --> 00:03:48,600
+The third way is MTP.
+
+69
+00:03:48,600 --> 00:03:53,733
+Connect the console to the PC with a cable in handheld mode, not in the dock.
+
+70
+00:03:53,733 --> 00:03:58,200
+After about two seconds you see "Computer connected — MTP started".
+
+71
+00:03:58,200 --> 00:04:03,533
+If the console does not appear on the PC, press plus on the Tools tab and choose
+
+72
+00:04:03,533 --> 00:04:05,533
+"Mount MTP".
+
+73
+00:04:05,533 --> 00:04:10,533
+MTP does not start by itself while a USB drive is connected to the console.
+
+74
+00:04:10,533 --> 00:04:13,200
+On the PC, open the console in Explorer.
+
+75
+00:04:13,200 --> 00:04:18,133
+There are two drives: the microSD card and "Install (NSP, XCI, NSZ, XCZ)".
+
+76
+00:04:18,133 --> 00:04:20,667
+Copy a game file to the Install drive.
+
+77
+00:04:20,667 --> 00:04:26,200
+The console installs it while it is being copied, so the file itself is not kept on
+
+78
+00:04:26,200 --> 00:04:28,200
+the card.
+
+79
+00:04:28,200 --> 00:04:30,333
+The console opens "MTP Install".
+
+80
+00:04:30,333 --> 00:04:35,600
+There is no percentage, because the PC does not tell the console the file size.
+
+81
+00:04:35,600 --> 00:04:39,133
+Watch the copy window on the PC to see how far it is.
+
+82
+00:04:39,133 --> 00:04:42,667
+When the file is done you see "MTP install success!".
+
+83
+00:04:42,667 --> 00:04:45,733
+A few seconds later the Session summary opens.
+
+84
+00:04:45,733 --> 00:04:47,733
+B closes it.
+
+85
+00:04:47,733 --> 00:04:53,000
+Note: if you copy a game to the microSD card drive, it is only saved as a file.
+
+86
+00:04:53,000 --> 00:04:56,133
+You can install it later from the File Browser.
+
+87
+00:04:56,133 --> 00:05:00,333
+To cancel, press X on the console or cancel the copy on the PC.
+
+88
+00:05:00,333 --> 00:05:05,200
+Files that are already installed stay, and the unfinished one is removed.
+
+89
+00:05:05,200 --> 00:05:10,600
+If a game installed but the console says it cannot be started yet, the game needs
+
+90
+00:05:10,600 --> 00:05:12,600
+newer firmware.
+
+91
+00:05:12,600 --> 00:05:14,600
+Update the firmware and Kefir.
+
+92
+00:05:14,600 --> 00:05:17,133
+You do not need to reinstall the game.
+
+93
+00:05:17,133 --> 00:05:21,267
+For more, read the Installing games page in the documentation.
+
+94
+00:05:21,267 --> 00:05:25,000
+It has separate pages for the microSD card, USB and MTP.

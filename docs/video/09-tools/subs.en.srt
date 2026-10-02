@@ -1,0 +1,327 @@
+1
+00:00:00,000 --> 00:00:05,267
+This video covers the Kefir Hub tools: the file browser, homebrew apps, the App
+
+2
+00:00:05,267 --> 00:00:09,200
+Store, sysmodules, the fan curve, Wi-Fi and Kefir Settings.
+
+3
+00:00:09,200 --> 00:00:12,667
+For each we show the one or two most useful actions.
+
+4
+00:00:12,667 --> 00:00:14,667
+Let's start with files.
+
+5
+00:00:14,667 --> 00:00:17,000
+On the Tools tab open File Browser.
+
+6
+00:00:17,000 --> 00:00:20,267
+A opens a folder or a file, B goes up one folder.
+
+7
+00:00:20,267 --> 00:00:23,400
+To copy files, mark them with X and press Plus.
+
+8
+00:00:23,400 --> 00:00:25,400
+File Options opens.
+
+9
+00:00:25,400 --> 00:00:27,600
+Choose Copy, or Cut to move them.
+
+10
+00:00:27,600 --> 00:00:31,467
+Go to the destination folder, press Plus and choose Paste.
+
+11
+00:00:31,467 --> 00:00:36,533
+If a file with the same name is there, Kefir Hub asks whether to replace it.
+
+12
+00:00:36,533 --> 00:00:40,733
+Press the left stick, L3, and the screen splits into two panes.
+
+13
+00:00:40,733 --> 00:00:43,467
+D-pad left and right switch between them.
+
+14
+00:00:43,467 --> 00:00:48,267
+Each pane can show its own source, for example the card and a USB drive.
+
+15
+00:00:48,267 --> 00:00:52,800
+To delete: mark the files, press Plus, Delete, and confirm with Yes.
+
+16
+00:00:52,800 --> 00:00:56,600
+Careful: there is no recycle bin, deleted files are gone.
+
+17
+00:00:56,600 --> 00:01:00,067
+A on a zip archive opens it like a read-only folder.
+
+18
+00:01:00,067 --> 00:01:04,800
+To unpack the whole archive, press Plus, Extract zip, and Extract here.
+
+19
+00:01:04,800 --> 00:01:06,800
+Text files can be edited.
+
+20
+00:01:06,800 --> 00:01:08,800
+Open the file and choose Edit.
+
+21
+00:01:08,800 --> 00:01:14,133
+A changes a line with the keyboard, and Y on a line like enabled = true switches
+
+22
+00:01:14,133 --> 00:01:16,133
+true and false.
+
+23
+00:01:16,133 --> 00:01:18,133
+Save with Plus, Save.
+
+24
+00:01:18,133 --> 00:01:20,133
+Now apps.
+
+25
+00:01:20,133 --> 00:01:22,600
+L takes you back to the Homebrew tab.
+
+26
+00:01:22,600 --> 00:01:25,267
+It lists every app in the switch folder.
+
+27
+00:01:25,267 --> 00:01:27,267
+A launches the selected app.
+
+28
+00:01:27,267 --> 00:01:32,000
+The right stick, R3, stars an app: it gets a star and stays at the top.
+
+29
+00:01:32,000 --> 00:01:35,133
+Plus opens the options: sort, order and layout.
+
+30
+00:01:35,133 --> 00:01:39,400
+Install Forwarder adds the app to the HOME Menu as its own icon.
+
+31
+00:01:39,400 --> 00:01:45,000
+Careful: a forwarder is installed like a game, and installing unofficial content can
+
+32
+00:01:45,000 --> 00:01:47,867
+get the console banned when it goes online.
+
+33
+00:01:47,867 --> 00:01:50,733
+New apps are easiest to get from the store.
+
+34
+00:01:50,733 --> 00:01:54,467
+On the Tools tab open Software, then Homebrew App Store.
+
+35
+00:01:54,467 --> 00:02:00,000
+The icon on a tile shows whether the app is installed and whether an update exists.
+
+36
+00:02:00,000 --> 00:02:02,000
+Select an app and press A.
+
+37
+00:02:02,000 --> 00:02:06,133
+On its page choose Install, or Update if a new version is out.
+
+38
+00:02:06,133 --> 00:02:08,133
+Remove deletes its files.
+
+39
+00:02:08,133 --> 00:02:12,467
+To find an app by name, press Plus in the list and choose Search.
+
+40
+00:02:12,467 --> 00:02:14,467
+Next, sysmodules.
+
+41
+00:02:14,467 --> 00:02:16,467
+Open Tools, Module Manager.
+
+42
+00:02:16,467 --> 00:02:20,600
+A green dot means the module runs now, grey means it does not.
+
+43
+00:02:20,600 --> 00:02:24,200
+On the right you see whether it starts after a reboot.
+
+44
+00:02:24,200 --> 00:02:26,733
+A starts or stops the selected module.
+
+45
+00:02:26,733 --> 00:02:30,667
+Y turns autostart on or off; this applies on the next boot.
+
+46
+00:02:30,667 --> 00:02:35,800
+Careful: stopping a module the system or a game depends on can make it crash.
+
+47
+00:02:35,800 --> 00:02:37,800
+Then reboot the console.
+
+48
+00:02:37,800 --> 00:02:41,133
+Fan curve sets the fan speed for each temperature.
+
+49
+00:02:41,133 --> 00:02:45,467
+The first time, Kefir Hub offers to install the Kefir fan module.
+
+50
+00:02:45,467 --> 00:02:49,200
+Choose Install: the curve then applies without a reboot.
+
+51
+00:02:49,200 --> 00:02:52,733
+X switches between the handheld and the docked curve.
+
+52
+00:02:52,733 --> 00:02:57,867
+Select a point, press A, and change the temperature and speed with the D-pad.
+
+53
+00:02:57,867 --> 00:02:59,933
+Plus, Apply, saves both curves.
+
+54
+00:02:59,933 --> 00:03:03,200
+ZL loads a preset, for example Quiet or Balanced.
+
+55
+00:03:03,200 --> 00:03:08,800
+Be careful with Fan off: the fan does not spin at any temperature, so watch the heat
+
+56
+00:03:08,800 --> 00:03:10,800
+while you play.
+
+57
+00:03:10,800 --> 00:03:13,867
+Wi-Fi lists the networks saved on the console.
+
+58
+00:03:13,867 --> 00:03:15,933
+A connects to the selected one.
+
+59
+00:03:15,933 --> 00:03:19,667
+New networks are added in the console's System Settings.
+
+60
+00:03:19,667 --> 00:03:24,867
+Plus on a network opens its actions: Change password, Delete network and more.
+
+61
+00:03:24,867 --> 00:03:30,467
+View password & details shows the password in plain text, so do not open it in front
+
+62
+00:03:30,467 --> 00:03:32,467
+of others.
+
+63
+00:03:32,467 --> 00:03:35,200
+Finally, Kefir Settings on the Tools tab.
+
+64
+00:03:35,200 --> 00:03:40,133
+These are switches for Kefir and Atmosphère that change files on the card.
+
+65
+00:03:40,133 --> 00:03:43,533
+The value on the right always shows the real state.
+
+66
+00:03:43,533 --> 00:03:45,533
+Select a setting and press A.
+
+67
+00:03:45,533 --> 00:03:47,533
+The box explains what happens.
+
+68
+00:03:47,533 --> 00:03:50,867
+To confirm, hold A until the bar fills; B cancels.
+
+69
+00:03:50,867 --> 00:03:55,533
+Most settings reboot the console right away, while USB 3.0 asks first.
+
+70
+00:03:55,533 --> 00:04:00,933
+Careful: 8GB DRAM status is only for consoles with 8GB of RAM physically soldered
+
+71
+00:04:00,933 --> 00:04:02,933
+on.
+
+72
+00:04:02,933 --> 00:04:05,733
+Any other console will not boot correctly.
+
+73
+00:04:05,733 --> 00:04:09,933
+To undo it, in hekate open Payloads, TegraExplorer, and run the
+
+74
+00:04:09,933 --> 00:04:11,933
+Remove_8GB-RAM_config script.
+
+75
+00:04:11,933 --> 00:04:17,467
+Translate Interface replaces one of the console's system languages with a community
+
+76
+00:04:17,467 --> 00:04:19,467
+translation.
+
+77
+00:04:19,467 --> 00:04:24,133
+Choose Load translations and hold A to get the list for your firmware.
+
+78
+00:04:24,133 --> 00:04:28,333
+Select a translation and the language it replaces, then hold A.
+
+79
+00:04:28,333 --> 00:04:30,333
+The console reboots.
+
+80
+00:04:30,333 --> 00:04:35,600
+Every firmware install removes the translation, so install it again afterwards.
+
+81
+00:04:35,600 --> 00:04:41,067
+Read more on the File Browser, Homebrew, Software, System tools and Kefir Settings
+
+82
+00:04:41,067 --> 00:04:43,067
+pages of the Kefir Hub docs.

@@ -1,0 +1,319 @@
+1
+00:00:00,000 --> 00:00:05,133
+In this video you will learn how to start Kefir Hub, find your way around its
+
+2
+00:00:05,133 --> 00:00:08,067
+screen, switch tabs and change the language.
+
+3
+00:00:08,067 --> 00:00:11,400
+Kefir Hub is a homebrew app that comes with Kefir.
+
+4
+00:00:11,400 --> 00:00:15,533
+It starts from the Homebrew Menu, like any other homebrew app.
+
+5
+00:00:15,533 --> 00:00:19,067
+The quickest way into the Homebrew Menu is the Album.
+
+6
+00:00:19,067 --> 00:00:21,067
+Select Kefir Hub and press A.
+
+7
+00:00:21,067 --> 00:00:23,067
+But how you start it matters.
+
+8
+00:00:23,067 --> 00:00:26,067
+From the Album, Kefir Hub gets little memory.
+
+9
+00:00:26,067 --> 00:00:31,400
+Large compressed NSZ games will most likely not install, and the web server runs
+
+10
+00:00:31,400 --> 00:00:33,400
+slower.
+
+11
+00:00:33,400 --> 00:00:38,733
+To give Kefir Hub all the memory, hold R while you start any installed game, and
+
+12
+00:00:38,733 --> 00:00:41,600
+keep holding until the Homebrew Menu opens.
+
+13
+00:00:41,600 --> 00:00:44,267
+Use this way whenever you install games.
+
+14
+00:00:44,267 --> 00:00:46,533
+An icon of its own is even easier.
+
+15
+00:00:46,533 --> 00:00:51,200
+On the Tools tab press plus and choose "Install Title Mode forwarder".
+
+16
+00:00:51,200 --> 00:00:53,200
+Confirm the install.
+
+17
+00:00:53,200 --> 00:00:56,000
+When it is done, go back to the HOME Menu.
+
+18
+00:00:56,000 --> 00:00:59,800
+The new icon always starts Kefir Hub with all the memory.
+
+19
+00:00:59,800 --> 00:01:03,800
+On the first launch Kefir Hub asks you to choose a language.
+
+20
+00:01:03,800 --> 00:01:06,533
+The list opens in the console's language.
+
+21
+00:01:06,533 --> 00:01:11,800
+If some profiles on the console are not linked to a Nintendo Account, Kefir Hub
+
+22
+00:01:11,800 --> 00:01:13,800
+offers to link them.
+
+23
+00:01:13,800 --> 00:01:16,333
+There is a separate video about users.
+
+24
+00:01:16,333 --> 00:01:18,333
+This is the main screen.
+
+25
+00:01:18,333 --> 00:01:20,333
+At the top is the header.
+
+26
+00:01:20,333 --> 00:01:25,800
+On its left: the Kefir Hub version, the screen name and your position in the list.
+
+27
+00:01:25,800 --> 00:01:31,200
+On the right: the Kefir, firmware and Atmosphère versions, the Wi-Fi name and the
+
+28
+00:01:31,200 --> 00:01:33,200
+console's IP address.
+
+29
+00:01:33,200 --> 00:01:38,267
+Then two bars with free space in the console memory and on the microSD card.
+
+30
+00:01:38,267 --> 00:01:40,333
+Then the clock and the battery.
+
+31
+00:01:40,333 --> 00:01:44,467
+The MTP and FTP badges show whether these servers are running.
+
+32
+00:01:44,467 --> 00:01:46,800
+A green dot means the server is on.
+
+33
+00:01:46,800 --> 00:01:51,867
+The bottom line shows the buttons that work on this screen and what they do.
+
+34
+00:01:51,867 --> 00:01:54,933
+If you are not sure what to press, look there.
+
+35
+00:01:54,933 --> 00:01:56,933
+A opens, starts or confirms.
+
+36
+00:01:56,933 --> 00:01:58,933
+B goes back.
+
+37
+00:01:58,933 --> 00:02:04,333
+X selects an item so you can act on several at once, and Y inverts the selection.
+
+38
+00:02:04,333 --> 00:02:07,800
+ZL and ZR jump to the first and last item of a list.
+
+39
+00:02:07,800 --> 00:02:10,467
+In long lists, L and R page up and down.
+
+40
+00:02:10,467 --> 00:02:12,467
+The main screen has two tabs.
+
+41
+00:02:12,467 --> 00:02:15,533
+Homebrew lists the homebrew apps on your card.
+
+42
+00:02:15,533 --> 00:02:17,533
+Press R to go to Tools.
+
+43
+00:02:17,533 --> 00:02:22,933
+The Tools tab has everything else: File Browser, Game Tools with games, saves and
+
+44
+00:02:22,933 --> 00:02:27,267
+cheats, Themes, Updater, and Software with the App Store and DBI.
+
+45
+00:02:27,267 --> 00:02:31,533
+The Tools tile holds Module Manager, Fan curve, Wi-Fi and Users.
+
+46
+00:02:31,533 --> 00:02:36,267
+Kefir Settings are console settings; Settings are for Kefir Hub itself.
+
+47
+00:02:36,267 --> 00:02:39,733
+Console Transfer exchanges data with another device.
+
+48
+00:02:39,733 --> 00:02:42,000
+Screens open on top of each other.
+
+49
+00:02:42,000 --> 00:02:44,000
+B closes the current one.
+
+50
+00:02:44,000 --> 00:02:48,067
+Minus closes them all and takes you back to the Homebrew tab.
+
+51
+00:02:48,067 --> 00:02:51,933
+From the Tools tab, L or B also take you back to Homebrew.
+
+52
+00:02:51,933 --> 00:02:56,200
+Plus opens the options panel of the current screen on the right.
+
+53
+00:02:56,200 --> 00:03:01,267
+Move the cursor onto an entry and a short description appears at the bottom.
+
+54
+00:03:01,267 --> 00:03:03,867
+A runs the action or flips the setting.
+
+55
+00:03:03,867 --> 00:03:05,867
+B or plus closes the panel.
+
+56
+00:03:05,867 --> 00:03:10,533
+A grey entry is not available right now, and its description says why.
+
+57
+00:03:10,533 --> 00:03:14,800
+In dialogs, move between the buttons with the D-pad and press A.
+
+58
+00:03:14,800 --> 00:03:18,333
+B picks the first button, usually Back, No or Cancel.
+
+59
+00:03:18,333 --> 00:03:22,133
+Plus picks the last one, the button that does the action.
+
+60
+00:03:22,133 --> 00:03:25,800
+Some risky actions ask you to hold A until a bar fills.
+
+61
+00:03:25,800 --> 00:03:31,133
+When text is needed, some fields offer "Manual (Keyboard)" or "From Phone / PC".
+
+62
+00:03:31,133 --> 00:03:36,667
+The second shows a QR code and an address, so you can type long text on your phone.
+
+63
+00:03:36,667 --> 00:03:41,867
+The touch screen works too: tap an item to select it and tap again to open it.
+
+64
+00:03:41,867 --> 00:03:43,867
+Now let's change the language.
+
+65
+00:03:43,867 --> 00:03:47,667
+Open Tools, Settings, the General category, and Language.
+
+66
+00:03:47,667 --> 00:03:49,667
+Pick a language.
+
+67
+00:03:49,667 --> 00:03:52,067
+Kefir Hub asks "Restart Kefir Hub?".
+
+68
+00:03:52,067 --> 00:03:55,667
+Choose Restart so the new language applies everywhere.
+
+69
+00:03:55,667 --> 00:03:59,267
+Copies, installs and downloads show a progress window.
+
+70
+00:03:59,267 --> 00:04:03,600
+Some tasks can run in the background, for example the web server.
+
+71
+00:04:03,600 --> 00:04:08,067
+Press L3 and the window shrinks to a badge in the top right corner.
+
+72
+00:04:08,067 --> 00:04:11,867
+Press L3 again or tap the badge to bring the window back.
+
+73
+00:04:11,867 --> 00:04:14,733
+B stops the task, but Kefir Hub asks first.
+
+74
+00:04:14,733 --> 00:04:17,133
+Do not press HOME during a transfer.
+
+75
+00:04:17,133 --> 00:04:22,733
+While you are in the HOME Menu the console pauses Kefir Hub, and the transfer stops.
+
+76
+00:04:22,733 --> 00:04:27,867
+If you want the Album to open Kefir Hub directly, turn on Settings, Homebrew,
+
+77
+00:04:27,867 --> 00:04:29,867
+"Replace hbmenu on exit".
+
+78
+00:04:29,867 --> 00:04:35,067
+When you turn it off again, Kefir Hub offers to restore the old Homebrew Menu.
+
+79
+00:04:35,067 --> 00:04:37,067
+That covers the basics.
+
+80
+00:04:37,067 --> 00:04:42,133
+For more, read the Kefir Hub and Getting started pages in the documentation.

@@ -1,0 +1,287 @@
+1
+00:00:00,000 --> 00:00:05,400
+In this video you will start a game from the list, move it between console memory
+
+2
+00:00:05,400 --> 00:00:10,600
+and the microSD card, dump it as NSP files, delete it, and create a save slot.
+
+3
+00:00:10,600 --> 00:00:12,600
+Open Tools, Game Tools, Games.
+
+4
+00:00:12,600 --> 00:00:14,600
+Each game has small tags.
+
+5
+00:00:14,600 --> 00:00:19,533
+SD or NAND shows where it is stored, and Base, Update and DLC show what is
+
+6
+00:00:19,533 --> 00:00:21,533
+installed.
+
+7
+00:00:21,533 --> 00:00:26,467
+To start a game, highlight it and press L3, that is, click the left stick.
+
+8
+00:00:26,467 --> 00:00:28,467
+Not sure what to play?
+
+9
+00:00:28,467 --> 00:00:32,933
+Press plus, choose "Launch random game", then Launch in the window.
+
+10
+00:00:32,933 --> 00:00:34,933
+A opens Game Details.
+
+11
+00:00:34,933 --> 00:00:39,600
+At the top: the Title ID, version, play time and when you last played.
+
+12
+00:00:39,600 --> 00:00:43,400
+At the bottom are three tabs: Content, Tickets and Saves.
+
+13
+00:00:43,400 --> 00:00:45,600
+Switch between them with L and R.
+
+14
+00:00:45,600 --> 00:00:48,400
+ZL and ZR go to the previous or next game.
+
+15
+00:00:48,400 --> 00:00:53,467
+On the Content tab, the base game, the update and the DLC are separate rows.
+
+16
+00:00:53,467 --> 00:00:57,067
+Now let's move a game from console memory to the card.
+
+17
+00:00:57,067 --> 00:01:02,600
+Kefir Hub first copies the game, switches it to the new copy, and only then deletes
+
+18
+00:01:02,600 --> 00:01:04,600
+the old one.
+
+19
+00:01:04,600 --> 00:01:09,733
+On the details screen press plus, and under Game Actions choose "Move to SD".
+
+20
+00:01:09,733 --> 00:01:13,533
+Only the direction that has something to move is offered.
+
+21
+00:01:13,533 --> 00:01:19,067
+The summary shows what will move, what stays, the total size, and the free space on
+
+22
+00:01:19,067 --> 00:01:21,133
+both storages before and after.
+
+23
+00:01:21,133 --> 00:01:23,133
+Choose Move.
+
+24
+00:01:23,133 --> 00:01:26,733
+If there is not enough space, the move does not start.
+
+25
+00:01:26,733 --> 00:01:29,733
+While data is being copied you can cancel it.
+
+26
+00:01:29,733 --> 00:01:35,267
+At the last step, when the game switches to the new copy, you can no longer cancel.
+
+27
+00:01:35,267 --> 00:01:38,067
+Do not turn the console off during a move.
+
+28
+00:01:38,067 --> 00:01:43,533
+To move several games, use the list: select them with X, press plus and choose the
+
+29
+00:01:43,533 --> 00:01:45,533
+direction.
+
+30
+00:01:45,533 --> 00:01:48,933
+The move then starts right away, without a summary.
+
+31
+00:01:48,933 --> 00:01:52,800
+You can also move just one part, for example only the DLC.
+
+32
+00:01:52,800 --> 00:01:58,267
+On the Content tab press A on its row and choose "Move component to NAND" or "Move
+
+33
+00:01:58,267 --> 00:02:00,267
+component to SD".
+
+34
+00:02:00,267 --> 00:02:03,000
+Next, a dump: saving a game as NSP files.
+
+35
+00:02:03,000 --> 00:02:07,200
+Highlight a game or select several, press plus and choose Dump.
+
+36
+00:02:07,200 --> 00:02:12,733
+Choose what to dump: "Dump All", "Dump Application" for the base game, "Dump Patch"
+
+37
+00:02:12,733 --> 00:02:15,867
+for the update, or "Dump AddOnContent" for DLC.
+
+38
+00:02:15,867 --> 00:02:19,800
+In "Select dump location", choose "microSD card (/dumps/)".
+
+39
+00:02:19,800 --> 00:02:23,333
+The files appear in the dumps/NSP folder on the card.
+
+40
+00:02:23,333 --> 00:02:28,000
+You can install these files again later, as shown in the second video.
+
+41
+00:02:28,000 --> 00:02:33,200
+The same list also offers a USB transfer to another console, plus your network
+
+42
+00:02:33,200 --> 00:02:35,200
+locations and USB drives.
+
+43
+00:02:35,200 --> 00:02:37,400
+You can also build a single file.
+
+44
+00:02:37,400 --> 00:02:41,400
+On the details screen press plus and choose "Create repack".
+
+45
+00:02:41,400 --> 00:02:46,933
+Tick "Application/BASE", "Patch/Update" and "AddOnContent/DLC", then choose "Create
+
+46
+00:02:46,933 --> 00:02:48,933
+repack" at the bottom.
+
+47
+00:02:48,933 --> 00:02:52,200
+The file appears in the games folder on the card.
+
+48
+00:02:52,200 --> 00:02:57,467
+To delete a game, highlight it or select several, press plus, choose Delete and
+
+49
+00:02:57,467 --> 00:02:59,467
+confirm with Delete.
+
+50
+00:02:59,467 --> 00:03:02,333
+The base game, updates and DLC are deleted.
+
+51
+00:03:02,333 --> 00:03:06,667
+The saves stay: you find them in Saves, on the Deleted Games tab.
+
+52
+00:03:06,667 --> 00:03:09,933
+To remove them too, delete them there separately.
+
+53
+00:03:09,933 --> 00:03:14,600
+The Saves tab in Game Details manages the saves on the console itself.
+
+54
+00:03:14,600 --> 00:03:18,667
+X creates an empty save for a user who does not have one yet.
+
+55
+00:03:18,667 --> 00:03:22,867
+Pick the user, then the size: standard, plus 16 or plus 64 MiB.
+
+56
+00:03:22,867 --> 00:03:25,267
+Check the summary and choose Create.
+
+57
+00:03:25,267 --> 00:03:30,667
+For several games at once: select them in the list, press plus and choose "Create
+
+58
+00:03:30,667 --> 00:03:32,667
+save".
+
+59
+00:03:32,667 --> 00:03:38,133
+Kefir Hub creates a standard save for the chosen user and skips games that already
+
+60
+00:03:38,133 --> 00:03:40,133
+have one.
+
+61
+00:03:40,133 --> 00:03:42,733
+"Increase save size" adds 16 or 64 MiB.
+
+62
+00:03:42,733 --> 00:03:45,533
+You cannot make a save smaller afterwards.
+
+63
+00:03:45,533 --> 00:03:49,067
+"Backup and restore" opens Saves with only this game.
+
+64
+00:03:49,067 --> 00:03:52,067
+The previous video shows how to make backups.
+
+65
+00:03:52,067 --> 00:03:55,600
+The Mods folder line shows whether the game has mods.
+
+66
+00:03:55,600 --> 00:03:59,267
+Plus, "Open mods folder", opens it in the File Browser.
+
+67
+00:03:59,267 --> 00:04:03,067
+An empty folder does nothing; copy the mod files into it.
+
+68
+00:04:03,067 --> 00:04:07,200
+The plus menu on the list also has Layout, Sort By and Search.
+
+69
+00:04:07,200 --> 00:04:11,067
+Type part of a name to find a game quickly in a long list.
+
+70
+00:04:11,067 --> 00:04:15,267
+To sort by play time, first choose Sort By, "Update play time".
+
+71
+00:04:15,267 --> 00:04:18,800
+Kefir Hub reads the play time from the console's log.
+
+72
+00:04:18,800 --> 00:04:22,200
+For more, read the Games page in the documentation.

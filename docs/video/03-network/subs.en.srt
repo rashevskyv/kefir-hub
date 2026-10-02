@@ -1,0 +1,371 @@
+1
+00:00:00,000 --> 00:00:05,533
+In this video you will install a game over the network: from a browser, with an FTP
+
+2
+00:00:05,533 --> 00:00:07,867
+program, or from an Ownfoil server.
+
+3
+00:00:07,867 --> 00:00:11,600
+You will also open the console's files on a PC or phone.
+
+4
+00:00:11,600 --> 00:00:15,600
+The console and the PC or phone must be on the same network.
+
+5
+00:00:15,600 --> 00:00:20,533
+The top of the screen shows the network name and the console's IP address.
+
+6
+00:00:20,533 --> 00:00:23,800
+If it says "No Internet", connect to Wi-Fi first.
+
+7
+00:00:23,800 --> 00:00:28,133
+A guest Wi-Fi usually isolates devices, so use your home network.
+
+8
+00:00:28,133 --> 00:00:32,133
+And start Kefir Hub in Title Mode, as in the previous video.
+
+9
+00:00:32,133 --> 00:00:37,467
+Important: the web page has no password, and FTP lets anyone in with the default
+
+10
+00:00:37,467 --> 00:00:39,467
+settings.
+
+11
+00:00:39,467 --> 00:00:45,000
+While a server runs, anyone on the same network can read, download and delete files
+
+12
+00:00:45,000 --> 00:00:47,000
+on the microSD card.
+
+13
+00:00:47,000 --> 00:00:52,133
+So use these servers only at home, and stop the web server when you are done.
+
+14
+00:00:52,133 --> 00:00:54,133
+Let's start with the browser.
+
+15
+00:00:54,133 --> 00:00:57,467
+On the Tools tab press plus and choose Web Server.
+
+16
+00:00:57,467 --> 00:01:02,600
+If Kefir Hub was started from the Album, the panel "Web Server — Applet Mode"
+
+17
+00:01:02,600 --> 00:01:04,600
+appears first.
+
+18
+00:01:04,600 --> 00:01:08,533
+Choose "Start anyway", or install the Title Mode forwarder.
+
+19
+00:01:08,533 --> 00:01:12,933
+The Web Sharing Server window opens with a QR code and an address.
+
+20
+00:01:12,933 --> 00:01:18,067
+Scan the code with your phone, or type the address into a browser on your PC.
+
+21
+00:01:18,067 --> 00:01:23,467
+If the kefir.local address does not open, type the IP address from the top of the
+
+22
+00:01:23,467 --> 00:01:25,467
+console screen instead.
+
+23
+00:01:25,467 --> 00:01:28,000
+If the address had a port, add it too.
+
+24
+00:01:28,000 --> 00:01:30,067
+The Kefir Hub Files page opens.
+
+25
+00:01:30,067 --> 00:01:32,067
+It is in English only.
+
+26
+00:01:32,067 --> 00:01:35,000
+Click Add to Upload and pick the game files.
+
+27
+00:01:35,000 --> 00:01:37,000
+Then click Queue.
+
+28
+00:01:37,000 --> 00:01:40,200
+Game files already have Install directly ticked.
+
+29
+00:01:40,200 --> 00:01:42,200
+Click Start transfers.
+
+30
+00:01:42,200 --> 00:01:47,067
+The game installs while it uploads, and the file is not kept on the card.
+
+31
+00:01:47,067 --> 00:01:51,933
+The console shows "Web install" with a percentage and the time remaining.
+
+32
+00:01:51,933 --> 00:01:55,800
+When the game is installed you see "Web install success!".
+
+33
+00:01:55,800 --> 00:02:01,333
+If you untick Install directly, the game file is only saved into the folder open in
+
+34
+00:02:01,333 --> 00:02:03,333
+the browser.
+
+35
+00:02:03,333 --> 00:02:06,667
+The same page shows the files on the microSD card.
+
+36
+00:02:06,667 --> 00:02:09,267
+Click a file to download it to your PC.
+
+37
+00:02:09,267 --> 00:02:13,400
+Select several and click Download Selected or Delete Selected.
+
+38
+00:02:13,400 --> 00:02:16,600
+Download a very large file by clicking its name.
+
+39
+00:02:16,600 --> 00:02:21,933
+Download Selected keeps the whole file in the browser's memory until it is done.
+
+40
+00:02:21,933 --> 00:02:27,400
+The Screenshots button opens the console's album: screenshots and videos with game
+
+41
+00:02:27,400 --> 00:02:29,400
+names.
+
+42
+00:02:29,400 --> 00:02:32,867
+Click a screenshot to open it full size and save it.
+
+43
+00:02:32,867 --> 00:02:37,067
+When you are done, press B in the server window on the console.
+
+44
+00:02:37,067 --> 00:02:42,533
+L3 shrinks the window to a badge, and the server keeps running while you use Kefir
+
+45
+00:02:42,533 --> 00:02:44,533
+Hub.
+
+46
+00:02:44,533 --> 00:02:50,067
+The server also stops by itself when the console loses the network or gets a new IP
+
+47
+00:02:50,067 --> 00:02:52,067
+address.
+
+48
+00:02:52,067 --> 00:02:54,667
+Start it again; the address may change.
+
+49
+00:02:54,667 --> 00:02:56,667
+Now FTP.
+
+50
+00:02:56,667 --> 00:02:59,733
+Open Tools, Settings, Network and turn on FTP.
+
+51
+00:02:59,733 --> 00:03:05,200
+The server runs while Kefir Hub is open, and starts with it until you turn it off.
+
+52
+00:03:05,200 --> 00:03:10,600
+To require a login, open "FTP settings", set Username and Password, then turn off
+
+53
+00:03:10,600 --> 00:03:12,600
+"Anonymous (no login)".
+
+54
+00:03:12,600 --> 00:03:17,933
+In an FTP program such as FileZilla, connect to the console's IP address on port
+
+55
+00:03:17,933 --> 00:03:19,933
+5000.
+
+56
+00:03:19,933 --> 00:03:23,800
+With the default settings any user name and password work.
+
+57
+00:03:23,800 --> 00:03:29,333
+At the top level of the server you see the microSD card and a folder named install.
+
+58
+00:03:29,333 --> 00:03:31,333
+Copy a game file into install.
+
+59
+00:03:31,333 --> 00:03:36,000
+The console shows "FTP Install" and installs the file while it copies.
+
+60
+00:03:36,000 --> 00:03:41,333
+There is no percentage: the FTP program does not tell the console the file size.
+
+61
+00:03:41,333 --> 00:03:46,733
+You see how many files are installed, how much is written, and the average speed.
+
+62
+00:03:46,733 --> 00:03:52,133
+Careful: a game file copied to the top level of the server is also installed, not
+
+63
+00:03:52,133 --> 00:03:54,133
+saved.
+
+64
+00:03:54,133 --> 00:03:58,333
+To keep a game on the card as a file, copy it into a subfolder.
+
+65
+00:03:58,333 --> 00:04:03,133
+Over FTP you can also copy any other files to and from the microSD card.
+
+66
+00:04:03,133 --> 00:04:06,600
+The console's system memory is not visible over FTP.
+
+67
+00:04:06,600 --> 00:04:11,133
+Ownfoil is a game library server that you run on your own PC or NAS.
+
+68
+00:04:11,133 --> 00:04:14,267
+On the Tools tab press plus and choose Ownfoil.
+
+69
+00:04:14,267 --> 00:04:16,400
+Choose "Discover local servers".
+
+70
+00:04:16,400 --> 00:04:20,333
+A server that was found but is not saved yet is tagged New.
+
+71
+00:04:20,333 --> 00:04:22,333
+Select it.
+
+72
+00:04:22,333 --> 00:04:26,200
+Kefir Hub tells you whether the shop is public or private.
+
+73
+00:04:26,200 --> 00:04:29,333
+Yes opens the form where you can enter a login.
+
+74
+00:04:29,333 --> 00:04:32,600
+No saves the server without a login and connects.
+
+75
+00:04:32,600 --> 00:04:36,600
+If the server is not found, press X and choose "Add server".
+
+76
+00:04:36,600 --> 00:04:42,200
+Enter a name and the local address with its port, for example 192.168.1.10:8465, and
+
+77
+00:04:42,200 --> 00:04:44,200
+choose Save.
+
+78
+00:04:44,200 --> 00:04:48,867
+The catalog opens on New games: games that are not on the console yet.
+
+79
+00:04:48,867 --> 00:04:52,067
+Y switches to Updates, DLC, All games or Search.
+
+80
+00:04:52,067 --> 00:04:54,067
+Pick a game and press A.
+
+81
+00:04:54,067 --> 00:04:59,533
+In the panel, choose the version and tick the DLC you want under "Add-on content".
+
+82
+00:04:59,533 --> 00:05:01,800
+The last entry starts the install.
+
+83
+00:05:01,800 --> 00:05:07,000
+It is called Install, Update or Downgrade, depending on the version you chose.
+
+84
+00:05:07,000 --> 00:05:10,533
+A progress window shows the download and the install.
+
+85
+00:05:10,533 --> 00:05:13,133
+Finally, you can share a single folder.
+
+86
+00:05:13,133 --> 00:05:17,667
+In the File Browser highlight a folder, press plus and choose Mount.
+
+87
+00:05:17,667 --> 00:05:19,667
+Then pick MTP, FTP or HTTP.
+
+88
+00:05:19,667 --> 00:05:25,067
+Mounting does not hide the rest of the card: the web page and FTP can still reach
+
+89
+00:05:25,067 --> 00:05:27,067
+every folder.
+
+90
+00:05:27,067 --> 00:05:30,400
+To stop sharing, choose Unmount in the same panel.
+
+91
+00:05:30,400 --> 00:05:34,800
+You can also install from a network share over SMB, NFS or WebDAV.
+
+92
+00:05:34,800 --> 00:05:40,400
+For that and more, read the Install over the network and Share files with a PC pages
+
+93
+00:05:40,400 --> 00:05:42,400
+in the documentation.

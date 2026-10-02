@@ -1,0 +1,279 @@
+1
+00:00:00,000 --> 00:00:05,533
+In this video you will install cheats for your games, fix them after a game update,
+
+2
+00:00:05,533 --> 00:00:09,667
+install a system theme and make your own theme from a picture.
+
+3
+00:00:09,667 --> 00:00:12,733
+On the Tools tab open Game Tools, then Cheats.
+
+4
+00:00:12,733 --> 00:00:16,733
+Each game's cheats are a text file named after its Build ID.
+
+5
+00:00:16,733 --> 00:00:21,333
+This is a code of the game version, and it changes with every update.
+
+6
+00:00:21,333 --> 00:00:24,867
+So a file works only for the version it was made for.
+
+7
+00:00:24,867 --> 00:00:28,200
+Kefir Hub installs, shows and deletes cheat files.
+
+8
+00:00:28,200 --> 00:00:32,867
+Single cheats are turned on and off in the game, with a cheat overlay.
+
+9
+00:00:32,867 --> 00:00:35,200
+The easiest way is a complete pack.
+
+10
+00:00:35,200 --> 00:00:40,333
+Choose Download Kefir Cheats, or Download 60FPS/GFX Cheats for frame rate and
+
+11
+00:00:40,333 --> 00:00:42,333
+graphics cheats.
+
+12
+00:00:42,333 --> 00:00:44,333
+Confirm with Download.
+
+13
+00:00:44,333 --> 00:00:46,533
+Wait for "Cheats pack installed".
+
+14
+00:00:46,533 --> 00:00:50,000
+The pack overwrites cheat files with the same names.
+
+15
+00:00:50,000 --> 00:00:55,000
+Cheats for one game: choose Download Exact Cheats and the game in the list.
+
+16
+00:00:55,000 --> 00:00:58,333
+Tip: start the game once and close it before this.
+
+17
+00:00:58,333 --> 00:01:01,533
+Kefir Hub then reads the Build ID more reliably.
+
+18
+00:01:01,533 --> 00:01:05,200
+The Build ID is shown at the top next to the game name.
+
+19
+00:01:05,200 --> 00:01:08,667
+A ticks a cheat, X selects all, R previews the code.
+
+20
+00:01:08,667 --> 00:01:10,800
+Press Y to download and confirm.
+
+21
+00:01:10,800 --> 00:01:14,067
+New cheats are added to the game's existing file.
+
+22
+00:01:14,067 --> 00:01:17,933
+One file holds up to 128 cheats: Atmosphère reads no more.
+
+23
+00:01:17,933 --> 00:01:23,200
+If you have your own cheat file, choose Import From File, then the file and the
+
+24
+00:01:23,200 --> 00:01:25,200
+game.
+
+25
+00:01:25,200 --> 00:01:28,067
+Kefir Hub renames it to the right Build ID.
+
+26
+00:01:28,067 --> 00:01:30,067
+Confirm with Import.
+
+27
+00:01:30,067 --> 00:01:33,067
+View Cheats lists every game that has cheats.
+
+28
+00:01:33,067 --> 00:01:38,267
+Open a game to see its files by Build ID, and a file to see the cheats inside.
+
+29
+00:01:38,267 --> 00:01:41,400
+After a game update the old file is not loaded.
+
+30
+00:01:41,400 --> 00:01:43,400
+Focus it and press Y, Fix BID.
+
+31
+00:01:43,400 --> 00:01:46,467
+The dialog shows the old and the new Build ID.
+
+32
+00:01:46,467 --> 00:01:48,467
+Confirm.
+
+33
+00:01:48,467 --> 00:01:52,333
+The file is renamed, but the codes inside are not changed.
+
+34
+00:01:52,333 --> 00:01:56,600
+Cheats made for an older version may not work, or may misbehave.
+
+35
+00:01:56,600 --> 00:02:01,867
+To delete a file, press X on it; for all cheats of a game, press Y on the game.
+
+36
+00:02:01,867 --> 00:02:07,133
+Delete All Cheats removes the cheats of every game, and Delete Orphaned removes
+
+37
+00:02:07,133 --> 00:02:09,467
+those of games no longer installed.
+
+38
+00:02:09,467 --> 00:02:11,467
+Now themes.
+
+39
+00:02:11,467 --> 00:02:13,467
+On the Tools tab open Themes.
+
+40
+00:02:13,467 --> 00:02:18,600
+Kefir Hub downloads theme files, and the NXThemes Installer app applies them.
+
+41
+00:02:18,600 --> 00:02:23,667
+There are two ready-made packs, Mario BG Dark and Switch 2 Theme by alexwak.
+
+42
+00:02:23,667 --> 00:02:27,533
+Select a pack and confirm "Download theme?" with Download.
+
+43
+00:02:27,533 --> 00:02:32,333
+If NXThemes Installer is not there yet, Kefir Hub offers to download it.
+
+44
+00:02:32,333 --> 00:02:34,333
+Choose Download.
+
+45
+00:02:34,333 --> 00:02:38,467
+When "Theme downloaded, install now?" appears, choose Install.
+
+46
+00:02:38,467 --> 00:02:41,867
+NXThemes Installer opens with the downloaded files.
+
+47
+00:02:41,867 --> 00:02:43,867
+Apply the theme there.
+
+48
+00:02:43,867 --> 00:02:45,867
+More themes are in Themezer.
+
+49
+00:02:45,867 --> 00:02:49,267
+Each tile shows a preview, the name and the author.
+
+50
+00:02:49,267 --> 00:02:52,667
+Y shows the pack's screenshots, R and L turn pages.
+
+51
+00:02:52,667 --> 00:02:56,467
+Press A to download a pack, then install it the same way.
+
+52
+00:02:56,467 --> 00:03:01,867
+Pressing the right stick, R3, stars the pack: it then appears in the Themes menu.
+
+53
+00:03:01,867 --> 00:03:04,733
+You can make your own theme from a picture.
+
+54
+00:03:04,733 --> 00:03:09,933
+Open File Browser, select an image, press Plus and choose Create Switch Theme.
+
+55
+00:03:09,933 --> 00:03:11,933
+Frame the picture.
+
+56
+00:03:11,933 --> 00:03:17,400
+The D-pad or a stick moves it, holding ZL with up and down zooms, and A resets the
+
+57
+00:03:17,400 --> 00:03:19,400
+view.
+
+58
+00:03:19,400 --> 00:03:23,933
+L picks which screen the theme is for; the default is the HOME Menu.
+
+59
+00:03:23,933 --> 00:03:25,933
+X sets the name, Y the author.
+
+60
+00:03:25,933 --> 00:03:27,933
+Press Plus, Generate Theme.
+
+61
+00:03:27,933 --> 00:03:30,600
+The theme is saved to the themes folder.
+
+62
+00:03:30,600 --> 00:03:32,867
+On the Theme Created Successfully!
+
+63
+00:03:32,867 --> 00:03:37,867
+screen, hold A for three seconds to install it, or Y to install and reboot.
+
+64
+00:03:37,867 --> 00:03:41,067
+Remove an installed theme in NXThemes Installer.
+
+65
+00:03:41,067 --> 00:03:46,333
+And remember: every firmware install removes custom themes, because a theme for
+
+66
+00:03:46,333 --> 00:03:49,733
+another firmware can stop the console from booting.
+
+67
+00:03:49,733 --> 00:03:52,467
+Install the theme again after the update.
+
+68
+00:03:52,467 --> 00:03:57,533
+The look of Kefir Hub itself is set separately: Settings, Appearance, Theme.
+
+69
+00:03:57,533 --> 00:04:00,533
+This does not change the console's HOME Menu.
+
+70
+00:04:00,533 --> 00:04:04,733
+Read more on the Cheats and Themes pages of the Kefir Hub docs.
