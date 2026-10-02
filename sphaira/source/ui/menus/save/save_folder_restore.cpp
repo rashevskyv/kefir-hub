@@ -192,7 +192,7 @@ Result RestoreSaveFolder(ProgressBox* pbox, const Entry& e, const fs::FsPath& fo
     if (out_created_slot_retained) {
         *out_created_slot_retained = false;
     }
-    if (haze::IsRunning()) {
+    if (!haze::ReleaseSaveMounts()) { // only while the PC has a save open over MTP
         return FsError_TargetLocked;
     }
     R_UNLESS(!e.is_backup && (e.save_data_id != 0 || e.is_planned_create), FsError_PathNotFound);

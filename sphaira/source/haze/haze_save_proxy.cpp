@@ -27,9 +27,40 @@
 
 namespace sphaira::haze {
 
+struct FsSaveProxy;
+
+namespace {
+
+// the live MTP "saves" storage (at most one), so a save restore can drop its cached mounts.
+Mutex g_save_proxy_mutex{};
+FsSaveProxy* g_save_proxy{}; // guarded by g_save_proxy_mutex
+
+} // namespace
+
 struct FsSaveProxy final : FsProxyBase {
     FsSaveProxy(const char* name, const char* display_name) : FsProxyBase{name, display_name} {
         ScanMtpSaves(m_tree);
+        SCOPED_MUTEX(&g_save_proxy_mutex);
+        g_save_proxy = this;
+    }
+
+    ~FsSaveProxy() {
+        SCOPED_MUTEX(&g_save_proxy_mutex);
+        if (g_save_proxy == this) {
+            g_save_proxy = nullptr;
+        }
+    }
+
+    // closes the cached save filesystems. false if the PC has a file or folder of a save open.
+    bool ReleaseMounts() {
+        SCOPED_MUTEX(&m_mount_mutex);
+        for (const auto& [key, mount] : m_mounts) {
+            if (mount.fs.use_count() > 1) {
+                return false;
+            }
+        }
+        m_mounts.clear();
+        return true;
     }
 
     Result GetTotalSpace(const char *path, s64 *out) override {
@@ -347,6 +378,11 @@ private:
 
 std::shared_ptr<::haze::FileSystemProxyImpl> MakeFsSaveProxy(const char* name, const char* display_name) {
     return std::make_shared<FsSaveProxy>(name, display_name);
+}
+
+bool ReleaseSaveMounts() {
+    SCOPED_MUTEX(&g_save_proxy_mutex);
+    return !g_save_proxy || g_save_proxy->ReleaseMounts();
 }
 
 } // namespace sphaira::haze

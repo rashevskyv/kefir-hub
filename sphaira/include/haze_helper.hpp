@@ -44,4 +44,9 @@ void DisableInstallMode();
 bool HasActiveTransfer();
 void CancelTransfer();
 
+// the MTP "Saves" storage keeps the saves a PC browsed mounted, and a mounted save cannot be
+// opened again for a restore. Closes those mounts; false if the PC has one of them open right now.
+// (MTP itself keeps running; true as well when MTP or that storage is off.)
+bool ReleaseSaveMounts();
+
 } // namespace sphaira::haze

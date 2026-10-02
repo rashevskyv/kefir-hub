@@ -53,7 +53,7 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
         }
     }
 
-    if (haze::IsRunning()) {
+    if (!haze::ReleaseSaveMounts()) { // only while the PC has a save open over MTP
         App::Push<OptionBox>("MTP is currently active. Please close the running game and disable MTP before restoring save data."_i18n, "OK"_i18n);
         return;
     }
@@ -343,7 +343,7 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
         return;
     }
 
-    if (haze::IsRunning()) {
+    if (!haze::ReleaseSaveMounts()) { // only while the PC has a save open over MTP
         App::Push<OptionBox>("MTP is currently active. Please close the running game and disable MTP before restoring save data."_i18n, "OK"_i18n);
         return;
     }

@@ -58,7 +58,7 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
         return;
     }
 
-    if (!is_disa && haze::IsRunning()) {
+    if (!is_disa && !haze::ReleaseSaveMounts()) { // only while the PC has a save open over MTP
         App::Push<OptionBox>("MTP is currently active. Please close the running game and disable MTP before restoring save data."_i18n, "OK"_i18n);
         return;
     }
