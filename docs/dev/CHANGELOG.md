@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.944 — bounded FsPath copies (3.7a)
+FsPath::From(std::string/string_view) copied without a bound or terminator and operator+=(string/string_view) appended the whole source; both now clamp to FS_MAX_PATH-1, terminate and log a truncation, and operator+=(char) no longer writes past a full buffer. Not compilable on host (libnx). host tests: pass (--quick) · nro: not built · switch: pending (smoke: file browser, long paths)
 ## v0.13.943 — log MTP object creation to diagnose the folder drop (H3, diagnostics only)
 No console log of a folder drop exists, and the code path reads correct (SendObjectPropList -> Association -> FsProxy::CreateDirectory), so no behaviour is changed. libhaze patch 24 logs every SendObjectPropList (storage, parent, format, name) and FsProxy::CreateDirectory logs its result: the next folder drop shows whether the host never asks, the parent lookup fails, or the directory create fails. H3 stays open. host tests: pass · nro: not built · switch: pending (A2 with a folder, then send log.txt)
 ## v0.13.942 — Backups tab shows source sections for games; DBI saves folder from dbi.config (H7)

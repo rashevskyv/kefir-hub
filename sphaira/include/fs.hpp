@@ -2,11 +2,13 @@
 
 #include <switch.h>
 #include <dirent.h>
+#include <algorithm>
 #include <cstring>
 #include <vector>
 #include <string>
 #include <string_view>
 #include "defines.hpp"
+#include "log.hpp"
 
 namespace fs {
 
@@ -38,11 +40,19 @@ struct FsPath {
     }
 
     constexpr void From(const std::string& str) {
-        std::copy(str.cbegin(), str.cend(), std::begin(s));
+        From(std::string_view{str});
     }
 
+    // bounded: a source longer than the buffer is truncated and always terminated.
     constexpr void From(const std::string_view& str) {
-        std::copy(str.cbegin(), str.cend(), std::begin(s));
+        const auto len = str.size() < sizeof(s) ? str.size() : sizeof(s) - 1;
+        std::copy_n(str.cbegin(), len, std::begin(s));
+        s[len] = '\0';
+        if !consteval {
+            if (len != str.size()) {
+                log_write("[FS] path truncated to %zu bytes: %s\n", len, s);
+            }
+        }
     }
 
     constexpr auto toString() const -> std::string {
@@ -127,19 +137,25 @@ struct FsPath {
     }
 
     constexpr FsPath& operator+=(const std::string& v) noexcept {
-        std::strncat(*this, v.data(), v.length());
-        return *this;
+        return *this += std::string_view{v};
     }
 
+    // bounded: appends only what still fits.
     constexpr FsPath& operator+=(const std::string_view& v) noexcept {
-        std::strncat(*this, v.data(), v.length());
+        const auto room = sizeof(s) - std::strlen(s) - 1;
+        std::strncat(s, v.data(), v.length() < room ? v.length() : room);
+        if (v.length() > room) {
+            log_write("[FS] path truncated on append: %s\n", s);
+        }
         return *this;
     }
 
     constexpr FsPath& operator+=(char v) noexcept {
         const auto sz = size();
-        s[sz + 0] = v;
-        s[sz + 1] = '\0';
+        if (sz + 1 < sizeof(s)) {
+            s[sz + 0] = v;
+            s[sz + 1] = '\0';
+        }
         return *this;
     }
 
