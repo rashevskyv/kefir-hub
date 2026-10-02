@@ -52,6 +52,7 @@ auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocat
 
     std::vector<BackupCandidate> retained;
     std::unordered_set<std::string> seen_paths;
+    u64 newest_ts = 0;
     for (const auto& c : candidates) {
         if (c.path.empty() || !seen_paths.insert(c.path.s).second) {
             continue;
@@ -63,6 +64,11 @@ auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocat
             ? InspectBackupFolder(probe_fs, c.path, fname, group.dbi_game_dir, info)
             : InspectBackupArchive(probe_fs, c.path, fname, group.dbi_game_dir, info);
         if (inspected && BackupGroupKey(info) == target_key) {
+            // the group spans every source; label it with the newest archive's one.
+            if (retained.empty() || c.ts > newest_ts) {
+                newest_ts = c.ts;
+                group.backup_source = info.backup_source;
+            }
             retained.emplace_back(c);
         }
     }

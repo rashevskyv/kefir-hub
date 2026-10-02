@@ -20,11 +20,11 @@ namespace {
 
 auto FormatTargetSlotLabel(const Entry& target, const std::vector<AccountProfileBase>& accounts) -> std::string {
     std::string game_name;
-    if (target.GetName() && target.GetName()[0] != '\0') {
+    if (target.GetName() && target.GetName()[0] != '\0' && !title::IsPlaceholderName(target.GetName())) {
         game_name = target.GetName();
     } else {
         auto data = title::Get(target.application_id);
-        if (data && data->lang.name[0] != '\0') {
+        if (data && data->lang.name[0] != '\0' && !title::IsPlaceholderName(data->lang.name)) {
             game_name = data->lang.name;
         } else if (target.system_save_data_id != 0) {
             game_name = "System";

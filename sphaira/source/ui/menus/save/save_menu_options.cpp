@@ -18,6 +18,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdio>
+#include <cstring>
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -41,11 +44,19 @@ constexpr std::array<u8, 7> SAVE_TYPE_VALUES{
 auto Menu::CollectActionEntries(const std::vector<Entry>& seeds, const std::vector<u8>& types, const std::vector<s64>& account_indexes) -> std::vector<Entry> {
     std::set<u64> app_ids;
     std::set<u64> system_ids;
+    // a rescanned entry has no name, and an uninstalled title would then load as
+    // "Corrupted": remember the name the list shows (not the synthetic "Title <id>").
+    std::map<u64, const Entry*> seed_names;
     for (const auto& e : seeds) {
         if (IsSystemLikeSave(e.save_data_type)) {
             system_ids.emplace(e.system_save_data_id);
         } else {
             app_ids.emplace(e.application_id);
+            char fallback[32];
+            std::snprintf(fallback, sizeof(fallback), "Title %016lX", e.application_id);
+            if (e.lang.name[0] != '\0' && !title::IsPlaceholderName(e.lang.name) && std::strcmp(e.lang.name, fallback) != 0) {
+                seed_names.emplace(e.application_id, &e);
+            }
         }
     }
 
@@ -71,6 +82,9 @@ auto Menu::CollectActionEntries(const std::vector<Entry>& seeds, const std::vect
 
             const auto key = SaveEntryKey(e);
             if (seen.insert(key).second) {
+                if (const auto it = seed_names.find(e.application_id); it != seed_names.end() && e.lang.name[0] == '\0') {
+                    std::memcpy(e.lang.name, it->second->lang.name, sizeof(e.lang.name));
+                }
                 out.emplace_back(e);
             }
         }

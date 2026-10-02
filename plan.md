@@ -93,7 +93,7 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       and visible in the file browser, but the Backups tab does not show it. Check the library scanner roots
       (`source/ui/menus/save/save_locations.cpp`, `save_backup_library*`): does it scan the configured dump folder or a
       hard-coded path? Is there a cache that is not invalidated after a backup? Facts: the backup in question is `/dumps/12Switch/20261001/01000320000CC000_D_20261001191222_0.zip` (892 bytes, type `_D_` = Device save; the other backups are `_A_`), `kefir-config.ini` has `[saves] show_backups=0` and `default_backup_location=sd||/dumps`. Check whether Device-type backups are filtered out of the Backups tab and what `show_backups` gates. **Re-run:** B1 → B2.
-- [ ] H5 **Restore to an uninstalled game fails (B4).** Dialog shows target as «Corrupted (Account: nin10do)
+- [x] H5 **Restore to an uninstalled game fails (B4).** Dialog shows target as «Corrupted (Account: nin10do)
       [idx:0 rk:0 sp:1 …]» — the title-name fallback for a not-installed title should use the archive metadata name,
       not «Corrupted». After «Так»: «Вибраний архів резервної копії змінився або більше не доступний» — the staged-ZIP
       revalidation (v0.13.882 blocker 4) rejects a valid archive; likely compares path/size/mtime after staging or after

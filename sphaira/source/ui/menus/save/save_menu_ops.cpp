@@ -211,14 +211,12 @@ void Menu::ExecuteRestore(
 
             if (is_folder) {
                 if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                    check_info.backup_source != src.backup_source ||
                     BackupGroupKey(check_info) != BackupGroupKey(src)) {
                     log_write("Backup folder reinspection failed or identity mismatch for %s\n", file_path.s);
                     return FsError_PathNotFound;
                 }
             } else {
                 if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                    check_info.backup_source != src.backup_source ||
                     BackupGroupKey(check_info) != BackupGroupKey(src)) {
                     log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
                     return FsError_PathNotFound;
@@ -329,24 +327,15 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
     filename = filename ? filename + 1 : chosen.s;
     BackupArchiveInfo check_info{};
 
-    if (is_folder) {
-        if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, chosen, filename, group.dbi_game_dir, check_info)) {
-            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-            return;
-        }
-        if (check_info.backup_source != group.backup_source || BackupGroupKey(check_info) != BackupGroupKey(group)) {
-            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-            return;
-        }
-    } else {
-        if (!InspectBackupArchive(probe_fs, chosen, filename, group.dbi_game_dir, check_info)) {
-            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-            return;
-        }
-        if (check_info.backup_source != group.backup_source || BackupGroupKey(check_info) != BackupGroupKey(group)) {
-            App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-            return;
-        }
+    // identity (BackupGroupKey) is what must still hold. the backup source is not compared:
+    // a group built from a live save spans every source, so that check rejected valid archives.
+    const bool inspected = is_folder
+        ? (is_dir_on_disk && InspectBackupFolder(probe_fs, chosen, filename, group.dbi_game_dir, check_info))
+        : InspectBackupArchive(probe_fs, chosen, filename, group.dbi_game_dir, check_info);
+    if (!inspected || BackupGroupKey(check_info) != BackupGroupKey(group)) {
+        log_write("[SAVE] restore revalidation failed for %s (inspected=%d)\n", chosen.s, inspected ? 1 : 0);
+        App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
+        return;
     }
 
     if (!MatchesRestoreDestination(check_info, e)) {
