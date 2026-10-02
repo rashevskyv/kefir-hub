@@ -65,7 +65,7 @@ Main thread: `App` loop (input, draw, widget stack). Every other thread and what
 | Thread | Started in | Shares |
 |---|---|---|
 | Log flusher | `log.cpp` `ensure_thread_started` | `std::mutex mutex`, `g_thread_running`, `g_thread_stop`, `g_file_open` |
-| MTP responder (libhaze) | `haze_helper.cpp` `Init` → `haze::Initialize` | `haze/haze_internal.cpp`: `g_mutex`, `g_mtp_ui_mutex`, `g_mtp_done_event`, `g_mtp_transfer_*`, `g_is_running`, `g_should_exit` (atomic) |
+| MTP responder (libhaze) | `haze_helper.cpp` `Init` → `haze::Initialize` | `haze/haze_internal.cpp`: `g_mutex`, `g_mtp_ui_mutex`, `g_mtp_done_event`, `g_mtp_state` (transitions: `include/haze/mtp_transfer_state.hpp`), `g_is_running`, `g_should_exit` (atomic) |
 | MTP progress worker | `haze_helper.cpp` `StartMtpProgressBox` (ProgressBox thread) | same as MTP responder |
 | FTP server | `ftpsrv_helper.cpp` `Init` | `g_mutex`, `g_is_running`, `g_should_exit` (atomic) |
 | NX-Link | `nxlink.cpp` `nxlinkInitialize` | `g_mutex`, `g_is_running`, `g_quit` (atomic) |

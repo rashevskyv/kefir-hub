@@ -58,8 +58,7 @@ void StartMtpProgressBox() {
             std::string init_filename;
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
-                if (g_should_exit || (!g_mtp_transfer_active && g_mtp_transfer_seq == g_mtp_handled_seq)) {
-                    g_mtp_ui_alive = false;
+                if (!OnUiLaunch(g_mtp_state, g_should_exit)) {
                     return;
                 }
                 init_filename = g_mtp_current_filename;
@@ -93,8 +92,8 @@ void StartMtpProgressBox() {
                     SCOPED_MUTEX(&g_mtp_ui_mutex);
                     g_mtp_pbox = pbox;
                     current_filename = g_mtp_current_filename;
-                    last_seq = g_mtp_transfer_seq;
-                    is_active = g_mtp_transfer_active;
+                    last_seq = g_mtp_state.seq;
+                    is_active = g_mtp_state.active;
                 }
                 if (!current_filename.empty()) {
                     pbox->SetTitle(MtpParentDir(current_filename));
@@ -116,13 +115,13 @@ void StartMtpProgressBox() {
 
                     {
                         SCOPED_MUTEX(&g_mtp_ui_mutex);
-                        if (g_mtp_transfer_seq != last_seq) {
-                            last_seq = g_mtp_transfer_seq;
+                        if (g_mtp_state.seq != last_seq) {
+                            last_seq = g_mtp_state.seq;
                             filename = g_mtp_current_filename;
                             update_label = true;
                         }
-                        is_active = g_mtp_transfer_active;
-                        is_aborted = g_mtp_transfer_aborted;
+                        is_active = g_mtp_state.active;
+                        is_aborted = g_mtp_state.aborted;
                     }
 
                     if (is_aborted) {
@@ -144,7 +143,7 @@ void StartMtpProgressBox() {
                             idle_start = now;
                         } else if (now - idle_start >= IDLE_TIMEOUT_NS) {
                             SCOPED_MUTEX(&g_mtp_ui_mutex);
-                            if (!g_mtp_transfer_active && g_mtp_transfer_seq == last_seq) {
+                            if (IsIdle(g_mtp_state, last_seq)) {
                                 break;
                             }
                         }
@@ -156,15 +155,7 @@ void StartMtpProgressBox() {
                 if (user_cancelled) {
                     {
                         SCOPED_MUTEX(&g_mtp_ui_mutex);
-                        if (g_mtp_transfer_active) {
-                            g_mtp_transfer_active = false;
-                            g_mtp_transfer_aborted = true;
-                            should_cancel_worker = true;
-                        }
-
-                        if (g_mtp_handled_seq < last_seq) {
-                            g_mtp_handled_seq = last_seq;
-                        }
+                        should_cancel_worker = OnWorkerCancel(g_mtp_state, last_seq);
                     }
                     if (should_cancel_worker) {
                         ::haze::CancelTransfer();
@@ -174,9 +165,7 @@ void StartMtpProgressBox() {
 
                 {
                     SCOPED_MUTEX(&g_mtp_ui_mutex);
-                    if (g_mtp_handled_seq < last_seq) {
-                        g_mtp_handled_seq = last_seq;
-                    }
+                    MarkHandled(g_mtp_state, last_seq);
                     g_mtp_pbox = nullptr;
                 }
 
@@ -190,12 +179,7 @@ void StartMtpProgressBox() {
                 {
                     SCOPED_MUTEX(&g_mtp_ui_mutex);
                     g_mtp_pbox = nullptr;
-                    if (push_state->load() == 1 && !g_should_exit && (g_mtp_transfer_active || g_mtp_transfer_seq != g_mtp_handled_seq)) {
-                        g_mtp_ui_alive = true;
-                        relaunch = true;
-                    } else {
-                        g_mtp_ui_alive = false;
-                    }
+                    relaunch = OnUiClosed(g_mtp_state, push_state->load() == 1 && !g_should_exit);
                 }
 
                 if (relaunch) {
@@ -207,13 +191,7 @@ void StartMtpProgressBox() {
                 bool should_cancel = false;
                 {
                     SCOPED_MUTEX(&g_mtp_ui_mutex);
-                    if (g_mtp_transfer_active) {
-                        g_mtp_transfer_active = false;
-                        g_mtp_transfer_aborted = true;
-                        should_cancel = true;
-                    }
-
-                    g_mtp_handled_seq = g_mtp_transfer_seq;
+                    should_cancel = OnUserCancel(g_mtp_state);
                 }
                 if (should_cancel) {
                     ::haze::CancelTransfer();
@@ -224,7 +202,7 @@ void StartMtpProgressBox() {
             if (!App::PushTransfer(std::move(pbox_ptr))) {
                 push_state->store(-1);
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
-                g_mtp_ui_alive = false;
+                OnUiClosed(g_mtp_state, false);
             } else {
                 push_state->store(1);
             }
@@ -254,9 +232,7 @@ void haze_callback(const ::haze::CallbackData *data) {
             App::Notify("MTP disconnected"_i18n);
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
-                g_mtp_transfer_active = false;
-                g_mtp_transfer_aborted = false;
-                g_mtp_handled_seq = g_mtp_transfer_seq;
+                OnSessionEnd(g_mtp_state);
                 if (g_mtp_pbox) {
                     g_mtp_pbox->RequestExit();
                 }
@@ -306,13 +282,7 @@ void haze_callback(const ::haze::CallbackData *data) {
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                 g_mtp_current_filename = e.file.filename;
-                g_mtp_transfer_active = true;
-                g_mtp_transfer_aborted = false;
-                g_mtp_transfer_seq++;
-                if (!g_mtp_ui_alive) {
-                    g_mtp_ui_alive = true;
-                    trigger_ui = true;
-                }
+                trigger_ui = OnFileStart(g_mtp_state);
             }
             ueventSignal(&g_mtp_done_event);
 
@@ -326,9 +296,7 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_WriteProgress: {
             SCOPED_MUTEX(&g_mtp_ui_mutex);
             if (g_mtp_pbox) {
-                const s64 offset = e.progress.offset;
-                const s64 chunk = e.progress.size;
-                const s64 transferred = (offset >= 0 && chunk >= 0 && offset <= INT64_MAX - chunk) ? (offset + chunk) : offset;
+                const s64 transferred = TransferredBytes(e.progress.offset, e.progress.size);
                 const s64 total = e.progress.total > 0 ? e.progress.total : 0;
                 g_mtp_pbox->UpdateTransferForce(transferred, total);
             }
@@ -340,10 +308,7 @@ void haze_callback(const ::haze::CallbackData *data) {
             log_write("[LIBHAZE] Transfer Finished: %s\n", e.file.filename);
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
-                g_mtp_transfer_active = false;
-                if (e.file.aborted) {
-                    g_mtp_transfer_aborted = true;
-                }
+                OnFileDone(g_mtp_state, e.file.aborted);
             }
             ueventSignal(&g_mtp_done_event);
             break;
@@ -362,7 +327,7 @@ bool Init() {
 
     {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
-        g_mtp_transfer_aborted = false;
+        g_mtp_state.aborted = false;
     }
 
     struct MtpStorageDef {
@@ -479,11 +444,8 @@ bool Init() {
     ueventCreate(&g_mtp_done_event, true);
     {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
-        g_mtp_ui_alive = false;
+        OnInit(g_mtp_state);
         g_mtp_pbox = nullptr;
-        g_mtp_transfer_active = false;
-        g_mtp_transfer_seq = 0;
-        g_mtp_handled_seq = 0;
         g_mtp_current_filename.clear();
     }
 
@@ -518,9 +480,7 @@ void Exit(bool reinit_usb_host) {
     ueventSignal(&g_mtp_done_event);
     {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
-        g_mtp_transfer_active = false;
-        g_mtp_transfer_aborted = false;
-        g_mtp_handled_seq = g_mtp_transfer_seq;
+        OnSessionEnd(g_mtp_state);
         if (g_mtp_pbox) {
             g_mtp_pbox->RequestExit();
         }

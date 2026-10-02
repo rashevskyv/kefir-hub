@@ -1,6 +1,7 @@
 #pragma once
 
 #include "haze_helper.hpp"
+#include "haze/mtp_transfer_state.hpp"
 #include "app.hpp"
 #include "fs.hpp"
 #include "log.hpp"
@@ -63,12 +64,8 @@ extern Mutex g_mutex;
 extern Mutex g_mtp_ui_mutex;
 extern ui::ProgressBox* g_mtp_pbox;
 extern UEvent g_mtp_done_event;
-extern bool g_mtp_ui_alive; // guarded by g_mtp_ui_mutex
 extern std::string g_mtp_current_filename;
-extern bool g_mtp_transfer_active; // guarded by g_mtp_ui_mutex
-extern bool g_mtp_transfer_aborted; // guarded by g_mtp_ui_mutex
-extern u64 g_mtp_transfer_seq; // guarded by g_mtp_ui_mutex
-extern u64 g_mtp_handled_seq; // guarded by g_mtp_ui_mutex
+extern MtpTransferState g_mtp_state; // guarded by g_mtp_ui_mutex; change it only through mtp_transfer_state.hpp
 
 extern std::vector<PinnedMount> g_pinned;
 extern ::haze::FsEntries g_fs_entries;

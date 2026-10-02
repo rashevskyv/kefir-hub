@@ -38,23 +38,14 @@ Mutex g_mutex{};
 Mutex g_mtp_ui_mutex;
 ui::ProgressBox* g_mtp_pbox{nullptr};
 UEvent g_mtp_done_event;
-bool g_mtp_ui_alive{false}; // guarded by g_mtp_ui_mutex
 std::string g_mtp_current_filename;
-bool g_mtp_transfer_active{false}; // guarded by g_mtp_ui_mutex
-bool g_mtp_transfer_aborted{false}; // guarded by g_mtp_ui_mutex
-u64 g_mtp_transfer_seq{0}; // guarded by g_mtp_ui_mutex
-u64 g_mtp_handled_seq{0}; // guarded by g_mtp_ui_mutex
+MtpTransferState g_mtp_state{}; // guarded by g_mtp_ui_mutex
 
 void CancelTransfer() {
     bool should_cancel = false;
     {
         SCOPED_MUTEX(&g_mtp_ui_mutex);
-        if (g_mtp_transfer_active) {
-            g_mtp_transfer_active = false;
-            g_mtp_transfer_aborted = true;
-            should_cancel = true;
-        }
-        g_mtp_handled_seq = g_mtp_transfer_seq;
+        should_cancel = OnUserCancel(g_mtp_state);
         if (g_mtp_pbox) {
             g_mtp_pbox->RequestExit();
         }

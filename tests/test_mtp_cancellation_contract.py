@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Regression test contract for MTP file transfer cancellation, recovery, and review findings.
-Validates: Switch-side cancel, idle-window guard, single cancel invocation, Clean Exit deadlock-free,
-MicroSD partial delete, URB abort/PC cancel, clean drain, bounded recovery retries, exit reason filtering,
-and multi-scenario upgrade paths (clean, prev2, prev3, prev4, 09c04c20, idempotency). Limits <= 600 lines.
+"""Applies the real sphaira/cmake/patch_libhaze*.cmake chain to upstream libhaze:
+clean, intermediate (prev2, prev3, prev4, 09c04c20) and already patched sources (idempotency).
+The MTP box state machine is tested in tests/test_mtp_transfer_state.cpp. Limits <= 600 lines.
 """
 
 from pathlib import Path
@@ -10,12 +9,6 @@ import re
 import subprocess
 import sys
 import tempfile
-
-from test_mtp_cancellation_models import (
-    simulate_cancellation_state_machine,
-    simulate_parser_and_drain_contract,
-    simulate_usb_watcher_and_remount_contracts,
-)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -237,10 +230,7 @@ def test_patch_application_scenarios() -> None:
 
 def main() -> None:
     test_patch_application_scenarios()
-    simulate_cancellation_state_machine()
-    simulate_parser_and_drain_contract()
-    simulate_usb_watcher_and_remount_contracts()
-    print("PASS: all MTP cancellation and recovery contracts verified successfully.")
+    print("PASS: libhaze patch chain applies to every upgrade scenario.")
 
 
 if __name__ == "__main__":

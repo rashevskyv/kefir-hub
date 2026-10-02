@@ -22,6 +22,11 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.960 — MTP progress-box state machine (3.2), no behaviour change
+- The five `g_mtp_*` flags are one `MtpTransferState g_mtp_state`; every change goes through pure transitions in `include/haze/mtp_transfer_state.hpp` (`OnFileStart`, `OnFileDone`, `OnUserCancel`, `OnWorkerCancel`, `OnUiLaunch`, `OnUiClosed`, `OnSessionEnd`, `OnInit`, `TransferredBytes`). Call sites in `haze_helper.cpp` / `haze_internal.cpp` keep the mutex and apply the returned action.
+- New `tests/test_mtp_transfer_state.cpp` (79 checks on the real header: Switch cancel, PC cancel, idle-window cancel, late-file relaunch, exit during transfer, repeated cancel). Deleted: `tests/test_mtp_cancellation_models.py` (Python model of itself; the contract test keeps the real patch-chain scenarios) and `tests/test_mtp_progress_calc.cpp` (local copies; its one real function is now tested through the header).
+- host tests: pass; nro: built; switch: pending (re-run checklist section A).
+
 ## v0.13.959 — USB waiting-screen test exercises the real code (2.8, 1 of 10)
 tests/test_usb3_indicator.cpp re-implemented the badge text choice and the warning-card position locally. Both now live in ui/menus/dbi/usb_status_text.hpp (UsbStatusTextKey, WaitingWarningY), dbi_draw.cpp calls them, and the test includes that header. No behaviour change: same five strings, same max(text bottom + 35, 470). Nine copy-tests remain in 2.8. host tests: pass · nro: built (checkpoint v0.13.959) · switch: pending (PC Install (USB) waiting screen shows the same badge text)
 ## v0.13.958 — fix the -Werror build (1.5)
