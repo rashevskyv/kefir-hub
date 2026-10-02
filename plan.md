@@ -247,6 +247,25 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
 
 ---
 
+## Phase D — decisions from the docs review (2026-10-02)
+Context: `docs/dev/AUDIT-2026-10-02-docs.md`. When a task changes behaviour, update the matching `docs/site/{en,uk}` page.
+
+- [ ] D.1 🔥 **DBI Backend Qt: ship the Windows USB driver** so "PC Install (USB)" works without a manual Zadig step
+      (separate repo). Then replace the TODO in `docs/site/*/install/usb.md#requirements` and the site `inc/zadig.txt`.
+- [ ] D.2 **Remove the install-enable switch** (Settings → Install → Enable sysMMC/emuMMC and the ban-warning prompt).
+      Installing is always allowed. Drop `install/index.md#enable` and the "turn installing on" steps (docs, site, video 02).
+- [ ] D.3 **Bring back restoring profile backups.** Backups from Delete user and Console Transfer → Share User Backups
+      can be made but not restored (dead `users_restore*`, `users_manage*`). Give them a menu entry.
+- [ ] D.4 **After installing a system interface translation, ask before switching Kefir Hub's language.** Today
+      `TryAutoSwitchLanguage` (settings_translations.cpp:427-518) switches it silently when a matching UI language
+      exists. Offer it in a dialog instead.
+- [ ] D.6 **Auto-update check also on network connect**, not only once per launch (main_menu.cpp:90-226).
+- [ ] D.7 **Kefir Settings: USB 3.0 shows On when the key is absent** (settings_kefir.cpp:158-162). Every switch must
+      read Off by default.
+- [ ] D.5 `[USER]` Screenshots (`python docs/site/shotlist.py`) and video recording (`docs/video/*/script.md`).
+
+---
+
 ## Not to do (from audit)
 - No refactor of `App`; no new abstractions, registries, interfaces with one implementation.
 - No file splits for their own sake; the 600-line cap is already met.
