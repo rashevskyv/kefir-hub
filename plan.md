@@ -1,7 +1,7 @@
 # plan.md — work queue
 
-## Поточний delivery: v0.13.949
-Попередній: v0.13.948
+## Поточний delivery: v0.13.959
+Попередній: v0.13.958
 
 Source: `docs/dev/AUDIT-2026-10-01.md` (findings F1–F10). Baseline v0.13.922, commit `0c80cdd4`.
 Rules: `AGENTS.md`. One task ≈ one session ≈ one commit. Do tasks in order inside a phase; phases in order.
@@ -180,7 +180,7 @@ validates real data files (i18n JSON, cmake patch files). Everything that assert
       `find tests -name '*.py' | xargs wc -l | tail -1` < 3000 lines.
 - [ ] 2.7 Build checkpoint + commit.
 - [ ] 2.8 **C++ tests that test copies.** Executor found 11 `tests/*.cpp` (incl. `test_save_restore_contract.cpp`) that re-implement project logic locally instead of including the project header, plus `test_save_restore_contract.cpp` and `tools/module_catalog/tests/test_catalog.py` asserting on C++ source text (catalog test currently fails 1/9). List them (`grep -L '#include "' tests/test_*.cpp` is a start; then read each), and for each: include the real header (PURE), extract a seam (SEAM, same rules as 2.5), or delete (DROP). Fix or delete the failing catalog test. **Done when:** every `tests/test_*.cpp` includes at least one project header and no test greps C++ source.
-      <!-- build checkpoint passed at v0.13.934; done: test_save_restore_contract.cpp deleted (source greps only), test_catalog.py text check removed (8/8 pass); next: 10 copy tests, all SEAM (no real function of that name exists): hbl_nro_reader, header_network_layout, header_service_indicators, list_null_safety, mtp_progress_calc (with 3.2), queue_outcome, screensaver_title, tico_assoc, title_scaling, usb3_indicator; test_transport_install_queue already includes a project header (<...>) -->
+      <!-- build checkpoint passed at v0.13.934; done: test_save_restore_contract.cpp deleted (source greps only), test_catalog.py text check removed (8/8 pass); next: 10 copy tests, all SEAM (no real function of that name exists): hbl_nro_reader, header_network_layout, header_service_indicators, list_null_safety, mtp_progress_calc (with 3.2), queue_outcome, screensaver_title, tico_assoc, title_scaling (usb3_indicator done in v0.13.959); test_transport_install_queue already includes a project header (<...>) -->
 
 ## Phase 3 — Stability (audit F3, F6, F7)
 
