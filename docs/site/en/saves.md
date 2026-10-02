@@ -100,10 +100,10 @@ To make Kefir Hub look in another folder too:
 Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps/recovery/`. After the restore a dialog shows where it is. When it finishes you see [[Restore successful!]].
 
 ## Restore from the Backups tab
-1. Open the [[Backups]] tab.
-2. Focus a game tile and press **A**. A list opens:
-    - [[Restore all]] — restores every save in this backup group (all users and types), newest backup of each.
-    - One line per user or save type, with the source app, number of archives and the newest date. Choose a line for more actions.
+1. Open the [[Backups]] tab. A game has one tile for each user whose backups it holds; the user's name is on the tile. Device and BCAT backups of a game share a tile of their own.
+2. Focus a tile and press **A**. A list opens:
+    - [[Restore all]] — restores every save in this tile, newest backup of each.
+    - One line per save type or slot, with the source app, number of archives and the newest date. Choose a line for more actions.
 3. In [[Backup Action]] choose [[Restore]] and continue as in [Restore a save](#restore-a-save) from step 3.
 
 <!-- shot: saves-backup-group | Backup group list for one game: Restore all, Account line with DBI source and archive count -->

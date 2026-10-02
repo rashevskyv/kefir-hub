@@ -246,8 +246,10 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
 
     if (show_backups) {
         if (m_category == Category::Backups && !m_app_id_filter) {
-            std::vector<u64> app_order;
-            std::unordered_map<u64, std::vector<Entry>> app_groups;
+            // one tile per game and owner: backups of different users are never one restore.
+            // device/BCAT backups have no owner (uid 0) and share a tile per game.
+            std::vector<std::string> app_order;
+            std::unordered_map<std::string, std::vector<Entry>> app_groups;
             std::vector<Entry> system_entries;
 
             for (auto& b : backups) {
@@ -269,9 +271,13 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 if (IsSystemLikeSave(b.save_data_type)) {
                     system_entries.emplace_back(std::move(b));
                 } else if (b.application_id != 0) {
-                    auto& group = app_groups[b.application_id];
+                    const bool by_user = b.save_data_type == FsSaveDataType_Account;
+                    char tile_key[64];
+                    std::snprintf(tile_key, sizeof(tile_key), "%016lX:%016lX%016lX", b.application_id,
+                        by_user ? b.uid.uid[0] : 0, by_user ? b.uid.uid[1] : 0);
+                    auto& group = app_groups[tile_key];
                     if (group.empty()) {
-                        app_order.push_back(b.application_id);
+                        app_order.emplace_back(tile_key);
                     }
                     group.emplace_back(std::move(b));
                 } else {
@@ -279,15 +285,17 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 }
             }
 
-            for (const auto app_id : app_order) {
-                auto& children = app_groups[app_id];
+            for (const auto& tile_key : app_order) {
+                auto& children = app_groups[tile_key];
                 if (children.empty()) {
                     continue;
                 }
 
+                const auto app_id = children.front().application_id;
                 Entry parent{};
                 parent.application_id = app_id;
-                parent.save_data_type = FsSaveDataType_Account;
+                parent.uid = children.front().uid;
+                parent.save_data_type = children.front().save_data_type;
                 parent.is_backup = true;
                 parent.is_game_parent = true;
                 parent.backup_count = children.size();

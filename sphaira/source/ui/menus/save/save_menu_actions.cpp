@@ -356,7 +356,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
             if (entry.is_game_parent) {
                 const bool match = IsSystemLikeSave(first.save_data_type)
                     ? (entry.system_save_data_id == first.system_save_data_id)
-                    : (entry.application_id == first.application_id);
+                    : (entry.application_id == first.application_id && !std::memcmp(&entry.uid, &first.uid, sizeof(AccountUid)));
                 if (match) {
                     auto* raw = popup.get();
                     popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, entry]() {

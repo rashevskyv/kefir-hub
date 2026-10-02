@@ -222,10 +222,10 @@ void Menu::SetIndex(s64 index) {
         this->SetSubHeading("0 / 0");
     }
 
-    char title[0x80];
+    char title[0x100];
     if (m_entries[m_index].is_game_parent) {
         const std::string groups_str = m_entries[m_index].children.size() > 1 ? " backup groups"_i18n : " backup group"_i18n;
-        std::snprintf(title, sizeof(title), "%zu%s | %016lX", m_entries[m_index].children.size(), groups_str.c_str(), id);
+        std::snprintf(title, sizeof(title), "%s | %zu%s | %016lX", BackupTileOwner(m_entries[m_index], m_accounts).c_str(), m_entries[m_index].children.size(), groups_str.c_str(), id);
     } else {
         const auto account = (m_entries[m_index].save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
             GetAccountName(m_entries[m_index].uid) : GetAccountSummary();

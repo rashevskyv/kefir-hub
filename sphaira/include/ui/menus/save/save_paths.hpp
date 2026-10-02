@@ -146,6 +146,8 @@ auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& 
 auto AccountPickerItems(const std::vector<AccountProfileBase>& accounts) -> std::vector<std::string>;
 // "Restore for user (game · backup owner · date)": tells apart backups of one game from different users.
 auto BackupPickerTitle(const Entry& seed, const std::vector<AccountProfileBase>& accounts) -> std::string;
+// whose backups a Backups-tab game tile holds: the user, or the save type for a device/BCAT tile.
+auto BackupTileOwner(const Entry& tile, const std::vector<AccountProfileBase>& accounts) -> std::string;
 auto FormatBackupTimestamp(u64 ts, bool compact = false) -> std::string;
 auto GetBackupSecondaryColumns(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> BackupSecondaryColumns;
 auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;

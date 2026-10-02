@@ -68,6 +68,10 @@ auto BackupPickerTitle(const Entry& seed, const std::vector<AccountProfileBase>&
     return title + ")";
 }
 
+auto BackupTileOwner(const Entry& tile, const std::vector<AccountProfileBase>& accounts) -> std::string {
+    return tile.save_data_type == FsSaveDataType_Account ? FormatBackupAccount(tile, accounts) : FormatSaveTypeLabel(tile.save_data_type);
+}
+
 void Menu::OpenGameBackupGroup(const Entry& game) {
     if (game.children.empty()) {
         App::Push<OptionBox>("No backups found for this game."_i18n, "OK"_i18n);
@@ -293,7 +297,7 @@ void Menu::PromptRestoreAllDestinations(
         if (entry.is_game_parent) {
             const bool match = IsSystemLikeSave(first.save_data_type)
                 ? (entry.system_save_data_id == first.system_save_data_id)
-                : (entry.application_id == first.application_id);
+                : (entry.application_id == first.application_id && !std::memcmp(&entry.uid, &first.uid, sizeof(AccountUid)));
             if (match) {
                 auto* raw = popup.get();
                 popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, entry]() {

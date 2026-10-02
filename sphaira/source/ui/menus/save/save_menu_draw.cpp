@@ -214,7 +214,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         std::snprintf(title_id, sizeof(title_id), "%016lX", id);
 
         const auto account = e.is_game_parent ?
-            (e.children.size() > 1 ? std::to_string(e.children.size()) + " backup groups"_i18n : "1 backup group"_i18n) :
+            BackupTileOwner(e, m_accounts) + "  •  " + (e.children.size() > 1 ? std::to_string(e.children.size()) + " backup groups"_i18n : "1 backup group"_i18n) :
             (e.is_backup ?
                 FormatBackupAccount(e, m_accounts) + "  •  " + FormatBackupRankMarker(e) :
                 ((e.save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
@@ -306,7 +306,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             ? std::string{}
             : (e.is_backup ? (e.is_game_parent ? FormatBackupTimestamp(e.backup_timestamp) : FormatBackupSecondaryText(e, m_accounts)) : std::string{e.GetAuthor()});
 
-        const char* entry_name = (m_layout.Get() == grid::LayoutType_HbMenu) ? "" : e.GetName();
+        // a game has one tile per backup owner: say whose it is wherever the layout shows text.
+        const auto owner = e.is_game_parent ? BackupTileOwner(e, m_accounts) : std::string{};
+        const auto list_name = e.is_game_parent && is_list ? std::string(e.GetName()) + "  ·  " + owner : std::string{};
+        const char* entry_name = (m_layout.Get() == grid::LayoutType_HbMenu) ? "" : (list_name.empty() ? e.GetName() : list_name.c_str());
 
         if (!IsSystemLikeSave(e.save_data_type)) {
             image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, entry_name, author_str.c_str(), info.c_str(), e.selected);
@@ -314,6 +317,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, entry_name, author_str.c_str(), info.c_str(), e.selected);
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
+        }
+
+        if (e.is_game_parent && (m_layout.Get() == grid::LayoutType_Grid || m_layout.Get() == grid::LayoutType_GridDetail)) {
+            // the grid shows icons only: put the owner on a strip at the bottom of the icon.
+            const Vec4 strip{image_v.x, image_v.y + image_v.h - 26.f, image_v.w, 26.f};
+            gfx::drawRect(vg, strip, nvgRGBA(0, 0, 0, 170), 0.f);
+            nvgSave(vg);
+            nvgIntersectScissor(vg, strip.x + 4.f, strip.y, strip.w - 8.f, strip.h);
+            gfx::drawTextArgs(vg, strip.x + strip.w / 2.f, strip.y + strip.h / 2.f, 16.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, nvgRGB(255, 255, 255), "%s", owner.c_str());
+            nvgRestore(vg);
         }
 
         if (e.is_backup && !e.is_game_parent && is_list) {
