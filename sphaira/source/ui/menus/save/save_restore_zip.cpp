@@ -52,6 +52,9 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
     R_UNLESS(!e.is_backup, FsError_PathNotFound);
     R_UNLESS(e.save_data_id != 0 || e.is_planned_create, FsError_PathNotFound);
 
+    // lifts the cancel shield raised below, right before the save is rewritten.
+    ON_SCOPE_EXIT(pbox->SetCancelDeferred(false));
+
     SaveReaderContext source_reader_ctx;
     zlib_filefunc64_def file_func;
     source_reader_ctx.InitFileFunc(&file_func);
@@ -424,6 +427,10 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
 
         R_UNLESS(!source_reader_ctx.HasError(), Result_UnzOpen2_64);
         R_TRY(pbox->ShouldExitResult());
+
+        // a save cut off half-way is worse than either state: from here until this save is
+        // written and verified, a confirmed cancel waits (a batch then stops before the next save).
+        pbox->SetCancelDeferred(true);
 
         // Conservative mutation flag: mark mutation started immediately before clear
         if (out_mutation_started) {

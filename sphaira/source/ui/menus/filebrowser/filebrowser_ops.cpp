@@ -138,7 +138,9 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                     return save::RestoreSaveZip(pbox, se, file_path, recovery_path.get(), mutation_started.get());
                 }
             }, [recovery_path, mutation_started, is_disa](Result rc) {
-                if (R_FAILED(rc)) {
+                if (rc == Result_TransferCancelled) {
+                    App::Notify("Restore cancelled."_i18n); // the user stopped it: not an error
+                } else if (R_FAILED(rc)) {
                     App::PushErrorBox(rc, "Save restore failed!"_i18n);
                 } else {
                     App::Notify("Save restored successfully!"_i18n);

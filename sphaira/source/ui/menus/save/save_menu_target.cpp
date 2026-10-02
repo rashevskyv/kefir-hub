@@ -134,16 +134,9 @@ void Menu::ResolveRestoreTarget(const Entry& backup, const AccountUid* explicit_
         return;
     }
 
+    // one matching slot: nothing to choose. every caller asks for the (single) confirmation itself.
     if (candidates.size() == 1) {
-        const auto accounts = App::GetAccountList();
-        const auto label = FormatTargetSlotLabel(candidates.front(), accounts);
-        App::Push<OptionBox>("Restore save data to\n" + label + "?", "No"_i18n, "Yes"_i18n, 0, [candidates, cb = std::move(cb)](auto choice) {
-            if (!choice || *choice != 1) {
-                cb(std::nullopt);
-                return;
-            }
-            cb(candidates.front());
-        });
+        cb(candidates.front());
         return;
     }
 

@@ -252,6 +252,8 @@ void Menu::ExecuteRestore(
                 App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
             } else if (*last_item_is_raw) {
                 App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
+            } else if (rc == Result_TransferCancelled) {
+                App::Notify("Restore cancelled."_i18n); // the user stopped it: not an error
             } else {
                 App::PushErrorBox(rc, "Restore failed!"_i18n);
             }
@@ -348,7 +350,12 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
         return;
     }
 
-    const std::string prompt = "Restore save data to\n"_i18n + (e.GetName() ? std::string(e.GetName()) : "") + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
+    // the only confirmation of a restore: name the game and, for an account save, the user.
+    std::string target_name = e.GetName() ? e.GetName() : "";
+    if (const auto account = e.save_data_type == FsSaveDataType_Account ? GetAccountName(e.uid) : std::string{}; !account.empty()) {
+        target_name += " (" + account + ")";
+    }
+    const std::string prompt = "Restore save data to\n"_i18n + target_name + "?\n\n" + "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
 
     auto start_restore = [this, e = std::move(e), location, backup_root, chosen = std::move(chosen), is_raw]() mutable {
         auto recovery_path = std::make_shared<fs::FsPath>();
@@ -367,7 +374,11 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
                     App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
                     return;
                 }
-                App::PushErrorBox(rc, "Restore failed!"_i18n);
+                if (rc == Result_TransferCancelled) {
+                    App::Notify("Restore cancelled."_i18n); // the user stopped it: not an error
+                } else {
+                    App::PushErrorBox(rc, "Restore failed!"_i18n);
+                }
             } else {
                 App::Notify("Restore successful!"_i18n);
             }

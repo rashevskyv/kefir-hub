@@ -262,9 +262,24 @@ void ProgressBox::RequestExit() {
     ueventSignal(GetCancelEvent());
 }
 
+void ProgressBox::SetCancelDeferred(bool deferred) {
+    m_cancel_deferred = deferred;
+    if (!deferred && m_cancel_pending.exchange(false)) {
+        RequestExit();
+    }
+}
+
 void ProgressBox::ShowCancelConfirmation() {
     App::Push<OptionBox>("Are you sure you wish to cancel?"_i18n, "\uE0E1 " + "No"_i18n, "\uE0EF " + "Yes"_i18n, 1, [this](auto op_index){
         if (op_index && *op_index) {
+            if (m_cancel_deferred) {
+                // applied by SetCancelDeferred(false); the box stays up until the worker is done.
+                m_cancel_pending = true;
+                if (!m_cancel_deferred && m_cancel_pending.exchange(false)) {
+                    RequestExit();
+                }
+                return;
+            }
             if (m_cancel_cb) {
                 m_cancel_cb();
             }

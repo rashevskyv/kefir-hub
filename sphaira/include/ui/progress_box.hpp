@@ -63,6 +63,9 @@ struct ProgressBox final : Widget, InstallProgress {
 
     void RequestExit();
     void ShowCancelConfirmation();
+    // worker side: while set, a cancel the user confirms is only remembered; it is applied
+    // when the flag is cleared. For a step that must not be cut off half-way (writing a save).
+    void SetCancelDeferred(bool deferred);
     auto SetCancelCallback(ProgressBoxCancelCallback cancel_cb) -> ProgressBox& {
         m_cancel_cb = std::move(cancel_cb);
         return *this;
@@ -135,6 +138,8 @@ private:
     Mutex m_mutex{};
     Thread m_thread{};
     bool m_thread_started{false}; // set once in the constructor, read in the destructor (main thread)
+    std::atomic<bool> m_cancel_deferred{false}; // worker writes, main thread reads
+    std::atomic<bool> m_cancel_pending{false};
     ThreadData m_thread_data{};
     ProgressBoxDoneCallback m_done{};
     ProgressBoxCancelCallback m_cancel_cb{};
