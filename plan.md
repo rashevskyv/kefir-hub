@@ -89,7 +89,7 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       Four files dropped at once work; a folder does not. MTP sends `SendObjectInfo` with format Association (0x3001)
       for the directory, then children. Check the device-root/SD route (`haze_fs_proxy.cpp`, `haze_game_proxy.cpp`,
       v0.13.913 routing) for missing directory creation / parent-handle mapping. **Re-run:** A2 (nested folder, 3+ files).
-- [ ] H4 **New ZIP backup not listed in «Бекапи» (B2).** Backup written to `/dumps` (user's dump folder, v0.13.905)
+- [x] H4 **New ZIP backup not listed in «Бекапи» (B2).** Backup written to `/dumps` (user's dump folder, v0.13.905)
       and visible in the file browser, but the Backups tab does not show it. Check the library scanner roots
       (`source/ui/menus/save/save_locations.cpp`, `save_backup_library*`): does it scan the configured dump folder or a
       hard-coded path? Is there a cache that is not invalidated after a backup? Facts: the backup in question is `/dumps/12Switch/20261001/01000320000CC000_D_20261001191222_0.zip` (892 bytes, type `_D_` = Device save; the other backups are `_A_`), `kefir-config.ini` has `[saves] show_backups=0` and `default_backup_location=sd||/dumps`. Check whether Device-type backups are filtered out of the Backups tab and what `show_backups` gates. **Re-run:** B1 → B2.

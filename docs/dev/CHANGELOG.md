@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.937 — empty saves are not written as invisible backups (H4)
+The /dumps/12Switch archive (892 bytes, Device save) holds only DBI metadata: an empty save still produced a ZIP because the root collection always exists, and the Backups tab drops archives without payload (restore refuses them too). BackupSaveInternal now skips a save with no files or folders, and the toast says "No save data found for this title" when nothing was written. Device backups are not filtered and `show_backups` only gates the mixed view. host tests: pass · nro: not built · switch: pending (B1 → B2)
 ## v0.13.936 — PC-side MTP cancel closes the box and drops the partial file (H2)
 scratch/A4.txt: Windows ends the data phase with a short packet, so libhaze saw a normal EOT, kept a truncated file (116 MB of 443 MB) and reported success; the ProgressBox then waited out its 1.5 s idle window. SendObject now treats EOT before the declared size as a host cancel: WriteEnd is reported aborted (box closes at once), the partial file is deleted, the response is IncompleteTransfer (libhaze patch 23 + ops_so_body_new_tail). host tests: pass · nro: built (checkpoint v0.13.936) · switch: pending (A4, A1, A8)
 ## v0.13.935 — MTP survives a Switch-side cancel (H1)

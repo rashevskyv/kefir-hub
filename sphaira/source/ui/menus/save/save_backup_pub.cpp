@@ -62,7 +62,9 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
         App::PushErrorBox(rc, "Backup failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
-            App::Notify("Backup successful!"_i18n);
+            // empty saves are skipped, so a successful run may have written nothing.
+            const bool any_created = std::ranges::any_of(*created_paths, [](const auto& p) { return !p.empty(); });
+            App::Notify(any_created ? "Backup successful!"_i18n : "No save data found for this title"_i18n);
 
             if (App::GetSaveAutosync()) {
                 const auto webdav_locations = GetWebdavLocations();
@@ -348,8 +350,13 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     filebrowser::FsDirCollections collections;
     R_TRY(filebrowser::FsView::get_collections(&save_fs, "/", "", collections));
 
-    // the save file may be empty, this isn't an error, but we exit early.
-    R_UNLESS(!collections.empty(), 0x0);
+    // the save file may be empty, this isn't an error, but we exit early: a
+    // metadata-only archive is hidden by the backup library and refused on restore.
+    // (the root collection always exists, so look at what it holds.)
+    const bool has_payload = std::ranges::any_of(collections, [](const auto& c) {
+        return !c.files.empty() || !c.dirs.empty();
+    });
+    R_UNLESS(has_payload, 0x0);
 
     // non-system saves are written in the dbi backup format so that DBI can
     // restore them and vice versa. system saves keep the sphaira format.
