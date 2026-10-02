@@ -1,7 +1,7 @@
 # plan.md — work queue
 
-## Поточний delivery: v0.13.934
-Попередній: v0.13.933
+## Поточний delivery: v0.13.936
+Попередній: v0.13.935
 
 Source: `docs/dev/AUDIT-2026-10-01.md` (findings F1–F10). Baseline v0.13.922, commit `0c80cdd4`.
 Rules: `AGENTS.md`. One task ≈ one session ≈ one commit. Do tasks in order inside a phase; phases in order.
