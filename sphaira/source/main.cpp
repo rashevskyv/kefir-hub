@@ -8,11 +8,9 @@
 #include "web.hpp"
 
 int main(int argc, char** argv) {
-    if (!argc || !argv) {
-        return 1;
-    }
-
-    auto app = std::make_unique<sphaira::App>(argv[0]);
+    // hbloader always passes our path; an emulator (Eden) starts the .nro with no argv.
+    static char default_path[] = "sdmc:/switch/kefir-hub.nro";
+    auto app = std::make_unique<sphaira::App>(argc && argv ? argv[0] : default_path);
     app->Loop();
     return 0;
 }
@@ -177,7 +175,9 @@ void userAppInit(void) {
         if (R_FAILED(rc = nifmInitialize(NifmServiceType_User)))
             diagAbortWithResult(rc);
     }
-    if (R_FAILED(rc = accountInitialize(is_application ? AccountServiceType_Application : AccountServiceType_System)))
+    // acc:u0 needs a launch property, which an emulator does not give an .nro: fall back to acc:u1.
+    if (R_FAILED(rc = accountInitialize(is_application ? AccountServiceType_Application : AccountServiceType_System)) &&
+        R_FAILED(rc = accountInitialize(AccountServiceType_System)))
         diagAbortWithResult(rc);
     if (R_FAILED(rc = setInitialize()))
         diagAbortWithResult(rc);
