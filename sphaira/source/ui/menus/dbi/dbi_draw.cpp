@@ -1,6 +1,7 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi/dbi_internal.hpp"
+#include "ui/menus/dbi/usb_status_text.hpp"
 #include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
@@ -68,18 +69,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         // Draw USB Status Pill/Badge at y = 180.f
         {
-            std::string usb_status_text;
-            if (state == State::WaitingForUsb && usb_state == UsbState_Detached) {
-                usb_status_text = is_usb3
-                    ? "USB 3.0 Enabled · Waiting for PC connection"_i18n
-                    : "USB 2.0 · Waiting for PC connection"_i18n;
-            } else if (is_super_speed) {
-                usb_status_text = "USB 3.0 SuperSpeed (5 Gbps)"_i18n;
-            } else if (is_usb3_forced) {
-                usb_status_text = "USB 3.0 Enabled · Link: USB 2.0 High Speed (480 Mbps)"_i18n;
-            } else {
-                usb_status_text = "USB 2.0 High Speed (480 Mbps)"_i18n;
-            }
+            const std::string usb_status_text = i18n::get(UsbStatusTextKey(
+                state == State::WaitingForUsb && usb_state == UsbState_Detached, is_super_speed, is_usb3_forced));
 
             const float badge_h = 36.f;
             const float badge_y = 180.f;
@@ -139,7 +130,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         if (!m_local_fs && App::IsApplet()) {
             const auto warning = "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation."_i18n;
-            const float warn_y = std::max(text_bounds[3] + 35.f, 470.f);
+            const float warn_y = WaitingWarningY(text_bounds[3]);
             const float warn_w = 900.f;
             const float warn_x = (SCREEN_WIDTH - warn_w) / 2.f;
             const float warn_pad_y = 12.f;

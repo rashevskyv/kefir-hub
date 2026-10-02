@@ -21,6 +21,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.959 — USB waiting-screen test exercises the real code (2.8, 1 of 10)
+tests/test_usb3_indicator.cpp re-implemented the badge text choice and the warning-card position locally. Both now live in ui/menus/dbi/usb_status_text.hpp (UsbStatusTextKey, WaitingWarningY), dbi_draw.cpp calls them, and the test includes that header. No behaviour change: same five strings, same max(text bottom + 35, 470). Nine copy-tests remain in 2.8. host tests: pass · nro: not built · switch: pending (PC Install (USB) waiting screen shows the same badge text)
 ## v0.13.958 — fix the -Werror build (1.5)
 The first -Werror build failed on warnings my path filter had missed because they are reported inside dependency headers: save_restore_route.cpp included libhaze's internal `haze.hpp` (unused there), which redefined ON_SCOPE_EXIT/R_TRY/R_THROW/R_SUCCEED for the rest of that file and pulled in two vapours warnings — include removed; `-fdiagnostics-all-candidates` was passed to the two C sources — now C++ only. Clean `ReleaseWithInstall` build with -Werror, 0 first-party warnings. host tests: pass (--quick) · nro: built · switch: pending (no behaviour change)
 ## v0.13.957 — graph holes: net.hpp parses, the rest are marked (3.5)
