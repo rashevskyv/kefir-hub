@@ -1,4 +1,5 @@
-# libhaze patch recover: sections 21 to 23 (local abort re-enumerates MTP in device mode; host cancel drops the partial file)
+# libhaze patch recover: sections 21 to 24 (local abort re-enumerates MTP in device mode; host cancel
+# drops the partial file; SendObjectPropList is logged)
 
 # Replace `old` with `new` in `file` unless `marker` (a string only the new shape has) is present.
 function(haze_patch_once file marker old new label)
@@ -50,3 +51,17 @@ haze_patch_once("source/ptp_responder_ptp_operations.cpp"
     "            R_THROW(haze::ResultCancelled());\n        }\n\n        transfer_success = true;"
     "            R_THROW(haze::ResultCancelled());\n        }\n\n        /* sphaira: the host ended the data phase early (PC-side cancel); drop the partial file. */\n        if (has_known_size && offset < file_size) {\n            log_write(\"[LIBHAZE] host cancelled transfer: %s\\n\", obj->GetName());\n            R_RETURN(this->WriteResponse(PtpResponseCode_IncompleteTransfer));\n        }\n\n        transfer_success = true;"
     "ptp_responder_ptp_operations.cpp early-EOT abort")
+
+# --- 24. source/ptp_responder_mtp_operations.cpp : log every SendObjectPropList (plan H3) ---
+# A folder drop that "does nothing" left no trace; this names the object the host asked for.
+haze_patch_once("source/ptp_responder_mtp_operations.cpp"
+    "void log_write("
+    "#include <haze/ptp_responder_types.hpp>\n\nnamespace haze {"
+    "#include <haze/ptp_responder_types.hpp>\n\nextern \"C\" {\n    __attribute__((weak)) void log_write(const char* s, ...) {}\n}\n\nnamespace haze {"
+    "ptp_responder_mtp_operations.cpp log_write declaration")
+
+haze_patch_once("source/ptp_responder_mtp_operations.cpp"
+    "[LIBHAZE] SendObjectPropList"
+    "        /* sphaira: the storage root is the parent (no device-root routing). */"
+    "        log_write(\"[LIBHAZE] SendObjectPropList storage=%08X parent=%08X format=%04X name=%s\\n\", storage_id, parent_object, format_code, m_buffers->filename_string_buffer);\n\n        /* sphaira: the storage root is the parent (no device-root routing). */"
+    "ptp_responder_mtp_operations.cpp SendObjectPropList log")

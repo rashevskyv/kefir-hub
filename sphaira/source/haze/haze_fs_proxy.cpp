@@ -392,9 +392,9 @@ struct FsProxy final : FsProxyBase {
     }
 
     Result CreateDirectory(const char* path) override {
-        log_write("[HAZE] CreateDirectory(%s)\n", path);
         const auto fixed_path = FixPath(path);
         const auto rc = m_fs->CreateDirectory(fixed_path);
+        log_write("[HAZE] CreateDirectory(%s) 0x%X\n", path, rc);
         if (R_SUCCEEDED(rc)) {
             m_fs->Commit();
             ui::menu::homebrew::NotifyDirectoryCreated(fixed_path);

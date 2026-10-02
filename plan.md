@@ -89,6 +89,8 @@ Evidence already on disk (git-ignored `scratch/`): `scratch/log-saves-session-v9
       Four files dropped at once work; a folder does not. MTP sends `SendObjectInfo` with format Association (0x3001)
       for the directory, then children. Check the device-root/SD route (`haze_fs_proxy.cpp`, `haze_game_proxy.cpp`,
       v0.13.913 routing) for missing directory creation / parent-handle mapping. **Re-run:** A2 (nested folder, 3+ files).
+      <!-- blocked: needs scratch/A2.log (console log of a folder drop on v0.13.943+, which logs `[LIBHAZE] SendObjectPropList …` and `[HAZE] CreateDirectory(…) 0x…`); code path reads correct, v0.13.913 routing removed in H8 -->
+
 - [x] H4 **New ZIP backup not listed in «Бекапи» (B2).** Backup written to `/dumps` (user's dump folder, v0.13.905)
       and visible in the file browser, but the Backups tab does not show it. Check the library scanner roots
       (`source/ui/menus/save/save_locations.cpp`, `save_backup_library*`): does it scan the configured dump folder or a

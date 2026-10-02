@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.943 — log MTP object creation to diagnose the folder drop (H3, diagnostics only)
+No console log of a folder drop exists, and the code path reads correct (SendObjectPropList -> Association -> FsProxy::CreateDirectory), so no behaviour is changed. libhaze patch 24 logs every SendObjectPropList (storage, parent, format, name) and FsProxy::CreateDirectory logs its result: the next folder drop shows whether the host never asks, the parent lookup fails, or the directory create fails. H3 stays open. host tests: pass · nro: not built · switch: pending (A2 with a folder, then send log.txt)
 ## v0.13.942 — Backups tab shows source sections for games; DBI saves folder from dbi.config (H7)
 Sections by origin existed only for loose (system) backups: game tiles were put in one unlabeled section, so with game backups nothing was visible. ComputeGridSections now labels game sections too (Kefir Hub / DBI / JKSV / Checkpoint / Other); a game with several sources sits under its highest-precedence one. DBI root = `SavesFolder` from /switch/DBI/dbi.config (path::SdFolderFromConfigValue, host-tested), fallback /switch/DBI/saves; JKSV and Checkpoint roots unchanged. host tests: pass · nro: not built · switch: pending (B3)
 ## v0.13.941 — remove MTP device-root routing (H8)
