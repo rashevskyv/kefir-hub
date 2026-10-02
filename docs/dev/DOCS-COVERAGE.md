@@ -62,7 +62,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Install queue: review, buttons, progress, skip, cancel, summary, errors.txt | Install queue | dbi_*.cpp | install/sd-card#queue | doc |
 | Minimize to badge | L3 | app_frame.cpp:169-230 | install/sd-card#minimize | partial: L3 from menus on top |
 | Screen off during install | − | dbi_menu_options.cpp:249-334, screensaver.cpp | install/sd-card#screen-off | doc |
-| PC Install (USB): DBI Backend/Qt, ns-usbloader, Fluffy; live queue; USB speed badge | Tools + → PC Install (USB) | dbi_usb.cpp, yati/source/usb.cpp, dbi_plan.cpp | install/usb | partial: Windows driver, backend version |
+| PC Install (USB): DBI Backend/Qt, ns-usbloader, Fluffy; live queue; USB speed badge | Tools + → PC Install (USB) | dbi_usb.cpp, yati/source/usb.cpp, dbi_plan.cpp | install/usb | partial: backend version for live queue |
 | MTP install: auto start, storages, progress, cancel, .nro → /switch | PC Explorer | app_usb.cpp, install_stream*.cpp, haze_helper.cpp | install/mtp | partial: Windows-side behaviour |
 | Dump game card to NSP | Games → Dump | game_menu.cpp:217-244 | install/gamecard#dump | partial: card-only content |
 | Game card install / XCI dump menu | **unreachable** | gc_menu.cpp, gc_menu_ops.cpp | install/gamecard | none: no entry point (says "not available") |

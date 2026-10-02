@@ -14,8 +14,11 @@ Turn installing on first (see [Turn installing on](index.md#enable)).
 
 - A USB cable between the console and the PC.
 - One of the PC apps above. Its stream mode must be off: the console checks every package before installing, and a stream-mode app cannot send them that way.
-
-<!-- TODO(verify): does Windows need a USB driver (for example libusbK installed with Zadig) for these PC apps? Nothing in the code or README says so. -->
+- On Windows, a USB driver for the console. Windows has none of its own, so a PC app cannot open the console until one is installed.
+    - DBI Backend Qt 2.9.0 or newer installs the WinUSB driver itself. The first time it finds the console without a driver, it asks to install it and Windows asks for administrator permission once. You can also start it from **Help → Install USB Driver** in DBI Backend Qt.
+    - For ns-usbloader and Fluffy, install the driver as their instructions say (libusbK with Zadig).
+    - A driver you already installed with Zadig keeps working; DBI Backend Qt leaves it as it is.
+- On Linux, DBI Backend Qt offers to add a udev rule (it asks for your password) if your user cannot open the console. macOS needs nothing.
 
 ## Install games {#install}
 
@@ -58,6 +61,8 @@ With USB 3.0 turned on, the badge also shows if the cable or port only gives a U
 ## Problems {#problems}
 
 **The console stays on the waiting screen.** Check the cable, then start the transfer in the PC app. The console keeps looking for the PC until you press **B** ([[Cancel session]]).
+
+**The PC app does not find the console on Windows.** The USB driver is missing. In DBI Backend Qt, choose **Help → Install USB Driver** and allow the administrator prompt. If you declined the prompt or have no administrator rights, ask the PC's administrator to run it.
 
 **The PC app is in stream mode.** The console shows [[USB session failed]] and asks you to turn stream mode off. Turn it off in the PC app and open [[PC Install (USB)]] again.
 

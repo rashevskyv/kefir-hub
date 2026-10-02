@@ -4,6 +4,7 @@ Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
 ## unreleased
+- docs: install/usb requirements and site inc/zadig.txt — Windows USB driver now installed by DBI Backend Qt 2.9.0 (WinUSB), ns-usbloader/Fluffy still need libusbK via Zadig, udev rule on Linux; plan D.1 done.
 - docs: skill `update-docs` (.agents/skills, stub in .claude/skills; rule 5 in AGENTS.md) — how any agent keeps docs/site, screenshots, video scripts and the guide site in step with the code; tools/docs (eden.ps1, web-shot.mjs, check_site_links.py); label check warns about doc labels missing from the code; Console Transfer listed as under review.
 - docs: video tutorial scripts `docs/video/01..09` (scene table, UK+EN voiceover, draft subtitles via `docs/video/srt.py`); docs fixes from the site pass (Album needs R on Kefir, assoc ini, /firmware is cleared), uk docs use «папка».
 - docs: user docs site `docs/site` (MkDocs, EN+UK, 23 pages written from code); UI names as `[[en.json key]]` resolved from prod i18n per language (`tests/test_doc_labels_contract.py`); `shot` markers + `docs/site/shotlist.py` for screenshots; coverage map `docs/dev/DOCS-COVERAGE.md`, code findings `docs/dev/AUDIT-2026-10-02-docs.md`. docs build: pass; host tests: pass.
