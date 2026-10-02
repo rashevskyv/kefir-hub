@@ -117,6 +117,14 @@ struct ThreadData {
         }
     }
 
+    // a thread that never started will never clear its running flag; clear it here and
+    // fail the transfer so a thread that did start winds down.
+    void SetStartFailed(Result result, bool read_started, bool write_started) {
+        read_running = read_started;
+        write_running = write_started;
+        SetWriteResult(result);
+    }
+
     Result Pull(void* data, s64 size, u64* bytes_read);
     Result readFuncInternal();
     Result writeFuncInternal();
@@ -415,15 +423,25 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
         R_TRY(threadCreate(&t_write, writeFunc, std::addressof(t_data), nullptr, 1024*256, 0x3B, WRITE_THREAD_CORE));
         ON_SCOPE_EXIT(threadClose(&t_write));
 
+        bool read_started = false;
+        bool write_started = false;
         const auto start_threads = [&]() -> Result {
             log_write("starting threads\n");
-            R_TRY(threadStart(std::addressof(t_read)));
-            R_TRY(threadStart(std::addressof(t_write)));
-            R_SUCCEED();
+            auto rc = threadStart(std::addressof(t_read));
+            read_started = R_SUCCEEDED(rc);
+            if (read_started) {
+                rc = threadStart(std::addressof(t_write));
+                write_started = R_SUCCEEDED(rc);
+            }
+            if (R_FAILED(rc)) {
+                t_data.SetStartFailed(rc, read_started, write_started);
+            }
+            return rc;
         };
 
-        ON_SCOPE_EXIT(threadWaitForExit(std::addressof(t_read)));
-        ON_SCOPE_EXIT(threadWaitForExit(std::addressof(t_write)));
+        // a thread that never started cannot be joined.
+        ON_SCOPE_EXIT(if (read_started) { threadWaitForExit(std::addressof(t_read)); });
+        ON_SCOPE_EXIT(if (write_started) { threadWaitForExit(std::addressof(t_write)); });
 
         if (sfunc) {
             log_write("[THREAD] doing sfuncn\n");
@@ -433,7 +451,9 @@ Result TransferInternal(ui::ProgressBox* pbox, s64 size, ReadCallback rfunc, Wri
             }));
         } else {
             log_write("[THREAD] doing normal\n");
-            R_TRY(start_threads());
+            // not R_TRY: a failed start is recorded in t_data and signals the done event,
+            // so the wait below ends at once and the common teardown returns that result.
+            start_threads();
             log_write("[THREAD] started threads\n");
 
             const auto waiter_progress = waiterForUEvent(t_data.GetProgressEvent());

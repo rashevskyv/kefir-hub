@@ -19,6 +19,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.947 — no join on a thread that never started (3.7d)
+ProgressBox, the download queue/workers and the threaded transfer core checked threadStart only for logging (or returned early) and then called threadWaitForExit on a thread that never ran — a hang on the error path. Each now records whether the thread started and joins only then; ProgressBox reports the failure through its done callback and closes, the transfer core clears the running flag of the missing thread and returns the start error through its normal teardown. host tests: pass (--quick) · nro: not built · switch: pending (smoke: any transfer, a download, app exit)
 ## v0.13.946 — bounded path append in recursive directory creation (3.7c)
 fs.cpp CreateDirectoryRecursively appended each component with `strncat(path, dir, dir.size())` (bounded by the source, not the destination); it now uses FsPath::operator+=(string_view), which clamps to FS_MAX_PATH-1 and logs a truncation. host tests: pass (--quick) · nro: not built · switch: pending (smoke: create nested folders)
 ## v0.13.945 — bounded fallback NRO name (3.7b)

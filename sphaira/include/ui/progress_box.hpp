@@ -134,6 +134,7 @@ private:
     UEvent m_uevent{};
     Mutex m_mutex{};
     Thread m_thread{};
+    bool m_thread_started{false}; // set once in the constructor, read in the destructor (main thread)
     ThreadData m_thread_data{};
     ProgressBoxDoneCallback m_done{};
     ProgressBoxCancelCallback m_cancel_cb{};

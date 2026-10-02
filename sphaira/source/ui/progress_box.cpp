@@ -50,11 +50,19 @@ ProgressBox::ProgressBox(int image, const std::string& action, const std::string
     m_cpuid = cpuid;
     m_thread_data.pbox = this;
     m_thread_data.callback = callback;
-    if (R_FAILED(threadCreate(&m_thread, threadFunc, &m_thread_data, nullptr, stack_size, prio, cpuid))) {
-        log_write("failed to create thead\n");
+    auto rc = threadCreate(&m_thread, threadFunc, &m_thread_data, nullptr, stack_size, prio, cpuid);
+    if (R_SUCCEEDED(rc)) {
+        rc = threadStart(&m_thread);
+        if (R_FAILED(rc)) {
+            threadClose(&m_thread);
+        }
     }
-    if (R_FAILED(threadStart(&m_thread))) {
-        log_write("failed to start thread\n");
+    m_thread_started = R_SUCCEEDED(rc);
+    if (!m_thread_started) {
+        // the callback never runs: hand the failure to m_done and let the box close.
+        log_write("failed to create or start thread: 0x%X\n", rc);
+        m_thread_data.result = rc;
+        RequestExit();
     }
 }
 
@@ -79,11 +87,14 @@ ProgressBox::~ProgressBox() {
     ueventSignal(GetCancelEvent());
     m_stop_source.request_stop();
 
-    if (R_FAILED(threadWaitForExit(&m_thread))) {
-        log_write("failed to join thread\n");
-    }
-    if (R_FAILED(threadClose(&m_thread))) {
-        log_write("failed to close thread\n");
+    // a thread that never started can be neither joined nor closed.
+    if (m_thread_started) {
+        if (R_FAILED(threadWaitForExit(&m_thread))) {
+            log_write("failed to join thread\n");
+        }
+        if (R_FAILED(threadClose(&m_thread))) {
+            log_write("failed to close thread\n");
+        }
     }
 
     FreeImage();

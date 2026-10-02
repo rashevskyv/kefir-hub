@@ -26,15 +26,26 @@ struct ThreadEntry {
 
         ueventCreate(&m_uevent, true);
         R_TRY(threadCreate(&m_thread, ThreadFunc, this, nullptr, 1024*32, THREAD_PRIO, THREAD_CORE));
-        R_TRY(svcSetThreadCoreMask(m_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE)));
-        R_TRY(threadStart(&m_thread));
+        auto rc = svcSetThreadCoreMask(m_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE));
+        if (R_SUCCEEDED(rc)) {
+            rc = threadStart(&m_thread);
+        }
+        if (R_FAILED(rc)) {
+            threadClose(&m_thread);
+            return rc;
+        }
+        m_started = true;
         R_SUCCEED();
     }
 
     void Close() {
         ueventSignal(&m_uevent);
-        threadWaitForExit(&m_thread);
-        threadClose(&m_thread);
+        // a thread that never started can be neither joined nor closed again.
+        if (m_started) {
+            threadWaitForExit(&m_thread);
+            threadClose(&m_thread);
+            m_started = false;
+        }
         if (m_curl) {
             curl_easy_cleanup(m_curl);
             m_curl = nullptr;
@@ -64,6 +75,7 @@ struct ThreadEntry {
 
     CURL* m_curl{};
     Thread m_thread{};
+    bool m_started{false}; // Create()/Close() only (main thread)
     Api m_api{};
     std::atomic_bool m_in_progress{};
     Mutex m_mutex{};
@@ -78,20 +90,29 @@ struct ThreadQueueEntry {
 struct ThreadQueue {
     std::deque<ThreadQueueEntry> m_entries;
     Thread m_thread;
+    bool m_started{false}; // Create()/Close() only (main thread)
     Mutex m_mutex{};
     UEvent m_uevent{};
 
     auto Create() -> Result {
         ueventCreate(&m_uevent, true);
         R_TRY(threadCreate(&m_thread, ThreadFunc, this, nullptr, 1024*32, THREAD_PRIO, THREAD_CORE));
-        R_TRY(threadStart(&m_thread));
+        if (const auto rc = threadStart(&m_thread); R_FAILED(rc)) {
+            threadClose(&m_thread);
+            return rc;
+        }
+        m_started = true;
         R_SUCCEED();
     }
 
     void Close() {
         ueventSignal(&m_uevent);
-        threadWaitForExit(&m_thread);
-        threadClose(&m_thread);
+        // a thread that never started can be neither joined nor closed again.
+        if (m_started) {
+            threadWaitForExit(&m_thread);
+            threadClose(&m_thread);
+            m_started = false;
+        }
     }
 
     auto Add(const Api& api, bool is_upload = false) -> bool {
