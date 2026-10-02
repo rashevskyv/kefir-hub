@@ -21,6 +21,8 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.958 — fix the -Werror build (1.5)
+The first -Werror build failed on warnings my path filter had missed because they are reported inside dependency headers: save_restore_route.cpp included libhaze's internal `haze.hpp` (unused there), which redefined ON_SCOPE_EXIT/R_TRY/R_THROW/R_SUCCEED for the rest of that file and pulled in two vapours warnings — include removed; `-fdiagnostics-all-candidates` was passed to the two C sources — now C++ only. Clean `ReleaseWithInstall` build with -Werror, 0 first-party warnings. host tests: pass (--quick) · nro: built · switch: pending (no behaviour change)
 ## v0.13.957 — graph holes: net.hpp parses, the rest are marked (3.5)
 net.hpp: the braced default argument `= {}` stopped the tree-sitter parser for the whole header; `= nullptr` is the same empty std::function and parses. defines.hpp (macro-generated enumerators), nxlink.h / ams_su.h (extern "C" brace under #ifdef in a C header) and hbl/source/main.c (attribute macro before the name) have no trivial rewrite and carry a `// graphify: parse stop` note. host tests: pass (--quick) · nro: not built · switch: pending (no behaviour change)
 ## v0.13.956 — warning-free first-party build with -Werror (1.2)

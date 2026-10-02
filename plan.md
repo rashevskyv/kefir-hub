@@ -58,7 +58,7 @@ Each task has **Do**, **Done when** (verifiable), **Verify** (command). Tick `[x
       **Verify:** `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` exits 0.
 - [x] 1.4 `[USER]` **Hardware baseline.** *(done on v0.13.934, 2026-10-01 — results in the checklist; failures became Phase H)* Flash the 1.1 NRO and run `docs/dev/HARDWARE-CHECKLIST.md` sections A–C.
       Record pass/fail per item in the checklist file. This is the baseline for Phase 3.2 — do not start 3.2 before it.
-- [ ] 1.5 Build checkpoint + commit(s) `v0.13.9XX: warning-free first-party build with -Werror`.
+- [x] 1.5 Build checkpoint + commit(s) `v0.13.9XX: warning-free first-party build with -Werror`.
 
 ## Phase H — bugs found on hardware (baseline v0.13.934, see `docs/dev/HARDWARE-CHECKLIST.md`)
 

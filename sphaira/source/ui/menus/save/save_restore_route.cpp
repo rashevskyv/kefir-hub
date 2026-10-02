@@ -1,7 +1,6 @@
 #include "ui/menus/save_menu.hpp"
 #include "app.hpp"
 #include "fs.hpp"
-#include "haze.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 #include "ui/option_box.hpp"

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.957)
+set(sphaira_VERSION 0.13.958)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -404,7 +404,8 @@ target_compile_options(sphaira PRIVATE
     -Wimplicit-fallthrough=5
     -Wsuggest-final-types
     -Wuninitialized
-    -fdiagnostics-all-candidates
+    # C++ only: the C compiler warns about this option (an error under -Werror).
+    $<$<COMPILE_LANGUAGE:CXX>:-fdiagnostics-all-candidates>
 )
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/sphaira_dependencies.cmake)
