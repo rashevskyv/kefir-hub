@@ -155,7 +155,7 @@ Result CreateDirectoryRecursively(FsFileSystem* fs, const FsPath& _path, bool ig
         if (dir.empty()) {
             continue;
         }
-        std::strncat(path, dir.data(), dir.size());
+        path += std::string_view{dir.data(), dir.size()}; // bounded by FsPath
         log_write("[FS] dir creation path is now: %s\n", path.s);
 
         if (fs) {
