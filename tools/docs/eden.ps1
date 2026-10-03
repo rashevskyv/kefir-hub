@@ -121,22 +121,22 @@ function Save-Recipe([string]$id, [string[]]$steps) {
   Write-Host "recipe saved: $id ($($steps.Count) steps)"
 }
 
-# The owner's own save backups on the Eden SD (real games and nicknames) must not show on docs shots. Hide-OwnData
+# The owner's own save backups and /games files on the Eden SD (real games and nicknames) must not show on docs shots. Hide-OwnData
 # moves every backup folder that does not come from docs/site/fixtures to $Hidden (same relative paths);
 # Restore-OwnData moves it back. Start-Hub hides, shoot.ps1 restores at the end: after a manual session run
 # Restore-OwnData yourself. Nothing is deleted.
 $Hidden = "$EdenDir\user\sdmc-hidden-by-docs"
-$BackupRoots = 'dumps', 'DBISaves', 'switch\DBI\saves', 'JKSV', 'switch\JKSV', 'switch\Checkpoint\saves', 'Checkpoint\saves'
+$BackupRoots = 'games', 'dumps', 'DBISaves', 'switch\DBI\saves', 'JKSV', 'switch\JKSV', 'switch\Checkpoint\saves', 'Checkpoint\saves'
 function Hide-OwnData {
   $n = 0
   $fixtures = "$Repo\docs\site\fixtures\sdmc"
   foreach ($root in $BackupRoots) {
     if (-not (Test-Path "$Sdmc\$root")) { continue }
     foreach ($item in Get-ChildItem -Force "$Sdmc\$root") {
-      if (Test-Path "$fixtures\$root\$($item.Name)") { continue }
+      if (Test-Path -LiteralPath "$fixtures\$root\$($item.Name)") { continue }
       $dest = "$Hidden\$root"
       New-Item -ItemType Directory -Force $dest | Out-Null
-      if (Test-Path "$dest\$($item.Name)") { throw "$dest\$($item.Name) already exists: run Restore-OwnData first" }
+      if (Test-Path -LiteralPath "$dest\$($item.Name)") { throw "$dest\$($item.Name) already exists: run Restore-OwnData first" }
       Move-Item -LiteralPath $item.FullName -Destination $dest
       $n++
     }
@@ -149,7 +149,7 @@ function Restore-OwnData {
     if (-not (Test-Path "$Hidden\$root")) { continue }
     New-Item -ItemType Directory -Force "$Sdmc\$root" | Out-Null
     foreach ($item in Get-ChildItem -Force "$Hidden\$root") {
-      if (Test-Path "$Sdmc\$root\$($item.Name)") { Write-Warning "kept hidden, name taken on the SD: $root\$($item.Name)"; continue }
+      if (Test-Path -LiteralPath "$Sdmc\$root\$($item.Name)") { Write-Warning "kept hidden, name taken on the SD: $root\$($item.Name)"; continue }
       Move-Item -LiteralPath $item.FullName -Destination "$Sdmc\$root"
     }
   }

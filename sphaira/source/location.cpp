@@ -10,6 +10,9 @@
 #include <minIni.h>
 #include <string>
 #include <usbhsfs.h>
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 namespace sphaira::location {
 namespace {
@@ -163,6 +166,12 @@ auto GetStdio(bool write) -> StdioEntries {
         log_write("\t[USBHSFS] %s vid:%04x pid:%04x name: %s serial: %s man: %s\n",
             e.name, e.vid, e.pid, e.product_name, e.serial_number, e.manufacturer);
     }
+#if DOCS_DEMO
+    // docs screenshots: a read-only folder on the SD plays a USB drive (Eden has no USB host).
+    if (!write) {
+        out.emplace_back(demo::USB_ROOT, "SanDisk Ultra Fit — 64.00 GB (exFAT)", ui::menu::filebrowser::FsEntryFlag_ReadOnly);
+    }
+#endif
 
     return out;
 }

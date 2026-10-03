@@ -19,6 +19,8 @@ struct Data {
     std::vector<Title> titles;
     s64 nand_free{};
     s64 nand_total{};
+    s64 sd_free{};
+    s64 sd_total{};
     bool emummc{};
 };
 
@@ -78,6 +80,9 @@ Data Load() {
     out.nand_free = yyjson_get_sint(yyjson_obj_get(nand, "free"));
     out.nand_total = yyjson_get_sint(yyjson_obj_get(nand, "total"));
     out.emummc = yyjson_get_bool(yyjson_obj_get(nand, "emummc"));
+    const auto sd = yyjson_obj_get(root, "sd");
+    out.sd_free = yyjson_get_sint(yyjson_obj_get(sd, "free"));
+    out.sd_total = yyjson_get_sint(yyjson_obj_get(sd, "total"));
 
     yyjson_doc_free(doc);
     log_write("[demo] %zu titles\n", out.titles.size());
@@ -172,6 +177,15 @@ void SetWifiProfiles(std::vector<wifi::WifiProfile>& out) {
     }
 }
 
+std::string DisplayPath(const std::string& path) {
+    const std::string_view root{USB_ROOT};
+    if (!path.starts_with(root)) {
+        return path;
+    }
+    const auto rest = path.substr(root.size());
+    return "ums0:" + (rest.empty() ? std::string{"/"} : rest);
+}
+
 bool NandSpace(s64* free, s64* total) {
     const auto& d = Get();
     if (d.nand_total <= 0) {
@@ -179,6 +193,16 @@ bool NandSpace(s64* free, s64* total) {
     }
     if (free) *free = d.nand_free;
     if (total) *total = d.nand_total;
+    return true;
+}
+
+bool SdSpace(s64* free, s64* total) {
+    const auto& d = Get();
+    if (d.sd_total <= 0) {
+        return false;
+    }
+    if (free) *free = d.sd_free;
+    if (total) *total = d.sd_total;
     return true;
 }
 

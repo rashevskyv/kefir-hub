@@ -373,6 +373,14 @@ void StartConsoleTransferShareNandBackups() {
 }
 
 void ConnectConsoleTransfer(std::function<void(const std::string& base_url)> on_connected) {
+#if DOCS_DEMO
+    // docs screenshots: Eden's keyboard opens outside the frame, so the fictional sending console is taken as
+    // typed; its replies are http fixtures (demo_http.cpp).
+    if (on_connected) {
+        on_connected("http://192.168.0.51:8080");
+    }
+    return;
+#endif
     net::RequireConnection([on_connected](){
         u32 ip{};
         std::string initial_prefix;

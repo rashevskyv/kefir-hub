@@ -21,6 +21,9 @@
 
 extern "C" NVGcontext* nvgCreateDk(nvg::DkRenderer* renderer, int flags);
 #include <minIni.h>
+#if DOCS_DEMO
+#include "demo/demo_scene.hpp"
+#endif
 #include <usbhsfs.h>
 #include <switch.h>
 
@@ -612,6 +615,9 @@ App::App(const char* argv0) {
     if (App::NeedsLanguageSelection()) {
         App::ShowInitialLanguageSelection();
     }
+#if DOCS_DEMO
+    demo::StartScene();
+#endif
     log_write("\n\tfinished app constructor, time taken: %.2fs %zums\n\n", ts.GetSecondsD(), ts.GetMs());
 }
 

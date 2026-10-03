@@ -1,6 +1,7 @@
 {
     "_comment": "Fictional games for DOCS_DEMO builds (docs screenshots). Read by sphaira/source/demo/. Sizes in bytes. user = index in the Eden profile list. build_id = what the cheat screens show; atmosphere/contents/<id>/cheats/ holds matching .txt files.",
     "nand": {"emummc": true, "total": 26843545600, "free": 19971178496},
+    "sd": {"total": 255850250240, "free": 168577458176},
     "titles": [
         {
             "id": "0100DE0000010000", "icon": "icons/stonks-tycoon.jpg", "build_id": "3F7A9C21D4E8B605",

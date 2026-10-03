@@ -28,6 +28,10 @@
 #include <optional>
 #include <ranges>
 
+#if DOCS_DEMO
+#include "demo/demo_scene.hpp"
+#endif
+
 namespace sphaira::ui::menu::dbi {
 void Menu::LocalThreadFunction() {
     m_state = State::Analysing;
@@ -59,6 +63,11 @@ void Menu::LocalThreadFunction() {
             entry.analysis_deferred = true;
             entry.analysis_result = 0;
             entry.analysis.source_size = listed_size;
+#if DOCS_DEMO
+            if (demo::IsBrokenPackage(entry.file_name)) {
+                entry.analysis_result = MAKERESULT(Module_Libnx, LibnxError_NotFound);
+            }
+#endif
         } else {
             yati::source::File source{m_local_fs, path};
             entry.analysis_result = source.GetOpenResult();

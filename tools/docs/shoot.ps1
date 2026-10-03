@@ -60,7 +60,8 @@ function Launch($id, $lang) {
   Set-HubIni demo scene "$($data.shots.$id.scene)"
   Set-HubLang $lang
   Start-Hub $Wait
-  $startup = if ($data.shots.$id.PSObject.Properties['startup']) { $data.shots.$id.startup } else { $data.startup }
+  # a scene opens on top of the startup dialogs, so it needs no startup steps unless the recipe names some.
+  $startup = if ($data.shots.$id.PSObject.Properties['startup']) { $data.shots.$id.startup } elseif ($data.shots.$id.scene) { @() } else { $data.startup }
   foreach ($s in @($startup)) { if ($s) { Step $s } }
 }
 function Take($id, $lang) {
@@ -75,8 +76,8 @@ foreach ($id in $ids) {
   if ($st -ne 'recipe') { $skipped += "$id ($st)"; continue }
   $todo = @($Lang | Where-Object { -not ($Missing -and (Test-Path "$Repo\docs\site\$_\img\$id.png")) })
   if (-not $todo.Count) { continue }
-  if ($data.shots.$id.PSObject.Properties['startup']) {
-    # its screen exists only right after a launch (a startup dialog): `lang` would rebuild it away.
+  if ($data.shots.$id.PSObject.Properties['startup'] -or $data.shots.$id.scene) {
+    # its screen exists only right after a launch (a scene, a startup dialog): `lang` would rebuild it away.
     foreach ($l in $todo) { Launch $id $l; Take $id $l }
     $scene = $null
     continue

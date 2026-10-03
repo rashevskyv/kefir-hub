@@ -1,392 +1,555 @@
 {
-    "startup":  [
-                    "B",
-                    "A"
-                ],
-    "shots":  {
-                  "index-tools-tab":  {
-                                          "steps":  [
-                                                        "R",
-                                                        "wait 1"
-                                                    ]
-                                      },
-                  "games-list":  {
-                                     "steps":  [
-                                                   "R",
-                                                   "wait 1",
-                                                   "Right",
-                                                   "A",
-                                                   "wait 1",
-                                                   "A",
-                                                   "wait 3"
-                                               ]
-                                 },
-                  "games-details":  {
-                                        "steps":  [
-                                                      "R",
-                                                      "wait 1",
-                                                      "Right",
-                                                      "A",
-                                                      "wait 1",
-                                                      "A",
-                                                      "wait 3",
-                                                      "Right",
-                                                      "A",
-                                                      "wait 3"
-                                                  ]
-                                    },
-                  "games-move-summary":  {
-                                             "steps":  [
-                                                           "R",
-                                                           "wait 1",
-                                                           "Right",
-                                                           "A",
-                                                           "wait 1",
-                                                           "A",
-                                                           "wait 3",
-                                                           "Right",
-                                                           "A",
-                                                           "wait 3",
-                                                           "Plus",
-                                                           "wait 1",
-                                                           "Down",
-                                                           "A",
-                                                           "wait 1.5"
-                                                       ]
-                                         },
-                  "cheats-files":  {
-                                       "steps":  [
-                                                     "R",
-                                                     "wait 1",
-                                                     "Right",
-                                                     "A",
-                                                     "wait 1",
-                                                     "Right 2",
-                                                     "A",
-                                                     "wait 2",
-                                                     "Down 4",
-                                                     "A",
-                                                     "wait 3",
-                                                     "A",
-                                                     "wait 2"
-                                                 ]
-                                   },
-                  "saves-list":  {
-                                     "steps":  [
-                                                   "R",
-                                                   "wait 1",
-                                                   "Right",
-                                                   "A",
-                                                   "wait 1",
-                                                   "Right",
-                                                   "A",
-                                                   "wait 4"
-                                               ]
-                                 },
-                  "saves-backup-options":  {
-                                               "steps":  [
-                                                             "R",
-                                                             "wait 1",
-                                                             "Right",
-                                                             "A",
-                                                             "wait 1",
-                                                             "Right",
-                                                             "A",
-                                                             "wait 4",
-                                                             "Right 2",
-                                                             "A",
-                                                             "wait 1.5",
-                                                             "A",
-                                                             "wait 1.5"
-                                                         ]
-                                           },
-                  "saves-select-backup":  {
-                                              "steps":  [
-                                                            "R",
-                                                            "wait 1",
-                                                            "Right",
-                                                            "A",
-                                                            "wait 1",
-                                                            "Right",
-                                                            "A",
-                                                            "wait 4",
-                                                            "A",
-                                                            "wait 1.5",
-                                                            "Down 2",
-                                                            "A",
-                                                            "wait 1.5",
-                                                            "A",
-                                                            "wait 2",
-                                                            "A",
-                                                            "wait 1.5"
-                                                        ]
-                                          },
-                  "saves-restore-confirm":  {
-                                                "steps":  [
-                                                              "R",
-                                                              "wait 1",
-                                                              "Right",
-                                                              "A",
-                                                              "wait 1",
-                                                              "Right",
-                                                              "A",
-                                                              "wait 4",
-                                                              "A",
-                                                              "wait 1.5",
-                                                              "Down 2",
-                                                              "A",
-                                                              "wait 1.5",
-                                                              "A",
-                                                              "wait 2",
-                                                              "A",
-                                                              "wait 1.5",
-                                                              "A",
-                                                              "wait 2"
-                                                          ]
-                                            },
-                  "saves-backup-group":  {
-                                             "steps":  [
-                                                           "R",
-                                                           "wait 1",
-                                                           "Right",
-                                                           "A",
-                                                           "wait 1",
-                                                           "Right",
-                                                           "A",
-                                                           "wait 4",
-                                                           "R 2",
-                                                           "wait 3"
-                                                       ]
-                                         },
-                  "users-list":  {
-                                     "steps":  [
-                                                   "R",
-                                                   "wait 1",
-                                                   "Down",
-                                                   "Right 2",
-                                                   "A",
-                                                   "wait 1.5",
-                                                   "Down 3",
-                                                   "A",
-                                                   "wait 2"
-                                               ]
-                                 },
-                  "users-delete-hold":  {
-                                            "steps":  [
-                                                          "R",
-                                                          "wait 1",
-                                                          "Down",
-                                                          "Right 2",
-                                                          "A",
-                                                          "wait 1.5",
-                                                          "Down 3",
-                                                          "A",
-                                                          "wait 2",
-                                                          "Right 2",
-                                                          "A",
-                                                          "wait 1.5",
-                                                          "Down 3",
-                                                          "A",
-                                                          "wait 1"
-                                                      ]
-                                        },
-                  "software-appstore-grid":  {
-                                                 "steps":  [
-                                                               "R",
-                                                               "wait 1",
-                                                               "Down",
-                                                               "Right",
-                                                               "A",
-                                                               "wait 1.5",
-                                                               "A",
-                                                               "wait 5"
-                                                           ]
-                                             },
-                  "software-appstore-entry":  {
-                                                  "steps":  [
-                                                                "R",
-                                                                "wait 1",
-                                                                "Down",
-                                                                "Right",
-                                                                "A",
-                                                                "wait 1.5",
-                                                                "A",
-                                                                "wait 5",
-                                                                "A",
-                                                                "wait 4"
-                                                            ]
-                                              },
-                  "themes-themezer-grid":  {
-                                               "steps":  [
-                                                             "R",
-                                                             "wait 1",
-                                                             "Right 2",
-                                                             "A",
-                                                             "wait 2",
-                                                             "A",
-                                                             "wait 3",
-                                                             "B",
-                                                             "wait 3"
-                                                         ]
-                                           },
-                  "updater-main":  {
-                                       "steps":  [
-                                                     "R",
-                                                     "wait 1",
-                                                     "Down",
-                                                     "A",
-                                                     "wait 5"
-                                                 ]
-                                   },
-                  "updater-changelog":  {
-                                            "steps":  [
-                                                          "R",
-                                                          "wait 1",
-                                                          "Down",
-                                                          "A",
-                                                          "wait 5",
-                                                          "A",
-                                                          "wait 3",
-                                                          "Down 3",
-                                                          "wait 1"
-                                                      ]
-                                        },
-                  "updater-downgrade-warning":  {
-                                                    "steps":  [
-                                                                  "R",
-                                                                  "wait 1",
-                                                                  "Down",
-                                                                  "A",
-                                                                  "wait 5",
-                                                                  "Down 2",
-                                                                  "A",
-                                                                  "wait 2"
-                                                              ]
-                                                },
-                  "updater-hub-update-prompt":  {
-                                                    "ini":  {
-                                                                "config.auto_update":  "2"
-                                                            },
-                                                    "startup":  [
-
-                                                                ],
-                                                    "steps":  [
-                                                                  "wait 2"
-                                                              ]
-                                                },
-                  "network-ownfoil-servers":  {
-                                                  "steps":  [
-                                                                "R",
-                                                                "wait 1",
-                                                                "Down",
-                                                                "Right",
-                                                                "A",
-                                                                "wait 1.5",
-                                                                "Down 2",
-                                                                "A",
-                                                                "wait 4",
-                                                                "X",
-                                                                "wait 1.5",
-                                                                "Down 4",
-                                                                "A",
-                                                                "wait 2",
-                                                                "Down",
-                                                                "A",
-                                                                "wait 4"
-                                                            ]
-                                              },
-                  "network-ownfoil-catalog":  {
-                                                  "steps":  [
-                                                                "R",
-                                                                "wait 1",
-                                                                "Down",
-                                                                "Right",
-                                                                "A",
-                                                                "wait 1.5",
-                                                                "Down 2",
-                                                                "A",
-                                                                "wait 4"
-                                                            ]
-                                              },
-                  "network-ownfoil-install-panel":  {
-                                                        "steps":  [
-                                                                      "R",
-                                                                      "wait 1",
-                                                                      "Down",
-                                                                      "Right",
-                                                                      "A",
-                                                                      "wait 1.5",
-                                                                      "Down 2",
-                                                                      "A",
-                                                                      "wait 4",
-                                                                      "A",
-                                                                      "wait 4",
-                                                                      "A",
-                                                                      "wait 2"
-                                                                  ]
-                                                    },
-                  "system-tools-wifi":  {
-                                            "steps":  [
-                                                          "R",
-                                                          "wait 1",
-                                                          "Down",
-                                                          "Right 2",
-                                                          "A",
-                                                          "wait 1.5",
-                                                          "Down 2",
-                                                          "A",
-                                                          "wait 2"
-                                                      ]
-                                        },
-                  "settings-about":  {
-                                         "steps":  [
-                                                       "R",
-                                                       "wait 1",
-                                                       "Down 2",
-                                                       "Right",
-                                                       "A",
-                                                       "wait 1.5",
-                                                       "Right",
-                                                       "Down 6",
-                                                       "A",
-                                                       "wait 3"
-                                                   ]
-                                     },
-                  "kefir-settings-translate":  {
-                                                   "steps":  [
-                                                                 "R",
-                                                                 "wait 1",
-                                                                 "Down 2",
-                                                                 "A",
-                                                                 "wait 2",
-                                                                 "Down 4",
-                                                                 "A",
-                                                                 "wait 2"
-                                                             ]
-                                               },
-                  "cheats-select":  {
-                                        "steps":  [
-                                                      "R",
-                                                      "wait 1",
-                                                      "Right",
-                                                      "A",
-                                                      "wait 1",
-                                                      "Right 2",
-                                                      "A",
-                                                      "wait 2",
-                                                      "Down 2",
-                                                      "A",
-                                                      "wait 3",
-                                                      "Right 2",
-                                                      "A",
-                                                      "wait 4",
-                                                      "A",
-                                                      "Down",
-                                                      "A",
-                                                      "Down",
-                                                      "A",
-                                                      "wait 1"
-                                                  ]
-                                    }
-              }
+    "startup": [
+        "B",
+        "A"
+    ],
+    "shots": {
+        "index-tools-tab": {
+            "steps": [
+                "R",
+                "wait 1"
+            ]
+        },
+        "games-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "A",
+                "wait 3"
+            ]
+        },
+        "games-details": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "A",
+                "wait 3",
+                "Right",
+                "A",
+                "wait 3"
+            ]
+        },
+        "games-move-summary": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "A",
+                "wait 3",
+                "Right",
+                "A",
+                "wait 3",
+                "Plus",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "cheats-files": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right 2",
+                "A",
+                "wait 2",
+                "Down 4",
+                "A",
+                "wait 3",
+                "A",
+                "wait 2"
+            ]
+        },
+        "saves-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 4"
+            ]
+        },
+        "saves-backup-options": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 4",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "saves-select-backup": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 4",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "saves-restore-confirm": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 4",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 2"
+            ]
+        },
+        "saves-backup-group": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 4",
+                "R 2",
+                "wait 3"
+            ]
+        },
+        "users-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2"
+            ]
+        },
+        "users-delete-hold": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 1"
+            ]
+        },
+        "software-appstore-grid": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 5"
+            ]
+        },
+        "software-appstore-entry": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 5",
+                "A",
+                "wait 4"
+            ]
+        },
+        "themes-themezer-grid": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right 2",
+                "A",
+                "wait 2",
+                "A",
+                "wait 3",
+                "B",
+                "wait 3"
+            ]
+        },
+        "updater-main": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 5"
+            ]
+        },
+        "updater-changelog": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 5",
+                "A",
+                "wait 3",
+                "Down 3",
+                "wait 1"
+            ]
+        },
+        "updater-downgrade-warning": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 5",
+                "Down 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "updater-hub-update-prompt": {
+            "ini": {
+                "config.auto_update": "2"
+            },
+            "startup": [],
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "network-ownfoil-servers": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 4",
+                "X",
+                "wait 1.5",
+                "Down 4",
+                "A",
+                "wait 2",
+                "Down",
+                "A",
+                "wait 4"
+            ]
+        },
+        "network-ownfoil-catalog": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 4"
+            ]
+        },
+        "network-ownfoil-install-panel": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 4",
+                "A",
+                "wait 4",
+                "A",
+                "wait 2"
+            ]
+        },
+        "system-tools-wifi": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "settings-about": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Right",
+                "Down 6",
+                "A",
+                "wait 3"
+            ]
+        },
+        "kefir-settings-translate": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "A",
+                "wait 2",
+                "Down 4",
+                "A",
+                "wait 2"
+            ]
+        },
+        "cheats-select": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right 2",
+                "A",
+                "wait 2",
+                "Down 2",
+                "A",
+                "wait 3",
+                "Right 2",
+                "A",
+                "wait 4",
+                "A",
+                "Down",
+                "A",
+                "Down",
+                "A",
+                "wait 1"
+            ]
+        },
+        "install-sd-card-queue-review": {
+            "scene": "install-review",
+            "steps": [
+                "wait 3"
+            ]
+        },
+        "install-sd-card-queue-progress": {
+            "scene": "install-progress",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "install-sd-card-minimized-badge": {
+            "scene": "install-minimized",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "install-sd-card-screensaver": {
+            "scene": "install-screensaver",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "install-sd-card-summary": {
+            "scene": "install-summary",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "install-mtp-progress": {
+            "scene": "install-mtp",
+            "steps": [
+                "wait 2"
+            ],
+            "startup": [
+                "B",
+                "A"
+            ]
+        },
+        "network-ftp-progress": {
+            "scene": "install-ftp",
+            "steps": [
+                "wait 2"
+            ],
+            "startup": [
+                "B",
+                "A"
+            ]
+        },
+        "install-usb-queue": {
+            "scene": "install-usb-queue",
+            "steps": [
+                "wait 3"
+            ]
+        },
+        "console-transfer-te-confirm": {
+            "scene": "te-confirm",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "software-extract-options": {
+            "scene": "extract-options",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "updater-firmware-confirm": {
+            "scene": "firmware-confirm",
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "console-transfer-ip-entry": {
+            "user": true
+        },
+        "install-usb-waiting": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Plus",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 3"
+            ]
+        },
+        "console-transfer-remote-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5",
+                "Up 5",
+                "A",
+                "wait 3"
+            ]
+        },
+        "install-gamecard-games-row": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "A",
+                "wait 4"
+            ]
+        },
+        "file-browser-sources": {
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 2",
+                "Plus",
+                "wait 2",
+                "Up 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 2"
+            ]
+        },
+        "file-browser-split": {
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 2",
+                "L3",
+                "wait 1.5",
+                "Right",
+                "Plus",
+                "wait 2",
+                "Up 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 1.5",
+                "Up",
+                "A",
+                "wait 3"
+            ]
+        },
+        "settings-sources": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 5",
+                "wait 1.5"
+            ]
+        }
+    }
 }

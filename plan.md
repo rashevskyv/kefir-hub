@@ -385,7 +385,7 @@ Rules for this phase:
       `updater-downgrade-warning`, `updater-hub-update-prompt`, `cheats-select` (CheatSlips reply; Build ID from S.1), `network-ownfoil-servers`, `network-ownfoil-catalog`,
       `network-ownfoil-install-panel`, `kefir-settings-translate`, `settings-about`, `system-tools-wifi`.
       Never let a demo action download or install for real: Install buttons on demo items may stop at the first prompt.
-- [ ] S.4 **Demo scenes.** `[demo] scene=<name>` in config.ini (written by `shoot.ps1` from the recipe's `"scene"`).
+- [x] S.4 **Demo scenes.** `[demo] scene=<name>` in config.ini (written by `shoot.ps1` from the recipe's `"scene"`).
       After the main menu is up, `demo::StartScene()` pushes the screen in a frozen state; no worker thread, no I/O.
       Install session: a `DemoSession` deriving `InstallSession` (`dbi_menu.hpp`) that fills `m_queue`, `m_log`,
       stats and state from a per-scene table (meme game file names) and never starts a transfer. Mode badges

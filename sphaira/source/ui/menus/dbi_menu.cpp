@@ -73,6 +73,11 @@ Menu::Menu(u32 flags) : InstallSession{"PC Install (USB)"_i18n, flags, Transport
     m_list->SetLayout(List::Layout::GRID);
     UpdateActions();
 
+#if DOCS_DEMO
+    // docs screenshots: Eden has no USB device stack, so the screen stays on "Waiting for PC".
+    return;
+#endif
+
     m_was_mtp_enabled = App::GetMtpEnable();
     if (m_was_mtp_enabled) {
         App::Notify("Disable MTP for usb install"_i18n);

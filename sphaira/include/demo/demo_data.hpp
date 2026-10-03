@@ -60,8 +60,15 @@ void AppendSaves(FsSaveDataSpaceId space, std::vector<FsSaveDataInfo>& out);
 // has no name and would read as a broken entry.
 void SetWifiProfiles(std::vector<wifi::WifiProfile>& out);
 
+// the demo USB drive (location.cpp) is a folder on the SD; header paths show it as "ums0:" like a real drive.
+constexpr const char* USB_ROOT = "sdmc:/config/kefir/demo/usb";
+std::string DisplayPath(const std::string& path);
+
 // NAND user partition space from titles.json "nand" (Eden has no BIS filesystem); false if absent.
 bool NandSpace(s64* free, s64* total);
+
+// microSD space from titles.json "sd" (Eden's emulated card is a few GB); false if absent.
+bool SdSpace(s64* free, s64* total);
 
 // header shows "EmuNAND" (titles.json "nand.emummc"); App::IsEmummc() itself is not changed.
 bool EmuNand();

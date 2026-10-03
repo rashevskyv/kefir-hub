@@ -578,6 +578,9 @@ void GetStorageSpaces(s64* nand_free, s64* nand_total, s64* sd_free, s64* sd_tot
             if (sd_free) *sd_free = 0;
             if (sd_total) *sd_total = 0;
         }
+#if DOCS_DEMO
+        sphaira::demo::SdSpace(sd_free, sd_total);
+#endif
     }
 }
 

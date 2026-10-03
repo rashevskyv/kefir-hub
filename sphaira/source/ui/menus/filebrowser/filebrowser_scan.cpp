@@ -71,6 +71,10 @@
 #include <algorithm>
 #include "ui/menus/filebrowser/filebrowser_internal.hpp"
 
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
+
 namespace sphaira::ui::menu::filebrowser {
 using namespace detail;
 
@@ -120,7 +124,11 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
     m_entries.clear();
     m_index = 0;
     m_list->SetYoff(0);
+#if DOCS_DEMO
+    m_menu->SetTitleSubHeading(demo::DisplayPath(m_path.toString()), true);
+#else
     m_menu->SetTitleSubHeading(m_path, true);
+#endif
     m_selected_count = 0;
 
     m_entries_index.clear();

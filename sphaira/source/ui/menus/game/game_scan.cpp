@@ -7,6 +7,9 @@
 #include "swkbd.hpp"
 #include "ui/progress_box.hpp"
 #include "yati/nx/ncm.hpp"
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 #include <algorithm>
 #include <cctype>
@@ -20,6 +23,14 @@
 namespace sphaira::ui::menu::game {
 
 void Menu::AppendGameCardEntries() {
+#if DOCS_DEMO
+    // titles.json "storage": "gamecard" plays the inserted card (Eden has no game card slot).
+    for (auto& e : m_entries) {
+        if (const auto t = demo::FindTitle(e.app_id); t && t->storage == NcmStorageId_GameCard) {
+            e.on_gamecard = true;
+        }
+    }
+#endif
     NcmContentMetaDatabase db{};
     if (R_FAILED(ncmOpenContentMetaDatabase(&db, NcmStorageId_GameCard))) {
         return;
