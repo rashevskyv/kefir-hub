@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.972)
+set(sphaira_VERSION 0.13.973)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -373,6 +373,7 @@ if (DOCS_DEMO)
     # fictional demo content for docs screenshots (plan Phase S); never in release presets.
     target_sources(sphaira PRIVATE
         source/demo/demo_data.cpp
+        source/demo/demo_input.cpp
         source/demo/demo_wrap.cpp
     )
     target_link_options(sphaira PRIVATE -Wl,--wrap=nsListApplicationRecord)

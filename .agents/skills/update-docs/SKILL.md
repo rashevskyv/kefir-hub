@@ -87,16 +87,18 @@ recipe gives the shot in every language. Record once, replay for any language.
    scenes; release builds never contain it. `shoot.ps1` copies `build/DocsDemo/kefir-hub.nro` into Eden by itself.
    Eden is portable: `E:\Switch\Eden\user` holds the keys, the firmware and the emulated microSD (`sdmc`).
 2. **Record a recipe** (new or changed screen). PowerShell: `. tools\docs\eden.ps1; Set-HubLang en; Start-Hub`,
-   then `Rec <id>`, navigate with `B <A|B|X|Y|L|R|ZL|ZR|Plus|Minus|L3|R3|Up|Down|Left|Right> [count]` and
+   then `Lang en` (fresh main screen, the state every recipe starts from), `Rec <id>`, navigate with `B <A|B|X|Y|L|R|ZL|ZR|Plus|Minus|L3|R3|Up|Down|Left|Right> [count]` and
    `W <seconds>` for loading, and finish with `Shot docs\site\en\img\<id>.png`. Shot saves the frame
-   (1280x720) and the recipe. Recipes start from a fresh launch: if you navigated before `Rec`, run
-   `Start-Hub` again and record from the first press. Steps run once at launch for every shot (a first-run
+   (1280x720) and the recipe. Recipes start from the main screen right after `Lang <code>`: if you navigated
+   before `Rec`, run `Lang en` again and record from the first press. Input goes through a file the DocsDemo Hub
+   reads (`sdmc/config/kefir/demo/input.txt`), so Eden works in the background and needs no clicks; a non-demo
+   .nro does not read it (`B`/`Shot` time out). Steps run once at launch for every shot (a first-run
    dialog) go into `"startup"` in shots.json. A screen that only a demo scene shows (install queue, MTP/FTP
    progress, ...) gets `"scene": "<name>"` in its entry; `shoot.ps1` sets `[demo] scene=<name>` before launch.
 3. **Replay for languages**: `powershell -ExecutionPolicy Bypass -File tools\docs\shoot.ps1 -Lang uk,en`
-   (add `-Only id1,id2` or `-Missing`; `-List` shows recipe status). It sets `[config] language=N` in the
-   Eden `config.ini`, launches the Hub for each shot and writes `docs/site/<lang>/img/<id>.png`.
-   Codes: en ja fr de it es zh ko nl pt ru se vi uk (the languages in `assets/romfs/i18n/`).
+   (add `-Only id1,id2` or `-Missing`; `-List` shows recipe status). It launches Eden once (again only for
+   another demo scene), runs `"startup"`, then for each shot loops the languages: `Lang <code>`, the recipe,
+   `docs/site/<lang>/img/<id>.png`. Codes = file names in `assets/romfs/i18n/` (en, uk, de, es419, ...).
    A new docs language needs no pages to get its shots: a folder `docs/site/<lang>/` with only `img/` builds
    with English text, that language's labels and its screenshots.
 4. **Look at every PNG** (open the image) and check it shows what the marker says in that language: right
@@ -125,7 +127,7 @@ Capture in title mode, and pulls the album from the Hub web page `/album`. Name 
   product fix: its own commit with a version bump, `tools/i18n-translate/context.json` for ambiguous keys.
 - Never wrap a string with `%s`/`%d` or a line break in `[[...]]`; describe it instead.
 - Emulator: never send keys with keybd_event/SendKeys/SendInput (they type into the user's foreground app).
-  Use only `B`, `W`, `Rec`, `Shot`, `Grab`, `Set-HubLang` from `tools/docs/eden.ps1` and `tools/docs/shoot.ps1`. Never install, delete or move real content, and
+  Use only `B`, `W`, `Lang`, `Rec`, `Shot`, `Grab`, `Set-HubLang` from `tools/docs/eden.ps1` and `tools/docs/shoot.ps1`. Never install, delete or move real content, and
   never link accounts, reboot, downgrade, change Kefir Settings, or send anything to the internet.
 - Never touch `D:\git\site\switch` (the live site's checkout, release commits land there), never switch
   branches in it, never push. Never commit `build/`.

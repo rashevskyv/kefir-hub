@@ -1,4 +1,14 @@
 {
-    "startup": [],
-    "shots": {}
+    "startup": [
+        "B",
+        "A"
+    ],
+    "shots": {
+        "index-tools-tab": {
+            "steps": [
+                "R",
+                "wait 1"
+            ]
+        }
+    }
 }

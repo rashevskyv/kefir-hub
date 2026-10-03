@@ -184,6 +184,10 @@ void CleanStaleOwnForwarders(u64 kefirhub_tid, u64 skip_tid) {
 }
 
 void NotifyUi(const Plan& plan) {
+#if DOCS_DEMO
+    // Eden: the old forwarder is "removed" on every launch and the notice would open every screenshot.
+    return;
+#endif
     const char* key = nullptr;
     switch (plan.notice) {
     case Notice::OldWillBeRemoved:

@@ -297,7 +297,7 @@ Rules for this phase:
       Also check whether the normal build reaches the network in Eden (App Store loads?) and write the answer in
       the CHANGELOG line: it decides S.3. **Done when:** Games shows the six titles (no icons yet is fine);
       `strings build/ReleaseWithInstall/kefir-hub.nro | grep -c __wrap_` → 0.
-- [ ] S.0b **Focus-free input + every language on one screen** (decided 2026-10-03, after S.0). Eden ignores
+- [x] S.0b **Focus-free input + every language on one screen** (decided 2026-10-03, after S.0). Eden ignores
       PostMessage keys while its window is not active, and Windows will not let a script activate it, so
       `eden.ps1`/`shoot.ps1` cannot drive the Hub unattended. (1) Input from a file: one `#if DOCS_DEMO` hook where
       `app_frame.cpp` polls the pad (`padGetButtonsDown`): each frame `demo::` reads queued commands from

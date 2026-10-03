@@ -1,24 +1,25 @@
 # Drive Kefir Hub in the Eden emulator and take docs screenshots (see .agents/skills/update-docs/SKILL.md).
 #   . tools\docs\eden.ps1
-#   Start-Hub                        # launch Eden with E:\Switch\Eden\user\sdmc\switch\kefir-hub.nro
-#   B A; B Down 3; B Plus            # press Switch buttons (posted to the Eden window; works unfocused)
-#   Shot docs\site\en\img\<id>.png   # console frame only, 1280x720
+#   Start-Hub                        # launch Eden with E:\Switch\Eden\user\sdmc\switch\kefir-hub.nro, wait until it runs
+#   B A; B Down 3; B Plus            # press Switch buttons
+#   W 2                              # let the Hub load something before the next press
+#   Shot docs\site\en\img\<id>.png   # waits until every press was handled, then saves the console frame, 1280x720
+#   Lang uk                          # switch the running Hub to another UI language, back on the main screen
 #   Grab out.png                     # whole Eden window, for debugging
 #   Set-HubLang uk                   # UI language for the next Start-Hub (writes sdmc/config/kefir/config.ini)
 #   Set-HubIni demo scene <name>     # DOCS_DEMO builds: open a frozen demo scene at start (empty value = none)
 #   Rec <id>; B ...; W 2; Shot ...   # record: the presses after Rec are saved as the recipe of <id> in
 #                                    # docs/site/shots.json when Shot runs; tools\docs\shoot.ps1 replays them
-# Keys go to the Eden window by PostMessage. Never send keys with keybd_event/SendKeys/SendInput: those type
-# into whatever window is in front, i.e. the user's other apps.
+# Input needs the DOCS_DEMO build (build/DocsDemo): presses go into sdmc/config/kefir/demo/input.txt and the Hub
+# reads them itself (sphaira/source/demo/demo_input.cpp), so Eden works in the background. Eden ignores keys
+# posted to its window unless it is the active one, and keybd_event/SendInput would type into the user's apps.
 param()
-Add-Type -AssemblyName System.Drawing, System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 Add-Type @"
 using System; using System.Runtime.InteropServices;
 public static class EdenW {
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
-  [DllImport("user32.dll")] public static extern uint MapVirtualKey(uint code, uint type);
   [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr hdc, uint flags);
-  [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
   [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr h, EnumProc cb, IntPtr l);
   public delegate bool EnumProc(IntPtr h, IntPtr l);
   public static System.Collections.Generic.List<IntPtr> Children(IntPtr p) {
@@ -32,9 +33,10 @@ $Sdmc = "$EdenDir\user\sdmc"
 $HubNro = "$Sdmc\switch\kefir-hub.nro"
 $Repo = (Resolve-Path "$PSScriptRoot\..\..").Path
 $ShotsJson = "$Repo\docs\site\shots.json"
-
-# Docs language code -> Kefir Hub [config] language index (sphaira/source/i18n.cpp, i18n::init).
-$HubLang = @{ en = 1; ja = 2; fr = 3; de = 4; it = 5; es = 6; zh = 7; ko = 8; nl = 9; pt = 10; ru = 11; se = 12; vi = 13; uk = 14 }
+$DemoDir = "$Sdmc\config\kefir\demo"
+$InputTxt = "$DemoDir\input.txt"
+$ReadyFile = "$DemoDir\ready"
+$Buttons = 'A', 'B', 'X', 'Y', 'L', 'R', 'ZL', 'ZR', 'Plus', 'Minus', 'L3', 'R3', 'Up', 'Down', 'Left', 'Right'
 
 # Set one key in the Hub config (sdmc/config/kefir/config.ini) for the next Start-Hub. Empty value removes the key.
 function Set-HubIni([string]$section, [string]$key, [string]$value) {
@@ -50,16 +52,59 @@ function Set-HubIni([string]$section, [string]$key, [string]$value) {
   [System.IO.File]::WriteAllLines($ini, $lines, (New-Object System.Text.UTF8Encoding $false))
 }
 
-# Set the Hub UI language for the next Start-Hub: [config] language=N.
-function Set-HubLang([string]$lang) {
-  if (-not $HubLang.ContainsKey($lang)) { throw "unknown language $lang (known: $($HubLang.Keys -join ', '))" }
-  Set-HubIni config language "$($HubLang[$lang])"
+# UI language code = the Hub translation file name (assets/romfs/i18n/<code>.json); docs languages use the same codes.
+function Assert-Lang([string]$lang) {
+  if (-not (Test-Path "$Repo\assets\romfs\i18n\$lang.json")) {
+    throw "unknown language $lang (known: $((Get-ChildItem "$Repo\assets\romfs\i18n\*.json").BaseName -join ', '))"
+  }
+}
+
+# UI language for the next Start-Hub: [config] language=<code>.
+function Set-HubLang([string]$lang) { Assert-Lang $lang; Set-HubIni config language $lang }
+
+# Queue lines for the Hub (demo_cmd.hpp). The Hub deletes input.txt when it has read it; wait for that first,
+# then write a temp file and rename it so the Hub never reads half a file.
+function Send([string[]]$lines, [int]$timeoutSec = 120) {
+  $t = [Diagnostics.Stopwatch]::StartNew()
+  while (Test-Path $InputTxt) {
+    if ($t.Elapsed.TotalSeconds -gt $timeoutSec) { throw "the Hub does not read $InputTxt (not a DocsDemo build, or not running)" }
+    Start-Sleep -Milliseconds 50
+  }
+  New-Item -ItemType Directory -Force $DemoDir | Out-Null
+  [System.IO.File]::WriteAllLines("$InputTxt.tmp", $lines)
+  Move-Item -Force "$InputTxt.tmp" $InputTxt
+}
+
+# Wait until the Hub has handled every queued line.
+function Sync([int]$timeoutSec = 120) {
+  Remove-Item $ReadyFile -ErrorAction SilentlyContinue
+  Send @('ready') $timeoutSec
+  $t = [Diagnostics.Stopwatch]::StartNew()
+  while (-not (Test-Path $ReadyFile)) {
+    if ($t.Elapsed.TotalSeconds -gt $timeoutSec) { throw "the Hub did not answer within $timeoutSec s" }
+    Start-Sleep -Milliseconds 50
+  }
+  Remove-Item $ReadyFile
 }
 
 # Recording. Rec <id> starts a recipe; B and W append to it; Shot saves it into docs/site/shots.json.
 $script:RecId = $null; $script:RecSteps = $null
 function Rec([string]$id) { $script:RecId = $id; $script:RecSteps = [System.Collections.Generic.List[string]]::new() }
-function W([double]$sec) { if ($script:RecId) { $script:RecSteps.Add("wait $sec") }; Start-Sleep -Milliseconds ([int]($sec * 1000)) }
+function W([double]$sec) {
+  $s = "wait $([string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0}', $sec))"
+  if ($script:RecId) { $script:RecSteps.Add($s) }
+  Send @($s)
+}
+
+# Press a Switch button $n times (the Hub paces presses 350 ms apart).
+function B([string]$button, [int]$n = 1) {
+  if ($button -cnotin $Buttons) { throw "unknown button $button (known: $($Buttons -join ', '))" }
+  if ($script:RecId) { $script:RecSteps.Add($(if ($n -eq 1) { $button } else { "$button $n" })) }
+  Send @(1..$n | ForEach-Object { $button })
+}
+
+# Switch the running Hub to another UI language: it rebuilds its menus on the main screen.
+function Lang([string]$lang) { Assert-Lang $lang; Send @("lang $lang"); Sync }
 
 function Read-Shots {
   if (Test-Path $ShotsJson) { Get-Content $ShotsJson -Raw -Encoding UTF8 | ConvertFrom-Json } else { [pscustomobject]@{ startup = @(); shots = [pscustomobject]@{} } }
@@ -77,10 +122,14 @@ function Save-Recipe([string]$id, [string[]]$steps) {
 
 function Win { (Get-Process eden -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1).MainWindowHandle }
 
-function Start-Hub([int]$waitSec = 25) {
+# Launch Eden and wait until the Hub reads input (startup dialogs are the recipe's "startup" steps).
+function Start-Hub([int]$waitSec = 90) {
   Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
+  Start-Sleep -Milliseconds 500
+  Remove-Item $InputTxt, "$InputTxt.tmp", $ReadyFile -ErrorAction SilentlyContinue
   Start-Process -FilePath "$EdenDir\eden.exe" -ArgumentList '-g', "`"$HubNro`"" -WorkingDirectory $EdenDir
-  Start-Sleep $waitSec
+  Sync $waitSec
+  Start-Sleep 1  # first frames after the dialogs open
 }
 
 # Whole window via PrintWindow (works when other windows cover it).
@@ -95,6 +144,8 @@ function Grab([string]$path) {
 
 # Console frame only: the largest child window is the render widget; the 16:9 picture is centred in it.
 function Shot([string]$path) {
+  Sync
+  Start-Sleep -Milliseconds 300  # the frame after the last press
   $h = Win; $best = $null; $area = 0
   foreach ($c in [EdenW]::Children($h)) {
     $r = New-Object EdenW+RECT; [EdenW]::GetWindowRect($c, [ref]$r) | Out-Null
@@ -116,22 +167,4 @@ function Shot([string]$path) {
   $out.Save($dest, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose()
   if ($script:RecId) { Save-Recipe $script:RecId $script:RecSteps.ToArray(); $script:RecId = $null }
   $path
-}
-
-# Eden keyboard map (user\config\qt-config.ini, player_0_button_*).
-$Btn = @{ A = 'C'; B = 'X'; X = 'V'; Y = 'Z'; L = 'Q'; R = 'E'; ZL = 'R'; ZR = 'T'; Plus = 'M'; Minus = 'N'; L3 = 'F'; R3 = 'G'
-          Up = 'Up'; Down = 'Down'; Left = 'Left'; Right = 'Right' }
-
-# Press a Switch button $n times: WM_KEYDOWN/WM_KEYUP posted to the Eden window.
-function B([string]$button, [int]$n = 1, [int]$gapMs = 350) {
-  $h = Win; if (-not $h) { throw "no Eden window" }
-  $key = $Btn[$button]; if (-not $key) { throw "unknown button $button" }
-  if ($script:RecId) { $script:RecSteps.Add($(if ($n -eq 1) { $button } else { "$button $n" })) }
-  $vk = [int][System.Windows.Forms.Keys]::$key; $scan = [int][EdenW]::MapVirtualKey($vk, 0)
-  $ext = if ($key -in 'Up', 'Down', 'Left', 'Right') { 1 -shl 24 } else { 0 }
-  for ($i = 0; $i -lt $n; $i++) {
-    [EdenW]::PostMessage($h, 0x100, [IntPtr]$vk, [IntPtr](1 -bor ($scan -shl 16) -bor $ext)) | Out-Null; Start-Sleep -Milliseconds 80
-    [EdenW]::PostMessage($h, 0x101, [IntPtr]$vk, [IntPtr](1 -bor ($scan -shl 16) -bor $ext -bor (3 -shl 30))) | Out-Null
-    Start-Sleep -Milliseconds $gapMs
-  }
 }

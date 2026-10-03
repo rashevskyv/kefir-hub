@@ -5,10 +5,12 @@
 #   ... -List                                                                            # recipe status, no emulator
 # Output: docs/site/<lang>/img/<id>.png (1280x720). A recipe is recorded once with eden.ps1 (Rec/B/W/Shot) and
 # then works for every language, because it is a list of button presses, not of labels.
-# Each shot starts from a fresh Hub launch. Before the run: the DOCS_DEMO build (build/DocsDemo/kefir-hub.nro, if
-# present; -Nro to override) is copied into Eden, and docs/site/fixtures/sdmc/ over the Eden sdmc.
+# Eden is launched once (again only when a recipe needs another demo scene). For each shot, every language in turn:
+# `lang <code>` puts the running Hub on a fresh main screen in that language, the recipe is replayed, the frame is
+# saved, then the next language. Eden can stay in the background. Before the run: the DOCS_DEMO build
+# (build/DocsDemo/kefir-hub.nro; -Nro to override) is copied into Eden, and docs/site/fixtures/sdmc/ over the Eden sdmc.
 # A recipe may name a demo scene ("scene": "<name>", DOCS_DEMO builds only); it is set as [demo] scene=<name>.
-param([string[]]$Lang = @('en'), [string[]]$Only = @(), [switch]$Missing, [int]$Wait = 25, [switch]$List,
+param([string[]]$Lang = @('en'), [string[]]$Only = @(), [switch]$Missing, [int]$Wait = 90, [switch]$List,
       [string]$Nro = '')
 $ErrorActionPreference = 'Stop'
 # powershell -File passes "uk,en" as one string
@@ -32,7 +34,7 @@ if ($List) {
 
 function Step([string]$s) {
   $p = $s.Trim() -split '\s+'
-  if ($p[0] -eq 'wait') { Start-Sleep -Milliseconds ([int]([double]$p[1] * 1000)); return }
+  if ($p[0] -eq 'wait') { W ([double]::Parse($p[1], [Globalization.CultureInfo]::InvariantCulture)); return }
   if ($p.Count -gt 1) { B $p[0] ([int]$p[1]) } else { B $p[0] }
 }
 
@@ -42,20 +44,25 @@ if (Test-Path $Nro) { Copy-Item $Nro $HubNro -Force; Write-Host "hub: $Nro" } el
 $fixtures = "$Repo\docs\site\fixtures\sdmc"
 if (Test-Path $fixtures) { Copy-Item "$fixtures\*" $Sdmc -Recurse -Force }
 
-$taken = 0; $skipped = @()
-foreach ($l in $Lang) {
-  Set-HubLang $l
-  foreach ($id in $ids) {
-    $st = Status $id
-    if ($st -ne 'recipe') { $skipped += "$l/$id ($st)"; continue }
-    $png = "$Repo\docs\site\$l\img\$id.png"
-    if ($Missing -and (Test-Path $png)) { continue }
-    Set-HubIni demo scene "$($data.shots.$id.scene)"
+$Lang | ForEach-Object { Assert-Lang $_ }
+$taken = 0; $skipped = @(); $scene = $null
+foreach ($id in $ids) {
+  $st = Status $id
+  if ($st -ne 'recipe') { $skipped += "$id ($st)"; continue }
+  $todo = @($Lang | Where-Object { -not ($Missing -and (Test-Path "$Repo\docs\site\$_\img\$id.png")) })
+  if (-not $todo.Count) { continue }
+  $want = "$($data.shots.$id.scene)"
+  if ($want -ne $scene) {
+    Set-HubIni demo scene $want
+    Set-HubLang $todo[0]
     Start-Hub $Wait
     foreach ($s in @($data.startup)) { if ($s) { Step $s } }
+    $scene = $want
+  }
+  foreach ($l in $todo) {
+    Lang $l
     foreach ($s in $data.shots.$id.steps) { Step $s }
-    Start-Sleep -Milliseconds 800
-    Shot $png | Out-Null
+    Shot "$Repo\docs\site\$l\img\$id.png" | Out-Null
     $taken++; Write-Host "shot $l/$id"
   }
 }

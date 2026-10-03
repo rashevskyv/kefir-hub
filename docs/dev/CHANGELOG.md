@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.973 — DocsDemo: focus-free Eden input, every language on one screen (Phase S.0b)
+- DOCS_DEMO only: the Hub reads button presses from `sdmc:/config/kefir/demo/input.txt` (`demo/demo_input.cpp`, one hook in `App::Poll`; commands `demo_cmd.hpp`: buttons, `wait`, `lang <code>` = new language + menus rebuilt on the main screen, `ready`); the old-forwarder notice is skipped. `eden.ps1` B/W/Shot/Lang go through that file (PostMessage removed), `Set-HubLang` writes language codes; `shoot.ps1` launches Eden once and loops the languages per shot. Recipe `index-tools-tab` + startup steps in shots.json.
+- Checked: `shoot.ps1 -Lang en,uk -Only index-tools-tab` with Eden in the background, no clicks: both PNGs, correct labels per language, EmuNAND row (PNGs not committed, S.6 retakes all).
+- host tests: pass (new tests/test_demo_cmd.cpp) · nro: built (DocsDemo, ReleaseWithInstall) · switch: n/a (release path unchanged when OFF)
+
 ## v0.13.972 — DocsDemo build switch (Phase S.0)
 - `option(DOCS_DEMO OFF)` + `DocsDemo` preset (build/DocsDemo/kefir-hub.nro); `source/demo/`: titles.json read once, `-Wl,--wrap=nsListApplicationRecord` appends the six demo ids after the real records. Eden has no BIS fs (fsp-srv cmd 11), so the header had no NAND row: `#if DOCS_DEMO` hooks in `fs::GetStorageSpaces` (NAND space from titles.json `nand`) and the header EmuNAND label (App::IsEmummc unchanged). `nm`: demo symbols only in DocsDemo ELF, 0 in ReleaseWithInstall (the planned `strings nro | grep __wrap_` is 0 for both: nro has no symbols).
 - Eden network (decides S.3): DNS and TCP work, HTTPS fails in the handshake (`code: 0 SSL connect error`, Eden ssl service) in the normal build; App Store screen itself not opened (Eden needs window focus for keys: PostMessage alone is ignored while unfocused). Games in Eden: 6 entries (ids, placeholder icons), EmuNAND 18.60 GB row shown.
