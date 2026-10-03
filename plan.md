@@ -306,7 +306,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [ ] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.
-- [ ] F.12 **MTP "Installed games": add a mods folder** per game (`atmosphere/contents/<TitleID>`; DBI "Mods &
+- [x] F.12 **MTP "Installed games": add a mods folder** per game (`atmosphere/contents/<TitleID>`; DBI "Mods &
       cheats"). NSP and combined NSP already exist.
 - [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
 
