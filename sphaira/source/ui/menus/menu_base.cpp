@@ -11,6 +11,9 @@
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 #include "utils/utils.hpp"
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 #include <switch.h>
 #include <algorithm>
@@ -82,6 +85,9 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         }
         data.usb3_enabled = s_cached_usb3_enabled;
         data.is_emummc = App::IsEmummc();
+#if DOCS_DEMO
+        data.is_emummc = data.is_emummc || demo::EmuNand();
+#endif
 
         const auto t = std::time(NULL) + ntp::GetDisplayOffset();
         localtime_r(&t, &data.tm);

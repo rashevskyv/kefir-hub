@@ -31,6 +31,12 @@
             }
         },
         {
+            "name": "DocsDemo",
+            "displayName": "DocsDemo (docs screenshots, fictional content)",
+            "inherits":["ReleaseWithInstall"],
+            "cacheVariables": { "DOCS_DEMO": true }
+        },
+        {
             "name": "Debug",
             "displayName": "Debug",
             "inherits":["core"],
@@ -46,6 +52,11 @@
         {
             "name": "ReleaseWithInstall",
             "configurePreset": "ReleaseWithInstall",
+            "jobs": 16
+        },
+        {
+            "name": "DocsDemo",
+            "configurePreset": "DocsDemo",
             "jobs": 16
         },
         {

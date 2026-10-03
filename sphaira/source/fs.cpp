@@ -2,6 +2,9 @@
 #include "defines.hpp"
 #include "ui/nvg_util.hpp"
 #include "log.hpp"
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 #include <switch.h>
 #include <sys/statvfs.h>
@@ -557,6 +560,9 @@ void GetStorageSpaces(s64* nand_free, s64* nand_total, s64* sd_free, s64* sd_tot
         } else {
             if (nand_free) *nand_free = 0;
             if (nand_total) *nand_total = 0;
+#if DOCS_DEMO
+            sphaira::demo::NandSpace(nand_free, nand_total);
+#endif
         }
     }
     if (sd_free || sd_total) {

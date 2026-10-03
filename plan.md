@@ -288,7 +288,7 @@ Rules for this phase:
 - Shot status: `python docs/site/shotlist.py`. Each task lists the shot ids it unlocks; it is done when those shots
   are recorded (`Rec`) in English and their PNGs checked.
 
-- [ ] S.0 **Spike: build switch + one wrapper.** Add `option(DOCS_DEMO "docs screenshot build" OFF)` to
+- [x] S.0 **Spike: build switch + one wrapper.** Add `option(DOCS_DEMO "docs screenshot build" OFF)` to
       `sphaira/CMakeLists.txt` (`target_compile_definitions(... DOCS_DEMO=$<BOOL:...>)`, demo sources and
       `target_link_options(sphaira PRIVATE -Wl,--wrap=nsListApplicationRecord)` only when ON) and a `DocsDemo`
       configure/build preset in `CMakePresets.json` (inherits ReleaseWithInstall, `DOCS_DEMO=ON`, output

@@ -1,5 +1,6 @@
 {
     "_comment": "Fictional games for DOCS_DEMO builds (docs screenshots). Read by sphaira/source/demo/. Sizes in bytes. user = index in the Eden profile list.",
+    "nand": {"emummc": true, "total": 26843545600, "free": 19971178496},
     "titles": [
         {
             "id": "0100DE0000010000", "icon": "icons/stonks-tycoon.jpg",

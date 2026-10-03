@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.972 — DocsDemo build switch (Phase S.0)
+- `option(DOCS_DEMO OFF)` + `DocsDemo` preset (build/DocsDemo/kefir-hub.nro); `source/demo/`: titles.json read once, `-Wl,--wrap=nsListApplicationRecord` appends the six demo ids after the real records. Eden has no BIS fs (fsp-srv cmd 11), so the header had no NAND row: `#if DOCS_DEMO` hooks in `fs::GetStorageSpaces` (NAND space from titles.json `nand`) and the header EmuNAND label (App::IsEmummc unchanged). `nm`: demo symbols only in DocsDemo ELF, 0 in ReleaseWithInstall (the planned `strings nro | grep __wrap_` is 0 for both: nro has no symbols).
+- Eden network (decides S.3): DNS and TCP work, HTTPS fails in the handshake (`code: 0 SSL connect error`, Eden ssl service) in the normal build; App Store screen itself not opened (Eden needs window focus for keys: PostMessage alone is ignored while unfocused). Games in Eden: 6 entries (ids, placeholder icons), EmuNAND 18.60 GB row shown.
+- host tests: pass · nro: built (DocsDemo, ReleaseWithInstall) · switch: n/a (demo build only; release path unchanged when OFF)
+
 ## unreleased
 - chore: screenshots in any UI language — recipes (`docs/site/shots.json`: button presses recorded by `tools/docs/eden.ps1` Rec/Shot), replay per language `tools/docs/shoot.ps1 -Lang uk,en` (sets `[config] language`, `[demo] scene`), fixtures `docs/site/fixtures/sdmc/` (six meme demo games with covers for Phase S), `tools/docs/sync_site_shots.py` (uk shots into the guide site, `inc/hub-shot.html`), shotlist recipe column; plan Phase S (DOCS_DEMO build). Scripts checked in PowerShell 7 with stubs; not yet run against Eden.
 - docs: install/usb requirements and site inc/zadig.txt — Windows USB driver now installed by DBI Backend Qt 2.9.0 (WinUSB), ns-usbloader/Fluffy still need libusbK via Zadig, udev rule on Linux; plan D.1 done.

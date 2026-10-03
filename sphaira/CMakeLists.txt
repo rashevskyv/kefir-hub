@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.971)
+set(sphaira_VERSION 0.13.972)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -366,6 +366,17 @@ target_compile_definitions(sphaira PRIVATE
     -DENABLE_NETWORK_INSTALL=$<BOOL:${ENABLE_NETWORK_INSTALL}>
     -DBUILD_SMB2
 )
+
+option(DOCS_DEMO "docs screenshot build" OFF)
+target_compile_definitions(sphaira PRIVATE DOCS_DEMO=$<BOOL:${DOCS_DEMO}>)
+if (DOCS_DEMO)
+    # fictional demo content for docs screenshots (plan Phase S); never in release presets.
+    target_sources(sphaira PRIVATE
+        source/demo/demo_data.cpp
+        source/demo/demo_wrap.cpp
+    )
+    target_link_options(sphaira PRIVATE -Wl,--wrap=nsListApplicationRecord)
+endif()
 
 target_compile_options(sphaira PRIVATE
     -Wall
