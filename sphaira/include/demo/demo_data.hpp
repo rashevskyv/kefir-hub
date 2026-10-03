@@ -48,6 +48,10 @@ std::string Name(const Title& t);
 // the cover JPEG, empty if the file is missing.
 std::vector<u8> Icon(const Title& t);
 
+// save_discovery.cpp: one account save per titles.json "saves" entry, appended to the User space list
+// (uid = the Eden profile at that index; a missing profile skips the save).
+void AppendSaves(FsSaveDataSpaceId space, std::vector<FsSaveDataInfo>& out);
+
 // NAND user partition space from titles.json "nand" (Eden has no BIS filesystem); false if absent.
 bool NandSpace(s64* free, s64* total);
 

@@ -6,6 +6,7 @@
 #   Shot docs\site\en\img\<id>.png   # waits until every press was handled, then saves the console frame, 1280x720
 #   Lang uk                          # switch the running Hub to another UI language, back on the main screen
 #   Grab out.png                     # whole Eden window, for debugging
+#   Restore-OwnData                  # after a manual session: put back the owner's backups Start-Hub hid
 #   Set-HubLang uk                   # UI language for the next Start-Hub (writes sdmc/config/kefir/config.ini)
 #   Set-HubIni demo scene <name>     # DOCS_DEMO builds: open a frozen demo scene at start (empty value = none)
 #   Rec <id>; B ...; W 2; Shot ...   # record: the presses after Rec are saved as the recipe of <id> in
@@ -120,6 +121,42 @@ function Save-Recipe([string]$id, [string[]]$steps) {
   Write-Host "recipe saved: $id ($($steps.Count) steps)"
 }
 
+# The owner's own save backups on the Eden SD (real games and nicknames) must not show on docs shots. Hide-OwnData
+# moves every backup folder that does not come from docs/site/fixtures to $Hidden (same relative paths);
+# Restore-OwnData moves it back. Start-Hub hides, shoot.ps1 restores at the end: after a manual session run
+# Restore-OwnData yourself. Nothing is deleted.
+$Hidden = "$EdenDir\user\sdmc-hidden-by-docs"
+$BackupRoots = 'dumps', 'DBISaves', 'switch\DBI\saves', 'JKSV', 'switch\JKSV', 'switch\Checkpoint\saves', 'Checkpoint\saves'
+function Hide-OwnData {
+  $n = 0
+  $fixtures = "$Repo\docs\site\fixtures\sdmc"
+  foreach ($root in $BackupRoots) {
+    if (-not (Test-Path "$Sdmc\$root")) { continue }
+    foreach ($item in Get-ChildItem -Force "$Sdmc\$root") {
+      if (Test-Path "$fixtures\$root\$($item.Name)") { continue }
+      $dest = "$Hidden\$root"
+      New-Item -ItemType Directory -Force $dest | Out-Null
+      if (Test-Path "$dest\$($item.Name)") { throw "$dest\$($item.Name) already exists: run Restore-OwnData first" }
+      Move-Item -LiteralPath $item.FullName -Destination $dest
+      $n++
+    }
+  }
+  if ($n) { Write-Host "own backups hidden: $n folders -> $Hidden" }
+}
+function Restore-OwnData {
+  if (-not (Test-Path $Hidden)) { return }
+  foreach ($root in $BackupRoots) {
+    if (-not (Test-Path "$Hidden\$root")) { continue }
+    New-Item -ItemType Directory -Force "$Sdmc\$root" | Out-Null
+    foreach ($item in Get-ChildItem -Force "$Hidden\$root") {
+      if (Test-Path "$Sdmc\$root\$($item.Name)") { Write-Warning "kept hidden, name taken on the SD: $root\$($item.Name)"; continue }
+      Move-Item -LiteralPath $item.FullName -Destination "$Sdmc\$root"
+    }
+  }
+  if (-not (Get-ChildItem -Recurse -File -Force $Hidden)) { Remove-Item -Recurse -Force $Hidden }
+  Write-Host "own backups restored"
+}
+
 function Win { (Get-Process eden -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1).MainWindowHandle }
 
 # Launch Eden and wait until the Hub reads input (startup dialogs are the recipe's "startup" steps).
@@ -127,6 +164,7 @@ function Start-Hub([int]$waitSec = 90) {
   Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
   Start-Sleep -Milliseconds 500
   Remove-Item $InputTxt, "$InputTxt.tmp", $ReadyFile -ErrorAction SilentlyContinue
+  Hide-OwnData
   Start-Process -FilePath "$EdenDir\eden.exe" -ArgumentList '-g', "`"$HubNro`"" -WorkingDirectory $EdenDir
   Sync $waitSec
   Start-Sleep 1  # first frames after the dialogs open

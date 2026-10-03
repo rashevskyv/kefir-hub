@@ -47,6 +47,7 @@ if (Test-Path $fixtures) { Copy-Item "$fixtures\*" $Sdmc -Recurse -Force }
 
 $Lang | ForEach-Object { Assert-Lang $_ }
 $taken = 0; $skipped = @(); $scene = $null
+try {
 foreach ($id in $ids) {
   $st = Status $id
   if ($st -ne 'recipe') { $skipped += "$id ($st)"; continue }
@@ -67,7 +68,11 @@ foreach ($id in $ids) {
     $taken++; Write-Host "shot $l/$id"
   }
 }
-Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
+} finally {
+  Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
+  Start-Sleep -Milliseconds 500
+  Restore-OwnData
+}
 Set-HubIni demo scene ''
 Write-Host "taken: $taken"
 if ($skipped.Count) { Write-Host "skipped (user = console-only, empty = record it first):"; $skipped | ForEach-Object { "  $_" } }

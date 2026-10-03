@@ -127,6 +127,35 @@ std::vector<u8> Icon(const Title& t) {
     return out;
 }
 
+void AppendSaves(FsSaveDataSpaceId space, std::vector<FsSaveDataInfo>& out) {
+    if (space != FsSaveDataSpaceId_User) {
+        return;
+    }
+    AccountUid uids[ACC_USER_LIST_SIZE]{};
+    s32 count{};
+    if (R_FAILED(accountListAllUsers(uids, ACC_USER_LIST_SIZE, &count))) {
+        return;
+    }
+
+    const auto titles = Titles();
+    for (size_t t = 0; t < titles.size(); t++) {
+        for (size_t i = 0; i < titles[t].saves.size(); i++) {
+            const auto& s = titles[t].saves[i];
+            if (s.user < 0 || s.user >= count) {
+                continue;
+            }
+            FsSaveDataInfo info{};
+            info.save_data_id = 0xDE00000000000000ull | (t << 8) | i;
+            info.save_data_space_id = FsSaveDataSpaceId_User;
+            info.save_data_type = FsSaveDataType_Account;
+            info.uid = uids[s.user];
+            info.application_id = titles[t].id;
+            info.size = s.size;
+            out.push_back(info);
+        }
+    }
+}
+
 bool NandSpace(s64* free, s64* total) {
     const auto& d = Get();
     if (d.nand_total <= 0) {

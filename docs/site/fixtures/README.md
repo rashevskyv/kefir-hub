@@ -11,3 +11,9 @@ Keep `config/kefir/config.ini` out of it: `shoot.ps1` sets the language and the 
 `sdmc/config/kefir/demo/` is the content of the DOCS_DEMO build (plan Phase S): `titles.json` (six fictional
 meme games: names per language, sizes, updates, add-ons, saves per Eden profile) and `icons/` (original 256x256
 covers, generated). Release builds ignore this folder.
+
+`sdmc/dumps/` holds the demo save backups (Kefir Hub archive format), written by
+`python tools/docs/make_demo_backups.py`. Owner uids come from the Eden profiles (Pixel, Kotyk, Guest in Eden's
+`nand/system/save/8000000000000010/su/avators/profiles.dat`): run it again after the Eden profiles change.
+`sdmc/atmosphere/contents/0100DE0000010000/cheats/` holds the demo game's cheat files (Build IDs = `titles.json`
+`build_id`).

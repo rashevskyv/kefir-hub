@@ -294,6 +294,14 @@ auto ListUsers() -> std::vector<User> {
         }
     }
 
+#if DOCS_DEMO
+    // docs screenshots: the first two profiles show as linked (Eden has no Nintendo Account data).
+    for (size_t i = 0; i < out.size() && i < 2; i++) {
+        out[i].linked_known = out[i].horizon_linked = true;
+        out[i].kind = LinkKind::Offline;
+    }
+#endif
+
     u32 count_official = 0;
     u32 count_offline = 0;
     u32 count_none = 0;

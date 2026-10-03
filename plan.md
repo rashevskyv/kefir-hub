@@ -364,7 +364,7 @@ Rules for this phase:
       walk ncm. Graph first: `graphify explain "ForEachApplicationRecord"`, `"GetMetaEntries"`, `"ThreadData::Get"`.
       Shots: `games-list`, `games-details`, `games-move-summary`, `cheats-select`, `cheats-files` (cheat .txt files go
       into fixtures `atmosphere/contents/<id>/cheats/`; Build ID: read how cheats_ops gets it and fake it the same way).
-- [ ] S.2 **Saves and users.** Wrap `fsOpenSaveDataInfoReader` / `fsSaveDataInfoReaderRead` / `...Close`: for
+- [x] S.2 **Saves and users.** Wrap `fsOpenSaveDataInfoReader` / `fsSaveDataInfoReaderRead` / `...Close`: for
       `FsSaveDataSpaceId_User` append one `FsSaveDataInfo` per titles.json save (uid = Eden profile at `user` index via
       `accountListAllUsers`). Saved backups: write `tools/docs/make_demo_backups.py` that creates backup archives in
       the exact format and folder the Backups tab reads (`save_backup_pub.cpp`, `save_archive_metadata.cpp`) into

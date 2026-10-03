@@ -7,7 +7,7 @@
             "name": {"en": "Stonks Tycoon", "uk": "Стонкс Магнат"}, "publisher": "Line Goes Up Ltd.",
             "version": "1.4.2", "storage": "sd", "size": 3221225472,
             "updates": [{"version": 393216, "display": "1.4.2", "size": 536870912}], "dlc": 2,
-            "saves": [{"user": 0, "size": 4194304}, {"user": 1, "size": 2097152}]
+            "saves": [{"user": 0, "size": 4194304}]
         },
         {
             "id": "0100DE0000020000", "icon": "icons/this-is-fine.jpg",

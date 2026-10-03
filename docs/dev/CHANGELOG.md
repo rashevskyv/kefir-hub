@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.977 — DocsDemo: demo saves, save backups, linked users (Phase S.2)
+- DOCS_DEMO only: `save_discovery.cpp` appends one account save per titles.json save (owner = Eden profile at that index); `ListUsers` shows the first two profiles as linked. `tools/docs/make_demo_backups.py` writes Kefir Hub backup archives (`.nx_save_meta.bin`, owner uids from Eden profiles.dat) into fixtures `dumps/`: three dated Stonks Tycoon backups (Pixel), Borshch Royale for Pixel and Guest. Eden profiles Pixel, Kotyk, Guest were already set up. `eden.ps1`: Start-Hub moves the owner's own backups on the Eden SD (real games and nicknames) to `user/sdmc-hidden-by-docs`, shoot.ps1 / `Restore-OwnData` put them back; nothing is deleted.
+- Recipes + en PNGs: `saves-list`, `saves-backup-options`, `saves-select-backup`, `saves-restore-confirm` (dialog only, No focused), `saves-backup-group`, `users-list`, `users-delete-hold` (dialog only, never held).
+- host tests: pass · nro: built (DocsDemo, ReleaseWithInstall; 0 demo symbols in release) · switch: n/a
+
 ## v0.13.976 — Users: the separator in user headers shows as a dot
 - Users grid header and the profile backup lists (restore library, remote list) printed "В·" (a UTF-8 "·" saved through CP1251) between the nickname and the link status; now "·". No other such bytes in sphaira/ or i18n.
 - host tests: pass · nro: built (with v0.13.977) · switch: pending (Users screen header)

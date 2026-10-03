@@ -70,6 +70,125 @@
                                                      "A",
                                                      "wait 2"
                                                  ]
-                                   }
+                                   },
+                  "saves-list":  {
+                                     "steps":  [
+                                                   "R",
+                                                   "wait 1",
+                                                   "Right",
+                                                   "A",
+                                                   "wait 1",
+                                                   "Right",
+                                                   "A",
+                                                   "wait 4"
+                                               ]
+                                 },
+                  "saves-backup-options":  {
+                                               "steps":  [
+                                                             "R",
+                                                             "wait 1",
+                                                             "Right",
+                                                             "A",
+                                                             "wait 1",
+                                                             "Right",
+                                                             "A",
+                                                             "wait 4",
+                                                             "Right 2",
+                                                             "A",
+                                                             "wait 1.5",
+                                                             "A",
+                                                             "wait 1.5"
+                                                         ]
+                                           },
+                  "saves-select-backup":  {
+                                              "steps":  [
+                                                            "R",
+                                                            "wait 1",
+                                                            "Right",
+                                                            "A",
+                                                            "wait 1",
+                                                            "Right",
+                                                            "A",
+                                                            "wait 4",
+                                                            "A",
+                                                            "wait 1.5",
+                                                            "Down 2",
+                                                            "A",
+                                                            "wait 1.5",
+                                                            "A",
+                                                            "wait 2",
+                                                            "A",
+                                                            "wait 1.5"
+                                                        ]
+                                          },
+                  "saves-restore-confirm":  {
+                                                "steps":  [
+                                                              "R",
+                                                              "wait 1",
+                                                              "Right",
+                                                              "A",
+                                                              "wait 1",
+                                                              "Right",
+                                                              "A",
+                                                              "wait 4",
+                                                              "A",
+                                                              "wait 1.5",
+                                                              "Down 2",
+                                                              "A",
+                                                              "wait 1.5",
+                                                              "A",
+                                                              "wait 2",
+                                                              "A",
+                                                              "wait 1.5",
+                                                              "A",
+                                                              "wait 2"
+                                                          ]
+                                            },
+                  "saves-backup-group":  {
+                                             "steps":  [
+                                                           "R",
+                                                           "wait 1",
+                                                           "Right",
+                                                           "A",
+                                                           "wait 1",
+                                                           "Right",
+                                                           "A",
+                                                           "wait 4",
+                                                           "R 2",
+                                                           "wait 3"
+                                                       ]
+                                         },
+                  "users-list":  {
+                                     "steps":  [
+                                                   "R",
+                                                   "wait 1",
+                                                   "Down",
+                                                   "Right 2",
+                                                   "A",
+                                                   "wait 1.5",
+                                                   "Down 3",
+                                                   "A",
+                                                   "wait 2"
+                                               ]
+                                 },
+                  "users-delete-hold":  {
+                                            "steps":  [
+                                                          "R",
+                                                          "wait 1",
+                                                          "Down",
+                                                          "Right 2",
+                                                          "A",
+                                                          "wait 1.5",
+                                                          "Down 3",
+                                                          "A",
+                                                          "wait 2",
+                                                          "Right 2",
+                                                          "A",
+                                                          "wait 1.5",
+                                                          "Down 3",
+                                                          "A",
+                                                          "wait 1"
+                                                      ]
+                                        }
               }
 }

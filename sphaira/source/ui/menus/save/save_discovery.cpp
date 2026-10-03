@@ -1,6 +1,9 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "defines.hpp"
 #include "log.hpp"
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 #include <atomic>
 #include <cstdio>
 #include <cstring>
@@ -71,6 +74,9 @@ auto DiscoverSaveDataInfo(const AccountUid* uid_filter, const std::optional<u8>&
         if (read_failed) {
             continue;
         }
+#if DOCS_DEMO
+        demo::AppendSaves(space, staged);
+#endif
 
         for (const auto& info : staged) {
             if (type_filter.has_value() && info.save_data_type != *type_filter) {
