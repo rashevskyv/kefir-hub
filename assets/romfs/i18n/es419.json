@@ -2816,5 +2816,6 @@
   "Scan selected folder(s) recursively for packages and open the install queue.": "Escanear la(s) carpeta(s) seleccionada(s) recursivamente en busca de paquetes y abrir la cola de instalación.",
   "No packages found.": "No se encontraron paquetes.",
   "Failed to scan folder": "Error al escanear la carpeta",
-  " ÐÂ· no play hours": " ÐÂ· sin horas de juego"
+  " ÐÂ· no play hours": " ÐÂ· sin horas de juego",
+  "%s is not installed. Install the game to restore its save.": "%s no está instalado. Instala el juego para restaurar su partida guardada."
 }

@@ -2810,5 +2810,6 @@
   "Toggle the MTP responder to browse SD card files on PC.": "Pārslēgt MTP atbildētāju, lai pārlūkotu SD kartes failus datorā.",
   "USB install failed!": "USB instalēšana neizdevās!",
   "Expand": "Izvērst",
-  "Minimize": "Minimizēt"
+  "Minimize": "Minimizēt",
+  "%s is not installed. Install the game to restore its save.": "%s nav instalēts. Instalējiet spēli, lai atjaunotu tās saglabājumu."
 }

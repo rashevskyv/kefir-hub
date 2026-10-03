@@ -2816,5 +2816,6 @@
   "installed: %s": "installé : %s",
   "not enough free space": "espace libre insuffisant",
   "â¢ Open Kefir Hub yourself. We will continue the restore.": "• Ouvrez vous-même Kefir Hub. Nous continuerons la restauration.",
-  "â¢ That puts the old profiles back and cancels this restore.": "• Cela remet les anciens profils en place et annule cette restauration."
+  "â¢ That puts the old profiles back and cancels this restore.": "• Cela remet les anciens profils en place et annule cette restauration.",
+  "%s is not installed. Install the game to restore its save.": "%s n'est pas installé. Installez le jeu pour restaurer sa sauvegarde."
 }

@@ -2816,5 +2816,6 @@
   "Tap to ask about this version again.": "Tippen, um erneut nach dieser Version zu fragen.",
   "TegraExplorer will create and verify the mandatory safety backup before writing any save.\n\n": "TegraExplorer erstellt und verifiziert das obligatorische Sicherheitsbackup, bevor Speicherstände geschrieben werden.\n\n",
   "That backup is not a valid profiles & play hours pack.": "Dieses Backup ist kein gültiges Paket für Profile und Spielstunden.",
-  "The console will reboot after linking.": "Die Konsole wird nach der Verknüpfung neu gestartet."
+  "The console will reboot after linking.": "Die Konsole wird nach der Verknüpfung neu gestartet.",
+  "%s is not installed. Install the game to restore its save.": "%s ist nicht installiert. Installiere das Spiel, um den Spielstand wiederherzustellen."
 }

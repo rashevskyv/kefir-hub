@@ -2810,5 +2810,6 @@
   "installed: %s": "ўсталявана: %s",
   "not enough free space": "недастаткова вольнага месца",
   "â¢ Open Kefir Hub yourself. We will continue the restore.": "• Адкрыйце Kefir Hub самастойна. Мы працягнем аднаўленне.",
-  "â¢ That puts the old profiles back and cancels this restore.": "• Гэта верне старыя профілі і адменіць гэта аднаўленне."
+  "â¢ That puts the old profiles back and cancels this restore.": "• Гэта верне старыя профілі і адменіць гэта аднаўленне.",
+  "%s is not installed. Install the game to restore its save.": "Гульня «%s» не ўсталявана. Усталюйце яе, каб аднавіць захаванне."
 }

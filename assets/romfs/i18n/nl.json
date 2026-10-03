@@ -2815,5 +2815,6 @@
   "When it finishes, open Kefir Hub yourself to continue the restore.": "Open zodra het klaar is Kefir Hub zelf om door te gaan met het herstel.",
   "When restoring, also list backups that exist on WebDAV but not on this console.": "Toon bij het herstellen ook backups die op WebDAV staan maar niet op deze console.",
   "When to install": "Wanneer te installeren",
-  "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Je kunt later koppelen via Gereedschap â Gebruikers â Nintendo-account koppelen. Sommige games vereisen een gekoppeld account om te starten."
+  "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Je kunt later koppelen via Gereedschap â Gebruikers â Nintendo-account koppelen. Sommige games vereisen een gekoppeld account om te starten.",
+  "%s is not installed. Install the game to restore its save.": "%s is niet geïnstalleerd. Installeer de game om de opgeslagen gegevens te herstellen."
 }

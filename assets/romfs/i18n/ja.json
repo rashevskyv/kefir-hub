@@ -2815,5 +2815,6 @@
   "FunControl is started by Kefir Hub when you use the fan curve, then stopped automatically. You do not need autostart.": "FunControlは、ファンカーブを使用するときにKefir Hubによって起動され、その後自動的に停止します。自動起動は必要ありません。",
   "FunControl is started by Kefir Hub when you use the fan curve, then stopped automatically. You do not need to turn it on here.": "FunControlは、ファンカーブを使用するときにKefir Hubによって起動され、その後自動的に停止します。ここでオンにする必要はありません。",
   "Give this backup a custom name.": "このバックアップにカスタム名を設定します。",
-  "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te": "コンソールが起動しない場合: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te"
+  "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te": "コンソールが起動しない場合: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te",
+  "%s is not installed. Install the game to restore its save.": "%s はインストールされていません。セーブデータを復元するにはゲームをインストールしてください。"
 }

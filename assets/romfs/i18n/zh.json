@@ -2868,5 +2868,6 @@
   "Put TegraExplorer.bin in /bootloader/payloads/ and open Kefir Hub again, or run Undo if the console will not boot.": "将 TegraExplorer.bin 放入 /bootloader/payloads/ 中并再次打开 Kefir Hub，或者如果主机无法引导则运行撤销。",
   "Rank: %s Â· Index: %u": "排名：%s Â· 索引：%u",
   "Ready â restart": "就绪 â 请重启",
-  "Received input from phone/PC": "已接收来自手机/PC 的输入"
+  "Received input from phone/PC": "已接收来自手机/PC 的输入",
+  "%s is not installed. Install the game to restore its save.": "%s 未安装。请安装该游戏以恢复其存档。"
 }

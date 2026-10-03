@@ -2868,5 +2868,6 @@
   "Put TegraExplorer.bin in /bootloader/payloads/ and open Kefir Hub again, or run Undo if the console will not boot.": "將 TegraExplorer.bin 放入 /bootloader/payloads/ 中並再次開啟 Kefir Hub，或者如果主機無法引導則執行復原。",
   "Rank: %s Â· Index: %u": "排名：%s Â· 索引：%u",
   "Ready â restart": "就緒 â 請重新啟動",
-  "Received input from phone/PC": "已接收來自手機/PC 的輸入"
+  "Received input from phone/PC": "已接收來自手機/PC 的輸入",
+  "%s is not installed. Install the game to restore its save.": "%s 尚未安裝。請安裝該遊戲以還原其存檔。"
 }

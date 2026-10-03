@@ -23,6 +23,10 @@ Entries without a detail line are commit titles only; their verification state w
 - test: drop source-text assertions — tests/test_save_restore_contract.cpp (only grepped .cpp text) deleted; test_catalog.py loses its uninstaller_menu.cpp text check (was the 1/9 failure; 8/8 pass).
 - chore: .graphifyignore excludes docs/dev/CHANGELOG.md, docs/dev/history/, graphify-out/; after `graphify update .` CHANGELOG (was #2, 640 edges) is gone from God Nodes.
 
+## v0.13.971 — restore of an uninstalled game's save names the game
+- Restoring a backup whose game is not installed (no control data, archive without owner/metadata) now says "<game> is not installed. Install the game to restore its save." instead of "Application control data is missing save data owner." New status `GameNotInstalled`; 26 translations; docs saves.md EN+UK.
+- host tests: pass; nro: not built; switch: pending (restore a backup of an uninstalled game, e.g. from the Backups tab).
+
 ## v0.13.970 — Backup owner names: safety copies and two users with one nickname
 - Found in Eden on the user's `/dumps` + DBI saves: safety copies (`recovery.zip`, no `.dbi_save_info.ini`) showed an id code; they now take the name from another backup of the same uid. The user's console has two accounts named "nin10do": tiles and rows now add the same `(XXXX)` tag the user picker already uses, so the two are told apart.
 - Also seen, not changed: same game + owner from Kefir Hub and DBI is one tile (in the first source's section) with one row per source; backups that hold only metadata (Celeste, 1-2-Switch from v0.13.907) are left out of the library as before.

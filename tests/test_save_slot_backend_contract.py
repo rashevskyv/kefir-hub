@@ -167,8 +167,10 @@ class SyntheticSaveSlotBackend:
                     prov = "InstalledControlDataAndArchiveMetadata"
             owner = ctrl["owner"]
         else:
-            if not archive_sizing or not archive_sizing.get("has_metadata"):
+            if not archive_sizing:
                 return None, "MissingControlData"
+            if not archive_sizing.get("has_metadata"):
+                return None, "GameNotInstalled"
             if archive_sizing.get("app_id") != app_id:
                 return None, "InvalidApplicationId"
             if archive_sizing.get("type") != FsSaveDataType_Account or archive_sizing.get("system_save_data_id", 0) != 0:
@@ -178,7 +180,7 @@ class SyntheticSaveSlotBackend:
             if archive_sizing.get("index") != 0:
                 return None, "UnsupportedIndex"
             if archive_sizing.get("owner", 0) == 0:
-                return None, "MissingOwnerId"
+                return None, "GameNotInstalled"
             m_data = archive_sizing.get("data_size", 0)
             m_journal = archive_sizing.get("journal_size", 0)
             if m_data <= 0 or m_data % self.ALIGNMENT != 0 or m_data > self.INT64_MAX:
@@ -457,7 +459,7 @@ def test_behavioral_regressions() -> None:
         ("type", FsSaveDataType_Device, "UnsupportedSaveType"),
         ("rank", 1, "UnsupportedRank"),
         ("index", 1, "UnsupportedIndex"),
-        ("owner", 0, "MissingOwnerId"),
+        ("owner", 0, "GameNotInstalled"),
         ("data_size", 0x4001, "InvalidSizes"),
     ]:
         _, st_err = backend.plan_creation(uninstalled_app, local_uid, dict(valid_archive, **{k: v}))

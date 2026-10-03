@@ -123,6 +123,8 @@ If the user you pick has no save for the game, Kefir Hub creates one and restore
 - for user saves ([[Account]] type), main slot;
 - when the game is installed (the console needs the game's data to create the save).
 
+If the game is not installed, the restore stops with a message that names the game and asks you to install it.
+
 Device and BCAT saves are not created automatically: start the game once so it creates its save, then restore.
 
 To restore a save for a game you have uninstalled, either keep the console's save (it stays under [[Deleted Games]] and can be restored there), or install the game again first.

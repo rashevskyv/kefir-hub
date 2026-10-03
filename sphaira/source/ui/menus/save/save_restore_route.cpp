@@ -330,7 +330,7 @@ void PlanRestoreCreation(
                 cb(std::nullopt); return;
             }
             if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
-                App::Push<OptionBox>(GetBackendStatusMessage(ctx->status), "OK"_i18n);
+                App::Push<OptionBox>(GetBackendStatusMessage(ctx->status, group.GetName()), "OK"_i18n);
                 cb(std::nullopt); return;
             }
             if (!ctx->reinspect_ok) {

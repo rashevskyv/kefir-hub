@@ -2815,5 +2815,6 @@
   "Restore User Backup": "사용자 백업 복원",
   "Local backup library": "로컬 백업 라이브러리",
   "Restore user backups from the default library (/config/kefir/user_packs).": "기본 라이브러리(/config/kefir/user_packs)에서 사용자 백업을 복원합니다.",
-  "Restore user backups from the default library (/config/kefir/account_backups).": "기본 라이브러리(/config/kefir/account_backups)에서 사용자 백업을 복원합니다."
+  "Restore user backups from the default library (/config/kefir/account_backups).": "기본 라이브러리(/config/kefir/account_backups)에서 사용자 백업을 복원합니다.",
+  "%s is not installed. Install the game to restore its save.": "%s이(가) 설치되어 있지 않습니다. 세이브를 복원하려면 게임을 설치하세요."
 }

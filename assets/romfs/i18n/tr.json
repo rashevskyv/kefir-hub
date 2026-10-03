@@ -2810,5 +2810,6 @@
   "Confirm that both consoles are connected to the same local network and that the source console has Share active.": "Her iki konsolun da aynı yerel ağa bağlı olduğundan ve kaynak konsolda Paylaşım aktif olduğundan emin olun.",
   "Copying": "Kopyalanıyor",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "yeni profiller olarak eklenecek.\\n\\nBir şeyler ters giderse diye önce mevcut hesap kayıt verilerini SD karta kopyalıyoruz.",
-  "Restore will replace that profile: name, avatar and Nintendo Account link. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Geri yükleme işlemi o profili değiştirecektir: ad, avatar ve Nintendo Hesabı bağlantısı. İkinci bir kullanıcı eklemeyecektir.\\n\\nBir şeyler ters gitmesi ihtimaline karşı mevcut hesap kaydını yine de önce SD karta kopyalıyoruz."
+  "Restore will replace that profile: name, avatar and Nintendo Account link. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Geri yükleme işlemi o profili değiştirecektir: ad, avatar ve Nintendo Hesabı bağlantısı. İkinci bir kullanıcı eklemeyecektir.\\n\\nBir şeyler ters gitmesi ihtimaline karşı mevcut hesap kaydını yine de önce SD karta kopyalıyoruz.",
+  "%s is not installed. Install the game to restore its save.": "%s yüklü değil. Kaydını geri yüklemek için oyunu yükleyin."
 }

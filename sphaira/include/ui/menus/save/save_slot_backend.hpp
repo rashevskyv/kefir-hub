@@ -32,6 +32,7 @@ enum class SaveBackendStatus {
     Cancelled,
     IpcFailed,
     VerificationFailed,
+    GameNotInstalled, // no control data on the console and the archive cannot stand in for it
 };
 
 struct SaveCreationRequest {
@@ -118,6 +119,6 @@ auto ExtendSaveDataChecked(
     std::function<bool()> should_cancel = nullptr
 ) -> SaveGrowResult;
 
-auto GetBackendStatusMessage(SaveBackendStatus status) -> std::string;
+auto GetBackendStatusMessage(SaveBackendStatus status, const char* game_name = "") -> std::string;
 
 } // namespace sphaira::ui::menu::save

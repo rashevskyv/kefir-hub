@@ -2815,5 +2815,6 @@
   "When it finishes, open Kefir Hub yourself to continue the restore.": "Khi quá trình hoàn tất, hãy tự mở Kefir Hub để tiếp tục khôi phục.",
   "When restoring, also list backups that exist on WebDAV but not on this console.": "Khi khôi phục, cũng hiển thị các bản sao lưu tồn tại trên WebDAV nhưng không có trên máy này.",
   "When to install": "Thời điểm cài đặt",
-  "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Bạn có thể liên kết sau trong Công cụ â Người dùng â Liên kết Tài khoản Nintendo. Một số trò chơi yêu cầu tài khoản đã liên kết để khởi động."
+  "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Bạn có thể liên kết sau trong Công cụ â Người dùng â Liên kết Tài khoản Nintendo. Một số trò chơi yêu cầu tài khoản đã liên kết để khởi động.",
+  "%s is not installed. Install the game to restore its save.": "%s chưa được cài đặt. Hãy cài đặt trò chơi để khôi phục dữ liệu lưu."
 }

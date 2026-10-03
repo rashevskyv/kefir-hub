@@ -2810,5 +2810,6 @@
   "What the Saves menu shows, and where backups go.": "Ką rodo meniu Išsaugojimai ir kur keliauja atsarginės kopijos.",
   "When and how new versions are installed.": "Kada ir kaip diegiamos naujos versijos.",
   "When it finishes, open Kefir Hub yourself to continue the restore.": "Kai jis baigsis, patys atidarykite Kefir Hub, kad tęstumėte atkūrimą.",
-  "When restoring, also list backups that exist on WebDAV but not on this console.": "Atkuriant taip pat parodyti atsargines kopijas, kurios yra WebDAV, bet nėra šioje konsolėje."
+  "When restoring, also list backups that exist on WebDAV but not on this console.": "Atkuriant taip pat parodyti atsargines kopijas, kurios yra WebDAV, bet nėra šioje konsolėje.",
+  "%s is not installed. Install the game to restore its save.": "%s neįdiegtas. Įdiekite žaidimą, kad atkurtumėte jo išsaugojimą."
 }

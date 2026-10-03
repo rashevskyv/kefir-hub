@@ -2842,5 +2842,6 @@
   "Restore all": "Restaurar tudo",
   "No backups found for this game.": "Nenhuma cópia de segurança encontrada para este jogo.",
   "No restorable archives found for this game.": "Nenhum arquivo de cópia de segurança restaurável encontrado para este jogo.",
-  "Cannot restore: compatible live save slot is missing for ": "Não é possível restaurar: falta o espaço de salvamento ativo compatível para "
+  "Cannot restore: compatible live save slot is missing for ": "Não é possível restaurar: falta o espaço de salvamento ativo compatível para ",
+  "%s is not installed. Install the game to restore its save.": "%s não está instalado. Instale o jogo para restaurar o seu progresso guardado."
 }

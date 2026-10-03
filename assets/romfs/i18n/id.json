@@ -2810,5 +2810,6 @@
   "What the Saves menu shows, and where backups go.": "Apa yang ditampilkan menu Penyimpanan, dan tempat penyimpanan cadangan.",
   "When and how new versions are installed.": "Kapan dan bagaimana versi baru diinstal.",
   "When it finishes, open Kefir Hub yourself to continue the restore.": "Setelah selesai, buka Kefir Hub sendiri untuk melanjutkan pemulihan.",
-  "When restoring, also list backups that exist on WebDAV but not on this console.": "Saat memulihkan, tampilkan juga cadangan yang ada di WebDAV tetapi tidak ada di konsol ini."
+  "When restoring, also list backups that exist on WebDAV but not on this console.": "Saat memulihkan, tampilkan juga cadangan yang ada di WebDAV tetapi tidak ada di konsol ini.",
+  "%s is not installed. Install the game to restore its save.": "%s belum terpasang. Pasang gimnya untuk memulihkan data simpanannya."
 }

@@ -2815,5 +2815,6 @@
   "Invalid backup files received from the sending console.": "Ogiltiga filer för säkerhetskopia mottogs från den sändande konsolen.",
   "Failed to download backup files from the sending console.": "Det gick inte att ladda ner filer för säkerhetskopia från den sändande konsolen.",
   "Downloaded backup is incomplete or invalid.": "Den nedladdade säkerhetskopian är ofullständig eller ogiltig.",
-  "Failed to transfer user backup from the sending console.": "Det gick inte att överföra användarsäkerhetskopian från den sändande konsolen."
+  "Failed to transfer user backup from the sending console.": "Det gick inte att överföra användarsäkerhetskopian från den sändande konsolen.",
+  "%s is not installed. Install the game to restore its save.": "%s är inte installerat. Installera spelet för att återställa dess sparfil."
 }

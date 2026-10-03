@@ -2810,5 +2810,6 @@
   "Available version": "Қолжетімді нұсқа",
   "Latest version": "Соңғы нұсқа",
   "Add-on content": "Қосымша контент",
-  "Ownfoil Server": "Ownfoil Server"
+  "Ownfoil Server": "Ownfoil Server",
+  "%s is not installed. Install the game to restore its save.": "«%s» ойыны орнатылмаған. Сақтауды қалпына келтіру үшін ойынды орнатыңыз."
 }

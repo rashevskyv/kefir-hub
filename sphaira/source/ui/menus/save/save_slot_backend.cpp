@@ -5,6 +5,7 @@
 #include "log.hpp"
 #include <sys/statvfs.h>
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <limits>
 #include <memory>
@@ -180,7 +181,7 @@ auto PlanAccountSaveCreation(
         }
     } else {
         if (!archive_sizing || !archive_sizing->has_metadata) {
-            if (out_status) *out_status = SaveBackendStatus::MissingControlData;
+            if (out_status) *out_status = archive_sizing ? SaveBackendStatus::GameNotInstalled : SaveBackendStatus::MissingControlData;
             return R_FAILED(rc) ? rc : static_cast<Result>(FsError_PathNotFound);
         }
         if (archive_sizing->attr.application_id != application_id) {
@@ -201,7 +202,7 @@ auto PlanAccountSaveCreation(
             return FsError_PathNotFound;
         }
         if (archive_sizing->owner_id == 0) {
-            if (out_status) *out_status = SaveBackendStatus::MissingOwnerId;
+            if (out_status) *out_status = SaveBackendStatus::GameNotInstalled;
             return FsError_PathNotFound;
         }
         const s64 arch_data = archive_sizing->data_size;
@@ -456,8 +457,13 @@ auto ExtendSaveDataChecked(
     return result;
 }
 
-auto GetBackendStatusMessage(SaveBackendStatus status) -> std::string {
+auto GetBackendStatusMessage(SaveBackendStatus status, const char* game_name) -> std::string {
     switch (status) {
+        case SaveBackendStatus::GameNotInstalled: {
+            char msg[1024];
+            std::snprintf(msg, sizeof(msg), "%s is not installed. Install the game to restore its save."_i18n.c_str(), game_name);
+            return msg;
+        }
         case SaveBackendStatus::UnsupportedSaveType: return "Save slot creation is only supported for Account saves."_i18n;
         case SaveBackendStatus::UnsupportedSpace: return "Save slot creation is only supported in User space."_i18n;
         case SaveBackendStatus::UnsupportedRank: return "Save slot creation is only supported for primary save slots."_i18n;

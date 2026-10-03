@@ -2810,5 +2810,6 @@
   "Extract into new folder...": "Wypakuj do nowego folderu...",
   "This archive contains one app. The app will be installed to ": "To archiwum zawiera jedną aplikację. Aplikacja zostanie zainstalowana w ",
   "Tick what to extract. Unpack the files into a folder, or into a new folder named after the archive.": "Zaznacz, co wypakować. Rozpakuj pliki do folderu lub nowego folderu nazwanego tak jak archiwum.",
-  "All / none": "Wszystkie / żadne"
+  "All / none": "Wszystkie / żadne",
+  "%s is not installed. Install the game to restore its save.": "Gra %s nie jest zainstalowana. Zainstaluj ją, aby przywrócić zapis."
 }

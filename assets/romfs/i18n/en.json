@@ -2810,5 +2810,6 @@
   "installed: %s": "installed: %s",
   "not enough free space": "not enough free space",
   "â¢ Open Kefir Hub yourself. We will continue the restore.": "â¢ Open Kefir Hub yourself. We will continue the restore.",
-  "â¢ That puts the old profiles back and cancels this restore.": "â¢ That puts the old profiles back and cancels this restore."
+  "â¢ That puts the old profiles back and cancels this restore.": "â¢ That puts the old profiles back and cancels this restore.",
+  "%s is not installed. Install the game to restore its save.": "%s is not installed. Install the game to restore its save."
 }

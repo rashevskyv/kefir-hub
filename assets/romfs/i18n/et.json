@@ -2810,5 +2810,6 @@
   "Enter username (optional)": "Sisesta kasutajanimi (valikuline)",
   "Enter password (optional)": "Sisesta parool (valikuline)",
   "Configure a new network storage share.": "Konfigureeri uus võrguhoidla jagamine.",
-  "Restore for user…": "Kasutaja taastamine…"
+  "Restore for user…": "Kasutaja taastamine…",
+  "%s is not installed. Install the game to restore its save.": "%s ei ole installitud. Salvestuse taastamiseks installi mäng."
 }
