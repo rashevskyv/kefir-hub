@@ -121,4 +121,8 @@ inline constexpr s8 HEADER_RIGHT[]{  2,  3,  2,  3,  4 };
 
 Result DeleteApplicationKeepSave(u64 app_id);
 
+// mods = everything in /atmosphere/contents/<tid> except cheats/, which the cheats menu owns.
+auto ModsFolderSize(u64 app_id) -> s64;
+Result DeleteGameMods(u64 app_id);
+
 } // namespace sphaira::ui::menu::game

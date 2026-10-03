@@ -397,4 +397,71 @@ page_done:
     return page;
 }
 
+// hex view: one line per 16 bytes, "OFFSET  XX XX ... XX  |ascii|". line n starts at byte (n - 1) * 16,
+// so any page can be read directly without scanning the file.
+constexpr int64_t HEX_BYTES_PER_LINE = 16;
+
+inline auto FormatHexLine(int64_t offset, const unsigned char* data, int64_t size) -> std::string {
+    constexpr char digits[] = "0123456789ABCDEF";
+    std::string line;
+    line.reserve(10 + HEX_BYTES_PER_LINE * 3 + 2 + HEX_BYTES_PER_LINE + 2);
+    for (int shift = 28; shift >= 0; shift -= 4) {
+        line.push_back(digits[(offset >> shift) & 0xF]);
+    }
+    line += "  ";
+    for (int64_t i = 0; i < HEX_BYTES_PER_LINE; i++) {
+        if (i < size) {
+            line.push_back(digits[data[i] >> 4]);
+            line.push_back(digits[data[i] & 0xF]);
+        } else {
+            line += "  ";
+        }
+        line.push_back(i == 7 && size > 8 ? '-' : ' ');
+    }
+    line += " |";
+    for (int64_t i = 0; i < size; i++) {
+        line.push_back(data[i] >= 0x20 && data[i] < 0x7F ? static_cast<char>(data[i]) : '.');
+    }
+    line.push_back('|');
+    return line;
+}
+
+template <typename ReadFunc>
+inline auto ReadHexPage(ReadFunc&& read_func, int64_t file_size, int64_t start_offset, int64_t start_line, int64_t page_rows, int64_t logical_rows = 0) -> Page {
+    if (logical_rows <= 0) {
+        logical_rows = page_rows;
+    }
+
+    Page page;
+    page.start_offset = std::clamp<int64_t>(start_offset, 0, std::max<int64_t>(0, file_size));
+    page.start_line = std::max<int64_t>(1, start_line);
+
+    const int64_t want = std::min<int64_t>(std::max<int64_t>(0, page_rows) * HEX_BYTES_PER_LINE, file_size - page.start_offset);
+    std::string buf(want, '\0');
+    int64_t got = 0;
+    while (got < want) {
+        const int64_t n = read_func(page.start_offset + got, buf.data() + got, want - got);
+        if (n <= 0) {
+            break;
+        }
+        got += n;
+    }
+
+    const auto* bytes = reinterpret_cast<const unsigned char*>(buf.data());
+    for (int64_t pos = 0; pos < got; pos += HEX_BYTES_PER_LINE) {
+        page.lines.emplace_back(FormatHexLine(page.start_offset + pos, bytes + pos, std::min(HEX_BYTES_PER_LINE, got - pos)));
+    }
+
+    page.end_offset = page.start_offset + got;
+    page.is_eof = page.end_offset >= file_size;
+    page.is_error = got < want;
+    const int64_t logical = std::min<int64_t>(logical_rows, page.lines.size());
+    page.logical_end_offset = page.start_offset + std::min<int64_t>(got, logical * HEX_BYTES_PER_LINE);
+    page.logical_end_line = page.start_line + logical;
+    if (page.lines.empty() && !page.is_error) {
+        page.lines.emplace_back();
+    }
+    return page;
+}
+
 } // namespace text_helper

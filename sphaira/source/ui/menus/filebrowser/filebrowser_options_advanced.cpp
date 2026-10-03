@@ -266,6 +266,9 @@ void FsView::DisplayAdvancedOptions() {
     create_folder_entry->Depends([this](){ return !IsReadOnly(m_path); }, "Folder is read-only"_i18n);
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
+        options->Add<SidebarEntryCallback>("View as hex"_i18n, [this](){
+            App::Push<fileview::Menu>(m_fs.get(), GetNewPathCurrent(), fileview::TextMode::Hex);
+        }, "Show the raw bytes of the selected file."_i18n);
         if (IsSd() && path::IsAnyOfIC(GetEntry().GetExtension(), IMAGE_EXTENSIONS)) {
             options->Add<SidebarEntryCallback>("View Image"_i18n, [this](){
                 OpenImageViewer();

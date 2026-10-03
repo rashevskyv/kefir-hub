@@ -2811,5 +2811,22 @@
   "not enough free space": "недастаткова вольнага месца",
   "â¢ Open Kefir Hub yourself. We will continue the restore.": "• Адкрыйце Kefir Hub самастойна. Мы працягнем аднаўленне.",
   "â¢ That puts the old profiles back and cancels this restore.": "• Гэта верне старыя профілі і адменіць гэта аднаўленне.",
-  "%s is not installed. Install the game to restore its save.": "Гульня «%s» не ўсталявана. Усталюйце яе, каб аднавіць захаванне."
+  "%s is not installed. Install the game to restore its save.": "Гульня «%s» не ўсталявана. Усталюйце яе, каб аднавіць захаванне.",
+  "Fill": "Запоўніць",
+  "Free space filled with zeros": "Вольны прасвет запоўнены нулямі",
+  "Overwrite unused system memory space.": "Перазапісаць нявыкарыстанае месца сістэмнай памяці.",
+  "Fill failed!": "Памылка запаўнення!",
+  "Filling with zeros": "Заполненне нулямі",
+  "Fill free NAND space with zeros": "Запоўніць вольную прастору NAND нулямі",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Перапісаць увесь вольны прастору на microSD-карце нулямі? Файлы не закрануцца. Гэта можа заняць шмат часу.",
+  "Show the raw bytes of the selected file.": "Паказаць сырыя байты выбранага файла.",
+  "View as hex": "Праглядзець як шэснаццатковы",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Перазапісаць увесь вольны прастору ў сістэмнай памяці кансолі нулямі? Гульні і захаванні не закрануты. Гэта можа заняць шмат часу.",
+  "Mods deleted": "Мады выдалены",
+  "Delete with mods": "Выдаліць з мадыфікацыямі",
+  "Delete the mods of ": "Выдаліць мадыфікацыі ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Выдаліць мадыфікацыі гэтай гульні з карты памяці. Чыты застаюцца.",
+  "Delete mods": "Выдаліць моды",
+  "Cheats are kept.": "Чыты захаваны.",
+  "Backing up before deleting...": "Рэзервовае капіраванне перад выдаленнем..."
 }

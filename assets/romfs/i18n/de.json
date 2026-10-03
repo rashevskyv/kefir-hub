@@ -2817,5 +2817,22 @@
   "TegraExplorer will create and verify the mandatory safety backup before writing any save.\n\n": "TegraExplorer erstellt und verifiziert das obligatorische Sicherheitsbackup, bevor Speicherstände geschrieben werden.\n\n",
   "That backup is not a valid profiles & play hours pack.": "Dieses Backup ist kein gültiges Paket für Profile und Spielstunden.",
   "The console will reboot after linking.": "Die Konsole wird nach der Verknüpfung neu gestartet.",
-  "%s is not installed. Install the game to restore its save.": "%s ist nicht installiert. Installiere das Spiel, um den Spielstand wiederherzustellen."
+  "%s is not installed. Install the game to restore its save.": "%s ist nicht installiert. Installiere das Spiel, um den Spielstand wiederherzustellen.",
+  "Fill": "Ausfüllen",
+  "Free space filled with zeros": "Freier Speicherplatz mit Nullen gefüllt",
+  "Overwrite unused system memory space.": "Unbenutzten Systemspeicherbereich überschreiben.",
+  "Fill failed!": "Füllen fehlgeschlagen!",
+  "Filling with zeros": "Mit Nullen füllen",
+  "Fill free NAND space with zeros": "Freien NAND-Speicher mit Nullen füllen",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Den gesamten freien Speicherplatz auf der microSD-Karte mit Nullen überschreiben? Dateien bleiben unberührt. Das kann lange dauern.",
+  "Show the raw bytes of the selected file.": "Rohdaten der ausgewählten Datei anzeigen.",
+  "View as hex": "Als Hex anzeigen",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Den gesamten freien Speicherplatz im Systemspeicher der Konsole mit Nullen überschreiben? Spiele und Spielstände bleiben unberührt. Dies kann einige Zeit dauern.",
+  "Mods deleted": "Mods gelöscht",
+  "Delete with mods": "Mit Mods löschen",
+  "Delete the mods of ": "Mods löschen von ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Mods dieses Spiels von der Speicherkarte entfernen. Cheats bleiben erhalten.",
+  "Delete mods": "Mods löschen",
+  "Cheats are kept.": "Cheats werden beibehalten.",
+  "Backing up before deleting...": "Sicherung vor dem Löschen wird erstellt..."
 }

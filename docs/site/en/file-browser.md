@@ -259,6 +259,7 @@ These appear in [[File Options]] (**+**) or [[Advanced Options]] when they fit t
 | [[StartWebServer]] | Share the current folder through the built-in web server | [Sharing](sharing.md) |
 | [[Upload to network location]] | Copy the selected files to one of your network shares | |
 | [[Hash]] | Show the [[CRC32]], [[MD5]], [[SHA1]] or [[SHA256]] checksum of a file | |
+| [[View as hex]] | Show the raw bytes of any file, 16 per row with their offset; read only | |
 | [[View Image]] | Open the image in the viewer | |
 | [[Create Switch Theme]] | Make a HOME Menu theme from the image | [Themes](themes.md) |
 | [[Add to Homebrew Search Paths]] | List the apps in this folder on the [[Homebrew]] tab | [Homebrew](homebrew.md#add-a-search-folder) |

@@ -76,5 +76,17 @@ auto ImageBounds(bool fullscreen) -> Vec4 {
 
 std::vector<std::string> s_line_clipboard{};
 
+void DrawMonoText(NVGcontext* vg, float x, float y, float font_size, const NVGcolor& colour, std::string_view text) {
+    float bounds[4];
+    nvgFontSize(vg, font_size);
+    gfx::textBounds(vg, 0, 0, bounds, "0");
+    const float cell = bounds[2] - bounds[0] + 1.f;
+    for (size_t i = 0; i < text.size(); i++) {
+        if (text[i] != ' ') {
+            gfx::drawText(vg, x + cell * (i + 0.5f), y, font_size, &text[i], &text[i] + 1, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, colour);
+        }
+    }
+}
+
 
 } // namespace sphaira::ui::menu::fileview

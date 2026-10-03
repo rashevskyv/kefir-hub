@@ -63,9 +63,9 @@ void Menu::LoadTextFile() {
         return;
     }
 
-    if (m_file_size > EDIT_MAX_SIZE) {
+    if (m_mode == TextMode::Hex || m_file_size > EDIT_MAX_SIZE) {
         m_is_streamed = true;
-        m_mode = TextMode::View;
+        m_mode = m_mode == TextMode::Hex ? TextMode::Hex : TextMode::View;
         m_editable = false;
         m_current_page = 0;
         m_page_offsets = {0};

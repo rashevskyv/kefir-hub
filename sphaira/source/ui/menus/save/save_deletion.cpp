@@ -94,6 +94,9 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
                     sd_fs.DeleteDirectory(custom_sphaira_id_dir);
                 }
             } else {
+                // a deleted save cannot come back, so keep an automatic backup first (DBI "foolproof delete").
+                pbox->SetActionName("Backing up before deleting..."_i18n);
+                R_TRY(BackupSaveInternal(pbox, MakeSdCardDumpLocation(), e, true, true, backup_root));
                 pbox->SetActionName("Deleting save data..."_i18n);
                 R_TRY(DeleteLiveSaveEntry(e));
                 (*deleted_count)++;

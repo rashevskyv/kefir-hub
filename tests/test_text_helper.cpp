@@ -266,6 +266,28 @@ int main() {
     assert(sp2.lines[2] == "line 7");
     assert(sp2.is_eof);
 
+    // hex view: 16 bytes per line, offset + hex + ascii; short last line padded.
+    const unsigned char hb[] = {'H', 'i', 0x00, 0xFF, 0x7F, ' '};
+    assert(FormatHexLine(0x10, hb, 6) ==
+        "00000010  48 69 00 FF 7F 20                                |Hi... |");
+
+    std::string bin(40, '\0');
+    for (size_t i = 0; i < bin.size(); i++) bin[i] = static_cast<char>(i);
+    auto read_bin = [&](int64_t off, char* out, int64_t sz) -> int64_t {
+        std::memcpy(out, bin.data() + off, sz);
+        return sz;
+    };
+    auto h1 = ReadHexPage(read_bin, bin.size(), 0, 1, 2, 1);
+    assert(h1.lines.size() == 2);
+    assert(h1.lines[0].rfind("00000000  00 01", 0) == 0);
+    assert(h1.lines[1].rfind("00000010  10 11", 0) == 0);
+    assert(h1.logical_end_offset == 16 && h1.logical_end_line == 2);
+    assert(!h1.is_eof && !h1.is_error);
+    auto h2 = ReadHexPage(read_bin, bin.size(), 32, 3, 4);
+    assert(h2.lines.size() == 1 && h2.is_eof && !h2.is_error);
+    assert(h2.lines[0].rfind("00000020  20 21 22 23 24 25 26 27 ", 0) == 0);
+    assert(h2.logical_end_offset == 40 && h2.logical_end_line == 4);
+
     std::cout << "ok  text_helper: all checks passed\n";
     return 0;
 }

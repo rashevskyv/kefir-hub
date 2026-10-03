@@ -2811,5 +2811,22 @@
   "Copying": "Kopyalanıyor",
   "will be added as new profiles.\\n\\nWe copy the current account save to SD first, in case something goes wrong.": "yeni profiller olarak eklenecek.\\n\\nBir şeyler ters giderse diye önce mevcut hesap kayıt verilerini SD karta kopyalıyoruz.",
   "Restore will replace that profile: name, avatar and Nintendo Account link. It will not add a second user.\\n\\nWe still copy the current account save to SD first, in case something goes wrong.": "Geri yükleme işlemi o profili değiştirecektir: ad, avatar ve Nintendo Hesabı bağlantısı. İkinci bir kullanıcı eklemeyecektir.\\n\\nBir şeyler ters gitmesi ihtimaline karşı mevcut hesap kaydını yine de önce SD karta kopyalıyoruz.",
-  "%s is not installed. Install the game to restore its save.": "%s yüklü değil. Kaydını geri yüklemek için oyunu yükleyin."
+  "%s is not installed. Install the game to restore its save.": "%s yüklü değil. Kaydını geri yüklemek için oyunu yükleyin.",
+  "Fill": "Doldur",
+  "Free space filled with zeros": "Boş alan sıfırlarla dolduruldu",
+  "Overwrite unused system memory space.": "Kullanılmayan sistem belleği alanının üzerine yaz.",
+  "Fill failed!": "Doldurma başarısız!",
+  "Filling with zeros": "Sıfırlarla dolduruluyor",
+  "Fill free NAND space with zeros": "Boş NAND alanını sıfırlarla doldur",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD kartındaki tüm boş alan sıfırlarla üzerine yazılsın mı? Dosyalar etkilenmez. Uzun sürebilir.",
+  "Show the raw bytes of the selected file.": "Seçilen dosyanın ham baytlarını göster.",
+  "View as hex": "Onaltılık olarak görüntüle",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Konsolun sistem belleğindeki tüm boş alan sıfırlarla üzerine yazılsın mı? Oyunlar ve kayıtlar etkilenmez. Uzun sürebilir.",
+  "Mods deleted": "Modlar silindi",
+  "Delete with mods": "Modlarla birlikte sil",
+  "Delete the mods of ": "Şunun modlarını sil: ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Bu oyunun modlarını hafıza kartından kaldır. Hileler korunur.",
+  "Delete mods": "Modları sil",
+  "Cheats are kept.": "Hileler korunur.",
+  "Backing up before deleting...": "Silinmeden önce yedekleniyor..."
 }

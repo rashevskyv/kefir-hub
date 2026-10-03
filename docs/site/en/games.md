@@ -93,16 +93,17 @@ The file is written to `/games/` on the microSD card.
 
 ## Delete a game
 1. Select the games (or focus one), press **+**.
-2. Choose [[Delete]] and confirm with [[Delete]].
+2. Choose [[Delete]] and confirm with [[Delete]]. If a selected game has mods, the question also offers [[Delete with mods]]: it removes the game's mods too (cheats stay).
 
 This removes the installed base game, updates and DLC and drops the game from the list. **Save data is kept** — the saves then appear in [[Saves]] under [[Deleted Games]]. To remove saves too, delete them in [Saves](saves.md#delete-a-save-from-the-console).
 
 ## Mods folder
 Atmosphère loads mods for a game from `/atmosphere/contents/<Title ID>/` on the microSD card (LayeredFS).
 
-- On the details screen, [[Mods folder]] shows [[Not found]], [[Empty]] or [[Found]] (has files).
+- On the details screen, [[Mods folder]] shows [[Not found]], [[Empty]] or [[Found]] with the size of the mods.
 - Press **+** → [[Open mods folder]] to open it in the file browser. If it does not exist the entry is called [[Create mods folder]]; confirm with [[Create]].
 - From the list, **+** → [[Create mods folders]] creates the folder for every selected game.
+- **+** → [[Delete mods]] removes everything in the folder except `cheats/`; cheats are managed in [Cheats](cheats.md).
 
 An empty folder does nothing; copy the mod's files into it.
 

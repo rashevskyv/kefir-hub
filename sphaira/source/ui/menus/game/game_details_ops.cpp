@@ -57,6 +57,8 @@ void DbiDetailsMenu::LoadGame() {
         auto& entry = CurrentEntry();
         LoadControlEntry(entry, true);
         LoadGameSummary(entry);
+        // walks the folder, so only for the open card, never for the whole list.
+        m_mods_size = entry.layeredfs ? ModsFolderSize(entry.app_id) : 0;
 
         m_components.clear();
         m_tickets.clear();
@@ -291,6 +293,28 @@ void DbiDetailsMenu::ShowGameActions() {
         options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
             OpenModsFolder();
         }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n)->SetIcon(ActionIcon::Folder);
+        if (CurrentEntry().layeredfs) {
+            options->Add<SidebarEntryCallback>("Delete mods"_i18n, [this](){
+                const auto app_id = CurrentEntry().app_id;
+                const auto name = CurrentEntry().GetName();
+                App::Push<OptionBox>("Delete the mods of "_i18n + name + "?\n" + "Cheats are kept."_i18n,
+                    "Back"_i18n, "Delete"_i18n, 0, [this, app_id, name](auto op_index){
+                        if (!op_index || !*op_index) {
+                            return;
+                        }
+                        App::Push<ProgressBox>(0, "Deleting"_i18n, name, [app_id](auto) -> Result {
+                            return DeleteGameMods(app_id);
+                        }, [this](Result rc){
+                            App::PushErrorBox(rc, "Delete failed!"_i18n);
+                            ProbeModsFolder(CurrentEntry());
+                            LoadGame();
+                            if (R_SUCCEEDED(rc)) {
+                                App::Notify("Mods deleted"_i18n);
+                            }
+                        });
+                    });
+            }, true, "Remove this game's mods from the memory card. Cheats are kept."_i18n)->SetIcon(ActionIcon::Delete);
+        }
     }
 
 

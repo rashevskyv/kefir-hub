@@ -2811,5 +2811,22 @@
   "Computer connected â MTP started": "Комп'ютер підключено — MTP запущено",
   "Confirm that both consoles are connected to the same local network and that the source console has Share active.": "Переконайтеся, що обидві консолі підключені до однієї локальної мережі та що на джерелі активовано спільний доступ (Share).",
   "Connected": "Підключено",
-  "%s is not installed. Install the game to restore its save.": "Гру «%s» не встановлено. Встановіть її, щоб відновити збереження."
+  "%s is not installed. Install the game to restore its save.": "Гру «%s» не встановлено. Встановіть її, щоб відновити збереження.",
+  "Fill": "Заповнити",
+  "Free space filled with zeros": "Вільне місце заповнено нулями",
+  "Overwrite unused system memory space.": "Перезаписати вільне місце в системній пам'яті.",
+  "Fill failed!": "Не вдалося заповнити!",
+  "Filling with zeros": "Заповнення нулями",
+  "Fill free NAND space with zeros": "Заповнити вільне місце в NAND нулями",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Перезаписати весь вільний простір на карті microSD нулями? Файли не чіпаються. Це може зайняти багато часу.",
+  "Show the raw bytes of the selected file.": "Показати байти вибраного файлу в шістнадцятковому вигляді.",
+  "View as hex": "Переглянути як HEX",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Перезаписати весь вільний простір у системній пам'яті консолі нулями? Ігри та збереження не зачіпаються. Це може зайняти багато часу.",
+  "Mods deleted": "Моди видалено",
+  "Delete with mods": "Видалити разом із модами",
+  "Delete the mods of ": "Видалити моди для ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Видалити моди цієї гри з карти пам'яті. Чити залишаються.",
+  "Delete mods": "Видалити моди",
+  "Cheats are kept.": "Чити залишаться.",
+  "Backing up before deleting...": "Створення резервної копії перед видаленням..."
 }

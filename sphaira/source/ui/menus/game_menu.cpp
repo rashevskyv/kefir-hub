@@ -312,14 +312,17 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     const auto buf = targets.size() == 1
                         ? "Are you sure you want to delete "_i18n + targets.front().GetName() + "?"
                         : "Are you sure you want to delete the selected games?"_i18n;
-                    App::Push<OptionBox>(
-                        buf,
-                        "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
-                            if (op_index && *op_index) {
-                                DeleteGames();
-                            }
-                        }, targets.front().image
-                    );
+                    const bool has_mods = std::ranges::any_of(targets, [](auto e){ ProbeModsFolder(e); return e.layeredfs; });
+                    const auto on_pick = [this](auto op_index){
+                        if (op_index && *op_index) {
+                            DeleteGames(*op_index == 2);
+                        }
+                    };
+                    if (has_mods) {
+                        App::Push<OptionBox>(buf, "Back"_i18n, "Delete"_i18n, "Delete with mods"_i18n, 0, on_pick, targets.front().image);
+                    } else {
+                        App::Push<OptionBox>(buf, "Back"_i18n, "Delete"_i18n, 0, on_pick, targets.front().image);
+                    }
                 }, true, "Permanently delete all selected games and their data."_i18n)->SetIcon(ActionIcon::Delete);
             }
 

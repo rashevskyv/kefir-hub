@@ -145,8 +145,9 @@ It shows up on the [[Backups]] tab as one more archive in the [[Kefir Hub]] grou
 <!-- TODO(verify): the recovery restore flow is being finished; recheck these steps. -->
 
 ## Delete a save from the console
-!!! warning
-    This deletes the save on the console. No backup is made. Back it up first.
+!!! note
+    Before deleting, Kefir Hub makes an automatic backup of each save (`AUTO - <user> - <date>.zip`, on the [[Backups]]
+    tab), so a save deleted by mistake can be restored. If that backup fails, the save is not deleted.
 
 1. On [[Installed Games]] or [[Deleted Games]], focus the game (or select several), press **A** → [[Delete]].
 2. In [[Delete Options]] pick the users and save types, then [[Delete Saves]].

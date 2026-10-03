@@ -18,6 +18,7 @@ namespace sphaira::ui::menu::fileview {
 enum class TextMode {
     View,
     Edit,
+    Hex, // read only, 16 bytes per row, any file type
 };
 
 struct Menu final : MenuBase {

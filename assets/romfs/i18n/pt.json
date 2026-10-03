@@ -2843,5 +2843,22 @@
   "No backups found for this game.": "Nenhuma cópia de segurança encontrada para este jogo.",
   "No restorable archives found for this game.": "Nenhum arquivo de cópia de segurança restaurável encontrado para este jogo.",
   "Cannot restore: compatible live save slot is missing for ": "Não é possível restaurar: falta o espaço de salvamento ativo compatível para ",
-  "%s is not installed. Install the game to restore its save.": "%s não está instalado. Instale o jogo para restaurar o seu progresso guardado."
+  "%s is not installed. Install the game to restore its save.": "%s não está instalado. Instale o jogo para restaurar o seu progresso guardado.",
+  "Fill": "Preencher",
+  "Free space filled with zeros": "Espaço livre preenchido com zeros",
+  "Overwrite unused system memory space.": "Sobrescrever espaço de memória do sistema não utilizado.",
+  "Fill failed!": "Falha ao preencher!",
+  "Filling with zeros": "A preencher com zeros",
+  "Fill free NAND space with zeros": "Preencher o espaço livre da NAND com zeros",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Sobrescrever todo o espaço livre no cartão microSD com zeros? Os ficheiros não são afetados. Pode demorar muito tempo.",
+  "Show the raw bytes of the selected file.": "Mostrar os bytes em bruto do ficheiro selecionado.",
+  "View as hex": "Ver como hex",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Sobrescrever todo o espaço livre na memória de sistema da consola com zeros? Os jogos e os dados guardados não são afetados. Pode demorar algum tempo.",
+  "Mods deleted": "Mods eliminados",
+  "Delete with mods": "Eliminar com mods",
+  "Delete the mods of ": "Eliminar os mods de ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Remover os mods deste jogo do cartão de memória. Os cheats são mantidos.",
+  "Delete mods": "Eliminar mods",
+  "Cheats are kept.": "Os cheats são mantidos.",
+  "Backing up before deleting...": "A fazer cópia de segurança antes de apagar..."
 }

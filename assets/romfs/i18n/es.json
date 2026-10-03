@@ -2817,5 +2817,22 @@
   "No packages found.": "No se encontraron paquetes.",
   "Failed to scan folder": "Error al escanear la carpeta",
   " ÐÂ· no play hours": " ÐÂ· sin horas de juego",
-  "%s is not installed. Install the game to restore its save.": "%s no está instalado. Instala el juego para restaurar su partida guardada."
+  "%s is not installed. Install the game to restore its save.": "%s no está instalado. Instala el juego para restaurar su partida guardada.",
+  "Fill": "Rellenar",
+  "Free space filled with zeros": "Espacio libre rellenado con ceros",
+  "Overwrite unused system memory space.": "Sobrescribir el espacio de memoria del sistema no utilizado.",
+  "Fill failed!": "¡Error al rellenar!",
+  "Filling with zeros": "Rellenando con ceros",
+  "Fill free NAND space with zeros": "Llenar el espacio libre de la NAND con ceros",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "¿Sobrescribir todo el espacio libre de la tarjeta microSD con ceros? Los archivos no se verán afectados. Puede tardar bastante.",
+  "Show the raw bytes of the selected file.": "Mostrar los bytes en crudo del archivo seleccionado.",
+  "View as hex": "Ver como hex",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "¿Sobrescribir todo el espacio libre en la memoria del sistema de la consola con ceros? No se modifican los juegos ni las partidas guardadas. Puede tardar bastante.",
+  "Mods deleted": "Mods eliminados",
+  "Delete with mods": "Eliminar con mods",
+  "Delete the mods of ": "Eliminar los mods de ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Eliminar los mods de este juego de la tarjeta de memoria. Los trucos se conservan.",
+  "Delete mods": "Eliminar mods",
+  "Cheats are kept.": "Se conservan los trucos.",
+  "Backing up before deleting...": "Creando copia de seguridad antes de borrar..."
 }

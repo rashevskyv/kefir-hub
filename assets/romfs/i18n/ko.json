@@ -2816,5 +2816,22 @@
   "Local backup library": "로컬 백업 라이브러리",
   "Restore user backups from the default library (/config/kefir/user_packs).": "기본 라이브러리(/config/kefir/user_packs)에서 사용자 백업을 복원합니다.",
   "Restore user backups from the default library (/config/kefir/account_backups).": "기본 라이브러리(/config/kefir/account_backups)에서 사용자 백업을 복원합니다.",
-  "%s is not installed. Install the game to restore its save.": "%s이(가) 설치되어 있지 않습니다. 세이브를 복원하려면 게임을 설치하세요."
+  "%s is not installed. Install the game to restore its save.": "%s이(가) 설치되어 있지 않습니다. 세이브를 복원하려면 게임을 설치하세요.",
+  "Fill": "채우기",
+  "Free space filled with zeros": "빈 공간을 0으로 채움",
+  "Overwrite unused system memory space.": "사용되지 않는 시스템 메모리 공간을 덮어씁니다.",
+  "Fill failed!": "채우기 실패!",
+  "Filling with zeros": "0으로 채우는 중",
+  "Fill free NAND space with zeros": "NAND 여유 공간을 0으로 채우기",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD 카드의 모든 여유 공간을 0으로 덮어쓰시겠습니까? 파일은 변경되지 않습니다. 시간이 오래 걸릴 수 있습니다.",
+  "Show the raw bytes of the selected file.": "선택한 파일의 원시 바이트를 표시합니다.",
+  "View as hex": "16진수로 보기",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "콘솔의 시스템 메모리에 있는 모든 여유 공간을 0으로 덮어씁니다. 게임과 세이브 데이터는 변경되지 않습니다. 시간이 다소 걸릴 수 있습니다.",
+  "Mods deleted": "모드가 삭제됨",
+  "Delete with mods": "모드와 함께 삭제",
+  "Delete the mods of ": "모드 삭제: ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "메모리 카드에서 이 게임의 모드를 제거합니다. 치트는 유지됩니다.",
+  "Delete mods": "모드 삭제",
+  "Cheats are kept.": "치트가 유지됩니다.",
+  "Backing up before deleting...": "삭제하기 전에 백업 중..."
 }

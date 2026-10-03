@@ -2811,5 +2811,22 @@
   "Enter password (optional)": "Sisesta parool (valikuline)",
   "Configure a new network storage share.": "Konfigureeri uus võrguhoidla jagamine.",
   "Restore for user…": "Kasutaja taastamine…",
-  "%s is not installed. Install the game to restore its save.": "%s ei ole installitud. Salvestuse taastamiseks installi mäng."
+  "%s is not installed. Install the game to restore its save.": "%s ei ole installitud. Salvestuse taastamiseks installi mäng.",
+  "Fill": "Täida",
+  "Free space filled with zeros": "Vaba ruum täidetud nullidega",
+  "Overwrite unused system memory space.": "Kirjuta kasutamata süsteemimälu ruum üle.",
+  "Fill failed!": "Täitmine ebaõnnestus!",
+  "Filling with zeros": "Nullidega täitmine",
+  "Fill free NAND space with zeros": "Täida vaba NAND ruum nullidega",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Kirjutada kõik microSD-kaardi vabad ruudud nullidega üle? Faile ei muudeta. See võib võtta kaua aega.",
+  "Show the raw bytes of the selected file.": "Kuva valitud faili toorbaidid.",
+  "View as hex": "Kuva heksakoodina",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Kirjutada konsooli süsteemimälu vaba ruum üle nullidega? Mänge ja salvestisi ei puuduta. See võib võtta aega.",
+  "Mods deleted": "Modid kustutatud",
+  "Delete with mods": "Kustuta modifikatsioonidega",
+  "Delete the mods of ": "Kustuta modifikatsioonid: ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Eemalda selle mängu modifikatsioonid mälukaardilt. Pettused säilitatakse.",
+  "Delete mods": "Kustuta modid",
+  "Cheats are kept.": "Cheats säilitatakse.",
+  "Backing up before deleting...": "Varundamine enne kustutamist..."
 }

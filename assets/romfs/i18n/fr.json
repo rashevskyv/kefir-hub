@@ -2817,5 +2817,22 @@
   "not enough free space": "espace libre insuffisant",
   "â¢ Open Kefir Hub yourself. We will continue the restore.": "• Ouvrez vous-même Kefir Hub. Nous continuerons la restauration.",
   "â¢ That puts the old profiles back and cancels this restore.": "• Cela remet les anciens profils en place et annule cette restauration.",
-  "%s is not installed. Install the game to restore its save.": "%s n'est pas installé. Installez le jeu pour restaurer sa sauvegarde."
+  "%s is not installed. Install the game to restore its save.": "%s n'est pas installé. Installez le jeu pour restaurer sa sauvegarde.",
+  "Fill": "Remplir",
+  "Free space filled with zeros": "Espace libre rempli de zéros",
+  "Overwrite unused system memory space.": "Écraser l'espace mémoire système inutilisé.",
+  "Fill failed!": "Échec du remplissage !",
+  "Filling with zeros": "Remplissage avec des zéros",
+  "Fill free NAND space with zeros": "Remplir l'espace libre de la NAND par des zéros",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Écraser tout l'espace libre de la carte microSD avec des zéros ? Les fichiers ne sont pas touchés. Cela peut prendre du temps.",
+  "Show the raw bytes of the selected file.": "Afficher les octets bruts du fichier sélectionné.",
+  "View as hex": "Afficher en hexadécimal",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Écraser tout l'espace libre de la mémoire système de la console par des zéros ? Les jeux et les sauvegardes ne sont pas touchés. Cela peut prendre du temps.",
+  "Mods deleted": "Mods supprimés",
+  "Delete with mods": "Supprimer avec les mods",
+  "Delete the mods of ": "Supprimer les mods de ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Supprimer les mods de ce jeu de la carte mémoire. Les codes de triche sont conservés.",
+  "Delete mods": "Supprimer les mods",
+  "Cheats are kept.": "Les cheats sont conservés.",
+  "Backing up before deleting...": "Sauvegarde avant la suppression..."
 }

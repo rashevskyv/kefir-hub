@@ -2843,5 +2843,22 @@
   "No backups found for this game.": "Nenhum backup encontrado para este jogo.",
   "No restorable archives found for this game.": "Nenhum arquivo de backup restaurável encontrado para este jogo.",
   "Cannot restore: compatible live save slot is missing for ": "Não é possível restaurar: falta o espaço de salvamento ativo compatível para ",
-  "%s is not installed. Install the game to restore its save.": "%s não está instalado. Instale o jogo para restaurar o save."
+  "%s is not installed. Install the game to restore its save.": "%s não está instalado. Instale o jogo para restaurar o save.",
+  "Fill": "Preencher",
+  "Free space filled with zeros": "Espaço livre preenchido com zeros",
+  "Overwrite unused system memory space.": "Sobrescrever espaço de memória do sistema não utilizado.",
+  "Fill failed!": "Falha ao preencher!",
+  "Filling with zeros": "Preenchendo com zeros",
+  "Fill free NAND space with zeros": "Preencher espaço livre da NAND com zeros",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Sobrescrever todo o espaço livre no cartão microSD com zeros? Os arquivos não são afetados. Pode demorar bastante.",
+  "Show the raw bytes of the selected file.": "Mostrar os bytes brutos do arquivo selecionado.",
+  "View as hex": "Ver como hex",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Sobrescrever todo o espaço livre na memória do sistema do console com zeros? Jogos e salvamentos não são afetados. Isso pode demorar bastante.",
+  "Mods deleted": "Mods excluídos",
+  "Delete with mods": "Excluir com mods",
+  "Delete the mods of ": "Excluir os mods de ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Remover os mods deste jogo do cartão de memória. Os cheats são mantidos.",
+  "Delete mods": "Excluir mods",
+  "Cheats are kept.": "Os cheats são mantidos.",
+  "Backing up before deleting...": "Criando backup antes de excluir..."
 }

@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <ctime>
 #include <ranges>
+#include <strings.h>
 
 namespace sphaira::ui::menu::game {
 
@@ -488,6 +489,71 @@ Result DeleteApplicationKeepSave(u64 app_id) {
     ON_SCOPE_EXIT(serviceClose(&srv));
 
     return ns::DeleteApplicationRecord(srv_ptr, app_id);
+}
+
+namespace {
+
+auto IsCheatsDir(const FsDirectoryEntry& e) -> bool {
+    return e.type == FsDirEntryType_Dir && !strcasecmp(e.name, "cheats");
+}
+
+auto ReadEntries(fs::Fs& fs, const fs::FsPath& path, std::vector<FsDirectoryEntry>& out) -> Result {
+    fs::Dir dir;
+    R_TRY(fs.OpenDirectory(path, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir));
+    return dir.ReadAll(out);
+}
+
+auto TreeSize(fs::Fs& fs, const fs::FsPath& path) -> s64 {
+    std::vector<FsDirectoryEntry> entries;
+    if (R_FAILED(ReadEntries(fs, path, entries))) {
+        return 0;
+    }
+    s64 total{};
+    for (const auto& e : entries) {
+        total += e.type == FsDirEntryType_Dir ? TreeSize(fs, fs::AppendPath(path, e.name)) : e.file_size;
+    }
+    return total;
+}
+
+} // namespace
+
+auto ModsFolderSize(u64 app_id) -> s64 {
+    fs::FsNativeSd sd;
+    const auto root = title::GetContentsPath(app_id);
+    std::vector<FsDirectoryEntry> entries;
+    if (R_FAILED(ReadEntries(sd, root, entries))) {
+        return 0;
+    }
+    s64 total{};
+    for (const auto& e : entries) {
+        if (!IsCheatsDir(e)) {
+            total += e.type == FsDirEntryType_Dir ? TreeSize(sd, fs::AppendPath(root, e.name)) : e.file_size;
+        }
+    }
+    return total;
+}
+
+Result DeleteGameMods(u64 app_id) {
+    fs::FsNativeSd sd;
+    const auto root = title::GetContentsPath(app_id);
+    std::vector<FsDirectoryEntry> entries;
+    R_TRY(ReadEntries(sd, root, entries));
+    bool kept_cheats{};
+    for (const auto& e : entries) {
+        const auto path = fs::AppendPath(root, e.name);
+        if (IsCheatsDir(e)) {
+            kept_cheats = true;
+        } else if (e.type == FsDirEntryType_Dir) {
+            R_TRY(sd.DeleteDirectoryRecursively(path));
+        } else {
+            R_TRY(sd.DeleteFile(path));
+        }
+    }
+    // an empty contents folder would still read as "Mods folder: Empty".
+    if (!kept_cheats) {
+        R_TRY(sd.DeleteDirectory(root));
+    }
+    R_SUCCEED();
 }
 
 } // namespace sphaira::ui::menu::game

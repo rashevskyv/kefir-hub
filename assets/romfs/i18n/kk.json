@@ -2811,5 +2811,22 @@
   "Latest version": "Соңғы нұсқа",
   "Add-on content": "Қосымша контент",
   "Ownfoil Server": "Ownfoil Server",
-  "%s is not installed. Install the game to restore its save.": "«%s» ойыны орнатылмаған. Сақтауды қалпына келтіру үшін ойынды орнатыңыз."
+  "%s is not installed. Install the game to restore its save.": "«%s» ойыны орнатылмаған. Сақтауды қалпына келтіру үшін ойынды орнатыңыз.",
+  "Fill": "Tolтыру",
+  "Free space filled with zeros": "Бос орын нөлдермен толтырылды",
+  "Overwrite unused system memory space.": "Қолданылмаған жүйелік жад орнын қайта жазу.",
+  "Fill failed!": "Толтыру сәтсіз аяқталды!",
+  "Filling with zeros": "Нөлдермен толтыру",
+  "Fill free NAND space with zeros": "NAND бос орнын нөлдермен толтыру",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD картасындағы барлық бос орынды нөлдермен қайта жазу керек пе? Файлдарға әсер етпейді. Бұл біраз уақыт алуы мүмкін.",
+  "Show the raw bytes of the selected file.": "Таңдалған файлдың шикі байттарын көрсету.",
+  "View as hex": "Онaltic ретінде көру",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Консоль жүйелік жадындағы барлық бос орынды нөлдермен қайта жазу керек пе? Ойындар мен сақтауларға әсер етілмейді. Бұл көп уақыт алуы мүмкін.",
+  "Mods deleted": "Модтар жойылды",
+  "Delete with mods": "Модтармен бірге жою",
+  "Delete the mods of ": "Модтарын жою: ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Бұл ойынның модтарын жад картасынан жою. Читтер сақталады.",
+  "Delete mods": "Модтарды жою",
+  "Cheats are kept.": "Читтер сақталды.",
+  "Backing up before deleting...": "Жою алдында сақтық көшірме жасалуда..."
 }

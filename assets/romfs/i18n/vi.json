@@ -2816,5 +2816,22 @@
   "When restoring, also list backups that exist on WebDAV but not on this console.": "Khi khôi phục, cũng hiển thị các bản sao lưu tồn tại trên WebDAV nhưng không có trên máy này.",
   "When to install": "Thời điểm cài đặt",
   "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Bạn có thể liên kết sau trong Công cụ â Người dùng â Liên kết Tài khoản Nintendo. Một số trò chơi yêu cầu tài khoản đã liên kết để khởi động.",
-  "%s is not installed. Install the game to restore its save.": "%s chưa được cài đặt. Hãy cài đặt trò chơi để khôi phục dữ liệu lưu."
+  "%s is not installed. Install the game to restore its save.": "%s chưa được cài đặt. Hãy cài đặt trò chơi để khôi phục dữ liệu lưu.",
+  "Fill": "Điền",
+  "Free space filled with zeros": "Không gian trống được điền số không",
+  "Overwrite unused system memory space.": "Ghi đè lên vùng nhớ hệ thống chưa sử dụng.",
+  "Fill failed!": "Điền thất bại!",
+  "Filling with zeros": "Đang điền bằng số 0",
+  "Fill free NAND space with zeros": "Điền không gian NAND trống bằng số 0",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Ghi đè toàn bộ dung lượng trống trên thẻ microSD bằng các số không? Các tệp không bị ảnh hưởng. Quá trình này có thể mất nhiều thời gian.",
+  "Show the raw bytes of the selected file.": "Hiển thị byte thô của tệp đã chọn.",
+  "View as hex": "Xem dạng hệ 16",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Ghi đè tất cả dung lượng trống trong bộ nhớ hệ thống của máy bằng các số không? Trò chơi và dữ liệu lưu không bị ảnh hưởng. Việc này có thể mất nhiều thời gian.",
+  "Mods deleted": "Đã xóa bản mod",
+  "Delete with mods": "Xóa cùng các bản mod",
+  "Delete the mods of ": "Xóa các mod của ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Xóa các mod của trò chơi này khỏi thẻ nhớ. Các mã cheat được giữ lại.",
+  "Delete mods": "Xóa mod",
+  "Cheats are kept.": "Các cheat được giữ lại.",
+  "Backing up before deleting...": "Đang sao lưu trước khi xóa..."
 }

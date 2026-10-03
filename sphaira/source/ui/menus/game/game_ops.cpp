@@ -42,8 +42,8 @@ void Menu::CreateContentsFolders() {
     App::Notify(std::to_string(created) + " " + "mods folder(s) ready"_i18n);
 }
 
-void Menu::DeleteGames() {
-    App::Push<ProgressBox>(0, "Deleting"_i18n, "", [this](auto pbox) -> Result {
+void Menu::DeleteGames(bool with_mods) {
+    App::Push<ProgressBox>(0, "Deleting"_i18n, "", [this, with_mods](auto pbox) -> Result {
         auto targets = GetSelectedEntries();
 
         for (s64 i = 0; i < std::size(targets); i++) {
@@ -53,6 +53,12 @@ void Menu::DeleteGames() {
             pbox->SetTitle(e.GetName());
             pbox->UpdateTransfer(i + 1, std::size(targets));
             R_TRY(DeleteApplicationKeepSave(e.app_id));
+            if (with_mods) {
+                ProbeModsFolder(e);
+                if (e.layeredfs) {
+                    R_TRY(DeleteGameMods(e.app_id));
+                }
+            }
         }
 
         R_SUCCEED();

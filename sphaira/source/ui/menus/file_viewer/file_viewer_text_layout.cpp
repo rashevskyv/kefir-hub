@@ -69,7 +69,7 @@ void Menu::LoadPage(s64 page_idx) {
         const s64 last_idx = static_cast<s64>(m_page_offsets.size()) - 1;
         const s64 last_offset = m_page_offsets[last_idx];
         const s64 last_line = m_page_start_lines[last_idx];
-        const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_buffer_rows, m_viewport_rows);
+        const auto p = ReadViewPage(m_mode == TextMode::Hex, read_func, m_file_size, last_offset, last_line, m_buffer_rows, m_viewport_rows);
         if (p.is_error || p.logical_end_offset <= last_offset) {
             if (!m_load_failed) {
                 m_load_result = FsError_InvalidSize;
@@ -97,7 +97,7 @@ void Menu::LoadPage(s64 page_idx) {
     m_current_page = page_idx;
 
     if (!m_page_cache.contains(page_idx)) {
-        auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[page_idx], m_page_start_lines[page_idx], m_buffer_rows, m_viewport_rows);
+        auto p = ReadViewPage(m_mode == TextMode::Hex, read_func, m_file_size, m_page_offsets[page_idx], m_page_start_lines[page_idx], m_buffer_rows, m_viewport_rows);
         if (p.is_error) {
             if (!m_load_failed) {
                 m_load_result = FsError_InvalidSize;
@@ -167,7 +167,7 @@ void Menu::PreloadPages() {
             const s64 last_idx = static_cast<s64>(m_page_offsets.size()) - 1;
             const s64 last_offset = m_page_offsets[last_idx];
             const s64 last_line = m_page_start_lines[last_idx];
-            const auto p = text_helper::ReadPage(read_func, m_file_size, last_offset, last_line, m_buffer_rows, m_viewport_rows);
+            const auto p = ReadViewPage(m_mode == TextMode::Hex, read_func, m_file_size, last_offset, last_line, m_buffer_rows, m_viewport_rows);
             if (p.is_error || p.logical_end_offset <= last_offset) {
                 if (!m_load_failed) {
                     m_load_result = FsError_InvalidSize;
@@ -190,7 +190,7 @@ void Menu::PreloadPages() {
         }
 
         if (next_page < static_cast<s64>(m_page_offsets.size())) {
-            auto p = text_helper::ReadPage(read_func, m_file_size, m_page_offsets[next_page], m_page_start_lines[next_page], m_buffer_rows, m_viewport_rows);
+            auto p = ReadViewPage(m_mode == TextMode::Hex, read_func, m_file_size, m_page_offsets[next_page], m_page_start_lines[next_page], m_buffer_rows, m_viewport_rows);
             if (p.is_error) {
                 if (!m_load_failed) {
                     m_load_result = FsError_InvalidSize;
@@ -508,7 +508,7 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
     float bounds[4];
     nvgFontSize(vg, m_font_size);
     gfx::textBounds(vg, 0, 0, bounds, gutter.c_str());
-    const float gutter_w = bounds[2] - bounds[0] + 16.f;
+    const float gutter_w = m_mode == TextMode::Hex ? 0.f : bounds[2] - bounds[0] + 16.f;
     const bool is_ini = text_helper::IsIniFile(m_path);
     const bool has_sel = HasSelection();
     const auto [sel_start, sel_end] = GetTargetRange();
@@ -530,9 +530,11 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
 
         const s64 display_line_num = m_is_streamed ? (m_stream_start_line + index) : (index + 1);
         const float gutter_font_size = std::max(10.f, m_font_size - 2.f);
-        gfx::drawTextArgs(vg, pos.x + gutter_w - 8.f, pos.y + pos.h / 2.f, gutter_font_size,
-            NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%ld", static_cast<long>(display_line_num));
+        if (m_mode != TextMode::Hex) {
+            gfx::drawTextArgs(vg, pos.x + gutter_w - 8.f, pos.y + pos.h / 2.f, gutter_font_size,
+                NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%ld", static_cast<long>(display_line_num));
+        }
 
         const auto colour = theme->GetColour((focused && m_editable) ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         const auto text_x = pos.x + gutter_w;
@@ -578,6 +580,8 @@ void Menu::DrawText(NVGcontext* vg, Theme* theme) {
                     NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, colour, "%s", m_lines[index].c_str());
             }
             nvgRestore(vg);
+        } else if (m_mode == TextMode::Hex) {
+            DrawMonoText(vg, text_x, pos.y + pos.h / 2.f, m_font_size, colour, m_lines[index]);
         } else {
             nvgSave(vg);
             nvgIntersectScissor(vg, text_x, pos.y, text_w, pos.h);

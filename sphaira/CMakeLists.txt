@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.974)
+set(sphaira_VERSION 0.13.975)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -306,6 +306,7 @@ add_executable(sphaira
     source/title_move.cpp
     source/title_nacp.cpp
     source/title_nsp.cpp
+    source/zero_fill.cpp
     source/minizip_helper.cpp
     source/fs_zip.cpp
     source/fs_ncm.cpp

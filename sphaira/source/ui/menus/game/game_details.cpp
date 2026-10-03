@@ -221,7 +221,7 @@ void DbiDetailsMenu::Draw(NVGcontext* vg, Theme* theme) {
         // Block 2: Left column, lower pair (Languages, Mods folder)
         draw_stat_block(265.f, {STAT_ROW_Y[2], STAT_ROW_Y[3]}, 530.f, {
             StatItem{"Languages"_i18n, m_languages.empty() ? "-" : m_languages, false, true, 2},
-            StatItem{"Mods folder"_i18n, !entry.mods_folder ? "Not found"_i18n : (entry.layeredfs ? "Found"_i18n : "Empty"_i18n), true, false, 3}
+            StatItem{"Mods folder"_i18n, !entry.mods_folder ? "Not found"_i18n : (entry.layeredfs ? "Found"_i18n + " · " + FormatBytes(static_cast<u64>(m_mods_size)) : "Empty"_i18n), true, false, 3}
         });
 
         // Block 3: Right column, upper pair (Play time, Last played)

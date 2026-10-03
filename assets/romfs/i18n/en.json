@@ -2811,5 +2811,22 @@
   "not enough free space": "not enough free space",
   "â¢ Open Kefir Hub yourself. We will continue the restore.": "â¢ Open Kefir Hub yourself. We will continue the restore.",
   "â¢ That puts the old profiles back and cancels this restore.": "â¢ That puts the old profiles back and cancels this restore.",
-  "%s is not installed. Install the game to restore its save.": "%s is not installed. Install the game to restore its save."
+  "%s is not installed. Install the game to restore its save.": "%s is not installed. Install the game to restore its save.",
+  "Fill": "Fill",
+  "Filling with zeros": "Filling with zeros",
+  "Free space filled with zeros": "Free space filled with zeros",
+  "Fill failed!": "Fill failed!",
+  "Fill free NAND space with zeros": "Fill free NAND space with zeros",
+  "Overwrite unused system memory space.": "Overwrite unused system memory space.",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.",
+  "View as hex": "View as hex",
+  "Show the raw bytes of the selected file.": "Show the raw bytes of the selected file.",
+  "Delete mods": "Delete mods",
+  "Delete the mods of ": "Delete the mods of ",
+  "Cheats are kept.": "Cheats are kept.",
+  "Mods deleted": "Mods deleted",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Remove this game's mods from the memory card. Cheats are kept.",
+  "Delete with mods": "Delete with mods",
+  "Backing up before deleting...": "Backing up before deleting..."
 }

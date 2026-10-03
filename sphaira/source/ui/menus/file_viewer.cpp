@@ -112,7 +112,7 @@ void Menu::LoadCurrentFile() {
     m_zl_modifier_used = false;
     m_touch_was_pinch = false;
     m_rotation = 0;
-    m_is_image_file = IsImageExtension(path::Extension(m_path));
+    m_is_image_file = m_mode != TextMode::Hex && IsImageExtension(path::Extension(m_path));
 
     if (!m_fs) {
         m_fs = &m_sd_fs;

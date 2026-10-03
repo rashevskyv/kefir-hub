@@ -2816,5 +2816,22 @@
   "FunControl is started by Kefir Hub when you use the fan curve, then stopped automatically. You do not need to turn it on here.": "FunControlは、ファンカーブを使用するときにKefir Hubによって起動され、その後自動的に停止します。ここでオンにする必要はありません。",
   "Give this backup a custom name.": "このバックアップにカスタム名を設定します。",
   "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te": "コンソールが起動しない場合: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te",
-  "%s is not installed. Install the game to restore its save.": "%s はインストールされていません。セーブデータを復元するにはゲームをインストールしてください。"
+  "%s is not installed. Install the game to restore its save.": "%s はインストールされていません。セーブデータを復元するにはゲームをインストールしてください。",
+  "Fill": "塗りつぶし",
+  "Free space filled with zeros": "空き領域をゼロで埋める",
+  "Overwrite unused system memory space.": "未使用のシステムメモリ領域を上書きします。",
+  "Fill failed!": "塗りつぶしに失敗しました！",
+  "Filling with zeros": "0で埋めています",
+  "Fill free NAND space with zeros": "NANDの空き領域をゼロで埋める",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSDカードのすべての空き領域をゼロで上書きしますか？ ファイルは変更されません。時間がかかる場合があります。",
+  "Show the raw bytes of the selected file.": "選択したファイルのローバイトを表示します。",
+  "View as hex": "16進数で表示",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "本体のシステムメモリの空き領域をすべてゼロで上書きしますか？ ゲームやセーブデータには影響しません。時間がかかることがあります。",
+  "Mods deleted": "Modが削除されました",
+  "Delete with mods": "MODも含めて削除",
+  "Delete the mods of ": "のMODを削除",
+  "Remove this game's mods from the memory card. Cheats are kept.": "このゲームのModをメモリカードから削除します（チートは保持されます）。",
+  "Delete mods": "MODを削除",
+  "Cheats are kept.": "チートは保持されます。",
+  "Backing up before deleting...": "削除する前にバックアップを作成しています..."
 }

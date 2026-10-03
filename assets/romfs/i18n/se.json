@@ -2816,5 +2816,22 @@
   "Failed to download backup files from the sending console.": "Det gick inte att ladda ner filer för säkerhetskopia från den sändande konsolen.",
   "Downloaded backup is incomplete or invalid.": "Den nedladdade säkerhetskopian är ofullständig eller ogiltig.",
   "Failed to transfer user backup from the sending console.": "Det gick inte att överföra användarsäkerhetskopian från den sändande konsolen.",
-  "%s is not installed. Install the game to restore its save.": "%s är inte installerat. Installera spelet för att återställa dess sparfil."
+  "%s is not installed. Install the game to restore its save.": "%s är inte installerat. Installera spelet för att återställa dess sparfil.",
+  "Fill": "Fyll",
+  "Free space filled with zeros": "Ledigt utrymme fyllt med nollor",
+  "Overwrite unused system memory space.": "Skriv över oanvänt systemminnesutrymme.",
+  "Fill failed!": "Fyllning misslyckades!",
+  "Filling with zeros": "Fyller med nollor",
+  "Fill free NAND space with zeros": "Fyll ledigt NAND-utrymme med nollor",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Skriv över allt ledigt utrymme på microSD-kortet med nollor? Filer berörs inte. Det kan ta lång tid.",
+  "Show the raw bytes of the selected file.": "Visa råa byte för den markerade filen.",
+  "View as hex": "Visa som hex",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Skriva över allt ledigt utrymme i konsolens systemminne med nollor? Spel och sparade data berörs inte. Det kan ta lite tid.",
+  "Mods deleted": "Moddar raderade",
+  "Delete with mods": "Radera med moddar",
+  "Delete the mods of ": "Radera modifikationer för ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Ta bort det här spelets moddar från minneskortet. Fusk behålls.",
+  "Delete mods": "Ta bort moddar",
+  "Cheats are kept.": "Cheats behålles.",
+  "Backing up before deleting...": "Säkerhetskopierar innan radering..."
 }

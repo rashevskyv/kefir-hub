@@ -2811,5 +2811,22 @@
   "This archive contains one app. The app will be installed to ": "To archiwum zawiera jedną aplikację. Aplikacja zostanie zainstalowana w ",
   "Tick what to extract. Unpack the files into a folder, or into a new folder named after the archive.": "Zaznacz, co wypakować. Rozpakuj pliki do folderu lub nowego folderu nazwanego tak jak archiwum.",
   "All / none": "Wszystkie / żadne",
-  "%s is not installed. Install the game to restore its save.": "Gra %s nie jest zainstalowana. Zainstaluj ją, aby przywrócić zapis."
+  "%s is not installed. Install the game to restore its save.": "Gra %s nie jest zainstalowana. Zainstaluj ją, aby przywrócić zapis.",
+  "Fill": "Wypełnij",
+  "Free space filled with zeros": "Wolna przestrzeń wypełniona zerami",
+  "Overwrite unused system memory space.": "Zastąp nieużywaną przestrzeń pamięci systemowej.",
+  "Fill failed!": "Wypełnienie nie powiodło się!",
+  "Filling with zeros": "Wypełnianie zerami",
+  "Fill free NAND space with zeros": "Wypełnij wolną przestrzeń NAND zerami",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Nadisać całą wolną przestrzeń na karcie microSD zerami? Pliki nie zostaną naruszone. To może potrwać.",
+  "Show the raw bytes of the selected file.": "Pokaż surowe bajty wybranego pliku.",
+  "View as hex": "Wyświetl jako szesnastkowy",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Nadpisać całą wolną przestrzeń w pamięci systemowej konsoli zerami? Gry i zapisy nie zostaną naruszone. To może potrwać dłuższą chwilę.",
+  "Mods deleted": "Usunięto modyfikacje",
+  "Delete with mods": "Usuń z modami",
+  "Delete the mods of ": "Usuń mody dla ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Usuń modyfikacje tej gry z karty pamięci. Kody są zachowywane.",
+  "Delete mods": "Usuń mody",
+  "Cheats are kept.": "Cheaty są zachowane.",
+  "Backing up before deleting...": "Tworzenie kopii zapasowej przed usunięciem..."
 }

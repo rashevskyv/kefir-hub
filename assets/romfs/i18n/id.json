@@ -2811,5 +2811,22 @@
   "When and how new versions are installed.": "Kapan dan bagaimana versi baru diinstal.",
   "When it finishes, open Kefir Hub yourself to continue the restore.": "Setelah selesai, buka Kefir Hub sendiri untuk melanjutkan pemulihan.",
   "When restoring, also list backups that exist on WebDAV but not on this console.": "Saat memulihkan, tampilkan juga cadangan yang ada di WebDAV tetapi tidak ada di konsol ini.",
-  "%s is not installed. Install the game to restore its save.": "%s belum terpasang. Pasang gimnya untuk memulihkan data simpanannya."
+  "%s is not installed. Install the game to restore its save.": "%s belum terpasang. Pasang gimnya untuk memulihkan data simpanannya.",
+  "Fill": "Isi",
+  "Free space filled with zeros": "Ruang kosong diisi dengan nol",
+  "Overwrite unused system memory space.": "Timpa ruang memori sistem yang tidak digunakan.",
+  "Fill failed!": "Pengisian gagal!",
+  "Filling with zeros": "Mengisi dengan nol",
+  "Fill free NAND space with zeros": "Isi ruang NAND kosong dengan nol",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Timpa semua ruang kosong pada kartu microSD dengan nol? File tidak disentuh. Proses ini bisa memakan waktu lama.",
+  "Show the raw bytes of the selected file.": "Tampilkan byte mentah dari file yang dipilih.",
+  "View as hex": "Tampilkan sebagai hex",
+  "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time.": "Timpa semua ruang kosong di memori sistem konsol dengan angka nol? Game dan penyimpanan tidak terpengaruh. Ini bisa memakan waktu lama.",
+  "Mods deleted": "Mod dihapus",
+  "Delete with mods": "Hapus dengan mod",
+  "Delete the mods of ": "Hapus mod dari ",
+  "Remove this game's mods from the memory card. Cheats are kept.": "Hapus mod game ini dari kartu memori. Cheat tetap disimpan.",
+  "Delete mods": "Hapus mod",
+  "Cheats are kept.": "Cheat dipertahankan.",
+  "Backing up before deleting...": "Mencadangkan sebelum menghapus..."
 }

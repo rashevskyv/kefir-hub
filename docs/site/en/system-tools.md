@@ -12,8 +12,10 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | [[Fan curve]] | Fan speed curves for handheld and docked mode. |
 | [[Wi-Fi]] | Saved Wi-Fi networks. |
 | [[Users]] | Console user profiles. See [Users](users.md). |
+| [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free space with zeros](#fill-free-space-with-zeros). |
+| [[Fill free NAND space with zeros]] | Overwrites the unused space of the console's system memory. |
 
-[[System information]], [[Fill free SD space with zeros]], [[Remove parental controls]] and [[Clean system junk]] are planned; they open a "Coming soon" message.
+[[System information]], [[Remove parental controls]] and [[Clean system junk]] are planned; they open a "Coming soon" message.
 
 ## [[Module Manager]]
 
@@ -151,6 +153,19 @@ Press **B** to clear the selection.
 ## [[Users]]
 
 Create, rename, back up and link console user profiles. See [Users](users.md).
+
+## Fill free space with zeros
+
+Overwrites the space no file uses with zeros, on the memory card or in the console's system memory. Files, games and
+saves stay as they are. Use it before you sell or hand over a console or a card, so deleted data cannot be recovered.
+
+**Where:** [[Tools]] → [[Tools]] → [[Fill free SD space with zeros]] or [[Fill free NAND space with zeros]]
+
+1. Select the item and confirm with [[Fill]].
+2. Wait. The bar shows how much is written; it can take a long time on a large card.
+3. **B** cancels; the space written so far is freed again.
+
+Kefir Hub keeps 64 MB free while it writes, so the system can still save its own data.
 
 ## Problems
 

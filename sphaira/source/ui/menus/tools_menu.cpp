@@ -17,6 +17,7 @@
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
+#include "zero_fill.hpp"
 
 #include "ui/nvg_util.hpp"
 
@@ -104,6 +105,23 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
+}
+
+void FillWithZeros(NcmStorageId storage_id, const std::string& question, const std::string& storage_name) {
+    App::Push<ui::OptionBox>(question, "Back"_i18n, "Fill"_i18n, 1, [storage_id, storage_name](auto op_index){
+        if (!op_index || !*op_index) {
+            return;
+        }
+        App::Push<ui::ProgressBox>(0, "Filling with zeros"_i18n, storage_name, [storage_id](auto pbox) -> Result {
+            return zero_fill::FillFreeSpace(storage_id, pbox);
+        }, [](Result rc){
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Free space filled with zeros"_i18n);
+            } else if (rc != Result_TransferCancelled) {
+                App::PushErrorBox(rc, "Fill failed!"_i18n);
+            }
+        });
+    });
 }
 
 void DrawToolsGrid(NVGcontext* vg, Theme* theme, List& list, s64 selected, const std::vector<ToolItem>& items) {
@@ -428,7 +446,16 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
             App::Push<ui::menu::users::Menu>();
         }},
         { "System information"_i18n, "Firmware, Atmosphere and console details."_i18n, 0, ComingSoon },
-        { "Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, 0, ComingSoon },
+        { "Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, 0, [](){
+            FillWithZeros(NcmStorageId_SdCard,
+                "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time."_i18n,
+                "microSD card"_i18n);
+        }},
+        { "Fill free NAND space with zeros"_i18n, "Overwrite unused system memory space."_i18n, 0, [](){
+            FillWithZeros(NcmStorageId_BuiltInUser,
+                "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time."_i18n,
+                "System memory"_i18n);
+        }},
         { "Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, 0, ComingSoon },
         { "Clean system junk"_i18n, "Remove leftover cache and temporary files."_i18n, 0, ComingSoon },
     };

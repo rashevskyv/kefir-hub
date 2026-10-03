@@ -110,7 +110,7 @@ private:
         UpdateStorageHighlight();
     }
 
-    void DeleteGames();
+    void DeleteGames(bool with_mods);
     void DumpGames(u32 flags);
     void DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selection);
     void CreateRepack(Entry entry, u32 flags);

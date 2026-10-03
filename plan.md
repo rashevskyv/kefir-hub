@@ -269,6 +269,52 @@ Context: `docs/dev/AUDIT-2026-10-02-docs.md`. When a task changes behaviour, upd
 
 ---
 
+## Phase F — features DBI has and Kefir Hub does not (decided 2026-10-03)
+Sources: DBI 810 walked in Eden; DBI 912 strings (`D:\git\dev\dbi_patcher\data\dictionary.xlsx`, column 1); DBI
+README (old). DBI 905/912 quit themselves in Eden and Ryujinx (`am Exit` at 3 s), so their screens are not seen yet:
+F.0 first. Rule: user-first UI (names, one question, no dead options). Each task: check Hub first, then build only
+the gap. Code tasks follow the delivery ritual and update `docs/site`.
+
+- [ ] F.0 `[USER]` DVR capture of DBI 912 on the console: main menu, Tools, Installed games → (+) and game card,
+      Saves → each tab (+), Tickets (+), file browser (+), Activity log, Settings. Confirms F.1–F.12 behaviour.
+- [ ] F.1 ⏸ *Deferred by the user (needs a focused session).* **Game needs newer firmware (SDK).** (a) Install
+      warning also when the Program NCA `SdkAddonVersion` major > firmware major (today only RequiredSystemVersion,
+      `yati_metadata.cpp:427-440`). (b) Installed game → "Reset required version". (c) Experimental "Use SDK from
+      another installed game" (DBI 828+ Export/Replace SDK): donor = installed game with the highest SDK ≤ firmware
+      major; copy its exefs `sdk` to `/atmosphere/contents/<ProgramID>/exefs/sdk`; show it as active with one-tap
+      removal; offer removal after a firmware or game update. Never download or bundle sdk files; never swap silently.
+- [ ] F.2 **Game updates → hand off to the Kefir apps.** Do not build a downloader. First find out how the Kefir apps
+      that fetch games get a request (candidates in `D:\git\dev\_kefir\kefir\switch`: TorrentShopNX — catalog +
+      torrserver, `config.ini`; pipensx; confirm with the user which two). Then: find installed games with a newer
+      update/DLC (titledb versions; Hub reads titledb in `ownfoil_api.cpp`) and open that app on the found title,
+      or show the list with a button per game if the app takes no arguments.
+- [ ] F.4 **System cleanup.** Orphaned content (records/NCAs of removed games), install placeholders, unused tickets,
+      downloaded system updates. Hub's "Remove leftover cache" covers only temp files. `[USER]` sends a screenshot of
+      the expected screen first.
+- [ ] F.5 **Mods.** Big area, split into tasks when started: (a) installing mods automatically when a game folder
+      with mods is dropped over MTP together with the game (put them in `/atmosphere/contents/<TitleID>/`); (b) mods
+      size in the game card, "Delete mods" (also offered when deleting the game) — done; (c) "Pack mods into romfs.bin".
+- [x] F.6 **Saves.** "Check backups" (validate backup archives), browse a backup's files read-only, automatic backup
+      before deleting a save (DBI FoolproofSaveDelete).
+- [ ] F.8 **Language bound to a translation pack.** Ukrainian translations ship as a repacked update + translation +
+      metadata saying which language the game must start with (some must be forced to English). Hub reads that
+      metadata on install and forces the language for that title; plus a manual "Force language" per installed game
+      (DBI Force language). Find the mechanism first (how DBI forces it); define the metadata format with the user.
+- [x] F.9 **Hex view** in the file browser. (Second panel exists. RAR/7z do not: only zip extracts; 7z only for RetroArch in the App Store.)
+- [ ] F.9b **RAR/7z extraction** in the file browser — ask the user (needs a new library).
+- [x] F.10 **Fill free NAND space with zeros** (next to "Fill free SD space with zeros").
+- [ ] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
+      requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
+      options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.
+- [ ] F.12 **MTP "Installed games": add a mods folder** per game (`atmosphere/contents/<TitleID>`; DBI "Mods &
+      cheats"). NSP and combined NSP already exist.
+- [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
+
+Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
+firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
+
+---
+
 ## Phase S — DocsDemo build: screenshots of every screen, any language (decided 2026-10-03)
 Goal: every `<!-- shot -->` marker can be taken in Eden, in any UI language, by `tools/docs/shoot.ps1`, without a
 console. A `DOCS_DEMO` build is the normal app plus fictional content: six meme games with covers, their saves,

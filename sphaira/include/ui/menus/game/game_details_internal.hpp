@@ -71,6 +71,7 @@ struct DbiDetailsMenu final : MenuBase {
     u64 m_save_size{};
     u64 m_save_journal_size{};
     u64 m_save_allocated_size{};
+    s64 m_mods_size{};
 };
 
 } // namespace sphaira::ui::menu::game
