@@ -397,7 +397,7 @@ Rules for this phase:
       software keyboard first). Game card row: wrap `fsDeviceOperatorIsGameCardInserted` and serve the
       `storage: gamecard` title as the card → `install-gamecard-games-row`. Second storage for `file-browser-split`,
       `file-browser-sources`, `settings-sources`: a demo mount named like a USB drive over `sdmc:/config/kefir/demo/usb/`.
-- [ ] S.5 **Validate fixtures** (host test, real data): `tests/test_demo_fixtures.py` — titles.json parses, ids are
+- [x] S.5 **Validate fixtures** (host test, real data): `tests/test_demo_fixtures.py` — titles.json parses, ids are
       base ids (`...000`, unique), every icon exists and is a 256x256 JPEG, every `user` index < 3, every http fixture
       parses as JSON. Runs in `tests/run.sh`.
 - [ ] S.6 Build checkpoint (`ReleaseWithInstall` and `DocsDemo`), then record the recipes for all remaining markers in
