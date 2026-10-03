@@ -210,7 +210,7 @@ struct RestoreBackupMenu final : MenuBase {
                 "%s", e.pack.nickname.c_str());
 
             std::string detail_str = !e.pack.created_label.empty() ? e.pack.created_label : e.pack.folder_name;
-            detail_str += e.pack.has_playtime ? " В· play hours"_i18n : " В· no play hours"_i18n;
+            detail_str += e.pack.has_playtime ? " · play hours"_i18n : " · no play hours"_i18n;
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f + 13.f, 15.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO),

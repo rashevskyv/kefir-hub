@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.976 — Users: the separator in user headers shows as a dot
+- Users grid header and the profile backup lists (restore library, remote list) printed "В·" (a UTF-8 "·" saved through CP1251) between the nickname and the link status; now "·". No other such bytes in sphaira/ or i18n.
+- host tests: pass · nro: built (with v0.13.977) · switch: pending (Users screen header)
+
 ## v0.13.975 — Phase F: fill free space with zeros, hex view, mods size/delete, backup before save delete
 - Tools: "Fill free SD space with zeros" works (was "Coming soon") + new "Fill free NAND space with zeros" (`zero_fill.cpp`: one ncm placeholder of free space − 64 MiB, written with zeros, always deleted; B cancels). File browser → Advanced Options → "View as hex" (`TextMode::Hex`, streamed pager, `text_helper::FormatHexLine/ReadHexPage` + host test, fixed-cell drawing for aligned columns). Game card shows mods size; "Delete mods" (keeps `cheats/`); deleting games with mods offers "Delete with mods". Deleting a live save first writes an AUTO backup (save is kept if the backup fails). Phase F added to plan.md (DBI comparison).
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — fill SD/NAND (cancel too), hex view of a large file, mods size/delete + delete with mods, save delete leaves an AUTO zip

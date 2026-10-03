@@ -136,7 +136,7 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff(0);
     }
     const auto& item = m_items[m_index];
-    SetTitleSubHeading(item.nickname + "  В·  " + StatusLabel(item), true);
+    SetTitleSubHeading(item.nickname + "  ·  " + StatusLabel(item), true);
     SetSubHeading(std::to_string(m_index + 1) + " / " + std::to_string(m_items.size()));
 }
 
