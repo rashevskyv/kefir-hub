@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 namespace sphaira::wifi {
 
@@ -104,6 +107,9 @@ auto GetProfiles() -> std::vector<WifiProfile> {
 
         profiles.push_back(std::move(p));
     }
+#if DOCS_DEMO
+    demo::SetWifiProfiles(profiles);
+#endif
 
     std::sort(profiles.begin(), profiles.end(), [](const WifiProfile& a, const WifiProfile& b) {
         if (a.is_connected != b.is_connected) {

@@ -373,7 +373,7 @@ Rules for this phase:
       (`graphify explain` on the users grid draw); wrap if it is one call, else mark `users-list` as `user`.
       Shots: `saves-list`, `saves-backup-options`, `saves-select-backup`, `saves-restore-confirm`, `saves-backup-group`,
       `users-list`, `users-delete-hold`.
-- [ ] S.3 **Network replies from fixtures.** (Skip parts S.0 found working in Eden.) Online state: wrap the
+- [x] S.3 **Network replies from fixtures.** (Skip parts S.0 found working in Eden.) Online state: wrap the
       `nifm` calls `net.cpp` uses so the header shows Wi-Fi connected with an IP. Download layer: in `download*.cpp`
       one `#if DOCS_DEMO` hook before curl: if `sdmc:/config/kefir/demo/http/<host>/<path>` (POST: `<path>.<fnv1a of
       body>`) exists, return it as the response (status 200, same callbacks), else fail like offline. Fixtures, all
@@ -393,7 +393,7 @@ Rules for this phase:
       `install-sd-card-queue-review` (4 packages, one Analysis failed), `install-sd-card-queue-progress` (2 of 4,
       speed graph, log), `install-sd-card-minimized-badge`, `install-sd-card-screensaver`, `install-sd-card-summary`
       (3 installed, 1 failed), `install-mtp-progress`, `network-ftp-progress`, `install-usb-waiting`, `install-usb-queue`,
-      `console-transfer-remote-list`, `console-transfer-te-confirm`, `console-transfer-ip-entry` (keyboard: try Eden's
+      `console-transfer-remote-list`, `console-transfer-te-confirm`, `software-extract-options` (ZipExtractBox on a fixture zip), `updater-firmware-confirm` (install prompt), `console-transfer-ip-entry` (keyboard: try Eden's
       software keyboard first). Game card row: wrap `fsDeviceOperatorIsGameCardInserted` and serve the
       `storage: gamecard` title as the card → `install-gamecard-games-row`. Second storage for `file-browser-split`,
       `file-browser-sources`, `settings-sources`: a demo mount named like a USB drive over `sdmc:/config/kefir/demo/usb/`.

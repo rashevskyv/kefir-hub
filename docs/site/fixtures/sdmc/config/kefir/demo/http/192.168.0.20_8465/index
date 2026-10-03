@@ -1,0 +1,1 @@
+{"uid": "docs-home-shop", "name": "Home Shop", "version": "2.3.0", "protocol_version": 1, "motd": "", "public": false, "features": {"shop": true, "dumps_upload": false, "save_backup": true, "resumable_download": true, "resumable_upload": false}}

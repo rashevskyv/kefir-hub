@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.979)
+set(sphaira_VERSION 0.13.980)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -376,6 +376,7 @@ if (DOCS_DEMO)
     target_sources(sphaira PRIVATE
         source/demo/demo_data.cpp
         source/demo/demo_input.cpp
+        source/demo/demo_http.cpp
         source/demo/demo_wrap.cpp
     )
     target_link_options(sphaira PRIVATE

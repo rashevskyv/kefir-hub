@@ -10,6 +10,8 @@
 # saved, then the next language. Eden can stay in the background. Before the run: the DOCS_DEMO build
 # (build/DocsDemo/kefir-hub.nro; -Nro to override) is copied into Eden, and docs/site/fixtures/sdmc/ over the Eden sdmc.
 # A recipe may name a demo scene ("scene": "<name>", DOCS_DEMO builds only); it is set as [demo] scene=<name>.
+# "ini": {"config.auto_update": "2"} sets Hub config keys for that shot's launch (removed again afterwards);
+# "startup": [...] replaces the shared startup steps for it. Such a shot gets its own launch.
 param([string[]]$Lang = @('en'), [string[]]$Only = @(), [switch]$Missing, [int]$Wait = 90, [switch]$List,
       [string]$Nro = '')
 $ErrorActionPreference = 'Stop'
@@ -46,32 +48,49 @@ $fixtures = "$Repo\docs\site\fixtures\sdmc"
 if (Test-Path $fixtures) { Copy-Item "$fixtures\*" $Sdmc -Recurse -Force }
 
 $Lang | ForEach-Object { Assert-Lang $_ }
-$taken = 0; $skipped = @(); $scene = $null
+$taken = 0; $skipped = @(); $scene = $null; $iniSet = @()
+
+# Fresh launch for $id in $lang: its "ini" keys ({"section.key": "value"}), scene, then the startup steps
+# (a recipe's own "startup" replaces the shared one).
+function Launch($id, $lang) {
+  foreach ($k in $script:iniSet) { $sk = $k -split '\.', 2; Set-HubIni $sk[0] $sk[1] '' }
+  $script:iniSet = @()
+  $ini = $data.shots.$id.ini
+  if ($ini) { foreach ($p in $ini.PSObject.Properties) { $sk = $p.Name -split '\.', 2; Set-HubIni $sk[0] $sk[1] "$($p.Value)"; $script:iniSet += $p.Name } }
+  Set-HubIni demo scene "$($data.shots.$id.scene)"
+  Set-HubLang $lang
+  Start-Hub $Wait
+  $startup = if ($data.shots.$id.PSObject.Properties['startup']) { $data.shots.$id.startup } else { $data.startup }
+  foreach ($s in @($startup)) { if ($s) { Step $s } }
+}
+function Take($id, $lang) {
+  foreach ($s in $data.shots.$id.steps) { Step $s }
+  Shot "$Repo\docs\site\$lang\img\$id.png" | Out-Null
+  $script:taken++; Write-Host "shot $lang/$id"
+}
+
 try {
 foreach ($id in $ids) {
   $st = Status $id
   if ($st -ne 'recipe') { $skipped += "$id ($st)"; continue }
   $todo = @($Lang | Where-Object { -not ($Missing -and (Test-Path "$Repo\docs\site\$_\img\$id.png")) })
   if (-not $todo.Count) { continue }
-  $want = "$($data.shots.$id.scene)"
-  if ($want -ne $scene) {
-    Set-HubIni demo scene $want
-    Set-HubLang $todo[0]
-    Start-Hub $Wait
-    foreach ($s in @($data.startup)) { if ($s) { Step $s } }
-    $scene = $want
+  if ($data.shots.$id.PSObject.Properties['startup']) {
+    # its screen exists only right after a launch (a startup dialog): `lang` would rebuild it away.
+    foreach ($l in $todo) { Launch $id $l; Take $id $l }
+    $scene = $null
+    continue
   }
-  foreach ($l in $todo) {
-    Lang $l
-    foreach ($s in $data.shots.$id.steps) { Step $s }
-    Shot "$Repo\docs\site\$l\img\$id.png" | Out-Null
-    $taken++; Write-Host "shot $l/$id"
-  }
+  # shots with the same scene and "ini" keys share one launch; `lang` switches the language in place.
+  $want = "$($data.shots.$id.scene)|$(if ($data.shots.$id.ini) { $data.shots.$id.ini | ConvertTo-Json -Compress })"
+  if ($want -ne $scene) { Launch $id $todo[0]; $scene = $want }
+  foreach ($l in $todo) { Lang $l; Take $id $l }
 }
 } finally {
   Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
   Start-Sleep -Milliseconds 500
   Restore-OwnData
+  foreach ($k in $iniSet) { $sk = $k -split '\.', 2; Set-HubIni $sk[0] $sk[1] '' }
 }
 Set-HubIni demo scene ''
 Write-Host "taken: $taken"

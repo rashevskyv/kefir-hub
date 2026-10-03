@@ -1,4 +1,7 @@
 #include "download_internal.hpp"
+#if DOCS_DEMO
+#include "demo/demo_http.hpp"
+#endif
 #include <algorithm>
 #include <cctype>
 #include <cstring>
@@ -87,6 +90,12 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
     if (!g_running || !curl || e.GetToken().stop_requested()) {
         return {};
     }
+
+#if DOCS_DEMO
+    if (auto reply = demo::HttpReply(e)) {
+        return std::move(*reply);
+    }
+#endif
 
     App::SetAutoSleepDisabled(true);
     ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));

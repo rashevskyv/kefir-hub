@@ -9,6 +9,10 @@
 #include <utility>
 #include <vector>
 
+namespace sphaira::wifi {
+struct WifiProfile;
+}
+
 namespace sphaira::demo {
 
 struct Update {
@@ -51,6 +55,10 @@ std::vector<u8> Icon(const Title& t);
 // save_discovery.cpp: one account save per titles.json "saves" entry, appended to the User space list
 // (uid = the Eden profile at that index; a missing profile skips the save).
 void AppendSaves(FsSaveDataSpaceId space, std::vector<FsSaveDataInfo>& out);
+
+// wifi_manager.cpp: two saved networks, the first one connected. They replace the list: Eden's own profile
+// has no name and would read as a broken entry.
+void SetWifiProfiles(std::vector<wifi::WifiProfile>& out);
 
 // NAND user partition space from titles.json "nand" (Eden has no BIS filesystem); false if absent.
 bool NandSpace(s64* free, s64* total);

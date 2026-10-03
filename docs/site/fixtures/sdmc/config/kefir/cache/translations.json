@@ -1,0 +1,13 @@
+{
+    "tag": "FW22.5.0-TR2.01",
+    "firmware": "22.5.0",
+    "warning_required": false,
+    "languages": [
+        {
+            "id": "uk",
+            "name": "Українська",
+            "zip_url": "https://github.com/NX-Family/NX-Translation/releases/download/FW22.5.0-TR2.01/NX-Translation_uk.zip",
+            "replacements": [{"label": "Русский", "dir": "ru"}]
+        }
+    ]
+}

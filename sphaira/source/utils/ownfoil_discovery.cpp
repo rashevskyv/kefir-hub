@@ -114,6 +114,12 @@ auto BroadcastTargets() -> std::vector<in_addr_t> {
 auto Discover(std::stop_token token) -> std::vector<DiscoveredServer> {
     std::vector<DiscoveredServer> out{};
 
+#if DOCS_DEMO
+    // docs screenshots: one fictional shop answers on the LAN; its http replies are fixtures.
+    out.push_back({.uid = "docs-demo-shop", .name = "Living Room Shop", .version = "2.3.0", .local = "192.168.0.42:8465"});
+    return out;
+#endif
+
     SocketWrapper sock{AF_INET, SOCK_DGRAM, 0};
     if (sock < 0) {
         log_write("[OWNFOIL] discovery: failed to create socket: %s\n", strerror(errno));

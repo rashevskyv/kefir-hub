@@ -1,0 +1,148 @@
+{
+ "data": {
+  "switch": {
+   "packs": {
+    "nodes": [
+     {
+      "hexId": "a1",
+      "name": "Midnight Borshch",
+      "creator": {
+       "username": "Smetana"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a1@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a1@jpg"
+      }
+     },
+     {
+      "hexId": "a2",
+      "name": "Stonks Green",
+      "creator": {
+       "username": "LineGoesUp"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a2@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a2@jpg"
+      }
+     },
+     {
+      "hexId": "a3",
+      "name": "Cozy Kotyk",
+      "creator": {
+       "username": "Meow"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a3@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a3@jpg"
+      }
+     },
+     {
+      "hexId": "a4",
+      "name": "Pixel Night",
+      "creator": {
+       "username": "8bitFox"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a4@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a4@jpg"
+      }
+     },
+     {
+      "hexId": "a5",
+      "name": "Sunny Mood",
+      "creator": {
+       "username": "Calm"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a5@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a5@jpg"
+      }
+     },
+     {
+      "hexId": "a6",
+      "name": "Retro Wave",
+      "creator": {
+       "username": "Synth"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a6@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a6@jpg"
+      }
+     },
+     {
+      "hexId": "a7",
+      "name": "Minimal Mint",
+      "creator": {
+       "username": "Leaf"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a7@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a7@jpg"
+      }
+     },
+     {
+      "hexId": "a8",
+      "name": "Lava Lamp",
+      "creator": {
+       "username": "Groovy"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a8@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a8@jpg"
+      }
+     },
+     {
+      "hexId": "a9",
+      "name": "Deep Ocean",
+      "creator": {
+       "username": "Wave"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/a9@jpg",
+       "hdUrl": "https://img.themezer.net/demo/a9@jpg"
+      }
+     },
+     {
+      "hexId": "aa",
+      "name": "Paper Craft",
+      "creator": {
+       "username": "Origami"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/aa@jpg",
+       "hdUrl": "https://img.themezer.net/demo/aa@jpg"
+      }
+     },
+     {
+      "hexId": "ab",
+      "name": "Neon Arcade",
+      "creator": {
+       "username": "Coin"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/ab@jpg",
+       "hdUrl": "https://img.themezer.net/demo/ab@jpg"
+      }
+     },
+     {
+      "hexId": "ac",
+      "name": "Autumn Leaves",
+      "creator": {
+       "username": "Maple"
+      },
+      "collagePreview": {
+       "thumbUrl": "https://img.themezer.net/demo/ac@jpg",
+       "hdUrl": "https://img.themezer.net/demo/ac@jpg"
+      }
+     }
+    ],
+    "pageInfo": {
+     "page": 1,
+     "pageCount": 3,
+     "itemCount": 36,
+     "limit": 12
+    }
+   }
+  }
+ }
+}

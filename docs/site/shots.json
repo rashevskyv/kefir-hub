@@ -189,6 +189,204 @@
                                                           "A",
                                                           "wait 1"
                                                       ]
-                                        }
+                                        },
+                  "software-appstore-grid":  {
+                                                 "steps":  [
+                                                               "R",
+                                                               "wait 1",
+                                                               "Down",
+                                                               "Right",
+                                                               "A",
+                                                               "wait 1.5",
+                                                               "A",
+                                                               "wait 5"
+                                                           ]
+                                             },
+                  "software-appstore-entry":  {
+                                                  "steps":  [
+                                                                "R",
+                                                                "wait 1",
+                                                                "Down",
+                                                                "Right",
+                                                                "A",
+                                                                "wait 1.5",
+                                                                "A",
+                                                                "wait 5",
+                                                                "A",
+                                                                "wait 4"
+                                                            ]
+                                              },
+                  "themes-themezer-grid":  {
+                                               "steps":  [
+                                                             "R",
+                                                             "wait 1",
+                                                             "Right 2",
+                                                             "A",
+                                                             "wait 2",
+                                                             "A",
+                                                             "wait 3",
+                                                             "B",
+                                                             "wait 3"
+                                                         ]
+                                           },
+                  "updater-main":  {
+                                       "steps":  [
+                                                     "R",
+                                                     "wait 1",
+                                                     "Down",
+                                                     "A",
+                                                     "wait 5"
+                                                 ]
+                                   },
+                  "updater-changelog":  {
+                                            "steps":  [
+                                                          "R",
+                                                          "wait 1",
+                                                          "Down",
+                                                          "A",
+                                                          "wait 5",
+                                                          "A",
+                                                          "wait 3",
+                                                          "Down 3",
+                                                          "wait 1"
+                                                      ]
+                                        },
+                  "updater-downgrade-warning":  {
+                                                    "steps":  [
+                                                                  "R",
+                                                                  "wait 1",
+                                                                  "Down",
+                                                                  "A",
+                                                                  "wait 5",
+                                                                  "Down 2",
+                                                                  "A",
+                                                                  "wait 2"
+                                                              ]
+                                                },
+                  "updater-hub-update-prompt":  {
+                                                    "ini":  {
+                                                                "config.auto_update":  "2"
+                                                            },
+                                                    "startup":  [
+
+                                                                ],
+                                                    "steps":  [
+                                                                  "wait 2"
+                                                              ]
+                                                },
+                  "network-ownfoil-servers":  {
+                                                  "steps":  [
+                                                                "R",
+                                                                "wait 1",
+                                                                "Down",
+                                                                "Right",
+                                                                "A",
+                                                                "wait 1.5",
+                                                                "Down 2",
+                                                                "A",
+                                                                "wait 4",
+                                                                "X",
+                                                                "wait 1.5",
+                                                                "Down 4",
+                                                                "A",
+                                                                "wait 2",
+                                                                "Down",
+                                                                "A",
+                                                                "wait 4"
+                                                            ]
+                                              },
+                  "network-ownfoil-catalog":  {
+                                                  "steps":  [
+                                                                "R",
+                                                                "wait 1",
+                                                                "Down",
+                                                                "Right",
+                                                                "A",
+                                                                "wait 1.5",
+                                                                "Down 2",
+                                                                "A",
+                                                                "wait 4"
+                                                            ]
+                                              },
+                  "network-ownfoil-install-panel":  {
+                                                        "steps":  [
+                                                                      "R",
+                                                                      "wait 1",
+                                                                      "Down",
+                                                                      "Right",
+                                                                      "A",
+                                                                      "wait 1.5",
+                                                                      "Down 2",
+                                                                      "A",
+                                                                      "wait 4",
+                                                                      "A",
+                                                                      "wait 4",
+                                                                      "A",
+                                                                      "wait 2"
+                                                                  ]
+                                                    },
+                  "system-tools-wifi":  {
+                                            "steps":  [
+                                                          "R",
+                                                          "wait 1",
+                                                          "Down",
+                                                          "Right 2",
+                                                          "A",
+                                                          "wait 1.5",
+                                                          "Down 2",
+                                                          "A",
+                                                          "wait 2"
+                                                      ]
+                                        },
+                  "settings-about":  {
+                                         "steps":  [
+                                                       "R",
+                                                       "wait 1",
+                                                       "Down 2",
+                                                       "Right",
+                                                       "A",
+                                                       "wait 1.5",
+                                                       "Right",
+                                                       "Down 6",
+                                                       "A",
+                                                       "wait 3"
+                                                   ]
+                                     },
+                  "kefir-settings-translate":  {
+                                                   "steps":  [
+                                                                 "R",
+                                                                 "wait 1",
+                                                                 "Down 2",
+                                                                 "A",
+                                                                 "wait 2",
+                                                                 "Down 4",
+                                                                 "A",
+                                                                 "wait 2"
+                                                             ]
+                                               },
+                  "cheats-select":  {
+                                        "steps":  [
+                                                      "R",
+                                                      "wait 1",
+                                                      "Right",
+                                                      "A",
+                                                      "wait 1",
+                                                      "Right 2",
+                                                      "A",
+                                                      "wait 2",
+                                                      "Down 2",
+                                                      "A",
+                                                      "wait 3",
+                                                      "Right 2",
+                                                      "A",
+                                                      "wait 4",
+                                                      "A",
+                                                      "Down",
+                                                      "A",
+                                                      "Down",
+                                                      "A",
+                                                      "wait 1"
+                                                  ]
+                                    }
               }
 }

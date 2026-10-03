@@ -1,0 +1,12 @@
+{
+    "cfws": {
+        "Atmosphere": {
+            "Kefir 930": "https://github.com/rashevskyv/kefir/releases/download/930/kefir930.zip"
+        }
+    },
+    "firmwares": {
+        "22.5.0": "https://github.com/THZoria/NX_Firmware/releases/download/22.5.0/Firmware.22.5.0.zip",
+        "22.1.0": "https://github.com/THZoria/NX_Firmware/releases/download/22.1.0/Firmware.22.1.0.zip",
+        "20.5.0": "https://github.com/THZoria/NX_Firmware/releases/download/20.5.0/Firmware.20.5.0.zip"
+    }
+}

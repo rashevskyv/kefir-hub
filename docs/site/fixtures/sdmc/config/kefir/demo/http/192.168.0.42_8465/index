@@ -1,0 +1,1 @@
+{"uid": "docs-demo-shop", "name": "Living Room Shop", "version": "2.3.0", "protocol_version": 1, "motd": "Demo shop for the Kefir Hub docs", "public": false, "features": {"shop": true, "dumps_upload": true, "save_backup": true, "resumable_download": true, "resumable_upload": true}}

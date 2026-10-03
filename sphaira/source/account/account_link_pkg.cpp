@@ -20,6 +20,10 @@
 namespace sphaira::account_link {
 auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_count) -> Result {
     out_linked_count = 0;
+#if DOCS_DEMO
+    // docs screenshots never link the emulator's profiles (a stray A on "Link and reboot").
+    return MAKERESULT(Module_Kernel, KernelError_NotImplemented);
+#endif
     if (targets.empty()) {
         R_SUCCEED();
     }
@@ -315,6 +319,10 @@ auto ApplyLinkPackages(const std::vector<TargetLink>& targets, u32& out_linked_c
 
 
 auto UnlinkLinkedProfiles(const std::vector<AccountUid>& uids, u32& out_unlinked_count) -> Result {
+#if DOCS_DEMO
+    out_unlinked_count = 0;
+    return MAKERESULT(Module_Kernel, KernelError_NotImplemented);
+#endif
     out_unlinked_count = 0;
     R_UNLESS(!uids.empty(), Result_FsEmpty);
 

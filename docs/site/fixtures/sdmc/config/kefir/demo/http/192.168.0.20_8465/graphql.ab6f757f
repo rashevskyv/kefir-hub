@@ -1,0 +1,79 @@
+{
+ "data": {
+  "title": {
+   "name": "Goose Delivery Service",
+   "publisher": "Honk Works",
+   "intro": "Every parcel arrives. Eventually.",
+   "description": "Deliver parcels across a sleepy town as a goose with places to be. Fictional demo game for the Kefir Hub docs.",
+   "releaseDate": "2026-05-14",
+   "category": [
+    "Simulation",
+    "Adventure"
+   ],
+   "numberOfPlayers": "1-2",
+   "size": "2147483648",
+   "rating": "E",
+   "region": "WORLD",
+   "banner": {
+    "url": "/demo/screens/0100DE0000110000.jpg",
+    "local": true
+   },
+   "screenshots": [
+    {
+     "url": "/demo/screens/0100DE0000110000.jpg",
+     "local": true
+    }
+   ],
+   "availableVersions": [
+    {
+     "version": 131072,
+     "releaseDate": "2026-09-01"
+    }
+   ],
+   "base": [
+    {
+     "displayVersion": "1.0.0",
+     "downloadSize": "2147483648",
+     "downloadUrl": "/api/shop/0100DE0000110000/base",
+     "downloadExtension": "nsp"
+    }
+   ],
+   "updates": [
+    {
+     "appVersion": 65536,
+     "displayVersion": "1.1.0",
+     "downloadUrl": "/api/shop/0100DE0000110000/v65536",
+     "downloadExtension": "nsp"
+    },
+    {
+     "appVersion": 131072,
+     "displayVersion": "1.2.0",
+     "downloadUrl": "/api/shop/0100DE0000110000/v131072",
+     "downloadExtension": "nsp"
+    }
+   ],
+   "dlc": [
+    {
+     "appId": "0100DE0000111001",
+     "appVersion": 0,
+     "downloadUrl": "/api/shop/0100DE0000110000/dlc1",
+     "downloadExtension": "nsp",
+     "titledb": {
+      "name": "Golden Bell Pack",
+      "intro": "A bell that honks."
+     }
+    },
+    {
+     "appId": "0100DE0000111002",
+     "appVersion": 0,
+     "downloadUrl": "/api/shop/0100DE0000110000/dlc2",
+     "downloadExtension": "nsp",
+     "titledb": {
+      "name": "Winter Scarf Pack",
+      "intro": "Stay warm on the rounds."
+     }
+    }
+   ]
+  }
+ }
+}

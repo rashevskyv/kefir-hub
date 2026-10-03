@@ -1,0 +1,29 @@
+## Changelog
+#### **UKR**
+Демо-журнал змін для скріншотів документації Kefir Hub.
+
+**930**
+* [**Оновлено**] Kefir Hub — нові скріншоти документації, усі екрани будь-якою мовою.
+* [**Оновлено**] Atmosphere — стабільніший запуск після оновлення прошивки.
+* [**Виправлено**] Тема за замовчуванням знову має темний фон у вкладці Ігри.
+
+**929**
+* [**Додано**] Резервні копії збережень показують ім'я власника.
+* [**Оновлено**] Hekate — швидше створення emuMMC.
+
+**928**
+* [**Виправлено**] Перенесення гри між NAND і microSD показує вільне місце до і після.
+#### **ENG**
+Demo changelog for the Kefir Hub documentation screenshots.
+
+**930**
+* [**Updated**] Kefir Hub — new documentation screenshots, every screen in any language.
+* [**Updated**] Atmosphere — steadier boot after a firmware update.
+* [**Fixed**] The default theme has a dark background on the Games tab again.
+
+**929**
+* [**Added**] Save backups show the owner's name.
+* [**Updated**] Hekate — faster emuMMC creation.
+
+**928**
+* [**Fixed**] Moving a game between NAND and microSD shows the free space before and after.

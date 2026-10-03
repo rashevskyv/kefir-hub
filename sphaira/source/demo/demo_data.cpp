@@ -1,6 +1,7 @@
 #include "demo/demo_data.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "wifi_manager.hpp"
 
 #include <yyjson.h>
 #include <algorithm>
@@ -153,6 +154,21 @@ void AppendSaves(FsSaveDataSpaceId space, std::vector<FsSaveDataInfo>& out) {
             info.size = s.size;
             out.push_back(info);
         }
+    }
+}
+
+void SetWifiProfiles(std::vector<wifi::WifiProfile>& out) {
+    out.clear();
+    const struct { const char* name; bool connected; } nets[] = {{"Home Wi-Fi", true}, {"Kotyk 5G", false}};
+    for (size_t i = 0; i < std::size(nets); i++) {
+        wifi::WifiProfile p{};
+        p.uuid.uuid[0] = u8(0xDE);
+        p.uuid.uuid[1] = u8(i + 1);
+        p.name = p.ssid = nets[i].name;
+        p.auth = NifmAuthentication_Wpa2Psk;
+        p.enc = NifmEncryption_Aes;
+        p.is_connected = nets[i].connected;
+        out.push_back(std::move(p));
     }
 }
 

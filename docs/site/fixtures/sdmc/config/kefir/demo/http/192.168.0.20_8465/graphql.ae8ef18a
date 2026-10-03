@@ -1,0 +1,113 @@
+{
+ "data": {
+  "apps": {
+   "total": 8,
+   "items": [
+    {
+     "appId": "0100DE0000110000",
+     "titleId": "0100DE0000110000",
+     "displayVersion": "1.2.0",
+     "titledb": {
+      "name": "Goose Delivery Service",
+      "publisher": "Honk Works",
+      "icon": {
+       "url": "/demo/icons/0100DE0000110000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000120000",
+     "titleId": "0100DE0000120000",
+     "displayVersion": "2.0.1",
+     "titledb": {
+      "name": "Bread Knight",
+      "publisher": "Crust Games",
+      "icon": {
+       "url": "/demo/icons/0100DE0000120000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000130000",
+     "titleId": "0100DE0000130000",
+     "displayVersion": "1.0.0",
+     "titledb": {
+      "name": "Space Hamster",
+      "publisher": "Wheel Studio",
+      "icon": {
+       "url": "/demo/icons/0100DE0000130000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000140000",
+     "titleId": "0100DE0000140000",
+     "displayVersion": "1.4.3",
+     "titledb": {
+      "name": "Sock Hunter",
+      "publisher": "Laundry Day",
+      "icon": {
+       "url": "/demo/icons/0100DE0000140000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000150000",
+     "titleId": "0100DE0000150000",
+     "displayVersion": "3.1.0",
+     "titledb": {
+      "name": "Moon Bakery",
+      "publisher": "Crater Cakes",
+      "icon": {
+       "url": "/demo/icons/0100DE0000150000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000160000",
+     "titleId": "0100DE0000160000",
+     "displayVersion": "0.9.2",
+     "titledb": {
+      "name": "Rubber Duck Debugger",
+      "publisher": "Quack Labs",
+      "icon": {
+       "url": "/demo/icons/0100DE0000160000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000170000",
+     "titleId": "0100DE0000170000",
+     "displayVersion": "1.1.0",
+     "titledb": {
+      "name": "Cat Cafe Tycoon",
+      "publisher": "Meow",
+      "icon": {
+       "url": "/demo/icons/0100DE0000170000.jpg",
+       "local": true
+      }
+     }
+    },
+    {
+     "appId": "0100DE0000180000",
+     "titleId": "0100DE0000180000",
+     "displayVersion": "1.0.5",
+     "titledb": {
+      "name": "Tiny Tractor 2026",
+      "publisher": "Field Day",
+      "icon": {
+       "url": "/demo/icons/0100DE0000180000.jpg",
+       "local": true
+      }
+     }
+    }
+   ]
+  }
+ }
+}
