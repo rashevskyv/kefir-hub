@@ -210,4 +210,23 @@ auto FsGameProxy::InfoDirEntry(std::string_view which) const -> FsDirectoryEntry
     return MakeVirtualFileEntry(m_names.readme, static_cast<s64>(InfoText(which).size()));
 }
 
+Result FsGameProxy::ModsSdPath(const sphaira::mtp::ParsedPath& pp, fs::FsPath& out) const {
+    const auto it = m_games.find(pp.game);
+    R_UNLESS(it != m_games.end(), FsError_PathNotFound);
+    out = title::GetContentsPath(it->second.app_id);
+    if (!pp.filename.empty()) {
+        out = fs::AppendPath(out, pp.filename.c_str());
+    }
+    R_SUCCEED();
+}
+
+Result FsGameProxy::ModsSdItem(const char* path, fs::FsPath& out) const {
+    const auto pp = Parse(path);
+    if (pp.kind != sphaira::mtp::PathKind::ModsPath || pp.filename.empty()) {
+        log_write("[MTP-GAMES] rejecting write to %s\n", path);
+        R_THROW(FsError_NotImplemented);
+    }
+    return ModsSdPath(pp, out);
+}
+
 } // namespace sphaira::haze

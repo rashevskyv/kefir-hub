@@ -190,6 +190,10 @@ USB-накопичувачі, і консоль показує [[USB storage tur
 | [[Separate files]] | Папку на кожну гру, де базова гра, оновлення й кожне DLC — окремі файли NSP. |
 | [[Both]] | Три папки: `Merged` (як [[Compatible dump]]), `Separate` (як [[Separate files]]) і `Forwarders` (форвардери HOME Menu). |
 
+У режимах [[Separate files]] і [[Both]] у папці кожної гри є ще папка `Моди` (англійською `Mods`).
+Це папка гри `/atmosphere/contents/<Title ID>/` на карті пам'яті (моди й чити): копіюйте в неї моди й з неї, перейменовуйте
+чи видаляйте, як на диску карти пам'яті. Файли NSP поруч лишаються лише для читання.
+
 <!-- shot: sharing-mtp-storages | Settings, MTP storages page with the Show toggles, Dump format = Both, names and Add folder -->
 
 ## Поділитися однією папкою {#mount}

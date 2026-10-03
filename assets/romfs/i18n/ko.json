@@ -2833,5 +2833,6 @@
   "Remove this game's mods from the memory card. Cheats are kept.": "메모리 카드에서 이 게임의 모드를 제거합니다. 치트는 유지됩니다.",
   "Delete mods": "모드 삭제",
   "Cheats are kept.": "치트가 유지됩니다.",
-  "Backing up before deleting...": "삭제하기 전에 백업 중..."
+  "Backing up before deleting...": "삭제하기 전에 백업 중...",
+  "Mods": "모드"
 }

@@ -2828,5 +2828,6 @@
   "Remove this game's mods from the memory card. Cheats are kept.": "Бұл ойынның модтарын жад картасынан жою. Читтер сақталады.",
   "Delete mods": "Модтарды жою",
   "Cheats are kept.": "Читтер сақталды.",
-  "Backing up before deleting...": "Жою алдында сақтық көшірме жасалуда..."
+  "Backing up before deleting...": "Жою алдында сақтық көшірме жасалуда...",
+  "Mods": "Модтар"
 }

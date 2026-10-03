@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.979 — MTP Games drive: a Mods folder in every game folder (plan F.12)
+- With the Separate or Both dump format each game folder lists `Mods` (localized): the game's `/atmosphere/contents/<tid>/` on the SD card, readable and writable (create, write, rename, delete files and folders); NSP files stay read-only, `.`/`..` segments are rejected (`ParseGamesPath` → `PathKind::ModsPath`, host test), drive free space = SD free space so PCs allow copies. Docs: sharing.md.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — copy a mod folder into Games/Separate/<game>/Mods from Windows, rename/delete it, check it lands in /atmosphere/contents/<tid>
+
 ## v0.13.978 — split the MTP Games drive proxy (no behaviour change)
 - `haze_game_proxy.cpp` (598 lines) → class in `include/haze/haze_game_proxy_internal.hpp`, filesystem ops in `haze_game_proxy.cpp`, game scan and NSP caches in `haze_game_proxy_catalog.cpp`; room for the per-game mods folder (plan F.12).
 - host tests: not run (no logic change) · nro: built (ReleaseWithInstall, same size as 0.13.975) · switch: pending (MTP Games drive lists and copies as before)

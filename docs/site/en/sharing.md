@@ -188,6 +188,10 @@ A change restarts a running MTP connection. If every drive is off, MTP does not 
 | [[Separate files]] | A folder per game, with the base game, update and each DLC as separate NSP files. |
 | [[Both]] | Three folders: `Merged` (as [[Compatible dump]]), `Separate` (as [[Separate files]]) and `Forwarders` (HOME Menu forwarders). |
 
+With [[Separate files]] or [[Both]], each game folder also has a `Mods` folder. It is the game's
+`/atmosphere/contents/<Title ID>/` folder on the microSD card (mods and cheats): copy mods into it or out of it, rename
+or delete them, like on the SD card drive. The NSP files next to it stay read-only.
+
 <!-- shot: sharing-mtp-storages | Settings, MTP storages page with the Show toggles, Dump format = Both, names and Add folder -->
 
 ## Share one folder {#mount}

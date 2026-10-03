@@ -8,9 +8,8 @@ Result FsGameProxy::GetTotalSpace(const char *path, s64 *out) {
 }
 
 Result FsGameProxy::GetFreeSpace(const char *path, s64 *out) {
-    // read-only drive: nothing can be written into it.
-    *out = 0;
-    R_SUCCEED();
+    // only the per-game mods folders take writes, and they live on the SD card.
+    return m_sd.GetFreeSpace("/", out);
 }
 
 Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_type) {
@@ -33,6 +32,17 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
         case sphaira::mtp::PathKind::InfoFile:
             *out_entry_type = FsDirEntryType_File;
             R_SUCCEED();
+
+        case sphaira::mtp::PathKind::ModsPath: {
+            fs::FsPath sd_path;
+            R_TRY(ModsSdPath(pp, sd_path));
+            if (pp.filename.empty()) {
+                // shown even before the folder exists on the SD card.
+                *out_entry_type = FsDirEntryType_Dir;
+                R_SUCCEED();
+            }
+            return m_sd.GetEntryType(sd_path, out_entry_type);
+        }
 
         case sphaira::mtp::PathKind::MergedFile: {
             std::shared_ptr<GameNsp> nsp;
@@ -64,52 +74,75 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
 }
 
 Result FsGameProxy::CreateFile(const char* path, s64 size, u32 option) {
-    log_write("[MTP-GAMES] rejecting CreateFile(%s)\n", path);
-    R_THROW(FsError_NotImplemented);
+    fs::FsPath sd_path;
+    R_TRY(ModsSdItem(path, sd_path));
+    R_TRY(m_sd.CreateDirectoryRecursivelyWithPath(sd_path));
+    return m_sd.CreateFile(sd_path, size, option);
 }
 
 Result FsGameProxy::DeleteFile(const char* path) {
-    log_write("[MTP-GAMES] rejecting DeleteFile(%s)\n", path);
-    R_THROW(FsError_NotImplemented);
+    fs::FsPath sd_path;
+    R_TRY(ModsSdItem(path, sd_path));
+    return m_sd.DeleteFile(sd_path);
 }
 
 Result FsGameProxy::RenameFile(const char *old_path, const char *new_path) {
-    log_write("[MTP-GAMES] rejecting RenameFile(%s)\n", old_path);
-    R_THROW(FsError_NotImplemented);
+    fs::FsPath sd_old, sd_new;
+    R_TRY(ModsSdItem(old_path, sd_old));
+    R_TRY(ModsSdItem(new_path, sd_new));
+    return m_sd.RenameFile(sd_old, sd_new);
 }
 
 Result FsGameProxy::CreateDirectory(const char* path) {
-    log_write("[MTP-GAMES] rejecting CreateDirectory(%s)\n", path);
-    R_THROW(FsError_NotImplemented);
+    fs::FsPath sd_path;
+    R_TRY(ModsSdItem(path, sd_path));
+    return m_sd.CreateDirectoryRecursively(sd_path);
 }
 
 Result FsGameProxy::DeleteDirectoryRecursively(const char* path) {
-    log_write("[MTP-GAMES] rejecting DeleteDirectoryRecursively(%s)\n", path);
-    R_THROW(FsError_NotImplemented);
+    fs::FsPath sd_path;
+    R_TRY(ModsSdItem(path, sd_path));
+    return m_sd.DeleteDirectoryRecursively(sd_path);
 }
 
 Result FsGameProxy::RenameDirectory(const char *old_path, const char *new_path) {
-    log_write("[MTP-GAMES] rejecting RenameDirectory(%s)\n", old_path);
-    R_THROW(FsError_NotImplemented);
+    fs::FsPath sd_old, sd_new;
+    R_TRY(ModsSdItem(old_path, sd_old));
+    R_TRY(ModsSdItem(new_path, sd_new));
+    return m_sd.RenameDirectory(sd_old, sd_new);
 }
 
 Result FsGameProxy::SetFileSize(FsFile *file, s64 size) {
-    log_write("[MTP-GAMES] rejecting SetFileSize()\n");
-    R_THROW(FsError_NotImplemented);
+    FileHandle* h;
+    std::memcpy(&h, &file->s, sizeof(h));
+    R_UNLESS(h->is_sd, FsError_NotImplemented);
+    return h->sd.SetSize(size);
 }
 
 Result FsGameProxy::WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) {
-    log_write("[MTP-GAMES] rejecting WriteFile()\n");
-    R_THROW(FsError_NotImplemented);
+    FileHandle* h;
+    std::memcpy(&h, &file->s, sizeof(h));
+    R_UNLESS(h->is_sd, FsError_NotImplemented);
+    return h->sd.Write(off, buf, write_size, option);
 }
 
 Result FsGameProxy::OpenFile(const char *path, u32 mode, FsFile *out_file) {
     log_write("[MTP-GAMES] OpenFile(%s)\n", path);
-    R_UNLESS(!(mode & (FsOpenMode_Write | FsOpenMode_Append)), FsError_NotImplemented);
-
     const auto pp = Parse(path);
     auto handle = std::make_unique<FileHandle>();
 
+    if (pp.kind == sphaira::mtp::PathKind::ModsPath) {
+        fs::FsPath sd_path;
+        R_TRY(ModsSdPath(pp, sd_path));
+        R_UNLESS(!pp.filename.empty(), FsError_PathNotFound);
+        R_TRY(m_sd.OpenFile(sd_path, mode, &handle->sd));
+        handle->is_sd = true;
+        auto raw = handle.release();
+        std::memcpy(&out_file->s, &raw, sizeof(raw));
+        R_SUCCEED();
+    }
+
+    R_UNLESS(!(mode & (FsOpenMode_Write | FsOpenMode_Append)), FsError_NotImplemented);
     if (pp.kind == sphaira::mtp::PathKind::InfoFile) {
         handle->info = InfoText(pp.game);
     } else if (pp.kind == sphaira::mtp::PathKind::MergedFile) {
@@ -130,6 +163,9 @@ Result FsGameProxy::OpenFile(const char *path, u32 mode, FsFile *out_file) {
 Result FsGameProxy::GetFileSize(FsFile *file, s64 *out_size) {
     FileHandle* h;
     std::memcpy(&h, &file->s, sizeof(h));
+    if (h->is_sd) {
+        return h->sd.GetSize(out_size);
+    }
     if (!h->info.empty()) {
         *out_size = static_cast<s64>(h->info.size());
         R_SUCCEED();
@@ -142,6 +178,9 @@ Result FsGameProxy::ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u3
     FileHandle* h;
     std::memcpy(&h, &file->s, sizeof(h));
 
+    if (h->is_sd) {
+        return h->sd.Read(off, buf, read_size, option, out_bytes_read);
+    }
     if (!h->info.empty()) {
         *out_bytes_read = 0;
         if (off < 0 || off >= static_cast<s64>(h->info.size())) {
@@ -255,6 +294,21 @@ Result FsGameProxy::OpenDirectory(const char *path, u32 mode, FsDir *out_dir) {
             R_TRY(GetNsp(pp.game, nsp));
             if (mode & FsDirOpenMode_ReadFiles) {
                 handle->entries = nsp->listing;
+            }
+            if (mode & FsDirOpenMode_ReadDirs) {
+                handle->entries.emplace_back(MakeVirtualDirEntry(m_names.mods));
+            }
+            break;
+        }
+
+        case sphaira::mtp::PathKind::ModsPath: {
+            fs::FsPath sd_path;
+            R_TRY(ModsSdPath(pp, sd_path));
+            fs::Dir dir;
+            if (const auto rc = m_sd.OpenDirectory(sd_path, mode, &dir); R_SUCCEEDED(rc)) {
+                R_TRY(dir.ReadAll(handle->entries));
+            } else if (!pp.filename.empty()) {
+                return rc;
             }
             break;
         }

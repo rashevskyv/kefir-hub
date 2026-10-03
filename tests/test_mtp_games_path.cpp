@@ -225,6 +225,40 @@ static int test_parse_games_path() {
         CHECK(res.kind == PathKind::Invalid);
     }
 
+    // per-game mods folder: <game>/Mods[/path], both layouts with game folders.
+    {
+        auto res = ParseGamesPath("/Separate/Game A/Mods");
+        CHECK(res.kind == PathKind::ModsPath);
+        CHECK(res.game == "Game A");
+        CHECK(res.filename.empty());
+    }
+    {
+        auto res = ParseGamesPath("/separate/Game A/mods/romfs/Data/x.bin");
+        CHECK(res.kind == PathKind::ModsPath);
+        CHECK(res.filename == "romfs/Data/x.bin");
+    }
+    {
+        auto res = ParseGamesPath("/Game A/Mods/exefs", GamesLayout::Separate);
+        CHECK(res.kind == PathKind::ModsPath);
+        CHECK(res.game == "Game A");
+        CHECK(res.filename == "exefs");
+    }
+    {
+        GamesFolderNames names;
+        names.mods = "Моди";
+        auto res = ParseGamesPath("/Separate/Game A/Моди/cheats", GamesLayout::Both, names);
+        CHECK(res.kind == PathKind::ModsPath && res.filename == "cheats");
+        CHECK(ParseGamesPath("/Separate/Game A/Mods", GamesLayout::Both, names).kind == PathKind::ModsPath);
+    }
+    {
+        // no mods folder in the merged layout, and an nsp keeps its meaning.
+        CHECK(ParseGamesPath("/Mods", GamesLayout::Compatible).kind == PathKind::MergedFile);
+        CHECK(ParseGamesPath("/Separate/Game A/Mods.nsp").kind == PathKind::SeparateFile);
+        // a mods path is joined onto a real SD folder: no way out of it.
+        CHECK(ParseGamesPath("/Separate/Game A/Mods/../../x").kind == PathKind::Invalid);
+        CHECK(ParseGamesPath("/Separate/Game A/Mods/romfs/./a").kind == PathKind::Invalid);
+    }
+
     CHECK(IsForwarderTitleId(0x0500000000123000ULL));
     CHECK(IsForwarderTitleId(0x03DB1280BD84000ULL));
     CHECK(IsForwarderTitleId(0x03DB12780BD84000ULL));

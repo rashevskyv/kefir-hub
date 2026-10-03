@@ -2886,5 +2886,6 @@
   "Remove this game's mods from the memory card. Cheats are kept.": "从存储卡中移除此游戏的模组。保留金手指。",
   "Delete mods": "删除MOD",
   "Cheats are kept.": "保留作弊码。",
-  "Backing up before deleting...": "删除前正在备份..."
+  "Backing up before deleting...": "删除前正在备份...",
+  "Mods": "模组"
 }

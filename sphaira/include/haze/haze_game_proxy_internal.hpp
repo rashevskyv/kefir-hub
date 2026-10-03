@@ -39,6 +39,7 @@ struct FsGameProxy final : FsProxyBase {
         m_names.separate = "Separate"_i18n;
         m_names.forwarders = "Forwarders"_i18n;
         m_names.readme = "Readme.txt"_i18n;
+        m_names.mods = "Mods"_i18n;
         ScanGames();
         log_write("[MTP-GAMES] layout=%d scanned %zu games, %zu forwarders\n",
             static_cast<int>(m_layout), m_games.size(), m_forwarders.size());
@@ -54,8 +55,8 @@ struct FsGameProxy final : FsProxyBase {
     Result GetFreeSpace(const char *path, s64 *out) override;
     Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override;
 
-    // the drive is a view of installed content: everything that would modify
-    // it is rejected, same as the saves drive.
+    // the drive is a view of installed content: everything that would modify it
+    // is rejected, except inside a game's mods folder, which is a real SD folder.
     Result CreateFile(const char* path, s64 size, u32 option) override;
     Result DeleteFile(const char* path) override;
     Result RenameFile(const char *old_path, const char *new_path) override;
@@ -99,6 +100,9 @@ private:
         std::shared_ptr<GameNsp> nsp{};
         size_t index{};
         std::string info{};
+        // a real file in the game's mods folder on the SD card.
+        fs::File sd{};
+        bool is_sd{};
     };
 
     struct DirHandle {
@@ -118,6 +122,10 @@ private:
     auto Parse(const char* path) const -> sphaira::mtp::ParsedPath;
     auto InfoText(std::string_view which) const -> std::string;
     auto InfoDirEntry(std::string_view which) const -> FsDirectoryEntry;
+    // <game>/Mods/<sub> -> /atmosphere/contents/<tid>/<sub> on the SD card.
+    Result ModsSdPath(const sphaira::mtp::ParsedPath& pp, fs::FsPath& out) const;
+    // same, for an item inside a mods folder; anything else is not writable.
+    Result ModsSdItem(const char* path, fs::FsPath& out) const;
 
     // game folder name -> title. built once at registration, immutable
     // afterwards (safe for concurrent reads). forwarders live in m_forwarders.
@@ -136,6 +144,8 @@ private:
     bool m_is_file_based_emummc{};
     sphaira::mtp::GamesLayout m_layout{sphaira::mtp::GamesLayout::Both};
     sphaira::mtp::GamesFolderNames m_names{};
+    // backs the mods folders; open sd files keep a pointer to it.
+    fs::FsNativeSd m_sd{};
 };
 
 } // namespace sphaira::haze

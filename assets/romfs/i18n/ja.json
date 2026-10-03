@@ -2833,5 +2833,6 @@
   "Remove this game's mods from the memory card. Cheats are kept.": "このゲームのModをメモリカードから削除します（チートは保持されます）。",
   "Delete mods": "MODを削除",
   "Cheats are kept.": "チートは保持されます。",
-  "Backing up before deleting...": "削除する前にバックアップを作成しています..."
+  "Backing up before deleting...": "削除する前にバックアップを作成しています...",
+  "Mods": "Mod"
 }

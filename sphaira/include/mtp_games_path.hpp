@@ -20,6 +20,9 @@ enum class PathKind {
     // Readme.txt (or the locale's name). `game` is "", "merged", "separate"
     // or "forwarders" so the virtual text can explain that folder.
     InfoFile,
+    // <game>/Mods[/sub/path]: the game's /atmosphere/contents/<tid> folder on
+    // the SD card. `filename` is the path inside it ("" for the folder itself).
+    ModsPath,
     Invalid
 };
 
@@ -37,6 +40,7 @@ struct GamesFolderNames {
     std::string separate{"Separate"};
     std::string forwarders{"Forwarders"};
     std::string readme{"Readme.txt"};
+    std::string mods{"Mods"};
 };
 
 // owo HOME-menu forwarders (0x05…) and the known HBL 0x03 titles.
@@ -100,6 +104,28 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     auto is_separate = [&](std::string_view s) { return match_name(s, "Separate", names.separate); };
     auto is_forwarders = [&](std::string_view s) { return match_name(s, "Forwarders", names.forwarders); };
     auto is_readme = [&](std::string_view s) { return match_name(s, "Readme.txt", names.readme); };
+    auto is_mods = [&](std::string_view s) { return match_name(s, "Mods", names.mods); };
+
+    // segments[game_at] is a game folder; true when the rest is its mods folder.
+    auto parse_mods = [&](size_t game_at) {
+        if (segments.size() <= game_at + 1 || !is_mods(segments[game_at + 1])) {
+            return false;
+        }
+        result.kind = PathKind::ModsPath;
+        result.game = std::string(segments[game_at]);
+        for (size_t k = game_at + 2; k < segments.size(); ++k) {
+            // the path is joined onto a real SD folder: never let it climb out.
+            if (segments[k] == "." || segments[k] == "..") {
+                result = ParsedPath{};
+                return true;
+            }
+            if (!result.filename.empty()) {
+                result.filename.push_back('/');
+            }
+            result.filename += segments[k];
+        }
+        return true;
+    };
 
     if (segments.size() == 1 && is_readme(segments[0])) {
         result.kind = PathKind::InfoFile;
@@ -134,6 +160,9 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     }
 
     if (layout == GamesLayout::Separate) {
+        if (parse_mods(0)) {
+            return result;
+        }
         if (segments.size() == 1) {
             result.kind = PathKind::SeparateGameDir;
             result.game = std::string(segments[0]);
@@ -161,6 +190,9 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
             result.kind = PathKind::Invalid;
         }
     } else if (is_separate(segments[0])) {
+        if (parse_mods(1)) {
+            return result;
+        }
         if (segments.size() == 1) {
             result.kind = PathKind::SeparateDir;
         } else if (segments.size() == 2 && is_readme(segments[1])) {
