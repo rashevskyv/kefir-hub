@@ -269,6 +269,85 @@ Context: `docs/dev/AUDIT-2026-10-02-docs.md`. When a task changes behaviour, upd
 
 ---
 
+## Phase S — DocsDemo build: screenshots of every screen, any language (decided 2026-10-03)
+Goal: every `<!-- shot -->` marker can be taken in Eden, in any UI language, by `tools/docs/shoot.ps1`, without a
+console. A `DOCS_DEMO` build is the normal app plus fictional content: six meme games with covers, their saves,
+network replies and frozen demo scenes. Data: `docs/site/fixtures/sdmc/config/kefir/demo/` (`titles.json`, `icons/`;
+read at run time from `sdmc:/config/kefir/demo/`). Workflow: `.agents/skills/update-docs/SKILL.md` → Screenshots.
+Rules for this phase:
+- Release presets never contain demo code: `option(DOCS_DEMO OFF)`; demo sources are added to the target only when ON.
+- Demo code lives in `sphaira/source/demo/` (+ `include/demo/`). In other modules only `#if DOCS_DEMO` hooks of a few
+  lines that call into `demo::`. No behaviour change when OFF.
+- Prefer link-time wrapping (`-Wl,--wrap=<libnx fn>`, `__wrap_`/`__real_` in `demo/demo_wrap.cpp`) over hooks: one
+  wrapper covers every caller. Wrappers return real results plus the demo ones (`__real_` first), so Eden content stays.
+- Demo data is fictional only: no real people, no real accounts, no third-party art. App Store / Themezer / Ownfoil /
+  updater replies use the meme titles and simple generated images, not copies of real catalogues.
+- Demo code never installs, deletes, writes saves, links accounts or touches NAND; actions on demo items may fail
+  with the normal error. It only has to *look* right for the screenshot.
+- Tasks that touch `sphaira/` follow the delivery ritual (version bump, CHANGELOG). Build checkpoint closes the phase.
+- Shot status: `python docs/site/shotlist.py`. Each task lists the shot ids it unlocks; it is done when those shots
+  are recorded (`Rec`) in English and their PNGs checked.
+
+- [ ] S.0 **Spike: build switch + one wrapper.** Add `option(DOCS_DEMO "docs screenshot build" OFF)` to
+      `sphaira/CMakeLists.txt` (`target_compile_definitions(... DOCS_DEMO=$<BOOL:...>)`, demo sources and
+      `target_link_options(sphaira PRIVATE -Wl,--wrap=nsListApplicationRecord)` only when ON) and a `DocsDemo`
+      configure/build preset in `CMakePresets.json` (inherits ReleaseWithInstall, `DOCS_DEMO=ON`, output
+      `build/DocsDemo/`, nro named `kefir-hub.nro`). `demo/demo_data.cpp`: parse `titles.json` (yyjson) once, cache.
+      `demo/demo_wrap.cpp`: `__wrap_nsListApplicationRecord` = real records, then demo ids appended (offset-aware).
+      Also check whether the normal build reaches the network in Eden (App Store loads?) and write the answer in
+      the CHANGELOG line: it decides S.3. **Done when:** Games shows the six titles (no icons yet is fine);
+      `strings build/ReleaseWithInstall/kefir-hub.nro | grep -c __wrap_` → 0.
+- [ ] S.1 **Games: names, icons, contents.** Wrap what `title_info.cpp` and the game menu read for a demo id:
+      `nsGetApplicationControlData` (NACP built from titles.json: name per language — fill every NACP language slot,
+      `uk` name for Ukrainian, `en` for the rest; publisher, display version; JPEG from `icons/`),
+      `nsListApplicationContentMetaStatus` (base + updates + `dlc` add-ons, storage from `storage`),
+      and the size/occupied-size call used by Game Details. Make `LoadControlManual` skip demo ids (hook) so it does not
+      walk ncm. Graph first: `graphify explain "ForEachApplicationRecord"`, `"GetMetaEntries"`, `"ThreadData::Get"`.
+      Shots: `games-list`, `games-details`, `games-move-summary`, `cheats-select`, `cheats-files` (cheat .txt files go
+      into fixtures `atmosphere/contents/<id>/cheats/`; Build ID: read how cheats_ops gets it and fake it the same way).
+- [ ] S.2 **Saves and users.** Wrap `fsOpenSaveDataInfoReader` / `fsSaveDataInfoReaderRead` / `...Close`: for
+      `FsSaveDataSpaceId_User` append one `FsSaveDataInfo` per titles.json save (uid = Eden profile at `user` index via
+      `accountListAllUsers`). Saved backups: write `tools/docs/make_demo_backups.py` that creates backup archives in
+      the exact format and folder the Backups tab reads (`save_backup_pub.cpp`, `save_archive_metadata.cpp`) into
+      fixtures, three dated backups for one game, two owners for another. `[USER]` once: three Eden profiles with
+      fictional names (e.g. Pixel, Kotyk, Guest). Linked / Not linked on the Users grid: find its source
+      (`graphify explain` on the users grid draw); wrap if it is one call, else mark `users-list` as `user`.
+      Shots: `saves-list`, `saves-backup-options`, `saves-select-backup`, `saves-restore-confirm`, `saves-backup-group`,
+      `users-list`, `users-delete-hold`.
+- [ ] S.3 **Network replies from fixtures.** (Skip parts S.0 found working in Eden.) Online state: wrap the
+      `nifm` calls `net.cpp` uses so the header shows Wi-Fi connected with an IP. Download layer: in `download*.cpp`
+      one `#if DOCS_DEMO` hook before curl: if `sdmc:/config/kefir/demo/http/<host>/<path>` (POST: `<path>.<fnv1a of
+      body>`) exists, return it as the response (status 200, same callbacks), else fail like offline. Fixtures, all
+      fictional, minimal JSON shaped after each parser: App Store repo (the meme apps + icons), Themezer list (a few
+      generated previews), Kefir/firmware releases newer than current (Updater, changelog), Hub self-update, Ownfoil
+      server (shop of the six meme games), translations list, About release notes. Saved Wi-Fi list for `system-tools-wifi`:
+      wrap the nifm profile listing `wifi_menu.cpp` uses. Shots: `software-appstore-grid`, `software-appstore-entry`,
+      `software-extract-options`, `themes-themezer-grid`, `updater-main`, `updater-changelog`, `updater-firmware-confirm`,
+      `updater-downgrade-warning`, `updater-hub-update-prompt`, `network-ownfoil-servers`, `network-ownfoil-catalog`,
+      `network-ownfoil-install-panel`, `kefir-settings-translate`, `settings-about`, `system-tools-wifi`.
+      Never let a demo action download or install for real: Install buttons on demo items may stop at the first prompt.
+- [ ] S.4 **Demo scenes.** `[demo] scene=<name>` in config.ini (written by `shoot.ps1` from the recipe's `"scene"`).
+      After the main menu is up, `demo::StartScene()` pushes the screen in a frozen state; no worker thread, no I/O.
+      Install session: a `DemoSession` deriving `InstallSession` (`dbi_menu.hpp`) that fills `m_queue`, `m_log`,
+      stats and state from a per-scene table (meme game file names) and never starts a transfer. Mode badges
+      (USB 2.0, MTP, FTP): wrap `usbDsGetState` / the speed query where the header reads them. Scenes and shots:
+      `install-sd-card-queue-review` (4 packages, one Analysis failed), `install-sd-card-queue-progress` (2 of 4,
+      speed graph, log), `install-sd-card-minimized-badge`, `install-sd-card-screensaver`, `install-sd-card-summary`
+      (3 installed, 1 failed), `install-mtp-progress`, `network-ftp-progress`, `install-usb-waiting`, `install-usb-queue`,
+      `console-transfer-remote-list`, `console-transfer-te-confirm`, `console-transfer-ip-entry` (keyboard: try Eden's
+      software keyboard first). Game card row: wrap `fsDeviceOperatorIsGameCardInserted` and serve the
+      `storage: gamecard` title as the card → `install-gamecard-games-row`. Second storage for `file-browser-split`,
+      `file-browser-sources`, `settings-sources`: a demo mount named like a USB drive over `sdmc:/config/kefir/demo/usb/`.
+- [ ] S.5 **Validate fixtures** (host test, real data): `tests/test_demo_fixtures.py` — titles.json parses, ids are
+      base ids (`...000`, unique), every icon exists and is a 256x256 JPEG, every `user` index < 3, every http fixture
+      parses as JSON. Runs in `tests/run.sh`.
+- [ ] S.6 Build checkpoint (`ReleaseWithInstall` and `DocsDemo`), then record the recipes for all remaining markers in
+      English, mark PC-side shots (`install-mtp-explorer`, `network-ftp-client`, `sharing-mtp-pc`) `user`, retake the
+      49 old English shots from the DocsDemo build for one consistent look, then `shoot.ps1 -Lang uk,en`, check every
+      PNG, `python tools/docs/sync_site_shots.py`, docs build, commit (docs: no bump). Report `[USER]` leftovers.
+
+---
+
 ## Not to do (from audit)
 - No refactor of `App`; no new abstractions, registries, interfaces with one implementation.
 - No file splits for their own sake; the 600-line cap is already met.

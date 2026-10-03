@@ -21,11 +21,12 @@ docs saying otherwise is unfinished. This skill is the same for Codex, Gemini an
 | Nav / page list | `docs/site/mkdocs.yml` |
 | Feature → page map, features under review | `docs/dev/DOCS-COVERAGE.md` |
 | Open questions, code findings | `docs/dev/AUDIT-2026-10-02-docs.md` |
-| Screenshots (English UI) | `docs/site/en/img/<shot-id>.png` |
+| Screenshots (per UI language; en = fallback) | `docs/site/<lang>/img/<shot-id>.png` |
+| Screenshot recipes (button presses per shot) | `docs/site/shots.json`, fixtures `docs/site/fixtures/sdmc/` |
 | Shot list (which ids exist, which are taken) | `python docs/site/shotlist.py` |
 | Video scripts + draft subtitles | `docs/video/NN-topic/script.md`, `python docs/video/srt.py` |
 | Guide site (Jekyll, Ukrainian), separate clone | `D:\git\site\switch-hub`, branch `kefir-hub`, notes `_rework/REVIEW.md` |
-| Emulator + screenshot tools | `tools/docs/eden.ps1`, `tools/docs/web-shot.mjs` |
+| Emulator + screenshot tools | `tools/docs/eden.ps1` (record), `tools/docs/shoot.ps1` (replay per language), `tools/docs/web-shot.mjs`, `tools/docs/sync_site_shots.py` (to the site) |
 | Checks | `tests/test_doc_labels_contract.py`, `docs/site/build.sh`, `tools/docs/check_site_links.py` |
 | Local review for the owner | `docs/site/review.ps1` |
 
@@ -75,26 +76,46 @@ a translated UI name by hand in docs/site.
     (that commit has the version bump). Stage by path, never `git add -A`. The site clone is a separate
     repo: commit there on `kefir-hub`. Never push anything.
 
-## Screenshots (Eden emulator)
-Kefir Hub runs in Eden from v0.13.955. All screenshots are taken with the **English** UI and saved as
-`docs/site/en/img/<shot-id>.png`. They are the fallback for every language.
-1. Build as usual (`test-build` skill), then copy the `.nro` from `build/ReleaseWithInstall/kefir-hub.nro`
-   to `E:\Switch\Eden\user\sdmc\switch\kefir-hub.nro`. Eden is portable: `E:\Switch\Eden\user` holds the
-   keys, the firmware and the emulated microSD (`sdmc`). Hub config is `sdmc\config\kefir\`.
-2. PowerShell: `. tools\docs\eden.ps1; Start-Hub`. On first start, pick English.
-3. Navigate with `B <A|B|X|Y|L|R|ZL|ZR|Plus|Minus|L3|R3|Up|Down|Left|Right> [count]`. Take a shot with
-   `Shot docs\site\en\img\<id>.png`, which saves the console frame only at 1280x720.
-4. **Look at every PNG** (open the image) and check it shows what the marker says: right screen, right item
-   focused, no stray popup. Retake if not.
-5. Web pages of the Hub web server (Install & Share → Web Server, http://127.0.0.1:80 in Eden):
-   `node tools/docs/web-shot.mjs <url> docs\site\en\img\<id>.png`.
-6. Test data may be created **only** inside `E:\Switch\Eden\user\sdmc` (dummy files, copies of .nro as
-   other apps, folders).
+## Screenshots (Eden emulator, any language)
+Kefir Hub runs in Eden from v0.13.955. Screenshots are per language: `docs/site/<lang>/img/<shot-id>.png`
+(`en/img` is the fallback for every language). A screenshot is made from a **recipe**: the button presses
+from a fresh Hub launch to the screen, stored in `docs/site/shots.json`. A recipe holds no labels, so one
+recipe gives the shot in every language. Record once, replay for any language.
+1. Build the **DocsDemo** preset (`cmake --preset DocsDemo && cmake --build --preset DocsDemo`, same WSL setup as the
+   `test-build` skill; plan Phase S). It is the normal app plus fictional content from
+   `docs/site/fixtures/sdmc/config/kefir/demo/` (meme games with covers, saves, network replies) and frozen demo
+   scenes; release builds never contain it. `shoot.ps1` copies `build/DocsDemo/kefir-hub.nro` into Eden by itself.
+   Eden is portable: `E:\Switch\Eden\user` holds the keys, the firmware and the emulated microSD (`sdmc`).
+2. **Record a recipe** (new or changed screen). PowerShell: `. tools\docs\eden.ps1; Set-HubLang en; Start-Hub`,
+   then `Rec <id>`, navigate with `B <A|B|X|Y|L|R|ZL|ZR|Plus|Minus|L3|R3|Up|Down|Left|Right> [count]` and
+   `W <seconds>` for loading, and finish with `Shot docs\site\en\img\<id>.png`. Shot saves the frame
+   (1280x720) and the recipe. Recipes start from a fresh launch: if you navigated before `Rec`, run
+   `Start-Hub` again and record from the first press. Steps run once at launch for every shot (a first-run
+   dialog) go into `"startup"` in shots.json. A screen that only a demo scene shows (install queue, MTP/FTP
+   progress, ...) gets `"scene": "<name>"` in its entry; `shoot.ps1` sets `[demo] scene=<name>` before launch.
+3. **Replay for languages**: `powershell -ExecutionPolicy Bypass -File tools\docs\shoot.ps1 -Lang uk,en`
+   (add `-Only id1,id2` or `-Missing`; `-List` shows recipe status). It sets `[config] language=N` in the
+   Eden `config.ini`, launches the Hub for each shot and writes `docs/site/<lang>/img/<id>.png`.
+   Codes: en ja fr de it es zh ko nl pt ru se vi uk (the languages in `assets/romfs/i18n/`).
+   A new docs language needs no pages to get its shots: a folder `docs/site/<lang>/` with only `img/` builds
+   with English text, that language's labels and its screenshots.
+4. **Look at every PNG** (open the image) and check it shows what the marker says in that language: right
+   screen, right item focused, no stray popup, no clipped text. Retake (re-record if the menu changed).
+5. Test data lives in `docs/site/fixtures/sdmc/` (copied into the Eden sdmc by shoot.ps1; see its README).
+   Add dummy files there instead of editing the sdmc by hand, so every language shows the same content.
+6. Web pages of the Hub web server (Install & Share → Web Server, http://127.0.0.1:80 in Eden):
+   `node tools/docs/web-shot.mjs <url> docs\site\<lang>\img\<id>.png` (Hub language = page language).
+7. Status of every marker: `python docs/site/shotlist.py` (columns: recipe, and taken per language).
+8. **Guide site**: `python tools/docs/sync_site_shots.py` copies `docs/site/uk/img` shots into
+   `D:\git\site\switch-hub\assets\images\switch\hub\` and turns each `{% comment %}shot: id{% endcomment %}`
+   that has a PNG into `{% include inc/hub-shot.html id="id" %}`. Commit both in the site clone.
 
-The emulator cannot show: MTP/USB/FTP from a PC, game cards, installed games and saves, real install
+Without the DocsDemo build the emulator cannot show: MTP/USB/FTP from a PC, game cards, installed games and saves, real install
 queues, Ownfoil, online lists (App Store, Themezer, updater, translations), console-to-console transfer,
-TegraExplorer. These are `[USER]` console shots: the owner presses Capture in title mode, and the album
-can be pulled from the Hub web page `/album`.
+TegraExplorer. Phase S covers them with demo data and scenes. What stays impossible (screens of the PC
+side: Windows Explorer, an FTP client) is marked `"<id>": {"user": true}` in shots.json: the owner takes them
+on the PC. A console screen the demo cannot fake is also `user`: the owner sets the Hub language, presses
+Capture in title mode, and pulls the album from the Hub web page `/album`. Name them `docs/site/<lang>/img/<id>.png`.
 
 ## Never
 - Never invent a fact. Unsure → `<!-- TODO(verify): question -->` and list it in the report.
@@ -104,7 +125,7 @@ can be pulled from the Hub web page `/album`.
   product fix: its own commit with a version bump, `tools/i18n-translate/context.json` for ambiguous keys.
 - Never wrap a string with `%s`/`%d` or a line break in `[[...]]`; describe it instead.
 - Emulator: never send keys with keybd_event/SendKeys/SendInput (they type into the user's foreground app).
-  Use only `B`, `Shot`, `Grab` from `tools/docs/eden.ps1`. Never install, delete or move real content, and
+  Use only `B`, `W`, `Rec`, `Shot`, `Grab`, `Set-HubLang` from `tools/docs/eden.ps1` and `tools/docs/shoot.ps1`. Never install, delete or move real content, and
   never link accounts, reboot, downgrade, change Kefir Settings, or send anything to the internet.
 - Never touch `D:\git\site\switch` (the live site's checkout, release commits land there), never switch
   branches in it, never push. Never commit `build/`.

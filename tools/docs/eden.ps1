@@ -4,6 +4,10 @@
 #   B A; B Down 3; B Plus            # press Switch buttons (posted to the Eden window; works unfocused)
 #   Shot docs\site\en\img\<id>.png   # console frame only, 1280x720
 #   Grab out.png                     # whole Eden window, for debugging
+#   Set-HubLang uk                   # UI language for the next Start-Hub (writes sdmc/config/kefir/config.ini)
+#   Set-HubIni demo scene <name>     # DOCS_DEMO builds: open a frozen demo scene at start (empty value = none)
+#   Rec <id>; B ...; W 2; Shot ...   # record: the presses after Rec are saved as the recipe of <id> in
+#                                    # docs/site/shots.json when Shot runs; tools\docs\shoot.ps1 replays them
 # Keys go to the Eden window by PostMessage. Never send keys with keybd_event/SendKeys/SendInput: those type
 # into whatever window is in front, i.e. the user's other apps.
 param()
@@ -24,7 +28,52 @@ public static class EdenW {
 "@
 
 $EdenDir = "E:\Switch\Eden"
-$HubNro = "$EdenDir\user\sdmc\switch\kefir-hub.nro"
+$Sdmc = "$EdenDir\user\sdmc"
+$HubNro = "$Sdmc\switch\kefir-hub.nro"
+$Repo = (Resolve-Path "$PSScriptRoot\..\..").Path
+$ShotsJson = "$Repo\docs\site\shots.json"
+
+# Docs language code -> Kefir Hub [config] language index (sphaira/source/i18n.cpp, i18n::init).
+$HubLang = @{ en = 1; ja = 2; fr = 3; de = 4; it = 5; es = 6; zh = 7; ko = 8; nl = 9; pt = 10; ru = 11; se = 12; vi = 13; uk = 14 }
+
+# Set one key in the Hub config (sdmc/config/kefir/config.ini) for the next Start-Hub. Empty value removes the key.
+function Set-HubIni([string]$section, [string]$key, [string]$value) {
+  $ini = "$Sdmc\config\kefir\config.ini"
+  New-Item -ItemType Directory -Force (Split-Path $ini) | Out-Null
+  $lines = [System.Collections.Generic.List[string]]::new()
+  if (Test-Path $ini) { foreach ($l in Get-Content $ini) { $lines.Add($l) } }
+  $sec = $lines.IndexOf("[$section]")
+  if ($sec -lt 0) { if (-not $value) { return }; $lines.Add("[$section]"); $sec = $lines.Count - 1 }
+  $end = $sec + 1; while ($end -lt $lines.Count -and -not $lines[$end].StartsWith('[')) { $end++ }
+  for ($i = $end - 1; $i -gt $sec; $i--) { if ($lines[$i] -match "^\s*$([regex]::Escape($key))\s*=") { $lines.RemoveAt($i) } }
+  if ($value) { $lines.Insert($sec + 1, "$key=$value") }
+  [System.IO.File]::WriteAllLines($ini, $lines, (New-Object System.Text.UTF8Encoding $false))
+}
+
+# Set the Hub UI language for the next Start-Hub: [config] language=N.
+function Set-HubLang([string]$lang) {
+  if (-not $HubLang.ContainsKey($lang)) { throw "unknown language $lang (known: $($HubLang.Keys -join ', '))" }
+  Set-HubIni config language "$($HubLang[$lang])"
+}
+
+# Recording. Rec <id> starts a recipe; B and W append to it; Shot saves it into docs/site/shots.json.
+$script:RecId = $null; $script:RecSteps = $null
+function Rec([string]$id) { $script:RecId = $id; $script:RecSteps = [System.Collections.Generic.List[string]]::new() }
+function W([double]$sec) { if ($script:RecId) { $script:RecSteps.Add("wait $sec") }; Start-Sleep -Milliseconds ([int]($sec * 1000)) }
+
+function Read-Shots {
+  if (Test-Path $ShotsJson) { Get-Content $ShotsJson -Raw -Encoding UTF8 | ConvertFrom-Json } else { [pscustomobject]@{ startup = @(); shots = [pscustomobject]@{} } }
+}
+function Write-Shots($data) {
+  [System.IO.File]::WriteAllText($ShotsJson, ($data | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding $false))
+}
+function Save-Recipe([string]$id, [string[]]$steps) {
+  $data = Read-Shots
+  $entry = $data.shots.PSObject.Properties[$id]
+  if ($entry) { $entry.Value | Add-Member -Force steps $steps } else { $data.shots | Add-Member $id ([pscustomobject]@{ steps = $steps }) }
+  Write-Shots $data
+  Write-Host "recipe saved: $id ($($steps.Count) steps)"
+}
 
 function Win { (Get-Process eden -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1).MainWindowHandle }
 
@@ -62,7 +111,11 @@ function Shot([string]$path) {
   $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
   $g.DrawImage($full, (New-Object System.Drawing.Rectangle 0, 0, 1280, 720), (New-Object System.Drawing.Rectangle $x, $y, $fw, $fh), [System.Drawing.GraphicsUnit]::Pixel)
   $g.Dispose(); $full.Dispose(); Remove-Item $tmp
-  $out.Save($path, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose(); $path
+  $dest = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)  # .NET ignores Set-Location
+  New-Item -ItemType Directory -Force (Split-Path -Parent $dest) | Out-Null
+  $out.Save($dest, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose()
+  if ($script:RecId) { Save-Recipe $script:RecId $script:RecSteps.ToArray(); $script:RecId = $null }
+  $path
 }
 
 # Eden keyboard map (user\config\qt-config.ini, player_0_button_*).
@@ -73,6 +126,7 @@ $Btn = @{ A = 'C'; B = 'X'; X = 'V'; Y = 'Z'; L = 'Q'; R = 'E'; ZL = 'R'; ZR = '
 function B([string]$button, [int]$n = 1, [int]$gapMs = 350) {
   $h = Win; if (-not $h) { throw "no Eden window" }
   $key = $Btn[$button]; if (-not $key) { throw "unknown button $button" }
+  if ($script:RecId) { $script:RecSteps.Add($(if ($n -eq 1) { $button } else { "$button $n" })) }
   $vk = [int][System.Windows.Forms.Keys]::$key; $scan = [int][EdenW]::MapVirtualKey($vk, 0)
   $ext = if ($key -in 'Up', 'Down', 'Left', 'Right') { 1 -shl 24 } else { 0 }
   for ($i = 0; $i -lt $n; $i++) {

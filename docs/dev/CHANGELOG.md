@@ -4,6 +4,7 @@ Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
 ## unreleased
+- chore: screenshots in any UI language — recipes (`docs/site/shots.json`: button presses recorded by `tools/docs/eden.ps1` Rec/Shot), replay per language `tools/docs/shoot.ps1 -Lang uk,en` (sets `[config] language`, `[demo] scene`), fixtures `docs/site/fixtures/sdmc/` (six meme demo games with covers for Phase S), `tools/docs/sync_site_shots.py` (uk shots into the guide site, `inc/hub-shot.html`), shotlist recipe column; plan Phase S (DOCS_DEMO build). Scripts checked in PowerShell 7 with stubs; not yet run against Eden.
 - docs: install/usb requirements and site inc/zadig.txt — Windows USB driver now installed by DBI Backend Qt 2.9.0 (WinUSB), ns-usbloader/Fluffy still need libusbK via Zadig, udev rule on Linux; plan D.1 done.
 - docs: skill `update-docs` (.agents/skills, stub in .claude/skills; rule 5 in AGENTS.md) — how any agent keeps docs/site, screenshots, video scripts and the guide site in step with the code; tools/docs (eden.ps1, web-shot.mjs, check_site_links.py); label check warns about doc labels missing from the code; Console Transfer listed as under review.
 - docs: video tutorial scripts `docs/video/01..09` (scene table, UK+EN voiceover, draft subtitles via `docs/video/srt.py`); docs fixes from the site pass (Album needs R on Kefir, assoc ini, /firmware is cleared), uk docs use «папка».

@@ -1,0 +1,47 @@
+{
+    "_comment": "Fictional games for DOCS_DEMO builds (docs screenshots). Read by sphaira/source/demo/. Sizes in bytes. user = index in the Eden profile list.",
+    "titles": [
+        {
+            "id": "0100DE0000010000", "icon": "icons/stonks-tycoon.jpg",
+            "name": {"en": "Stonks Tycoon", "uk": "Стонкс Магнат"}, "publisher": "Line Goes Up Ltd.",
+            "version": "1.4.2", "storage": "sd", "size": 3221225472,
+            "updates": [{"version": 393216, "display": "1.4.2", "size": 536870912}], "dlc": 2,
+            "saves": [{"user": 0, "size": 4194304}, {"user": 1, "size": 2097152}]
+        },
+        {
+            "id": "0100DE0000020000", "icon": "icons/this-is-fine.jpg",
+            "name": {"en": "This Is Fine: Office Edition", "uk": "Все гаразд: Офісне видання"}, "publisher": "Calm Studios",
+            "version": "2.0.0", "storage": "nand", "size": 1610612736,
+            "updates": [{"version": 131072, "display": "2.0.0", "size": 268435456}], "dlc": 0,
+            "saves": [{"user": 0, "size": 1048576}]
+        },
+        {
+            "id": "0100DE0000030000", "icon": "icons/borshch-royale.jpg",
+            "name": {"en": "Borshch Royale", "uk": "Борщ Рояль"}, "publisher": "Smetana Games",
+            "version": "1.0.3", "storage": "sd", "size": 7516192768,
+            "updates": [{"version": 196608, "display": "1.0.3", "size": 1073741824}], "dlc": 3,
+            "saves": [{"user": 0, "size": 8388608}, {"user": 2, "size": 8388608}]
+        },
+        {
+            "id": "0100DE0000040000", "icon": "icons/galaxy-brain.jpg",
+            "name": {"en": "Galaxy Brain Academy", "uk": "Академія Галактичного Мозку"}, "publisher": "Big Think Interactive",
+            "version": "1.1.0", "storage": "sd", "size": 2147483648,
+            "updates": [], "dlc": 0,
+            "saves": [{"user": 1, "size": 3145728}]
+        },
+        {
+            "id": "0100DE0000050000", "icon": "icons/much-wow-racing.jpg",
+            "name": {"en": "Much Wow Racing", "uk": "Дуже Вау Перегони"}, "publisher": "Such Studio",
+            "version": "3.2.1", "storage": "gamecard", "size": 5368709120,
+            "updates": [{"version": 458752, "display": "3.2.1", "size": 805306368}], "dlc": 1,
+            "saves": [{"user": 0, "size": 6291456}]
+        },
+        {
+            "id": "0100DE0000060000", "icon": "icons/loading-99.jpg",
+            "name": {"en": "99% Loading Simulator", "uk": "Симулятор завантаження 99%"}, "publisher": "Almost Done Inc.",
+            "version": "0.9.9", "storage": "nand", "size": 999999999,
+            "updates": [], "dlc": 0,
+            "saves": []
+        }
+    ]
+}
