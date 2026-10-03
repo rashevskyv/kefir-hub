@@ -25,7 +25,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.13.971 — restore of an uninstalled game's save names the game
 - Restoring a backup whose game is not installed (no control data, archive without owner/metadata) now says "<game> is not installed. Install the game to restore its save." instead of "Application control data is missing save data owner." New status `GameNotInstalled`; 26 translations; docs saves.md EN+UK.
-- host tests: pass; nro: not built; switch: pending (restore a backup of an uninstalled game, e.g. from the Backups tab).
+- host tests: pass; nro: built; switch: pending (restore a backup of an uninstalled game, e.g. from the Backups tab).
 
 ## v0.13.970 — Backup owner names: safety copies and two users with one nickname
 - Found in Eden on the user's `/dumps` + DBI saves: safety copies (`recovery.zip`, no `.dbi_save_info.ini`) showed an id code; they now take the name from another backup of the same uid. The user's console has two accounts named "nin10do": tiles and rows now add the same `(XXXX)` tag the user picker already uses, so the two are told apart.
