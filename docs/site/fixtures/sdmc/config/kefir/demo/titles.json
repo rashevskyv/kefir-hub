@@ -1,9 +1,9 @@
 {
-    "_comment": "Fictional games for DOCS_DEMO builds (docs screenshots). Read by sphaira/source/demo/. Sizes in bytes. user = index in the Eden profile list.",
+    "_comment": "Fictional games for DOCS_DEMO builds (docs screenshots). Read by sphaira/source/demo/. Sizes in bytes. user = index in the Eden profile list. build_id = what the cheat screens show; atmosphere/contents/<id>/cheats/ holds matching .txt files.",
     "nand": {"emummc": true, "total": 26843545600, "free": 19971178496},
     "titles": [
         {
-            "id": "0100DE0000010000", "icon": "icons/stonks-tycoon.jpg",
+            "id": "0100DE0000010000", "icon": "icons/stonks-tycoon.jpg", "build_id": "3F7A9C21D4E8B605",
             "name": {"en": "Stonks Tycoon", "uk": "Стонкс Магнат"}, "publisher": "Line Goes Up Ltd.",
             "version": "1.4.2", "storage": "sd", "size": 3221225472,
             "updates": [{"version": 393216, "display": "1.4.2", "size": 536870912}], "dlc": 2,
@@ -17,7 +17,7 @@
             "saves": [{"user": 0, "size": 1048576}]
         },
         {
-            "id": "0100DE0000030000", "icon": "icons/borshch-royale.jpg",
+            "id": "0100DE0000030000", "icon": "icons/borshch-royale.jpg", "build_id": "8D2E6B90A17C4F53",
             "name": {"en": "Borshch Royale", "uk": "Борщ Рояль"}, "publisher": "Smetana Games",
             "version": "1.0.3", "storage": "sd", "size": 7516192768,
             "updates": [{"version": 196608, "display": "1.0.3", "size": 1073741824}], "dlc": 3,

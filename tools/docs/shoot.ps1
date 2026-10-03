@@ -38,6 +38,7 @@ function Step([string]$s) {
   if ($p.Count -gt 1) { B $p[0] ([int]$p[1]) } else { B $p[0] }
 }
 
+Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Milliseconds 500  # it locks the .nro
 if (-not $Nro) { $Nro = "$Repo\build\DocsDemo\kefir-hub.nro" }
 if (Test-Path $Nro) { Copy-Item $Nro $HubNro -Force; Write-Host "hub: $Nro" } else { Write-Warning "no $Nro; using the .nro already in Eden" }
 

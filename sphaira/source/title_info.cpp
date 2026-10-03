@@ -11,6 +11,9 @@
 #include "yati/nx/ns.hpp"
 #include "ui/progress_box.hpp"
 #include "utils/utils.hpp"
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 #include <cstring>
 #include <cstdio>
@@ -229,7 +232,14 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
     auto result = std::make_unique<ThreadResultData>(app_id);
     result->status = NacpLoadStatus::Error;
 
-    if (auto data = nxtcGetApplicationMetadataEntryById(app_id)) {
+#if DOCS_DEMO
+    // demo games: names follow the UI language, so neither the title cache nor ncm (they have no contents).
+    const bool demo_title = demo::FindTitle(app_id) != nullptr;
+#else
+    constexpr bool demo_title = false;
+#endif
+
+    if (auto data = demo_title ? nullptr : nxtcGetApplicationMetadataEntryById(app_id)) {
         log_write("[NXTC] loaded from cache time taken: %.2fs %zums %zuns\n", ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
         ON_SCOPE_EXIT(nxtcFreeApplicationMetadata(&data));
 
@@ -260,7 +270,7 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
         }
 
         if (manual_load) {
-            manual_load = R_SUCCEEDED(LoadControlManual(app_id, control->nacp, result.get()));
+            manual_load = !demo_title && R_SUCCEEDED(LoadControlManual(app_id, control->nacp, result.get()));
         }
 
         Result rc{};
@@ -303,7 +313,7 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
             }
 
             // add new entry to cache, if valid.
-            if (valid) {
+            if (valid && !demo_title) {
                 nxtcAddEntry(app_id, &control->nacp, result->icon.size(), result->icon.data(), true);
             }
 

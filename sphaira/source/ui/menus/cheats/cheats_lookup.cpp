@@ -5,6 +5,9 @@
 #include "utils/devoptab.hpp"
 #include "yati/nx/ncm.hpp"
 #include "defines.hpp"
+#if DOCS_DEMO
+#include "demo/demo_data.hpp"
+#endif
 
 #include <switch.h>
 #include <format>
@@ -523,6 +526,14 @@ auto HasApplicationContentMeta(u64 title_id) -> bool {
 
 auto LookupBuildIdForCheats(u64 title_id, bool allow_nso_fallback) -> BuildIdLookupResult {
     BuildIdLookupResult result;
+
+#if DOCS_DEMO
+    if (const auto t = demo::FindTitle(title_id); t && !t->build_id.empty()) {
+        result.build_id = t->build_id;
+        result.source = "demo";
+        return result;
+    }
+#endif
 
     result.build_id = GetBuildIdFromDmnt(title_id);
     if (!result.build_id.empty()) {

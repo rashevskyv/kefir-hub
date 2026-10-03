@@ -5,11 +5,48 @@
 
 #include <switch.h>
 #include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace sphaira::demo {
 
-// application ids from titles.json, parsed once; empty if the file is missing.
-std::span<const u64> TitleIds();
+struct Update {
+    u32 version{};
+    std::string display{};
+    s64 size{};
+};
+
+struct Save {
+    int user{};    // index in the Eden profile list
+    s64 size{};
+};
+
+struct Title {
+    u64 id{};
+    std::vector<std::pair<std::string, std::string>> names{}; // language code -> name
+    std::string publisher{};
+    std::string version{};
+    std::string icon{};   // path relative to the demo folder
+    std::string build_id{}; // main NSO Build ID (16 hex digits) for the cheat screens; empty = unknown
+    u8 storage{};         // NcmStorageId
+    s64 size{};
+    std::vector<Update> updates{};
+    int dlc{};
+    std::vector<Save> saves{};
+};
+
+// size of each add-on: titles.json lists only how many a game has.
+constexpr s64 DLC_SIZE = 256ll * 1024 * 1024;
+
+// titles.json, parsed once; empty if the file is missing.
+std::span<const Title> Titles();
+// the demo title for a base, update (base+0x800) or add-on (base+0x1000+n) id.
+const Title* FindTitle(u64 id);
+// name in the current UI language, "en" if that one is missing.
+std::string Name(const Title& t);
+// the cover JPEG, empty if the file is missing.
+std::vector<u8> Icon(const Title& t);
 
 // NAND user partition space from titles.json "nand" (Eden has no BIS filesystem); false if absent.
 bool NandSpace(s64* free, s64* total);

@@ -1,14 +1,75 @@
 {
-    "startup": [
-        "B",
-        "A"
-    ],
-    "shots": {
-        "index-tools-tab": {
-            "steps": [
-                "R",
-                "wait 1"
-            ]
-        }
-    }
+    "startup":  [
+                    "B",
+                    "A"
+                ],
+    "shots":  {
+                  "index-tools-tab":  {
+                                          "steps":  [
+                                                        "R",
+                                                        "wait 1"
+                                                    ]
+                                      },
+                  "games-list":  {
+                                     "steps":  [
+                                                   "R",
+                                                   "wait 1",
+                                                   "Right",
+                                                   "A",
+                                                   "wait 1",
+                                                   "A",
+                                                   "wait 3"
+                                               ]
+                                 },
+                  "games-details":  {
+                                        "steps":  [
+                                                      "R",
+                                                      "wait 1",
+                                                      "Right",
+                                                      "A",
+                                                      "wait 1",
+                                                      "A",
+                                                      "wait 3",
+                                                      "Right",
+                                                      "A",
+                                                      "wait 3"
+                                                  ]
+                                    },
+                  "games-move-summary":  {
+                                             "steps":  [
+                                                           "R",
+                                                           "wait 1",
+                                                           "Right",
+                                                           "A",
+                                                           "wait 1",
+                                                           "A",
+                                                           "wait 3",
+                                                           "Right",
+                                                           "A",
+                                                           "wait 3",
+                                                           "Plus",
+                                                           "wait 1",
+                                                           "Down",
+                                                           "A",
+                                                           "wait 1.5"
+                                                       ]
+                                         },
+                  "cheats-files":  {
+                                       "steps":  [
+                                                     "R",
+                                                     "wait 1",
+                                                     "Right",
+                                                     "A",
+                                                     "wait 1",
+                                                     "Right 2",
+                                                     "A",
+                                                     "wait 2",
+                                                     "Down 4",
+                                                     "A",
+                                                     "wait 3",
+                                                     "A",
+                                                     "wait 2"
+                                                 ]
+                                   }
+              }
 }

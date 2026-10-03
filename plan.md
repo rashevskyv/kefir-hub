@@ -310,7 +310,7 @@ Rules for this phase:
       Also: skip the old-forwarder notice in DOCS_DEMO (`NotifyUi`, it shows on every Eden launch, nothing is removed).
       **Done when:** with Eden in the background (user's window in front) `shoot.ps1 -Lang en,uk -Only <one shot>`
       produces both PNGs with correct labels in each language.
-- [ ] S.1 **Games: names, icons, contents.** Wrap what `title_info.cpp` and the game menu read for a demo id:
+- [x] S.1 **Games: names, icons, contents.** Wrap what `title_info.cpp` and the game menu read for a demo id:
       `nsGetApplicationControlData` (NACP built from titles.json: name per language — fill every NACP language slot,
       `uk` name for Ukrainian, `en` for the rest; publisher, display version; JPEG from `icons/`),
       `nsListApplicationContentMetaStatus` (base + updates + `dlc` add-ons, storage from `storage`),
@@ -336,7 +336,7 @@ Rules for this phase:
       server (shop of the six meme games), translations list, About release notes. Saved Wi-Fi list for `system-tools-wifi`:
       wrap the nifm profile listing `wifi_menu.cpp` uses. Shots: `software-appstore-grid`, `software-appstore-entry`,
       `software-extract-options`, `themes-themezer-grid`, `updater-main`, `updater-changelog`, `updater-firmware-confirm`,
-      `updater-downgrade-warning`, `updater-hub-update-prompt`, `network-ownfoil-servers`, `network-ownfoil-catalog`,
+      `updater-downgrade-warning`, `updater-hub-update-prompt`, `cheats-select` (CheatSlips reply; Build ID from S.1), `network-ownfoil-servers`, `network-ownfoil-catalog`,
       `network-ownfoil-install-panel`, `kefir-settings-translate`, `settings-about`, `system-tools-wifi`.
       Never let a demo action download or install for real: Install buttons on demo items may stop at the first prompt.
 - [ ] S.4 **Demo scenes.** `[demo] scene=<name>` in config.ini (written by `shoot.ps1` from the recipe's `"scene"`).

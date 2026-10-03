@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.974 — DocsDemo: demo games with names, covers, contents and cheats (Phase S.1)
+- DOCS_DEMO only: wraps `nsGetApplicationControlData` (NACP: name in the UI language in every slot, publisher, version, cover JPEG), `nsListApplicationContentMetaStatus` (base, updates, add-ons on the titles.json storage) and the ncm calls behind sizes and the move plan (`ncmContentMetaDatabaseList/ListContentInfo/Get`, `ncmContentStorageGetRightsIdFromContentId`); `title_info.cpp` skips the nxtc cache and `LoadControlManual` for demo ids, `lang` clears the title cache; Build ID for demo games from titles.json (`cheats_lookup.cpp`). Fixtures: cover `borshch-royale.jpg` (press-f.jpg had no game), two Stonks Tycoon cheat files.
+- Recipes + en PNGs: `games-list`, `games-details`, `games-move-summary`, `cheats-files` (uk replay checked: Ukrainian game names). `cheats-select` moved to S.3 (cheats come from CheatSlips online). Stale files removed from build/ReleaseWithInstall romfs (ru.json, two .te); release romfs now equals a clean copy.
+- host tests: pass · nro: built (DocsDemo, ReleaseWithInstall; 0 demo symbols in release) · switch: n/a
+
 ## v0.13.973 — DocsDemo: focus-free Eden input, every language on one screen (Phase S.0b)
 - DOCS_DEMO only: the Hub reads button presses from `sdmc:/config/kefir/demo/input.txt` (`demo/demo_input.cpp`, one hook in `App::Poll`; commands `demo_cmd.hpp`: buttons, `wait`, `lang <code>` = new language + menus rebuilt on the main screen, `ready`); the old-forwarder notice is skipped. `eden.ps1` B/W/Shot/Lang go through that file (PostMessage removed), `Set-HubLang` writes language codes; `shoot.ps1` launches Eden once and loops the languages per shot. Recipe `index-tools-tab` + startup steps in shots.json.
 - Checked: `shoot.ps1 -Lang en,uk -Only index-tools-tab` with Eden in the background, no clicks: both PNGs, correct labels per language, EmuNAND row (PNGs not committed, S.6 retakes all).

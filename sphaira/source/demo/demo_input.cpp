@@ -5,6 +5,7 @@
 #include "demo/demo_cmd.hpp"
 #include "app.hpp"
 #include "log.hpp"
+#include "title_info.hpp"
 #include "ui/menus/main_menu.hpp"
 
 #include <cstdio>
@@ -51,6 +52,7 @@ void ReadInputFile() {
 // fresh main screen in the new language: menu labels are translated when a menu is built.
 void SwitchLanguage(const std::string& code) {
     App::SetLanguage(code, false);
+    title::Clear();  // game names are loaded in the UI language
     while (!g_app->m_widgets.empty()) {
         g_app->m_widgets.pop_back();
     }

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.973)
+set(sphaira_VERSION 0.13.974)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -376,7 +376,15 @@ if (DOCS_DEMO)
         source/demo/demo_input.cpp
         source/demo/demo_wrap.cpp
     )
-    target_link_options(sphaira PRIVATE -Wl,--wrap=nsListApplicationRecord)
+    target_link_options(sphaira PRIVATE
+        -Wl,--wrap=nsListApplicationRecord
+        -Wl,--wrap=nsGetApplicationControlData
+        -Wl,--wrap=nsListApplicationContentMetaStatus
+        -Wl,--wrap=ncmContentMetaDatabaseList
+        -Wl,--wrap=ncmContentMetaDatabaseListContentInfo
+        -Wl,--wrap=ncmContentMetaDatabaseGet
+        -Wl,--wrap=ncmContentStorageGetRightsIdFromContentId
+    )
 endif()
 
 target_compile_options(sphaira PRIVATE
