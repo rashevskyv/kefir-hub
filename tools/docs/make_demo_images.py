@@ -170,7 +170,16 @@ def shop_items():
             for tid, name, pub, ver in SHOP]
 
 
+def pictures():
+    """screenshots for the file browser's image viewer (fixtures sdmc/pictures)."""
+    out = REPO / "docs/site/fixtures/sdmc/pictures"
+    out.mkdir(parents=True, exist_ok=True)
+    screen("stonks-shot", "Stonks Tycoon", "Quarterly report: line goes up").save(out / "2026092818301200-stonks-tycoon.jpg", quality=88)
+    screen("borshch-shot", "Borshch Royale", "Victory bowl!").save(out / "2026093020470900-borshch-royale.jpg", quality=88)
+
+
 if __name__ == "__main__":
+    pictures()
     appstore()
     themezer()
     ownfoil()

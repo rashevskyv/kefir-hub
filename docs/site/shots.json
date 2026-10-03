@@ -106,20 +106,24 @@
                 "wait 1",
                 "Right",
                 "A",
-                "wait 1",
+                "wait 1.5",
                 "Right",
                 "A",
                 "wait 4",
                 "A",
-                "wait 1.5",
-                "Down 2",
+                "wait 2.5",
+                "Down",
+                "wait 0.7",
+                "Down",
+                "wait 0.7",
                 "A",
-                "wait 1.5",
+                "wait 2.5",
                 "A",
-                "wait 2",
+                "wait 2.5",
                 "A",
-                "wait 1.5"
-            ]
+                "wait 2"
+            ],
+            "fresh": true
         },
         "saves-restore-confirm": {
             "steps": [
@@ -127,22 +131,27 @@
                 "wait 1",
                 "Right",
                 "A",
-                "wait 1",
+                "wait 1.5",
                 "Right",
                 "A",
                 "wait 4",
                 "A",
-                "wait 1.5",
-                "Down 2",
+                "wait 2.5",
+                "Down",
+                "wait 0.7",
+                "Down",
+                "wait 0.7",
                 "A",
-                "wait 1.5",
+                "wait 2.5",
+                "A",
+                "wait 2.5",
                 "A",
                 "wait 2",
+                "wait 1",
                 "A",
-                "wait 1.5",
-                "A",
-                "wait 2"
-            ]
+                "wait 2.5"
+            ],
+            "fresh": true
         },
         "saves-backup-group": {
             "steps": [
@@ -227,7 +236,8 @@
                 "wait 3",
                 "B",
                 "wait 3"
-            ]
+            ],
+            "fresh": true
         },
         "updater-main": {
             "steps": [
@@ -402,6 +412,10 @@
             "scene": "install-minimized",
             "steps": [
                 "wait 2"
+            ],
+            "startup": [
+                "B",
+                "A"
             ]
         },
         "install-sd-card-screensaver": {
@@ -550,6 +564,587 @@
                 "Down 5",
                 "wait 1.5"
             ]
+        },
+        "index-main-screen": {
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "getting-started-layout": {
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "getting-started-header": {
+            "steps": [
+                "wait 2"
+            ],
+            "crop": [
+                560,
+                0,
+                720,
+                90
+            ]
+        },
+        "troubleshooting-version": {
+            "steps": [
+                "wait 2"
+            ],
+            "crop": [
+                0,
+                0,
+                480,
+                90
+            ]
+        },
+        "homebrew-grid": {
+            "steps": [
+                "Right",
+                "wait 1.5"
+            ]
+        },
+        "homebrew-options": {
+            "steps": [
+                "Plus",
+                "wait 1.5"
+            ]
+        },
+        "getting-started-sidebar": {
+            "steps": [
+                "Plus",
+                "wait 1.5",
+                "Down",
+                "wait 1.5"
+            ]
+        },
+        "getting-started-badge": {
+            "scene": "install-minimized",
+            "steps": [
+                "wait 2",
+                "R",
+                "wait 1.5"
+            ],
+            "startup": [
+                "B",
+                "A"
+            ]
+        },
+        "network-install-share-panel": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Plus",
+                "wait 1.5"
+            ]
+        },
+        "install-usb-sidebar": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Plus",
+                "wait 1.5",
+                "Down 2",
+                "wait 1"
+            ]
+        },
+        "cheats-menu": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Right 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "console-transfer-menu": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "kefir-settings-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "kefir-settings-hold-confirm": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1"
+            ]
+        },
+        "settings-overview": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 2"
+            ]
+        },
+        "troubleshooting-logging": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 2"
+            ]
+        },
+        "sharing-ftp-settings": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 4",
+                "wait 1.5"
+            ]
+        },
+        "install-index-settings-install": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 6",
+                "wait 1.5"
+            ]
+        },
+        "software-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 2"
+            ]
+        },
+        "software-direct-link": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 6",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "system-tools-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "system-tools-module-manager": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 3"
+            ]
+        },
+        "system-tools-fan-curve": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down",
+                "A",
+                "wait 2",
+                "B",
+                "wait 3"
+            ]
+        },
+        "themes-list": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "users-options": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "users-avatar-picker": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "users-link-confirm": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5",
+                "Up 3",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "users-launch-reminder": {
+            "startup": [],
+            "steps": [
+                "wait 2"
+            ]
+        },
+        "updater-manual-picker": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 5",
+                "Up",
+                "A",
+                "wait 2"
+            ]
+        },
+        "file-browser-picker": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 5",
+                "Up",
+                "A",
+                "wait 2"
+            ]
+        },
+        "install-mtp-explorer": {
+            "user": true
+        },
+        "network-ftp-client": {
+            "user": true
+        },
+        "sharing-mtp-pc": {
+            "user": true
+        },
+        "file-browser-list": {
+            "ini": {
+                "paths.last_path": "/switch"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 2.5",
+                "Down",
+                "wait 1"
+            ]
+        },
+        "file-browser-options": {
+            "ini": {
+                "paths.last_path": "/switch"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 2.5",
+                "Down",
+                "Plus",
+                "wait 1.5",
+                "Down 2",
+                "A",
+                "wait 1.5",
+                "Plus",
+                "wait 1.5"
+            ]
+        },
+        "file-browser-image-viewer": {
+            "ini": {
+                "paths.last_path": "/pictures"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 2.5",
+                "Down",
+                "A",
+                "wait 2.5"
+            ]
+        },
+        "file-browser-text-edit": {
+            "ini": {
+                "paths.last_path": "/borshch-tools"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 3",
+                "A",
+                "wait 2",
+                "Down",
+                "A",
+                "wait 2.5",
+                "Down 2",
+                "wait 1"
+            ]
+        },
+        "themes-creator": {
+            "ini": {
+                "paths.last_path": "/pictures"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 3",
+                "Down",
+                "wait 1",
+                "Plus",
+                "wait 1.5",
+                "Up",
+                "A",
+                "wait 1.5",
+                "Down 5",
+                "A",
+                "wait 2"
+            ]
+        },
+        "sharing-mount-popup": {
+            "ini": {
+                "paths.last_path": "/"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 2.5",
+                "Down 4",
+                "Plus",
+                "wait 1.5",
+                "Up 3",
+                "A",
+                "wait 2"
+            ]
+        },
+        "install-sd-card-browser-options": {
+            "ini": {
+                "paths.last_path": "/games",
+                "config.install_sysmmc": "1"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "A",
+                "wait 3",
+                "Down",
+                "X",
+                "X",
+                "X",
+                "wait 1",
+                "Plus",
+                "wait 1.5"
+            ]
+        },
+        "install-index-enable-warning": {
+            "ini": {
+                "config.install_emummc": "0",
+                "config.install_sysmmc": "0"
+            },
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 6",
+                "Right",
+                "Down",
+                "A",
+                "wait 1.5"
+            ]
+        },
+        "users-nand-library": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5",
+                "Down 6",
+                "A",
+                "wait 2",
+                "X",
+                "wait 1"
+            ]
+        },
+        "users-restore-mode-dialog": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "Down 3",
+                "A",
+                "wait 2",
+                "A",
+                "wait 1.5",
+                "Down 5",
+                "A",
+                "wait 2",
+                "A",
+                "wait 2"
+            ]
+        },
+        "homebrew-edit-name-icon": {
+            "steps": [
+                "Plus",
+                "wait 1.5",
+                "Down 4",
+                "A",
+                "wait 2"
+            ]
+        },
+        "network-web-server-qr": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Plus",
+                "wait 1.5",
+                "A",
+                "wait 3"
+            ],
+            "fresh": true
+        },
+        "sharing-web-server": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Plus",
+                "wait 1.5",
+                "A",
+                "wait 3"
+            ],
+            "fresh": true
+        },
+        "console-transfer-server-screen": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right 2",
+                "A",
+                "wait 2",
+                "A",
+                "wait 3"
+            ],
+            "fresh": true
+        },
+        "sharing-mtp-storages": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right",
+                "A",
+                "wait 1.5",
+                "Down 4",
+                "Right",
+                "Down 3",
+                "A",
+                "wait 2"
+            ]
+        },
+        "sharing-web-files": {
+            "web": {
+                "url": "http://127.0.0.1/?path=%2Fgames",
+                "js": "tools/docs/web/list.js"
+            }
+        },
+        "network-web-queue": {
+            "web": {
+                "url": "http://127.0.0.1/?path=%2Fgames",
+                "js": "tools/docs/web/queue.js"
+            }
+        },
+        "sharing-web-album": {
+            "user": true
         }
     }
 }

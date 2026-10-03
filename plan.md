@@ -400,7 +400,7 @@ Rules for this phase:
 - [x] S.5 **Validate fixtures** (host test, real data): `tests/test_demo_fixtures.py` — titles.json parses, ids are
       base ids (`...000`, unique), every icon exists and is a 256x256 JPEG, every `user` index < 3, every http fixture
       parses as JSON. Runs in `tests/run.sh`.
-- [ ] S.6 Build checkpoint (`ReleaseWithInstall` and `DocsDemo`), then record the recipes for all remaining markers in
+- [x] S.6 Build checkpoint (`ReleaseWithInstall` and `DocsDemo`), then record the recipes for all remaining markers in
       English, mark PC-side shots (`install-mtp-explorer`, `network-ftp-client`, `sharing-mtp-pc`) `user`, retake the
       49 old English shots from the DocsDemo build for one consistent look, then `shoot.ps1 -Lang uk,en`, check every
       PNG, `python tools/docs/sync_site_shots.py`, docs build, commit (docs: no bump). Report `[USER]` leftovers.

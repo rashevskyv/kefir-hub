@@ -12,6 +12,8 @@
 # A recipe may name a demo scene ("scene": "<name>", DOCS_DEMO builds only); it is set as [demo] scene=<name>.
 # "ini": {"config.auto_update": "2"} sets Hub config keys for that shot's launch (removed again afterwards);
 # "startup": [...] replaces the shared startup steps for it. Such a shot gets its own launch.
+# "crop": [x, y, w, h] keeps only that part of the 1280x720 frame (close-ups).
+# "fresh": true = own launch per language (a server or transfer it starts outlives `lang`).
 param([string[]]$Lang = @('en'), [string[]]$Only = @(), [switch]$Missing, [int]$Wait = 90, [switch]$List,
       [string]$Nro = '')
 $ErrorActionPreference = 'Stop'
@@ -26,7 +28,7 @@ if ($Only.Count) { $ids = @($ids | Where-Object { $_ -in $Only }); $Only | Where
 
 function Status($id) {
   $e = $data.shots.$id
-  if ($e.user) { 'user' } elseif ($e.scene -or ($e.steps -and $e.steps.Count)) { 'recipe' } else { 'empty' }
+  if ($e.user) { 'user' } elseif ($e.web) { 'web' } elseif ($e.scene -or ($e.steps -and $e.steps.Count)) { 'recipe' } else { 'empty' }
 }
 
 if ($List) {
@@ -53,6 +55,8 @@ $taken = 0; $skipped = @(); $scene = $null; $iniSet = @()
 # Fresh launch for $id in $lang: its "ini" keys ({"section.key": "value"}), scene, then the startup steps
 # (a recipe's own "startup" replaces the shared one).
 function Launch($id, $lang) {
+  # the running Hub writes config.ini too (last_path when a menu closes): stop it before setting keys.
+  Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Milliseconds 500
   foreach ($k in $script:iniSet) { $sk = $k -split '\.', 2; Set-HubIni $sk[0] $sk[1] '' }
   $script:iniSet = @()
   $ini = $data.shots.$id.ini
@@ -67,6 +71,7 @@ function Launch($id, $lang) {
 function Take($id, $lang) {
   foreach ($s in $data.shots.$id.steps) { Step $s }
   Shot "$Repo\docs\site\$lang\img\$id.png" | Out-Null
+  if ($data.shots.$id.crop) { Crop-Png "$Repo\docs\site\$lang\img\$id.png" @($data.shots.$id.crop) }
   $script:taken++; Write-Host "shot $lang/$id"
 }
 
@@ -76,7 +81,7 @@ foreach ($id in $ids) {
   if ($st -ne 'recipe') { $skipped += "$id ($st)"; continue }
   $todo = @($Lang | Where-Object { -not ($Missing -and (Test-Path "$Repo\docs\site\$_\img\$id.png")) })
   if (-not $todo.Count) { continue }
-  if ($data.shots.$id.PSObject.Properties['startup'] -or $data.shots.$id.scene) {
+  if ($data.shots.$id.PSObject.Properties['startup'] -or $data.shots.$id.scene -or $data.shots.$id.fresh) {
     # its screen exists only right after a launch (a scene, a startup dialog): `lang` would rebuild it away.
     foreach ($l in $todo) { Launch $id $l; Take $id $l }
     $scene = $null
@@ -95,5 +100,5 @@ foreach ($id in $ids) {
 }
 Set-HubIni demo scene ''
 Write-Host "taken: $taken"
-if ($skipped.Count) { Write-Host "skipped (user = console-only, empty = record it first):"; $skipped | ForEach-Object { "  $_" } }
+if ($skipped.Count) { Write-Host "skipped (user = console-only, web = node tools/docs/web-shot.mjs with the Hub web server on, empty = record it first):"; $skipped | ForEach-Object { "  $_" } }
 Write-Host "Open every new PNG and check it matches its <!-- shot --> marker."

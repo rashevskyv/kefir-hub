@@ -174,10 +174,11 @@ void SceneInstallProgress() {
     App::Push(SdSession());
 }
 
+// minimized = a background session (as when R3 is pressed): the badge stays on top, the menus under it take input.
 void SceneInstallMinimized() {
-    auto s = SdSession();
+    std::shared_ptr<DemoSession> s = SdSession();
     s->SetMinimized(true);
-    App::Push(std::move(s));
+    App::PushInstallSession(std::move(s));
 }
 
 void SceneInstallScreensaver() {

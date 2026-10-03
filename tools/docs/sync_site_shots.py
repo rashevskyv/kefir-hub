@@ -42,8 +42,11 @@ placed, refreshed, missing = [], [], []
 for page in sorted([*site.glob("_pages/**/*.md"), *site.glob("_includes/**/*")]):
     if not page.is_file():
         continue
-    with open(page, encoding="utf-8", newline="") as f:  # keep CRLF/LF as is
-        text = f.read()
+    try:
+        with open(page, encoding="utf-8", newline="") as f:  # keep CRLF/LF as is
+            text = f.read()
+    except UnicodeDecodeError:  # images and other binaries under _includes
+        continue
 
     def put(m):
         png = source(m[1])
@@ -60,6 +63,7 @@ for page in sorted([*site.glob("_pages/**/*.md"), *site.glob("_includes/**/*")])
     for sid in PLACED.findall(text):
         png = source(sid)
         if png and not args.dry_run:
+            dest.mkdir(parents=True, exist_ok=True)
             shutil.copy2(png, dest / f"{sid}.png")
         (refreshed if png else missing).append(sid if png else f"{page.relative_to(site).as_posix()}: {sid} (placed, no PNG)")
     if new != text and not args.dry_run:

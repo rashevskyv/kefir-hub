@@ -99,7 +99,9 @@ def check_backups(ids):
 def check_shots():
     shots = json.loads((REPO / "docs/site/shots.json").read_text(encoding="utf-8-sig"))["shots"]
     for sid, e in shots.items():
-        check(e.get("user") or e.get("scene") or e.get("steps"), f"shots.json {sid}: neither recipe nor user")
+        check(e.get("user") or e.get("web") or e.get("scene") or e.get("steps"), f"shots.json {sid}: neither recipe, web nor user")
+        if e.get("web") and e["web"].get("js"):
+            check((REPO / e["web"]["js"]).is_file(), f"shots.json {sid}: missing {e['web']['js']}")
 
 
 ids = check_titles()

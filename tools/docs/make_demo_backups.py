@@ -2,8 +2,9 @@
 
     python tools/docs/make_demo_backups.py [--profiles <Eden profiles.dat>]
 
-Output: docs/site/fixtures/sdmc/dumps/<game>/Account/<owner> - YYYY.MM.DD @ hh.mm.ss.zip, the folder and name
-Menu::BuildSavePath (save_backup_pub.cpp) uses. Each zip: `.nx_save_meta.bin` (NXSaveMeta, 128 bytes,
+Output: docs/site/fixtures/sdmc/dumps/<title id>/Account/<owner> - YYYY.MM.DD @ hh.mm.ss.zip. Menu::CollectBackups
+(save_backup_pub.cpp) looks in the folder named after the game and in the one named after its title id; the demo
+game names change with the UI language, so only the title id folder is found in every language. Each zip: `.nx_save_meta.bin` (NXSaveMeta, 128 bytes,
 save_paths.hpp), one fictional payload file, zip comment "sphaira v..." (read as a Kefir Hub backup).
 The owner uid is the Eden profile at the save's `user` index, read from Eden's profiles.dat: run this again
 after the Eden profiles change. Stonks Tycoon gets three dated backups (Pixel), Borshch Royale one per owner.
@@ -73,7 +74,7 @@ def main():
         t = titles[tid]
         uid, owner = users[user]
         size = next(s["size"] for s in t["saves"] if s["user"] == user)
-        folder = OUT / safe_name(t["name"]["en"]) / "Account"
+        folder = OUT / tid / "Account"
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / f"{safe_name(owner)} - {when:%Y.%m.%d @ %H.%M.%S}.zip"
         with zipfile.ZipFile(path, "w", zipfile.ZIP_STORED) as z:

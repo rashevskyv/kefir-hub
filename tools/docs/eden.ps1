@@ -85,7 +85,10 @@ function Sync([int]$timeoutSec = 120) {
     if ($t.Elapsed.TotalSeconds -gt $timeoutSec) { throw "the Hub did not answer within $timeoutSec s" }
     Start-Sleep -Milliseconds 50
   }
-  Remove-Item $ReadyFile
+  # the Hub may still hold the file open for a moment after creating it.
+  for ($i = 0; $i -lt 40; $i++) {
+    try { Remove-Item $ReadyFile -ErrorAction Stop; break } catch { Start-Sleep -Milliseconds 50 }
+  }
 }
 
 # Recording. Rec <id> starts a recipe; B and W append to it; Shot saves it into docs/site/shots.json.
@@ -126,7 +129,7 @@ function Save-Recipe([string]$id, [string[]]$steps) {
 # Restore-OwnData moves it back. Start-Hub hides, shoot.ps1 restores at the end: after a manual session run
 # Restore-OwnData yourself. Nothing is deleted.
 $Hidden = "$EdenDir\user\sdmc-hidden-by-docs"
-$BackupRoots = 'games', 'dumps', 'DBISaves', 'switch\DBI\saves', 'JKSV', 'switch\JKSV', 'switch\Checkpoint\saves', 'Checkpoint\saves'
+$BackupRoots = 'games', 'pictures', 'dumps', 'DBISaves', 'switch\DBI\saves', 'JKSV', 'switch\JKSV', 'switch\Checkpoint\saves', 'Checkpoint\saves'
 function Hide-OwnData {
   $n = 0
   $fixtures = "$Repo\docs\site\fixtures\sdmc"
@@ -205,4 +208,12 @@ function Shot([string]$path) {
   $out.Save($dest, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose()
   if ($script:RecId) { Save-Recipe $script:RecId $script:RecSteps.ToArray(); $script:RecId = $null }
   $path
+}
+
+# Cut a part of a saved 1280x720 shot (close-ups such as the header): x, y, w, h in 1280x720 pixels.
+function Crop-Png([string]$path, [int[]]$box) {
+  $src = [System.Drawing.Bitmap]::FromFile($path)
+  $out = $src.Clone((New-Object System.Drawing.Rectangle $box[0], $box[1], $box[2], $box[3]), $src.PixelFormat)
+  $src.Dispose()
+  $out.Save($path, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose()
 }

@@ -9,7 +9,8 @@ A language folder may hold only img/ (no pages yet): its build uses the English 
 language's labels and screenshots.
 
 Recipe column (docs/site/shots.json, replayed by tools/docs/shoot.ps1 for any language):
-recipe = recorded button presses, user = console-only shot (the emulator cannot show it), blank = not recorded.
+recipe = recorded button presses (or a DOCS_DEMO scene), web = a Hub web page (tools/docs/web-shot.mjs),
+user = console-only shot (the emulator cannot show it), blank = not recorded.
 """
 import json
 import re
@@ -26,7 +27,11 @@ recipes = json.loads(shots_file.read_text(encoding="utf-8-sig"))["shots"] if sho
 
 def recipe(sid):
     entry = recipes.get(sid) or {}
-    return "user" if entry.get("user") else "recipe" if entry.get("steps") else ""
+    if entry.get("user"):
+        return "user"
+    if entry.get("web"):
+        return "web"
+    return "recipe" if entry.get("steps") or entry.get("scene") else ""
 
 
 print(f"| Page | Shot id | What the screen must show | Recipe | {' | '.join(langs)} |")
