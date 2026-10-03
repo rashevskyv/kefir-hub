@@ -297,6 +297,19 @@ Rules for this phase:
       Also check whether the normal build reaches the network in Eden (App Store loads?) and write the answer in
       the CHANGELOG line: it decides S.3. **Done when:** Games shows the six titles (no icons yet is fine);
       `strings build/ReleaseWithInstall/kefir-hub.nro | grep -c __wrap_` → 0.
+- [ ] S.0b **Focus-free input + every language on one screen** (decided 2026-10-03, after S.0). Eden ignores
+      PostMessage keys while its window is not active, and Windows will not let a script activate it, so
+      `eden.ps1`/`shoot.ps1` cannot drive the Hub unattended. (1) Input from a file: one `#if DOCS_DEMO` hook where
+      `app_frame.cpp` polls the pad (`padGetButtonsDown`): each frame `demo::` reads queued commands from
+      `sdmc:/config/kefir/demo/input.txt` (button names as in shots.json, `wait <s>`) and ORs the buttons into
+      kdown/kheld; consumed lines are removed. `eden.ps1` `B`/`W` write there instead of PostMessage (`Rec` unchanged).
+      (2) Language loop in one Eden launch: command `lang <code>` = `App::SetLanguage` without the restart prompt,
+      rebuild the menu stack (labels are cached at construction), replay the current recipe's steps, then write
+      `sdmc:/config/kefir/demo/ready` → the PC side takes `Shot` and sends the next `lang`. `shoot.ps1 -Lang uk,en`:
+      per shot, open it once, loop all languages, go to the next shot (no Eden restart per language).
+      Also: skip the old-forwarder notice in DOCS_DEMO (`NotifyUi`, it shows on every Eden launch, nothing is removed).
+      **Done when:** with Eden in the background (user's window in front) `shoot.ps1 -Lang en,uk -Only <one shot>`
+      produces both PNGs with correct labels in each language.
 - [ ] S.1 **Games: names, icons, contents.** Wrap what `title_info.cpp` and the game menu read for a demo id:
       `nsGetApplicationControlData` (NACP built from titles.json: name per language — fill every NACP language slot,
       `uk` name for Ukrainian, `en` for the rest; publisher, display version; JPEG from `icons/`),
