@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.977)
+set(sphaira_VERSION 0.13.978)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -297,6 +297,7 @@ add_executable(sphaira
     source/haze/haze_save_proxy.cpp
     source/haze/haze_save_proxy_scan.cpp
     source/haze/haze_game_proxy.cpp
+    source/haze/haze_game_proxy_catalog.cpp
     source/threaded_file_transfer.cpp
     source/threaded_file_transfer_core.cpp
     source/threaded_file_transfer_preflight.cpp
