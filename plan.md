@@ -334,7 +334,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       (charge %, raw, age, voltage, current, limits, PD source); saved battery controller params and MAX17050
       registers (full capacity vs design, cycles); hardware (BT/WLAN MAC, config id, serial, battery lot, screen
       panel); play activity totals. User-first: group into sections, names not raw registers where possible.
-- [ ] F.15 **Save folder restore without metadata** (JKSV/Checkpoint folders): when the game is installed, take the
+- [x] F.15 **Save folder restore without metadata** (JKSV/Checkpoint folders): when the game is installed, take the
       save size from its NACP instead of refusing with "Backup folder metadata is missing…" (only for a user with
       no save of that game yet). Found by the other session 2026-10-04; user agreed.
 - [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.

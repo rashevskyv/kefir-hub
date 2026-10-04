@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.986 — JKSV / Checkpoint folders restore for a new user when the game is installed (plan F.15)
+- A save folder without metadata no longer stops with "Backup folder metadata is missing…": it goes through `PlanAccountSaveCreation` like a ZIP without metadata, sized from the installed game's NACP, or "… is not installed. Install the game…" when it is not (`save_restore_route.cpp`). Docs: saves.md.
+- host tests: pass (full) · nro: built (ReleaseWithInstall) · switch: pending — restore a JKSV folder for a user without a save of an installed game
+
 ## v0.13.985 — Tools → Clean system junk works (plan F.4, after DBI 905)
 - One list of switches, then "Run selected" (`system_cleanup.cpp`): old game updates (older than the newest of the same game, SD+NAND, ns record re-pushed), lost content on SD / NAND (content ids no registered meta uses, meta ncas kept), unfinished installs (CleanupAllPlaceHolder), unused tickets (common + personalized whose rights id no installed content uses; new es Delete/Count/ListCommon), `/atmosphere/erpt_reports`, `/atmosphere/contents` folders of games without an app record (sysmodules never match), saves of removed users (off by default). Notification shows items removed and space freed. Not taken: downloaded system update, ticket cache, "fix tickets" (no reliable API yet). `system_cleanup_plan.hpp` + host test.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — run with all on, check games still launch (eShop + pirated + cartridge with update), freed space shown

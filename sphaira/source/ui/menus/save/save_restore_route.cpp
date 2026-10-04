@@ -265,7 +265,6 @@ void PlanRestoreCreation(
         Result plan_rc{0};
         bool reinspect_ok{false};
         bool is_folder{false};
-        bool folder_meta_missing{false};
     };
     auto ctx = std::make_shared<PlanContext>();
 
@@ -283,11 +282,9 @@ void PlanRestoreCreation(
 
             if (ctx->is_folder) {
                 ctx->admission = InspectSaveFolderAdmission(archive_path, pbox, false);
+                // a JKSV / Checkpoint folder has no metadata: the save is then sized from the installed game
+                // (PlanAccountSaveCreation reports "not installed" when it is not).
                 if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : static_cast<Result>(FsError_PathNotFound);
-                if (!ctx->admission.sizing.has_metadata) {
-                    ctx->folder_meta_missing = true;
-                    return 0;
-                }
             } else {
                 ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
                 if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : static_cast<Result>(FsError_PathNotFound);
@@ -320,10 +317,6 @@ void PlanRestoreCreation(
             if (rc == Result_TransferCancelled) {
                 cb(std::nullopt);
                 return;
-            }
-            if (ctx->folder_meta_missing) {
-                App::Push<OptionBox>("Backup folder metadata is missing or incomplete for save slot creation."_i18n, "OK"_i18n);
-                cb(std::nullopt); return;
             }
             if (!ctx->admission.admitted) {
                 App::Push<OptionBox>("Invalid or corrupt save backup archive."_i18n, "OK"_i18n);

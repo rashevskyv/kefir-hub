@@ -74,6 +74,8 @@ The [[Backups]] tab and every restore look in these folders on the microSD card:
 | Checkpoint | `/switch/Checkpoint/saves`, `/Checkpoint/saves` |
 
 DBI and Kefir Hub backups are ZIP files. JKSV and Checkpoint backups are folders; they are restored the same way.
+JKSV, Checkpoint and old DBI backups do not record the save size, so restoring one for a user who has no save of
+that game yet needs the game installed: Kefir Hub then takes the size from the game.
 
 To make Kefir Hub look in another folder too:
 
