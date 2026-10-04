@@ -1,9 +1,9 @@
-# Online preview for proofreading: https://customfw.xyz/kefir-hub/ (GitHub Pages of this repository).
-#   /         Kefir Hub docs, English (docs/site of branch docs), /uk/ Ukrainian
-#   /guide/   the switch.customfw.xyz guide reworked for Kefir Hub (rashevskyv/switch, branch kefir-hub)
+# GitHub Pages of this repository, https://hub.customfw.xyz/ (custom domain, set in the Pages settings):
+#   /         Kefir Hub docs, English (docs/site of branch docs), /uk/ Ukrainian — indexed, published docs
+#   /guide/   preview of the switch.customfw.xyz guide reworked for Kefir Hub (rashevskyv/switch, branch kefir-hub), noindex
 # Runs on a push to branch docs, on "guide-updated" (sent by rashevskyv/switch on a push to kefir-hub) and by hand
 # (Actions -> docs-preview -> Run workflow). Every page has an edit link to its file on those branches.
-# Not the published docs: the pages carry noindex. The live guide site (switch, gh-pages) is not touched.
+# The live guide site (switch, gh-pages) is not touched.
 name: docs-preview
 
 on:
@@ -38,12 +38,11 @@ jobs:
         env:
           DOCS_EDIT_BRANCH: docs
           DOCS_REPO_URL: https://github.com/rashevskyv/kefir-hub
-          DOCS_NOINDEX: "true"
-          DOCS_LINK_EN: /kefir-hub/
-          DOCS_LINK_UK: /kefir-hub/uk/
+          DOCS_SITE_BASE: https://hub.customfw.xyz
         run: |
           pip install -r docs/site/requirements.txt
           sh docs/site/build.sh
+          printf 'User-agent: *\nAllow: /\n\nSitemap: https://hub.customfw.xyz/sitemap.xml\nSitemap: https://hub.customfw.xyz/uk/sitemap.xml\n' > build/docs-site/robots.txt
 
       - uses: actions/checkout@v4
         with:
@@ -63,8 +62,8 @@ jobs:
           bundle install
           bundle exec jekyll build --config _config.yml,_rework/_config.ghpreview.yml -d ../build/docs-site/guide
           # the guide's pages and screenshots link from the site root ("/hbl", "/assets/..."), right on
-          # switch.customfw.xyz; under /kefir-hub/guide/ they must carry the subpath.
-          find ../build/docs-site/guide -name '*.html' -exec perl -pi -e 's#(href|src)="/(?!/|kefir-hub/)#$1="/kefir-hub/guide/#g' {} +
+          # switch.customfw.xyz; under /guide/ they must carry the subpath.
+          find ../build/docs-site/guide -name '*.html' -exec perl -pi -e 's#(href|src)="/(?!/|guide/)#$1="/guide/#g' {} +
 
       - uses: actions/upload-pages-artifact@v3
         with:

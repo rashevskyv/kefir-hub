@@ -25,6 +25,10 @@ build() {
     [ "$lang" = en ] || cp -r "$lang/." "$stage/$lang/"
     # online preview: DOCS_EDIT_BRANCH=<branch> gives each page an edit link to its own language file.
     if [ -n "$DOCS_EDIT_BRANCH" ]; then export DOCS_EDIT_URI="edit/$DOCS_EDIT_BRANCH/docs/site/$lang/"; fi
+    # published docs: DOCS_SITE_BASE=https://hub.customfw.xyz gives canonical links and a full sitemap.xml.
+    if [ -n "$DOCS_SITE_BASE" ]; then
+        if [ "$lang" = en ]; then export DOCS_SITE_URL="$DOCS_SITE_BASE/"; else export DOCS_SITE_URL="$DOCS_SITE_BASE/$lang/"; fi
+    fi
     DOCS_LANG=$lang DOCS_THEME_LANG=$(theme_lang "$lang") DOCS_STAGE="$stage/$lang" DOCS_OUT="$dest" \
         mkdocs build --strict -q -f "$here/mkdocs.yml"
     echo "built $lang -> $dest"

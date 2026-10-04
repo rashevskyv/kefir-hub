@@ -96,6 +96,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: pass · nro: built (DocsDemo, ReleaseWithInstall) · switch: n/a (demo build only; release path unchanged when OFF)
 
 ## unreleased
+- docs: Hub docs published at https://hub.customfw.xyz/ (Pages custom domain of this repo; customfw.xyz/kefir-hub/ redirects there): indexed, canonical links and per-language sitemap.xml (`DOCS_SITE_BASE` in build.sh → `site_url`), robots.txt; the guide preview moves to /guide/ and stays noindex. docs build: pass (local, DOCS_SITE_BASE set).
 - docs: online preview https://customfw.xyz/kefir-hub/ (GitHub Pages, `.github/workflows/docs-preview.yml`): Hub docs from branch `docs` (en, `/uk/`) and the reworked guide from rashevskyv/switch branch `kefir-hub` under `/guide/`, rebuilt on push to either (switch sends `guide-updated`); edit link on every page, noindex. mkdocs.yml: repo_url/edit_uri/noindex/language links from env (unset locally = as before). docs build: pass.
 - test: tests/test_demo_fixtures_contract.py (plan S.5) — DOCS_DEMO fixtures: titles.json ids/icons (256x256 JPEG)/save owners, every JSON http fixture parses, demo save backups carry a valid 128-byte .nx_save_meta.bin of a demo game with an owner, shots.json entries are recipes or user; runs in tests/run.sh. host tests: pass.
 - docs: plan S.0b — focus-free input for Eden (commands from a file in DOCS_DEMO) and every language shot on one screen without restarting Eden.
