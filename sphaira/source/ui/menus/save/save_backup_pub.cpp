@@ -12,6 +12,7 @@
 #include "threaded_file_transfer.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
+#include "ui/option_box.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
@@ -50,21 +51,40 @@ auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs
 
 void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
     auto created_paths = std::make_shared<std::vector<fs::FsPath>>(entries.size());
-    App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root, created_paths](auto pbox) mutable -> Result {
+    auto up_to_date = std::make_shared<size_t>(0);
+    App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root, created_paths, up_to_date](auto pbox) mutable -> Result {
+        // a save unchanged since its newest backup would only be written again, byte for byte.
+        fs::FsStdio stdio_fs;
+        fs::FsNativeSd sd_fs;
+        fs::Fs* probe_fs = (location.entry.type == dump::DumpLocationType_Stdio || backup_root.starts_with("ums"))
+            ? static_cast<fs::Fs*>(&stdio_fs)
+            : static_cast<fs::Fs*>(&sd_fs);
+        const bool can_probe = location.entry.type == dump::DumpLocationType_SdCard || location.entry.type == dump::DumpLocationType_Stdio;
         for (size_t i = 0; i < entries.size(); i++) {
             auto& e = entries[i];
             // the entry may not have loaded yet.
             detail::LoadControlEntry(e);
+            if (can_probe && IsBackupUpToDate(probe_fs, e, backup_root)) {
+                (*up_to_date)++;
+                continue;
+            }
             R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root, &(*created_paths)[i]));
         }
         R_SUCCEED();
-    }, [this, entries, location, created_paths](Result rc){
+    }, [this, entries, location, created_paths, up_to_date](Result rc){
         App::PushErrorBox(rc, "Backup failed!"_i18n);
 
         if (R_SUCCEEDED(rc)) {
-            // empty saves are skipped, so a successful run may have written nothing.
-            const bool any_created = std::ranges::any_of(*created_paths, [](const auto& p) { return !p.empty(); });
-            App::Notify(any_created ? "Backup successful!"_i18n : "No save data found for this title"_i18n);
+            // empty and unchanged saves are skipped, so a successful run may have written nothing.
+            const auto created = std::ranges::count_if(*created_paths, [](const auto& p) { return !p.empty(); });
+            if (*up_to_date && !created) {
+                App::Push<OptionBox>("All selected saves are already up to date."_i18n, "OK"_i18n);
+            } else if (*up_to_date) {
+                App::Push<OptionBox>(std::to_string(created) + " " + "backup(s) created, "_i18n +
+                    std::to_string(*up_to_date) + " " + "already up to date."_i18n, "OK"_i18n);
+            } else {
+                App::Notify(created ? "Backup successful!"_i18n : "No save data found for this title"_i18n);
+            }
 
             if (App::GetSaveAutosync()) {
                 const auto webdav_locations = GetWebdavLocations();

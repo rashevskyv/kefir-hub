@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.999 — Saves: backup skips unchanged saves; archived games count as deleted; sort by name/size
+- Create backup / Backup now skips a save whose newest backup in the chosen location has the same commit id and timestamp (no more identical copies); the separate "Create backup if newer" action is gone (`IsBackupUpToDate`). Message: "N backup(s) created, M already up to date." Docs en/uk updated.
+- Animal Crossing was still not in Deleted Games: archived games keep their record and content list with storage None, so `BuildInstalledAppIds` called them installed. Installed now means a base program (Application meta) on SD, NAND or game card.
+- Sort: Updated / Alphabetical / Size (all saves of the game together, `Entry::sort_size`); live saves and each backup section sort on their own. v0.13.998 (backup-skip only) was built, never deployed.
+- host tests: pass (quick) · nro: built · switch: pending — Animal Crossing in Deleted Games; backing up an unchanged save says "already up to date"; Sort → Size/Alphabetical
+
 ## v0.13.997 — Saves: Deleted Games lists games with only Device/BCAT saves
 - Animal Crossing (only Device + BCAT saves) was missing from Deleted Games, so a Hub backup of all deleted games skipped it: the type filter defaults to Account. Deleted games with a save of any non-system type now get a tile (one `DiscoverSaveDataInfo()` pass). Found by comparing 129 Hub/DBI backups with the MTP Saves drive: all identical, Hub covered 55/57 saves, DBI 57/57.
 - host tests: not run (UI-only) · nro: built · switch: pending — Animal Crossing in Deleted Games, backup writes Device + BCAT

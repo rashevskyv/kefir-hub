@@ -338,9 +338,9 @@ void Menu::DisplaySaveOptions() {
         OnLayoutChange();
     }, cur_idx, "Choose how saves are displayed on screen."_i18n)->SetIcon(ActionIcon::Layout);
 
-    options->Add<SidebarEntryArray>("Sort"_i18n, SidebarEntryArray::Items{"Updated"_i18n}, [this](s64& index_out){
+    options->Add<SidebarEntryArray>("Sort"_i18n, SidebarEntryArray::Items{"Updated"_i18n, "Alphabetical"_i18n, "Size"_i18n}, [this](s64& index_out){
         m_sort.Set(index_out);
-        SortAndFindLastFile(false);
+        ScanHomebrew(true); // back to "Updated" needs the scan order again; the backup library stays cached
     }, m_sort.Get(), "Select which field to sort saves by."_i18n)->SetIcon(ActionIcon::Sort);
 
     options->Add<SidebarEntryArray>("Order"_i18n, SidebarEntryArray::Items{"Descending"_i18n, "Ascending"_i18n}, [this](s64& index_out){

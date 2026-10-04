@@ -68,6 +68,7 @@ struct Entry final : FsSaveDataInfo {
     std::string backup_owner_name{}; // nickname stored in the archive, for users not on this console
     u64 source_timestamp{};
     u64 commit_id{};
+    u64 sort_size{}; // live tiles: all saves of the game together (Sort by size)
     std::vector<BackupCandidate> backup_members{};
     BackupSource backup_source{BackupSource::Other};
 
@@ -90,6 +91,8 @@ void KeepNewestPerSlot(std::vector<Entry>& groups);
 
 enum SortType {
     SortType_Updated,
+    SortType_Name,
+    SortType_Size,
 };
 
 enum OrderType {
@@ -279,7 +282,8 @@ private:
     void PromptLiveSaveAction(const std::vector<Entry>& seeds);
     void PromptBackupGroupAction(const std::vector<Entry>& seeds);
     void OpenGameBackupGroup(const Entry& game);
-    void CreateBackupIfNewer(const std::vector<Entry>& seeds);
+    // true when the newest backup in backup_root has the live save's commit id and timestamp.
+    auto IsBackupUpToDate(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> bool;
     void VerifyIntegrity(const std::vector<Entry>& seeds);
     void DeleteOlderBackups(const std::vector<Entry>& seeds);
     void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid = nullptr, bool force_user_picker = false);

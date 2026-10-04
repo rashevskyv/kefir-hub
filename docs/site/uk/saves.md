@@ -42,13 +42,9 @@
 
 <!-- shot: saves-backup-options | Backup Options sidebar: Start Backup, Location sd://dumps, Auto-sync after backup, ACCOUNTS with two users -->
 
-Наприкінці з'явиться [[Backup successful!]]. Порожні збереження пропускаються; якщо нічого не записано, ви побачите [[No save data found for this title]].
+Наприкінці з'явиться [[Backup successful!]].
 
-## Копіювати лише змінені збереження
-1. Позначте ігри, натисніть **A** і виберіть [[Create backup if newer]].
-2. Kefir Hub порівняє кожне збереження з його найновішою копією. Незмінені пропускаються, решта копіюються.
-
-Ця дія завжди пише в `/dumps` на карті пам'яті, хоч яке [[Location]] ви вибирали раніше. Якщо нічого не змінилося, з'явиться [[All selected saves are already up to date.]]
+Kefir Hub копіює лише змінені збереження. Він порівнює кожне збереження з його найновішою копією у вибраному [[Location]]. Якщо збереження не змінилося від тієї копії, Kefir Hub його пропускає, тож у папці не буде двох однакових копій. Якщо нічого не змінилося, з'явиться [[All selected saves are already up to date.]] Порожні збереження теж пропускаються; якщо нічого не записано, ви побачите [[No save data found for this title]].
 
 ## Де лежать резервні копії
 Типова папка: `/dumps` на карті пам'яті.
@@ -183,7 +179,7 @@
 |---|---|---|
 | [[Backup]] / [[Restore]] / [[Delete]] | Те саме, що **A** → [[Create backup]] / [[Restore]] / [[Delete]]. На вкладці [[Backups]] є лише [[Restore]]. | — |
 | [[Layout]] | [[Grid]], [[HB Menu]] або [[List]]. | [[Grid]] |
-| [[Sort]] / [[Order]] | Сортування за [[Updated]], [[Descending]] чи [[Ascending]]. | [[Descending]] |
+| [[Sort]] / [[Order]] | Сортування за [[Updated]], [[Alphabetical]] або [[Size]] (усі збереження гри разом); [[Descending]] чи [[Ascending]]. [[Descending]] означає від А до Я і спершу найбільші. | [[Updated]], [[Descending]] |
 | [[Accounts]] | Чиї збереження в списку. | Поточний користувач |
 | [[Data Types]] | Які типи збережень у списку. | [[Account]] |
 | [[Show saves]] | Які групи показувати, коли екран відкрито з подробиць гри. | — |

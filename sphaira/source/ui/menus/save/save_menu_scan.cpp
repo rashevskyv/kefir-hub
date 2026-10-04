@@ -109,6 +109,14 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     // "Show saves" filter has turned off. system saves are governed by the Data
     // Types filter instead, so they are always kept here.
     BuildInstalledAppIds();
+    // every save of every type, once: tiles for games the type filter would hide, and sizes.
+    const auto all_saves = DiscoverSaveDataInfo();
+    std::unordered_map<u64, u64> save_sizes;
+    for (const auto& info : all_saves) {
+        if (info.application_id && !IsSystemLikeSave(info.save_data_type)) {
+            save_sizes[info.application_id] += info.size;
+        }
+    }
     bool show_installed = App::GetSaveShowInstalled();
     bool show_deleted = App::GetSaveShowDeleted();
     bool show_backups = App::GetSaveShowBackups();
@@ -158,7 +166,7 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
         // any type: the type filter defaults to Account, and YouTube has only a Cache save.
         if (m_installed_app_ids.size() != m_installed_apps.size()) {
             std::unordered_set<u64> added;
-            for (const auto& info : DiscoverSaveDataInfo()) {
+            for (const auto& info : all_saves) {
                 const auto app_id = info.application_id;
                 if (!m_installed_app_ids.contains(app_id) || std::ranges::contains(m_installed_apps, app_id) ||
                     (m_app_id_filter && app_id != m_app_id_filter) || !added.insert(app_id).second) {
@@ -193,7 +201,7 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
         for (const auto& e : m_entries) {
             listed.insert(e.application_id);
         }
-        for (const auto& info : DiscoverSaveDataInfo()) {
+        for (const auto& info : all_saves) {
             if (!info.application_id || IsSystemLikeSave(info.save_data_type) ||
                 m_installed_app_ids.contains(info.application_id) ||
                 (m_app_id_filter && info.application_id != m_app_id_filter) ||
@@ -428,6 +436,13 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
         }
     }
 
+    for (auto& e : m_entries) {
+        if (!e.is_backup) {
+            const auto it = save_sizes.find(e.application_id);
+            e.sort_size = it != save_sizes.end() ? it->second : 0;
+        }
+    }
+
     log_write("games found: %zu time_taken: %.2f seconds %zu ms %zu ns\n", m_entries.size(), ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
     this->Sort();
     SetIndex(0);
@@ -523,8 +538,13 @@ void Menu::BuildInstalledAppIds() {
             if (!app_id) {
                 continue;
             }
+            // an archived game keeps its record and content list with storage None, and update/DLC
+            // can outlive the base: installed means the base program is on a storage.
             title::MetaEntries installed_content;
-            if (R_FAILED(title::GetMetaEntries(app_id, installed_content)) || installed_content.empty()) {
+            if (R_FAILED(title::GetMetaEntries(app_id, installed_content, title::ContentFlag_Application)) ||
+                std::ranges::none_of(installed_content, [](const auto& m) {
+                    return m.storageID == NcmStorageId_SdCard || m.storageID == NcmStorageId_BuiltInUser || m.storageID == NcmStorageId_GameCard;
+                })) {
                 continue;
             }
 

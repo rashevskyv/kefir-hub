@@ -318,8 +318,38 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
 }
 
 void Menu::Sort() {
-    // const auto sort = m_sort.Get();
+    const auto sort = m_sort.Get();
     const auto order = m_order.Get();
+
+    if (sort != SortType_Updated) {
+        // names of installed games are loaded lazily by Draw; sorting needs them now.
+        for (auto& e : m_entries) {
+            if (!e.is_backup && m_installed_app_ids.contains(e.application_id)) {
+                detail::LoadControlEntry(e);
+            }
+        }
+        // descending = A to Z / biggest first, as in the games menu. backups have no size and
+        // fall back to the name.
+        const auto cmp = [sort, order](const Entry& a, const Entry& b) {
+            if (sort == SortType_Size && a.sort_size != b.sort_size) {
+                return order == OrderType_Descending ? a.sort_size > b.sort_size : a.sort_size < b.sort_size;
+            }
+            const auto r = strcasecmp(a.GetName(), b.GetName());
+            return order == OrderType_Descending ? r < 0 : r > 0;
+        };
+        // live saves and every backup section are sorted on their own so the sections stay apart.
+        const auto mid = std::clamp<s64>(m_backup_start, 0, static_cast<s64>(m_entries.size()));
+        std::stable_sort(m_entries.begin(), m_entries.begin() + mid, cmp);
+        if (m_category == Category::Backups) {
+            for (const auto& sec : ComputeGridSections().sections) {
+                std::stable_sort(m_entries.begin() + sec.entry_start, m_entries.begin() + sec.entry_start + sec.entry_count, cmp);
+            }
+        } else {
+            std::stable_sort(m_entries.begin() + mid, m_entries.end(), cmp);
+        }
+        return;
+    }
+
     const bool want_reversed = order == OrderType_Ascending;
 
     if (want_reversed != m_is_reversed) {

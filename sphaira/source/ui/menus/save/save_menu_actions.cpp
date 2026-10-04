@@ -85,7 +85,6 @@ void Menu::PromptLiveSaveAction(const std::vector<Entry>& seeds) {
 
     PopupList::Items items;
     items.emplace_back("Create backup"_i18n);
-    items.emplace_back("Create backup if newer"_i18n);
     items.emplace_back("Restore"_i18n);
     items.emplace_back("Open in file browser"_i18n);
     items.emplace_back("Delete"_i18n);
@@ -105,22 +104,18 @@ void Menu::PromptLiveSaveAction(const std::vector<Entry>& seeds) {
                 break;
 
             case 1:
-                CreateBackupIfNewer(seeds);
-                break;
-
-            case 2:
                 PromptSaveTypeOptions(SaveOp::Restore);
                 break;
 
-            case 3:
+            case 2:
                 App::Push<OptionBox>("Live save filesystem browsing is not currently supported."_i18n, "OK"_i18n);
                 break;
 
-            case 4:
+            case 3:
                 PromptSaveTypeOptions(SaveOp::Delete);
                 break;
 
-            case 5: {
+            case 4: {
                 for (auto& e : m_entries) {
                     if (!e.is_backup) {
                         const bool match = IsSystemLikeSave(e.save_data_type)
@@ -143,101 +138,28 @@ void Menu::PromptLiveSaveAction(const std::vector<Entry>& seeds) {
     App::Push(std::move(popup));
 }
 
-void Menu::CreateBackupIfNewer(const std::vector<Entry>& seeds) {
-    auto to_backup_count = std::make_shared<size_t>(0);
-    auto up_to_date_count = std::make_shared<size_t>(0);
+auto Menu::IsBackupUpToDate(fs::Fs* fs, const Entry& e, const fs::FsPath& backup_root) const -> bool {
+    const auto archives = CollectGroupArchives(fs, e, backup_root);
+    if (archives.empty()) {
+        return false;
+    }
 
-    App::Push<ProgressBox>(0, "Create backup if newer"_i18n, "", [this, seeds, to_backup_count, up_to_date_count](auto pbox) -> Result {
-        fs::FsNativeSd sd_fs;
-        const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
+    const auto& newest = archives.front();
+    const auto slash = std::strrchr(newest.path.s, '/');
+    BackupArchiveInfo binfo{};
+    if (!InspectBackupArchive(fs, newest.path, slash ? slash + 1 : newest.path.s, "", binfo)) {
+        return false;
+    }
 
-        std::vector<Entry> to_backup;
+    FsSaveDataExtraData live_extra{};
+    const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
+    if (R_FAILED(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live_extra, sizeof(live_extra), space_id, e.save_data_id))) {
+        return false;
+    }
 
-        for (size_t i = 0; i < seeds.size(); i++) {
-            R_TRY(pbox->ShouldExitResult());
-            const auto& e = seeds[i];
-            pbox->SetTitle(e.GetName());
-            pbox->UpdateTransfer(i + 1, seeds.size());
-
-            const auto archives = CollectGroupArchives(&sd_fs, e, backup_root);
-            if (archives.empty()) {
-                to_backup.emplace_back(e);
-                continue;
-            }
-
-            const auto& newest = archives.front();
-            const auto slash = std::strrchr(newest.path.s, '/');
-            BackupArchiveInfo binfo{};
-            if (!InspectBackupArchive(&sd_fs, newest.path, slash ? slash + 1 : newest.path.s, "", binfo)) {
-                to_backup.emplace_back(e);
-                continue;
-            }
-
-            const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
-
-            FsSaveDataExtraData live_extra{};
-            const auto rc = fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&live_extra, sizeof(live_extra), space_id, e.save_data_id);
-            if (R_FAILED(rc)) {
-                to_backup.emplace_back(e);
-                continue;
-            }
-
-            const bool is_up_to_date =
-                live_extra.timestamp != 0 &&
-                binfo.source_timestamp != 0 &&
-                live_extra.commit_id != 0 &&
-                binfo.commit_id != 0 &&
-                live_extra.timestamp == binfo.source_timestamp &&
-                live_extra.commit_id == binfo.commit_id;
-
-            if (is_up_to_date) {
-                (*up_to_date_count)++;
-            } else {
-                to_backup.emplace_back(e);
-            }
-        }
-
-        *to_backup_count = to_backup.size();
-
-        if (to_backup.empty()) {
-            R_SUCCEED();
-        }
-
-        const auto location = MakeSdCardDumpLocation();
-        for (size_t i = 0; i < to_backup.size(); i++) {
-            R_TRY(pbox->ShouldExitResult());
-            auto& e = to_backup[i];
-            detail::LoadControlEntry(e);
-            pbox->SetTitle(e.GetName());
-            if (e.image) {
-                pbox->SetImage(e.image);
-            } else if (auto data = title::Get(e.application_id); data && !data->icon.empty()) {
-                pbox->SetImageDataConst(data->icon);
-            } else {
-                pbox->SetImage(0);
-            }
-            pbox->UpdateTransfer(i + 1, to_backup.size());
-            R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));
-        }
-
-        R_SUCCEED();
-    }, [this, to_backup_count, up_to_date_count](Result rc) {
-        if (R_SUCCEEDED(rc)) {
-            if (*to_backup_count == 0 && *up_to_date_count > 0) {
-                App::Push<OptionBox>("All selected saves are already up to date."_i18n, "OK"_i18n);
-            } else if (*to_backup_count > 0 && *up_to_date_count > 0) {
-                const std::string msg = std::to_string(*to_backup_count) + " " + "backup(s) created, "_i18n +
-                    std::to_string(*up_to_date_count) + " " + "already up to date."_i18n;
-                App::Push<OptionBox>(msg, "OK"_i18n);
-            } else {
-                App::Notify("Backup successful!"_i18n);
-            }
-        } else {
-            App::PushErrorBox(rc, "Backup failed!"_i18n);
-        }
-        ClearSelection();
-        ScanHomebrew();
-    });
+    // fs bumps commit_id on every commit and stamps the time: both equal means nothing was written since.
+    return live_extra.timestamp != 0 && live_extra.commit_id != 0 &&
+        live_extra.timestamp == binfo.source_timestamp && live_extra.commit_id == binfo.commit_id;
 }
 
 void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {

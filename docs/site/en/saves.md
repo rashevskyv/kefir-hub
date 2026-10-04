@@ -42,13 +42,9 @@ Opened from a game's details ([[Backup and restore]], see [Games](games.md#manag
 
 <!-- shot: saves-backup-options | Backup Options sidebar: Start Backup, Location sd://dumps, Auto-sync after backup, ACCOUNTS with two users -->
 
-When it finishes you see [[Backup successful!]]. A save with no files in it is skipped; if nothing was written you see [[No save data found for this title]].
+When it finishes you see [[Backup successful!]].
 
-## Back up only saves that changed
-1. Select the games, press **A**, choose [[Create backup if newer]].
-2. For each save Kefir Hub compares it with its newest backup. Saves that have not changed are skipped; the others are backed up.
-
-This always writes to `/dumps` on the microSD card, whatever [[Location]] you used before. If nothing changed you see [[All selected saves are already up to date.]]
+Kefir Hub backs up only saves that changed. It compares each save with its newest backup in the chosen [[Location]]. A save that has not changed since that backup is skipped, so the folder never gets two identical copies. If nothing changed you see [[All selected saves are already up to date.]] A save with no files in it is skipped too; if nothing was written you see [[No save data found for this title]].
 
 ## Where backups are stored
 Default folder: `/dumps` on the microSD card.
@@ -183,7 +179,7 @@ Only the backup library on the microSD card is synced: `/dumps` and `/switch/DBI
 |---|---|---|
 | [[Backup]] / [[Restore]] / [[Delete]] | Same as **A** → [[Create backup]] / [[Restore]] / [[Delete]]. On [[Backups]] only [[Restore]] is shown. | — |
 | [[Layout]] | [[Grid]], [[HB Menu]] or [[List]]. | [[Grid]] |
-| [[Sort]] / [[Order]] | Sort by [[Updated]], [[Descending]] or [[Ascending]]. | [[Descending]] |
+| [[Sort]] / [[Order]] | Sort by [[Updated]], [[Alphabetical]] or [[Size]] (all saves of the game together); [[Descending]] or [[Ascending]]. [[Descending]] means A to Z and biggest first. | [[Updated]], [[Descending]] |
 | [[Accounts]] | Users whose saves are listed. | Current user |
 | [[Data Types]] | Save types that are listed. | [[Account]] |
 | [[Show saves]] | Which groups are listed when the screen is opened from a game's details. | — |
