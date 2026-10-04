@@ -176,7 +176,8 @@ private:
     void BuildInstalledAppIds();
     // scans the SD card for backup archives and appends one tile per game that
     // has a backup (deduped by application id). is_backup is set on each.
-    void ReadBackupEntries(std::vector<Entry>& out) const;
+    void ReadBackupEntries(std::vector<Entry>& out, ProgressBox* pbox = nullptr) const;
+    void StartBackupScan(); // reads the backup library under a progress box, then scans again
 
     // the saves grid keeps all live saves first, then all backup tiles. a full
     // empty row is inserted between the two so the "Backups" divider label has
@@ -336,6 +337,8 @@ private:
     bool m_dirty{};
     std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()
     bool m_backup_cache_valid{};
+    bool m_backup_scan_pending{}; // ScanHomebrew() needs the library; Update() starts the scan
+    bool m_keep_backup_cache{}; // set by the scan's done callback, consumed by the OnFocusGained() after it
 
     std::vector<AccountProfileBase> m_accounts{};
     s64 m_account_index{};

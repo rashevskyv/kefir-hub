@@ -5,6 +5,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "save_menu_internal.hpp"
+#include "ui/progress_box.hpp"
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
 
@@ -153,6 +154,13 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 m_entries.emplace_back(e);
             }
         }
+        // installed apps left out of m_installed_apps (0x05… ids) still show when they have a save.
+        for (const auto& [app_id, e] : live_saves) {
+            if (m_installed_app_ids.contains(app_id) && !std::ranges::contains(m_installed_apps, app_id) &&
+                (!m_app_id_filter || app_id == m_app_id_filter)) {
+                m_entries.emplace_back(e);
+            }
+        }
     } else if (m_category == Category::Deleted) {
         for (const auto& e : grouped) {
             if (m_app_id_filter && e.application_id != m_app_id_filter) {
@@ -226,22 +234,13 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     std::vector<Entry> backups;
     if (show_backups || has_uninstalled) {
         if (!m_backup_cache_valid) {
-            m_backup_cache.clear();
-            ReadBackupEntries(m_backup_cache);
-            m_backup_cache_valid = true;
-            // archives without a stored name (safety copies) take it from another backup of the same user.
-            std::unordered_map<std::string, std::string> owner_names;
-            for (const auto& b : m_backup_cache) {
-                if (!b.backup_owner_name.empty()) {
-                    owner_names.try_emplace(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)), b.backup_owner_name);
-                }
-            }
-            for (auto& b : m_backup_cache) {
-                const auto it = owner_names.find(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)));
-                if (b.backup_owner_name.empty() && it != owner_names.end()) {
-                    b.backup_owner_name = it->second;
-                }
-            }
+            // hundreds of DBI archives take seconds: show the new tab empty now, read the library
+            // under a progress box (started from Update()), and scan again from its done callback.
+            m_entries.clear();
+            m_backup_start = 0;
+            m_backup_scan_pending = true;
+            SetIndex(0);
+            return;
         }
         backups = m_backup_cache;
     }
@@ -400,6 +399,34 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     ClearSelection();
 }
 
+void Menu::StartBackupScan() {
+    auto out = std::make_shared<std::vector<Entry>>();
+    App::Push<ProgressBox>(0, "Reading backups"_i18n, "", [this, out](auto pbox) -> Result {
+        pbox->SetHideSpeed(true);
+        ReadBackupEntries(*out, pbox);
+        R_SUCCEED();
+    }, [this, out](Result) {
+        // a cancelled scan keeps what it read: marking it invalid would only start it again.
+        m_backup_cache = std::move(*out);
+        m_backup_cache_valid = true;
+        m_keep_backup_cache = true;
+        // archives without a stored name (safety copies) take it from another backup of the same user.
+        std::unordered_map<std::string, std::string> owner_names;
+        for (const auto& b : m_backup_cache) {
+            if (!b.backup_owner_name.empty()) {
+                owner_names.try_emplace(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)), b.backup_owner_name);
+            }
+        }
+        for (auto& b : m_backup_cache) {
+            const auto it = owner_names.find(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)));
+            if (b.backup_owner_name.empty() && it != owner_names.end()) {
+                b.backup_owner_name = it->second;
+            }
+        }
+        ScanHomebrew(true);
+    });
+}
+
 void Menu::BuildInstalledAppIds() {
     m_installed_app_ids.clear();
     m_installed_apps.clear();
@@ -417,15 +444,14 @@ void Menu::BuildInstalledAppIds() {
             if (!app_id) {
                 continue;
             }
-            if ((app_id & 0x0500000000000000) == 0x0500000000000000) {
-                continue;
-            }
             title::MetaEntries installed_content;
             if (R_FAILED(title::GetMetaEntries(app_id, installed_content)) || installed_content.empty()) {
                 continue;
             }
 
-            if (m_installed_app_ids.insert(app_id).second) {
+            // 0x05… ids (forwarders, but also YouTube 05003A400C3DA000) count as installed so their
+            // saves are listed; they get no empty "no save yet" tile of their own.
+            if (m_installed_app_ids.insert(app_id).second && (app_id & 0x0500000000000000) != 0x0500000000000000) {
                 m_installed_apps.push_back(app_id);
             }
         }

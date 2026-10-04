@@ -2928,5 +2928,6 @@
   "Installed games allow screenshots even where they forbid them.": "Installitud mängud lubavad ekraanipilte isegi seal, kus need on keelatud.",
   "Allow screenshots": "Luba ekraanipildid",
   "Installed games no longer ask for a linked Nintendo Account.": "Installitud mängud ei küsi enam lingitud Nintendo kontot.",
-  "Installed games allow video capture (and screenshots).": "Installitud mängud lubavad videot salvestada (ja ekraanipilte teha)."
+  "Installed games allow video capture (and screenshots).": "Installitud mängud lubavad videot salvestada (ja ekraanipilte teha).",
+  "Reading backups": "Varukoopiate lugemine"
 }

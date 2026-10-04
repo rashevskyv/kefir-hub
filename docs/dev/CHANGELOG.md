@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.994 — Saves: YouTube listed; backup library read under a progress box
+- Save menu skipped every 0x05… app as a forwarder, so YouTube (05003A400C3DA000 on this console) and its Cache save never showed and never got backed up. 0x05… apps now count as installed and show when they have a save (`BuildInstalledAppIds`).
+- Opening Deleted Games / Backups froze the UI while every backup archive was opened (hundreds of DBI zips). The tab now switches at once; the library is read in a progress box with "N / total  <path>" and Cancel (`StartBackupScan`, two-pass `ReadBackupEntries`). New key "Reading backups" in all languages.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — YouTube in Installed; Deleted Games shows the progress box, no freeze
+
 ## v0.13.993 — the previous session's log is kept as log.prev.txt
 - `log_file_init` renames `log.txt` to `log.prev.txt` before starting a new one (`log.cpp`). A crash or an odd exit used to leave no trace: the next launch truncated the only log (2026-10-04: a reported crash had no log, and Atmosphère wrote no crash report since 2026-09-30).
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — relaunch twice, `/config/kefir/log.prev.txt` holds the earlier session

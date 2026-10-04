@@ -2928,5 +2928,6 @@
   "Allow screenshots": "Allow screenshots",
   "Installed games allow screenshots even where they forbid them.": "Installed games allow screenshots even where they forbid them.",
   "Allow video capture": "Allow video capture",
-  "Installed games allow video capture (and screenshots).": "Installed games allow video capture (and screenshots)."
+  "Installed games allow video capture (and screenshots).": "Installed games allow video capture (and screenshots).",
+  "Reading backups": "Reading backups"
 }

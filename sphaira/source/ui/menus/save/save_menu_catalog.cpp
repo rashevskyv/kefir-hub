@@ -6,6 +6,8 @@
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
 #include "path_util.hpp"
+#include "i18n.hpp"
+#include "ui/progress_box.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -18,7 +20,7 @@
 
 namespace sphaira::ui::menu::save {
 
-void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
+void Menu::ReadBackupEntries(std::vector<Entry>& out, ProgressBox* pbox) const {
     fs::FsNativeSd fs;
     struct GroupScanMeta {
         size_t index{};
@@ -126,12 +128,26 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
         }
     };
 
+    // the walk below only lists folders; candidates are opened afterwards so the progress box can
+    // show "N / total" for the slow part (each archive is opened and its metadata read).
+    struct Candidate {
+        fs::FsPath path;
+        std::string name;
+        std::string dbi_game_dir;
+        int source_prio;
+        bool is_dir;
+    };
+    std::vector<Candidate> candidates;
+    if (pbox) {
+        pbox->NewTransfer("Scanning..."_i18n);
+    }
+
     const auto process_archive = [&](const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, int source_prio) {
-        process_candidate(path, filename, dbi_game_dir_name, source_prio, false);
+        candidates.emplace_back(Candidate{path, std::string(filename), std::string(dbi_game_dir_name), source_prio, false});
     };
 
     const auto process_folder = [&](const fs::FsPath& path, std::string_view folder_name, std::string_view dbi_game_dir_name, int source_prio) {
-        process_candidate(path, folder_name, dbi_game_dir_name, source_prio, true);
+        candidates.emplace_back(Candidate{path, std::string(folder_name), std::string(dbi_game_dir_name), source_prio, true});
     };
 
     // 1. Scan DBI-format game backups: /switch/DBI/saves, /DBISaves, and custom paths
@@ -271,6 +287,18 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out) const {
     for (const auto& custom_path_str : GetBackupSearchPaths()) {
         scan_custom_folder_root(fs::FsPath{custom_path_str}, folder_custom_prio);
         folder_custom_prio += 5;
+    }
+
+    for (size_t i = 0; i < candidates.size(); i++) {
+        const auto& c = candidates[i];
+        if (pbox) {
+            if (pbox->ShouldExit()) {
+                break;
+            }
+            pbox->SetTransfer(std::to_string(i + 1) + " / " + std::to_string(candidates.size()) + "  " + c.path.toString());
+            pbox->UpdateTransfer(i + 1, candidates.size());
+        }
+        process_candidate(c.path, c.name, c.dbi_game_dir, c.source_prio, c.is_dir);
     }
 
     // Sort backups by source precedence first, then newest first

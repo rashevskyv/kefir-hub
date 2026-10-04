@@ -2933,5 +2933,6 @@
   "Installed games allow screenshots even where they forbid them.": "Installerade spel tillåter skärmdumpar även där de är förbjudna.",
   "Allow screenshots": "Tillåt skärmbilder",
   "Installed games no longer ask for a linked Nintendo Account.": "Installerade spel frågar inte längre efter ett länkat Nintendo-konto.",
-  "Installed games allow video capture (and screenshots).": "Installerade spel tillåter videoinspelning (och skärmdumpar)."
+  "Installed games allow video capture (and screenshots).": "Installerade spel tillåter videoinspelning (och skärmdumpar).",
+  "Reading backups": "Läser säkerhetskopior"
 }

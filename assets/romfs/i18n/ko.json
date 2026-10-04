@@ -2933,5 +2933,6 @@
   "Installed games allow screenshots even where they forbid them.": "설치된 게임은 금지된 장소에서도 스크린샷을 허용합니다.",
   "Allow screenshots": "스크린샷 허용",
   "Installed games no longer ask for a linked Nintendo Account.": "설치된 게임이 연동된 닌텐도 아카이브를 더 이상 요구하지 않습니다.",
-  "Installed games allow video capture (and screenshots).": "설치된 게임은 동영상 캡처(및 스크린샷)를 허용합니다."
+  "Installed games allow video capture (and screenshots).": "설치된 게임은 동영상 캡처(및 스크린샷)를 허용합니다.",
+  "Reading backups": "백업 읽는 중"
 }

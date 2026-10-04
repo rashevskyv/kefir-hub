@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 namespace sphaira::ui::menu::save {
@@ -146,6 +147,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         SortAndFindLastFile(true);
     }
 
+    // pushed here, not from ScanHomebrew(): that also runs inside other progress boxes' done callbacks.
+    if (std::exchange(m_backup_scan_pending, false)) {
+        StartBackupScan();
+        return;
+    }
+
     MenuBase::Update(controller, touch);
 
     if (!m_app_id_filter && touch->is_clicked && touch->in_range(TAB_BAR_RECT)) {
@@ -184,6 +191,9 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    if (std::exchange(m_keep_backup_cache, false)) {
+        return; // back from our own backup scan: its done callback has just filled the list
+    }
     m_backup_cache_valid = false; // a dialog, a transfer or another screen may have changed the backups
     if (m_entries.empty()) {
         ScanHomebrew();
