@@ -17,7 +17,9 @@
 
 | [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
 
-[[System information]] і [[Remove parental controls]] заплановано; зараз вони показують повідомлення «Coming soon».
+| [[System information]] | Відомості про прошивку, Atmosphère, батарею й обладнання. Звіт також зберігається в `/config/kefir/system-info.txt`. |
+
+[[Remove parental controls]] заплановано; зараз цей пункт показує повідомлення «Coming soon».
 
 ## [[Module Manager]]
 

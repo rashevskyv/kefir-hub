@@ -19,6 +19,8 @@
 #include "haze_helper.hpp"
 #include "zero_fill.hpp"
 #include "system_cleanup.hpp"
+#include "system_info.hpp"
+#include "ui/menus/file_viewer.hpp"
 #include "ui/menus/grid_menu_base.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -107,6 +109,19 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
+}
+
+void OpenSystemInfo() {
+    const auto text = system_info::BuildReport();
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursivelyWithPath(system_info::REPORT_PATH);
+    const std::vector<u8> data(text.begin(), text.end());
+    if (R_FAILED(sd.write_entire_file(system_info::REPORT_PATH, data))) {
+        App::Notify("Could not save the report"_i18n);
+        return;
+    }
+    // nullptr: the viewer uses its own sd fs (sd above dies with this function).
+    App::Push<fileview::Menu>(nullptr, system_info::REPORT_PATH, fileview::TextMode::View, false);
 }
 
 void OpenCleanup() {
@@ -475,7 +490,7 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
         { "Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, 0, [](){
             App::Push<ui::menu::users::Menu>();
         }},
-        { "System information"_i18n, "Firmware, Atmosphere and console details."_i18n, 0, ComingSoon },
+        { "System information"_i18n, "Firmware, Atmosphere and console details."_i18n, 0, OpenSystemInfo },
         { "Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, 0, [](){
             FillWithZeros(NcmStorageId_SdCard,
                 "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time."_i18n,

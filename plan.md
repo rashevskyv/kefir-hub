@@ -326,7 +326,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       re-encrypt header, placeholder + Register same id, invalidate ns control cache. Base and update controls.
 - [x] F.12 **MTP "Installed games": add a mods folder** per game (`atmosphere/contents/<TitleID>`; DBI "Mods &
       cheats"). NSP and combined NSP already exist.
-- [ ] F.14 **System information** (Tools, today "Coming soon"). DBI 905 has one scrolling page (user screenshots
+- [x] F.14 **System information** (Tools, today "Coming soon"). DBI 905 has one scrolling page (user screenshots
       2026-10-04): firmware (version, hash, display name, DRAM id, burnt fuses, SoC, hardware type, purpose, device id,
       HiZ/kiosk, serial read/guessed, language, region, console nickname, parental PIN set?); Atmosphère (version, key
       generation, target firmware, git hash, RCM bug patched, exosphere CAL0 flags, emuMMC, USB 3.0 forced, supported

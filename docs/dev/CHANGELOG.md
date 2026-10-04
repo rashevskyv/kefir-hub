@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.987 — Tools → System information (plan F.14, after DBI 905)
+- Report in sections: firmware (version, name, hash, hardware, retail, DRAM id, device id, serial, nickname, language, region, parental controls), Atmosphère (version, target firmware, key generation, git commit, RCM patched, emuMMC, USB 3.0), battery and power (charge, raw, health, charger, charging, temperature, voltages and current limits on 17.0.0+), hardware (BT/Wi-Fi MAC, configuration id, battery lot). Saved to `/config/kefir/system-info.txt` and opened in the text viewer (`system_info.cpp`). Not yet: SD card CID, burnt fuses, MAX17050 registers, play activity.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — open it, check values against DBI's screen
+
 ## v0.13.986 — JKSV / Checkpoint folders restore for a new user when the game is installed (plan F.15)
 - A save folder without metadata no longer stops with "Backup folder metadata is missing…": it goes through `PlanAccountSaveCreation` like a ZIP without metadata, sized from the installed game's NACP, or "… is not installed. Install the game…" when it is not (`save_restore_route.cpp`). Docs: saves.md.
 - host tests: pass (full) · nro: built (ReleaseWithInstall) · switch: pending — restore a JKSV folder for a user without a save of an installed game

@@ -17,7 +17,9 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 
 | [[Clean system junk]] | Deletes leftovers. See [Clean system junk](#clean-system-junk). |
 
-[[System information]] and [[Remove parental controls]] are planned; they open a "Coming soon" message.
+| [[System information]] | Firmware, Atmosphère, battery and hardware details. The report is also saved to `/config/kefir/system-info.txt`. |
+
+[[Remove parental controls]] is planned; it opens a "Coming soon" message.
 
 ## [[Module Manager]]
 
