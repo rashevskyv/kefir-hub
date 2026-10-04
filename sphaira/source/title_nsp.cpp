@@ -261,6 +261,10 @@ Result NspEntry::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
 }
 
 Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder, std::vector<NspEntry>& out) {
+    // tickets come from es; the MTP drive builds NSPs without any menu having opened it first.
+    R_TRY(es::Initialize());
+    ON_SCOPE_EXIT(es::Exit());
+
     MetaEntries meta_entries;
     R_TRY(GetMetaEntries(app_id, meta_entries, flags));
 
@@ -300,6 +304,9 @@ Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& ou
     constexpr u32 supported_flags = ContentFlag_Application | ContentFlag_Patch | ContentFlag_AddOnContent;
     flags &= supported_flags;
     R_UNLESS(flags, Result_GameNoNspEntriesBuilt);
+
+    R_TRY(es::Initialize());
+    ON_SCOPE_EXIT(es::Exit());
 
     MetaEntries meta_entries;
     R_TRY(GetMetaEntries(app_id, meta_entries, flags));

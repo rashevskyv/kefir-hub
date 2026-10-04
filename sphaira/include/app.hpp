@@ -446,7 +446,7 @@ public:
     // network
     option::OptionBool m_nxlink_enabled{INI_SECTION, "nxlink_enabled", true};
     option::OptionBool m_ntp_enabled{INI_SECTION, "ntp_enabled", true};
-    option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", false};
+    option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", true};
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
     option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", true};

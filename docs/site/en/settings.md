@@ -112,7 +112,7 @@ Servers that let a PC reach the console. Details: [Share files with a PC](sharin
 |---|---|---|
 | [[FTP]] | Runs the FTP server in the background. | Off |
 | [[FTP settings]] | Sub-page: [[Anonymous (no login)]] (default On), [[Username]], [[Password]], [[Port]] (default 5000). See [Sharing](sharing.md). | |
-| [[MTP]] | Runs the MTP server (USB cable to a PC) in the background. Turning it on turns [[USB storage]] off, because both need the USB port. | Off |
+| [[MTP]] | Runs the MTP server (USB cable to a PC) in the background. Turning it on turns [[USB storage]] off, because both need the USB port. | On |
 | [[MTP storages]] | Sub-page: which drives the PC sees over MTP, their names, the game dump format and extra folders. See [Sharing](sharing.md). | |
 | [[Nxlink]] | Lets you send `.nro` files from a PC with the nxlink tool (for homebrew developers). | On |
 
@@ -125,6 +125,8 @@ Network locations and USB drives you browse and install from. Details: [File bro
 | [[+ Add network location]] | Adds an SMB, NFS, WebDAV, FTP or HTTP location. | |
 | *each saved location* | **A** opens it in the file browser (or its edit page if it is not set up yet). **+** ([[Options]]) offers [[Enter/Connect]], [[Edit]], [[Test Connection]], [[Rename]], [[Properties]], [[Delete]]. | |
 | [[USB storage]] | Mounts USB drives connected to the console next to the microSD card. Turning it on turns [[MTP]] off. | On |
+
+By default both [[MTP]] and [[USB storage]] are on: a computer on the cable gets MTP, a USB drive gets mounted.
 | [[USB storage read-only]] | Protects connected USB drives from changes. Turn it off to write, rename, delete and install to them. | Off |
 | *each connected drive* | Shows whether the drive is mounted read-only or writable. | |
 

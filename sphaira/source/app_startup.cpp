@@ -460,15 +460,9 @@ App::App(const char* argv0) {
         usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
     }
 
-    // mtp and usb host storage cannot share the usb port. The setters keep the
-    // two mutually exclusive from now on, but a config written before that rule
-    // could still have both set. Reconcile in favour of the drive -- if the
-    // user turned it on, that is what they are waiting to see -- and write the
-    // corrected state back so the deferred MTP init below skips it too.
-    if (App::GetHddEnable() && App::GetMtpEnable()) {
-        log_write("[USBHSFS] stale config had MTP + HDD both on; keeping HDD\n");
-        m_mtp_enabled.Set(false);
-    }
+    // MTP and USB storage may both be on (both are by default): the port goes to
+    // whatever is plugged in. A PC (low-power charger) starts MTP in the main loop,
+    // and haze::Init drops the host stack; haze::Exit gives it back for a drive.
 
     mark("nxlink");
 
