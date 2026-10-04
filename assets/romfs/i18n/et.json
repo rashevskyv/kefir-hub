@@ -2829,5 +2829,7 @@
   "Delete mods": "Kustuta modid",
   "Cheats are kept.": "Cheats säilitatakse.",
   "Backing up before deleting...": "Varundamine enne kustutamist...",
-  "Mods": "Modid"
+  "Mods": "Modid",
+  "Extract": "Paki lahti",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Paki valitud arhiivi sisu lahti (zip, rar, 7z, tar, gz, xz)."
 }

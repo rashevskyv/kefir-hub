@@ -2887,5 +2887,7 @@
   "Delete mods": "删除MOD",
   "Cheats are kept.": "保留作弊码。",
   "Backing up before deleting...": "删除前正在备份...",
-  "Mods": "模组"
+  "Mods": "模组",
+  "Extract": "解压",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "提取所选压缩包的内容 (zip, rar, 7z, tar, gz, xz)。"
 }

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.983 — file browser extracts RAR, 7z, TAR, GZ, XZ, BZ2 (plan F.9b)
+- "Extract" (was "Extract zip") now also takes rar/7z/tar/tgz/gz/xz/txz/bz2/tbz2 via libarchive (`archive_extract.cpp`, reads through `fs::File` so SD, USB and mounts work, seekable for 7z/rar); entries leaving the target folder are skipped (`archive_extract_plan.hpp` + host test); a bare .gz/.xz/.bz2 becomes one file without that extension. New build dependency `switch-libarchive` (README, CI step). New result code `ArchiveRead`.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, +430 KB, no first-party warnings) · switch: pending — extract a .rar, a .7z and a .tar.gz to the current folder, cancel a big one
+
 ## v0.13.982 — Phase S done: every docs screen shot in English and Ukrainian from the DocsDemo build (S.6)
 - 88 recipes + 2 web pages, all taken in en and uk (176 + 4 PNGs, each checked) with `tools/docs/shoot.ps1 -Lang en,uk` in one unattended Eden run; the 49 old English shots retaken from DocsDemo for one look. `user` (console or PC side only): install-mtp-explorer, network-ftp-client, sharing-mtp-pc, console-transfer-ip-entry (Eden keyboard opens outside the frame), sharing-web-album (Eden album holds the owner's screenshots). uk shots synced into the guide site clone (switch-hub, branch kefir-hub, local commit ef9ff16e, not pushed).
 - DOCS_DEMO: minimized install = background session (the badge over a working menu). Tools: shots.json `ini` / `startup` / `fresh` / `crop` / `web`, shoot.ps1 stops the Hub before writing config.ini, Sync retries the `ready` file, Hide-OwnData also hides /games and /pictures, sync_site_shots.py skips binaries and creates the image folder; demo save backups moved to `dumps/<title id>/` (the game-name folder changes with the UI language); fixtures for pictures, a text file, the changelog `____` section end. docs build: pass (en, uk; 59 links, 0 broken).

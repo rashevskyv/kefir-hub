@@ -2834,5 +2834,7 @@
   "Delete mods": "Mods verwijderen",
   "Cheats are kept.": "Cheats worden behouden.",
   "Backing up before deleting...": "Bezig met back-up maken voor het verwijderen...",
-  "Mods": "Mods"
+  "Mods": "Mods",
+  "Extract": "Uitpakken",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Pak de inhoud van het geselecteerde archief uit (zip, rar, 7z, tar, gz, xz)."
 }

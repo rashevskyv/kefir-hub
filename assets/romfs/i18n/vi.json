@@ -2834,5 +2834,7 @@
   "Delete mods": "Xóa mod",
   "Cheats are kept.": "Các cheat được giữ lại.",
   "Backing up before deleting...": "Đang sao lưu trước khi xóa...",
-  "Mods": "Bản mod"
+  "Mods": "Bản mod",
+  "Extract": "Giải nén",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Giải nén nội dung của tệp lưu trữ đã chọn (zip, rar, 7z, tar, gz, xz)."
 }

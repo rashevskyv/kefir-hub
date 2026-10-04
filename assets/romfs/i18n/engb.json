@@ -2829,5 +2829,7 @@
   "Delete mods": "Delete mods",
   "Cheats are kept.": "Cheats are kept.",
   "Backing up before deleting...": "Backing up before deleting...",
-  "Mods": "Mods"
+  "Mods": "Mods",
+  "Extract": "Extract",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz)."
 }

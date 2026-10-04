@@ -2835,5 +2835,7 @@
   "Delete mods": "Mods löschen",
   "Cheats are kept.": "Cheats werden beibehalten.",
   "Backing up before deleting...": "Sicherung vor dem Löschen wird erstellt...",
-  "Mods": "Mods"
+  "Mods": "Mods",
+  "Extract": "Entpacken",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Inhalt des ausgewählten Archivs extrahieren (zip, rar, 7z, tar, gz, xz)."
 }

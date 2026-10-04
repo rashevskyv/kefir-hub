@@ -1,4 +1,5 @@
 #include "ui/menus/filebrowser.hpp"
+#include "archive_extract_plan.hpp"
 #include "text_helper.hpp"
 #include "path_util.hpp"
 #include "ui/menus/filebrowser_assoc.hpp"
@@ -511,8 +512,8 @@ void FsView::DisplayOptions() {
     }
 
     if (!is_root && m_fs_entry.type != FsType::Archive && m_entries_current.size()) {
-        if (check_all_ext(ZIP_EXTENSIONS)) {
-            auto extract_entry = options->Add<SidebarEntryCallback>("Extract zip"_i18n, [this](){
+        if (check_all_ext(ZIP_EXTENSIONS) || check_all_ext(archive::EXTENSIONS)) {
+            auto extract_entry = options->Add<SidebarEntryCallback>("Extract"_i18n, [this](){
                 auto options = std::make_unique<Sidebar>("Extract Options"_i18n, Sidebar::Side::RIGHT);
                 ON_SCOPE_EXIT(App::Push(std::move(options)));
 
@@ -538,7 +539,7 @@ void FsView::DisplayOptions() {
                     }
                 }, "Extract the archive to a custom path you specify."_i18n);
                 to_entry->SetIcon(ThemeEntryID_ICON_ZIP);
-            }, "Extract the contents of the selected ZIP archive."_i18n);
+            }, "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz)."_i18n);
             extract_entry->SetHasSubmenu(true);
             extract_entry->SetIcon(ThemeEntryID_ICON_ZIP);
         }

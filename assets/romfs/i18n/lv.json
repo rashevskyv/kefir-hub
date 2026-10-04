@@ -2829,5 +2829,7 @@
   "Delete mods": "Dzēst modifikācijas",
   "Cheats are kept.": "Čīti tiek saglabāti.",
   "Backing up before deleting...": "Veic dublējumu pirms dzēšanas...",
-  "Mods": "Modifikācijas"
+  "Mods": "Modifikācijas",
+  "Extract": "Atspiest",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Izvilkt izvēlētā arhīva saturu (zip, rar, 7z, tar, gz, xz)."
 }

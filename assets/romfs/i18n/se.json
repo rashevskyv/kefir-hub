@@ -2834,5 +2834,7 @@
   "Delete mods": "Ta bort moddar",
   "Cheats are kept.": "Cheats behålles.",
   "Backing up before deleting...": "Säkerhetskopierar innan radering...",
-  "Mods": "Moddar"
+  "Mods": "Moddar",
+  "Extract": "Extrahera",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extrahera innehållet i det valda arkivet (zip, rar, 7z, tar, gz, xz)."
 }

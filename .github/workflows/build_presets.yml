@@ -25,6 +25,9 @@ jobs:
         make -j$(nproc)
         make install
 
+    - name: Install portlibs
+      run: dkp-pacman -S --noconfirm --needed switch-libarchive
+
     - name: Configure CMake
       run: cmake --preset ${{ matrix.preset }}
 

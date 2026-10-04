@@ -69,7 +69,7 @@ You will first need to install [devkitPro](https://devkitpro.org/wiki/Getting_St
 
 Next you will need to install the dependencies:
 ```sh
-sudo pacman -S switch-dev deko3d switch-cmake switch-curl switch-glm switch-zlib switch-mbedtls
+sudo pacman -S switch-dev deko3d switch-cmake switch-curl switch-glm switch-zlib switch-mbedtls switch-libarchive
 ```
 
 Also you need to have on your environment the packages `git`, `make`, `zip` and `cmake`

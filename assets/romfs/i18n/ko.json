@@ -2834,5 +2834,7 @@
   "Delete mods": "모드 삭제",
   "Cheats are kept.": "치트가 유지됩니다.",
   "Backing up before deleting...": "삭제하기 전에 백업 중...",
-  "Mods": "모드"
+  "Mods": "모드",
+  "Extract": "압축 해제",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "선택한 아카이브의 압축을 해제합니다 (zip, rar, 7z, tar, gz, xz)."
 }

@@ -2829,5 +2829,7 @@
   "Remove this game's mods from the memory card. Cheats are kept.": "Remove this game's mods from the memory card. Cheats are kept.",
   "Delete with mods": "Delete with mods",
   "Backing up before deleting...": "Backing up before deleting...",
-  "Mods": "Mods"
+  "Mods": "Mods",
+  "Extract": "Extract",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz)."
 }

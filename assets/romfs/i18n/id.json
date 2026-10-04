@@ -2829,5 +2829,7 @@
   "Delete mods": "Hapus mod",
   "Cheats are kept.": "Cheat dipertahankan.",
   "Backing up before deleting...": "Mencadangkan sebelum menghapus...",
-  "Mods": "Mod"
+  "Mods": "Mod",
+  "Extract": "Ekstrak",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Ekstrak isi arsip yang dipilih (zip, rar, 7z, tar, gz, xz)."
 }

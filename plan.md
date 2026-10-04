@@ -283,25 +283,27 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       another installed game" (DBI 828+ Export/Replace SDK): donor = installed game with the highest SDK ≤ firmware
       major; copy its exefs `sdk` to `/atmosphere/contents/<ProgramID>/exefs/sdk`; show it as active with one-tap
       removal; offer removal after a firmware or game update. Never download or bundle sdk files; never swap silently.
-- [ ] F.2 **Game updates → hand off to the Kefir apps.** Do not build a downloader. First find out how the Kefir apps
-      that fetch games get a request (candidates in `D:\git\dev\_kefir\kefir\switch`: TorrentShopNX — catalog +
-      torrserver, `config.ini`; pipensx; confirm with the user which two). Then: find installed games with a newer
-      update/DLC (titledb versions; Hub reads titledb in `ownfoil_api.cpp`) and open that app on the found title,
-      or show the list with a button per game if the app takes no arguments.
+- [ ] F.2 **Game updates.** Hub finds installed games with a newer update/DLC (titledb versions; Hub reads titledb in
+      `ownfoil_api.cpp`), the user picks which app fetches it — TorrentShopNX or pipensx (confirmed 2026-10-04,
+      `D:\git\dev\_kefir\kefir\switch`) — that app downloads, Hub installs. Better still (user): Hub downloads just
+      the update itself. Research how both apps get a request and where they fetch updates from first.
 - [ ] F.4 **System cleanup.** Orphaned content (records/NCAs of removed games), install placeholders, unused tickets,
       downloaded system updates. Hub's "Remove leftover cache" covers only temp files. `[USER]` sends a screenshot of
       the expected screen first.
 - [ ] F.5 **Mods.** Big area, split into tasks when started: (a) installing mods automatically when a game folder
-      with mods is dropped over MTP together with the game (put them in `/atmosphere/contents/<TitleID>/`); (b) mods
+      with mods is dropped over MTP together with the game (put them in `/atmosphere/contents/<TitleID>/`; agreed
+      2026-10-04: folders accepted, files under `…/atmosphere/contents/<tid>/…` or `…/<tid>/…` go to the SD, mod files
+      without a tid in the path are skipped without stopping the copy); (b) mods
       size in the game card, "Delete mods" (also offered when deleting the game) — done; (c) "Pack mods into romfs.bin".
 - [x] F.6 **Saves.** "Check backups" (validate backup archives), browse a backup's files read-only, automatic backup
       before deleting a save (DBI FoolproofSaveDelete).
 - [ ] F.8 **Language bound to a translation pack.** Ukrainian translations ship as a repacked update + translation +
       metadata saying which language the game must start with (some must be forced to English). Hub reads that
       metadata on install and forces the language for that title; plus a manual "Force language" per installed game
-      (DBI Force language). Find the mechanism first (how DBI forces it); define the metadata format with the user.
+      (DBI Force language). Find the mechanism first (how DBI forces it). The metadata format is mine to define, then
+      agree it with the shop app `D:\git\dev\swuk_shop_nx` (user, 2026-10-04).
 - [x] F.9 **Hex view** in the file browser. (Second panel exists. RAR/7z do not: only zip extracts; 7z only for RetroArch in the App Store.)
-- [ ] F.9b **RAR/7z extraction** in the file browser — ask the user (needs a new library).
+- [x] F.9b **Archive extraction** in the file browser: RAR, 7z, xz, tar, gz (zip already works). Approved 2026-10-04.
 - [x] F.10 **Fill free NAND space with zeros** (next to "Fill free SD space with zeros").
 - [ ] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install

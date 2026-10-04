@@ -2829,5 +2829,7 @@
   "Delete mods": "Модтарды жою",
   "Cheats are kept.": "Читтер сақталды.",
   "Backing up before deleting...": "Жою алдында сақтық көшірме жасалуда...",
-  "Mods": "Модтар"
+  "Mods": "Модтар",
+  "Extract": "Шығару",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Таңдалған архивтің мазмұнын шығару (zip, rar, 7z, tar, gz, xz)."
 }

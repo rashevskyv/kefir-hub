@@ -1,4 +1,6 @@
 #include "ui/menus/filebrowser.hpp"
+#include "archive_extract.hpp"
+#include "archive_extract_plan.hpp"
 #include "path_util.hpp"
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "download.hpp"
@@ -193,6 +195,10 @@ void FsView::UnzipFiles(fs::FsPath dir_path) {
         for (auto& e : targets) {
             pbox->SetTitle(e.GetName());
             const auto zip_out = GetNewPath(e);
+            if (path::IsAnyOfIC(path::Extension(e.GetName()), archive::EXTENSIONS)) {
+                R_TRY(archive::Extract(pbox, m_fs.get(), zip_out, dir_path));
+                continue;
+            }
             R_TRY(thread::TransferUnzipAll(pbox, zip_out, m_fs.get(), dir_path, nullptr, is_hdd_fs ? thread::Mode::SingleThreaded : thread::Mode::SingleThreadedIfSmaller));
         }
 

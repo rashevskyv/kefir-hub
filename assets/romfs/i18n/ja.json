@@ -2834,5 +2834,7 @@
   "Delete mods": "MODを削除",
   "Cheats are kept.": "チートは保持されます。",
   "Backing up before deleting...": "削除する前にバックアップを作成しています...",
-  "Mods": "Mod"
+  "Mods": "Mod",
+  "Extract": "展開",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "選択したアーカイブのコンテンツを解凍します (zip、rar、7z、tar、gz、xz)。"
 }

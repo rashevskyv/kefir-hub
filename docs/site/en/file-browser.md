@@ -148,9 +148,12 @@ the cursor. The same settings are in [[Settings]] → [[Sources]], see [Settings
    where the `.zip` file is.
 4. Press **B** at the top folder of the archive to leave it.
 
-## Unpack a ZIP archive
-1. Select one or more `.zip` files, or put the cursor on one.
-2. Press **+** and choose [[Extract zip]].
+## Unpack an archive {#unpack-a-zip-archive}
+ZIP, RAR, 7z, TAR and compressed `.tar.gz`/`.tar.xz`/`.tar.bz2` archives unpack the same way. A single `.gz`, `.xz` or
+`.bz2` file unpacks into one file named without that extension.
+
+1. Select one or more archives, or put the cursor on one.
+2. Press **+** and choose [[Extract]].
 3. Choose where:
     - [[Extract here]]: into the current folder;
     - [[Extract to root]]: into the top folder of this storage. Kefir Hub asks to confirm;

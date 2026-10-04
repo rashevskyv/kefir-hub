@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.982)
+set(sphaira_VERSION 0.13.983)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -308,6 +308,7 @@ add_executable(sphaira
     source/title_nacp.cpp
     source/title_nsp.cpp
     source/zero_fill.cpp
+    source/archive_extract.cpp
     source/minizip_helper.cpp
     source/fs_zip.cpp
     source/fs_ncm.cpp
@@ -475,6 +476,14 @@ target_link_libraries(sphaira PRIVATE
     CURL::libcurl
     ${mbedcrypto_lib}
 )
+
+# rar / 7z / tar / gz / xz extraction in the file browser (switch-libarchive portlib).
+find_library(archive_lib archive REQUIRED)
+find_library(lzma_lib lzma REQUIRED)
+find_library(lz4_lib lz4 REQUIRED)
+find_library(expat_lib expat REQUIRED)
+find_library(bz2_lib bz2 REQUIRED)
+target_link_libraries(sphaira PRIVATE ${archive_lib} ${lzma_lib} ${lz4_lib} ${expat_lib} ${bz2_lib} ZLIB::ZLIB)
 
 if (USE_NEW_ZSTD)
     message(STATUS "USING UPSTREAM ZSTD")

@@ -2829,5 +2829,7 @@
   "Delete mods": "Выдаліць моды",
   "Cheats are kept.": "Чыты захаваны.",
   "Backing up before deleting...": "Рэзервовае капіраванне перад выдаленнем...",
-  "Mods": "Моды"
+  "Mods": "Моды",
+  "Extract": "Выняць",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Выняць змесціва выбранага архіва (zip, rar, 7z, tar, gz, xz)."
 }

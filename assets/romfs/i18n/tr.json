@@ -2829,5 +2829,7 @@
   "Delete mods": "Modları sil",
   "Cheats are kept.": "Hileler korunur.",
   "Backing up before deleting...": "Silinmeden önce yedekleniyor...",
-  "Mods": "Modlar"
+  "Mods": "Modlar",
+  "Extract": "Ayıkla",
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Seçilen arşivi dışarı çıkar (zip, rar, 7z, tar, gz, xz)."
 }

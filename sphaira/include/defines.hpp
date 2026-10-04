@@ -248,6 +248,9 @@ enum class SphairaResult : Result {
 
     // an http source's transfer ended before a read was filled.
     YatiHttpReadFailed,
+
+    // libarchive could not read an archive (rar, 7z, tar, gz, xz) being extracted.
+    ArchiveRead,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -386,6 +389,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(NtpSetTimeFailed),
     MAKE_SPHAIRA_RESULT_ENUM(NetNoConnection),
     MAKE_SPHAIRA_RESULT_ENUM(YatiHttpReadFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchiveRead),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM
