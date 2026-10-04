@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Lubab ka ekraanitõmmiseid.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Seotud Nintendo konto, ekraanipildid ja videosalvestus. Nende muutmiseks on vaja sigpatche.",
   "Video capture allowed": "Video salvestamine lubatud",
-  "Screenshots allowed": "Ekraanipildid lubatud"
+  "Screenshots allowed": "Ekraanipildid lubatud",
+  "Start without linked account": "Alusta seotud kontota",
+  "Allow video capture": "Luba videohõive",
+  "Game restrictions (need sigpatches)": "Mängupiirangud (vaja sigpatche)",
+  "Installed games allow screenshots even where they forbid them.": "Installitud mängud lubavad ekraanipilte isegi seal, kus need on keelatud.",
+  "Allow screenshots": "Luba ekraanipildid",
+  "Installed games no longer ask for a linked Nintendo Account.": "Installitud mängud ei küsi enam lingitud Nintendo kontot.",
+  "Installed games allow video capture (and screenshots).": "Installitud mängud lubavad videot salvestada (ja ekraanipilte teha)."
 }

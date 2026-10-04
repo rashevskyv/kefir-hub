@@ -317,7 +317,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.9 **Hex view** in the file browser. (Second panel exists. RAR/7z do not: only zip extracts; 7z only for RetroArch in the App Store.)
 - [x] F.9b **Archive extraction** in the file browser: RAR, 7z, xz, tar, gz (zip already works). Approved 2026-10-04.
 - [x] F.10 **Fill free NAND space with zeros** (next to "Fill free SD space with zeros").
-- [ ] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
+- [x] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.
       Research (2026-10-04): NACP `startup_user_account`(0x3025)=1, `required_network_service_license_on_launch`

@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Taip pat leidžia ekrano kopijas.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Susieta „Nintendo“ paskyra, ekrano kopijos ir vaizdo įrašai. Norint juos pakeisti, reikia „sigpatches“.",
   "Video capture allowed": "Vaizdo įrašymas leidžiamas",
-  "Screenshots allowed": "Ekrano kopijos leidžiamos"
+  "Screenshots allowed": "Ekrano kopijos leidžiamos",
+  "Start without linked account": "Paleisti be susietos paskyros",
+  "Allow video capture": "Leisti vaizdo įrašymą",
+  "Game restrictions (need sigpatches)": "Žaidimų apribojimai (reikia „sigpatches“)",
+  "Installed games allow screenshots even where they forbid them.": "Įdiegti žaidimai leidžia daryti ekrano kopijas net ten, kur jos draudžiamos.",
+  "Allow screenshots": "Leisti ekrano kopijas",
+  "Installed games no longer ask for a linked Nintendo Account.": "Įdiegti žaidimai nebeprašo susietos „Nintendo“ paskyros.",
+  "Installed games allow video capture (and screenshots).": "Įdiegti žaidimai leidžia daryti vaizdo įrašus (ir ekrano kopijas)."
 }

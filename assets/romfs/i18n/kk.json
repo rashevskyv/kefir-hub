@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Сондай-ақ экран көріністеріне рұқсат береді.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Байланыстырылған Nintendo тіркелгісі, скриншоттар және видео жазу. Оларды өзгерту үшін sigpatches қажет.",
   "Video capture allowed": "Видео жазуға рұқсат етілген",
-  "Screenshots allowed": "Skrinshotterge ruqsat etilgen"
+  "Screenshots allowed": "Skrinshotterge ruqsat etilgen",
+  "Start without linked account": "Байланыстырылған тіркелгісіз бастау",
+  "Allow video capture": "Видеонүсқауды рұқсат етіңіз",
+  "Game restrictions (need sigpatches)": "Ойын шектеулері (sigpatches қажет)",
+  "Installed games allow screenshots even where they forbid them.": "Орнатылған ойындар тыйым салынған жерлердің өзінде скриншоттарға рұқсат етеді.",
+  "Allow screenshots": "Скриншоттарға рұқсат ету",
+  "Installed games no longer ask for a linked Nintendo Account.": "Орнатылған ойындар енді байланыстырылған Nintendo тіркелгі жазбасын сұрамайды.",
+  "Installed games allow video capture (and screenshots).": "Орнатыված ойындар бейне жазуға (және скриншоттарға) рұқсат етеді."
 }

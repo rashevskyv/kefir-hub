@@ -2927,5 +2927,12 @@
   "Also allows screenshots.": "También permite capturas de pantalla.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Cuenta de Nintendo vinculada, capturas de pantalla y grabación de video. Cambiarlas requiere sigpatches.",
   "Video capture allowed": "Captura de video permitida",
-  "Screenshots allowed": "Capturas permitidas"
+  "Screenshots allowed": "Capturas permitidas",
+  "Start without linked account": "Iniciar sin cuenta vinculada",
+  "Allow video capture": "Permitir captura de video",
+  "Game restrictions (need sigpatches)": "Restricciones de juegos (se necesitan sigpatches)",
+  "Installed games allow screenshots even where they forbid them.": "Los juegos instalados permiten capturas de pantalla incluso donde están prohibidas.",
+  "Allow screenshots": "Permitir capturas de pantalla",
+  "Installed games no longer ask for a linked Nintendo Account.": "Los juegos instalados ya no solicitan una cuenta Nintendo vinculada.",
+  "Installed games allow video capture (and screenshots).": "Los juegos instalados permiten la captura de video (y capturas de pantalla)."
 }

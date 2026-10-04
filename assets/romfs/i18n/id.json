@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Juga mengizinkan tangkapan layar.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Akun Nintendo yang ditautkan, tangkapan layar, dan tangkapan video. Mengubahnya memerlukan sigpatch.",
   "Video capture allowed": "Perekaman video diizinkan",
-  "Screenshots allowed": "Tangkapan layar diizinkan"
+  "Screenshots allowed": "Tangkapan layar diizinkan",
+  "Start without linked account": "Mulai tanpa akun tertaut",
+  "Allow video capture": "Izinkan pengambilan video",
+  "Game restrictions (need sigpatches)": "Pembatasan game (butuh sigpatches)",
+  "Installed games allow screenshots even where they forbid them.": "Game yang dipasang mengizinkan tangkapan layar bahkan di tempat yang melarangnya.",
+  "Allow screenshots": "Izinkan tangkapan layar",
+  "Installed games no longer ask for a linked Nintendo Account.": "Game yang terinstal tidak lagi meminta Akun Nintendo yang ditautkan.",
+  "Installed games allow video capture (and screenshots).": "Game yang dipasang mengizinkan perekaman video (dan tangkapan layar)."
 }

@@ -2926,5 +2926,12 @@
   "Also allows screenshots.": "Tillåter också skärmdumpar.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Länkat Nintendo-konto, skärmdumpar och videoinspelning. Att ändra dem kräver sigpatches.",
   "Video capture allowed": "Videoinspelning tillåten",
-  "Screenshots allowed": "Skärmbilder tillåtna"
+  "Screenshots allowed": "Skärmbilder tillåtna",
+  "Start without linked account": "Starta utan länkat konto",
+  "Allow video capture": "Tillåt videoinspelning",
+  "Game restrictions (need sigpatches)": "Spelrestriktioner (kräver sigpatches)",
+  "Installed games allow screenshots even where they forbid them.": "Installerade spel tillåter skärmdumpar även där de är förbjudna.",
+  "Allow screenshots": "Tillåt skärmbilder",
+  "Installed games no longer ask for a linked Nintendo Account.": "Installerade spel frågar inte längre efter ett länkat Nintendo-konto.",
+  "Installed games allow video capture (and screenshots).": "Installerade spel tillåter videoinspelning (och skärmdumpar)."
 }

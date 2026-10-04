@@ -164,6 +164,11 @@ Install behaviour and safety switches. What each option does is on the [Install]
 | [[Convert to standard crypto]] | Off |
 | [[Re-encrypt to master key 0]] | Off |
 | [[Lower required firmware]] | On |
+| [[Start without linked account]] | Off |
+| [[Allow screenshots]] | Off |
+| [[Allow video capture]] | Off |
+
+The last three patch each installed game's restrictions (see [Game restrictions](games.md#game-restrictions)); they need sigpatches.
 
 [[Boost CPU during transfer]] speeds up installs but lowers the graphics clock, so the screen can look frozen
 while a transfer runs. See [Kefir Hub looks frozen](troubleshooting.md#kefir-hub-looks-frozen-during-a-transfer).

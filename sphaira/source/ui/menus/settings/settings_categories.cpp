@@ -1,5 +1,6 @@
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/settings/settings_internal.hpp"
+#include "control_patch.hpp"
 #include "ui/menus/settings/settings_sources.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
@@ -511,6 +512,11 @@ void Menu::BuildCategories() {
                 MakeOptionItem("Convert to standard crypto"_i18n, "Convert titlekey to standard crypto."_i18n, app->m_convert_to_standard_crypto),
                 MakeOptionItem("Re-encrypt to master key 0"_i18n, "Encrypt key area keys with master key 0 so older firmware can read them."_i18n, app->m_lower_master_key),
                 MakeOptionItem("Lower required firmware"_i18n, "Lower the required system version recorded in the metadata."_i18n, app->m_lower_system_version),
+
+                MakeHeader("Game restrictions (need sigpatches)"_i18n),
+                MakeBoolItem("Start without linked account"_i18n, "Installed games no longer ask for a linked Nintendo Account."_i18n, control_patch::GetInstallNoLinkedAccount, control_patch::SetInstallNoLinkedAccount),
+                MakeBoolItem("Allow screenshots"_i18n, "Installed games allow screenshots even where they forbid them."_i18n, control_patch::GetInstallScreenshots, control_patch::SetInstallScreenshots),
+                MakeBoolItem("Allow video capture"_i18n, "Installed games allow video capture (and screenshots)."_i18n, control_patch::GetInstallVideo, control_patch::SetInstallVideo),
             }
         },
         {

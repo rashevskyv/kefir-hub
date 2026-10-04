@@ -20,6 +20,7 @@
 #include "log.hpp"
 #include "utils/utils.hpp"
 #include "forced_language.hpp"
+#include "control_patch.hpp"
 #include <sys/statvfs.h>
 
 #include <minIni.h>
@@ -55,6 +56,27 @@ void ApplyLanguagePack(const std::optional<forced_language::PackInfo>& pack, std
         }
     }
     log_write("[LANG] pack title %016lX matches no installed meta\n", pack->title_id);
+}
+
+// Settings → Install → game restrictions: patch each installed game's control data afterwards.
+// A failure here does not fail the install; the game is in, only its restrictions stay.
+void ApplyInstallPatches(std::span<const CnmtCollection> cnmts) {
+    const auto patch = control_patch::InstallPatch();
+    if (!patch.linked_account_required && !patch.screenshots_allowed && !patch.video_allowed) {
+        return;
+    }
+    std::vector<u64> done;
+    for (const auto& cnmt : cnmts) {
+        const auto app_id = ncm::GetAppId(cnmt.key);
+        if ((cnmt.key.type != NcmContentMetaType_Application && cnmt.key.type != NcmContentMetaType_Patch) ||
+            std::ranges::find(done, app_id) != done.end()) {
+            continue;
+        }
+        done.push_back(app_id);
+        if (const auto rc = control_patch::PatchInstalled(app_id, patch); R_FAILED(rc)) {
+            log_write("[CONTROL] install patch %016lX failed: 0x%X\n", app_id, rc);
+        }
+    }
 }
 
 auto IsLanguagePack(const container::CollectionEntry& collection) -> bool {
@@ -327,6 +349,7 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
     }
 
     ApplyLanguagePack(language_pack, cnmts);
+    ApplyInstallPatches(cnmts);
     log_write("success!\n");
     R_SUCCEED();
 }
@@ -428,6 +451,7 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
     }
 
     ApplyLanguagePack(language_pack, cnmts);
+    ApplyInstallPatches(cnmts);
     log_write("success!\n");
     R_SUCCEED();
 }

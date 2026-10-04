@@ -2926,5 +2926,12 @@
   "Also allows screenshots.": "Sta ook screenshots toe.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Gekoppeld Nintendo-account, screenshots en video-opname. Deze wijzigen vereist sigpatches.",
   "Video capture allowed": "Video-opname toegestaan",
-  "Screenshots allowed": "Schermafbeeldingen toegestaan"
+  "Screenshots allowed": "Schermafbeeldingen toegestaan",
+  "Start without linked account": "Starten zonder gekoppeld account",
+  "Allow video capture": "Video-opname toestaan",
+  "Game restrictions (need sigpatches)": "Spelbeperkingen (sigpatches vereist)",
+  "Installed games allow screenshots even where they forbid them.": "Geïnstalleerde games staan screenshots toe, zelfs waar dit verboden is.",
+  "Allow screenshots": "Screenshots toestaan",
+  "Installed games no longer ask for a linked Nintendo Account.": "Geïnstalleerde games vragen niet langer om een gekoppeld Nintendo-account.",
+  "Installed games allow video capture (and screenshots).": "Geïnstalleerde games staan video-opname (en screenshots) toe."
 }

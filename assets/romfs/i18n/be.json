@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Таксама дазваляе здымкі экрана.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Звязаны ўліковы запіс Nintendo, скрыншоты і запіс відэа. Іх змяненне патрабуе сігпачаў.",
   "Video capture allowed": "Дазволены запіс відэа",
-  "Screenshots allowed": "Зыходы дазволеныя"
+  "Screenshots allowed": "Зыходы дазволеныя",
+  "Start without linked account": "Запусціць без звязанага акаўнта",
+  "Allow video capture": "Дазволіць запіс відэа",
+  "Game restrictions (need sigpatches)": "Гульнявыя абмежаванні (патрэбныя сігпатчы)",
+  "Installed games allow screenshots even where they forbid them.": "Устаноўленыя гульні дазваляюць рабіць здымкі экрана нават там, дзе гэта забаронена.",
+  "Allow screenshots": "Дазволіць здымкі экрана",
+  "Installed games no longer ask for a linked Nintendo Account.": "Устаноўленыя гульні больш не патрабуюць звязанага ўліковага запісу Nintendo.",
+  "Installed games allow video capture (and screenshots).": "Устаноўленыя гульні дазваляюць запісваць відэа (і рабіць здымкі экрана)."
 }

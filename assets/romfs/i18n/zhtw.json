@@ -2979,5 +2979,12 @@
   "Also allows screenshots.": "同時允許截圖。",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "已連結的 Nintendo 帳號、截圖與影片錄製。更改這些需要 sigpatches。",
   "Video capture allowed": "允許影片擷取",
-  "Screenshots allowed": "允許截圖"
+  "Screenshots allowed": "允許截圖",
+  "Start without linked account": "無關聯帳戶啟動",
+  "Allow video capture": "允許影片擷取",
+  "Game restrictions (need sigpatches)": "遊戲限制（需要 sigpatches）",
+  "Installed games allow screenshots even where they forbid them.": "已安裝的遊戲允許在禁止截圖的地方進行截圖。",
+  "Allow screenshots": "允許螢幕截圖",
+  "Installed games no longer ask for a linked Nintendo Account.": "已安裝的遊戲不再要求連結任天堂帳號。",
+  "Installed games allow video capture (and screenshots).": "已安裝的遊戲允許錄製影片（與截圖）。"
 }

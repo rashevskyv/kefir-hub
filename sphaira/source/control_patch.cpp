@@ -6,6 +6,9 @@
 #include "yati/nx/nca.hpp"
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/ns.hpp"
+#include "app.hpp"
+
+#include <minIni.h>
 
 #include <array>
 #include <cstring>
@@ -181,6 +184,27 @@ Result PatchInstalled(u64 app_id, const nacp_patch::Patch& patch) {
         ns::InvalidateApplicationControlCache(am.get(), app_id);
     }
     R_SUCCEED();
+}
+
+namespace {
+constexpr const char* SECTION = "install";
+bool GetFlag(const char* key) { return ini_getbool(SECTION, key, 0, App::CONFIG_PATH); }
+void SetFlag(const char* key, bool v) { ini_putl(SECTION, key, v, App::CONFIG_PATH); }
+} // namespace
+
+bool GetInstallNoLinkedAccount() { return GetFlag("patch_no_linked_account"); }
+void SetInstallNoLinkedAccount(bool v) { SetFlag("patch_no_linked_account", v); }
+bool GetInstallScreenshots() { return GetFlag("patch_screenshots"); }
+void SetInstallScreenshots(bool v) { SetFlag("patch_screenshots", v); }
+bool GetInstallVideo() { return GetFlag("patch_video"); }
+void SetInstallVideo(bool v) { SetFlag("patch_video", v); }
+
+auto InstallPatch() -> nacp_patch::Patch {
+    nacp_patch::Patch p;
+    if (GetInstallNoLinkedAccount()) p.linked_account_required = false;
+    if (GetInstallScreenshots()) p.screenshots_allowed = true;
+    if (GetInstallVideo()) p.video_allowed = true;
+    return p;
 }
 
 } // namespace sphaira::control_patch

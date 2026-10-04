@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.989 — game restrictions switched at install too (plan F.11, part 2)
+- Settings → Install → "Game restrictions (need sigpatches)": start without linked account, allow screenshots, allow video capture (off by default, stored in config.ini `[install]` by `control_patch`, not in App). After an install, each installed game/update gets `control_patch::PatchInstalled` (both install paths in `yati.cpp`); a failure is logged, the install still counts. Docs: settings.md, games.md anchor.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — turn "start without linked account" on, install a game that needs one, launch without a linked account
+
 ## v0.13.988 — game restrictions on an installed game: linked account, screenshots, video (plan F.11, part 1)
 - Game details → **+** → "Restrictions": three switches read from the control data; a change patches every installed Control NCA of the game (base + update, SD + NAND): decrypt the RomFS section, patch control.nacp (`startup_user_account`, network license bit, `screenshot`, `video_capture`), rehash IVFC after verifying the stored hashes, update the fs header hash, encrypt, write a placeholder and re-register under the same content id, invalidate the ns control cache (`control_patch.cpp`, `nacp_patch.hpp` + host test with a synthetic IVFC tree and RomFS). New `ncm::ListAllKeys`, reused by the cleanup. Needs sigpatches.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — toggle each switch on an eShop game and a cartridge-dumped game, with and without an update, launch, screenshot/record; a refused layout must leave the game untouched

@@ -19,4 +19,14 @@ Result ReadState(u64 app_id, nacp_patch::State& out);
 // it under the same content id.
 Result PatchInstalled(u64 app_id, const nacp_patch::Patch& patch);
 
+// install-time switches (Settings → Install), kept in the Hub config.ini, not in App.
+bool GetInstallNoLinkedAccount();
+void SetInstallNoLinkedAccount(bool v);
+bool GetInstallScreenshots();
+void SetInstallScreenshots(bool v);
+bool GetInstallVideo();
+void SetInstallVideo(bool v);
+// the patch the switches ask for after an install; nothing set = all off.
+auto InstallPatch() -> nacp_patch::Patch;
+
 } // namespace sphaira::control_patch

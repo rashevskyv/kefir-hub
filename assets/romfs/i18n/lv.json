@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Ļauj arī uzņemt ekrānuzņēmumus.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Saistītais Nintendo konts, ekrānuzņēmumi un video uzņemšana. To maiņai ir nepieciešami sigpatches.",
   "Video capture allowed": "Video uzņemšana atļauta",
-  "Screenshots allowed": "Ekrānuzņēmumi atļauti"
+  "Screenshots allowed": "Ekrānuzņēmumi atļauti",
+  "Start without linked account": "Sākt bez piesaistītā konta",
+  "Allow video capture": "Atļaut video uzņemšanu",
+  "Game restrictions (need sigpatches)": "Spēļu ierobežojumi (nepieciešami sigpatches)",
+  "Installed games allow screenshots even where they forbid them.": "Instalētās spēles ļauj uzņemt ekrānuzņēmumus pat tur, kur tie ir aizliegti.",
+  "Allow screenshots": "Atļaut ekrānuzņēmumus",
+  "Installed games no longer ask for a linked Nintendo Account.": "Instalētās spēles vairs neprasa piesaistītu Nintendo kontu.",
+  "Installed games allow video capture (and screenshots).": "Instalētās spēles ļauj uzņemt video (un ekrānuzņēmumus)."
 }

@@ -2921,5 +2921,12 @@
   "Also allows screenshots.": "Ayrıca ekran görüntülerine izin verir.",
   "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Bağlı Nintendo Hesabı, ekran görüntüleri ve video yakalama. Bunları değiştirmek sigpatch gerektirir.",
   "Video capture allowed": "Video kaydına izin verildi",
-  "Screenshots allowed": "Ekran görüntüleri izin verildi"
+  "Screenshots allowed": "Ekran görüntüleri izin verildi",
+  "Start without linked account": "Bağlı hesap olmadan başlat",
+  "Allow video capture": "Video yakalamaya izin ver",
+  "Game restrictions (need sigpatches)": "Oyun kısıtlamaları (sigpatch gerekir)",
+  "Installed games allow screenshots even where they forbid them.": "Yüklenen oyunlar, yasak olduğu yerlerde bile ekran görüntülerine izin verir.",
+  "Allow screenshots": "Ekran görüntülerine izin ver",
+  "Installed games no longer ask for a linked Nintendo Account.": "Yüklü oyunlar artık bağlı bir Nintendo Hesabı sormuyor.",
+  "Installed games allow video capture (and screenshots).": "Yüklenen oyunlar video yakalamaya (ve ekran görüntülerine) izin verir."
 }

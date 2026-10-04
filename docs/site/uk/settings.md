@@ -164,6 +164,11 @@ Kefir Hub перевіряє наявність нової версії один
 | [[Convert to standard crypto]] | Вимк. |
 | [[Re-encrypt to master key 0]] | Вимк. |
 | [[Lower required firmware]] | Увімк. |
+| [[Start without linked account]] | Вимк. |
+| [[Allow screenshots]] | Вимк. |
+| [[Allow video capture]] | Вимк. |
+
+Останні три змінюють обмеження кожної встановленої гри (див. [Обмеження гри](games.md#game-restrictions)); потрібні сигпатчі.
 
 [[Boost CPU during transfer]] пришвидшує встановлення, але знижує частоту графіки, тож під час передачі екран
 може здаватися завислим. Див. [Kefir Hub ніби завис](troubleshooting.md#kefir-hub-looks-frozen-during-a-transfer).
