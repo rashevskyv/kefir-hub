@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{#- the online preview is not the published docs: keep it out of search engines -#}
+{% block extrahead %}{% if config.extra.noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}{% endblock %}

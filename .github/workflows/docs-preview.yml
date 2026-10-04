@@ -1,0 +1,78 @@
+# Online preview for proofreading: https://customfw.xyz/kefir-hub/ (GitHub Pages of this repository).
+#   /         Kefir Hub docs, English (docs/site of branch docs), /uk/ Ukrainian
+#   /guide/   the switch.customfw.xyz guide reworked for Kefir Hub (rashevskyv/switch, branch kefir-hub)
+# Runs on a push to branch docs, on "guide-updated" (sent by rashevskyv/switch on a push to kefir-hub) and by hand
+# (Actions -> docs-preview -> Run workflow). Every page has an edit link to its file on those branches.
+# Not the published docs: the pages carry noindex. The live guide site (switch, gh-pages) is not touched.
+name: docs-preview
+
+on:
+  push:
+    branches: [docs]
+  repository_dispatch:
+    types: [guide-updated]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: docs-preview
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Kefir Hub docs
+        env:
+          DOCS_EDIT_BRANCH: docs
+          DOCS_REPO_URL: https://github.com/rashevskyv/kefir-hub
+          DOCS_NOINDEX: "true"
+          DOCS_LINK_EN: /kefir-hub/
+          DOCS_LINK_UK: /kefir-hub/uk/
+        run: |
+          pip install -r docs/site/requirements.txt
+          sh docs/site/build.sh
+
+      - uses: actions/checkout@v4
+        with:
+          repository: rashevskyv/switch
+          ref: kefir-hub
+          path: guide-src
+
+      # Jekyll 4.2 / Liquid 4.0.3 break on Ruby 3.2+ (String#tainted? removed).
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+
+      - name: Guide
+        working-directory: guide-src
+        run: |
+          bundle lock --add-platform x86_64-linux
+          bundle install
+          bundle exec jekyll build --config _config.yml,_rework/_config.ghpreview.yml -d ../build/docs-site/guide
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/docs-site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

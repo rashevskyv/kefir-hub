@@ -23,6 +23,8 @@ build() {
     mkdir -p "$stage/$lang"
     cp -r en/. "$stage/$lang/"
     [ "$lang" = en ] || cp -r "$lang/." "$stage/$lang/"
+    # online preview: DOCS_EDIT_BRANCH=<branch> gives each page an edit link to its own language file.
+    if [ -n "$DOCS_EDIT_BRANCH" ]; then export DOCS_EDIT_URI="edit/$DOCS_EDIT_BRANCH/docs/site/$lang/"; fi
     DOCS_LANG=$lang DOCS_THEME_LANG=$(theme_lang "$lang") DOCS_STAGE="$stage/$lang" DOCS_OUT="$dest" \
         mkdocs build --strict -q -f "$here/mkdocs.yml"
     echo "built $lang -> $dest"

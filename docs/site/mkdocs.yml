@@ -4,6 +4,9 @@
 site_name: Kefir Hub
 docs_dir: !ENV [DOCS_STAGE, en]
 site_dir: !ENV [DOCS_OUT, ../../build/docs-site]
+# set only by the online preview (.github/workflows/docs-preview.yml): an edit button on every page.
+repo_url: !ENV [DOCS_REPO_URL]
+edit_uri: !ENV [DOCS_EDIT_URI]
 hooks:
   - hooks/ui_labels.py
 validation:
@@ -12,6 +15,7 @@ validation:
 
 theme:
   name: material
+  custom_dir: overrides
   language: !ENV [DOCS_THEME_LANG, en]
   features:
     - navigation.sections
@@ -20,6 +24,7 @@ theme:
     - navigation.footer
     - search.highlight
     - content.code.copy
+    - content.action.edit
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -37,9 +42,10 @@ markdown_extensions:
   - pymdownx.superfences
 
 extra:
+  noindex: !ENV [DOCS_NOINDEX, false]
   alternate:
-    - {name: English, link: /, lang: en}
-    - {name: Українська, link: /uk/, lang: uk}
+    - {name: English, link: !ENV [DOCS_LINK_EN, /], lang: en}
+    - {name: Українська, link: !ENV [DOCS_LINK_UK, /uk/], lang: uk}
 
 nav:
   - index.md
