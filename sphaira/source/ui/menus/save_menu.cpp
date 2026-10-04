@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <utility>
 #include <vector>
 
 namespace sphaira::ui::menu::save {
@@ -119,6 +118,7 @@ Menu::Menu(u32 flags, u64 app_id_filter, Category category)
 }
 
 Menu::~Menu() {
+    StopBackupScan();
     title::Exit();
 
     FreeEntries();
@@ -147,11 +147,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         SortAndFindLastFile(true);
     }
 
-    // pushed here, not from ScanHomebrew(): that also runs inside other progress boxes' done callbacks.
-    if (std::exchange(m_backup_scan_pending, false)) {
-        StartBackupScan();
-        return;
-    }
+    PollBackupScan();
 
     MenuBase::Update(controller, touch);
 
@@ -191,9 +187,6 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
-    if (std::exchange(m_keep_backup_cache, false)) {
-        return; // back from our own backup scan: its done callback has just filled the list
-    }
     m_backup_cache_valid = false; // a dialog, a transfer or another screen may have changed the backups
     if (m_entries.empty()) {
         ScanHomebrew();
@@ -270,7 +263,7 @@ void Menu::OnLayoutChange() {
 
             case grid::LayoutType_Grid: {
                 // Room for a source label between adjacent backup rows.
-                const Vec2 pad{10, m_category == Category::Backups ? 34.f : 10.f};
+                const Vec2 pad{10, m_category == Category::Backups ? 60.f : 10.f};
                 const Vec4 v{93, 202, 174, 174};
                 m_list = std::make_unique<List>(6, 6*2, content_pos, v, pad);
             }   break;

@@ -5,7 +5,6 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "save_menu_internal.hpp"
-#include "ui/progress_box.hpp"
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
 
@@ -60,6 +59,7 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     if (!keep_backup_cache) {
         m_backup_cache_valid = false;
     }
+    m_backup_scan_pending = false; // set again below if this view needs the library
 
     FreeEntries();
     ClearSelection();
@@ -246,10 +246,10 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     // ponytail: files added behind the menu's back (MTP/FTP while it stays open and focused)
     // show up after the next action or reopening the screen; add an fs watch if that matters.
     std::vector<Entry> backups;
-    if (show_backups || has_uninstalled) {
+    if (show_backups) {
         if (!m_backup_cache_valid) {
-            // hundreds of DBI archives take seconds: show the new tab empty now, read the library
-            // under a progress box (started from Update()), and scan again from its done callback.
+            // hundreds of DBI archives take seconds: show the tab now with a progress bar in place of
+            // the grid (DrawBackupScan), read the library on a thread, and scan again when it is done.
             m_entries.clear();
             m_backup_start = 0;
             m_backup_scan_pending = true;
@@ -259,8 +259,10 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
         backups = m_backup_cache;
     }
 
+    // names for saves of deleted games: from the scanned library when there is one, else from the
+    // backup folder names (Deleted Games never opens the archives).
     std::unordered_map<u64, std::string> backup_name_lookup;
-    for (const auto& b : backups) {
+    for (const auto& b : m_backup_cache_valid ? m_backup_cache : backups) {
         if (b.application_id && !IsSystemLikeSave(b.save_data_type) && !backup_name_lookup.contains(b.application_id)) {
             if (b.lang.name[0] != '\0' && !title::IsPlaceholderName(b.lang.name)) {
                 backup_name_lookup.emplace(b.application_id, b.lang.name);
@@ -268,6 +270,10 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 backup_name_lookup.emplace(b.application_id, b.dbi_game_dir);
             }
         }
+    }
+
+    if (has_uninstalled && !m_backup_cache_valid) {
+        ReadBackupNames(backup_name_lookup);
     }
 
     if (show_backups) {
@@ -414,31 +420,75 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
 }
 
 void Menu::StartBackupScan() {
-    auto out = std::make_shared<std::vector<Entry>>();
-    App::Push<ProgressBox>(0, "Reading backups"_i18n, "", [this, out](auto pbox) -> Result {
-        pbox->SetHideSpeed(true);
-        ReadBackupEntries(*out, pbox);
-        R_SUCCEED();
-    }, [this, out](Result) {
-        // a cancelled scan keeps what it read: marking it invalid would only start it again.
-        m_backup_cache = std::move(*out);
-        m_backup_cache_valid = true;
-        m_keep_backup_cache = true;
-        // archives without a stored name (safety copies) take it from another backup of the same user.
-        std::unordered_map<std::string, std::string> owner_names;
-        for (const auto& b : m_backup_cache) {
-            if (!b.backup_owner_name.empty()) {
-                owner_names.try_emplace(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)), b.backup_owner_name);
+    auto job = std::make_unique<BackupScanJob>();
+    job->menu = this;
+    const auto run = [](void* arg) {
+        auto* j = static_cast<BackupScanJob*>(arg);
+        j->menu->ReadBackupEntries(j->out, [j](size_t done, size_t total, const fs::FsPath& path) {
+            {
+                std::scoped_lock lock{j->mutex};
+                j->path = path.toString();
             }
+            j->done = done;
+            j->total = total;
+            return !j->cancel;
+        });
+        j->finished = true;
+    };
+    job->started = R_SUCCEEDED(threadCreate(&job->thread, run, job.get(), nullptr, 1024 * 128, PRIO_PREEMPTIVE, 1));
+    if (job->started && R_FAILED(threadStart(&job->thread))) {
+        threadClose(&job->thread);
+        job->started = false;
+    }
+    if (!job->started) {
+        run(job.get()); // no thread: the old blocking read
+    }
+    m_backup_scan = std::move(job);
+}
+
+void Menu::PollBackupScan() {
+    if (!m_backup_scan) {
+        if (m_backup_scan_pending) {
+            StartBackupScan(); // pending stays set: the view that asked is rebuilt when it is done
         }
-        for (auto& b : m_backup_cache) {
-            const auto it = owner_names.find(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)));
-            if (b.backup_owner_name.empty() && it != owner_names.end()) {
-                b.backup_owner_name = it->second;
-            }
+        return;
+    }
+    if (!m_backup_scan->finished) {
+        return;
+    }
+
+    auto job = std::move(m_backup_scan);
+    if (job->started) {
+        threadWaitForExit(&job->thread);
+        threadClose(&job->thread);
+    }
+    m_backup_cache = std::move(job->out);
+    m_backup_cache_valid = true;
+    // archives without a stored name (safety copies) take it from another backup of the same user.
+    std::unordered_map<std::string, std::string> owner_names;
+    for (const auto& b : m_backup_cache) {
+        if (!b.backup_owner_name.empty()) {
+            owner_names.try_emplace(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)), b.backup_owner_name);
         }
+    }
+    for (auto& b : m_backup_cache) {
+        const auto it = owner_names.find(std::string(reinterpret_cast<const char*>(&b.uid), sizeof(b.uid)));
+        if (b.backup_owner_name.empty() && it != owner_names.end()) {
+            b.backup_owner_name = it->second;
+        }
+    }
+    if (m_backup_scan_pending) {
         ScanHomebrew(true);
-    });
+    }
+}
+
+void Menu::StopBackupScan() {
+    if (m_backup_scan && m_backup_scan->started) {
+        m_backup_scan->cancel = true;
+        threadWaitForExit(&m_backup_scan->thread);
+        threadClose(&m_backup_scan->thread);
+    }
+    m_backup_scan.reset();
 }
 
 void Menu::BuildInstalledAppIds() {

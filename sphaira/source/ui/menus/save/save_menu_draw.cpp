@@ -201,6 +201,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         DrawCategoryTabs(vg, theme);
     }
 
+    if (m_backup_scan && m_backup_scan_pending) {
+        DrawBackupScan(vg, theme);
+        return;
+    }
+
     if (m_entries.empty()) {
         const float empty_y = !m_app_id_filter ? (TAB_BAR_TOP + TAB_BAR_H + layout::FOOTER_LINE_Y) * 0.5f : (GetY() + GetH() / 2.f);
         gfx::drawTextArgs(vg, GetX() + GetW() / 2.f, empty_y, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Empty..."_i18n.c_str());
@@ -443,7 +448,7 @@ void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v,
     }
 
     // Keep every backup grid label the same distance above its first tile.
-    const float cy = align_above_tile ? first_v.y - 22.f : first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
+    const float cy = align_above_tile ? first_v.y - 30.f : first_v.y - m_list->GetMaxY() + first_v.h / 2.f;
     const float dl = m_list->GetX();
     const float dr = m_list->GetX() + m_list->GetW();
     const float mid = (dl + dr) / 2.f;
@@ -459,6 +464,33 @@ void Menu::DrawSectionDivider(NVGcontext* vg, Theme* theme, const Vec4& first_v,
     const float rx = mid + half_w + gap;
     gfx::drawRect(vg, rx, cy - 1.f, std::max(0.f, dr - rx), 2.f, line_col);
     gfx::drawText(vg, mid, cy, font, text_col, label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+}
+
+void Menu::DrawBackupScan(NVGcontext* vg, Theme* theme) {
+    const auto done = m_backup_scan->done.load();
+    const auto total = m_backup_scan->total.load();
+    std::string path;
+    {
+        std::scoped_lock lock{m_backup_scan->mutex};
+        path = m_backup_scan->path;
+    }
+
+    const float cx = GetX() + GetW() / 2.f;
+    const float cy = (TAB_BAR_TOP + TAB_BAR_H + layout::FOOTER_LINE_Y) * 0.5f;
+    const float bar_w = 700.f;
+    const Vec4 bar{cx - bar_w / 2.f, cy - 6.f, bar_w, 12.f};
+    gfx::drawTextArgs(vg, cx, bar.y - 24.f, 28.f, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", "Reading backups"_i18n.c_str());
+    gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 5.f);
+    if (total) {
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * float(done + 1) / float(total), bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5.f);
+        gfx::drawTextArgs(vg, cx, bar.y + bar.h + 16.f, 22.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%zu / %zu", done + 1, total);
+    } else {
+        gfx::drawTextArgs(vg, cx, bar.y + bar.h + 16.f, 22.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", "Scanning..."_i18n.c_str());
+    }
+    nvgSave(vg);
+    nvgIntersectScissor(vg, GetX() + 40.f, 0.f, GetW() - 80.f, SCREEN_HEIGHT);
+    gfx::drawTextArgs(vg, cx, bar.y + bar.h + 52.f, 18.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", path.c_str());
+    nvgRestore(vg);
 }
 
 void Menu::DrawCategoryTabs(NVGcontext* vg, Theme* theme) {

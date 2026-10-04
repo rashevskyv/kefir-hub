@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.996 — Saves: backup scan drawn in place of the grid; Deleted Games opens no archives
+- The v0.13.994 progress box covered the whole screen. The library scan now runs on a menu-owned thread (`BackupScanJob`, `PollBackupScan`) and the Backups tab draws "Reading backups", a bar, "N / total" and the current path where the grid goes; other tabs stay usable meanwhile, leaving the menu cancels it.
+- Deleted Games no longer reads the whole library: it needs only names, now taken from backup folder names (`ReadBackupNames`: game folder + title id from the first archive name, no archive opened).
+- Backups grid: row gap 34 -> 60 px, section label centred in it (DBI label no longer touches the Kefir Hub row above).
+- host tests: not run (UI-only) · nro: built · switch: pending
+
 ## v0.13.995 — Saves: YouTube tile shows even with only a Cache save
 - v0.13.994 still hid YouTube: the list's type filter defaults to Account and YouTube has only a Cache save. Installed 0x05… apps now get a tile when they have a save of any type (one extra `DiscoverSaveDataInfo()` pass, only when such apps exist).
 - host tests: not run (UI-only) · nro: built · switch: pending — YouTube in Installed Games

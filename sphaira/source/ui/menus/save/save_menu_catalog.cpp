@@ -6,8 +6,6 @@
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
 #include "path_util.hpp"
-#include "i18n.hpp"
-#include "ui/progress_box.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -20,7 +18,7 @@
 
 namespace sphaira::ui::menu::save {
 
-void Menu::ReadBackupEntries(std::vector<Entry>& out, ProgressBox* pbox) const {
+void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& progress) const {
     fs::FsNativeSd fs;
     struct GroupScanMeta {
         size_t index{};
@@ -128,7 +126,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, ProgressBox* pbox) const {
         }
     };
 
-    // the walk below only lists folders; candidates are opened afterwards so the progress box can
+    // the walk below only lists folders; candidates are opened afterwards so the progress can
     // show "N / total" for the slow part (each archive is opened and its metadata read).
     struct Candidate {
         fs::FsPath path;
@@ -138,9 +136,6 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, ProgressBox* pbox) const {
         bool is_dir;
     };
     std::vector<Candidate> candidates;
-    if (pbox) {
-        pbox->NewTransfer("Scanning..."_i18n);
-    }
 
     const auto process_archive = [&](const fs::FsPath& path, std::string_view filename, std::string_view dbi_game_dir_name, int source_prio) {
         candidates.emplace_back(Candidate{path, std::string(filename), std::string(dbi_game_dir_name), source_prio, false});
@@ -291,12 +286,8 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, ProgressBox* pbox) const {
 
     for (size_t i = 0; i < candidates.size(); i++) {
         const auto& c = candidates[i];
-        if (pbox) {
-            if (pbox->ShouldExit()) {
-                break;
-            }
-            pbox->SetTransfer(std::to_string(i + 1) + " / " + std::to_string(candidates.size()) + "  " + c.path.toString());
-            pbox->UpdateTransfer(i + 1, candidates.size());
+        if (progress && !progress(i, candidates.size(), c.path)) {
+            break;
         }
         process_candidate(c.path, c.name, c.dbi_game_dir, c.source_prio, c.is_dir);
     }
@@ -463,6 +454,47 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
     }
 
     return out;
+}
+
+void Menu::ReadBackupNames(std::unordered_map<u64, std::string>& out) const {
+    fs::FsNativeSd fs;
+    // <root>/<Game name>/[<date>/]<TID>_<type>_….zip: the game folder gives the name, the first
+    // archive name the title id. two listings per game; nothing is opened.
+    const auto scan_root = [&](const fs::FsPath& root_path) {
+        const auto root = fs::AppendPath(fs.Root(), root_path);
+        filebrowser::FsDirCollection games{};
+        filebrowser::FsView::get_collection(&fs, root, "", games, false, true, false);
+        for (const auto& game : games.dirs) {
+            if (IsHex16(game.name)) {
+                continue;
+            }
+            const auto game_dir = fs::AppendPath(root, game.name);
+            filebrowser::FsDirCollection dates{};
+            filebrowser::FsView::get_collection(&fs, game_dir, "", dates, true, true, false);
+            const auto tid_of = [](const filebrowser::FsDirCollection& c) -> u64 {
+                for (const auto& f : c.files) {
+                    const std::string_view name = f.name;
+                    if (name.size() > 16 && IsHex16(name.substr(0, 16))) {
+                        return ParseHex16(name.substr(0, 16));
+                    }
+                }
+                return 0;
+            };
+            u64 tid = tid_of(dates);
+            if (!tid && !dates.dirs.empty()) {
+                filebrowser::FsDirCollection files{};
+                filebrowser::FsView::get_collection(&fs, fs::AppendPath(game_dir, dates.dirs.front().name), "", files, true, false, false);
+                tid = tid_of(files);
+            }
+            if (tid) {
+                out.try_emplace(tid, game.name);
+            }
+        }
+    };
+
+    scan_root(fs::FsPath{DEFAULT_BACKUP_ROOT});
+    scan_root(fs::FsPath{GetDbiSavesPath()});
+    scan_root(fs::FsPath{DBI_SAVES_ROOT_PATH});
 }
 
 } // namespace sphaira::ui::menu::save
