@@ -154,11 +154,25 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 m_entries.emplace_back(e);
             }
         }
-        // installed apps left out of m_installed_apps (0x05… ids) still show when they have a save.
-        for (const auto& [app_id, e] : live_saves) {
-            if (m_installed_app_ids.contains(app_id) && !std::ranges::contains(m_installed_apps, app_id) &&
-                (!m_app_id_filter || app_id == m_app_id_filter)) {
-                m_entries.emplace_back(e);
+        // installed apps left out of m_installed_apps (0x05… ids) still show when they have a save of
+        // any type: the type filter defaults to Account, and YouTube has only a Cache save.
+        if (m_installed_app_ids.size() != m_installed_apps.size()) {
+            std::unordered_set<u64> added;
+            for (const auto& info : DiscoverSaveDataInfo()) {
+                const auto app_id = info.application_id;
+                if (!m_installed_app_ids.contains(app_id) || std::ranges::contains(m_installed_apps, app_id) ||
+                    (m_app_id_filter && app_id != m_app_id_filter) || !added.insert(app_id).second) {
+                    continue;
+                }
+                const auto it = live_saves.find(app_id);
+                if (it != live_saves.end()) {
+                    m_entries.emplace_back(it->second);
+                } else {
+                    Entry e{};
+                    e.application_id = app_id;
+                    e.save_data_type = FsSaveDataType_Account; // same tile as a game with no listed save
+                    m_entries.emplace_back(e);
+                }
             }
         }
     } else if (m_category == Category::Deleted) {

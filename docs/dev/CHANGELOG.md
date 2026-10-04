@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.995 — Saves: YouTube tile shows even with only a Cache save
+- v0.13.994 still hid YouTube: the list's type filter defaults to Account and YouTube has only a Cache save. Installed 0x05… apps now get a tile when they have a save of any type (one extra `DiscoverSaveDataInfo()` pass, only when such apps exist).
+- host tests: not run (UI-only) · nro: built · switch: pending — YouTube in Installed Games
+
 ## v0.13.994 — Saves: YouTube listed; backup library read under a progress box
 - Save menu skipped every 0x05… app as a forwarder, so YouTube (05003A400C3DA000 on this console) and its Cache save never showed and never got backed up. 0x05… apps now count as installed and show when they have a save (`BuildInstalledAppIds`).
 - Opening Deleted Games / Backups froze the UI while every backup archive was opened (hundreds of DBI zips). The tab now switches at once; the library is read in a progress box with "N / total  <path>" and Cancel (`StartBackupScan`, two-pass `ReadBackupEntries`). New key "Reading backups" in all languages.
