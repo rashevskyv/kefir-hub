@@ -61,6 +61,21 @@ Result ImportTicket(const void* tik_buf, u64 tik_size, const void* cert_buf, u64
     );
 }
 
+Result DeleteTicket(const FsRightsId* rights_ids, s32 count) {
+    return serviceDispatch(&g_esSrv, 3,
+        .buffer_attrs = { SfBufferAttr_HipcMapAlias | SfBufferAttr_In },
+        .buffers = { { rights_ids, count * sizeof(*rights_ids) } },
+    );
+}
+
+Result CountCommonTicket(s32* count) {
+    return serviceDispatchOut(&g_esSrv, 9, *count);
+}
+
+Result ListCommonTicket(s32 *out_entries_written, FsRightsId* out_ids, s32 count) {
+    return ListTicket(11, out_entries_written, out_ids, count);
+}
+
 Result CountPersonalizedTicket(s32* count) {
     return serviceDispatchOut(&g_esSrv, 10, *count);
 }

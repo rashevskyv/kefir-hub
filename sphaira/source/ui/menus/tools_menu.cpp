@@ -18,6 +18,8 @@
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
 #include "zero_fill.hpp"
+#include "system_cleanup.hpp"
+#include "ui/menus/grid_menu_base.hpp"
 
 #include "ui/nvg_util.hpp"
 
@@ -105,6 +107,34 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
+}
+
+void OpenCleanup() {
+    auto opts = std::make_shared<cleanup::Options>();
+    auto sidebar = std::make_unique<Sidebar>("Clean system junk"_i18n, Sidebar::Side::RIGHT);
+    sidebar->Add<SidebarEntryBool>("Old game updates"_i18n, opts->old_updates, "Updates older than the newest one installed for the same game."_i18n);
+    sidebar->Add<SidebarEntryBool>("Lost content on the SD card"_i18n, opts->orphans_sd, "Game files no installed game uses any more."_i18n);
+    sidebar->Add<SidebarEntryBool>("Lost content in system memory"_i18n, opts->orphans_nand, "Game files no installed game uses any more."_i18n);
+    sidebar->Add<SidebarEntryBool>("Unfinished installs on the SD card"_i18n, opts->placeholders_sd, "Pieces left by installs that stopped half way."_i18n);
+    sidebar->Add<SidebarEntryBool>("Unfinished installs in system memory"_i18n, opts->placeholders_nand, "Pieces left by installs that stopped half way."_i18n);
+    sidebar->Add<SidebarEntryBool>("Unused tickets"_i18n, opts->unused_tickets, "Tickets of games that are no longer installed."_i18n);
+    sidebar->Add<SidebarEntryBool>("Error reports"_i18n, opts->erpt_reports, "Crash reports in /atmosphere/erpt_reports."_i18n);
+    sidebar->Add<SidebarEntryBool>("Folders of removed games"_i18n, opts->contents_folders, "Mods and cheats folders in /atmosphere/contents for games that are no longer on the console. Sysmodules are kept."_i18n);
+    sidebar->Add<SidebarEntryBool>("Saves of removed users"_i18n, opts->deleted_user_saves, "Saves of users that are no longer on the console. They cannot be restored afterwards."_i18n);
+    sidebar->Add<SidebarEntryCallback>("Run selected"_i18n, [opts](){
+        auto report = std::make_shared<cleanup::Report>();
+        App::Push<ui::ProgressBox>(0, "Clean system junk"_i18n, "", [opts, report](auto pbox) -> Result {
+            return cleanup::Run(pbox, *opts, *report);
+        }, [report](Result rc){
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Cleaned: "_i18n + std::to_string(report->removed) + " · SD +" + grid::FormatBytes(static_cast<u64>(report->freed_sd)) +
+                    " · NAND +" + grid::FormatBytes(static_cast<u64>(report->freed_nand)));
+            } else if (rc != Result_TransferCancelled) {
+                App::PushErrorBox(rc, "Cleanup failed!"_i18n);
+            }
+        });
+    }, true);
+    App::Push(std::move(sidebar));
 }
 
 void FillWithZeros(NcmStorageId storage_id, const std::string& question, const std::string& storage_name) {
@@ -457,7 +487,7 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
                 "System memory"_i18n);
         }},
         { "Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, 0, ComingSoon },
-        { "Clean system junk"_i18n, "Remove leftover cache and temporary files."_i18n, 0, ComingSoon },
+        { "Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, 0, OpenCleanup },
     };
 
     this->SetActions(

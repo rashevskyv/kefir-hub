@@ -15,7 +15,9 @@
 | [[Fill free SD space with zeros]] | Заповнює нулями вільне місце на карті пам'яті. Див. [Заповнення вільного місця нулями](#fill-free-space-with-zeros). |
 | [[Fill free NAND space with zeros]] | Заповнює нулями вільне місце в системній пам'яті консолі. |
 
-[[System information]], [[Remove parental controls]] і [[Clean system junk]] заплановано; зараз вони показують повідомлення «Coming soon».
+| [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
+
+[[System information]] і [[Remove parental controls]] заплановано; зараз вони показують повідомлення «Coming soon».
 
 ## [[Module Manager]]
 
@@ -153,6 +155,24 @@
 ## [[Users]]
 
 Створення, перейменування, резервне копіювання й прив'язка профілів користувачів консолі. Див. [Користувачі](users.md).
+
+## Очищення системи { #clean-system-junk }
+
+Видаляє те, що лишається після встановлень і видалених ігор.
+
+**Де:** [[Tools]] → [[Tools]] → [[Clean system junk]]
+
+Вимкніть те, що хочете зберегти, і виберіть [[Run selected]]. Повідомлення наприкінці покаже, скільки місця звільнилося.
+
+| Пункт | Що видаляє |
+|---|---|
+| [[Old game updates]] | Оновлення, якщо встановлено новіше для тієї самої гри. |
+| [[Lost content on the SD card]], [[Lost content in system memory]] | Файли ігор, якими не користується жодна встановлена гра. |
+| [[Unfinished installs on the SD card]], [[Unfinished installs in system memory]] | Залишки встановлень, що зупинилися на півдорозі. |
+| [[Unused tickets]] | Тікети ігор, яких уже немає на консолі. |
+| [[Error reports]] | Звіти про збої в `/atmosphere/erpt_reports`. |
+| [[Folders of removed games]] | Папки в `/atmosphere/contents` ігор, яких уже немає на консолі. Системні модулі лишаються. |
+| [[Saves of removed users]] | Збереження користувачів, видалених з консолі. Вимкнено за замовчуванням: їх не відновити. |
 
 ## Заповнення вільного місця нулями { #fill-free-space-with-zeros }
 

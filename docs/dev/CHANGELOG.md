@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.985 — Tools → Clean system junk works (plan F.4, after DBI 905)
+- One list of switches, then "Run selected" (`system_cleanup.cpp`): old game updates (older than the newest of the same game, SD+NAND, ns record re-pushed), lost content on SD / NAND (content ids no registered meta uses, meta ncas kept), unfinished installs (CleanupAllPlaceHolder), unused tickets (common + personalized whose rights id no installed content uses; new es Delete/Count/ListCommon), `/atmosphere/erpt_reports`, `/atmosphere/contents` folders of games without an app record (sysmodules never match), saves of removed users (off by default). Notification shows items removed and space freed. Not taken: downloaded system update, ticket cache, "fix tickets" (no reliable API yet). `system_cleanup_plan.hpp` + host test.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — run with all on, check games still launch (eShop + pirated + cartridge with update), freed space shown
+
 ## v0.13.984 — force a game's language; translation packs set it on install (plan F.8)
 - Game details → **+** → "Force language" (only the game's languages + Off) writes Atmosphère `[override_config] override_language` into `/atmosphere/contents/<tid>/config.ini` (other keys kept, minIni); the Languages stat shows "Forced: …". Installs read `kefir_lang.json` from the PFS0 root (`{"format":1,"title_id":…,"language":"en-US"}`, both stream and random-access paths) and apply it after the title is registered. Format for the swuk_shop_nx repacker: `docs/dev/KEFIR-LANG-PACK.md`. `forced_language.hpp` + host test.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — force English on a game, launch, check language; Off; install an NSP with kefir_lang.json

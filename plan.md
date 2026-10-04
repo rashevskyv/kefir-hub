@@ -292,7 +292,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       (i3sey/pipensx-metadata `game_metadata_index.json`). Hub: compare installed patch version, then
       `nro_launch(app, "--update <tid>")` once the authors add it (ask: `--update/--dlc <tid>`); native download
       only via a user's TorrServer (`/stream?...&index=N&play` + `yati::source::Http`).
-- [ ] F.4 **System cleanup** (Tools → "Clean system junk", today "Coming soon"). DBI 905 screen (user screenshot
+- [x] F.4 **System cleanup** (Tools → "Clean system junk", today "Coming soon"). DBI 905 screen (user screenshot
       2026-10-04): one list of checkboxes, all on, then "Run selected": delete old game updates; orphaned content on
       SD; orphaned content on NAND; placeholders on SD; placeholders on NAND; unused tickets; fix tickets with dump
       errors; downloaded system update; clear erpt_reports; clear ticket cache; clean /atmosphere/contents (folders of

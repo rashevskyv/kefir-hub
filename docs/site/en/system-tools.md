@@ -15,7 +15,9 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free space with zeros](#fill-free-space-with-zeros). |
 | [[Fill free NAND space with zeros]] | Overwrites the unused space of the console's system memory. |
 
-[[System information]], [[Remove parental controls]] and [[Clean system junk]] are planned; they open a "Coming soon" message.
+| [[Clean system junk]] | Deletes leftovers. See [Clean system junk](#clean-system-junk). |
+
+[[System information]] and [[Remove parental controls]] are planned; they open a "Coming soon" message.
 
 ## [[Module Manager]]
 
@@ -153,6 +155,24 @@ Press **B** to clear the selection.
 ## [[Users]]
 
 Create, rename, back up and link console user profiles. See [Users](users.md).
+
+## Clean system junk
+
+Deletes what installs and removed games leave behind.
+
+**Where:** [[Tools]] → [[Tools]] → [[Clean system junk]]
+
+Turn off what you want to keep, then choose [[Run selected]]. The message at the end tells how much space came free.
+
+| Item | What it deletes |
+|---|---|
+| [[Old game updates]] | An update when a newer one of the same game is installed. |
+| [[Lost content on the SD card]], [[Lost content in system memory]] | Game files no installed game uses. |
+| [[Unfinished installs on the SD card]], [[Unfinished installs in system memory]] | Pieces of installs that stopped half way. |
+| [[Unused tickets]] | Tickets of games that are no longer installed. |
+| [[Error reports]] | Crash reports in `/atmosphere/erpt_reports`. |
+| [[Folders of removed games]] | Folders in `/atmosphere/contents` of games that are no longer on the console. Sysmodules are kept. |
+| [[Saves of removed users]] | Saves of users that were deleted from the console. Off by default: these cannot be restored. |
 
 ## Fill free space with zeros
 
