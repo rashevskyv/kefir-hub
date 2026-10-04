@@ -449,10 +449,10 @@ public:
     option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", false};
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
-    option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", false};
+    option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", true};
     option::OptionBool m_mtp_show_raw_saves{INI_SECTION, "mtp_show_raw_saves", false};
     option::OptionBool m_mtp_show_raw_system_saves{INI_SECTION, "mtp_show_raw_system_saves", false};
-    option::OptionBool m_mtp_show_games{INI_SECTION, "mtp_show_games", false};
+    option::OptionBool m_mtp_show_games{INI_SECTION, "mtp_show_games", true};
     option::OptionLong m_mtp_games_layout{INI_SECTION, "mtp_games_layout", 2};
     option::OptionString m_mtp_name_sd{INI_SECTION, "mtp_name_sd", ""};
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};

@@ -59,6 +59,24 @@ auto BuildNspPath(const char* name, const NsApplicationContentMetaStatus& status
     return path;
 }
 
+// eShop games and DBI installs keep a personalized ticket: there is no common one to read. Fall back to
+// the personalized ticket (PatchTicket turns it into a common one) with the common certificate chain.
+Result GetTicketAndCert(const FsRightsId& rights_id, TikEntry& entry) {
+    u64 tik_size{}, cert_size{};
+    if (R_SUCCEEDED(es::GetCommonTicketAndCertificateSize(&tik_size, &cert_size, &rights_id))) {
+        entry.tik_data.resize(tik_size);
+        entry.cert_data.resize(cert_size);
+        R_TRY(es::GetCommonTicketAndCertificateData(&tik_size, &cert_size, entry.tik_data.data(), entry.tik_data.size(), entry.cert_data.data(), entry.cert_data.size(), &rights_id));
+        R_SUCCEED();
+    }
+    log_write("[NSP] no common ticket for %s, trying the personalized one\n", utils::hexIdToStr(rights_id).str);
+    R_TRY(es::GetPersonalizedTicketSize(&tik_size, &rights_id));
+    entry.tik_data.resize(tik_size);
+    R_TRY(es::GetPersonalizedTicketData(&tik_size, entry.tik_data.data(), entry.tik_data.size(), &rights_id));
+    entry.tik_data.resize(tik_size);
+    return es::GetAnyCommonCertificate(entry.cert_data);
+}
+
 Result BuildNspEntryFromInfoEntries(const char* name, const fs::FsPath& path, std::span<const ContentInfoEntry> content_entries, const keys::Keys& keys, NspEntry& out) {
     out = {};
     out.application_name = name;
@@ -103,17 +121,7 @@ Result BuildNspEntryFromInfoEntries(const char* name, const fs::FsPath& path, st
             added_rights_ids.push_back(rights_id);
 
             TikEntry entry{rights_id, key_gen};
-            log_write("rights id is valid, fetching common ticket and cert\n");
-
-            u64 tik_size;
-            u64 cert_size;
-            R_TRY(es::GetCommonTicketAndCertificateSize(&tik_size, &cert_size, &rights_id));
-            log_write("got tik_size: %zu cert_size: %zu\n", tik_size, cert_size);
-
-            entry.tik_data.resize(tik_size);
-            entry.cert_data.resize(cert_size);
-            R_TRY(es::GetCommonTicketAndCertificateData(&tik_size, &cert_size, entry.tik_data.data(), entry.tik_data.size(), entry.cert_data.data(), entry.cert_data.size(), &rights_id));
-            log_write("got tik_data: %zu cert_data: %zu\n", tik_size, cert_size);
+            R_TRY(GetTicketAndCert(rights_id, entry));
 
             // patch fake ticket / convert personalised to common if needed.
             R_TRY(es::PatchTicket(entry.tik_data, entry.cert_data, key_gen, keys, App::GetApp()->m_dump_convert_to_common_ticket.Get()));
@@ -259,15 +267,24 @@ Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder,
     keys::Keys keys;
     R_TRY(keys::parse_keys(keys, true));
 
+    Result first_rc = 0;
     for (const auto& status : meta_entries) {
+        // one broken component (missing ticket, odd meta) must not hide the rest of the game.
         ContentInfoEntry info;
-        R_TRY(BuildContentEntry(status, info));
-
-        const fs::FsPath path = BuildNspPath(name, info.status, app_folder);
-
         NspEntry nsp;
-        R_TRY(BuildNspEntryFromInfoEntries(name, path, std::span(&info, 1), keys, nsp));
+        Result rc = BuildContentEntry(status, info);
+        if (R_SUCCEEDED(rc)) {
+            rc = BuildNspEntryFromInfoEntries(name, BuildNspPath(name, info.status, app_folder), std::span(&info, 1), keys, nsp);
+        }
+        if (R_FAILED(rc)) {
+            log_write("[NSP] %016lX type %u skipped: 0x%X\n", status.application_id, status.meta_type, rc);
+            first_rc = first_rc ? first_rc : rc;
+            continue;
+        }
         out.emplace_back(std::move(nsp));
+    }
+    if (out.empty() && first_rc) {
+        return first_rc;
     }
 
     R_UNLESS(!out.empty(), Result_GameNoNspEntriesBuilt);
@@ -304,36 +321,52 @@ Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& ou
     }
 
     std::vector<NsApplicationContentMetaStatus> selected_metas;
-    bool has_base = false;
-    bool has_patch = false;
-    u32 patch_version = 0;
-    u32 dlc_count = 0;
-
     if (base_status) {
         selected_metas.push_back(*base_status);
-        has_base = true;
     }
     if (highest_patch_status) {
         selected_metas.push_back(*highest_patch_status);
-        has_patch = true;
-        patch_version = highest_patch_status->version;
     }
     for (const auto* dlc : dlc_statuses) {
         selected_metas.push_back(*dlc);
-        dlc_count++;
     }
 
     R_UNLESS(!selected_metas.empty(), Result_GameNoNspEntriesBuilt);
 
+    keys::Keys keys;
+    R_TRY(keys::parse_keys(keys, true));
+
+    // every game belongs in the merged folder: a component that cannot be built (no ticket, odd meta)
+    // is left out and logged instead of dropping the whole game.
+    bool has_base = false;
+    bool has_patch = false;
+    u32 patch_version = 0;
+    u32 dlc_count = 0;
+    Result first_rc = 0;
     std::vector<ContentInfoEntry> content_entries;
     for (const auto& status : selected_metas) {
         ContentInfoEntry info;
-        R_TRY(BuildContentEntry(status, info));
+        NspEntry probe;
+        Result rc = BuildContentEntry(status, info);
+        if (R_SUCCEEDED(rc)) {
+            rc = BuildNspEntryFromInfoEntries(name, "probe.nsp", std::span(&info, 1), keys, probe);
+        }
+        if (R_FAILED(rc)) {
+            log_write("[NSP] merged %016lX type %u skipped: 0x%X\n", status.application_id, status.meta_type, rc);
+            first_rc = first_rc ? first_rc : rc;
+            continue;
+        }
+        has_base |= status.meta_type == NcmContentMetaType_Application;
+        if (status.meta_type == NcmContentMetaType_Patch) {
+            has_patch = true;
+            patch_version = status.version;
+        }
+        dlc_count += status.meta_type == NcmContentMetaType_AddOnContent;
         content_entries.push_back(std::move(info));
     }
-
-    keys::Keys keys;
-    R_TRY(keys::parse_keys(keys, true));
+    if (content_entries.empty()) {
+        return first_rc ? first_rc : Result_GameNoNspEntriesBuilt;
+    }
 
     const std::string safe_name = ResolveExportTitleName(name, app_id);
     const std::string filename = FormatMergedNspFilename(safe_name, app_id, has_base, has_patch, patch_version, dlc_count);

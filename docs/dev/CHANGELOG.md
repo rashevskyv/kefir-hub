@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.990 — MTP Games drive lists every game; Games and Saves drives on by default
+- User report (console, 2026-10-04): Merged showed 3 of 18 games, Separate folders empty (Cuphead, Mario Galaxy 2) or update only (Mario Wonder). Cause: an NSP needs each content's ticket and Hub read only common tickets, so games with a personalized ticket (eShop, DBI installs) failed, and one failed component dropped the whole game. Now `title_nsp.cpp` falls back to the personalized ticket (new es 15/17, converted to common by `PatchTicket`) with the common certificate chain from any common ticket (`es::GetAnyCommonCertificate`); Separate skips only the broken component, Merged keeps every component that builds and is named after what it holds. `mtp_show_games` / `mtp_show_saves` default to on.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — Merged lists all games, Cuphead / Galaxy 2 / Wonder show base + update + DLC, copying one works; Cuphead no longer hangs
+
 ## v0.13.989 — game restrictions switched at install too (plan F.11, part 2)
 - Settings → Install → "Game restrictions (need sigpatches)": start without linked account, allow screenshots, allow video capture (off by default, stored in config.ini `[install]` by `control_patch`, not in App). After an install, each installed game/update gets `control_patch::PatchInstalled` (both install paths in `yati.cpp`); a failure is logged, the install still counts. Docs: settings.md, games.md anchor.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — turn "start without linked account" on, install a game that needs one, launch without a linked account

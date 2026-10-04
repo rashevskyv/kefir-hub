@@ -167,10 +167,10 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 |---|---|---|
 | [[Show microSD card]] | Shows the microSD card drive. | On |
 | [[Show Install folder]] | Shows the install drive. | On |
-| [[Show Saves (read-only)]] | Shows the unpacked saves drive. | Off |
+| [[Show Saves (read-only)]] | Shows the unpacked saves drive. | On |
 | [[Show NAND Saves (USER:/save)]] | Shows the raw game saves drive. | Off |
 | [[Show NAND System Saves (SYSTEM:/save)]] | Shows the raw system saves drive. | Off |
-| [[Show Games (read-only)]] | Shows the installed games drive. | Off |
+| [[Show Games (read-only)]] | Shows the installed games drive. | On |
 | [[Dump format]] | How the games drive lists games, see below. | [[Both]] |
 | [[microSD card name]] | Your own name for the microSD card drive. | `microSD card` |
 | [[Install folder name]] | Your own name for the install drive. | `Install (NSP, XCI, NSZ, XCZ)` |

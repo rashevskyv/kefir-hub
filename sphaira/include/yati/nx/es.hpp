@@ -187,6 +187,11 @@ Result ListPersonalizedTicket(s32 *out_entries_written, FsRightsId* out_ids, s32
 Result ListMissingPersonalizedTicket(s32 *out_entries_written, FsRightsId* out_ids, s32 count); // untested
 Result GetCommonTicketSize(u64 *size_out, const FsRightsId* rightsId);
 Result GetCommonTicketData(u64 *size_out, void *tik_data, u64 tik_size, const FsRightsId* rightsId);
+Result GetPersonalizedTicketSize(u64 *size_out, const FsRightsId* rightsId);
+Result GetPersonalizedTicketData(u64 *size_out, void *tik_data, u64 tik_size, const FsRightsId* rightsId);
+// the common XS00000020 certificate chain, taken from any common ticket on the console; a personalized
+// ticket converted to a common one needs it.
+Result GetAnyCommonCertificate(std::vector<u8>& out);
 Result GetCommonTicketAndCertificateSize(u64 *tik_size_out, u64 *cert_size_out, const FsRightsId* rightsId); // [4.0.0+]
 Result GetCommonTicketAndCertificateData(u64 *tik_size_out, u64 *cert_size_out, void* tik_buf, u64 tik_size, void* cert_buf, u64 cert_size, const FsRightsId* rightsId); // [4.0.0+]
 

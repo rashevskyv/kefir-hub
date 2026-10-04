@@ -92,6 +92,39 @@ Result GetCommonTicketSize(u64 *size_out, const FsRightsId* rightsId) {
     return serviceDispatchInOut(&g_esSrv, 14, *rightsId, *size_out);
 }
 
+Result GetPersonalizedTicketSize(u64 *size_out, const FsRightsId* rightsId) {
+    return serviceDispatchInOut(&g_esSrv, 15, *rightsId, *size_out);
+}
+
+Result GetPersonalizedTicketData(u64 *size_out, void *tik_data, u64 tik_size, const FsRightsId* rightsId) {
+    return serviceDispatchInOut(&g_esSrv, 17, *rightsId, *size_out,
+        .buffer_attrs = { SfBufferAttr_HipcMapAlias | SfBufferAttr_Out },
+        .buffers = { { tik_data, tik_size } },
+    );
+}
+
+Result GetAnyCommonCertificate(std::vector<u8>& out) {
+    s32 count{};
+    R_TRY(CountCommonTicket(&count));
+    R_UNLESS(count > 0, Result_EsBadTicketSize);
+    std::vector<FsRightsId> ids(count);
+    s32 written{};
+    R_TRY(ListCommonTicket(&written, ids.data(), count));
+    for (s32 i = 0; i < written; i++) {
+        u64 tik_size{}, cert_size{};
+        if (R_FAILED(GetCommonTicketAndCertificateSize(&tik_size, &cert_size, &ids[i]))) {
+            continue;
+        }
+        std::vector<u8> tik(tik_size);
+        out.resize(cert_size);
+        if (R_SUCCEEDED(GetCommonTicketAndCertificateData(&tik_size, &cert_size, tik.data(), tik.size(), out.data(), out.size(), &ids[i]))) {
+            out.resize(cert_size);
+            R_SUCCEED();
+        }
+    }
+    R_THROW(Result_EsBadTicketSize);
+}
+
 Result GetCommonTicketData(u64 *size_out, void *tik_data, u64 tik_size, const FsRightsId* rightsId) {
     return serviceDispatchInOut(&g_esSrv, 16, *rightsId, *size_out,
         .buffer_attrs = { SfBufferAttr_HipcMapAlias | SfBufferAttr_Out },
