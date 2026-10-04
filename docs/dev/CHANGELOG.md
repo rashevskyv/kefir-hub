@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.993 — the previous session's log is kept as log.prev.txt
+- `log_file_init` renames `log.txt` to `log.prev.txt` before starting a new one (`log.cpp`). A crash or an odd exit used to leave no trace: the next launch truncated the only log (2026-10-04: a reported crash had no log, and Atmosphère wrote no crash report since 2026-09-30).
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — relaunch twice, `/config/kefir/log.prev.txt` holds the earlier session
+
 ## v0.13.992 — NSP file names keep Cyrillic and other non-Latin letters
 - `ResolveExportTitleName` used an ASCII-only sanitizer, so "Mario + Rabbids Битва за королевство" became "Mario + Rabbids _ _ _" in NSP names (MTP Games drive, SD dumps) while folder names kept it. It now uses the UTF-8 sanitizer the folders use (only `\ / : * ? " < > |` and control codes become `_`), trims spaces, and truncates on a character boundary; `SanitizeAsciiTitleName` removed. Host test updated (Cyrillic, Japanese, boundary cut).
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: verified over MTP — "Mario + Rabbids Битва за королевство [010067300059A000][B+U589824+4DLC].nsp", "Pokémon Legends_ Arceus …"

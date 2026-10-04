@@ -160,6 +160,15 @@ auto log_file_init() -> bool {
         return false;
     }
 
+    // keep the previous session's log: after a crash or an odd exit it is the only record of what
+    // happened, and the next launch would otherwise wipe it.
+    std::string prev = logpath;
+    if (const auto dot = prev.rfind('.'); dot != std::string::npos) {
+        prev.insert(dot, ".prev");
+    }
+    remove(prev.c_str());
+    rename(logpath.c_str(), prev.c_str());
+
     int fd = open(logpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd >= 0) {
         g_file_open = true;
