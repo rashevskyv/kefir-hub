@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.997 — Saves: Deleted Games lists games with only Device/BCAT saves
+- Animal Crossing (only Device + BCAT saves) was missing from Deleted Games, so a Hub backup of all deleted games skipped it: the type filter defaults to Account. Deleted games with a save of any non-system type now get a tile (one `DiscoverSaveDataInfo()` pass). Found by comparing 129 Hub/DBI backups with the MTP Saves drive: all identical, Hub covered 55/57 saves, DBI 57/57.
+- host tests: not run (UI-only) · nro: built · switch: pending — Animal Crossing in Deleted Games, backup writes Device + BCAT
+
 ## v0.13.996 — Saves: backup scan drawn in place of the grid; Deleted Games opens no archives
 - The v0.13.994 progress box covered the whole screen. The library scan now runs on a menu-owned thread (`BackupScanJob`, `PollBackupScan`) and the Backups tab draws "Reading backups", a bar, "N / total" and the current path where the grid goes; other tabs stay usable meanwhile, leaving the menu cancels it.
 - Deleted Games no longer reads the whole library: it needs only names, now taken from backup folder names (`ReadBackupNames`: game folder + title id from the first archive name, no archive opened).

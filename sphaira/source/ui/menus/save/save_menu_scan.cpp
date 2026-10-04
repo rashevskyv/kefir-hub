@@ -187,6 +187,21 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 m_entries.emplace_back(e);
             }
         }
+        // games whose saves are all of a type the filter hides (Animal Crossing: only Device + BCAT;
+        // the filter defaults to Account) still get a tile; it opens every save of the game.
+        std::unordered_set<u64> listed;
+        for (const auto& e : m_entries) {
+            listed.insert(e.application_id);
+        }
+        for (const auto& info : DiscoverSaveDataInfo()) {
+            if (!info.application_id || IsSystemLikeSave(info.save_data_type) ||
+                m_installed_app_ids.contains(info.application_id) ||
+                (m_app_id_filter && info.application_id != m_app_id_filter) ||
+                !listed.insert(info.application_id).second) {
+                continue;
+            }
+            m_entries.emplace_back(info);
+        }
     } else if (m_category == Category::Backups) {
         // Backups only
     } else {
