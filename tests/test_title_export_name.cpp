@@ -38,23 +38,6 @@ static int test_is_usable_title_name() {
     return 0;
 }
 
-static int test_sanitize_ascii_title_name() {
-    using namespace sphaira::title;
-
-    // Normal ASCII
-    CHECK(SanitizeAsciiTitleName("Super Mario Odyssey") == "Super Mario Odyssey");
-
-    // Illegal filesystem chars
-    CHECK(SanitizeAsciiTitleName("Game: Subtitle / Part 1 * Special") == "Game_ Subtitle _ Part 1 _ Special");
-    CHECK(SanitizeAsciiTitleName("A?B<C>D|E\"F\\G/H") == "A_B_C_D_E_F_G_H");
-
-    // Non-ASCII characters become '_'
-    CHECK(SanitizeAsciiTitleName("Pokémon") == "Pok_mon");
-    CHECK(SanitizeAsciiTitleName("ゼルダの伝説") == "_");
-
-    return 0;
-}
-
 static int test_resolve_export_title_name_hierarchy() {
     using namespace sphaira::title;
 
@@ -74,9 +57,13 @@ static int test_resolve_export_title_name_hierarchy() {
     CHECK(ResolveExportTitleName(nullptr, nullptr, "The Legend of Zelda", app_id)
           == "The Legend of Zelda");
 
-    // 4. Localized name sanitization produces unusable string (e.g. Japanese-only or dots) -> fallback to Title ID
+    // 4. Non-Latin names stay as they are (NSP files keep Cyrillic / Japanese); only dots -> Title ID
     CHECK(ResolveExportTitleName(nullptr, nullptr, "ゼルダの伝説", app_id)
-          == "0100000000010000");
+          == "ゼルダの伝説");
+    CHECK(ResolveExportTitleName(nullptr, nullptr, "Mario + Rabbids Битва за королевство", app_id)
+          == "Mario + Rabbids Битва за королевство");
+    CHECK(ResolveExportTitleName(nullptr, nullptr, "Pokémon: Legends / Arceus", app_id)
+          == "Pokémon_ Legends _ Arceus");
     CHECK(ResolveExportTitleName("...", "___", "   ...   ", app_id)
           == "0100000000010000");
 
@@ -89,6 +76,10 @@ static int test_resolve_export_title_name_hierarchy() {
     std::string resolved = ResolveExportTitleName(long_name.c_str(), nullptr, nullptr, app_id, 50);
     CHECK(resolved.size() == 50);
     CHECK(resolved == std::string(50, 'A'));
+    std::string cyr;
+    for (int i = 0; i < 100; i++) cyr += "Ж";
+    const auto cut = ResolveExportTitleName(nullptr, nullptr, cyr.c_str(), app_id, 51);
+    CHECK(cut.size() == 50 && cut == cyr.substr(0, 50));
 
     return 0;
 }
@@ -174,7 +165,6 @@ static int test_format_mtp_game_dir_name() {
 
 int main() {
     if (test_is_usable_title_name() != 0) return 1;
-    if (test_sanitize_ascii_title_name() != 0) return 1;
     if (test_resolve_export_title_name_hierarchy() != 0) return 1;
     if (test_sanitize_utf8_title_name() != 0) return 1;
     if (test_truncate_utf8() != 0) return 1;

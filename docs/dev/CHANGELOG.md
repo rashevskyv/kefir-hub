@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.992 — NSP file names keep Cyrillic and other non-Latin letters
+- `ResolveExportTitleName` used an ASCII-only sanitizer, so "Mario + Rabbids Битва за королевство" became "Mario + Rabbids _ _ _" in NSP names (MTP Games drive, SD dumps) while folder names kept it. It now uses the UTF-8 sanitizer the folders use (only `\ / : * ? " < > |` and control codes become `_`), trims spaces, and truncates on a character boundary; `SanitizeAsciiTitleName` removed. Host test updated (Cyrillic, Japanese, boundary cut).
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: verified over MTP — "Mario + Rabbids Битва за королевство [010067300059A000][B+U589824+4DLC].nsp", "Pokémon Legends_ Arceus …"
+
 ## v0.13.991 — MTP Games drive reads tickets again; MTP on by default next to USB storage
 - The real cause behind v0.13.990's report (console log): every es call from the MTP drive failed with 0xE401 (invalid handle) — es was only opened by the Games menu, so with MTP alone no ticket could be read and only key-area content (no rights id) was dumped. `BuildNspEntries` / `BuildMergedNspEntry` now open es themselves. `mtp_enabled` defaults to on; the startup rule that switched MTP off when USB storage was also on is gone — the port already goes to what is plugged in (`haze::Init` drops the host stack, `haze::Exit` restores it). Docs: settings.md.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: verified over MTP (nxlink to the console) — Merged lists all 18 games with updates and DLC (e.g. Cuphead [B+U655360+1DLC]); Separate shows base + update + DLC, Cuphead opens at once. Open: NSP file names replace Cyrillic with `_` (folder names keep it).

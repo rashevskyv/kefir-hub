@@ -31,46 +31,6 @@ inline std::string FormatTitleId(std::uint64_t id) {
     return std::string(buf);
 }
 
-// Sanitizes a title name string for ASCII-safe filesystem NSP export, replacing
-// illegal filesystem characters and non-ASCII sequences with a single underscore.
-inline std::string SanitizeAsciiTitleName(std::string_view input) {
-    static const char g_illegal[] = "\\/:*?\"<>|";
-    std::string out;
-    out.reserve(input.size());
-    bool repl = false;
-
-    for (size_t i = 0; i < input.size(); ) {
-        unsigned char c = static_cast<unsigned char>(input[i]);
-        if (c < 0x80) {
-            if (c < 0x20 || c == 0x7F || std::strchr(g_illegal, c) != nullptr) {
-                if (!repl) {
-                    out.push_back('_');
-                    repl = true;
-                }
-            } else {
-                out.push_back(static_cast<char>(c));
-                repl = false;
-            }
-            i++;
-        } else {
-            size_t len = 1;
-            if ((c & 0xE0) == 0xC0) len = 2;
-            else if ((c & 0xF0) == 0xE0) len = 3;
-            else if ((c & 0xF8) == 0xF0) len = 4;
-
-            if (i + len > input.size()) {
-                len = 1;
-            }
-            if (!repl) {
-                out.push_back('_');
-                repl = true;
-            }
-            i += len;
-        }
-    }
-    return out;
-}
-
 // Truncates a title name to max_len characters if necessary.
 inline std::string TruncateTitleName(std::string_view name, size_t max_len = 160) {
     if (name.size() <= max_len) {
@@ -154,17 +114,23 @@ inline std::string SanitizeUtf8TitleName(std::string_view input) {
     return out;
 }
 
-// Evaluates an ordered list of title candidates for ASCII-safe NSP export:
-// Sanitizes each candidate, checks usability, truncates if valid, and falls back
-// to formatted Title ID if no candidate is usable.
+// Evaluates an ordered list of title candidates for NSP file names: keeps UTF-8 (Cyrillic, Japanese,
+// accents), replaces only characters a filesystem refuses, truncates to max_len bytes without cutting
+// a character, and falls back to the Title ID if no candidate is usable.
 inline std::string ResolveExportTitleNameFromCandidates(std::span<const std::string_view> candidates, std::uint64_t app_id, size_t max_len = 160) {
     for (const auto& cand : candidates) {
         if (cand.empty()) {
             continue;
         }
-        std::string sanitized = SanitizeAsciiTitleName(cand);
+        std::string sanitized = SanitizeUtf8TitleName(cand);
+        while (!sanitized.empty() && (sanitized.front() == ' ' || sanitized.front() == '\t')) {
+            sanitized.erase(sanitized.begin());
+        }
+        while (!sanitized.empty() && (sanitized.back() == ' ' || sanitized.back() == '\t')) {
+            sanitized.pop_back();
+        }
         if (IsUsableTitleName(sanitized)) {
-            return TruncateTitleName(sanitized, max_len);
+            return TruncateUtf8(sanitized, max_len);
         }
     }
     return FormatTitleId(app_id);
