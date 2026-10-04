@@ -2889,5 +2889,16 @@
   "Backing up before deleting...": "刪除前正在備份...",
   "Mods": "模組",
   "Extract": "解壓縮",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "解壓縮所選壓縮檔的內容 (zip, rar, 7z, tar, gz, xz)。"
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "解壓縮所選壓縮檔的內容 (zip, rar, 7z, tar, gz, xz)。",
+  "Forced: ": "強制：",
+  "British English": "英式英文",
+  "Force language": "強制語言",
+  "Could not save the language": "無法儲存語言",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "以所選語言啟動此遊戲，而不是主機語言。將在下次啟動時生效。",
+  "American English": "美式英文",
+  "Canadian French": "加拿大法文",
+  "Simplified Chinese": "简体中文",
+  "Latin American Spanish": "拉丁美洲西班牙文",
+  "Brazilian Portuguese": "葡萄牙文（巴西）",
+  "Traditional Chinese": "繁體中文"
 }

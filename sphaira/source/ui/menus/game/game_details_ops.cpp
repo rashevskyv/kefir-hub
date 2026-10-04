@@ -1,5 +1,6 @@
 #include "ui/menus/game/game_details_internal.hpp"
 #include "ui/menus/game_menu.hpp"
+#include "forced_language.hpp"
 #include "ui/list.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
@@ -53,6 +54,14 @@ void DbiDetailsMenu::BrowseSdPath(const fs::FsPath& path) {
         App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
     }
 
+auto DbiDetailsMenu::ForcedLanguageText() const -> std::string {
+    const auto idx = forced_language::IndexOf(m_forced_language);
+    if (idx < 0) {
+        return {};
+    }
+    return "Forced: "_i18n + i18n::get(forced_language::LANGS[idx].name);
+}
+
 void DbiDetailsMenu::LoadGame() {
         auto& entry = CurrentEntry();
         LoadControlEntry(entry, true);
@@ -69,6 +78,8 @@ void DbiDetailsMenu::LoadGame() {
         m_display_version[0] = '\0';
         m_languages.clear();
         m_language_list.clear();
+        m_language_idx.clear();
+        m_forced_language = forced_language::Get(entry.app_id);
         m_language_scroll.Reset();
         for (auto& scroll : m_stat_label_scrolls) {
             scroll.Reset();
@@ -92,6 +103,7 @@ void DbiDetailsMenu::LoadGame() {
                     if (!m_languages.empty()) m_languages += ", ";
                     m_languages += language_names[i];
                     m_language_list.emplace_back(language_names[i]);
+                    m_language_idx.emplace_back(static_cast<int>(i));
                 }
             }
         }
@@ -293,6 +305,30 @@ void DbiDetailsMenu::ShowGameActions() {
         options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
             OpenModsFolder();
         }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n)->SetIcon(ActionIcon::Folder);
+        if (!m_language_idx.empty()) {
+            options->Add<SidebarEntryCallback>("Force language"_i18n, [this](){
+                // "Off" first, then only the languages the game has.
+                PopupList::Items items{"Off"_i18n};
+                s64 current{};
+                for (size_t i = 0; i < m_language_idx.size(); i++) {
+                    const auto& lang = forced_language::LANGS[m_language_idx[i]];
+                    items.emplace_back(i18n::get(lang.name));
+                    if (forced_language::IndexOf(m_forced_language) == m_language_idx[i]) {
+                        current = static_cast<s64>(i + 1);
+                    }
+                }
+                App::Push<PopupList>("Force language"_i18n, items, [this](auto op_index){
+                    if (!op_index) {
+                        return;
+                    }
+                    const auto code = *op_index ? forced_language::LANGS[m_language_idx[*op_index - 1]].code : "";
+                    if (!forced_language::Set(CurrentEntry().app_id, code)) {
+                        App::Notify("Could not save the language"_i18n);
+                    }
+                    m_forced_language = forced_language::Get(CurrentEntry().app_id);
+                }, current);
+            }, "Start this game in the chosen language instead of the console language. Applies on the next launch."_i18n)->SetIcon(ActionIcon::Edit);
+        }
         if (CurrentEntry().layeredfs) {
             options->Add<SidebarEntryCallback>("Delete mods"_i18n, [this](){
                 const auto app_id = CurrentEntry().app_id;

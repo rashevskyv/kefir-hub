@@ -19,6 +19,7 @@
 #include "i18n.hpp"
 #include "log.hpp"
 #include "utils/utils.hpp"
+#include "forced_language.hpp"
 #include <sys/statvfs.h>
 
 #include <minIni.h>
@@ -27,6 +28,40 @@
 
 namespace sphaira::yati {
 namespace detail {
+namespace {
+
+// kefir_lang.json in the PFS0 root: the language a translation pack must start the game in.
+void ReadLanguagePack(source::Base* source, const container::CollectionEntry& collection, std::optional<forced_language::PackInfo>& out) {
+    std::string json(std::min<s64>(collection.size, 4096), '\0');
+    u64 bytes_read{};
+    forced_language::PackInfo pack;
+    if (R_SUCCEEDED(source->Read(json.data(), collection.offset, json.size(), &bytes_read)) &&
+        forced_language::ParsePack(std::string_view{json.data(), bytes_read}, pack)) {
+        out = pack;
+    } else {
+        log_write("[LANG] ignoring %s\n", collection.name.c_str());
+    }
+}
+
+// only after the title is in: the pack must belong to one of the installed metas.
+void ApplyLanguagePack(const std::optional<forced_language::PackInfo>& pack, std::span<const CnmtCollection> cnmts) {
+    if (!pack) {
+        return;
+    }
+    for (const auto& cnmt : cnmts) {
+        if (ncm::GetAppId(cnmt.key) == pack->title_id) {
+            forced_language::Set(pack->title_id, pack->language);
+            return;
+        }
+    }
+    log_write("[LANG] pack title %016lX matches no installed meta\n", pack->title_id);
+}
+
+auto IsLanguagePack(const container::CollectionEntry& collection) -> bool {
+    return !strcasecmp(collection.name.c_str(), forced_language::PACK_FILE.data());
+}
+
+} // namespace
 
 Yati::Yati(ui::InstallProgress* _pbox, source::Base* _source) : pbox{_pbox}, source{_source} {
     App::SetAutoSleepDisabled(true);
@@ -249,9 +284,12 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
     R_TRY(yati->ParseTicketsIntoCollection(tickets, collections, true));
 
     std::vector<CnmtCollection> cnmts{};
+    std::optional<forced_language::PackInfo> language_pack{};
     for (const auto& collection : collections) {
         log_write("found collection: %s\n", collection.name.c_str());
-        if (path::EndsWithIC(collection.name, ".cnmt.nca") || path::EndsWithIC(collection.name, ".cnmt.ncz")) {
+        if (IsLanguagePack(collection)) {
+            ReadLanguagePack(source, collection, language_pack);
+        } else if (path::EndsWithIC(collection.name, ".cnmt.nca") || path::EndsWithIC(collection.name, ".cnmt.ncz")) {
             auto& cnmt = cnmts.emplace_back(NcaCollection{collection});
             cnmt.type = NcmContentType_Meta;
         }
@@ -288,6 +326,7 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
         R_TRY(yati->RegisterNcasAndPushRecord(cnmt, latest_version_num));
     }
 
+    ApplyLanguagePack(language_pack, cnmts);
     log_write("success!\n");
     R_SUCCEED();
 }
@@ -304,6 +343,7 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
     std::vector<NcaCollection> ncas{};
     std::vector<CnmtCollection> cnmts{};
     std::vector<TikCollection> tickets{};
+    std::optional<forced_language::PackInfo> language_pack{};
 
     ON_SCOPE_EXIT(
         for (const auto& cnmt : cnmts) {
@@ -335,6 +375,8 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
             } else {
                 R_TRY(yati->InstallNca(tickets, nca));
             }
+        } else if (IsLanguagePack(collection)) {
+            ReadLanguagePack(source, collection, language_pack);
         } else if (path::EndsWithIC(collection.name, ".tik") || path::EndsWithIC(collection.name, ".cert")) {
             FsRightsId rights_id{};
             keys::parse_hex_key(rights_id.c, collection.name.c_str());
@@ -385,6 +427,7 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
         R_TRY(yati->RegisterNcasAndPushRecord(cnmt, latest_version_num));
     }
 
+    ApplyLanguagePack(language_pack, cnmts);
     log_write("success!\n");
     R_SUCCEED();
 }

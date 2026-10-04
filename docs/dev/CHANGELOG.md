@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.984 — force a game's language; translation packs set it on install (plan F.8)
+- Game details → **+** → "Force language" (only the game's languages + Off) writes Atmosphère `[override_config] override_language` into `/atmosphere/contents/<tid>/config.ini` (other keys kept, minIni); the Languages stat shows "Forced: …". Installs read `kefir_lang.json` from the PFS0 root (`{"format":1,"title_id":…,"language":"en-US"}`, both stream and random-access paths) and apply it after the title is registered. Format for the swuk_shop_nx repacker: `docs/dev/KEFIR-LANG-PACK.md`. `forced_language.hpp` + host test.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — force English on a game, launch, check language; Off; install an NSP with kefir_lang.json
+
 ## v0.13.983 — file browser extracts RAR, 7z, TAR, GZ, XZ, BZ2 (plan F.9b)
 - "Extract" (was "Extract zip") now also takes rar/7z/tar/tgz/gz/xz/txz/bz2/tbz2 via libarchive (`archive_extract.cpp`, reads through `fs::File` so SD, USB and mounts work, seekable for 7z/rar); entries leaving the target folder are skipped (`archive_extract_plan.hpp` + host test); a bare .gz/.xz/.bz2 becomes one file without that extension. New build dependency `switch-libarchive` (README, CI step). New result code `ArchiveRead`.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, +430 KB, no first-party warnings) · switch: pending — extract a .rar, a .7z and a .tar.gz to the current folder, cancel a big one

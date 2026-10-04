@@ -97,6 +97,16 @@ The file is written to `/games/` on the microSD card.
 
 This removes the installed base game, updates and DLC and drops the game from the list. **Save data is kept** — the saves then appear in [[Saves]] under [[Deleted Games]]. To remove saves too, delete them in [Saves](saves.md#delete-a-save-from-the-console).
 
+## Force a game's language
+Start a game in another language than the console's, for example English for a translation that replaces the English text.
+
+1. Open the game's details screen, press **+** → [[Force language]].
+2. Pick a language (only the game's own languages are listed) or [[Off]].
+3. The next launch uses it. [[Languages]] on the details screen then shows "[[Forced: ]]…".
+
+Translation packs that carry a `kefir_lang.json` file set this automatically when you install them.
+The setting is Atmosphère's `override_language` in `/atmosphere/contents/<Title ID>/config.ini`.
+
 ## Mods folder
 Atmosphère loads mods for a game from `/atmosphere/contents/<Title ID>/` on the microSD card (LayeredFS).
 

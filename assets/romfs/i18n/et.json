@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Varundamine enne kustutamist...",
   "Mods": "Modid",
   "Extract": "Paki lahti",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Paki valitud arhiivi sisu lahti (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Paki valitud arhiivi sisu lahti (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Sunnitud: ",
+  "British English": "Briti inglise",
+  "Force language": "Sunni keel",
+  "Could not save the language": "Keele salvestamine ebaõnnestus",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Käivita see mäng valitud keeles konsooli keele asemel. Rakendub järgmisel käivitamisel.",
+  "American English": "ameerika inglise",
+  "Canadian French": "Kanada prantsuse",
+  "Simplified Chinese": "Lihtsustatud hiina",
+  "Latin American Spanish": "Ladinaameerika hispaania",
+  "Brazilian Portuguese": "Brasiilia portugali",
+  "Traditional Chinese": "Traditsiooniline hiina"
 }

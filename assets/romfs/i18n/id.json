@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Mencadangkan sebelum menghapus...",
   "Mods": "Mod",
   "Extract": "Ekstrak",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Ekstrak isi arsip yang dipilih (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Ekstrak isi arsip yang dipilih (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Dipaksa: ",
+  "British English": "Bahasa Inggris Britania",
+  "Force language": "Paksa bahasa",
+  "Could not save the language": "Tidak dapat menyimpan bahasa",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Mulai game ini dalam bahasa pilihan alih-alih bahasa konsol. Berlaku pada peluncuran berikutnya.",
+  "American English": "Bahasa Inggris Amerika",
+  "Canadian French": "Bahasa Prancis Kanada",
+  "Simplified Chinese": "Tionghoa Sederhana",
+  "Latin American Spanish": "Spanyol Amerika Latin",
+  "Brazilian Portuguese": "Bahasa Portugis (Brasil)",
+  "Traditional Chinese": "Tionghoa Tradisional"
 }

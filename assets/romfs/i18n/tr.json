@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Silinmeden önce yedekleniyor...",
   "Mods": "Modlar",
   "Extract": "Ayıkla",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Seçilen arşivi dışarı çıkar (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Seçilen arşivi dışarı çıkar (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Zorunlu: ",
+  "British English": "İngiliz İngilizcesi",
+  "Force language": "Dili zorla",
+  "Could not save the language": "Dil kaydedilemedi",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Bu oyunu konsol dili yerine seçilen dilde başlat. Sonraki başlatmada geçerli olur.",
+  "American English": "Amerikan İngilizcesi",
+  "Canadian French": "Kanada Fransızcası",
+  "Simplified Chinese": "Basitleştirilmiş Çince",
+  "Latin American Spanish": "Latin Amerika İspanyolcası",
+  "Brazilian Portuguese": "Brezilya Portekizcesi",
+  "Traditional Chinese": "Geleneksel Çince"
 }

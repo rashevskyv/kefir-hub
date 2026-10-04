@@ -2836,5 +2836,16 @@
   "Backing up before deleting...": "Säkerhetskopierar innan radering...",
   "Mods": "Moddar",
   "Extract": "Extrahera",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extrahera innehållet i det valda arkivet (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extrahera innehållet i det valda arkivet (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Tvingad: ",
+  "British English": "britisk engelsk",
+  "Force language": "Tvinga språk",
+  "Could not save the language": "Kunde inte spara språket",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Starta detta spel på det valda språket istället för konsolens språk. Gäller vid nästa start.",
+  "American English": "Amerikansk engelska",
+  "Canadian French": "Kanadensisk franska",
+  "Simplified Chinese": "Förenklad kinesiska",
+  "Latin American Spanish": "Latinamerikansk spanska",
+  "Brazilian Portuguese": "Brasiliansk portugisiska",
+  "Traditional Chinese": "Traditionell kinesiska"
 }

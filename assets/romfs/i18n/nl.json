@@ -2836,5 +2836,16 @@
   "Backing up before deleting...": "Bezig met back-up maken voor het verwijderen...",
   "Mods": "Mods",
   "Extract": "Uitpakken",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Pak de inhoud van het geselecteerde archief uit (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Pak de inhoud van het geselecteerde archief uit (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Geforceerd: ",
+  "British English": "Brits-Engels",
+  "Force language": "Taal erzwingen",
+  "Could not save the language": "Kan de taal niet opslaan",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Start dit game in de gekozen taal in plaats van de systeemtaal. Is van toepassing bij de volgende start.",
+  "American English": "Amerikaans-Engels",
+  "Canadian French": "Canadees Frans",
+  "Simplified Chinese": "Vereenvoudigd Chinees",
+  "Latin American Spanish": "Latijns-Amerikaans Spaans",
+  "Brazilian Portuguese": "Braziliaans Portugees",
+  "Traditional Chinese": "Traditioneel Chinees"
 }

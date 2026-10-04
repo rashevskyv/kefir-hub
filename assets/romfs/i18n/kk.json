@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Жою алдында сақтық көшірме жасалуда...",
   "Mods": "Модтар",
   "Extract": "Шығару",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Таңдалған архивтің мазмұнын шығару (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Таңдалған архивтің мазмұнын шығару (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Mәжбүрлі: ",
+  "British English": "британдық ағылшын",
+  "Force language": "Тілді мәжбүрлеу",
+  "Could not save the language": "Тілді сақтау мүмкін болмады",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Бұл ойынды консоль тілінің орнына таңдалған тілде іске қосу. Келесі іске қосқанда қолданылады.",
+  "American English": "Америкалық ағылшын",
+  "Canadian French": "Канадалық французша",
+  "Simplified Chinese": "Қытай (жеңілдетілген)",
+  "Latin American Spanish": "Латын Америкасы испан тілі",
+  "Brazilian Portuguese": "Бразилиялық португал тілі",
+  "Traditional Chinese": "Традициялық қытай"
 }

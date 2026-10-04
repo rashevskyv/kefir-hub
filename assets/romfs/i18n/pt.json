@@ -2863,5 +2863,16 @@
   "Backing up before deleting...": "A fazer cópia de segurança antes de apagar...",
   "Mods": "Mods",
   "Extract": "Extrair",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extrair o conteúdo do arquivo selecionado (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Extrair o conteúdo do arquivo selecionado (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Forçado: ",
+  "British English": "inglês britânico",
+  "Force language": "Forçar idioma",
+  "Could not save the language": "Não foi possível guardar o idioma",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Iniciar este jogo no idioma escolhido em vez do idioma da consola. Aplica-se no próximo arranque.",
+  "American English": "Inglês americano",
+  "Canadian French": "Francês do Canadá",
+  "Simplified Chinese": "Chinês Simplificado",
+  "Latin American Spanish": "Espanhol latino-americano",
+  "Brazilian Portuguese": "Português (Brasil)",
+  "Traditional Chinese": "Chinês tradicional"
 }

@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Kuriama atsarginė kopija prieš ištrinant...",
   "Mods": "Modai",
   "Extract": "Išskleisti",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Išskleisti pasirinkto archyvo turinį (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Išskleisti pasirinkto archyvo turinį (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Priverstinis: ",
+  "British English": "britų anglų",
+  "Force language": "Priverstinė kalba",
+  "Could not save the language": "Nepavyko išsaugoti kalbos",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Paleisti šį žaidimą pasirinkta kalba, o ne konsolės kalba. Įsigalios kitą kartą paleidus.",
+  "American English": "Amerikiečių anglų",
+  "Canadian French": "Kanados prancūzų",
+  "Simplified Chinese": "Supaprastinta kinų",
+  "Latin American Spanish": "Lotynų Amerikos ispanų",
+  "Brazilian Portuguese": "Brazilijos portugalų",
+  "Traditional Chinese": "Tradicinė kinų"
 }

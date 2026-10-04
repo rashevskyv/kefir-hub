@@ -287,9 +287,16 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       `ownfoil_api.cpp`), the user picks which app fetches it — TorrentShopNX or pipensx (confirmed 2026-10-04,
       `D:\git\dev\_kefir\kefir\switch`) — that app downloads, Hub installs. Better still (user): Hub downloads just
       the update itself. Research how both apps get a request and where they fetch updates from first.
-- [ ] F.4 **System cleanup.** Orphaned content (records/NCAs of removed games), install placeholders, unused tickets,
-      downloaded system updates. Hub's "Remove leftover cache" covers only temp files. `[USER]` sends a screenshot of
-      the expected screen first.
+      Research (2026-10-04): neither app takes argv yet; both install what they download. pipensx has an
+      update-only download (`game_update_install.hpp`) and an index with `latestVersion` per torrent
+      (i3sey/pipensx-metadata `game_metadata_index.json`). Hub: compare installed patch version, then
+      `nro_launch(app, "--update <tid>")` once the authors add it (ask: `--update/--dlc <tid>`); native download
+      only via a user's TorrServer (`/stream?...&index=N&play` + `yati::source::Http`).
+- [ ] F.4 **System cleanup** (Tools → "Clean system junk", today "Coming soon"). DBI 905 screen (user screenshot
+      2026-10-04): one list of checkboxes, all on, then "Run selected": delete old game updates; orphaned content on
+      SD; orphaned content on NAND; placeholders on SD; placeholders on NAND; unused tickets; fix tickets with dump
+      errors; downloaded system update; clear erpt_reports; clear ticket cache; clean /atmosphere/contents (folders of
+      titles no longer installed — keep sysmodules); saves of deleted users. Show what each step freed.
 - [ ] F.5 **Mods.** Big area, split into tasks when started: (a) installing mods automatically when a game folder
       with mods is dropped over MTP together with the game (put them in `/atmosphere/contents/<TitleID>/`; agreed
       2026-10-04: folders accepted, files under `…/atmosphere/contents/<tid>/…` or `…/<tid>/…` go to the SD, mod files
@@ -297,19 +304,39 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       size in the game card, "Delete mods" (also offered when deleting the game) — done; (c) "Pack mods into romfs.bin".
 - [x] F.6 **Saves.** "Check backups" (validate backup archives), browse a backup's files read-only, automatic backup
       before deleting a save (DBI FoolproofSaveDelete).
-- [ ] F.8 **Language bound to a translation pack.** Ukrainian translations ship as a repacked update + translation +
+- [x] F.8 **Language bound to a translation pack.** Ukrainian translations ship as a repacked update + translation +
       metadata saying which language the game must start with (some must be forced to English). Hub reads that
       metadata on install and forces the language for that title; plus a manual "Force language" per installed game
       (DBI Force language). Find the mechanism first (how DBI forces it). The metadata format is mine to define, then
       agree it with the shop app `D:\git\dev\swuk_shop_nx` (user, 2026-10-04).
+      Research (2026-10-04): mechanism = Atmosphère `/atmosphere/contents/<app_id>/config.ini`
+      `[override_config] override_language=<en-US|en-GB|ja|fr|de|es-419|es|it|nl|fr-CA|pt|ru|ko|zh-Hant|zh-Hans|pt-BR>`
+      (what DBI writes; Kefirosphere keeps it; merge with existing keys). Format: `kefir_lang.json` in the PFS0
+      root of the repacked NSP: `{"format":1,"title_id":"<base tid>","language":"en-US"}`; swuk_shop_nx (PC
+      repacker) adds it per title.
 - [x] F.9 **Hex view** in the file browser. (Second panel exists. RAR/7z do not: only zip extracts; 7z only for RetroArch in the App Store.)
 - [x] F.9b **Archive extraction** in the file browser: RAR, 7z, xz, tar, gz (zip already works). Approved 2026-10-04.
 - [x] F.10 **Fill free NAND space with zeros** (next to "Fill free SD space with zeros").
 - [ ] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.
+      Research (2026-10-04): NACP `startup_user_account`(0x3025)=1, `required_network_service_license_on_launch`
+      (0x3213)=0, `screenshot`(0x3034)=0, `video_capture`(0x3035)=2 (+screenshots on). Patch the Control NCA after
+      it is registered: read via ncm, decrypt section, patch, rehash IVFC (verify old hashes first), fs_header_hash,
+      re-encrypt header, placeholder + Register same id, invalidate ns control cache. Base and update controls.
 - [x] F.12 **MTP "Installed games": add a mods folder** per game (`atmosphere/contents/<TitleID>`; DBI "Mods &
       cheats"). NSP and combined NSP already exist.
+- [ ] F.14 **System information** (Tools, today "Coming soon"). DBI 905 has one scrolling page (user screenshots
+      2026-10-04): firmware (version, hash, display name, DRAM id, burnt fuses, SoC, hardware type, purpose, device id,
+      HiZ/kiosk, serial read/guessed, language, region, console nickname, parental PIN set?); Atmosphère (version, key
+      generation, target firmware, git hash, RCM bug patched, exosphere CAL0 flags, emuMMC, USB 3.0 forced, supported
+      HOS); SD card (CID, manufacturer, OEM, product, revision, serial, date); power source and battery charging
+      (charge %, raw, age, voltage, current, limits, PD source); saved battery controller params and MAX17050
+      registers (full capacity vs design, cycles); hardware (BT/WLAN MAC, config id, serial, battery lot, screen
+      panel); play activity totals. User-first: group into sections, names not raw registers where possible.
+- [ ] F.15 **Save folder restore without metadata** (JKSV/Checkpoint folders): when the game is installed, take the
+      save size from its NACP instead of refusing with "Backup folder metadata is missing…" (only for a user with
+      no save of that game yet). Found by the other session 2026-10-04; user agreed.
 - [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current

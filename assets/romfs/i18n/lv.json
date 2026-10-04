@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Veic dublējumu pirms dzēšanas...",
   "Mods": "Modifikācijas",
   "Extract": "Atspiest",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Izvilkt izvēlētā arhīva saturu (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Izvilkt izvēlētā arhīva saturu (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Piespiedu: ",
+  "British English": "britu angļu",
+  "Force language": "Piespiedu valoda",
+  "Could not save the language": "Neizdevās saglabāt valodu",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Palaist šo spēli izvēlētajā valodā, nevis konsoles valodā. Stājas spēkā nākamajā palaišanas reizē.",
+  "American English": "Amerikāņu angļu",
+  "Canadian French": "Kanādas franču",
+  "Simplified Chinese": "Vienkāršotā ķīniešu",
+  "Latin American Spanish": "Latīņamerikas spāņu",
+  "Brazilian Portuguese": "Brazīlijas portugāļu",
+  "Traditional Chinese": "Tradicionālā ķīniešu"
 }

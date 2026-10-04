@@ -2831,5 +2831,16 @@
   "Backing up before deleting...": "Рэзервовае капіраванне перад выдаленнем...",
   "Mods": "Моды",
   "Extract": "Выняць",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Выняць змесціва выбранага архіва (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Выняць змесціва выбранага архіва (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Прымусова: ",
+  "British English": "брытанская англійская",
+  "Force language": "Прымусовая мова",
+  "Could not save the language": "Не атрымалася захаваць мову",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Запусціць гэтую гульню на абранай мове замест мовы кансолі. Уступіць у сілу пры наступным запуску.",
+  "American English": "Амерыканскі англійскі",
+  "Canadian French": "Канадская французская",
+  "Simplified Chinese": "Кітайская (спрошчаная)",
+  "Latin American Spanish": "Лацінаамерыканская іспанская",
+  "Brazilian Portuguese": "Партугальская (Бразілія)",
+  "Traditional Chinese": "Традыцыйны кітайскі"
 }

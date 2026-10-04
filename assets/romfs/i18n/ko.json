@@ -2836,5 +2836,16 @@
   "Backing up before deleting...": "삭제하기 전에 백업 중...",
   "Mods": "모드",
   "Extract": "압축 해제",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "선택한 아카이브의 압축을 해제합니다 (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "선택한 아카이브의 압축을 해제합니다 (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "강제: ",
+  "British English": "영국 영어",
+  "Force language": "언어 강제 설정",
+  "Could not save the language": "언어를 저장할 수 없습니다",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "콘솔 언어 대신 선택한 언어로 이 게임을 시작합니다. 다음 실행 시 적용됩니다.",
+  "American English": "미국 영어",
+  "Canadian French": "캐나다 프랑스어",
+  "Simplified Chinese": "중국어 간체",
+  "Latin American Spanish": "라틴 아메리카 스페인어",
+  "Brazilian Portuguese": "포르투갈어(브라질)",
+  "Traditional Chinese": "번체 중국어"
 }

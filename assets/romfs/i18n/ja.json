@@ -2836,5 +2836,16 @@
   "Backing up before deleting...": "削除する前にバックアップを作成しています...",
   "Mods": "Mod",
   "Extract": "展開",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "選択したアーカイブのコンテンツを解凍します (zip、rar、7z、tar、gz、xz)。"
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "選択したアーカイブのコンテンツを解凍します (zip、rar、7z、tar、gz、xz)。",
+  "Forced: ": "強制: ",
+  "British English": "イギリス英語",
+  "Force language": "言語を強制",
+  "Could not save the language": "言語を保存できませんでした",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "本体言語の代わりに選択した言語でこのゲームを起動します。次回の起動時に適用されます。",
+  "American English": "アメリカ英語",
+  "Canadian French": "カナダ・フランス語",
+  "Simplified Chinese": "簡体字中国語",
+  "Latin American Spanish": "ラテンアメリカ・スペイン語",
+  "Brazilian Portuguese": "ポルトガル語 (ブラジル)",
+  "Traditional Chinese": "繁体字中国語"
 }

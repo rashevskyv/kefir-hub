@@ -2836,5 +2836,16 @@
   "Backing up before deleting...": "Đang sao lưu trước khi xóa...",
   "Mods": "Bản mod",
   "Extract": "Giải nén",
-  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Giải nén nội dung của tệp lưu trữ đã chọn (zip, rar, 7z, tar, gz, xz)."
+  "Extract the contents of the selected archive (zip, rar, 7z, tar, gz, xz).": "Giải nén nội dung của tệp lưu trữ đã chọn (zip, rar, 7z, tar, gz, xz).",
+  "Forced: ": "Buộc: ",
+  "British English": "Tiếng Anh (Anh)",
+  "Force language": "Buộc dùng ngôn ngữ",
+  "Could not save the language": "Không thể lưu ngôn ngữ",
+  "Start this game in the chosen language instead of the console language. Applies on the next launch.": "Khởi động trò chơi này bằng ngôn ngữ đã chọn thay vì ngôn ngữ hệ thống. Áp dụng vào lần khởi chạy tiếp theo.",
+  "American English": "Tiếng Anh Mỹ",
+  "Canadian French": "Tiếng Pháp Canada",
+  "Simplified Chinese": "Tiếng Trung Giản thể",
+  "Latin American Spanish": "Tiếng Tây Ban Nha (Mỹ Latinh)",
+  "Brazilian Portuguese": "Tiếng Bồ Đào Nha (Brazil)",
+  "Traditional Chinese": "Tiếng Trung Phồn thể"
 }

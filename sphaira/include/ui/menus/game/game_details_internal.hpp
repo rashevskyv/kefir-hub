@@ -72,6 +72,11 @@ struct DbiDetailsMenu final : MenuBase {
     u64 m_save_journal_size{};
     u64 m_save_allocated_size{};
     s64 m_mods_size{};
+    // NACP indexes of the game's languages, and the Atmosphère override if one is set.
+    std::vector<int> m_language_idx{};
+    std::string m_forced_language{};
+    // "Forced: English" when an override is set, else empty.
+    auto ForcedLanguageText() const -> std::string;
 };
 
 } // namespace sphaira::ui::menu::game
