@@ -97,6 +97,17 @@ The file is written to `/games/` on the microSD card.
 
 This removes the installed base game, updates and DLC and drops the game from the list. **Save data is kept** — the saves then appear in [[Saves]] under [[Deleted Games]]. To remove saves too, delete them in [Saves](saves.md#delete-a-save-from-the-console).
 
+## Game restrictions
+Let a game start without a linked Nintendo Account, or allow screenshots and video capture where the game forbids them.
+
+1. Open the game's details screen, press **+** → [[Restrictions]].
+2. Switch [[Linked Nintendo Account required]], [[Screenshots allowed]] or [[Video capture allowed]]. Turning video on also allows screenshots.
+3. The change applies on the next launch.
+
+!!! warning
+    This rewrites the game's control data (base game and update), so the console needs sigpatches (Kefir includes
+    sys-patch). Installing the update again brings the original restrictions back; switch them again then.
+
 ## Force a game's language
 Start a game in another language than the console's, for example English for a translation that replaces the English text.
 

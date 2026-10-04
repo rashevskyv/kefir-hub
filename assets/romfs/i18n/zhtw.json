@@ -2969,5 +2969,15 @@
   "Low power charger": "低功率充電器",
   "Official charger": "官方充電器",
   "Unsupported charger": "不支援的充電器",
-  "Battery lot": "電池批次"
+  "Battery lot": "電池批次",
+  "Linked Nintendo Account required": "需要已連結的 Nintendo 帳號",
+  "Could not read the game's restrictions": "無法讀取遊戲限制",
+  "Off lets the game start without a linked Nintendo Account.": "關閉狀態下，遊戲無需連結任天堂帳戶即可啟動。",
+  "Could not change the restrictions": "無法變更限制",
+  "Restrictions": "限制",
+  "Applies on the next launch": "將在下次啟動時生效。",
+  "Also allows screenshots.": "同時允許截圖。",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "已連結的 Nintendo 帳號、截圖與影片錄製。更改這些需要 sigpatches。",
+  "Video capture allowed": "允許影片擷取",
+  "Screenshots allowed": "允許截圖"
 }

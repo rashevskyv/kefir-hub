@@ -2916,5 +2916,15 @@
   "Low power charger": "저속 충전기",
   "Official charger": "정품 충전기",
   "Unsupported charger": "지원되지 않는 충전기",
-  "Battery lot": "배터리 로트"
+  "Battery lot": "배터리 로트",
+  "Linked Nintendo Account required": "연동된 닌텐도 어카운트가 필요합니다",
+  "Could not read the game's restrictions": "게임 제한 사항을 읽을 수 없습니다",
+  "Off lets the game start without a linked Nintendo Account.": "꺼짐으로 설정하면 닌텐도 계정 연동 없이 게임을 시작할 수 있습니다.",
+  "Could not change the restrictions": "제한 사항을 변경할 수 없습니다.",
+  "Restrictions": "제한",
+  "Applies on the next launch": "다음 실행 시 적용됩니다",
+  "Also allows screenshots.": "스크린샷도 허용합니다.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "연동된 닌텐도 계정, 스크린샷 및 비디오 캡처. 이를 변경하려면 sigpatch가 필요합니다.",
+  "Video capture allowed": "비디오 캡처 허용됨",
+  "Screenshots allowed": "스크린샷 허용됨"
 }

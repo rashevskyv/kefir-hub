@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.13.988 — game restrictions on an installed game: linked account, screenshots, video (plan F.11, part 1)
+- Game details → **+** → "Restrictions": three switches read from the control data; a change patches every installed Control NCA of the game (base + update, SD + NAND): decrypt the RomFS section, patch control.nacp (`startup_user_account`, network license bit, `screenshot`, `video_capture`), rehash IVFC after verifying the stored hashes, update the fs header hash, encrypt, write a placeholder and re-register under the same content id, invalidate the ns control cache (`control_patch.cpp`, `nacp_patch.hpp` + host test with a synthetic IVFC tree and RomFS). New `ncm::ListAllKeys`, reused by the cleanup. Needs sigpatches.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — toggle each switch on an eShop game and a cartridge-dumped game, with and without an update, launch, screenshot/record; a refused layout must leave the game untouched
+
 ## v0.13.987 — Tools → System information (plan F.14, after DBI 905)
 - Report in sections: firmware (version, name, hash, hardware, retail, DRAM id, device id, serial, nickname, language, region, parental controls), Atmosphère (version, target firmware, key generation, git commit, RCM patched, emuMMC, USB 3.0), battery and power (charge, raw, health, charger, charging, temperature, voltages and current limits on 17.0.0+), hardware (BT/Wi-Fi MAC, configuration id, battery lot). Saved to `/config/kefir/system-info.txt` and opened in the text viewer (`system_info.cpp`). Not yet: SD card CID, burnt fuses, MAX17050 registers, play activity.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall, no first-party warnings) · switch: pending — open it, check values against DBI's screen

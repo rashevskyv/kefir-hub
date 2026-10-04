@@ -2911,5 +2911,15 @@
   "Low power charger": "Слабкий зарядний пристрій",
   "Official charger": "Офіційний зарядний пристрій",
   "Unsupported charger": "Непідтримуваний зарядний пристрій",
-  "Battery lot": "Партія батарей"
+  "Battery lot": "Партія батарей",
+  "Linked Nintendo Account required": "Потрібен зв'язаний обліковий запис Nintendo",
+  "Could not read the game's restrictions": "Не вдалося прочитати обмеження гри",
+  "Off lets the game start without a linked Nintendo Account.": "Вимкнено дозволяє грі запускатися без прив'язаного облікового запису Nintendo.",
+  "Could not change the restrictions": "Не вдалося змінити обмеження",
+  "Restrictions": "Обмеження",
+  "Applies on the next launch": "Застосується при наступному запуску",
+  "Also allows screenshots.": "Також дозволяє робити знімки екрана.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Зв'язаний обліковий запис Nintendo, скріншоти та запис відео. Їх зміна потребує сигпатчів.",
+  "Video capture allowed": "Запис відео дозволено",
+  "Screenshots allowed": "Знімки екрана дозволені"
 }

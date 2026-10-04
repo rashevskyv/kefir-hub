@@ -2911,5 +2911,15 @@
   "Low power charger": "Nõrk laadija",
   "Official charger": "Ametlik laadija",
   "Unsupported charger": "Mittetoetatud laadija",
-  "Battery lot": "Akude partii"
+  "Battery lot": "Akude partii",
+  "Linked Nintendo Account required": "Nõutav on ühendatud Nintendo konto",
+  "Could not read the game's restrictions": "Mängu piiranguid ei õnnestunud lugeda",
+  "Off lets the game start without a linked Nintendo Account.": "Väljas lubab mängul käivituda ilma seotud Nintendo kontota.",
+  "Could not change the restrictions": "Piirangute muutmine ebaõnnestus",
+  "Restrictions": "Piirangud",
+  "Applies on the next launch": "Rakendub järgmisel käivitamisel",
+  "Also allows screenshots.": "Lubab ka ekraanitõmmiseid.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Seotud Nintendo konto, ekraanipildid ja videosalvestus. Nende muutmiseks on vaja sigpatche.",
+  "Video capture allowed": "Video salvestamine lubatud",
+  "Screenshots allowed": "Ekraanipildid lubatud"
 }

@@ -65,6 +65,9 @@ Result GetContentInfos(NcmContentMetaDatabase *db, const NcmContentMetaKey *key,
 // same as above but accepts the ncm header rather than fetching it.
 Result GetContentInfos(NcmContentMetaDatabase *db, const NcmContentMetaKey *key, const NcmContentMetaHeader& header, std::vector<NcmContentInfo>& out);
 
+// every meta key in the database, all types.
+Result ListAllKeys(NcmContentMetaDatabase *db, std::vector<NcmContentMetaKey>& out);
+
 // removes key from ncm, including ncas and setting the db.
 Result DeleteKey(NcmContentStorage* cs, NcmContentMetaDatabase *db, const NcmContentMetaKey *key);
 

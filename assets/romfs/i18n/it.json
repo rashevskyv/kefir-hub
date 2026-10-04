@@ -2916,5 +2916,15 @@
   "Low power charger": "Caricabatterie lento",
   "Official charger": "Caricabatterie ufficiale",
   "Unsupported charger": "Caricabatterie non supportato",
-  "Battery lot": "Lotto batteria"
+  "Battery lot": "Lotto batteria",
+  "Linked Nintendo Account required": "È richiesto un account Nintendo collegato",
+  "Could not read the game's restrictions": "Impossibile leggere le restrizioni del gioco",
+  "Off lets the game start without a linked Nintendo Account.": "Disattivato consente l'avvio del gioco senza un Account Nintendo collegato.",
+  "Could not change the restrictions": "Impossibile modificare le restrizioni",
+  "Restrictions": "Restrizioni",
+  "Applies on the next launch": "Si applica al prossimo avvio",
+  "Also allows screenshots.": "Consente anche le cattureschermata.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Account Nintendo collegato, schermate e cattura video. La modifica richiede i sigpatch.",
+  "Video capture allowed": "Acquisizione video consentita",
+  "Screenshots allowed": "Screenshot consentiti"
 }

@@ -2911,5 +2911,15 @@
   "Low power charger": "Düşük güçlü şarj cihazı",
   "Official charger": "Resmi şarj cihazı",
   "Unsupported charger": "Desteklenmeyen şarj cihazı",
-  "Battery lot": "Pil partisi"
+  "Battery lot": "Pil partisi",
+  "Linked Nintendo Account required": "Bağlanmış Nintendo Hesabı gerekiyor",
+  "Could not read the game's restrictions": "Oyun kısıtlamaları okunamadı",
+  "Off lets the game start without a linked Nintendo Account.": "Kapalı, oyunun bağlı bir Nintendo Hesabı olmadan başlamasını sağlar.",
+  "Could not change the restrictions": "Kısıtlamalar değiştirilemedi",
+  "Restrictions": "Kısıtlamalar",
+  "Applies on the next launch": "Sonraki başlatmada uygulanır",
+  "Also allows screenshots.": "Ayrıca ekran görüntülerine izin verir.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Bağlı Nintendo Hesabı, ekran görüntüleri ve video yakalama. Bunları değiştirmek sigpatch gerektirir.",
+  "Video capture allowed": "Video kaydına izin verildi",
+  "Screenshots allowed": "Ekran görüntüleri izin verildi"
 }

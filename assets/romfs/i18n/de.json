@@ -2917,5 +2917,15 @@
   "Low power charger": "Schwaches Ladegerät",
   "Official charger": "Offizielles Ladegerät",
   "Unsupported charger": "Nicht unterstütztes Ladegerät",
-  "Battery lot": "Batterielos"
+  "Battery lot": "Batterielos",
+  "Linked Nintendo Account required": "Verknüpftes Nintendo-Konto erforderlich",
+  "Could not read the game's restrictions": "Die Spielbeschränkungen konnten nicht gelesen werden",
+  "Off lets the game start without a linked Nintendo Account.": "Aus lässt das Spiel ohne verknüpften Nintendo-Account starten.",
+  "Could not change the restrictions": "Einschränkungen konnten nicht geändert werden",
+  "Restrictions": "Einschränkungen",
+  "Applies on the next launch": "Wird beim nächsten Start angewendet",
+  "Also allows screenshots.": "Erlaubt auch Screenshots.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Verknüpftes Nintendo-Konto, Screenshots und Videoaufnahme. Zum Ändern sind Sigpatches erforderlich.",
+  "Video capture allowed": "Videoaufnahme erlaubt",
+  "Screenshots allowed": "Screenshots erlaubt"
 }

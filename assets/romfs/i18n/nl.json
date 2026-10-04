@@ -2916,5 +2916,15 @@
   "Low power charger": "Zwabe lader",
   "Official charger": "Officiële oplader",
   "Unsupported charger": "Niet-ondersteunde oplader",
-  "Battery lot": "Acculot"
+  "Battery lot": "Acculot",
+  "Linked Nintendo Account required": "Gekoppeld Nintendo-account vereist",
+  "Could not read the game's restrictions": "Kan de spelbeperkingen niet lezen",
+  "Off lets the game start without a linked Nintendo Account.": "Uit laat de game starten zonder gekoppeld Nintendo-account.",
+  "Could not change the restrictions": "Kan de beperkingen niet wijzigen",
+  "Restrictions": "Beperkingen",
+  "Applies on the next launch": "Wordt toegepast bij de volgende start",
+  "Also allows screenshots.": "Sta ook screenshots toe.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Gekoppeld Nintendo-account, screenshots en video-opname. Deze wijzigen vereist sigpatches.",
+  "Video capture allowed": "Video-opname toegestaan",
+  "Screenshots allowed": "Schermafbeeldingen toegestaan"
 }

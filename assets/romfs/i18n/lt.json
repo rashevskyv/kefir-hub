@@ -2911,5 +2911,15 @@
   "Low power charger": "Silpnas įkroviklis",
   "Official charger": "Oficialus įkroviklis",
   "Unsupported charger": "Nepalaikomas įkroviklis",
-  "Battery lot": "Baterijų partija"
+  "Battery lot": "Baterijų partija",
+  "Linked Nintendo Account required": "Reikalinga susieta „Nintendo“ paskyra",
+  "Could not read the game's restrictions": "Nepavyko perskaityti žaidimo apribojimų",
+  "Off lets the game start without a linked Nintendo Account.": "Išjungta leidžia žaidimui pasileisti be susietos „Nintendo“ paskyros.",
+  "Could not change the restrictions": "Nepavyko pakeisti apribojimų",
+  "Restrictions": "Apribojimai",
+  "Applies on the next launch": "Įsigalios kitą kartą paleidus",
+  "Also allows screenshots.": "Taip pat leidžia ekrano kopijas.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Susieta „Nintendo“ paskyra, ekrano kopijos ir vaizdo įrašai. Norint juos pakeisti, reikia „sigpatches“.",
+  "Video capture allowed": "Vaizdo įrašymas leidžiamas",
+  "Screenshots allowed": "Ekrano kopijos leidžiamos"
 }

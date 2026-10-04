@@ -2916,5 +2916,15 @@
   "Low power charger": "Bộ sạc công suất thấp",
   "Official charger": "Bộ sạc chính hãng",
   "Unsupported charger": "Bộ sạc không được hỗ trợ",
-  "Battery lot": "Lô pin"
+  "Battery lot": "Lô pin",
+  "Linked Nintendo Account required": "Yêu cầu tài khoản Nintendo được liên kết",
+  "Could not read the game's restrictions": "Không thể đọc các giới hạn của trò chơi",
+  "Off lets the game start without a linked Nintendo Account.": "Tắt cho phép trò chơi khởi động mà không cần liên kết Tài khoản Nintendo.",
+  "Could not change the restrictions": "Không thể thay đổi các giới hạn",
+  "Restrictions": "Hạn chế",
+  "Applies on the next launch": "Áp dụng ở lần khởi động tiếp theo",
+  "Also allows screenshots.": "Cũng cho phép chụp ảnh màn hình.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Tài khoản Nintendo liên kết, ảnh chụp màn hình và quay video. Thay đổi chúng cần có sigpatches.",
+  "Video capture allowed": "Cho phép ghi hình video",
+  "Screenshots allowed": "Cho phép chụp màn hình"
 }

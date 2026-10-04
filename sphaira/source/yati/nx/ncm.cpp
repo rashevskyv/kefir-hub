@@ -161,6 +161,20 @@ Result GetContentInfos(NcmContentMetaDatabase *db, const NcmContentMetaKey *key,
     R_SUCCEED();
 }
 
+Result ListAllKeys(NcmContentMetaDatabase *db, std::vector<NcmContentMetaKey>& out) {
+    out.clear();
+    s32 total{}, written{};
+    NcmContentMetaKey probe{};
+    R_TRY(ncmContentMetaDatabaseList(db, &total, &written, &probe, 1, NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full));
+    if (total <= 0) {
+        R_SUCCEED();
+    }
+    out.resize(total);
+    R_TRY(ncmContentMetaDatabaseList(db, &total, &written, out.data(), out.size(), NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full));
+    out.resize(written);
+    R_SUCCEED();
+}
+
 Result DeleteKey(NcmContentStorage* cs, NcmContentMetaDatabase *db, const NcmContentMetaKey *key) {
     // get list of infos.
     std::vector<NcmContentInfo> infos;

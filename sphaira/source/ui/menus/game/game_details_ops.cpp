@@ -1,6 +1,7 @@
 #include "ui/menus/game/game_details_internal.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "forced_language.hpp"
+#include "control_patch.hpp"
 #include "ui/list.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
@@ -53,6 +54,37 @@ void DbiDetailsMenu::BrowseSdPath(const fs::FsPath& path) {
         constexpr filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
         App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
     }
+
+void DbiDetailsMenu::ShowRestrictions() {
+    const auto app_id = CurrentEntry().app_id;
+    nacp_patch::State state;
+    if (const auto rc = control_patch::ReadState(app_id, state); R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Could not read the game's restrictions"_i18n);
+        return;
+    }
+    const auto apply = [app_id](nacp_patch::Patch patch) {
+        App::Push<ProgressBox>(0, "Restrictions"_i18n, "", [app_id, patch](auto) -> Result {
+            return control_patch::PatchInstalled(app_id, patch);
+        }, [](Result rc){
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Applies on the next launch"_i18n);
+            } else {
+                App::PushErrorBox(rc, "Could not change the restrictions"_i18n);
+            }
+        });
+    };
+    auto sidebar = std::make_unique<Sidebar>("Restrictions"_i18n, Sidebar::Side::RIGHT);
+    sidebar->Add<SidebarEntryBool>("Linked Nintendo Account required"_i18n, state.linked_account_required, [apply](bool& v){
+        apply({.linked_account_required = v});
+    }, "Off lets the game start without a linked Nintendo Account."_i18n);
+    sidebar->Add<SidebarEntryBool>("Screenshots allowed"_i18n, state.screenshots_allowed, [apply](bool& v){
+        apply({.screenshots_allowed = v});
+    });
+    sidebar->Add<SidebarEntryBool>("Video capture allowed"_i18n, state.video_allowed, [apply](bool& v){
+        apply({.video_allowed = v});
+    }, "Also allows screenshots."_i18n);
+    App::Push(std::move(sidebar));
+}
 
 auto DbiDetailsMenu::ForcedLanguageText() const -> std::string {
     const auto idx = forced_language::IndexOf(m_forced_language);
@@ -329,6 +361,9 @@ void DbiDetailsMenu::ShowGameActions() {
                 }, current);
             }, "Start this game in the chosen language instead of the console language. Applies on the next launch."_i18n)->SetIcon(ActionIcon::Edit);
         }
+        options->Add<SidebarEntryCallback>("Restrictions"_i18n, [this](){
+            ShowRestrictions();
+        }, "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches."_i18n)->SetIcon(ActionIcon::Edit);
         if (CurrentEntry().layeredfs) {
             options->Add<SidebarEntryCallback>("Delete mods"_i18n, [this](){
                 const auto app_id = CurrentEntry().app_id;

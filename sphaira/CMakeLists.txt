@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.987)
+set(sphaira_VERSION 0.13.988)
 
 project(sphaira
     VERSION ${sphaira_VERSION}
@@ -312,6 +312,7 @@ add_executable(sphaira
     source/forced_language.cpp
     source/system_cleanup.cpp
     source/system_info.cpp
+    source/control_patch.cpp
     source/minizip_helper.cpp
     source/fs_zip.cpp
     source/fs_ncm.cpp

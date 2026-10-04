@@ -2911,5 +2911,15 @@
   "Low power charger": "Pengisi daya lambat",
   "Official charger": "Pengisi daya resmi",
   "Unsupported charger": "Pengisi daya tidak didukung",
-  "Battery lot": "Lot baterai"
+  "Battery lot": "Lot baterai",
+  "Linked Nintendo Account required": "Akun Nintendo yang ditautkan diperlukan",
+  "Could not read the game's restrictions": "Tidak dapat membaca batasan game",
+  "Off lets the game start without a linked Nintendo Account.": "Mati memungkinkan game dimulai tanpa Akun Nintendo yang ditautkan.",
+  "Could not change the restrictions": "Tidak dapat mengubah batasan",
+  "Restrictions": "Batasan",
+  "Applies on the next launch": "Diterapkan pada peluncuran berikutnya",
+  "Also allows screenshots.": "Juga mengizinkan tangkapan layar.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Akun Nintendo yang ditautkan, tangkapan layar, dan tangkapan video. Mengubahnya memerlukan sigpatch.",
+  "Video capture allowed": "Perekaman video diizinkan",
+  "Screenshots allowed": "Tangkapan layar diizinkan"
 }

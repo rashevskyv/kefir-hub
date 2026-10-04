@@ -2911,5 +2911,15 @@
   "Low power charger": "Әлсіз зарядтағыш",
   "Official charger": "Ресми зарядтағыш құрылғы",
   "Unsupported charger": "Қолдау көрсетілмейтін зарядтағыш",
-  "Battery lot": "Батарея партиясы"
+  "Battery lot": "Батарея партиясы",
+  "Linked Nintendo Account required": "Байланыстырылған Nintendo тіркелгісі қажет",
+  "Could not read the game's restrictions": "Ойын шектеулерін оқу мүмкін болмады",
+  "Off lets the game start without a linked Nintendo Account.": "Өшірулі ойынды байланыстырылған Nintendo Account аккаунтсыз іске қосуға мүмкіндік береді.",
+  "Could not change the restrictions": "Шектеулерді өзгерту мүмкін болмады",
+  "Restrictions": "Шектеулер",
+  "Applies on the next launch": "Келесі іске қосу кезінде қолданылады",
+  "Also allows screenshots.": "Сондай-ақ экран көріністеріне рұқсат береді.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Байланыстырылған Nintendo тіркелгісі, скриншоттар және видео жазу. Оларды өзгерту үшін sigpatches қажет.",
+  "Video capture allowed": "Видео жазуға рұқсат етілген",
+  "Screenshots allowed": "Skrinshotterge ruqsat etilgen"
 }

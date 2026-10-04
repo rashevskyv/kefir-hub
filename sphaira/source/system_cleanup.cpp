@@ -46,18 +46,9 @@ struct Storage {
     }
 
     void LoadKeys() {
-        keys.clear();
-        s32 total{}, written{};
-        NcmContentMetaKey probe{};
-        if (R_FAILED(ncmContentMetaDatabaseList(&db, &total, &written, &probe, 1, NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full)) || total <= 0) {
-            return;
-        }
-        keys.resize(total);
-        if (R_FAILED(ncmContentMetaDatabaseList(&db, &total, &written, keys.data(), keys.size(), NcmContentMetaType_Unknown, 0, 0, UINT64_MAX, NcmContentInstallType_Full))) {
+        if (R_FAILED(ncm::ListAllKeys(&db, keys))) {
             keys.clear();
-            return;
         }
-        keys.resize(written);
     }
 
     // every content id a registered title still uses, its own meta nca included.

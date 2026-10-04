@@ -2916,5 +2916,15 @@
   "Low power charger": "Svag laddare",
   "Official charger": "Officiell laddare",
   "Unsupported charger": "Laddare som inte stöds",
-  "Battery lot": "Batteriparti"
+  "Battery lot": "Batteriparti",
+  "Linked Nintendo Account required": "Länkat Nintendo-konto krävs",
+  "Could not read the game's restrictions": "Kunde inte läsa spelets begränsningar",
+  "Off lets the game start without a linked Nintendo Account.": "Av låter spelet starta utan ett länkat Nintendo-konto.",
+  "Could not change the restrictions": "Det gick inte att ändra begränsningarna",
+  "Restrictions": "Restriktioner",
+  "Applies on the next launch": "Tillämpas vid nästa start",
+  "Also allows screenshots.": "Tillåter också skärmdumpar.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Länkat Nintendo-konto, skärmdumpar och videoinspelning. Att ändra dem kräver sigpatches.",
+  "Video capture allowed": "Videoinspelning tillåten",
+  "Screenshots allowed": "Skärmbilder tillåtna"
 }

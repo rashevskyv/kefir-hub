@@ -2911,5 +2911,15 @@
   "Low power charger": "Low power charger",
   "Official charger": "Official charger",
   "Unsupported charger": "Unsupported charger",
-  "Battery lot": "Battery lot"
+  "Battery lot": "Battery lot",
+  "Linked Nintendo Account required": "Linked Nintendo Account required",
+  "Could not read the game's restrictions": "Could not read the game's restrictions",
+  "Off lets the game start without a linked Nintendo Account.": "Off lets the game start without a linked Nintendo Account.",
+  "Could not change the restrictions": "Could not change the restrictions",
+  "Restrictions": "Restrictions",
+  "Applies on the next launch": "Applies on the next launch",
+  "Also allows screenshots.": "Also allows screenshots.",
+  "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.": "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches.",
+  "Video capture allowed": "Video capture allowed",
+  "Screenshots allowed": "Screenshots allowed"
 }
