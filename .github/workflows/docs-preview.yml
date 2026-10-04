@@ -62,6 +62,9 @@ jobs:
           bundle lock --add-platform x86_64-linux
           bundle install
           bundle exec jekyll build --config _config.yml,_rework/_config.ghpreview.yml -d ../build/docs-site/guide
+          # the guide's pages and screenshots link from the site root ("/hbl", "/assets/..."), right on
+          # switch.customfw.xyz; under /kefir-hub/guide/ they must carry the subpath.
+          find ../build/docs-site/guide -name '*.html' -exec perl -pi -e 's#(href|src)="/(?!/|kefir-hub/)#$1="/kefir-hub/guide/#g' {} +
 
       - uses: actions/upload-pages-artifact@v3
         with:
