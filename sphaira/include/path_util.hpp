@@ -288,6 +288,39 @@ inline auto IniAccountName(std::string_view ini) -> std::string {
     return {};
 }
 
+// The "Space=" value of a DBI/Kefir Hub ".dbi_save_info.ini": maps User, SdUser, System,
+// etc. to concrete FsSaveDataSpaceId. Returns std::nullopt when absent or unrecognized.
+inline auto IniSpaceId(std::string_view ini) -> std::optional<uint8_t> {
+    constexpr std::string_view spaces = " \t\r";
+    while (!ini.empty()) {
+        const auto eol = ini.find('\n');
+        auto line = ini.substr(0, eol);
+        ini = eol == std::string_view::npos ? std::string_view{} : ini.substr(eol + 1);
+        const auto eq = line.find('=');
+        if (eq == std::string_view::npos) {
+            continue;
+        }
+        auto key = line.substr(0, eq);
+        key.remove_prefix(std::min(key.find_first_not_of(spaces), key.size()));
+        key = key.substr(0, key.find_last_not_of(spaces) + 1);
+        if (!EqualsIC(key, "Space")) {
+            continue;
+        }
+        auto value = line.substr(eq + 1);
+        value.remove_prefix(std::min(value.find_first_not_of(spaces), value.size()));
+        const auto val = value.substr(0, value.find_last_not_of(spaces) + 1);
+        if (EqualsIC(val, "User")) return 1;          // FsSaveDataSpaceId_User
+        if (EqualsIC(val, "SdUser")) return 4;        // FsSaveDataSpaceId_SdUser
+        if (EqualsIC(val, "System")) return 0;        // FsSaveDataSpaceId_System
+        if (EqualsIC(val, "SdSystem")) return 2;      // FsSaveDataSpaceId_SdSystem
+        if (EqualsIC(val, "Temporary")) return 3;     // FsSaveDataSpaceId_Temporary
+        if (EqualsIC(val, "ProperSystem")) return 100; // FsSaveDataSpaceId_ProperSystem
+        if (EqualsIC(val, "SafeMode")) return 101;    // FsSaveDataSpaceId_SafeMode
+        return std::nullopt;
+    }
+    return std::nullopt;
+}
+
 // Returns true if the content type or filename/URL indicates a ZIP archive.
 // - Content type contains "zip" (case-insensitive)
 // - Filename or URL path ends with ".zip" (case-insensitive, URL query/fragment ignored)

@@ -71,6 +71,7 @@ auto ParseDbiTypeLetter(char c) -> u8 {
         case 'D': case 'd': return FsSaveDataType_Device;
         case 'T': case 't': return FsSaveDataType_Temporary;
         case 'C': case 'c': return FsSaveDataType_Cache;
+        case 'G': case 'g': return FsSaveDataType_Cache;
         default: return 0xFF;
     }
 }
@@ -311,6 +312,13 @@ auto IsDbiBackupName(const Entry& e, const char* name) -> bool {
     std::snprintf(prefix, sizeof(prefix), "%016lX_%c_", e.application_id, GetDbiTypeLetter(e.save_data_type));
 
     if (strncasecmp(name, prefix, std::strlen(prefix))) {
+        if (e.save_data_type == FsSaveDataType_Cache) {
+            std::snprintf(prefix, sizeof(prefix), "%016lX_G_", e.application_id);
+            if (!strncasecmp(name, prefix, std::strlen(prefix))) {
+                const auto len = std::strlen(name);
+                return len > 4 && !strcasecmp(name + len - 4, ".zip");
+            }
+        }
         return false;
     }
 

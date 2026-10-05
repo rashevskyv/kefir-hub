@@ -87,6 +87,10 @@ auto Menu::FindLiveRestoreCandidates(const Entry& backup, const AccountUid* expl
             continue;
         }
 
+        if (backup.backup_space_known && info.save_data_space_id != backup.save_data_space_id) {
+            continue;
+        }
+
         if (info.save_data_type == FsSaveDataType_Account) {
             if (explicit_uid && std::memcmp(&info.uid, explicit_uid, sizeof(AccountUid)) != 0) {
                 continue;

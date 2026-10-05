@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
+## v0.13.1000 — Complete game save bundles and source-isolated restore
+- Show games with Account, Device, BCAT or Cache saves; back up complete game bundles. Keep restore histories and unchanged-backup checks within the selected creator; preserve known save spaces and legacy unknown-space archive identity before mutation. EN/UK docs, guide and video scripts updated.
+- host tests: pass (full; final quick pass) · nro: built · switch: pending — Animal Crossing Device+BCAT, multi-user bundles, USB/source switching, legacy restore and recovery copies; [USER] retake changed save screenshots and video scenes.
+
 ## v0.13.999 — Saves: backup skips unchanged saves; archived games count as deleted; sort by name/size
 - Create backup / Backup now skips a save whose newest backup in the chosen location has the same commit id and timestamp (no more identical copies); the separate "Create backup if newer" action is gone (`IsBackupUpToDate`). Message: "N backup(s) created, M already up to date." Docs en/uk updated.
 - Animal Crossing was still not in Deleted Games: archived games keep their record and content list with storage None, so `BuildInstalledAppIds` called them installed. Installed now means a base program (Application meta) on SD, NAND or game card.

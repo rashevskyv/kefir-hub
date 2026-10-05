@@ -304,10 +304,20 @@ Result WriteSaveBackupZip(
 
             const char* space = "User";
             switch (e.save_data_space_id) {
+                case FsSaveDataSpaceId_SdUser:
+                    space = "SdUser";
+                    break;
                 case FsSaveDataSpaceId_System:
-                case FsSaveDataSpaceId_SdSystem:
-                case FsSaveDataSpaceId_ProperSystem:
                     space = "System";
+                    break;
+                case FsSaveDataSpaceId_SdSystem:
+                    space = "SdSystem";
+                    break;
+                case FsSaveDataSpaceId_ProperSystem:
+                    space = "ProperSystem";
+                    break;
+                case FsSaveDataSpaceId_SafeMode:
+                    space = "SafeMode";
                     break;
                 case FsSaveDataSpaceId_Temporary:
                     space = "Temporary";

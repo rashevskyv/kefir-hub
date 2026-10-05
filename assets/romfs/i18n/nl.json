@@ -2934,5 +2934,13 @@
   "Allow screenshots": "Screenshots toestaan",
   "Installed games no longer ask for a linked Nintendo Account.": "Geïnstalleerde games vragen niet langer om een gekoppeld Nintendo-account.",
   "Installed games allow video capture (and screenshots).": "Geïnstalleerde games staan video-opname (en screenshots) toe.",
-  "Reading backups": "Back-ups lezen"
+  "Reading backups": "Back-ups lezen",
+  "Individual saves...": "Individuele opslagen...",
+  "All saves (bundle)": "Alle opslagen (bundel)",
+  "SOURCE": "BRON",
+  "Backup Source": "Backupbron",
+  "Choose which backup creator to restore from when multiple are present.": "Kies van welke maker u wilt herstellen als er meerdere aanwezig zijn.",
+  "Only one backup source available.": "Slechts één backupbron beschikbaar.",
+  "No backups found in this location.": "Geen backups gevonden op deze locatie.",
+  "Please select a backup source.": "Selecteer een back-upbron."
 }

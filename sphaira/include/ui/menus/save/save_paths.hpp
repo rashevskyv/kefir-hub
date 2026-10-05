@@ -2,6 +2,7 @@
 
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/save/save_bundle_util.hpp"
 #include "fs.hpp"
 #include <string>
 #include <string_view>
@@ -124,6 +125,7 @@ struct BackupArchiveInfo {
     BackupSource backup_source{BackupSource::Other};
     bool is_directory{false};
     std::string owner_name{}; // user nickname stored in the archive (shown when the user is not on this console)
+    std::optional<u8> source_space{};
 };
 
 auto ParseDbiTypeLetter(char c) -> u8;
@@ -156,18 +158,22 @@ auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileB
 auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string;
 auto BackupGroupKey(const Entry& e) -> std::string;
 inline auto MatchesRestoreDestination(const BackupArchiveInfo& info, const Entry& dst) -> bool {
-    const bool rank_matches = (!info.rank_known || info.save_data_rank == dst.save_data_rank);
     if (info.application_id != dst.application_id ||
         info.system_save_data_id != dst.system_save_data_id ||
-        info.save_data_type != dst.save_data_type ||
-        !rank_matches ||
-        info.save_data_index != dst.save_data_index) {
+        info.save_data_type != dst.save_data_type) {
         return false;
     }
-    if (info.save_data_type == FsSaveDataType_Account) {
-        return (dst.uid.uid[0] != 0 || dst.uid.uid[1] != 0);
-    }
-    return (info.uid.uid[0] == dst.uid.uid[0] && info.uid.uid[1] == dst.uid.uid[1]);
+    return bundle::MatchesRestoreDestinationSlot(
+        info.save_data_type, info.application_id, info.source_space.has_value(),
+        info.source_space.value_or(0), info.uid.uid, info.save_data_index,
+        info.rank_known, info.save_data_rank, dst.save_data_space_id,
+        dst.uid.uid, dst.save_data_index, dst.save_data_rank);
+}
+
+inline auto MatchesSelectedBackup(const BackupArchiveInfo& info, const Entry& selected) -> bool {
+    return bundle::RevalidateSelectedArchiveIdentityAndProvenance(
+        BackupGroupKey(info), static_cast<bundle::BackupSourceId>(info.backup_source),
+        BackupGroupKey(selected), static_cast<bundle::BackupSourceId>(selected.backup_source));
 }
 
 auto GetSaveFolder(u8 data_type) -> fs::FsPath;

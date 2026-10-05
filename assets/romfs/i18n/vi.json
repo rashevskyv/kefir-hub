@@ -2934,5 +2934,13 @@
   "Allow screenshots": "Cho phép chụp màn hình",
   "Installed games no longer ask for a linked Nintendo Account.": "Các trò chơi đã cài đặt không còn yêu cầu Tài khoản Nintendo liên kết.",
   "Installed games allow video capture (and screenshots).": "Trò chơi đã cài đặt cho phép quay video (và chụp ảnh màn hình).",
-  "Reading backups": "Đang đọc bản sao lưu"
+  "Reading backups": "Đang đọc bản sao lưu",
+  "Individual saves...": "Dữ liệu lưu riêng lẻ...",
+  "All saves (bundle)": "Tất cả dữ liệu lưu (gói)",
+  "SOURCE": "NGUỒN",
+  "Backup Source": "Nguồn sao lưu",
+  "Choose which backup creator to restore from when multiple are present.": "Chọn người tạo bản sao lưu để khôi phục khi có nhiều bản sao lưu.",
+  "Only one backup source available.": "Chỉ có một nguồn sao lưu khả dụng.",
+  "No backups found in this location.": "Không tìm thấy bản sao lưu nào tại vị trí này.",
+  "Please select a backup source.": "Vui lòng chọn nguồn sao lưu."
 }

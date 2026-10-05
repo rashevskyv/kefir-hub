@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Luba ekraanipildid",
   "Installed games no longer ask for a linked Nintendo Account.": "Installitud mängud ei küsi enam lingitud Nintendo kontot.",
   "Installed games allow video capture (and screenshots).": "Installitud mängud lubavad videot salvestada (ja ekraanipilte teha).",
-  "Reading backups": "Varukoopiate lugemine"
+  "Reading backups": "Varukoopiate lugemine",
+  "Individual saves...": "Üksikud salvestused...",
+  "All saves (bundle)": "Kõik salvestised (pakett)",
+  "SOURCE": "ALLIKAS",
+  "Backup Source": "Varunduse allikas",
+  "Choose which backup creator to restore from when multiple are present.": "Valige, milliselt loojalt taastada, kui saadaval on mitu.",
+  "Only one backup source available.": "Saadaval on ainult üks varunduse allikas.",
+  "No backups found in this location.": "Selles asukohas varundusi ei leitud.",
+  "Please select a backup source.": "Palun valige varukoopia allikas."
 }

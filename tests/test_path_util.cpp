@@ -320,6 +320,15 @@ static int test_sd_folder_from_config_value() {
     CHECK(path::IniAccountName("TitleId=0100C3C015738000\nSpace=Device") == "");
     CHECK(path::IniAccountName("") == "");
     CHECK(path::IniAccountName("AccountId=7\nAccount=Kid") == "Kid");
+    CHECK(path::IniSpaceId("Space=User") == 1);
+    CHECK(path::IniSpaceId("Space=SdUser") == 4);
+    CHECK(path::IniSpaceId("Space=System") == 0);
+    CHECK(path::IniSpaceId("Space=SdSystem") == 2);
+    CHECK(path::IniSpaceId("Space=Temporary") == 3);
+    CHECK(path::IniSpaceId("Space=ProperSystem") == 100);
+    CHECK(path::IniSpaceId("Space=SafeMode") == 101);
+    CHECK(path::IniSpaceId("Space=Unknown") == std::nullopt);
+    CHECK(path::IniSpaceId("TitleId=0100C3C015738000\r\nAccount=Shark\r\nSpace=SdUser\r\n") == 4);
     CHECK(path::SdFolderFromConfigValue("sdmc:/switch/DBI/saves/") == std::string{"/switch/DBI/saves"});
     CHECK(path::SdFolderFromConfigValue("SDMC:/DBISaves") == std::string{"/DBISaves"});
     CHECK(path::SdFolderFromConfigValue("/backups//dbi/") == std::string{"/backups/dbi"});

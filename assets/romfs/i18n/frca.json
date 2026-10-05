@@ -2935,5 +2935,13 @@
   "Allow screenshots": "Autoriser les captures d'écran",
   "Installed games no longer ask for a linked Nintendo Account.": "Les jeux installés ne demandent plus de compte Nintendo associé.",
   "Installed games allow video capture (and screenshots).": "Les jeux installés permettent la capture vidéo (et les captures d'écran).",
-  "Reading backups": "Lecture des sauvegardes"
+  "Reading backups": "Lecture des sauvegardes",
+  "Individual saves...": "Sauvegardes individuelles...",
+  "All saves (bundle)": "Toutes les sauvegardes (lot)",
+  "SOURCE": "SOURCE",
+  "Backup Source": "Source de sauvegarde",
+  "Choose which backup creator to restore from when multiple are present.": "Choisissez le créateur de sauvegarde à restaurer lorsque plusieurs sont présents.",
+  "Only one backup source available.": "Une seule source de sauvegarde disponible.",
+  "No backups found in this location.": "Aucune sauvegarde trouvée à cet emplacement.",
+  "Please select a backup source.": "Veuillez sélectionner une source de sauvegarde."
 }

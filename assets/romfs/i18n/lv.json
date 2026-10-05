@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Atļaut ekrānuzņēmumus",
   "Installed games no longer ask for a linked Nintendo Account.": "Instalētās spēles vairs neprasa piesaistītu Nintendo kontu.",
   "Installed games allow video capture (and screenshots).": "Instalētās spēles ļauj uzņemt video (un ekrānuzņēmumus).",
-  "Reading backups": "Dublējumu lasīšana"
+  "Reading backups": "Dublējumu lasīšana",
+  "Individual saves...": "Atsevišķi saglabāšanas dati...",
+  "All saves (bundle)": "Visi saglabājumi (pakotne)",
+  "SOURCE": "AVOTS",
+  "Backup Source": "Dublējuma avots",
+  "Choose which backup creator to restore from when multiple are present.": "Izvēlieties, no kura veidotāja atjaunot, ja ir pieejami vairāki.",
+  "Only one backup source available.": "Pieejams tikai viens dublējuma avots.",
+  "No backups found in this location.": "Šajā atrašanās vietā dublējumi netika atrasti.",
+  "Please select a backup source.": "Lūdzu, izvēlieties dublējuma avotu."
 }

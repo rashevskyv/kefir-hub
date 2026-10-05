@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Izinkan tangkapan layar",
   "Installed games no longer ask for a linked Nintendo Account.": "Game yang terinstal tidak lagi meminta Akun Nintendo yang ditautkan.",
   "Installed games allow video capture (and screenshots).": "Game yang dipasang mengizinkan perekaman video (dan tangkapan layar).",
-  "Reading backups": "Membaca cadangan"
+  "Reading backups": "Membaca cadangan",
+  "Individual saves...": "Simpanan individual...",
+  "All saves (bundle)": "Semua penyimpanan (bundel)",
+  "SOURCE": "SUMBER",
+  "Backup Source": "Sumber Cadangan",
+  "Choose which backup creator to restore from when multiple are present.": "Pilih pembuat cadangan mana yang akan dipulihkan jika ada beberapa.",
+  "Only one backup source available.": "Hanya satu sumber cadangan yang tersedia.",
+  "No backups found in this location.": "Tidak ada cadangan yang ditemukan di lokasi ini.",
+  "Please select a backup source.": "Silakan pilih sumber cadangan."
 }

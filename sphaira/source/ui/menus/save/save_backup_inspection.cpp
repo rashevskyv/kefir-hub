@@ -1,4 +1,5 @@
 #include "ui/menus/save/save_paths.hpp"
+#include "ui/menus/save/save_bundle_util.hpp"
 #include "save_internal.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -284,6 +285,7 @@ auto InspectBackupArchive(fs::Fs* fs, const fs::FsPath& path, std::string_view f
 
         out.payload_count = archive_meta.payload_count;
         out.owner_name = archive_meta.account_name;
+        out.source_space = archive_meta.source_space;
 
         if (meta_status == ArchiveMetaStatus::Valid) {
             const auto& meta = archive_meta.meta;
@@ -464,10 +466,7 @@ auto FormatBackupTimestamp(u64 ts, bool compact) -> std::string {
 namespace {
 
 auto FormatBackupRankMarker(const Entry& e) -> std::string {
-    if (!e.backup_rank_known) {
-        return "rk:?";
-    }
-    return (e.save_data_rank == FsSaveDataRank_Secondary) ? "rk:1" : "rk:0";
+    return !e.backup_rank_known ? "rk:?" : ((e.save_data_rank == FsSaveDataRank_Secondary) ? "rk:1" : "rk:0");
 }
 
 } // namespace
@@ -508,38 +507,34 @@ auto FormatBackupSecondaryText(const Entry& e, const std::vector<AccountProfileB
     return out;
 }
 
-static auto FormatRankKeyPart(bool rank_known, u8 rank) -> const char* {
-    if (!rank_known) {
-        return "rk:?";
-    }
-    return (rank == FsSaveDataRank_Secondary) ? "rk:1" : "rk:0";
-}
-
 auto BackupGroupKey(const BackupArchiveInfo& info) -> std::string {
-    char key[0x80];
-    const char* rk = FormatRankKeyPart(info.rank_known, info.save_data_rank);
-    if (IsSystemLikeSave(info.save_data_type)) {
-        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u:%s",
-            info.save_data_type, info.system_save_data_id, info.save_data_index, rk);
-    } else {
-        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u:%s",
-            info.application_id, info.save_data_type, info.uid.uid[0], info.uid.uid[1], info.save_data_index, rk);
-    }
-    return key;
+    const uint64_t uid[2] = {info.uid.uid[0], info.uid.uid[1]};
+    return bundle::FormatBackupGroupIdentityKey(
+        IsSystemLikeSave(info.save_data_type),
+        info.save_data_type,
+        IsSystemLikeSave(info.save_data_type) ? info.system_save_data_id : info.application_id,
+        info.source_space.has_value(),
+        info.source_space.value_or(0),
+        uid,
+        info.save_data_index,
+        info.rank_known,
+        info.save_data_rank);
 }
 
 auto BackupGroupKey(const Entry& e) -> std::string {
-    char key[0x80];
+    const uint64_t uid[2] = {e.uid.uid[0], e.uid.uid[1]};
     const bool rank_known = e.is_backup ? e.backup_rank_known : true;
-    const char* rk = FormatRankKeyPart(rank_known, e.save_data_rank);
-    if (IsSystemLikeSave(e.save_data_type)) {
-        std::snprintf(key, sizeof(key), "backup:system:%u:%016lX:%u:%s",
-            e.save_data_type, e.system_save_data_id, e.save_data_index, rk);
-    } else {
-        std::snprintf(key, sizeof(key), "backup:app:%016lX:%u:%016lX%016lX:%u:%s",
-            e.application_id, e.save_data_type, e.uid.uid[0], e.uid.uid[1], e.save_data_index, rk);
-    }
-    return key;
+    const bool space_known = e.is_backup ? e.backup_space_known : true;
+    return bundle::FormatBackupGroupIdentityKey(
+        IsSystemLikeSave(e.save_data_type),
+        e.save_data_type,
+        IsSystemLikeSave(e.save_data_type) ? e.system_save_data_id : e.application_id,
+        space_known,
+        e.save_data_space_id,
+        uid,
+        e.save_data_index,
+        rank_known,
+        e.save_data_rank);
 }
 
 auto VerifyZipIntegrity(const fs::FsPath& path) -> bool {

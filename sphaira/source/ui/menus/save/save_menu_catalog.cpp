@@ -5,6 +5,7 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
+#include "ui/menus/save/save_bundle_util.hpp"
 #include "path_util.hpp"
 
 #include <algorithm>
@@ -18,8 +19,9 @@
 
 namespace sphaira::ui::menu::save {
 
-void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& progress) const {
-    fs::FsNativeSd fs;
+void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& progress, fs::Fs* custom_fs, const fs::FsPath& custom_root) const {
+    fs::FsNativeSd sd_fs;
+    fs::Fs* probe_fs = custom_fs ? custom_fs : static_cast<fs::Fs*>(&sd_fs);
     struct GroupScanMeta {
         size_t index{};
         int rep_source{};
@@ -40,9 +42,9 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
         BackupArchiveInfo info{};
         bool ok = false;
         if (is_dir) {
-            ok = InspectBackupFolder(&fs, path, name, dbi_game_dir_name, info);
+            ok = InspectBackupFolder(probe_fs, path, name, dbi_game_dir_name, info);
         } else {
-            ok = InspectBackupArchive(&fs, path, name, dbi_game_dir_name, info);
+            ok = InspectBackupArchive(probe_fs, path, name, dbi_game_dir_name, info);
         }
         if (!ok) {
             return;
@@ -56,6 +58,10 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
             e.application_id = info.application_id;
             e.system_save_data_id = info.system_save_data_id;
             e.save_data_type = info.save_data_type;
+            if (info.source_space.has_value()) {
+                e.save_data_space_id = *info.source_space;
+                e.backup_space_known = true;
+            }
             e.uid = info.uid;
             e.save_data_index = info.save_data_index;
             e.save_data_rank = info.save_data_rank;
@@ -70,11 +76,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
             e.backup_owner_name = info.owner_name;
             e.source_timestamp = info.source_timestamp;
             e.commit_id = info.commit_id;
-            if (is_dir) {
-                e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio, true});
-            } else {
-                e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio});
-            }
+            e.backup_members.emplace_back(BackupCandidate{info.timestamp, path, source_prio, is_dir});
 
             if (IsSystemLikeSave(e.save_data_type)) {
                 detail::FakeNacpEntryForSystem(e);
@@ -111,6 +113,10 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
                 existing.source_timestamp = info.source_timestamp;
                 existing.commit_id = info.commit_id;
                 meta.rep_source = source_prio;
+                if (info.source_space.has_value()) {
+                    existing.save_data_space_id = *info.source_space;
+                    existing.backup_space_known = true;
+                }
             }
 
             if (existing.backup_owner_name.empty()) {
@@ -147,19 +153,19 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
 
     // 1. Scan DBI-format game backups: /switch/DBI/saves, /DBISaves, and custom paths
     const auto scan_dbi_root = [&](const fs::FsPath& root_path, int prio_base) {
-        const auto dbi_root = fs::AppendPath(fs.Root(), root_path);
+        const auto dbi_root = fs::AppendPath(probe_fs->Root(), root_path);
         filebrowser::FsDirCollection games{};
-        filebrowser::FsView::get_collection(&fs, dbi_root, "", games, false, true, false);
+        filebrowser::FsView::get_collection(probe_fs, dbi_root, "", games, false, true, false);
         for (const auto& game : games.dirs) {
             const auto game_dir = fs::AppendPath(dbi_root, game.name);
             filebrowser::FsDirCollection dates{};
-            filebrowser::FsView::get_collection(&fs, game_dir, "", dates, true, true, false);
+            filebrowser::FsView::get_collection(probe_fs, game_dir, "", dates, true, true, false);
             for (const auto& file : dates.files) {
                 process_archive(fs::AppendPath(dates.path, file.name), file.name, game.name, prio_base);
             }
             for (const auto& date : dates.dirs) {
                 filebrowser::FsDirCollection files{};
-                filebrowser::FsView::get_collection(&fs, fs::AppendPath(game_dir, date.name), "", files, true, false, false);
+                filebrowser::FsView::get_collection(probe_fs, fs::AppendPath(game_dir, date.name), "", files, true, false, false);
                 for (const auto& file : files.files) {
                     process_archive(fs::AppendPath(files.path, file.name), file.name, game.name, prio_base);
                 }
@@ -167,31 +173,25 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
         }
     };
 
-    scan_dbi_root(fs::FsPath{GetDbiSavesPath()}, 0);
-    scan_dbi_root(fs::FsPath{DBI_SAVES_ROOT_PATH}, 0);
-    for (const auto& custom_path_str : GetBackupSearchPaths()) {
-        scan_dbi_root(fs::FsPath{custom_path_str}, 10);
-    }
-
     // 2. Scan Sphaira root (/dumps) and custom search paths
     const auto scan_sphaira_root = [&](const fs::FsPath& root_path, int prio_base) {
-        const auto root = fs::AppendPath(fs.Root(), root_path);
+        const auto root = fs::AppendPath(probe_fs->Root(), root_path);
         filebrowser::FsDirCollection l1{};
-        filebrowser::FsView::get_collection(&fs, root, "", l1, true, true, false);
+        filebrowser::FsView::get_collection(probe_fs, root, "", l1, true, true, false);
         for (const auto& file : l1.files) {
             process_archive(fs::AppendPath(l1.path, file.name), file.name, "", prio_base);
         }
         for (const auto& dir1 : l1.dirs) {
             const auto dir1_path = fs::AppendPath(root, dir1.name);
             filebrowser::FsDirCollection l2{};
-            filebrowser::FsView::get_collection(&fs, dir1_path, "", l2, true, true, false);
+            filebrowser::FsView::get_collection(probe_fs, dir1_path, "", l2, true, true, false);
             for (const auto& file : l2.files) {
                 process_archive(fs::AppendPath(l2.path, file.name), file.name, "", prio_base + 1);
             }
             for (const auto& dir2 : l2.dirs) {
                 const auto dir2_path = fs::AppendPath(dir1_path, dir2.name);
                 filebrowser::FsDirCollection l3{};
-                filebrowser::FsView::get_collection(&fs, dir2_path, "", l3, true, false, false);
+                filebrowser::FsView::get_collection(probe_fs, dir2_path, "", l3, true, false, false);
                 for (const auto& file : l3.files) {
                     process_archive(fs::AppendPath(l3.path, file.name), file.name, "", prio_base + 2);
                 }
@@ -199,19 +199,11 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
         }
     };
 
-    scan_sphaira_root(fs::FsPath{DEFAULT_BACKUP_ROOT}, 1);
-
-    int custom_prio = 10;
-    for (const auto& custom_path_str : GetBackupSearchPaths()) {
-        scan_sphaira_root(fs::FsPath{custom_path_str}, custom_prio);
-        custom_prio += 5;
-    }
-
     // 3. Scan JKSV folder backups: /JKSV and /switch/JKSV
     const auto scan_jksv_root = [&](const fs::FsPath& root_path, int prio_base) {
-        const auto jksv_root = fs::AppendPath(fs.Root(), root_path);
+        const auto jksv_root = fs::AppendPath(probe_fs->Root(), root_path);
         filebrowser::FsDirCollection l1{};
-        filebrowser::FsView::get_collection(&fs, jksv_root, "", l1, false, true, false);
+        filebrowser::FsView::get_collection(probe_fs, jksv_root, "", l1, false, true, false);
         for (const auto& d1 : l1.dirs) {
             const auto d1_path = fs::AppendPath(jksv_root, d1.name);
             const bool is_category = path::EqualsIC(d1.name, "Device Saves") ||
@@ -219,18 +211,18 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
                                      path::EqualsIC(d1.name, "BCAT Saves");
             if (is_category) {
                 filebrowser::FsDirCollection games{};
-                filebrowser::FsView::get_collection(&fs, d1_path, "", games, false, true, false);
+                filebrowser::FsView::get_collection(probe_fs, d1_path, "", games, false, true, false);
                 for (const auto& game : games.dirs) {
                     const auto game_dir = fs::AppendPath(d1_path, game.name);
                     filebrowser::FsDirCollection backups{};
-                    filebrowser::FsView::get_collection(&fs, game_dir, "", backups, false, true, false);
+                    filebrowser::FsView::get_collection(probe_fs, game_dir, "", backups, false, true, false);
                     for (const auto& b : backups.dirs) {
                         process_folder(fs::AppendPath(game_dir, b.name), b.name, game.name, prio_base + 2);
                     }
                 }
             } else {
                 filebrowser::FsDirCollection backups{};
-                filebrowser::FsView::get_collection(&fs, d1_path, "", backups, false, true, false);
+                filebrowser::FsView::get_collection(probe_fs, d1_path, "", backups, false, true, false);
                 for (const auto& b : backups.dirs) {
                     process_folder(fs::AppendPath(d1_path, b.name), b.name, d1.name, prio_base + 1);
                 }
@@ -238,36 +230,30 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
         }
     };
 
-    scan_jksv_root(fs::FsPath{JKSV_PATH}, 2);
-    scan_jksv_root(fs::FsPath{JKSV_SWITCH_PATH}, 2);
-
     // 4. Scan Checkpoint folder backups: /switch/Checkpoint/saves and /Checkpoint/saves
     const auto scan_checkpoint_root = [&](const fs::FsPath& root_path, int prio_base) {
-        const auto cp_root = fs::AppendPath(fs.Root(), root_path);
+        const auto cp_root = fs::AppendPath(probe_fs->Root(), root_path);
         filebrowser::FsDirCollection games{};
-        filebrowser::FsView::get_collection(&fs, cp_root, "", games, false, true, false);
+        filebrowser::FsView::get_collection(probe_fs, cp_root, "", games, false, true, false);
         for (const auto& game : games.dirs) {
             const auto game_dir = fs::AppendPath(cp_root, game.name);
             filebrowser::FsDirCollection backups{};
-            filebrowser::FsView::get_collection(&fs, game_dir, "", backups, false, true, false);
+            filebrowser::FsView::get_collection(probe_fs, game_dir, "", backups, false, true, false);
             for (const auto& b : backups.dirs) {
                 process_folder(fs::AppendPath(game_dir, b.name), b.name, game.name, prio_base + 1);
             }
         }
     };
 
-    scan_checkpoint_root(fs::FsPath{CHECKPOINT_SAVES_PATH}, 3);
-    scan_checkpoint_root(fs::FsPath{CHECKPOINT_ROOT_SAVES_PATH}, 3);
-
     // 5. Scan custom search paths for folder backups
     const auto scan_custom_folder_root = [&](const fs::FsPath& root_path, int prio_base) {
-        const auto root = fs::AppendPath(fs.Root(), root_path);
+        const auto root = fs::AppendPath(probe_fs->Root(), root_path);
         filebrowser::FsDirCollection l1{};
-        filebrowser::FsView::get_collection(&fs, root, "", l1, false, true, false);
+        filebrowser::FsView::get_collection(probe_fs, root, "", l1, false, true, false);
         for (const auto& d1 : l1.dirs) {
             const auto d1_path = fs::AppendPath(root, d1.name);
             filebrowser::FsDirCollection l2{};
-            filebrowser::FsView::get_collection(&fs, d1_path, "", l2, false, true, false);
+            filebrowser::FsView::get_collection(probe_fs, d1_path, "", l2, false, true, false);
             if (!l2.dirs.empty()) {
                 for (const auto& d2 : l2.dirs) {
                     process_folder(fs::AppendPath(d1_path, d2.name), d2.name, d1.name, prio_base + 2);
@@ -278,10 +264,35 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
         }
     };
 
-    int folder_custom_prio = 10;
-    for (const auto& custom_path_str : GetBackupSearchPaths()) {
-        scan_custom_folder_root(fs::FsPath{custom_path_str}, folder_custom_prio);
-        folder_custom_prio += 5;
+    if (custom_fs) {
+        if (!custom_root.empty()) {
+            scan_dbi_root(custom_root, 0);
+            scan_sphaira_root(custom_root, 1);
+        }
+    } else {
+        scan_dbi_root(fs::FsPath{GetDbiSavesPath()}, 0);
+        scan_dbi_root(fs::FsPath{DBI_SAVES_ROOT_PATH}, 0);
+        for (const auto& custom_path_str : GetBackupSearchPaths()) {
+            scan_dbi_root(fs::FsPath{custom_path_str}, 10);
+        }
+
+        scan_sphaira_root(fs::FsPath{DEFAULT_BACKUP_ROOT}, 1);
+        int custom_prio = 10;
+        for (const auto& custom_path_str : GetBackupSearchPaths()) {
+            scan_sphaira_root(fs::FsPath{custom_path_str}, custom_prio);
+            custom_prio += 5;
+        }
+
+        scan_jksv_root(fs::FsPath{JKSV_PATH}, 2);
+        scan_jksv_root(fs::FsPath{JKSV_SWITCH_PATH}, 2);
+        scan_checkpoint_root(fs::FsPath{CHECKPOINT_SAVES_PATH}, 3);
+        scan_checkpoint_root(fs::FsPath{CHECKPOINT_ROOT_SAVES_PATH}, 3);
+
+        int folder_custom_prio = 10;
+        for (const auto& custom_path_str : GetBackupSearchPaths()) {
+            scan_custom_folder_root(fs::FsPath{custom_path_str}, folder_custom_prio);
+            folder_custom_prio += 5;
+        }
     }
 
     for (size_t i = 0; i < candidates.size(); i++) {
@@ -416,8 +427,7 @@ void Menu::SortAndFindLastFile(bool scan) {
 }
 
 auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath& backup_root) const -> std::vector<BackupCandidate> {
-    if (group.is_backup) {
-        const auto target_key = BackupGroupKey(group);
+    if (group.is_backup && !group.backup_members.empty()) {
         std::unordered_set<std::string> seen_paths;
         std::vector<BackupCandidate> out;
 
@@ -429,18 +439,15 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
             const auto slash = std::strrchr(m.path.s, '/');
             const auto fname = slash ? (slash + 1) : m.path.s;
             BackupArchiveInfo info{};
-            bool inspected = false;
-            if (m.is_directory) {
-                inspected = InspectBackupFolder(fs, m.path, fname, group.dbi_game_dir, info);
-            } else {
-                inspected = InspectBackupArchive(fs, m.path, fname, group.dbi_game_dir, info);
-            }
+            const bool inspected = m.is_directory
+                ? InspectBackupFolder(fs, m.path, fname, group.dbi_game_dir, info)
+                : InspectBackupArchive(fs, m.path, fname, group.dbi_game_dir, info);
             if (!inspected) {
                 continue;
             }
 
             info.source = m.source;
-            if (BackupGroupKey(info) != target_key) {
+            if (!MatchesSelectedBackup(info, group)) {
                 continue;
             }
 
@@ -461,21 +468,37 @@ auto Menu::CollectGroupArchives(fs::Fs* fs, const Entry& group, const fs::FsPath
     }
 
     const auto candidates = CollectBackups(fs, group, backup_root);
-    const auto target_key = BackupGroupKey(group);
+    const bool group_space_known = group.is_backup ? group.backup_space_known : true;
+    const bool group_rank_known = group.is_backup ? group.backup_rank_known : true;
 
     std::vector<BackupCandidate> out;
     for (const auto& c : candidates) {
         const auto slash = std::strrchr(c.path.s, '/');
         const auto fname = slash ? (slash + 1) : c.path.s;
         BackupArchiveInfo info{};
-        bool inspected = false;
-        if (c.is_directory) {
-            inspected = InspectBackupFolder(fs, c.path, fname, group.dbi_game_dir, info);
-        } else {
-            inspected = InspectBackupArchive(fs, c.path, fname, group.dbi_game_dir, info);
+        const bool inspected = c.is_directory
+            ? InspectBackupFolder(fs, c.path, fname, group.dbi_game_dir, info)
+            : InspectBackupArchive(fs, c.path, fname, group.dbi_game_dir, info);
+        if (!inspected) {
+            continue;
         }
-        if (inspected && BackupGroupKey(info) == target_key) {
-            out.emplace_back(c);
+
+        if (group.is_backup) {
+            if (MatchesSelectedBackup(info, group)) {
+                out.emplace_back(c);
+            }
+        } else {
+            if (bundle::AreBackupSlotIdentitiesCompatible(
+                    IsSystemLikeSave(group.save_data_type), group.save_data_type,
+                    IsSystemLikeSave(group.save_data_type) ? group.system_save_data_id : group.application_id,
+                    group_space_known, group.save_data_space_id,
+                    group.uid.uid, group.save_data_index, group_rank_known, group.save_data_rank,
+                    IsSystemLikeSave(info.save_data_type), info.save_data_type,
+                    IsSystemLikeSave(info.save_data_type) ? info.system_save_data_id : info.application_id,
+                    info.source_space.has_value(), info.source_space.value_or(0),
+                    info.uid.uid, info.save_data_index, info.rank_known, info.save_data_rank)) {
+                out.emplace_back(c);
+            }
         }
     }
 

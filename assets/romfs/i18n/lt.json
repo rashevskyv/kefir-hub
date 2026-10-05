@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Leisti ekrano kopijas",
   "Installed games no longer ask for a linked Nintendo Account.": "Įdiegti žaidimai nebeprašo susietos „Nintendo“ paskyros.",
   "Installed games allow video capture (and screenshots).": "Įdiegti žaidimai leidžia daryti vaizdo įrašus (ir ekrano kopijas).",
-  "Reading backups": "Atsarginių kopijų skaitymas"
+  "Reading backups": "Atsarginių kopijų skaitymas",
+  "Individual saves...": "Atskiri įrašai...",
+  "All saves (bundle)": "Visi išsaugojimai (paketas)",
+  "SOURCE": "ŠALTINIS",
+  "Backup Source": "Atsarginės kopijos šaltinis",
+  "Choose which backup creator to restore from when multiple are present.": "Pasirinkite, iš kurio kūrėjo atkurti, kai yra keli.",
+  "Only one backup source available.": "Prieinamas tik vienas atsarginės kopijos šaltinis.",
+  "No backups found in this location.": "Šioje vietoje atsarginių kopijų nerasta.",
+  "Please select a backup source.": "Pasirinkite atsarginės kopijos šaltinį."
 }

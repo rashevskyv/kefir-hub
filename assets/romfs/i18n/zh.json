@@ -2987,5 +2987,13 @@
   "Allow screenshots": "允许屏幕截图",
   "Installed games no longer ask for a linked Nintendo Account.": "已安装的游戏不再要求关联任天堂账户。",
   "Installed games allow video capture (and screenshots).": "已安装的游戏允许录制视频（和截屏）。",
-  "Reading backups": "读取备份"
+  "Reading backups": "读取备份",
+  "Individual saves...": "单独存档...",
+  "All saves (bundle)": "所有存档（打包）",
+  "SOURCE": "来源",
+  "Backup Source": "备份来源",
+  "Choose which backup creator to restore from when multiple are present.": "存在多个备份生成工具时，选择要从哪个来源恢复。",
+  "Only one backup source available.": "仅有一个可用的备份来源。",
+  "No backups found in this location.": "在此位置未找到备份。",
+  "Please select a backup source.": "请选择备份来源。"
 }

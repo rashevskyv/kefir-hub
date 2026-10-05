@@ -63,6 +63,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
     DecodedSaveMetaInternal dbi_extra_meta{};
     bool has_valid_nx = false;
     bool has_valid_dbi_extra = false;
+    std::optional<u8> dbi_info_space{};
 
     for (s64 i = 0; i < entry_count; i++) {
         if (pbox) {
@@ -281,7 +282,9 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
             has_valid_dbi_extra = true;
         } else if (reserved_kind == SaveReservedMetaKind::DbiInfo) {
             const auto shown = static_cast<size_t>(std::min<u64>(bytes_drained, sizeof(meta_read_buf)));
-            out.account_name = path::IniAccountName({reinterpret_cast<const char*>(meta_read_buf), shown});
+            std::string_view ini_text{reinterpret_cast<const char*>(meta_read_buf), shown};
+            out.account_name = path::IniAccountName(ini_text);
+            dbi_info_space = path::IniSpaceId(ini_text);
         }
     }
 
@@ -324,7 +327,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
             return ArchiveMetaStatus::Invalid;
         }
         local_out.meta = ToNXSaveMeta(nx_meta);
-        local_out.source_space = nx_meta.source_space;
+        local_out.source_space = nx_meta.source_space.has_value() ? nx_meta.source_space : dbi_info_space;
         local_out.has_nx_meta = true;
         local_out.has_dbi_extra = true;
         local_out.has_dbi_info = seen_dbi_info;
@@ -335,7 +338,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
 
     if (has_valid_nx) {
         local_out.meta = ToNXSaveMeta(nx_meta);
-        local_out.source_space = nx_meta.source_space;
+        local_out.source_space = nx_meta.source_space.has_value() ? nx_meta.source_space : dbi_info_space;
         local_out.has_nx_meta = true;
         local_out.has_dbi_info = seen_dbi_info;
         out = local_out;
@@ -345,7 +348,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
 
     if (has_valid_dbi_extra) {
         local_out.meta = ToNXSaveMeta(dbi_extra_meta);
-        local_out.source_space = std::nullopt;
+        local_out.source_space = dbi_info_space;
         local_out.has_dbi_extra = true;
         local_out.has_dbi_info = seen_dbi_info;
         out = local_out;
@@ -355,6 +358,7 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
 
     if (seen_dbi_info && !seen_nx_meta && !seen_dbi_extra) {
         local_out.has_dbi_info = true;
+        local_out.source_space = dbi_info_space;
         out = local_out;
         success = true;
         return ArchiveMetaStatus::NoMetadata;

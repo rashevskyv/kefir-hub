@@ -36,8 +36,7 @@ Opened from a game's details ([[Backup and restore]], see [Games](games.md#manag
 3. [[Backup Options]] opens:
     - [[Location]] — where to write. `sd://dumps` is the default. [[Choose Folder...]] lets you pick another folder on the microSD card or on a USB drive; the last 5 picked folders are remembered.
     - [[Auto-sync after backup]] — also upload the new backup to WebDAV (see [Sync with WebDAV](#sync-backups-with-webdav)).
-    - [[ACCOUNTS]] — which users' saves to back up (shown when the console has more than one user).
-    - [[SAVE TYPES]] — which save types (shown when the game has more than one).
+    - [[ACCOUNTS]] — which users' saves to back up (shown when the console has more than one user). All relevant save types (Account, Device, BCAT, and Cache) are included in the bundle automatically.
 4. Choose [[Start Backup]] at the top.
 
 <!-- shot: saves-backup-options | Backup Options sidebar: Start Backup, Location sd://dumps, Auto-sync after backup, ACCOUNTS with two users -->
@@ -86,7 +85,9 @@ To make Kefir Hub look in another folder too:
     Close the game before restoring. A restore is refused while MTP (USB file transfer to a PC) is running; turn MTP off first.
 
 1. On [[Installed Games]] (or [[Deleted Games]]), focus the game and press **A** → [[Restore]]. (Or **+** → [[Restore]].)
-2. [[Restore Options]] opens. Check [[Location]] — backups are looked up there, plus in the DBI, JKSV and Checkpoint folders. Choose [[Start Restore]].
+2. [[Restore Options]] opens. Set [[Location]] to the folder containing the backups. The default location also searches the configured backup library. Changing location updates the available sources and account options.
+
+    Check [[Backup Source]]. Kefir Hub is selected when its backups are available. To use another app's backups, select that source. A source already selected on the [[Backups]] tab stays selected. Choose [[Start Restore]].
 3. For a user save, [[Restore for user]] asks which user gets the save. You can restore one user's backup to another user.
 4. If that user already has a save, confirm the target. If the game has several slots, pick one in [[Select restore target slot]].
 5. If there is more than one backup, pick it in [[Select backup]]. Backups are listed newest first by date and time.
@@ -98,20 +99,22 @@ To make Kefir Hub look in another folder too:
 Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps/recovery/`. After the restore a dialog shows where it is. When it finishes you see [[Restore successful!]].
 
 ## Restore from the Backups tab
-1. Open the [[Backups]] tab. A game has one tile for each user whose backups it holds; the user's name is on the tile, also for a user of another console (the name saved in the backup). Device and BCAT backups of a game share a tile of their own.
-2. Focus a tile and press **A**. [[Backup Action]] opens. If the tile holds more than one save (several slots, or Device and BCAT), a list comes first: one line per save with the source app, number of archives and the newest date; choose one.
-3. In [[Backup Action]] choose [[Restore]] and continue as in [Restore a save](#restore-a-save) from step 3.
+1. Open the [[Backups]] tab. Each game has a tile for each backup source. A tile contains the complete save bundle for that source: user accounts, Device, BCAT, and Cache saves.
+2. Focus a tile and press **A**. [[Backup Action]] opens.
+3. In [[Backup Action]], choose [[Restore]] to restore the complete save bundle (or choose [[Individual saves...]] to inspect and restore a single save slot or user). Continue as in [Restore a save](#restore-a-save) from step 3.
 
-<!-- shot: saves-backup-group | Backups tab: game tiles with the owner name at the bottom, one game shown twice for two users -->
+<!-- shot: saves-backup-group | Backups tab: unified game tiles representing complete save bundles -->
 
 [[Backup Action]] also has:
 
 | Action | What it does |
 |---|---|
+| [[Restore]] | Restores all available saves in this game's bundle (or the chosen slot). |
 | [[Verify integrity]] | Checks every ZIP of this group and lists damaged ones. Folder (RAW) backups cannot be checked. |
 | [[Delete older backups]] | Deletes all but the newest backup of each group. |
 | [[Open in file browser]] | Opens the folder that holds the newest backup. |
-| [[Select all backups for this user]] | Selects this user's backups of all games. |
+| [[Individual saves...]] | Lists each save in the bundle individually (by user account or save type) to restore or delete single slots. |
+| [[Select all backups for this user]] | Selects this user's backups of all games (when inspecting an account save). |
 | [[Select all backups for this game]] | Selects every backup group of this game. |
 | [[Delete]] | Deletes all backups of this group from the microSD card. |
 

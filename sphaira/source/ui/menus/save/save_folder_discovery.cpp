@@ -225,6 +225,7 @@ auto InspectBackupFolder(fs::Fs* fs, const fs::FsPath& folder_path, std::string_
         if (out.timestamp == 0 && decoded.timestamp != 0) {
             out.timestamp = PosixToTimestamp(decoded.timestamp);
         }
+        out.source_space = decoded.source_space;
         out.backup_source = BackupSource::Jksv;
     } else {
         u64 title_id = has_ancestor_id ? derived_id : 0;

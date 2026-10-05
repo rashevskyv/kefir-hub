@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Скриншоттарға рұқсат ету",
   "Installed games no longer ask for a linked Nintendo Account.": "Орнатылған ойындар енді байланыстырылған Nintendo тіркелгі жазбасын сұрамайды.",
   "Installed games allow video capture (and screenshots).": "Орнатыված ойындар бейне жазуға (және скриншоттарға) рұқсат етеді.",
-  "Reading backups": "Сақтық көшірмелерді оқу"
+  "Reading backups": "Сақтық көшірмелерді оқу",
+  "Individual saves...": "Жеке сақтаулар...",
+  "All saves (bundle)": "Барлық сақтаулар (пакет)",
+  "SOURCE": "ДЕРЕККӨЗ",
+  "Backup Source": "Сақтық көшірме көзі",
+  "Choose which backup creator to restore from when multiple are present.": "Бірнешеу болған кезде қай бағдарламаның көшірмесін қалпына келтіруді таңдаңыз.",
+  "Only one backup source available.": "Тек бір сақтық көшірме көзі қолжетімді.",
+  "No backups found in this location.": "Бұл орында сақтық көшірмелер табылмады.",
+  "Please select a backup source.": "Резервтік көшірме көзін таңдаңыз."
 }

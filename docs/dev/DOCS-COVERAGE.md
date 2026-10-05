@@ -82,7 +82,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Saves tabs, filters, per-game view | Game Tools → Saves | save_menu*.cpp | saves#find-your-way-around | doc |
 | Backup (options, if newer), storage paths | A | save_backup_pub.cpp, save_paths.cpp | saves#back-up-a-save | doc |
 | DBI/JKSV/Checkpoint backups, search paths | Backups tab | save_menu_catalog.cpp | saves#backups-made-by-other-apps | doc |
-| Restore (slot target, new slot, uninstalled game, batch) | A → Restore | save_restore_route.cpp, save_slot_backend.cpp | saves#restore-a-save | doc |
+| Restore (game bundles, source picker, slot target, new slot, batch) | A → Restore | save_restore_route.cpp, save_slot_backend.cpp | saves#restore-a-save | doc |
 | Undo restore (recovery.zip) | — | save_restore_zip.cpp | saves#undo-a-restore | partial: instructed flow is broken |
 | Delete save / backups | A → Delete | save_deletion.cpp | saves#delete-a-save-from-the-console | doc |
 | WebDAV sync | + → Sync with remote | save_remote_sync.cpp | saves#sync-backups-with-webdav | doc |

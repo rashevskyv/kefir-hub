@@ -7,6 +7,7 @@
 
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
+#include "path_util.hpp"
 
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -16,6 +17,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_bundle_util.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -54,10 +56,6 @@ void Menu::PromptSaveAction() {
     if (has_live) {
         PromptLiveSaveAction(seeds);
     } else {
-        if (seeds.size() == 1 && seeds.front().is_game_parent) {
-            OpenGameBackupGroup(seeds.front());
-            return;
-        }
         PromptBackupGroupAction(seeds);
     }
 }
@@ -144,10 +142,28 @@ auto Menu::IsBackupUpToDate(fs::Fs* fs, const Entry& e, const fs::FsPath& backup
         return false;
     }
 
-    const auto& newest = archives.front();
-    const auto slash = std::strrchr(newest.path.s, '/');
-    BackupArchiveInfo binfo{};
-    if (!InspectBackupArchive(fs, newest.path, slash ? slash + 1 : newest.path.s, "", binfo)) {
+    // Hub manages freshness only within its own backup source.
+    // External backup timestamps must not affect Hub backup creation or skipping.
+    const auto target_root = fs::AppendPath(fs->Root(), backup_root);
+    std::optional<BackupArchiveInfo> newest_hub;
+
+    for (const auto& a : archives) {
+        if (!sphaira::path::IsSubpathOf(a.path.s, target_root.s)) {
+            continue;
+        }
+        const auto slash = std::strrchr(a.path.s, '/');
+        BackupArchiveInfo binfo{};
+        if (!InspectBackupArchive(fs, a.path, slash ? slash + 1 : a.path.s, "", binfo)) {
+            continue;
+        }
+        if (!bundle::IsCandidateEligibleForHubFreshness(true, static_cast<bundle::BackupSourceId>(binfo.backup_source))) {
+            continue;
+        }
+        if (!newest_hub.has_value() || binfo.timestamp > newest_hub->timestamp) {
+            newest_hub = binfo;
+        }
+    }
+    if (!newest_hub.has_value()) {
         return false;
     }
 
@@ -157,9 +173,9 @@ auto Menu::IsBackupUpToDate(fs::Fs* fs, const Entry& e, const fs::FsPath& backup
         return false;
     }
 
-    // fs bumps commit_id on every commit and stamps the time: both equal means nothing was written since.
-    return live_extra.timestamp != 0 && live_extra.commit_id != 0 &&
-        live_extra.timestamp == binfo.source_timestamp && live_extra.commit_id == binfo.commit_id;
+    return bundle::IsBackupFreshnessMatching(
+        live_extra.timestamp, live_extra.commit_id,
+        newest_hub->source_timestamp, newest_hub->commit_id);
 }
 
 void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
@@ -173,6 +189,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
         DeleteOlder,
         Restore,
         OpenFileBrowser,
+        IndividualSaves,
         Delete,
         SelectUser,
         SelectGame,
@@ -189,6 +206,10 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
     actions.push_back({ActionType::VerifyIntegrity, "Verify integrity"_i18n});
     actions.push_back({ActionType::DeleteOlder, "Delete older backups"_i18n});
     actions.push_back({ActionType::OpenFileBrowser, "Open in file browser"_i18n});
+
+    if (seeds.size() == 1 && seeds.front().is_game_parent && seeds.front().children.size() > 1) {
+        actions.push_back({ActionType::IndividualSaves, "Individual saves..."_i18n});
+    }
 
     const bool has_user_select = (m_category != Category::Backups) &&
         focused.is_backup &&
@@ -237,6 +258,10 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                 break;
             }
 
+            case ActionType::IndividualSaves:
+                OpenGameBackupGroup(seeds.front());
+                break;
+
             case ActionType::Delete:
                 DeleteBackupGroups(actual_seeds);
                 break;
@@ -278,7 +303,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
             if (entry.is_game_parent) {
                 const bool match = IsSystemLikeSave(first.save_data_type)
                     ? (entry.system_save_data_id == first.system_save_data_id)
-                    : (entry.application_id == first.application_id && !std::memcmp(&entry.uid, &first.uid, sizeof(AccountUid)));
+                    : (entry.application_id == first.application_id);
                 // a tile with one backup group has no list to go back to (OpenGameBackupGroup skips it).
                 if (match && entry.children.size() > 1) {
                     auto* raw = popup.get();

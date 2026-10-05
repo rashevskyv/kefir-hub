@@ -58,6 +58,7 @@ struct Entry final : FsSaveDataInfo {
     // border and grouped below the "Backups" divider.
     bool is_backup{};
     bool backup_rank_known{};
+    bool backup_space_known{};
     title::NacpLoadStatus status{title::NacpLoadStatus::None};
 
     u64 backup_timestamp{};
@@ -181,7 +182,7 @@ private:
     // has a backup (deduped by application id). is_backup is set on each.
     // progress(done, total, path) is called before each candidate is opened; false stops the scan.
     using BackupScanProgress = std::function<bool(size_t done, size_t total, const fs::FsPath& path)>;
-    void ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& progress = {}) const;
+    void ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& progress = {}, fs::Fs* custom_fs = nullptr, const fs::FsPath& custom_root = {}) const;
     // game names by title id from backup folder names (DBI, /dumps): lists folders, opens no archive.
     void ReadBackupNames(std::unordered_map<u64, std::string>& out) const;
     void StartBackupScan(); // reads the backup library on a thread; Update() collects it
@@ -268,13 +269,13 @@ private:
         const fs::FsPath& backup_root);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
-    void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt);
     // collect (off the UI thread, via ProgressBox) + show the picker for one
     // save, then restore the chosen archive. remote_names are archive file
     // names just downloaded from WebDAV (flagged with a cloud marker); empty
     // when remote restore is off.
-    auto MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocation& location, const fs::FsPath& backup_root) const -> Entry;
-    auto MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& backup_root) const -> Entry;
+    auto MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt) const -> Entry;
+    auto MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt) const -> Entry;
     void ShowRestorePickerPopup(Entry e, const Entry& group, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::vector<std::string> remote_names, std::vector<BackupCandidate> candidates);
     void RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocation& location, const fs::FsPath& backup_root, fs::FsPath chosen);
     Result DownloadRemoteBackupsForEntry(ProgressBox* pbox, const location::Entry& loc, const dump::DumpLocation& location, Entry e, const fs::FsPath& backup_root, std::vector<std::string>* out_downloaded) const;
@@ -315,6 +316,8 @@ private:
     auto GetSelectedAccountIndexes() const -> std::vector<s64>;
     auto GetSelectedSaveTypes() const -> std::vector<u8>;
     auto CollectActionEntries(const std::vector<Entry>& seeds, const std::vector<u8>& types, const std::vector<s64>& account_indexes) -> std::vector<Entry>;
+    auto CollectBackupEntriesForRestore(const std::vector<Entry>& seeds, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt) const -> std::vector<Entry>;
+    auto GetAvailableBackupSources(const std::vector<Entry>& seeds, const dump::DumpLocation& location, const fs::FsPath& backup_root) const -> std::vector<BackupSource>;
     void ReadSaveEntries(u8 data_type, s64 account_index, std::vector<Entry>& out) const;
     void MarkFiltersChanged();
     auto GetRecentBackupDirs() -> std::vector<RecentBackupDir>;
@@ -346,8 +349,8 @@ private:
     ScrollingText m_hb_title_scroll{};
     bool m_is_reversed{};
     bool m_dirty{};
-    std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()
-    bool m_backup_cache_valid{};
+    mutable std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()
+    mutable bool m_backup_cache_valid{};
     bool m_backup_scan_pending{}; // the current view needs the library; Update() starts the scan
     struct BackupScanJob; // thread + progress, see save_menu_scan.cpp
     std::unique_ptr<BackupScanJob> m_backup_scan{};

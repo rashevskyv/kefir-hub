@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Ekran görüntülerine izin ver",
   "Installed games no longer ask for a linked Nintendo Account.": "Yüklü oyunlar artık bağlı bir Nintendo Hesabı sormuyor.",
   "Installed games allow video capture (and screenshots).": "Yüklenen oyunlar video yakalamaya (ve ekran görüntülerine) izin verir.",
-  "Reading backups": "Yedekler okunuyor"
+  "Reading backups": "Yedekler okunuyor",
+  "Individual saves...": "Bireysel kayıtlar...",
+  "All saves (bundle)": "Tüm kayıtlar (paket)",
+  "SOURCE": "KAYNAK",
+  "Backup Source": "Yedek Kaynağı",
+  "Choose which backup creator to restore from when multiple are present.": "Birden fazla mevcut olduğunda hangi oluşturucudan geri yükleneceğini seçin.",
+  "Only one backup source available.": "Yalnızca bir yedekleme kaynağı mevcut.",
+  "No backups found in this location.": "Bu konumda yedek bulunamadı.",
+  "Please select a backup source.": "Lütfen bir yedekleme kaynağı seçin."
 }

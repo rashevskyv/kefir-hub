@@ -2929,5 +2929,13 @@
   "Allow screenshots": "Дазволіць здымкі экрана",
   "Installed games no longer ask for a linked Nintendo Account.": "Устаноўленыя гульні больш не патрабуюць звязанага ўліковага запісу Nintendo.",
   "Installed games allow video capture (and screenshots).": "Устаноўленыя гульні дазваляюць запісваць відэа (і рабіць здымкі экрана).",
-  "Reading backups": "Чытанне рэзервовых копій"
+  "Reading backups": "Чытанне рэзервовых копій",
+  "Individual saves...": "Асобныя захаванні...",
+  "All saves (bundle)": "Усе захаванні (пакет)",
+  "SOURCE": "КРЫНІЦА",
+  "Backup Source": "Крыніца копіі",
+  "Choose which backup creator to restore from when multiple are present.": "Выберыце, ад якой праграмы аднавіць копію, калі іх некалькі.",
+  "Only one backup source available.": "Даступна толькі адна крыніца копій.",
+  "No backups found in this location.": "У гэтай лакацыі рэзервовых копій не знойдзена.",
+  "Please select a backup source.": "Калі ласка, абярыце крыніцу рэзервовай копіі."
 }

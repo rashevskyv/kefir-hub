@@ -41,7 +41,7 @@ def test_seven_save_types_connected_pipeline():
         ("Device", FS_SAVE_DATA_TYPE_DEVICE, FS_SAVE_DATA_SPACE_ID_USER, 0, 0, 0, 0, 0, True, True, "Device", "User"),
         ("Bcat", FS_SAVE_DATA_TYPE_BCAT, FS_SAVE_DATA_SPACE_ID_USER, 0, 0, 0, 0, 0, False, True, "BCAT", "User"),
         ("Cache_User", FS_SAVE_DATA_TYPE_CACHE, FS_SAVE_DATA_SPACE_ID_USER, 0x1111222233334444, 0x5555666677778888, 0, 0, 0, True, True, "Cache", "User"),
-        ("Cache_SdUser", FS_SAVE_DATA_TYPE_CACHE, FS_SAVE_DATA_SPACE_ID_SD_USER, 0x1111222233334444, 0x5555666677778888, 0, 0, 1, False, True, "Cache", "User"),
+        ("Cache_SdUser", FS_SAVE_DATA_TYPE_CACHE, FS_SAVE_DATA_SPACE_ID_SD_USER, 0x1111222233334444, 0x5555666677778888, 0, 0, 1, False, True, "Cache", "SdUser"),
         ("Temporary", FS_SAVE_DATA_TYPE_TEMPORARY, FS_SAVE_DATA_SPACE_ID_TEMPORARY, 0, 0, 0, 0, 0, True, True, "Temporary", "Temporary"),
         ("System", FS_SAVE_DATA_TYPE_SYSTEM, FS_SAVE_DATA_SPACE_ID_SYSTEM, 0, 0, 0x8000000000000010, 0, 0, False, False, "System", "System"),
         ("System_SdSystem", FS_SAVE_DATA_TYPE_SYSTEM, FS_SAVE_DATA_SPACE_ID_SD_SYSTEM, 0, 0, 0x8000000000000020, 0, 0, True, False, "System", "System"),

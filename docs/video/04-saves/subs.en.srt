@@ -19,293 +19,293 @@ There are three tabs: Installed Games, Deleted Games and Backups.
 Switch between them with L and R.
 
 6
-00:00:17,400 --> 00:00:21,067
-The line under the header shows whose saves are listed.
+00:00:17,400 --> 00:00:21,533
+Each game has a single tile covering its complete save bundle.
 
 7
-00:00:21,067 --> 00:00:25,067
-At first you see only the regular saves of the current user.
+00:00:21,533 --> 00:00:24,667
+The line under the header shows active filters.
 
 8
-00:00:25,067 --> 00:00:28,733
-To add others, press plus and tick them under Accounts.
+00:00:24,667 --> 00:00:29,000
+To choose other users or types, press plus and open Save Options.
 
 9
-00:00:28,733 --> 00:00:30,733
+00:00:29,000 --> 00:00:31,000
 Let's make a backup.
 
 10
-00:00:30,733 --> 00:00:33,600
+00:00:31,000 --> 00:00:33,867
 Highlight a game, or select several with X.
 
 11
-00:00:33,600 --> 00:00:35,933
+00:00:33,867 --> 00:00:36,200
 Press A and choose "Create backup".
 
 12
-00:00:35,933 --> 00:00:37,933
+00:00:36,200 --> 00:00:38,200
 Backup Options opens.
 
 13
-00:00:37,933 --> 00:00:43,467
+00:00:38,200 --> 00:00:43,733
 Location is where the backup is written, by default the dumps folder on the microSD
 
 14
-00:00:43,467 --> 00:00:45,467
+00:00:43,733 --> 00:00:45,733
 card.
 
 15
-00:00:45,467 --> 00:00:49,867
+00:00:45,733 --> 00:00:50,133
 "Choose Folder..." lets you pick another one, also on a USB drive.
 
 16
-00:00:49,867 --> 00:00:54,000
+00:00:50,133 --> 00:00:54,267
 If the console has several users, tick whose saves to back up.
 
 17
-00:00:54,000 --> 00:00:56,400
+00:00:54,267 --> 00:00:56,667
 Then choose Start Backup at the top.
 
 18
-00:00:56,400 --> 00:00:59,067
+00:00:56,667 --> 00:00:59,333
 At the end you see "Backup successful!".
 
 19
-00:00:59,067 --> 00:01:01,067
+00:00:59,333 --> 00:01:01,333
 Empty saves are skipped.
 
 20
-00:01:01,067 --> 00:01:06,667
+00:01:01,333 --> 00:01:06,933
 The backup is in the dumps folder, in a subfolder named after the game and the date.
 
 21
-00:01:06,667 --> 00:01:10,800
+00:01:06,933 --> 00:01:11,067
 It uses the same ZIP format as DBI, so DBI can restore it too.
 
 22
-00:01:10,800 --> 00:01:16,200
-To back up only saves that changed, select the games and choose "Create backup if
+00:01:11,067 --> 00:01:14,400
+Normal backup automatically skips unchanged saves.
 
 23
-00:01:16,200 --> 00:01:18,200
-newer".
+00:01:14,400 --> 00:01:18,600
+Kefir Hub checks only its own backups in the selected location.
 
 24
-00:01:18,200 --> 00:01:20,200
-Unchanged saves are skipped.
-
-25
-00:01:20,200 --> 00:01:24,600
-This action always writes to the dumps folder on the microSD card.
-
-26
-00:01:24,600 --> 00:01:26,600
+00:01:18,600 --> 00:01:20,600
 Now the restore.
 
-27
-00:01:26,600 --> 00:01:28,800
+25
+00:01:20,600 --> 00:01:22,800
 Before you start, close the game.
 
-28
-00:01:28,800 --> 00:01:32,933
+26
+00:01:22,800 --> 00:01:26,933
 If MTP is running, turn it off, or the restore will not start.
 
-29
-00:01:32,933 --> 00:01:36,067
+27
+00:01:26,933 --> 00:01:30,067
 Highlight the game, press A and choose Restore.
 
+28
+00:01:30,067 --> 00:01:33,200
+In Restore Options, choose the backup location.
+
+29
+00:01:33,200 --> 00:01:36,733
+Kefir Hub is selected when its backups are available.
+
 30
-00:01:36,067 --> 00:01:38,400
-In Restore Options, check Location.
+00:01:36,733 --> 00:01:40,667
+For another app's backups, explicitly select Backup Source.
 
 31
-00:01:38,400 --> 00:01:43,200
-Backups are looked up there and in the DBI, JKSV and Checkpoint folders.
+00:01:40,667 --> 00:01:42,667
+Then choose Start Restore.
 
 32
-00:01:43,200 --> 00:01:45,200
-Choose Start Restore.
-
-33
-00:01:45,200 --> 00:01:47,867
+00:01:42,667 --> 00:01:45,333
 Kefir Hub asks which user gets the save.
 
-34
-00:01:47,867 --> 00:01:51,400
+33
+00:01:45,333 --> 00:01:48,867
 A backup of one user can be restored to another user.
 
-35
-00:01:51,400 --> 00:01:54,000
+34
+00:01:48,867 --> 00:01:51,467
 If there are several backups, pick one.
 
-36
-00:01:54,000 --> 00:01:57,600
+35
+00:01:51,467 --> 00:01:55,067
 The newest is at the top, each with its date and time.
 
-37
-00:01:57,600 --> 00:01:59,800
+36
+00:01:55,067 --> 00:01:57,267
 Confirm the last window with Yes.
 
-38
-00:01:59,800 --> 00:02:04,867
+37
+00:01:57,267 --> 00:02:02,333
 Before overwriting, Kefir Hub keeps the current save as a safety copy in the
 
-39
-00:02:04,867 --> 00:02:06,867
+38
+00:02:02,333 --> 00:02:04,333
 dumps/recovery folder.
 
-40
-00:02:06,867 --> 00:02:12,467
+39
+00:02:04,333 --> 00:02:09,933
 At the end you see "Restore successful!", and the window shows where the safety copy
 
-41
-00:02:12,467 --> 00:02:14,467
+40
+00:02:09,933 --> 00:02:11,933
 is.
 
-42
-00:02:14,467 --> 00:02:19,733
+41
+00:02:11,933 --> 00:02:17,200
 To undo the restore, open the Backups tab: in that game's "Kefir Hub" group the
 
-43
-00:02:19,733 --> 00:02:21,867
+42
+00:02:17,200 --> 00:02:19,333
 safety copy is one more archive.
 
-44
-00:02:21,867 --> 00:02:23,867
+43
+00:02:19,333 --> 00:02:21,333
 Restore it from there.
 
-45
-00:02:23,867 --> 00:02:29,333
+44
+00:02:21,333 --> 00:02:26,800
 Its date is when the save was last written before the restore, so it may not be at
 
-46
-00:02:29,333 --> 00:02:31,333
+45
+00:02:26,800 --> 00:02:28,800
 the top.
 
-47
-00:02:31,333 --> 00:02:35,667
+46
+00:02:28,800 --> 00:02:33,133
 If the user has no save for this game yet, Kefir Hub creates one.
 
-48
-00:02:35,667 --> 00:02:40,400
+47
+00:02:33,133 --> 00:02:37,867
 This works for regular user saves, and only when the game is installed.
 
-49
-00:02:40,400 --> 00:02:43,533
+48
+00:02:37,867 --> 00:02:41,000
 Device and BCAT saves are not created this way.
 
-50
-00:02:43,533 --> 00:02:46,933
+49
+00:02:41,000 --> 00:02:44,400
 For those, start the game once first, then restore.
 
-51
-00:02:46,933 --> 00:02:52,400
+50
+00:02:44,400 --> 00:02:49,867
 The Backups tab shows the backups on the microSD card made by Kefir Hub, DBI, JKSV
 
-52
-00:02:52,400 --> 00:02:55,733
+51
+00:02:49,867 --> 00:02:53,200
 and Checkpoint, grouped by the app that made them.
 
-53
-00:02:55,733 --> 00:02:59,333
+52
+00:02:53,200 --> 00:02:56,800
 Kefir Hub looks in the standard folders of these apps.
 
-54
-00:02:59,333 --> 00:03:04,867
+53
+00:02:56,800 --> 00:03:02,333
 If your backups are somewhere else, add the folder in Settings, Saves, "Save Backup
 
-55
-00:03:04,867 --> 00:03:06,867
+54
+00:03:02,333 --> 00:03:04,333
 Search Paths".
 
+55
+00:03:04,333 --> 00:03:09,733
+Each game has a tile for each backup source representing the complete save bundle
+
 56
-00:03:06,867 --> 00:03:12,467
-Each user has a separate tile for the game, with the name at the bottom of the tile.
+00:03:09,733 --> 00:03:11,733
+for all users.
 
 57
-00:03:12,467 --> 00:03:16,533
-Highlight it and press A to open the actions for this backup.
+00:03:11,733 --> 00:03:16,067
+Highlight it and press A to open actions for this game's backups.
 
 58
-00:03:16,533 --> 00:03:21,000
-To restore several games or users at once, select the tiles with X.
+00:03:16,067 --> 00:03:19,733
+To restore several games together, select tiles with X.
 
 59
-00:03:21,000 --> 00:03:25,400
+00:03:19,733 --> 00:03:24,133
 Choose Restore and continue as before: user, backup, confirmation.
 
 60
-00:03:25,400 --> 00:03:30,000
+00:03:24,133 --> 00:03:28,733
 In the same menu, "Verify integrity" checks the group's ZIP archives.
 
 61
-00:03:30,000 --> 00:03:34,400
+00:03:28,733 --> 00:03:33,133
 "Delete older backups" keeps only the newest backup in each group.
 
 62
-00:03:34,400 --> 00:03:38,133
+00:03:33,133 --> 00:03:36,867
 Backups on a USB drive do not appear on the Backups tab.
 
 63
-00:03:38,133 --> 00:03:43,133
+00:03:36,867 --> 00:03:41,867
 To restore one, start from the Installed Games tab and pick the drive under
 
 64
-00:03:43,133 --> 00:03:45,133
+00:03:41,867 --> 00:03:43,867
 Location.
 
 65
-00:03:45,133 --> 00:03:49,600
+00:03:43,867 --> 00:03:48,333
 Delete erases the save from the console and does not make a backup.
 
 66
-00:03:49,600 --> 00:03:51,933
+00:03:48,333 --> 00:03:50,667
 Make a backup before you choose it.
 
 67
-00:03:51,933 --> 00:03:54,933
+00:03:50,667 --> 00:03:53,667
 You can also keep backups on a WebDAV server.
 
 68
-00:03:54,933 --> 00:03:59,867
+00:03:53,667 --> 00:03:58,600
 Add it in Settings, Saves, "Save sync location", "+ Add network location".
 
 69
-00:03:59,867 --> 00:04:03,800
+00:03:58,600 --> 00:04:02,533
 Select the games, press plus and choose "Sync with remote".
 
 70
-00:04:03,800 --> 00:04:09,067
+00:04:02,533 --> 00:04:07,800
 Backups missing on the server are uploaded, and backups missing on the card are
 
 71
-00:04:09,067 --> 00:04:11,067
+00:04:07,800 --> 00:04:09,800
 downloaded.
 
 72
-00:04:11,067 --> 00:04:14,200
+00:04:09,800 --> 00:04:12,933
 Files with the same name are never overwritten.
 
 73
-00:04:14,200 --> 00:04:18,067
+00:04:12,933 --> 00:04:16,800
 On the server the backups are in the sphaira-saves folder.
 
 74
-00:04:18,067 --> 00:04:23,400
+00:04:16,800 --> 00:04:22,133
 Downloaded backups are not applied by themselves; restore them as shown earlier.
 
 75
-00:04:23,400 --> 00:04:28,267
+00:04:22,133 --> 00:04:27,000
 "Auto-sync after backup" uploads every new backup right after it is made.
 
 76
-00:04:28,267 --> 00:04:33,867
+00:04:27,000 --> 00:04:32,600
 "Include remote backups" in Restore Options downloads the backups that exist only on
 
 77
-00:04:33,867 --> 00:04:35,933
+00:04:32,600 --> 00:04:34,667
 the server before you pick one.
 
 78
-00:04:35,933 --> 00:04:39,333
+00:04:34,667 --> 00:04:38,067
 For more, read the Saves page in the documentation.

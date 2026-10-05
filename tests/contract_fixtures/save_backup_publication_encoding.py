@@ -194,6 +194,8 @@ def get_actual_dbi_space_label(space_id: int) -> str:
     """Matches exact Menu::WriteSaveBackupZip space switch in sphaira."""
     if space_id in (FS_SAVE_DATA_SPACE_ID_SYSTEM, FS_SAVE_DATA_SPACE_ID_SD_SYSTEM, FS_SAVE_DATA_SPACE_ID_PROPER_SYSTEM):
         return "System"
+    elif space_id == FS_SAVE_DATA_SPACE_ID_SD_USER:
+        return "SdUser"
     elif space_id == FS_SAVE_DATA_SPACE_ID_TEMPORARY:
         return "Temporary"
     else:

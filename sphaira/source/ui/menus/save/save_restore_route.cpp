@@ -10,6 +10,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_slot_backend.hpp"
+#include "ui/menus/save/save_bundle_util.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
 #include "save_menu_internal.hpp"
 #include "minizip_helper.hpp"
@@ -19,84 +20,110 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
-
 namespace sphaira::ui::menu::save {
+namespace {
 
-auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocation& location, const fs::FsPath& backup_root) const -> Entry {
-    Entry group{};
-    group.application_id = live.application_id;
-    group.system_save_data_id = live.system_save_data_id;
-    group.save_data_type = live.save_data_type;
-    group.uid = live.uid;
-    group.save_data_index = live.save_data_index;
-    group.save_data_rank = live.save_data_rank;
-    group.backup_rank_known = true;
+struct ProbeFilesystem {
+    fs::FsStdio stdio_fs;
+    fs::FsNativeSd sd_fs;
+    auto Get(const dump::DumpLocation& loc, const fs::FsPath& root) -> fs::Fs* {
+        return (loc.entry.type == dump::DumpLocationType_Stdio || root.starts_with("ums"))
+            ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+    }
+    auto Get(const fs::FsPath& path) -> fs::Fs* {
+        return path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+    }
+};
+
+} // namespace
+
+auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter) const -> Entry {
+    Entry group = live;
     group.is_backup = true;
+    const bool live_space_known = live.is_backup ? live.backup_space_known : true;
+    const bool live_rank_known = live.is_backup ? live.backup_rank_known : true;
+    group.backup_space_known = live_space_known;
+    group.backup_rank_known = live_rank_known;
+    group.backup_members.clear();
+    group.backup_count = 0;
+    group.backup_path.clear();
+    group.backup_timestamp = 0;
+    group.backup_is_directory = false;
     if (!IsSystemLikeSave(group.save_data_type)) {
         group.dbi_game_dir = BuildDbiGameFolderName(live).s;
     }
-    if (live.GetName() && live.GetName()[0] != '\0') {
-        std::strncpy(group.lang.name, live.GetName(), sizeof(group.lang.name) - 1);
-        group.lang.name[sizeof(group.lang.name) - 1] = '\0';
-    }
-    group.image = live.image;
 
-    fs::FsStdio stdio_fs;
-    fs::FsNativeSd sd_fs;
-    fs::Fs* probe_fs = (location.entry.type == dump::DumpLocationType_Stdio || backup_root.starts_with("ums"))
-        ? static_cast<fs::Fs*>(&stdio_fs)
-        : static_cast<fs::Fs*>(&sd_fs);
+    ProbeFilesystem pfs;
+    fs::Fs* probe_fs = pfs.Get(location, backup_root);
 
     const auto candidates = CollectBackups(probe_fs, live, backup_root);
-    const auto target_key = BackupGroupKey(group);
+    const BackupSource target_source = source_filter.value_or(BackupSource::KefirHub);
+    group.backup_source = target_source;
 
-    std::vector<BackupCandidate> retained;
+    std::vector<std::pair<BackupCandidate, BackupArchiveInfo>> retained;
     std::unordered_set<std::string> seen_paths;
-    u64 newest_ts = 0;
     for (const auto& c : candidates) {
-        if (c.path.empty() || !seen_paths.insert(c.path.s).second) {
-            continue;
-        }
+        if (c.path.empty() || !seen_paths.insert(c.path.s).second) continue;
         const auto slash = std::strrchr(c.path.s, '/');
         const auto fname = slash ? (slash + 1) : c.path.s;
         BackupArchiveInfo info{};
-        bool inspected = c.is_directory
+        const bool inspected = c.is_directory
             ? InspectBackupFolder(probe_fs, c.path, fname, group.dbi_game_dir, info)
             : InspectBackupArchive(probe_fs, c.path, fname, group.dbi_game_dir, info);
-        if (inspected && BackupGroupKey(info) == target_key) {
-            // the group spans every source; label it with the newest archive's one.
-            if (retained.empty() || c.ts > newest_ts) {
-                newest_ts = c.ts;
-                group.backup_source = info.backup_source;
-            }
-            retained.emplace_back(c);
+        if (!inspected || info.backup_source != target_source) continue;
+        if (!bundle::AreBackupSlotIdentitiesCompatible(
+                IsSystemLikeSave(live.save_data_type), live.save_data_type,
+                IsSystemLikeSave(live.save_data_type) ? live.system_save_data_id : live.application_id,
+                live_space_known, live.save_data_space_id,
+                live.uid.uid, live.save_data_index, live_rank_known, live.save_data_rank,
+                IsSystemLikeSave(info.save_data_type), info.save_data_type,
+                IsSystemLikeSave(info.save_data_type) ? info.system_save_data_id : info.application_id,
+                info.source_space.has_value(), info.source_space.value_or(0),
+                info.uid.uid, info.save_data_index, info.rank_known, info.save_data_rank)) {
+            continue;
         }
+        retained.emplace_back(c, info);
     }
 
-    std::ranges::sort(retained, [](const BackupCandidate& a, const BackupCandidate& b) {
-        if (a.ts != b.ts) return a.ts > b.ts;
-        if (a.source != b.source) return a.source < b.source;
-        return a.path.toString() < b.path.toString();
+    std::ranges::sort(retained, [](const auto& a, const auto& b) {
+        return (a.first.ts != b.first.ts) ? (a.first.ts > b.first.ts) : (a.first.path.toString() < b.first.path.toString());
     });
 
-    group.backup_members = std::move(retained);
-    group.backup_count = group.backup_members.size();
-    if (!group.backup_members.empty()) {
-        group.backup_path = group.backup_members.front().path;
-        group.backup_timestamp = group.backup_members.front().ts;
+    if (!retained.empty()) {
+        const auto& newest = retained.front();
+        const auto target_group_key = BackupGroupKey(newest.second);
+        group.backup_path = newest.first.path;
+        group.backup_timestamp = newest.first.ts;
+        group.backup_is_directory = newest.first.is_directory;
+        if (newest.second.source_space.has_value()) {
+            group.save_data_space_id = *newest.second.source_space;
+            group.backup_space_known = true;
+        } else {
+            group.save_data_space_id = 0;
+            group.backup_space_known = false;
+        }
+        group.backup_rank_known = newest.second.rank_known;
+        group.save_data_rank = newest.second.save_data_rank;
+        group.backup_owner_name = newest.second.owner_name;
+        group.source_timestamp = newest.second.source_timestamp;
+        group.commit_id = newest.second.commit_id;
+        for (const auto& item : retained) {
+            if (BackupGroupKey(item.second) == target_group_key) {
+                group.backup_members.emplace_back(item.first);
+            }
+        }
     }
+    group.backup_count = group.backup_members.size();
     return group;
 }
 
-auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& backup_root) const -> Entry {
-    return MakeBackupGroupFromLiveEntry(live, MakeSdCardDumpLocation(), backup_root);
+auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter) const -> Entry {
+    return MakeBackupGroupFromLiveEntry(live, MakeSdCardDumpLocation(), backup_root, source_filter);
 }
 
-void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter) {
     entries = ExpandGameGroups(entries);
-    if (entries.empty()) {
-        return;
-    }
+    if (entries.empty()) return;
 
     if (m_category == Category::Backups || entries.front().is_backup) {
         RestoreBackupGroups(std::move(entries), false, location, backup_root);
@@ -107,18 +134,18 @@ void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& lo
         const auto webdav_locations = GetWebdavLocations();
         if (!webdav_locations.empty()) {
             Entry e = entries.front();
-            const auto run = [this, e, location, backup_root](const location::Entry& loc) {
+            const auto run = [this, e, location, backup_root, source_filter](const location::Entry& loc) {
                 auto downloaded = std::make_shared<std::vector<std::string>>();
                 App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "",
                     [this, e, loc, location, backup_root, downloaded](auto pbox) mutable -> Result {
                         pbox->SetHideSpeed(true);
                         return DownloadRemoteBackupsForEntry(pbox, loc, location, e, backup_root, downloaded.get());
                     },
-                    [this, e, location, backup_root](Result rc) mutable {
+                    [this, e, location, backup_root, source_filter](Result rc) mutable {
                         if (R_FAILED(rc)) {
                             App::PushErrorBox(rc, "Sync failed!"_i18n);
                         }
-                        auto group = MakeBackupGroupFromLiveEntry(e, location, backup_root);
+                        auto group = MakeBackupGroupFromLiveEntry(e, location, backup_root, source_filter);
                         RestoreBackupGroups({std::move(group)}, false, location, backup_root);
                     });
             };
@@ -126,32 +153,26 @@ void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& lo
             if (webdav_locations.size() == 1) {
                 run(webdav_locations.front());
                 return;
-            } else {
-                PopupList::Items items;
-                for (const auto& loc : webdav_locations) {
-                    std::string proto = loc.protocol;
-                    if (proto.empty()) {
-                        if (loc.url.starts_with("webdav://") || loc.url.starts_with("webdavs://")) proto = "webdav";
-                        else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) proto = "webdav";
-                    }
-                    std::string proto_upper = proto;
-                    std::transform(proto_upper.begin(), proto_upper.end(), proto_upper.begin(), ::toupper);
-                    items.emplace_back(loc.name + " (" + proto_upper + ")");
-                }
-                App::Push<PopupList>("Select Sync Location"_i18n, items, [webdav_locations, run](auto op_index) {
-                    if (op_index) {
-                        run(webdav_locations[*op_index]);
-                    }
-                });
-                return;
             }
+            PopupList::Items items;
+            for (const auto& loc : webdav_locations) {
+                std::string proto = loc.protocol.empty() ? "webdav" : loc.protocol;
+                std::transform(proto.begin(), proto.end(), proto.begin(), ::toupper);
+                items.emplace_back(loc.name + " (" + proto + ")");
+            }
+            App::Push<PopupList>("Select Sync Location"_i18n, items, [webdav_locations, run](auto op_index) {
+                if (op_index) run(webdav_locations[*op_index]);
+            });
+            return;
         }
     }
 
-    std::vector<Entry> groups;
-    groups.reserve(entries.size());
-    for (const auto& e : entries) {
-        groups.emplace_back(MakeBackupGroupFromLiveEntry(e, location, backup_root));
+    std::vector<Entry> groups = CollectBackupEntriesForRestore(entries, location, backup_root, source_filter);
+    if (groups.empty()) {
+        groups.reserve(entries.size());
+        for (const auto& e : entries) {
+            groups.emplace_back(MakeBackupGroupFromLiveEntry(e, location, backup_root, source_filter));
+        }
     }
     RestoreBackupGroups(std::move(groups), false, location, backup_root);
 }
@@ -220,9 +241,7 @@ void Menu::ShowRestorePickerPopup(Entry e, const Entry& group, const dump::DumpL
     App::Push(std::move(popup));
 }
 
-namespace {
-
-void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, std::function<void(std::optional<fs::FsPath>)> cb) {
+static void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, std::function<void(std::optional<fs::FsPath>)> cb) {
     if (candidates.empty()) { cb(std::nullopt); return; }
     if (candidates.size() == 1) { cb(candidates.front().path); return; }
     PopupList::Items items;
@@ -237,24 +256,20 @@ void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candidates, s
     App::Push(std::move(popup));
 }
 
-} // namespace
+void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const fs::FsPath& archive_path, std::function<void(std::optional<Entry>)> cb) {
 
-void PlanRestoreCreation(
-    const Entry& group,
-    const AccountUid& dest_uid,
-    const fs::FsPath& archive_path,
-    std::function<void(std::optional<Entry>)> cb) {
-
-    if (group.save_data_type != FsSaveDataType_Account) {
-        App::Push<OptionBox>("Save slot creation is only supported for Account saves."_i18n, "OK"_i18n);
-        cb(std::nullopt); return;
-    }
-    if (group.save_data_rank != FsSaveDataRank_Primary || group.save_data_index != 0) {
-        App::Push<OptionBox>("Save slot creation is only supported for primary save slots."_i18n, "OK"_i18n);
-        cb(std::nullopt); return;
-    }
-    if (group.application_id == 0) {
-        App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
+    const auto outcome = bundle::EvaluateRestoreDestination(
+        false, group.save_data_type, group.save_data_rank, group.save_data_index, group.application_id);
+    if (outcome == bundle::RestoreDestinationOutcome::UnsupportedMissingDestination) {
+        if (group.save_data_type == FsSaveDataType_Bcat || group.save_data_type == FsSaveDataType_Device) {
+            App::Push<OptionBox>("Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first."_i18n, "OK"_i18n);
+        } else if (group.save_data_type != FsSaveDataType_Account) {
+            App::Push<OptionBox>("Save slot creation is only supported for Account saves."_i18n, "OK"_i18n);
+        } else if (group.application_id == 0) {
+            App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
+        } else {
+            App::Push<OptionBox>("Save slot creation is only supported for primary save slots."_i18n, "OK"_i18n);
+        }
         cb(std::nullopt); return;
     }
 
@@ -273,9 +288,8 @@ void PlanRestoreCreation(
             pbox->SetHideSpeed(true);
             pbox->SetTransfer("Verifying archive..."_i18n);
 
-            fs::FsStdio stdio_fs;
-            fs::FsNativeSd sd_fs;
-            fs::Fs* probe_fs = archive_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+            ProbeFilesystem pfs;
+            fs::Fs* probe_fs = pfs.Get(archive_path);
 
             FsDirEntryType ptype{};
             ctx->is_folder = (R_SUCCEEDED(probe_fs->GetEntryType(archive_path, &ptype)) && ptype == FsDirEntryType_Dir);
@@ -302,13 +316,10 @@ void PlanRestoreCreation(
             const char* filename = std::strrchr(archive_path.s, '/');
             filename = filename ? filename + 1 : archive_path.s;
             BackupArchiveInfo check_info{};
-            bool reinspect_ok = false;
-            if (ctx->is_folder) {
-                reinspect_ok = InspectBackupFolder(probe_fs, archive_path, filename, group.dbi_game_dir, check_info);
-            } else {
-                reinspect_ok = InspectBackupArchive(probe_fs, archive_path, filename, group.dbi_game_dir, check_info);
-            }
-            if (reinspect_ok && BackupGroupKey(check_info) == BackupGroupKey(group)) {
+            const bool reinspect_ok = ctx->is_folder
+                ? InspectBackupFolder(probe_fs, archive_path, filename, group.dbi_game_dir, check_info)
+                : InspectBackupArchive(probe_fs, archive_path, filename, group.dbi_game_dir, check_info);
+            if (reinspect_ok && MatchesSelectedBackup(check_info, group)) {
                 ctx->reinspect_ok = true;
             }
             return 0;
@@ -349,11 +360,8 @@ void PlanRestoreCreation(
 
 void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions) {
     if (group.backup_members.empty()) {
-        fs::FsStdio stdio_fs;
-        fs::FsNativeSd sd_fs;
-        fs::Fs* probe_fs = (location.entry.type == dump::DumpLocationType_Stdio || backup_root.starts_with("ums"))
-            ? static_cast<fs::Fs*>(&stdio_fs)
-            : static_cast<fs::Fs*>(&sd_fs);
+        ProbeFilesystem pfs;
+        fs::Fs* probe_fs = pfs.Get(location, backup_root);
         group.backup_members = CollectGroupArchives(probe_fs, group, backup_root);
         group.backup_count = group.backup_members.size();
         if (!group.backup_members.empty()) {
@@ -443,15 +451,10 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
 
 void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions) {
     groups = ExpandGameGroups(groups);
-    if (groups.empty()) {
-        return;
-    }
+    if (groups.empty()) return;
 
-    fs::FsStdio stdio_fs;
-    fs::FsNativeSd sd_fs;
-    fs::Fs* probe_fs = (location.entry.type == dump::DumpLocationType_Stdio || backup_root.starts_with("ums"))
-        ? static_cast<fs::Fs*>(&stdio_fs)
-        : static_cast<fs::Fs*>(&sd_fs);
+    ProbeFilesystem pfs;
+    fs::Fs* probe_fs = pfs.Get(location, backup_root);
 
     for (auto& g : groups) {
         if (g.backup_members.empty()) {
@@ -464,6 +467,11 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
         }
     }
     KeepNewestPerSlot(groups);
+    std::erase_if(groups, [](const Entry& g) { return g.backup_members.empty(); });
+    if (groups.empty()) {
+        App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
+        return;
+    }
 
     if (groups.size() == 1) {
         RestoreSingleBackupGroup(std::move(groups.front()), nullptr, force_user_picker, location, backup_root, return_to_actions);
@@ -492,15 +500,12 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
 }
 
 void Menu::PromptBatchRestoreTargets(
-    std::shared_ptr<std::vector<Entry>> seeds,
-    size_t step,
+    std::shared_ptr<std::vector<Entry>> seeds, size_t step,
     std::shared_ptr<std::vector<AccountProfileBase>> accounts,
     std::shared_ptr<std::vector<Entry>> resolved_targets,
     std::shared_ptr<std::set<std::string>> seen_target_keys,
-    const dump::DumpLocation& location,
-    const fs::FsPath& backup_root,
-    bool return_to_actions,
-    std::shared_ptr<std::optional<AccountUid>> shared_uid) {
+    const dump::DumpLocation& location, const fs::FsPath& backup_root,
+    bool return_to_actions, std::shared_ptr<std::optional<AccountUid>> shared_uid) {
 
     if (step >= seeds->size()) {
         RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root);

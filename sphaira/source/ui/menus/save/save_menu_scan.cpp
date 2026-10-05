@@ -4,6 +4,7 @@
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_bundle_util.hpp"
 #include "save_menu_internal.hpp"
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
@@ -76,47 +77,43 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     }
 
     const auto account_indexes = GetSelectedAccountIndexes();
-    for (const auto type : GetSelectedSaveTypes()) {
-        if (type == FsSaveDataType_Account) {
-            for (const auto account_index : account_indexes) {
-                ReadSaveEntries(type, account_index, m_entries);
-            }
-        } else {
-            ReadSaveEntries(type, -1, m_entries);
-        }
-    }
+    BuildInstalledAppIds();
+    const auto all_saves = DiscoverSaveDataInfo();
+    std::unordered_map<u64, u64> save_sizes;
+    std::vector<u64> game_order;
+    std::unordered_map<u64, Entry> game_representatives;
+    std::vector<Entry> system_entries;
 
-    std::vector<Entry> grouped;
-    std::vector<std::string> keys;
-    grouped.reserve(m_entries.size());
-    keys.reserve(m_entries.size());
-    for (auto& e : m_entries) {
-        const auto key = DisplayEntryKey(e);
-        const auto it = std::ranges::find(keys, key);
-        if (it == keys.end()) {
-            keys.emplace_back(key);
-            grouped.emplace_back(e);
+    const bool system_only = m_save_type_enabled[SaveTypeIndex(FsSaveDataType_System)];
+    const auto* active_uid = (!m_accounts.empty() && m_account_index >= 0 && m_account_index < static_cast<s64>(m_accounts.size()))
+        ? &m_accounts[m_account_index].uid.uid[0] : nullptr;
+
+    for (const auto& info : all_saves) {
+        if (IsSystemLikeSave(info.save_data_type)) {
+            if (system_only || m_save_type_enabled[SaveTypeIndex(info.save_data_type)]) {
+                system_entries.emplace_back(info);
+            }
             continue;
         }
 
-        const auto index = std::distance(keys.begin(), it);
-        if (grouped[index].save_data_type != FsSaveDataType_Account && e.save_data_type == FsSaveDataType_Account) {
-            grouped[index] = e;
+        if (system_only || info.application_id == 0) {
+            continue;
+        }
+
+        save_sizes[info.application_id] += info.size;
+
+        auto [it, inserted] = game_representatives.try_emplace(info.application_id, info);
+        if (inserted) {
+            game_order.emplace_back(info.application_id);
+        } else {
+            const int cur_prio = bundle::SlotPriority(it->second.save_data_type, it->second.uid.uid, active_uid);
+            const int new_prio = bundle::SlotPriority(info.save_data_type, info.uid.uid, active_uid);
+            if (new_prio > cur_prio) {
+                it->second = Entry(info);
+            }
         }
     }
 
-    // classify live saves as installed vs deleted-game, and drop whichever the
-    // "Show saves" filter has turned off. system saves are governed by the Data
-    // Types filter instead, so they are always kept here.
-    BuildInstalledAppIds();
-    // every save of every type, once: tiles for games the type filter would hide, and sizes.
-    const auto all_saves = DiscoverSaveDataInfo();
-    std::unordered_map<u64, u64> save_sizes;
-    for (const auto& info : all_saves) {
-        if (info.application_id && !IsSystemLikeSave(info.save_data_type)) {
-            save_sizes[info.application_id] += info.size;
-        }
-    }
     bool show_installed = App::GetSaveShowInstalled();
     bool show_deleted = App::GetSaveShowDeleted();
     bool show_backups = App::GetSaveShowBackups();
@@ -136,118 +133,39 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     }
 
     m_entries.clear();
-    m_entries.reserve(grouped.size() + m_installed_apps.size());
+    m_entries.reserve(game_representatives.size() + m_installed_apps.size() + system_entries.size());
 
-    if (m_category == Category::Installed) {
-        std::unordered_map<u64, Entry> live_saves;
-        for (const auto& e : grouped) {
-            if (!IsSystemLikeSave(e.save_data_type)) {
-                live_saves.emplace(e.application_id, e);
-            }
+    std::unordered_set<u64> added_apps;
+
+    if (m_category == Category::All) {
+        for (auto& sys : system_entries) {
+            m_entries.emplace_back(std::move(sys));
         }
+    }
 
+    if (m_category != Category::Backups) {
         for (const auto app_id : m_installed_apps) {
-            if (m_app_id_filter && app_id != m_app_id_filter) {
-                continue;
-            }
-
-            auto it = live_saves.find(app_id);
-            if (it != live_saves.end()) {
-                m_entries.emplace_back(it->second);
-            } else {
-                Entry e{};
-                e.application_id = app_id;
-                e.save_data_type = FsSaveDataType_Account;
-                e.is_backup = false;
-                m_entries.emplace_back(e);
-            }
-        }
-        // installed apps left out of m_installed_apps (0x05… ids) still show when they have a save of
-        // any type: the type filter defaults to Account, and YouTube has only a Cache save.
-        if (m_installed_app_ids.size() != m_installed_apps.size()) {
-            std::unordered_set<u64> added;
-            for (const auto& info : all_saves) {
-                const auto app_id = info.application_id;
-                if (!m_installed_app_ids.contains(app_id) || std::ranges::contains(m_installed_apps, app_id) ||
-                    (m_app_id_filter && app_id != m_app_id_filter) || !added.insert(app_id).second) {
-                    continue;
-                }
-                const auto it = live_saves.find(app_id);
-                if (it != live_saves.end()) {
-                    m_entries.emplace_back(it->second);
-                } else {
-                    Entry e{};
-                    e.application_id = app_id;
-                    e.save_data_type = FsSaveDataType_Account; // same tile as a game with no listed save
-                    m_entries.emplace_back(e);
-                }
-            }
-        }
-    } else if (m_category == Category::Deleted) {
-        for (const auto& e : grouped) {
-            if (m_app_id_filter && e.application_id != m_app_id_filter) {
-                continue;
-            }
-            if (IsSystemLikeSave(e.save_data_type)) {
-                continue;
-            }
-            if (!m_installed_app_ids.contains(e.application_id)) {
-                m_entries.emplace_back(e);
-            }
-        }
-        // games whose saves are all of a type the filter hides (Animal Crossing: only Device + BCAT;
-        // the filter defaults to Account) still get a tile; it opens every save of the game.
-        std::unordered_set<u64> listed;
-        for (const auto& e : m_entries) {
-            listed.insert(e.application_id);
-        }
-        for (const auto& info : all_saves) {
-            if (!info.application_id || IsSystemLikeSave(info.save_data_type) ||
-                m_installed_app_ids.contains(info.application_id) ||
-                (m_app_id_filter && info.application_id != m_app_id_filter) ||
-                !listed.insert(info.application_id).second) {
-                continue;
-            }
-            m_entries.emplace_back(info);
-        }
-    } else if (m_category == Category::Backups) {
-        // Backups only
-    } else {
-        std::unordered_set<u64> added_installed;
-        for (const auto& e : grouped) {
-            if (m_app_id_filter && e.application_id != m_app_id_filter) {
-                continue;
-            }
-
-            if (IsSystemLikeSave(e.save_data_type)) {
-                m_entries.emplace_back(e);
-                continue;
-            }
-
-            const bool installed = m_installed_app_ids.contains(e.application_id);
-            if (installed) {
-                if (show_installed) {
-                    m_entries.emplace_back(e);
-                    added_installed.insert(e.application_id);
-                }
-            } else {
-                if (show_deleted) {
-                    m_entries.emplace_back(e);
+            const bool has_save = game_representatives.contains(app_id);
+            if (bundle::ShouldShowGameTile(app_id, true, has_save, static_cast<bundle::Category>(m_category), show_installed, show_deleted, m_app_id_filter)) {
+                if (added_apps.insert(app_id).second) {
+                    if (has_save) {
+                        m_entries.emplace_back(game_representatives[app_id]);
+                    } else {
+                        Entry e{};
+                        e.application_id = app_id;
+                        e.save_data_type = FsSaveDataType_Account;
+                        e.is_backup = false;
+                        m_entries.emplace_back(e);
+                    }
                 }
             }
         }
 
-        if (show_installed) {
-            for (const auto app_id : m_installed_apps) {
-                if (m_app_id_filter && app_id != m_app_id_filter) {
-                    continue;
-                }
-                if (!added_installed.contains(app_id)) {
-                    Entry e{};
-                    e.application_id = app_id;
-                    e.save_data_type = FsSaveDataType_Account;
-                    e.is_backup = false;
-                    m_entries.emplace_back(e);
+        for (const auto app_id : game_order) {
+            const bool is_installed = m_installed_app_ids.contains(app_id);
+            if (bundle::ShouldShowGameTile(app_id, is_installed, true, static_cast<bundle::Category>(m_category), show_installed, show_deleted, m_app_id_filter)) {
+                if (added_apps.insert(app_id).second) {
+                    m_entries.emplace_back(game_representatives[app_id]);
                 }
             }
         }
@@ -326,10 +244,8 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 if (IsSystemLikeSave(b.save_data_type)) {
                     system_entries.emplace_back(std::move(b));
                 } else if (b.application_id != 0) {
-                    const bool by_user = b.save_data_type == FsSaveDataType_Account;
-                    char tile_key[64];
-                    std::snprintf(tile_key, sizeof(tile_key), "%016lX:%016lX%016lX", b.application_id,
-                        by_user ? b.uid.uid[0] : 0, by_user ? b.uid.uid[1] : 0);
+                    char tile_key[48];
+                    std::snprintf(tile_key, sizeof(tile_key), "%u:%016lX", static_cast<unsigned>(b.backup_source), b.application_id);
                     auto& group = app_groups[tile_key];
                     if (group.empty()) {
                         app_order.emplace_back(tile_key);
@@ -349,9 +265,13 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 const auto app_id = children.front().application_id;
                 Entry parent{};
                 parent.application_id = app_id;
-                parent.uid = children.front().uid;
-                parent.backup_owner_name = children.front().backup_owner_name;
-                parent.save_data_type = children.front().save_data_type;
+                const auto rep_it = std::ranges::find_if(children, [](const Entry& c) {
+                    return c.save_data_type == FsSaveDataType_Account;
+                });
+                const auto& rep = (rep_it != children.end()) ? *rep_it : children.front();
+                parent.uid = rep.uid;
+                parent.backup_owner_name = rep.backup_owner_name;
+                parent.save_data_type = rep.save_data_type;
                 parent.is_backup = true;
                 parent.is_game_parent = true;
                 parent.backup_count = children.size();

@@ -2934,5 +2934,13 @@
   "Allow screenshots": "Tillåt skärmbilder",
   "Installed games no longer ask for a linked Nintendo Account.": "Installerade spel frågar inte längre efter ett länkat Nintendo-konto.",
   "Installed games allow video capture (and screenshots).": "Installerade spel tillåter videoinspelning (och skärmdumpar).",
-  "Reading backups": "Läser säkerhetskopior"
+  "Reading backups": "Läser säkerhetskopior",
+  "Individual saves...": "Individuella sparfiler...",
+  "All saves (bundle)": "Alla sparningar (paket)",
+  "SOURCE": "KÄLLA",
+  "Backup Source": "Säkerhetskopieringskälla",
+  "Choose which backup creator to restore from when multiple are present.": "Välj vilken skapare du vill återställa från när det finns flera.",
+  "Only one backup source available.": "Endast en säkerhetskopieringskälla tillgänglig.",
+  "No backups found in this location.": "Inga säkerhetskopior hittades på denna plats.",
+  "Please select a backup source.": "Välj en säkerhetskopieringskälla."
 }

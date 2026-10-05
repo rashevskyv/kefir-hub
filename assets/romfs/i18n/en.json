@@ -2398,6 +2398,8 @@
   "Restore for user…": "Restore for user…",
   "Select all backups for this user": "Select all backups for this user",
   "Select all backups for this game": "Select all backups for this game",
+  "Individual saves...": "Individual saves...",
+  "All saves (bundle)": "All saves (bundle)",
   "Backup Action": "Backup Action",
   "Integrity verification failed!": "Integrity verification failed!",
   "Integrity verified: all ": "Integrity verified: all ",
@@ -2929,5 +2931,11 @@
   "Installed games allow screenshots even where they forbid them.": "Installed games allow screenshots even where they forbid them.",
   "Allow video capture": "Allow video capture",
   "Installed games allow video capture (and screenshots).": "Installed games allow video capture (and screenshots).",
-  "Reading backups": "Reading backups"
+  "Reading backups": "Reading backups",
+  "SOURCE": "SOURCE",
+  "Backup Source": "Backup Source",
+  "Choose which backup creator to restore from when multiple are present.": "Choose which backup creator to restore from when multiple are present.",
+  "Only one backup source available.": "Only one backup source available.",
+  "No backups found in this location.": "No backups found in this location.",
+  "Please select a backup source.": "Please select a backup source."
 }
