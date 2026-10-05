@@ -8,7 +8,7 @@
 namespace sphaira::ui::menu::save {
 
 auto SaveBadgeColour(const char* label) -> NVGcolor {
-    if (!std::strcmp(label, "Account")) {
+    if (!std::strcmp(label, "Acc")) {
         return nvgRGBA(0, 78, 190, 255);
     }
     if (!std::strcmp(label, "Device")) {
@@ -20,13 +20,13 @@ auto SaveBadgeColour(const char* label) -> NVGcolor {
     if (!std::strcmp(label, "Cache")) {
         return nvgRGBA(190, 76, 0, 255);
     }
-    if (!std::strcmp(label, "Temporary")) {
+    if (!std::strcmp(label, "Temp")) {
         return nvgRGBA(90, 100, 130, 255);
     }
-    if (!std::strcmp(label, "System")) {
+    if (!std::strcmp(label, "Sys")) {
         return nvgRGBA(180, 24, 24, 255);
     }
-    if (!std::strcmp(label, "System BCAT")) {
+    if (!std::strcmp(label, "SysBCAT")) {
         return nvgRGBA(135, 28, 92, 255);
     }
     return nvgRGBA(100, 100, 100, 255);
@@ -48,7 +48,7 @@ void DrawSaveBadges(NVGcontext* vg, Theme*, const Vec4& image, const Entry& entr
     float bounds[4]{};
     float width = compact ? 20.f : 26.f;
     nvgFontSize(vg, font);
-    gfx::textBounds(vg, 0, 0, bounds, "Account");
+    gfx::textBounds(vg, 0, 0, bounds, "Acc");
     width = std::max(width, bounds[2] - bounds[0] + (compact ? 6.f : 12.f));
     for (size_t i = 0; i < count; i++) {
         gfx::textBounds(vg, 0, 0, bounds, labels[i]);

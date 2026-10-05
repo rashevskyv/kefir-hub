@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
+## v0.14.002 — Short save-type badges
+- Use Acc, Device, BCAT, Cache, Temp, Sys and SysBCAT as fixed badge labels; keep existing colors and type aggregation. Update EN/UK docs and video subtitles.
+- host tests: pass (full; final quick pass) · nro: not built (user builds) · switch: pending — check shortened labels in all save layouts.
+
 ## v0.14.001 — Save-type badges for complete game bundles
 - Show distinct fixed-English Account, Device, BCAT and Cache badges from actual live slots or source-isolated backup children; preserve type coverage across representative replacement and omit badges for games without saves. Update EN/UK docs, video script and guide.
 - host tests: pass (full, before final fixed-label adjustment) · nro: not built for final changes (user builds) · switch: pending — badge readability in List, Grid, GridDetail and HbMenu; [USER] retake saves-list screenshots and scene 3.

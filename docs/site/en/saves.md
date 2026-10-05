@@ -23,12 +23,12 @@ Game tiles show small colored badges for their actual save types, matching the s
 
 | Badge | Meaning |
 |---|---|
-| `Account` | Standard user save data belonging to a profile on the console. |
+| `Acc` | Standard user save data belonging to a profile on the console. |
 | `Device` | Console-wide device save data shared by all users (for example in Animal Crossing). |
 | `BCAT` | Background Content Asynchronous Delivery data (distribution events, deliveries). |
 | `Cache` | Cache storage save data. |
-| `Temporary` | Temporary save data created during gameplay. |
-| `System` / `System BCAT` | Console system-level save data. |
+| `Temp` | Temporary save data created during gameplay. |
+| `Sys` / `SysBCAT` | Console system-level save data. |
 
 Games with multiple save types (such as Device and BCAT) show badges for every type present. Repeated save slots of the same type (for example across multiple user profiles) are grouped into a single badge. Installed games that have not yet created a live save show no save-type badge. In List layout, the badges appear in the row to the left of the save size. Badge labels stay in English in every interface language.
 

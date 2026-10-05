@@ -33,7 +33,7 @@ inline auto CollectSaveBadgeLabels(
 {
     std::size_t n = 0;
     if (mask & SaveTypeMask_Account) {
-        out[n++] = "Account";
+        out[n++] = "Acc";
     }
     if (mask & SaveTypeMask_Device) {
         out[n++] = "Device";
@@ -45,13 +45,13 @@ inline auto CollectSaveBadgeLabels(
         out[n++] = "Cache";
     }
     if (mask & SaveTypeMask_Temporary) {
-        out[n++] = "Temporary";
+        out[n++] = "Temp";
     }
     if (mask & SaveTypeMask_System) {
-        out[n++] = "System";
+        out[n++] = "Sys";
     }
     if (mask & SaveTypeMask_SystemBcat) {
-        out[n++] = "System BCAT";
+        out[n++] = "SysBCAT";
     }
     return n;
 }

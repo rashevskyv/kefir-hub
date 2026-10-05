@@ -45,12 +45,12 @@ static int test_save_badges_collection() {
 
     // 3. Adding a real Account slot adds Account
     const uint32_t acc_bcat_dev = bcat_device | SaveTypeToMask(1 /* Account */);
-    CHECK(JoinSaveBadges(acc_bcat_dev) == "Account,Device,BCAT");
-    CHECK(FormatSaveTypesSummary(acc_bcat_dev) == "Account, Device, BCAT");
+    CHECK(JoinSaveBadges(acc_bcat_dev) == "Acc,Device,BCAT");
+    CHECK(FormatSaveTypesSummary(acc_bcat_dev) == "Acc, Device, BCAT");
 
     // 4. Repeated Account slots still produce one Account badge
     const uint32_t repeated_acc = acc_bcat_dev | SaveTypeToMask(1 /* Account */);
-    CHECK(JoinSaveBadges(repeated_acc) == "Account,Device,BCAT");
+    CHECK(JoinSaveBadges(repeated_acc) == "Acc,Device,BCAT");
 
     // 5. BCAT-only remains BCAT-only
     const uint32_t bcat_only = SaveTypeToMask(2 /* BCAT */);
@@ -73,9 +73,9 @@ static int test_save_badges_collection() {
     CHECK(SaveTypeToMask(255) == 0);
 
     // 8. Other types: Temporary, System, System BCAT
-    CHECK(JoinSaveBadges(SaveTypeToMask(4 /* Temporary */)) == "Temporary");
-    CHECK(JoinSaveBadges(SaveTypeToMask(0 /* System */)) == "System");
-    CHECK(JoinSaveBadges(SaveTypeToMask(6 /* System BCAT */)) == "System BCAT");
+    CHECK(JoinSaveBadges(SaveTypeToMask(4 /* Temporary */)) == "Temp");
+    CHECK(JoinSaveBadges(SaveTypeToMask(0 /* System */)) == "Sys");
+    CHECK(JoinSaveBadges(SaveTypeToMask(6 /* System BCAT */)) == "SysBCAT");
 
     return 0;
 }
