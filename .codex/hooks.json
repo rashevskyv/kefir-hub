@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -Command \"& 'C:/Program Files/Git/bin/bash.exe' 'D:/git/dev/sphaira/.codex/hooks/graphify-session.sh'\"",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}

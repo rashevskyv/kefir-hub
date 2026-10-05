@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## unreleased
+- Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
+
 ## v0.13.999 — Saves: backup skips unchanged saves; archived games count as deleted; sort by name/size
 - Create backup / Backup now skips a save whose newest backup in the chosen location has the same commit id and timestamp (no more identical copies); the separate "Create backup if newer" action is gone (`IsBackupUpToDate`). Message: "N backup(s) created, M already up to date." Docs en/uk updated.
 - Animal Crossing was still not in Deleted Games: archived games keep their record and content list with storage None, so `BuildInstalledAppIds` called them installed. Installed now means a base program (Application meta) on SD, NAND or game card.
