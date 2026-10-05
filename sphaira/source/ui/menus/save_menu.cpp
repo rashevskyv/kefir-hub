@@ -4,6 +4,7 @@
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
+#include "ui/menus/save_list_info.hpp"
 #include "save/save_menu_internal.hpp"
 #include "ui/layout.hpp"
 #include "ui/list.hpp"
@@ -227,12 +228,16 @@ void Menu::SetIndex(s64 index) {
 
     char title[0x100];
     if (m_entries[m_index].is_game_parent) {
+        const auto types = FormatSaveTypesSummary(m_entries[m_index].save_types_mask);
         const std::string groups_str = m_entries[m_index].children.size() > 1 ? " backup groups"_i18n : " backup group"_i18n;
-        std::snprintf(title, sizeof(title), "%s | %zu%s | %016lX", BackupTileOwner(m_entries[m_index], m_accounts).c_str(), m_entries[m_index].children.size(), groups_str.c_str(), id);
+        std::snprintf(title, sizeof(title), "%s | %s | %zu%s | %016lX", BackupTileOwner(m_entries[m_index], m_accounts).c_str(), types.c_str(), m_entries[m_index].children.size(), groups_str.c_str(), id);
     } else {
-        const auto account = (m_entries[m_index].save_data_type == FsSaveDataType_Account && !m_all_accounts) ?
+        const auto mask = m_entries[m_index].save_types_mask;
+        const std::string type_summary = (mask == 0 && !m_entries[m_index].is_backup && !IsSystemLikeSave(m_entries[m_index].save_data_type))
+            ? "None"_i18n : FormatSaveTypesSummary(mask ? mask : SaveTypeToMask(m_entries[m_index].save_data_type));
+        const auto account = ((mask & SaveTypeMask_Account) && !m_all_accounts) ?
             GetAccountName(m_entries[m_index].uid) : GetAccountSummary();
-        std::snprintf(title, sizeof(title), "%s | %s | %016lX", account.c_str(), GetSaveTypeLabel(m_entries[m_index].save_data_type), id);
+        std::snprintf(title, sizeof(title), "%s | %s | %016lX", account.c_str(), type_summary.c_str(), id);
     }
     SetTitleSubHeading(title, true);
 }

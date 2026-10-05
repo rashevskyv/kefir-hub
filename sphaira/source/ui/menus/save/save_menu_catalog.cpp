@@ -6,6 +6,7 @@
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
 #include "ui/menus/save/save_bundle_util.hpp"
+#include "ui/menus/save_list_info.hpp"
 #include "path_util.hpp"
 
 #include <algorithm>
@@ -58,6 +59,7 @@ void Menu::ReadBackupEntries(std::vector<Entry>& out, const BackupScanProgress& 
             e.application_id = info.application_id;
             e.system_save_data_id = info.system_save_data_id;
             e.save_data_type = info.save_data_type;
+            e.save_types_mask = SaveTypeToMask(info.save_data_type);
             if (info.source_space.has_value()) {
                 e.save_data_space_id = *info.source_space;
                 e.backup_space_known = true;

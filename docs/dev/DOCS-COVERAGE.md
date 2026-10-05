@@ -79,7 +79,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Mods folder | details / + | game_details_ops.cpp:167 | games#mods-folder | doc |
 | Save slots: create, increase size, info | Details → Saves | game_save_manager.cpp | games#manage-save-slots | doc |
 | Sort, search, filters, options | + | game_menu.cpp, game_scan.cpp | games#sort-search-and-filter, #options | doc |
-| Saves tabs, filters, per-game view | Game Tools → Saves | save_menu*.cpp | saves#find-your-way-around | doc |
+| Saves tabs, filters, per-game view, save-type badges | Game Tools → Saves | save_menu*.cpp | saves#find-your-way-around | doc |
 | Backup (options, if newer), storage paths | A | save_backup_pub.cpp, save_paths.cpp | saves#back-up-a-save | doc |
 | DBI/JKSV/Checkpoint backups, search paths | Backups tab | save_menu_catalog.cpp | saves#backups-made-by-other-apps | doc |
 | Restore (game bundles, source picker, slot target, new slot, batch) | A → Restore | save_restore_route.cpp, save_slot_backend.cpp | saves#restore-a-save | doc |

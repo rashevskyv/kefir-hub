@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.13.1000)
+set(sphaira_VERSION 0.14.001)
+# project(VERSION) normalizes numeric components; keep the release label's padding.
+set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
 project(sphaira
     VERSION ${sphaira_VERSION}
     LANGUAGES C CXX
 )
+set(sphaira_VERSION "${sphaira_RELEASE_LABEL}")
 
 find_package(Git REQUIRED)
 
@@ -115,6 +118,7 @@ add_executable(sphaira
     source/ui/menus/save/save_locations.cpp
     source/ui/menus/save/save_menu_detail.cpp
     source/ui/menus/save/save_menu_draw.cpp
+    source/ui/menus/save/save_badges.cpp
     source/ui/menus/save/save_menu_filters.cpp
     source/ui/menus/save/save_menu_options.cpp
     source/ui/menus/save/save_menu_scan.cpp

@@ -15,7 +15,22 @@ The screen has three tabs. Switch with **L** and **R**, or tap a tab.
 | [[Deleted Games]] | Saves that are still on the console for games you have uninstalled. |
 | [[Backups]] | Backups found on the microSD card, grouped by the app that made them: [[Kefir Hub]], [[DBI]], [[JKSV]], [[Checkpoint]], [[Other]]. |
 
-The line under the title shows which users and which save types are listed. By default you see only the current user's normal game saves ([[Account]] type).
+The line under the title shows which users and which save types are listed. By default you see only the current user's normal game saves (`Account` type).
+
+### Save-type badges
+
+Game tiles show small colored badges for their actual save types, matching the style on the [[Games]] screen:
+
+| Badge | Meaning |
+|---|---|
+| `Account` | Standard user save data belonging to a profile on the console. |
+| `Device` | Console-wide device save data shared by all users (for example in Animal Crossing). |
+| `BCAT` | Background Content Asynchronous Delivery data (distribution events, deliveries). |
+| `Cache` | Cache storage save data. |
+| `Temporary` | Temporary save data created during gameplay. |
+| `System` / `System BCAT` | Console system-level save data. |
+
+Games with multiple save types (such as Device and BCAT) show badges for every type present. Repeated save slots of the same type (for example across multiple user profiles) are grouped into a single badge. Installed games that have not yet created a live save show no save-type badge. In List layout, the badges appear in the row to the left of the save size. Badge labels stay in English in every interface language.
 
 Buttons:
 
@@ -28,7 +43,7 @@ Opened from a game's details ([[Backup and restore]], see [Games](games.md#manag
 ## Choose users and save types
 1. Press **+**.
 2. [[Accounts]]: tick [[All Accounts]], or tick single users.
-3. [[Data Types]]: tick the save types to show. [[System]] saves are shown on their own; ticking [[System]] hides the other types.
+3. [[Data Types]]: tick the save types to show. `System` saves are shown on their own; ticking `System` hides the other types.
 
 ## Back up a save
 1. On [[Installed Games]] or [[Deleted Games]], focus the game (or select several with **X**).
@@ -121,7 +136,7 @@ Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps
 ## Restore when the game has no save yet
 If the user you pick has no save for the game, Kefir Hub creates one and restores into it. This works only:
 
-- for user saves ([[Account]] type), main slot;
+- for user saves (`Account` type), main slot;
 - when the game is installed (the console needs the game's data to create the save).
 
 If the game is not installed, the restore stops with a message that names the game and asks you to install it.
@@ -184,7 +199,7 @@ Only the backup library on the microSD card is synced: `/dumps` and `/switch/DBI
 | [[Layout]] | [[Grid]], [[HB Menu]] or [[List]]. | [[Grid]] |
 | [[Sort]] / [[Order]] | Sort by [[Updated]], [[Alphabetical]] or [[Size]] (all saves of the game together); [[Descending]] or [[Ascending]]. [[Descending]] means A to Z and biggest first. | [[Updated]], [[Descending]] |
 | [[Accounts]] | Users whose saves are listed. | Current user |
-| [[Data Types]] | Save types that are listed. | [[Account]] |
+| [[Data Types]] | Save types that are listed. | `Account` |
 | [[Show saves]] | Which groups are listed when the screen is opened from a game's details. | — |
 | [[Sync with remote]] | Two-way WebDAV sync, see above. | — |
 | [[Advanced]] → [[Compress backup]] | Compresses the files inside the backup ZIP. Off makes larger, faster backups. | On |

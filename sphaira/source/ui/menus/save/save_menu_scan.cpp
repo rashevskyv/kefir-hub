@@ -5,6 +5,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_bundle_util.hpp"
+#include "ui/menus/save_list_info.hpp"
 #include "save_menu_internal.hpp"
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
@@ -91,7 +92,9 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     for (const auto& info : all_saves) {
         if (IsSystemLikeSave(info.save_data_type)) {
             if (system_only || m_save_type_enabled[SaveTypeIndex(info.save_data_type)]) {
-                system_entries.emplace_back(info);
+                Entry sys(info);
+                sys.save_types_mask = SaveTypeToMask(info.save_data_type);
+                system_entries.emplace_back(std::move(sys));
             }
             continue;
         }
@@ -105,12 +108,15 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
         auto [it, inserted] = game_representatives.try_emplace(info.application_id, info);
         if (inserted) {
             game_order.emplace_back(info.application_id);
+            it->second.save_types_mask = SaveTypeToMask(info.save_data_type);
         } else {
+            const u32 old_mask = it->second.save_types_mask;
             const int cur_prio = bundle::SlotPriority(it->second.save_data_type, it->second.uid.uid, active_uid);
             const int new_prio = bundle::SlotPriority(info.save_data_type, info.uid.uid, active_uid);
             if (new_prio > cur_prio) {
                 it->second = Entry(info);
             }
+            it->second.save_types_mask = old_mask | SaveTypeToMask(info.save_data_type);
         }
     }
 
@@ -155,6 +161,7 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                         e.application_id = app_id;
                         e.save_data_type = FsSaveDataType_Account;
                         e.is_backup = false;
+                        e.save_types_mask = 0;
                         m_entries.emplace_back(e);
                     }
                 }
@@ -275,6 +282,10 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                 parent.is_backup = true;
                 parent.is_game_parent = true;
                 parent.backup_count = children.size();
+                parent.save_types_mask = 0;
+                for (const auto& c : children) {
+                    parent.save_types_mask |= c.save_types_mask ? c.save_types_mask : SaveTypeToMask(c.save_data_type);
+                }
 
                 const auto it = backup_name_lookup.find(app_id);
                 if (it != backup_name_lookup.end() && !it->second.empty()) {
@@ -335,6 +346,9 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
                     if (!match) {
                         continue;
                     }
+                }
+                if (!b.save_types_mask) {
+                    b.save_types_mask = SaveTypeToMask(b.save_data_type);
                 }
                 m_entries.emplace_back(std::move(b));
             }

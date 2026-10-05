@@ -77,6 +77,7 @@ struct Entry final : FsSaveDataInfo {
     SaveCreationRequest creation_request{};
     bool is_game_parent{};
     std::vector<Entry> children{};
+    u32 save_types_mask{0};
 
     auto GetName() const -> const char* {
         return lang.name;
@@ -227,7 +228,7 @@ private:
         float max_account_w{0.f};
         float max_date_w{0.f};
     };
-    void DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& v, const Vec4& image_v, const Entry& e, const BackupColumnLayout& layout, const char* info) const;
+    void DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& v, const Vec4& image_v, const Entry& e, const BackupColumnLayout& layout, const char* info, float extra_right = 0.f) const;
 
     auto GetSelectedEntries() const {
         std::vector<Entry> out;

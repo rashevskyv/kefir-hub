@@ -4,6 +4,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_badges.hpp"
 #include "save_menu_internal.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/layout.hpp"
@@ -38,11 +39,11 @@ auto FormatListInfo(const Entry& e) -> std::string {
     if (e.is_game_parent) {
         return e.children.size() > 1 ? std::to_string(e.children.size()) + " backups"_i18n : "1 backup"_i18n;
     }
-    const std::string label = "[" + FormatSaveTypeLabel(e.save_data_type) + "]";
     if (e.is_backup) {
-        return e.backup_count > 1 ? label + "  " + std::to_string(e.backup_count) + " archives" : label;
+        return e.backup_count > 1 ? std::to_string(e.backup_count) + " archives"_i18n : std::string{};
     }
-    return e.size ? label + "  " + grid::FormatBytes(e.size) : label;
+    const auto bytes = e.sort_size ? e.sort_size : e.size;
+    return bytes ? grid::FormatBytes(bytes) : std::string{};
 }
 
 auto FormatBackupRankMarker(const Entry& e) -> std::string {
@@ -228,13 +229,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto author_text = e.is_backup ?
             FormatBackupTimestamp(e.backup_timestamp) : std::string{e.GetAuthor()};
 
+        const Vec4 header_cover{80.f, 120.f, 200.f, 200.f};
         if (!m_app_id_filter) {
             nvgSave(vg);
             nvgTranslate(vg, 0.f, 26.f);
             DrawHbMenuHeader(vg, theme, e.image, e.GetName(), author_text.c_str(), title_id, account.c_str());
+            DrawSaveBadges(vg, theme, header_cover, e);
             nvgRestore(vg);
         } else {
             DrawHbMenuHeader(vg, theme, e.image, e.GetName(), author_text.c_str(), title_id, account.c_str());
+            DrawSaveBadges(vg, theme, header_cover, e);
         }
     }
 
@@ -316,12 +320,32 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto list_name = e.is_game_parent && is_list ? std::string(e.GetName()) + "  ·  " + owner : std::string{};
         const char* entry_name = (m_layout.Get() == grid::LayoutType_HbMenu) ? "" : (list_name.empty() ? e.GetName() : list_name.c_str());
 
+        float extra_right = 0.f;
+        if (is_list) {
+            extra_right = MeasureSaveListBadges(vg, e);
+        }
+
         if (!IsSystemLikeSave(e.save_data_type)) {
-            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, entry_name, author_str.c_str(), info.c_str(), e.selected);
+            image_v = DrawEntry(vg, theme, m_layout.Get(), v, selected, e.image, entry_name, author_str.c_str(), info.c_str(), e.selected, extra_right);
         } else {
-            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, entry_name, author_str.c_str(), info.c_str(), e.selected);
+            image_v = DrawEntryNoImage(vg, theme, m_layout.Get(), v, selected, entry_name, author_str.c_str(), info.c_str(), e.selected, extra_right);
             gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_GRID), 5);
             gfx::drawTextArgs(vg, image_v.x + image_v.w / 2, image_v.y + image_v.w / 2, 20, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), detail::GetSystemSaveName(e.system_save_data_id));
+        }
+
+        Vec4 cover_v = image_v;
+        if (m_layout.Get() == grid::LayoutType_HbMenu) {
+            cover_v.y += 28.f;
+            cover_v.h -= 28.f;
+        }
+        if (e.is_game_parent && (m_layout.Get() == grid::LayoutType_Grid || m_layout.Get() == grid::LayoutType_GridDetail)) {
+            cover_v.h -= 26.f; // keep badges above the owner strip
+        }
+
+        if (is_list) {
+            DrawSaveListBadges(vg, v, e, !info.empty());
+        } else if (!IsSystemLikeSave(e.save_data_type)) {
+            DrawSaveBadges(vg, theme, cover_v, e);
         }
 
         if (e.is_game_parent && (m_layout.Get() == grid::LayoutType_Grid || m_layout.Get() == grid::LayoutType_GridDetail)) {
@@ -335,7 +359,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         if (e.is_backup && !e.is_game_parent && is_list) {
-            DrawBackupSecondaryColumns(vg, theme, v, image_v, e, backup_cols, info.c_str());
+            DrawBackupSecondaryColumns(vg, theme, v, image_v, e, backup_cols, info.c_str(), extra_right);
         }
 
         // grey for deleted-game saves, yellow for backups, nothing otherwise.
@@ -351,10 +375,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     });
 }
 
-void Menu::DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& v, const Vec4& image_v, const Entry& e, const BackupColumnLayout& layout, const char* info) const {
+void Menu::DrawBackupSecondaryColumns(NVGcontext* vg, Theme* theme, const Vec4& v, const Vec4& image_v, const Entry& e, const BackupColumnLayout& layout, const char* info, float extra_right) const {
     const float text_x = image_v.x + image_v.w + 14.f;
     const float text_y = v.y + v.h / 2.f + 12.f;
-    const float text_clip_w = GetListTextClipWidth(vg, v, text_x, info);
+    const float text_clip_w = GetListTextClipWidth(vg, v, text_x, info, extra_right);
     if (text_clip_w <= 0.f) {
         return;
     }

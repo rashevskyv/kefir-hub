@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
+## v0.14.001 — Save-type badges for complete game bundles
+- Show distinct fixed-English Account, Device, BCAT and Cache badges from actual live slots or source-isolated backup children; preserve type coverage across representative replacement and omit badges for games without saves. Update EN/UK docs, video script and guide.
+- host tests: pass (full, before final fixed-label adjustment) · nro: not built for final changes (user builds) · switch: pending — badge readability in List, Grid, GridDetail and HbMenu; [USER] retake saves-list screenshots and scene 3.
+
 ## v0.13.1000 — Complete game save bundles and source-isolated restore
 - Show games with Account, Device, BCAT or Cache saves; back up complete game bundles. Keep restore histories and unchanged-backup checks within the selected creator; preserve known save spaces and legacy unknown-space archive identity before mutation. EN/UK docs, guide and video scripts updated.
 - host tests: pass (full; final quick pass) · nro: built · switch: pending — Animal Crossing Device+BCAT, multi-user bundles, USB/source switching, legacy restore and recovery copies; [USER] retake changed save screenshots and video scenes.
