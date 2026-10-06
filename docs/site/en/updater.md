@@ -88,11 +88,15 @@ Use this when you already copied a firmware to the memory card, as a folder or a
 4. Confirm with [[Select]] ("[[Install firmware from this folder?]]" or "[[Install firmware from this archive?]]").
 5. An archive is unpacked to `/config/kefir-updater/firmware_manual` first.
 6. The same check, prompt and install as in [Update the firmware](#update-the-firmware) follow.
-7. If you installed from an archive, Kefir Hub asks whether to delete the original archive: [[Keep]] or [[Delete]].
+7. After the install finishes:
+    - If you installed from a folder, Kefir Hub asks whether to delete the firmware folder ("[[Delete firmware folder?]]"): [[Keep]] or [[Delete]]. [[Keep]] is selected by default; choosing [[Keep]] or pressing **B** leaves the folder untouched.
+    - If you installed from an archive, Kefir Hub asks whether to delete the original archive: [[Keep]] or [[Delete]].
+
+Only the selected folder is deleted. Parent folders and neighboring files stay on the memory card. A failed or cancelled installation keeps the folder. If deletion fails, an error appears; the firmware installation remains successful. Close the error to return to the reboot prompt.
+
+<!-- shot: updater-firmware-folder-delete | Successful manual folder install: Keep selected, Delete available; USER console capture -->
 
 <!-- shot: updater-manual-picker | File browser in firmware picker mode, "Select current folder" row at the top -->
-
-Your own folder is not deleted, unless it is `/firmware` itself: that is the download folder and is cleared after every install. Do not keep a firmware you want to keep in `/firmware`.
 
 ## Downgrade the firmware
 

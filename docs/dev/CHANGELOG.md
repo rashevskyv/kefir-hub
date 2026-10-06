@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
+## v0.14.005 — Ask before deleting manually installed firmware folders
+- After successful manual folder installation, offer Keep (default/B) or Delete for the exact validated source folder, including /firmware. Preserve source on failure/cancel; report deletion errors separately from install success. Update translations, EN/UK docs, video 06 and guide.
+- host tests: pass (full + final quick, 80 cleanup checks); Switch C++ syntax checks: pass (4 modules, -Werror); docs EN/UK built, 0 unknown labels, 0 broken guide links · nro: built (ReleaseWithInstall) · switch: pending — Keep/B/Delete, manual /firmware, sibling preservation, install/deletion errors, ZIP/network regression; [USER] updater-firmware-folder-delete screenshot and scene 21 recording.
+
 ## v0.14.004 — Consistent TegraExplorer version selection
 - Route 8GB DRAM and selected TegraExplorer payload launches through the shared version check: install missing TE, upgrade older SD copies, preserve equal/newer SD versions. Verify staged writes and retain the old payload during replacement; update EN/UK docs and video preparation notes.
 - host tests: pass (full, 67 TE checks); Switch C++ syntax checks: pass (3 modules, -Werror) · nro: not built · switch: pending — missing/older/equal/newer TE, selected paths, write failures, profile transfer and downgrade; test 8GB only on modified hardware.

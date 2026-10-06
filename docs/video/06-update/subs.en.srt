@@ -227,197 +227,201 @@ Confirm with Select.
 Then the same check and the same prompt follow.
 
 58
-00:03:20,333 --> 00:03:25,867
-After an install from an archive Kefir Hub asks what to do with it: Keep or Delete.
+00:03:20,333 --> 00:03:25,600
+After an install from a folder or an archive Kefir Hub asks what to do with the
 
 59
-00:03:25,867 --> 00:03:28,067
-Your own folder is never deleted.
+00:03:25,600 --> 00:03:27,600
+source files: Keep or Delete.
 
 60
-00:03:28,067 --> 00:03:32,533
-A downgrade means installing a lower firmware than the current one.
+00:03:27,600 --> 00:03:29,600
+Keep is selected by default.
 
 61
-00:03:32,533 --> 00:03:37,867
-When you select a version tagged DOWNGRADE, the Firmware downgrade warning opens
+00:03:29,600 --> 00:03:34,067
+A downgrade means installing a lower firmware than the current one.
 
 62
-00:03:37,867 --> 00:03:39,867
-first.
+00:03:34,067 --> 00:03:39,400
+When you select a version tagged DOWNGRADE, the Firmware downgrade warning opens
 
 63
-00:03:39,867 --> 00:03:44,067
-Careful: in this window the confirm button is already selected.
+00:03:39,400 --> 00:03:41,400
+first.
 
 64
-00:03:44,067 --> 00:03:46,400
-Pressing A continues the downgrade.
+00:03:41,400 --> 00:03:45,600
+Careful: in this window the confirm button is already selected.
 
 65
-00:03:46,400 --> 00:03:48,400
-Press B to cancel.
+00:03:45,600 --> 00:03:47,933
+Pressing A continues the downgrade.
 
 66
-00:03:48,400 --> 00:03:52,800
-What happens after a downgrade is set by the Downgrade fix option.
+00:03:47,933 --> 00:03:49,933
+Press B to cancel.
 
 67
-00:03:52,800 --> 00:03:54,800
-Press Plus in the Updater.
+00:03:49,933 --> 00:03:54,333
+What happens after a downgrade is set by the Downgrade fix option.
 
 68
-00:03:54,800 --> 00:04:00,400
-Automatic prepares the fix without asking, Optional (ask) asks every time, Off never
+00:03:54,333 --> 00:03:56,333
+Press Plus in the Updater.
 
 69
-00:04:00,400 --> 00:04:02,400
-applies it.
+00:03:56,333 --> 00:04:01,933
+Automatic prepares the fix without asking, Optional (ask) asks every time, Off never
 
 70
-00:04:02,400 --> 00:04:07,400
-The fix deletes the system save 8000000000000073 and runs in TegraExplorer.
+00:04:01,933 --> 00:04:03,933
+applies it.
 
 71
-00:04:07,400 --> 00:04:13,000
-So after a downgrade with the fix the console restarts into TegraExplorer instead of
+00:04:03,933 --> 00:04:08,933
+The fix deletes the system save 8000000000000073 and runs in TegraExplorer.
 
 72
-00:04:13,000 --> 00:04:15,000
-a normal reboot.
+00:04:08,933 --> 00:04:14,533
+So after a downgrade with the fix the console restarts into TegraExplorer instead of
 
 73
-00:04:15,000 --> 00:04:20,333
-The TegraExplorer screen appears, does its work by itself and returns you to the
+00:04:14,533 --> 00:04:16,533
+a normal reboot.
 
 74
-00:04:20,333 --> 00:04:22,333
-firmware.
+00:04:16,533 --> 00:04:21,867
+The TegraExplorer screen appears, does its work by itself and returns you to the
 
 75
-00:04:22,333 --> 00:04:24,333
-But this is not guaranteed.
+00:04:21,867 --> 00:04:23,867
+firmware.
 
 76
-00:04:24,333 --> 00:04:26,333
-Warning!
+00:04:23,867 --> 00:04:25,867
+But this is not guaranteed.
 
 77
-00:04:26,333 --> 00:04:31,867
-If the firmware still does not boot after a downgrade, Maintenance Mode is the only
+00:04:25,867 --> 00:04:27,867
+Warning!
 
 78
-00:04:31,867 --> 00:04:33,867
-way.
+00:04:27,867 --> 00:04:33,400
+If the firmware still does not boot after a downgrade, Maintenance Mode is the only
 
 79
-00:04:33,867 --> 00:04:36,400
-The steps are also in the warning box.
+00:04:33,400 --> 00:04:35,400
+way.
 
 80
-00:04:36,400 --> 00:04:38,400
-Power on the console.
+00:04:35,400 --> 00:04:37,933
+The steps are also in the warning box.
 
 81
-00:04:38,400 --> 00:04:41,133
-After the Kefir logo the trident appears.
+00:04:37,933 --> 00:04:39,933
+Power on the console.
 
 82
-00:04:41,133 --> 00:04:46,333
-As soon as it does, hold both volume buttons and keep holding: the blue-yellow
+00:04:39,933 --> 00:04:42,667
+After the Kefir logo the trident appears.
 
 83
-00:04:46,333 --> 00:04:50,867
-Atmosphère logo appears, then the sloth logo, then Maintenance Mode.
+00:04:42,667 --> 00:04:47,867
+As soon as it does, hold both volume buttons and keep holding: the blue-yellow
 
 84
-00:04:50,867 --> 00:04:54,533
-Choose "Initialize Console Without Deleting Save Data".
+00:04:47,867 --> 00:04:52,400
+Atmosphère logo appears, then the sloth logo, then Maintenance Mode.
 
 85
-00:04:54,533 --> 00:04:57,400
-The wording depends on the system language.
+00:04:52,400 --> 00:04:56,067
+Choose "Initialize Console Without Deleting Save Data".
 
 86
-00:04:57,400 --> 00:05:00,533
-All games are gone and must be installed again.
+00:04:56,067 --> 00:04:58,933
+The wording depends on the system language.
 
 87
-00:05:00,533 --> 00:05:03,400
-Profiles, most settings and all saves stay.
+00:04:58,933 --> 00:05:02,067
+All games are gone and must be installed again.
 
 88
-00:05:03,400 --> 00:05:08,267
-When the console offers to delete the Nintendo folder on the card, agree.
+00:05:02,067 --> 00:05:04,933
+Profiles, most settings and all saves stay.
 
 89
-00:05:08,267 --> 00:05:11,867
-The QR code in the box opens a manual downgrade guide.
+00:05:04,933 --> 00:05:09,800
+When the console offers to delete the Nintendo folder on the card, agree.
 
 90
-00:05:11,867 --> 00:05:14,667
-What is left is updating Kefir Hub itself.
+00:05:09,800 --> 00:05:13,400
+The QR code in the box opens a manual downgrade guide.
 
 91
-00:05:14,667 --> 00:05:19,867
-It checks for a new version once, when it starts, so it needs internet at that
+00:05:13,400 --> 00:05:16,200
+What is left is updating Kefir Hub itself.
 
 92
-00:05:19,867 --> 00:05:21,867
-moment.
+00:05:16,200 --> 00:05:21,400
+It checks for a new version once, when it starts, so it needs internet at that
 
 93
-00:05:21,867 --> 00:05:25,533
-The behaviour is set in Settings, General, Auto-update.
+00:05:21,400 --> 00:05:23,400
+moment.
 
 94
-00:05:25,533 --> 00:05:27,733
-When to install has three values.
+00:05:23,400 --> 00:05:27,067
+The behaviour is set in Settings, General, Auto-update.
 
 95
-00:05:27,733 --> 00:05:29,733
-Off never checks.
+00:05:27,067 --> 00:05:29,267
+When to install has three values.
 
 96
-00:05:29,733 --> 00:05:35,267
-Silent downloads in the background, and the next launch opens the new version; this
+00:05:29,267 --> 00:05:31,267
+Off never checks.
 
 97
-00:05:35,267 --> 00:05:37,267
-is the default.
+00:05:31,267 --> 00:05:36,800
+Silent downloads in the background, and the next launch opens the new version; this
 
 98
-00:05:37,267 --> 00:05:39,267
-Ask shows a prompt.
+00:05:36,800 --> 00:05:38,800
+is the default.
 
 99
-00:05:39,267 --> 00:05:43,400
-With Ask, this appears at launch: "A new version is available.
+00:05:38,800 --> 00:05:40,800
+Ask shows a prompt.
 
 100
-00:05:43,400 --> 00:05:45,400
-Update now?".
+00:05:40,800 --> 00:05:44,933
+With Ask, this appears at launch: "A new version is available.
 
 101
-00:05:45,400 --> 00:05:47,400
-Later asks again next time.
+00:05:44,933 --> 00:05:46,933
+Update now?".
 
 102
-00:05:47,400 --> 00:05:50,667
-Skip this update stops asking about this version.
+00:05:46,933 --> 00:05:48,933
+Later asks again next time.
 
 103
-00:05:50,667 --> 00:05:53,133
-Update downloads and installs it now.
+00:05:48,933 --> 00:05:52,200
+Skip this update stops asking about this version.
 
 104
-00:05:53,133 --> 00:05:55,533
-When it finishes, restart Kefir Hub.
+00:05:52,200 --> 00:05:54,667
+Update downloads and installs it now.
 
 105
-00:05:55,533 --> 00:05:59,400
-The Update now item in the settings does the same by hand.
+00:05:54,667 --> 00:05:57,067
+When it finishes, restart Kefir Hub.
 
 106
-00:05:59,400 --> 00:06:03,800
+00:05:57,067 --> 00:06:00,933
+The Update now item in the settings does the same by hand.
+
+107
+00:06:00,933 --> 00:06:05,333
 Read more on the Updater and Settings pages of the Kefir Hub docs.

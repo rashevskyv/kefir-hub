@@ -468,6 +468,9 @@
                 "wait 2"
             ]
         },
+        "updater-firmware-folder-delete": {
+            "user": true
+        },
         "updater-firmware-confirm": {
             "scene": "firmware-confirm",
             "steps": [

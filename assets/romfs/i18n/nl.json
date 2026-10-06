@@ -2946,5 +2946,7 @@
   "Retry": "Opnieuw proberen",
   "TegraExplorer did not finish the dump.": "TegraExplorer heeft de dump niet voltooid.",
   "The account save dump is not on SD yet.": "De accountsave-dump staat nog niet op SD.",
-  "Failed to clear unfinished operation.": "Kan onvoltooide bewerking niet wissen."
+  "Failed to clear unfinished operation.": "Kan onvoltooide bewerking niet wissen.",
+  "Delete firmware folder?": "Firmwaremap verwijderen?",
+  "Failed to delete firmware folder": "Firmwaremap verwijderen mislukt"
 }

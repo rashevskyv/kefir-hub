@@ -69,12 +69,12 @@ private:
     void StartManualZipFirmware(const fs::FsPath& zip_path);
     // acked_downgrade_fix carries a downgrade already acknowledged before the
     // download started, so the warning is not shown a second time afterwards.
-    void PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path = "/firmware", std::optional<bool> acked_downgrade_fix = std::nullopt, std::optional<fs::FsPath> origin_zip = std::nullopt);
+    void PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path = "/firmware", std::optional<bool> acked_downgrade_fix = std::nullopt, std::optional<fs::FsPath> origin_zip = std::nullopt, bool is_manual_folder = false);
     // asks the downgrade warning + downgrade-fix question up front, then runs
     // on_ack with the chosen fix policy. returns false if not a downgrade.
     bool PromptDowngradeAck(const std::string& target_version, const std::string& confirm_label, std::function<void(bool)> on_ack, std::function<void()> on_cancel = {});
     void StartFirmwareDownload(const UpdaterEntry& entry, std::optional<bool> acked_downgrade_fix);
-    void InstallFirmware(const std::string& display_name, const fs::FsPath& path = "/firmware", bool apply_downgrade_fix = false, std::optional<fs::FsPath> origin_zip = std::nullopt);
+    void InstallFirmware(const std::string& display_name, const fs::FsPath& path = "/firmware", bool apply_downgrade_fix = false, std::optional<fs::FsPath> origin_zip = std::nullopt, bool is_manual_folder = false);
     void UpdateSubheading();
     void RefreshSystemInfo();
     bool IsDowngrade(const std::string& target_version) const;

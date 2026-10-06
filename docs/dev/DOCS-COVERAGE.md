@@ -97,6 +97,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 |---|---|---|---|---|
 | Updater screen, update Kefir, changelog | Tools → Updater | kefir_menu.cpp, kefir/*.cpp | updater#update-kefir | partial: reboot behaviour |
 | Firmware download/install, manual from folder/zip | Updater → FIRMWARE | kefir_ops.cpp, kefir_firmware*.cpp | updater#update-the-firmware | doc |
+| Manual firmware folder deletion: Keep/Delete, default Keep, B keeps source | Updater manual folder install success | kefir_ops.cpp | updater | doc; [USER] updater-firmware-folder-delete capture pending |
 | Downgrade warning, downgrade fix modes, recovery | Updater | kefir_downgrade_box.cpp | updater#downgrade-the-firmware | partial: TegraExplorer step |
 | Theme/translation cleanup after firmware | automatic | kefir_firmware_ops.cpp:94,496 | updater, themes#remove-a-theme | doc |
 | Kefir Hub self-update | Settings → General → Auto-update | auto_update.cpp | updater#update-kefir-hub | doc |

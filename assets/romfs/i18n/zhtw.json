@@ -2999,5 +2999,7 @@
   "Retry": "重試",
   "TegraExplorer did not finish the dump.": "TegraExplorer 未完成傾印。",
   "The account save dump is not on SD yet.": "帳號存檔傾印尚未在 SD 卡上。",
-  "Failed to clear unfinished operation.": "無法清除未完成的操作。"
+  "Failed to clear unfinished operation.": "無法清除未完成的操作。",
+  "Delete firmware folder?": "刪除韌體資料夾？",
+  "Failed to delete firmware folder": "刪除韌體資料夾失敗"
 }

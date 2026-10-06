@@ -2124,6 +2124,8 @@
   "ZIP archive": "ZIP архів",
   "Manual firmware install": "Ручне встановлення прошивки",
   "Delete original firmware archive?\n\n": "Видалити вихідний архів прошивки?\n\n",
+  "Delete firmware folder?": "Видалити папку з файлами прошивки?",
+  "Failed to delete firmware folder": "Не вдалося видалити папку з прошивкою",
   "Firmware downgrade warning": "Попередження про пониження прошивки",
   "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup.": "Пониження версії системної прошивки може спричинити проблеми із завантаженням та призвести до неможливості запуску консолі до виконання скидання до заводських налаштувань. Переконайся, що маєш резервну копію NAND або emuMMC.",
   "Fix path:": "Шлях виправлення:",

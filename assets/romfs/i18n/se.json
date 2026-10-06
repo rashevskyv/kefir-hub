@@ -2946,5 +2946,7 @@
   "Retry": "Försök igen",
   "TegraExplorer did not finish the dump.": "TegraExplorer slutförde inte dumpen.",
   "The account save dump is not on SD yet.": "Dumpen av kontots sparfil finns inte på SD än.",
-  "Failed to clear unfinished operation.": "Det gick inte att rensa oavslutad åtgärd."
+  "Failed to clear unfinished operation.": "Det gick inte att rensa oavslutad åtgärd.",
+  "Delete firmware folder?": "Ta bort firmwaremappen?",
+  "Failed to delete firmware folder": "Misslyckades med att ta bort firmwaremappen"
 }

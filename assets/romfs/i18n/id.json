@@ -2941,5 +2941,7 @@
   "Retry": "Coba lagi",
   "TegraExplorer did not finish the dump.": "TegraExplorer tidak menyelesaikan proses dump.",
   "The account save dump is not on SD yet.": "Dump save akun belum ada di SD.",
-  "Failed to clear unfinished operation.": "Gagal menghapus operasi yang belum selesai."
+  "Failed to clear unfinished operation.": "Gagal menghapus operasi yang belum selesai.",
+  "Delete firmware folder?": "Hapus folder firmware?",
+  "Failed to delete firmware folder": "Gagal menghapus folder firmware"
 }

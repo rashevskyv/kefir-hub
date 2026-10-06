@@ -2095,6 +2095,8 @@
   "ZIP archive": "ZIP archive",
   "Manual firmware install": "Manual firmware install",
   "Delete original firmware archive?\n\n": "Delete original firmware archive?\n\n",
+  "Delete firmware folder?": "Delete firmware folder?",
+  "Failed to delete firmware folder": "Failed to delete firmware folder",
   "Firmware downgrade warning": "Firmware downgrade warning",
   "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup.": "Downgrading system firmware can cause boot problems and may prevent the console from booting until a factory reset is performed. Make sure you have a NAND or emuMMC backup.",
   "Fix path:": "Fix path:",

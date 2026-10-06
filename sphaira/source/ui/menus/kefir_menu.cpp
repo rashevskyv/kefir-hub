@@ -127,7 +127,7 @@ void Menu::OnFocusGained() {
                 name = "Firmware";
             }
 
-            PromptInstallFirmware(name, path);
+            PromptInstallFirmware(name, path, std::nullopt, std::nullopt, true);
         }
         return;
     }

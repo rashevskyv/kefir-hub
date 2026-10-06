@@ -2946,5 +2946,7 @@
   "Retry": "Thử lại",
   "TegraExplorer did not finish the dump.": "TegraExplorer không hoàn tất quá trình kết xuất.",
   "The account save dump is not on SD yet.": "Bản kết xuất tệp lưu tài khoản chưa có trên thẻ SD.",
-  "Failed to clear unfinished operation.": "Không thể xóa thao tác chưa hoàn tất."
+  "Failed to clear unfinished operation.": "Không thể xóa thao tác chưa hoàn tất.",
+  "Delete firmware folder?": "Xóa thư mục firmware?",
+  "Failed to delete firmware folder": "Xóa thư mục firmware thất bại"
 }

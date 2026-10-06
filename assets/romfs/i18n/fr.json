@@ -2947,5 +2947,7 @@
   "Retry": "Réessayer",
   "TegraExplorer did not finish the dump.": "TegraExplorer n'a pas terminé l'extraction.",
   "The account save dump is not on SD yet.": "L'extraction de la sauvegarde du compte n'est pas encore sur la carte SD.",
-  "Failed to clear unfinished operation.": "Échec de l'effacement de l'opération inachevée."
+  "Failed to clear unfinished operation.": "Échec de l'effacement de l'opération inachevée.",
+  "Delete firmware folder?": "Supprimer le dossier du firmware ?",
+  "Failed to delete firmware folder": "Échec de la suppression du dossier du firmware"
 }

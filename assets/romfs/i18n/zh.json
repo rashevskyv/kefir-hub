@@ -2999,5 +2999,7 @@
   "Retry": "重试",
   "TegraExplorer did not finish the dump.": "TegraExplorer 未完成转储。",
   "The account save dump is not on SD yet.": "账户存档转储尚未在 SD 卡上。",
-  "Failed to clear unfinished operation.": "无法清除未完成的操作。"
+  "Failed to clear unfinished operation.": "无法清除未完成的操作。",
+  "Delete firmware folder?": "删除固件文件夹？",
+  "Failed to delete firmware folder": "删除固件文件夹失败"
 }

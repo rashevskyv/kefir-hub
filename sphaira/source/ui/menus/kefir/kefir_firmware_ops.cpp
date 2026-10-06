@@ -380,7 +380,11 @@ auto DescribeDowngradeFix(const DowngradeFixResult& fix) -> std::string {
     return "Downgrade fix could not be staged. Automatic recovery is NOT armed."_i18n;
 }
 
-void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
+void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path, bool is_manual_folder) {
+    if (!ShouldAutomaticCleanupFirmware(path.s, is_manual_folder)) {
+        return;
+    }
+
     fs::FsNativeSd fs;
     if (R_FAILED(fs.GetFsOpenResult())) {
         return;
@@ -391,14 +395,6 @@ void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
         firmware_path = FIRMWARE_DEST;
     }
 
-    // Only clean app-owned staging locations. Never remove user-selected folders.
-    const bool is_download_dest = (std::strcmp(firmware_path.s, FIRMWARE_DEST) == 0);
-    const bool is_manual_staging = (std::strcmp(firmware_path.s, MANUAL_FIRMWARE_DEST) == 0);
-
-    if (!is_download_dest && !is_manual_staging) {
-        return;
-    }
-
     if (pbox) {
         pbox->NewTransfer("Removing firmware files...");
     }
@@ -406,7 +402,7 @@ void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path) {
     if (fs.DirExists(firmware_path)) {
         fs.DeleteDirectoryRecursively(firmware_path);
     }
-    if (is_download_dest && fs.FileExists(FIRMWARE_ZIP)) {
+    if (ShouldAutomaticCleanupZip(path.s, is_manual_folder) && fs.FileExists(FIRMWARE_ZIP)) {
         fs.DeleteFile(FIRMWARE_ZIP);
     }
     fs.Commit();
@@ -424,7 +420,7 @@ void CleanupManualFirmwareStaging() {
     }
 }
 
-auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix, DowngradeFixResult* out_fix) -> Result {
+auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix, DowngradeFixResult* out_fix, bool is_manual_folder) -> Result {
     Result rc = amssuInitialize();
     if (R_FAILED(rc)) {
         return rc;
@@ -501,7 +497,7 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
         out_fix->cleanup_failed = !cleanup_ok;
     }
 
-    CleanupFirmwareFiles(pbox, path);
+    CleanupFirmwareFiles(pbox, path, is_manual_folder);
 
     R_SUCCEED();
 }

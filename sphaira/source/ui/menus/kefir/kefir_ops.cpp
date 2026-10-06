@@ -1,5 +1,6 @@
 #include "ui/menus/kefir/kefir_internal.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
+#include "ui/menus/kefir/kefir_firmware_cleanup.hpp"
 #include "ui/menus/kefir/kefir_changelog.hpp"
 #include "ui/menus/ghdl.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -231,14 +232,14 @@ bool Menu::PromptDowngradeAck(const std::string& target_version, const std::stri
     return true;
 }
 
-void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path, std::optional<bool> acked_downgrade_fix, std::optional<fs::FsPath> origin_zip) {
+void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPath& path, std::optional<bool> acked_downgrade_fix, std::optional<fs::FsPath> origin_zip, bool is_manual_folder) {
     auto validation = std::make_shared<FirmwareValidation>();
     App::Push<ProgressBox>(0, "Validating"_i18n, display_name,
         [validation, path](auto pbox) -> Result {
             pbox->NewTransfer("Validating firmware contents..."_i18n);
             return detail::ValidateFirmware(validation.get(), path);
         },
-        [this, display_name, path, validation, acked_downgrade_fix, origin_zip](Result rc) {
+        [this, display_name, path, validation, acked_downgrade_fix, origin_zip, is_manual_folder](Result rc) {
             if (R_FAILED(rc)) {
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
@@ -251,13 +252,13 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
             const bool use_exfat = validation->info.exfat_supported &&
                                    R_SUCCEEDED(validation->validation.exfat_result);
 
-            auto prompt_install_confirm = [this, display_name, path, version, use_exfat, origin_zip](bool apply_fix) {
+            auto prompt_install_confirm = [this, display_name, path, version, use_exfat, origin_zip, is_manual_folder](bool apply_fix) {
                 std::string message = "Install firmware " + version + " on " + detail::GetFirmwareTargetName() + "?\n\n";
                 message += use_exfat ? "FAT32 + exFAT support\n" : "FAT32 support only\n";
                 message += "Do not power off the console during installation.";
 
                 App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
-                    [this, display_name, path, apply_fix, origin_zip](auto op_index) {
+                    [this, display_name, path, apply_fix, origin_zip, is_manual_folder](auto op_index) {
                         if (!op_index || *op_index != 1) {
                             if (origin_zip) {
                                 detail::CleanupManualFirmwareStaging();
@@ -265,7 +266,7 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                             return;
                         }
 
-                        InstallFirmware(display_name, path, apply_fix, origin_zip);
+                        InstallFirmware(display_name, path, apply_fix, origin_zip, is_manual_folder);
                     });
             };
 
@@ -297,18 +298,18 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
         });
 }
 
-void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path, bool apply_downgrade_fix, std::optional<fs::FsPath> origin_zip) {
+void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& path, bool apply_downgrade_fix, std::optional<fs::FsPath> origin_zip, bool is_manual_folder) {
     auto fix = std::make_shared<DowngradeFixResult>();
 
     App::Push<ProgressBox>(0, "Updating Firmware"_i18n, display_name,
-        [path, apply_downgrade_fix, fix](auto pbox) -> Result {
+        [path, apply_downgrade_fix, fix, is_manual_folder](auto pbox) -> Result {
             FirmwareValidation validation{};
             R_TRY(detail::ValidateFirmware(&validation, path));
             const bool use_exfat = validation.info.exfat_supported &&
                                    R_SUCCEEDED(validation.validation.exfat_result);
-            return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix, fix.get());
+            return detail::InstallValidatedFirmware(pbox, use_exfat, path, apply_downgrade_fix, fix.get(), is_manual_folder);
         },
-        [apply_downgrade_fix, fix, origin_zip](Result rc) {
+        [path, apply_downgrade_fix, fix, origin_zip, is_manual_folder](Result rc) {
             if (R_FAILED(rc)) {
                 if (origin_zip) {
                     detail::CleanupManualFirmwareStaging();
@@ -364,7 +365,43 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
                     });
             };
 
-            if (origin_zip) {
+            if (ShouldPromptManualFolderCleanup(is_manual_folder, R_SUCCEEDED(rc), rc == Result_TransferCancelled)) {
+                const auto folder = path;
+                App::Push<OptionBox>(
+                    "Delete firmware folder?"_i18n,
+                    "Keep"_i18n, "Delete"_i18n, 0,
+                    [folder, prompt_reboot = std::move(prompt_reboot)](auto op_index) {
+                        if (ShouldExecuteFolderDeletion(op_index)) {
+                            const auto valid_folder = ValidateManualFirmwareFolder(folder.s);
+                            Result del_rc = 0;
+                            if (!valid_folder) {
+                                del_rc = FsError_PathNotFound;
+                            } else {
+                                fs::FsNativeSd fs;
+                                del_rc = fs.GetFsOpenResult();
+                                if (R_SUCCEEDED(del_rc)) {
+                                    const fs::FsPath target{*valid_folder};
+                                    if (fs.DirExists(target)) {
+                                        del_rc = fs.DeleteDirectoryRecursively(target);
+                                    } else {
+                                        del_rc = FsError_PathNotFound;
+                                    }
+                                    if (R_SUCCEEDED(del_rc)) {
+                                        del_rc = fs.Commit();
+                                    }
+                                }
+                            }
+
+                            prompt_reboot();
+                            if (R_FAILED(del_rc)) {
+                                App::PushErrorBox(del_rc, "Failed to delete firmware folder"_i18n);
+                            }
+                            return;
+                        }
+
+                        prompt_reboot();
+                    });
+            } else if (origin_zip) {
                 const auto zip = *origin_zip;
                 std::string zip_name = zip.s;
                 if (const auto slash = zip_name.find_last_of('/'); slash != std::string::npos) {
