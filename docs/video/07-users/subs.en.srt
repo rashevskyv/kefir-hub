@@ -243,137 +243,153 @@ If the console restarts into TegraExplorer, let it finish, start Kefir and open
 Kefir Hub again.
 
 62
-00:03:43,333 --> 00:03:48,867
-Then on the Tools tab open Console Transfer and choose Share Profiles & Play Hours.
+00:03:43,333 --> 00:03:46,667
+If the dump did not finish, Retry starts it again.
 
 63
-00:03:48,867 --> 00:03:52,000
-A screen with an address and a QR code appears.
+00:03:46,667 --> 00:03:48,667
+Cancel defers the operation.
 
 64
-00:03:52,000 --> 00:03:55,867
-Write down the IP address: you type it on the new console.
+00:03:48,667 --> 00:03:52,667
+Don't remind again removes its progress and temporary files.
 
 65
-00:03:55,867 --> 00:03:59,133
-Keep this screen open until the transfer is done.
+00:03:52,667 --> 00:03:54,667
+Completed backups are kept.
 
 66
-00:03:59,133 --> 00:04:01,133
-A warning.
+00:03:54,667 --> 00:04:00,200
+Then on the Tools tab open Console Transfer and choose Share Profiles & Play Hours.
 
 67
-00:04:01,133 --> 00:04:06,600
-The new console loses all its own profiles: they are replaced by the ones from the
+00:04:00,200 --> 00:04:03,333
+A screen with an address and a QR code appears.
 
 68
-00:04:06,600 --> 00:04:08,600
-old console.
+00:04:03,333 --> 00:04:07,200
+Write down the IP address: you type it on the new console.
 
 69
-00:04:08,600 --> 00:04:11,933
-With play hours, its play history is replaced too.
+00:04:07,200 --> 00:04:10,467
+Keep this screen open until the transfer is done.
 
 70
-00:04:11,933 --> 00:04:14,400
-Make a SYSTEM backup in hekate first.
+00:04:10,467 --> 00:04:12,467
+A warning.
 
 71
-00:04:14,400 --> 00:04:19,667
-On the new console open Users, press A and choose Restore from another console.
+00:04:12,467 --> 00:04:17,933
+The new console loses all its own profiles: they are replaced by the ones from the
 
 72
-00:04:19,667 --> 00:04:21,933
-Type the old console's IP address.
+00:04:17,933 --> 00:04:19,933
+old console.
 
 73
-00:04:21,933 --> 00:04:25,933
-The first part of your network address is already filled in.
+00:04:19,933 --> 00:04:23,267
+With play hours, its play history is replaced too.
 
 74
-00:04:25,933 --> 00:04:30,733
-Kefir Hub tests the connection and lists the backups on the old console.
+00:04:23,267 --> 00:04:25,733
+Make a SYSTEM backup in hekate first.
 
 75
-00:04:30,733 --> 00:04:32,733
-Choose one.
+00:04:25,733 --> 00:04:31,000
+On the new console open Users, press A and choose Restore from another console.
 
 76
-00:04:32,733 --> 00:04:35,733
-It is saved to the new console's memory card.
+00:04:31,000 --> 00:04:33,267
+Type the old console's IP address.
 
 77
-00:04:35,733 --> 00:04:40,267
-Now choose what to restore: Profiles only, or Profiles + play hours.
+00:04:33,267 --> 00:04:37,267
+The first part of your network address is already filled in.
 
 78
-00:04:40,267 --> 00:04:42,267
-Press Launch TegraExplorer.
+00:04:37,267 --> 00:04:42,067
+Kefir Hub tests the connection and lists the backups on the old console.
 
 79
-00:04:42,267 --> 00:04:47,667
-The console restarts into TegraExplorer, writes the backup and returns to hekate.
+00:04:42,067 --> 00:04:44,067
+Choose one.
 
 80
-00:04:47,667 --> 00:04:50,333
-Do not touch the console while it works.
+00:04:44,067 --> 00:04:47,067
+It is saved to the new console's memory card.
 
 81
-00:04:50,333 --> 00:04:52,400
-Start Kefir and open Kefir Hub.
+00:04:47,067 --> 00:04:51,600
+Now choose what to restore: Profiles only, or Profiles + play hours.
 
 82
-00:04:52,400 --> 00:04:54,933
-It shows whether the restore finished.
+00:04:51,600 --> 00:04:53,600
+Press Launch TegraExplorer.
 
 83
-00:04:54,933 --> 00:05:00,000
-The restore goes to the system you started Kefir Hub from, emuMMC or sysMMC.
+00:04:53,600 --> 00:04:59,000
+The console restarts into TegraExplorer, writes the backup and returns to hekate.
 
 84
-00:05:00,000 --> 00:05:05,333
-Games and the saves themselves do not move this way: moving saves would take too
+00:04:59,000 --> 00:05:01,667
+Do not touch the console while it works.
 
 85
-00:05:05,333 --> 00:05:07,333
-long.
+00:05:01,667 --> 00:05:03,733
+Start Kefir and open Kefir Hub.
 
 86
-00:05:07,333 --> 00:05:12,733
-Back up the saves in Saves, move the backups with Share Save Backups, and install
+00:05:03,733 --> 00:05:06,267
+It shows whether the restore finished.
 
 87
-00:05:12,733 --> 00:05:15,067
-the games on the new console again.
+00:05:06,267 --> 00:05:11,333
+The restore goes to the system you started Kefir Hub from, emuMMC or sysMMC.
 
 88
-00:05:15,067 --> 00:05:17,867
-All profile backups are in Manage Backups.
+00:05:11,333 --> 00:05:16,667
+Games and the saves themselves do not move this way: moving saves would take too
 
 89
-00:05:17,867 --> 00:05:23,333
-Without a network, copy the backup file from the config/kefir/nand_transfer folder
+00:05:16,667 --> 00:05:18,667
+long.
 
 90
-00:05:23,333 --> 00:05:28,600
-to the same folder on the new console and choose Restore profiles & play hours.
+00:05:18,667 --> 00:05:24,067
+Back up the saves in Saves, move the backups with Share Save Backups, and install
 
 91
-00:05:28,600 --> 00:05:33,600
-If the console does not boot after a restore, open Payloads in hekate, then
+00:05:24,067 --> 00:05:26,400
+the games on the new console again.
 
 92
-00:05:33,600 --> 00:05:37,600
-TegraExplorer, and run the script Undo_restore_if_wont_boot.
+00:05:26,400 --> 00:05:29,200
+All profile backups are in Manage Backups.
 
 93
-00:05:37,600 --> 00:05:39,600
-It puts the old profiles back.
+00:05:29,200 --> 00:05:34,667
+Without a network, copy the backup file from the config/kefir/nand_transfer folder
 
 94
-00:05:39,600 --> 00:05:43,533
-If that does not help, restore the SYSTEM backup in hekate.
+00:05:34,667 --> 00:05:39,933
+to the same folder on the new console and choose Restore profiles & play hours.
 
 95
-00:05:43,533 --> 00:05:48,333
+00:05:39,933 --> 00:05:44,933
+If the console does not boot after a restore, open Payloads in hekate, then
+
+96
+00:05:44,933 --> 00:05:48,933
+TegraExplorer, and run the script Undo_restore_if_wont_boot.
+
+97
+00:05:48,933 --> 00:05:50,933
+It puts the old profiles back.
+
+98
+00:05:50,933 --> 00:05:54,867
+If that does not help, restore the SYSTEM backup in hekate.
+
+99
+00:05:54,867 --> 00:05:59,667
 Read more on the Users and Console Transfer pages of the Kefir Hub docs.

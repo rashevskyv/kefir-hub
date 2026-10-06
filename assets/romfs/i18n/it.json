@@ -2942,5 +2942,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Scegli da quale creatore di backup ripristinare se ce ne sono diversi.",
   "Only one backup source available.": "È disponibile una sola sorgente di backup.",
   "No backups found in this location.": "Nessun backup trovato in questa posizione.",
-  "Please select a backup source.": "Seleziona una sorgente di backup."
+  "Please select a backup source.": "Seleziona una sorgente di backup.",
+  "Retry": "Riprova",
+  "TegraExplorer did not finish the dump.": "TegraExplorer non ha terminato il dump.",
+  "The account save dump is not on SD yet.": "Il dump del salvataggio dell'account non è ancora sulla SD.",
+  "Failed to clear unfinished operation.": "Impossibile cancellare l'operazione incompleta."
 }

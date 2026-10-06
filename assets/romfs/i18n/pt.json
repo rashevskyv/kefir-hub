@@ -2969,5 +2969,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Escolha de qual criador restaurar quando houver vários presentes.",
   "Only one backup source available.": "Apenas uma origem de cópia de segurança disponível.",
   "No backups found in this location.": "Nenhuma cópia de segurança encontrada nesta localização.",
-  "Please select a backup source.": "Selecione uma fonte de cópia de segurança."
+  "Please select a backup source.": "Selecione uma fonte de cópia de segurança.",
+  "Retry": "Tentar novamente",
+  "TegraExplorer did not finish the dump.": "O TegraExplorer não concluiu o despejo.",
+  "The account save dump is not on SD yet.": "O despejo do save da conta ainda não está no SD.",
+  "Failed to clear unfinished operation.": "Falha ao limpar operação inacabada."
 }

@@ -2937,5 +2937,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Pasirinkite, iš kurio kūrėjo atkurti, kai yra keli.",
   "Only one backup source available.": "Prieinamas tik vienas atsarginės kopijos šaltinis.",
   "No backups found in this location.": "Šioje vietoje atsarginių kopijų nerasta.",
-  "Please select a backup source.": "Pasirinkite atsarginės kopijos šaltinį."
+  "Please select a backup source.": "Pasirinkite atsarginės kopijos šaltinį.",
+  "Retry": "Kartoti",
+  "TegraExplorer did not finish the dump.": "TegraExplorer nebaigė išsaugojimo.",
+  "The account save dump is not on SD yet.": "Paskyros išsaugojimo kopijos dar nėra SD.",
+  "Failed to clear unfinished operation.": "Nepavyko išvalyti nebaigtos operacijos."
 }

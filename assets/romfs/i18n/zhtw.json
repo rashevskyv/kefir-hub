@@ -2995,5 +2995,9 @@
   "Choose which backup creator to restore from when multiple are present.": "存在多個備份生成工具時，選擇要從哪個來源還原。",
   "Only one backup source available.": "僅有一個可用的備份來源。",
   "No backups found in this location.": "在此位置未找到備份。",
-  "Please select a backup source.": "請選擇備份來源。"
+  "Please select a backup source.": "請選擇備份來源。",
+  "Retry": "重試",
+  "TegraExplorer did not finish the dump.": "TegraExplorer 未完成傾印。",
+  "The account save dump is not on SD yet.": "帳號存檔傾印尚未在 SD 卡上。",
+  "Failed to clear unfinished operation.": "無法清除未完成的操作。"
 }

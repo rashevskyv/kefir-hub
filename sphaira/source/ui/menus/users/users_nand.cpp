@@ -190,7 +190,13 @@ void Menu::RunNandRestore(const std::string& dir, bool restore_play_hours) {
                         if (*is_archive && !staging->empty()) {
                             account_restore::CleanRestoreStagingDir(*staging);
                         }
-                        account_restore::ClearPending();
+                        const auto rc = account_restore::ClearPending();
+                        if (R_FAILED(rc)) {
+                            App::Push<OptionBox>(
+                                "Failed to clear unfinished operation."_i18n,
+                                "OK"_i18n);
+                            return;
+                        }
                         App::Push<OptionBox>("Restore cancelled."_i18n, "OK"_i18n);
                         return;
                     }

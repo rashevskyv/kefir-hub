@@ -2937,5 +2937,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Wybierz, z którego programu przywrócić kopię, gdy jest ich kilka.",
   "Only one backup source available.": "Dostępne jest tylko jedno źródło kopii zapasowej.",
   "No backups found in this location.": "Nie znaleziono kopii zapasowych w tej lokalizacji.",
-  "Please select a backup source.": "Wybierz źródło kopii zapasowej."
+  "Please select a backup source.": "Wybierz źródło kopii zapasowej.",
+  "Retry": "Ponów",
+  "TegraExplorer did not finish the dump.": "TegraExplorer nie ukończył zrzutu.",
+  "The account save dump is not on SD yet.": "Zrzut zapisu konta nie znajduje się jeszcze na karcie SD.",
+  "Failed to clear unfinished operation.": "Nie udało się wyczyścić niedokończonej operacji."
 }

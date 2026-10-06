@@ -2937,5 +2937,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Виберіть, від якої програми відновити копію, якщо їх декілька.",
   "Only one backup source available.": "Доступне лише одне джерело копій.",
   "No backups found in this location.": "У цій локації резервних копій не знайдено.",
-  "Please select a backup source.": "Будь ласка, виберіть джерело резервної копії."
+  "Please select a backup source.": "Будь ласка, виберіть джерело резервної копії.",
+  "Retry": "Повторити",
+  "TegraExplorer did not finish the dump.": "TegraExplorer не закінчив дамп.",
+  "The account save dump is not on SD yet.": "Дампу сейву акаунтів на SD ще немає.",
+  "Failed to clear unfinished operation.": "Не вдалося очистити незавершену операцію."
 }

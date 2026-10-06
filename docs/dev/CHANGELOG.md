@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
+## v0.14.003 — Abandon unfinished TegraExplorer operations
+- Add Cancel / Don't remind again / Retry to unfinished profile dump prompts; abandonment clears guarded staging, pending state, scripts and reopen notifications, preserving completed and safety backups. Update translations, EN/UK docs and video 07; [USER] users-unfinished-dump screenshot and scene 19 recording pending.
+- host tests: pass (full + final quick); Switch C++ syntax checks: pass (3 changed modules, -Werror) · nro: not built · switch: pending — test Cancel, retry, abandonment across Hub restart, fresh operation and unrelated startup preservation.
+
 ## v0.14.002 — Short save-type badges
 - Use Acc, Device, BCAT, Cache, Temp, Sys and SysBCAT as fixed badge labels; keep existing colors and type aggregation. Update EN/UK docs and video subtitles.
 - host tests: pass (full; final quick pass) · nro: not built (user builds) · switch: pending — check shortened labels in all save layouts.

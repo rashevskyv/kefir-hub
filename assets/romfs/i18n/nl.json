@@ -2942,5 +2942,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Kies van welke maker u wilt herstellen als er meerdere aanwezig zijn.",
   "Only one backup source available.": "Slechts één backupbron beschikbaar.",
   "No backups found in this location.": "Geen backups gevonden op deze locatie.",
-  "Please select a backup source.": "Selecteer een back-upbron."
+  "Please select a backup source.": "Selecteer een back-upbron.",
+  "Retry": "Opnieuw proberen",
+  "TegraExplorer did not finish the dump.": "TegraExplorer heeft de dump niet voltooid.",
+  "The account save dump is not on SD yet.": "De accountsave-dump staat nog niet op SD.",
+  "Failed to clear unfinished operation.": "Kan onvoltooide bewerking niet wissen."
 }

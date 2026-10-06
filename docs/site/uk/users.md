@@ -127,6 +127,14 @@ Kefir Hub може створити таку прив'язку без інтер
 2. Kefir Hub копіює профілі та години в `/config/kefir/nand_transfer/` у файл `.kefir-nand.zip`.
 3. Якщо система саме використовує ці файли, консоль сама перезапуститься в TegraExplorer, скопіює їх там і
    повернеться в hekate. Запустіть Kefir і відкрийте Kefir Hub: він повідомить, що копію зроблено.
+   Якщо TegraExplorer не закінчив дамп, Kefir Hub запропонує [[Retry]], [[Cancel]] та [[Don't remind again]].
+   [[Retry]] знову запустить TegraExplorer для повторної спроби. [[Cancel]] закриває повідомлення без
+   перезавантаження та зберігає незавершений дамп на потім. [[Don't remind again]] скасовує операцію, видаляє
+   тимчасові файли й скрипти та вимикає нагадування.
+
+   Готові резервні копії та страхові копії зберігаються. Якщо очищення не вдалося, Kefir Hub показує помилку.
+
+<!-- shot: users-unfinished-dump | Unfinished TegraExplorer dump with Cancel, Don't remind again and Retry -->
 
 ### Відновлення {#restore}
 !!! warning

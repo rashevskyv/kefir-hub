@@ -2937,5 +2937,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Izvēlieties, no kura veidotāja atjaunot, ja ir pieejami vairāki.",
   "Only one backup source available.": "Pieejams tikai viens dublējuma avots.",
   "No backups found in this location.": "Šajā atrašanās vietā dublējumi netika atrasti.",
-  "Please select a backup source.": "Lūdzu, izvēlieties dublējuma avotu."
+  "Please select a backup source.": "Lūdzu, izvēlieties dublējuma avotu.",
+  "Retry": "Mēģināt vēlreiz",
+  "TegraExplorer did not finish the dump.": "TegraExplorer nepabeidza saglabāšanu.",
+  "The account save dump is not on SD yet.": "Konta saglabāto datu kopija vēl nav atrodama SD kartē.",
+  "Failed to clear unfinished operation.": "Neizdevās notīrīt nepabeigto darbību."
 }

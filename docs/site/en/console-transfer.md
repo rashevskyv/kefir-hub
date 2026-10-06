@@ -133,5 +133,9 @@ or has no backup yet. Make a backup there and start [[Share Profiles & Play Hour
 **"TegraExplorer did not finish restoring profiles & play hours".** The restore did not complete. If the console
 boots, run the restore again. If not, see [Undo a profiles restore](#undo-a-profiles-restore).
 
+**"TegraExplorer did not finish the dump".** The dump did not complete. Choose [[Retry]] to try again in TegraExplorer,
+[[Cancel]] to close the reminder and keep the progress for later, or [[Don't remind again]] to abandon the operation and
+clean up temporary staging and scripts.
+
 **The server stops during the transfer.** The sending console lost its network or got a new IP address.
 Reconnect, start sharing again, and use the new address.

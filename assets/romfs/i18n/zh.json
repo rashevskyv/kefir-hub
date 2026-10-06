@@ -2995,5 +2995,9 @@
   "Choose which backup creator to restore from when multiple are present.": "存在多个备份生成工具时，选择要从哪个来源恢复。",
   "Only one backup source available.": "仅有一个可用的备份来源。",
   "No backups found in this location.": "在此位置未找到备份。",
-  "Please select a backup source.": "请选择备份来源。"
+  "Please select a backup source.": "请选择备份来源。",
+  "Retry": "重试",
+  "TegraExplorer did not finish the dump.": "TegraExplorer 未完成转储。",
+  "The account save dump is not on SD yet.": "账户存档转储尚未在 SD 卡上。",
+  "Failed to clear unfinished operation.": "无法清除未完成的操作。"
 }

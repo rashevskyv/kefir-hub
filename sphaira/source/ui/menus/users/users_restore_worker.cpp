@@ -33,7 +33,13 @@ auto OfferPendingRestore() -> bool {
     auto pending = account_restore::LoadPending();
     if (pending.rolled_back) {
         s_offered = true;
-        account_restore::ClearPending();
+        const auto rc = account_restore::ClearPending();
+        if (R_FAILED(rc)) {
+            App::Push<OptionBox>(
+                "Failed to clear unfinished operation."_i18n,
+                "OK"_i18n);
+            return true;
+        }
         App::Push<OptionBox>(
             "Account save 0010 was rolled back. Restore was cancelled."_i18n,
             "OK"_i18n);
@@ -91,7 +97,10 @@ auto OfferPendingRestore() -> bool {
             if (R_SUCCEEDED(arc_rc)) {
                 log_write("[NAND] TE dump finalized to %s\n", final_archive.c_str());
                 account_restore::SavePending({final_archive}, "applied", true);
-                account_restore::CleanDumpHandshake();
+                if (R_FAILED(account_restore::CleanDumpHandshake())) {
+                    App::Push<OptionBox>("Failed to clear unfinished operation."_i18n, "OK"_i18n);
+                    return true;
+                }
                 App::Push<OptionBox>(
                     "Profiles and play hours dump is done."_i18n,
                     "OK"_i18n);
@@ -105,16 +114,28 @@ auto OfferPendingRestore() -> bool {
             }
         }
         App::Push<OptionBox>(
-            "TegraExplorer did not finish the dump.\n\nAfter OK, TegraExplorer will try again."_i18n,
-            "OK"_i18n,
+            "TegraExplorer did not finish the dump."_i18n,
+            "Cancel"_i18n, "Don't remind again"_i18n, "Retry"_i18n, 2,
             [](auto op) {
-                if (!op) {
+                const auto choice = account_restore::ResolveAbandonChoice(op);
+                if (choice == account_restore::AbandonChoice::Cancel) {
                     return;
                 }
-                if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
-                    App::Push<OptionBox>(
-                        "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
-                        "OK"_i18n);
+                if (choice == account_restore::AbandonChoice::DontRemindAgain) {
+                    const auto rc = account_restore::ClearPending();
+                    if (R_FAILED(rc)) {
+                        App::Push<OptionBox>(
+                            "Failed to clear unfinished operation."_i18n,
+                            "OK"_i18n);
+                    }
+                    return;
+                }
+                if (choice == account_restore::AbandonChoice::Retry) {
+                    if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
+                        App::Push<OptionBox>(
+                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                            "OK"_i18n);
+                    }
                 }
             });
         return true;
@@ -131,18 +152,28 @@ auto OfferPendingRestore() -> bool {
         } else {
             s_offered = true;
             App::Push<OptionBox>(
-                "The account save dump is not on SD yet.\n\n"
-                "After OK, TegraExplorer will dump 0010 automatically.\n"
-                "When it finishes, open Kefir Hub yourself to continue the restore."_i18n,
-                "OK"_i18n,
+                "The account save dump is not on SD yet."_i18n,
+                "Cancel"_i18n, "Don't remind again"_i18n, "Retry"_i18n, 2,
                 [](auto op) {
-                    if (!op) {
+                    const auto choice = account_restore::ResolveAbandonChoice(op);
+                    if (choice == account_restore::AbandonChoice::Cancel) {
                         return;
                     }
-                    if (!account_restore::LaunchTegraDump()) {
-                        App::Push<OptionBox>(
-                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
-                            "OK"_i18n);
+                    if (choice == account_restore::AbandonChoice::DontRemindAgain) {
+                        const auto rc = account_restore::ClearPending();
+                        if (R_FAILED(rc)) {
+                            App::Push<OptionBox>(
+                                "Failed to clear unfinished operation."_i18n,
+                                "OK"_i18n);
+                        }
+                        return;
+                    }
+                    if (choice == account_restore::AbandonChoice::Retry) {
+                        if (!account_restore::LaunchTegraDump()) {
+                            App::Push<OptionBox>(
+                                "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                                "OK"_i18n);
+                        }
                     }
                 });
             return true;
@@ -166,7 +197,20 @@ auto OfferPendingRestore() -> bool {
         }
     }
     if (packs.empty()) {
-        App::Push<OptionBox>("Pending restore packs are missing from SD."_i18n, "OK"_i18n);
+        App::Push<OptionBox>(
+            "Pending restore packs are missing from SD."_i18n,
+            "Cancel"_i18n, "Don't remind again"_i18n, 1,
+            [](auto op) {
+                if (!op || *op != 1) {
+                    return;
+                }
+                const auto rc = account_restore::ClearPending();
+                if (R_FAILED(rc)) {
+                    App::Push<OptionBox>(
+                        "Failed to clear unfinished operation."_i18n,
+                        "OK"_i18n);
+                }
+            });
         return true;
     }
 
@@ -190,7 +234,13 @@ auto OfferPendingRestore() -> bool {
                 return;
             }
             if (*op == 1) {
-                account_restore::ClearPending();
+                const auto rc = account_restore::ClearPending();
+                if (R_FAILED(rc)) {
+                    App::Push<OptionBox>(
+                        "Failed to clear unfinished operation."_i18n,
+                        "OK"_i18n);
+                    return;
+                }
                 App::Push<OptionBox>("Restore cancelled. The 0010 snapshot was removed."_i18n, "OK"_i18n);
                 return;
             }

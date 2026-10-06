@@ -2943,5 +2943,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Elige de qué creador de copias restaurar cuando haya varios disponibles.",
   "Only one backup source available.": "Solo hay un origen de copia disponible.",
   "No backups found in this location.": "No se encontraron copias en esta ubicación.",
-  "Please select a backup source.": "Por favor, seleccione una fuente de copia de seguridad."
+  "Please select a backup source.": "Por favor, seleccione una fuente de copia de seguridad.",
+  "Retry": "Reintentar",
+  "TegraExplorer did not finish the dump.": "TegraExplorer no finalizó el volcado.",
+  "The account save dump is not on SD yet.": "El volcado del guardado de cuenta aún no está en la SD.",
+  "Failed to clear unfinished operation.": "Error al borrar la operación no finalizada."
 }

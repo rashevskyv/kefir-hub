@@ -314,25 +314,77 @@ auto CleanRestoreStagingDir(const std::string& path) -> bool {
     return true;
 }
 
+auto LoadCandidateScript(fs::FsNativeSd& sd, const char* name) -> std::string {
+    if (!name || !*name) return {};
+    std::vector<u8> b;
+    if (ReadRomfsTe((std::string("romfs:/tegra/") + name).c_str(), b) && !b.empty())
+        return std::string(reinterpret_cast<const char*>(b.data()), b.size());
+    if (R_SUCCEEDED(sd.read_entire_file((std::string("/TegraExplorer/scripts/") + name).c_str(), b)) && !b.empty())
+        return std::string(reinterpret_cast<const char*>(b.data()), b.size());
+    if (R_SUCCEEDED(sd.read_entire_file((std::string(PendingDir()) + "/" + name).c_str(), b)) && !b.empty())
+        return std::string(reinterpret_cast<const char*>(b.data()), b.size());
+    return {};
+}
+
+auto CollectCandidates(fs::FsNativeSd& sd, const char* script_name) -> std::vector<std::string> {
+    std::vector<std::string> c;
+    auto add = [&](const char* n) { if (n && *n) { auto s = LoadCandidateScript(sd, n); if (!s.empty()) c.push_back(std::move(s)); } };
+    if (script_name && *script_name) add(script_name);
+    else { add(NandDumpTeName()); add(DumpTeName()); add(NandRestoreTeName()); add(ApplyLinkTeName()); }
+    return c;
+}
+
+auto CleanStartupTeIfOwned(fs::FsNativeSd& sd, const char* script_name) -> Result {
+    if (!sd.FileExists("/startup.te")) return 0;
+    std::vector<u8> actual;
+    const auto read_rc = sd.read_entire_file("/startup.te", actual);
+    if (R_FAILED(read_rc)) {
+        log_write("[RESTORE] failed to read /startup.te: 0x%X\n", read_rc);
+        return read_rc;
+    }
+    const std::string_view act(reinterpret_cast<const char*>(actual.data()), actual.size());
+    if (!IsStartupTeContentOwned(act, CollectCandidates(sd, script_name))) {
+        log_write("[RESTORE] preserving unrelated /startup.te\n");
+        return 0;
+    }
+    log_write("[RESTORE] removing owned /startup.te\n");
+    const auto rc = sd.DeleteFile("/startup.te");
+    std::remove("/startup.te");
+    return (R_FAILED(rc) && sd.FileExists("/startup.te")) ? rc : 0;
+}
+
 auto ClearPending() -> Result {
     fs::FsNativeSd sd;
     const auto p = LoadPending();
-    if (!p.staging_dir.empty()) {
-        CleanRestoreStagingDir(p.staging_dir);
-    }
-    if (sd.DirExists(PendingDir())) {
-        sd.DeleteDirectoryRecursively(PendingDir());
-    }
-    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + DumpTeName()).c_str());
-    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + ApplyLinkTeName()).c_str());
-    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + NandRestoreTeName()).c_str());
-    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + RollbackTeName()).c_str());
-    sd.DeleteFile("/TegraExplorer/scripts/account_0010_rollback.te");
-    sd.DeleteFile("/startup.te");
-    std::remove("/startup.te");
-    fsdevCommitDevice("sdmc");
-    sd.Commit();
-    R_SUCCEED();
+    AbandonPendingInfo info;
+    info.staging_dir = p.staging_dir;
+    info.pack_dirs = p.pack_dirs;
+    info.pending_dir = PendingDir();
+    info.tegra_scripts = {
+        DumpTeName(), ApplyLinkTeName(), NandRestoreTeName(), NandDumpTeName(),
+        RollbackTeName(), "account_0010_rollback.te"
+    };
+
+    struct NativeAbandonFs : public AbandonFsOps {
+        fs::FsNativeSd& m_sd;
+        explicit NativeAbandonFs(fs::FsNativeSd& s) : m_sd(s) {}
+        auto DirExists(std::string_view p) -> bool override { return m_sd.DirExists(p.data()); }
+        auto FileExists(std::string_view p) -> bool override { return m_sd.FileExists(p.data()); }
+        auto ReadEntireFile(std::string_view p, std::vector<uint8_t>& out) -> int64_t override { return m_sd.read_entire_file(p.data(), out); }
+        auto WriteEntireFile(std::string_view p, const std::vector<uint8_t>& d) -> int64_t override { return m_sd.write_entire_file(p.data(), d); }
+        auto DeleteFile(std::string_view p) -> int64_t override {
+            return m_sd.DeleteFile(p.data());
+        }
+        auto DeleteDirectoryRecursively(std::string_view p) -> int64_t override { return m_sd.DeleteDirectoryRecursively(p.data()); }
+        auto Commit() -> int64_t override {
+            const auto sdmc_rc = fsdevCommitDevice("sdmc");
+            return (sdmc_rc != 0) ? 0x100 : m_sd.Commit();
+        }
+    } fs(sd);
+
+    const auto rc = static_cast<Result>(PerformAbandonCleanup(fs, info, CollectCandidates(sd, nullptr)));
+    if (R_FAILED(rc)) log_write("[RESTORE] ClearPending failed: 0x%X\n", rc);
+    return rc;
 }
 
 auto InstallRestoreTeScripts() -> void {
@@ -407,25 +459,20 @@ auto UpsertUltrahandBootHook(const std::string& message) -> void {
     sd.write_entire_file(kBootPackagePath, std::vector<u8>(text.begin(), text.end()));
 }
 
-auto RemoveUltrahandBootHook() -> void {
+auto RemoveUltrahandBootHook() -> Result {
     fs::FsNativeSd sd;
-    std::string text;
+    if (!sd.FileExists(kBootPackagePath)) return 0;
     std::vector<u8> raw;
-    if (R_FAILED(sd.read_entire_file(kBootPackagePath, raw)) || raw.empty()) {
-        return;
+    const auto r_rc = sd.read_entire_file(kBootPackagePath, raw);
+    if (R_FAILED(r_rc)) return r_rc;
+    if (raw.empty()) return 0;
+    const std::string text(raw.begin(), raw.end());
+    const auto cleaned = RemoveUltrahandBootHookText(text);
+    if (cleaned != text) {
+        const auto w_rc = sd.write_entire_file(kBootPackagePath, std::vector<u8>(cleaned.begin(), cleaned.end()));
+        if (R_FAILED(w_rc)) return w_rc;
     }
-    text.assign(raw.begin(), raw.end());
-    const auto begin = text.find(kHookBegin);
-    const auto end = text.find(kHookEnd);
-    if (begin == std::string::npos || end == std::string::npos || end < begin) {
-        return;
-    }
-    auto after = end + std::strlen(kHookEnd);
-    while (after < text.size() && (text[after] == '\n' || text[after] == '\r')) {
-        after++;
-    }
-    text.erase(begin, after - begin);
-    sd.write_entire_file(kBootPackagePath, std::vector<u8>(text.begin(), text.end()));
+    return 0;
 }
 
 } // namespace
@@ -445,24 +492,45 @@ auto ArmReopenHubHint() -> void {
     log_write("[RESTORE] armed Ultrahand reopen-hub hint\n");
 }
 
-auto ClearReopenHubHint() -> void {
+auto ClearReopenHubHint() -> Result {
     fs::FsNativeSd sd;
-    sd.DeleteFile(ReopenHubFlagPath());
-    sd.DeleteFile(kNotifyJsonPath);
-    RemoveUltrahandBootHook();
+    Result rc = 0;
+    auto del = [&](const char* p) {
+        if (sd.FileExists(p)) {
+            const auto drc = sd.DeleteFile(p);
+            if (R_FAILED(drc) && sd.FileExists(p) && R_SUCCEEDED(rc)) rc = drc;
+        }
+    };
+    del(ReopenHubFlagPath());
+    del(kNotifyJsonPath);
+    const auto hrc = RemoveUltrahandBootHook();
+    if (R_FAILED(hrc) && R_SUCCEEDED(rc)) rc = hrc;
+    return rc;
 }
 
-auto CleanDumpHandshake() -> void {
+auto CleanDumpHandshake() -> Result {
     fs::FsNativeSd sd;
-    sd.DeleteFile(DumpedOkPath());
-    sd.DeleteFile(NandPackPath());
-    sd.DeleteFile("/startup.te");
-    std::remove("/startup.te");
-    sd.DeleteFile((std::string("/TegraExplorer/scripts/") + NandDumpTeName()).c_str());
-    sd.DeleteFile((std::string(PendingDir()) + "/" + NandDumpTeName()).c_str());
-    fsdevCommitDevice("sdmc");
-    sd.Commit();
-    log_write("[RESTORE] cleaned dump handshake temps\n");
+    Result rc = 0;
+    auto del = [&](const char* p) {
+        if (sd.FileExists(p)) {
+            const auto drc = sd.DeleteFile(p);
+            if (R_FAILED(drc) && sd.FileExists(p) && R_SUCCEEDED(rc)) rc = drc;
+        }
+    };
+    del(DumpedOkPath());
+    del(NandPackPath());
+    const auto st_rc = CleanStartupTeIfOwned(sd, NandDumpTeName());
+    if (R_FAILED(st_rc) && R_SUCCEEDED(rc)) rc = st_rc;
+    del((std::string("/TegraExplorer/scripts/") + NandDumpTeName()).c_str());
+    del((std::string(PendingDir()) + "/" + NandDumpTeName()).c_str());
+
+    const auto sdmc_rc = fsdevCommitDevice("sdmc");
+    if (sdmc_rc != 0 && R_SUCCEEDED(rc)) rc = 0x100;
+    const auto commit_rc = sd.Commit();
+    if (R_FAILED(commit_rc) && R_SUCCEEDED(rc)) rc = commit_rc;
+
+    log_write("[RESTORE] cleaned dump handshake temps (rc=0x%X)\n", rc);
+    return rc;
 }
 
 auto WriteStartupTe(const char* romfs_name) -> bool {

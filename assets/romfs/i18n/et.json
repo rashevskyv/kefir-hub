@@ -2937,5 +2937,9 @@
   "Choose which backup creator to restore from when multiple are present.": "Valige, milliselt loojalt taastada, kui saadaval on mitu.",
   "Only one backup source available.": "Saadaval on ainult üks varunduse allikas.",
   "No backups found in this location.": "Selles asukohas varundusi ei leitud.",
-  "Please select a backup source.": "Palun valige varukoopia allikas."
+  "Please select a backup source.": "Palun valige varukoopia allikas.",
+  "Retry": "Proovi uuesti",
+  "TegraExplorer did not finish the dump.": "TegraExplorer ei lõpetanud tõmmist.",
+  "The account save dump is not on SD yet.": "Konto salvestuse tõmmis pole veel SD-kaardil.",
+  "Failed to clear unfinished operation.": "Lõpetamata toimingu kustutamine ebaõnnestus."
 }

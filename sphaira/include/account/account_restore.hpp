@@ -1,10 +1,13 @@
 #pragma once
 
+#include "account/account_abandon.hpp"
+
 #include <string>
 #include <vector>
 #include <switch.h>
 
 namespace sphaira::ui { struct ProgressBox; }
+namespace fs { struct FsNativeSd; }
 
 namespace sphaira::account_restore {
 
@@ -98,13 +101,16 @@ auto LaunchTegraDump() -> bool;
 // One-shot Ultrahand [on-boot] toast: overlay cannot launch the HOME forwarder
 // or NRO, so after CFW start the user is told to open Kefir Hub.
 auto ArmReopenHubHint() -> void;
-auto ClearReopenHubHint() -> void;
+auto ClearReopenHubHint() -> Result;
 
 // After Hub confirms a finished nand dump: drop handshake temps only.
 // Keeps pack folder, state.json (phase applied), nand flag, Undo snapshots.
-auto CleanDumpHandshake() -> void;
+auto CleanDumpHandshake() -> Result;
 
 // Deletes the restore staging directory if and only if IsSafeRestoreStagingDir returns true.
 auto CleanRestoreStagingDir(const std::string& path) -> bool;
+
+// Removes /startup.te only if owned by this operation; preserves unrelated startup scripts.
+auto CleanStartupTeIfOwned(fs::FsNativeSd& sd, const char* script_name = nullptr) -> Result;
 
 } // namespace sphaira::account_restore
