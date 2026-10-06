@@ -9,6 +9,8 @@ For profiles and play hours, the receiving console uses [[Tools]] → [[Tools]] 
 
 <!-- shot: console-transfer-menu | Console Transfer screen with all seven share items -->
 
+Before launching TegraExplorer, Kefir Hub compares the memory-card payload with its bundled copy. It installs the bundled copy if the file is missing, or updates an older version. An equal or newer version on the card stays unchanged. If installation fails, Hub does not launch it.
+
 ## What you can move
 | What | Sending console | Receiving console |
 |---|---|---|

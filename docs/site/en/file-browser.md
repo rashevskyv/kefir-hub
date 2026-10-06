@@ -271,6 +271,8 @@ These appear in [[File Options]] (**+**) or [[Advanced Options]] when they fit t
 !!! warning
     [[Launch payload]] reboots the console at once after you confirm [[Reboot]]. Save your game first.
 
+Before launching TegraExplorer, Kefir Hub compares the memory-card payload with its bundled copy. It installs the bundled copy if the file is missing, or updates an older version. An equal or newer version on the card stays unchanged. If installation fails, Hub does not launch it. When you select a TegraExplorer `.bin`, Hub applies this version check to the selected file. Other payloads launch unchanged.
+
 ## Pick a folder for another feature
 Some features ask you to choose a folder, for example a manual firmware install in the [Updater](updater.md) or
 [[Choose Folder...]] in [Console Transfer](console-transfer.md). The File Browser then opens in picker mode with its

@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
+## v0.14.004 — Consistent TegraExplorer version selection
+- Route 8GB DRAM and selected TegraExplorer payload launches through the shared version check: install missing TE, upgrade older SD copies, preserve equal/newer SD versions. Verify staged writes and retain the old payload during replacement; update EN/UK docs and video preparation notes.
+- host tests: pass (full, 67 TE checks); Switch C++ syntax checks: pass (3 modules, -Werror) · nro: not built · switch: pending — missing/older/equal/newer TE, selected paths, write failures, profile transfer and downgrade; test 8GB only on modified hardware.
+
 ## v0.14.003 — Abandon unfinished TegraExplorer operations
 - Add Cancel / Don't remind again / Retry to unfinished profile dump prompts; abandonment clears guarded staging, pending state, scripts and reopen notifications, preserving completed and safety backups. Update translations, EN/UK docs and video 07; [USER] users-unfinished-dump screenshot and scene 19 recording pending.
 - host tests: pass (full + final quick); Switch C++ syntax checks: pass (3 changed modules, -Werror) · nro: not built · switch: pending — test Cancel, retry, abandonment across Hub restart, fresh operation and unrelated startup preservation.

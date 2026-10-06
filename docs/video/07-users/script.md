@@ -5,7 +5,7 @@
 - UI language Ukrainian on both consoles. Both consoles on the same home Wi-Fi (not a guest network), both running Kefir with Kefir Hub.
 - **Console A (sending):** any console with real profiles and some play hours. Only read actions happen on it (backup and sharing).
 - **Console B (receiving):** a **test console, booted into emuMMC**. All profile changes, the account link and the profile restore are filmed only here: the link writes account data and the restore replaces every profile on the system.
-- Console B before the session: a SYSTEM backup made in hekate; hekate and TegraExplorer available (Kefir Hub copies `TegraExplorer.bin` to `/bootloader/payloads/` itself); no `/startup.te` in the card root.
+- Console B before the session: a SYSTEM backup made in hekate; hekate and TegraExplorer available (Kefir Hub installs its bundled TegraExplorer when absent or newer than the card version; equal/newer card versions remain unchanged); no `/startup.te` in the card root.
 - Console B profiles: three profiles, two Linked and one Not linked (for the list shot), plus one throwaway profile to delete. Fewer than 8 profiles in total, so Create user works.
 - Console B: the throwaway profile has at least one game save (so the save backup offer appears on delete); an image in `/config/kefir/avatars/` and one picture elsewhere on the card for From SD.
 - Console B: the startup link reminder not yet dismissed (`account_link_prompt_skip=0` in `/config/kefir/config.ini`), so scene 17 can be filmed on launch.

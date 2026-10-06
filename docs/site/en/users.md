@@ -7,6 +7,8 @@ Nintendo Account offline, and back up all profiles with their play hours.
 
 <!-- shot: users-list | Users screen in the default Grid layout, three profiles: two Linked (green), one Not linked (red) -->
 
+Before launching TegraExplorer, Kefir Hub compares the memory-card payload with its bundled copy. It installs the bundled copy if the file is missing, or updates an older version. An equal or newer version on the card stays unchanged. If installation fails, Hub does not launch it.
+
 ## The profile list
 Each profile shows its avatar, name, link status and user ID. The status is one of:
 
@@ -194,7 +196,6 @@ are not enough unused donors for all unlinked profiles. Check `/config/kefir/log
 
 **"Cannot delete every user profile. Keep at least one."** Create another profile first, or delete fewer.
 
-**"Could not start TegraExplorer".** Kefir Hub puts its own copy of `TegraExplorer.bin` into
-`/bootloader/payloads/`. If that failed, copy `TegraExplorer.bin` there yourself and try again.
+**"Could not start TegraExplorer".** Check that the memory card is writable and has free space. Hub must finish installing or updating the payload before launch. You can copy `TegraExplorer.bin` to `/bootloader/payloads/` yourself and try again.
 
 **The console does not boot after a restore.** See [Undo a profiles restore](console-transfer.md#undo-a-profiles-restore).

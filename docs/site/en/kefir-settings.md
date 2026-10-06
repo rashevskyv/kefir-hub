@@ -6,6 +6,8 @@ Switches for Kefir and Atmosphère that change files on the memory card. Most of
 
 <!-- shot: kefir-settings-list | Kefir Settings list: Overclock status, 40MB Memory, USB 3.0, 8GB DRAM status, Translate Interface, each with On/Off -->
 
+Before launching TegraExplorer, Kefir Hub compares the memory-card payload with its bundled copy. It installs the bundled copy if the file is missing, or updates an older version. An equal or newer version on the card stays unchanged. If installation fails, Hub does not launch it.
+
 ## Change a setting
 
 1. Select the setting and press **A**.

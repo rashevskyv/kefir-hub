@@ -7,6 +7,8 @@
 
 <!-- shot: users-list | Users screen in the default Grid layout, three profiles: two Linked (green), one Not linked (red) -->
 
+Перед запуском TegraExplorer Kefir Hub порівнює версію на карті пам’яті з вбудованою копією. Якщо файл відсутній, Hub встановлює свою копію. Якщо версія на карті старіша, Hub оновлює її. Однакову або новішу версію залишає. Якщо встановлення не вдалося, Hub не запускає payload.
+
 ## Список профілів {#the-profile-list}
 Для кожного профілю видно аватар, ім'я, стан прив'язки та ID користувача. Стан буває такий:
 
@@ -194,7 +196,6 @@ Kefir Hub може створити таку прив'язку без інтер
 
 **«Cannot delete every user profile. Keep at least one.»** Спершу створіть ще один профіль або видаляйте менше.
 
-**«Could not start TegraExplorer».** Kefir Hub сам кладе свою копію `TegraExplorer.bin` у `/bootloader/payloads/`.
-Якщо це не вдалося, скопіюйте `TegraExplorer.bin` туди вручну й спробуйте знову.
+**«Could not start TegraExplorer».** Перевірте, чи карта пам’яті доступна для запису та має вільне місце. Hub має завершити встановлення або оновлення payload перед запуском. Можна скопіювати `TegraExplorer.bin` у `/bootloader/payloads/` вручну та спробувати знову.
 
 **Консоль не завантажується після відновлення.** Див. [Скасувати відновлення профілів](console-transfer.md#undo-a-profiles-restore).

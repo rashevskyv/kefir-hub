@@ -234,21 +234,18 @@ void FsView::DisplayOptions() {
             auto launch_entry = options->Add<SidebarEntryCallback>("Launch payload"_i18n, [this](){
                 const auto path = GetNewPathCurrent();
                 const auto entry_name = GetEntry().GetName();
-                App::Push<OptionBox>(
-                    "Reboot to payload "_i18n + entry_name + "?\n\n" + path.s,
-                    "Cancel"_i18n, "Reboot"_i18n, 1,
-                    [path](auto op_index) {
+                App::Push<OptionBox>("Reboot to payload "_i18n + entry_name + "?\n\n" + path.s,
+                    "Cancel"_i18n, "Reboot"_i18n, 1, [path](auto op_index) {
                         if (op_index && *op_index == 1) {
-                            if (!utils::rebootToPayload(path)) {
-                                App::Push<OptionBox>(
-                                    "Failed to prepare payload launch!"_i18n + "\n" +
-                                    "Hekate payload API is not available or payload is invalid."_i18n,
-                                    "OK"_i18n
-                                );
+                            fs::FsPath launch_path = path;
+                            const bool prepared = !utils::isTegraExplorerPayload(path) ||
+                                utils::ensureTegraExplorerPayload(launch_path, path);
+                            if (!prepared || !utils::rebootToPayload(launch_path)) {
+                                App::Push<OptionBox>("Failed to prepare payload launch!"_i18n + "\n" +
+                                    "Hekate payload API is not available or payload is invalid."_i18n, "OK"_i18n);
                             }
                         }
-                    }
-                );
+                    });
             }, "Reboot console into this payload via Hekate."_i18n);
             launch_entry->SetIcon(ActionIcon::Launch);
         }

@@ -6,6 +6,8 @@
 
 <!-- shot: kefir-settings-list | Kefir Settings list: Overclock status, 40MB Memory, USB 3.0, 8GB DRAM status, Translate Interface, each with On/Off -->
 
+Перед запуском TegraExplorer Kefir Hub порівнює версію на карті пам’яті з вбудованою копією. Якщо файл відсутній, Hub встановлює свою копію. Якщо версія на карті старіша, Hub оновлює її. Однакову або новішу версію залишає. Якщо встановлення не вдалося, Hub не запускає payload.
+
 ## Змініть параметр
 
 1. Виберіть параметр і натисніть **A**.

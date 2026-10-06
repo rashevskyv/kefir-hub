@@ -184,54 +184,6 @@ bool findLockpickPayload(fs::FsPath& out) {
 
 namespace {
 
-#pragma pack(push, 1)
-struct TegraExplorerFooter {
-    char magic[4];
-    u8 format_version;
-    u8 payload_type;
-    u8 app_version_major;
-    u8 app_version_minor;
-    u8 app_version_patch;
-    u8 reserved[3];
-    u32 kefir_version;
-    char magic_end[4];
-};
-#pragma pack(pop)
-static_assert(sizeof(TegraExplorerFooter) == 20);
-
-struct TegraExplorerVersion {
-    u32 major{0};
-    u32 minor{0};
-    u32 patch{0};
-    u32 kefir{0};
-
-    auto operator<=>(const TegraExplorerVersion&) const = default;
-};
-
-bool parseTegraExplorerVersion(const u8* data, size_t size, TegraExplorerVersion& out_ver) {
-    out_ver = {};
-    if (size < sizeof(TegraExplorerFooter)) {
-        return false;
-    }
-    const size_t search_start = size >= 512 ? size - 512 : 0;
-    for (size_t i = size - sizeof(TegraExplorerFooter); i >= search_start; --i) {
-        if (std::memcmp(&data[i], "KFRP", 4) == 0 &&
-            std::memcmp(&data[i + 16], "PRFK", 4) == 0) {
-            TegraExplorerFooter footer{};
-            std::memcpy(&footer, &data[i], sizeof(footer));
-            out_ver.major = footer.app_version_major;
-            out_ver.minor = footer.app_version_minor;
-            out_ver.patch = footer.app_version_patch;
-            out_ver.kefir = footer.kefir_version;
-            return true;
-        }
-        if (i == 0) {
-            break;
-        }
-    }
-    return false;
-}
-
 bool findExistingTegraExplorerPayloadOnSd(fs::FsPath& out) {
     fs::FsNativeSd fs;
     fs::Dir dir;
@@ -246,14 +198,11 @@ bool findExistingTegraExplorerPayloadOnSd(fs::FsPath& out) {
     fs::FsPath exact;
     fs::FsPath any;
     for (const auto& entry : entries) {
-        const auto lower = toLower(entry.name);
-        if (lower.size() < 4 || lower.compare(lower.size() - 4, 4, ".bin") != 0) {
-            continue;
-        }
-        if (lower.find("tegraexplorer") == std::string::npos && lower.find("tegra_explorer") == std::string::npos) {
+        if (!isTegraExplorerPayload(entry.name)) {
             continue;
         }
         const auto path = fs::AppendPath(LOCKPICK_PAYLOAD_DIR, entry.name);
+        const auto lower = toLower(entry.name);
         if (lower == "tegraexplorer.bin") {
             exact = path;
             break;
@@ -266,9 +215,69 @@ bool findExistingTegraExplorerPayloadOnSd(fs::FsPath& out) {
     return !out.empty();
 }
 
+bool safeWritePayloadFile(fs::FsNativeSd& sd, const char* target_path, const std::vector<u8>& data) {
+    if (!target_path || !*target_path || data.empty()) {
+        log_write("safeWritePayloadFile: invalid target path or empty data\n");
+        return false;
+    }
+
+    Result rc = sd.CreateDirectoryRecursivelyWithPath(target_path);
+    if (R_FAILED(rc)) {
+        log_write("safeWritePayloadFile: CreateDirectoryRecursivelyWithPath failed for %s (0x%x)\n", target_path, rc);
+        return false;
+    }
+
+    const std::string tmp_path = std::string(target_path) + ".kefir-te.tmp";
+    const std::string backup_path = std::string(target_path) + ".kefir-te.bak";
+    if (tmp_path.size() >= sizeof(fs::FsPath{}.s) || backup_path.size() >= sizeof(fs::FsPath{}.s)) {
+        log_write("safeWritePayloadFile: target path too long for staging\n");
+        return false;
+    }
+    if (sd.FileExists(tmp_path.c_str()) || sd.FileExists(backup_path.c_str())) {
+        log_write("safeWritePayloadFile: unfinished replacement exists for %s\n", target_path);
+        return false;
+    }
+    rc = sd.write_entire_file(tmp_path.c_str(), data);
+    std::vector<u8> verified;
+    if (R_FAILED(rc) || R_FAILED(sd.Commit()) ||
+        R_FAILED(sd.read_entire_file(tmp_path.c_str(), verified)) || verified != data) {
+        log_write("safeWritePayloadFile: staging or verification failed for %s\n", target_path);
+        sd.DeleteFile(tmp_path.c_str());
+        return false;
+    }
+
+    const bool had_target = sd.FileExists(target_path);
+    if (had_target && R_FAILED(sd.RenameFile(target_path, backup_path.c_str()))) {
+        log_write("safeWritePayloadFile: cannot preserve old payload %s\n", target_path);
+        sd.DeleteFile(tmp_path.c_str());
+        return false;
+    }
+    rc = sd.RenameFile(tmp_path.c_str(), target_path);
+    if (R_FAILED(rc)) {
+        // Keep the previous payload recoverable if replacing the file fails.
+        if (had_target && !sd.FileExists(target_path) &&
+            R_FAILED(sd.RenameFile(backup_path.c_str(), target_path))) {
+            log_write("safeWritePayloadFile: old payload retained at %s\n", backup_path.c_str());
+        }
+        log_write("safeWritePayloadFile: replacement failed for %s (0x%x)\n", target_path, rc);
+        sd.DeleteFile(tmp_path.c_str());
+        return false;
+    }
+    if (R_FAILED(sd.Commit())) {
+        log_write("safeWritePayloadFile: commit failed for %s; backup retained\n", target_path);
+        return false;
+    }
+    if (had_target && R_FAILED(sd.DeleteFile(backup_path.c_str()))) {
+        log_write("safeWritePayloadFile: backup cleanup failed for %s\n", target_path);
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace
 
-bool ensureTegraExplorerPayload(fs::FsPath& out) {
+bool ensureTegraExplorerPayload(fs::FsPath& out, const char* target_path) {
     std::vector<u8> romfs_data;
     bool has_romfs = false;
     if (R_SUCCEEDED(romfsInit())) {
@@ -276,79 +285,100 @@ bool ensureTegraExplorerPayload(fs::FsPath& out) {
         romfsExit();
     }
 
-    fs::FsPath sd_path;
-    const bool has_sd = findExistingTegraExplorerPayloadOnSd(sd_path);
-
+    TegraExplorerPayloadState romfs_state{};
     if (!has_romfs) {
-        if (has_sd) {
-            out = sd_path;
-            log_write("ensureTegraExplorerPayload: no romfs payload, using existing SD payload: %s\n", static_cast<const char*>(out));
-            return true;
-        }
-        log_write("ensureTegraExplorerPayload: TegraExplorer.bin not found in romfs and not on SD\n");
-        return false;
+        romfs_state.status = PayloadMetaStatus::Missing;
+    } else {
+        romfs_state.status = inspectTegraExplorerPayloadData(
+            romfs_data.data(), romfs_data.size(), romfs_state.version);
     }
-
-    TegraExplorerVersion romfs_ver{};
-    parseTegraExplorerVersion(romfs_data.data(), romfs_data.size(), romfs_ver);
 
     fs::FsNativeSd sd;
-    if (!has_sd) {
-        constexpr const char* target = "/bootloader/payloads/TegraExplorer.bin";
-        sd.CreateDirectoryRecursively(LOCKPICK_PAYLOAD_DIR);
-        FILE* fp = fopen(target, "wb");
-        bool written = false;
-        if (fp) {
-            written = (fwrite(romfs_data.data(), 1, romfs_data.size(), fp) == romfs_data.size());
-            fflush(fp);
-            fclose(fp);
-        }
-        if (!written) {
-            sd.write_entire_file(target, romfs_data);
-        }
-        fsdevCommitDevice("sdmc");
-        sd.Commit();
-        out = target;
-        log_write("ensureTegraExplorerPayload: installed RomFS TegraExplorer v%u.%u.%u.%u to %s\n",
-            romfs_ver.major, romfs_ver.minor, romfs_ver.patch, romfs_ver.kefir, target);
-        return true;
-    }
+    fs::FsPath sd_path;
+    const bool explicit_target = (target_path != nullptr && *target_path != '\0');
+    bool has_sd_file = false;
 
-    std::vector<u8> sd_data;
-    TegraExplorerVersion sd_ver{};
-    if (R_SUCCEEDED(sd.read_entire_file(sd_path, sd_data)) && !sd_data.empty()) {
-        parseTegraExplorerVersion(sd_data.data(), sd_data.size(), sd_ver);
-    }
-
-    log_write("ensureTegraExplorerPayload: SD v%u.%u.%u.%u vs RomFS v%u.%u.%u.%u\n",
-        sd_ver.major, sd_ver.minor, sd_ver.patch, sd_ver.kefir,
-        romfs_ver.major, romfs_ver.minor, romfs_ver.patch, romfs_ver.kefir);
-
-    if (sd_ver < romfs_ver) {
-        FILE* fp = fopen(static_cast<const char*>(sd_path), "wb");
-        bool written = false;
-        if (fp) {
-            written = (fwrite(romfs_data.data(), 1, romfs_data.size(), fp) == romfs_data.size());
-            fflush(fp);
-            fclose(fp);
+    if (explicit_target) {
+        std::string target_norm = target_path;
+        if (target_norm.starts_with("sdmc:/")) {
+            target_norm.erase(0, 5);
+        } else if (target_norm.starts_with("sdmc:")) {
+            target_norm.erase(0, 5);
         }
-        if (!written) {
-            sd.write_entire_file(sd_path, romfs_data);
+        if (!target_norm.starts_with("/")) {
+            target_norm = "/" + target_norm;
         }
-        fsdevCommitDevice("sdmc");
-        sd.Commit();
-        log_write("ensureTegraExplorerPayload: upgraded %s to v%u.%u.%u.%u\n",
-            static_cast<const char*>(sd_path),
-            romfs_ver.major, romfs_ver.minor, romfs_ver.patch, romfs_ver.kefir);
+        sd_path = target_norm;
+        has_sd_file = sd.FileExists(sd_path);
     } else {
-        log_write("ensureTegraExplorerPayload: keeping existing SD payload (%s, v%u.%u.%u.%u >= v%u.%u.%u.%u)\n",
-            static_cast<const char*>(sd_path),
-            sd_ver.major, sd_ver.minor, sd_ver.patch, sd_ver.kefir,
-            romfs_ver.major, romfs_ver.minor, romfs_ver.patch, romfs_ver.kefir);
+        has_sd_file = findExistingTegraExplorerPayloadOnSd(sd_path);
+        if (!has_sd_file) {
+            sd_path = "/bootloader/payloads/TegraExplorer.bin";
+        }
     }
 
-    out = sd_path;
-    return true;
+    TegraExplorerPayloadState sd_state{};
+    std::vector<u8> sd_data;
+    if (!has_sd_file) {
+        sd_state.status = PayloadMetaStatus::Missing;
+    } else if (R_FAILED(sd.read_entire_file(sd_path, sd_data))) {
+        sd_state.status = PayloadMetaStatus::Unreadable;
+    } else {
+        sd_state.status = inspectTegraExplorerPayloadData(
+            sd_data.data(), sd_data.size(), sd_state.version);
+    }
+
+    const auto action = decideTegraExplorerPayloadAction(sd_state, romfs_state);
+
+    switch (action) {
+        case TegraExplorerSelectionAction::FailNoPayload:
+            log_write("ensureTegraExplorerPayload: no usable TegraExplorer payload in romfs or on SD\n");
+            return false;
+
+        case TegraExplorerSelectionAction::UseExistingSd:
+            out = sd_path;
+            if (romfs_state.status != PayloadMetaStatus::Valid && romfs_state.status != PayloadMetaStatus::Unrecognized) {
+                log_write("ensureTegraExplorerPayload: romfs unavailable, preserving readable SD fallback: %s\n",
+                    static_cast<const char*>(out));
+            } else if (romfs_state.status != PayloadMetaStatus::Valid) {
+                log_write("ensureTegraExplorerPayload: romfs metadata unrecognized, preserving known SD payload (%s, v%u.%u.%u.%u)\n",
+                    static_cast<const char*>(sd_path),
+                    sd_state.version.major, sd_state.version.minor, sd_state.version.patch, sd_state.version.kefir);
+            } else {
+                log_write("ensureTegraExplorerPayload: keeping existing SD payload (%s, v%u.%u.%u.%u >= RomFS v%u.%u.%u.%u)\n",
+                    static_cast<const char*>(sd_path),
+                    sd_state.version.major, sd_state.version.minor, sd_state.version.patch, sd_state.version.kefir,
+                    romfs_state.version.major, romfs_state.version.minor, romfs_state.version.patch, romfs_state.version.kefir);
+            }
+            return true;
+
+        case TegraExplorerSelectionAction::InstallSdFromRomfs:
+            log_write("ensureTegraExplorerPayload: installing RomFS TegraExplorer v%u.%u.%u.%u to %s\n",
+                romfs_state.version.major, romfs_state.version.minor, romfs_state.version.patch, romfs_state.version.kefir,
+                static_cast<const char*>(sd_path));
+            if (!safeWritePayloadFile(sd, sd_path, romfs_data)) {
+                log_write("ensureTegraExplorerPayload: failed to install RomFS payload to %s\n",
+                    static_cast<const char*>(sd_path));
+                return false;
+            }
+            out = sd_path;
+            return true;
+
+        case TegraExplorerSelectionAction::UpgradeSdFromRomfs:
+            log_write("ensureTegraExplorerPayload: upgrading %s (v%u.%u.%u.%u) to RomFS v%u.%u.%u.%u\n",
+                static_cast<const char*>(sd_path),
+                sd_state.version.major, sd_state.version.minor, sd_state.version.patch, sd_state.version.kefir,
+                romfs_state.version.major, romfs_state.version.minor, romfs_state.version.patch, romfs_state.version.kefir);
+            if (!safeWritePayloadFile(sd, sd_path, romfs_data)) {
+                log_write("ensureTegraExplorerPayload: failed to upgrade %s with RomFS payload\n",
+                    static_cast<const char*>(sd_path));
+                return false;
+            }
+            out = sd_path;
+            return true;
+    }
+
+    return false;
 }
 
 bool findTegraExplorerPayload(fs::FsPath& out) {

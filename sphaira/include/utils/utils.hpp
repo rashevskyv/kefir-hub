@@ -2,6 +2,7 @@
 
 #include "fs.hpp"
 #include "ui/types.hpp"
+#include "utils/tegra_explorer_meta.hpp"
 
 namespace sphaira::utils {
 
@@ -40,7 +41,8 @@ bool findLockpickPayload(fs::FsPath& out);
 // Ensure TegraExplorer payload exists on SD and is at least as new as the RomFS version.
 // If missing on SD, copies from RomFS. If SD version < RomFS version, upgrades in-place.
 // If SD version >= RomFS version, leaves SD version untouched.
-bool ensureTegraExplorerPayload(fs::FsPath& out);
+// When target_path is specified, checks and updates that explicit path instead of auto-discovering.
+bool ensureTegraExplorerPayload(fs::FsPath& out, const char* target_path = nullptr);
 
 // Find TegraExplorer.bin under /bootloader/payloads (any casing), ensuring RomFS version check.
 bool findTegraExplorerPayload(fs::FsPath& out);

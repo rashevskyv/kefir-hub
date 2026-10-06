@@ -44,3 +44,5 @@
 ## Open questions
 - Whether the user must switch the system language manually after installing a translation. Scene 26 says only that Kefir Hub switches its own language. (kefir-settings.md TODO)
 - USB 3.0 shows On when its key is absent (code bug, plan D.7); scene 22 says every switch is Off out of the box. Recheck the list shot after D.7. (kefir-settings.md TODO)
+
+TegraExplorer preparation: Hub installs its bundled payload if absent or newer than the memory-card copy. Equal/newer card versions remain unchanged. This also applies to the 8GB DRAM setting and a TegraExplorer file selected in the File Browser. No visible menu or confirmation changes; existing screenshots remain valid.

@@ -46,13 +46,17 @@ auto ApplyRedirectSaves(bool enabled) -> Result {
 }
 
 auto Apply8GbDram(bool enabled) -> Result {
+    fs::FsPath te_bin;
+    if (!utils::findTegraExplorerPayload(te_bin)) {
+        R_THROW(Result_FsUnknownStdioError);
+    }
     if (enabled) {
         R_TRY(CopyFileSimple("/config/8gb/install.te", "/startup.te"));
     } else {
         R_TRY(CopyFileSimple("/tegraexplorer/scripts/Remove_8GB-RAM_config.te", "/startup.te"));
     }
     fsdevCommitDevice("sdmc");
-    if (!utils::rebootToPayload("/bootloader/payloads/TegraExplorer.bin")) {
+    if (!utils::rebootToPayload(te_bin)) {
         R_THROW(Result_FsUnknownStdioError);
     }
     R_SUCCEED();
