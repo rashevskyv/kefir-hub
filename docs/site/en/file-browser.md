@@ -32,7 +32,8 @@ The header shows the current path and the position in the list. When items are s
 Some folders get a description next to their name:
 
 - in `/atmosphere/contents/`, each title ID folder shows the game or system module name;
-- in `/config/kefir/`, each folder shows what it is for.
+- files and folders of the Kefir package (card root, `atmosphere/`, `bootloader/`, `config/`, `switch/` and others)
+  show what they are for. The full list is on [What is on the microSD card](card-contents.md).
 
 ## Open a file
 **A** on a file does what fits the file type:

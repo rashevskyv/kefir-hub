@@ -70,6 +70,7 @@
 #include <limits>
 #include <algorithm>
 #include "ui/menus/filebrowser/filebrowser_internal.hpp"
+#include "ui/menus/filebrowser_path_notes.hpp"
 
 namespace sphaira::ui::menu::filebrowser {
 using namespace detail;
@@ -106,51 +107,20 @@ void FsView::LoadTitleLabels() {
         }
     }
 
-    if (path::EqualsIC(path, paths::DATA_ROOT)) {
-        for (auto& e : m_entries) {
-            if (!e.IsDir()) {
-                continue;
-            }
-
-            if (path::EqualsIC(e.name, "account_link_rollback")) {
-                e.title_label = "Safety snapshots created before changing Nintendo Account link data"_i18n;
-            } else if (path::EqualsIC(e.name, "account_save_dump")) {
-                e.title_label = "Legacy read-only dump of account save 0010"_i18n;
-            } else if (path::EqualsIC(e.name, "restore_pending")) {
-                e.title_label = "Staged account restore and rollback state"_i18n;
-            } else if (path::EqualsIC(e.name, "account_backups")) {
-                e.title_label = "KefirHub account backup library"_i18n;
-            } else if (path::EqualsIC(e.name, "user_packs")) {
-                e.title_label = "Legacy KefirHub account backup library"_i18n;
-            } else if (path::EqualsIC(e.name, "playtime_pending")) {
-                e.title_label = "Files awaiting TegraExplorer play time restoration"_i18n;
-            } else if (path::EqualsIC(e.name, "nand_transfer")) {
-                e.title_label = "Temporary files and scripts for NAND transfer"_i18n;
-            } else if (path::EqualsIC(e.name, "assoc")) {
-                e.title_label = "File type associations"_i18n;
-            } else if (path::EqualsIC(e.name, "themes")) {
-                e.title_label = "Custom user interface themes"_i18n;
-            } else if (path::EqualsIC(e.name, "github")) {
-                e.title_label = "Downloaded GitHub packages and repositories"_i18n;
-            } else if (path::EqualsIC(e.name, "i18n")) {
-                e.title_label = "Custom interface translations"_i18n;
-            } else if (path::EqualsIC(e.name, "downloads")) {
-                e.title_label = "Downloaded files and updates"_i18n;
-            } else if (path::EqualsIC(e.name, "packages")) {
-                e.title_label = "Package definitions and metadata"_i18n;
-            } else if (path::EqualsIC(e.name, "logo")) {
-                e.title_label = "Custom startup logo and animation"_i18n;
-            } else if (path::EqualsIC(e.name, "cache")) {
-                e.title_label = "Application cache files"_i18n;
-            } else if (path::EqualsIC(e.name, "avatars")) {
-                e.title_label = "Custom user avatar images"_i18n;
+    // known Kefir files and folders get a one-line note under the name.
+    for (auto& e : m_entries) {
+        if (e.title_label.empty()) {
+            if (const auto note = FindPathNote(path, e.name)) {
+                e.title_label = i18n::get(note);
             }
         }
     }
 
     for (auto& e : m_entries) {
         if (e.IsFile() && path::EqualsIC(e.GetExtension(), "bin")) {
-            e.title_label = IdentifyPayload(m_fs.get(), GetNewPath(e));
+            if (auto payload = IdentifyPayload(m_fs.get(), GetNewPath(e)); !payload.empty()) {
+                e.title_label = payload; // a recognised payload beats the generic note
+            }
         }
     }
 }
