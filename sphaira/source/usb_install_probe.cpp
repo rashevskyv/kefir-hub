@@ -12,10 +12,11 @@ namespace sphaira::usb_probe {
 namespace {
 
 // how long the PC gets to start talking once the device has enumerated. A
-// backend that is up answers the first round; the rounds after that only cover
-// an app the user is still clicking "start" in.
+// backend with its server running answers the first round. DBI Backend Qt
+// starts its server by itself when the console appears, but only on a 2 s
+// timer plus a device reset and a 1 s settle, so two more rounds cover it.
 constexpr u64 ENUMERATE_TIMEOUT = 3'000'000'000ULL;
-constexpr int DETECT_ROUNDS = 2;
+constexpr int DETECT_ROUNDS = 3;
 
 std::atomic<State> g_state{State::Idle};
 Thread g_thread{};
