@@ -91,6 +91,13 @@
 
 Файл записується в `/games/` на карті пам'яті.
 
+## Надіслати гру на іншу консоль { #send-a-game-to-another-console }
+
+<!-- draft
+- new in v0.14.020: open the game with **A**, press **+**, choose [[Send to another console]]
+- the game, its installed updates and DLC are offered at once over Wi-Fi; the server screen with the address opens; the other console uses [[Tools]] → [[Console Transfer]] → [[Receive games]], see [Перенести встановлені ігри](console-transfer.md#move-installed-games)
+-->
+
 ## Видалити гру
 1. Позначте ігри (або наведіть на одну) і натисніть **+**.
 2. Виберіть [[Delete]] і підтвердіть кнопкою [[Delete]]. Якщо в позначеної гри є моди, у питанні буде ще [[Delete with mods]]: моди гри теж видаляться (чити залишаться).

@@ -140,71 +140,71 @@ auto FindSerial() -> SerialInfo {
 } // namespace
 
 auto CollectConsole() -> Group {
-    GroupBuilder g{"Console"};
+    GroupBuilder g{"Console"_i18n};
 
     SetSysFirmwareVersion fw{};
     if (R_SUCCEEDED(setsysGetFirmwareVersion(&fw))) {
-        g.Line("Firmware", fw.display_version);
-        g.Line("Firmware name", fw.display_title);
-        g.Line("Firmware hash", fw.version_hash);
+        g.Line("Firmware"_i18n, fw.display_version);
+        g.Line("Firmware name"_i18n, fw.display_title);
+        g.Line("Firmware hash"_i18n, fw.version_hash);
     }
 
     u64 v{};
     SetSysProductModel model{};
     if (R_SUCCEEDED(setsysGetProductModel(&model))) {
         static constexpr const char* models[] = {"Unknown", "Nintendo Switch (Erista)", "Copper (development)", "Nintendo Switch (Mariko)", "Nintendo Switch Lite", "Calcio (development)", "Nintendo Switch OLED"};
-        g.Line("Model", static_cast<size_t>(model) < std::size(models) ? i18n::get(models[model]) : Fmt("%d", (int)model));
+        g.Line("Model"_i18n, static_cast<size_t>(model) < std::size(models) ? i18n::get(models[model]) : Fmt("%d", (int)model));
     }
     if (GetSpl(SplConfigItem_HardwareType, v)) {
         static constexpr const char* types[] = {"Icosa", "Copper", "Hoag", "Iowa", "Calcio", "Aula"};
-        g.Line("Hardware type", v < std::size(types) ? types[v] : Fmt("%lu", v));
-        g.Line("SoC", v == 0 || v == 1 ? "Tegra X1 (Erista)" : "Tegra X1+ (Mariko)");
+        g.Line("Hardware type"_i18n, v < std::size(types) ? types[v] : Fmt("%lu", v));
+        g.Line("SoC"_i18n, v == 0 || v == 1 ? "Tegra X1 (Erista)" : "Tegra X1+ (Mariko)");
     }
     if (GetSpl(SplConfigItem_IsRetail, v)) {
-        g.Line("Unit", v ? "Retail"_i18n : "Development"_i18n);
+        g.Line("Unit"_i18n, v ? "Retail"_i18n : "Development"_i18n);
     }
     if (GetSpl(SplConfigItem_Version, v)) {
-        g.Line("Burnt fuses", Fmt("%lu", v));
+        g.Line("Burnt fuses"_i18n, Fmt("%lu", v));
     }
     if (GetSpl(SplConfigItem_DramId, v)) {
-        g.Line("DRAM id", Fmt("%lu", v));
+        g.Line("DRAM id"_i18n, Fmt("%lu", v));
     }
     if (GetSpl(SplConfigItem_DeviceId, v)) {
-        g.Line("Device id", Fmt("%016lX", v));
+        g.Line("Device id"_i18n, Fmt("%016lX", v));
     }
     if (GetSpl(SplConfigItem_IsKiosk, v)) {
-        g.Line("Kiosk unit", YesNo(v));
+        g.Line("Kiosk unit"_i18n, YesNo(v));
     }
     if (GetSpl(SplConfigItem_IsChargerHiZModeEnabled, v)) {
-        g.Line("Charger HiZ mode", v ? "On"_i18n : "Off"_i18n);
+        g.Line("Charger HiZ mode"_i18n, v ? "On"_i18n : "Off"_i18n);
     }
 
     const auto serial = FindSerial();
-    g.Line("Serial number", serial.serial.empty() ? "Not available"_i18n : serial.serial);
-    g.Line("Serial number source", serial.source);
+    g.Line("Serial number"_i18n, serial.serial.empty() ? "Not available"_i18n : serial.serial);
+    g.Line("Serial number source"_i18n, serial.source);
     if (!serial.system.empty() && serial.system != serial.serial) {
-        g.Line("Serial number (system)", serial.system + " (" + "blank"_i18n + ")");
+        g.Line("Serial number (system)"_i18n, serial.system + " (" + "blank"_i18n + ")");
     }
 
     SetSysDeviceNickName nick{};
     if (R_SUCCEEDED(setsysGetDeviceNickname(&nick))) {
-        g.Line("Console nickname", nick.nickname);
+        g.Line("Console nickname"_i18n, nick.nickname);
     }
     u64 lang{};
     if (R_SUCCEEDED(setGetSystemLanguage(&lang))) {
         char code[9]{};
         std::memcpy(code, &lang, 8);
-        g.Line("Language", code);
+        g.Line("Language"_i18n, code);
     }
     SetRegion region{};
     if (R_SUCCEEDED(setGetRegionCode(&region))) {
         static constexpr const char* regions[] = {"Japan", "USA", "Europe", "Australia", "Hong Kong / Taiwan / Korea", "China"};
-        g.Line("Region", static_cast<size_t>(region) < std::size(regions) ? i18n::get(regions[region]) : Fmt("%d", (int)region));
+        g.Line("Region"_i18n, static_cast<size_t>(region) < std::size(regions) ? i18n::get(regions[region]) : Fmt("%d", (int)region));
     }
     if (R_SUCCEEDED(pctlInitialize())) {
         bool restricted{};
         if (R_SUCCEEDED(pctlIsRestrictionEnabled(&restricted))) {
-            g.Line("Parental controls", restricted ? "On"_i18n : "Off"_i18n);
+            g.Line("Parental controls"_i18n, restricted ? "On"_i18n : "Off"_i18n);
         }
         pctlExit();
     }
@@ -212,42 +212,42 @@ auto CollectConsole() -> Group {
 }
 
 auto CollectAtmosphere() -> Group {
-    GroupBuilder g{"Atmosphere"};
+    GroupBuilder g{"Atmosphere"_i18n};
     u64 v{};
     if (GetSpl(Exo_Version, v)) {
-        g.Line("Version", Fmt("%lu.%lu.%lu", (v >> 56) & 0xFF, (v >> 48) & 0xFF, (v >> 40) & 0xFF));
-        g.Line("Key generation", Fmt("%lu", (v >> 32) & 0xFF));
-        g.Line("Target firmware", Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
+        g.Line("Version"_i18n, Fmt("%lu.%lu.%lu", (v >> 56) & 0xFF, (v >> 48) & 0xFF, (v >> 40) & 0xFF));
+        g.Line("Key generation"_i18n, Fmt("%lu", (v >> 32) & 0xFF));
+        g.Line("Target firmware"_i18n, Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
     }
     if (GetSpl(Exo_SupportedHosVersion, v)) {
-        g.Line("Supported firmware", Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
+        g.Line("Supported firmware"_i18n, Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
     }
     if (GetSpl(Exo_GitCommitHash, v)) {
-        g.Line("Git commit", Fmt("%016lX", v));
+        g.Line("Git commit"_i18n, Fmt("%016lX", v));
     }
     if (GetSpl(Exo_HasRcmBugPatch, v)) {
-        g.Line("RCM bug patched", YesNo(v));
+        g.Line("RCM bug patched"_i18n, YesNo(v));
     }
     if (GetSpl(Exo_EmummcType, v)) {
         static constexpr const char* types[] = {"No", "Yes (partition)", "Yes (file)"};
-        g.Line("emuMMC", v < std::size(types) ? i18n::get(types[v]) : Fmt("%lu", v));
+        g.Line("emuMMC"_i18n, v < std::size(types) ? i18n::get(types[v]) : Fmt("%lu", v));
     } else {
-        g.Line("emuMMC", YesNo(App::IsEmummc()));
+        g.Line("emuMMC"_i18n, YesNo(App::IsEmummc()));
     }
     if (GetSpl(Exo_BlankProdInfo, v)) {
-        g.Line("Blank PRODINFO", v ? "On"_i18n : "Off"_i18n);
+        g.Line("Blank PRODINFO"_i18n, v ? "On"_i18n : "Off"_i18n);
     }
     if (GetSpl(Exo_AllowCalWrites, v)) {
-        g.Line("PRODINFO writes allowed", YesNo(v));
+        g.Line("PRODINFO writes allowed"_i18n, YesNo(v));
     }
     if (GetSpl(Exo_ForceEnableUsb30, v)) {
-        g.Line("USB 3.0 forced", YesNo(v));
+        g.Line("USB 3.0 forced"_i18n, YesNo(v));
     }
     return g.group;
 }
 
 auto CollectHardware() -> Group {
-    GroupBuilder g{"Hardware"};
+    GroupBuilder g{"Hardware"_i18n};
     if (R_FAILED(setcalInitialize())) {
         return g.group;
     }
@@ -255,25 +255,25 @@ auto CollectHardware() -> Group {
 
     SetCalBdAddress bt{};
     if (R_SUCCEEDED(setcalGetBdAddress(&bt))) {
-        g.Line("Bluetooth MAC", Mac(bt.bd_addr));
+        g.Line("Bluetooth MAC"_i18n, Mac(bt.bd_addr));
     }
     SetCalMacAddress wlan{};
     if (R_SUCCEEDED(setcalGetWirelessLanMacAddress(&wlan))) {
-        g.Line("Wi-Fi MAC", Mac(wlan.addr));
+        g.Line("Wi-Fi MAC"_i18n, Mac(wlan.addr));
     }
     SetCalConfigurationId1 cfg{};
     if (R_SUCCEEDED(setcalGetConfigurationId1(&cfg))) {
         const auto* s = reinterpret_cast<const char*>(cfg.cfg);
-        g.Line("Configuration id", std::string(s, strnlen(s, sizeof(cfg.cfg))));
+        g.Line("Configuration id"_i18n, std::string(s, strnlen(s, sizeof(cfg.cfg))));
     }
     SetBatteryLot lot{};
     if (R_SUCCEEDED(setcalGetBatteryLot(&lot))) {
-        g.Line("Battery lot", std::string(lot.lot, strnlen(lot.lot, sizeof(lot.lot))));
+        g.Line("Battery lot"_i18n, std::string(lot.lot, strnlen(lot.lot, sizeof(lot.lot))));
     }
     SetCalSerialNumber serial{};
     if (R_SUCCEEDED(setcalGetSerialNumber(&serial))) {
         const std::string_view s{serial.number, strnlen(serial.number, sizeof(serial.number))};
-        g.Line("Serial number (calibration)", IsRealSerial(s) ? std::string{TrimSerial(s)} : std::string{TrimSerial(s)} + " (" + "blank"_i18n + ")");
+        g.Line("Serial number (calibration)"_i18n, IsRealSerial(s) ? std::string{TrimSerial(s)} : std::string{TrimSerial(s)} + " (" + "blank"_i18n + ")");
     }
     return g.group;
 }

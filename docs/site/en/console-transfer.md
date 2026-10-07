@@ -7,13 +7,14 @@ downloads them.
 **Where:** on the sending console [[Tools]] → [[Console Transfer]].
 For profiles and play hours, the receiving console uses [[Tools]] → [[Tools]] → [[Users]].
 
-<!-- shot: console-transfer-menu | Console Transfer screen with all seven share items -->
+<!-- shot: console-transfer-menu | Console Transfer screen: Send installed games and Receive games on top, then the seven share items -->
 
 Before launching TegraExplorer, Kefir Hub compares the memory-card payload with its bundled copy. It installs the bundled copy if the file is missing, or updates an older version. An equal or newer version on the card stays unchanged. If installation fails, Hub does not launch it.
 
 ## What you can move
 | What | Sending console | Receiving console |
 |---|---|---|
+| Installed games (base, updates, DLC) | [[Send installed games]] | [[Receive games]], see [Move installed games](#move-installed-games) |
 | All profiles and their play hours | [[Share Profiles & Play Hours]] | [[Users]] → [[Restore from another console]] or [[Receive from another console]] |
 | Save backups | [[Share Save Backups]] | Download the files, then restore them in [[Saves]] |
 | Screenshots and videos | [[Share Screenshots & Videos]] | Download in a browser |
@@ -23,8 +24,9 @@ Before launching TegraExplorer, Kefir Hub compares the memory-card payload with 
 
 What is **not** moved:
 
-- Installed games. Console Transfer shares files, not installed titles. Install the games on the new console
-  from your files, see [Install games](install/index.md).
+<!-- draft
+- installed games are moved now (v0.14.020), see [Move installed games](#move-installed-games); the old "not moved" bullet about games is gone
+-->
 - Game saves. Copying them with the profiles would take too long. Back them up in [[Saves]] and move the
   backups with [[Share Save Backups]], see [Move save backups](#move-save-backups).
 - [[Share User Backups]] shares the profile backups in `/config/kefir/account_backups/`. Restoring them on the
@@ -91,6 +93,22 @@ On the receiving console:
 !!! tip
     Without a network: copy the `.kefir-nand.zip` file from `/config/kefir/nand_transfer/` on the sending console's
     memory card to the same folder on the receiving one, then use [[Restore profiles & play hours]] in [[Users]].
+
+## Move installed games
+
+<!-- shot: console-transfer-send-games | Send installed games sidebar: Choose games "0 / 6", Start sharing -->
+<!-- shot: console-transfer-receive-games | Receive games sidebar on the other console: Choose games with all ticked, Install -->
+
+<!-- draft
+- new in v0.14.020; both consoles on the same Wi-Fi; the receiving console needs installing enabled (the usual enable-install prompt appears otherwise)
+- sending console: [[Tools]] → [[Console Transfer]] → [[Send installed games]]; Kefir Hub reads the installed games (a progress box), then a sidebar: [[Choose games]] opens a tick list (**A** ticks one, **X** all, **Y** none, **B** closes), the row shows "ticked / total"; [[Start sharing]] starts the server screen (address + QR, **B** stops) titled [[Send installed games]]; with nothing ticked the message [[No games chosen]] appears
+- shortcut: in [[Games]] open a game, press **+** → [[Send to another console]]: shares that one game at once, no tick list
+- what is offered per game: the base game, every installed update and every installed DLC, as NSP files built from the installed content (nothing is written to the memory card); the server screen shows "Sending: <file>" with a progress bar while the other console downloads
+- receiving console: [[Tools]] → [[Console Transfer]] → [[Receive games]]; type the sending console's address (same keyboard and port rules as for profiles); Kefir Hub fetches the list ([[Fetching game list...]]); if the other console offers nothing, a message says to open [[Send installed games]] there first
+- then a sidebar: [[Choose games]] (every offered game is ticked; the tick list shows size and file count per game), [[Install]]; the files of each game install one after another with the normal install progress; at the end "Installed N games"; a failure shows [[Install failed!]]
+- the sending console's server also still serves the memory card listing at its address, like every share
+- by cable (USB-C between two consoles): not available; use Wi-Fi
+-->
 
 ## Move save backups
 1. On the sending console, back up the saves you need in [[Saves]]. See [Saves](saves.md).

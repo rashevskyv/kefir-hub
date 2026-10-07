@@ -27,13 +27,13 @@ auto UsedOfTotal(s64 free, s64 total) -> std::string {
 } // namespace
 
 auto CollectStorage() -> Group {
-    GroupBuilder g{"Storage"};
+    GroupBuilder g{"Storage"_i18n};
 
     s64 nand_free{}, nand_total{}, sd_free{}, sd_total{};
     fs::GetStorageSpaces(&nand_free, &nand_total, &sd_free, &sd_total);
     if (nand_total) {
-        g.Line("System memory used", UsedOfTotal(nand_free, nand_total));
-        g.Line("System memory free", FormatBytes(static_cast<u64>(nand_free)));
+        g.Line("System memory used"_i18n, UsedOfTotal(nand_free, nand_total));
+        g.Line("System memory free"_i18n, FormatBytes(static_cast<u64>(nand_free)));
     }
 
     FsDeviceOperator op{};
@@ -44,22 +44,22 @@ auto CollectStorage() -> Group {
 
     bool inserted{};
     if (R_FAILED(fsDeviceOperatorIsSdCardInserted(&op, &inserted)) || !inserted) {
-        g.Line("microSD card", "Not inserted"_i18n);
+        g.Line("microSD card"_i18n, "Not inserted"_i18n);
         return g.group;
     }
     if (sd_total) {
-        g.Line("microSD card used", UsedOfTotal(sd_free, sd_total));
-        g.Line("microSD card free", FormatBytes(static_cast<u64>(sd_free)));
+        g.Line("microSD card used"_i18n, UsedOfTotal(sd_free, sd_total));
+        g.Line("microSD card free"_i18n, FormatBytes(static_cast<u64>(sd_free)));
     }
     s64 v{};
     if (R_SUCCEEDED(fsDeviceOperatorGetSdCardSpeedMode(&op, &v))) {
-        g.Line("microSD card speed mode", SpeedModeName(v));
+        g.Line("microSD card speed mode"_i18n, SpeedModeName(v));
     }
     if (R_SUCCEEDED(fsDeviceOperatorGetSdCardUserAreaSize(&op, &v))) {
-        g.Line("microSD card user area", FormatBytes(static_cast<u64>(v)));
+        g.Line("microSD card user area"_i18n, FormatBytes(static_cast<u64>(v)));
     }
     if (R_SUCCEEDED(fsDeviceOperatorGetSdCardProtectedAreaSize(&op, &v))) {
-        g.Line("microSD card protected area", FormatBytes(static_cast<u64>(v)));
+        g.Line("microSD card protected area"_i18n, FormatBytes(static_cast<u64>(v)));
     }
 
     u8 raw[16]{};
@@ -67,14 +67,14 @@ auto CollectStorage() -> Group {
         const auto cid = ParseSdCid(std::span<const u8, 16>{raw});
         if (cid.valid) {
             const auto* maker = SdManufacturerName(cid.mid);
-            g.Line("microSD card maker", *maker ? Fmt("%s (0x%02X)", maker, cid.mid) : Fmt("0x%02X", cid.mid));
-            g.Line("microSD card OEM id", cid.oid);
-            g.Line("microSD card product", cid.pnm);
-            g.Line("microSD card revision", Fmt("%u.%u", cid.prv_major, cid.prv_minor));
-            g.Line("microSD card serial", Fmt("%08X", cid.psn));
-            g.Line("microSD card made", Fmt("%04u-%02u", cid.year, cid.month));
+            g.Line("microSD card maker"_i18n, *maker ? Fmt("%s (0x%02X)", maker, cid.mid) : Fmt("0x%02X", cid.mid));
+            g.Line("microSD card OEM id"_i18n, cid.oid);
+            g.Line("microSD card product"_i18n, cid.pnm);
+            g.Line("microSD card revision"_i18n, Fmt("%u.%u", cid.prv_major, cid.prv_minor));
+            g.Line("microSD card serial"_i18n, Fmt("%08X", cid.psn));
+            g.Line("microSD card made"_i18n, Fmt("%04u-%02u", cid.year, cid.month));
         } else {
-            g.Line("microSD card CID", Fmt("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+            g.Line("microSD card CID"_i18n, Fmt("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
                 raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
                 raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]));
         }
@@ -83,7 +83,7 @@ auto CollectStorage() -> Group {
 }
 
 auto CollectPlayActivity() -> Group {
-    GroupBuilder g{"Play activity"};
+    GroupBuilder g{"Play activity"_i18n};
     if (R_FAILED(pdmqryInitialize())) {
         return g.group;
     }
@@ -112,9 +112,9 @@ auto CollectPlayActivity() -> Group {
         const auto minutes = ns / 60'000'000'000ULL;
         return Fmt("%lu h %02lu min", minutes / 60, minutes % 60);
     };
-    g.Line("Installed games", Fmt("%lu", games));
-    g.Line("Total play time", hm(playtime_ns));
-    g.Line("Total launches", Fmt("%lu", launches));
+    g.Line("Installed games"_i18n, Fmt("%lu", games));
+    g.Line("Total play time"_i18n, hm(playtime_ns));
+    g.Line("Total launches"_i18n, Fmt("%lu", launches));
     if (top_id) {
         std::string name = Fmt("%016lX", top_id);
         if (titles) {
@@ -122,7 +122,7 @@ auto CollectPlayActivity() -> Group {
                 name = data->lang.name;
             }
         }
-        g.Line("Most played", name + " · " + hm(top_ns));
+        g.Line("Most played"_i18n, name + " · " + hm(top_ns));
     }
     return g.group;
 }

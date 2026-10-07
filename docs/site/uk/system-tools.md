@@ -4,22 +4,44 @@
 
 **Де:** [[Tools]] → [[Tools]]
 
-<!-- shot: system-tools-list | Tools submenu: Module Manager, Fan curve, Wi-Fi, Users and the planned items -->
+<!-- shot: system-tools-list | Tools submenu: one list under three captions — Diagnostics, Settings, Maintenance -->
 
-| Пункт | Що це |
-|---|---|
-| [[Module Manager]] | Запуск, зупинка й автозапуск установлених системних модулів. |
-| [[Fan curve]] | Криві швидкості вентилятора для портативного режиму й док-станції. |
-| [[Wi-Fi]] | Збережені мережі Wi-Fi. |
-| [[Users]] | Профілі користувачів консолі. Див. [Користувачі](users.md). |
-| [[Fill free SD space with zeros]] | Заповнює нулями вільне місце на карті пам'яті. Див. [Заповнення вільного місця нулями](#fill-free-space-with-zeros). |
-| [[Fill free NAND space with zeros]] | Заповнює нулями вільне місце в системній пам'яті консолі. |
+<!-- draft
+- the list has three captions (v0.14.018): [[Diagnostics]], [[Settings]], [[Maintenance]]; the cursor skips a caption, tapping one does nothing
+- the two "fill free space with zeros" items (SD and NAND) were removed in v0.14.018; nothing replaces them
+-->
 
-| [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
+| Група | Пункт | Що це |
+|---|---|---|
+| [[Diagnostics]] | [[System information]] | Консоль, Atmosphère, пам'ять, живлення, батарея, обладнання та ігрова активність. Див. [Системна інформація](#system-information). |
+| [[Settings]] | [[Module Manager]] | Запуск, зупинка й автозапуск установлених системних модулів. |
+| [[Settings]] | [[Fan curve]] | Криві швидкості вентилятора для портативного режиму й док-станції. |
+| [[Settings]] | [[Wi-Fi]] | Збережені мережі Wi-Fi. |
+| [[Settings]] | [[Users]] | Профілі користувачів консолі. Див. [Користувачі](users.md). |
+| [[Maintenance]] | [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
+| [[Maintenance]] | [[Remove parental controls]] | Заплановано; показує повідомлення «Coming soon». |
 
-| [[System information]] | Відомості про прошивку, Atmosphère, батарею й обладнання. Звіт також зберігається в `/config/kefir/system-info.txt`. |
+## [[System information]] { #system-information }
 
-[[Remove parental controls]] заплановано; зараз цей пункт показує повідомлення «Coming soon».
+**Де:** [[Tools]] → [[Tools]] → [[System information]]
+
+<!-- shot: system-tools-system-info | System information: Console group open, parameter → value rows, other groups closed -->
+
+<!-- draft
+- replaces the text report (v0.14.019): no file is written to the memory card any more
+- one list of groups: [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], [[Play activity]]; the first group is open at start
+- press **A** on a group, or tap it, to open or close it; **A** on a row opens or closes the group the row belongs to; **Y** opens all groups or closes all
+- each open group shows rows parameter → value; the number on the right of a closed group is its row count
+- [[Console]]: firmware version, name and hash; model; hardware type and SoC; retail or development unit; burnt fuses; DRAM id; device id; kiosk; charger HiZ; serial number; console nickname; language; region; parental controls
+- [[Serial number]] is the real one. [[Serial number source]] says where it was read: [[System settings]], [[PRODINFO partition]] or [[Backup file]] with the file path (Atmosphère `/atmosphere/automatic_backups`, hekate `/backup`). When the system returns a blank serial (Atmosphère blank_prodinfo, Incognito), the row [[Serial number (system)]] shows that blank value. The number is never computed or guessed; if no source has it, the value is [[Not available]]
+- [[Atmosphere]]: version, key generation, target firmware, supported firmware, git commit, RCM bug patched, emuMMC (partition or file), blank PRODINFO, PRODINFO writes allowed, USB 3.0 forced
+- [[Storage]]: system memory used and free; microSD used and free, speed mode, user and protected area; microSD CID: maker, OEM id, product, revision, serial, month made
+- [[Power]]: charger, charging allowed, enough power, charging now, fast charging, USB charger type, USB power role, every current and voltage limit, HiZ, controller power supply, OTG, power delivery state (firmware 17.0.0 or newer for most rows)
+- [[Battery]]: charge, raw charge, health, temperature, voltage; from the fuel gauge: design capacity, full capacity now, remaining capacity, charge cycles, age, current, average current, cell voltage, cell temperature, time to empty
+- [[Hardware]]: Bluetooth and Wi-Fi MAC, configuration id, battery lot, serial number from the calibration data
+- [[Play activity]]: installed games, total play time, total launches, most played game
+- a group whose service cannot be read is not shown
+-->
 
 ## [[Module Manager]]
 
@@ -175,19 +197,6 @@
 | [[Error reports]] | Звіти про збої в `/atmosphere/erpt_reports`. |
 | [[Folders of removed games]] | Папки в `/atmosphere/contents` ігор, яких уже немає на консолі. Системні модулі лишаються. |
 | [[Saves of removed users]] | Збереження користувачів, видалених з консолі. Вимкнено за замовчуванням: їх не відновити. |
-
-## Заповнення вільного місця нулями { #fill-free-space-with-zeros }
-
-Записує нулі в місце, яке не зайняте файлами, — на карті пам'яті або в системній пам'яті консолі. Файли, ігри
-й збереження лишаються як були. Корисно перед продажем чи передачею консолі або карти: видалені дані вже не відновити.
-
-**Де:** [[Tools]] → [[Tools]] → [[Fill free SD space with zeros]] або [[Fill free NAND space with zeros]]
-
-1. Виберіть пункт і підтвердьте кнопкою [[Fill]].
-2. Зачекайте. Смуга показує, скільки вже записано; на великій карті це може тривати довго.
-3. **B** скасовує; уже записане місце знову звільняється.
-
-Під час запису Kefir Hub лишає 64 МБ вільними, щоб система могла зберігати свої дані.
 
 ## Проблеми
 

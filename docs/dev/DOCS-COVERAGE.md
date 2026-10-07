@@ -106,7 +106,12 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Module Manager | Tools → Tools | uninstaller_menu.cpp | system-tools#module-manager | doc |
 | Fan curve | Tools → Tools | settings_fancurve*.cpp | system-tools#fan-curve | doc |
 | Wi-Fi manager | Tools → Tools | wifi_menu.cpp, wifi_manager.cpp | system-tools#wi-fi | doc |
-| System info, zero-fill, parental controls, junk clean | Tools → Tools | tools_menu.cpp:430-433 | system-tools | "planned" (Coming soon) |
+| Tools → Tools captions (Diagnostics / Settings / Maintenance) | Tools → Tools | tools_menu.cpp (SystemToolsMenu) | system-tools | draft (v0.14.018) |
+| System information: grouped parameter → value tables, serial source | Tools → Tools → System information | system_info*.cpp, ui/menus/system_info_menu.cpp | system-tools#system-information | draft (v0.14.019) |
+| Fill free SD/NAND space with zeros | Tools → Tools | — | — | removed in v0.14.018 |
+| Remove parental controls | Tools → Tools | tools_menu.cpp (ComingSoon) | system-tools | "planned" (Coming soon) |
+| Clean system junk | Tools → Tools | system_cleanup.cpp | system-tools#clean-system-junk | doc |
+| Game transfer between consoles: Send installed games / Receive games, Send to another console | Console Transfer, Games → + | web_games.cpp, ui/menus/console_games_transfer.cpp, game_details_ops.cpp | console-transfer#move-installed-games, games#send-a-game-to-another-console | draft (v0.14.020) |
 | Theme packs, favorites, Themezer, NXThemes Installer | Tools → Themes | settings_themes.cpp, themezer*.cpp | themes | doc |
 | Theme creator | File Browser → + → Create Switch Theme | theme_creator.cpp | themes#make-a-theme-from-a-picture | doc |
 | Remove system theme | none in app | — | themes#remove-a-theme | partial: no UI |

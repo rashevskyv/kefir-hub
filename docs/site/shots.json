@@ -175,7 +175,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2"
             ]
@@ -188,7 +188,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "Right 2",
@@ -341,7 +341,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 2",
+                "Down 3",
                 "A",
                 "wait 2"
             ]
@@ -499,7 +499,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "A",
@@ -777,6 +777,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
+                "Down",
                 "A",
                 "wait 3"
             ]
@@ -789,7 +790,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down",
+                "Down 2",
                 "A",
                 "wait 2",
                 "B",
@@ -813,7 +814,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "A",
@@ -828,7 +829,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "A",
@@ -846,7 +847,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "A",
@@ -1043,7 +1044,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "A",
@@ -1063,7 +1064,7 @@
                 "Right 2",
                 "A",
                 "wait 1.5",
-                "Down 3",
+                "Down 4",
                 "A",
                 "wait 2",
                 "A",
@@ -1114,6 +1115,7 @@
                 "Right 2",
                 "A",
                 "wait 2",
+                "Down 2",
                 "A",
                 "wait 3"
             ],
@@ -1150,6 +1152,33 @@
             "user": true
         },
         "users-unfinished-dump": {
+            "user": true
+        },
+        "system-tools-system-info": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
+                "Right 2",
+                "A",
+                "wait 1.5",
+                "A",
+                "wait 4"
+            ]
+        },
+        "console-transfer-send-games": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down 2",
+                "Right 2",
+                "A",
+                "wait 2",
+                "A",
+                "wait 4"
+            ]
+        },
+        "console-transfer-receive-games": {
             "user": true
         }
     }

@@ -11,16 +11,13 @@
 
 namespace sphaira::system_info {
 
+// labels arrive translated ("..."_i18n), so the i18n sync sees every one.
 struct GroupBuilder {
     Group group;
 
-    explicit GroupBuilder(const char* title) : group{i18n::get(title), {}} {}
+    explicit GroupBuilder(std::string title) : group{std::move(title), {}} {}
 
-    void Line(const char* label, std::string value) {
-        group.rows.push_back({i18n::get(label), std::move(value)});
-    }
-    // a row with an already translated label (built from pieces).
-    void LineRaw(std::string label, std::string value) {
+    void Line(std::string label, std::string value) {
         group.rows.push_back({std::move(label), std::move(value)});
     }
 };

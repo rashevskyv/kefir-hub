@@ -7,13 +7,14 @@
 **Де:** на консолі-відправнику [[Tools]] → [[Console Transfer]].
 Для профілів і годин консоль-отримувач використовує [[Tools]] → [[Tools]] → [[Users]].
 
-<!-- shot: console-transfer-menu | Console Transfer screen with all seven share items -->
+<!-- shot: console-transfer-menu | Console Transfer screen: Send installed games and Receive games on top, then the seven share items -->
 
 Перед запуском TegraExplorer Kefir Hub порівнює версію на карті пам’яті з вбудованою копією. Якщо файл відсутній, Hub встановлює свою копію. Якщо версія на карті старіша, Hub оновлює її. Однакову або новішу версію залишає. Якщо встановлення не вдалося, Hub не запускає payload.
 
 ## Що можна перенести {#what-you-can-move}
 | Що | Консоль-відправник | Консоль-отримувач |
 |---|---|---|
+| Встановлені ігри (основна гра, оновлення, DLC) | [[Send installed games]] | [[Receive games]], див. [Перенести встановлені ігри](#move-installed-games) |
 | Усі профілі та їхні години | [[Share Profiles & Play Hours]] | [[Users]] → [[Restore from another console]] або [[Receive from another console]] |
 | Резервні копії збережень | [[Share Save Backups]] | Завантажте файли, потім відновіть їх у [[Saves]] |
 | Знімки екрана й відео | [[Share Screenshots & Videos]] | Завантажте в браузері |
@@ -23,8 +24,9 @@
 
 Що **не** переноситься:
 
-- Встановлені ігри. [[Console Transfer]] передає файли, а не встановлені тайтли. Встановіть ігри на новій консолі
-  зі своїх файлів, див. [Встановлення ігор](install/index.md).
+<!-- draft
+- installed games are moved now (v0.14.020), see [Перенести встановлені ігри](#move-installed-games); the old "not moved" bullet about games is gone
+-->
 - Ігрові збереження. Копіювати їх разом із профілями було б надто довго. Зробіть їхні копії в [[Saves]] і
   перенесіть копії через [[Share Save Backups]], див. [Перенести копії збережень](#move-save-backups).
 - [[Share User Backups]] відкриває доступ до копій профілів у `/config/kefir/account_backups/`. Відновити їх на
@@ -90,6 +92,22 @@
 !!! tip
     Без мережі: скопіюйте файл `.kefir-nand.zip` з `/config/kefir/nand_transfer/` на карті пам'яті консолі-відправника
     в ту саму папку на карті отримувача, а потім скористайтеся [[Restore profiles & play hours]] в [[Users]].
+
+## Перенести встановлені ігри {#move-installed-games}
+
+<!-- shot: console-transfer-send-games | Send installed games sidebar: Choose games "0 / 6", Start sharing -->
+<!-- shot: console-transfer-receive-games | Receive games sidebar on the other console: Choose games with all ticked, Install -->
+
+<!-- draft
+- new in v0.14.020; both consoles on the same Wi-Fi; the receiving console needs installing enabled (the usual enable-install prompt appears otherwise)
+- sending console: [[Tools]] → [[Console Transfer]] → [[Send installed games]]; Kefir Hub reads the installed games (a progress box), then a sidebar: [[Choose games]] opens a tick list (**A** ticks one, **X** all, **Y** none, **B** closes), the row shows "ticked / total"; [[Start sharing]] starts the server screen (address + QR, **B** stops) titled [[Send installed games]]; with nothing ticked the message [[No games chosen]] appears
+- shortcut: in [[Games]] open a game, press **+** → [[Send to another console]]: shares that one game at once, no tick list
+- what is offered per game: the base game, every installed update and every installed DLC, as NSP files built from the installed content (nothing is written to the memory card); the server screen shows "Sending: <file>" with a progress bar while the other console downloads
+- receiving console: [[Tools]] → [[Console Transfer]] → [[Receive games]]; type the sending console's address (same keyboard and port rules as for profiles); Kefir Hub fetches the list ([[Fetching game list...]]); if the other console offers nothing, a message says to open [[Send installed games]] there first
+- then a sidebar: [[Choose games]] (every offered game is ticked; the tick list shows size and file count per game), [[Install]]; the files of each game install one after another with the normal install progress; at the end "Installed N games"; a failure shows [[Install failed!]]
+- the sending console's server also still serves the memory card listing at its address, like every share
+- by cable (USB-C between two consoles): not available; use Wi-Fi
+-->
 
 ## Перенести копії збережень {#move-save-backups}
 1. На консолі-відправнику зробіть копії потрібних збережень у [[Saves]]. Див. [Збереження](saves.md).

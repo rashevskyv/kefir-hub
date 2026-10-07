@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.021 — Build checkpoint for v0.14.018–020; translations and docs drafts
+- System information labels go through `"..."_i18n` so the i18n sync sees them; 93 new strings translated into every bundled language (tools/i18n-translate). Docs drafts (EN+UK) for the grouped Tools list, the System information screen, Move installed games and Send to another console; zero-fill sections removed; DOCS-COVERAGE rows; 12 shot recipes shifted for the new caption rows and the two new Console Transfer items.
+- host tests: pass (full, incl. i18n parity and doc labels: 753 used, 0 unknown) · docs: built en/uk, 0 warnings · nro: built (ReleaseWithInstall, v0.14.020 sources + this label change, no errors) · switch: pending — see v0.14.018–020.
+
 ## v0.14.020 — Game transfer between two consoles over Wi-Fi
 - Console Transfer → "Send installed games": tick games (X = all), Start sharing; the web server offers them at /games as streamed NSPs (base, every update, every DLC — the MTP Games builder, nothing written to the SD) with Range support, one ncm read at a time; the server box shows "Sending: <file>". Installed game → + → "Send to another console" shares that one game at once. Console Transfer → "Receive games": enter the sending console's address (same probe as the user-backup receive), all offered games ticked, Install: each file is installed over HTTP with yati (the Ownfoil path). Needs Install enabled. Game shares end with the server.
 - Cable: not shipped. MTP (libhaze) and the USB install protocols (DBI/Tinfoil/Goldleaf) both make the console the USB device; a second console would have to be the USB host (usb:hs), which Kefir Hub does not implement, and two Switches negotiate USB-C roles unpredictably. Decision recorded in plan F.13.

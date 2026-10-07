@@ -93,7 +93,7 @@ auto HoursMinutes(u64 seconds) -> std::string {
 } // namespace
 
 auto CollectPower() -> Group {
-    GroupBuilder g{"Power"};
+    GroupBuilder g{"Power"_i18n};
     if (R_FAILED(psmInitialize())) {
         return g.group;
     }
@@ -101,14 +101,14 @@ auto CollectPower() -> Group {
 
     PsmChargerType charger{};
     if (R_SUCCEEDED(psmGetChargerType(&charger))) {
-        g.Line("Charger", ChargerName(charger));
+        g.Line("Charger"_i18n, ChargerName(charger));
     }
     bool b{};
     if (R_SUCCEEDED(psmIsBatteryChargingEnabled(&b))) {
-        g.Line("Charging allowed", YesNo(b));
+        g.Line("Charging allowed"_i18n, YesNo(b));
     }
     if (R_SUCCEEDED(psmIsEnoughPowerSupplied(&b))) {
-        g.Line("Enough power supplied", YesNo(b));
+        g.Line("Enough power supplied"_i18n, YesNo(b));
     }
 
     if (!hosversionAtLeast(17, 0, 0)) {
@@ -118,43 +118,43 @@ auto CollectPower() -> Group {
     if (R_FAILED(psmGetBatteryChargeInfoFields(&f))) {
         return g.group;
     }
-    g.Line("Charging now", YesNo(f.battery_charging));
-    g.Line("Fast charging", YesNo(f.fast_battery_charging));
-    g.Line("USB charger type", UsbChargerName(f.usb_charger_type));
-    g.Line("USB power role", PowerRoleName(f.usb_power_role));
-    g.Line("Power source voltage limit", Fmt("%u mV", f.charger_input_voltage_limit));
-    g.Line("Power source current limit", Fmt("%u mA", f.charger_input_current_limit));
-    g.Line("Input current limit", Fmt("%u mA", f.input_current_limit));
-    g.Line("Fast charge current limit", Fmt("%u mA", f.fast_charge_current_limit));
-    g.Line("Charge voltage limit", Fmt("%u mV", f.charge_voltage_limit));
-    g.Line("Accessory (OTG) current limit", Fmt("%u mA", f.boost_mode_current_limit));
-    g.Line("HiZ mode", f.hi_z_mode ? "On"_i18n : "Off"_i18n);
-    g.Line("Controller power supply", YesNo(f.controller_power_supply));
-    g.Line("OTG requested", YesNo(f.otg_request));
-    g.Line("Power delivery state", Vdd50Name(f.vdd50_state));
+    g.Line("Charging now"_i18n, YesNo(f.battery_charging));
+    g.Line("Fast charging"_i18n, YesNo(f.fast_battery_charging));
+    g.Line("USB charger type"_i18n, UsbChargerName(f.usb_charger_type));
+    g.Line("USB power role"_i18n, PowerRoleName(f.usb_power_role));
+    g.Line("Power source voltage limit"_i18n, Fmt("%u mV", f.charger_input_voltage_limit));
+    g.Line("Power source current limit"_i18n, Fmt("%u mA", f.charger_input_current_limit));
+    g.Line("Input current limit"_i18n, Fmt("%u mA", f.input_current_limit));
+    g.Line("Fast charge current limit"_i18n, Fmt("%u mA", f.fast_charge_current_limit));
+    g.Line("Charge voltage limit"_i18n, Fmt("%u mV", f.charge_voltage_limit));
+    g.Line("Accessory (OTG) current limit"_i18n, Fmt("%u mA", f.boost_mode_current_limit));
+    g.Line("HiZ mode"_i18n, f.hi_z_mode ? "On"_i18n : "Off"_i18n);
+    g.Line("Controller power supply"_i18n, YesNo(f.controller_power_supply));
+    g.Line("OTG requested"_i18n, YesNo(f.otg_request));
+    g.Line("Power delivery state"_i18n, Vdd50Name(f.vdd50_state));
     return g.group;
 }
 
 auto CollectBattery() -> Group {
-    GroupBuilder g{"Battery"};
+    GroupBuilder g{"Battery"_i18n};
     if (R_SUCCEEDED(psmInitialize())) {
         ON_SCOPE_EXIT(psmExit());
         u32 percent{};
         if (R_SUCCEEDED(psmGetBatteryChargePercentage(&percent))) {
-            g.Line("Charge", Fmt("%u%%", percent));
+            g.Line("Charge"_i18n, Fmt("%u%%", percent));
         }
         double d{};
         if (R_SUCCEEDED(psmGetRawBatteryChargePercentage(&d))) {
-            g.Line("Charge (raw)", Fmt("%.2f%%", d));
+            g.Line("Charge (raw)"_i18n, Fmt("%.2f%%", d));
         }
         if (R_SUCCEEDED(psmGetBatteryAgePercentage(&d))) {
-            g.Line("Battery health", Fmt("%.1f%%", d));
+            g.Line("Battery health"_i18n, Fmt("%.1f%%", d));
         }
         if (hosversionAtLeast(17, 0, 0)) {
             PsmBatteryChargeInfoFields f{};
             if (R_SUCCEEDED(psmGetBatteryChargeInfoFields(&f))) {
-                g.Line("Temperature", Fmt("%.1f °C", f.temperature_celcius / 1000.0));
-                g.Line("Voltage", Fmt("%u mV", f.battery_charge_milli_voltage));
+                g.Line("Temperature"_i18n, Fmt("%.1f °C", f.temperature_celcius / 1000.0));
+                g.Line("Voltage"_i18n, Fmt("%u mV", f.battery_charge_milli_voltage));
             }
         }
     }
@@ -164,34 +164,34 @@ auto CollectBattery() -> Group {
         return g.group;
     }
     if (const auto v = gauge.Capacity(MAX17050_DesignCap)) {
-        g.Line("Design capacity", Fmt("%.0f mAh", *v));
+        g.Line("Design capacity"_i18n, Fmt("%.0f mAh", *v));
     }
     if (const auto v = gauge.Capacity(MAX17050_FullCap)) {
-        g.Line("Full capacity now", Fmt("%.0f mAh", *v));
+        g.Line("Full capacity now"_i18n, Fmt("%.0f mAh", *v));
     }
     if (const auto v = gauge.Capacity(MAX17050_RepCap)) {
-        g.Line("Remaining capacity", Fmt("%.0f mAh", *v));
+        g.Line("Remaining capacity"_i18n, Fmt("%.0f mAh", *v));
     }
     if (const auto v = gauge.Read(MAX17050_Cycles)) {
-        g.Line("Charge cycles", Fmt("%.2f", *v / 100.0));
+        g.Line("Charge cycles"_i18n, Fmt("%.2f", *v / 100.0));
     }
     if (const auto v = gauge.Read(MAX17050_Age)) {
-        g.Line("Age (fuel gauge)", Fmt("%.1f%%", *v / 256.0));
+        g.Line("Age (fuel gauge)"_i18n, Fmt("%.1f%%", *v / 256.0));
     }
     if (const auto v = gauge.Current(MAX17050_Current)) {
-        g.Line("Current", Fmt("%.0f mA", *v));
+        g.Line("Current"_i18n, Fmt("%.0f mA", *v));
     }
     if (const auto v = gauge.Current(MAX17050_AvgCurrent)) {
-        g.Line("Average current", Fmt("%.0f mA", *v));
+        g.Line("Average current"_i18n, Fmt("%.0f mA", *v));
     }
     if (const auto v = gauge.Read(MAX17050_VCell)) {
-        g.Line("Cell voltage", Fmt("%.0f mV", (*v >> 3) * 0.625));
+        g.Line("Cell voltage"_i18n, Fmt("%.0f mV", (*v >> 3) * 0.625));
     }
     if (const auto v = gauge.Read(MAX17050_Temp)) {
-        g.Line("Cell temperature", Fmt("%.1f °C", static_cast<s16>(*v) / 256.0));
+        g.Line("Cell temperature"_i18n, Fmt("%.1f °C", static_cast<s16>(*v) / 256.0));
     }
     if (const auto v = gauge.Read(MAX17050_TTE); v && *v != 0xFFFF) {
-        g.Line("Time to empty", HoursMinutes(static_cast<u64>(*v * 5.625)));
+        g.Line("Time to empty"_i18n, HoursMinutes(static_cast<u64>(*v * 5.625)));
     }
     return g.group;
 }

@@ -4,22 +4,44 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 
 **Where:** [[Tools]] → [[Tools]]
 
-<!-- shot: system-tools-list | Tools submenu: Module Manager, Fan curve, Wi-Fi, Users and the planned items -->
+<!-- shot: system-tools-list | Tools submenu: one list under three captions — Diagnostics, Settings, Maintenance -->
 
-| Item | What it is |
-|---|---|
-| [[Module Manager]] | Start, stop and set autostart for installed sysmodules. |
-| [[Fan curve]] | Fan speed curves for handheld and docked mode. |
-| [[Wi-Fi]] | Saved Wi-Fi networks. |
-| [[Users]] | Console user profiles. See [Users](users.md). |
-| [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free space with zeros](#fill-free-space-with-zeros). |
-| [[Fill free NAND space with zeros]] | Overwrites the unused space of the console's system memory. |
+<!-- draft
+- the list has three captions (v0.14.018): [[Diagnostics]], [[Settings]], [[Maintenance]]; the cursor skips a caption, tapping one does nothing
+- the two "fill free space with zeros" items (SD and NAND) were removed in v0.14.018; nothing replaces them
+-->
 
-| [[Clean system junk]] | Deletes leftovers. See [Clean system junk](#clean-system-junk). |
+| Group | Item | What it is |
+|---|---|---|
+| [[Diagnostics]] | [[System information]] | Console, Atmosphère, storage, power, battery, hardware and play activity. See [System information](#system-information). |
+| [[Settings]] | [[Module Manager]] | Start, stop and set autostart for installed sysmodules. |
+| [[Settings]] | [[Fan curve]] | Fan speed curves for handheld and docked mode. |
+| [[Settings]] | [[Wi-Fi]] | Saved Wi-Fi networks. |
+| [[Settings]] | [[Users]] | Console user profiles. See [Users](users.md). |
+| [[Maintenance]] | [[Clean system junk]] | Deletes leftovers. See [Clean system junk](#clean-system-junk). |
+| [[Maintenance]] | [[Remove parental controls]] | Planned; opens a "Coming soon" message. |
 
-| [[System information]] | Firmware, Atmosphère, battery and hardware details. The report is also saved to `/config/kefir/system-info.txt`. |
+## [[System information]]
 
-[[Remove parental controls]] is planned; it opens a "Coming soon" message.
+**Where:** [[Tools]] → [[Tools]] → [[System information]]
+
+<!-- shot: system-tools-system-info | System information: Console group open, parameter → value rows, other groups closed -->
+
+<!-- draft
+- replaces the text report (v0.14.019): no file is written to the memory card any more
+- one list of groups: [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], [[Play activity]]; the first group is open at start
+- press **A** on a group, or tap it, to open or close it; **A** on a row opens or closes the group the row belongs to; **Y** opens all groups or closes all
+- each open group shows rows parameter → value; the number on the right of a closed group is its row count
+- [[Console]]: firmware version, name and hash; model; hardware type and SoC; retail or development unit; burnt fuses; DRAM id; device id; kiosk; charger HiZ; serial number; console nickname; language; region; parental controls
+- [[Serial number]] is the real one. [[Serial number source]] says where it was read: [[System settings]], [[PRODINFO partition]] or [[Backup file]] with the file path (Atmosphère `/atmosphere/automatic_backups`, hekate `/backup`). When the system returns a blank serial (Atmosphère blank_prodinfo, Incognito), the row [[Serial number (system)]] shows that blank value. The number is never computed or guessed; if no source has it, the value is [[Not available]]
+- [[Atmosphere]]: version, key generation, target firmware, supported firmware, git commit, RCM bug patched, emuMMC (partition or file), blank PRODINFO, PRODINFO writes allowed, USB 3.0 forced
+- [[Storage]]: system memory used and free; microSD used and free, speed mode, user and protected area; microSD CID: maker, OEM id, product, revision, serial, month made
+- [[Power]]: charger, charging allowed, enough power, charging now, fast charging, USB charger type, USB power role, every current and voltage limit, HiZ, controller power supply, OTG, power delivery state (firmware 17.0.0 or newer for most rows)
+- [[Battery]]: charge, raw charge, health, temperature, voltage; from the fuel gauge: design capacity, full capacity now, remaining capacity, charge cycles, age, current, average current, cell voltage, cell temperature, time to empty
+- [[Hardware]]: Bluetooth and Wi-Fi MAC, configuration id, battery lot, serial number from the calibration data
+- [[Play activity]]: installed games, total play time, total launches, most played game
+- a group whose service cannot be read is not shown
+-->
 
 ## [[Module Manager]]
 
@@ -175,19 +197,6 @@ Turn off what you want to keep, then choose [[Run selected]]. The message at the
 | [[Error reports]] | Crash reports in `/atmosphere/erpt_reports`. |
 | [[Folders of removed games]] | Folders in `/atmosphere/contents` of games that are no longer on the console. Sysmodules are kept. |
 | [[Saves of removed users]] | Saves of users that were deleted from the console. Off by default: these cannot be restored. |
-
-## Fill free space with zeros
-
-Overwrites the space no file uses with zeros, on the memory card or in the console's system memory. Files, games and
-saves stay as they are. Use it before you sell or hand over a console or a card, so deleted data cannot be recovered.
-
-**Where:** [[Tools]] → [[Tools]] → [[Fill free SD space with zeros]] or [[Fill free NAND space with zeros]]
-
-1. Select the item and confirm with [[Fill]].
-2. Wait. The bar shows how much is written; it can take a long time on a large card.
-3. **B** cancels; the space written so far is freed again.
-
-Kefir Hub keeps 64 MB free while it writes, so the system can still save its own data.
 
 ## Problems
 
