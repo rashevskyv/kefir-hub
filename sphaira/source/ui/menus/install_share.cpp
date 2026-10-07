@@ -1,5 +1,6 @@
 #include "ui/menus/install_share.hpp"
 
+#include "ui/menus/console_games_transfer.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -173,6 +174,20 @@ void StartShareServerFromTools() {
 
 ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, MenuFlag_None} {
     m_items = {
+        {
+            "Send installed games"_i18n,
+            "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi."_i18n,
+            [](){
+                games_transfer::Send();
+            }
+        },
+        {
+            "Receive games"_i18n,
+            "Install games offered by another console. Enter its address."_i18n,
+            [](){
+                games_transfer::Receive();
+            }
+        },
         {
             "Share Entire microSD"_i18n,
             "Share all files and folders on the microSD card."_i18n,

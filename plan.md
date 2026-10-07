@@ -340,8 +340,11 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       no save of that game yet). Found by the other session 2026-10-04; user agreed.
 - [x] F.14b **System information as grouped tables** (user, 2026-10-07; v0.14.019): groups open with A or a tap, rows are
       parameter → value; every DBI field; real serial from PRODINFO / a backup with the source named, never a computed one.
-- [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
+- [x] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
       Entry: Console Transfer menu (+ installed game menu). Base, updates and DLC, installed on the other console.
+      Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable decided against (2026-10-07): MTP and
+      the USB install protocols are both device-side; a console-to-console cable needs a usb:hs host implementation
+      plus a hardware spike on USB-C role negotiation between two Switches. Reopen only with that spike.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.

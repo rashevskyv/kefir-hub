@@ -5,6 +5,7 @@
 #include "web_screenshots.hpp"
 #include "web_upload_routes.hpp"
 #include "web_file_routes.hpp"
+#include "web_games.hpp"
 #include "ui/steamgriddb_icon.hpp"
 #include "ui/remote_input.hpp"
 
@@ -381,6 +382,17 @@ void HandleRequest(Socket sock) {
 
     if (path == "/list") {
         HandleList(sock, query);
+        return;
+    }
+
+    // Console Transfer → Send installed games.
+    if (path == "/games") {
+        HandleGamesList(sock);
+        return;
+    }
+
+    if (path == "/games/file") {
+        SendGameFile(sock, req, query);
         return;
     }
 

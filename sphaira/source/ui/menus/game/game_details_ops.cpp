@@ -1,4 +1,5 @@
 #include "ui/menus/game/game_details_internal.hpp"
+#include "ui/menus/console_games_transfer.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "forced_language.hpp"
 #include "control_patch.hpp"
@@ -334,6 +335,9 @@ void DbiDetailsMenu::ShowGameActions() {
         options->Add<SidebarEntryCallback>("Create repack"_i18n, [this](){
             ShowCreateRepackSidebar();
         }, true, "Export selected installed components as one merged NSP."_i18n)->SetIcon(ActionIcon::Compress);
+        options->Add<SidebarEntryCallback>("Send to another console"_i18n, [this](){
+            games_transfer::Send({CurrentEntry().app_id});
+        }, true, "Offer this game, its updates and DLC to another console on the same Wi-Fi."_i18n)->SetIcon(ActionIcon::Move);
         options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
             OpenModsFolder();
         }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n)->SetIcon(ActionIcon::Folder);

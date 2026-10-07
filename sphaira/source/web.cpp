@@ -5,6 +5,7 @@
 #include "web_upload.hpp"
 #include "web_mdns.hpp"
 #include "web_router.hpp"
+#include "web_games.hpp"
 #include "log.hpp"
 #include "app.hpp"
 #include "net.hpp"
@@ -464,6 +465,9 @@ void WebShareStop() {
         g_share_port = 0;
         g_share_self_test = false;
     }
+
+    // a game share ends with its server, so the next plain share offers none.
+    WebGamesClear();
 }
 
 WebUploadState WebGetUploadState() {
