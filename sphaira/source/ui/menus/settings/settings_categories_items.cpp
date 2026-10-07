@@ -273,7 +273,7 @@ auto BuildFtpItems() -> std::vector<SettingsItem> {
 }
 
 auto BuildForwarderItems() -> std::vector<SettingsItem> {
-    static constexpr const char* ADDRESS_SPACE_LABELS[] = { "Automatic", "36-bit", "39-bit" };
+    static constexpr const char* ADDRESS_SPACE_LABELS[] = { "Automatic", "36-bit", "39-bit", "32-bit", "32-bit (no alias)" };
     static constexpr const char* CPU_CORE_LABELS[] = { "3 cores", "4 cores" };
     static constexpr const char* SVC_DEBUG_LABELS[] = { "Automatic", "Enabled", "Disabled" };
 

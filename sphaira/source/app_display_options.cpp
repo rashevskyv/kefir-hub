@@ -173,9 +173,11 @@ void App::DisplayForwarderOptions(bool left_side) {
     address_space_items.push_back("Automatic"_i18n);
     address_space_items.push_back("36-bit"_i18n);
     address_space_items.push_back("39-bit"_i18n);
+    address_space_items.push_back("32-bit"_i18n);
+    address_space_items.push_back("32-bit (no alias)"_i18n);
     options->Add<ui::SidebarEntryArray>("Address space"_i18n, address_space_items, [](s64& index_out){
         g_app->m_forwarder_address_space.Set(index_out);
-    }, std::clamp<s64>(g_app->m_forwarder_address_space.Get(), 0, 2),
+    }, std::clamp<s64>(g_app->m_forwarder_address_space.Get(), 0, 4),
         "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility."_i18n);
 
     struct CpuEntryCtx {

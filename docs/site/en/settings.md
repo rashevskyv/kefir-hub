@@ -70,7 +70,7 @@ The [[About]] window shows the version, the release notes, and a button to [[Upd
 | Option | What it does | Default |
 |---|---|---|
 | [[Ask every time]] | Opens the forwarder editor each time you create a forwarder, instead of using the defaults below. | Off |
-| [[Address space]] | [[Automatic]] (uses 39-bit), [[36-bit]] for compatibility, or [[39-bit]]. | [[Automatic]] |
+| [[Address space]] | [[Automatic]] (uses 39-bit), [[36-bit]] for compatibility, [[39-bit]], or [[32-bit]] / [[32-bit (no alias)]] for apps such as Wine-NX or Box64. | [[Automatic]] |
 | [[CPU cores]] | [[3 cores]] or [[4 cores]]. Choosing 4 shows a warning: core 3 is shared with system services and some homebrew may lag. | [[3 cores]] |
 | [[Profile selection]] | Asks for a user profile when the forwarder starts. | Off |
 | [[Screenshots]] | Lets the Capture button take screenshots inside the forwarder. | On |

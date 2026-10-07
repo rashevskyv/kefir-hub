@@ -31,6 +31,10 @@ Entries without a detail line are commit titles only; their verification state w
 - v0.14.010 redeclared `state` in `dbi_menu.cpp` Menu::Update (conflicting declaration at line 390); renamed the new local to `blank_state`. No behaviour change.
 - host tests: pass (quick) · nro: built (ReleaseWithInstall checkpoint clean; rebuilt after the bump so the artifact reports 0.14.012) · switch: pending.
 
+## v0.14.013 — 32-bit address spaces in the global forwarder default
+- Settings → Forwarder → Address space offers Automatic / 36-bit / 39-bit / 32-bit / 32-bit (no alias) (sidebar and settings page); the default forwarder options map 3→32-bit, 4→32-bit (no alias). EN/UK settings docs updated.
+- host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — pick each value, create a forwarder, check the editor shows the same space.
+
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
