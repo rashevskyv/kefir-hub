@@ -3101,7 +3101,6 @@
   "OTG requested": "OTG on nõutud",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Paku installitud mänge (põhimäng, uuendused, DLC) teisele konsoolile samas Wi-Fi-s.",
   "Open / Close": "Ava / Sulge",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Paku seda mängu, selle uuendusi ja DLC-sid teisele samas Wi-Fi võrgus olevale konsoolile.",
   "No games chosen": "Mänge pole valitud",
   "PRODINFO partition": "PRODINFO partitsioon",
   "PRODINFO writes allowed": "PRODINFO kirjutamine lubatud",
@@ -3149,5 +3148,12 @@
   "microSD card user area": "microSD-kaardi kasutajaala",
   "microSD card used": "microSD-kaart on kasutusel",
   "microSD card maker": "microSD-kaardi looja",
-  "microSD card revision": "microSD-kaardi versioon"
+  "microSD card revision": "microSD-kaardi versioon",
+  "Fill free SD space with zeros": "Täida SD vaba ruum nullidega",
+  "Overwrite unused microSD space.": "Kirjuta microSD kasutuseta ruum üle.",
+  "Fill": "Täida",
+  "Filling with zeros": "Nullidega täitmine",
+  "Free space filled with zeros": "Vaba ruum täidetud nullidega",
+  "Fill failed!": "Täitmine ebaõnnestus!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Kirjutada kõik microSD-kaardi vabad ruudud nullidega üle? Faile ei muudeta. See võib võtta kaua aega."
 }

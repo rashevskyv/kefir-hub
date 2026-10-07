@@ -3101,7 +3101,6 @@
   "OTG requested": "OTG diminta",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Bagikan game yang terinstal (dasar, pembaruan, DLC) ke konsol lain di Wi-Fi yang sama.",
   "Open / Close": "Buka / Tutup",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Tawarkan game ini, pembaruannya, dan DLC ke konsol lain di Wi-Fi yang sama.",
   "No games chosen": "Tidak ada game yang dipilih",
   "PRODINFO partition": "Partisi PRODINFO",
   "PRODINFO writes allowed": "Penulisan PRODINFO diizinkan",
@@ -3149,5 +3148,12 @@
   "microSD card user area": "area pengguna kartu microSD",
   "microSD card used": "Kartu microSD digunakan",
   "microSD card maker": "Pembuat kartu microSD",
-  "microSD card revision": "Revisi kartu microSD"
+  "microSD card revision": "Revisi kartu microSD",
+  "Fill free SD space with zeros": "Isi sisa ruang microSD dengan nol",
+  "Overwrite unused microSD space.": "Timpa ruang microSD yang tidak digunakan.",
+  "Fill": "Isi",
+  "Filling with zeros": "Mengisi dengan nol",
+  "Free space filled with zeros": "Ruang kosong diisi dengan nol",
+  "Fill failed!": "Pengisian gagal!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Timpa semua ruang kosong pada kartu microSD dengan nol? File tidak disentuh. Proses ini bisa memakan waktu lama."
 }

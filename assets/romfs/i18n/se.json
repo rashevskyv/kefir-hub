@@ -3106,7 +3106,6 @@
   "OTG requested": "OTG begärt",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Erbjud installerade spel (grundspel, uppdateringar, DLC) till en annan konsol på samma Wi-Fi.",
   "Open / Close": "Öppna / Stäng",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Erbjud det här spelet, dess uppdateringar och DLC till en annan konsol på samma Wi-Fi.",
   "No games chosen": "Inga spel valda",
   "PRODINFO partition": "PRODINFO-partition",
   "PRODINFO writes allowed": "PRODINFO-skrivning tillåten",
@@ -3154,5 +3153,12 @@
   "microSD card user area": "microSD-kortets användarutrymme",
   "microSD card used": "microSD-kort används",
   "microSD card maker": "microSD-kortskapare",
-  "microSD card revision": "microSD-kortrevision"
+  "microSD card revision": "microSD-kortrevision",
+  "Fill free SD space with zeros": "Fyll ledigt SD-utrymme med nollor",
+  "Overwrite unused microSD space.": "Skriv över oanvänt microSD-utrymme.",
+  "Fill": "Fyll",
+  "Filling with zeros": "Fyller med nollor",
+  "Free space filled with zeros": "Ledigt utrymme fyllt med nollor",
+  "Fill failed!": "Fyllning misslyckades!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Skriv över allt ledigt utrymme på microSD-kortet med nollor? Filer berörs inte. Det kan ta lång tid."
 }

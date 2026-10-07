@@ -3101,7 +3101,6 @@
   "OTG requested": "OTG istendi",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Yüklenen oyunları (temel, güncelleme, DLC) aynı Wi-Fi'daki başka bir konsola sun.",
   "Open / Close": "Aç / Kapat",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Bu oyunu, güncellemelerini ve DLC'sini aynı Wi-Fi ağındaki başka bir konsola sun.",
   "No games chosen": "Oyun seçilmedi",
   "PRODINFO partition": "PRODINFO bölümü",
   "PRODINFO writes allowed": "PRODINFO yazma izin verildi",
@@ -3149,5 +3148,12 @@
   "microSD card user area": "microSD kart kullanıcı alanı",
   "microSD card used": "Kullanılan microSD kart",
   "microSD card maker": "microSD kart oluşturucu",
-  "microSD card revision": "microSD kart sürümü"
+  "microSD card revision": "microSD kart sürümü",
+  "Fill free SD space with zeros": "Boş microSD alanını sıfırlarla doldur",
+  "Overwrite unused microSD space.": "Kullanılmayan microSD alanının üzerine yaz.",
+  "Fill": "Doldur",
+  "Filling with zeros": "Sıfırlarla dolduruluyor",
+  "Free space filled with zeros": "Boş alan sıfırlarla dolduruldu",
+  "Fill failed!": "Doldurma başarısız!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD kartındaki tüm boş alan sıfırlarla üzerine yazılsın mı? Dosyalar etkilenmez. Uzun sürebilir."
 }

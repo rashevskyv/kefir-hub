@@ -3133,7 +3133,6 @@
   "OTG requested": "OTG solicitado",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Disponibilizar jogos instalados (base, atualizações, DLC) para outro console no mesmo Wi-Fi.",
   "Open / Close": "Abrir / Fechar",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Oferecer este jogo, suas atualizações e DLCs para outro console na mesma rede Wi-Fi.",
   "No games chosen": "Nenhum jogo selecionado",
   "PRODINFO partition": "partição PRODINFO",
   "PRODINFO writes allowed": "Escrita no PRODINFO permitida",
@@ -3181,5 +3180,12 @@
   "microSD card user area": "área do usuário do cartão microSD",
   "microSD card used": "Cartão microSD usado",
   "microSD card maker": "Criador de cartão microSD",
-  "microSD card revision": "Revisão do cartão microSD"
+  "microSD card revision": "Revisão do cartão microSD",
+  "Fill free SD space with zeros": "Preencher espaço livre do SD com zeros",
+  "Overwrite unused microSD space.": "Sobrescrever espaço não utilizado do microSD.",
+  "Fill": "Preencher",
+  "Filling with zeros": "Preenchendo com zeros",
+  "Free space filled with zeros": "Espaço livre preenchido com zeros",
+  "Fill failed!": "Falha ao preencher!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Sobrescrever todo o espaço livre no cartão microSD com zeros? Os arquivos não são afetados. Pode demorar bastante."
 }

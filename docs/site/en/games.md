@@ -91,13 +91,6 @@ A repack puts the base game, its newest update and all DLC into one NSP file.
 
 The file is written to `/games/` on the microSD card.
 
-## Send a game to another console
-
-<!-- draft
-- new in v0.14.020: open the game with **A**, press **+**, choose [[Send to another console]]
-- the game, its installed updates and DLC are offered at once over Wi-Fi; the server screen with the address opens; the other console uses [[Tools]] → [[Console Transfer]] → [[Receive games]], see [Move installed games](console-transfer.md#move-installed-games)
--->
-
 ## Delete a game
 1. Select the games (or focus one), press **+**.
 2. Choose [[Delete]] and confirm with [[Delete]]. If a selected game has mods, the question also offers [[Delete with mods]]: it removes the game's mods too (cheats stay).

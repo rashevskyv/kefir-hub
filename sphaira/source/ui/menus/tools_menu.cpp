@@ -18,6 +18,7 @@
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
+#include "zero_fill.hpp"
 #include "system_cleanup.hpp"
 #include "ui/menus/system_info_menu.hpp"
 #include "ui/menus/grid_menu_base.hpp"
@@ -186,6 +187,26 @@ void DrawToolsGrid(NVGcontext* vg, Theme* theme, List& list, s64 selected, const
             vg, text_x, desc_y, 13.f, text_w,
             theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str()
         );
+    });
+}
+
+// microSD only: the NAND variant was removed in v0.14.018.
+void FillSdWithZeros() {
+    App::Push<ui::OptionBox>(
+        "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time."_i18n,
+        "Back"_i18n, "Fill"_i18n, 1, [](auto op_index){
+        if (!op_index || !*op_index) {
+            return;
+        }
+        App::Push<ui::ProgressBox>(0, "Filling with zeros"_i18n, "microSD card"_i18n, [](auto pbox) -> Result {
+            return zero_fill::FillFreeSpace(NcmStorageId_SdCard, pbox);
+        }, [](Result rc){
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Free space filled with zeros"_i18n);
+            } else if (rc != Result_TransferCancelled) {
+                App::PushErrorBox(rc, "Fill failed!"_i18n);
+            }
+        });
     });
 }
 
@@ -453,6 +474,7 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
         }),
         settings::MakeHeader("Maintenance"_i18n),
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
+        Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
     };
 

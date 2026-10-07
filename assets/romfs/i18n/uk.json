@@ -3101,7 +3101,6 @@
   "OTG requested": "Потрібно OTG",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Запропонувати встановлені ігри (основну, оновлення, DLC) іншій консолі в тій самій Wi-Fi.",
   "Open / Close": "Відкрити / Закрити",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Запропонувати цю гру, її оновлення та DLC іншій консолі в тій самій мережі Wi-Fi.",
   "No games chosen": "Ігор не вибрано",
   "PRODINFO partition": "розділ PRODINFO",
   "PRODINFO writes allowed": "Запис у PRODINFO дозволено",
@@ -3149,5 +3148,12 @@
   "microSD card user area": "користувацька область карти microSD",
   "microSD card used": "Використовується microSD",
   "microSD card maker": "Створювач карти microSD",
-  "microSD card revision": "Версія microSD"
+  "microSD card revision": "Версія microSD",
+  "Fill free SD space with zeros": "Заповнити вільне місце на SD нулями",
+  "Overwrite unused microSD space.": "Перезаписати вільне місце на microSD.",
+  "Fill": "Заповнити",
+  "Filling with zeros": "Заповнення нулями",
+  "Free space filled with zeros": "Вільне місце заповнено нулями",
+  "Fill failed!": "Не вдалося заповнити!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Перезаписати весь вільний простір на карті microSD нулями? Файли не чіпаються. Це може зайняти багато часу."
 }

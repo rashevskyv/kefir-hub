@@ -3106,7 +3106,6 @@
   "OTG requested": "Đã yêu cầu OTG",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Chia sẻ các trò chơi đã cài đặt (bản gốc, cập nhật, DLC) sang máy khác trên cùng mạng Wi-Fi.",
   "Open / Close": "Mở / Đóng",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Chia sẻ trò chơi này, các bản cập nhật và DLC cho máy khác trên cùng mạng Wi-Fi.",
   "No games chosen": "Chưa chọn trò chơi nào",
   "PRODINFO partition": "Phân vùng PRODINFO",
   "PRODINFO writes allowed": "Cho phép ghi PRODINFO",
@@ -3154,5 +3153,12 @@
   "microSD card user area": "vùng người dùng thẻ microSD",
   "microSD card used": "Thẻ microSD được sử dụng",
   "microSD card maker": "Trình tạo thẻ microSD",
-  "microSD card revision": "Phiên bản thẻ microSD"
+  "microSD card revision": "Phiên bản thẻ microSD",
+  "Fill free SD space with zeros": "Làm đầy dung lượng trống trên thẻ SD bằng số không",
+  "Overwrite unused microSD space.": "Ghi đè không gian microSD chưa sử dụng.",
+  "Fill": "Điền",
+  "Filling with zeros": "Đang điền bằng số 0",
+  "Free space filled with zeros": "Không gian trống được điền số không",
+  "Fill failed!": "Điền thất bại!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Ghi đè toàn bộ dung lượng trống trên thẻ microSD bằng các số không? Các tệp không bị ảnh hưởng. Quá trình này có thể mất nhiều thời gian."
 }

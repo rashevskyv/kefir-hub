@@ -3159,7 +3159,6 @@
   "OTG requested": "需要 OTG",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "向同一Wi-Fi下的另一台主机分享已安装的游戏（主体、更新、DLC）。",
   "Open / Close": "打开 / 关闭",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "将此游戏、更新和 DLC 发送给同一 Wi-Fi 上的另一台主机。",
   "No games chosen": "未选择游戏",
   "PRODINFO partition": "PRODINFO 分区",
   "PRODINFO writes allowed": "允许写入 PRODINFO",
@@ -3207,5 +3206,12 @@
   "microSD card user area": "microSD卡用户区域",
   "microSD card used": "已使用的 microSD 卡",
   "microSD card maker": "microSD 卡制作工具",
-  "microSD card revision": "microSD卡版本"
+  "microSD card revision": "microSD卡版本",
+  "Fill free SD space with zeros": "用零填充 microSD 剩余空间",
+  "Overwrite unused microSD space.": "覆写未使用的 microSD 空间。",
+  "Fill": "填充",
+  "Filling with zeros": "正在填零",
+  "Free space filled with zeros": "可用空间已用零填充",
+  "Fill failed!": "填充失败！",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "要用零覆盖 microSD 卡上的所有可用空间吗？文件不受影响。这可能需要很长时间。"
 }

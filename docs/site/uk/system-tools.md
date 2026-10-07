@@ -8,7 +8,7 @@
 
 <!-- draft
 - the list has three captions (v0.14.018): [[Diagnostics]], [[Settings]], [[Maintenance]]; the cursor skips a caption, tapping one does nothing
-- the two "fill free space with zeros" items (SD and NAND) were removed in v0.14.018; nothing replaces them
+- the NAND zero-fill item was removed in v0.14.018; [[Fill free SD space with zeros]] stays, now under [[Maintenance]]
 -->
 
 | Група | Пункт | Що це |
@@ -19,6 +19,7 @@
 | [[Settings]] | [[Wi-Fi]] | Збережені мережі Wi-Fi. |
 | [[Settings]] | [[Users]] | Профілі користувачів консолі. Див. [Користувачі](users.md). |
 | [[Maintenance]] | [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
+| [[Maintenance]] | [[Fill free SD space with zeros]] | Заповнює нулями вільне місце на карті пам'яті. Див. [Заповнення вільного місця на SD нулями](#fill-free-sd-space-with-zeros). |
 | [[Maintenance]] | [[Remove parental controls]] | Заплановано; показує повідомлення «Coming soon». |
 
 ## [[System information]] { #system-information }
@@ -197,6 +198,19 @@
 | [[Error reports]] | Звіти про збої в `/atmosphere/erpt_reports`. |
 | [[Folders of removed games]] | Папки в `/atmosphere/contents` ігор, яких уже немає на консолі. Системні модулі лишаються. |
 | [[Saves of removed users]] | Збереження користувачів, видалених з консолі. Вимкнено за замовчуванням: їх не відновити. |
+
+## Заповнення вільного місця на SD нулями { #fill-free-sd-space-with-zeros }
+
+Записує нулі в місце на карті пам'яті, яке не зайняте файлами. Файли, ігри й збереження лишаються як були.
+Корисно перед продажем чи передачею карти: видалені дані вже не відновити.
+
+**Де:** [[Tools]] → [[Tools]] → [[Fill free SD space with zeros]]
+
+1. Виберіть пункт і підтвердьте кнопкою [[Fill]].
+2. Зачекайте. Смуга показує, скільки вже записано; на великій карті це може тривати довго.
+3. **B** скасовує; уже записане місце знову звільняється.
+
+Під час запису Kefir Hub лишає 64 МБ вільними, щоб система могла зберігати свої дані.
 
 ## Проблеми
 

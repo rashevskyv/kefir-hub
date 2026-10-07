@@ -3101,7 +3101,6 @@
   "OTG requested": "Reikalaujama OTG",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Pasiūlyti įdiegtus žaidimus (pagrindinį, atnaujinimus, DLC) kitai konsolei tame pačiame „Wi-Fi“.",
   "Open / Close": "Atidaryti / Uždaryti",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Pasiūlykite šį žaidimą, jo atnaujinimus ir DLC kitai konsolei tame pačiame Wi-Fi tinkle.",
   "No games chosen": "Žaidimai nepasirinkti",
   "PRODINFO partition": "PRODINFO skaidinys",
   "PRODINFO writes allowed": "PRODINFO rašymas leistinas",
@@ -3149,5 +3148,12 @@
   "microSD card user area": "microSD kortelės naudotojo sritis",
   "microSD card used": "Naudojama microSD kortelė",
   "microSD card maker": "\"microSD\" kortelių kūrėjas",
-  "microSD card revision": "microSD kortelės versija"
+  "microSD card revision": "microSD kortelės versija",
+  "Fill free SD space with zeros": "Užpildyti laisvą SD vietą nuliais",
+  "Overwrite unused microSD space.": "Perrašyti nenaudojamą microSD vietą.",
+  "Fill": "Užpildyti",
+  "Filling with zeros": "Pildymas nuliais",
+  "Free space filled with zeros": "Laisva vieta užpildyta nuliais",
+  "Fill failed!": "Užpildyti nepavyko!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Perrašyti visą laisvą vietą microSD kortelėje nuliais? Failai nepaliečiami. Tai gali užtrukti ilgai."
 }

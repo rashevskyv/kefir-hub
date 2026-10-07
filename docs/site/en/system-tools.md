@@ -8,7 +8,7 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 
 <!-- draft
 - the list has three captions (v0.14.018): [[Diagnostics]], [[Settings]], [[Maintenance]]; the cursor skips a caption, tapping one does nothing
-- the two "fill free space with zeros" items (SD and NAND) were removed in v0.14.018; nothing replaces them
+- the NAND zero-fill item was removed in v0.14.018; [[Fill free SD space with zeros]] stays, now under [[Maintenance]]
 -->
 
 | Group | Item | What it is |
@@ -19,6 +19,7 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | [[Settings]] | [[Wi-Fi]] | Saved Wi-Fi networks. |
 | [[Settings]] | [[Users]] | Console user profiles. See [Users](users.md). |
 | [[Maintenance]] | [[Clean system junk]] | Deletes leftovers. See [Clean system junk](#clean-system-junk). |
+| [[Maintenance]] | [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free SD space with zeros](#fill-free-sd-space-with-zeros). |
 | [[Maintenance]] | [[Remove parental controls]] | Planned; opens a "Coming soon" message. |
 
 ## [[System information]]
@@ -197,6 +198,19 @@ Turn off what you want to keep, then choose [[Run selected]]. The message at the
 | [[Error reports]] | Crash reports in `/atmosphere/erpt_reports`. |
 | [[Folders of removed games]] | Folders in `/atmosphere/contents` of games that are no longer on the console. Sysmodules are kept. |
 | [[Saves of removed users]] | Saves of users that were deleted from the console. Off by default: these cannot be restored. |
+
+## Fill free SD space with zeros
+
+Overwrites the space no file uses on the memory card with zeros. Files, games and saves stay as they are. Use it
+before you sell or hand over a card, so deleted data cannot be recovered.
+
+**Where:** [[Tools]] → [[Tools]] → [[Fill free SD space with zeros]]
+
+1. Select the item and confirm with [[Fill]].
+2. Wait. The bar shows how much is written; it can take a long time on a large card.
+3. **B** cancels; the space written so far is freed again.
+
+Kefir Hub keeps 64 MB free while it writes, so the system can still save its own data.
 
 ## Problems
 

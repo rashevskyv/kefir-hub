@@ -3101,7 +3101,6 @@
   "OTG requested": "OTG сұралды",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Орнатылған ойындарды (негізгі, жаңартулар, DLC) бір Wi-Fi желісіндегі басқа консольге ұсыну.",
   "Open / Close": "Ашу / Жабу",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Бұл ойынды, оның жаңартулары мен DLC-лерін бір Wi-Fi желісіндегі басқа консольге ұсыну.",
   "No games chosen": "Ойындар таңдалмады",
   "PRODINFO partition": "PRODINFO бөлімі",
   "PRODINFO writes allowed": "PRODINFO жазуға рұқсат етілген",
@@ -3149,5 +3148,12 @@
   "microSD card user area": "microSD картасының пайдаланушы аймағы",
   "microSD card used": "microSD картасы пайдаланылуда",
   "microSD card maker": "microSD карта жасаушысы",
-  "microSD card revision": "microSD картасының нұсқасы"
+  "microSD card revision": "microSD картасының нұсқасы",
+  "Fill free SD space with zeros": "SD бос орынын нөлдермен толтыру",
+  "Overwrite unused microSD space.": "Пайдаланылмаған microSD орынын үстіне жазу.",
+  "Fill": "Tolтыру",
+  "Filling with zeros": "Нөлдермен толтыру",
+  "Free space filled with zeros": "Бос орын нөлдермен толтырылды",
+  "Fill failed!": "Толтыру сәтсіз аяқталды!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD картасындағы барлық бос орынды нөлдермен қайта жазу керек пе? Файлдарға әсер етпейді. Бұл біраз уақыт алуы мүмкін."
 }

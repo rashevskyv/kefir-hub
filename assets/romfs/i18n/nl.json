@@ -3106,7 +3106,6 @@
   "OTG requested": "OTG vereist",
   "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi.": "Bied geïnstalleerde games (basis, updates, DLC) aan op een andere console op dezelfde wifinetwerk.",
   "Open / Close": "Openen / Sluiten",
-  "Offer this game, its updates and DLC to another console on the same Wi-Fi.": "Dit spel, updates en DLC aanbieden aan een andere console op dezelfde wifi.",
   "No games chosen": "Geen spellen geselecteerd",
   "PRODINFO partition": "PRODINFO-partitie",
   "PRODINFO writes allowed": "PRODINFO schrijven toegestaan",
@@ -3154,5 +3153,12 @@
   "microSD card user area": "gebruikersgebied microSD-kaart",
   "microSD card used": "microSD-kaart in gebruik",
   "microSD card maker": "microSD-kaartmaker",
-  "microSD card revision": "microSD-kaartversie"
+  "microSD card revision": "microSD-kaartversie",
+  "Fill free SD space with zeros": "Vul vrije SD-ruimte met nullen",
+  "Overwrite unused microSD space.": "Overschrijf ongebruikte microSD-ruimte.",
+  "Fill": "Vullen",
+  "Filling with zeros": "Vullen met nullen",
+  "Free space filled with zeros": "Vrije ruimte gevuld met nullen",
+  "Fill failed!": "Vullen mislukt!",
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Al de vrije ruimte op de microSD-kaart overschrijven met nullen? Bestanden worden niet aangeraakt. Dit kan lang duren."
 }

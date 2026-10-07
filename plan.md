@@ -316,7 +316,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       repacker) adds it per title.
 - [x] F.9 **Hex view** in the file browser. (Second panel exists. RAR/7z do not: only zip extracts; 7z only for RetroArch in the App Store.)
 - [x] F.9b **Archive extraction** in the file browser: RAR, 7z, xz, tar, gz (zip already works). Approved 2026-10-04.
-- [x] F.10 ~~**Fill free NAND space with zeros**~~ Both zero-fill items removed on the user's request (2026-10-07, v0.14.018).
+- [x] F.10 ~~**Fill free NAND space with zeros**~~ Removed on the user's request (2026-10-07, v0.14.018). The SD
+      zero-fill stays (restored in v0.14.022 under Maintenance).
 - [x] F.16 **Tools → Tools grouped** into Diagnostics / Settings / Maintenance captions (user, 2026-10-07; v0.14.018).
 - [x] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
@@ -341,7 +342,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.14b **System information as grouped tables** (user, 2026-10-07; v0.14.019): groups open with A or a tap, rows are
       parameter → value; every DBI field; real serial from PRODINFO / a backup with the source named, never a computed one.
 - [x] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
-      Entry: Console Transfer menu (+ installed game menu). Base, updates and DLC, installed on the other console.
+      Entry: Console Transfer menu only (user, 2026-10-07: all console-to-console options in one place for now; other
+      entry points, e.g. the installed game menu, to be decided after a walk through the menus). Base, updates and DLC.
       Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable decided against (2026-10-07): MTP and
       the USB install protocols are both device-side; a console-to-console cable needs a usb:hs host implementation
       plus a hardware spike on USB-C role negotiation between two Switches. Reopen only with that spike.
