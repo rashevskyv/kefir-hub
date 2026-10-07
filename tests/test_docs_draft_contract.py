@@ -39,6 +39,11 @@ def main():
     assert finish.other_changes(PAGE, good) == 0
     assert finish.other_changes(PAGE, good.replace("Install the game first.", "Install the game.")) == 1
     assert finish.validate(PAGE, "Sure! Here is the page:\n" + good) == "the page does not start with a heading"
+    diff = finish.review_diff(PAGE, good)
+    assert "-<!-- draft" not in diff and "+[[Backup]] stores every save type" in diff
+    assert finish.parse_verdict('{"ok": true}') == (True, [])
+    assert finish.parse_verdict('Sure.\n```json\n{"ok": false, "problems": ["typo in Problems"]}\n```') == (False, ["typo in Problems"])
+    assert finish.parse_verdict("I cannot review this.")[0] is False
     print("docs draft contract: ok")
 
 

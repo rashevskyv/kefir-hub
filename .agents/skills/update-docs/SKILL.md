@@ -89,8 +89,9 @@ Rules: facts only, one per line; UI names as `[[en.json key]]` (the finisher may
 the page or the draft); controller buttons as **A**, **B**; say which existing step or option changes. Shot
 markers, recipes and PNGs are yours as before. At publish time `tools/docs/publish.cmd` runs
 `tools/docs/finish.py`: the LLM proxy (gemini-web2api, `--url`/`--model` as in `tools/i18n-translate`) rewrites
-each page with drafts in its language per STYLE.md, the result must keep the shot markers and labels, then the
-label contract and the strict build run and the pages are committed as `docs: finish drafts`. Check a page
+each page with drafts in its language per STYLE.md; the result must keep the shot markers and labels, and a second
+proxy request reviews the diff against the facts (missing or invented fact, altered unrelated line = retry); then
+the label contract and the strict build run and the pages are committed as `docs: finish drafts`. Check a page
 without the proxy: `python tools/docs/finish.py --dry-run` lists the pages that still hold drafts.
 
 ## Screenshots (Eden emulator, any language)

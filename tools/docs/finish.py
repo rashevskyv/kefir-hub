@@ -9,12 +9,15 @@ A draft block is an HTML comment that starts with "draft":
     -->
 The coding agent writes the facts (UI names as [[en.json key]], shot markers as usual) and the proxy writes
 the page in the page's language, following docs/site/STYLE.md. The reply replaces the page only when it
-passes validate(): no draft left, the same shot markers, no label that was not in the page or the draft,
-not much shorter than before. The label contract test and the strict mkdocs build run after this in
-tools/docs/publish.ps1. Exit 0 = nothing to do or every page finished, 1 = a page was rejected or the proxy
+passes validate() (no draft left, the same shot markers, no label that was not in the page or the draft,
+not much shorter than before) and a second, independent request to the proxy reviews the diff against the
+draft facts (facts in, nothing invented, unrelated lines untouched). A rejection feeds the reviewer's
+problems into the next attempt, three attempts in all. The label contract test and the strict mkdocs
+build run after this in tools/docs/publish.ps1. Exit 0 = nothing to do or every page finished, 1 = a page was rejected or the proxy
 is down (start D:\\git\\dev\\gemini-web2api\\run.bat).
 """
 import argparse
+import difflib
 import json
 import re
 import sys
@@ -92,21 +95,61 @@ def request(url, model, system, user, timeout=180):
         return json.load(res)["choices"][0]["message"]["content"]
 
 
+def review_diff(old, new):
+    """What the writer changed: unified diff from the page without its draft blocks to the new page."""
+    before = DRAFT.sub("", old).splitlines()
+    return "\n".join(difflib.unified_diff(before, new.splitlines(), "before", "after", lineterm="", n=1))
+
+
+def review_prompt(lang, drafts, diff):
+    system = (
+        f"You review one edit of a {LANG_NAME.get(lang, lang)} documentation page of Kefir Hub, a Nintendo Switch "
+        f"homebrew app. A writer had to turn the developer's draft facts into prose in that page. You get the "
+        f"draft facts and the unified diff of the writer's edit. Reject the edit when:\n"
+        f"1. a fact from the drafts is missing or changed in meaning;\n"
+        f"2. the writer added a fact that is not in the drafts;\n"
+        f"3. a removed line (-) that the drafts do not concern is not restored unchanged in a (+) line: "
+        f"any altered word, typo, dropped sentence or re-wording of unrelated text is a defect;\n"
+        f"4. the new text is not in {LANG_NAME.get(lang, lang)}, or a [[Label]] was translated or altered.\n"
+        f"Reply with JSON only: {{\"ok\": true}} or {{\"ok\": false, \"problems\": [\"...\", ...]}}, each problem "
+        f"one short sentence that quotes the offending text."
+    )
+    user = "DRAFT FACTS:\n" + "\n\n".join(drafts) + "\n\nDIFF:\n" + diff
+    return system, user
+
+
+def parse_verdict(reply):
+    """(ok, problems) from the reviewer's reply; an unreadable reply counts as a rejection."""
+    first, last = reply.find("{"), reply.rfind("}")
+    try:
+        v = json.loads(reply[first:last + 1])
+        return bool(v.get("ok")), [str(p) for p in v.get("problems", [])]
+    except (ValueError, AttributeError):
+        return False, [f"unreadable verdict: {reply[:120]!r}"]
+
+
 def finish_page(path, lang, style, args):
     old = path.read_text(encoding="utf-8")
-    if not find_drafts(old):
+    drafts = find_drafts(old)
+    if not drafts:
         return True
-    print(f"{path.relative_to(args.root)}: {len(find_drafts(old))} draft block(s)")
+    print(f"{path.relative_to(args.root)}: {len(drafts)} draft block(s)")
     if args.dry_run:
         return True
     system, user = prompt(lang, style, old)
-    for attempt in (1, 2):
-        new = strip_fence(request(args.url, args.model, system, user)).replace("\r\n", "\n").rstrip("\n") + "\n"
+    feedback = ""
+    for attempt in (1, 2, 3):
+        new = strip_fence(request(args.url, args.model, system, user + feedback)).replace("\r\n", "\n").rstrip("\n") + "\n"
         why = validate(old, new)
         if why is None:
-            path.write_text(new, encoding="utf-8", newline="\n")
-            print(f"  finished ({len(old)} -> {len(new)} chars, {other_changes(old, new)} other line(s) changed)")
-            return True
+            # a second request reviews the first one's work before the page is replaced
+            ok, problems = parse_verdict(request(args.url, args.model, *review_prompt(lang, drafts, review_diff(old, new))))
+            if ok:
+                path.write_text(new, encoding="utf-8", newline="\n")
+                print(f"  finished ({len(old)} -> {len(new)} chars, {other_changes(old, new)} other line(s) changed, reviewed)")
+                return True
+            why = "reviewer: " + "; ".join(problems)
+            feedback = "\n\nA reviewer rejected your previous attempt. Fix these problems:\n- " + "\n- ".join(problems)
         print(f"  attempt {attempt} rejected: {why}")
     return False
 
