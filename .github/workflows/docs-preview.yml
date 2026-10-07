@@ -1,16 +1,17 @@
 # GitHub Pages of this repository, https://hub.customfw.xyz/ (custom domain, set in the Pages settings):
 #   /         Kefir Hub docs, English (docs/site of branch docs), /uk/ Ukrainian — indexed, published docs
 #   /guide/   preview of the switch.customfw.xyz guide reworked for Kefir Hub (rashevskyv/switch, branch kefir-hub), noindex
-# Runs on a push to branch docs, on "guide-updated" (sent by rashevskyv/switch on a push to kefir-hub) and by hand
-# (Actions -> docs-preview -> Run workflow). Every page has an edit link to its file on those branches.
+# Runs on a push to branch docs or guide-sync, and by hand (Actions -> docs-preview -> Run workflow).
+# A push to kefir-hub in rashevskyv/switch writes docs/site/guide.ref on branch guide-sync (hub-preview.yml there):
+# GitHub Pages ignores a deployment whose commit SHA was deployed before (actions/deploy-pages#383), so a
+# rebuild needs a new commit, and a dispatch or a manual run on an unchanged branch changes nothing online.
+# Every page has an edit link to its file on those branches.
 # The live guide site (switch, gh-pages) is not touched.
 name: docs-preview
 
 on:
   push:
-    branches: [docs]
-  repository_dispatch:
-    types: [guide-updated]
+    branches: [docs, guide-sync]
   workflow_dispatch:
 
 permissions:
