@@ -3155,5 +3155,7 @@
   "Filling with zeros": "Nullidega täitmine",
   "Free space filled with zeros": "Vaba ruum täidetud nullidega",
   "Fill failed!": "Täitmine ebaõnnestus!",
-  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Kirjutada kõik microSD-kaardi vabad ruudud nullidega üle? Faile ei muudeta. See võib võtta kaua aega."
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Kirjutada kõik microSD-kaardi vabad ruudud nullidega üle? Faile ei muudeta. See võib võtta kaua aega.",
+  "PC Install on connect": "PC install ühendamisel",
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Kui arvuti on ühendatud, otsige mõni sekund USB-installirakendust (DBI Backend, ns-usbloader, Goldleaf) ja avage arvuti install (USB), kui mõni neist vastab. Muul juhul käivitub MTP tavapäraselt."
 }

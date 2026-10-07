@@ -3160,5 +3160,7 @@
   "Filling with zeros": "Đang điền bằng số 0",
   "Free space filled with zeros": "Không gian trống được điền số không",
   "Fill failed!": "Điền thất bại!",
-  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Ghi đè toàn bộ dung lượng trống trên thẻ microSD bằng các số không? Các tệp không bị ảnh hưởng. Quá trình này có thể mất nhiều thời gian."
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Ghi đè toàn bộ dung lượng trống trên thẻ microSD bằng các số không? Các tệp không bị ảnh hưởng. Quá trình này có thể mất nhiều thời gian.",
+  "PC Install on connect": "Cài đặt từ PC khi kết nối",
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Khi máy tính được cắm vào, hãy tìm ứng dụng cài đặt USB (DBI Backend, ns-usbloader, Goldleaf) trong vài giây và mở Cài đặt PC (USB) nếu có ứng dụng phản hồi. Nếu không, MTP sẽ khởi động như bình thường."
 }

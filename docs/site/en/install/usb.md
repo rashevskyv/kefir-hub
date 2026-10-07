@@ -34,6 +34,15 @@ The queue, the progress screen, minimizing, screen off and the summary work the 
 <!-- shot: install-usb-waiting | PC Install (USB) waiting screen with the USB 2.0 badge -->
 <!-- shot: install-usb-queue | Queue with packages received from DBI Backend Qt -->
 
+## Open automatically on connect {#auto-open}
+
+<!-- draft
+- new in v0.14.023, setting [[PC Install on connect]] (on by default) in Settings → Network
+- handheld console plugged into a computer by cable: after 2 seconds Kefir Hub opens the USB install link and waits a few seconds for a PC app that is already running (DBI Backend, ns-usbloader, Goldleaf); if one answers, [[PC Install (USB)]] opens by itself with the file list already loaded; if nobody answers, MTP starts as before
+- the PC app must be started before or right after plugging in; Kefir Hub cannot start the app on the computer
+- turn the setting off to always get MTP on connect
+-->
+
 ## Change the queue from the PC {#live-queue}
 
 With DBI Backend Qt the queue stays in sync with the PC app:

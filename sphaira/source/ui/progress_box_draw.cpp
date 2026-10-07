@@ -229,9 +229,16 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         const float rounding = 5;
 
         gfx::drawRect(vg, prog_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
+        // the segment travels from fully outside the left edge to fully past
+        // the right edge, clipped to the bar, so it leaves and re-enters
+        // instead of vanishing the moment it touches the right end.
         const float chase_w = prog_bar.w * 0.25f;
-        const double phase = std::fmod((double)(armTicksToNs(armGetSystemTick()) / 1000000ULL) / 1600.0, 1.0);
-        gfx::drawRect(vg, prog_bar.x + (float)phase * (prog_bar.w - chase_w), prog_bar.y, chase_w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
+        const double phase = std::fmod((double)(armTicksToNs(armGetSystemTick()) / 1000000ULL) / 2000.0, 1.0);
+        const float chase_x = prog_bar.x - chase_w + (float)phase * (prog_bar.w + chase_w);
+        nvgSave(vg);
+        nvgIntersectScissor(vg, prog_bar.x, prog_bar.y, prog_bar.w, prog_bar.h);
+        gfx::drawRect(vg, chase_x, prog_bar.y, chase_w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
+        nvgRestore(vg);
 
         char done_str[32];
         if (offset >= 1024LL*1024LL) {

@@ -319,6 +319,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.10 ~~**Fill free NAND space with zeros**~~ Removed on the user's request (2026-10-07, v0.14.018). The SD
       zero-fill stays (restored in v0.14.022 under Maintenance).
 - [x] F.16 **Tools → Tools grouped** into Diagnostics / Settings / Maintenance captions (user, 2026-10-07; v0.14.018).
+- [x] F.17 **PC Install on connect** (user, 2026-10-07; v0.14.023): on cable plug-in probe for a USB install app before
+      auto MTP; a host that answers opens PC Install (USB) with its list. Also: indeterminate progress bar glides off the edge.
 - [x] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.

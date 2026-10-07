@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.023 — PC Install opens by itself when a USB install app answers; indeterminate bar glides off the edge
+- Cable plug-in (handheld, 2 s after the PC charger appears, where auto MTP used to start): with the new Settings → Network → "PC Install on connect" (default on) Kefir Hub opens usb:ds as the install device in a thread (`usb_install_probe.cpp`), waits up to 3 s for enumeration and runs two detection rounds of the install menu's own protocol probe (DBI write probe, Tinfoil listen, Goldleaf). A host that answers hands its open link and file list to a new PC Install (USB) constructor, so the menu starts in Analysing with no second list request (Awoo's one-shot list is not lost). No answer: the link is closed and MTP starts as before. Hub cannot start the app on the PC side.
+- ProgressBox indeterminate bar (unknown total: firmware prepare step, stream installs): the segment now travels from fully outside the left edge to fully past the right edge, clipped to the bar, instead of vanishing when it touches the right end; period 2 s.
+- host tests: pass (quick) · nro: not built · switch: pending — DBI Backend running + plug cable: PC Install opens with the list; backend not running: MTP starts after the probe (~5 s); ns-usbloader (Awoo) upload started before plugging: list arrives; setting off: MTP at once; firmware install prepare step bar glides.
+
 ## v0.14.022 — SD zero-fill back; game transfer only in Console Transfer
 - User correction (2026-10-07): only the NAND zero-fill was to go. "Fill free SD space with zeros" is back (zero_fill.cpp restored, SD only) under the Maintenance caption; its 7 i18n keys restored in every language. The "Send to another console" entry in the installed game's + menu is removed: every console-to-console option lives in Tools → Console Transfer for now (other entry points to be decided later). Docs drafts, coverage rows and the games page updated.
 - host tests: pass (quick) · nro: not built (1 unbuilt commit) · switch: pending — Tools → Tools → Maintenance → Fill free SD space with zeros runs and cancels; the game + menu has no transfer entry.

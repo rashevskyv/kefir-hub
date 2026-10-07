@@ -114,6 +114,7 @@ Servers that let a PC reach the console. Details: [Share files with a PC](sharin
 | [[FTP settings]] | Sub-page: [[Anonymous (no login)]] (default On), [[Username]], [[Password]], [[Port]] (default 5000). See [Sharing](sharing.md). | |
 | [[MTP]] | Runs the MTP server (USB cable to a PC) in the background. Turning it on turns [[USB storage]] off, because both need the USB port. | On |
 | [[MTP storages]] | Sub-page: which drives the PC sees over MTP, their names, the game dump format and extra folders. See [Sharing](sharing.md). | |
+| [[PC Install on connect]] | When a computer is plugged in, Kefir Hub first asks for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and opens [[PC Install (USB)]] if one answers. Otherwise MTP starts as before. See [PC Install over USB](install/usb.md#auto-open). | On |
 | [[Nxlink]] | Lets you send `.nro` files from a PC with the nxlink tool (for homebrew developers). | On |
 
 ## [[Sources]] {#sources}

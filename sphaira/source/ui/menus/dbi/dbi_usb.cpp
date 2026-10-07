@@ -54,26 +54,32 @@ void Menu::ThreadFunction() {
             finish_cancelled();
             return;
         }
-        m_state = State::WaitingForUsb;
-        const auto rc = m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
-        if (rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
-            finish_cancelled();
-            return;
-        }
-        if (R_FAILED(rc)) continue;
-
-        if (m_cancel_requested || GetToken().stop_requested()) {
-            finish_cancelled();
-            return;
-        }
-        m_state = State::WaitingForList;
         std::vector<std::string> names;
-        const auto list_rc = m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names);
-        if (list_rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
-            finish_cancelled();
-            return;
+        if (!m_handover_names.empty()) {
+            // the usb probe already connected and listed: start from its answer.
+            names = std::move(m_handover_names);
+            m_handover_names.clear();
+        } else {
+            m_state = State::WaitingForUsb;
+            const auto rc = m_usb_source->IsUsbConnected(CONNECTION_TIMEOUT);
+            if (rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
+                finish_cancelled();
+                return;
+            }
+            if (R_FAILED(rc)) continue;
+
+            if (m_cancel_requested || GetToken().stop_requested()) {
+                finish_cancelled();
+                return;
+            }
+            m_state = State::WaitingForList;
+            const auto list_rc = m_usb_source->WaitForConnection(CONNECTION_TIMEOUT, names);
+            if (list_rc == Result_UsbCancelled || m_cancel_requested || GetToken().stop_requested()) {
+                finish_cancelled();
+                return;
+            }
+            if (R_FAILED(list_rc)) continue;
         }
-        if (R_FAILED(list_rc)) continue;
 
                 AddLog(std::string{"Connected: "_i18n} + yati::source::GetUsbProtocolName(m_usb_source->GetProtocol()), LogKind::Event);
         m_last_acked_revision = 0;

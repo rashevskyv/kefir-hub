@@ -131,6 +131,8 @@ public:
     static auto IsHbmenu() -> bool;
 
     static auto GetMtpEnable() -> bool;
+    static auto GetUsbInstallOnConnect() -> bool;
+    static void SetUsbInstallOnConnect(bool enable);
     static auto GetMtpShowSd() -> bool;
     static auto GetMtpShowInstall() -> bool;
     static auto GetMtpShowSaves() -> bool;
@@ -447,6 +449,8 @@ public:
     option::OptionBool m_nxlink_enabled{INI_SECTION, "nxlink_enabled", true};
     option::OptionBool m_ntp_enabled{INI_SECTION, "ntp_enabled", true};
     option::OptionBool m_mtp_enabled{INI_SECTION, "mtp_enabled", true};
+    // PC plugged in: ask for a USB install app before MTP takes the port.
+    option::OptionBool m_usb_install_on_connect{INI_SECTION, "usb_install_on_connect", true};
     option::OptionBool m_mtp_show_sd{INI_SECTION, "mtp_show_sd", true};
     option::OptionBool m_mtp_show_install{INI_SECTION, "mtp_show_install", true};
     option::OptionBool m_mtp_show_saves{INI_SECTION, "mtp_show_saves", true};

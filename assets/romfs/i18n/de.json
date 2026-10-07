@@ -3161,5 +3161,7 @@
   "Filling with zeros": "Mit Nullen füllen",
   "Free space filled with zeros": "Freier Speicherplatz mit Nullen gefüllt",
   "Fill failed!": "Füllen fehlgeschlagen!",
-  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Den gesamten freien Speicherplatz auf der microSD-Karte mit Nullen überschreiben? Dateien bleiben unberührt. Das kann lange dauern."
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Den gesamten freien Speicherplatz auf der microSD-Karte mit Nullen überschreiben? Dateien bleiben unberührt. Das kann lange dauern.",
+  "PC Install on connect": "PC-Installation bei Verbindung",
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Suche bei eingestecktem Computer einige Sekunden lang nach einer USB-Installations-App (DBI Backend, ns-usbloader, Goldleaf) und öffne PC-Installation (USB), wenn eine antwortet. Andernfalls startet MTP wie gewohnt."
 }

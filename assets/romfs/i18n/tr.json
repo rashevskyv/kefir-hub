@@ -3155,5 +3155,7 @@
   "Filling with zeros": "Sıfırlarla dolduruluyor",
   "Free space filled with zeros": "Boş alan sıfırlarla dolduruldu",
   "Fill failed!": "Doldurma başarısız!",
-  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD kartındaki tüm boş alan sıfırlarla üzerine yazılsın mı? Dosyalar etkilenmez. Uzun sürebilir."
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD kartındaki tüm boş alan sıfırlarla üzerine yazılsın mı? Dosyalar etkilenmez. Uzun sürebilir.",
+  "PC Install on connect": "Bağlandığında PC'den Yükle",
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Bilgisayar takıldığında, birkaç saniye boyunca bir USB yükleme uygulaması (DBI Backend, ns-usbloader, Goldleaf) arayın ve biri yanıt verirse PC Yüklemesi (USB) öğesini açın. Aksi takdirde MTP normal şekilde başlar."
 }

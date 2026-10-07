@@ -3155,5 +3155,7 @@
   "Filling with zeros": "Mengisi dengan nol",
   "Free space filled with zeros": "Ruang kosong diisi dengan nol",
   "Fill failed!": "Pengisian gagal!",
-  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Timpa semua ruang kosong pada kartu microSD dengan nol? File tidak disentuh. Proses ini bisa memakan waktu lama."
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Timpa semua ruang kosong pada kartu microSD dengan nol? File tidak disentuh. Proses ini bisa memakan waktu lama.",
+  "PC Install on connect": "Instalasi PC saat tersambung",
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Saat komputer dicolokkan, cari aplikasi penginstal USB (DBI Backend, ns-usbloader, Goldleaf) selama beberapa detik dan buka Instal PC (USB) jika ada yang merespons. Jika tidak, MTP akan dimulai seperti biasa."
 }

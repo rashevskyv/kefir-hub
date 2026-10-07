@@ -6,7 +6,9 @@
 #include "log.hpp"
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
+#include "ui/menus/dbi_menu.hpp"
 #include "ui/option_box.hpp"
+#include "usb_install_probe.hpp"
 
 #include <usbhsfs.h>
 #include <switch.h>
@@ -33,6 +35,34 @@ void App::PollUsbStorage() {
     }
     if (timed) {
         m_usb_poll_ts.Update();
+    }
+
+    // a PC was plugged in and the install probe is asking it whether a USB
+    // install app is waiting. Nothing else touches the port until it answers.
+    switch (usb_probe::GetState()) {
+        case usb_probe::State::Running:
+            return;
+        case usb_probe::State::Found:
+        case usb_probe::State::NotFound: {
+            std::unique_ptr<yati::source::Usb> source;
+            std::vector<std::string> names;
+            usb_probe::Finish(source, names);
+#if ENABLE_NETWORK_INSTALL
+            if (source) {
+                log_write("[USB] install host answered; opening PC Install (USB)\n");
+                App::Push<ui::menu::dbi::Menu>(ui::menu::MenuFlag_None, std::move(source), std::move(names));
+                return;
+            }
+#endif
+            PsmChargerType still{PsmChargerType_Unconnected};
+            psmGetChargerType(&still);
+            if (still != PsmChargerType_Unconnected) {
+                TryStartAutoMtp();
+            }
+            return;
+        }
+        case usb_probe::State::Idle:
+            break;
     }
 
     PsmChargerType charger{PsmChargerType_Unconnected};
@@ -135,7 +165,14 @@ void App::PollUsbStorage() {
             m_usb_pending_mtp = false;
         } else if (m_usb_pending_mtp_ts.GetSeconds() >= 2) {
             m_usb_pending_mtp = false;
-            TryStartAutoMtp();
+            // ask for a USB install app first; MTP only when nobody answers
+            // (or in a build without network install, where Start() is a no-op).
+            if (App::GetUsbInstallOnConnect()) {
+                usb_probe::Start();
+            }
+            if (usb_probe::GetState() == usb_probe::State::Idle) {
+                TryStartAutoMtp();
+            }
         }
     }
 }

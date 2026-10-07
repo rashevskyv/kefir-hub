@@ -21,6 +21,14 @@ auto App::GetMtpEnable() -> bool {
     return g_app->m_mtp_enabled.Get();
 }
 
+auto App::GetUsbInstallOnConnect() -> bool {
+    return g_app->m_usb_install_on_connect.Get();
+}
+
+void App::SetUsbInstallOnConnect(bool enable) {
+    g_app->m_usb_install_on_connect.Set(enable);
+}
+
 auto App::GetMtpShowSd() -> bool {
     return g_app->m_mtp_show_sd.Get();
 }

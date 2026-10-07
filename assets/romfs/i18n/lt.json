@@ -3155,5 +3155,7 @@
   "Filling with zeros": "Pildymas nuliais",
   "Free space filled with zeros": "Laisva vieta užpildyta nuliais",
   "Fill failed!": "Užpildyti nepavyko!",
-  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Perrašyti visą laisvą vietą microSD kortelėje nuliais? Failai nepaliečiami. Tai gali užtrukti ilgai."
+  "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Perrašyti visą laisvą vietą microSD kortelėje nuliais? Failai nepaliečiami. Tai gali užtrukti ilgai.",
+  "PC Install on connect": "Kompiuterio diegimas prijungus",
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Kai prijungtas kompiuteris, kelias sekundes ieškokite USB diegimo programėlės (DBI Backend, ns-usbloader, Goldleaf) ir atidarykite kompiuterio diegimą (USB), jei kuri nors atsako. Priešingu atveju MTP prasideda įprastai."
 }

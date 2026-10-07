@@ -253,6 +253,8 @@ protected:
 
 struct Menu final : InstallSession {
     Menu(u32 flags);
+    // a link the usb probe already opened, with the host's first file list.
+    Menu(u32 flags, std::unique_ptr<yati::source::Usb> source, std::vector<std::string> names);
     Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes = {}, bool defer_analysis = false);
     ~Menu();
 
@@ -282,6 +284,8 @@ private:
     u32 m_last_acked_revision{0};
 
     std::unique_ptr<yati::source::Usb> m_usb_source{};
+    // file list the probe received; the first loop uses it instead of waiting.
+    std::vector<std::string> m_handover_names{};
     fs::Fs* m_local_fs{};
     std::vector<fs::FsPath> m_local_paths{};
     std::vector<s64> m_local_source_sizes{};

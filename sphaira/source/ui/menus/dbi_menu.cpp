@@ -110,6 +110,46 @@ Menu::Menu(u32 flags) : InstallSession{"PC Install (USB)"_i18n, flags, Transport
     }
 }
 
+Menu::Menu(u32 flags, std::unique_ptr<yati::source::Usb> source, std::vector<std::string> names)
+    : InstallSession{"PC Install (USB)"_i18n, flags, TransportOrigin::Usb} {
+    m_state = State::WaitingForList;
+
+    m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();
+    m_session_install_location = App::GetInstallLocation();
+    m_session_reserve_mb = App::GetInstallReserveMb();
+    m_session_reserve_sd_mb = App::GetInstallReserveSdMb();
+
+    const Vec4 queue_pos{70.f, GetY() + 63.f, 1140.f, 470.f};
+    const Vec4 row{queue_pos.x, queue_pos.y, queue_pos.w, 78.f};
+    m_list = std::make_unique<List>(1, 6, queue_pos, row);
+    m_list->SetLayout(List::Layout::GRID);
+    UpdateActions();
+
+    // the probe already holds usb:ds (so MTP is not running) and dropped usb
+    // host storage; the dtor restores both the way the plain ctor's does.
+    m_was_mtp_enabled = App::GetMtpEnable();
+    if (m_was_mtp_enabled) {
+        App::SetMtpEnable(false);
+    }
+
+    m_usb_source = std::move(source);
+    m_handover_names = std::move(names);
+
+    const auto create_rc = threadCreate(&m_thread, thread_func, this, nullptr, 1024 * 128, PRIO_PREEMPTIVE, 1);
+    if (R_SUCCEEDED(create_rc)) {
+        const auto start_rc = threadStart(&m_thread);
+        if (R_SUCCEEDED(start_rc)) {
+            m_thread_created = true;
+        } else {
+            threadClose(&m_thread);
+        }
+    }
+    if (!m_thread_created) {
+        m_state = State::Failed;
+        m_actions_dirty = true;
+    }
+}
+
 Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes, bool defer_analysis)
     : InstallSession{"Install queue"_i18n, flags, TransportOrigin::Dbi}, m_local_fs{fs}, m_local_paths{std::move(paths)},
       m_local_source_sizes{std::move(source_sizes)}, m_defer_local_analysis{defer_analysis} {
