@@ -49,7 +49,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.017 — File browser: one-line notes for the Kefir files and folders
 - The list layout shows what a known file or folder is for under its name (card root, atmosphere, bootloader, config, config/kefir, switch, overlays, themes, emuMMC): 120 notes in the pure table `filebrowser_path_notes.hpp` (`FindPathNote`, case-insensitive, host-tested). The old /config/kefir if-chain moved into the table with the same texts. A recognised payload still wins over the generic note for `.bin` files. `tools/i18n-translate/add_path_notes.py` copies the table into en.json (the strings are not `_i18n` literals); translate.py filled the other languages. Docs: file-browser.md EN/UK.
-- host tests: pass (quick, 120 notes) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — open /, /atmosphere, /bootloader, /config, /config/kefir, /switch in list layout: notes under the names; /atmosphere/contents still shows module and game names.
+- host tests: pass (quick, 120 notes) · i18n parity: pass · docs: built en/uk, 0 unknown labels · nro: built (ReleaseWithInstall checkpoint, 0.14.017, copied to the test card) · switch: pending — open /, /atmosphere, /bootloader, /config, /config/kefir, /switch in list layout: notes under the names; /atmosphere/contents still shows module and game names.
 
 ## unreleased
 - docs: new page "What is on the microSD card" (EN/UK): every Kefir folder and file on the card with its purpose, linked from Settings → Where settings are stored.
