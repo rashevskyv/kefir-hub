@@ -1,6 +1,7 @@
 # REQUIRE SD
 # REQUIRE KEYS
 # REQUIRE MINERVA
+# kefir-hub-owned: one-shot script written by Kefir Hub to sd:/startup.te; Kefir installers may delete it
 # REQUIRE VER 4.0.0
 
 # nand_transfer_restore_auto.te - Kefir Hub Profiles and Playtime Restore

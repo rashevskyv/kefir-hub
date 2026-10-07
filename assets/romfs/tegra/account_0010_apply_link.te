@@ -1,6 +1,7 @@
 # REQUIRE SD
 # REQUIRE KEYS
 # REQUIRE MINERVA
+# kefir-hub-owned: one-shot script written by Kefir Hub to sd:/startup.te; Kefir installers may delete it
 # REQUIRE VER 4.0.0
 
 # One-shot: Hub stages unchanged baas under destination UID-derived filename and nas under restore_pending/link/, then

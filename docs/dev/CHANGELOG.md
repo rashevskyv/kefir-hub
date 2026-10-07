@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Rename the unfinished-dump prompt buttons to Later (B, silent until Hub restarts) / Cancel operation (clears state, staging, scripts, reminders) / Retry; default cursor on Later, so no button reboots by accident. Retry re-stages the target folder, flags and pending state before rebooting and reports staging failures instead of launching. A dump without dumped.ok is never treated as complete. The TE dump script reports read errors as errors, not as an empty save. EN/UK docs and video 07 updated. Embedded TegraExplorer 4.2.28 fixes the black OLED screen (LTO inlined hw_init across pivot_stack).
 - host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — interrupt a dump, delete its folder, start Hub: B exits, Later stays silent this run, Cancel operation clears after restart, Retry re-creates the folder; TE 4.2.28 on OLED.
 
+## v0.14.007 — Mark one-shot TegraExplorer scripts as Hub-owned
+- Add a `# kefir-hub-owned` line to the four scripts Hub writes to /startup.te (0010 dump, apply link, NAND dump, NAND restore). Kefir install.bat and kefir-updater update.te now remove leftovers of an unfinished dump/restore: restore_pending, _staging_/_restore_ folders, reopen flag/notify, the one-shot script copies and an owned /startup.te; completed packs, .zip backups, restore_backup and Undo_restore_if_wont_boot.te are kept (Kefir repo commit).
+- host tests: pass (quick) · nro: not built · switch: pending — leave an interrupted dump, reinstall via install.bat and via update.te, confirm Hub shows no old prompt and completed backups remain.
+
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
