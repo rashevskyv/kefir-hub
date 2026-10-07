@@ -4,7 +4,7 @@ Single source of truth for any AI agent working here (Claude Code reads it via `
 Reports to the user are in Ukrainian; code, commits and this file are in English.
 
 ## Workspace
-- Primary checkout: `D:\git\dev\sphaira` (WSL: `/mnt/d/git/dev/sphaira`). No git worktrees, ever.
+- Primary checkout: `D:\git\dev\kefir-hub` (WSL: `/mnt/d/git/dev/kefir-hub`). No git worktrees, ever.
 - Never `git push` unless the user asks. Commit on Windows (Git Bash / PowerShell), not from a Linux VM mount
   (a VM sees CRLF noise in hundreds of files — do not stage it).
 - `assets/romfs/tegra/TegraExplorer.bin` changes in the background (Kefir updates). Ignore it when checking
@@ -34,7 +34,7 @@ Do **not** read `README.md`, `docs/wiki/`, `docs/dev/AUDIT-*.md` or the whole `G
 - Build checkpoint = run the `test-build` skill (`.agents/skills/test-build/SKILL.md` (canonical; `.claude/skills/test-build/` is a stub pointing there)) in WSL. Mandatory at the
   end of every plan phase and after at most 5 unbuilt commits. Fix errors surgically, bump, commit.
 - Host tests are cheap and **required** after touching pure logic, headers, tests or patches:
-  `wsl bash -lc 'cd /mnt/d/git/dev/sphaira && tests/run.sh'` (≈1 min; no devkitPro needed).
+  `wsl bash -lc 'cd /mnt/d/git/dev/kefir-hub && tests/run.sh'` (≈1 min; no devkitPro needed).
   Fast loop: `tests/run.sh --quick` (host C++ tests + dead-symbol guard, < 60 s); from Windows `tools/dev/check.ps1`.
 - Never claim a build or a test ran unless you ran it in this session. Hardware (Switch) verification is the
   user's; list what needs it in the CHANGELOG entry.

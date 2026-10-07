@@ -16,7 +16,7 @@ Workflow for testing project compilation, diagnosing build/link errors, applying
 ## Build Environment & Requirements
 
 - **Environment**: WSL (Windows Subsystem for Linux) with devkitPro installed at `/opt/devkitpro`.
-- **Primary Checkout**: `D:\git\dev\sphaira` (mapped to `/mnt/d/git/dev/sphaira` in WSL). Do not use worktrees.
+- **Primary Checkout**: `D:\git\dev\kefir-hub` (mapped to `/mnt/d/git/dev/kefir-hub` in WSL). Do not use worktrees.
 - **Preset**: `ReleaseWithInstall` (or `Release` for non-network builds).
 
 ## Procedure
@@ -26,7 +26,7 @@ Workflow for testing project compilation, diagnosing build/link errors, applying
 Execute the build via WSL:
 
 ```bash
-wsl bash -lc 'cd /mnt/d/git/dev/sphaira && cmake --preset ReleaseWithInstall && cmake --build --preset ReleaseWithInstall --parallel $(nproc)'
+wsl bash -lc 'cd /mnt/d/git/dev/kefir-hub && cmake --preset ReleaseWithInstall && cmake --build --preset ReleaseWithInstall --parallel $(nproc)'
 ```
 
 Alternatively run `./build.sh`.

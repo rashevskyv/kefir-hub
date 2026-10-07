@@ -68,7 +68,7 @@ a translated UI name by hand in docs/site.
     - `python tests/test_doc_labels_contract.py` → `0 unknown`. Read its warnings. A label "not found as a
       literal in sphaira/" means either its feature is gone (go to step 6, removed) or the label is built at
       run time (fine).
-    - `wsl bash -lc '. ~/.venvs/docs/bin/activate && cd /mnt/d/git/dev/sphaira && sh docs/site/build.sh'` →
+    - `wsl bash -lc '. ~/.venvs/docs/bin/activate && cd /mnt/d/git/dev/kefir-hub && sh docs/site/build.sh'` →
       `built en`, `built uk`, no WARNING or Aborted. First setup: `python3 -m venv ~/.venvs/docs &&
       ~/.venvs/docs/bin/pip install -r docs/site/requirements.txt`.
     - Site changed: `python tools/docs/check_site_links.py` → `0 broken`.
