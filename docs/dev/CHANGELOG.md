@@ -25,7 +25,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.011 — Port small upstream sphaira 1.0.8 changes
 - From NaGaa95/sphaira 1.0.7→1.0.8 review: forwarder editor gains 32-bit and 32-bit (no alias) address spaces (f7cd3782); Chinese UI languages use the Chinese shared font as the main face (e098979b); Ownfoil menu joins its connect worker in the destructor and the HTTP source retry wait is cancellable in 100 ms slices (76be2ac8; our cancel path already existed); evman::pop moves the event; dead ProgressCallbackFunc1 removed. Not ported: native Album menu (#377, overlaps our web /album share, owner decision), Docker builder, hard-coded language-name list (ours is data-driven), ru/zh translation refreshes, CMake dependency bumps. EN/UK docs for the forwarder editor updated.
-- host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — forwarder editor cycles 39→36→32→32 (no alias); zh UI font; Ownfoil B during a stalled download returns within ~0.1 s.
+- host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: built (ReleaseWithInstall, checkpoint clean, build/ReleaseWithInstall/kefir-hub.nro 0.14.011) · switch: pending — forwarder editor cycles 39→36→32→32 (no alias); zh UI font; Ownfoil B during a stalled download returns within ~0.1 s.
 
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
