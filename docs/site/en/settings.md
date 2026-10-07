@@ -214,6 +214,8 @@ Other files in `/config/kefir/`:
 | `themes/`, `i18n/` | Installed themes and translations. |
 | `log.txt`, `errors.txt` | Logs, see [Troubleshooting](troubleshooting.md#get-the-log). |
 
+The rest of the card is described in [What is on the microSD card](card-contents.md).
+
 If you used Sphaira before, Kefir Hub moves an old `/config/sphaira/` folder to `/config/kefir/` on first start,
 unless `/config/kefir/` already exists.
 
