@@ -2949,5 +2949,9 @@
   "The account save dump is not on SD yet.": "L'extraction de la sauvegarde du compte n'est pas encore sur la carte SD.",
   "Failed to clear unfinished operation.": "Échec de l'effacement de l'opération inachevée.",
   "Delete firmware folder?": "Supprimer le dossier du firmware ?",
-  "Failed to delete firmware folder": "Échec de la suppression du dossier du firmware"
+  "Failed to delete firmware folder": "Échec de la suppression du dossier du firmware",
+  " archives": " archives",
+  " Â· play hours": " · heures de jeu",
+  "Cancel operation": "Annuler l'opération",
+  " Â· no play hours": " · aucune heure de jeu"
 }

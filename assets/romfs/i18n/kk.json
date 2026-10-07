@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Тіркелгіні сақтау файлының көшірмесі әлі SD картасында жоқ.",
   "Failed to clear unfinished operation.": "Аяқталмаған операцияны тазалау мүмкін болмады.",
   "Delete firmware folder?": "Прошивка қалтасы жойылсын ба?",
-  "Failed to delete firmware folder": "Прошивка қалтасын жою мүмкін болмады"
+  "Failed to delete firmware folder": "Прошивка қалтасын жою мүмкін болмады",
+  " archives": " архивтер",
+  " Â· play hours": " · ойнау сағаты",
+  "Cancel operation": "Операцияны болдырмау",
+  " Â· no play hours": " · ойнау уақыты жоқ"
 }

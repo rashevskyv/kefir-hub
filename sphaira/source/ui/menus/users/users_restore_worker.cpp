@@ -115,13 +115,13 @@ auto OfferPendingRestore() -> bool {
         }
         App::Push<OptionBox>(
             "TegraExplorer did not finish the dump."_i18n,
-            "Cancel"_i18n, "Don't remind again"_i18n, "Retry"_i18n, 2,
-            [](auto op) {
+            "Later"_i18n, "Cancel operation"_i18n, "Retry"_i18n, 0,
+            [pack](auto op) {
                 const auto choice = account_restore::ResolveAbandonChoice(op);
-                if (choice == account_restore::AbandonChoice::Cancel) {
+                if (choice == account_restore::AbandonChoice::Later) {
                     return;
                 }
-                if (choice == account_restore::AbandonChoice::DontRemindAgain) {
+                if (choice == account_restore::AbandonChoice::CancelOperation) {
                     const auto rc = account_restore::ClearPending();
                     if (R_FAILED(rc)) {
                         App::Push<OptionBox>(
@@ -130,12 +130,20 @@ auto OfferPendingRestore() -> bool {
                     }
                     return;
                 }
-                if (choice == account_restore::AbandonChoice::Retry) {
-                    if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
-                        App::Push<OptionBox>(
-                            "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
-                            "OK"_i18n);
-                    }
+                // Retry: the user may have deleted the target folder or flags. Re-stage
+                // everything (folder, NAND flag, pack path, pending state) before rebooting.
+                nand_transfer::Report report;
+                report.dir = pack;
+                if (R_FAILED(StageNandDump(report))) {
+                    App::Push<OptionBox>(
+                        "Could not stage the profiles & play hours dump on SD."_i18n,
+                        "OK"_i18n);
+                    return;
+                }
+                if (!account_restore::LaunchTegraRomfs(account_restore::NandDumpTeName())) {
+                    App::Push<OptionBox>(
+                        "Could not start TegraExplorer. Put TegraExplorer.bin in /bootloader/payloads/ and try again."_i18n,
+                        "OK"_i18n);
                 }
             });
         return true;
@@ -153,13 +161,13 @@ auto OfferPendingRestore() -> bool {
             s_offered = true;
             App::Push<OptionBox>(
                 "The account save dump is not on SD yet."_i18n,
-                "Cancel"_i18n, "Don't remind again"_i18n, "Retry"_i18n, 2,
+                "Later"_i18n, "Cancel operation"_i18n, "Retry"_i18n, 0,
                 [](auto op) {
                     const auto choice = account_restore::ResolveAbandonChoice(op);
-                    if (choice == account_restore::AbandonChoice::Cancel) {
+                    if (choice == account_restore::AbandonChoice::Later) {
                         return;
                     }
-                    if (choice == account_restore::AbandonChoice::DontRemindAgain) {
+                    if (choice == account_restore::AbandonChoice::CancelOperation) {
                         const auto rc = account_restore::ClearPending();
                         if (R_FAILED(rc)) {
                             App::Push<OptionBox>(
@@ -199,7 +207,7 @@ auto OfferPendingRestore() -> bool {
     if (packs.empty()) {
         App::Push<OptionBox>(
             "Pending restore packs are missing from SD."_i18n,
-            "Cancel"_i18n, "Don't remind again"_i18n, 1,
+            "Later"_i18n, "Cancel operation"_i18n, 0,
             [](auto op) {
                 if (!op || *op != 1) {
                     return;

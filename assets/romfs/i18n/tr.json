@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Hesap kaydı dökümü henüz SD üzerinde değil.",
   "Failed to clear unfinished operation.": "Tamamlanmamış işlem temizlenemedi.",
   "Delete firmware folder?": "Firmware klasörü silinsin mi?",
-  "Failed to delete firmware folder": "Firmware klasörü silinemedi"
+  "Failed to delete firmware folder": "Firmware klasörü silinemedi",
+  " archives": " arşivler",
+  " Â· play hours": " · oynama saati",
+  "Cancel operation": "İşlemi iptal et",
+  " Â· no play hours": " · oynama süresi yok"
 }

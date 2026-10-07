@@ -2975,5 +2975,9 @@
   "The account save dump is not on SD yet.": "O despejo do save da conta ainda não está no SD.",
   "Failed to clear unfinished operation.": "Falha ao limpar operação inacabada.",
   "Delete firmware folder?": "Eliminar a pasta do firmware?",
-  "Failed to delete firmware folder": "Falha ao apagar pasta do firmware."
+  "Failed to delete firmware folder": "Falha ao apagar pasta do firmware.",
+  " archives": " arquivos",
+  " Â· play hours": " · horas de jogo",
+  "Cancel operation": "Cancelar operação",
+  " Â· no play hours": " · sem horas de jogo"
 }

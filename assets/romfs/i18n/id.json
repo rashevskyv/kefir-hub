@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Dump save akun belum ada di SD.",
   "Failed to clear unfinished operation.": "Gagal menghapus operasi yang belum selesai.",
   "Delete firmware folder?": "Hapus folder firmware?",
-  "Failed to delete firmware folder": "Gagal menghapus folder firmware"
+  "Failed to delete firmware folder": "Gagal menghapus folder firmware",
+  " archives": " arsip",
+  " Â· play hours": " · jam bermain",
+  "Cancel operation": "Batalkan operasi",
+  " Â· no play hours": " · belum ada jam bermain"
 }

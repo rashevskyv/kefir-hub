@@ -2943,5 +2943,9 @@
   "Retry": "Retry",
   "TegraExplorer did not finish the dump.": "TegraExplorer did not finish the dump.",
   "The account save dump is not on SD yet.": "The account save dump is not on SD yet.",
-  "Failed to clear unfinished operation.": "Failed to clear unfinished operation."
+  "Failed to clear unfinished operation.": "Failed to clear unfinished operation.",
+  " archives": " archives",
+  " Â· no play hours": " Â· no play hours",
+  " Â· play hours": " Â· play hours",
+  "Cancel operation": "Cancel operation"
 }

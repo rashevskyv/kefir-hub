@@ -324,10 +324,10 @@ dumpSave0010 = {
             colLog = 0x00FF00
             logMsg()
         } .else() {
-            if (saveFilesDone == 0) {
+            if (saveErrors == 0) {
                 stat0010 = "[EMPTY]"
                 col0010 = 0xFF0000
-                msg = "  [FAIL] Profiles save is empty"
+                msg = "  [FAIL] Profiles save has no files"
                 colLog = 0xFF0000
                 logMsg()
             } .else() {
@@ -385,9 +385,14 @@ dumpSave0011 = {
             colLog = 0x00FF00
             logMsg()
         } .else() {
-            stat0011 = "[EMPTY]"
+            if (saveErrors == 0) {
+                stat0011 = "[EMPTY]"
+                msg = "  [WARN] 0011 save has no files"
+            } .else() {
+                stat0011 = "[ERRORS] (" + saveErrors.str() + " err)"
+                msg = "  [WARN] 0011 save could not be read (" + saveErrors.str() + " errors)"
+            }
             col0011 = 0xFFFF00
-            msg = "  [WARN] 0011 save was empty"
             colLog = 0xFFFF00
             logMsg()
         }
@@ -477,10 +482,10 @@ dumpSave00F0 = {
             colLog = 0x00FF00
             logMsg()
         } .else() {
-            if (saveFilesDone == 0) {
+            if (saveErrors == 0) {
                 stat00F0 = "[EMPTY]"
                 col00F0 = 0xFF0000
-                msg = "  [FAIL] Play hours save is empty"
+                msg = "  [FAIL] Play hours save has no files"
                 colLog = 0xFF0000
                 logMsg()
             } .else() {
@@ -548,9 +553,14 @@ dumpSave0041 = {
             colLog = 0x00FF00
             logMsg()
         } .else() {
-            stat0041 = "[EMPTY]"
+            if (saveErrors == 0) {
+                stat0041 = "[EMPTY]"
+                msg = "  [WARN] 0041 HOME icons has no files (skipped)"
+            } .else() {
+                stat0041 = "[ERRORS] (" + saveErrors.str() + " err)"
+                msg = "  [WARN] 0041 HOME icons could not be read (" + saveErrors.str() + " errors)"
+            }
             col0041 = 0xFFFF00
-            msg = "  [WARN] 0041 HOME icons empty (skipped)"
             colLog = 0xFFFF00
             logMsg()
         }

@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Konta saglabāto datu kopija vēl nav atrodama SD kartē.",
   "Failed to clear unfinished operation.": "Neizdevās notīrīt nepabeigto darbību.",
   "Delete firmware folder?": "Dzēst programmaparatūras mapi?",
-  "Failed to delete firmware folder": "Neizdevās dzēst programmaparatūras mapi"
+  "Failed to delete firmware folder": "Neizdevās dzēst programmaparatūras mapi",
+  " archives": " arhīvi",
+  " Â· play hours": " · spēlēšanas stundas",
+  "Cancel operation": "Atcelt operāciju",
+  " Â· no play hours": " · nav spēles stundu"
 }

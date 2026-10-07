@@ -11,18 +11,19 @@
 
 namespace sphaira::account_restore {
 
+// Button order of the unfinished-operation prompts: Later (B) / Cancel operation / Retry.
 enum class AbandonChoice {
-    Cancel = 0,
-    DontRemindAgain = 1,
-    Retry = 2,
+    Later = 0,            // close the prompt; it stays silent until Kefir Hub restarts
+    CancelOperation = 1,  // abandon this attempt: clear state, staging, scripts and reminders
+    Retry = 2,            // explicit retry: re-stage, then reboot into TegraExplorer
 };
 
 inline auto ResolveAbandonChoice(std::optional<int64_t> op) -> AbandonChoice {
     if (!op || (*op != 1 && *op != 2)) {
-        return AbandonChoice::Cancel;
+        return AbandonChoice::Later;
     }
     if (*op == 1) {
-        return AbandonChoice::DontRemindAgain;
+        return AbandonChoice::CancelOperation;
     }
     return AbandonChoice::Retry;
 }

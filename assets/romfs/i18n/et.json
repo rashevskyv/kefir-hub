@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Konto salvestuse tõmmis pole veel SD-kaardil.",
   "Failed to clear unfinished operation.": "Lõpetamata toimingu kustutamine ebaõnnestus.",
   "Delete firmware folder?": "Kas kustutada püsivara kaust?",
-  "Failed to delete firmware folder": "Püsivara kausta kustutamine ebaõnnestus"
+  "Failed to delete firmware folder": "Püsivara kausta kustutamine ebaõnnestus",
+  " archives": " arhiivid",
+  " Â· play hours": " · mänguaeg",
+  "Cancel operation": "Katkesta toiming",
+  " Â· no play hours": " · mänguaega pole"
 }

@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Дампа сейва акаўнтаў на SD яшчэ няма.",
   "Failed to clear unfinished operation.": "Не ўдалося ачысціць незавершаную аперацыю.",
   "Delete firmware folder?": "Выдаліць тэчку прашыўкі?",
-  "Failed to delete firmware folder": "Не ўдалося выдаліць тэчку прашыўкі"
+  "Failed to delete firmware folder": "Не ўдалося выдаліць тэчку прашыўкі",
+  " archives": " архівы",
+  " Â· play hours": " · гадзін гульні",
+  "Cancel operation": "Скасаваць аперацыю",
+  " Â· no play hours": " · няма гадзін гульні"
 }

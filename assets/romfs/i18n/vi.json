@@ -2948,5 +2948,9 @@
   "The account save dump is not on SD yet.": "Bản kết xuất tệp lưu tài khoản chưa có trên thẻ SD.",
   "Failed to clear unfinished operation.": "Không thể xóa thao tác chưa hoàn tất.",
   "Delete firmware folder?": "Xóa thư mục firmware?",
-  "Failed to delete firmware folder": "Xóa thư mục firmware thất bại"
+  "Failed to delete firmware folder": "Xóa thư mục firmware thất bại",
+  " archives": " kho lưu trữ",
+  " Â· play hours": " · giờ chơi",
+  "Cancel operation": "Hủy thao tác",
+  " Â· no play hours": " · chưa chơi giờ nào"
 }

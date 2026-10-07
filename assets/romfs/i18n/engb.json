@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "The account save dump is not on SD yet.",
   "Failed to clear unfinished operation.": "Failed to clear unfinished operation.",
   "Delete firmware folder?": "Delete firmware folder?",
-  "Failed to delete firmware folder": "Failed to delete firmware folder"
+  "Failed to delete firmware folder": "Failed to delete firmware folder",
+  " archives": " archives",
+  " Â· play hours": " · play hours",
+  "Cancel operation": "Cancel operation",
+  " Â· no play hours": " · no play hours"
 }

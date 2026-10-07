@@ -129,10 +129,12 @@ console.
 2. Kefir Hub copies the profiles and play hours to `/config/kefir/nand_transfer/` as a `.kefir-nand.zip` file.
 3. If the system is using one of these files at that moment, the console restarts into TegraExplorer by itself,
    copies them there, and returns to hekate. Start Kefir again and open Kefir Hub: it reports that the dump is done.
-   If TegraExplorer did not finish the dump, Kefir Hub offers [[Retry]], [[Cancel]], and [[Don't remind again]].
-   [[Retry]] launches TegraExplorer to try the dump again. [[Cancel]] closes the message without rebooting and
-   keeps the unfinished dump for later. [[Don't remind again]] abandons the operation, removes temporary staging
-   and scripts, and clears the reminder.
+   If TegraExplorer did not finish the dump, Kefir Hub offers [[Later]], [[Cancel operation]] and [[Retry]].
+   Nothing restarts the console unless you choose [[Retry]].
+   [[Later]] (or **B**) closes the message without rebooting. The unfinished dump stays on the card, and the
+   message does not come back until Kefir Hub starts again. [[Cancel operation]] abandons this attempt: it removes
+   the temporary folder, its scripts and reminders, and keeps every completed backup. [[Retry]] creates the target
+   folder again and restarts TegraExplorer. If the folder cannot be prepared, Kefir Hub reports it and does not reboot.
 
    Completed backups and safety backups are kept. If cleanup fails, Kefir Hub shows an error.
 

@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Paskyros išsaugojimo kopijos dar nėra SD.",
   "Failed to clear unfinished operation.": "Nepavyko išvalyti nebaigtos operacijos.",
   "Delete firmware folder?": "Ištrinti programinės aparatinės įrangos aplanką?",
-  "Failed to delete firmware folder": "Nepavyko ištrinti programinės aparatinės įrangos aplanko"
+  "Failed to delete firmware folder": "Nepavyko ištrinti programinės aparatinės įrangos aplanko",
+  " archives": " archyvai",
+  " Â· play hours": " · žaidimo valandos",
+  "Cancel operation": "Atšaukti operaciją",
+  " Â· no play hours": " · nėra žaidimo valandų"
 }

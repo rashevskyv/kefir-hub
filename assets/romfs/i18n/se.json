@@ -2948,5 +2948,9 @@
   "The account save dump is not on SD yet.": "Dumpen av kontots sparfil finns inte på SD än.",
   "Failed to clear unfinished operation.": "Det gick inte att rensa oavslutad åtgärd.",
   "Delete firmware folder?": "Ta bort firmwaremappen?",
-  "Failed to delete firmware folder": "Misslyckades med att ta bort firmwaremappen"
+  "Failed to delete firmware folder": "Misslyckades med att ta bort firmwaremappen",
+  " archives": " arkiv",
+  " Â· play hours": " · spelade timmar",
+  "Cancel operation": "Avbryt åtgärd",
+  " Â· no play hours": " · inga speltimmar"
 }

@@ -2943,5 +2943,9 @@
   "The account save dump is not on SD yet.": "Zrzut zapisu konta nie znajduje się jeszcze na karcie SD.",
   "Failed to clear unfinished operation.": "Nie udało się wyczyścić niedokończonej operacji.",
   "Delete firmware folder?": "Usunąć folder oprogramowania układowego?",
-  "Failed to delete firmware folder": "Nie udało się usunąć folderu oprogramowania układowego"
+  "Failed to delete firmware folder": "Nie udało się usunąć folderu oprogramowania układowego",
+  " archives": " archiwa",
+  " Â· play hours": " · godziny gry",
+  "Cancel operation": "Anuluj operację",
+  " Â· no play hours": " · brak czasu gry"
 }

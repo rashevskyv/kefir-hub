@@ -70,11 +70,12 @@ auto NandDumpLooksComplete(const std::string& dir) -> bool {
         return false;
     }
     fs::FsNativeSd sd;
-    if (sd.FileExists(account_restore::DumpedOkPath())) {
-        return sd.DirExists((dir + "/8000000000000010").c_str()) ||
-               sd.DirExists((dir + "/80000000000000F0").c_str());
+    // dumped.ok is written by the TE script only after 0010 and 00F0 were read without errors.
+    // Folders left behind by a failed or interrupted dump are never treated as complete.
+    if (!sd.FileExists(account_restore::DumpedOkPath())) {
+        return false;
     }
-    return sd.DirExists((dir + "/8000000000000010").c_str()) &&
+    return sd.DirExists((dir + "/8000000000000010").c_str()) ||
            sd.DirExists((dir + "/80000000000000F0").c_str());
 }
 

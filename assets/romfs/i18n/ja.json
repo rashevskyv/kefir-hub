@@ -2948,5 +2948,9 @@
   "The account save dump is not on SD yet.": "アカウントセーブのダンプがまだSDにありません。",
   "Failed to clear unfinished operation.": "未完了の操作をクリアできませんでした。",
   "Delete firmware folder?": "ファームウェアフォルダーを削除しますか？",
-  "Failed to delete firmware folder": "ファームウェアフォルダーを削除できませんでした"
+  "Failed to delete firmware folder": "ファームウェアフォルダーを削除できませんでした",
+  " archives": " アーカイブ",
+  " Â· play hours": " ・プレイ時間",
+  "Cancel operation": "操作をキャンセル",
+  " Â· no play hours": " · プレイ時間なし"
 }

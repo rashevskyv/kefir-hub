@@ -2948,5 +2948,9 @@
   "The account save dump is not on SD yet.": "De accountsave-dump staat nog niet op SD.",
   "Failed to clear unfinished operation.": "Kan onvoltooide bewerking niet wissen.",
   "Delete firmware folder?": "Firmwaremap verwijderen?",
-  "Failed to delete firmware folder": "Firmwaremap verwijderen mislukt"
+  "Failed to delete firmware folder": "Firmwaremap verwijderen mislukt",
+  " archives": " archieven",
+  " Â· play hours": " · speeluur",
+  "Cancel operation": "Bewerking annuleren",
+  " Â· no play hours": " · geen speeluren"
 }

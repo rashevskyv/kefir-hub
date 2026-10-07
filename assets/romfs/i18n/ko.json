@@ -2948,5 +2948,9 @@
   "The account save dump is not on SD yet.": "계정 세이브 덤프가 아직 SD에 없습니다.",
   "Failed to clear unfinished operation.": "완료되지 않은 작업을 삭제하지 못했습니다.",
   "Delete firmware folder?": "펌웨어 폴더를 삭제하시겠습니까?",
-  "Failed to delete firmware folder": "펌웨어 폴더 삭제 실패"
+  "Failed to delete firmware folder": "펌웨어 폴더 삭제 실패",
+  " archives": " 아카이브",
+  " Â· play hours": " · 플레이 시간",
+  "Cancel operation": "작업 취소",
+  " Â· no play hours": " · 플레이 시간 없음"
 }

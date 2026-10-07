@@ -92,12 +92,12 @@ auto main() -> int {
     using namespace sphaira::account_restore;
 
     // 1. Choice resolution tests
-    assert(ResolveAbandonChoice(std::nullopt) == AbandonChoice::Cancel);
-    assert(ResolveAbandonChoice(0) == AbandonChoice::Cancel);
-    assert(ResolveAbandonChoice(1) == AbandonChoice::DontRemindAgain);
+    assert(ResolveAbandonChoice(std::nullopt) == AbandonChoice::Later);
+    assert(ResolveAbandonChoice(0) == AbandonChoice::Later);
+    assert(ResolveAbandonChoice(1) == AbandonChoice::CancelOperation);
     assert(ResolveAbandonChoice(2) == AbandonChoice::Retry);
-    assert(ResolveAbandonChoice(99) == AbandonChoice::Cancel);
-    assert(ResolveAbandonChoice(-1) == AbandonChoice::Cancel);
+    assert(ResolveAbandonChoice(99) == AbandonChoice::Later);
+    assert(ResolveAbandonChoice(-1) == AbandonChoice::Later);
 
     // 2. Staging directory validation tests
     assert(IsSafeAbandonStagingDir("/config/kefir/nand_transfer/_staging_20261005_120000"));
