@@ -2478,7 +2478,6 @@
   "No compatible live save slot found on console. Automatic save slot creation is not supported in this version.": "На консолі не знайдено сумісного слота збереження. Автоматичне створення слотів збереження не підтримується в цій версії.",
   "Selected backup archive has changed or is no longer available.": "Вибраний архів резервної копії змінився або більше не доступний.",
   "Selected backup contains no save payload.": "Вибрана резервна копія не містить корисних даних збереження.",
-  "Save slot creation is only supported for Account saves.": "Створення слота збереження підтримується лише для збережень типу Account.",
   "Save slot creation is only supported in User space.": "Створення слота збереження підтримується лише у просторі User.",
   "Save slot creation is only supported for primary save slots.": "Створення слота збереження підтримується лише для основних слотів збереження.",
   "Save slot creation is only supported for slot index 0.": "Створення слота збереження підтримується лише для індексу слота 0.",
@@ -2567,7 +2566,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Неможливо відновити: відсутній сумісний активний слот збереження для ",
   "Cannot restore: no admissible backup archive found for ": "Неможливо відновити: не знайдено придатного архіву резервної копії для ",
   "Batch restore requires valid archives for all items in the game group.": "Групове відновлення вимагає наявності дійсних архівів для всіх елементів групи гри.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Збереження Device та BCAT не можуть бути створені автоматично. Будь ласка, запустіть гру, щоб спочатку створити активний слот збереження.",
   "Items to restore:\n": "Елементи для відновлення:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Відновлення виконується окремо для кожного елемента (не атомарно: наступні елементи можуть не відновитися у разі помилки).\n",
   "Account: ": "Акаунт: ",
@@ -2947,5 +2945,7 @@
   " Â· play hours": " · год. гри",
   "Cancel operation": "Скасувати операцію",
   " Â· no play hours": " · немає годин гри",
-  " archives": " архіви"
+  " archives": " архіви",
+  "Save slot creation is only supported for Account saves.": "Створення слота збереження підтримується лише для збережень облікового запису.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Створення слотів збережень підтримується лише для збережень облікового запису, пристрою та BCAT."
 }

@@ -80,15 +80,31 @@ auto QuerySaveDataSpaceFreeBytes(FsSaveDataSpaceId space_id, s64* out_free_bytes
 
 } // namespace
 
+bool IsCreatableSaveType(u8 type) {
+    return type == FsSaveDataType_Account || type == FsSaveDataType_Device || type == FsSaveDataType_Bcat;
+}
+
+bool IsZeroUid(const AccountUid& uid) {
+    return uid.uid[0] == 0 && uid.uid[1] == 0;
+}
+
+// Horizon creates BCAT saves with a fixed journal and the bcat sysmodule as owner (fs::CreateBcatSaveData).
+constexpr s64 kBcatSaveDataJournalSize = 0x200000;
+constexpr u64 kBcatProgramId = 0x010000000000000CULL;
+
 auto ValidateCreationRequest(const SaveCreationRequest& req) -> SaveBackendStatus {
-    if (req.attr.save_data_type != FsSaveDataType_Account) return SaveBackendStatus::UnsupportedSaveType;
+    if (!IsCreatableSaveType(req.attr.save_data_type)) return SaveBackendStatus::UnsupportedSaveType;
     if (req.space_id != FsSaveDataSpaceId_User) return SaveBackendStatus::UnsupportedSpace;
     if (req.attr.save_data_rank != FsSaveDataRank_Primary) return SaveBackendStatus::UnsupportedRank;
     if (req.attr.save_data_index != 0) return SaveBackendStatus::UnsupportedIndex;
     if (req.attr.system_save_data_id != 0) return SaveBackendStatus::UnsupportedSaveType;
     if (req.attr.application_id == 0) return SaveBackendStatus::InvalidApplicationId;
-    if (req.selected_uid.uid[0] == 0 && req.selected_uid.uid[1] == 0) return SaveBackendStatus::InvalidAccountUid;
-    if (std::memcmp(&req.attr.uid, &req.selected_uid, sizeof(AccountUid)) != 0) return SaveBackendStatus::InvalidAccountUid;
+    if (req.attr.save_data_type == FsSaveDataType_Account) {
+        if (IsZeroUid(req.selected_uid)) return SaveBackendStatus::InvalidAccountUid;
+        if (std::memcmp(&req.attr.uid, &req.selected_uid, sizeof(AccountUid)) != 0) return SaveBackendStatus::InvalidAccountUid;
+    } else if (!IsZeroUid(req.selected_uid) || !IsZeroUid(req.attr.uid)) {
+        return SaveBackendStatus::InvalidAccountUid; // Device and BCAT slots are shared: no user
+    }
     if (req.owner_id == 0) return SaveBackendStatus::MissingOwnerId;
     if (req.data_size <= 0 || req.data_size > std::numeric_limits<s64>::max() || (req.data_size % 0x4000 != 0)) return SaveBackendStatus::InvalidSizes;
     if (req.journal_size < 0 || req.journal_size > std::numeric_limits<s64>::max() || (req.journal_size % 0x4000 != 0)) return SaveBackendStatus::InvalidSizes;
@@ -101,27 +117,39 @@ auto PlanAccountSaveCreation(
     const AccountUid& selected_uid,
     const SaveArchiveSizing* archive_sizing,
     SaveCreationRequest& out_request,
-    SaveBackendStatus* out_status
+    SaveBackendStatus* out_status,
+    u8 save_data_type
 ) -> Result {
+    if (!IsCreatableSaveType(save_data_type)) {
+        if (out_status) *out_status = SaveBackendStatus::UnsupportedSaveType;
+        return FsError_PathNotFound;
+    }
+    const bool is_account = save_data_type == FsSaveDataType_Account;
+
     if (application_id == 0) {
         if (out_status) *out_status = SaveBackendStatus::InvalidApplicationId;
         return FsError_PathNotFound;
     }
 
-    if (selected_uid.uid[0] == 0 && selected_uid.uid[1] == 0) {
-        if (out_status) *out_status = SaveBackendStatus::InvalidAccountUid;
-        return FsError_PathNotFound;
-    }
-
-    const auto accounts = App::GetAccountList();
-    bool user_found = false;
-    for (const auto& acc : accounts) {
-        if (!std::memcmp(&acc.uid, &selected_uid, sizeof(AccountUid))) {
-            user_found = true;
-            break;
+    if (is_account) {
+        if (IsZeroUid(selected_uid)) {
+            if (out_status) *out_status = SaveBackendStatus::InvalidAccountUid;
+            return FsError_PathNotFound;
         }
-    }
-    if (!user_found) {
+
+        const auto accounts = App::GetAccountList();
+        bool user_found = false;
+        for (const auto& acc : accounts) {
+            if (!std::memcmp(&acc.uid, &selected_uid, sizeof(AccountUid))) {
+                user_found = true;
+                break;
+            }
+        }
+        if (!user_found) {
+            if (out_status) *out_status = SaveBackendStatus::InvalidAccountUid;
+            return FsError_PathNotFound;
+        }
+    } else if (!IsZeroUid(selected_uid)) {
         if (out_status) *out_status = SaveBackendStatus::InvalidAccountUid;
         return FsError_PathNotFound;
     }
@@ -141,14 +169,26 @@ auto PlanAccountSaveCreation(
         &actual_size
     );
 
+    u64 base_data_u64 = 0;
+    u64 base_journal_u64 = 0;
     if (R_SUCCEEDED(rc) && actual_size >= sizeof(NacpStruct)) {
-        const u64 base_data_u64 = control_data->nacp.user_account_save_data_size
-            ? control_data->nacp.user_account_save_data_size
-            : control_data->nacp.user_account_save_data_size_max;
-        const u64 base_journal_u64 = control_data->nacp.user_account_save_data_journal_size
-            ? control_data->nacp.user_account_save_data_journal_size
-            : control_data->nacp.user_account_save_data_journal_size_max;
-        owner_id = control_data->nacp.save_data_owner_id;
+        const auto& nacp = control_data->nacp;
+        owner_id = nacp.save_data_owner_id;
+        if (is_account) {
+            base_data_u64 = nacp.user_account_save_data_size ? nacp.user_account_save_data_size : nacp.user_account_save_data_size_max;
+            base_journal_u64 = nacp.user_account_save_data_journal_size ? nacp.user_account_save_data_journal_size : nacp.user_account_save_data_journal_size_max;
+        } else if (save_data_type == FsSaveDataType_Device) {
+            base_data_u64 = nacp.device_save_data_size ? nacp.device_save_data_size : nacp.device_save_data_size_max;
+            base_journal_u64 = nacp.device_save_data_journal_size ? nacp.device_save_data_journal_size : nacp.device_save_data_journal_size_max;
+        } else {
+            base_data_u64 = nacp.bcat_delivery_cache_storage_size;
+            base_journal_u64 = kBcatSaveDataJournalSize;
+            owner_id = kBcatProgramId;
+        }
+    }
+
+    // A game whose control data declares no Device/BCAT storage is sized from the archive metadata below.
+    if (R_SUCCEEDED(rc) && actual_size >= sizeof(NacpStruct) && (is_account || base_data_u64 != 0)) {
 
         if (owner_id == 0) {
             if (out_status) *out_status = SaveBackendStatus::MissingOwnerId;
@@ -188,7 +228,7 @@ auto PlanAccountSaveCreation(
             if (out_status) *out_status = SaveBackendStatus::InvalidApplicationId;
             return FsError_PathNotFound;
         }
-        if (archive_sizing->attr.save_data_type != FsSaveDataType_Account ||
+        if (archive_sizing->attr.save_data_type != save_data_type ||
             archive_sizing->attr.system_save_data_id != 0) {
             if (out_status) *out_status = SaveBackendStatus::UnsupportedSaveType;
             return FsError_PathNotFound;
@@ -221,9 +261,9 @@ auto PlanAccountSaveCreation(
 
     out_request = SaveCreationRequest{};
     out_request.attr.application_id = application_id;
-    out_request.attr.uid = selected_uid;
+    out_request.attr.uid = is_account ? selected_uid : AccountUid{};
     out_request.attr.system_save_data_id = 0;
-    out_request.attr.save_data_type = FsSaveDataType_Account;
+    out_request.attr.save_data_type = save_data_type;
     out_request.attr.save_data_rank = FsSaveDataRank_Primary;
     out_request.attr.save_data_index = 0;
     out_request.space_id = FsSaveDataSpaceId_User;
@@ -233,7 +273,7 @@ auto PlanAccountSaveCreation(
     out_request.available_size = 0x4000;
     out_request.flags = 0;
     out_request.provenance = provenance;
-    out_request.selected_uid = selected_uid;
+    out_request.selected_uid = out_request.attr.uid;
 
     const auto v_status = ValidateCreationRequest(out_request);
     if (v_status != SaveBackendStatus::Success) {
@@ -273,8 +313,11 @@ auto CreateSaveDataChecked(
     info.save_data_space_id = request.space_id;
 
     FsSaveDataMetaInfo meta{};
-    meta.size = 0x40060;
-    meta.type = FsSaveDataMetaType_Thumbnail;
+    if (request.attr.save_data_type == FsSaveDataType_Account) {
+        // Only user saves carry a thumbnail meta file; Device and BCAT saves are created without one.
+        meta.size = 0x40060;
+        meta.type = FsSaveDataMetaType_Thumbnail;
+    }
 
     const auto create_rc = fsCreateSaveDataFileSystem(&request.attr, &info, &meta);
     result.ipc_executed = true;
@@ -464,7 +507,7 @@ auto GetBackendStatusMessage(SaveBackendStatus status, const char* game_name) ->
             std::snprintf(msg, sizeof(msg), "%s is not installed. Install the game to restore its save."_i18n.c_str(), game_name);
             return msg;
         }
-        case SaveBackendStatus::UnsupportedSaveType: return "Save slot creation is only supported for Account saves."_i18n;
+        case SaveBackendStatus::UnsupportedSaveType: return "Save slot creation is only supported for Account, Device and BCAT saves."_i18n;
         case SaveBackendStatus::UnsupportedSpace: return "Save slot creation is only supported in User space."_i18n;
         case SaveBackendStatus::UnsupportedRank: return "Save slot creation is only supported for primary save slots."_i18n;
         case SaveBackendStatus::UnsupportedIndex: return "Save slot creation is only supported for slot index 0."_i18n;

@@ -261,10 +261,8 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
     const auto outcome = bundle::EvaluateRestoreDestination(
         false, group.save_data_type, group.save_data_rank, group.save_data_index, group.application_id);
     if (outcome == bundle::RestoreDestinationOutcome::UnsupportedMissingDestination) {
-        if (group.save_data_type == FsSaveDataType_Bcat || group.save_data_type == FsSaveDataType_Device) {
-            App::Push<OptionBox>("Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first."_i18n, "OK"_i18n);
-        } else if (group.save_data_type != FsSaveDataType_Account) {
-            App::Push<OptionBox>("Save slot creation is only supported for Account saves."_i18n, "OK"_i18n);
+        if (group.save_data_type != FsSaveDataType_Account && group.save_data_type != FsSaveDataType_Device && group.save_data_type != FsSaveDataType_Bcat) {
+            App::Push<OptionBox>("Save slot creation is only supported for Account, Device and BCAT saves."_i18n, "OK"_i18n);
         } else if (group.application_id == 0) {
             App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
         } else {
@@ -308,7 +306,7 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
             ctx->plan_rc = PlanAccountSaveCreation(
                 group.application_id, dest_uid,
                 &ctx->admission.sizing,
-                ctx->req, &ctx->status);
+                ctx->req, &ctx->status, group.save_data_type);
             if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
                 return ctx->plan_rc ? ctx->plan_rc : static_cast<Result>(FsError_InvalidSize);
             }

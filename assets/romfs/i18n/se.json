@@ -2575,7 +2575,6 @@
   "Remove installed interface translations and reboot.": "Ta bort installerade gränssnittsöversättningar och starta om.",
   "MTP is currently active. Click to disable it.": "MTP är för närvarande aktivt. Klicka för att inaktivera det.",
   "Start the MTP responder to browse SD card files on PC.": "Starta MTP-svararen för att bläddra bland SD-kortfiler på datorn.",
-  "Save slot creation is only supported for Account saves.": "Skapande av sparplatser stöder endast kontosparfiler.",
   "Save slot creation is only supported in User space.": "Skapande av sparplatser stöder endast användarrymden.",
   "Save slot creation is only supported for primary save slots.": "Skapande av sparplatser stöder endast primära sparplatser.",
   "Save slot creation is only supported for slot index 0.": "Skapande av sparplatser stöder endast spårindex 0.",
@@ -2714,7 +2713,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Kan inte återställa: kompatibel live-sparfil saknas för ",
   "Cannot restore: no admissible backup archive found for ": "Kan inte återställa: inget tillåtet säkerhetskopieringsarkiv hittades för ",
   "Batch restore requires valid archives for all items in the game group.": "Batchåterställning kräver giltiga arkiv för alla objekt i spelgruppen.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Enhets- och BCAT-sparfiler kan inte skapas automatiskt. Starta spelet för att skapa live-sparfilen först.",
   "Items to restore:\n": "Objekt att återställa:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Återställningar utförs individuellt (ej atomiska: senare objekt kan misslyckas om ett fel uppstår).\n",
   "Account: ": "Konto: ",
@@ -2952,5 +2950,7 @@
   " archives": " arkiv",
   " Â· play hours": " · spelade timmar",
   "Cancel operation": "Avbryt åtgärd",
-  " Â· no play hours": " · inga speltimmar"
+  " Â· no play hours": " · inga speltimmar",
+  "Save slot creation is only supported for Account saves.": "Skapande av spårningsplatser stöds endast för kontosparingar.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Skapande av sparfilsplatser stöds endast för Konto-, Enhets- och BCAT-sparfiler."
 }

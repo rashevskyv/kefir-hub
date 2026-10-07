@@ -2575,7 +2575,6 @@
   "Remove installed interface translations and reboot.": "Verwijder geïnstalleerde vertalingen van de interface en herstart.",
   "MTP is currently active. Click to disable it.": "MTP is momenteel actief. Klik om uit te schakelen.",
   "Start the MTP responder to browse SD card files on PC.": "Start de MTP-responder om SD-kaartbestanden op pc te bekijken.",
-  "Save slot creation is only supported for Account saves.": "Aanmaken van save-slots wordt alleen ondersteund voor accountsaves.",
   "Save slot creation is only supported in User space.": "Aanmaken van save-slots wordt alleen ondersteund in de gebruikersruimte.",
   "Save slot creation is only supported for primary save slots.": "Aanmaken van save-slots wordt alleen ondersteund voor primaire save-slots.",
   "Save slot creation is only supported for slot index 0.": "Aanmaken van save-slots wordt alleen ondersteund voor slotindex 0.",
@@ -2639,7 +2638,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Kan niet herstellen: compatibele live save-slot ontbreekt voor ",
   "Cannot restore: no admissible backup archive found for ": "Kan niet herstellen: geen toelaatbaar back-uparchief gevonden voor ",
   "Batch restore requires valid archives for all items in the game group.": "Batchherstel vereist geldige archieven voor alle items in de gamegroep.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Apparaat- en BCAT-saves kunnen niet automatisch worden aangemaakt. Start de game om eerst de live save-slot aan te maken.",
   "Items to restore:\n": "Items om te herstellen:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Herstellen worden individueel uitgevoerd (niet atomair: latere items kunnen mislukken als er een fout optreedt).\n",
   "Account: ": "Account: ",
@@ -2952,5 +2950,7 @@
   " archives": " archieven",
   " Â· play hours": " · speeluur",
   "Cancel operation": "Bewerking annuleren",
-  " Â· no play hours": " · geen speeluren"
+  " Â· no play hours": " · geen speeluren",
+  "Save slot creation is only supported for Account saves.": "Het aanmaken van opslagslots wordt alleen ondersteund voor account-saves.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Het maken van opslagslots wordt alleen ondersteund voor Account-, Apparaat- en BCAT-saves."
 }

@@ -81,7 +81,8 @@ void Menu::ShowRestoreConfirm(
     };
     const auto dest_of = [](const Entry& dst, const std::string& acc_str) -> std::string {
         if (dst.is_planned_create) {
-            return "New slot ("_i18n + acc_str + ")";
+            const auto what = dst.save_data_type == FsSaveDataType_Account ? acc_str : std::string(GetSaveTypeLabel(dst.save_data_type));
+            return "New slot ("_i18n + what + ")";
         }
         if (dst.save_data_type != FsSaveDataType_Account) {
             return GetSaveTypeLabel(dst.save_data_type);

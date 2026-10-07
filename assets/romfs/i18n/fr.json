@@ -2526,7 +2526,6 @@
   "Remove installed interface translations and reboot.": "Supprimer les traductions d'interface installées et redémarrer.",
   "MTP is currently active. Click to disable it.": "MTP est actuellement actif. Cliquez pour le désactiver.",
   "Start the MTP responder to browse SD card files on PC.": "Démarrez le répondeur MTP pour parcourir les fichiers de la carte microSD sur le PC.",
-  "Save slot creation is only supported for Account saves.": "La création d'emplacement de sauvegarde n'est prise en charge que pour les sauvegardes de compte.",
   "Save slot creation is only supported in User space.": "La création d'emplacement de sauvegarde n'est prise en charge que dans l'espace utilisateur.",
   "Save slot creation is only supported for primary save slots.": "La création d'emplacements de sauvegarde n'est prise en charge que pour les emplacements de sauvegarde principaux.",
   "Save slot creation is only supported for slot index 0.": "La création d'emplacement de sauvegarde n'est prise en charge que pour l'index d'emplacement 0.",
@@ -2640,7 +2639,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Impossible de restaurer : l'emplacement de sauvegarde en direct compatible est manquant pour ",
   "Cannot restore: no admissible backup archive found for ": "Impossible de restaurer : aucune archive de sauvegarde admissible trouvée pour ",
   "Batch restore requires valid archives for all items in the game group.": "La restauration par lot nécessite des archives valides pour tous les éléments du groupe de jeux.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Les sauvegardes d'appareil et BCAT ne peuvent pas être créées automatiquement. Veuillez lancer le jeu pour créer d'abord l'emplacement de sauvegarde en direct.",
   "Items to restore:\n": "Éléments à restaurer :\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Les restaurations sont effectuées individuellement (non atomique : les éléments ultérieurs peuvent échouer si une erreur se produit).\n",
   "Account: ": "Compte : ",
@@ -2953,5 +2951,7 @@
   " archives": " archives",
   " Â· play hours": " · heures de jeu",
   "Cancel operation": "Annuler l'opération",
-  " Â· no play hours": " · aucune heure de jeu"
+  " Â· no play hours": " · aucune heure de jeu",
+  "Save slot creation is only supported for Account saves.": "La création de blocs de sauvegarde n'est prise en charge que pour les sauvegardes de compte.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "La création d'emplacements de sauvegarde n'est prise en charge que pour les sauvegardes de compte, d'appareil et BCAT."
 }

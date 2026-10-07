@@ -2474,7 +2474,6 @@
   "Remove installed interface translations and reboot.": "Remove installed interface translations and reboot.",
   "MTP is currently active. Click to disable it.": "MTP is currently active. Click to disable it.",
   "Start the MTP responder to browse SD card files on PC.": "Start the MTP responder to browse SD card files on PC.",
-  "Save slot creation is only supported for Account saves.": "Save slot creation is only supported for Account saves.",
   "Save slot creation is only supported in User space.": "Save slot creation is only supported in User space.",
   "Save slot creation is only supported for primary save slots.": "Save slot creation is only supported for primary save slots.",
   "Save slot creation is only supported for slot index 0.": "Save slot creation is only supported for slot index 0.",
@@ -2563,7 +2562,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Cannot restore: compatible live save slot is missing for ",
   "Cannot restore: no admissible backup archive found for ": "Cannot restore: no admissible backup archive found for ",
   "Batch restore requires valid archives for all items in the game group.": "Batch restore requires valid archives for all items in the game group.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.",
   "Items to restore:\n": "Items to restore:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Restores are performed individually (not atomic: later items may fail if an error occurs).\n",
   "Account: ": "Account: ",
@@ -2947,5 +2945,7 @@
   " archives": " archives",
   " Â· play hours": " · play hours",
   "Cancel operation": "Cancel operation",
-  " Â· no play hours": " · no play hours"
+  " Â· no play hours": " · no play hours",
+  "Save slot creation is only supported for Account saves.": "Save slot creation is only supported for Account saves.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Save slot creation is only supported for Account, Device and BCAT saves."
 }

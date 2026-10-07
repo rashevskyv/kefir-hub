@@ -2526,7 +2526,6 @@
   "Remove installed interface translations and reboot.": "Installierte Übersetzung der Benutzeroberfläche entfernen und neu starten.",
   "MTP is currently active. Click to disable it.": "MTP ist derzeit aktiv. Klicken, um es zu deaktivieren.",
   "Start the MTP responder to browse SD card files on PC.": "MTP-Responder starten, um SD-Karten-Dateien auf dem PC zu durchsuchen.",
-  "Save slot creation is only supported for Account saves.": "Das Erstellen von Speicherstand-Slots wird nur für Account-Spielstände unterstützt.",
   "Save slot creation is only supported in User space.": "Das Erstellen von Speicherstand-Slots wird nur im Benutzerspeicher unterstützt.",
   "Save slot creation is only supported for primary save slots.": "Das Erstellen von Speicherstand-Slots wird nur für primäre Speicherstand-Slots unterstützt.",
   "Save slot creation is only supported for slot index 0.": "Das Erstellen von Speicherstand-Slots wird nur für den Slot-Index 0 unterstützt.",
@@ -2565,7 +2564,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Wiederherstellung nicht möglich: Kompatibler Live-Speicherstand fehlt für ",
   "Cannot restore: no admissible backup archive found for ": "Wiederherstellung nicht möglich: Kein zulässiges Backup-Archiv gefunden für ",
   "Batch restore requires valid archives for all items in the game group.": "Die Stapel-Wiederherstellung erfordert gültige Archive für alle Elemente in der Spielgruppe.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Geräte- und BCAT-Speicherstände können nicht automatisch erstellt werden. Bitte starte das Spiel, um den Live-Speicherstand zuerst zu erstellen.",
   "Items to restore:\n": "Wiederherzustellende Elemente:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Wiederherstellungen werden einzeln durchgeführt (nicht atomar: spätere Elemente können fehlschlagen, wenn ein Fehler auftritt).\n",
   "Account: ": "Konto: ",
@@ -2953,5 +2951,7 @@
   " archives": " Archive",
   " Â· play hours": " · Spielstunden",
   "Cancel operation": "Vorgang abbrechen",
-  " Â· no play hours": " · Keine Spielstunden"
+  " Â· no play hours": " · Keine Spielstunden",
+  "Save slot creation is only supported for Account saves.": "Das Erstellen von Speicherplätzen wird nur für Account-Speicherstände unterstützt.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Das Erstellen von Speicherplätzen wird nur für Account-, Geräte- und BCAT-Speicherstände unterstützt."
 }

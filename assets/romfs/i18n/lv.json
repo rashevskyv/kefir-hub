@@ -2487,7 +2487,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Nevar atjaunot: trūkst saderīgas tiešsaistes saglabāšanas vietas priekš ",
   "Cannot restore: no admissible backup archive found for ": "Nevar atjaunot: nav atrasts neviens atbilstošs dublējuma arhīvs priekš ",
   "Batch restore requires valid archives for all items in the game group.": "Sērijveida atjaunošanai ir nepieciešami derīgi arhīvi visiem spēļu grupas vienumiem.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Ierīces un BCAT saglabājumus nevar izveidot automātiski. Lūdzu, palaidiet spēli, lai vispirms izveidotu tiešsaistes saglabāšanas vietu.",
   "Items to restore:\n": "Atjaunojamie vienumi:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Atjaunošana tiek veikta pa vienam (nav atomāra: kļūdas gadījumā vācākie vienumi var neizdoties).\n",
   "Account: ": "Konts: ",
@@ -2548,7 +2547,6 @@
   "Remove installed interface translations and reboot.": "Noņemt instalētos saskarnes tulkojumus un restartēt.",
   "MTP is currently active. Click to disable it.": "MTP pašlaik ir aktīvs. Noklikšķiniet, lai to atspējotu.",
   "Start the MTP responder to browse SD card files on PC.": "Startēt MTP atbildētāju, lai pārlūkotu microSD kartes failus datorā.",
-  "Save slot creation is only supported for Account saves.": "Saglabāšanas slotu izveide tiek atbalstīta tikai konta saglabāšanas datiem.",
   "Save slot creation is only supported in User space.": "Saglabāšanas slotu izveide tiek atbalstīta tikai lietotāja apgabalā.",
   "Save slot creation is only supported for primary save slots.": "Saglabāšanas slotu izveide tiek atbalstīta tikai galvenajiem saglabāšanas slotiem.",
   "Save slot creation is only supported for slot index 0.": "Saglabāšanas slotu izveide tiek atbalstīta tikai 0. slota indeksam.",
@@ -2947,5 +2945,7 @@
   " archives": " arhīvi",
   " Â· play hours": " · spēlēšanas stundas",
   "Cancel operation": "Atcelt operāciju",
-  " Â· no play hours": " · nav spēles stundu"
+  " Â· no play hours": " · nav spēles stundu",
+  "Save slot creation is only supported for Account saves.": "Saglabāšanas vietas izveide tiek atbalstīta tikai konta saglabātajiem datiem.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Saglabāšanas vietu izveide tiek atbalstīta tikai konta, ierīces un BCAT saglabāšanai."
 }

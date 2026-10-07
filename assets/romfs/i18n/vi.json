@@ -2600,7 +2600,6 @@
   "Remove installed interface translations and reboot.": "Xóa các bản dịch giao diện đã cài đặt và khởi động lại.",
   "MTP is currently active. Click to disable it.": "MTP hiện đang hoạt động. Nhấp để tắt.",
   "Start the MTP responder to browse SD card files on PC.": "Khởi động bộ phản hồi MTP để duyệt các tệp thẻ SD trên PC.",
-  "Save slot creation is only supported for Account saves.": "Việc tạo khe lưu chỉ được hỗ trợ cho tệp lưu Tài khoản.",
   "Save slot creation is only supported in User space.": "Việc tạo khe lưu chỉ được hỗ trợ trong Không gian người dùng.",
   "Save slot creation is only supported for primary save slots.": "Việc tạo khe lưu chỉ được hỗ trợ cho các khe lưu chính.",
   "Save slot creation is only supported for slot index 0.": "Việc tạo khe lưu chỉ được hỗ trợ cho chỉ mục khe 0.",
@@ -2664,7 +2663,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Không thể khôi phục: thiếu ô lưu dữ liệu trực tiếp tương thích cho ",
   "Cannot restore: no admissible backup archive found for ": "Không thể khôi phục: không tìm thấy tệp lưu trữ sao lưu hợp lệ cho ",
   "Batch restore requires valid archives for all items in the game group.": "Khôi phục hàng loạt yêu cầu các tệp lưu trữ hợp lệ cho tất cả các mục trong nhóm trò chơi.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Dữ liệu lưu của thiết bị và BCAT không thể được tạo tự động. Vui lòng khởi động trò chơi để tạo ô lưu dữ liệu trực tiếp trước.",
   "Items to restore:\n": "Các mục cần khôi phục:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Quá trình khôi phục được thực hiện riêng lẻ (không nguyên tử: các mục sau có thể thất bại nếu xảy ra lỗi).\n",
   "Account: ": "Tài khoản: ",
@@ -2952,5 +2950,7 @@
   " archives": " kho lưu trữ",
   " Â· play hours": " · giờ chơi",
   "Cancel operation": "Hủy thao tác",
-  " Â· no play hours": " · chưa chơi giờ nào"
+  " Â· no play hours": " · chưa chơi giờ nào",
+  "Save slot creation is only supported for Account saves.": "Việc tạo ô lưu chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Việc tạo khe lưu trữ chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản, Thiết bị và BCAT."
 }

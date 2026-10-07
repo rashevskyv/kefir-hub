@@ -2475,7 +2475,6 @@
   "Remove installed interface translations and reboot.": "インストール済みのインターフェース翻訳を削除して再起動します。",
   "MTP is currently active. Click to disable it.": "MTPは現在有効です。クリックして無効化してください。",
   "Start the MTP responder to browse SD card files on PC.": "MTPレスポンダーを起動して、PC上でSDカードのファイルを閲覧します。",
-  "Save slot creation is only supported for Account saves.": "セーブスロットの作成は、アカウントセーブでのみサポートされています。",
   "Save slot creation is only supported in User space.": "セーブスロットの作成は、ユーザー空間でのみサポートされています。",
   "Save slot creation is only supported for primary save slots.": "セーブスロットの作成は、プライマリセーブスロットでのみサポートされています。",
   "Save slot creation is only supported for slot index 0.": "セーブスロットの作成は、スロットインデックス 0 でのみサポートされています。",
@@ -2639,7 +2638,6 @@
   "Cannot restore: compatible live save slot is missing for ": "復元できません: 次の互換性のあるライブセーブスロットが見つかりません: ",
   "Cannot restore: no admissible backup archive found for ": "復元できません: 次の有効なバックアップアーカイブが見つかりません: ",
   "Batch restore requires valid archives for all items in the game group.": "一括復元には、ゲームグループ内のすべてのアイテムに対する有効なアーカイブが必要です。",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "デバイスおよびBCATセーブは自動的に作成できません。最初にゲームを起動してライブセーブスロットを作成してください。",
   "Items to restore:\n": "復元するアイテム:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "復元は個別に実行されます（アトミックではありません。エラーが発生した場合、後続のアイテムが失敗する可能性があります）。\n",
   "Account: ": "アカウント: ",
@@ -2952,5 +2950,7 @@
   " archives": " アーカイブ",
   " Â· play hours": " ・プレイ時間",
   "Cancel operation": "操作をキャンセル",
-  " Â· no play hours": " · プレイ時間なし"
+  " Â· no play hours": " · プレイ時間なし",
+  "Save slot creation is only supported for Account saves.": "セーブスロットの作成はアカウントのセーブデータのみサポートされています。",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "セーブデータのスロット作成は、アカウント、本体、BCATのセーブデータでのみサポートされています。"
 }

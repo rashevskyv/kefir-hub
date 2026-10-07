@@ -2475,7 +2475,6 @@
   "Remove installed interface translations and reboot.": "Rimuovi le traduzioni dell'interfaccia installate e riavvia.",
   "MTP is currently active. Click to disable it.": "MTP è attualmente attivo. Clicca per disabilitarlo.",
   "Start the MTP responder to browse SD card files on PC.": "Avvia il risponditore MTP per esplorare i file della scheda SD sul PC.",
-  "Save slot creation is only supported for Account saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi dell'account.",
   "Save slot creation is only supported in User space.": "La creazione di slot di salvataggio è supportata solo nello spazio utente.",
   "Save slot creation is only supported for primary save slots.": "La creazione di slot di salvataggio è supportata solo per gli slot di salvataggio primari.",
   "Save slot creation is only supported for slot index 0.": "La creazione di slot di salvataggio è supportata solo per l'indice di slot 0.",
@@ -2689,7 +2688,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Impossibile ripristinare: manca lo slot di salvataggio live compatibile per ",
   "Cannot restore: no admissible backup archive found for ": "Impossibile ripristinare: nessun archivio di backup ammissibile trovato per ",
   "Batch restore requires valid archives for all items in the game group.": "Il ripristino in batch richiede archivi validi per tutti gli elementi nel gruppo di gioco.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "I salvataggi di dispositivo e BCAT non possono essere creati automaticamente. Avvia il gioco per creare prima lo slot di salvataggio live.",
   "Items to restore:\n": "Elementi da ripristinare:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "I ripristini vengono eseguiti singolarmente (non atomici: gli elementi successivi potrebbero fallire se si verifica un errore).\n",
   "Account: ": "Account: ",
@@ -2952,5 +2950,7 @@
   " archives": " archivi",
   " Â· play hours": " · ore di gioco",
   "Cancel operation": "Annulla operazione",
-  " Â· no play hours": " · nessuna ora di gioco"
+  " Â· no play hours": " · nessuna ora di gioco",
+  "Save slot creation is only supported for Account saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi dell'account.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi Account, Dispositivo e BCAT."
 }

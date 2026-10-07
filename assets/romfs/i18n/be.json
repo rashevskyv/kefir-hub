@@ -2524,7 +2524,6 @@
   "Remove installed interface translations and reboot.": "Выдаліць усталяваныя пераклады інтэрфейсу і перазагрузіцца.",
   "MTP is currently active. Click to disable it.": "MTP зараз актыўны. Націсніце, каб адключыць яго.",
   "Start the MTP responder to browse SD card files on PC.": "Запусціце MTP-рэспандэр для прагляду файлаў SD-карты на ПК.",
-  "Save slot creation is only supported for Account saves.": "Стварэнне слотаў захавання падтрымліваецца толькі для захаванняў уліковых запісаў.",
   "Save slot creation is only supported in User space.": "Стварэнне слотаў захавання падтрымліваецца толькі ў прасторы карыстальніка.",
   "Save slot creation is only supported for primary save slots.": "Стварэнне слотаў захавання падтрымліваецца толькі для асноўных слотаў захавання.",
   "Save slot creation is only supported for slot index 0.": "Стварэнне слотаў захавання падтрымліваецца толькі для індэкса слота 0.",
@@ -2613,7 +2612,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Немагчыма аднавіць: адсутнічае сумяшчальны слот актыўнага захавання для ",
   "Cannot restore: no admissible backup archive found for ": "Немагчыма аднавіць: не знойдзена дапушчальнага архіва рэзервовай копіі для ",
   "Batch restore requires valid archives for all items in the game group.": "Пакетнае аднаўленне патрабуе сасавецкіх архіваў для ўсіх элементаў у групе гульні.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Захаванні Device і BCAT не могуць быць створаны аўтаматычна. Калі ласка, запусціце гульню, каб спачатку стварыць слот актыўнага захавання.",
   "Items to restore:\n": "Элементы для аднаўлення:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Аднаўленні выконваюцца паасобку (неатамарна: пазнейшыя элементы могуць атрымаць памылку, калі ўзнікне памылка).\n",
   "Account: ": "Акаўнт: ",
@@ -2947,5 +2945,7 @@
   " archives": " архівы",
   " Â· play hours": " · гадзін гульні",
   "Cancel operation": "Скасаваць аперацыю",
-  " Â· no play hours": " · няма гадзін гульні"
+  " Â· no play hours": " · няма гадзін гульні",
+  "Save slot creation is only supported for Account saves.": "Ствараць слот захавання можна толькі для захаванняў уліковага запісу.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Стварэнне слотаў захаванняў падтрымліваецца толькі для захаванняў уліковага запісу, прылады і BCAT."
 }

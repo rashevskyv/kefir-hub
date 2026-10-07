@@ -2487,7 +2487,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Ei saa taastada: ühilduv reaalajas salvestuskoht puudub kasutajale ",
   "Cannot restore: no admissible backup archive found for ": "Ei saa taastada: sobivat varukoopia arhiivi ei leitud kasutajale ",
   "Batch restore requires valid archives for all items in the game group.": "Paketstaastamine nõuab kehtivaid arhiive kõigile mängugrupi üksustele.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Seadme ja BCAT salvestusi ei saa automaatselt luua. Reaalajas salvestuskoha loomiseks käivitage palun mäng.",
   "Items to restore:\n": "Taastatavad üksused:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Taastamisi tehakse ükshaaval (ei ole aatomiline: vea ilmnemisel võivad hilisemad üksused ebaõnnestuda).\n",
   "Account: ": "Konto: ",
@@ -2780,7 +2779,6 @@
   "Remove installed interface translations and reboot.": "Eemalda installitud liidese tõlked ja taaskäivita.",
   "MTP is currently active. Click to disable it.": "MTP on hetkel aktiivne. Klõpsake selle keelamiseks.",
   "Start the MTP responder to browse SD card files on PC.": "Käivitage MTP-vastaja, et sirvida SD-kaardi faile arvutis.",
-  "Save slot creation is only supported for Account saves.": "Salvestuskoha loomist toetatakse ainult konto salvestuste puhul.",
   "Save slot creation is only supported in User space.": "Salvestuskoha loomist toetatakse ainult kasutajaruumis.",
   "Save slot creation is only supported for primary save slots.": "Salvestuskoha loomist toetatakse ainult esmaste salvestuskohtade puhul.",
   "Save slot creation is only supported for slot index 0.": "Salvestuskoha loomist toetatakse ainult koha indeksi 0 jaoks.",
@@ -2947,5 +2945,7 @@
   " archives": " arhiivid",
   " Â· play hours": " · mänguaeg",
   "Cancel operation": "Katkesta toiming",
-  " Â· no play hours": " · mänguaega pole"
+  " Â· no play hours": " · mänguaega pole",
+  "Save slot creation is only supported for Account saves.": "Salvestuskoha loomine on toetatud ainult kontode salvestuste jaoks.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Salvestuskoha loomine on toetatud ainult konto-, seadme- ja BCAT-salvestuste puhul."
 }

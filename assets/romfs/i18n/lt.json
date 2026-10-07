@@ -2524,7 +2524,6 @@
   "Remove installed interface translations and reboot.": "Pašalinti įdiegtus sąsajos vertimus ir paleisti iš naujo.",
   "MTP is currently active. Click to disable it.": "MTP šiuo metu aktyvus. Spustelėkite, kad išjungtumėte.",
   "Start the MTP responder to browse SD card files on PC.": "Paleisti MTP atsakiklį, kad naršytumėte SD kortelės failus kompiuteryje.",
-  "Save slot creation is only supported for Account saves.": "Įrašų lizdų kūrimas palaikomas tik paskyros įrašams.",
   "Save slot creation is only supported in User space.": "Įrašų lizdų kūrimas palaikomas tik vartotojo erdvėje.",
   "Save slot creation is only supported for primary save slots.": "Įrašų lizdų kūrimas palaikomas tik pirminiams įrašų lizdams.",
   "Save slot creation is only supported for slot index 0.": "Įrašų lizdų kūrimas palaikomas tik 0 lizdo indeksui.",
@@ -2563,7 +2562,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Nepavyksta atstatyti: trūksta suderinamo tiesioginio įrašo lizdo skirtam ",
   "Cannot restore: no admissible backup archive found for ": "Nepavyksta atstatyti: nerasta leistino atsarginės kopijos archyvo skirtam ",
   "Batch restore requires valid archives for all items in the game group.": "Paketiniam atstatymui reikalingi galiojantys archyvai visiems žaidimo grupės elementams.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Įrenginio ir BCAT įrašų negalima sukurti automatiškai. Pirmiausia paleiskite žaidimą, kad sukurtumėte tiesioginio įrašo lizdą.",
   "Items to restore:\n": "Atstatytini elementai:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Atstatymai atliekami individualiai (neatominis: vėlesni elementai gali nesisekti, jei įvyksta klaida).\n",
   "Account: ": "Paskyra: ",
@@ -2947,5 +2945,7 @@
   " archives": " archyvai",
   " Â· play hours": " · žaidimo valandos",
   "Cancel operation": "Atšaukti operaciją",
-  " Â· no play hours": " · nėra žaidimo valandų"
+  " Â· no play hours": " · nėra žaidimo valandų",
+  "Save slot creation is only supported for Account saves.": "Išsaugojimo lizdo kūrimas palaikomas tik paskyros išsaugojimams.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Išsaugojimo vietos kūrimas palaikomas tik paskyros, įrenginio ir BCAT išsaugojimams."
 }

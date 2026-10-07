@@ -2488,7 +2488,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Қалпына келтіру мүмкін емес: мына үшін үйлесімді тікелей сақтау слоты жоқ: ",
   "Cannot restore: no admissible backup archive found for ": "Қалпына келтіру мүмкін емес: мына үшін жарамды сақтық көшірме мұрағаты табылмады: ",
   "Batch restore requires valid archives for all items in the game group.": "Пакеттік түрде қалпына келтіру ойын тобындағы барлық элементтер үшін жарамды мұрағаттарды талап етеді.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Құрылғы және BCAT сақтауларын автоматты түрде жасау мүмкін емес. Тікелей сақтау слотын жасау үшін ойынды іске қосыңыз.",
   "Items to restore:\n": "Қалпына келтірілетін элементтер:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Қалпына келтіру әрекеттері жеке орындалады (атомарлы емес: қате орын алса, кейінгі элементтер сәтсіз болуы мүмкін).\n",
   "Account: ": "Тіркелгі: ",
@@ -2599,7 +2598,6 @@
   "Remove installed interface translations and reboot.": "Орнатылған интерфейс аудармаларын жою және қайта жүктеу.",
   "MTP is currently active. Click to disable it.": "MTP қазір белсенді. Оны өшіру үшін басыңыз.",
   "Start the MTP responder to browse SD card files on PC.": "PC-де microSD картасы файлдарын шолу үшін MTP жауап берушісін іске қосыңыз.",
-  "Save slot creation is only supported for Account saves.": "Сақтау ұяшығын жасау тек Тіркелгі (Account) сақтау файлдары үшін қолдау көрсетіледі.",
   "Save slot creation is only supported in User space.": "Сақтау ұяшығын жасау тек Пайдаланушы кеңістігінде (User space) қолдау көрсетіледі.",
   "Save slot creation is only supported for primary save slots.": "Сақтау ұяшығын жасау тек негізгі сақтау ұяшықтары үшін қолдау көрсетіледі.",
   "Save slot creation is only supported for slot index 0.": "Сақтау ұяшығын жасау тек 0 ұяшық индексі үшін қолдау көрсетіледі.",
@@ -2947,5 +2945,7 @@
   " archives": " архивтер",
   " Â· play hours": " · ойнау сағаты",
   "Cancel operation": "Операцияны болдырмау",
-  " Â· no play hours": " · ойнау уақыты жоқ"
+  " Â· no play hours": " · ойнау уақыты жоқ",
+  "Save slot creation is only supported for Account saves.": "Сақтау слотын жасау тек Тіркелгі сақтаулары үшін ғана қолдау көрсетіледі.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Сақтау слотын жасау тек Тіркелгі, Құрылғы және BCAT сақтаулары үшін қолдау көрсетіледі."
 }

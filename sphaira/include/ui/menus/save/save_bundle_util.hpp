@@ -154,15 +154,15 @@ inline std::vector<T> DeduplicateBundleMembers(
 // 4. Missing live destinations & restore admission outcome:
 enum class RestoreDestinationOutcome {
     ExistingLiveTarget,
-    PlanAccountCreation,
+    PlanCreation,
     UnsupportedMissingDestination,
 };
 
+// Account, Device and BCAT primary slots can be created from the game's control data or from the
+// archive metadata (DBI does the same without the game installed). Cache/Temporary/System cannot.
 inline bool CanCreateLiveSlot(uint8_t save_data_type, uint8_t rank, uint16_t index, uint64_t application_id) {
-    if (save_data_type == 1 /* Account */) {
-        return rank == 0 /* Primary */ && index == 0 && application_id != 0;
-    }
-    return false;
+    const bool creatable_type = save_data_type == 1 /* Account */ || save_data_type == 2 /* BCAT */ || save_data_type == 3 /* Device */;
+    return creatable_type && rank == 0 /* Primary */ && index == 0 && application_id != 0;
 }
 
 inline RestoreDestinationOutcome EvaluateRestoreDestination(
@@ -176,7 +176,7 @@ inline RestoreDestinationOutcome EvaluateRestoreDestination(
         return RestoreDestinationOutcome::ExistingLiveTarget;
     }
     if (CanCreateLiveSlot(save_data_type, rank, index, application_id)) {
-        return RestoreDestinationOutcome::PlanAccountCreation;
+        return RestoreDestinationOutcome::PlanCreation;
     }
     return RestoreDestinationOutcome::UnsupportedMissingDestination;
 }

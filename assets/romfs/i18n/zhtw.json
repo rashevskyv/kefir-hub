@@ -2604,7 +2604,6 @@
   "Remove installed interface translations and reboot.": "移除已安裝的界面翻譯并重啟。",
   "MTP is currently active. Click to disable it.": "MTP 當前處于活動狀態。點擊以禁用。",
   "Start the MTP responder to browse SD card files on PC.": "啟動 MTP 響應程序以便在 PC 上瀏覽 microSD 卡文件。",
-  "Save slot creation is only supported for Account saves.": "僅支持為賬戶存檔創建存檔槽位。",
   "Save slot creation is only supported in User space.": "僅在用戶空間中支持創建存檔槽位。",
   "Save slot creation is only supported for primary save slots.": "僅支持為主存檔槽位創建存檔槽位。",
   "Save slot creation is only supported for slot index 0.": "僅支持為索引 0 的槽位創建存檔槽位。",
@@ -2667,7 +2666,6 @@
   "Don't remind again": "不再提醒",
   "Cannot restore: no admissible backup archive found for ": "無法還原：未找到該項的有效備份歸檔 ",
   "Batch restore requires valid archives for all items in the game group.": "批次還原要求遊戲組中的所有項目都有有效的歸檔。",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "設備和 BCAT 存檔無法自動創建。請先啟動遊戲以創建實時存檔槽。",
   "Items to restore:\n": "要還原的項目：\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "還原是逐個進行的（非原子操作：如果發生錯誤，後面的項目可能会失敗）。\n",
   "Account: ": "賬戶：",
@@ -3005,5 +3003,7 @@
   " archives": " 封存",
   " Â· play hours": " · 遊玩時間",
   "Cancel operation": "取消操作",
-  " Â· no play hours": " · 無遊玩時間"
+  " Â· no play hours": " · 無遊玩時間",
+  "Save slot creation is only supported for Account saves.": "僅帳戶存檔支援建立存檔槽位。",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "僅帳號、主機和 BCAT 存檔支援建立存檔插槽。"
 }

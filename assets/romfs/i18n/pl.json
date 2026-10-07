@@ -2373,7 +2373,6 @@
   "Remove installed interface translations and reboot.": "Usuń zainstalowane tłumaczenia interfejsu i uruchom ponownie.",
   "MTP is currently active. Click to disable it.": "MTP jest obecnie włączony. Kliknij, aby wyłączyć.",
   "Start the MTP responder to browse SD card files on PC.": "Uruchom responder MTP, aby przeglądać pliki karty microSD na komputerze.",
-  "Save slot creation is only supported for Account saves.": "Tworzenie slotów zapisu jest obsługiwane tylko dla zapisów konta.",
   "Save slot creation is only supported in User space.": "Tworzenie slotów zapisu jest obsługiwane tylko w przestrzeni użytkownika.",
   "Save slot creation is only supported for primary save slots.": "Tworzenie slotów zapisu jest obsługiwane tylko dla głównych slotów zapisu.",
   "Save slot creation is only supported for slot index 0.": "Tworzenie slotów zapisu jest obsługiwane tylko dla indeksu slotu 0.",
@@ -2588,7 +2587,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Nie można przywrócić: brak kompatybilnego aktywnego slotu zapisu dla ",
   "Cannot restore: no admissible backup archive found for ": "Nie można przywrócić: nie znaleziono odpowiedniego archiwum kopii zapasowej dla ",
   "Batch restore requires valid archives for all items in the game group.": "Przywrócenie wsadowe wymaga poprawnych archiwów dla wszystkich elementów w grupie gry.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Zapisów urządzeń i BCAT nie można utworzyć automatycznie. Uruchom grę, aby najpierw utworzyć aktywny slot zapisu.",
   "Items to restore:\n": "Elementy do przywrócenia:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Przywracanie jest wykonywane indywidualnie (nieatomowo: późniejsze elementy mogą się nie udać w przypadku wystąpienia błędu).\n",
   "Account: ": "Konto: ",
@@ -2947,5 +2945,7 @@
   " archives": " archiwa",
   " Â· play hours": " · godziny gry",
   "Cancel operation": "Anuluj operację",
-  " Â· no play hours": " · brak czasu gry"
+  " Â· no play hours": " · brak czasu gry",
+  "Save slot creation is only supported for Account saves.": "Tworzenie slotów zapisu jest obsługiwane tylko dla zapisów konta.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Tworzenie slotów zapisów jest obsługiwane tylko dla zapisów konta, urządzenia i BCAT."
 }

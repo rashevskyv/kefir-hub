@@ -2551,7 +2551,6 @@
   "Remove installed interface translations and reboot.": "Eliminar traducciones de interfaz instaladas y reiniciar.",
   "MTP is currently active. Click to disable it.": "MTP está activo actualmente. Haz clic para desactivarlo.",
   "Start the MTP responder to browse SD card files on PC.": "Iniciar el servicio MTP para explorar los archivos de la tarjeta microSD en la PC.",
-  "Save slot creation is only supported for Account saves.": "La creación de espacios de guardado solo es compatible con partidas guardadas de Cuentas.",
   "Save slot creation is only supported in User space.": "La creación de espacios de guardado solo es compatible en el espacio de Usuario.",
   "Save slot creation is only supported for primary save slots.": "La creación de espacios de guardado solo es compatible con espacios de guardado primarios.",
   "Save slot creation is only supported for slot index 0.": "La creación de espacios de guardado solo es compatible con el índice de espacio 0.",
@@ -2765,7 +2764,6 @@
   "Cannot restore: compatible live save slot is missing for ": "No se puede restaurar: falta el espacio de guardado activo compatible para ",
   "Cannot restore: no admissible backup archive found for ": "No se puede restaurar: no se encontró ningún archivo de respaldo admisible para ",
   "Batch restore requires valid archives for all items in the game group.": "La restauración por lotes requiere archivos válidos para todos los elementos del grupo del juego.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Los guardados de dispositivos y BCAT no se pueden crear automáticamente. Inicia el juego para crear primero el espacio de guardado activo.",
   "Items to restore:\n": "Elementos a restaurar:\n",
   " ÐÂ· play hours": "· horas de juego",
   ").": ").",
@@ -2953,5 +2951,7 @@
   " archives": " archivos",
   " Â· play hours": " · horas de juego",
   "Cancel operation": "Cancelar operación",
-  " Â· no play hours": " · sin horas de juego"
+  " Â· no play hours": " · sin horas de juego",
+  "Save slot creation is only supported for Account saves.": "La creación de ranuras de guardado solo es compatible con partidas de cuentas.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "La creación de espacios de guardado solo es compatible con los guardados de Cuenta, Dispositivo y BCAT."
 }

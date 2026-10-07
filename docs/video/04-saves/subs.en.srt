@@ -183,133 +183,141 @@ Its date is when the save was last written before the restore, so it may not be 
 the top.
 
 47
-00:02:33,267 --> 00:02:37,600
-If the user has no save for this game yet, Kefir Hub creates one.
+00:02:33,267 --> 00:02:38,600
+If the console has no slot for this backup yet, Kefir Hub creates one: for user,
 
 48
-00:02:37,600 --> 00:02:42,333
-This works for regular user saves, and only when the game is installed.
+00:02:38,600 --> 00:02:40,600
+Device and BCAT saves.
 
 49
-00:02:42,333 --> 00:02:45,467
-Device and BCAT saves are not created this way.
+00:02:40,600 --> 00:02:46,133
+Kefir Hub and DBI backups do not need the game: the slot size comes from the backup
 
 50
-00:02:45,467 --> 00:02:48,867
-For those, start the game once first, then restore.
+00:02:46,133 --> 00:02:48,133
+metadata.
 
 51
-00:02:48,867 --> 00:02:54,333
-The Backups tab shows the backups on the microSD card made by Kefir Hub, DBI, JKSV
+00:02:48,133 --> 00:02:53,200
+Only JKSV or Checkpoint folders need the game installed first: they carry no
 
 52
-00:02:54,333 --> 00:02:57,667
-and Checkpoint, grouped by the app that made them.
+00:02:53,200 --> 00:02:55,200
+metadata.
 
 53
-00:02:57,667 --> 00:03:01,267
-Kefir Hub looks in the standard folders of these apps.
+00:02:55,200 --> 00:03:00,667
+The Backups tab shows the backups on the microSD card made by Kefir Hub, DBI, JKSV
 
 54
-00:03:01,267 --> 00:03:06,800
-If your backups are somewhere else, add the folder in Settings, Saves, "Save Backup
+00:03:00,667 --> 00:03:04,000
+and Checkpoint, grouped by the app that made them.
 
 55
-00:03:06,800 --> 00:03:08,800
-Search Paths".
+00:03:04,000 --> 00:03:07,600
+Kefir Hub looks in the standard folders of these apps.
 
 56
-00:03:08,800 --> 00:03:14,200
-Each game has a tile for each backup source representing the complete save bundle
+00:03:07,600 --> 00:03:13,133
+If your backups are somewhere else, add the folder in Settings, Saves, "Save Backup
 
 57
-00:03:14,200 --> 00:03:16,200
-for all users.
+00:03:13,133 --> 00:03:15,133
+Search Paths".
 
 58
-00:03:16,200 --> 00:03:20,533
-Highlight it and press A to open actions for this game's backups.
+00:03:15,133 --> 00:03:20,533
+Each game has a tile for each backup source representing the complete save bundle
 
 59
-00:03:20,533 --> 00:03:24,200
-To restore several games together, select tiles with X.
+00:03:20,533 --> 00:03:22,533
+for all users.
 
 60
-00:03:24,200 --> 00:03:28,600
-Choose Restore and continue as before: user, backup, confirmation.
+00:03:22,533 --> 00:03:26,867
+Highlight it and press A to open actions for this game's backups.
 
 61
-00:03:28,600 --> 00:03:33,200
-In the same menu, "Verify integrity" checks the group's ZIP archives.
+00:03:26,867 --> 00:03:30,533
+To restore several games together, select tiles with X.
 
 62
-00:03:33,200 --> 00:03:37,600
-"Delete older backups" keeps only the newest backup in each group.
+00:03:30,533 --> 00:03:34,933
+Choose Restore and continue as before: user, backup, confirmation.
 
 63
-00:03:37,600 --> 00:03:41,333
-Backups on a USB drive do not appear on the Backups tab.
+00:03:34,933 --> 00:03:39,533
+In the same menu, "Verify integrity" checks the group's ZIP archives.
 
 64
-00:03:41,333 --> 00:03:46,333
-To restore one, start from the Installed Games tab and pick the drive under
+00:03:39,533 --> 00:03:43,933
+"Delete older backups" keeps only the newest backup in each group.
 
 65
-00:03:46,333 --> 00:03:48,333
-Location.
+00:03:43,933 --> 00:03:47,667
+Backups on a USB drive do not appear on the Backups tab.
 
 66
-00:03:48,333 --> 00:03:52,800
-Delete erases the save from the console and does not make a backup.
+00:03:47,667 --> 00:03:52,667
+To restore one, start from the Installed Games tab and pick the drive under
 
 67
-00:03:52,800 --> 00:03:55,133
-Make a backup before you choose it.
+00:03:52,667 --> 00:03:54,667
+Location.
 
 68
-00:03:55,133 --> 00:03:58,133
-You can also keep backups on a WebDAV server.
+00:03:54,667 --> 00:03:59,133
+Delete erases the save from the console and does not make a backup.
 
 69
-00:03:58,133 --> 00:04:03,067
-Add it in Settings, Saves, "Save sync location", "+ Add network location".
+00:03:59,133 --> 00:04:01,467
+Make a backup before you choose it.
 
 70
-00:04:03,067 --> 00:04:07,000
-Select the games, press plus and choose "Sync with remote".
+00:04:01,467 --> 00:04:04,467
+You can also keep backups on a WebDAV server.
 
 71
-00:04:07,000 --> 00:04:12,267
-Backups missing on the server are uploaded, and backups missing on the card are
+00:04:04,467 --> 00:04:09,400
+Add it in Settings, Saves, "Save sync location", "+ Add network location".
 
 72
-00:04:12,267 --> 00:04:14,267
-downloaded.
+00:04:09,400 --> 00:04:13,333
+Select the games, press plus and choose "Sync with remote".
 
 73
-00:04:14,267 --> 00:04:17,400
-Files with the same name are never overwritten.
+00:04:13,333 --> 00:04:18,600
+Backups missing on the server are uploaded, and backups missing on the card are
 
 74
-00:04:17,400 --> 00:04:21,267
-On the server the backups are in the sphaira-saves folder.
+00:04:18,600 --> 00:04:20,600
+downloaded.
 
 75
-00:04:21,267 --> 00:04:26,600
-Downloaded backups are not applied by themselves; restore them as shown earlier.
+00:04:20,600 --> 00:04:23,733
+Files with the same name are never overwritten.
 
 76
-00:04:26,600 --> 00:04:31,467
-"Auto-sync after backup" uploads every new backup right after it is made.
+00:04:23,733 --> 00:04:27,600
+On the server the backups are in the sphaira-saves folder.
 
 77
-00:04:31,467 --> 00:04:37,067
-"Include remote backups" in Restore Options downloads the backups that exist only on
+00:04:27,600 --> 00:04:32,933
+Downloaded backups are not applied by themselves; restore them as shown earlier.
 
 78
-00:04:37,067 --> 00:04:39,133
-the server before you pick one.
+00:04:32,933 --> 00:04:37,800
+"Auto-sync after backup" uploads every new backup right after it is made.
 
 79
-00:04:39,133 --> 00:04:42,533
+00:04:37,800 --> 00:04:43,400
+"Include remote backups" in Restore Options downloads the backups that exist only on
+
+80
+00:04:43,400 --> 00:04:45,467
+the server before you pick one.
+
+81
+00:04:45,467 --> 00:04:48,867
 For more, read the Saves page in the documentation.

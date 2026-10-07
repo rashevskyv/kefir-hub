@@ -11,6 +11,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Add a `# kefir-hub-owned` line to the four scripts Hub writes to /startup.te (0010 dump, apply link, NAND dump, NAND restore). Kefir install.bat and kefir-updater update.te now remove leftovers of an unfinished dump/restore: restore_pending, _staging_/_restore_ folders, reopen flag/notify, the one-shot script copies and an owned /startup.te; completed packs, .zip backups, restore_backup and Undo_restore_if_wont_boot.te are kept (Kefir repo commit).
 - host tests: pass (quick) · nro: not built · switch: pending — leave an interrupted dump, reinstall via install.bat and via update.te, confirm Hub shows no old prompt and completed backups remain.
 
+## v0.14.008 — Restore Device and BCAT saves without the installed game
+- Save slot creation now covers Account, Device and BCAT primary slots. Sizes and owner come from the installed game's control data (Device: nacp device sizes; BCAT: delivery cache size, 2 MiB journal, bcat owner) or, when the game is absent, from the backup's save metadata (Kefir Hub / DBI zips), exactly as the Account path already did. Device/BCAT slots are created without a thumbnail meta and with a zero uid. The old 'launch the game first' refusal is gone; JKSV/Checkpoint folders without metadata still need the installed game. EN/UK docs, video 04 scenes 17-18 updated.
+- host tests: pass (quick; bundle rules updated) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — restore Device and BCAT from a Kefir Hub zip with the game uninstalled, install the game and check it picks the data; re-restore; mixed Account/Device/BCAT bundle; compare with DBI; corrupt metadata must be refused.
+
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 

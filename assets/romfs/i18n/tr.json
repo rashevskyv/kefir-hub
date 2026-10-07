@@ -2510,7 +2510,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Geri yüklenemiyor: şunun için uyumlu canlı kayıt yuvası eksik: ",
   "Cannot restore: no admissible backup archive found for ": "Geri yüklenemiyor: şunun için kabul edilebilir yedekleme arşivi bulunamadı: ",
   "Batch restore requires valid archives for all items in the game group.": "Toplu geri yükleme, oyun grubundaki tüm öğeler için geçerli arşivler gerektirir.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Cihaz ve BCAT kayıtları otomatik olarak oluşturulamaz. Canlı kayıt yuvasını oluşturmak için lütfen önce oyunu başlatın.",
   "Items to restore:\n": "Geri yüklenecek öğeler:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Geri yüklemeler tek tek gerçekleştirilir (atomik değildir: bir hata oluşursa sonraki öğeler başarısız olabilir).\n",
   "Account: ": "Hesap: ",
@@ -2546,7 +2545,6 @@
   "Remove installed interface translations and reboot.": "Yüklenen arayüz çevirilerini kaldır ve yeniden başlat.",
   "MTP is currently active. Click to disable it.": "MTP şu anda etkin. Devre dışı bırakmak için tıklayın.",
   "Start the MTP responder to browse SD card files on PC.": "PC'de SD kart dosyalarına göz atmak için MTP yanıtlayıcısını başlatın.",
-  "Save slot creation is only supported for Account saves.": "Kayıt yuvası oluşturma yalnızca Hesap kayıtları için desteklenir.",
   "Save slot creation is only supported in User space.": "Kayıt yuvası oluşturma yalnızca Kullanıcı alanında desteklenir.",
   "Save slot creation is only supported for primary save slots.": "Kayıt yuvası oluşturma yalnızca birincil kayıt yuvaları için desteklenir.",
   "Save slot creation is only supported for slot index 0.": "Kayıt yuvası oluşturma yalnızca 0 indeksli yuva için desteklenir.",
@@ -2947,5 +2945,7 @@
   " archives": " arşivler",
   " Â· play hours": " · oynama saati",
   "Cancel operation": "İşlemi iptal et",
-  " Â· no play hours": " · oynama süresi yok"
+  " Â· no play hours": " · oynama süresi yok",
+  "Save slot creation is only supported for Account saves.": "Kayıt yuvası oluşturma yalnızca Hesap kayıtları için desteklenir.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Kayıt slotu oluşturma yalnızca Hesap, Cihaz ve BCAT kayıtları için desteklenir."
 }

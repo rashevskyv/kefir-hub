@@ -103,8 +103,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
 
         if (meta_status == ArchiveMetaStatus::Valid && (archive_meta.has_nx_meta || archive_meta.has_dbi_extra)) {
             if (archive_meta.meta.attr.application_id != e.creation_request.attr.application_id ||
-                archive_meta.meta.attr.save_data_type != FsSaveDataType_Account ||
-                e.creation_request.attr.save_data_type != FsSaveDataType_Account ||
+                archive_meta.meta.attr.save_data_type != e.creation_request.attr.save_data_type ||
                 archive_meta.meta.attr.save_data_rank != FsSaveDataRank_Primary ||
                 e.creation_request.attr.save_data_rank != FsSaveDataRank_Primary ||
                 archive_meta.meta.attr.save_data_index != 0 ||

@@ -133,18 +133,22 @@ static void test_missing_live_destinations() {
     assert(EvaluateRestoreDestination(true, 5 /* Cache */, 0, 0, app_id) == RestoreDestinationOutcome::ExistingLiveTarget);
 
     // When missing live destination:
-    // Account primary slot 0 for installed title -> PlanAccountCreation
-    assert(EvaluateRestoreDestination(false, 1 /* Account */, 0, 0, app_id) == RestoreDestinationOutcome::PlanAccountCreation);
+    // Account, Device and BCAT primary slot 0 -> PlanCreation
+    assert(EvaluateRestoreDestination(false, 1 /* Account */, 0, 0, app_id) == RestoreDestinationOutcome::PlanCreation);
+    assert(EvaluateRestoreDestination(false, 3 /* Device */, 0, 0, app_id) == RestoreDestinationOutcome::PlanCreation);
+    assert(EvaluateRestoreDestination(false, 2 /* BCAT */, 0, 0, app_id) == RestoreDestinationOutcome::PlanCreation);
+    assert(EvaluateRestoreDestination(false, 3 /* Device */, 1 /* Secondary */, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+    assert(EvaluateRestoreDestination(false, 2 /* BCAT */, 0, 1 /* Slot 1 */, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+    assert(EvaluateRestoreDestination(false, 3 /* Device */, 0, 0, 0 /* Invalid App ID */) == RestoreDestinationOutcome::UnsupportedMissingDestination);
 
     // Account secondary rank or non-zero slot or zero app_id -> UnsupportedMissingDestination
     assert(EvaluateRestoreDestination(false, 1 /* Account */, 1 /* Secondary */, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
     assert(EvaluateRestoreDestination(false, 1 /* Account */, 0, 1 /* Slot 1 */, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
     assert(EvaluateRestoreDestination(false, 1 /* Account */, 0, 0, 0 /* Invalid App ID */) == RestoreDestinationOutcome::UnsupportedMissingDestination);
 
-    // Shared slots (Device, BCAT, Cache) -> UnsupportedMissingDestination
-    assert(EvaluateRestoreDestination(false, 3 /* Device */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
-    assert(EvaluateRestoreDestination(false, 2 /* BCAT */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+    // Cache and system saves -> UnsupportedMissingDestination
     assert(EvaluateRestoreDestination(false, 5 /* Cache */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+    assert(EvaluateRestoreDestination(false, 4 /* Temporary */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
     assert(EvaluateRestoreDestination(false, 0 /* System */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
 }
 
@@ -358,9 +362,9 @@ static void test_bundle_admission_and_destination_evaluation() {
 
     // Verify admission evaluation:
     assert(EvaluateRestoreDestination(true, bundle[0].save_data_type, bundle[0].save_data_rank, bundle[0].save_data_index, acnh_id) == RestoreDestinationOutcome::ExistingLiveTarget);
-    assert(EvaluateRestoreDestination(false, bundle[1].save_data_type, bundle[1].save_data_rank, bundle[1].save_data_index, acnh_id) == RestoreDestinationOutcome::PlanAccountCreation);
-    assert(EvaluateRestoreDestination(false, bundle[2].save_data_type, bundle[2].save_data_rank, bundle[2].save_data_index, acnh_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
-    assert(EvaluateRestoreDestination(false, bundle[3].save_data_type, bundle[3].save_data_rank, bundle[3].save_data_index, acnh_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+    assert(EvaluateRestoreDestination(false, bundle[1].save_data_type, bundle[1].save_data_rank, bundle[1].save_data_index, acnh_id) == RestoreDestinationOutcome::PlanCreation);
+    assert(EvaluateRestoreDestination(false, bundle[2].save_data_type, bundle[2].save_data_rank, bundle[2].save_data_index, acnh_id) == RestoreDestinationOutcome::PlanCreation); // Device
+    assert(EvaluateRestoreDestination(false, bundle[3].save_data_type, bundle[3].save_data_rank, bundle[3].save_data_index, acnh_id) == RestoreDestinationOutcome::PlanCreation); // BCAT
 }
 
 // Regression 8: Admission followed by final revalidation using production identity logic

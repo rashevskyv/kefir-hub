@@ -134,14 +134,15 @@ Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps
 | [[Delete]] | Deletes all backups of this group from the microSD card. |
 
 ## Restore when the game has no save yet
-If the user you pick has no save for the game, Kefir Hub creates one and restores into it. This works only:
+If the console has no save slot for the backup, Kefir Hub creates one and restores into it. This works for
+`Account` (the user you pick), `Device` and `BCAT` saves, main slot only. The slot gets its size and owner:
 
-- for user saves (`Account` type), main slot;
-- when the game is installed (the console needs the game's data to create the save).
+- from the backup itself, when it is a Kefir Hub or DBI backup (these carry the save metadata). The game does
+  not have to be installed. When you install the game later, it uses the restored save;
+- from the installed game, when the backup is a JKSV or Checkpoint folder (no metadata inside).
 
-If the game is not installed, the restore stops with a message that names the game and asks you to install it.
-
-Device and BCAT saves are not created automatically: start the game once so it creates its save, then restore.
+If the backup has no metadata and the game is not installed, the restore stops with a message that names the
+game and asks you to install it.
 
 To restore a save for a game you have uninstalled, either keep the console's save (it stays under [[Deleted Games]] and can be restored there), or install the game again first.
 
@@ -226,8 +227,6 @@ Only the backup library on the microSD card is synced: `/dumps` and `/switch/DBI
 **[[Selected backup archive has changed or is no longer available.]]** The file was moved, deleted or does not belong to this save. Reopen [[Saves]] and pick again.
 
 **[[Application control data not found for installed title.]]** Kefir Hub cannot create a save for a game that is not installed. Install the game, or start it once.
-
-**[[Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.]]** Start the game once, then restore.
 
 **[[RAW container restore is unsupported.]]** The backup is a raw save image, not a ZIP or a folder. Kefir Hub cannot restore it.
 

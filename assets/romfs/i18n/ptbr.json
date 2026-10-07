@@ -2603,7 +2603,6 @@
   "Remove installed interface translations and reboot.": "Remover traduções de interface instaladas e reiniciar.",
   "MTP is currently active. Click to disable it.": "O MTP está atualmente ativo. Clique para desativá-lo.",
   "Start the MTP responder to browse SD card files on PC.": "Iniciar o servidor MTP para navegar pelos arquivos do cartão SD no PC.",
-  "Save slot creation is only supported for Account saves.": "A criação de slots de save é suportada apenas para saves de Contas.",
   "Save slot creation is only supported in User space.": "A criação de slots de save é suportada apenas no espaço de Usuário.",
   "Save slot creation is only supported for primary save slots.": "A criação de slots de save é suportada apenas para slots de save primários.",
   "Save slot creation is only supported for slot index 0.": "A criação de slots de save é suportada apenas para o índice de slot 0.",
@@ -2666,7 +2665,6 @@
   "Could not stop this module.": "Não foi possível parar este módulo.",
   "Cannot restore: no admissible backup archive found for ": "Não foi possível restaurar: nenhum arquivo de backup compatível encontrado para ",
   "Batch restore requires valid archives for all items in the game group.": "A restauração em lote requer arquivos válidos para todos os itens do grupo de jogo.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Os salvamentos de Device e BCAT não podem ser criados automaticamente. Inicie o jogo para criar o slot de salvamento ativo primeiro.",
   "Items to restore:\n": "Itens para restaurar:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "As restaurações são feitas individualmente (não atômicas: itens posteriores podem falhar se ocorrer um erro).\n",
   "Account: ": "Conta: ",
@@ -2979,5 +2977,7 @@
   " archives": " arquivos",
   " Â· play hours": " · horas de jogo",
   "Cancel operation": "Cancelar operação",
-  " Â· no play hours": " · sem horas de jogo"
+  " Â· no play hours": " · sem horas de jogo",
+  "Save slot creation is only supported for Account saves.": "A criação de slots de salvamento é suportada apenas para salvamentos de contas.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "A criação de slots de salvamento é compatível apenas com salvamentos de Conta, Dispositivo e BCAT."
 }

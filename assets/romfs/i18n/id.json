@@ -2448,7 +2448,6 @@
   "Remove installed interface translations and reboot.": "Hapus terjemahan antarmuka yang terinstal dan mulai ulang.",
   "MTP is currently active. Click to disable it.": "MTP sedang aktif. Klik untuk menonaktifkannya.",
   "Start the MTP responder to browse SD card files on PC.": "Mulai responder MTP untuk menjelajahi file kartu SD di PC.",
-  "Save slot creation is only supported for Account saves.": "Pembuatan slot simpanan hanya didukung untuk simpanan Akun.",
   "Save slot creation is only supported in User space.": "Pembuatan slot simpanan hanya didukung di ruang Pengguna.",
   "Save slot creation is only supported for primary save slots.": "Pembuatan slot simpanan hanya didukung untuk slot simpanan primer.",
   "Save slot creation is only supported for slot index 0.": "Pembuatan slot simpanan hanya didukung untuk indeks slot 0.",
@@ -2563,7 +2562,6 @@
   "Cannot restore: compatible live save slot is missing for ": "Tidak dapat memulihkan: slot penyimpanan langsung yang kompatibel hilang untuk ",
   "Cannot restore: no admissible backup archive found for ": "Tidak dapat memulihkan: tidak ada arsip backup yang diizinkan yang ditemukan untuk ",
   "Batch restore requires valid archives for all items in the game group.": "Pemulihan batch memerlukan arsip yang valid untuk semua item dalam grup game.",
-  "Device and BCAT saves cannot be created automatically. Please launch the game to create the live save slot first.": "Penyimpanan perangkat dan BCAT tidak dapat dibuat secara otomatis. Harap luncurkan game untuk membuat slot penyimpanan langsung terlebih dahulu.",
   "Items to restore:\n": "Item yang akan dipulihkan:\n",
   "Restores are performed individually (not atomic: later items may fail if an error occurs).\n": "Pemulihan dilakukan secara individual (tidak atomik: item selanjutnya mungkin gagal jika terjadi kesalahan).\n",
   "Account: ": "Akun: ",
@@ -2947,5 +2945,7 @@
   " archives": " arsip",
   " Â· play hours": " · jam bermain",
   "Cancel operation": "Batalkan operasi",
-  " Â· no play hours": " · belum ada jam bermain"
+  " Â· no play hours": " · belum ada jam bermain",
+  "Save slot creation is only supported for Account saves.": "Pembuatan slot simpan hanya didukung untuk penyimpanan Akun.",
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Pembuatan slot penyimpanan hanya didukung untuk penyimpanan Akun, Perangkat, dan BCAT."
 }
