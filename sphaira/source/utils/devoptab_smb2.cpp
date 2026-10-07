@@ -151,6 +151,7 @@ int CSMB2FS::connect_v2(){
 	smb2_set_user(smb2,username.c_str()); 
 	smb2_set_password(smb2,password.c_str()); 
 	smb2_set_security_mode(smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
+	smb2_set_timeout(smb2, 15); // seconds; the ui joins this thread on Cancel
 	
 	if (smb2_connect_share(smb2, server.c_str(), path.c_str(), username.c_str()) < 0) {
 		printf("smb2_connect_share failed. %s\n", smb2_get_error(smb2));
@@ -179,6 +180,7 @@ int CSMB2FS::connect(){
 	smb2_set_user(smb2,SMB2_PARSER->user.c_str()); 
 	smb2_set_password(smb2,SMB2_PARSER->pass.c_str()); 
 	smb2_set_security_mode(smb2, SMB2_NEGOTIATE_SIGNING_ENABLED);
+	smb2_set_timeout(smb2, 15); // seconds; the ui joins this thread on Cancel
 	
 	if (smb2_connect_share(smb2, SMB2_PARSER->server.c_str(), SMB2_PARSER->share.c_str(), SMB2_PARSER->user.c_str()) < 0) {
 		printf("smb2_connect_share failed. %s\n", smb2_get_error(smb2));

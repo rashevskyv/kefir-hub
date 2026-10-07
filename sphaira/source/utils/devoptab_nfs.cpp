@@ -96,6 +96,7 @@ bool Device::Mount() {
     }
     ON_SCOPE_EXIT(nfs_destroy_url(nfs_url));
 
+    nfs_set_timeout(nfs, 15000); // ms; an unreachable server must not block Cancel forever
     const auto ret = nfs_mount(nfs, nfs_url->server, nfs_url->path);
     if (ret) {
         log_write("[NFS] nfs_mount() failed: %s errno: %s\n", nfs_get_error(nfs), std::strerror(-ret));
@@ -326,6 +327,7 @@ Result TestConnection(const std::string& url) {
     }
     ON_SCOPE_EXIT(nfs_destroy_url(nfs_url));
 
+    nfs_set_timeout(nfs, 15000); // ms; an unreachable server must not block Cancel forever
     const auto ret = nfs_mount(nfs, nfs_url->server, nfs_url->path);
     if (ret) {
         log_write("[NFS] TestConnection failed: %s errno: %s\n", nfs_get_error(nfs), std::strerror(-ret));

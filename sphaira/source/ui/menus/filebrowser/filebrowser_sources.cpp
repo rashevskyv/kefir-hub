@@ -153,6 +153,7 @@ void FsView::ConnectToLocation(const FsEntry& target_entry) {
                 curl::Url{url_str},
                 curl::UserPass{target_entry.user.toString(), target_entry.pass.toString()},
                 curl::Port{target_entry.port},
+                curl::StopToken{pbox->GetToken()}, // Cancel joins this thread: the probe must abort
             };
             auto probe_type = curl::ProbeType::Http;
             if (proto_str == "webdav" ||
