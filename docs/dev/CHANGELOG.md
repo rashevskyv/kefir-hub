@@ -35,6 +35,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Settings → Forwarder → Address space offers Automatic / 36-bit / 39-bit / 32-bit / 32-bit (no alias) (sidebar and settings page); the default forwarder options map 3→32-bit, 4→32-bit (no alias). EN/UK settings docs updated.
 - host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — pick each value, create a forwarder, check the editor shows the same space.
 
+## v0.14.014 — Explain the forwarder address space
+- One plain description in Settings (sidebar and page) and, new, in the forwarder editor under the icon column while the Address Space row is selected: leave Automatic (39-bit); 36-bit only if an old app does not start; 32-bit variants only when the app asks for it (Wine-NX, Box64). Automatic detection is not possible: an NRO carries no address-space requirement. Old description key removed from all languages.
+- host tests: pass (quick) · docs: 0 unknown labels · nro: building · switch: pending — select Address Space in the editor: hint appears under the icon; other rows: no hint.
+
 ## unreleased
 - Embed TegraExplorer 4.2.29: the Joy-Con connect rumble is muted with a neutral pattern before the disable subcommand, so third-party controllers stop buzzing at TE start (hekate 6.5.4 sequence). nro: built (ReleaseWithInstall checkpoint clean, build/ReleaseWithInstall/kefir-hub.nro 0.14.013 with TE 4.2.29) · switch: pending — start TE with a third-party controller attached.
 - Repository folder renamed from `sphaira` to `kefir-hub` (D:\git\dev\kefir-hub, WSL /mnt/d/git/dev/kefir-hub); AGENTS.md, test-build and update-docs skills updated; a junction `D:\git\dev\sphaira` points to the new folder for old tooling. TegraExplorer Makefile/AGENTS.md follow. Product code unchanged.

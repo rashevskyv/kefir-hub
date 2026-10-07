@@ -2054,7 +2054,6 @@
   "Oct": "ott",
   "Nov": "nov",
   "Dec": "dic",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Spazio di indirizzamento virtuale assegnato al forwarder. Automatico usa 39 bit; 36 bit è disponibile per compatibilità.",
   "CPU cores": "Core della CPU",
   "CPU Cores": "Core della CPU",
   "3 cores": "3 core",
@@ -2954,5 +2953,6 @@
   "Save slot creation is only supported for Account saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi dell'account.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi Account, Dispositivo e BCAT.",
   "32-bit": "32-bit",
-  "32-bit (no alias)": "32-bit (nessun alias)"
+  "32-bit (no alias)": "32-bit (nessun alias)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Quanta memoria virtuale riceve l'app. Lascia su Automatico (39-bit). 36-bit: solo se una vecchia app non si avvia. 32-bit e 32-bit (senza alias): solo quando l'app stessa lo richiede (Wine-NX, Box64)."
 }

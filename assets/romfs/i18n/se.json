@@ -2054,7 +2054,6 @@
   "Oct": "okt",
   "Nov": "nov",
   "Dec": "dec",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Virtuellt adressutrymme som tilldelas forwardern. Automatiskt används 39-bitars; 36-bitars är tillgängligt för kompatibilitet.",
   "CPU cores": "CPU-kärnor",
   "CPU Cores": "CPU-kärnor",
   "3 cores": "3 kärnor",
@@ -2954,5 +2953,6 @@
   "Save slot creation is only supported for Account saves.": "Skapande av spårningsplatser stöds endast för kontosparingar.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Skapande av sparfilsplatser stöds endast för Konto-, Enhets- och BCAT-sparfiler.",
   "32-bit": "32-bitars",
-  "32-bit (no alias)": "32-bitars (inget alias)"
+  "32-bit (no alias)": "32-bitars (inget alias)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hur mycket virtuellt minne appen får. Lämna på Automatisk (39-bit). 36-bit: endast om en gammal app inte startar. 32-bit och 32-bit (inga alias): endast när appen själv begär det (Wine-NX, Box64)."
 }

@@ -2648,7 +2648,6 @@
   "Oct": "Eki",
   "Nov": "Kas",
   "Dec": "Ara",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Yönelticiye verilen sanal adres alanı. Otomatik 39-bit kullanır; uyumluluk için 36-bit kullanılabilir.",
   "Give this backup a custom name.": "Bu yedeğe özel bir ad verin.",
   "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te": "Konsol açılmazsa: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te",
   "Input cancelled": "Giriş iptal edildi",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Kayıt yuvası oluşturma yalnızca Hesap kayıtları için desteklenir.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Kayıt slotu oluşturma yalnızca Hesap, Cihaz ve BCAT kayıtları için desteklenir.",
   "32-bit": "32-bit",
-  "32-bit (no alias)": "32-bit (alias yok)"
+  "32-bit (no alias)": "32-bit (alias yok)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Uygulamanın ne kadar sanal bellek alacağı. Otomatik (39-bit) olarak bırakın. 36-bit: yalnızca eski bir uygulama başlamıyorsa. 32-bit ve 32-bit (takma ad yok): yalnızca uygulama bunu kendisi istediğinde (Wine-NX, Box64)."
 }

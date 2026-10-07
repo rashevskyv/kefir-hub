@@ -2676,7 +2676,6 @@
   "Oct": "Okt",
   "Nov": "Nov",
   "Dec": "Des",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Ruang alamat virtual yang diberikan ke forwarder. Otomatis menggunakan 39-bit; 36-bit tersedia untuk kompatibilitas.",
   "Give this backup a custom name.": "Beri nama kustom untuk cadangan ini.",
   "If the console will not boot: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te": "Jika konsol tidak mau booting: hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te",
   "Input cancelled": "Masukan dibatalkan",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Pembuatan slot simpan hanya didukung untuk penyimpanan Akun.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Pembuatan slot penyimpanan hanya didukung untuk penyimpanan Akun, Perangkat, dan BCAT.",
   "32-bit": "32-bit",
-  "32-bit (no alias)": "32-bit (tanpa alias)"
+  "32-bit (no alias)": "32-bit (tanpa alias)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Berapa banyak memori virtual yang didapat aplikasi. Biarkan Otomatis (39-bit). 36-bit: hanya jika aplikasi lama tidak mau berjalan. 32-bit dan 32-bit (tanpa alias): hanya saat aplikasi itu sendiri yang memintanya (Wine-NX, Box64)."
 }

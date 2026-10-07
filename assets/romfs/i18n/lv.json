@@ -2625,7 +2625,6 @@
   "Oct": "Okt",
   "Nov": "Nov",
   "Dec": "Dec",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Virtuālā adrešu telpa, kas piešķirta pārsūtītājam. Automātiskā izmanto 39 bitus; 36 biti ir pieejami saderībai.",
   "Release date": "Izdošanas datums",
   "This shop is public. Set up a login anyway?": "Šis veikals ir publisks. Vai tomēr iestatīt pieteikšanos?",
   "This shop is private. Set up a login now?": "Šis veikals ir privāts. Vai iestatīt pieteikšanos tagad?",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Saglabāšanas vietas izveide tiek atbalstīta tikai konta saglabātajiem datiem.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Saglabāšanas vietu izveide tiek atbalstīta tikai konta, ierīces un BCAT saglabāšanai.",
   "32-bit": "32 bitu",
-  "32-bit (no alias)": "32-bitu (bez alias)"
+  "32-bit (no alias)": "32-bitu (bez alias)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cik daudz virtuālās atmiņas saņem lietotne. Atstāt Automātiski (39-bit). 36-bit: tikai tad, ja vecā lietotne nepalaižas. 32-bit un 32-bit (bez aizstājvārda): tikai tad, kad pati lietotne to prasa (Wine-NX, Box64)."
 }

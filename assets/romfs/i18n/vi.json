@@ -2054,7 +2054,6 @@
   "Oct": "thg10",
   "Nov": "thg11",
   "Dec": "thg12",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Không gian địa chỉ ảo được cấp cho forwarder. Tự động sử dụng 39-bit; 36-bit khả dụng cho tính tương thích.",
   "CPU cores": "Số lõi CPU",
   "CPU Cores": "Số lõi CPU",
   "3 cores": "3 lõi",
@@ -2954,5 +2953,6 @@
   "Save slot creation is only supported for Account saves.": "Việc tạo ô lưu chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Việc tạo khe lưu trữ chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản, Thiết bị và BCAT.",
   "32-bit": "32-bit",
-  "32-bit (no alias)": "32-bit (không có alias)"
+  "32-bit (no alias)": "32-bit (không có alias)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Ứng dụng nhận được bao nhiêu bộ nhớ ảo. Giữ ở mức Tự động (39-bit). 36-bit: chỉ khi ứng dụng cũ không khởi động. 32-bit và 32-bit (không bí danh): chỉ khi chính ứng dụng yêu cầu (Wine-NX, Box64)."
 }

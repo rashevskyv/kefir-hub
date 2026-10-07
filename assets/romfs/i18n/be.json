@@ -2801,7 +2801,6 @@
   "Oct": "Кас",
   "Nov": "Ліст",
   "Dec": "Сне",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Віртуальная прастора адрасоў, дадзеная форвардэру. Аўтаматычны рэжым выкарыстоўвае 39 біт; 36 біт даступна для сумяшчальнасці.",
   "When to install": "Калі ўсталёўваць",
   "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Вы можаце прывязаць пазней у Інструменты → Карыстальнікі → Прывязаць уліковы запіс Nintendo. Некаторыя гульні патрабуюць прывязанага ўліковага запісу для запуску.",
   "You won't be asked again at launch. To link manually later: Tools â Users â Link Nintendo Account.": "Вас больш не будуць пытацца пры запуску. Каб прывязаць уручную пазней: Інструменты → Карыстальнікі → Прывязаць уліковы запіс Nintendo.",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Ствараць слот захавання можна толькі для захаванняў уліковага запісу.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Стварэнне слотаў захаванняў падтрымліваецца толькі для захаванняў уліковага запісу, прылады і BCAT.",
   "32-bit": "32-бітны",
-  "32-bit (no alias)": "32-біт (без аліяса)"
+  "32-bit (no alias)": "32-біт (без аліяса)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Колькі віртуальнай памяці атрымлівае праграма. Пакіньце Аўтаматычна (39-біт). 36-біт: толькі калі старая праграма не запускаецца. 32-біт і 32-біт (без псеўданіма): толькі калі праграма сама пра гэта просіць (Wine-NX, Box64)."
 }

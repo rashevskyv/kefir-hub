@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.013)
+set(sphaira_VERSION 0.14.014)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 

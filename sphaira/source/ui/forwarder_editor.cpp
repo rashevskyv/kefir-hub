@@ -210,6 +210,13 @@ public:
 
         gfx::drawTextBox(vg, 85.f, 525.f, 16.f, 290.f, theme->GetColour(ThemeEntryID_TEXT_INFO), "Press A or tap the icon to change it"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
+        // what the selected row means, for rows a user cannot be expected to know.
+        if (!m_icon_focused) {
+            if (const auto hint = GetRowHint(m_rows[m_index]); !hint.empty()) {
+                gfx::drawTextBox(vg, 85.f, 575.f, 16.f, 290.f, theme->GetColour(ThemeEntryID_TEXT_INFO), hint.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+            }
+        }
+
         m_list->Draw(vg, theme, m_rows.size(), !m_icon_focused ? m_index : List::NO_FOCUS, [this](auto* vg, auto* theme, const Vec4& pos, s64 index){
             const auto row = m_rows[index];
             const auto selected = !m_icon_focused && m_index == index;
@@ -472,6 +479,13 @@ private:
             case Row::VideoCapture: return "Video Capture"_i18n;
             case Row::Create: return {};
             case Row::SvcDebug: return "svcDebug"_i18n;
+        }
+        return {};
+    }
+
+    auto GetRowHint(Row row) const -> std::string {
+        if (row == Row::AddressSpace) {
+            return "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n;
         }
         return {};
     }

@@ -288,7 +288,7 @@ auto BuildForwarderItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(SettingsItem{
         "Address space"_i18n,
-        "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility."_i18n,
+        "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n,
         [](){ return i18n::get(ADDRESS_SPACE_LABELS[App::GetForwarderAddressSpace()]); },
         [](){
             PopupList::Items list;

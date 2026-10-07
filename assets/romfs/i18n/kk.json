@@ -2577,7 +2577,6 @@
   "Oct": "Қаз",
   "Nov": "Қар",
   "Dec": "Жел",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Форвардерге берілген виртуалды мекенжай кеңістігі. Автоматты режим 39 битті пайдаланады; үйлесімділік үшін 36 бит қолжетімді.",
   "List the NCA files that make up this component.": "Осы компонентті құрайтын NCA файлдарын тізімдеу.",
   "Failed to read component contents": "Компонент мазмұнын оқу сәтсіз аяқталды",
   "No content files": "Мазмұн файлдары жоқ",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Сақтау слотын жасау тек Тіркелгі сақтаулары үшін ғана қолдау көрсетіледі.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Сақтау слотын жасау тек Тіркелгі, Құрылғы және BCAT сақтаулары үшін қолдау көрсетіледі.",
   "32-bit": "32-бит",
-  "32-bit (no alias)": "32-біт (alias жоқ)"
+  "32-bit (no alias)": "32-біт (alias жоқ)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Қолданбаға қанша виртуалды жад беріледі. Автоматты (39-бит) күйінде қалдырыңыз. 36-бит: тек ескі қолданба іске қосылмаса. 32-бит және 32-бит (бүркеншік атсыз): тек қолданба өзі сұраған кезде (Wine-NX, Box64)."
 }

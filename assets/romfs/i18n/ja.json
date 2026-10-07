@@ -2054,7 +2054,6 @@
   "Oct": "10月",
   "Nov": "11月",
   "Dec": "12月",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "フォワーダーに割り当てられた仮想アドレス空間。自動では39ビットを使用します。互換性のために36ビットも利用可能です。",
   "CPU cores": "CPUコア",
   "CPU Cores": "CPUコア",
   "3 cores": "3コア",
@@ -2954,5 +2953,6 @@
   "Save slot creation is only supported for Account saves.": "セーブスロットの作成はアカウントのセーブデータのみサポートされています。",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "セーブデータのスロット作成は、アカウント、本体、BCATのセーブデータでのみサポートされています。",
   "32-bit": "32ビット",
-  "32-bit (no alias)": "32ビット (エイリアスなし)"
+  "32-bit (no alias)": "32ビット (エイリアスなし)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "アプリに割り当てる仮想メモリの量。「自動 (39-bit)」のままにしてください。36-bit: 古いアプリが起動しない場合のみ。32-bit および 32-bit (エイリアスなし): アプリ自身が要求する場合のみ (Wine-NX, Box64)。"
 }

@@ -2601,7 +2601,6 @@
   "Oct": "Spa",
   "Nov": "Lap",
   "Dec": "Gru",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Virtuali adresų erdvė, skirta siuntėjui. Automatinis režimas naudoja 39 bitų; suderinamumui galimas 36 bitų.",
   "Connected": "Prisijungta",
   "Could not start this module. Some modules only load when the console boots â use autostart.": "Nepavyko paleisti šio modulio. Kai kurie moduliai įsikrauna tik įsikraunant konsolei — naudokite automatinį paleidimą.",
   "Could not stop this module.": "Nepavyko sustabdyti šio modulio.",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Išsaugojimo lizdo kūrimas palaikomas tik paskyros išsaugojimams.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Išsaugojimo vietos kūrimas palaikomas tik paskyros, įrenginio ir BCAT išsaugojimams.",
   "32-bit": "32 bitų",
-  "32-bit (no alias)": "32 bitų (be aliaso)"
+  "32-bit (no alias)": "32 bitų (be aliaso)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kiek virtualios atminties gauna programėlė. Palikite Automatinį (39-bit). 36-bit: tik jei sena programėlė nepasileidžia. 32-bit ir 32-bit (be pseudonimo): tik kai pati programėlė to prašo (Wine-NX, Box64)."
 }

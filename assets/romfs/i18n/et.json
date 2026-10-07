@@ -2751,7 +2751,6 @@
   "Oct": "Okt",
   "Nov": "Nov",
   "Dec": "Det",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Edasisuunajale antud virtuaalne aadressiruumi. Automaatne kasutab 39-bitist; ühilduvuse tagamiseks on saadaval 36-bitine.",
   "When to install": "Millal installida",
   "You can link later in Tools â Users â Link Nintendo Account. Some games require a linked account to start.": "Saate hiljem siduda menüüs Tööriistad â Kasutajad â Seo Nintendo kontoga. Mõned mängud nõuavad käivitamiseks seotud kontot.",
   "You won't be asked again at launch. To link manually later: Tools â Users â Link Nintendo Account.": "Käivitamisel seda enam ei küsita. Käsitsi sidumiseks hiljem: Tööriistad â Kasutajad â Seo Nintendo kontoga.",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Salvestuskoha loomine on toetatud ainult kontode salvestuste jaoks.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Salvestuskoha loomine on toetatud ainult konto-, seadme- ja BCAT-salvestuste puhul.",
   "32-bit": "32-bitine",
-  "32-bit (no alias)": "32-bitine (aliaseta)"
+  "32-bit (no alias)": "32-bitine (aliaseta)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kui palju virtuaalset mälu rakendus saab. Jäta Automaatne (39-bitine). 36-bitine: ainult siis, kui vana rakendus ei käivitu. 32-bitine ja 32-bitine (ilma aliaseta): ainult siis, kui rakendus ise seda küsib (Wine-NX, Box64)."
 }

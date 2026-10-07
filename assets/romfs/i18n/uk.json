@@ -2680,7 +2680,6 @@
   "Oct": "жовт.",
   "Nov": "лист.",
   "Dec": "груд.",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "Віртуальний адресний простір форвардера. Автоматично — 39-біт; 36-біт для сумісності.",
   "CPU cores": "Ядра ЦП",
   "CPU Cores": "Ядра ЦП",
   "3 cores": "3 ядра",
@@ -2949,5 +2948,6 @@
   "Save slot creation is only supported for Account saves.": "Створення слота збереження підтримується лише для збережень облікового запису.",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "Створення слотів збережень підтримується лише для збережень облікового запису, пристрою та BCAT.",
   "32-bit": "32-біт",
-  "32-bit (no alias)": "32-біт (без аліасу)"
+  "32-bit (no alias)": "32-біт (без аліасу)",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Скільки віртуальної пам'яті отримує застосунок. Залишіть Автоматично (39-біт). 36-біт: лише якщо старий застосунок не запускається. 32-біт і 32-біт (без псевдоніма): лише коли застосунок сам про це просить (Wine-NX, Box64)."
 }

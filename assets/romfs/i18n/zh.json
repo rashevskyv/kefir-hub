@@ -2108,7 +2108,6 @@
   "Oct": "10月",
   "Nov": "11月",
   "Dec": "12月",
-  "Virtual address space given to the forwarder. Automatic uses 39-bit; 36-bit is available for compatibility.": "分配给转发器的虚拟地址空间。自动模式使用 39 位；36 位用于兼容性。",
   "CPU cores": "CPU 核心",
   "CPU Cores": "CPU 核心",
   "3 cores": "3 个核心",
@@ -3007,5 +3006,6 @@
   "Save slot creation is only supported for Account saves.": "仅账户存档支持创建存档槽位。",
   "Save slot creation is only supported for Account, Device and BCAT saves.": "仅账户、本机和 BCAT 存档支持创建存档插槽。",
   "32-bit": "32位",
-  "32-bit (no alias)": "32位（无别名）"
+  "32-bit (no alias)": "32位（无别名）",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "应用获取的虚拟内存大小。请保持“自动 (39-bit)”。36-bit：仅在旧应用无法启动时使用。32-bit 和 32-bit（无别名）：仅在应用本身请求时使用（Wine-NX, Box64）。"
 }
