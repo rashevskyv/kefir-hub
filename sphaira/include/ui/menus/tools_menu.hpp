@@ -2,6 +2,7 @@
 
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
+#include "ui/menus/settings_menu.hpp"
 #include "ui/scrolling_text.hpp"
 #include <functional>
 #include <memory>
@@ -73,7 +74,8 @@ private:
     void OnSelect();
 
 private:
-    std::vector<ToolItem> m_items;
+    // SettingsItem rows so the list can carry captions (SettingsItemKind::Header).
+    std::vector<settings::SettingsItem> m_items;
     s64 m_index{};
     std::unique_ptr<List> m_list;
 };

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.018 — Tools → Tools grouped; zero-fill removed
+- Tools → Tools is one list with three captions: Diagnostics (System information), Settings (Module Manager, Fan curve, Wi-Fi, Users), Maintenance (Clean system junk, Remove parental controls). Captions reuse the Settings header rows; the cursor steps over them. Both "Fill free … space with zeros" items are gone (zero_fill.cpp deleted, 10 i18n keys dropped in every language).
+- host tests: not run · nro: not built · switch: pending — open Tools → Tools, step through with the D-pad and tap a caption (nothing happens).
+
 ## v0.14.006 — Unfinished TegraExplorer dump: Later / Cancel operation / Retry
 - Rename the unfinished-dump prompt buttons to Later (B, silent until Hub restarts) / Cancel operation (clears state, staging, scripts, reminders) / Retry; default cursor on Later, so no button reboots by accident. Retry re-stages the target folder, flags and pending state before rebooting and reports staging failures instead of launching. A dump without dumped.ok is never treated as complete. The TE dump script reports read errors as errors, not as an empty save. EN/UK docs and video 07 updated. Embedded TegraExplorer 4.2.28 fixes the black OLED screen (LTO inlined hw_init across pivot_stack).
 - host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — interrupt a dump, delete its folder, start Hub: B exits, Later stays silent this run, Cancel operation clears after restart, Retry re-creates the folder; TE 4.2.28 on OLED.

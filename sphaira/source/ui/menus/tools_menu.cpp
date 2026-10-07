@@ -14,10 +14,10 @@
 #include "ui/menus/users_menu.hpp"
 #include "ui/menus/wifi_menu.hpp"
 #include "ui/menus/settings/settings_fancurve.hpp"
+#include "ui/menus/settings/settings_internal.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
-#include "zero_fill.hpp"
 #include "system_cleanup.hpp"
 #include "system_info.hpp"
 #include "ui/menus/file_viewer.hpp"
@@ -152,23 +152,6 @@ void OpenCleanup() {
     App::Push(std::move(sidebar));
 }
 
-void FillWithZeros(NcmStorageId storage_id, const std::string& question, const std::string& storage_name) {
-    App::Push<ui::OptionBox>(question, "Back"_i18n, "Fill"_i18n, 1, [storage_id, storage_name](auto op_index){
-        if (!op_index || !*op_index) {
-            return;
-        }
-        App::Push<ui::ProgressBox>(0, "Filling with zeros"_i18n, storage_name, [storage_id](auto pbox) -> Result {
-            return zero_fill::FillFreeSpace(storage_id, pbox);
-        }, [](Result rc){
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Free space filled with zeros"_i18n);
-            } else if (rc != Result_TransferCancelled) {
-                App::PushErrorBox(rc, "Fill failed!"_i18n);
-            }
-        });
-    });
-}
-
 void DrawToolsGrid(NVGcontext* vg, Theme* theme, List& list, s64 selected, const std::vector<ToolItem>& items) {
     list.Draw(vg, theme, items.size(), selected, [vg, theme, selected, &items](auto*, auto*, Vec4 v, auto i) {
         const auto& item = items[i];
@@ -220,21 +203,9 @@ void DrawToolsGrid(NVGcontext* vg, Theme* theme, List& list, s64 selected, const
     });
 }
 
-void DrawToolsList(NVGcontext* vg, Theme* theme, List& list, s64 selected, const std::vector<ToolItem>& items) {
-    list.Draw(vg, theme, items.size(), selected, [vg, theme, selected, &items](auto*, auto*, Vec4 v, auto i) {
-        const auto& item = items[i];
-        const auto is_selected = selected == static_cast<s64>(i);
-        const auto text_id = is_selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
-        if (is_selected) {
-            gfx::drawRectOutline(vg, theme, 4.f, v);
-        } else {
-            DrawElement(v, ThemeEntryID_GRID);
-        }
-        gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f - 10.f, 18.f,
-            theme->GetColour(text_id), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        gfx::drawText(vg, v.x + 20.f, v.y + v.h / 2.f + 14.f, 14.f,
-            theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    });
+// a plain row of the system tools list: label, description, action.
+auto Tool(std::string label, std::string description, std::function<void()> action) -> settings::SettingsItem {
+    return { std::move(label), std::move(description), {}, std::move(action), settings::SettingsItemKind::Normal };
 }
 
 } // namespace
@@ -477,32 +448,26 @@ void GameToolsMenu::OnSelect() {
 }
 
 SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
+    // one list, three captions. The cursor steps over the captions.
     m_items = {
-        { "Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, 0, [](){
+        settings::MakeHeader("Diagnostics"_i18n),
+        Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, OpenSystemInfo),
+        settings::MakeHeader("Settings"_i18n),
+        Tool("Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
-        }},
-        { "Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, 0, [](){
+        }),
+        Tool("Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, [](){
             ui::menu::settings::OpenFanCurveMenu();
-        }},
-        { "Wi-Fi"_i18n, "Manage wireless connections."_i18n, 0, [](){
+        }),
+        Tool("Wi-Fi"_i18n, "Manage wireless connections."_i18n, [](){
             App::Push<ui::menu::wifi::Menu>();
-        }},
-        { "Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, 0, [](){
+        }),
+        Tool("Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, [](){
             App::Push<ui::menu::users::Menu>();
-        }},
-        { "System information"_i18n, "Firmware, Atmosphere and console details."_i18n, 0, OpenSystemInfo },
-        { "Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, 0, [](){
-            FillWithZeros(NcmStorageId_SdCard,
-                "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time."_i18n,
-                "microSD card"_i18n);
-        }},
-        { "Fill free NAND space with zeros"_i18n, "Overwrite unused system memory space."_i18n, 0, [](){
-            FillWithZeros(NcmStorageId_BuiltInUser,
-                "Overwrite all free space in the console's system memory with zeros? Games and saves are not touched. It can take a long time."_i18n,
-                "System memory"_i18n);
-        }},
-        { "Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, 0, ComingSoon },
-        { "Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, 0, OpenCleanup },
+        }),
+        settings::MakeHeader("Maintenance"_i18n),
+        Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
+        Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
     };
 
     this->SetActions(
@@ -519,6 +484,9 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
 void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && i < static_cast<s64>(m_items.size()) && m_items[i].kind == settings::SettingsItemKind::Header) {
+            return;
+        }
         if (touch && m_index == i) {
             FireAction(Button::A);
         } else {
@@ -530,7 +498,9 @@ void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
 
 void SystemToolsMenu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
-    DrawToolsList(vg, theme, *m_list, m_index, m_items);
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        settings::DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
+    });
 }
 
 void SystemToolsMenu::OnFocusGained() {
@@ -543,9 +513,11 @@ void SystemToolsMenu::SetIndex(s64 index) {
         m_index = 0;
         return;
     }
-    m_index = std::clamp<s64>(index, 0, static_cast<s64>(m_items.size() - 1));
+    m_index = settings::ResolveItemIndex(m_items, index, m_index);
     if (!m_index) {
         m_list->SetYoff(0);
+    } else {
+        m_list->EnsureVisible(m_index, m_items.size());
     }
     SetTitleSubHeading(m_items[m_index].description, true);
     SetSubHeading("");

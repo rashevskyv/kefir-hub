@@ -316,7 +316,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       repacker) adds it per title.
 - [x] F.9 **Hex view** in the file browser. (Second panel exists. RAR/7z do not: only zip extracts; 7z only for RetroArch in the App Store.)
 - [x] F.9b **Archive extraction** in the file browser: RAR, 7z, xz, tar, gz (zip already works). Approved 2026-10-04.
-- [x] F.10 **Fill free NAND space with zeros** (next to "Fill free SD space with zeros").
+- [x] F.10 ~~**Fill free NAND space with zeros**~~ Both zero-fill items removed on the user's request (2026-10-07, v0.14.018).
+- [x] F.16 **Tools → Tools grouped** into Diagnostics / Settings / Maintenance captions (user, 2026-10-07; v0.14.018).
 - [x] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.
@@ -337,7 +338,10 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.15 **Save folder restore without metadata** (JKSV/Checkpoint folders): when the game is installed, take the
       save size from its NACP instead of refusing with "Backup folder metadata is missing…" (only for a user with
       no save of that game yet). Found by the other session 2026-10-04; user agreed.
+- [ ] F.14b **System information as grouped tables** (user, 2026-10-07): groups open with A or a tap, rows are
+      parameter → value; every DBI field; real serial from PRODINFO / a backup with the source named, never a computed one.
 - [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
+      Entry: Console Transfer menu (+ installed game menu). Base, updates and DLC, installed on the other console.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
