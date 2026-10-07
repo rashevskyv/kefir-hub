@@ -4,7 +4,9 @@
 #   powershell -ExecutionPolicy Bypass -File tools\docs\publish.ps1 [-SkipChecks]
 #
 # 1. Both clones must be clean (TegraExplorer.bin ignored) and ahead of, or equal to, their remote branch.
-# 2. Checks: doc labels, docs build (WSL venv ~/.venvs/docs), guide links into the built docs.
+# 2. Draft blocks in docs/site pages become prose through the LLM proxy (tools/docs/finish.py), then
+#    checks: doc labels, docs build (WSL venv ~/.venvs/docs), guide links into the built docs; a finished
+#    draft is committed as 'docs: finish drafts'.
 # 3. Push: sphaira master -> docs (publishes https://hub.customfw.xyz/), guide kefir-hub (its workflow
 #    commits docs/site/guide.ref on branch guide-sync, which rebuilds https://hub.customfw.xyz/guide/).
 # 4. Wait for the Pages deploys and probe the site.
@@ -33,11 +35,19 @@ function Ready($dir, $remote, $local) {
 Run 'sphaira ready' { Ready $repo docs master }
 Run 'guide ready' { git -C $guide checkout --quiet kefir-hub; Ready $guide kefir-hub kefir-hub }
 
+# Draft blocks the coding agent left in the pages become prose through the LLM proxy (tools/docs/finish.py).
+Run 'finish drafts' { python -I "$repo\tools\docs\finish.py" }
+$finished = git -C $repo status --short docs/site
+
 if (-not $SkipChecks) {
     $wslRepo = (& wsl wslpath -a ($repo -replace '\\', '/')).Trim()
     Run 'doc labels' { python -I "$repo\tests\test_doc_labels_contract.py" }
     Run 'docs build' { wsl bash -lc ". ~/.venvs/docs/bin/activate && cd '$wslRepo' && sh docs/site/build.sh" }
     Run 'guide links' { python -I "$repo\tools\docs\check_site_links.py" $guide }
+}
+
+if ($finished) {
+    Run 'commit finished drafts' { git -C $repo add docs/site; git -C $repo commit --quiet -m 'docs: finish drafts (tools/docs/finish.py)' }
 }
 
 $docsBefore = git -C $repo rev-parse origin/docs

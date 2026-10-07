@@ -44,10 +44,10 @@ a translated UI name by hand in docs/site.
    (`grep -rn` on `_pages`, `_includes`).
 3. **Read the code** for the new behaviour (graphify first, line ranges, see AGENTS.md). Facts come from the
    code or from the owner, never from old docs or guesses.
-4. **Edit the English page**, following STYLE.md: plain words, the task as numbered steps, an options table,
-   a Problems section.
-5. **Edit the Ukrainian page the same way**: same headings in the same order (heading ids come from the
-   English page, and the build fails on a mismatch). Write natural Ukrainian, «папка», «карта пам'яті».
+4. **Leave a draft on the English page** where the text belongs (see Draft mode below). New page or new
+   section: write the heading and a draft under it. Full prose only when it is one sentence anyway.
+5. **Leave the same draft on the Ukrainian page**, under the same heading (heading ids come from the
+   English page, and the build fails on a mismatch). The facts may stay in English; the finisher writes Ukrainian.
 6. **Per kind of change:**
    - *Renamed label*: replace `[[Old]]` with `[[New]]` everywhere, including nav titles in `mkdocs.yml`.
    - *New feature or option*: add a section, a coverage row and `<!-- shot: page-thing | what the screen shows -->` markers.
@@ -76,6 +76,22 @@ a translated UI name by hand in docs/site.
     `docs/dev/CHANGELOG.md`. Docs written together with the code change go in the same commit as the code
     (that commit has the version bump). Stage by path, never `git add -A`. The site clone is a separate
     repo: commit there on `kefir-hub`. Never push anything.
+
+## Draft mode (the coding agent writes facts, the finisher writes prose)
+A draft is an HTML comment that starts with `draft`, placed where the text belongs:
+```
+<!-- draft
+- [[Backup]] now stores every save type of the game; the tile shows one badge per type (Device, BCAT, Cache)
+- the Restore dialog asks for the source account first; **B** cancels
+-->
+```
+Rules: facts only, one per line; UI names as `[[en.json key]]` (the finisher may use only labels that are in
+the page or the draft); controller buttons as **A**, **B**; say which existing step or option changes. Shot
+markers, recipes and PNGs are yours as before. At publish time `tools/docs/publish.cmd` runs
+`tools/docs/finish.py`: the LLM proxy (gemini-web2api, `--url`/`--model` as in `tools/i18n-translate`) rewrites
+each page with drafts in its language per STYLE.md, the result must keep the shot markers and labels, then the
+label contract and the strict build run and the pages are committed as `docs: finish drafts`. Check a page
+without the proxy: `python tools/docs/finish.py --dry-run` lists the pages that still hold drafts.
 
 ## Screenshots (Eden emulator, any language)
 Kefir Hub runs in Eden from v0.13.955. Screenshots are per language: `docs/site/<lang>/img/<shot-id>.png`
