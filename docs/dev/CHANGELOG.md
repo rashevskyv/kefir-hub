@@ -36,7 +36,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — pick each value, create a forwarder, check the editor shows the same space.
 
 ## unreleased
-- Embed TegraExplorer 4.2.29: the Joy-Con connect rumble is muted with a neutral pattern before the disable subcommand, so third-party controllers stop buzzing at TE start (hekate 6.5.4 sequence). nro: not rebuilt · switch: pending — start TE with a third-party controller attached.
+- Embed TegraExplorer 4.2.29: the Joy-Con connect rumble is muted with a neutral pattern before the disable subcommand, so third-party controllers stop buzzing at TE start (hekate 6.5.4 sequence). nro: built (ReleaseWithInstall checkpoint clean, build/ReleaseWithInstall/kefir-hub.nro 0.14.013 with TE 4.2.29) · switch: pending — start TE with a third-party controller attached.
 - Repository folder renamed from `sphaira` to `kefir-hub` (D:\git\dev\kefir-hub, WSL /mnt/d/git/dev/kefir-hub); AGENTS.md, test-build and update-docs skills updated; a junction `D:\git\dev\sphaira` points to the new folder for old tooling. TegraExplorer Makefile/AGENTS.md follow. Product code unchanged.
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
