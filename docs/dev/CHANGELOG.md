@@ -36,6 +36,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: pass (quick) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — pick each value, create a forwarder, check the editor shows the same space.
 
 ## unreleased
+- Repository folder renamed from `sphaira` to `kefir-hub` (D:\git\dev\kefir-hub, WSL /mnt/d/git/dev/kefir-hub); AGENTS.md, test-build and update-docs skills updated; a junction `D:\git\dev\sphaira` points to the new folder for old tooling. TegraExplorer Makefile/AGENTS.md follow. Product code unchanged.
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 
 ## v0.14.005 — Ask before deleting manually installed firmware folders
