@@ -29,7 +29,7 @@ docs saying otherwise is unfinished. This skill is the same for Codex, Gemini an
 | Emulator + screenshot tools | `tools/docs/eden.ps1` (record), `tools/docs/shoot.ps1` (replay per language), `tools/docs/web-shot.mjs`, `tools/docs/sync_site_shots.py` (to the site) |
 | Checks | `tests/test_doc_labels_contract.py`, `docs/site/build.sh`, `tools/docs/check_site_links.py` |
 | Local review for the owner | `docs/site/review.ps1` |
-| Online preview (proofreading, edit links) | https://customfw.xyz/kefir-hub/ (docs, branch `docs`) and `/guide/` (switch, branch `kefir-hub`); `.github/workflows/docs-preview.yml` |
+| Online docs + guide | https://hub.customfw.xyz/ (docs, branch `docs`) and `/guide/` (switch, branch `kefir-hub`); `.github/workflows/docs-preview.yml`. Publish = the owner runs `tools/docs/publish.cmd` (checks, pushes both, waits for the deploy) |
 
 UI names in pages are `[[en.json key]]`. The build replaces them with the app's own string in the page
 language (`docs/site/hooks/ui_labels.py`), so every language uses the production button names. Never write
