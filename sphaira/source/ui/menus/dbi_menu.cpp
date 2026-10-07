@@ -315,10 +315,15 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         return;
     }
 
-    const bool is_installing = (m_state.load() == State::Installing) && !WebShareIsRunning();
+    const auto state = m_state.load();
+    const bool is_installing = (state == State::Installing) && !WebShareIsRunning();
+    // A finished queue blanks the screen after a fixed minute without input; the
+    // user's inactivity timeout only applies while installing.
+    const int blank_phase = is_installing ? BlankPhase_Installing
+        : (state == State::Summary ? BlankPhase_Finished : BlankPhase_None);
     const bool is_saver_active = m_screensaver.IsActive();
     const double now_sec = m_inactivity_timestamp.GetSecondsD();
-    const long timeout_sec = App::GetBlankTimeout();
+    const long timeout_sec = blank_phase == BlankPhase_Finished ? kFinishedBlankTimeoutSec : App::GetBlankTimeout();
 
     TimeoutInput timeout_input{};
     if (controller) {
@@ -334,7 +339,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         timeout_input.is_clicked = touch->is_clicked;
     }
 
-    if (m_inactivity_tracker.Update(is_installing, is_saver_active, timeout_sec, timeout_input, now_sec)) {
+    if (m_inactivity_tracker.Update(blank_phase, is_saver_active, timeout_sec, timeout_input, now_sec)) {
         m_screensaver.Start();
         m_inactivity_tracker.Reset(now_sec);
     }

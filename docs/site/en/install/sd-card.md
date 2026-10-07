@@ -91,6 +91,10 @@ During a long queue, press **−** ([[Screen off]]). What happens depends on [[M
 
 Press any button or touch the screen to wake it. The install keeps running either way.
 
+When the whole queue has finished, Kefir Hub turns the screen off by itself after 60 seconds without input,
+in the same [[Minus button]] mode. Any button wakes it and the result screen is still there. Starting a new
+install stops that countdown.
+
 These settings are in the queue's [[Options]] → [[Screen off (Minus)]] and in [[Tools]] → [[Settings]] → [[Install]] → [[Screen off (Minus)]]:
 
 | Option | What it does | Default |

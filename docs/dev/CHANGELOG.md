@@ -19,6 +19,10 @@ Entries without a detail line are commit titles only; their verification state w
 - The main menu is built in English before the first language dialog, so its tiles kept English labels. After the first choice of a non-English language Kefir Hub now restarts itself once (config already saved); the same restart path as the Settings language change. EN/UK docs and video 01 scene 8 updated.
 - host tests: not needed (UI-only) · docs: built en/uk · nro: not built · switch: pending — fresh config, pick Ukrainian: whole main screen in Ukrainian after the automatic restart; second start keeps it; pick English: no restart.
 
+## v0.14.010 — Screen off one minute after the install queue finishes
+- The DBI install screen now arms the existing inactivity tracker in the Summary state with a fixed 60 s timeout: the finished queue blanks the screen in the configured Minus-button mode, any input wakes it and restarts the clock, a new install replaces it with the install-time rule. The clock restarts at the transition, so a long untouched install does not blank immediately. Tracker now takes a phase (none/installing/finished); host test extended. EN/UK docs updated.
+- host tests: pass (quick, screensaver_timeout) · docs: built en/uk, 0 unknown labels · nro: not built (v0.14.009 checkpoint built clean: build/ReleaseWithInstall/kefir-hub.nro, 0.14.009) · switch: pending — finish a queue, wait 60 s untouched: screen off; press a button at 50 s: restarts; new install during countdown: no blank; wake after blank: summary still shown.
+
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 

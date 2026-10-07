@@ -184,7 +184,7 @@ While the install queue runs, press **−** to darken the screen. These options 
 | Option | What it does | Default |
 |---|---|---|
 | [[Minus button]] | [[Lower brightness]], [[Turn off backlight]], or [[Screensaver]] (a black screen with a small moving readout). | [[Screensaver]] |
-| [[Inactivity timeout]] | Starts the screen-off mode by itself after no input for [[Off]], 30 s, 1, 2, 5 or 10 minutes during an install. | [[Off]] |
+| [[Inactivity timeout]] | Starts the screen-off mode by itself after no input for [[Off]], 30 s, 1, 2, 5 or 10 minutes during an install. After the queue has finished, the screen always turns off after 60 s without input. | [[Off]] |
 | [[Brightness]] | Panel brightness while the screen is lowered: 1–50 %. Ignored when the backlight is off. | 10 % |
 | [[OLED mode]] | Leaves the empty part of the progress bar black, so only useful pixels are lit. | On |
 | [[Preview]] | Shows the screensaver at its real brightness. Any button exits. | |

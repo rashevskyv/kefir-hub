@@ -25,23 +25,34 @@ inline bool HasUserActivity(const TimeoutInput& input, int32_t deadzone = 4000) 
     return false;
 }
 
+// When to blank the screen by itself.
+enum BlankPhase : int {
+    BlankPhase_None = 0,      // nothing running: never blank
+    BlankPhase_Installing = 1, // queue running: after the user's inactivity timeout
+    BlankPhase_Finished = 2,   // queue finished: after a fixed minute without input
+};
+
+inline constexpr long kFinishedBlankTimeoutSec = 60;
+
 class InactivityTracker {
 public:
     void Reset(double current_time_sec) {
         m_last_activity_sec = current_time_sec;
     }
 
-    void OnStateChange(bool is_installing, double current_time_sec) {
-        if (!m_was_installing && is_installing) {
+    // Entering a blanking phase restarts the idle clock, so a queue that ends after a
+    // long untouched install still waits the full finished timeout.
+    void OnStateChange(int phase, double current_time_sec) {
+        if (phase != BlankPhase_None && phase != m_phase) {
             m_last_activity_sec = current_time_sec;
         }
-        m_was_installing = is_installing;
+        m_phase = phase;
     }
 
-    bool Update(bool is_installing, bool is_saver_active, long timeout_sec, const TimeoutInput& input, double current_time_sec, int32_t deadzone = 4000) {
-        OnStateChange(is_installing, current_time_sec);
+    bool Update(int phase, bool is_saver_active, long timeout_sec, const TimeoutInput& input, double current_time_sec, int32_t deadzone = 4000) {
+        OnStateChange(phase, current_time_sec);
 
-        if (!is_installing) {
+        if (phase == BlankPhase_None) {
             return false;
         }
 
@@ -69,7 +80,7 @@ public:
 
 private:
     double m_last_activity_sec{0.0};
-    bool m_was_installing{false};
+    int m_phase{BlankPhase_None};
 };
 
 } // namespace sphaira::ui
