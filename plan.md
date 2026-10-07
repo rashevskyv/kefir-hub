@@ -338,7 +338,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.15 **Save folder restore without metadata** (JKSV/Checkpoint folders): when the game is installed, take the
       save size from its NACP instead of refusing with "Backup folder metadata is missing…" (only for a user with
       no save of that game yet). Found by the other session 2026-10-04; user agreed.
-- [ ] F.14b **System information as grouped tables** (user, 2026-10-07): groups open with A or a tap, rows are
+- [x] F.14b **System information as grouped tables** (user, 2026-10-07; v0.14.019): groups open with A or a tap, rows are
       parameter → value; every DBI field; real serial from PRODINFO / a backup with the source named, never a computed one.
 - [ ] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
       Entry: Console Transfer menu (+ installed game menu). Base, updates and DLC, installed on the other console.

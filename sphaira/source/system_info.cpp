@@ -1,187 +1,296 @@
 #include "system_info.hpp"
+#include "system_info_internal.hpp"
+#include "system_info_parse.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "fs.hpp"
 #include "i18n.hpp"
+#include "log.hpp"
 
 #include <switch.h>
-#include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 
 namespace sphaira::system_info {
 namespace {
 
-struct Report {
-    std::string text;
-
-    void Section(const char* title) {
-        if (!text.empty()) {
-            text += "\n";
-        }
-        const auto t = i18n::get(title);
-        text += t + "\n" + std::string(t.size(), '=') + "\n";
-    }
-    void Line(const char* label, const std::string& value) {
-        text += i18n::get(label) + ": " + value + "\n";
-    }
+// exosphere's ApiInfo config items (Atmosphère libstratosphere spl::ConfigItem).
+enum ExoConfigItem : u32 {
+    Exo_Version = 65000,
+    Exo_GitCommitHash = 65003,
+    Exo_HasRcmBugPatch = 65004,
+    Exo_BlankProdInfo = 65005,
+    Exo_AllowCalWrites = 65006,
+    Exo_EmummcType = 65007,
+    Exo_ForceEnableUsb30 = 65010,
+    Exo_SupportedHosVersion = 65011,
 };
 
-auto Fmt(const char* fmt, auto... args) -> std::string {
-    char buf[128];
-    std::snprintf(buf, sizeof(buf), fmt, args...);
-    return buf;
+auto GetSpl(u32 item, u64& out) -> bool {
+    return R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(item), &out));
 }
 
 auto Mac(const u8* a) -> std::string {
     return Fmt("%02X:%02X:%02X:%02X:%02X:%02X", a[0], a[1], a[2], a[3], a[4], a[5]);
 }
 
-auto YesNo(bool v) -> std::string {
-    return v ? "Yes"_i18n : "No"_i18n;
+// the first PRODINFO_MIN_READ bytes of a file, or empty.
+auto ReadHead(fs::Fs& fs, const fs::FsPath& path, std::vector<u8>& out) -> bool {
+    fs::File file;
+    if (R_FAILED(fs.OpenFile(path, FsOpenMode_Read, &file))) {
+        return false;
+    }
+    out.resize(PRODINFO_MIN_READ);
+    u64 bytes_read{};
+    if (R_FAILED(file.Read(0, out.data(), out.size(), FsReadOption_None, &bytes_read)) || bytes_read != out.size()) {
+        out.clear();
+        return false;
+    }
+    return true;
 }
 
-void Firmware(Report& r) {
-    r.Section("Firmware");
+// a PRODINFO backup with a real serial under `dir`: Atmosphère writes
+// automatic_backups/<serial>_PRODINFO.bin, hekate writes backup/<id>/PRODINFO
+// (or partitions/PRODINFO). Any file whose name says PRODINFO is tried; the
+// content decides, so a BLANK_PRODINFO_*.bin backup never supplies a serial.
+auto SerialFromBackupDir(fs::Fs& fs, const std::string& dir, int depth, std::string& out_path) -> std::string {
+    fs::Dir d;
+    std::vector<FsDirectoryEntry> entries;
+    if (R_FAILED(fs.OpenDirectory(fs::FsPath{dir}, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d))) {
+        return {};
+    }
+    d.ReadAll(entries);
+
+    std::vector<u8> head;
+    for (const auto& e : entries) {
+        const auto path = dir + "/" + e.name;
+        if (e.type == FsDirEntryType_File) {
+            if (!std::strstr(e.name, "PRODINFO")) {
+                continue;
+            }
+            if (ReadHead(fs, fs::FsPath{path}, head)) {
+                if (auto serial = SerialFromProdinfo(head); !serial.empty()) {
+                    out_path = path;
+                    return serial;
+                }
+            }
+        } else if (e.type == FsDirEntryType_Dir && depth > 0) {
+            if (auto serial = SerialFromBackupDir(fs, path, depth - 1, out_path); !serial.empty()) {
+                return serial;
+            }
+        }
+    }
+    return {};
+}
+
+struct SerialInfo {
+    std::string serial;   // the real one, or ""
+    std::string source;   // translated, where it came from
+    std::string system;   // what settings returned, verbatim (shown when blank)
+};
+
+// the console's serial, from the first source that has a real one: system
+// settings; the raw PRODINFO partition; a backup on the SD card. The source
+// is named next to the number, and a number is never derived or guessed.
+auto FindSerial() -> SerialInfo {
+    SerialInfo info{};
+
+    SetSysSerialNumber sys{};
+    if (R_SUCCEEDED(setsysGetSerialNumber(&sys))) {
+        info.system = std::string{TrimSerial(std::string_view{sys.number, strnlen(sys.number, sizeof(sys.number))})};
+        if (IsRealSerial(info.system)) {
+            info.serial = info.system;
+            info.source = "System settings"_i18n;
+            return info;
+        }
+    }
+
+    FsStorage cal0{};
+    if (R_SUCCEEDED(fsOpenBisStorage(&cal0, FsBisPartitionId_CalibrationBinary))) {
+        std::vector<u8> head(PRODINFO_MIN_READ);
+        const auto rc = fsStorageRead(&cal0, 0, head.data(), head.size());
+        fsStorageClose(&cal0);
+        if (R_SUCCEEDED(rc)) {
+            if (auto serial = SerialFromProdinfo(head); !serial.empty()) {
+                info.serial = serial;
+                info.source = "PRODINFO partition"_i18n;
+                return info;
+            }
+        }
+    }
+
+    fs::FsNativeSd sd;
+    std::string path;
+    std::string serial = SerialFromBackupDir(sd, "/atmosphere/automatic_backups", 0, path);
+    if (serial.empty()) {
+        serial = SerialFromBackupDir(sd, "/backup", 2, path);
+    }
+    if (!serial.empty()) {
+        info.serial = serial;
+        info.source = "Backup file"_i18n + ": " + path;
+        return info;
+    }
+
+    u64 blank{};
+    info.source = GetSpl(Exo_BlankProdInfo, blank) && blank ? "Hidden by Atmosphere (blank_prodinfo)"_i18n : "Not found"_i18n;
+    return info;
+}
+
+} // namespace
+
+auto CollectConsole() -> Group {
+    GroupBuilder g{"Console"};
+
     SetSysFirmwareVersion fw{};
     if (R_SUCCEEDED(setsysGetFirmwareVersion(&fw))) {
-        r.Line("Version", fw.display_version);
-        r.Line("Name", fw.display_title);
-        r.Line("Version hash", fw.version_hash);
+        g.Line("Firmware", fw.display_version);
+        g.Line("Firmware name", fw.display_title);
+        g.Line("Firmware hash", fw.version_hash);
     }
+
     u64 v{};
-    if (R_SUCCEEDED(splGetConfig(SplConfigItem_HardwareType, &v))) {
-        static constexpr const char* types[] = {"Icosa (Erista)", "Copper", "Hoag (Lite)", "Iowa (Mariko)", "Calcio", "Aula (OLED)"};
-        r.Line("Hardware", v < std::size(types) ? types[v] : Fmt("%lu", v));
+    SetSysProductModel model{};
+    if (R_SUCCEEDED(setsysGetProductModel(&model))) {
+        static constexpr const char* models[] = {"Unknown", "Nintendo Switch (Erista)", "Copper (development)", "Nintendo Switch (Mariko)", "Nintendo Switch Lite", "Calcio (development)", "Nintendo Switch OLED"};
+        g.Line("Model", static_cast<size_t>(model) < std::size(models) ? i18n::get(models[model]) : Fmt("%d", (int)model));
     }
-    if (R_SUCCEEDED(splGetConfig(SplConfigItem_IsRetail, &v))) {
-        r.Line("Unit", v ? "Retail"_i18n : "Development"_i18n);
+    if (GetSpl(SplConfigItem_HardwareType, v)) {
+        static constexpr const char* types[] = {"Icosa", "Copper", "Hoag", "Iowa", "Calcio", "Aula"};
+        g.Line("Hardware type", v < std::size(types) ? types[v] : Fmt("%lu", v));
+        g.Line("SoC", v == 0 || v == 1 ? "Tegra X1 (Erista)" : "Tegra X1+ (Mariko)");
     }
-    if (R_SUCCEEDED(splGetConfig(SplConfigItem_DramId, &v))) {
-        r.Line("DRAM id", Fmt("%lu", v));
+    if (GetSpl(SplConfigItem_IsRetail, v)) {
+        g.Line("Unit", v ? "Retail"_i18n : "Development"_i18n);
     }
-    if (R_SUCCEEDED(splGetConfig(SplConfigItem_DeviceId, &v))) {
-        r.Line("Device id", Fmt("%016lX", v));
+    if (GetSpl(SplConfigItem_Version, v)) {
+        g.Line("Burnt fuses", Fmt("%lu", v));
     }
-    SetSysSerialNumber serial{};
-    if (R_SUCCEEDED(setsysGetSerialNumber(&serial))) {
-        r.Line("Serial number", serial.number);
+    if (GetSpl(SplConfigItem_DramId, v)) {
+        g.Line("DRAM id", Fmt("%lu", v));
     }
+    if (GetSpl(SplConfigItem_DeviceId, v)) {
+        g.Line("Device id", Fmt("%016lX", v));
+    }
+    if (GetSpl(SplConfigItem_IsKiosk, v)) {
+        g.Line("Kiosk unit", YesNo(v));
+    }
+    if (GetSpl(SplConfigItem_IsChargerHiZModeEnabled, v)) {
+        g.Line("Charger HiZ mode", v ? "On"_i18n : "Off"_i18n);
+    }
+
+    const auto serial = FindSerial();
+    g.Line("Serial number", serial.serial.empty() ? "Not available"_i18n : serial.serial);
+    g.Line("Serial number source", serial.source);
+    if (!serial.system.empty() && serial.system != serial.serial) {
+        g.Line("Serial number (system)", serial.system + " (" + "blank"_i18n + ")");
+    }
+
     SetSysDeviceNickName nick{};
     if (R_SUCCEEDED(setsysGetDeviceNickname(&nick))) {
-        r.Line("Console nickname", nick.nickname);
+        g.Line("Console nickname", nick.nickname);
     }
     u64 lang{};
     if (R_SUCCEEDED(setGetSystemLanguage(&lang))) {
         char code[9]{};
         std::memcpy(code, &lang, 8);
-        r.Line("Language", code);
+        g.Line("Language", code);
     }
     SetRegion region{};
     if (R_SUCCEEDED(setGetRegionCode(&region))) {
         static constexpr const char* regions[] = {"Japan", "USA", "Europe", "Australia", "Hong Kong / Taiwan / Korea", "China"};
-        r.Line("Region", static_cast<size_t>(region) < std::size(regions) ? regions[region] : Fmt("%d", (int)region));
+        g.Line("Region", static_cast<size_t>(region) < std::size(regions) ? i18n::get(regions[region]) : Fmt("%d", (int)region));
     }
     if (R_SUCCEEDED(pctlInitialize())) {
         bool restricted{};
         if (R_SUCCEEDED(pctlIsRestrictionEnabled(&restricted))) {
-            r.Line("Parental controls", restricted ? "On"_i18n : "Off"_i18n);
+            g.Line("Parental controls", restricted ? "On"_i18n : "Off"_i18n);
         }
         pctlExit();
     }
+    return g.group;
 }
 
-void Atmosphere(Report& r) {
-    r.Section("Atmosphere");
+auto CollectAtmosphere() -> Group {
+    GroupBuilder g{"Atmosphere"};
     u64 v{};
-    if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65000), &v))) {
-        r.Line("Version", Fmt("%lu.%lu.%lu", (v >> 56) & 0xFF, (v >> 48) & 0xFF, (v >> 40) & 0xFF));
-        r.Line("Target firmware", Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
-        r.Line("Key generation", Fmt("%lu", (v >> 32) & 0xFF));
+    if (GetSpl(Exo_Version, v)) {
+        g.Line("Version", Fmt("%lu.%lu.%lu", (v >> 56) & 0xFF, (v >> 48) & 0xFF, (v >> 40) & 0xFF));
+        g.Line("Key generation", Fmt("%lu", (v >> 32) & 0xFF));
+        g.Line("Target firmware", Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
     }
-    if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65003), &v))) {
-        r.Line("Git commit", Fmt("%016lX", v));
+    if (GetSpl(Exo_SupportedHosVersion, v)) {
+        g.Line("Supported firmware", Fmt("%lu.%lu.%lu", (v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF));
     }
-    if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65004), &v))) {
-        r.Line("RCM bug patched", YesNo(v));
+    if (GetSpl(Exo_GitCommitHash, v)) {
+        g.Line("Git commit", Fmt("%016lX", v));
     }
-    r.Line("emuMMC", YesNo(App::IsEmummc()));
-    if (R_SUCCEEDED(splGetConfig(static_cast<SplConfigItem>(65010), &v))) {
-        r.Line("USB 3.0 forced", YesNo(v));
+    if (GetSpl(Exo_HasRcmBugPatch, v)) {
+        g.Line("RCM bug patched", YesNo(v));
     }
+    if (GetSpl(Exo_EmummcType, v)) {
+        static constexpr const char* types[] = {"No", "Yes (partition)", "Yes (file)"};
+        g.Line("emuMMC", v < std::size(types) ? i18n::get(types[v]) : Fmt("%lu", v));
+    } else {
+        g.Line("emuMMC", YesNo(App::IsEmummc()));
+    }
+    if (GetSpl(Exo_BlankProdInfo, v)) {
+        g.Line("Blank PRODINFO", v ? "On"_i18n : "Off"_i18n);
+    }
+    if (GetSpl(Exo_AllowCalWrites, v)) {
+        g.Line("PRODINFO writes allowed", YesNo(v));
+    }
+    if (GetSpl(Exo_ForceEnableUsb30, v)) {
+        g.Line("USB 3.0 forced", YesNo(v));
+    }
+    return g.group;
 }
 
-void Battery(Report& r) {
-    if (R_FAILED(psmInitialize())) {
-        return;
-    }
-    ON_SCOPE_EXIT(psmExit());
-    r.Section("Battery and power");
-    u32 percent{};
-    if (R_SUCCEEDED(psmGetBatteryChargePercentage(&percent))) {
-        r.Line("Charge", Fmt("%u%%", percent));
-    }
-    double d{};
-    if (R_SUCCEEDED(psmGetRawBatteryChargePercentage(&d))) {
-        r.Line("Charge (raw)", Fmt("%.2f%%", d));
-    }
-    if (R_SUCCEEDED(psmGetBatteryAgePercentage(&d))) {
-        r.Line("Battery health", Fmt("%.1f%%", d));
-    }
-    PsmChargerType charger{};
-    if (R_SUCCEEDED(psmGetChargerType(&charger))) {
-        static constexpr const char* chargers[] = {"Not connected", "Official charger", "Low power charger", "Unsupported charger"};
-        r.Line("Charger", static_cast<size_t>(charger) < std::size(chargers) ? i18n::get(chargers[charger]) : Fmt("%d", (int)charger));
-    }
-    if (hosversionAtLeast(17, 0, 0)) {
-        PsmBatteryChargeInfoFields f{};
-        if (R_SUCCEEDED(psmGetBatteryChargeInfoFields(&f))) {
-            r.Line("Charging", YesNo(f.battery_charging));
-            r.Line("Battery temperature", Fmt("%.1f °C", f.temperature_celcius / 1000.0));
-            r.Line("Battery voltage", Fmt("%u mV", f.battery_charge_milli_voltage));
-            r.Line("Input current limit", Fmt("%u mA", f.input_current_limit));
-            r.Line("Fast charge current limit", Fmt("%u mA", f.fast_charge_current_limit));
-            r.Line("Charge voltage limit", Fmt("%u mV", f.charge_voltage_limit));
-            r.Line("Power source voltage", Fmt("%u mV", f.charger_input_voltage_limit));
-            r.Line("Power source current", Fmt("%u mA", f.charger_input_current_limit));
-        }
-    }
-}
-
-void Hardware(Report& r) {
+auto CollectHardware() -> Group {
+    GroupBuilder g{"Hardware"};
     if (R_FAILED(setcalInitialize())) {
-        return;
+        return g.group;
     }
     ON_SCOPE_EXIT(setcalExit());
-    r.Section("Hardware");
+
     SetCalBdAddress bt{};
     if (R_SUCCEEDED(setcalGetBdAddress(&bt))) {
-        r.Line("Bluetooth MAC", Mac(bt.bd_addr));
+        g.Line("Bluetooth MAC", Mac(bt.bd_addr));
     }
     SetCalMacAddress wlan{};
     if (R_SUCCEEDED(setcalGetWirelessLanMacAddress(&wlan))) {
-        r.Line("Wi-Fi MAC", Mac(wlan.addr));
+        g.Line("Wi-Fi MAC", Mac(wlan.addr));
     }
     SetCalConfigurationId1 cfg{};
     if (R_SUCCEEDED(setcalGetConfigurationId1(&cfg))) {
-        r.Line("Configuration id", std::string(reinterpret_cast<const char*>(cfg.cfg), strnlen(reinterpret_cast<const char*>(cfg.cfg), sizeof(cfg.cfg))));
+        const auto* s = reinterpret_cast<const char*>(cfg.cfg);
+        g.Line("Configuration id", std::string(s, strnlen(s, sizeof(cfg.cfg))));
     }
     SetBatteryLot lot{};
     if (R_SUCCEEDED(setcalGetBatteryLot(&lot))) {
-        r.Line("Battery lot", std::string(lot.lot, strnlen(lot.lot, sizeof(lot.lot))));
+        g.Line("Battery lot", std::string(lot.lot, strnlen(lot.lot, sizeof(lot.lot))));
     }
+    SetCalSerialNumber serial{};
+    if (R_SUCCEEDED(setcalGetSerialNumber(&serial))) {
+        const std::string_view s{serial.number, strnlen(serial.number, sizeof(serial.number))};
+        g.Line("Serial number (calibration)", IsRealSerial(s) ? std::string{TrimSerial(s)} : std::string{TrimSerial(s)} + " (" + "blank"_i18n + ")");
+    }
+    return g.group;
 }
 
-} // namespace
+auto Collect() -> std::vector<Group> {
+    std::vector<Group> groups;
+    const bool spl = R_SUCCEEDED(splInitialize());
+    ON_SCOPE_EXIT(if (spl) splExit());
 
-auto BuildReport() -> std::string {
-    Report r;
-    splInitialize();
-    ON_SCOPE_EXIT(splExit());
-    Firmware(r);
-    Atmosphere(r);
-    Battery(r);
-    Hardware(r);
-    return r.text;
+    for (auto* collect : {CollectConsole, CollectAtmosphere, CollectStorage, CollectPower, CollectBattery, CollectHardware, CollectPlayActivity}) {
+        auto group = collect();
+        if (!group.rows.empty()) {
+            groups.push_back(std::move(group));
+        }
+    }
+    log_write("[SYSINFO] %zu groups\n", groups.size());
+    return groups;
 }
 
 } // namespace sphaira::system_info

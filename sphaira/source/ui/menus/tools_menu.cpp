@@ -19,8 +19,7 @@
 #include "ui/option_box.hpp"
 #include "haze_helper.hpp"
 #include "system_cleanup.hpp"
-#include "system_info.hpp"
-#include "ui/menus/file_viewer.hpp"
+#include "ui/menus/system_info_menu.hpp"
 #include "ui/menus/grid_menu_base.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -109,19 +108,6 @@ auto LoadIcon(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
-}
-
-void OpenSystemInfo() {
-    const auto text = system_info::BuildReport();
-    fs::FsNativeSd sd;
-    sd.CreateDirectoryRecursivelyWithPath(system_info::REPORT_PATH);
-    const std::vector<u8> data(text.begin(), text.end());
-    if (R_FAILED(sd.write_entire_file(system_info::REPORT_PATH, data))) {
-        App::Notify("Could not save the report"_i18n);
-        return;
-    }
-    // nullptr: the viewer uses its own sd fs (sd above dies with this function).
-    App::Push<fileview::Menu>(nullptr, system_info::REPORT_PATH, fileview::TextMode::View, false);
 }
 
 void OpenCleanup() {
@@ -451,7 +437,7 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
     // one list, three captions. The cursor steps over the captions.
     m_items = {
         settings::MakeHeader("Diagnostics"_i18n),
-        Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, OpenSystemInfo),
+        Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, sysinfo::Open),
         settings::MakeHeader("Settings"_i18n),
         Tool("Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
