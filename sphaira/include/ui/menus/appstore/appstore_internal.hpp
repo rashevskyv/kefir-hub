@@ -2,6 +2,7 @@
 
 #include "ui/menus/appstore.hpp"
 #include "ui/nvg_util.hpp"
+#include "app_paths.hpp"
 #include <string>
 #include <vector>
 #include <span>
@@ -12,10 +13,9 @@ namespace sphaira::ui {
 
 namespace sphaira::ui::menu::appstore {
 
-inline constexpr fs::FsPath REPO_PATH{"/switch/sphaira/cache/appstore/repo.json"};
 inline constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/appstore"};
-inline constexpr auto URL_BASE = "https://switch.cdn.fortheusers.org";
-inline constexpr auto URL_JSON = "https://switch.cdn.fortheusers.org/repo.json";
+// extra sources added by the user, see AppendSourceList().
+inline const std::string SOURCES_PATH = paths::DATA_ROOT + "/appstore_sources.txt";
 inline constexpr auto URL_POST_FEEDBACK = "http://switchbru.com/appstore/feedback";
 inline constexpr auto URL_GET_FEEDACK = "http://switchbru.com/appstore/feedback";
 
@@ -44,6 +44,7 @@ inline constexpr const char* FILTER_STR[] = {
     "Themes",
     "Legacy",
     "Misc",
+    "Recompiles",
 };
 
 inline constexpr const char* SORT_STR[] = {
@@ -63,6 +64,10 @@ auto BuildIconUrl(const Entry& e) -> std::string;
 auto BuildBannerUrl(const Entry& e) -> std::string;
 auto BuildManifestUrl(const Entry& e) -> std::string;
 auto BuildZipUrl(const Entry& e) -> std::string;
+
+// Sources
+auto LoadSources() -> std::vector<std::string>; // defaults + SOURCES_PATH
+auto BuildRepoCachePath(u32 source) -> fs::FsPath; // repo.json of source N
 
 // Cache path builders
 auto BuildIconCachePath(const Entry& e) -> fs::FsPath;

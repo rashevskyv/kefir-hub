@@ -20,7 +20,9 @@
 
 ## [[Homebrew App Store]]
 
-Список застосунків береться з Homebrew App Store (fortheusers.org).
+Список застосунків береться з двох джерел: Homebrew App Store (fortheusers.org) і магазин Kefir з рекомпайлами
+ПК-ігор для Switch (категорія [[Recompiles]]). Обидва списки показуються разом. Якщо одне джерело недоступне,
+його застосунки лишаються з останнього завантаженого списку.
 
 **Де:** [[Tools]] → [[Software]] → [[Homebrew App Store]]
 
@@ -58,13 +60,28 @@
 
 | Параметр | Що робить | За замовчуванням |
 |---|---|---|
-| [[Filter]] | Показати одну категорію: [[All]], [[Games]], [[Emulators]], [[Tools]], [[Advanced]], [[Themes]], [[Legacy]], [[Misc]]. | [[All]] |
+| [[Filter]] | Показати одну категорію: [[All]], [[Games]], [[Emulators]], [[Tools]], [[Advanced]], [[Themes]], [[Legacy]], [[Misc]], [[Recompiles]]. | [[All]] |
 | [[Sort]] | [[Updated]], [[Downloads]], [[Size]] або [[Alphabetical]]. | [[Updated]] |
 | [[Order]] | [[Descending]] або [[Ascending]]. | [[Descending]] |
 | [[Layout]] | [[Icon]], [[Grid]] або [[HB Menu]]. | [[Grid]] |
 | [[Search]] | Пошук за назвою чи ключовим словом. Щоб вийти з результатів пошуку, натисніть **B**. | — |
 
 [[More by Author]] на сторінці застосунку показує всі застосунки того самого автора. Щоб повернутися до повного списку, натисніть **B**.
+
+### Додати свій магазин
+
+Kefir Hub читає додаткові магазини з файлу `/config/kefir/appstore_sources.txt` на картці памʼяті. Пишіть одну
+адресу магазину в рядку. Рядок, що починається з `#`, є коментарем.
+
+```
+# мої магазини
+https://example.org/switch-store
+```
+
+Магазин — це тека на вебсервері з розкладкою Homebrew App Store: `repo.json`, `packages/<name>/icon.png` і
+`zips/<name>.zip`. Запис у `repo.json` може також мати власні `download` (пряме посилання на zip) та `icon`
+(пряме посилання на іконку). Інструмент `tools/recompile-store` у репозиторії Kefir Hub збирає такий магазин
+з релізів GitHub. Після зміни файлу перезапустіть Kefir Hub.
 
 ## [[DBI]]
 

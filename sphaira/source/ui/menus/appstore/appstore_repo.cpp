@@ -19,22 +19,38 @@
 #include <vector>
 
 namespace sphaira::ui::menu::appstore {
-auto BuildIconUrl(const Entry& e) -> std::string {
-    char out[0x100];
-    std::snprintf(out, sizeof(out), "%s/packages/%s/icon.png", URL_BASE, e.name.c_str());
+auto LoadSources() -> std::vector<std::string> {
+    auto sources = DefaultSources();
+    std::vector<u8> text;
+    if (R_SUCCEEDED(fs::read_entire_file(SOURCES_PATH, text))) {
+        AppendSourceList(std::string_view{(const char*)text.data(), text.size()}, sources);
+    }
+    return sources;
+}
+
+auto BuildRepoCachePath(u32 source) -> fs::FsPath {
+    fs::FsPath out;
+    if (!source) { // keep the old cache file name for the first source
+        std::snprintf(out, sizeof(out), "%s/repo.json", CACHE_PATH.s);
+    } else {
+        std::snprintf(out, sizeof(out), "%s/repo_%u.json", CACHE_PATH.s, source);
+    }
     return out;
+}
+
+auto BuildIconUrl(const Entry& e) -> std::string {
+    if (!e.icon.empty()) {
+        return e.icon;
+    }
+    return e.base_url + "/packages/" + e.name + "/icon.png";
 }
 
 auto BuildBannerUrl(const Entry& e) -> std::string {
-    char out[0x100];
-    std::snprintf(out, sizeof(out), "%s/packages/%s/screen.png", URL_BASE, e.name.c_str());
-    return out;
+    return e.base_url + "/packages/" + e.name + "/screen.png";
 }
 
 auto BuildManifestUrl(const Entry& e) -> std::string {
-    char out[0x100];
-    std::snprintf(out, sizeof(out), "%s/packages/%s/manifest.install", URL_BASE, e.name.c_str());
-    return out;
+    return e.base_url + "/packages/" + e.name + "/manifest.install";
 }
 
 auto IsRetroArchPackage(const Entry& e) -> bool {
@@ -42,7 +58,7 @@ auto IsRetroArchPackage(const Entry& e) -> bool {
 }
 
 auto BuildZipUrl(const Entry& e) -> std::string {
-    return ResolveAppstoreZipUrl(e.name, e.title, URL_BASE);
+    return ResolveAppstoreZipUrl(e.name, e.title, e.base_url, e.download);
 }
 
 auto BuildIconCachePath(const Entry& e) -> fs::FsPath {
@@ -101,6 +117,8 @@ void from_json(yyjson_val* json, Entry& e) {
         JSON_SET_STR(details);
         JSON_SET_UINT(app_dls);
         JSON_SET_STR(md5);
+        JSON_SET_STR(download);
+        JSON_SET_STR(icon);
     );
 }
 

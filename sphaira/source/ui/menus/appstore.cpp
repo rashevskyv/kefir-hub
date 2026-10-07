@@ -76,6 +76,7 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             filter_items.push_back("Themes"_i18n);
             filter_items.push_back("Legacy"_i18n);
             filter_items.push_back("Misc"_i18n);
+            filter_items.push_back("Recompiles"_i18n);
 
             SidebarEntryArray::Items sort_items;
             sort_items.push_back("Updated"_i18n);
@@ -127,23 +128,32 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
         }})
     );
 
+    // every source is fetched at once; the list is built when the last one answers.
+    // a source that fails keeps its cached repo file, so it still shows up offline.
+    m_sources = LoadSources();
+    m_repo_pending = m_sources.size();
     m_repo_download_state = ImageDownloadState::Progress;
-    curl::Api().ToFileAsync(
-        curl::Url{URL_JSON},
-        curl::Path{REPO_PATH},
-        curl::Flags{curl::Flag_Cache},
-        curl::StopToken{this->GetToken()},
-        curl::OnComplete{[this](auto& result){
-            if (result.success) {
-                m_repo_download_state = ImageDownloadState::Done;
-                if (HasFocus()) {
+    for (u32 i = 0; i < m_sources.size(); i++) {
+        curl::Api().ToFileAsync(
+            curl::Url{m_sources[i] + "/repo.json"},
+            curl::Path{BuildRepoCachePath(i)},
+            curl::Flags{curl::Flag_Cache},
+            curl::StopToken{this->GetToken()},
+            curl::OnComplete{[this, i](auto& result){
+                if (!result.success) {
+                    log_write("appstore source %u failed: %s\n", i, m_sources[i].c_str());
+                }
+                m_repo_any_ok |= result.success;
+                if (--m_repo_pending) {
+                    return;
+                }
+                m_repo_download_state = m_repo_any_ok ? ImageDownloadState::Done : ImageDownloadState::Failed;
+                if (m_repo_any_ok && HasFocus()) {
                     ScanHomebrew();
                 }
-            } else {
-                m_repo_download_state = ImageDownloadState::Failed;
             }
-        }
-    });
+        });
+    }
 
     OnLayoutChange();
 }

@@ -1,0 +1,14 @@
+{
+  "_comment": "One object per recompile. repo = GitHub owner/name. asset = regex over release asset names (default: first .nro or .zip). install_dir = where a bare .nro or a non-rooted zip goes (default /switch/<name>). icon = direct png link (optional). Game assets stay the user's job.",
+  "packages": [
+    {
+      "name": "example-port",
+      "title": "Example Port",
+      "repo": "owner/example-port",
+      "asset": "\\.nro$",
+      "install_dir": "/switch/example-port",
+      "description": "PC port recompiled for Switch. Copy the game files next to the .nro.",
+      "icon": "https://raw.githubusercontent.com/owner/example-port/main/icon.png"
+    }
+  ]
+}

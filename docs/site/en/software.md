@@ -20,7 +20,9 @@ All items need an internet connection.
 
 ## [[Homebrew App Store]]
 
-The app list comes from the Homebrew App Store (fortheusers.org).
+The app list comes from two sources: the Homebrew App Store (fortheusers.org) and the Kefir store with recompiled
+PC ports for Switch (category [[Recompiles]]). Both lists are shown together. An app from one source that is offline
+stays visible from the last downloaded list.
 
 **Where:** [[Tools]] → [[Software]] → [[Homebrew App Store]]
 
@@ -58,13 +60,28 @@ Press **+** ([[AppStore Options]]) in the list.
 
 | Option | What it does | Default |
 |---|---|---|
-| [[Filter]] | Show one category: [[All]], [[Games]], [[Emulators]], [[Tools]], [[Advanced]], [[Themes]], [[Legacy]], [[Misc]]. | [[All]] |
+| [[Filter]] | Show one category: [[All]], [[Games]], [[Emulators]], [[Tools]], [[Advanced]], [[Themes]], [[Legacy]], [[Misc]], [[Recompiles]]. | [[All]] |
 | [[Sort]] | [[Updated]], [[Downloads]], [[Size]] or [[Alphabetical]]. | [[Updated]] |
 | [[Order]] | [[Descending]] or [[Ascending]]. | [[Descending]] |
 | [[Layout]] | [[Icon]], [[Grid]] or [[HB Menu]]. | [[Grid]] |
 | [[Search]] | Search by name or keyword. Press **B** to leave the search results. | — |
 
 [[More by Author]] on an app page shows all apps by the same author. Press **B** to return to the full list.
+
+### Add your own store
+
+Kefir Hub reads extra stores from the file `/config/kefir/appstore_sources.txt` on the memory card. Write one store
+address per line. A line that starts with `#` is a comment.
+
+```
+# my stores
+https://example.org/switch-store
+```
+
+A store is a folder on a web server with the Homebrew App Store layout: `repo.json`, `packages/<name>/icon.png` and
+`zips/<name>.zip`. An entry in `repo.json` may also name its own `download` (direct link to the zip) and `icon`
+(direct link to the icon). The tool `tools/recompile-store` in the Kefir Hub repository builds such a store from
+GitHub releases. Restart Kefir Hub after you change the file.
 
 ## [[DBI]]
 

@@ -60,6 +60,9 @@ struct Entry {
     std::string details{};
     u64 app_dls{};
     std::string md5{}; // md5 of the zip
+    std::string download{}; // optional direct zip url, else <base_url>/zips/<name>.zip
+    std::string icon{}; // optional direct icon url, else <base_url>/packages/<name>/icon.png
+    std::string base_url{}; // source this entry came from
 
     LazyImage image{};
     u32 updated_num{};
@@ -125,6 +128,7 @@ enum Filter {
     Filter_Themes,
     Filter_Legacy,
     Filter_Misc,
+    Filter_Recompiles,
     Filter_MAX,
 };
 
@@ -177,6 +181,7 @@ private:
 private:
     static constexpr inline const char* INI_SECTION = "appstore";
 
+    std::vector<std::string> m_sources{}; // base urls, index = repo cache file number
     std::vector<Entry> m_entries{};
     std::vector<EntryMini> m_entries_index[Filter_MAX]{};
     std::vector<EntryMini> m_entries_index_author{};
@@ -195,6 +200,8 @@ private:
     LazyImage m_local{};
     LazyImage m_installed{};
     ImageDownloadState m_repo_download_state{ImageDownloadState::None};
+    u32 m_repo_pending{}; // source downloads still running (callbacks run on the ui thread)
+    bool m_repo_any_ok{};
     std::unique_ptr<List> m_list{};
 
     std::string m_search_term{};

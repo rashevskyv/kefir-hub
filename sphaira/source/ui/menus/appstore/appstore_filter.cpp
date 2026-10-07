@@ -20,7 +20,15 @@ void Menu::ScanHomebrew() {
     App::SetBoostMode(true);
     ON_SCOPE_EXIT(App::SetBoostMode(false));
 
-    from_json(REPO_PATH, m_entries);
+    for (u32 s = 0; s < m_sources.size(); s++) {
+        std::vector<Entry> part;
+        from_json(BuildRepoCachePath(s), part);
+        for (auto& e : part) {
+            e.base_url = m_sources[s];
+        }
+        // ponytail: names are assumed unique across sources (cache and install dirs are keyed by name).
+        m_entries.insert(m_entries.end(), std::make_move_iterator(part.begin()), std::make_move_iterator(part.end()));
+    }
 
     fs::FsNativeSd fs;
     if (R_FAILED(fs.GetFsOpenResult())) {
@@ -50,6 +58,8 @@ void Menu::ScanHomebrew() {
             m_entries_index[Filter_Themes].push_back(i);
         } else if (e.category == std::string_view{"legacy"}) {
             m_entries_index[Filter_Legacy].push_back(i);
+        } else if (e.category == std::string_view{"recompile"}) {
+            m_entries_index[Filter_Recompiles].push_back(i);
         } else {
             m_entries_index[Filter_Misc].push_back(i);
         }
