@@ -2947,5 +2947,7 @@
   "Cancel operation": "Atšaukti operaciją",
   " Â· no play hours": " · nėra žaidimo valandų",
   "Save slot creation is only supported for Account saves.": "Išsaugojimo lizdo kūrimas palaikomas tik paskyros išsaugojimams.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Išsaugojimo vietos kūrimas palaikomas tik paskyros, įrenginio ir BCAT išsaugojimams."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Išsaugojimo vietos kūrimas palaikomas tik paskyros, įrenginio ir BCAT išsaugojimams.",
+  "32-bit": "32 bitų",
+  "32-bit (no alias)": "32 bitų (be aliaso)"
 }

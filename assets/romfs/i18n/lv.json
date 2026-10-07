@@ -2947,5 +2947,7 @@
   "Cancel operation": "Atcelt operāciju",
   " Â· no play hours": " · nav spēles stundu",
   "Save slot creation is only supported for Account saves.": "Saglabāšanas vietas izveide tiek atbalstīta tikai konta saglabātajiem datiem.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Saglabāšanas vietu izveide tiek atbalstīta tikai konta, ierīces un BCAT saglabāšanai."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Saglabāšanas vietu izveide tiek atbalstīta tikai konta, ierīces un BCAT saglabāšanai.",
+  "32-bit": "32 bitu",
+  "32-bit (no alias)": "32-bitu (bez alias)"
 }

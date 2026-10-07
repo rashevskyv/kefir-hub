@@ -85,6 +85,7 @@ Menu::~Menu() {
     m_stop_source.request_stop();
     m_page_stop.request_stop();
     m_connect_stop.request_stop();
+    m_connect_async.reset();
 }
 
 void Menu::SetMode(Mode mode) {

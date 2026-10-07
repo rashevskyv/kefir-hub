@@ -9,10 +9,14 @@
 
 namespace sphaira {
 
-// npdm meta flags, bits 1-3 (ProcessAddressSpace).
+// npdm meta flags, bits 1-3 (ProcessAddressSpace). The 32-bit spaces start at
+// 0x00200000 rather than 0x08000000, which lets homebrew (Wine-NX, Box64) map a
+// fixed low image base; they cap total VA at 4 GiB.
 enum class ForwarderAddressSpace : u8 {
-    Bit36 = 1, // AddressSpace64BitOld, what the hbl npdm ships with.
-    Bit39 = 3, // AddressSpace64Bit, needed by homebrew that wants more va space.
+    Bit32 = 0,        // AddressSpace32Bit
+    Bit36 = 1,        // AddressSpace64BitOld, what the hbl npdm ships with.
+    Bit32NoAlias = 2, // AddressSpace32BitNoReserved
+    Bit39 = 3,        // AddressSpace64Bit, needed by homebrew that wants more va space.
 };
 
 // the kac ForceDebug bit. automatic follows the ams version, see patch_npdm().

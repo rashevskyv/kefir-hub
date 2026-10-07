@@ -2953,5 +2953,7 @@
   "Cancel operation": "Cancelar operación",
   " Â· no play hours": " · sin horas de juego",
   "Save slot creation is only supported for Account saves.": "La creación de espacios de guardado solo es compatible con partidas de cuentas.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "La creación de espacios de guardado solo es compatible con las partidas guardadas de Cuenta, Dispositivo y BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "La creación de espacios de guardado solo es compatible con las partidas guardadas de Cuenta, Dispositivo y BCAT.",
+  "32-bit": "32 bits",
+  "32-bit (no alias)": "32 bits (sin alias)"
 }

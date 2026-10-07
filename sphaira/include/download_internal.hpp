@@ -100,7 +100,6 @@ auto EscapeString(CURL* curl, const std::string& str) -> std::string;
 auto UnescapeString(CURL* curl, const std::string& str) -> std::string;
 auto EncodeUrl(std::string url) -> std::string;
 
-auto ProgressCallbackFunc1(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) -> int;
 auto ProgressCallbackFunc2(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) -> int;
 auto SeekCallback(void *clientp, curl_off_t offset, int origin) -> int;
 auto SeekCustomCallback(void *clientp, curl_off_t offset, int origin) -> int;

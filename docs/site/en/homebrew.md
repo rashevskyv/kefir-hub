@@ -90,7 +90,7 @@ It starts the app in title mode, with full memory.
 | [[Ask every time]] | Open the forwarder editor for each forwarder instead of using the defaults | Off |
 | [[Forwarder options]] | The defaults for new forwarders. Also in [[Settings]] → [[Homebrew]] → [[Forwarders]] | see below |
 | [[Profile Selection]] | Ask which user profile to use when the forwarder starts | Off |
-| [[Address Space]] | Memory layout given to the app. Change to 36-bit only if an old app needs it | 39-bit |
+| [[Address Space]] | Memory layout given to the app: 39-bit, 36-bit, 32-bit or 32-bit (no alias). Change it only if the app needs it: 36-bit for some old apps, the 32-bit spaces for apps like Wine-NX or Box64 that need a fixed low image base | 39-bit |
 | [[CPU Cores]] | 3 or 4 CPU cores for the app. The fourth core is shared with the system and can cause lag | 3 cores |
 | [[Screenshots]] | Allow screenshots while the app runs | On |
 | [[Video Capture]] | Allow video capture while the app runs. Needs [[Screenshots]] | On |

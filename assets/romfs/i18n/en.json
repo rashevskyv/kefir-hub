@@ -2947,5 +2947,7 @@
   " Â· play hours": " Â· play hours",
   "Cancel operation": "Cancel operation",
   "Save slot creation is only supported for Account saves.": "Save slot creation is only supported for Account saves.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Save slot creation is only supported for Account, Device and BCAT saves."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Save slot creation is only supported for Account, Device and BCAT saves.",
+  "32-bit": "32-bit",
+  "32-bit (no alias)": "32-bit (no alias)"
 }

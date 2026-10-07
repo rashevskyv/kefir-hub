@@ -3005,5 +3005,7 @@
   "Cancel operation": "取消操作",
   " Â· no play hours": " · 无游玩时间",
   "Save slot creation is only supported for Account saves.": "仅账户存档支持创建存档槽位。",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "仅账户、本机和 BCAT 存档支持创建存档插槽。"
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "仅账户、本机和 BCAT 存档支持创建存档插槽。",
+  "32-bit": "32位",
+  "32-bit (no alias)": "32位（无别名）"
 }

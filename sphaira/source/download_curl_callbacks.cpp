@@ -16,15 +16,6 @@ void GetDownloadTempPath(fs::FsPath& buf) {
     std::snprintf(buf, sizeof(buf), "/switch/sphaira/cache/download_temp%lu", count_copy);
 }
 
-auto ProgressCallbackFunc1(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) -> int {
-    if (!g_running) {
-        return 1;
-    }
-
-    Yield();
-    return 0;
-}
-
 auto ProgressCallbackFunc2(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) -> int {
     auto api = static_cast<Api*>(clientp);
     if (!g_running || (api && api->GetToken().stop_requested())) {

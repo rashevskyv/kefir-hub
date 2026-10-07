@@ -2947,5 +2947,7 @@
   "Cancel operation": "Скасаваць аперацыю",
   " Â· no play hours": " · няма гадзін гульні",
   "Save slot creation is only supported for Account saves.": "Ствараць слот захавання можна толькі для захаванняў уліковага запісу.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Стварэнне слотаў захаванняў падтрымліваецца толькі для захаванняў уліковага запісу, прылады і BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Стварэнне слотаў захаванняў падтрымліваецца толькі для захаванняў уліковага запісу, прылады і BCAT.",
+  "32-bit": "32-бітны",
+  "32-bit (no alias)": "32-біт (без аліяса)"
 }

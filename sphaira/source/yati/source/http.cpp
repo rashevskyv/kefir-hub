@@ -134,7 +134,10 @@ Result Http::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
         R_UNLESS(now - stalled_since < RESUME_WINDOW_NS, Result_YatiHttpReadFailed);
 
         log_write("[HTTP] resuming at %ld\n", m_offset);
-        svcSleepThread(RETRY_WAIT_NS);
+        // sleep in slices so a cancel does not wait out the whole retry pause.
+        for (u64 slept = 0; slept < RETRY_WAIT_NS && !m_cancelled; slept += 100'000'000ULL) {
+            svcSleepThread(100'000'000ULL);
+        }
     }
 }
 

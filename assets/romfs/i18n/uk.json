@@ -2947,5 +2947,7 @@
   " Â· no play hours": " · немає годин гри",
   " archives": " архіви",
   "Save slot creation is only supported for Account saves.": "Створення слота збереження підтримується лише для збережень облікового запису.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Створення слотів збережень підтримується лише для збережень облікового запису, пристрою та BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Створення слотів збережень підтримується лише для збережень облікового запису, пристрою та BCAT.",
+  "32-bit": "32-біт",
+  "32-bit (no alias)": "32-біт (без аліасу)"
 }

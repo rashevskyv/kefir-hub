@@ -2952,5 +2952,7 @@
   "Cancel operation": "Hủy thao tác",
   " Â· no play hours": " · chưa chơi giờ nào",
   "Save slot creation is only supported for Account saves.": "Việc tạo ô lưu chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Việc tạo khe lưu trữ chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản, Thiết bị và BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Việc tạo khe lưu trữ chỉ được hỗ trợ cho dữ liệu lưu của Tài khoản, Thiết bị và BCAT.",
+  "32-bit": "32-bit",
+  "32-bit (no alias)": "32-bit (không có alias)"
 }

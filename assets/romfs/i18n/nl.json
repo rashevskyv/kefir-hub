@@ -2952,5 +2952,7 @@
   "Cancel operation": "Bewerking annuleren",
   " Â· no play hours": " · geen speeluren",
   "Save slot creation is only supported for Account saves.": "Het aanmaken van opslagslots wordt alleen ondersteund voor account-saves.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Het maken van opslagslots wordt alleen ondersteund voor Account-, Apparaat- en BCAT-saves."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Het maken van opslagslots wordt alleen ondersteund voor Account-, Apparaat- en BCAT-saves.",
+  "32-bit": "32-bits",
+  "32-bit (no alias)": "32-bits (geen alias)"
 }

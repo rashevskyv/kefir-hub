@@ -2947,5 +2947,7 @@
   "Cancel operation": "Batalkan operasi",
   " Â· no play hours": " · belum ada jam bermain",
   "Save slot creation is only supported for Account saves.": "Pembuatan slot simpan hanya didukung untuk penyimpanan Akun.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Pembuatan slot penyimpanan hanya didukung untuk penyimpanan Akun, Perangkat, dan BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Pembuatan slot penyimpanan hanya didukung untuk penyimpanan Akun, Perangkat, dan BCAT.",
+  "32-bit": "32-bit",
+  "32-bit (no alias)": "32-bit (tanpa alias)"
 }

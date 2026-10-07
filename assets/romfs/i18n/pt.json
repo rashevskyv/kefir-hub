@@ -2979,5 +2979,7 @@
   "Cancel operation": "Cancelar operação",
   " Â· no play hours": " · sem horas de jogo",
   "Save slot creation is only supported for Account saves.": "A criação de espaços de gravação é suportada apenas para gravações de contas.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "A criação de ranhuras de gravação só é suportada para gravações de Conta, Dispositivo e BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "A criação de ranhuras de gravação só é suportada para gravações de Conta, Dispositivo e BCAT.",
+  "32-bit": "32-bit",
+  "32-bit (no alias)": "32-bit (sem alias)"
 }

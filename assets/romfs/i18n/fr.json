@@ -2953,5 +2953,7 @@
   "Cancel operation": "Annuler l'opération",
   " Â· no play hours": " · aucune heure de jeu",
   "Save slot creation is only supported for Account saves.": "La création de blocs de sauvegarde n'est prise en charge que pour les sauvegardes de compte.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "La création d'emplacements de sauvegarde n'est prise en charge que pour les sauvegardes de compte, d'appareil et BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "La création d'emplacements de sauvegarde n'est prise en charge que pour les sauvegardes de compte, d'appareil et BCAT.",
+  "32-bit": "32 bits",
+  "32-bit (no alias)": "32 bits (pas d'alias)"
 }

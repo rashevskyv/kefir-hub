@@ -2952,5 +2952,7 @@
   "Cancel operation": "작업 취소",
   " Â· no play hours": " · 플레이 시간 없음",
   "Save slot creation is only supported for Account saves.": "세이브 슬롯 생성은 계정 세이브 데이터에서만 지원됩니다.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "세이브 슬롯 생성은 계정, 기기, BCAT 세이브 데이터에서만 지원됩니다."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "세이브 슬롯 생성은 계정, 기기, BCAT 세이브 데이터에서만 지원됩니다.",
+  "32-bit": "32비트",
+  "32-bit (no alias)": "32비트 (별칭 없음)"
 }

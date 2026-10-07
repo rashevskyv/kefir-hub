@@ -2947,5 +2947,7 @@
   "Cancel operation": "Операцияны болдырмау",
   " Â· no play hours": " · ойнау уақыты жоқ",
   "Save slot creation is only supported for Account saves.": "Сақтау слотын жасау тек Тіркелгі сақтаулары үшін ғана қолдау көрсетіледі.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Сақтау слотын жасау тек Тіркелгі, Құрылғы және BCAT сақтаулары үшін қолдау көрсетіледі."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Сақтау слотын жасау тек Тіркелгі, Құрылғы және BCAT сақтаулары үшін қолдау көрсетіледі.",
+  "32-bit": "32-бит",
+  "32-bit (no alias)": "32-біт (alias жоқ)"
 }

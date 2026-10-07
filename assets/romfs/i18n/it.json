@@ -2952,5 +2952,7 @@
   "Cancel operation": "Annulla operazione",
   " Â· no play hours": " · nessuna ora di gioco",
   "Save slot creation is only supported for Account saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi dell'account.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi Account, Dispositivo e BCAT."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "La creazione di slot di salvataggio è supportata solo per i salvataggi Account, Dispositivo e BCAT.",
+  "32-bit": "32-bit",
+  "32-bit (no alias)": "32-bit (nessun alias)"
 }

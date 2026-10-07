@@ -2952,5 +2952,7 @@
   "Cancel operation": "Avbryt åtgärd",
   " Â· no play hours": " · inga speltimmar",
   "Save slot creation is only supported for Account saves.": "Skapande av spårningsplatser stöds endast för kontosparingar.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Skapande av sparfilsplatser stöds endast för Konto-, Enhets- och BCAT-sparfiler."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Skapande av sparfilsplatser stöds endast för Konto-, Enhets- och BCAT-sparfiler.",
+  "32-bit": "32-bitars",
+  "32-bit (no alias)": "32-bitars (inget alias)"
 }

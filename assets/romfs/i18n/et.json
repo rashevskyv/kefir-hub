@@ -2947,5 +2947,7 @@
   "Cancel operation": "Katkesta toiming",
   " Â· no play hours": " · mänguaega pole",
   "Save slot creation is only supported for Account saves.": "Salvestuskoha loomine on toetatud ainult kontode salvestuste jaoks.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Salvestuskoha loomine on toetatud ainult konto-, seadme- ja BCAT-salvestuste puhul."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Salvestuskoha loomine on toetatud ainult konto-, seadme- ja BCAT-salvestuste puhul.",
+  "32-bit": "32-bitine",
+  "32-bit (no alias)": "32-bitine (aliaseta)"
 }

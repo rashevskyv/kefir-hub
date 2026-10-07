@@ -2952,5 +2952,7 @@
   "Cancel operation": "操作をキャンセル",
   " Â· no play hours": " · プレイ時間なし",
   "Save slot creation is only supported for Account saves.": "セーブスロットの作成はアカウントのセーブデータのみサポートされています。",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "セーブデータのスロット作成は、アカウント、本体、BCATのセーブデータでのみサポートされています。"
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "セーブデータのスロット作成は、アカウント、本体、BCATのセーブデータでのみサポートされています。",
+  "32-bit": "32ビット",
+  "32-bit (no alias)": "32ビット (エイリアスなし)"
 }

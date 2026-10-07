@@ -2947,5 +2947,7 @@
   "Cancel operation": "İşlemi iptal et",
   " Â· no play hours": " · oynama süresi yok",
   "Save slot creation is only supported for Account saves.": "Kayıt yuvası oluşturma yalnızca Hesap kayıtları için desteklenir.",
-  "Save slot creation is only supported for Account, Device and BCAT saves.": "Kayıt slotu oluşturma yalnızca Hesap, Cihaz ve BCAT kayıtları için desteklenir."
+  "Save slot creation is only supported for Account, Device and BCAT saves.": "Kayıt slotu oluşturma yalnızca Hesap, Cihaz ve BCAT kayıtları için desteklenir.",
+  "32-bit": "32-bit",
+  "32-bit (no alias)": "32-bit (alias yok)"
 }

@@ -515,15 +515,26 @@ App::App(const char* argv0) {
     this->vg = nvgCreateDk(&*this->renderer, NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 
     // not sure if these are meant to be deleted or not...
+    // A Chinese UI language takes the Chinese shared font as the main face so that
+    // shared CJK code points get Chinese glyph shapes; Standard then serves as fallback.
+    const std::string ui_language = m_language_chosen ? m_language.Get() : "en";
+    PlSharedFontType standard_type = PlSharedFontType_Standard;
+    if (ui_language == "zh") {
+        standard_type = PlSharedFontType_ChineseSimplified;
+    } else if (ui_language == "zhtw") {
+        standard_type = PlSharedFontType_ChineseTraditional;
+    }
+
     PlFontData font_standard, font_extended, font_lang;
-    plGetSharedFontByType(&font_standard, PlSharedFontType_Standard);
+    plGetSharedFontByType(&font_standard, standard_type);
     plGetSharedFontByType(&font_extended, PlSharedFontType_NintendoExt);
 
     auto standard_font = nvgCreateFontMem(this->vg, "Standard", (unsigned char*)font_standard.address, font_standard.size, 0);
     auto extended_font = nvgCreateFontMem(this->vg, "Extended", (unsigned char*)font_extended.address, font_extended.size, 0);
     nvgAddFallbackFontId(this->vg, standard_font, extended_font);
 
-    constexpr PlSharedFontType lang_font[] = {
+    const PlSharedFontType lang_font[] = {
+        PlSharedFontType_Standard,
         PlSharedFontType_ChineseSimplified,
         PlSharedFontType_ExtChineseSimplified,
         PlSharedFontType_ChineseTraditional,
@@ -531,6 +542,9 @@ App::App(const char* argv0) {
     };
 
     for (auto type : lang_font) {
+        if (type == standard_type) {
+            continue;
+        }
         if (R_SUCCEEDED(plGetSharedFontByType(&font_lang, type))) {
             char name[32];
             snprintf(name, sizeof(name), "Lang_%u", font_lang.type);

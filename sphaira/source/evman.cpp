@@ -42,7 +42,7 @@ auto pop() -> std::optional<EventData> {
     if (events.empty()) {
         return std::nullopt;
     }
-    auto e = events.front();
+    auto e = std::move(events.front());
     events.pop_front();
     return e;
 }
