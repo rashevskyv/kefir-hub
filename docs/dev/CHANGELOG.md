@@ -15,6 +15,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Save slot creation now covers Account, Device and BCAT primary slots. Sizes and owner come from the installed game's control data (Device: nacp device sizes; BCAT: delivery cache size, 2 MiB journal, bcat owner) or, when the game is absent, from the backup's save metadata (Kefir Hub / DBI zips), exactly as the Account path already did. Device/BCAT slots are created without a thumbnail meta and with a zero uid. The old 'launch the game first' refusal is gone; JKSV/Checkpoint folders without metadata still need the installed game. EN/UK docs, video 04 scenes 17-18 updated.
 - host tests: pass (quick; bundle rules updated) · docs: built en/uk, 0 unknown labels · nro: not built · switch: pending — restore Device and BCAT from a Kefir Hub zip with the game uninstalled, install the game and check it picks the data; re-restore; mixed Account/Device/BCAT bundle; compare with DBI; corrupt metadata must be refused.
 
+## v0.14.009 — Apply the first-start language everywhere
+- The main menu is built in English before the first language dialog, so its tiles kept English labels. After the first choice of a non-English language Kefir Hub now restarts itself once (config already saved); the same restart path as the Settings language change. EN/UK docs and video 01 scene 8 updated.
+- host tests: not needed (UI-only) · docs: built en/uk · nro: not built · switch: pending — fresh config, pick Ukrainian: whole main screen in Ukrainian after the automatic restart; second start keeps it; pick English: no restart.
+
 ## unreleased
 - Add the Codex Graphify session hook; invoke Git Bash explicitly on Windows. JSON parsed; shell syntax and configured command: pass. Product code unchanged.
 

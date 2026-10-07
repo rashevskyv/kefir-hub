@@ -32,7 +32,8 @@ Turn it off to get the old Homebrew Menu back: Kefir Hub asks [[Restore hbmenu?]
 `/switch/hbmenu.nro`. Default: Off.
 
 ## First start
-1. Pick your language. The list opens on the console language. You can change it later, see
+1. Pick your language. The list opens on the console language. Kefir Hub restarts once so that every
+   menu, tile and dialog uses it. You can change it later, see
    [Getting started](getting-started.md#change-the-language).
 2. If some user profiles on the console are not linked to a Nintendo Account, Kefir Hub offers to link them.
    See [Users](users.md).

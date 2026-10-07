@@ -79,241 +79,245 @@ On the first launch Kefir Hub asks you to choose a language.
 The list opens in the console's language.
 
 21
-00:01:06,533 --> 00:01:11,800
-If some profiles on the console are not linked to a Nintendo Account, Kefir Hub
+00:01:06,533 --> 00:01:10,800
+After the choice Kefir Hub restarts once in the chosen language.
 
 22
-00:01:11,800 --> 00:01:13,800
-offers to link them.
+00:01:10,800 --> 00:01:16,067
+If some profiles on the console are not linked to a Nintendo Account, Kefir Hub
 
 23
-00:01:13,800 --> 00:01:16,333
-There is a separate video about users.
+00:01:16,067 --> 00:01:18,067
+offers to link them.
 
 24
-00:01:16,333 --> 00:01:18,333
-This is the main screen.
+00:01:18,067 --> 00:01:20,600
+There is a separate video about users.
 
 25
-00:01:18,333 --> 00:01:20,333
-At the top is the header.
+00:01:20,600 --> 00:01:22,600
+This is the main screen.
 
 26
-00:01:20,333 --> 00:01:25,800
-On its left: the Kefir Hub version, the screen name and your position in the list.
+00:01:22,600 --> 00:01:24,600
+At the top is the header.
 
 27
-00:01:25,800 --> 00:01:31,200
-On the right: the Kefir, firmware and Atmosphère versions, the Wi-Fi name and the
+00:01:24,600 --> 00:01:30,067
+On its left: the Kefir Hub version, the screen name and your position in the list.
 
 28
-00:01:31,200 --> 00:01:33,200
-console's IP address.
+00:01:30,067 --> 00:01:35,467
+On the right: the Kefir, firmware and Atmosphère versions, the Wi-Fi name and the
 
 29
-00:01:33,200 --> 00:01:38,267
-Then two bars with free space in the console memory and on the microSD card.
+00:01:35,467 --> 00:01:37,467
+console's IP address.
 
 30
-00:01:38,267 --> 00:01:40,333
-Then the clock and the battery.
+00:01:37,467 --> 00:01:42,533
+Then two bars with free space in the console memory and on the microSD card.
 
 31
-00:01:40,333 --> 00:01:44,467
-The MTP and FTP badges show whether these servers are running.
+00:01:42,533 --> 00:01:44,600
+Then the clock and the battery.
 
 32
-00:01:44,467 --> 00:01:46,800
-A green dot means the server is on.
+00:01:44,600 --> 00:01:48,733
+The MTP and FTP badges show whether these servers are running.
 
 33
-00:01:46,800 --> 00:01:51,867
-The bottom line shows the buttons that work on this screen and what they do.
+00:01:48,733 --> 00:01:51,067
+A green dot means the server is on.
 
 34
-00:01:51,867 --> 00:01:54,933
-If you are not sure what to press, look there.
+00:01:51,067 --> 00:01:56,133
+The bottom line shows the buttons that work on this screen and what they do.
 
 35
-00:01:54,933 --> 00:01:56,933
-A opens, starts or confirms.
+00:01:56,133 --> 00:01:59,200
+If you are not sure what to press, look there.
 
 36
-00:01:56,933 --> 00:01:58,933
-B goes back.
+00:01:59,200 --> 00:02:01,200
+A opens, starts or confirms.
 
 37
-00:01:58,933 --> 00:02:04,333
-X selects an item so you can act on several at once, and Y inverts the selection.
+00:02:01,200 --> 00:02:03,200
+B goes back.
 
 38
-00:02:04,333 --> 00:02:07,800
-ZL and ZR jump to the first and last item of a list.
+00:02:03,200 --> 00:02:08,600
+X selects an item so you can act on several at once, and Y inverts the selection.
 
 39
-00:02:07,800 --> 00:02:10,467
-In long lists, L and R page up and down.
+00:02:08,600 --> 00:02:12,067
+ZL and ZR jump to the first and last item of a list.
 
 40
-00:02:10,467 --> 00:02:12,467
-The main screen has two tabs.
+00:02:12,067 --> 00:02:14,733
+In long lists, L and R page up and down.
 
 41
-00:02:12,467 --> 00:02:15,533
-Homebrew lists the homebrew apps on your card.
+00:02:14,733 --> 00:02:16,733
+The main screen has two tabs.
 
 42
-00:02:15,533 --> 00:02:17,533
-Press R to go to Tools.
+00:02:16,733 --> 00:02:19,800
+Homebrew lists the homebrew apps on your card.
 
 43
-00:02:17,533 --> 00:02:22,933
-The Tools tab has everything else: File Browser, Game Tools with games, saves and
+00:02:19,800 --> 00:02:21,800
+Press R to go to Tools.
 
 44
-00:02:22,933 --> 00:02:27,267
-cheats, Themes, Updater, and Software with the App Store and DBI.
+00:02:21,800 --> 00:02:27,200
+The Tools tab has everything else: File Browser, Game Tools with games, saves and
 
 45
-00:02:27,267 --> 00:02:31,533
-The Tools tile holds Module Manager, Fan curve, Wi-Fi and Users.
+00:02:27,200 --> 00:02:31,533
+cheats, Themes, Updater, and Software with the App Store and DBI.
 
 46
-00:02:31,533 --> 00:02:36,267
-Kefir Settings are console settings; Settings are for Kefir Hub itself.
+00:02:31,533 --> 00:02:35,800
+The Tools tile holds Module Manager, Fan curve, Wi-Fi and Users.
 
 47
-00:02:36,267 --> 00:02:39,733
-Console Transfer exchanges data with another device.
+00:02:35,800 --> 00:02:40,533
+Kefir Settings are console settings; Settings are for Kefir Hub itself.
 
 48
-00:02:39,733 --> 00:02:42,000
-Screens open on top of each other.
+00:02:40,533 --> 00:02:44,000
+Console Transfer exchanges data with another device.
 
 49
-00:02:42,000 --> 00:02:44,000
-B closes the current one.
+00:02:44,000 --> 00:02:46,267
+Screens open on top of each other.
 
 50
-00:02:44,000 --> 00:02:48,067
-Minus closes them all and takes you back to the Homebrew tab.
+00:02:46,267 --> 00:02:48,267
+B closes the current one.
 
 51
-00:02:48,067 --> 00:02:51,933
-From the Tools tab, L or B also take you back to Homebrew.
+00:02:48,267 --> 00:02:52,333
+Minus closes them all and takes you back to the Homebrew tab.
 
 52
-00:02:51,933 --> 00:02:56,200
-Plus opens the options panel of the current screen on the right.
+00:02:52,333 --> 00:02:56,200
+From the Tools tab, L or B also take you back to Homebrew.
 
 53
-00:02:56,200 --> 00:03:01,267
-Move the cursor onto an entry and a short description appears at the bottom.
+00:02:56,200 --> 00:03:00,467
+Plus opens the options panel of the current screen on the right.
 
 54
-00:03:01,267 --> 00:03:03,867
-A runs the action or flips the setting.
+00:03:00,467 --> 00:03:05,533
+Move the cursor onto an entry and a short description appears at the bottom.
 
 55
-00:03:03,867 --> 00:03:05,867
-B or plus closes the panel.
+00:03:05,533 --> 00:03:08,133
+A runs the action or flips the setting.
 
 56
-00:03:05,867 --> 00:03:10,533
-A grey entry is not available right now, and its description says why.
+00:03:08,133 --> 00:03:10,133
+B or plus closes the panel.
 
 57
-00:03:10,533 --> 00:03:14,800
-In dialogs, move between the buttons with the D-pad and press A.
+00:03:10,133 --> 00:03:14,800
+A grey entry is not available right now, and its description says why.
 
 58
-00:03:14,800 --> 00:03:18,333
-B picks the first button, usually Back, No or Cancel.
+00:03:14,800 --> 00:03:19,067
+In dialogs, move between the buttons with the D-pad and press A.
 
 59
-00:03:18,333 --> 00:03:22,133
-Plus picks the last one, the button that does the action.
+00:03:19,067 --> 00:03:22,600
+B picks the first button, usually Back, No or Cancel.
 
 60
-00:03:22,133 --> 00:03:25,800
-Some risky actions ask you to hold A until a bar fills.
+00:03:22,600 --> 00:03:26,400
+Plus picks the last one, the button that does the action.
 
 61
-00:03:25,800 --> 00:03:31,133
-When text is needed, some fields offer "Manual (Keyboard)" or "From Phone / PC".
+00:03:26,400 --> 00:03:30,067
+Some risky actions ask you to hold A until a bar fills.
 
 62
-00:03:31,133 --> 00:03:36,667
-The second shows a QR code and an address, so you can type long text on your phone.
+00:03:30,067 --> 00:03:35,400
+When text is needed, some fields offer "Manual (Keyboard)" or "From Phone / PC".
 
 63
-00:03:36,667 --> 00:03:41,867
-The touch screen works too: tap an item to select it and tap again to open it.
+00:03:35,400 --> 00:03:40,933
+The second shows a QR code and an address, so you can type long text on your phone.
 
 64
-00:03:41,867 --> 00:03:43,867
-Now let's change the language.
+00:03:40,933 --> 00:03:46,133
+The touch screen works too: tap an item to select it and tap again to open it.
 
 65
-00:03:43,867 --> 00:03:47,667
-Open Tools, Settings, the General category, and Language.
+00:03:46,133 --> 00:03:48,133
+Now let's change the language.
 
 66
-00:03:47,667 --> 00:03:49,667
-Pick a language.
+00:03:48,133 --> 00:03:51,933
+Open Tools, Settings, the General category, and Language.
 
 67
-00:03:49,667 --> 00:03:52,067
-Kefir Hub asks "Restart Kefir Hub?".
+00:03:51,933 --> 00:03:53,933
+Pick a language.
 
 68
-00:03:52,067 --> 00:03:55,667
-Choose Restart so the new language applies everywhere.
+00:03:53,933 --> 00:03:56,333
+Kefir Hub asks "Restart Kefir Hub?".
 
 69
-00:03:55,667 --> 00:03:59,267
-Copies, installs and downloads show a progress window.
+00:03:56,333 --> 00:03:59,933
+Choose Restart so the new language applies everywhere.
 
 70
-00:03:59,267 --> 00:04:03,600
-Some tasks can run in the background, for example the web server.
+00:03:59,933 --> 00:04:03,533
+Copies, installs and downloads show a progress window.
 
 71
-00:04:03,600 --> 00:04:08,067
-Press R3 and the window shrinks to a badge in the top right corner.
+00:04:03,533 --> 00:04:07,867
+Some tasks can run in the background, for example the web server.
 
 72
-00:04:08,067 --> 00:04:11,867
-Press R3 again or tap the badge to bring the window back.
+00:04:07,867 --> 00:04:12,333
+Press R3 and the window shrinks to a badge in the top right corner.
 
 73
-00:04:11,867 --> 00:04:14,733
-B stops the task, but Kefir Hub asks first.
+00:04:12,333 --> 00:04:16,133
+Press R3 again or tap the badge to bring the window back.
 
 74
-00:04:14,733 --> 00:04:17,133
-Do not press HOME during a transfer.
+00:04:16,133 --> 00:04:19,000
+B stops the task, but Kefir Hub asks first.
 
 75
-00:04:17,133 --> 00:04:22,733
-While you are in the HOME Menu the console pauses Kefir Hub, and the transfer stops.
+00:04:19,000 --> 00:04:21,400
+Do not press HOME during a transfer.
 
 76
-00:04:22,733 --> 00:04:27,867
-If you want the Album to open Kefir Hub directly, turn on Settings, Homebrew,
+00:04:21,400 --> 00:04:27,000
+While you are in the HOME Menu the console pauses Kefir Hub, and the transfer stops.
 
 77
-00:04:27,867 --> 00:04:29,867
-"Replace hbmenu on exit".
+00:04:27,000 --> 00:04:32,133
+If you want the Album to open Kefir Hub directly, turn on Settings, Homebrew,
 
 78
-00:04:29,867 --> 00:04:35,067
-When you turn it off again, Kefir Hub offers to restore the old Homebrew Menu.
+00:04:32,133 --> 00:04:34,133
+"Replace hbmenu on exit".
 
 79
-00:04:35,067 --> 00:04:37,067
-That covers the basics.
+00:04:34,133 --> 00:04:39,333
+When you turn it off again, Kefir Hub offers to restore the old Homebrew Menu.
 
 80
-00:04:37,067 --> 00:04:42,133
+00:04:39,333 --> 00:04:41,333
+That covers the basics.
+
+81
+00:04:41,333 --> 00:04:46,400
 For more, read the Kefir Hub and Getting started pages in the documentation.

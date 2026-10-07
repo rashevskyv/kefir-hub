@@ -303,6 +303,12 @@ void App::OpenLanguageSelectDialog(bool is_initial_setup) {
                 App::SetLanguage(def.code, !is_initial_setup);
                 if (is_initial_setup) {
                     App::MarkLanguageChosen();
+                    // The main menu behind this dialog was built in English and its tiles cache
+                    // their labels. The choice is already in config.ini: restart once so every
+                    // tile, hint and dialog uses the chosen language.
+                    if (def.code != "en") {
+                        App::ExitRestart();
+                    }
                 }
             }
         },

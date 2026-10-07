@@ -88,7 +88,7 @@ The text editor in the File Browser can also open the whole file in a browser, s
 [Edit a text file](file-browser.md#edit-a-text-file).
 
 ## Change the language
-On the first start Kefir Hub asks for the language. To change it later:
+On the first start Kefir Hub asks for the language and restarts once to apply it. To change it later:
 
 1. Go to [[Tools]] → [[Settings]] → [[General]] → [[Language]].
 2. Choose the language.
