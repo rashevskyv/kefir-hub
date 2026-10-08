@@ -62,7 +62,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Install queue: review, buttons, progress, skip, cancel, summary, errors.txt | Install queue | dbi_*.cpp | install/sd-card#queue | doc |
 | Minimize to badge | R3 | app_frame.cpp:169-230 | install/sd-card#minimize | R3 from any menu since v0.13.962 (was L3); Package target moved to L3 |
 | Screen off during install | − | dbi_menu_options.cpp:249-334, screensaver.cpp | install/sd-card#screen-off | doc |
-| PC Install (USB): DBI Backend/Qt, ns-usbloader, Fluffy; live queue; USB speed badge | Tools + → PC Install (USB) | dbi_usb.cpp, yati/source/usb.cpp, dbi_plan.cpp | install/usb | partial: backend version for live queue |
+| PC Install (USB): DBI Backend/Qt, ns-usbloader, Fluffy; live queue both ways, queue plan to the PC, sort keys | Tools + → PC Install (USB) | dbi_usb.cpp, dbi_plan.cpp, yati/source/usb_dbi.cpp (QueuePlan) | install/usb#live-queue | draft (v0.14.026); backend version for live queue still open |
 | PC Install on connect (USB probe before auto MTP) | cable plug-in, Settings → Network | usb_install_probe.cpp, app_usb.cpp | install/usb#auto-open, settings | draft (v0.14.023) |
 | MTP install: auto start, storages, progress, cancel, .nro → /switch | PC Explorer | app_usb.cpp, install_stream*.cpp, haze_helper.cpp | install/mtp | partial: Windows-side behaviour |
 | Dump game card to NSP | Games → Dump | game_menu.cpp:217-244 | install/gamecard#dump | partial: card-only content |

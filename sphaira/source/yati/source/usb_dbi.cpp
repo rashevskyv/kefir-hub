@@ -292,6 +292,46 @@ Result Usb::SendPackageStatus(const std::string& name, u32 status, Result rc, u6
     R_SUCCEED();
 }
 
+Result Usb::SendQueuePlan(const std::vector<QueuePlanItem>& items, u32 revision, u64 timeout) {
+    R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
+
+    std::vector<u8> payload(sizeof(dbi::QueuePlanHeader));
+    const dbi::QueuePlanHeader header{.count = static_cast<u32>(items.size()), .revision = revision};
+    std::memcpy(payload.data(), &header, sizeof(header));
+    for (const auto& it : items) {
+        const dbi::QueuePlanRecord rec{
+            .selected = static_cast<u8>(it.selected ? 1 : 0),
+            .target = static_cast<u8>(it.target),
+            .planned = static_cast<u8>(it.planned_sd ? 1 : 2),
+            .flags = static_cast<u8>((it.analysis_ok ? dbi::QueuePlanFlag_AnalysisOk : 0) | (it.already_installed ? dbi::QueuePlanFlag_AlreadyInstalled : 0)),
+            .install_size = it.install_size,
+            .name_len = static_cast<u32>(it.name.size()),
+        };
+        const auto off = payload.size();
+        payload.resize(off + sizeof(rec) + it.name.size());
+        std::memcpy(payload.data() + off, &rec, sizeof(rec));
+        std::memcpy(payload.data() + off + sizeof(rec), it.name.data(), it.name.size());
+    }
+
+    R_TRY(SendDbiCmdHeader(dbi::CmdType::Request, dbi::CmdId::QueuePlan, static_cast<u32>(payload.size()), timeout));
+
+    dbi::CmdHeader ack{};
+    R_TRY(m_usb->TransferAll(true, &ack, sizeof(ack), timeout));
+    R_UNLESS(ack.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(ack.id == dbi::CmdId::QueuePlan, Result_UsbBadMagic);
+    R_UNLESS(ack.type == dbi::CmdType::Ack, Result_UsbBadMagic);
+
+    R_TRY(m_usb->TransferAll(false, payload.data(), static_cast<u32>(payload.size()), timeout));
+
+    dbi::CmdHeader response{};
+    R_TRY(m_usb->TransferAll(true, &response, sizeof(response), timeout));
+    R_UNLESS(response.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
+    R_UNLESS(response.id == dbi::CmdId::QueuePlan, Result_UsbBadMagic);
+    R_UNLESS(response.type == dbi::CmdType::Response, Result_UsbBadMagic);
+
+    R_SUCCEED();
+}
+
 Result Usb::SendStorageInfo(u64 nand_free, u64 nand_total, u64 sd_free, u64 sd_total, u64 timeout) {
     R_UNLESS(m_protocol == UsbProtocol::Dbi && m_dbi_selection_sync, Result_UsbBadMagic);
 

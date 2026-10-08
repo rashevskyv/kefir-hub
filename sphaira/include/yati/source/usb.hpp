@@ -79,6 +79,18 @@ struct Usb final : Base {
     Result SendPackageStatus(const std::string& name, u32 status, Result rc, u64 timeout = 1e+9);
     Result SendStorageInfo(u64 nand_free, u64 nand_total, u64 sd_free, u64 sd_total, u64 timeout = 1e+9);
 
+    // one package of the console's queue plan, see usb::dbi::QueuePlanRecord.
+    struct QueuePlanItem {
+        std::string name;
+        bool selected{};
+        int target{};
+        bool planned_sd{};
+        bool analysis_ok{};
+        bool already_installed{};
+        u64 install_size{};
+    };
+    Result SendQueuePlan(const std::vector<QueuePlanItem>& items, u32 revision, u64 timeout = 1e+9);
+
     auto GetProtocol() const {
         return m_protocol;
     }

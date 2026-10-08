@@ -45,6 +45,14 @@
 
 ## Змінюйте чергу з ПК {#live-queue}
 
+<!-- draft
+- new in v0.14.026, DBI Backend Qt with the queue plan command: the sync now runs both ways. A tick removed or a target changed on the console (**X**, **Y**, **L3**) is sent to the PC within a moment and stays; it no longer comes back on the next poll
+- the PC app shows for every [[Auto]] package where the console will really put it ("Auto → SD" / "Auto → NAND"), from the console's plan
+- the PC app's NAND and microSD bars are drawn like the console's: before the install the selected packages are projected into the free space (red when they do not fit), the row under the mouse in amber at the head; while installing, the remaining bytes of the active package
+- **+** → [[Sort]] on the console keeps its order while the PC keeps updating the queue; new keys [[Target]] (microSD first) and [[Status]] (ticked, unticked, already installed, failed analysis)
+-->
+
+
 З DBI Backend Qt черга синхронізується з програмою на ПК:
 
 - Вибір пакетів, їхній порядок і сховище [[Auto]], [[microSD]] чи [[System memory]], задані на ПК, з'являються на консолі.

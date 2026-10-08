@@ -157,6 +157,8 @@ void Menu::ThreadFunction() {
             while (!m_install_requested && !m_cancel_requested && !GetToken().stop_requested()) {
                 if (sync_supported && last_poll.GetNs() >= 300'000'000) {
                     last_poll.Update();
+                    // the console's changes go out before the PC's state comes in.
+                    SendQueuePlanIfChanged();
                     std::vector<yati::source::Usb::LiveQueueItem> items;
                     u32 revision = 0;
                     if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {

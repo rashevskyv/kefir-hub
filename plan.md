@@ -323,6 +323,9 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       auto MTP; a host that answers opens PC Install (USB) with its list. Also: indeterminate progress bar glides off the edge.
 - [x] F.18 **First-start page** (user, 2026-10-08; v0.14.025): full page in the console's language (HOME icon advice,
       A = language list) instead of a popup over the rendered menu; restart only for a different language, announced first.
+- [x] F.19 **USB queue two-way sync with DBI Backend Qt** (user, 2026-10-08; v0.14.026): QueuePlan command console → PC
+      (selection, targets, Auto destination, install sizes); PC mirrors the Hub storage projection; sort survives polls;
+      Target/Status sort keys. Backend side in E:\Switch\dbibackend-qt (uncommitted working tree, 68 tests green).
 - [x] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.

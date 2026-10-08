@@ -49,6 +49,9 @@ struct QueueEntry {
     bool rejected_no_space{};
     s64 source_size{0};
     size_t source_index{0};
+    // selected/target changed on the console and not yet sent to the PC: the
+    // live queue from the PC must not overwrite them until SendQueuePlan ran.
+    bool sync_dirty{};
 };
 
 // how a session-log line is drawn: events are bold, results are coloured.
@@ -280,8 +283,12 @@ private:
     void CycleSelectedTarget();
     void DisplayQueueOptions(bool left_side = false);
     void SortQueue();
+    // usb thread: sends the queue plan to the PC when it differs from the last
+    // one sent (selection, targets, where Auto packages go, install sizes).
+    void SendQueuePlanIfChanged();
 
     u32 m_last_acked_revision{0};
+    std::string m_sent_plan_digest{};
 
     std::unique_ptr<yati::source::Usb> m_usb_source{};
     // file list the probe received; the first loop uses it instead of waiting.

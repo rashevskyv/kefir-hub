@@ -23,6 +23,7 @@ void Menu::UpdateActions() {
                 if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size())) {
                     if (R_SUCCEEDED(m_queue[m_index].analysis_result)) {
                         m_queue[m_index].selected = !m_queue[m_index].selected;
+                        m_queue[m_index].sync_dirty = true;
                     }
                     if (m_index + 1 < static_cast<s64>(m_queue.size())) {
                         SetIndex(m_index + 1);
@@ -33,7 +34,10 @@ void Menu::UpdateActions() {
                 SCOPED_MUTEX(&m_mutex);
                 if (m_install_requested) return;
                 for (auto& entry : m_queue) {
-                    if (R_SUCCEEDED(entry.analysis_result)) entry.selected = !entry.selected;
+                    if (R_SUCCEEDED(entry.analysis_result)) {
+                        entry.selected = !entry.selected;
+                        entry.sync_dirty = true;
+                    }
                 }
             }}),
             std::make_pair(Button::A, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),
@@ -106,6 +110,7 @@ void Menu::CycleSelectedTarget() {
     auto& target = m_queue[m_index].target;
     target = target == InstallTarget::Auto ? InstallTarget::Sd
         : target == InstallTarget::Sd ? InstallTarget::Nand : InstallTarget::Auto;
+    m_queue[m_index].sync_dirty = true;
 }
 
 void Menu::SortQueue() {
@@ -144,6 +149,30 @@ void Menu::SortQueue() {
                 s64 ib = PlanSize(b);
                 if (ia != ib) {
                     return is_asc ? (ia < ib) : (ia > ib);
+                }
+                return a.source_index < b.source_index;
+            }
+            case 4: { // Target: where the package will go (microSD first)
+                const auto dest = [](const QueueEntry& e) {
+                    return e.target == InstallTarget::Auto ? e.planned_sd : e.target == InstallTarget::Sd;
+                };
+                const int ta = dest(a) ? 0 : 1;
+                const int tb = dest(b) ? 0 : 1;
+                if (ta != tb) {
+                    return is_asc ? (ta < tb) : (ta > tb);
+                }
+                return a.source_index < b.source_index;
+            }
+            case 5: { // Status: ticked, unticked, already installed, analysis failed
+                const auto rank = [](const QueueEntry& e) {
+                    if (R_FAILED(e.analysis_result)) return 3;
+                    if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(e))) return 2;
+                    return e.selected ? 0 : 1;
+                };
+                const int ra = rank(a);
+                const int rb = rank(b);
+                if (ra != rb) {
+                    return is_asc ? (ra < rb) : (ra > rb);
                 }
                 return a.source_index < b.source_index;
             }
@@ -340,6 +369,8 @@ void Menu::DisplayQueueOptions(bool left_side) {
         sort_items.push_back("Name"_i18n);
         sort_items.push_back("Package size"_i18n);
         sort_items.push_back("Install size"_i18n);
+        sort_items.push_back("Target"_i18n);
+        sort_items.push_back("Status"_i18n);
 
         options->Add<SidebarEntryArray>("Sort"_i18n, sort_items, [this](s64& index_out){
             m_session_sort_type = index_out;

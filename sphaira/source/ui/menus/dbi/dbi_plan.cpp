@@ -169,16 +169,21 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
                 QueueEntry entry = std::move(it->second);
                 existing_map.erase(it);
 
-                bool new_sel = item.selected && R_SUCCEEDED(entry.analysis_result);
-                if (entry.selected != new_sel) {
-                    entry.selected = new_sel;
-                    changed = true;
-                }
+                // a tick or target changed on the console keeps its value until the PC
+                // has been told (SendQueuePlanIfChanged); otherwise this poll would
+                // put the tick straight back.
+                if (!entry.sync_dirty) {
+                    bool new_sel = item.selected && R_SUCCEEDED(entry.analysis_result);
+                    if (entry.selected != new_sel) {
+                        entry.selected = new_sel;
+                        changed = true;
+                    }
 
-                InstallTarget new_target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
-                if (entry.target != new_target) {
-                    entry.target = new_target;
-                    changed = true;
+                    InstallTarget new_target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
+                    if (entry.target != new_target) {
+                        entry.target = new_target;
+                        changed = true;
+                    }
                 }
                 new_queue.emplace_back(std::move(entry));
             } else {
@@ -215,6 +220,11 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
             }
             RecomputePlan();
             m_actions_dirty = true;
+        }
+        // the wire order is the PC's; a sort the user chose on the console is
+        // re-applied on top of it, or every poll would undo it.
+        if (m_session_sort_type != 0) {
+            SortQueue();
         }
         return changed;
     }
@@ -376,6 +386,49 @@ bool Menu::ApplyLiveSelection(const std::unordered_map<std::string, bool>& selec
         items.push_back({name, 0, sel, tgt});
     }
     return ApplyLiveQueue(items, 0, false);
+}
+
+void Menu::SendQueuePlanIfChanged() {
+    if (!m_usb_source || !m_usb_source->HasSelectionSync()) {
+        return;
+    }
+
+    std::vector<yati::source::Usb::QueuePlanItem> items;
+    std::string digest;
+    bool dirty = false;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        items.reserve(m_queue.size());
+        for (const auto& e : m_queue) {
+            const bool ok = R_SUCCEEDED(e.analysis_result);
+            yati::source::Usb::QueuePlanItem it{
+                .name = e.file_name,
+                .selected = e.selected,
+                .target = e.target == InstallTarget::Sd ? 1 : e.target == InstallTarget::Nand ? 2 : 0,
+                .planned_sd = e.target == InstallTarget::Auto ? e.planned_sd : e.target == InstallTarget::Sd,
+                .analysis_ok = ok,
+                .already_installed = ok && IsTitleAlreadyInstalled(GetQueueEntryTitleId(e)),
+                .install_size = static_cast<u64>(std::max<s64>(0, PlanSize(e))),
+            };
+            digest += it.name + '|' + std::to_string(it.selected) + std::to_string(it.target) + std::to_string(it.planned_sd)
+                + std::to_string(it.analysis_ok) + std::to_string(it.already_installed) + '|' + std::to_string(it.install_size) + '\n';
+            dirty |= e.sync_dirty;
+            items.push_back(std::move(it));
+        }
+    }
+    digest += std::to_string(m_last_acked_revision);
+    if (!dirty && digest == m_sent_plan_digest) {
+        return;
+    }
+
+    if (R_FAILED(m_usb_source->SendQueuePlan(items, m_last_acked_revision))) {
+        return;
+    }
+    m_sent_plan_digest = digest;
+    SCOPED_MUTEX(&m_mutex);
+    for (auto& e : m_queue) {
+        e.sync_dirty = false;
+    }
 }
 
 void Menu::ConfirmInstallPlan() {
