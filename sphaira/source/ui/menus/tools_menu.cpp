@@ -526,6 +526,17 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
 
 void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+    // a one-column list without page jump leaves left/right unused; make them
+    // step through the items like up/down (captions are skipped by SetIndex).
+    if (controller && !m_items.empty()) {
+        if (controller->GotDown(Button::RIGHT)) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex((m_index + 1) % static_cast<s64>(m_items.size()));
+        } else if (controller->GotDown(Button::LEFT)) {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex((m_index + static_cast<s64>(m_items.size()) - 1) % static_cast<s64>(m_items.size()));
+        }
+    }
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
         if (touch && i < static_cast<s64>(m_items.size()) && m_items[i].kind == settings::SettingsItemKind::Header) {
             return;

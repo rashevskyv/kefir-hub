@@ -151,12 +151,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const float mid_y = v.y + v.h / 2.f;
 
         if (row.row < 0) {
-            // a group is a band: filled, with an accent rail on the left while it
-            // is open, so the caption and its rows never read as one list.
+            // a group is a filled band; while open its title takes the accent
+            // colour, so the caption and its rows never read as one list.
             gfx::drawRect(vg, v.x, v.y + 3.f, v.w, v.h - 6.f, theme->GetColour(ThemeEntryID_GRID), 6.f);
-            if (open) {
-                gfx::drawRect(vg, v.x, v.y + 3.f, 6.f, v.h - 6.f, accent, 3.f);
-            }
             if (selected) {
                 gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 3.f, v.w, v.h - 6.f, 6.f);
             }
@@ -168,9 +165,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             return;
         }
 
-        // a value row sits inside the open group's rail, indented under the caption.
-        const float rail_x = v.x;
-        gfx::drawRect(vg, rail_x, v.y, 6.f, v.h, accent, 0.f);
+        // a value row is indented under its caption.
         if (selected) {
             gfx::drawRect(vg, v.x + 14.f, v.y + 2.f, v.w - 14.f, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
             gfx::drawRectOutline(vg, theme, 4.f, v.x + 14.f, v.y + 2.f, v.w - 14.f, v.h - 4.f);
