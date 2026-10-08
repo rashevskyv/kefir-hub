@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.029 — Tools list: left/right step through items; System information without the side bar
 - Tools → Tools: D-pad left/right move the cursor one item like up/down (a one-column list without page jump left them unused). System information: the accent bar on the left of an open group and its rows is gone; the open group is still told apart by the filled band, the accent-coloured title and the indented rows.
-- host tests: not needed · nro: not built · switch: pending — left/right in Tools → Tools; open a group in System information.
+- host tests: not needed · nro: built (ReleaseWithInstall and DocsDemo clean, 0.14.029) · docs: 4 shots retaken · switch: pending — left/right in Tools → Tools; open a group in System information.
 
 ## v0.14.028 — fix the Release (no network install) build; CI builds both presets
 - haze_helper.cpp: the MTP close-session hook that finishes a dbi install session is now under `#if ENABLE_NETWORK_INSTALL`, like the file's other dbi blocks; the Release preset had not compiled since v0.13.960. CI matrix: ReleaseWithInstall only (green on branch ci-libnx); Release still fails to link (18 dbi InstallSession / yati Usb symbols from usb transfer and MTP code) and is not maintained. host tests: not run (guard only), nro: CI built, switch: not needed.
