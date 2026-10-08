@@ -1,6 +1,9 @@
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore: [docs, guide-sync]   # docs branches: docs-preview.yml builds them
+  pull_request:
 
 jobs:
   build:
@@ -18,10 +21,14 @@ jobs:
     # fetch latest cmake
     - uses: lukka/get-cmake@v3.31.6
 
+    # sysmodule/source/main.c uses the omm service, added to libnx after v4.12.0 (switchbrew/libnx#713, 2026-02-18):
+    # build libnx from master, pinned. The local WSL toolchain carries the same master build.
     - name: Build libnx
+      env:
+        LIBNX_SHA: feebd026ca0f5dcc2119f46ad8e0d16ad3dd4973
       run: |
-        wget -qO- https://github.com/switchbrew/libnx/archive/v4.10.0.tar.gz | tar zxf - -C /tmp
-        cd /tmp/libnx-4.10.0
+        wget -qO- https://github.com/switchbrew/libnx/archive/$LIBNX_SHA.tar.gz | tar zxf - -C /tmp
+        cd /tmp/libnx-$LIBNX_SHA
         make -j$(nproc)
         make install
 
