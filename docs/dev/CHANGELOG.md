@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.028 — fix the Release (no network install) build; CI builds both presets
+- haze_helper.cpp: the MTP close-session hook that finishes a dbi install session is now under `#if ENABLE_NETWORK_INSTALL`, like the file's other dbi blocks; the Release preset had not compiled since v0.13.960. CI matrix: ReleaseWithInstall (shipped) and Release. host tests: not run (guard only), nro: CI run on branch ci-libnx, switch: not needed.
+
 ## v0.14.027 — Game transfer by USB cable; System information and Tools looks
 - Console Transfer → Send installed games now ends in two buttons: "Send over Wi-Fi" (as before) and "Send by USB cable". Cable = the existing Dump → "USB transfer (Switch 2 Switch)" path: this console is the USB host (usb:hs, `usb::upload::Usb`, tinfoil protocol) and offers one NSP per installed component of every chosen game (`title::BuildNspEntries`, `game::NspSource`), with the STREAM flag forced off (`DumpLocation::usb_stream`) because the Hub's PC Install (USB) refuses stream hosts. Receive games first asks "How is the other console connected?": Wi-Fi (the v0.14.020 flow) or USB cable, which opens PC Install (USB); the list arrives from the sender by itself. Correction: the v0.14.020 note that a cable was impossible was wrong, sphaira's uploader has run the console as USB host for Switch 2 Switch dumps all along; plan F.13 fixed.
 - System information: groups are filled bands with a left accent bar and accent-coloured title while open; parameter names bold (over-drawn), values in the accent colour, rows indented under the open group. Tools → Tools: compact 44 px rows, all captions and items on one screen, name left and description right.

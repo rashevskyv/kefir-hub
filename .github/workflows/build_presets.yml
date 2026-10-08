@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        preset: [Release]
+        preset: [ReleaseWithInstall, Release]   # ReleaseWithInstall is what Kefir ships
     runs-on: ${{ matrix.os }}
     container: devkitpro/devkita64:20250728
 

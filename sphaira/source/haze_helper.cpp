@@ -238,6 +238,7 @@ void haze_callback(const ::haze::CallbackData *data) {
                 }
             }
             ueventSignal(&g_mtp_done_event);
+#if ENABLE_NETWORK_INSTALL
             if (auto session = App::GetActiveInstallSession()) {
                 if (session->GetOrigin() == ui::menu::dbi::TransportOrigin::Mtp
                     && session->GetState() == ui::menu::dbi::State::Installing
@@ -245,6 +246,7 @@ void haze_callback(const ::haze::CallbackData *data) {
                     session->TransitionToSummary();
                 }
             }
+#endif
             break;
 
         case ::haze::CallbackType_CreateFile: log_write("[LIBHAZE] Creating File: %s\n", e.file.filename); break;
