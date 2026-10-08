@@ -3162,5 +3162,10 @@
   "Fill failed!": "Vullen mislukt!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Al de vrije ruimte op de microSD-kaart overschrijven met nullen? Bestanden worden niet aangeraakt. Dit kan lang duren.",
   "PC Install on connect": "Pc-installatie bij verbinden",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Zoek bij een aangesloten computer een paar seconden naar een USB-installatie-app (DBI Backend, ns-usbloader, Goldleaf) en open PC-installatie (USB) als er een reageert. Anders start MTP zoals gewoonlijk."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Zoek bij een aangesloten computer een paar seconden naar een USB-installatie-app (DBI Backend, ns-usbloader, Goldleaf) en open PC-installatie (USB) als er een reageert. Anders start MTP zoals gewoonlijk.",
+  "Choose language": "Taal kiezen",
+  "First start": "Eerste start",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub voegt een eigen icoon toe aan het HOME-menu. Start Kefir Hub vanaf nu via dat icoon: dan krijgt het al het geheugen en de USB-poort. Het Homebrew-menu en het album geven het slechts een deel.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Kies een taal. Als deze afwijkt van de taal van deze pagina, start Kefir Hub eenmalig opnieuw op om deze toe te passen. Start hem opnieuw vanuit het HOME-menu-icoon.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub wordt nu opnieuw opgestart om de taal toe te passen. Start de app handmatig vanuit het HOME-menu als deze niet terugkeert."
 }

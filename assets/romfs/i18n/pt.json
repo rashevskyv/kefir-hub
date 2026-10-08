@@ -3189,5 +3189,10 @@
   "Fill failed!": "Falha ao preencher!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Sobrescrever todo o espaço livre no cartão microSD com zeros? Os ficheiros não são afetados. Pode demorar muito tempo.",
   "PC Install on connect": "Instalação por PC ao ligar",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Quando um computador estiver ligado, procure uma aplicação de instalação USB (DBI Backend, ns-usbloader, Goldleaf) durante alguns segundos e abra a Instalação por PC (USB) se alguma responder. Caso contrário, o MTP inicia-se normalmente."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Quando um computador estiver ligado, procure uma aplicação de instalação USB (DBI Backend, ns-usbloader, Goldleaf) durante alguns segundos e abra a Instalação por PC (USB) se alguma responder. Caso contrário, o MTP inicia-se normalmente.",
+  "Choose language": "Idioma",
+  "First start": "Primeiro arranque",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "O Kefir Hub adiciona o seu próprio ícone ao menu HOME. A partir de agora, inicie o Kefir Hub a partir desse ícone: ele obtém assim toda a memória e a porta USB. O menu Homebrew e o Álbum dão-lhe apenas uma parte.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Escolha um idioma. Se diferir do idioma desta página, o Kefir Hub será reiniciado uma vez para aplicá-lo. Inicie-o novamente a partir do ícone do menu HOME.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "O Kefir Hub vai reiniciar agora para aplicar o idioma. Se não abrir automaticamente, inicie-o a partir do ícone no menu HOME."
 }

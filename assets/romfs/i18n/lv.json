@@ -3157,5 +3157,10 @@
   "Fill failed!": "Aizpildīšana neizdevās!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Pārrakstīt visu brīvo vietu microSD kartē ar nullēm? Faili netiek aiztikt. Tas var aizņemt ilgu laiku.",
   "PC Install on connect": "Datora instalēšana, pieslēdzoties",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Kad dators ir pievienots, dažas sekundes meklējiet USB instalēšanas lietotni (DBI Backend, ns-usbloader, Goldleaf) un atveriet datora instalēšanu (USB), ja kāda atbild. Pretējā gadījumā MTP sākas kā parasti."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Kad dators ir pievienots, dažas sekundes meklējiet USB instalēšanas lietotni (DBI Backend, ns-usbloader, Goldleaf) un atveriet datora instalēšanu (USB), ja kāda atbild. Pretējā gadījumā MTP sākas kā parasti.",
+  "Choose language": "Izvēlēties valodu",
+  "First start": "Pirmā palaišana",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub pievieno savu ikonu HOME izvēlnē. No šī brīža sāciet Kefir Hub no šīs ikonas: tad tas saņem visu atmiņu un USB pieslēgvietu. Homebrew izvēlne un albums tam dod tikai daļu.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Izvēlieties valodu. Ja tā atšķiras no šīs lapas valodas, Kefir Hub vienu reizi restartēsies, lai to lietotu. Palaidiet to vēlreiz no HOME izvēlnes ikonas.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub tagad restartēsies, lai lietotu valodu. Ja tas neatgriežas, palaidiet to no HOME izvēlnes ikonas."
 }

@@ -3162,5 +3162,10 @@
   "Fill failed!": "Fyllning misslyckades!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Skriv över allt ledigt utrymme på microSD-kortet med nollor? Filer berörs inte. Det kan ta lång tid.",
   "PC Install on connect": "PC-installation vid anslutning",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "När en dator är ansluten, leta efter en USB-installationsapp (DBI Backend, ns-usbloader, Goldleaf) i några sekunder och öppna PC-installation (USB) om någon svarar. Annars startar MTP som vanligt."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "När en dator är ansluten, leta efter en USB-installationsapp (DBI Backend, ns-usbloader, Goldleaf) i några sekunder och öppna PC-installation (USB) om någon svarar. Annars startar MTP som vanligt.",
+  "Choose language": "Välj språk",
+  "First start": "Första start",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub lägger till sin egen ikon på HOME-menyn. Från och med nu startar du Kefir Hub från den ikonen: den får då allt minne och USB-porten. Homebrew-menyn och albumet ger den bara en del.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Välj ett språk. Om det skiljer sig från språket på den här sidan startar Kefir Hub om en gång för att tillämpa det. Starta den igen från HOME-menyikonen.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub startar om nu för att tillämpa språket. Om den inte kommer tillbaka, starta den från dess ikon i HOME-menyn."
 }

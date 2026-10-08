@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.025 — First start: a full page in the console's language, then the language list
+- Startup with no language in config.ini loads the console's matched language (fallback English) instead of English, so the first-start page, the list and the main menu built underneath are already readable. A new `ui::FirstStart` widget (modal, blocks drawing underneath, so the menu is not rendered) replaces the bare language popup: Kefir Hub title and version, "First start", two paragraphs (start Kefir Hub from its HOME Menu icon: all memory and the USB port; choose a language, a different one restarts once), A = Choose language opens the usual list (title "Language", no cancel). A language equal to the page's own: no restart, the page pops. A different one: a dialog says Kefir Hub restarts now and to start it from the HOME Menu icon if it does not come back; OK restarts. Docs drafts EN/UK (index, getting-started), video 01 scene 8, DocsDemo startup steps are now A, A (open list, pick the highlighted language).
+- host tests: pass (quick) · nro: not built · switch: pending — fresh config on a Ukrainian console: page in Ukrainian, pick Ukrainian: no restart; pick English: dialog then restart; the menu is never visible under the page.
+
 ## v0.14.024 — USB probe: three detection rounds (DBI Backend Qt auto-starts its server)
 - DBI Backend Qt (E:\Switch\dbibackend-qt, commit d4ca08d) now starts its USB server by itself when a Switch in install mode appears, on a 2 s poll plus a device reset and a 1 s settle; the Hub probe runs three detection rounds instead of two so that start is always inside the window. Build checkpoint: v0.14.023 sources built clean (ReleaseWithInstall, no errors, no warnings in first-party code).
 - host tests: not run (constant change) · nro: built (v0.14.023 + this constant, not rebuilt) · switch: pending — see v0.14.023.

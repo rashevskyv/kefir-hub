@@ -3157,5 +3157,10 @@
   "Fill failed!": "Täitmine ebaõnnestus!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Kirjutada kõik microSD-kaardi vabad ruudud nullidega üle? Faile ei muudeta. See võib võtta kaua aega.",
   "PC Install on connect": "PC install ühendamisel",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Kui arvuti on ühendatud, otsige mõni sekund USB-installirakendust (DBI Backend, ns-usbloader, Goldleaf) ja avage arvuti install (USB), kui mõni neist vastab. Muul juhul käivitub MTP tavapäraselt."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Kui arvuti on ühendatud, otsige mõni sekund USB-installirakendust (DBI Backend, ns-usbloader, Goldleaf) ja avage arvuti install (USB), kui mõni neist vastab. Muul juhul käivitub MTP tavapäraselt.",
+  "Choose language": "Vali keel",
+  "First start": "Esimene käivitus",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub lisab HOME-menüüsse oma ikooni. Nüüdsest alates käivitage Kefir Hub sellelt ikoonilt: nii saab see kogu mälu ja USB-pordi. Homebrew-menüü ja album annavad sellele vaid osa.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Vali keel. Kui see erineb selle lehe keelest, taaskäivitub Kefir Hub selle rakendamiseks üks kord. Käivitage see uuesti HOME-menüü ikoonilt.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub taaskäivitub nüüd keele rakendamiseks. Kui see ei käivitu automaatselt, käivita see HOME-menüü ikoonilt."
 }

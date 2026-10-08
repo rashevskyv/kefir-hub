@@ -14,6 +14,7 @@
 #include "ntp.hpp"
 #include "nxlink.h"
 #include "forwarder_auto_install.hpp"
+#include "ui/first_start.hpp"
 #include "ui/menus/main_menu.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "utils/devoptab_common.hpp"
@@ -372,7 +373,13 @@ App::App(const char* argv0) {
         m_language_chosen = false;
     }
 
-    i18n::init(m_language_chosen ? m_language.Get() : "en");
+    // no choice yet: the first-start page and the language list speak the
+    // console's language, so the page is readable before any choice is made.
+    std::string startup_language = m_language_chosen ? m_language.Get() : i18n::MatchSystemLanguage();
+    if (startup_language.empty()) {
+        startup_language = "en";
+    }
+    i18n::init(startup_language);
 
     if (App::GetLogEnable()) {
         log_file_init();
@@ -517,7 +524,7 @@ App::App(const char* argv0) {
     // not sure if these are meant to be deleted or not...
     // A Chinese UI language takes the Chinese shared font as the main face so that
     // shared CJK code points get Chinese glyph shapes; Standard then serves as fallback.
-    const std::string ui_language = m_language_chosen ? m_language.Get() : "en";
+    const std::string ui_language{i18n::GetCurrentLanguageCode()};
     PlSharedFontType standard_type = PlSharedFontType_Standard;
     if (ui_language == "zh") {
         standard_type = PlSharedFontType_ChineseSimplified;
@@ -621,7 +628,9 @@ App::App(const char* argv0) {
 
     App::Push<ui::menu::main::MainMenu>();
     if (App::NeedsLanguageSelection()) {
-        App::ShowInitialLanguageSelection();
+        // a full page over the menu (which is not drawn under it), not a list
+        // dropped onto a screen the user has not been introduced to.
+        App::Push<ui::FirstStart>();
     }
 #if DOCS_DEMO
     demo::StartScene();

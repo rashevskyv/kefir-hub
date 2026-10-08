@@ -33,6 +33,15 @@ Kefir Hub — це homebrew-застосунок (`.nro`), тому він за�
 `/switch/hbmenu.nro`. Типово: вимкнено.
 
 ## Перший запуск
+
+<!-- shot: index-first-start | First start page: Kefir Hub title, HOME Menu icon advice, A = Choose language -->
+
+<!-- draft
+- new in v0.14.025: the first start opens a full page in the console's language, not the main menu with a list on top; the menu is not drawn until the language is chosen
+- the page says: Kefir Hub adds its own icon to the HOME Menu; start it from that icon from now on (all memory, USB port); the Homebrew Menu and the Album give only a part
+- press **A** ([[Choose language]]) to open the [[Language]] list; it opens on the console's language
+- a language other than the page's own: a dialog says Kefir Hub restarts now, start it from the HOME Menu icon if it does not come back; [[OK]] restarts; the same language: no restart, the main screen appears at once
+-->
 1. Виберіть мову. Список відкривається на мові консолі. Kefir Hub один раз перезапуститься, щоб усі
    меню, плитки й діалоги були цією мовою. Згодом мову можна змінити, див.
    [Початок роботи](getting-started.md#change-the-language).

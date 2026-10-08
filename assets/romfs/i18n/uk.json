@@ -3157,5 +3157,10 @@
   "Fill failed!": "Не вдалося заповнити!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "Перезаписати весь вільний простір на карті microSD нулями? Файли не чіпаються. Це може зайняти багато часу.",
   "PC Install on connect": "Встановлення з ПК при підключенні",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Коли комп'ютер підключено, пошукайте програму встановлення через USB (DBI Backend, ns-usbloader, Goldleaf) протягом кількох секунд і відкрийте «Встановлення з ПК (USB)», якщо якась відповість. Інакше MTP запускається як зазвичай."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Коли комп'ютер підключено, пошукайте програму встановлення через USB (DBI Backend, ns-usbloader, Goldleaf) протягом кількох секунд і відкрийте «Встановлення з ПК (USB)», якщо якась відповість. Інакше MTP запускається як зазвичай.",
+  "Choose language": "Вибрати мову",
+  "First start": "Перший запуск",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub додає власний значок до меню HOME. Відтепер запускайте Kefir Hub із цього значка: тоді він отримує всю пам'ять і порт USB. Меню Homebrew та альбом дають йому лише частину.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Виберіть мову. Якщо вона відрізняється від мови цієї сторінки, Kefir Hub перезапуститься один раз, щоб застосувати її. Запустіть його знову зі значка меню HOME.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub перезавантажиться зараз для застосування мови. Якщо він не повернеться, запустіть його з іконки меню HOME."
 }

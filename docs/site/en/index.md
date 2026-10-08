@@ -32,6 +32,15 @@ Turn it off to get the old Homebrew Menu back: Kefir Hub asks [[Restore hbmenu?]
 `/switch/hbmenu.nro`. Default: Off.
 
 ## First start
+
+<!-- shot: index-first-start | First start page: Kefir Hub title, HOME Menu icon advice, A = Choose language -->
+
+<!-- draft
+- new in v0.14.025: the first start opens a full page in the console's language, not the main menu with a list on top; the menu is not drawn until the language is chosen
+- the page says: Kefir Hub adds its own icon to the HOME Menu; start it from that icon from now on (all memory, USB port); the Homebrew Menu and the Album give only a part
+- press **A** ([[Choose language]]) to open the [[Language]] list; it opens on the console's language
+- a language other than the page's own: a dialog says Kefir Hub restarts now, start it from the HOME Menu icon if it does not come back; [[OK]] restarts; the same language: no restart, the main screen appears at once
+-->
 1. Pick your language. The list opens on the console language. Kefir Hub restarts once so that every
    menu, tile and dialog uses it. You can change it later, see
    [Getting started](getting-started.md#change-the-language).

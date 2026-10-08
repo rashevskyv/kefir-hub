@@ -3157,5 +3157,10 @@
   "Fill failed!": "Doldurma başarısız!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD kartındaki tüm boş alan sıfırlarla üzerine yazılsın mı? Dosyalar etkilenmez. Uzun sürebilir.",
   "PC Install on connect": "Bağlandığında PC'den Yükle",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Bilgisayar takıldığında, birkaç saniye boyunca bir USB yükleme uygulaması (DBI Backend, ns-usbloader, Goldleaf) arayın ve biri yanıt verirse PC Yüklemesi (USB) öğesini açın. Aksi takdirde MTP normal şekilde başlar."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "Bilgisayar takıldığında, birkaç saniye boyunca bir USB yükleme uygulaması (DBI Backend, ns-usbloader, Goldleaf) arayın ve biri yanıt verirse PC Yüklemesi (USB) öğesini açın. Aksi takdirde MTP normal şekilde başlar.",
+  "Choose language": "Dil seç",
+  "First start": "İlk başlatma",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub, HOME Menüsüne kendi simgesini ekler. Bundan sonra Kefir Hub'ı bu simgeden başlatın: böylece tüm belleğe ve USB bağlantı noktasına sahip olur. Homebrew Menüsü ve Albüm ona yalnızca bir kısmını verir.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Bir dil seçin. Bu sayfanın dilinden farklıysa, Kefir Hub bunu uygulamak için bir kez yeniden başlatılacak. HOME Menüsü simgesinden tekrar başlatın.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Dilin uygulanması için Kefir Hub şimdi yeniden başlatılıyor. Geri gelmezse, HOME Menüsü simgesinden başlatın."
 }

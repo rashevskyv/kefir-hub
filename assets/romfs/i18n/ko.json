@@ -3162,5 +3162,10 @@
   "Fill failed!": "채우기 실패!",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "microSD 카드의 모든 여유 공간을 0으로 덮어쓰시겠습니까? 파일은 변경되지 않습니다. 시간이 오래 걸릴 수 있습니다.",
   "PC Install on connect": "연결 시 PC 설치",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "컴퓨터가 연결되면 몇 초 동안 USB 설치 앱(DBI Backend, ns-usbloader, Goldleaf)을 찾고 응답이 있으면 PC 설치(USB)를 엽니다. 그렇지 않으면 MTP가 평소처럼 시작됩니다."
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "컴퓨터가 연결되면 몇 초 동안 USB 설치 앱(DBI Backend, ns-usbloader, Goldleaf)을 찾고 응답이 있으면 PC 설치(USB)를 엽니다. 그렇지 않으면 MTP가 평소처럼 시작됩니다.",
+  "Choose language": "언어 선택",
+  "First start": "첫 시작",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub이 HOME 메뉴에 자체 아이콘을 추가합니다. 이제부터는 해당 아이콘에서 Kefir Hub를 실행하세요. 그러면 모든 메모리과 USB 포트를 할당받게 됩니다. 홈브류 메뉴와 앨범에서는 일부만 할당됩니다.",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "언어를 선택하세요. 이 페이지의 언어와 다른 경우 적용을 위해 Kefir Hub가 한 번 재시작됩니다. HOME 메뉴 아이콘에서 다시 실행하세요.",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "언어를 적용하기 위해 Kefir Hub를 재시작합니다. 화면이 돌아오지 않으면 HOME 메뉴 아이콘에서 실행하세요."
 }

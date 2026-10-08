@@ -321,6 +321,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.16 **Tools → Tools grouped** into Diagnostics / Settings / Maintenance captions (user, 2026-10-07; v0.14.018).
 - [x] F.17 **PC Install on connect** (user, 2026-10-07; v0.14.023): on cable plug-in probe for a USB install app before
       auto MTP; a host that answers opens PC Install (USB) with its list. Also: indeterminate progress bar glides off the edge.
+- [x] F.18 **First-start page** (user, 2026-10-08; v0.14.025): full page in the console's language (HOME icon advice,
+      A = language list) instead of a popup over the rendered menu; restart only for a different language, announced first.
 - [x] F.11 **Game patches, switchable at install and afterwards** (need sigpatches): remove the linked-account
       requirement, allow screenshots, allow video capture (DBI PatchUAC/PatchScreenshot/PatchVideoRec). Install
       options plus the same switches on an installed game (DBI "Edit parental controls"), on and off.

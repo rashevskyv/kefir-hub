@@ -127,7 +127,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Feature | UI | Code | Page | Status |
 |---|---|---|---|---|
 | Launch (applet vs title mode), replace hbmenu, Title Mode forwarder | Homebrew Menu, Settings → Homebrew | app.cpp, install_share.cpp:112 | index#start-kefir-hub | partial: does Kefir ship Hub as hbmenu |
-| First run (language, account prompt), tabs, Tools grid | main | main_menu.cpp, tools_menu.cpp | index#first-start, #the-two-tabs | doc |
+| First run (first-start page, language, account prompt), tabs, Tools grid | main | ui/first_start.cpp, app_settings.cpp, main_menu.cpp, tools_menu.cpp | index#first-start, #the-two-tabs | draft (v0.14.025) |
 | Header, buttons, tabs, sidebars, dialogs, touch, keyboard + phone input | all | menu_base*.cpp, option_box.cpp, swkbd.cpp, remote_input.cpp | getting-started | doc |
 | Language change | Settings → General | app_settings.cpp:481, i18n.cpp | getting-started#change-the-language | doc |
 | Progress, minimize, screen off | transfers | progress_box*.cpp, app_frame.cpp | getting-started#long-tasks-and-background-tasks | doc |

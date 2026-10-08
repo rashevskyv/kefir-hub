@@ -290,11 +290,8 @@ void App::OpenLanguageSelectDialog(bool is_initial_setup) {
         items.push_back(lang.name);
     }
 
-    const char* title = is_initial_setup ? "Select Language / Оберіть мову" : "Language";
-    std::string title_str = is_initial_setup ? title : i18n::get(title);
-
     auto popup = std::make_unique<ui::PopupList>(
-        std::move(title_str),
+        "Language"_i18n,
         std::move(items),
         [is_initial_setup](std::optional<s64> op_index){
             if (!op_index) {
@@ -304,14 +301,18 @@ void App::OpenLanguageSelectDialog(bool is_initial_setup) {
             const s64 idx = *op_index;
             if (idx >= 0 && idx < static_cast<s64>(languages.size())) {
                 const auto& def = languages[idx];
+                const std::string before{i18n::GetCurrentLanguageCode()};
                 App::SetLanguage(def.code, !is_initial_setup);
                 if (is_initial_setup) {
                     App::MarkLanguageChosen();
-                    // The main menu behind this dialog was built in English and its tiles cache
-                    // their labels. The choice is already in config.ini: restart once so every
-                    // tile, hint and dialog uses the chosen language.
-                    if (def.code != "en") {
-                        App::ExitRestart();
+                    // The main menu behind the first-start page was built in the console's
+                    // language and its tiles cache their labels. The choice is already in
+                    // config.ini: a different language restarts once so every tile, hint and
+                    // dialog uses it. The user is told first, so the restart is not a crash.
+                    if (def.code != before) {
+                        App::Push<ui::OptionBox>(
+                            "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon."_i18n,
+                            "OK"_i18n, [](auto){ App::ExitRestart(); });
                     }
                 }
             }

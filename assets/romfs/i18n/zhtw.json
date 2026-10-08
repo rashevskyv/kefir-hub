@@ -3215,5 +3215,10 @@
   "Fill failed!": "填充失敗！",
   "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time.": "要用零覆寫 microSD 卡上的所有可用空間嗎？檔案不受影響。這可能需要很長時間。",
   "PC Install on connect": "連線時PC安裝",
-  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "當連接電腦時，尋找幾秒鐘的 USB 安裝應用程式（DBI Backend、ns-usbloader、Goldleaf），如果有回應則開啟 PC 安裝（USB）。否則 MTP 將照常啟動。"
+  "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual.": "當連接電腦時，尋找幾秒鐘的 USB 安裝應用程式（DBI Backend、ns-usbloader、Goldleaf），如果有回應則開啟 PC 安裝（USB）。否則 MTP 將照常啟動。",
+  "Choose language": "選擇語言",
+  "First start": "首次啟動",
+  "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub 會將它自己的圖標添加到 HOME 選單。從現在起，請透過該圖標啟動 Kefir Hub：這樣它就能獲取全部記憶體和 USB 連接埠。自製程式選單與相簿只能提供它一部分。",
+  "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "選擇一種語言。如果它與此頁面的語言不同，Kefir Hub 將重新啟動一次以應用它。從 HOME 選單圖示再次啟動它。",
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub 將重新啟動以套用語言。如果未返回，請從 HOME 選單圖示啟動它。"
 }
