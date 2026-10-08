@@ -484,7 +484,11 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
     );
 
     // compact rows: every caption and item fits on one screen, no scrolling.
-    m_list = std::make_unique<List>(1, static_cast<s64>(m_items.size()), Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 44.f});
+    // the list area is as tall as its rows plus room for the cursor outline,
+    // so the last row and its frame are never cut by the list's own clip.
+    constexpr float row_h = 44.f;
+    m_list = std::make_unique<List>(1, static_cast<s64>(m_items.size()),
+        Vec4{75.f, 132.f, 1145.f, row_h * static_cast<float>(m_items.size()) + 8.f}, Vec4{75.f, 132.f, 1130.f, row_h});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     SetIndex(0);
