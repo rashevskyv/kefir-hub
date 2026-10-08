@@ -3170,5 +3170,7 @@
   "USB cable": "Kabel USB",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Druga konsola otwiera Przesyłanie danych konsoli → Odbierz gry → Wi-Fi i wpisuje adres tej konsoli.",
   "Wi-Fi (same network)": "Wi-Fi (ta sama sieć)",
-  "USB install is not part of this build": "Instalacja przez USB nie jest częścią tej wersji"
+  "USB install is not part of this build": "Instalacja przez USB nie jest częścią tej wersji",
+  "Next group": "Następna grupa",
+  "Previous group": "Poprzednia grupa"
 }

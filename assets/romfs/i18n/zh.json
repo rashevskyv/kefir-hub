@@ -3228,5 +3228,7 @@
   "USB cable": "USB 数据线",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "另一台主机打开“主机转移”→“接收游戏”→“Wi-Fi”，并输入此主机的地址。",
   "Wi-Fi (same network)": "Wi-Fi（同一网络）",
-  "USB install is not part of this build": "此版本不包含 USB 安装功能"
+  "USB install is not part of this build": "此版本不包含 USB 安装功能",
+  "Next group": "下一组",
+  "Previous group": "上一组"
 }

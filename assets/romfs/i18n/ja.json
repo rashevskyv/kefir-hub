@@ -3175,5 +3175,7 @@
   "USB cable": "USBケーブル",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "もう1台の本体で「本体間の引っ越し」→「ソフトを受信する」→「Wi-Fi」を開き、この本体のアドレスを入力してください。",
   "Wi-Fi (same network)": "Wi-Fi（同じネットワーク）",
-  "USB install is not part of this build": "このビルドにはUSBインストールが含まれていません"
+  "USB install is not part of this build": "このビルドにはUSBインストールが含まれていません",
+  "Next group": "次のグループ",
+  "Previous group": "前のグループ"
 }

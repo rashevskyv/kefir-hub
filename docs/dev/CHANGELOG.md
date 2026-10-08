@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.030 — Tools: left/right jump between captions; System information: page jump and L/R groups
+- Tools → Tools: left/right move the cursor to the first item of the next / previous caption (Diagnostics → Settings → Maintenance, wrapping). System information: left/right page through the rows like the file browser (list page jump on); L / R move to the previous / next group and open it (footer: "Previous group", "Next group").
+- host tests: not needed · nro: not built · switch: pending — Tools: right from System information lands on Module Manager, again on Clean system junk; System information: right pages down, R opens Atmosphere, L back to Console.
+
 ## v0.14.029 — Tools list: left/right step through items; System information without the side bar
 - Tools → Tools: D-pad left/right move the cursor one item like up/down (a one-column list without page jump left them unused). System information: the accent bar on the left of an open group and its rows is gone; the open group is still told apart by the filled band, the accent-coloured title and the indented rows.
 - host tests: not needed · nro: built (ReleaseWithInstall and DocsDemo clean, 0.14.029) · docs: 4 shots retaken · switch: pending — left/right in Tools → Tools; open a group in System information.

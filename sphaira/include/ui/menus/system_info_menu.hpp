@@ -32,6 +32,8 @@ private:
     void SetIndex(s64 index);
     void ToggleGroup(s64 group);
     void ToggleAll();
+    // moves to the previous / next group and opens it.
+    void JumpGroup(int step);
     auto GroupOf(s64 index) const -> s64;
 
 private:

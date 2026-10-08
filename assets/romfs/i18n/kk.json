@@ -3170,5 +3170,7 @@
   "USB cable": "USB кабелі",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Басқа консоль «Консольді тасымалдау» → «Ойындарды алу» → «Wi-Fi» бөлімін ашып, осы консольдің мекенжайын енгізеді.",
   "Wi-Fi (same network)": "Wi-Fi (сол желі)",
-  "USB install is not part of this build": "USB арқылы орнату бұл жинаққа кірмейді"
+  "USB install is not part of this build": "USB арқылы орнату бұл жинаққа кірмейді",
+  "Next group": "Келесі топ",
+  "Previous group": "Алдыңғы топ"
 }

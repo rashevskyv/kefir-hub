@@ -59,12 +59,16 @@ Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System informatio
             }
         }}),
         std::make_pair(Button::Y, Action{"Open all / Close all"_i18n, [this](){ ToggleAll(); }}),
+        // L / R walk the groups, opening each one they land on; left / right
+        // page through the rows like the file browser.
+        std::make_pair(Button::R, Action{"Next group"_i18n, [this](){ JumpGroup(1); }}),
+        std::make_pair(Button::L, Action{"Previous group"_i18n, [this](){ JumpGroup(-1); }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
     );
 
     m_list = std::make_unique<List>(1, 8, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, ROW_H});
     m_list->SetLayout(List::Layout::GRID);
-    m_list->SetPageJump(false);
+    m_list->SetPageJump(true);
     Rebuild();
     SetIndex(0);
 }
@@ -92,6 +96,19 @@ void Menu::ToggleGroup(s64 group) {
     m_open[group] = !m_open[group];
     Rebuild();
     // land on the group's caption, whichever way it went.
+    const auto it = std::find_if(m_rows.begin(), m_rows.end(), [group](const Row& r){ return r.group == group && r.row < 0; });
+    SetIndex(it == m_rows.end() ? 0 : std::distance(m_rows.begin(), it));
+    App::PlaySoundEffect(SoundEffect_Focus);
+}
+
+void Menu::JumpGroup(int step) {
+    if (m_groups.empty()) {
+        return;
+    }
+    const auto count = static_cast<s64>(m_groups.size());
+    const auto group = (GroupOf(m_index) + step + count) % count;
+    m_open[group] = true;
+    Rebuild();
     const auto it = std::find_if(m_rows.begin(), m_rows.end(), [group](const Row& r){ return r.group == group && r.row < 0; });
     SetIndex(it == m_rows.end() ? 0 : std::distance(m_rows.begin(), it));
     App::PlaySoundEffect(SoundEffect_Focus);

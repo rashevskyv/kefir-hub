@@ -3170,5 +3170,7 @@
   "USB cable": "USB-kaabel",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Teine konsool avab Konsooli edastus → Saadi mänge → Wi-Fi ja sisestab selle konsooli aadressi.",
   "Wi-Fi (same network)": "Wi-Fi (sama võrk)",
-  "USB install is not part of this build": "USB-install ei kuulu selle versiooni koosseisu"
+  "USB install is not part of this build": "USB-install ei kuulu selle versiooni koosseisu",
+  "Next group": "Järgmine rühm",
+  "Previous group": "Eelmine rühm"
 }

@@ -3170,5 +3170,7 @@
   "USB cable": "USB kabelis",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Kita konsolė atidaro „Konsolės perkėlimas“ → „Gauti žaidimus“ → „Wi-Fi“ ir įveda šios konsolės adresą.",
   "Wi-Fi (same network)": "Wi-Fi (tas pats tinklas)",
-  "USB install is not part of this build": "USB diegimas nėra šios versijos dalis"
+  "USB install is not part of this build": "USB diegimas nėra šios versijos dalis",
+  "Next group": "Kita grupė",
+  "Previous group": "Ankstesnė grupė"
 }

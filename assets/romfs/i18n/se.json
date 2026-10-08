@@ -3175,5 +3175,7 @@
   "USB cable": "USB-kabel",
   "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Den andra konsolen öppnar Konsolöverföring → Ta emot spel → Wi-Fi och anger denna konsols adress.",
   "Wi-Fi (same network)": "Wi-Fi (samma nätverk)",
-  "USB install is not part of this build": "USB-installation ingår inte i den här versionen"
+  "USB install is not part of this build": "USB-installation ingår inte i den här versionen",
+  "Next group": "Nästa grupp",
+  "Previous group": "Föregående grupp"
 }

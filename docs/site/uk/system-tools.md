@@ -33,6 +33,7 @@
 - replaces the text report (v0.14.019): no file is written to the memory card any more
 - one list of groups: [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], [[Play activity]]; the first group is open at start
 - press **A** on a group, or tap it, to open or close it; **A** on a row opens or closes the group the row belongs to; **Y** opens all groups or closes all
+- v0.14.030: **left** / **right** page through the rows (as in the file browser); **L** / **R** ([[Previous group]], [[Next group]]) move to the previous / next group and open it
 - each open group shows rows parameter → value; the number on the right of a closed group is its row count
 - v0.14.027 look (v0.14.029: no side bar): a group is a filled band, the open group has its title in the accent colour and its rows indented; parameter names are bold, values are in the accent colour
 - [[Console]]: firmware version, name and hash; model; hardware type and SoC; retail or development unit; burnt fuses; DRAM id; device id; kiosk; charger HiZ; serial number; console nickname; language; region; parental controls
