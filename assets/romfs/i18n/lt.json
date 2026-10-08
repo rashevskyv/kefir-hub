@@ -3162,5 +3162,13 @@
   "First start": "Pirmas paleidimas",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "„Kefir Hub“ prideda savo piktogramą į HOME meniu. Nuo šiol paleiskite „Kefir Hub“ nuo šios piktogramos: tada ji gauna visą atmintį ir USB prievadą. „Homebrew“ meniu ir albumas suteikia jai tik dalį.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Pasirinkite kalbą. Jei ji skiriasi nuo šio puslapio kalbos, „Kefir Hub“ pasileis iš naujo vieną kartą, kad ją pritaikytų. Paleiskite jį iš naujo iš HOME meniu piktogramos.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub dabar pasileis iš naujo, kad pritaikytų kalbą. Jei jis negrįžta, paleiskite jį iš HOME meniu piktogramos."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub dabar pasileis iš naujo, kad pritaikytų kalbą. Jei jis negrįžta, paleiskite jį iš HOME meniu piktogramos.",
+  "Send by USB cable": "Siųsti USB kabeliu",
+  "How is the other console connected?": "Kaip prijungta kita konsolė?",
+  "Send over Wi-Fi": "Siųsti per „Wi-Fi“",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Sujunkite abu pultus USB-C laidu. Kitame pulte atidarykite Konsolės perkėlimas → Priimti žaidimus → USB laidas.",
+  "USB cable": "USB kabelis",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Kita konsolė atidaro „Konsolės perkėlimas“ → „Gauti žaidimus“ → „Wi-Fi“ ir įveda šios konsolės adresą.",
+  "Wi-Fi (same network)": "Wi-Fi (tas pats tinklas)",
+  "USB install is not part of this build": "USB diegimas nėra šios versijos dalis"
 }

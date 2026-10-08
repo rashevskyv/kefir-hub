@@ -3162,5 +3162,13 @@
   "First start": "First start",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.",
+  "Send by USB cable": "Send by USB cable",
+  "How is the other console connected?": "How is the other console connected?",
+  "Send over Wi-Fi": "Send over Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Connect the two consoles with a USB-C cable. The other console opens Console Transfer → Receive games → USB cable.",
+  "USB cable": "USB cable",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "The other console opens Console Transfer → Receive games → Wi-Fi and enters this console's address.",
+  "Wi-Fi (same network)": "Wi-Fi (same network)",
+  "USB install is not part of this build": "USB install is not part of this build"
 }

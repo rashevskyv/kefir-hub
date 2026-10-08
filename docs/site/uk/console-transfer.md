@@ -105,7 +105,9 @@
 - receiving console: [[Tools]] → [[Console Transfer]] → [[Receive games]]; type the sending console's address (same keyboard and port rules as for profiles); Kefir Hub fetches the list ([[Fetching game list...]]); if the other console offers nothing, a message says to open [[Send installed games]] there first
 - then a sidebar: [[Choose games]] (every offered game is ticked; the tick list shows size and file count per game), [[Install]]; the files of each game install one after another with the normal install progress; at the end "Installed N games"; a failure shows [[Install failed!]]
 - the sending console's server also still serves the memory card listing at its address, like every share
-- by cable (USB-C between two consoles): not available; use Wi-Fi
+- sending console sidebar now offers [[Send over Wi-Fi]] and [[Send by USB cable]] (v0.14.027); receiving console first asks [[How is the other console connected?]]: [[Wi-Fi (same network)]] or [[USB cable]]
+- USB cable: a USB-C to USB-C cable between the two consoles; the sending console acts as the USB host and sends the chosen games (one NSP per base, update and DLC) the way Dump → [[USB transfer (Switch 2 Switch)]] does; the receiving console opens its [[PC Install (USB)]] screen, the list arrives by itself, then the usual queue: select and press **A** ([[Install selected]])
+- cable sending ignores the [[USB transfer stream]] dump option (stream mode is never used between two consoles)
 -->
 
 ## Перенести копії збережень {#move-save-backups}

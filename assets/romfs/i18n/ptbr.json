@@ -3194,5 +3194,13 @@
   "First start": "Primeiro início",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "O Kefir Hub adiciona seu próprio ícone ao menu HOME. A partir de agora, inicie o Kefir Hub a partir desse ícone: assim ele obtém toda a memória e a porta USB. O menu Homebrew e o álbum fornecem apenas uma parte.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Escolha um idioma. Se diferir do idioma desta página, o Kefir Hub será reiniciado uma vez para aplicá-lo. Inicie-o novamente a partir do ícone do menu HOME.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "O Kefir Hub será reiniciado agora para aplicar o idioma. Se ele não retornar, inicie-o pelo ícone no menu HOME."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "O Kefir Hub será reiniciado agora para aplicar o idioma. Se ele não retornar, inicie-o pelo ícone no menu HOME.",
+  "Send by USB cable": "Enviar por cabo USB",
+  "How is the other console connected?": "Como a outra locação está conectada?",
+  "Send over Wi-Fi": "Enviar por Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Conecte os dois consoles com um cabo USB-C. No outro console, abra Transferência de console → Receber jogos → Cabo USB.",
+  "USB cable": "Cabo USB",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "O outro console abre Transferência de console → Receber jogos → Wi-Fi e insere o endereço deste console.",
+  "Wi-Fi (same network)": "Wi-Fi (mesma rede)",
+  "USB install is not part of this build": "A instalação por USB não faz parte desta compilação"
 }

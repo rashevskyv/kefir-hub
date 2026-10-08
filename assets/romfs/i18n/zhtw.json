@@ -3220,5 +3220,13 @@
   "First start": "首次啟動",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub 會將它自己的圖標添加到 HOME 選單。從現在起，請透過該圖標啟動 Kefir Hub：這樣它就能獲取全部記憶體和 USB 連接埠。自製程式選單與相簿只能提供它一部分。",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "選擇一種語言。如果它與此頁面的語言不同，Kefir Hub 將重新啟動一次以應用它。從 HOME 選單圖示再次啟動它。",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub 將重新啟動以套用語言。如果未返回，請從 HOME 選單圖示啟動它。"
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub 將重新啟動以套用語言。如果未返回，請從 HOME 選單圖示啟動它。",
+  "Send by USB cable": "透過USB線傳送",
+  "How is the other console connected?": "另一台主機是如何連接的？",
+  "Send over Wi-Fi": "透過 Wi-Fi傳送",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "使用 USB-C 連接線連接兩台主機。在另一台主機上開啟「主機轉移」→「接收遊戲」→「USB 連接線」。",
+  "USB cable": "USB 連接線",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "另一臺主機開啟「主機轉移」→「接收遊戲」→「Wi-Fi」，並輸入此主機的位址。",
+  "Wi-Fi (same network)": "Wi-Fi（相同網路）",
+  "USB install is not part of this build": "此版本不包含 USB 安裝功能"
 }

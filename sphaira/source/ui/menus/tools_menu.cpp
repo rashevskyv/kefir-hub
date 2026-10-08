@@ -483,10 +483,41 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
     );
 
-    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
+    // compact rows: every caption and item fits on one screen, no scrolling.
+    m_list = std::make_unique<List>(1, static_cast<s64>(m_items.size()), Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 44.f});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     SetIndex(0);
+}
+
+void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected) {
+    const float mid_y = v.y + v.h / 2.f;
+    if (item.kind == settings::SettingsItemKind::Header) {
+        // a caption: small, dimmed, with a rule running off to the right.
+        const auto colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawText(vg, v.x + 12.f, mid_y + 4.f, 15.f, colour, item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        float bounds[4];
+        nvgFontSize(vg, 15.f);
+        gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
+        const float rule_x = v.x + 12.f + (bounds[2] - bounds[0]) + 12.f;
+        gfx::drawRect(vg, rule_x, mid_y + 4.f, std::max(0.f, v.x + v.w - 12.f - rule_x), 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        return;
+    }
+
+    if (selected) {
+        gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+        gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 2.f, v.w, v.h - 4.f);
+    }
+    // name on the left, description on the right, each clipped to its half.
+    const float split = v.x + v.w * 0.36f;
+    nvgSave(vg);
+    nvgIntersectScissor(vg, v.x, v.y, split - v.x - 10.f, v.h);
+    gfx::drawText(vg, v.x + 24.f, mid_y, 19.f, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgRestore(vg);
+    nvgSave(vg);
+    nvgIntersectScissor(vg, split, v.y, v.x + v.w - 20.f - split, v.h);
+    gfx::drawText(vg, split, mid_y, 15.f, theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgRestore(vg);
 }
 
 void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
@@ -507,7 +538,7 @@ void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
 void SystemToolsMenu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
     m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
-        settings::DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
+        DrawRow(vg, theme, v, m_items[i], m_index == i);
     });
 }
 

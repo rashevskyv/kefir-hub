@@ -351,9 +351,9 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
 - [x] F.13 **Game transfer between two consoles** over the existing console-link mode, by cable and over the air.
       Entry: Console Transfer menu only (user, 2026-10-07: all console-to-console options in one place for now; other
       entry points, e.g. the installed game menu, to be decided after a walk through the menus). Base, updates and DLC.
-      Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable decided against (2026-10-07): MTP and
-      the USB install protocols are both device-side; a console-to-console cable needs a usb:hs host implementation
-      plus a hardware spike on USB-C role negotiation between two Switches. Reopen only with that spike.
+      Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable shipped in v0.14.027 on the existing
+      Dump → "USB transfer (Switch 2 Switch)" path (sender = usb:hs host, tinfoil protocol, receiver = PC Install
+      (USB)); the 2026-10-07 note that cable was impossible was wrong — sphaira's uploader already runs the console as host.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.

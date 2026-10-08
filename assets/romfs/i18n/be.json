@@ -3162,5 +3162,13 @@
   "First start": "Першы запуск",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub дадае ўласны значок у меню HOME. З гэтага моманту запускайце Kefir Hub з гэтага значка: тады яму дастаецца ўся памяць і порт USB. Меню хамбрэў і альбом даюць яму толькі частку.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Выберыце мову. Калі яна адрозніваецца ад мовы гэтай старонкі, Kefir Hub перазапусціцца адзін раз, каб прымяніць яе. Запусціце яго зноў са значка меню HOME.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub перазагрузіцца зараз для прымянення мовы. Калі ён не вернецца, запусціце яго з ібражэння меню HOME."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub перазагрузіцца зараз для прымянення мовы. Калі ён не вернецца, запусціце яго з ібражэння меню HOME.",
+  "Send by USB cable": "Адправіць праз USB-кабель",
+  "How is the other console connected?": "Як падключана іншая кансоль?",
+  "Send over Wi-Fi": "Адправіць па Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Падключыце дзве кансолі кабелем USB-C. На другой кансолі адкрыйце «Перадача кансоляў» → «Прыняць гульні» → «Кабель USB».",
+  "USB cable": "USB-кабель",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Іншая кансоль адкрывае «Перанос кансолі» → « Атрымаць гульні» → «Wi-Fi» і ўводзіць адрас гэтай кансолі.",
+  "Wi-Fi (same network)": "Wi-Fi (такая ж сетка)",
+  "USB install is not part of this build": "Устаноўка па USB не ўваходзіць у гэтую зборку"
 }

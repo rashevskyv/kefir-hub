@@ -72,6 +72,7 @@ struct SystemToolsMenu final : MenuBase {
 private:
     void SetIndex(s64 index);
     void OnSelect();
+    static void DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected);
 
 private:
     // SettingsItem rows so the list can carry captions (SettingsItemKind::Header).

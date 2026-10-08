@@ -32,10 +32,15 @@ void DrawChevron(NVGcontext* vg, float x, float y, bool open, const NVGcolor& c)
     nvgFill(vg);
 }
 
-void DrawClipped(NVGcontext* vg, float x, float y, float w, float size, const NVGcolor& c, const char* text) {
+// no bold face is loaded: bold is faked by over-drawing with a sub-pixel x
+// offset, the way the install session draws its event lines.
+void DrawClipped(NVGcontext* vg, float x, float y, float w, float size, const NVGcolor& c, const char* text, bool bold = false) {
     nvgSave(vg);
     nvgIntersectScissor(vg, x, y - size, w, size * 2.f);
     gfx::drawText(vg, x, y, size, c, text, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    if (bold) {
+        gfx::drawText(vg, x + 0.7f, y, size, c, text, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    }
     nvgRestore(vg);
 }
 
@@ -141,29 +146,43 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto& row = m_rows[i];
         const auto& group = m_groups[row.group];
         const bool selected = m_index == static_cast<s64>(i);
-        const auto text_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
-
-        if (selected) {
-            gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
-            gfx::drawRectOutline(vg, theme, 4.f, v);
-        } else {
-            gfx::drawRect(vg, v.x, v.y + v.h, v.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-        }
-
+        const bool open = m_open[row.group];
+        const auto accent = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
         const float mid_y = v.y + v.h / 2.f;
+
         if (row.row < 0) {
-            DrawChevron(vg, v.x + 28.f, mid_y, m_open[row.group], theme->GetColour(text_id));
-            gfx::drawText(vg, v.x + 52.f, mid_y, 22.f, theme->GetColour(text_id), group.title.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            gfx::drawTextArgs(vg, v.x + v.w - 20.f, mid_y, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
+            // a group is a band: filled, with an accent rail on the left while it
+            // is open, so the caption and its rows never read as one list.
+            gfx::drawRect(vg, v.x, v.y + 3.f, v.w, v.h - 6.f, theme->GetColour(ThemeEntryID_GRID), 6.f);
+            if (open) {
+                gfx::drawRect(vg, v.x, v.y + 3.f, 6.f, v.h - 6.f, accent, 3.f);
+            }
+            if (selected) {
+                gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 3.f, v.w, v.h - 6.f, 6.f);
+            }
+            const auto title_col = open ? accent : theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+            DrawChevron(vg, v.x + 30.f, mid_y, open, title_col);
+            DrawClipped(vg, v.x + 54.f, mid_y, v.w - 140.f, 24.f, title_col, group.title.c_str(), true);
+            gfx::drawTextArgs(vg, v.x + v.w - 20.f, mid_y, 15.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(ThemeEntryID_TEXT_INFO), "%zu", group.rows.size());
             return;
         }
 
+        // a value row sits inside the open group's rail, indented under the caption.
+        const float rail_x = v.x;
+        gfx::drawRect(vg, rail_x, v.y, 6.f, v.h, accent, 0.f);
+        if (selected) {
+            gfx::drawRect(vg, v.x + 14.f, v.y + 2.f, v.w - 14.f, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+            gfx::drawRectOutline(vg, theme, 4.f, v.x + 14.f, v.y + 2.f, v.w - 14.f, v.h - 4.f);
+        } else {
+            gfx::drawRect(vg, v.x + 30.f, v.y + v.h - 1.f, v.w - 50.f, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        }
+
         const auto& r = group.rows[row.row];
         const float value_x = v.x + v.w * VALUE_X;
-        DrawClipped(vg, v.x + 52.f, mid_y, value_x - v.x - 64.f, 18.f, theme->GetColour(text_id), r.label.c_str());
-        DrawClipped(vg, value_x, mid_y, v.x + v.w - 20.f - value_x, 18.f,
-            theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO), r.value.c_str());
+        const auto label_col = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+        DrawClipped(vg, v.x + 54.f, mid_y, value_x - v.x - 66.f, 18.f, label_col, r.label.c_str(), true);
+        DrawClipped(vg, value_x, mid_y, v.x + v.w - 20.f - value_x, 18.f, accent, r.value.c_str());
     });
 }
 

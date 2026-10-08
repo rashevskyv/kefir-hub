@@ -3162,5 +3162,13 @@
   "First start": "Mulai pertama",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub menambahkan ikon sendiri ke Menu HOME. Mulai sekarang, jalankan Kefir Hub dari ikon tersebut: aplikasi ini akan mendapatkan seluruh memori dan port USB. Menu Homebrew dan Album hanya memberinya sebagian.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Pilih bahasa. Jika berbeda dari bahasa halaman ini, Kefir Hub akan dimulai ulang sekali untuk menerapkannya. Mulai lagi dari ikon Menu HOME.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub dimulai ulang sekarang untuk menerapkan bahasa. Jika tidak kembali, jalankan dari ikon menu HOME."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub dimulai ulang sekarang untuk menerapkan bahasa. Jika tidak kembali, jalankan dari ikon menu HOME.",
+  "Send by USB cable": "Kirim via kabel USB",
+  "How is the other console connected?": "Bagaimana konsol lainnya terhubung?",
+  "Send over Wi-Fi": "Kirim lewat Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Sambungkan kedua konsol dengan kabel USB-C. Di konsol lain, buka Transfer Konsol → Terima game → Kabel USB.",
+  "USB cable": "Kabel USB",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Konsol lain membuka Transfer Konsol → Terima game → Wi-Fi dan memasukkan alamat konsol ini.",
+  "Wi-Fi (same network)": "Wi-Fi (jaringan yang sama)",
+  "USB install is not part of this build": "Instalasi USB bukan bagian dari build ini"
 }

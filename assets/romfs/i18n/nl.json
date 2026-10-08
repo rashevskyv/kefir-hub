@@ -3167,5 +3167,13 @@
   "First start": "Eerste start",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub voegt een eigen icoon toe aan het HOME-menu. Start Kefir Hub vanaf nu via dat icoon: dan krijgt het al het geheugen en de USB-poort. Het Homebrew-menu en het album geven het slechts een deel.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Kies een taal. Als deze afwijkt van de taal van deze pagina, start Kefir Hub eenmalig opnieuw op om deze toe te passen. Start hem opnieuw vanuit het HOME-menu-icoon.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub wordt nu opnieuw opgestart om de taal toe te passen. Start de app handmatig vanuit het HOME-menu als deze niet terugkeert."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub wordt nu opnieuw opgestart om de taal toe te passen. Start de app handmatig vanuit het HOME-menu als deze niet terugkeert.",
+  "Send by USB cable": "Versturen via usb-kabel",
+  "How is the other console connected?": "Hoe is de andere console verbonden?",
+  "Send over Wi-Fi": "Via Wi-Fi versturen",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Verbind de twee consoles met een USB-C-kabel. Open op de andere console Console-overdracht → Games ontvangen → USB-kabel.",
+  "USB cable": "USB-kabel",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "De andere console opent Console-overdracht → Games ontvangen → Wi-Fi en voert het adres van deze console in.",
+  "Wi-Fi (same network)": "Wi-Fi (zelfde netwerk)",
+  "USB install is not part of this build": "USB-installatie maakt geen deel uit van deze build"
 }

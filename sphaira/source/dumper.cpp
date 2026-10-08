@@ -193,7 +193,7 @@ Result DumpToUsbS2SRandom(ui::ProgressBox* pbox, UsbTest* usb) {
     R_THROW(0xFFFF);
 }
 
-Result DumpToUsbS2S(ui::ProgressBox* pbox, BaseSource* source, std::span<const fs::FsPath> paths) {
+Result DumpToUsbS2S(ui::ProgressBox* pbox, BaseSource* source, std::span<const fs::FsPath> paths, bool stream) {
     std::vector<std::string> file_list;
     for (const auto& path : paths) {
         file_list.emplace_back(path);
@@ -207,7 +207,7 @@ Result DumpToUsbS2S(ui::ProgressBox* pbox, BaseSource* source, std::span<const f
         if (R_SUCCEEDED(usb->IsUsbConnected(timeout))) {
             pbox->NewTransfer("USB connected, sending file list"_i18n);
             u8 flags = usb::tinfoil::USBFlag_NONE;
-            if (App::GetApp()->m_dump_usb_transfer_stream.Get()) {
+            if (stream) {
                 flags |= usb::tinfoil::USBFlag_STREAM;
             }
 
@@ -364,7 +364,7 @@ void Dump(const std::shared_ptr<BaseSource>& source, const DumpLocation& locatio
             R_TRY(DumpToFileNative(pbox, source.get(), paths));
         } else if (location.entry.type == DumpLocationType_UsbS2S) {
             #if ENABLE_NETWORK_INSTALL
-            R_TRY(DumpToUsbS2S(pbox, source.get(), paths));
+            R_TRY(DumpToUsbS2S(pbox, source.get(), paths, location.usb_stream.value_or(App::GetApp()->m_dump_usb_transfer_stream.Get())));
             #endif
         } else if (location.entry.type == DumpLocationType_DevNull) {
             R_TRY(DumpToDevNull(pbox, source.get(), paths));

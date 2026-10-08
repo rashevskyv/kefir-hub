@@ -3167,5 +3167,13 @@
   "First start": "첫 시작",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub이 HOME 메뉴에 자체 아이콘을 추가합니다. 이제부터는 해당 아이콘에서 Kefir Hub를 실행하세요. 그러면 모든 메모리과 USB 포트를 할당받게 됩니다. 홈브류 메뉴와 앨범에서는 일부만 할당됩니다.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "언어를 선택하세요. 이 페이지의 언어와 다른 경우 적용을 위해 Kefir Hub가 한 번 재시작됩니다. HOME 메뉴 아이콘에서 다시 실행하세요.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "언어를 적용하기 위해 Kefir Hub를 재시작합니다. 화면이 돌아오지 않으면 HOME 메뉴 아이콘에서 실행하세요."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "언어를 적용하기 위해 Kefir Hub를 재시작합니다. 화면이 돌아오지 않으면 HOME 메뉴 아이콘에서 실행하세요.",
+  "Send by USB cable": "USB 케이블로 보내기",
+  "How is the other console connected?": "다른 본체가 어떻게 연결되어 있나요?",
+  "Send over Wi-Fi": "Wi-Fi로 전송",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "USB-C 케이블로 두 본체를 연결하세요. 다른 본체에서 본체 전송 → 게임 수신 → USB 케이블을 엽니다.",
+  "USB cable": "USB 케이블",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "다른 본체에서 본체 전송 → 게임 수신 → Wi-Fi를 열고 이 본체의 주소를 입력합니다.",
+  "Wi-Fi (same network)": "Wi-Fi (동일 네트워크)",
+  "USB install is not part of this build": "이 빌드에는 USB 설치가 포함되어 있지 않습니다"
 }

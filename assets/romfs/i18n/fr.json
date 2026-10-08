@@ -3168,5 +3168,13 @@
   "First start": "Premier démarrage",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub ajoute sa propre icône au menu HOME. Désormais, lancez Kefir Hub à partir de cette icône : il obtient ainsi toute la mémoire et le port USB. Le menu Homebrew et l'album ne lui en donnent qu'une partie.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Choisissez une langue. Si elle diffère de la langue de cette page, Kefir Hub redémarrera une fois pour l'appliquer. Relancez-le depuis l'icône du menu HOME.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub redémarre maintenant pour appliquer la langue. S'il ne revient pas, lancez-le depuis son icône du menu HOME."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub redémarre maintenant pour appliquer la langue. S'il ne revient pas, lancez-le depuis son icône du menu HOME.",
+  "Send by USB cable": "Envoyer par câble USB",
+  "How is the other console connected?": "Comment l'autre console est-elle connectée?",
+  "Send over Wi-Fi": "Envoyer via Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Connectez les deux consoles avec un câble USB-C. Sur l'autre console, allez dans Transfert de console → Recevoir des jeux → Câble USB.",
+  "USB cable": "Câble USB",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "L'autre console ouvre Transfert de console → Recevoir des jeux → Wi-Fi et saisit l'adresse de cette console.",
+  "Wi-Fi (same network)": "Wi-Fi (même réseau)",
+  "USB install is not part of this build": "L'installation USB ne fait pas partie de cette version"
 }

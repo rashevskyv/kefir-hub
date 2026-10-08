@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <optional>
 
 namespace sphaira::dump {
 
@@ -40,6 +41,10 @@ struct DumpLocation {
     DumpEntry entry{};
     location::Entries network{};
     location::StdioEntries stdio{};
+    // USB (Switch 2 Switch) only: send with the tinfoil STREAM flag. Unset
+    // follows the dump option; Console Transfer sets false, because the Hub's
+    // own PC Install (USB) on the other console refuses stream hosts.
+    std::optional<bool> usb_stream{};
 };
 
 struct BaseSource {

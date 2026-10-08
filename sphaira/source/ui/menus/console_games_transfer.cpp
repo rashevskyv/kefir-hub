@@ -1,6 +1,9 @@
 #include "ui/menus/console_games_transfer.hpp"
 #include "ui/menus/install_share.hpp"
+#include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/game/game_internal.hpp"
 #include "ui/menus/grid_menu_base.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/popup_multi_select.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/sidebar.hpp"
@@ -9,6 +12,8 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "download.hpp"
+#include "dumper.hpp"
+#include "title_nsp.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 #include "net.hpp"
@@ -86,6 +91,47 @@ void StartSharing(std::vector<u64> ids) {
     });
 }
 
+// cable: this console is the USB host (usb:hs) and speaks the tinfoil protocol
+// to the other console's PC Install (USB), exactly like Dump → USB transfer
+// (Switch 2 Switch); one NSP per installed component of every chosen game.
+void StartSendingByCable(std::vector<u64> ids) {
+    if (R_FAILED(title::Init())) {
+        App::Notify("Could not read the installed games"_i18n);
+        return;
+    }
+
+    std::vector<title::NspEntry> entries;
+    for (const auto id : ids) {
+        std::string name;
+        if (const auto data = title::Get(id); data && data->status == title::NacpLoadStatus::Loaded && data->lang.name[0]) {
+            name = data->lang.name;
+        }
+        if (const auto rc = title::BuildNspEntries(id, name.c_str(), title::ContentFlag_All, false, entries); R_FAILED(rc)) {
+            title::Exit();
+            App::PushErrorBox(rc, "Failed to prepare NSP dump"_i18n);
+            return;
+        }
+    }
+    if (entries.empty()) {
+        title::Exit();
+        App::Notify("No matching installed content to dump"_i18n);
+        return;
+    }
+
+    std::vector<fs::FsPath> paths;
+    for (const auto& e : entries) {
+        paths.emplace_back(e.path);
+    }
+
+    dump::DumpLocation location{};
+    location.entry = {dump::DumpLocationType_UsbS2S, 0};
+    location.usb_stream = false;
+    auto source = std::make_shared<game::NspSource>(entries);
+    dump::Dump(source, location, paths, [](Result){
+        title::Exit();
+    });
+}
+
 // every application with installed content, by name.
 auto ScanInstalled(ProgressBox* pbox, std::vector<LocalGame>& out) -> Result {
     R_TRY(title::Init());
@@ -134,7 +180,7 @@ void ShowSendPicker(std::shared_ptr<std::vector<LocalGame>> games) {
         });
     });
 
-    options->Add<SidebarEntryCallback>("Start sharing"_i18n, [games, ticks](){
+    const auto chosen = [games, ticks]() {
         std::vector<u64> ids;
         for (size_t i = 0; i < games->size(); i++) {
             if ((*ticks)[i]) {
@@ -143,10 +189,21 @@ void ShowSendPicker(std::shared_ptr<std::vector<LocalGame>> games) {
         }
         if (ids.empty()) {
             App::Notify("No games chosen"_i18n);
-            return;
         }
-        StartSharing(std::move(ids));
-    }, true, "The other console opens Console Transfer → Receive games and enters this console's address."_i18n);
+        return ids;
+    };
+
+    options->Add<SidebarEntryCallback>("Send over Wi-Fi"_i18n, [chosen](){
+        if (auto ids = chosen(); !ids.empty()) {
+            StartSharing(std::move(ids));
+        }
+    }, true, "The other console opens Console Transfer → Receive games → Wi-Fi and enters this console's address."_i18n);
+
+    options->Add<SidebarEntryCallback>("Send by USB cable"_i18n, [chosen](){
+        if (auto ids = chosen(); !ids.empty()) {
+            StartSendingByCable(std::move(ids));
+        }
+    }, true, "Connect the two consoles with a USB-C cable. The other console opens Console Transfer → Receive games → USB cable."_i18n);
 }
 
 auto FetchRemoteGames(ProgressBox* pbox, const std::string& base_url, std::vector<RemoteGame>& out) -> Result {
@@ -281,12 +338,34 @@ void Send(std::vector<u64> preselected) {
     }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
 }
 
+void ReceiveOverWifi();
+
 void Receive() {
     if (!App::GetInstallEnable()) {
         App::ShowEnableInstallPrompt();
         return;
     }
 
+    PopupList::Items items{"Wi-Fi (same network)"_i18n, "USB cable"_i18n};
+    App::Push<PopupList>("How is the other console connected?"_i18n, items, [](auto op_index){
+        if (!op_index) {
+            return;
+        }
+        if (*op_index == 0) {
+            ReceiveOverWifi();
+            return;
+        }
+#if ENABLE_NETWORK_INSTALL
+        // the other console sends the list the moment it sees this one; the
+        // usual USB install screen takes it from there.
+        App::Push<ui::menu::dbi::Menu>(ui::menu::MenuFlag_None);
+#else
+        App::Notify("USB install is not part of this build"_i18n);
+#endif
+    });
+}
+
+void ReceiveOverWifi() {
     ConnectConsoleTransfer([](const std::string& base_url) {
         auto games = std::make_shared<std::vector<RemoteGame>>();
         App::Push<ProgressBox>(0, "Fetching game list..."_i18n, base_url, [base_url, games](ProgressBox* pbox) -> Result {

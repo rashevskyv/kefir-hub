@@ -3168,5 +3168,13 @@
   "First start": "Erster Start",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub fügt dem HOME-Menü ein eigenes Symbol hinzu. Starten Sie Kefir Hub ab jetzt über dieses Symbol: So erhält es den gesamten Arbeitsspeicher und den USB-Anschluss. Das Homebrew-Menü und das Album stellen ihm nur einen Teil zur Verfügung.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Wähle eine Sprache. Wenn sie von der Sprache dieser Seite abweicht, wird Kefir Hub einmal neu gestartet, um sie anzuwenden. Starte es erneut über das HOME-Menü-Symbol.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub wird jetzt neu gestartet, um die Sprache zu übernehmen. Sollte er nicht automatisch starten, starte ihn über das HOME-Menü."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub wird jetzt neu gestartet, um die Sprache zu übernehmen. Sollte er nicht automatisch starten, starte ihn über das HOME-Menü.",
+  "Send by USB cable": "Über USB-Kabel senden",
+  "How is the other console connected?": "Wie ist die andere Konsole verbunden?",
+  "Send over Wi-Fi": "Über WLAN senden",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Verbinde die beiden Konsolen mit einem USB-C-Kabel. Öffne auf der anderen Konsole „Konsolenübertragung“ → „Spiele empfangen“ → „USB-Kabel“.",
+  "USB cable": "USB-Kabel",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Die andere Konsole öffnet Konsolenübertragung → Spiele empfangen → WLAN und gibt die Adresse dieser Konsole ein.",
+  "Wi-Fi (same network)": "Wi-Fi (gleiches Netzwerk)",
+  "USB install is not part of this build": "USB-Installation ist nicht Teil dieses Builds"
 }

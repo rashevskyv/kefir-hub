@@ -3162,5 +3162,13 @@
   "First start": "İlk başlatma",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub, HOME Menüsüne kendi simgesini ekler. Bundan sonra Kefir Hub'ı bu simgeden başlatın: böylece tüm belleğe ve USB bağlantı noktasına sahip olur. Homebrew Menüsü ve Albüm ona yalnızca bir kısmını verir.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Bir dil seçin. Bu sayfanın dilinden farklıysa, Kefir Hub bunu uygulamak için bir kez yeniden başlatılacak. HOME Menüsü simgesinden tekrar başlatın.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Dilin uygulanması için Kefir Hub şimdi yeniden başlatılıyor. Geri gelmezse, HOME Menüsü simgesinden başlatın."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Dilin uygulanması için Kefir Hub şimdi yeniden başlatılıyor. Geri gelmezse, HOME Menüsü simgesinden başlatın.",
+  "Send by USB cable": "USB kablosu ile gönder",
+  "How is the other console connected?": "Diğer konsol nasıl bağlanıyor?",
+  "Send over Wi-Fi": "Wi-Fi ile Gönder",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "İki konsolu bir USB-C kablosuyla bağlayın. Diğer konsolda Konsol Aktarımı → Oyunları al → USB kablosu yolunu izleyin.",
+  "USB cable": "USB kablosu",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Diğer konsol Konsol Aktarımı → Oyunları Al → Wi-Fi öğesini açar ve bu konsolun adresini girer.",
+  "Wi-Fi (same network)": "Wi-Fi (aynı ağ)",
+  "USB install is not part of this build": "USB kurulumu bu derlemenin bir parçası değil"
 }

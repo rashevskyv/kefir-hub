@@ -3167,5 +3167,13 @@
   "First start": "Första start",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub lägger till sin egen ikon på HOME-menyn. Från och med nu startar du Kefir Hub från den ikonen: den får då allt minne och USB-porten. Homebrew-menyn och albumet ger den bara en del.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Välj ett språk. Om det skiljer sig från språket på den här sidan startar Kefir Hub om en gång för att tillämpa det. Starta den igen från HOME-menyikonen.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub startar om nu för att tillämpa språket. Om den inte kommer tillbaka, starta den från dess ikon i HOME-menyn."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub startar om nu för att tillämpa språket. Om den inte kommer tillbaka, starta den från dess ikon i HOME-menyn.",
+  "Send by USB cable": "Skicka via USB-kabel",
+  "How is the other console connected?": "Hur är den andra konsolen ansluten?",
+  "Send over Wi-Fi": "Skicka via Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Anslut de två konsolerna med en USB-C-kabel. På den andra konsolen öppnar du Konsolöverföring → Ta emot spel → USB-kabel.",
+  "USB cable": "USB-kabel",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Den andra konsolen öppnar Konsolöverföring → Ta emot spel → Wi-Fi och anger denna konsols adress.",
+  "Wi-Fi (same network)": "Wi-Fi (samma nätverk)",
+  "USB install is not part of this build": "USB-installation ingår inte i den här versionen"
 }

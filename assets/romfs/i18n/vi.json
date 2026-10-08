@@ -3167,5 +3167,13 @@
   "First start": "Khởi động lần đầu",
   "Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub thêm biểu tượng của riêng mình vào Menu HOME. Từ nay hãy khởi chạy Kefir Hub từ biểu tượng đó: nó sẽ nhận được toàn bộ bộ nhớ và cổng USB. Menu Homebrew và Album chỉ cấp cho nó một phần.",
   "Choose a language. If it differs from the language of this page, Kefir Hub restarts once to apply it. Start it again from the HOME Menu icon.": "Chọn một ngôn ngữ. Nếu nó khác với ngôn ngữ của trang này, Kefir Hub sẽ khởi động lại một lần để áp dụng. Khởi động lại nó từ biểu tượng menu HOME.",
-  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub sẽ khởi động lại ngay để áp dụng ngôn ngữ. Nếu không tự mở lại, hãy khởi động từ biểu tượng trên menu HOME."
+  "Kefir Hub restarts now to apply the language. If it does not come back, start it from its HOME Menu icon.": "Kefir Hub sẽ khởi động lại ngay để áp dụng ngôn ngữ. Nếu không tự mở lại, hãy khởi động từ biểu tượng trên menu HOME.",
+  "Send by USB cable": "Gửi qua cáp USB",
+  "How is the other console connected?": "Máy chơi game kia được kết nối thế nào?",
+  "Send over Wi-Fi": "Gửi qua Wi-Fi",
+  "Connect the two consoles with a USB-C cable. The other console opens Console Transfer â Receive games â USB cable.": "Kết nối hai máy bằng cáp USB-C. Trên máy còn lại, mở Chuyển đổi máy → Nhận trò chơi → Cáp USB.",
+  "USB cable": "Cáp USB",
+  "The other console opens Console Transfer â Receive games â Wi-Fi and enters this console's address.": "Máy khác mở Chuyển đổi máy → Nhận trò chơi → Wi-Fi và nhập địa chỉ của máy này.",
+  "Wi-Fi (same network)": "Wi-Fi (cùng mạng)",
+  "USB install is not part of this build": "Cài đặt USB không phải là một phần của bản dựng này"
 }
