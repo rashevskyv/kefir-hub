@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        preset: [ReleaseWithInstall, Release]   # ReleaseWithInstall is what Kefir ships
+        preset: [ReleaseWithInstall]   # what Kefir ships; Release (no network install) does not link since v0.13.960
     runs-on: ${{ matrix.os }}
     container: devkitpro/devkita64:20250728
 

@@ -17,7 +17,7 @@ Workflow for testing project compilation, diagnosing build/link errors, applying
 
 - **Environment**: WSL (Windows Subsystem for Linux) with devkitPro installed at `/opt/devkitpro`.
 - **Primary Checkout**: `D:\git\dev\kefir-hub` (mapped to `/mnt/d/git/dev/kefir-hub` in WSL). Do not use worktrees.
-- **Preset**: `ReleaseWithInstall` (or `Release` for non-network builds).
+- **Preset**: `ReleaseWithInstall` (the shipped one; `Release` without network install does not link since v0.13.960).
 
 ## Procedure
 
