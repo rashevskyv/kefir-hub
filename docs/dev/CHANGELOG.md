@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.033 — cheats: no prod.keys → offer a key dump everywhere the Build ID needs them
 - When the Build ID cannot be read without keys (game not running, main NSO unreadable) and `/switch/prod.keys` is missing, nx-cheats-db download, manual import and Fix BID now show the existing "prod.keys not found" dialog that offers to start Lockpick_RCM (before: only CheatSlips; nx-cheats-db silently guessed the Build ID from the online version map, the other two said "Could not determine ... Build ID"). `ShowProdKeysMissingDialog` moved out of the anonymous namespace (`cheats_ops.hpp`).
-- host tests: pass (quick) · nro: not built (changed files pass -fsyntax-only) · switch: pending — rename /switch/prod.keys, game not running: Cheats → nx-cheats-db → a game offers the Lockpick dump; put the file back.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall clean, 0.14.033) · switch: pending — rename /switch/prod.keys, game not running: Cheats → nx-cheats-db → a game offers the Lockpick dump; put the file back.
 
 ## v0.14.032 — cheats: Build ID byte order; cheat files Atmosphere accepts
 - Build ID from the running game (dmnt) and from the main NSO (no prod.keys) was byte-reversed, so cheat files got a wrong name and Atmosphere never loaded them; now read in order like the NCA path. The reversed-ID retries in the nx-cheats-db/KefirUpdater fetch are gone; the Build ID cache is v2 (old one dropped) and is used only for the same game version.
