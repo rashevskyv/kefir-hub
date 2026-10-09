@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.037 — after installs: ask about updates and DLC whose base game is not installed
+- New `orphan_content` (`NoteInstalled` from yati's record push for every update/DLC, `Poll` from the App loop): 5 s after the last install with no progress box open, the noted titles without an Application content meta are listed in one box — [[Keep]] / [[Delete]] (default Keep; delete = `DeleteApplicationKeepSave`, saves stay). Covers every install path (file browser, queue, USB PC Install, MTP, FTP, web) since all register through yati; a base game arriving later in the same batch clears its update.
+- host tests: pass (quick) · nro: not built (new and changed files pass -fsyntax-only) · switch: pending — install only an update by MTP: 5 s after it, the box names the game; Delete removes it from Games; install base + update together: no box; update of a game-card game: box appears, Keep.
+
 ## v0.14.036 — Games: sort by size
 - Games → Sort By → Sort: new [[Size]] (base + updates + DLC on SD, NAND and game card; Descending = biggest first, ties by name). Storage and Size sorts now read the sizes of all games before sorting (they were loaded one row per frame while drawing, so rows not drawn yet sorted as empty).
 - host tests: pass (quick) · nro: not built (changed files pass -fsyntax-only) · switch: pending — Games → Sort By → Sort → Size: biggest game first, Ascending reverses; Storage sort right at once after start.

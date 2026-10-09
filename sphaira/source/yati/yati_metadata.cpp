@@ -1,4 +1,5 @@
 #include "yati_internal.hpp"
+#include "orphan_content.hpp"
 #include "path_util.hpp"
 #include "yati/nx/nca.hpp"
 #include "yati/nx/ncm.hpp"
@@ -421,6 +422,9 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
         R_TRY(avmPushLaunchVersion(app_id, latest_version_num));
     }
     log_write("pushed\n");
+    if (cnmt.key.type == NcmContentMetaType_Patch || cnmt.key.type == NcmContentMetaType_AddOnContent) {
+        orphan_content::NoteInstalled(app_id);
+    }
     if (pbox) {
         pbox->OnTitleInstalled(app_id);
     }

@@ -114,6 +114,10 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 ## Проблеми {#problems}
 
+<!-- draft
+- v0.14.037: after an install (any way: file browser, PC Install, MTP, FTP, browser) that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows one box listing those titles, "Installed without the base game"; [[Keep]] (default) leaves them, [[Delete]] removes them (saves are kept); keep them when the base game is on a game card, or install the base game afterwards; the box also appears for the DBI/PC queue
+-->
+
 **Повідомлення про вимкнене встановлення радить шлях через Menu (Y) → Advanced.** Цей шлях застарів. Увімкніть встановлення в [[Tools]] → [[Settings]] → [[Install]] (див. [Увімкніть встановлення](#enable)).
 
 **Гру встановлено, але консоль каже, що запустити її поки не можна.** Грі потрібна новіша системна прошивка, ніж на консолі. Оновіть прошивку й Kefir (див. [Оновлення](../updater.md)). Перевстановлювати гру не потрібно.

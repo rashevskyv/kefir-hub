@@ -3173,5 +3173,7 @@
   "USB install is not part of this build": "USB install is not part of this build",
   "Wi-Fi (same network)": "Wi-Fi (same network)",
   "Next group": "Next group",
-  "Previous group": "Previous group"
+  "Previous group": "Previous group",
+  "Installed without the base game:": "Installed without the base game:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card."
 }
