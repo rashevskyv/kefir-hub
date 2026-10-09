@@ -143,6 +143,10 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 
 Зі списку **+** → [[Create save]] створює стандартне збереження для всіх позначених ігор для вибраного користувача. Ігри, у яких це збереження вже є, пропускаються.
 
+<!-- draft
+- v0.14.040: when a game is under the cursor (or several are ticked), the storage row of the memory where it is installed shows "<game size> / <free space>" (for example "6.2 GB / 41.3 GB"), not the game size alone; the other row keeps showing free space
+-->
+
 ## Сортування, пошук і фільтри
 Натисніть **+**:
 

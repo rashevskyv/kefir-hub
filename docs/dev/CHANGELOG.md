@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.040 — storage bars: the focused game's size no longer hides the free space
+- Header storage rows (Games and every menu that highlights a title): the value is "size / free" ("6.2 GB / 41.3 GB") instead of the size alone; the value column is sized for it, the network text next to NAND moves left as before. Free-only, "+focus / total / free" (install queue projection) and "written / total" (install progress) are unchanged.
+- host tests: not needed (draw only) · nro: not built · switch: pending — Games: cursor on a game on microSD: the microSD row reads "<size> / <free>", NAND row keeps free only; select several (multi-select): the sum / free.
+
 ## v0.14.039 — "Scripted input" debug setting: drive Kefir Hub from a file over MTP
 - `demo_input.cpp` (the DocsDemo button queue read from `/config/kefir/demo/input.txt`) is in every build; `App::PollInput` runs it when the new Tools → Settings → [[Scripted input]] (next to [[Logging]], default off) is on, always in DocsDemo. New command `dump`: writes the open widgets bottom to top to `/config/kefir/demo/state.txt` ("menu <short title>", "modal", "widget"). `tools/dev/hub-input.ps1 Down A "wait 1" dump -State -Log` pushes the lines over MTP (Shell COM) and prints state.txt / log.txt, so an agent can press buttons and read the result without the user.
 - host tests: pass (quick, test_demo_cmd covers `dump`) · nro: built (ReleaseWithInstall clean, 0.14.039 checkpoint) · switch: pending — Scripted input on, MTP running: `tools\dev\hub-input.ps1 Down Down A dump -State` moves the cursor and prints the menu stack; with the setting off the file is ignored.

@@ -121,7 +121,9 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             ? "+000000 WW / 000000 WW / 000000 WW"
             : (m_storage_install_progress && m_storage_highlight_active)
                 ? "+000000 WW / 000000 WW"
-                : "000000 WW";
+                : m_storage_highlight_active
+                    ? "000000 WW / 000000 WW"
+                    : "000000 WW";
         gfx::textBounds(vg, 0, 0, bounds, template_str);
         return bounds[2] - bounds[0];
     }();
@@ -142,9 +144,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const float bar_x   = value_x - 15.f - bar_w;
     const float label_x = bar_x - 8.f - label_col_w;
 
-    // value shown next to a bar: free space normally, the highlighted size in
-    // highlight mode, "+size" for a projection (planned install usage), or
-    // "written / total" for active package install progress.
+    // value shown next to a bar: free space normally, "size / free" in
+    // highlight mode (the game's size never hides what is left), "+focus /
+    // total / free" for a projection (planned install usage), or "written /
+    // total" for active package install progress.
     // A bar with no bytes for this title stays free-space grey: only the
     // storage that actually holds the game (or the planned install) turns blue.
     auto storage_value_of = [&](s64 free_bytes, u64 highlight_bytes, u64 focus_bytes) -> std::string {
@@ -160,7 +163,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         if (m_storage_install_progress) {
             return utils::formatSizeStorage(focus_bytes) + " / " + value;
         }
-        return value;
+        return value + " / " + utils::formatSizeStorage(free_bytes);
     };
 
     // Determine the exact rightmost boundary of the NAND storage part on Row 1 (y=48).

@@ -143,6 +143,10 @@ On the details screen, [[Saves]] tab:
 
 From the list, **+** → [[Create save]] creates a default save for all selected games for the user you pick. Games that already have a save for that user are skipped.
 
+<!-- draft
+- v0.14.040: when a game is under the cursor (or several are ticked), the storage row of the memory where it is installed shows "<game size> / <free space>" (for example "6.2 GB / 41.3 GB"), not the game size alone; the other row keeps showing free space
+-->
+
 ## Sort, search and filter
 Press **+**:
 
