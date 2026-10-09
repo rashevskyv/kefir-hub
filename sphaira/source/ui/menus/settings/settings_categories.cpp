@@ -370,6 +370,7 @@ void Menu::BuildCategories() {
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
                 MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
                 MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
+                MakeBoolItem("Scripted input"_i18n, "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt)."_i18n, App::GetScriptInput, App::SetScriptInput),
                 { "About"_i18n, "View application version and changelog."_i18n, [](){ return "v" + std::string(APP_VERSION); }, [](){
                     App::Push<AboutBox>();
                 }},

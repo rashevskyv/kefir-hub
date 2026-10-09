@@ -36,6 +36,10 @@
 | [[Restart Kefir Hub]] | Закриває і знову відкриває Kefir Hub. | |
 | [[Exit]] | Закриває Kefir Hub. | |
 
+<!-- draft
+- v0.14.039: new row for the settings table, after [[Logging]]: [[Scripted input]] (default off) — for developers: Kefir Hub presses the buttons listed in `/config/kefir/demo/input.txt` on the memory card (one button name per line: A, B, X, Y, L, R, ZL, ZR, Plus, Minus, L3, R3, Up, Down, Left, Right; `wait N` pauses N seconds; `dump` writes the open screens to `state.txt` in the same folder); the file is read and removed within a moment; leave it off in normal use
+-->
+
 ### Оновлення Kefir Hub {#update-kefir-hub}
 
 **Де:** [[Settings]] → [[General]] → [[Auto-update]]

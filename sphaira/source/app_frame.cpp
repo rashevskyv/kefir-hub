@@ -3,9 +3,7 @@
 #include "log.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/progress_box.hpp"
-#if DOCS_DEMO
 #include "demo/demo_input.hpp"
-#endif
 
 #include <switch.h>
 
@@ -127,9 +125,9 @@ void App::Poll() {
         m_controller.m_kdown = padGetButtonsDown(&m_pad);
         m_controller.m_kheld = padGetButtons(&m_pad);
         m_controller.m_kup = padGetButtonsUp(&m_pad);
-#if DOCS_DEMO
-        demo::PollInput(m_controller.m_kdown, m_controller.m_kheld, m_controller.m_kup);
-#endif
+        if (DOCS_DEMO || App::GetScriptInput()) {
+            demo::PollInput(m_controller.m_kdown, m_controller.m_kheld, m_controller.m_kup);
+        }
         m_controller.m_stick_l = padGetStickPos(&m_pad, 0);
         m_controller.m_stick_r = padGetStickPos(&m_pad, 1);
         m_controller.UpdateButtonHeld(static_cast<u64>(Button::ANY_DIRECTION), m_delta_time);

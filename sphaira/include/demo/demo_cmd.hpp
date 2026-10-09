@@ -1,10 +1,12 @@
 #pragma once
 
-// DOCS_DEMO builds only: one line of sdmc:/config/kefir/demo/input.txt, written by tools/docs/eden.ps1.
+// One line of sdmc:/config/kefir/demo/input.txt: tools/docs/eden.ps1 (DOCS_DEMO) or tools/dev/hub-input.ps1
+// over MTP with the "Scripted input" setting on.
 //   A | B | ... | Up | Down        press a button (names as in docs/site/shots.json)
 //   wait <seconds>                  pause the queue
 //   lang <code>                     switch the UI language and rebuild the menus from the main screen
 //   ready                           write sdmc:/config/kefir/demo/ready (the PC side waits for it, then shoots)
+//   dump                            write the open screens, bottom to top, to sdmc:/config/kefir/demo/state.txt
 // libnx-free so tests/test_demo_cmd.cpp can run it on the host.
 
 #include <cstdint>
@@ -23,7 +25,7 @@ constexpr std::uint64_t Left = 1ull << 12, Up = 1ull << 13, Right = 1ull << 14, 
 } // namespace pad
 
 struct Cmd {
-    enum Kind { Invalid, Button, Wait, Lang, Ready } kind{Invalid};
+    enum Kind { Invalid, Button, Wait, Lang, Ready, Dump } kind{Invalid};
     std::uint64_t button{};
     double seconds{};
     std::string arg{};
@@ -51,6 +53,9 @@ inline Cmd ParseCmd(std::string_view line) {
     }
     if (word == "ready") {
         return rest.empty() ? Cmd{Cmd::Ready} : Cmd{};
+    }
+    if (word == "dump") {
+        return rest.empty() ? Cmd{Cmd::Dump} : Cmd{};
     }
     if (!rest.empty()) {
         return {};

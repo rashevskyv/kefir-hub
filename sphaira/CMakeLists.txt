@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.038)
+set(sphaira_VERSION 0.14.039)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -320,6 +320,7 @@ add_executable(sphaira
     source/forced_language.cpp
     source/zero_fill.cpp
     source/orphan_content.cpp
+    source/demo/demo_input.cpp
     source/system_cleanup.cpp
     source/system_info.cpp
     source/system_info_power.cpp
@@ -392,7 +393,6 @@ if (DOCS_DEMO)
     # fictional demo content for docs screenshots (plan Phase S); never in release presets.
     target_sources(sphaira PRIVATE
         source/demo/demo_data.cpp
-        source/demo/demo_input.cpp
         source/demo/demo_http.cpp
         source/demo/demo_scene.cpp
         source/demo/demo_install.cpp

@@ -25,6 +25,8 @@ int main() {
     CHECK(ParseCmd("Plus\r").button == pad::Plus);
     CHECK(ParseCmd("B\r\n").button == pad::B);  // a line from fgets keeps its newline
     CHECK(ParseCmd("ready\r\n").kind == Cmd::Ready);
+    CHECK(ParseCmd("dump\r\n").kind == Cmd::Dump);
+    CHECK(ParseCmd("dump now").kind == Cmd::Invalid);
     CHECK(ParseCmd("  Down ").button == pad::Down);
     CHECK(ParseCmd("ZR").button == pad::ZR);
     CHECK(ParseCmd("R3").button == pad::R3);

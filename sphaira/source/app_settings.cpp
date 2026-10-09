@@ -48,6 +48,14 @@ auto App::GetLogEnable() -> bool {
     return g_app->m_log_enabled.Get();
 }
 
+auto App::GetScriptInput() -> bool {
+    return g_app->m_script_input.Get();
+}
+
+void App::SetScriptInput(bool enable) {
+    g_app->m_script_input.Set(enable);
+}
+
 auto App::GetAutoUpdateEnable() -> bool {
     return GetAutoUpdateMode() == static_cast<long>(auto_update::Mode::Silent);
 }

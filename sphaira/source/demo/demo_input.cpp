@@ -1,5 +1,6 @@
-// DOCS_DEMO builds only: buttons from a file, so tools/docs/eden.ps1 can drive the Hub while Eden is in the
-// background (Eden ignores posted keys unless its window is active). Commands: include/demo/demo_cmd.hpp.
+// Buttons from a file: tools/docs/eden.ps1 drives the Hub in Eden (DOCS_DEMO, where posted keys are ignored
+// unless the window is active), tools/dev/hub-input.ps1 drives a console over MTP when the "Scripted input"
+// setting is on. Commands: include/demo/demo_cmd.hpp.
 
 #include "demo/demo_input.hpp"
 #include "demo/demo_cmd.hpp"
@@ -7,6 +8,7 @@
 #include "log.hpp"
 #include "title_info.hpp"
 #include "ui/menus/main_menu.hpp"
+#include "ui/menus/menu_base.hpp"
 
 #include <cstdio>
 #include <deque>
@@ -25,6 +27,7 @@ static_assert(pad::Left == HidNpadButton_Left && pad::Up == HidNpadButton_Up && 
 
 constexpr const char* INPUT_TXT = "/config/kefir/demo/input.txt";
 constexpr const char* READY_FILE = "/config/kefir/demo/ready";
+constexpr const char* STATE_TXT = "/config/kefir/demo/state.txt";
 constexpr u64 MS = 1000000ull;
 constexpr u64 PRESS_GAP_NS = 350 * MS; // same pace as eden.ps1 used for posted keys
 constexpr u64 POLL_NS = 100 * MS;
@@ -58,6 +61,24 @@ void SwitchLanguage(const std::string& code) {
     }
     App::Push<ui::menu::main::MainMenu>();
     log_write("[demo] lang %s, menus rebuilt\n", code.c_str());
+}
+
+// one line per open widget, bottom to top: "menu <short title>", "modal" or "widget".
+void DumpState() {
+    auto f = std::fopen(STATE_TXT, "wb");
+    if (!f) {
+        return;
+    }
+    for (const auto& w : g_app->m_widgets) {
+        const auto* menu = w->IsMenu() ? static_cast<const ui::menu::MenuBase*>(w.get()) : w->GetChromeOwner();
+        if (menu) {
+            std::fprintf(f, "menu %s\n", menu->GetShortTitle());
+        } else {
+            std::fprintf(f, "%s\n", w->IsModal() ? "modal" : "widget");
+        }
+    }
+    std::fclose(f);
+    log_write("[demo] state dumped\n");
 }
 
 } // namespace
@@ -101,6 +122,9 @@ void PollInput(u64& kdown, u64& kheld, u64& kup) {
         case Cmd::Lang:
             SwitchLanguage(cmd.arg);
             g_next_ns = now + 1000 * MS;
+            break;
+        case Cmd::Dump:
+            DumpState();
             break;
         case Cmd::Ready:
             if (auto f = std::fopen(READY_FILE, "wb")) {

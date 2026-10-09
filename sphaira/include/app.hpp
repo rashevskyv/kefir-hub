@@ -156,6 +156,7 @@ public:
     static auto GetWriteProtect() -> bool;
     static auto GetWebdavUrlName() -> std::string;
     static auto GetLogEnable() -> bool;
+    static auto GetScriptInput() -> bool;
     // file name a PC install app writes over MTP to ask for PC Install (USB).
     static constexpr const char* PC_INSTALL_MARKER = "kefir-hub.pc-install";
     static auto GetAutoUpdateEnable() -> bool;
@@ -256,6 +257,7 @@ public:
     static void SetWriteProtect(bool enable);
     static void SetWebdavUrl(std::string value);
     static void SetLogEnable(bool enable);
+    static void SetScriptInput(bool enable);
     static void SetAutoUpdateEnable(bool enable);
     static void SetReplaceHbmenuEnable(bool enable);
     static void SetInstallLocation(long location);
@@ -476,6 +478,8 @@ public:
     option::OptionString m_webdav_url{INI_SECTION, "webdav_url", ""};
 
     option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
+    // debug: button presses from /config/kefir/demo/input.txt (demo_cmd.hpp), for tests over MTP.
+    option::OptionBool m_script_input{INI_SECTION, "script_input", false};
     option::OptionLong m_auto_update{INI_SECTION, "auto_update", 1}; // Silent; 0=Off, 2=Ask; old 3 (On demand) maps to Silent
     option::OptionString m_auto_update_skip{INI_SECTION, "auto_update_skip", ""};
     option::OptionBool m_account_link_prompt_skip{INI_SECTION, "account_link_prompt_skip", false};
