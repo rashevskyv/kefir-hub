@@ -22,6 +22,14 @@ Result Usb::SendDbiCmdHeader(dbi::CmdType type, dbi::CmdId id, u32 data_size, u6
     return m_usb->TransferAll(false, &header, sizeof(header), timeout);
 }
 
+// "::SPHQ_REV::|<rev>|<skip>|0": returns rev, stores the PC's skip field.
+static u32 ParseRevLine(const std::string& entry, std::atomic<long>& skip_field) {
+    char* end{};
+    const auto rev = std::strtoul(entry.c_str() + DBI_SPHQ_REV_PREFIX.size(), &end, 10);
+    skip_field = (end && *end == '|') ? std::strtol(end + 1, nullptr, 10) : 0;
+    return rev;
+}
+
 Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std::vector<std::string>& out_names) {
     R_UNLESS(header.magic == dbi::Magic_Dbi0, Result_UsbBadMagic);
     R_UNLESS(header.id == dbi::CmdId::List, Result_UsbBadMagic);
@@ -33,6 +41,7 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
     out_names.clear();
     m_file_sizes.clear();
     m_dbi_selection_sync = false;
+    m_pc_skip_field = 0;
 
     if (list_len > 0) {
         R_TRY(SendDbiCmdHeader(dbi::CmdType::Ack, dbi::CmdId::List, list_len, timeout));
@@ -63,6 +72,7 @@ Result Usb::DbiWaitForConnection(const dbi::CmdHeader& header, u64 timeout, std:
             }
             if (entry.starts_with(DBI_SPHQ_REV_PREFIX)) {
                 has_rev_header = true;
+                ParseRevLine(entry, m_pc_skip_field);
                 continue;
             }
 
@@ -199,7 +209,7 @@ Result Usb::FetchLiveQueue(std::vector<LiveQueueItem>& out_items, u32& out_revis
                 continue;
             }
             if (entry.starts_with(DBI_SPHQ_REV_PREFIX)) {
-                out_revision = std::strtoul(entry.c_str() + DBI_SPHQ_REV_PREFIX.size(), nullptr, 10);
+                out_revision = ParseRevLine(entry, m_pc_skip_field);
                 continue;
             }
 
@@ -303,7 +313,7 @@ Result Usb::SendQueuePlan(const std::vector<QueuePlanItem>& items, u32 revision,
             .selected = static_cast<u8>(it.selected ? 1 : 0),
             .target = static_cast<u8>(it.target),
             .planned = static_cast<u8>(it.planned_sd ? 1 : 2),
-            .flags = static_cast<u8>((it.analysis_ok ? dbi::QueuePlanFlag_AnalysisOk : 0) | (it.already_installed ? dbi::QueuePlanFlag_AlreadyInstalled : 0)),
+            .flags = static_cast<u8>((it.analysis_ok ? dbi::QueuePlanFlag_AnalysisOk : 0) | (it.already_installed ? dbi::QueuePlanFlag_AlreadyInstalled : 0) | (it.no_space ? dbi::QueuePlanFlag_NoSpace : 0)),
             .install_size = it.install_size,
             .name_len = static_cast<u32>(it.name.size()),
         };

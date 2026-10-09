@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 
 namespace sphaira::ui::menu::dbi {
 
@@ -61,6 +62,62 @@ constexpr PlanCandidateResult PlanEvaluateCandidate(long loc, int64_t size, int6
         if (loc != 1 && free_sd >= size) return {true, true}; // spill to SD if not NAND-only
         return {false, false};
     }
+}
+
+// Title id and version from a scene-style file name, "Game [0100ABF008968000][v458752].nsz".
+// The queue analysis reads only the container's file table, never the cnmt, so this
+// is what "already installed" checks against. id 0 when the name has no [16 hex].
+// ponytail: names without the tag (multi-title repacks) count as not installed; read the
+// cnmt in AnalyzeSource if that ever matters.
+struct NameTitle {
+    uint64_t id{};
+    uint32_t version{};
+    bool has_version{};
+};
+
+constexpr NameTitle ParseNameTitle(std::string_view name) {
+    NameTitle out{};
+    const auto hex = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return -1;
+    };
+    for (size_t i = 0; i < name.size(); i++) {
+        if (name[i] != '[') continue;
+        const auto close = name.find(']', i + 1);
+        if (close == std::string_view::npos) break;
+        const auto tag = name.substr(i + 1, close - i - 1);
+        if (!out.id && tag.size() == 16) {
+            uint64_t v = 0;
+            bool ok = true;
+            for (char c : tag) {
+                const int d = hex(c);
+                if (d < 0) { ok = false; break; }
+                v = (v << 4) | static_cast<uint64_t>(d);
+            }
+            if (ok) out.id = v;
+        } else if (!out.has_version && tag.size() > 1 && tag.size() <= 11 && tag[0] == 'v') {
+            uint64_t v = 0;
+            bool ok = true;
+            for (char c : tag.substr(1)) {
+                if (c < '0' || c > '9') { ok = false; break; }
+                v = v * 10 + static_cast<uint64_t>(c - '0');
+            }
+            if (ok && v <= UINT32_MAX) {
+                out.version = static_cast<uint32_t>(v);
+                out.has_version = true;
+            }
+        }
+    }
+    return out;
+}
+
+// "Already installed" mode the PC sends in the SPHQ revision line ("::SPHQ_REV::|rev|<field>|0"):
+// 0 = the PC leaves it to the console, 1..3 = Reinstall / Skip / Prompt. Older backends
+// send 0 there. Returns -1 for "not set by the PC".
+constexpr long PcSkipMode(long field) {
+    return field >= 1 && field <= 3 ? field - 1 : -1;
 }
 
 } // namespace sphaira::ui::menu::dbi

@@ -46,7 +46,11 @@ void App::Loop() {
             // configured is what crashed when a flash drive was plugged in.
             PsmChargerType charger{PsmChargerType_Unconnected};
             psmGetChargerType(&charger);
-            if (App::GetMtpEnable() && charger == PsmChargerType_LowPower) {
+            // with "PC Install on connect" the port stays free at start-up: the
+            // first USB poll asks the PC for an install app (the cable may have
+            // been in before Kefir Hub was started) and starts MTP only when no
+            // app answers.
+            if (App::GetMtpEnable() && charger == PsmChargerType_LowPower && !App::GetUsbInstallOnConnect()) {
                 haze::Init();
                 ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
             }

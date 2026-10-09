@@ -62,7 +62,7 @@ struct NX_PACKED QueuePlanRecord {
     u8 selected;
     u8 target;   // 0 auto, 1 sd, 2 nand (as the user set it)
     u8 planned;  // 1 sd, 2 nand (where it will go)
-    u8 flags;    // bit0 analysis ok, bit1 title already installed
+    u8 flags;    // bit0 analysis ok, bit1 title already installed, bit2 takes no space (will be skipped)
     u64 install_size;
     u32 name_len;
     // followed by name
@@ -70,6 +70,7 @@ struct NX_PACKED QueuePlanRecord {
 
 constexpr u8 QueuePlanFlag_AnalysisOk = 1 << 0;
 constexpr u8 QueuePlanFlag_AlreadyInstalled = 1 << 1;
+constexpr u8 QueuePlanFlag_NoSpace = 1 << 2;
 
 static_assert(sizeof(CmdHeader) == 0x10, "CmdHeader must be 0x10!");
 static_assert(sizeof(QueuePlanHeader) == 8, "QueuePlanHeader must be 8 bytes!");

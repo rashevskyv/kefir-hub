@@ -48,8 +48,7 @@ void Menu::StartInstall() {
         for (const auto& entry : m_queue) {
             if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
             if (!entry.analysis_deferred) {
-                const u64 title_id = GetQueueEntryTitleId(entry);
-                if (!IsTitleAlreadyInstalled(title_id)) {
+                if (!TakesNoSpace(entry)) {
                     AddSizeSaturated(entry.planned_sd ? sd_required : nand_required, entry.analysis.install_size);
                 }
             }
@@ -86,9 +85,8 @@ void Menu::RecomputePlan(bool force_refresh) {
     s64 free_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
     s64 free_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
 
-    auto plannable = [](const QueueEntry& e) {
-        return e.selected && R_SUCCEEDED(e.analysis_result)
-            && !IsTitleAlreadyInstalled(GetQueueEntryTitleId(e));
+    auto plannable = [this](const QueueEntry& e) {
+        return e.selected && R_SUCCEEDED(e.analysis_result) && !TakesNoSpace(e);
     };
 
     // packages pinned to a target claim their space first, fit or not; the Auto
@@ -107,6 +105,16 @@ void Menu::RecomputePlan(bool force_refresh) {
         e.planned_sd = PlanPickSd(loc, size, free_sd, free_nand);
         PlanTake(e.planned_sd ? free_sd : free_nand, size);
     }
+}
+
+long Menu::SkipMode() const {
+    const auto pc = PcSkipMode(m_usb_source ? m_usb_source->GetPcSkipField() : 0);
+    if (pc >= 0) return pc;
+    return App::GetSaveSettingsGlobally() ? App::GetApp()->m_skip_if_already_installed.Get() : m_session_skip_if_already_installed;
+}
+
+bool Menu::TakesNoSpace(const QueueEntry& entry) const {
+    return SkipMode() != 0 && IsEntryAlreadyInstalled(entry);
 }
 
 bool Menu::RefreshAutoInstallTarget(size_t index) {
@@ -317,7 +325,7 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
         s64 avail_nand = std::max<s64>(0, spaces.nand_free - reserve_nand);
         s64 avail_sd = std::max<s64>(0, spaces.sd_free - reserve_sd);
 
-        if (m_queue[active_index].install_selected && !IsTitleAlreadyInstalled(GetQueueEntryTitleId(m_queue[active_index]))) {
+        if (m_queue[active_index].install_selected && !TakesNoSpace(m_queue[active_index])) {
             const auto asize = PlanSize(m_queue[active_index]);
             if (m_queue[active_index].install_sd) {
                 PlanTake(avail_sd, asize);
@@ -342,7 +350,7 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
                 entry.install_sd = false;
                 entry.install_selected = true;
                 PlanTake(avail_nand, PlanSize(entry));
-            } else if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(entry))) {
+            } else if (TakesNoSpace(entry)) {
                 entry.planned_sd = PlanPickSd(loc, PlanSize(entry), avail_sd, avail_nand);
                 entry.install_sd = entry.planned_sd;
                 entry.install_selected = true;
@@ -407,11 +415,12 @@ void Menu::SendQueuePlanIfChanged() {
                 .target = e.target == InstallTarget::Sd ? 1 : e.target == InstallTarget::Nand ? 2 : 0,
                 .planned_sd = e.target == InstallTarget::Auto ? e.planned_sd : e.target == InstallTarget::Sd,
                 .analysis_ok = ok,
-                .already_installed = ok && IsTitleAlreadyInstalled(GetQueueEntryTitleId(e)),
+                .already_installed = ok && IsEntryAlreadyInstalled(e),
+                .no_space = ok && TakesNoSpace(e),
                 .install_size = static_cast<u64>(std::max<s64>(0, PlanSize(e))),
             };
             digest += it.name + '|' + std::to_string(it.selected) + std::to_string(it.target) + std::to_string(it.planned_sd)
-                + std::to_string(it.analysis_ok) + std::to_string(it.already_installed) + '|' + std::to_string(it.install_size) + '\n';
+                + std::to_string(it.analysis_ok) + std::to_string(it.already_installed) + std::to_string(it.no_space) + '|' + std::to_string(it.install_size) + '\n';
             dirty |= e.sync_dirty;
             items.push_back(std::move(it));
         }

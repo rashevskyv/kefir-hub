@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.031 — PC Install on connect also when the cable was in before start; "already installed" really detected; skip mode from DBI Backend Qt
+- Start-up with the PC cable already in and MTP on: MTP no longer grabs the port at once when "PC Install on connect" is on, so the first USB poll runs the install probe (MTP starts after it when no app answers). Before, only a plug-in after start opened PC Install.
+- Queue "already installed" took the title id from the cnmt nca's name, which is its content id, so it never matched and installed games were booked as needing space ("may not fit"). Now `ParseNameTitle` reads `[16 hex]` and `[vN]` from the file name and NCM is asked for that id at that version or newer (`IsEntryAlreadyInstalled`). Installed rows book no space only when the skip mode is not Reinstall (`Menu::TakesNoSpace`, `SkipMode`). DBI Backend Qt can set the skip mode: field 3 of the SPHQ revision line (0 = console setting, 1..3 = Reinstall/Skip/Prompt; older backends send 0); queue plan flag bit2 = takes no space.
+- host tests: pass (quick, test_install_plan covers the name parser) · nro: built (ReleaseWithInstall clean, 0.14.031) · switch: pending — start Kefir Hub with the PC cable in (MTP on, backend running): PC Install opens; queue with installed games and Skip: no "may not fit", backend unticks them once; Reinstall on the PC: they count again.
+
 ## v0.14.030 — Tools: left/right jump between captions; System information: page jump and L/R groups
 - Tools → Tools: left/right move the cursor to the first item of the next / previous caption (Diagnostics → Settings → Maintenance, wrapping). System information: left/right page through the rows like the file browser (list page jump on); L / R move to the previous / next group and open it (footer: "Previous group", "Next group").
 - host tests: not needed · nro: built (ReleaseWithInstall clean, 0.14.030) · switch: pending — Tools: right from System information lands on Module Manager, again on Clean system junk; System information: right pages down, R opens Atmosphere, L back to Console.

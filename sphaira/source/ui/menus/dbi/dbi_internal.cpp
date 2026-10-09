@@ -7,6 +7,7 @@
 #include "ui/nvg_util.hpp"
 #include "usb/usbds.hpp"
 #include "title_info.hpp"
+#include "ui/menus/install_plan.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -52,28 +53,6 @@ void AddSizeSaturated(s64& total, s64 value) {
     total = value > INT64_MAX - total ? INT64_MAX : total + value;
 }
 
-u64 GetQueueEntryTitleId(const QueueEntry& entry) {
-    for (const auto& col : entry.analysis.collections) {
-        if (path::EndsWithIC(col.name, ".cnmt.nca") || path::EndsWithIC(col.name, ".cnmt.ncz")) {
-            size_t pos = col.name.find(".cnmt.");
-            if (pos != std::string::npos && pos >= 16) {
-                std::string hex_str = col.name.substr(pos - 16, 16);
-                u64 val = 0;
-                bool ok = true;
-                for (char c : hex_str) {
-                    val <<= 4;
-                    if (c >= '0' && c <= '9') val |= (c - '0');
-                    else if (c >= 'a' && c <= 'f') val |= (c - 'a' + 10);
-                    else if (c >= 'A' && c <= 'F') val |= (c - 'A' + 10);
-                    else { ok = false; break; }
-                }
-                if (ok) return val;
-            }
-        }
-    }
-    return 0;
-}
-
 s64 QueuePackageSize(const QueueEntry& entry) {
     if (entry.analysis.source_size > 0) return entry.analysis.source_size;
     if (entry.source_size > 0) return entry.source_size;
@@ -90,22 +69,19 @@ s64 PlanSize(const QueueEntry& entry) {
     return static_cast<s64>(std::max<s64>(0, QueuePackageSize(entry)) * 1.6);
 }
 
-bool IsTitleAlreadyInstalled(u64 title_id) {
-    if (!title_id) return false;
-    // Check BuiltInUser (NAND)
-    {
-        auto& db = title::GetNcmDb(NcmStorageId_BuiltInUser);
+// the same version or a newer one is in NCM: yati would skip it (same key) or
+// refuse it as a downgrade, so it takes no space. The id comes from the file
+// name; the cnmt nca's name is its content id, not the title id.
+bool IsEntryAlreadyInstalled(const QueueEntry& entry) {
+    const auto t = ParseNameTitle(entry.file_name);
+    if (!t.id) return false;
+    for (const auto storage : {NcmStorageId_BuiltInUser, NcmStorageId_SdCard}) {
+        auto& db = title::GetNcmDb(storage);
         NcmContentMetaKey key{};
-        if (R_SUCCEEDED(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, title_id))) {
-            return true;
-        }
-    }
-    // Check SdCard
-    {
-        auto& db = title::GetNcmDb(NcmStorageId_SdCard);
-        NcmContentMetaKey key{};
-        if (R_SUCCEEDED(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, title_id))) {
-            return true;
+        if (R_SUCCEEDED(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, t.id))) {
+            if (!t.has_version || key.version >= t.version) {
+                return true;
+            }
         }
     }
     return false;

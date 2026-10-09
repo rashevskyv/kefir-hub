@@ -12,6 +12,8 @@
 using sphaira::ui::menu::dbi::PlanPickSd;
 using sphaira::ui::menu::dbi::PlanTake;
 using sphaira::ui::menu::dbi::PlanEvaluateCandidate;
+using sphaira::ui::menu::dbi::ParseNameTitle;
+using sphaira::ui::menu::dbi::PcSkipMode;
 
 namespace {
 
@@ -185,6 +187,21 @@ int main() {
         for (size_t i = 0; i < local_queue.size(); ++i) {
             assert(restored_queue[i].source_index == local_queue[i].source_index);
         }
+    }
+
+    // title id / version from file names (queue "already installed" check).
+    {
+        const auto upd = ParseNameTitle("Pokemon Sword [0100ABF008968800][v458752] (2.86 GB).nsz");
+        assert(upd.id == 0x0100ABF008968800ULL && upd.has_version && upd.version == 458752);
+        const auto low = ParseNameTitle("Yoshi's Crafted World [01006000040c2000][v0].nsp");
+        assert(low.id == 0x01006000040C2000ULL && low.has_version && low.version == 0);
+        const auto nover = ParseNameTitle("Zelda [01006BB00C6F0000] [RePack + Uv131072 + UKR].nsz");
+        assert(nover.id == 0x01006BB00C6F0000ULL && !nover.has_version);
+        const auto dlc = ParseNameTitle("Diablo III [DLC Russian Language Pack] [01001B300B9BF00A][v0].nsp");
+        assert(dlc.id == 0x01001B300B9BF00AULL && dlc.has_version);
+        assert(ParseNameTitle("Overcooked! 2 [B+U1114112+5DLC].nsp").id == 0);
+        assert(ParseNameTitle("broken [0100ABF00896").id == 0);
+        assert(PcSkipMode(0) == -1 && PcSkipMode(1) == 0 && PcSkipMode(2) == 1 && PcSkipMode(3) == 2 && PcSkipMode(4) == -1);
     }
 
     std::puts("install plan: ok");

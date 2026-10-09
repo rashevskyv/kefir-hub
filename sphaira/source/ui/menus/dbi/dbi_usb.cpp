@@ -274,9 +274,7 @@ void Menu::ThreadFunction() {
 
                 AddLog("Starting: "_i18n + name, LogKind::Event);
                 yati::ConfigOverride override{};
-                override.skip_if_already_installed = App::GetSaveSettingsGlobally()
-                    ? App::GetApp()->m_skip_if_already_installed.Get()
-                    : m_session_skip_if_already_installed;
+                override.skip_if_already_installed = SkipMode();
                 // pass the resolved target so yati does not ChooseInstallTarget again.
                 override.sd_card_install = plan_sd;
                 const auto read_before = m_total_read.load();

@@ -7,6 +7,7 @@
 #include "usb/usbds.hpp"
 
 #include <array>
+#include <atomic>
 #include <functional>
 #include <string>
 #include <memory>
@@ -58,6 +59,12 @@ struct Usb final : Base {
         return m_dbi_selection_sync;
     }
 
+    // raw "already installed" field of the PC's SPHQ revision line, see
+    // ui::menu::dbi::PcSkipMode. 0 when the PC did not send one.
+    long GetPcSkipField() const {
+        return m_pc_skip_field.load();
+    }
+
     using PostReadHook = std::function<void()>;
     void SetPostReadHook(PostReadHook hook) {
         m_post_read_hook = std::move(hook);
@@ -87,6 +94,7 @@ struct Usb final : Base {
         bool planned_sd{};
         bool analysis_ok{};
         bool already_installed{};
+        bool no_space{}; // installed and the skip mode will skip it
         u64 install_size{};
     };
     Result SendQueuePlan(const std::vector<QueuePlanItem>& items, u32 revision, u64 timeout = 1e+9);
@@ -127,6 +135,8 @@ private:
     u8 m_flags{};
     UsbProtocol m_protocol{UsbProtocol::None};
     bool m_dbi_selection_sync{false};
+    // written by the usb thread, read by the ui thread (plan, draw).
+    std::atomic<long> m_pc_skip_field{0};
     PostReadHook m_post_read_hook{};
 
     // goldleaf request blocks are built in m_gl_req and replies land in

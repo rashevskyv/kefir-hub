@@ -166,7 +166,7 @@ void Menu::SortQueue() {
             case 5: { // Status: ticked, unticked, already installed, analysis failed
                 const auto rank = [](const QueueEntry& e) {
                     if (R_FAILED(e.analysis_result)) return 3;
-                    if (IsTitleAlreadyInstalled(GetQueueEntryTitleId(e))) return 2;
+                    if (IsEntryAlreadyInstalled(e)) return 2;
                     return e.selected ? 0 : 1;
                 };
                 const int ra = rank(a);

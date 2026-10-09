@@ -177,8 +177,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const auto& entry = m_queue[i];
             if (entry.selected && R_SUCCEEDED(entry.analysis_result)) {
                 const auto size = PlanSize(entry);
-                const u64 title_id = GetQueueEntryTitleId(entry);
-                if (!IsTitleAlreadyInstalled(title_id)) {
+                if (!TakesNoSpace(entry)) {
                     AddSizeSaturated(selected_size, size);
                     AddSizeSaturated(entry.planned_sd ? sd_required : nand_required, size);
                     // the row under the cursor gets its own colour inside the bar.

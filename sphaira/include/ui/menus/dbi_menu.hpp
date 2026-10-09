@@ -276,6 +276,11 @@ private:
     void StartInstall();
     void ConfirmInstallPlan();
     void RecomputePlan(bool force_refresh = false);
+    // "already installed" mode in force: the PC's when it sent one, else the
+    // console's (global or session). 0 reinstall, 1 skip, 2 prompt.
+    long SkipMode() const;
+    // installed and not going to be reinstalled: the plan books no space for it.
+    bool TakesNoSpace(const QueueEntry& entry) const;
     bool RefreshAutoInstallTarget(size_t index);
     bool ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& items, size_t active_index = 0, bool is_installing = false);
     bool ApplyLiveSelection(const std::unordered_map<std::string, bool>& selections, const std::unordered_map<std::string, int>& targets = {});
