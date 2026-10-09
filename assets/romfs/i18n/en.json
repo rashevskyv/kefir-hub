@@ -1064,6 +1064,7 @@
   "Installed": "Installed",
   "Failed": "Failed",
   "Starting: ": "Starting: ",
+  "Queued again: ": "Queued again: ",
   "Installed: ": "Installed: ",
   "Failed: ": "Failed: ",
   "Queue finished.": "Queue finished.",

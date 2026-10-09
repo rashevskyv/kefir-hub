@@ -52,6 +52,11 @@ struct QueueEntry {
     // selected/target changed on the console and not yet sent to the PC: the
     // live queue from the PC must not overwrite them until SendQueuePlan ran.
     bool sync_dirty{};
+    // a package the install went past without installing it (failed, skipped,
+    // unticked) that the PC has since shown unticked: ticking it again on the PC
+    // queues it once more (Retry). Unticked first, so a failed package the PC
+    // still shows ticked is not retried in a loop.
+    bool retry_armed{};
 };
 
 // how a session-log line is drawn: events are bold, results are coloured.

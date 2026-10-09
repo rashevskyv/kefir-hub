@@ -1223,6 +1223,7 @@
   "Installed": "Встановлено",
   "Failed": "Помилок",
   "Starting: ": "Початок: ",
+  "Queued again: ": "Знову в черзі: ",
   "Installed: ": "Встановлено: ",
   "Failed: ": "Помилка: ",
   "Queue finished.": "Чергу завершено.",

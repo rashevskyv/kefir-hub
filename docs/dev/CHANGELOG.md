@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.035 — USB queue: Retry from the PC during an install
+- A package the install already went past without installing it (failed, skipped, unticked) is queued once more when the PC unticks it and ticks it again (DBI Backend Qt "Retry" does that; it unticks failed packages itself). `QueueEntry::retry_armed` is set when the live queue shows it unticked, so a failed package still ticked on the PC is not retried in a loop. Log line "Queued again: <name>" (en, engb, uk).
+- host tests: pass (quick) · nro: built (ReleaseWithInstall clean, 0.14.035) · switch: pending — let a package fail mid-queue, Retry it on the PC: it installs after the current one; a failed one left alone is not retried.
+
 ## v0.14.034 — USB queue plan tells the PC which updates and DLC have no base game
 - Queue plan flag bit3 (`QueuePlanFlag_NoBase`): an update (…800) or DLC (base + 0x1000 + n) whose base game is in neither NCM database (`IsBaseMissing`, `BaseTitleId` from the file name's title id). DBI Backend Qt lists these, plus per-package results and failure codes, in its end-of-session report.
 - host tests: pass (quick, test_install_plan covers BaseTitleId) · nro: built (ReleaseWithInstall clean, 0.14.034) · switch: pending — queue an update whose game is not installed: the PC report lists it under "Without base game"; with the base in the same queue it is not listed.

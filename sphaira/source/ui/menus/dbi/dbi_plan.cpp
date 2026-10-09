@@ -241,6 +241,9 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
     // Future packages (after active_index) follow wire order, can be added or removed.
     std::unordered_set<std::string> frozen_names;
     std::unordered_map<std::string, QueueEntry> future_map;
+    // name -> (index, armed) of packages already passed without being installed.
+    std::unordered_map<std::string, std::pair<size_t, bool>> passed;
+    std::vector<size_t> arm, requeued;
     {
         SCOPED_MUTEX(&m_mutex);
         if (active_index >= m_queue.size()) {
@@ -248,6 +251,9 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
         }
         for (size_t k = 0; k <= active_index; k++) {
             frozen_names.insert(m_queue[k].file_name);
+            if (k < active_index && !m_queue[k].installed) {
+                passed[m_queue[k].file_name] = {k, m_queue[k].retry_armed};
+            }
         }
         for (size_t k = active_index + 1; k < m_queue.size(); k++) {
             future_map.emplace(m_queue[k].file_name, m_queue[k]);
@@ -256,8 +262,22 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
 
     std::vector<QueueEntry> new_future;
     for (const auto& item : items) {
-        if (frozen_names.contains(item.name)) {
-            continue; // Frozen prefix stays intact
+        if (!future_map.contains(item.name) && frozen_names.contains(item.name)) {
+            // Frozen prefix stays intact, except a passed package the PC retries:
+            // unticked there (arms it), then ticked again (queued once more below).
+            const auto p = passed.find(item.name);
+            if (p == passed.end()) {
+                continue;
+            }
+            if (!item.selected) {
+                arm.push_back(p->second.first);
+                continue;
+            }
+            if (!p->second.second) {
+                continue;
+            }
+            requeued.push_back(p->second.first);
+            AddLog("Queued again: "_i18n + item.name, LogKind::Event);
         }
         auto it = future_map.find(item.name);
         if (it != future_map.end()) {
@@ -309,6 +329,12 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
         SCOPED_MUTEX(&m_mutex);
         if (active_index >= m_queue.size()) {
             return false;
+        }
+        for (const auto k : arm) {
+            m_queue[k].retry_armed = true;
+        }
+        for (const auto k : requeued) {
+            m_queue[k].retry_armed = false;
         }
         m_queue.resize(active_index + 1);
         for (auto& entry : new_future) {
