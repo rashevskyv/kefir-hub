@@ -90,7 +90,7 @@ void CheatGameSelectMenu::ScanGames() {
             info.version = version;
             std::snprintf(info.lang.name, sizeof(info.lang.name), "%s", info.name.c_str());
             if (const auto it = cached_entries.find(info.title_id); it != cached_entries.end() &&
-                IsValidBuildId(it->second.build_id)) {
+                it->second.version == info.version && IsValidBuildId(it->second.build_id)) {
                 info.build_id = it->second.build_id;
             }
 
@@ -122,7 +122,7 @@ void CheatGameSelectMenu::ScanGames() {
 
         for (auto& game : m_games) {
             if (const auto it = cached_entries.find(game.title_id); it != cached_entries.end() &&
-                IsValidBuildId(it->second.build_id)) {
+                it->second.version == game.version && IsValidBuildId(it->second.build_id)) {
                 game.build_id = it->second.build_id;
             }
         }
@@ -140,77 +140,6 @@ void CheatGameSelectMenu::ScanGames() {
 
 namespace detail {
 
-static auto SanitizeManualCheatContent(const std::vector<u8>& data, std::string& out) -> bool {
-    if (data.empty()) {
-        return false;
-    }
-
-    // Atmosphere/EdiZon cheat parsers can be picky about BOM-prefixed files.
-    size_t offset = 0;
-    if (data.size() >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF) {
-        offset = 3;
-    } else if (data.size() >= 2 &&
-               ((data[0] == 0xFF && data[1] == 0xFE) || (data[0] == 0xFE && data[1] == 0xFF))) {
-        log_write("[Cheats] Manual import rejected UTF-16 cheat file\n");
-        return false;
-    }
-
-    std::string text(reinterpret_cast<const char*>(data.data() + offset), data.size() - offset);
-    if (!text.empty() && static_cast<unsigned char>(text.front()) == 0xEF) {
-        return false;
-    }
-
-    std::istringstream stream(text);
-    std::ostringstream sanitized;
-    std::string line;
-    std::string pending_header;
-    bool wrote_any_code = false;
-    bool wrote_code_for_header = false;
-
-    while (std::getline(stream, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-
-        while (!line.empty() && std::isspace(static_cast<unsigned char>(line.back()))) {
-            line.pop_back();
-        }
-
-        std::string trimmed = line;
-        trimmed.erase(0, trimmed.find_first_not_of(" \t"));
-
-        if (trimmed.empty() || trimmed.rfind("//", 0) == 0 || IsParenthesizedNoteLine(trimmed)) {
-            continue;
-        }
-
-        if (IsCheatHeaderLine(trimmed)) {
-            pending_header = trimmed;
-            wrote_code_for_header = false;
-            continue;
-        }
-
-        trimmed = StripInlineCheatComment(trimmed);
-        if (trimmed.empty()) {
-            continue;
-        }
-
-        if (!IsHexCodeLine(trimmed) || pending_header.empty()) {
-            continue;
-        }
-
-        if (!wrote_code_for_header) {
-            sanitized << pending_header << '\n';
-            wrote_code_for_header = true;
-        }
-
-        sanitized << NormalizeHexCodeLine(trimmed) << '\n';
-        wrote_any_code = true;
-    }
-
-    out = sanitized.str();
-    return wrote_any_code;
-}
-
 auto ImportManualCheatFile(u64 title_id, const fs::FsPath& source_path, const std::string& target_build_id) -> Result {
     fs::FsNativeSd fs;
 
@@ -222,8 +151,8 @@ auto ImportManualCheatFile(u64 title_id, const fs::FsPath& source_path, const st
 
     std::vector<u8> data;
     R_TRY(fs.read_entire_file(source_path, data));
-    std::string sanitized_content;
-    if (!SanitizeManualCheatContent(data, sanitized_content)) {
+    const auto sanitized_content = SanitizeCheatText({reinterpret_cast<const char*>(data.data()), data.size()}).text;
+    if (sanitized_content.empty()) {
         log_write("[Cheats] Manual import rejected invalid cheat file: %s\n", source_path.s);
         return 1;
     }

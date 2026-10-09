@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/menus/cheats_menu.hpp"
+#include "ui/menus/cheats/cheat_text.hpp"
 
 namespace sphaira::ui::menu::hats {
 
@@ -82,12 +83,6 @@ namespace detail {
     auto DeleteCheatFile(u64 title_id, const std::string& build_id) -> bool;
     auto ResolveManualTargetBuildId(const GameCheatInfo& game, const fs::FsPath* source_path = nullptr) -> std::string;
     auto GetManualCheatImportPath(u64 title_id, const std::string& build_id) -> fs::FsPath;
-    auto IsCheatHeaderLine(const std::string& line) -> bool;
-    auto GetCheatHeaderName(const std::string& line) -> std::string;
-    auto IsParenthesizedNoteLine(const std::string& line) -> bool;
-    auto StripInlineCheatComment(std::string line) -> std::string;
-    auto IsHexCodeLine(const std::string& line) -> bool;
-    auto NormalizeHexCodeLine(const std::string& line) -> std::string;
     auto GetCheatslipsToken() -> std::string;
 }
 

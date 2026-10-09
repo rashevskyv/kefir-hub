@@ -54,38 +54,11 @@ auto BytesToHex(const u8* data, size_t len) -> std::string {
     return hex;
 }
 
-auto BytesToBuildId(const u8* data, size_t len) -> std::string {
-    std::string hex;
-    hex.reserve(len * 2);
-    for (size_t i = 0; i < len; i++) {
-        const auto value = data[len - 1 - i];
-        char buf[3];
-        std::snprintf(buf, sizeof(buf), "%02X", value);
-        hex += buf;
-    }
-    return hex;
-}
-
 auto NormalizeBuildId(std::string build_id) -> std::string {
     std::transform(build_id.begin(), build_id.end(), build_id.begin(), [](unsigned char c) {
         return static_cast<char>(std::toupper(c));
     });
     return build_id;
-}
-
-auto ReverseBuildIdBytes(std::string build_id) -> std::string {
-    build_id = NormalizeBuildId(std::move(build_id));
-    if ((build_id.size() % 2) != 0) {
-        return build_id;
-    }
-
-    std::string reversed;
-    reversed.reserve(build_id.size());
-    for (size_t i = build_id.size(); i > 0; i -= 2) {
-        reversed.push_back(build_id[i - 2]);
-        reversed.push_back(build_id[i - 1]);
-    }
-    return reversed;
 }
 
 auto IsValidBuildId(const std::string& build_id) -> bool {
@@ -172,7 +145,7 @@ auto TryGetBuildIdFromNsoWithStorage(u64 title_id, NcmStorageId storage_id, cons
         return "";
     }
 
-    const auto build_id = detail::NormalizeBuildId(detail::BytesToBuildId(build_id_bytes, sizeof(build_id_bytes)));
+    const auto build_id = detail::NormalizeBuildId(detail::BytesToHex(build_id_bytes, sizeof(build_id_bytes)));
     if (!detail::IsValidBuildId(build_id)) {
         log_write("[Cheats] GetBuildIdFromNso: invalid Build ID read from /main for storage=%d path=%s: %s\n",
                   static_cast<int>(storage_id), path ? path : "(null)", build_id.c_str());

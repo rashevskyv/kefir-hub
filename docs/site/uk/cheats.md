@@ -36,6 +36,12 @@ Kefir Hub встановлює, показує й видаляє файли чи
 
 Нові чити додаються до наявного файлу читів гри; чити з такою самою назвою пропускаються. В одному файлі може бути щонайбільше 128 читів — більше Atmosphère не читає, тож зайві не встановлюються.
 
+<!-- draft
+- replaces the 128 limit sentence above (v0.14.032): one file holds at most 127 cheats plus one master code {..}; Atmosphere reads none of the file when one rule is broken, so Kefir Hub now writes only what it accepts: a second master code, a cheat longer than 256 code words and cheats past 127 are skipped, and a message says how many ("Atmosphere limits: skipped N cheat(s)")
+- the whole file is checked again each time cheats are added, also the cheats that were in it before; manual import uses the same check
+- Build ID fix (v0.14.032): when the game was running or no prod.keys were found, Kefir Hub read the Build ID with its bytes reversed, so the file got a wrong name and Atmosphere did not load it; files made that way can be renamed with Y (Fix BID) in the game's cheat file list
+-->
+
 !!! tip
     Запустіть гру один раз, закрийте її, а тоді завантажуйте. Найнадійніше Kefir Hub визначає Build ID із запущеної або встановленої гри. Якщо не вдається, він шукає версію онлайн, а це для деяких ігор може дати хибний результат.
 

@@ -111,7 +111,7 @@ auto GetBuildIdFromDmnt(u64 title_id) -> std::string {
                   metadata.process_id, application_pid);
     }
 
-    std::string build_id = detail::NormalizeBuildId(detail::BytesToBuildId(metadata.main_nso_build_id, 8));
+    std::string build_id = detail::NormalizeBuildId(detail::BytesToHex(metadata.main_nso_build_id, 8));
     if (!detail::IsValidBuildId(build_id)) {
         log_write("[Cheats] dmnt:cht returned an invalid Build ID: %s\n", build_id.c_str());
         return "";

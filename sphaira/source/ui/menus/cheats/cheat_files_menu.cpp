@@ -43,20 +43,6 @@ auto GetManualCheatImportPath(u64 title_id, const std::string& build_id) -> fs::
     return file_path;
 }
 
-auto IsCheatHeaderLine(const std::string& line) -> bool {
-    return line.size() >= 3 &&
-        ((line.front() == '[' && line.back() == ']') ||
-         (line.front() == '{' && line.back() == '}'));
-}
-
-auto GetCheatHeaderName(const std::string& line) -> std::string {
-    if (!IsCheatHeaderLine(line)) {
-        return {};
-    }
-
-    return line.substr(1, line.length() - 2);
-}
-
 // Get list of existing cheat files for a title
 // Returns map of {build_id: filename}
 auto GetExistingCheats(u64 title_id) -> std::vector<std::pair<std::string, std::string>> {
@@ -150,66 +136,6 @@ auto ResolveManualTargetBuildId(const GameCheatInfo& game, const fs::FsPath* sou
     }
 
     return {};
-}
-
-auto IsParenthesizedNoteLine(const std::string& line) -> bool {
-    return line.size() >= 2 && line.front() == '(' && line.back() == ')';
-}
-
-auto StripInlineCheatComment(std::string line) -> std::string {
-    const auto comment_pos = line.find("//");
-    if (comment_pos != std::string::npos) {
-        line.erase(comment_pos);
-    }
-
-    while (!line.empty() && std::isspace(static_cast<unsigned char>(line.back()))) {
-        line.pop_back();
-    }
-
-    return line;
-}
-
-auto IsHexCodeLine(const std::string& line) -> bool {
-    std::istringstream stream(line);
-    std::string part;
-    size_t count = 0;
-
-    while (stream >> part) {
-        if (part.size() != 8) {
-            return false;
-        }
-
-        for (const auto c : part) {
-            if (!std::isxdigit(static_cast<unsigned char>(c))) {
-                return false;
-            }
-        }
-
-        count++;
-    }
-
-    return count >= 1 && count <= 4;
-}
-
-auto NormalizeHexCodeLine(const std::string& line) -> std::string {
-    std::istringstream stream(line);
-    std::ostringstream out;
-    std::string part;
-    bool first = true;
-
-    while (stream >> part) {
-        std::transform(part.begin(), part.end(), part.begin(), [](unsigned char c) {
-            return static_cast<char>(std::toupper(c));
-        });
-
-        if (!first) {
-            out << ' ';
-        }
-        out << part;
-        first = false;
-    }
-
-    return out.str();
 }
 
 } // namespace detail

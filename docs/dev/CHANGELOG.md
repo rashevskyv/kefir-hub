@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.032 — cheats: Build ID byte order; cheat files Atmosphere accepts
+- Build ID from the running game (dmnt) and from the main NSO (no prod.keys) was byte-reversed, so cheat files got a wrong name and Atmosphere never loaded them; now read in order like the NCA path. The reversed-ID retries in the nx-cheats-db/KefirUpdater fetch are gone; the Build ID cache is v2 (old one dropped) and is used only for the same game version.
+- New `cheat_text.hpp` (`SanitizeCheatText`, host test `test_cheat_text`): dmnt drops the whole file for a second master code, more than 127 cheats, more than 256 words in one cheat, code before a header or brackets in a name. Download rewrites the whole file (old + new cheats) through it, manual import too; skipped cheats are reported.
+- host tests: pass (quick) · nro: not built (cheat sources pass -fsyntax-only with devkitPro) · switch: pending — download cheats for a game without prod.keys and with the game running: file name = Build ID shown by EdiZon/Breeze, cheats active in game; add cheats twice to one file: still loads.
+
 ## v0.14.031 — PC Install on connect also when the cable was in before start; "already installed" really detected; skip mode from DBI Backend Qt
 - Start-up with the PC cable already in and MTP on: MTP no longer grabs the port at once when "PC Install on connect" is on, so the first USB poll runs the install probe (MTP starts after it when no app answers). Before, only a plug-in after start opened PC Install.
 - Queue "already installed" took the title id from the cnmt nca's name, which is its content id, so it never matched and installed games were booked as needing space ("may not fit"). Now `ParseNameTitle` reads `[16 hex]` and `[vN]` from the file name and NCM is asked for that id at that version or newer (`IsEntryAlreadyInstalled`). Installed rows book no space only when the skip mode is not Reinstall (`Menu::TakesNoSpace`, `SkipMode`). DBI Backend Qt can set the skip mode: field 3 of the SPHQ revision line (0 = console setting, 1..3 = Reinstall/Skip/Prompt; older backends send 0); queue plan flag bit2 = takes no space.

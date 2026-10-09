@@ -184,17 +184,6 @@ void CheatDownloadMenu::FetchKefirCheatsFromGithub(const std::string& build_id) 
 
             if (!resolved_build_id.empty()) {
                 m_cheats = ParseNxDbCheats(content, resolved_build_id);
-                if (m_cheats.empty()) {
-                    const auto reversed_build_id = ReverseBuildIdBytes(resolved_build_id);
-                    if (reversed_build_id != resolved_build_id) {
-                        log_write("[Cheats] KefirUpdater retry with reversed-byte Build ID: %s -> %s\n",
-                                  resolved_build_id.c_str(), reversed_build_id.c_str());
-                        m_cheats = ParseNxDbCheats(content, reversed_build_id);
-                        if (!m_cheats.empty()) {
-                            resolved_build_id = reversed_build_id;
-                        }
-                    }
-                }
             }
 
             const auto build_ids = ExtractNxDbBuildIds(content);
@@ -272,19 +261,6 @@ void CheatDownloadMenu::FetchNxDbCheatsFromGithub(const std::string& build_id) {
 
             // Parse the cheat JSON
             m_cheats = ParseNxDbCheats(content, build_id);
-
-            if (m_cheats.empty()) {
-                const auto reversed_build_id = ReverseBuildIdBytes(build_id);
-                if (reversed_build_id != NormalizeBuildId(build_id)) {
-                    log_write("[Cheats] Retrying with reversed-byte Build ID: %s -> %s\n",
-                              build_id.c_str(), reversed_build_id.c_str());
-                    m_cheats = ParseNxDbCheats(content, reversed_build_id);
-                    if (!m_cheats.empty()) {
-                        m_game.build_id = reversed_build_id;
-                        SaveDetectedBuildIdToCache(m_game, m_game.build_id, "byte-swap-fix");
-                    }
-                }
-            }
 
             if (m_cheats.empty()) {
                 log_write("[Cheats] Build ID %s not found in cheats file\n", build_id.c_str());

@@ -51,7 +51,8 @@ auto LoadCheatMetadataCacheUnlocked() -> std::unordered_map<u64, CachedCheatMeta
     ON_SCOPE_EXIT(yyjson_doc_free(doc));
 
     auto* root = yyjson_doc_get_root(doc);
-    if (!root || !yyjson_is_obj(root)) {
+    if (!root || !yyjson_is_obj(root) ||
+        yyjson_get_uint(yyjson_obj_get(root, "cache_version")) != CHEAT_METADATA_CACHE_VERSION) {
         return entries;
     }
 

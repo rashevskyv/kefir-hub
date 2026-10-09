@@ -44,9 +44,7 @@ namespace detail {
     auto FormatTitleIdLower(u64 title_id) -> std::string;
     auto GetBaseApplicationTitleId(u64 title_id) -> u64;
     auto BytesToHex(const u8* data, size_t len) -> std::string;
-    auto BytesToBuildId(const u8* data, size_t len) -> std::string;
     auto NormalizeBuildId(std::string build_id) -> std::string;
-    auto ReverseBuildIdBytes(std::string build_id) -> std::string;
     auto IsValidBuildId(const std::string& build_id) -> bool;
     auto StringsEqualIgnoreCase(const std::string& a, const std::string& b) -> bool;
 }
