@@ -280,6 +280,14 @@ void Menu::Sort() {
         }
     }
 
+    // sizes are otherwise loaded one row per frame while drawing, so the
+    // storage and size sorts would see zeros for rows not drawn yet.
+    if ((sort == SortType_Storage || sort == SortType_Size) && !App::GetProgressActive()) {
+        for (auto& e : m_entries) {
+            LoadGameSummary(e);
+        }
+    }
+
     const auto name_cmp = [order](const Entry& lhs, const Entry& rhs) -> bool {
         auto r = strcasecmp(lhs.GetName(), rhs.GetName());
         if (!r) {
@@ -366,6 +374,15 @@ void Menu::Sort() {
                     return order == OrderType_Descending ? rank_lhs < rank_rhs : rank_lhs > rank_rhs;
                 }
                 return name_cmp(lhs, rhs);
+            } break;
+
+            case SortType_Size: {
+                const auto size_lhs = lhs.sd_size + lhs.nand_size + lhs.gc_size;
+                const auto size_rhs = rhs.sd_size + rhs.nand_size + rhs.gc_size;
+                if (size_lhs == size_rhs) {
+                    return name_cmp(lhs, rhs);
+                }
+                return order == OrderType_Descending ? size_lhs > size_rhs : size_lhs < size_rhs;
             } break;
         }
 

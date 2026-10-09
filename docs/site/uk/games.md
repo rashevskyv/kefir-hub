@@ -149,6 +149,10 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 - [[Layout]]: [[List]], [[Icon]], [[Grid]] або [[HB Menu]].
 - [[Sort By]] → [[Sort]]: [[Updated]], [[Alphabetical]], [[Publisher]], [[Storage]], [[Last played]], [[Play time]]; [[Order]]: [[Descending]] або [[Ascending]].
 - [[Sort By]] → [[Update play time]] — зчитує загальний час гри для кожної гри з журналу консолі й сортує за ним. Запустіть це перед сортуванням за [[Play time]].
+
+<!-- draft
+- v0.14.036: new sort field [[Size]] after [[Play time]]: the installed size of the game (base game, updates and DLC on the memory card, system memory and game card); [[Descending]] puts the biggest game first; the list may pause a moment while the sizes of all games are read (also for [[Storage]])
+-->
 - [[Search]] — введіть частину назви, щоб лишилися тільки відповідні ігри. [[Clear search]] знову показує всі ігри.
 
 ## Параметри

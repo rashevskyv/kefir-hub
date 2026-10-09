@@ -149,6 +149,10 @@ Press **+**:
 - [[Layout]]: [[List]], [[Icon]], [[Grid]] or [[HB Menu]].
 - [[Sort By]] → [[Sort]]: [[Updated]], [[Alphabetical]], [[Publisher]], [[Storage]], [[Last played]], [[Play time]]; [[Order]]: [[Descending]] or [[Ascending]].
 - [[Sort By]] → [[Update play time]]: reads the total play time of every game from the console's play log, then sorts by it. Run it before sorting by [[Play time]].
+
+<!-- draft
+- v0.14.036: new sort field [[Size]] after [[Play time]]: the installed size of the game (base game, updates and DLC on the memory card, system memory and game card); [[Descending]] puts the biggest game first; the list may pause a moment while the sizes of all games are read (also for [[Storage]])
+-->
 - [[Search]]: type part of a name to show only matching games. [[Clear search]] shows all games again.
 
 ## Options

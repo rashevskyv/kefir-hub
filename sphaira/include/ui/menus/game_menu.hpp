@@ -54,6 +54,7 @@ enum SortType {
     SortType_Storage,
     SortType_LastPlayed,
     SortType_PlayTime,
+    SortType_Size,
 };
 
 enum OrderType {

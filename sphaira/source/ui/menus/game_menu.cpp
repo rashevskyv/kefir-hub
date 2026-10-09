@@ -111,6 +111,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     sort_items.push_back("Storage"_i18n);
                     sort_items.push_back("Last played"_i18n);
                     sort_items.push_back("Play time"_i18n);
+                    sort_items.push_back("Size"_i18n);
 
                     SidebarEntryArray::Items order_items;
                     order_items.push_back("Descending"_i18n);
