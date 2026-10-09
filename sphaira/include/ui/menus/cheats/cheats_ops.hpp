@@ -12,6 +12,8 @@ namespace sphaira::ui::menu::hats {
 void RefreshCheatMetadataCache();
 auto DownloadAndExtractKefirCheats(ui::ProgressBox* pbox, const char* url) -> Result;
 void PromptKefirCheatsDownload(const char* title, const char* url);
+// The Build ID needs prod.keys and there are none: says so and offers a Lockpick_RCM key dump.
+void ShowProdKeysMissingDialog();
 
 namespace detail {
 

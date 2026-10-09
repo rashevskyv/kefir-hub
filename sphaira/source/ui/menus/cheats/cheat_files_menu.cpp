@@ -1,5 +1,6 @@
 #include "ui/menus/cheats/cheat_files_menu.hpp"
 #include "ui/menus/cheats/cheats_lookup.hpp"
+#include "ui/menus/cheats/cheats_ops.hpp"
 #include "ui/menus/cheats/cheats_db.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -355,6 +356,10 @@ void CheatFilesMenu::OnFixBuildId() {
     const auto cheat = m_cheats[m_index];
     const auto target_build_id = ResolveManualTargetBuildId(m_game);
     if (!IsValidBuildId(target_build_id)) {
+        if (!HasProdKeys()) {
+            ShowProdKeysMissingDialog();
+            return;
+        }
         App::Notify("Could not determine current Build ID");
         return;
     }

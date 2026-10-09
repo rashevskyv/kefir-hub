@@ -2,6 +2,7 @@
 #include "ui/menus/cheats/cheat_files_menu.hpp"
 #include "ui/menus/cheats/cheats_dmnt.hpp"
 #include "ui/menus/cheats/cheats_lookup.hpp"
+#include "ui/menus/cheats/cheats_ops.hpp"
 #include "ui/menus/cheats/cheats_db.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -46,6 +47,14 @@ void CheatDownloadMenu::FetchCheatsFromNxDb() {
         SaveDetectedBuildIdToCache(m_game, m_game.build_id, lookup.source.c_str());
         log_write("[Cheats] Got Build ID from %s: %s\n", lookup.source.c_str(), m_game.build_id.c_str());
         FetchNxDbCheatsFromGithub(m_game.build_id);
+        return;
+    }
+
+    if (lookup.failure_reason == BuildIdFailureReason::ProdKeysMissing) {
+        m_loading = false;
+        m_loaded = true;
+        ShowProdKeysMissingDialog();
+        m_should_close = true;
         return;
     }
 

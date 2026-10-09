@@ -2,6 +2,7 @@
 #include "ui/menus/cheats/cheat_files_menu.hpp"
 #include "ui/menus/cheats/cheats_dmnt.hpp"
 #include "ui/menus/cheats/cheats_lookup.hpp"
+#include "ui/menus/cheats/cheats_ops.hpp"
 #include "ui/menus/cheats/cheats_db.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -81,6 +82,8 @@ bool WritePayloadLaunchConfig(const fs::FsPath& payload_path) {
     return written > 0;
 }
 
+} // namespace
+
 void ShowProdKeysMissingDialog() {
     fs::FsPath lockpick_payload;
     if (!utils::findLockpickPayload(lockpick_payload)) {
@@ -121,8 +124,6 @@ void ShowProdKeysMissingDialog() {
         }
     );
 }
-
-} // namespace
 
 // ============================================================
 // CheatDownloadMenu - Select and download cheats

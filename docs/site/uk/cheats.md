@@ -45,6 +45,11 @@ Kefir Hub встановлює, показує й видаляє файли чи
 !!! tip
     Запустіть гру один раз, закрийте її, а тоді завантажуйте. Найнадійніше Kefir Hub визначає Build ID із запущеної або встановленої гри. Якщо не вдається, він шукає версію онлайн, а це для деяких ігор може дати хибний результат.
 
+<!-- draft
+- v0.14.033: Kefir dumps the console keys (prod.keys) at boot, so this is rare; when Kefir Hub needs them to read the Build ID and /switch/prod.keys is missing, it says so and offers to dump them now with Lockpick_RCM (the console restarts into the payload); if Lockpick_RCM is not in /bootloader/payloads, the message says to put it there
+- this replaces the online version guess in the tip above for the no-keys case; the same offer appears for manual import and Fix BID
+-->
+
 ## Імпортувати файл читів
 Для файлу `.txt` з читами, який ви скопіювали на карту пам'яті.
 

@@ -3,6 +3,7 @@
 #include "ui/menus/cheats/cheat_files_menu.hpp"
 #include "ui/menus/cheats/cheats_dmnt.hpp"
 #include "ui/menus/cheats/cheats_lookup.hpp"
+#include "ui/menus/cheats/cheats_ops.hpp"
 #include "ui/menus/cheats/cheats_db.hpp"
 
 #include "ui/nvg_util.hpp"
@@ -333,6 +334,10 @@ void CheatGameSelectMenu::OnSelect() {
     if (m_source == CheatSource::ManualFile) {
         const auto build_id = ResolveManualTargetBuildId(game, &m_manual_cheat_path);
         if (!IsValidBuildId(build_id)) {
+            if (!HasProdKeys()) {
+                ShowProdKeysMissingDialog();
+                return;
+            }
             App::Notify("Could not determine target Build ID");
             return;
         }

@@ -45,6 +45,11 @@ New cheats are added to the game's existing cheat file; cheats with the same nam
 !!! tip
     Start the game once, close it, and then download. Kefir Hub reads the Build ID most reliably from the running or installed game. If it cannot, it looks the version up online, which can be wrong for some games.
 
+<!-- draft
+- v0.14.033: Kefir dumps the console keys (prod.keys) at boot, so this is rare; when Kefir Hub needs them to read the Build ID and /switch/prod.keys is missing, it says so and offers to dump them now with Lockpick_RCM (the console restarts into the payload); if Lockpick_RCM is not in /bootloader/payloads, the message says to put it there
+- this replaces the online version guess in the tip above for the no-keys case; the same offer appears for manual import and Fix BID
+-->
+
 ## Import a cheat file
 Use this for a `.txt` cheat file you copied to the microSD card.
 
