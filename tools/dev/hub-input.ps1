@@ -1,27 +1,29 @@
-# Drives Kefir Hub on the console over MTP: queues button presses, reads the log and the open screens.
-# Console side: Tools -> Settings -> "Scripted input" on (and "Logging" on for -Log); MTP running.
+# Drives Kefir Hub on the console: queues button presses, reads the log and the open screens.
+# Console side: Tools -> Settings -> "Scripted input" on (and "Logging" on for -Log); MTP or FTP running.
 # Commands: sphaira/include/demo/demo_cmd.hpp (A, B, X, Y, L, R, ZL, ZR, Plus, Minus, L3, R3,
 # Up, Down, Left, Right, "wait N", "dump", "lang xx").
 #
-#   tools\dev\hub-input.ps1 Down Down A "wait 1" dump      # press, then write state.txt
+#   tools\dev\hub-input.ps1 Down Down A "wait 1" dump      # press, then write state.txt (MTP)
 #   tools\dev\hub-input.ps1 -State                          # print /config/kefir/demo/state.txt
 #   tools\dev\hub-input.ps1 -Log                            # print /config/kefir/log.txt
-#   tools\dev\hub-input.ps1 Down A -State                   # press, wait, then print the state
+#   tools\dev\hub-input.ps1 -Ftp 192.168.50.69 Down A -State  # same over the Hub FTP server (port 5000)
 param(
     [Parameter(ValueFromRemainingArguments = $true)][string[]]$Lines,
     [switch]$State,
     [switch]$Log,
+    [string]$Ftp = '',
     [string]$Device = 'Nintendo Switch',
     [string]$Storage = 'microSD card'
 )
 
 $ErrorActionPreference = 'Stop'
 
+# ---- MTP transport (Shell COM) ----
 function Get-MtpFolder([string[]]$path) {
     $shell = New-Object -ComObject Shell.Application
     $root = $shell.NameSpace(17)
     $dev = $root.Items() | Where-Object { $_.Name -eq $Device } | Select-Object -First 1
-    if (-not $dev) { throw "MTP device '$Device' not found. Is MTP running on the console?" }
+    if (-not $dev) { throw "MTP device '$Device' not found. Is MTP running on the console? (-Ftp <ip> uses FTP instead)" }
     $folder = ($dev.GetFolder.Items() | Where-Object { $_.Name -eq $Storage } | Select-Object -First 1)
     if (-not $folder) { throw "storage '$Storage' not found" }
     $folder = $folder.GetFolder
@@ -61,23 +63,43 @@ function Pull-File([object]$folder, [string]$name) {
     return $dst
 }
 
-$demo = Get-MtpFolder @('config', 'kefir', 'demo')
+# ---- FTP transport (Hub FTP server, anonymous, port 5000) ----
+function Ftp-Url([string]$path) {
+    $hostport = if ($Ftp -match ':') { $Ftp } else { "$Ftp`:5000" }
+    return "ftp://$hostport$path"
+}
+
+function Ftp-Push([string]$local, [string]$remote) {
+    & curl.exe -s -m 30 --ftp-create-dirs -T $local (Ftp-Url $remote)
+    if ($LASTEXITCODE) { throw "FTP upload of $remote failed (curl $LASTEXITCODE)" }
+}
+
+function Ftp-Pull([string]$remote) {
+    $dst = Join-Path $env:TEMP ("hub-input-" + [guid]::NewGuid().ToString('n') + '-' + (Split-Path $remote -Leaf))
+    & curl.exe -s -m 60 (Ftp-Url $remote) -o $dst
+    if ($LASTEXITCODE) { throw "FTP download of $remote failed (curl $LASTEXITCODE)" }
+    return $dst
+}
 
 if ($Lines -and $Lines.Count) {
     $local = Join-Path $env:TEMP 'input.txt'
     # LF only: the console side tolerates CRLF, but one format is one less thing to wonder about.
     [IO.File]::WriteAllText($local, (($Lines -join "`n") + "`n"))
-    Push-File $demo $local
+    if ($Ftp) { Ftp-Push $local '/config/kefir/demo/input.txt' }
+    else { Push-File (Get-MtpFolder @('config', 'kefir', 'demo')) $local }
     # the console reads the file within 100 ms and presses one button per 350 ms.
     Start-Sleep -Milliseconds (500 + 400 * $Lines.Count)
 }
 
 if ($State) {
-    Get-Content (Pull-File $demo 'state.txt')
+    if ($Ftp) { Get-Content (Ftp-Pull '/config/kefir/demo/state.txt') }
+    else { Get-Content (Pull-File (Get-MtpFolder @('config', 'kefir', 'demo')) 'state.txt') }
 }
 
 if ($Log) {
-    # Windows caches MTP object sizes per session; a fresh Shell object sees the current size.
-    $kefir = Get-MtpFolder @('config', 'kefir')
-    Get-Content (Pull-File $kefir 'log.txt')
+    if ($Ftp) { Get-Content (Ftp-Pull '/config/kefir/log.txt') }
+    else {
+        # Windows caches MTP object sizes per session; a fresh Shell object sees the current size.
+        Get-Content (Pull-File (Get-MtpFolder @('config', 'kefir')) 'log.txt')
+    }
 }

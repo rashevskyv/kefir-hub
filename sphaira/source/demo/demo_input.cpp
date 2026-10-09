@@ -70,7 +70,9 @@ void DumpState() {
         return;
     }
     for (const auto& w : g_app->m_widgets) {
-        const auto* menu = w->IsMenu() ? static_cast<const ui::menu::MenuBase*>(w.get()) : w->GetChromeOwner();
+        // not IsMenu(): MainMenu answers true to it without being a MenuBase (a static_cast
+        // there crashed the Hub); the chrome owner is the MenuBase every menu-like widget shows.
+        const auto* menu = w->GetChromeOwner();
         if (menu) {
             std::fprintf(f, "menu %s\n", menu->GetShortTitle());
         } else {
