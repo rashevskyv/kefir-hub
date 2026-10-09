@@ -156,6 +156,8 @@ public:
     static auto GetWriteProtect() -> bool;
     static auto GetWebdavUrlName() -> std::string;
     static auto GetLogEnable() -> bool;
+    // file name a PC install app writes over MTP to ask for PC Install (USB).
+    static constexpr const char* PC_INSTALL_MARKER = "kefir-hub.pc-install";
     static auto GetAutoUpdateEnable() -> bool;
     static auto GetAutoUpdateMode() -> long;
     static void SetAutoUpdateMode(long mode);
@@ -423,6 +425,8 @@ public:
     // cannot be host and device at once). Auto-MTP is undone on unplug.
     void PollUsbStorage();
     void OfferOpenUsbDrive(std::string name, std::string mount, u32 flags);
+    // MTP got the PC_INSTALL_MARKER file: offer to stop MTP and probe for the USB install app.
+    static void OfferPcInstallSwitch();
     void CloseFileBrowsersOnUsbMount(const std::string& mount);
     void TryStartAutoMtp();
     void RestoreUsbAfterAutoMtp();

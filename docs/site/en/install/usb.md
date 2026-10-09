@@ -23,6 +23,10 @@ Turn installing on first (see [Turn installing on](index.md#enable)).
 ## Install games {#install}
 
 1. Open [[PC Install (USB)]]. The console shows [[Waiting for PC]] and a badge with the USB speed.
+
+<!-- draft
+- v0.14.038: when the cable was already in and MTP is running, a PC install app started afterwards cannot reach the console over USB (MTP and the install link are different USB devices); if the app writes a file named `kefir-hub.pc-install` to any MTP storage (or you copy a file with that name to the memory card in Explorer), Kefir Hub asks "A PC install app is waiting. Stop MTP and open PC Install (USB)?": [[PC Install (USB)]] stops MTP and looks for the app for a few seconds as on plug-in, [[No]] keeps MTP; the file is removed from the card
+-->
 2. Connect the cable and start the PC app.
 3. In the PC app, add the files and start the transfer.
 4. The console reads the list and checks every package. Nothing is installed yet.

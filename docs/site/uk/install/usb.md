@@ -23,6 +23,10 @@
 ## Встановіть ігри {#install}
 
 1. Відкрийте [[PC Install (USB)]]. Консоль покаже [[Waiting for PC]] і значок зі швидкістю USB.
+
+<!-- draft
+- v0.14.038: when the cable was already in and MTP is running, a PC install app started afterwards cannot reach the console over USB (MTP and the install link are different USB devices); if the app writes a file named `kefir-hub.pc-install` to any MTP storage (or you copy a file with that name to the memory card in Explorer), Kefir Hub asks "A PC install app is waiting. Stop MTP and open PC Install (USB)?": [[PC Install (USB)]] stops MTP and looks for the app for a few seconds as on plug-in, [[No]] keeps MTP; the file is removed from the card
+-->
 2. Під'єднайте кабель і запустіть програму на ПК.
 3. У програмі на ПК додайте файли й почніть передавання.
 4. Консоль прочитає список і перевірить кожен пакет. Поки що нічого не встановлюється.

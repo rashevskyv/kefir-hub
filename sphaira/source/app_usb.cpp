@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "defines.hpp"
+#include "fs.hpp"
 #include "haze_helper.hpp"
 #include "i18n.hpp"
 #include "location.hpp"
@@ -199,6 +200,34 @@ void App::OfferOpenUsbDrive(std::string name, std::string mount, u32 flags) {
             const ui::menu::filebrowser::FsEntry entry{
                 name, mount, ui::menu::filebrowser::FsType::Stdio, flags};
             App::Push<ui::menu::filebrowser::Menu>(ui::menu::MenuFlag_None, entry, mount);
+        });
+}
+
+void App::OfferPcInstallSwitch() {
+    if (!haze::IsRunning() || usb_probe::GetState() != usb_probe::State::Idle) {
+        return;
+    }
+    if (!g_app->m_widgets.empty() && g_app->m_widgets.back()->IsModal()) {
+        return;
+    }
+
+    App::Push<ui::OptionBox>("A PC install app is waiting.\nStop MTP and open PC Install (USB)?"_i18n,
+        "No"_i18n, "PC Install (USB)"_i18n, 1, [](auto op_index) {
+            // the marker is a real file when it was dropped on the memory card.
+            fs::FsPath marker;
+            std::snprintf(marker, sizeof(marker), "/%s", PC_INSTALL_MARKER);
+            fs::FsNativeSd{}.DeleteFile(marker);
+            if (!op_index || !*op_index || !haze::IsRunning()) {
+                return;
+            }
+            log_write("[USB] PC install marker: stopping MTP, probing for the install host\n");
+            haze::Exit();
+            // PollUsbStorage opens PC Install (USB) when the host answers and
+            // restarts MTP when nobody does.
+            usb_probe::Start();
+            if (usb_probe::GetState() == usb_probe::State::Idle) {
+                g_app->TryStartAutoMtp();
+            }
         });
 }
 

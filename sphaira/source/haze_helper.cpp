@@ -249,7 +249,17 @@ void haze_callback(const ::haze::CallbackData *data) {
 #endif
             break;
 
-        case ::haze::CallbackType_CreateFile: log_write("[LIBHAZE] Creating File: %s\n", e.file.filename); break;
+        case ::haze::CallbackType_CreateFile: {
+            log_write("[LIBHAZE] Creating File: %s\n", e.file.filename);
+            // a PC install app that found the console in MTP mode writes this file
+            // (any storage) to ask for the USB install link; a user can drop it from Explorer too.
+            const char* base = std::strrchr(e.file.filename, '/');
+            base = base ? base + 1 : e.file.filename;
+            if (!std::strcmp(base, App::PC_INSTALL_MARKER)) {
+                evman::push(evman::FunctionalEventData{[]() { App::OfferPcInstallSwitch(); }});
+            }
+            break;
+        }
         case ::haze::CallbackType_DeleteFile: log_write("[LIBHAZE] Deleting File: %s\n", e.file.filename); break;
 
         case ::haze::CallbackType_RenameFile: log_write("[LIBHAZE] Rename File: %s -> %s\n", e.rename.filename, e.rename.newname); break;
