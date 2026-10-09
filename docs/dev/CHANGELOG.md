@@ -6,7 +6,7 @@ Entries without a detail line are commit titles only; their verification state w
 ## v0.14.041 — Scripted input: `dump` crashed the Hub on the main screen; hub-input.ps1 works over FTP
 - `demo_input.cpp` DumpState: `MainMenu` answers `IsMenu()` without being a `MenuBase`, so the `static_cast` there called `GetShortTitle()` through a foreign vtable and the Hub died on the first `dump` on hardware (0.14.040, main screen open). Now every widget is asked for its chrome owner (MenuBase: itself; MainMenu: the current tab; others: none).
 - `tools/dev/hub-input.ps1 -Ftp <ip[:port]>`: pushes input.txt and pulls state.txt / log.txt through the Hub FTP server (curl, port 5000) when MTP is not available; `--ftp-create-dirs` makes `/config/kefir/demo` on first use.
-- host tests: pass (quick) · nro: not built (demo_input.cpp passes -fsyntax-only) · switch: pending — Scripted input on, main screen: `hub-input.ps1 -Ftp 192.168.50.69 dump -State` prints "menu Homebrew" (or the open tab) and the Hub keeps running.
+- host tests: pass (quick) · nro: built (ReleaseWithInstall clean, 0.14.041) · switch: pending — Scripted input on, main screen: `hub-input.ps1 -Ftp 192.168.50.69 dump -State` prints "menu Homebrew" (or the open tab) and the Hub keeps running.
 
 ## v0.14.040 — storage bars: the focused game's size no longer hides the free space
 - Header storage rows (Games and every menu that highlights a title): the value is "size / free" ("6.2 GB / 41.3 GB") instead of the size alone; the value column is sized for it, the network text next to NAND moves left as before. Free-only, "+focus / total / free" (install queue projection) and "written / total" (install progress) are unchanged.
