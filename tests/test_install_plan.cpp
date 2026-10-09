@@ -14,6 +14,7 @@ using sphaira::ui::menu::dbi::PlanTake;
 using sphaira::ui::menu::dbi::PlanEvaluateCandidate;
 using sphaira::ui::menu::dbi::ParseNameTitle;
 using sphaira::ui::menu::dbi::PcSkipMode;
+using sphaira::ui::menu::dbi::BaseTitleId;
 
 namespace {
 
@@ -201,6 +202,9 @@ int main() {
         assert(dlc.id == 0x01001B300B9BF00AULL && dlc.has_version);
         assert(ParseNameTitle("Overcooked! 2 [B+U1114112+5DLC].nsp").id == 0);
         assert(ParseNameTitle("broken [0100ABF00896").id == 0);
+        assert(BaseTitleId(0x0100ABF008968800ULL) == 0x0100ABF008968000ULL);  // update
+        assert(BaseTitleId(0x01001B300B9BF00AULL) == 0x01001B300B9BE000ULL);  // DLC
+        assert(BaseTitleId(0x0100ABF008968000ULL) == 0 && BaseTitleId(0) == 0);  // base game
         assert(PcSkipMode(0) == -1 && PcSkipMode(1) == 0 && PcSkipMode(2) == 1 && PcSkipMode(3) == 2 && PcSkipMode(4) == -1);
     }
 

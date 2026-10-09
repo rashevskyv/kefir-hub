@@ -72,6 +72,20 @@ s64 PlanSize(const QueueEntry& entry) {
 // the same version or a newer one is in NCM: yati would skip it (same key) or
 // refuse it as a downgrade, so it takes no space. The id comes from the file
 // name; the cnmt nca's name is its content id, not the title id.
+// an update or DLC whose base game is in neither NCM database: it installs but
+// does not run. The PC lists these in its end-of-session report.
+bool IsBaseMissing(const QueueEntry& entry) {
+    const auto base = BaseTitleId(ParseNameTitle(entry.file_name).id);
+    if (!base) return false;
+    for (const auto storage : {NcmStorageId_BuiltInUser, NcmStorageId_SdCard}) {
+        NcmContentMetaKey key{};
+        if (R_SUCCEEDED(ncmContentMetaDatabaseGetLatestContentMetaKey(&title::GetNcmDb(storage), &key, base))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool IsEntryAlreadyInstalled(const QueueEntry& entry) {
     const auto t = ParseNameTitle(entry.file_name);
     if (!t.id) return false;

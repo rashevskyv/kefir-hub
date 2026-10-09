@@ -113,6 +113,14 @@ constexpr NameTitle ParseNameTitle(std::string_view name) {
     return out;
 }
 
+// The application a title id belongs to: an update (…800) or a DLC (base + 0x1000 + n)
+// needs its base game installed to be playable. 0 for a base game or no id.
+constexpr uint64_t BaseTitleId(uint64_t id) {
+    if (!id || (id & 0xFFF) == 0) return 0;
+    if ((id & 0xFFF) == 0x800) return id & ~0xFFFULL;
+    return (id & ~0xFFFULL) - 0x1000;
+}
+
 // "Already installed" mode the PC sends in the SPHQ revision line ("::SPHQ_REV::|rev|<field>|0"):
 // 0 = the PC leaves it to the console, 1..3 = Reinstall / Skip / Prompt. Older backends
 // send 0 there. Returns -1 for "not set by the PC".

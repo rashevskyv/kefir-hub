@@ -95,6 +95,7 @@ struct Usb final : Base {
         bool analysis_ok{};
         bool already_installed{};
         bool no_space{}; // installed and the skip mode will skip it
+        bool no_base{};  // update or DLC whose base game is not on the console
         u64 install_size{};
     };
     Result SendQueuePlan(const std::vector<QueuePlanItem>& items, u32 revision, u64 timeout = 1e+9);

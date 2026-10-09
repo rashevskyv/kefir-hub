@@ -417,10 +417,11 @@ void Menu::SendQueuePlanIfChanged() {
                 .analysis_ok = ok,
                 .already_installed = ok && IsEntryAlreadyInstalled(e),
                 .no_space = ok && TakesNoSpace(e),
+                .no_base = ok && IsBaseMissing(e),
                 .install_size = static_cast<u64>(std::max<s64>(0, PlanSize(e))),
             };
             digest += it.name + '|' + std::to_string(it.selected) + std::to_string(it.target) + std::to_string(it.planned_sd)
-                + std::to_string(it.analysis_ok) + std::to_string(it.already_installed) + std::to_string(it.no_space) + '|' + std::to_string(it.install_size) + '\n';
+                + std::to_string(it.analysis_ok) + std::to_string(it.already_installed) + std::to_string(it.no_space) + std::to_string(it.no_base) + '|' + std::to_string(it.install_size) + '\n';
             dirty |= e.sync_dirty;
             items.push_back(std::move(it));
         }

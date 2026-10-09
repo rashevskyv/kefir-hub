@@ -29,6 +29,7 @@ void AddSizeSaturated(s64& total, s64 value);
 s64 PlanSize(const QueueEntry& entry);
 s64 QueuePackageSize(const QueueEntry& entry);
 bool IsEntryAlreadyInstalled(const QueueEntry& entry);
+bool IsBaseMissing(const QueueEntry& entry);
 
 // one "label: value" cell of a stats row.
 struct StatItem {

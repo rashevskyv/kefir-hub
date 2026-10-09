@@ -313,7 +313,7 @@ Result Usb::SendQueuePlan(const std::vector<QueuePlanItem>& items, u32 revision,
             .selected = static_cast<u8>(it.selected ? 1 : 0),
             .target = static_cast<u8>(it.target),
             .planned = static_cast<u8>(it.planned_sd ? 1 : 2),
-            .flags = static_cast<u8>((it.analysis_ok ? dbi::QueuePlanFlag_AnalysisOk : 0) | (it.already_installed ? dbi::QueuePlanFlag_AlreadyInstalled : 0) | (it.no_space ? dbi::QueuePlanFlag_NoSpace : 0)),
+            .flags = static_cast<u8>((it.analysis_ok ? dbi::QueuePlanFlag_AnalysisOk : 0) | (it.already_installed ? dbi::QueuePlanFlag_AlreadyInstalled : 0) | (it.no_space ? dbi::QueuePlanFlag_NoSpace : 0) | (it.no_base ? dbi::QueuePlanFlag_NoBase : 0)),
             .install_size = it.install_size,
             .name_len = static_cast<u32>(it.name.size()),
         };
