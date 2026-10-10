@@ -12,6 +12,8 @@
 
 #include <cstdio>
 #include <deque>
+#include <mutex>
+#include <string>
 #include <vector>
 
 namespace sphaira {
@@ -40,6 +42,10 @@ std::deque<std::string> g_queue;
 u64 g_next_ns{};
 u64 g_held{};
 int g_held_frames{};
+
+// "text <string>": answer for the next system keyboard (read from whichever thread opens it).
+std::mutex g_text_mutex;
+std::string g_text;
 
 void ReadInputFile() {
     auto f = std::fopen(INPUT_TXT, "rb");
@@ -108,6 +114,16 @@ void Shot() {
 
 } // namespace
 
+bool TakeText(std::string& out) {
+    std::scoped_lock lock{g_text_mutex};
+    if (g_text.empty()) {
+        return false;
+    }
+    out = std::move(g_text);
+    g_text.clear();
+    return true;
+}
+
 void PollInput(u64& kdown, u64& kheld, u64& kup) {
     if (g_held) {
         if (--g_held_frames > 0) {
@@ -153,6 +169,12 @@ void PollInput(u64& kdown, u64& kheld, u64& kup) {
             break;
         case Cmd::Shot:
             Shot();
+            break;
+        case Cmd::Text:
+            {
+                std::scoped_lock lock{g_text_mutex};
+                g_text = cmd.arg;
+            }
             break;
         case Cmd::Ready:
             if (auto f = std::fopen(READY_FILE, "wb")) {

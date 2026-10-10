@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.049 — Scripted input: `text <string>` answers the system keyboard (0.14.048 had it behind DOCS_DEMO, which release builds do not define)
+- `demo_cmd.hpp` / `demo_input.cpp` / `swkbd.cpp`: a queued `text <string>` line is returned by the next keyboard (Rename, Create Folder, Go to path) without opening it, so a test run can type; `hub-input.ps1` joins `text name` given as two words. Nothing changes unless "Scripted input" is on.
+- host tests: pass (test_demo_cmd) · nro: built · switch: pending — Rename / Create Folder on FTP typed by the script.
+
 ## v0.14.047 — FTP folders delete with their content; archives from a share cannot extract onto the SD; the title keeps the source name when walking up
 - Review of 0.14.046 on the console: Delete of a folder with files sent `DELE folder` (the cache that picked RMD was cleared by every child delete); `devoptab_rmdir` now always sends RMD. Extract from an archive that lives on a network share wrote through the SD filesystem to a `net_xxx:/` path: the entry is offered only when the .zip lives on the SD. A .zip opens on the SD and on network shares only (it had opened on USB/MTP too, untested). `DisplayPath` also matches `net_xxx:` without the slash (walking up from a folder).
 - Source: HTTP added through the form (Server URL typed from the PC page, Test Connection ok, mounted, listed with sizes). Found: an archive on a server without Range support (python `http.server`) cannot be opened: the zip reader seeks back from the end and gets the whole file each time (real nginx/apache serve ranges; the FTP source opens fine).

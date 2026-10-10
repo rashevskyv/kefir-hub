@@ -1,6 +1,7 @@
 #include "swkbd.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "demo/demo_input.hpp"
 #include <cstdlib>
 #include <string>
 
@@ -8,6 +9,10 @@ namespace sphaira::swkbd {
 namespace {
 
 Result ShowInternal(bool numpad, std::string& out, const char* guide, const char* initial, s64 len_min, s64 len_max) {
+    // scripted input: a "text <string>" line answers the keyboard (tools/dev/hub-input.ps1).
+    if (sphaira::demo::TakeText(out)) {
+        R_SUCCEED();
+    }
     SwkbdConfig c;
     R_TRY(swkbdCreate(&c, 0));
     ON_SCOPE_EXIT(swkbdClose(&c));
