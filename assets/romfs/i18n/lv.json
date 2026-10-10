@@ -3189,5 +3189,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Atjauninājumi un DLC nedarbojas bez pamatspēles.\nSaglabājiet tos, ja spēle ir spēļu kartē.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Lai atsauktu: atveriet failu pārlūku, atlasiet recovery.zip, nospiediet + un izvēlieties Atjaunot saglabāšanas datus.",
   "A source with this name already exists.": "Avots ar šādu nosaukumu jau eksistē.",
-  "The name of this source in the list of sources.": "Šī avota nosaukums avotu sarakstā."
+  "The name of this source in the list of sources.": "Šī avota nosaukums avotu sarakstā.",
+  "Send": "Sūtīt",
+  "Sending to the console...": "Notiek sūtīšana uz konsoli...",
+  "Sent. You can close this page.": "Nosūtīts. Jūs varat aizvērt šo lapu.",
+  "The console did not accept the text.": "Konsole nepieņēma tekstu.",
+  "Could not reach the console.": "Neizdevās sasniegt konsoli.",
+  "Could not reach the server. Check the address and that the server is on.": "Neizdevās sasniegt serveri. Pārbaudiet adresi un pārliecinieties, ka serveris ir ieslēgts.",
+  "The server refused the login. Check the username and password.": "Serveris noraidīja pieteikšanos. Pārbaudiet lietotājvārdu un paroli.",
+  "Type or paste the text first.": "Vispirms ievadiet vai ielīmējiet tekstu.",
+  "Type or paste the text, then press Send.": "Ievadiet vai ielīmējiet tekstu, pēc tam nospiediet Sūtīt."
 }

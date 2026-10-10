@@ -12,6 +12,7 @@ struct Options {
     std::string placeholder{"https://... or enter text"};
     bool multiline{false};
     bool editor{false};
+    bool secret{false}; // a password: the browser field hides what is typed
     int min_length{1};
     int max_length{4096};
 };

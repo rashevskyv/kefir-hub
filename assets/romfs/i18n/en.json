@@ -3189,5 +3189,14 @@
   "Safety copy of the replaced save:": "Safety copy of the replaced save:",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.",
   "A source with this name already exists.": "A source with this name already exists.",
-  "The name of this source in the list of sources.": "The name of this source in the list of sources."
+  "The name of this source in the list of sources.": "The name of this source in the list of sources.",
+  "Could not reach the console.": "Could not reach the console.",
+  "Could not reach the server. Check the address and that the server is on.": "Could not reach the server. Check the address and that the server is on.",
+  "Send": "Send",
+  "Sending to the console...": "Sending to the console...",
+  "Sent. You can close this page.": "Sent. You can close this page.",
+  "The console did not accept the text.": "The console did not accept the text.",
+  "The server refused the login. Check the username and password.": "The server refused the login. Check the username and password.",
+  "Type or paste the text first.": "Type or paste the text first.",
+  "Type or paste the text, then press Send.": "Type or paste the text, then press Send."
 }

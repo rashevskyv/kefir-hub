@@ -3194,5 +3194,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Uppdateringar och DLC fungerar inte utan basspelet.\nBehåll dem om spelet finns på ett spelkort.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Gör så här för att ångra: öppna filbläddraren, välj recovery.zip, tryck på + och välj Återställ spara data.",
   "A source with this name already exists.": "En källa med detta namn finns redan.",
-  "The name of this source in the list of sources.": "Namnet på den här källan i källistan."
+  "The name of this source in the list of sources.": "Namnet på den här källan i källistan.",
+  "Send": "Skicka",
+  "Sending to the console...": "Skickar till konsolen...",
+  "Sent. You can close this page.": "Skickat. Du kan stänga den här sidan.",
+  "The console did not accept the text.": "Konsolen accepterade inte texten.",
+  "Could not reach the console.": "Kunde inte nå konsolen.",
+  "Could not reach the server. Check the address and that the server is on.": "Kunde inte nå servern. Kontrollera adressen och att servern är på.",
+  "The server refused the login. Check the username and password.": "Servern nekade inloggning. Kontrollera användarnamn och lösenord.",
+  "Type or paste the text first.": "Skriv eller klistra in texten först.",
+  "Type or paste the text, then press Send.": "Skriv eller klistra in texten och tryck på Skicka."
 }

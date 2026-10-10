@@ -3189,5 +3189,14 @@
   "Safety copies of the replaced saves:": "Страхувальні копії замінених збережень:",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Щоб скасувати: відкрийте Файловий браузер, виберіть recovery.zip, натисніть + і виберіть «Відновити сейв».",
   "A source with this name already exists.": "Джерело з такою назвою вже існує.",
-  "The name of this source in the list of sources.": "Назва цього джерела в списку джерел."
+  "The name of this source in the list of sources.": "Назва цього джерела в списку джерел.",
+  "Send": "Надіслати",
+  "Sending to the console...": "Надсилання на консоль...",
+  "Sent. You can close this page.": "Надіслано. Ви можете закрити цю сторінку.",
+  "The console did not accept the text.": "Консоль не прийняла текст.",
+  "Could not reach the console.": "Не вдалося зв'язатися з консоллю.",
+  "Could not reach the server. Check the address and that the server is on.": "Не вдалося підключитися до сервера. Перевірте адресу та чи ввімкнено сервер.",
+  "The server refused the login. Check the username and password.": "Сервер відхилив вхід. Перевірте ім’я користувача та пароль.",
+  "Type or paste the text first.": "Спершу введіть або вставте текст.",
+  "Type or paste the text, then press Send.": "Введіть або вставте текст і натисніть «Надіслати»."
 }

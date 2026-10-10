@@ -3194,5 +3194,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Aggiornamenti e DLC non funzionano senza il gioco base.\nTienili se il gioco è su una scheda di gioco.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Per annullare: apri File Browser, seleziona recovery.zip, premi + e scegli Ripristina dati di salvataggio.",
   "A source with this name already exists.": "Esiste già una sorgente con questo nome.",
-  "The name of this source in the list of sources.": "Il nome di questa sorgente nell'elenco delle sorgenti."
+  "The name of this source in the list of sources.": "Il nome di questa sorgente nell'elenco delle sorgenti.",
+  "Send": "Invia",
+  "Sending to the console...": "Invio alla console in corso...",
+  "Sent. You can close this page.": "Inviato. Puoi chiudere questa pagina.",
+  "The console did not accept the text.": "La console non ha accettato il testo.",
+  "Could not reach the console.": "Impossibile raggiungere la console.",
+  "Could not reach the server. Check the address and that the server is on.": "Impossibile raggiungere il server. Controlla l'indirizzo e che il server sia acceso.",
+  "The server refused the login. Check the username and password.": "Il server ha rifiutato l'accesso. Controlla nome utente e password.",
+  "Type or paste the text first.": "Digita o incolla prima il testo.",
+  "Type or paste the text, then press Send.": "Digita o incolla il testo, quindi premi Invia."
 }

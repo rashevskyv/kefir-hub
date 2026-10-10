@@ -3194,5 +3194,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Bản cập nhật và DLC không hoạt động nếu không có trò chơi gốc.\nGiữ lại nếu trò chơi nằm trên thẻ game.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Để hoàn tác: mở Trình duyệt tệp, chọn recovery.zip, nhấn + và chọn Khôi phục dữ liệu lưu.",
   "A source with this name already exists.": "Đã tồn tại một nguồn có tên này.",
-  "The name of this source in the list of sources.": "Tên của nguồn này trong danh sách nguồn."
+  "The name of this source in the list of sources.": "Tên của nguồn này trong danh sách nguồn.",
+  "Send": "Gửi",
+  "Sending to the console...": "Đang gửi đến máy...",
+  "Sent. You can close this page.": "Đã gửi. Bạn có thể đóng trang này.",
+  "The console did not accept the text.": "Máy không nhận văn bản.",
+  "Could not reach the console.": "Không thể kết nối với máy.",
+  "Could not reach the server. Check the address and that the server is on.": "Không thể kết nối đến máy chủ. Kiểm tra lại địa chỉ và đảm bảo máy chủ đang bật.",
+  "The server refused the login. Check the username and password.": "Máy chủ đã từ chối đăng nhập. Kiểm tra tên người dùng và mật khẩu.",
+  "Type or paste the text first.": "Nhập hoặc dán văn bản trước.",
+  "Type or paste the text, then press Send.": "Nhập hoặc dán văn bản, sau đó nhấn Gửi."
 }

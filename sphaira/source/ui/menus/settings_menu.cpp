@@ -251,7 +251,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
                         if (R_SUCCEEDED(rc)) {
                             App::Notify("Connection test successful!"_i18n);
                         } else {
-                            App::Push<OptionBox>("Connection test failed!"_i18n, "OK"_i18n);
+                            App::Push<OptionBox>("Connection test failed!"_i18n + "\n" + ConnectionFailureText(rc), "OK"_i18n);
                         }
                     });
                 }, true, "Test connection with current settings."_i18n);

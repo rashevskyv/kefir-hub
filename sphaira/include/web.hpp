@@ -13,6 +13,8 @@ class ProgressBox;
 
 struct WebShareResult {
     std::string url{};
+    std::string ip_url{}; // the same page by IP: many Android phones and PCs cannot resolve kefir.local
+
     int qr_image{};
     bool listener_self_test{};
 };

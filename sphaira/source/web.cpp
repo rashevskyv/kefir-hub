@@ -404,6 +404,15 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
     // server runs takes effect on the next request.
     R_TRY(StartShareServer());
 
+    char ip_url[64]{};
+    if (g_share_port == 80) {
+        std::snprintf(ip_url, sizeof(ip_url), "http://%u.%u.%u.%u",
+            ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+    } else {
+        std::snprintf(ip_url, sizeof(ip_url), "http://%u.%u.%u.%u:%u",
+            ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port.load());
+    }
+
     char url[128]{};
     if (IsMdnsActive()) {
         if (g_share_port == 80) {
@@ -412,17 +421,13 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
             std::snprintf(url, sizeof(url), "http://kefir.local:%u", g_share_port.load());
         }
     } else {
-        if (g_share_port == 80) {
-            std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u",
-                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
-        } else {
-            std::snprintf(url, sizeof(url), "http://%u.%u.%u.%u:%u",
-                ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, g_share_port.load());
-        }
+        std::snprintf(url, sizeof(url), "%s", ip_url);
     }
 
     out.url = std::string{url} + page_path;
-    out.qr_image = CreateQrImage(out.url);
+    out.ip_url = std::string{ip_url} + page_path;
+    // the QR is scanned by phones: by IP it opens everywhere, kefir.local only where mDNS works.
+    out.qr_image = CreateQrImage(out.ip_url);
     out.listener_self_test = g_share_self_test;
 
     R_SUCCEED();

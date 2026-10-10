@@ -3189,5 +3189,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Жаңартулар мен DLC негізгі ойынсыз жұмыс істемейді.\nЕгер ойын картриджде болса, оларды қалдырыңыз.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Болдырмау үшін: Файлдық браузерді ашып, recovery.zip таңдаңыз, + басып, «Сақтау деректерін қалпына келтіру» пәрменін таңдаңыз.",
   "A source with this name already exists.": "Бұл атаудағы дереккөз бұрыннан бар.",
-  "The name of this source in the list of sources.": "Көздер тізіміндегі бұл көздің атауы."
+  "The name of this source in the list of sources.": "Көздер тізіміндегі бұл көздің атауы.",
+  "Send": "Жіберу",
+  "Sending to the console...": "Консольге жіберілуде...",
+  "Sent. You can close this page.": "Жіберілді. Бұл бетті жабуға болады.",
+  "The console did not accept the text.": "Консоль мәтінді қабылдамады.",
+  "Could not reach the console.": "Консольге қосылу мүмкін болмады.",
+  "Could not reach the server. Check the address and that the server is on.": "Серверге қосылу мүмкін емес. Мекенжайды және сервердің қосулы екенін тексеріңіз.",
+  "The server refused the login. Check the username and password.": "Сервер кіруді қабылдамады. Пайдаланушы аты мен құпия сөзді тексеріңіз.",
+  "Type or paste the text first.": "Алдымен мәтінді енгізіңіз немесе көшіріп қойыңыз.",
+  "Type or paste the text, then press Send.": "Мәтінді теріңіз немесе көшіріп қойыңыз, содан кейін Жіберу батырмасын басыңыз."
 }

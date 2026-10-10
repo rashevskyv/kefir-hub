@@ -8,6 +8,7 @@
 #include "web_games.hpp"
 #include "ui/steamgriddb_icon.hpp"
 #include "ui/remote_input.hpp"
+#include "i18n.hpp"
 
 #include <switch.h>
 #include <algorithm>
@@ -169,8 +170,24 @@ void HandleRemoteInputConfig(Socket sock) {
     json += "\"placeholder\":\"" + JsonEscape(opts.placeholder) + "\",";
     json += "\"default_text\":\"" + JsonEscape(opts.editor ? std::string{} : opts.default_text) + "\",";
     json += "\"multiline\":" + std::string(opts.multiline ? "true" : "false") + ",";
-    json += "\"editor\":" + std::string(opts.editor ? "true" : "false");
-    json += "}";
+    json += "\"secret\":" + std::string(opts.secret ? "true" : "false") + ",";
+    json += "\"editor\":" + std::string(opts.editor ? "true" : "false") + ",";
+    // the page is static HTML; its own words come in the console's language.
+    const std::pair<const char*, std::string> ui[] = {
+        {"hint", "Type or paste the text, then press Send."_i18n},
+        {"send", "Send"_i18n},
+        {"paste", "Paste"_i18n},
+        {"sending", "Sending to the console..."_i18n},
+        {"sent", "Sent. You can close this page."_i18n},
+        {"rejected", "The console did not accept the text."_i18n},
+        {"offline", "Could not reach the console."_i18n},
+        {"empty", "Type or paste the text first."_i18n},
+    };
+    json += "\"ui\":{";
+    for (size_t i = 0; i < std::size(ui); i++) {
+        json += std::string(i ? "," : "") + "\"" + ui[i].first + "\":\"" + JsonEscape(ui[i].second) + "\"";
+    }
+    json += "}}";
 
     SendResponse(sock, "200 OK", "application/json", json);
 }

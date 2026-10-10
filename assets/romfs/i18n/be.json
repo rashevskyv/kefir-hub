@@ -3189,5 +3189,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Абнаўленні і DLC не працуюць без базавай гульні.\nПакіньце іх, калі гульня на картрыджы.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Каб адмяніць: адкрыйце «Файлавы браўзер», абярыце recovery.zip, націсніце + і абярыце «Аднавіць захаванні».",
   "A source with this name already exists.": "Крыніца з такой назвай ужо існуе.",
-  "The name of this source in the list of sources.": "Назва гэтага дзеніцы ў спісе дзеніцаў."
+  "The name of this source in the list of sources.": "Назва гэтага дзеніцы ў спісе дзеніцаў.",
+  "Send": "Адправіць",
+  "Sending to the console...": "Адпраўка на кансоль...",
+  "Sent. You can close this page.": "Адпраўлена. Вы можаце закрыць гэтую старонку.",
+  "The console did not accept the text.": "Кансоль не прыняла тэкст.",
+  "Could not reach the console.": "Не атрымалася звязацца з кансоляй.",
+  "Could not reach the server. Check the address and that the server is on.": "Сервер недаступны. Праверце адрас і ці ўключаны сервер.",
+  "The server refused the login. Check the username and password.": "Сэрвер адхіліў уваход. Праверце імя карыстальніка і пароль.",
+  "Type or paste the text first.": "Увядзіце ці ўстаўце спачатку тэкст.",
+  "Type or paste the text, then press Send.": "Увядзіце або ўстаўце тэкст, затым націсніце Адправіць."
 }

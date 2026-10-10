@@ -3189,5 +3189,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Atnaujinimai ir papildymai neveikia be pagrindinio žaidimo.\nPasilikite juos, jei žaidimas yra žaidimo kortelėje.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Norėdami anuliuoti: atidarykite failų naršyklę, pasirinkite „recovery.zip“, paspauskite „+“ ir pasirinkite „Atkurti išsaugojimo duomenis“.",
   "A source with this name already exists.": "Šaltinis tokiu pavadinimu jau yra.",
-  "The name of this source in the list of sources.": "Šio šaltinio pavadinimas šaltinių sąraše."
+  "The name of this source in the list of sources.": "Šio šaltinio pavadinimas šaltinių sąraše.",
+  "Send": "Siųsti",
+  "Sending to the console...": "Siunčiama į konsolę...",
+  "Sent. You can close this page.": "Išsiųsta. Galite uždaryti šį puslapį.",
+  "The console did not accept the text.": "Konsolė nepriėmė teksto.",
+  "Could not reach the console.": "Nepavyko pasiekti konsolės.",
+  "Could not reach the server. Check the address and that the server is on.": "Nepavyko pasiekti serverio. Patikrinkite adresą ir įsitikinkite, kad serveris įjungtas.",
+  "The server refused the login. Check the username and password.": "Serveris atmetė prisijungimą. Patikrinkite naudotojo vardą ir slaptažodį.",
+  "Type or paste the text first.": "Pirmiausia įveskite arba įklijuokite tekstą.",
+  "Type or paste the text, then press Send.": "Įveskite arba įklijuokite tekstą, tada paspauskite Siųsti."
 }

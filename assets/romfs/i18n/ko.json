@@ -3194,5 +3194,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "업데이트와 DLC는 기본 게임 없이는 작동하지 않습니다.\n게임이 게임 카드에 있는 경우 유지하세요.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "취소하려면: 파일 브라우저를 열고 recovery.zip을 선택한 후, +를 누르고 저장 데이터 복원을 선택하세요.",
   "A source with this name already exists.": "이 이름을 가진 소스가 이미 존재합니다.",
-  "The name of this source in the list of sources.": "소스 목록에 있는 이 소스의 이름."
+  "The name of this source in the list of sources.": "소스 목록에 있는 이 소스의 이름.",
+  "Send": "보내기",
+  "Sending to the console...": "콘솔로 전송 중...",
+  "Sent. You can close this page.": "전송되었습니다. 이 페이지를 닫으셔도 됩니다.",
+  "The console did not accept the text.": "본문이 텍스트를 거부했습니다.",
+  "Could not reach the console.": "콘솔에 연결할 수 없습니다.",
+  "Could not reach the server. Check the address and that the server is on.": "서버에 연결할 수 없습니다. 주소와 서버가 켜져 있는지 확인하세요.",
+  "The server refused the login. Check the username and password.": "서버가 로그인을 거부했습니다. 사용자 이름과 비밀번호를 확인하세요.",
+  "Type or paste the text first.": "먼저 텍스트를 입력하거나 붙여넣으세요.",
+  "Type or paste the text, then press Send.": "텍스트를 입력하거나 붙여넣은 후 보내기를 누르세요."
 }

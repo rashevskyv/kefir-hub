@@ -14,6 +14,8 @@ namespace sphaira::ui::menu::settings {
 
 // probes the given network location, Result 0 on success.
 auto TestLocationConnection(const location::Entry& loc) -> Result;
+// what TestLocationConnection failed on, in words: a refused login or an unreachable server.
+auto ConnectionFailureText(Result rc) -> std::string;
 
 enum class SettingsItemKind {
     Normal,

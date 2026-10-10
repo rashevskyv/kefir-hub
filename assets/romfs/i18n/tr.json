@@ -3189,5 +3189,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Güncellemeler ve DLC'ler ana oyun olmadan çalışmaz.\nOyun kartuştaysa bunları saklayın.",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Geri almak için: Dosya Tarayıcı'yı açın, recovery.zip öğesini seçin, + tuşuna basın ve Kayıt verilerini geri yükle seçeneğini seçin.",
   "A source with this name already exists.": "Bu ada sahip bir kaynak zaten var.",
-  "The name of this source in the list of sources.": "Kaynaklar listesindeki bu kaynağın adı."
+  "The name of this source in the list of sources.": "Kaynaklar listesindeki bu kaynağın adı.",
+  "Send": "Gönder",
+  "Sending to the console...": "Konsola gönderiliyor...",
+  "Sent. You can close this page.": "Gönderildi. Bu sayfayı kapatabilirsiniz.",
+  "The console did not accept the text.": "Konsol metni kabul etmedi.",
+  "Could not reach the console.": "Konsola ulaşılamadı.",
+  "Could not reach the server. Check the address and that the server is on.": "Sunucuya ulaşılamadı. Adresi ve sunucunun açık olup olmadığını kontrol edin.",
+  "The server refused the login. Check the username and password.": "Sunucu oturum açmayı reddetti. Kullanıcı adını ve şifreyi kontrol edin.",
+  "Type or paste the text first.": "Önce metni yazın veya yapıştırın.",
+  "Type or paste the text, then press Send.": "Metni yazın veya yapıştırın, ardından Gönder'e basın."
 }

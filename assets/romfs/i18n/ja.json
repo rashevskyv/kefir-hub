@@ -3194,5 +3194,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "更新データやDLCは、ベースゲームがないと動作しません。\nゲームがゲームカードにある場合はそのまま残してください。",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "取り消すには：ファイルブラウザを開き、recovery.zipを選択して「+」を押し、「セーブデータを復元」を選択してください。",
   "A source with this name already exists.": "同じ名前のソースがすでに存在します。",
-  "The name of this source in the list of sources.": "ソース一覧におけるこのソースの名前。"
+  "The name of this source in the list of sources.": "ソース一覧におけるこのソースの名前。",
+  "Send": "送信",
+  "Sending to the console...": "本体へ送信中...",
+  "Sent. You can close this page.": "送信しました。このページを閉じても構いません。",
+  "The console did not accept the text.": "本体がテキストを受け付けませんでした。",
+  "Could not reach the console.": "本体に接続できませんでした。",
+  "Could not reach the server. Check the address and that the server is on.": "サーバーに接続できませんでした。アドレスとサーバーの電源が入っているか確認してください。",
+  "The server refused the login. Check the username and password.": "サーバーがログインを拒否しました。ユーザー名とパスワードを確認してください。",
+  "Type or paste the text first.": "最初にテキストを入力または貼り付けてください。",
+  "Type or paste the text, then press Send.": "テキストを入力または貼り付けて、「送信」を押してください。"
 }

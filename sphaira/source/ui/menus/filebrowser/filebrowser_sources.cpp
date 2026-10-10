@@ -74,6 +74,21 @@
 namespace sphaira::ui::menu::filebrowser {
 using namespace detail;
 
+// the file browser entry for a saved network source.
+static FsEntry NetworkFsEntry(const location::Entry& e) {
+    return FsEntry{
+        .name = e.name,
+        .root = e.IsSmb() ? "smb2:/" : MakeNetworkRoot(e.url),
+        .type = FsType::Network,
+        .flags = e.IsNfs() ? FsEntryFlag_ReadOnly : FsEntryFlag_None,
+        .url = e.url,
+        .protocol = e.protocol,
+        .user = e.user,
+        .pass = e.pass,
+        .port = e.port
+    };
+}
+
 // only touched from the main thread (ui callbacks).
 std::unordered_map<std::string, ConnectionStatus> g_source_status;
 
@@ -248,18 +263,7 @@ void FsView::ShowSourcePicker() {
             continue;
         }
 
-        FsEntry entry{
-            .name = e.name,
-            .root = e.IsSmb() ? "smb2:/" : MakeNetworkRoot(e.url),
-            .type = FsType::Network,
-            .flags = e.IsNfs() ? FsEntryFlag_ReadOnly : FsEntryFlag_None,
-            .url = e.url,
-            .protocol = e.protocol,
-            .user = e.user,
-            .pass = e.pass,
-            .port = e.port
-        };
-        fs_entries.emplace_back(entry);
+        fs_entries.emplace_back(NetworkFsEntry(e));
 
         std::string proto = e.protocol;
         if (proto.empty()) {
@@ -272,7 +276,10 @@ void FsView::ShowSourcePicker() {
         std::string proto_upper = proto;
         std::transform(proto_upper.begin(), proto_upper.end(), proto_upper.begin(), ::toupper);
 
-        mount_items.push_back(e.name + " (" + proto_upper + ")");
+        // "FTP (FTP)" said the same thing twice: the protocol only when the name does not already say it.
+        std::string name_upper = e.name;
+        std::transform(name_upper.begin(), name_upper.end(), name_upper.begin(), ::toupper);
+        mount_items.push_back(name_upper.starts_with(proto_upper) ? e.name : e.name + " (" + proto_upper + ")");
     }
 
     s64 current_index = 0;
@@ -284,15 +291,20 @@ void FsView::ShowSourcePicker() {
             }
         }
         if (is_current) {
-            mount_items[i] = "-> " + mount_items[i];
             current_index = i;
         }
     }
 
     options->Add<SidebarEntryArray>("Mount"_i18n, mount_items, [this, fs_entries](s64& index_out){
         App::PopToMenu();
-        const auto& target_entry = fs_entries[index_out];
+        auto target_entry = fs_entries[index_out];
         if (target_entry.type == FsType::Network) {
+            for (const auto& e : location::Load()) {
+                if (e.name == target_entry.name.toString()) {
+                    target_entry = NetworkFsEntry(e);
+                    break;
+                }
+            }
             FsView* other_view = (this == m_menu->view_left.get()) ? m_menu->view_right.get() : m_menu->view_left.get();
             if (other_view && other_view->m_fs_entry.type == FsType::Network && !IsSameNetworkLocation(other_view->m_fs_entry, target_entry)) {
                 other_view->SetFs("/", FS_ENTRY_DEFAULT);
@@ -312,8 +324,12 @@ void FsView::ShowSourcePicker() {
     }, "Bring up a connected USB drive and open it."_i18n);
 
     options->Add<SidebarEntryCallback>("Add network location"_i18n, [this](){
+        // close the panels under the new source's form: B from the form lands in the file
+        // browser, whose source list already has the new source (a re-pushed Sources panel
+        // was a second, stale copy on top of the first).
         AddNetworkLocationInteractive([this](){
-            ShowSourcePicker();
+            App::PopToMenu();
+            SortAndFindLastFile(true);
         });
     }, "Configure a new network location (supported protocols: SMB, NFS, WebDAV, FTP, HTTP)."_i18n);
 }

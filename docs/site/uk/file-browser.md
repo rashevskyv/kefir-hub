@@ -149,6 +149,14 @@
 - v0.14.044: Ukrainian: the screen title is "Файловий браузер" like the tile in Tools; folder rows read "Файлів: N" / "Папок: N"
 -->
 
+<!-- draft
+- v0.14.045: in [[Mount]] the current source has only the check mark (no `->` in front of it); a source whose name already says its protocol is listed without it ("FTP", not "FTP (FTP)")
+- v0.14.045: after [[Add network location]] and the settings page, **B** returns to the File Browser; the new source is in the list of sources and in [[Mount]]
+- v0.14.045: typing from a phone or PC: the choice now has three buttons, [[Back]], [[Manual (Keyboard)]], [[From Phone / PC]] (B = Back); the wait screen shows both addresses, `kefir.local` and the console IP, and the QR code opens the IP one (works on every phone); B on the wait screen closes it at once; the browser page is in the Hub language, hides a password while you type it, and says when the text arrived
+- v0.14.045: [[Test Connection]] says why it failed: [[The server refused the login. Check the username and password.]] or [[Could not reach the server. Check the address and that the server is on.]]
+- v0.14.045: [[Server URL]] starts empty and shows an example of the address for the protocol (WebDAV `https://example.com/dav`, HTTP `http://192.168.1.10:8080/`, NFS `nfs://192.168.1.10/export`)
+-->
+
 <!-- shot: file-browser-sources | Sources panel: Mount list with microSD card, a USB drive and an SMB share -->
 
 ## Перегляд ZIP-архіву

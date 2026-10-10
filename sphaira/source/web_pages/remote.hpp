@@ -131,6 +131,7 @@ button:disabled{background:#3f3f46;color:#71717a;cursor:not-allowed}
 <script>
 const titleEl=document.getElementById('title'),guideEl=document.getElementById('guide'),container=document.getElementById('input-container'),pasteBtn=document.getElementById('paste-btn'),sendBtn=document.getElementById('send-btn'),msg=document.getElementById('msg'),hintEl=document.getElementById('hint');
 let field=document.getElementById('text-input');
+let T={hint:'Type or paste the text, then press Send.',send:'Send',paste:'Paste',sending:'Sending to the console...',sent:'Sent. You can close this page.',rejected:'The console did not accept the text.',offline:'Could not reach the console.',empty:'Type or paste the text first.'};
 const isPhone=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>0&&matchMedia('(pointer:coarse)').matches);
 if(!isPhone){pasteBtn.style.display='none';}
 async function init(){
@@ -138,15 +139,17 @@ async function init(){
     const res=await fetch('/input/config');
     if(res.ok){
       const cfg=await res.json();
+      if(cfg.ui)T=Object.assign(T,cfg.ui);
       if(cfg.title)titleEl.textContent=cfg.title;
-      if(cfg.guide)guideEl.textContent=cfg.guide;
+      if(cfg.guide&&cfg.guide!==cfg.title)guideEl.textContent=cfg.guide;else guideEl.style.display='none';
       if(cfg.multiline){
         container.innerHTML='<textarea id="text-input" spellcheck="false"></textarea>';
         field=document.getElementById('text-input');
       }
-      if(cfg.placeholder)field.placeholder=cfg.placeholder;
+      if(cfg.secret)field.type='password';
+      field.placeholder=cfg.placeholder||'';
       if(cfg.default_text)field.value=cfg.default_text;
-      if(cfg.multiline&&hintEl)hintEl.textContent='Paste or type the text, then Send.';
+      hintEl.textContent=T.hint;sendBtn.textContent=T.send;pasteBtn.textContent=T.paste;
     }
   }catch(e){}
   field.focus();
@@ -190,14 +193,14 @@ async function send(){
   const isArea=field.tagName==='TEXTAREA';
   const val=isArea?field.value:collapseSchemes(field.value);
   if(!isArea&&val)field.value=val;
-  if(!val){msg.className='msg err';msg.textContent=isArea?'Paste or type some text first.':'Paste or type the address first.';return;}
+  if(!val){msg.className='msg err';msg.textContent=T.empty;return;}
   sending=true;
-  sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent='Sending to console...';
+  sendBtn.disabled=true;pasteBtn.disabled=true;msg.className='msg';msg.textContent=T.sending;
   try{
     const res=await fetch('/input',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:val});
-    if(res.ok){msg.className='msg ok';msg.textContent='✓ Sent successfully! You can close this page.';}
-    else{msg.className='msg err';msg.textContent='Console rejected the input.';sending=false;sendBtn.disabled=false;pasteBtn.disabled=false;}
-  }catch(e){msg.className='msg err';msg.textContent='Could not connect to console.';sending=false;sendBtn.disabled=false;pasteBtn.disabled=false;}
+    if(res.ok){msg.className='msg ok';msg.textContent='✓ '+T.sent;}
+    else{msg.className='msg err';msg.textContent=T.rejected;sending=false;sendBtn.disabled=false;pasteBtn.disabled=false;}
+  }catch(e){msg.className='msg err';msg.textContent=T.offline;sending=false;sendBtn.disabled=false;pasteBtn.disabled=false;}
 }
 pasteBtn.addEventListener('click',async()=>{
   field.focus();

@@ -190,9 +190,16 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
         return;
     }
 
+    // kefir.local is friendly but not every phone resolves it; the IP always works (the QR uses it).
+    auto shown_url = share.url;
+    if (share.ip_url != share.url) {
+        shown_url += "  |  " + share.ip_url.substr(share.ip_url.find("://") + 3);
+    }
     App::Push<ProgressBox>(
-        share.qr_image, options.title, share.url,
+        share.qr_image, options.title, shown_url,
         [on_complete](auto pbox) -> Result {
+            // waiting for text loses nothing: B leaves at once, no "Are you sure?".
+            pbox->SetCancelWithoutConfirm(true);
             pbox->NewTransferForce(App::IsApplet()
                 ? "Applet Mode: keep this screen open; use the same Wi-Fi. Press B to cancel."_i18n
                 : (GetCurrentOptions().editor
@@ -302,12 +309,13 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
 void PromptTextInput(const Options& options, OnCompleteCallback on_complete) {
     App::Push<OptionBox>(
         options.guide + "\n\n" + "Select input method:"_i18n,
-        "Manual (Keyboard)"_i18n, "From Phone / PC"_i18n, 1,
+        "Back"_i18n, "Manual (Keyboard)"_i18n, "From Phone / PC"_i18n, 2,
         [options, on_complete](auto op_index) {
-            if (!op_index) {
+            // B picks the first button: Back, so leaving never opens a keyboard.
+            if (!op_index || *op_index == 0) {
                 return;
             }
-            if (*op_index == 0) {
+            if (*op_index == 1) {
                 // Manual entry on console
                 std::string out;
                 if (R_SUCCEEDED(swkbd::ShowText(out, options.guide.c_str(), options.default_text.c_str(), options.min_length, options.max_length)) && !out.empty()) {
@@ -315,7 +323,7 @@ void PromptTextInput(const Options& options, OnCompleteCallback on_complete) {
                         on_complete(out);
                     }
                 }
-            } else if (*op_index == 1) {
+            } else if (*op_index == 2) {
                 // Remote transfer from phone/PC
                 RequestRemoteText(options, on_complete);
             }

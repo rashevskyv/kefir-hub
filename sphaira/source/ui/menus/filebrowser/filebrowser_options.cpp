@@ -77,7 +77,7 @@ void FsView::DisplayOptions() {
                     if (R_SUCCEEDED(rc)) {
                         App::Notify("Connection test successful!"_i18n);
                     } else {
-                        App::Push<OptionBox>("Connection test failed!"_i18n, "OK"_i18n);
+                        App::Push<OptionBox>("Connection test failed!"_i18n + "\n" + settings::ConnectionFailureText(rc), "OK"_i18n);
                     }
                 });
             }, true, "Test connection with current settings."_i18n);

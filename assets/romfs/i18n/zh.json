@@ -3247,5 +3247,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "更新数据和DLC没有本体将无法运行。\n若游戏位于游戏卡带上，请保留它们。",
   "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "若要撤消：打开文件浏览器，选择 recovery.zip，按 + 并选择恢复存档数据。",
   "A source with this name already exists.": "已存在同名的源。",
-  "The name of this source in the list of sources.": "此源在源列表中的名称。"
+  "The name of this source in the list of sources.": "此源在源列表中的名称。",
+  "Send": "发送",
+  "Sending to the console...": "正在发送至主机...",
+  "Sent. You can close this page.": "已发送。您可以关闭此页面。",
+  "The console did not accept the text.": "主机未接受该文本。",
+  "Could not reach the console.": "无法连接到主机。",
+  "Could not reach the server. Check the address and that the server is on.": "无法连接到服务器。请检查地址以及服务器是否已开启。",
+  "The server refused the login. Check the username and password.": "服务器拒绝登录。请检查用户名和密码。",
+  "Type or paste the text first.": "请先输入或粘贴文本。",
+  "Type or paste the text, then press Send.": "输入或粘贴文本，然后按“发送”。"
 }

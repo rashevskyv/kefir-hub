@@ -96,6 +96,8 @@ auto BuildSourcesCategoryItems(Menu* menu) -> std::vector<SettingsItem> {
 }
 
 
+constexpr Result RC_LOGIN_REFUSED = -2;
+
 auto TestLocationConnection(const location::Entry& loc) -> Result {
     if (loc.IsSmb()) {
 #ifdef BUILD_SMB2
@@ -119,7 +121,17 @@ auto TestLocationConnection(const location::Entry& loc) -> Result {
 
     const auto result = curl::Probe(api, type);
     log_write("[SOURCE] connection probe for %s: success=%d code=%ld\n", loc.name.c_str(), result.success, result.code);
-    return result.success ? 0 : -1;
+    if (result.success) {
+        return 0;
+    }
+    // 401/403 (HTTP, WebDAV) and 530 (FTP "not logged in"): the server answered, the login is wrong.
+    return (result.code == 401 || result.code == 403 || result.code == 530) ? RC_LOGIN_REFUSED : -1;
+}
+
+auto ConnectionFailureText(Result rc) -> std::string {
+    return rc == RC_LOGIN_REFUSED
+        ? "The server refused the login. Check the username and password."_i18n
+        : "Could not reach the server. Check the address and that the server is on."_i18n;
 }
 
 
@@ -195,11 +207,14 @@ void ChangeLocationProtocol(location::Entry& loc, const std::string& protocol) {
 
 // every field offers the console keyboard or a phone / PC browser: a server URL or a password
 // is far easier to type there. The answer arrives later, so `done` saves by itself.
-void AskText(const std::string& guide, const std::string& current, std::function<void(const std::string&)> done) {
+void AskText(const std::string& guide, const std::string& current, std::function<void(const std::string&)> done,
+             std::string placeholder = {}, bool secret = false) {
     remote_input::Options opts{};
     opts.title = guide;
     opts.guide = guide;
     opts.default_text = current;
+    opts.placeholder = std::move(placeholder);
+    opts.secret = secret;
     remote_input::PromptTextInput(opts, [done](const std::string& text) {
         done(text);
     });
@@ -455,14 +470,17 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
         items.emplace_back(SettingsItem{
             "Server URL"_i18n,
             "Server connection URL address."_i18n,
-            [loc](){ return loc.url; },
-            [this, loc]() {
-                AskText("Enter Server URL"_i18n, loc.url, [this, loc](const std::string& out) {
+            [loc](){ return loc.url.ends_with("://") ? std::string{} : loc.url; },
+            [this, loc, proto]() {
+                const auto shown = (loc.url.ends_with("://")) ? std::string{} : loc.url;
+                const char* example = proto == "nfs" ? "nfs://192.168.1.10/export"
+                    : proto == "http" ? "http://192.168.1.10:8080/" : "https://example.com/dav";
+                AskText("Enter Server URL"_i18n, shown, [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.url = out;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                });
+                }, example);
             }
         });
     }
@@ -492,7 +510,7 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
                     new_loc.pass = out;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                });
+                }, {}, true);
             }
         });
     }
@@ -509,7 +527,7 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
                 if (R_SUCCEEDED(rc)) {
                     App::Notify("Connection test successful!"_i18n);
                 } else {
-                    App::Push<OptionBox>("Connection test failed!"_i18n, "OK"_i18n);
+                    App::Push<OptionBox>("Connection test failed!"_i18n + "\n" + ConnectionFailureText(rc), "OK"_i18n);
                 }
             });
         }
