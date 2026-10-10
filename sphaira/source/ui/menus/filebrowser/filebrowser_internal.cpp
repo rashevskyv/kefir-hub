@@ -30,10 +30,15 @@ std::string MakeNetworkRoot(std::string_view url) {
 }
 
 std::string DisplayPath(const FsEntry& entry, const std::string& path) {
-    const std::string root = entry.root.toString();
+    std::string root = entry.root.toString();
     const std::string name = entry.name.toString();
+    // walking up from a folder leaves "net_1a2b3c4d:" with no slash: match both.
+    if (root.ends_with('/')) {
+        root.pop_back();
+    }
     if (entry.type == FsType::Network && !name.empty() && !root.empty() && path.starts_with(root)) {
-        return name + ":/" + path.substr(root.size());
+        const auto rest = path.substr(root.size());
+        return name + ":" + (rest.empty() ? "/" : rest);
     }
     return path;
 }

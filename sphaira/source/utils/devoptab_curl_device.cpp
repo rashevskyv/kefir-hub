@@ -355,11 +355,8 @@ int MountCurlDevice::devoptab_unlink(const char *path) {
     SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(path, false);
     if (url.starts_with("ftp://") || url.starts_with("ftps://")) {
-        // ftp has no DELETE verb: DELE removes a file, RMD an (empty) folder.
-        const auto key = ftp_key(path);
-        const auto it = m_ftp_stat.find(key);
-        const bool is_dir = it != m_ftp_stat.end() && S_ISDIR(it->second.st_mode);
-        const auto rc = ftp_quote({std::string(is_dir ? "RMD " : "DELE ") + ftp_rel_path(path)});
+        // ftp has no DELETE verb: DELE removes a file (rmdir sends RMD).
+        const auto rc = ftp_quote({"DELE " + ftp_rel_path(path)});
         m_ftp_stat.clear();
         m_ftp_listed.clear();
         return rc;
@@ -378,6 +375,15 @@ int MountCurlDevice::devoptab_unlink(const char *path) {
 }
 
 int MountCurlDevice::devoptab_rmdir(const char *path) {
+    {
+        SCOPED_MUTEX(&m_handle_mutex);
+        if (const auto url = build_url(path, true); url.starts_with("ftp://") || url.starts_with("ftps://")) {
+            const auto rc = ftp_quote({"RMD " + ftp_rel_path(path)});
+            m_ftp_stat.clear();
+            m_ftp_listed.clear();
+            return rc;
+        }
+    }
     return devoptab_unlink(path);
 }
 

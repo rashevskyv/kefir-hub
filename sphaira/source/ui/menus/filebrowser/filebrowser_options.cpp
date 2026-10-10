@@ -443,7 +443,8 @@ void FsView::DisplayOptions() {
     view_entry->SetIcon(ActionIcon::Layout);
     view_entry->SetHasSubmenu(true);
 
-    if (m_fs_entry.type == FsType::Archive && m_entries_current.size()) {
+    // extract writes next to the .zip through the SD filesystem: a zip opened from a network share has no such folder.
+    if (m_fs_entry.type == FsType::Archive && m_entries_current.size() && m_archive_return_entry.type == FsType::Sd) {
         auto extract_sel = options->Add<SidebarEntryCallback>("Extract selection"_i18n, [this](){
             const auto targets = GetSelectedEntries();
             const auto src_path = m_path;               // current dir inside the archive

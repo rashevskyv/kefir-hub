@@ -160,7 +160,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                     InstallFiles();
                 } else if (IsSd() && path::IsAnyOfIC(entry.GetExtension(), IMAGE_EXTENSIONS)) {
                     OpenImageViewer();
-                } else if (path::IsAnyOfIC(entry.GetExtension(), ZIP_EXTENSIONS)) {
+                } else if ((IsSd() || m_fs_entry.type == FsType::Network) && path::IsAnyOfIC(entry.GetExtension(), ZIP_EXTENSIONS)) {
                     // browse inside the archive; if the zip is also a ROM (assoc
                     // match), offer both browsing and launching.
                     const auto assoc_list = m_menu->FindFileAssocFor();
