@@ -1183,6 +1183,15 @@
         },
         "index-first-start": {
             "user": true
+        },
+        "file-browser-add-source": {
+            "user": true
+        },
+        "file-browser-remote-input": {
+            "user": true
+        },
+        "file-browser-network-list": {
+            "user": true
         }
     }
 }

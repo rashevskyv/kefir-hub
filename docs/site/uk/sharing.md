@@ -30,7 +30,11 @@
    в адресі буде порт від 8080 до 8090, наприклад `http://kefir.local:8080`.
 4. Відскануйте QR-код телефоном або введіть адресу в браузері на ПК у тій самій мережі.
 
-<!-- shot: sharing-web-server | Web Sharing Server window: QR code, address http://kefir.local, "Press B to Stop Server" -->
+<!-- draft
+- v0.14.051: the [[Web Sharing Server]] window shows the console's IP address (for example `http://192.168.50.69`, with a port when 80 is taken), the address the QR code opens; it no longer shows `kefir.local`, which many phones cannot find. The text about `kefir.local` in this section and in Troubleshooting must say: use the address shown in the window
+-->
+
+<!-- shot: sharing-web-server | Web Sharing Server window: QR code, the console IP address, "Press B to Stop Server" -->
 
 Якщо адреса з `kefir.local` не відкривається, використайте IP-адресу, яку видно вгорі екрана консолі, наприклад
 `http://192.168.1.5` (додайте `:8080` або той порт, що був в адресі).

@@ -160,6 +160,20 @@ the cursor. The same settings are in [[Settings]] → [[Sources]], see [Settings
 - v0.14.046: a .zip opens as a folder on every source, a network share included (A on the file); [[Restore save data]] is offered for a .zip
 -->
 
+<!-- draft
+- v0.14.047: on FTP, [[Delete]] on a folder removes it with everything inside; Cut / Paste inside a share moves; Paste onto a name that exists asks [[Replace?]]
+- v0.14.047: [[Extract selection]] in an archive is offered only when the .zip lives on the memory card; an archive on a network share can be browsed and its files viewed, but not extracted onto the card (copy the .zip to the card first)
+- v0.14.047: a .zip opens as a folder on the memory card and on network shares (not on USB drives)
+- v0.14.047: the title keeps the source name (`FTP:/`, `WebDAV:/photos`) when you walk up out of a folder
+- Limits to state plainly: FTP [[Create File]] makes no file (an empty file cannot be uploaded; [[Create Folder]] works); NFS is read-only; SMB connects to port 445 only (no port field); an archive on an HTTP server opens only when the server supports byte ranges (nginx and Apache do; a quick `python -m http.server` does not)
+- v0.14.050: sources in [[Settings]] → [[Sources]]: **+** ([[Options]]) → [[Enter/Connect]] opens the File Browser on that source for every protocol (SMB, NFS, WebDAV, FTP, HTTP); before it said browsing was not supported for FTP, HTTP and WebDAV
+- v0.14.051: the windows with a QR code (typing from a phone or PC, Web Sharing Server, Console Transfer, SteamGridDB API key) show the console's IP address (for example `192.168.50.69/input`), the same address the QR code opens; `kefir.local` is no longer shown there because many phones cannot find `.local` names
+-->
+
+<!-- shot: file-browser-add-source | Source settings page of a network source: Name, Protocol, Server IP / Hostname, Port, Username, Password, Test Connection -->
+<!-- shot: file-browser-remote-input | Wait screen for typing from a phone: QR code, the console IP address, "Press B to cancel" -->
+<!-- shot: file-browser-network-list | File Browser on an FTP source: title FTP:/ and a list of folders and files with real sizes -->
+
 <!-- shot: file-browser-sources | Sources panel: Mount list with microSD card, a USB drive and an SMB share -->
 
 ## Browse a ZIP archive

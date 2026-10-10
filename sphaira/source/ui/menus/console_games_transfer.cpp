@@ -87,7 +87,7 @@ void StartSharing(std::vector<u64> ids) {
             return;
         }
 
-        WebPushServerProgressBox(result.url, result.qr_image, "Send installed games"_i18n);
+        WebPushServerProgressBox(result.ip_url, result.qr_image, "Send installed games"_i18n);
     });
 }
 

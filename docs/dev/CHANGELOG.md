@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.051 — Server and typing windows show the console IP address (not kefir.local); SteamGridDB API key window too
+- Found with an outside report (SteamGridDB API key: "the QR leads to a local site that goes nowhere") and on the console: the wait screen for typing from a phone showed `kefir.local/input | 192.168.50.69/input` on one line that did not fit and scrolled away, and the Web Sharing Server / SteamGridDB windows still showed `http://kefir.local` (many Android phones cannot resolve `.local`; the QR already used the IP since 0.14.045). The hint line under the address is 12 px from the box edge instead of 30 (`progress_box_draw.cpp`), so the English hint no longer scrolls. Now `remote_input.cpp`, `steamgriddb_icon.cpp` and `WebPushServerProgressBox` callers (`install_share.cpp`, `console_games_transfer.cpp`) show the IP address that the QR opens.
+- host tests: pass (quick) · nro: built · switch: verified — on the console the wait screen shows `192.168.50.69/input` and the hint fits (EN; UK hint is longer and still scrolls), the Web Sharing Server window shows `http://192.168.50.69` (EN, UK). Not tried from a phone; the SteamGridDB window uses the same code path. New doc shots taken from the console: `file-browser-add-source`, `file-browser-network-list`, `file-browser-remote-input`, `sharing-web-server` (EN, UK); drafts for 0.14.047-0.14.051 on the File Browser and Sharing pages.
+
 ## v0.14.050 — Settings > Sources > Options > Enter/Connect opens every configured protocol (it said "Browsing is not supported for this protocol yet." for FTP, HTTP and WebDAV)
 - `settings_menu.cpp`: the menu entry opens the File Browser on the location, like the row itself does. The string stays in i18n (unused keys are not removed here).
 - host tests: not run (one branch removed) · nro: not built (change is a deleted branch) · switch: pending.

@@ -191,10 +191,8 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
     }
 
     // kefir.local is friendly but not every phone resolves it; the IP always works (the QR uses it).
-    auto shown_url = share.url;
-    if (share.ip_url != share.url) {
-        shown_url += "  |  " + share.ip_url.substr(share.ip_url.find("://") + 3);
-    }
+    // One short address: two of them did not fit the line and scrolled away.
+    const auto shown_url = share.ip_url.substr(share.ip_url.find("://") + 3);
     App::Push<ProgressBox>(
         share.qr_image, options.title, shown_url,
         [on_complete](auto pbox) -> Result {

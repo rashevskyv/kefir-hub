@@ -280,7 +280,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     draw_text(m_scroll_action, action, m_pos.y + 40, 24, 160, ThemeEntryID_TEXT);
     draw_text(m_scroll_title, title, m_pos.y + 100, 22, 160, ThemeEntryID_TEXT);
     if (!transfer.empty()) {
-        draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 30, ThemeEntryID_TEXT_INFO);
+        draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 12, ThemeEntryID_TEXT_INFO);
     }
 
     // every transfer gets a stop button, including one with a known total: a

@@ -28,7 +28,11 @@ To move data to a second console, see [Console Transfer](console-transfer.md).
    is taken, the address has a port from 8080 to 8090, for example `http://kefir.local:8080`.
 4. Scan the QR code with a phone, or type the address into a browser on a PC on the same network.
 
-<!-- shot: sharing-web-server | Web Sharing Server window: QR code, address http://kefir.local, "Press B to Stop Server" -->
+<!-- draft
+- v0.14.051: the [[Web Sharing Server]] window shows the console's IP address (for example `http://192.168.50.69`, with a port when 80 is taken), the address the QR code opens; it no longer shows `kefir.local`, which many phones cannot find. The text about `kefir.local` in this section and in Troubleshooting must say: use the address shown in the window
+-->
+
+<!-- shot: sharing-web-server | Web Sharing Server window: QR code, the console IP address, "Press B to Stop Server" -->
 
 If the address with `kefir.local` does not open, use the IP address shown at the top of the console screen,
 for example `http://192.168.1.5` (add `:8080` or the port the address had).

@@ -53,7 +53,7 @@ void StartShareServerNow() {
             App::Notify("Web listener started, but its local self-test failed; check the log or use Title Mode"_i18n);
         }
 
-        WebPushServerProgressBox(result.url, result.qr_image, "Web Sharing Server"_i18n);
+        WebPushServerProgressBox(result.ip_url, result.qr_image, "Web Sharing Server"_i18n);
     });
 }
 
@@ -97,7 +97,7 @@ void StartConsoleTransferShare(const std::vector<fs::FsPath>& targets) {
             return;
         }
 
-        WebPushServerProgressBox(result.url, result.qr_image, "Console Transfer"_i18n);
+        WebPushServerProgressBox(result.ip_url, result.qr_image, "Console Transfer"_i18n);
     });
 }
 
