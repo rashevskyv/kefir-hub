@@ -1,16 +1,19 @@
 # Drives Kefir Hub on the console: queues button presses, reads the log and the open screens.
 # Console side: Tools -> Settings -> "Scripted input" on (and "Logging" on for -Log); MTP or FTP running.
 # Commands: sphaira/include/demo/demo_cmd.hpp (A, B, X, Y, L, R, ZL, ZR, Plus, Minus, L3, R3,
-# Up, Down, Left, Right, "wait N", "dump", "lang xx").
+# Up, Down, Left, Right, "wait N", "dump", "shot", "lang xx").
 #
 #   tools\dev\hub-input.ps1 Down Down A "wait 1" dump      # press, then write state.txt (MTP)
 #   tools\dev\hub-input.ps1 -State                          # print /config/kefir/demo/state.txt
 #   tools\dev\hub-input.ps1 -Log                            # print /config/kefir/log.txt
 #   tools\dev\hub-input.ps1 -Ftp 192.168.50.69 Down A -State  # same over the Hub FTP server (port 5000)
+#   tools\dev\hub-input.ps1 -Ftp 192.168.50.69 A "wait 1" shot -Shot out.jpg  # screen as JPEG on the PC
+[CmdletBinding(PositionalBinding = $false)]  # bare words are commands, never -Device / -Storage values
 param(
-    [Parameter(ValueFromRemainingArguments = $true)][string[]]$Lines,
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)][string[]]$Lines,
     [switch]$State,
     [switch]$Log,
+    [string]$Shot = '',
     [string]$Ftp = '',
     [string]$Device = 'Nintendo Switch',
     [string]$Storage = 'microSD card'
@@ -94,6 +97,12 @@ if ($Lines -and $Lines.Count) {
 if ($State) {
     if ($Ftp) { Get-Content (Ftp-Pull '/config/kefir/demo/state.txt') }
     else { Get-Content (Pull-File (Get-MtpFolder @('config', 'kefir', 'demo')) 'state.txt') }
+}
+
+if ($Shot) {
+    $src = if ($Ftp) { Ftp-Pull '/config/kefir/demo/shot.jpg' } else { Pull-File (Get-MtpFolder @('config', 'kefir', 'demo')) 'shot.jpg' }
+    Copy-Item $src $Shot -Force
+    Write-Output "shot: $((Resolve-Path $Shot).Path)"
 }
 
 if ($Log) {

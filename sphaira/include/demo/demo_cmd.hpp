@@ -7,6 +7,7 @@
 //   lang <code>                     switch the UI language and rebuild the menus from the main screen
 //   ready                           write sdmc:/config/kefir/demo/ready (the PC side waits for it, then shoots)
 //   dump                            write the open screens, bottom to top, to sdmc:/config/kefir/demo/state.txt
+//   shot                            write the current screen as JPEG to sdmc:/config/kefir/demo/shot.jpg
 // libnx-free so tests/test_demo_cmd.cpp can run it on the host.
 
 #include <cstdint>
@@ -25,7 +26,7 @@ constexpr std::uint64_t Left = 1ull << 12, Up = 1ull << 13, Right = 1ull << 14, 
 } // namespace pad
 
 struct Cmd {
-    enum Kind { Invalid, Button, Wait, Lang, Ready, Dump } kind{Invalid};
+    enum Kind { Invalid, Button, Wait, Lang, Ready, Dump, Shot } kind{Invalid};
     std::uint64_t button{};
     double seconds{};
     std::string arg{};
@@ -56,6 +57,9 @@ inline Cmd ParseCmd(std::string_view line) {
     }
     if (word == "dump") {
         return rest.empty() ? Cmd{Cmd::Dump} : Cmd{};
+    }
+    if (word == "shot") {
+        return rest.empty() ? Cmd{Cmd::Shot} : Cmd{};
     }
     if (!rest.empty()) {
         return {};

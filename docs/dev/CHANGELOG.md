@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.042 — Scripted input: `shot` saves the screen as JPEG; hub-input.ps1 keeps every bare word as a command
+- New command `shot` (`demo_cmd.hpp`, `demo_input.cpp`): caps:sc `capsscCaptureJpegScreenShot` (layer stack Default, 1 s timeout) writes `/config/kefir/demo/shot.jpg`; `hub-input.ps1 ... shot -Shot out.jpg` copies it to the PC, so an agent sees dialogs and the cursor, not only the screen stack.
+- `hub-input.ps1`: `PositionalBinding = $false` — PowerShell bound bare words to `-Device` / `-Storage`, so `-Ftp <ip> R "wait 1" dump` sent only `dump`.
+- Verified on the console with 0.14.041 over FTP: `dump` prints "menu Apps", then R → "menu Tools"; no crash. host tests: pass (quick, test_demo_cmd covers `shot`) · nro: not built (demo_input.cpp passes -fsyntax-only) · switch: pending — `hub-input.ps1 -Ftp 192.168.50.69 shot -Shot s.jpg` gives the current screen.
+
 ## v0.14.041 — Scripted input: `dump` crashed the Hub on the main screen; hub-input.ps1 works over FTP
 - `demo_input.cpp` DumpState: `MainMenu` answers `IsMenu()` without being a `MenuBase`, so the `static_cast` there called `GetShortTitle()` through a foreign vtable and the Hub died on the first `dump` on hardware (0.14.040, main screen open). Now every widget is asked for its chrome owner (MenuBase: itself; MainMenu: the current tab; others: none).
 - `tools/dev/hub-input.ps1 -Ftp <ip[:port]>`: pushes input.txt and pulls state.txt / log.txt through the Hub FTP server (curl, port 5000) when MTP is not available; `--ftp-create-dirs` makes `/config/kefir/demo` on first use.

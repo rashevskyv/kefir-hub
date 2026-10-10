@@ -12,6 +12,7 @@
 
 #include <cstdio>
 #include <deque>
+#include <vector>
 
 namespace sphaira {
 extern App* g_app;
@@ -28,6 +29,7 @@ static_assert(pad::Left == HidNpadButton_Left && pad::Up == HidNpadButton_Up && 
 constexpr const char* INPUT_TXT = "/config/kefir/demo/input.txt";
 constexpr const char* READY_FILE = "/config/kefir/demo/ready";
 constexpr const char* STATE_TXT = "/config/kefir/demo/state.txt";
+constexpr const char* SHOT_JPG = "/config/kefir/demo/shot.jpg";
 constexpr u64 MS = 1000000ull;
 constexpr u64 PRESS_GAP_NS = 350 * MS; // same pace as eden.ps1 used for posted keys
 constexpr u64 POLL_NS = 100 * MS;
@@ -83,6 +85,27 @@ void DumpState() {
     log_write("[demo] state dumped\n");
 }
 
+// the whole screen as caps:sc renders it (firmware 9.0.0+), so the PC side can see what the buttons did.
+void Shot() {
+    if (R_FAILED(capsscInitialize())) {
+        log_write("[demo] shot: caps:sc unavailable\n");
+        return;
+    }
+    std::vector<u8> jpeg(0x80000);
+    u64 size{};
+    const auto rc = capsscCaptureJpegScreenShot(&size, jpeg.data(), jpeg.size(), ViLayerStack_Default, 1'000'000'000);
+    capsscExit();
+    if (R_FAILED(rc) || !size || size > jpeg.size()) {
+        log_write("[demo] shot failed: 0x%X\n", rc);
+        return;
+    }
+    if (auto f = std::fopen(SHOT_JPG, "wb")) {
+        std::fwrite(jpeg.data(), 1, size, f);
+        std::fclose(f);
+        log_write("[demo] shot written (%lu bytes)\n", size);
+    }
+}
+
 } // namespace
 
 void PollInput(u64& kdown, u64& kheld, u64& kup) {
@@ -127,6 +150,9 @@ void PollInput(u64& kdown, u64& kheld, u64& kup) {
             break;
         case Cmd::Dump:
             DumpState();
+            break;
+        case Cmd::Shot:
+            Shot();
             break;
         case Cmd::Ready:
             if (auto f = std::fopen(READY_FILE, "wb")) {

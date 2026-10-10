@@ -27,6 +27,8 @@ int main() {
     CHECK(ParseCmd("ready\r\n").kind == Cmd::Ready);
     CHECK(ParseCmd("dump\r\n").kind == Cmd::Dump);
     CHECK(ParseCmd("dump now").kind == Cmd::Invalid);
+    CHECK(ParseCmd("shot\r\n").kind == Cmd::Shot);
+    CHECK(ParseCmd("shot 2").kind == Cmd::Invalid);
     CHECK(ParseCmd("  Down ").button == pad::Down);
     CHECK(ParseCmd("ZR").button == pad::ZR);
     CHECK(ParseCmd("R3").button == pad::R3);
