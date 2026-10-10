@@ -3187,5 +3187,7 @@
   "Safety copy of the replaced save:": "Asendatud salvestusfaili varukoopia:",
   "Safety copies of the replaced saves:": "Asendatud salvestiste turvakoopiad:",
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Uuendused ja DLC-d ei tööta ilma põhimänguta.\nJäta need alles, kui mäng on mängukaardil.",
-  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Tagasivõtmiseks: ava failibrauser, vali recovery.zip, vajuta + ja vali salvestusandmete taastamine."
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Tagasivõtmiseks: ava failibrauser, vali recovery.zip, vajuta + ja vali salvestusandmete taastamine.",
+  "A source with this name already exists.": "Selle nimega allikas on juba olemas.",
+  "The name of this source in the list of sources.": "Selle allika nimi allikate loendis."
 }

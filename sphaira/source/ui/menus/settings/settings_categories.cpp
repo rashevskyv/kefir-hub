@@ -204,8 +204,7 @@ void AddSaveSyncLocationInteractive() {
                     continue;
                 }
 
-                App::SetWebdavUrl(loc.name);
-                App::Push<SourceEditMenu>(loc.name);
+                App::SetWebdavUrl(loc.name);  // AddNetworkLocationInteractive opens the form itself
                 return;
             }
         });

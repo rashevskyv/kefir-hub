@@ -3187,5 +3187,7 @@
   "Restore stopped. The last save may be changed, and it was not checked.": "Restore stopped. The last save may be changed, and it was not checked.",
   "Safety copies of the replaced saves:": "Safety copies of the replaced saves:",
   "Safety copy of the replaced save:": "Safety copy of the replaced save:",
-  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.",
+  "A source with this name already exists.": "A source with this name already exists.",
+  "The name of this source in the list of sources.": "The name of this source in the list of sources."
 }

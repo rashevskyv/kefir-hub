@@ -140,6 +140,12 @@ A drive marked `[read-only]` is protected. Turn this off in [[Settings]] → [[S
 At the list of sources, **+** also has [[Rename Source]], [[Properties]] and [[Delete Source]] for the share under
 the cursor. The same settings are in [[Settings]] → [[Sources]], see [Settings](settings.md).
 
+<!-- draft
+- v0.14.044: new steps for "Add a network share": 1) **+** → [[Sources]] → [[Add network location]] (or [[Settings]] → [[Sources]] → [[+ Add network location]]); 2) choose the protocol; 3) the source is created at once with the protocol as its name ("WebDAV", "WebDAV (2)") and its settings page opens: [[Name]], [[Protocol]], the address fields ([[Server URL]] for WebDAV/HTTP/NFS, [[Server IP / Hostname]] + [[Share Name]] for SMB, [[Server IP / Hostname]] + [[Port]] for FTP), [[Username]], [[Password]], [[Test Connection]]; 4) **B** returns to the list of sources with the new one in it. No more name-only first step and no need to find the empty source and choose [[Edit Source]].
+- v0.14.044: every field of a source asks how to type: [[Manual (Keyboard)]] or [[From Phone / PC]] (a QR code and an address to type it in a browser on the same Wi-Fi) — handy for long addresses and passwords
+- v0.14.044: Ukrainian: the screen title is "Файловий браузер" like the tile in Tools; folder rows read "Файлів: N" / "Папок: N"
+-->
+
 <!-- shot: file-browser-sources | Sources panel: Mount list with microSD card, a USB drive and an SMB share -->
 
 ## Browse a ZIP archive

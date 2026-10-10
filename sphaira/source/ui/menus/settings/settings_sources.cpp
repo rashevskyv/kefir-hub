@@ -14,6 +14,7 @@
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/remote_input.hpp"
 #include "utils/devoptab_smb2.hpp"
 #include "utils/nfs_url.hpp"
 
@@ -192,6 +193,18 @@ void ChangeLocationProtocol(location::Entry& loc, const std::string& protocol) {
     }
 }
 
+// every field offers the console keyboard or a phone / PC browser: a server URL or a password
+// is far easier to type there. The answer arrives later, so `done` saves by itself.
+void AskText(const std::string& guide, const std::string& current, std::function<void(const std::string&)> done) {
+    remote_input::Options opts{};
+    opts.title = guide;
+    opts.guide = guide;
+    opts.default_text = current;
+    remote_input::PromptTextInput(opts, [done](const std::string& text) {
+        done(text);
+    });
+}
+
 
 } // namespace
 
@@ -294,6 +307,30 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
     const auto proto = GetLocationProtocol(loc);
 
     items.emplace_back(SettingsItem{
+        "Name"_i18n,
+        "The name of this source in the list of sources."_i18n,
+        [loc](){ return loc.name; },
+        [this, loc]() {
+            AskText("Enter location name (e.g. My NAS)"_i18n, loc.name, [this, loc](const std::string& out) {
+                if (out.empty() || out == loc.name) {
+                    return;
+                }
+                if (std::ranges::any_of(location::Load(), [&](const auto& e){ return e.name == out; })) {
+                    App::Push<OptionBox>("A source with this name already exists."_i18n, "OK"_i18n);
+                    return;
+                }
+                location::Remove(loc.name);
+                auto renamed = loc;
+                renamed.name = out;
+                location::Add(renamed);
+                m_loc_name = out;
+                SetTitle(out);
+                m_items = BuildEditItems();
+            });
+        }
+    });
+
+    items.emplace_back(SettingsItem{
         "Protocol"_i18n,
         "Change the network protocol and edit the fields required by the new source type."_i18n,
         [proto](){ return GetLocationProtocolLabel(proto); },
@@ -350,14 +387,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Server IP / Hostname"_i18n,
             "Samba server IP address or hostname."_i18n,
             [server](){ return server; },
-            [this, loc, server, share]() mutable {
-                std::string out = server;
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter server IP or hostname"_i18n.c_str(), server.c_str()))) {
+            [this, loc, server, share]() {
+                AskText("Enter server IP or hostname"_i18n, server, [this, loc, share](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.url = "smb://" + out + "/" + share;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                }
+                });
             }
         });
 
@@ -365,14 +401,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Share Name"_i18n,
             "Samba shared folder name."_i18n,
             [share](){ return share; },
-            [this, loc, server, share]() mutable {
-                std::string out = share;
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter share name"_i18n.c_str(), share.c_str()))) {
+            [this, loc, server, share]() {
+                AskText("Enter share name"_i18n, share, [this, loc, server](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.url = "smb://" + server + "/" + out;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                }
+                });
             }
         });
     }
@@ -389,14 +424,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Server IP / Hostname"_i18n,
             "FTP server IP address or hostname."_i18n,
             [server](){ return server; },
-            [this, loc, server]() mutable {
-                std::string out = server;
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter server IP or hostname"_i18n.c_str(), server.c_str()))) {
+            [this, loc, server]() {
+                AskText("Enter server IP or hostname"_i18n, server, [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.url = "ftp://" + out + "/";
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                }
+                });
             }
         });
 
@@ -404,9 +438,8 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Port"_i18n,
             "FTP port."_i18n,
             [loc](){ return std::to_string(loc.port); },
-            [this, loc]() mutable {
-                std::string out = std::to_string(loc.port);
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter port"_i18n.c_str(), std::to_string(loc.port).c_str()))) {
+            [this, loc]() {
+                AskText("Enter port"_i18n, std::to_string(loc.port), [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
                     const auto parsed = std::strtoul(out.c_str(), nullptr, 10);
                     if (parsed >= 1 && parsed <= 65535) {
@@ -414,7 +447,7 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
                         location::Add(new_loc);
                         m_items = BuildEditItems();
                     }
-                }
+                });
             }
         });
     }
@@ -423,14 +456,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Server URL"_i18n,
             "Server connection URL address."_i18n,
             [loc](){ return loc.url; },
-            [this, loc]() mutable {
-                std::string out = loc.url;
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter Server URL"_i18n.c_str(), loc.url.c_str()))) {
+            [this, loc]() {
+                AskText("Enter Server URL"_i18n, loc.url, [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.url = out;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                }
+                });
             }
         });
     }
@@ -440,14 +472,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Username"_i18n,
             "Username for network connection (optional)."_i18n,
             [loc](){ return loc.user; },
-            [this, loc]() mutable {
-                std::string out = loc.user;
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter username"_i18n.c_str(), loc.user.c_str()))) {
+            [this, loc]() {
+                AskText("Enter username"_i18n, loc.user, [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.user = out;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                }
+                });
             }
         });
 
@@ -455,14 +486,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "Password"_i18n,
             "Password for network connection (optional)."_i18n,
             [loc](){ return loc.pass.empty() ? "" : "********"; },
-            [this, loc]() mutable {
-                std::string out = loc.pass;
-                if (R_SUCCEEDED(swkbd::ShowText(out, "Enter password"_i18n.c_str(), loc.pass.c_str()))) {
+            [this, loc]() {
+                AskText("Enter password"_i18n, loc.pass, [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
                     new_loc.pass = out;
                     location::Add(new_loc);
                     m_items = BuildEditItems();
-                }
+                });
             }
         });
     }

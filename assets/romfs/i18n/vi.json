@@ -3192,5 +3192,7 @@
   "Safety copy of the replaced save:": "Bản sao lưu của dữ liệu lưu đã thay thế:",
   "Safety copies of the replaced saves:": "Bản sao an toàn của các tệp lưu trữ được thay thế:",
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Bản cập nhật và DLC không hoạt động nếu không có trò chơi gốc.\nGiữ lại nếu trò chơi nằm trên thẻ game.",
-  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Để hoàn tác: mở Trình duyệt tệp, chọn recovery.zip, nhấn + và chọn Khôi phục dữ liệu lưu."
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Để hoàn tác: mở Trình duyệt tệp, chọn recovery.zip, nhấn + và chọn Khôi phục dữ liệu lưu.",
+  "A source with this name already exists.": "Đã tồn tại một nguồn có tên này.",
+  "The name of this source in the list of sources.": "Tên của nguồn này trong danh sách nguồn."
 }

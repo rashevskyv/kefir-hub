@@ -346,204 +346,40 @@ void Menu::ConnectToLocation(const ::sphaira::location::Entry& e) {
     view->ConnectToLocation(target_entry);
 }
 
-bool IsUrlLike(const std::string& str) {
-    if (str.find("://") != std::string::npos) return true;
-    if (str.starts_with("192.168.") || str.starts_with("10.") || str.starts_with("172.")) return true;
-    if (str.find('.') != std::string::npos && (str.find('/') != std::string::npos || str.find(':') != std::string::npos)) return true;
-    return false;
-}
-
+// Protocol first, then one form with every field (name, address, login, Test Connection): the old
+// flow asked only for a name and left the user to find the empty source in the list and edit it.
 void AddNetworkLocationInteractive(std::function<void()> on_success) {
     PopupList::Items protocols = {"Samba (SMB)", "NFS", "WebDAV", "FTP", "HTTP"};
     App::Push<PopupList>("Select Protocol"_i18n, protocols, [on_success](std::optional<s64> op_proto) {
-        if (!op_proto) return;
-        s64 proto = *op_proto;
+        if (!op_proto || *op_proto < 0 || *op_proto >= 5) return;
+        constexpr std::array values{"smb", "nfs", "webdav", "ftp", "http"};
+        constexpr std::array labels{"SMB", "NFS", "WebDAV", "FTP", "HTTP"};
+        const auto proto = *op_proto;
 
-        std::string name;
-        if (R_FAILED(swkbd::ShowText(name, "Enter location name (e.g. My NAS)"_i18n.c_str(), ""))) return;
-        if (name.empty()) return;
+        // a free default name; the form has a Name row to change it.
+        const auto locations = location::Load();
+        const auto taken = [&](const std::string& n) {
+            return std::ranges::any_of(locations, [&](const auto& l){ return l.name == n; });
+        };
+        std::string name = labels[proto];
+        for (int n = 2; taken(name); n++) {
+            name = std::string{labels[proto]} + " (" + std::to_string(n) + ")";
+        }
+
+        location::Entry e;
+        e.name = name;
+        e.protocol = values[proto];
+        e.url = std::string{values[proto]} + "://";
+        e.port = (proto == 3) ? 21 : 0;
+        location::Add(e);
 
         App::Pop();
-
-        std::string target_proto;
-        if (proto == 0) target_proto = "smb";
-        else if (proto == 1) target_proto = "nfs";
-        else if (proto == 2) target_proto = "webdav";
-        else if (proto == 3) target_proto = "ftp";
-        else if (proto == 4) target_proto = "http";
-
-        auto network_locations = location::Load();
-        bool has_exact_name = false;
-        bool has_same_type = false;
-
-        for (const auto& loc : network_locations) {
-            if (loc.name == name) {
-                has_exact_name = true;
-                std::string existing_proto = loc.protocol;
-                if (existing_proto.empty()) {
-                    if (loc.url.starts_with("smb://")) existing_proto = "smb";
-                    else if (loc.url.starts_with("nfs://")) existing_proto = "nfs";
-                    else if (loc.url.starts_with("ftp://") || loc.url.starts_with("ftps://")) existing_proto = "ftp";
-                    else if (loc.url.starts_with("http://") || loc.url.starts_with("https://")) existing_proto = "http";
-                    else existing_proto = "webdav";
-                }
-                if (existing_proto == target_proto) {
-                    has_same_type = true;
-                }
-            }
-        }
-
-        bool is_url = IsUrlLike(name);
-
-        auto add_location_func = [proto, name, is_url, on_success](std::string final_name) {
-            location::Entry e;
-            e.name = final_name;
-            std::string target_url;
-
-            if (proto == 0) {
-                e.protocol = "smb";
-                if (is_url) {
-                    target_url = name;
-                    if (!target_url.starts_with("smb://")) {
-                        if (size_t pos = target_url.find("://"); pos != std::string::npos) {
-                            target_url = "smb://" + target_url.substr(pos + 3);
-                        } else {
-                            target_url = "smb://" + target_url;
-                        }
-                    }
-                } else {
-                    target_url = "smb://";
-                }
-                e.url = target_url;
-            } else if (proto == 1) {
-                e.protocol = "nfs";
-                if (is_url) {
-                    target_url = name;
-                    if (!target_url.starts_with("nfs://")) {
-                        if (size_t pos = target_url.find("://"); pos != std::string::npos) {
-                            target_url = "nfs://" + target_url.substr(pos + 3);
-                        } else {
-                            target_url = "nfs://" + target_url;
-                        }
-                    }
-                } else {
-                    target_url = "nfs://";
-                }
-                e.url = target_url;
-            } else if (proto == 2) {
-                e.protocol = "webdav";
-                if (is_url) {
-                    target_url = name;
-                    if (!target_url.starts_with("webdav://") && !target_url.starts_with("webdavs://") &&
-                        !target_url.starts_with("http://") && !target_url.starts_with("https://")) {
-                        if (size_t pos = target_url.find("://"); pos != std::string::npos) {
-                            target_url = "webdav://" + target_url.substr(pos + 3);
-                        } else {
-                            target_url = "webdav://" + target_url;
-                        }
-                    }
-                } else {
-                    target_url = "webdav://";
-                }
-                e.url = target_url;
-            } else if (proto == 3) {
-                e.protocol = "ftp";
-                e.port = 21;
-                if (is_url) {
-                    target_url = name;
-                    if (!target_url.starts_with("ftp://") && !target_url.starts_with("ftps://")) {
-                        if (size_t pos = target_url.find("://"); pos != std::string::npos) {
-                            target_url = "ftp://" + target_url.substr(pos + 3);
-                        } else {
-                            target_url = "ftp://" + target_url;
-                        }
-                    }
-                    if (size_t colon_pos = target_url.find_last_of(':'); colon_pos != std::string::npos && colon_pos > 6) {
-                        size_t slash_pos = target_url.find('/', colon_pos);
-                        std::string port_str = (slash_pos == std::string::npos) ? target_url.substr(colon_pos + 1) : target_url.substr(colon_pos + 1, slash_pos - colon_pos - 1);
-                        if (!port_str.empty()) {
-                            bool is_num = true;
-                            for (char c : port_str) {
-                                if (!std::isdigit(static_cast<unsigned char>(c))) {
-                                    is_num = false;
-                                    break;
-                                }
-                            }
-                            if (is_num) {
-                                const auto parsed = std::strtoul(port_str.c_str(), nullptr, 10);
-                                if (parsed >= 1 && parsed <= 65535) {
-                                    e.port = static_cast<u16>(parsed);
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    target_url = "ftp://";
-                }
-                e.url = target_url;
-            } else if (proto == 4) {
-                e.protocol = "http";
-                if (is_url) {
-                    target_url = name;
-                    if (!target_url.starts_with("http://") && !target_url.starts_with("https://")) {
-                        if (size_t pos = target_url.find("://"); pos != std::string::npos) {
-                            target_url = "http://" + target_url.substr(pos + 3);
-                        } else {
-                            target_url = "http://" + target_url;
-                        }
-                    }
-                } else {
-                    target_url = "http://";
-                }
-                e.url = target_url;
-            }
-
-            location::Add(e);
-            App::Notify("Location added successfully!"_i18n);
+        evman::push(evman::FunctionalEventData{[on_success, name]() {
             if (on_success) {
-                evman::push(evman::FunctionalEventData{[on_success]() {
-                    on_success();
-                }});
+                on_success();
             }
-        };
-
-        auto generate_numbered_name = [name, network_locations]() -> std::string {
-            int counter = 2;
-            std::string temp_name;
-            bool name_exists = true;
-            while (name_exists) {
-                temp_name = name + " (" + std::to_string(counter) + ")";
-                name_exists = false;
-                for (const auto& loc : network_locations) {
-                    if (loc.name == temp_name) {
-                        name_exists = true;
-                        break;
-                    }
-                }
-                counter++;
-            }
-            return temp_name;
-        };
-
-        if (has_exact_name) {
-            if (has_same_type) {
-                App::Push<OptionBox>(
-                    "A location with the same name and protocol already exists. Overwrite?"_i18n,
-                    "Overwrite"_i18n, "Keep Both"_i18n, 1,
-                    [add_location_func, generate_numbered_name, name](auto op_idx) {
-                        if (op_idx && *op_idx == 0) {
-                            add_location_func(name);
-                        } else {
-                            add_location_func(generate_numbered_name());
-                        }
-                    }
-                );
-            } else {
-                add_location_func(generate_numbered_name());
-            }
-        } else {
-            add_location_func(name);
-        }
+            App::Push<settings::SourceEditMenu>(name);
+        }});
     });
 }
 } // namespace sphaira::ui::menu::filebrowser

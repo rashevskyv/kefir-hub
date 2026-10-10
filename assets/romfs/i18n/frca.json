@@ -3193,5 +3193,7 @@
   "Safety copy of the replaced save:": "Copie de sauvegarde des données remplacées :",
   "Safety copies of the replaced saves:": "Copies de sécurité des sauvegardes remplacées :",
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Les mises à jour et les DLC ne fonctionnent pas sans le jeu de base.\nConservez-les si le jeu est sur une carte de jeu.",
-  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Pour annuler : ouvrez l'explorateur de fichiers, sélectionnez recovery.zip, appuyez sur + et choisissez Restaurer les données de sauvegarde."
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Pour annuler : ouvrez l'explorateur de fichiers, sélectionnez recovery.zip, appuyez sur + et choisissez Restaurer les données de sauvegarde.",
+  "A source with this name already exists.": "Une source avec ce nom existe déjà.",
+  "The name of this source in the list of sources.": "Le nom de cette source dans la liste des sources."
 }

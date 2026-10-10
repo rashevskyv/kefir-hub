@@ -3187,5 +3187,7 @@
   "Safety copy of the replaced save:": "Salinan cadangan penyimpanan yang diganti:",
   "Safety copies of the replaced saves:": "Salinan cadangan dari simpanan yang diganti:",
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Pembaruan dan DLC tidak berfungsi tanpa game dasarnya.\nSimpan jika game berada di kartu game.",
-  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Untuk membatalkan: buka Peramban Berkas, pilih recovery.zip, tekan + dan pilih Pulihkan data penyimpanan."
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Untuk membatalkan: buka Peramban Berkas, pilih recovery.zip, tekan + dan pilih Pulihkan data penyimpanan.",
+  "A source with this name already exists.": "Sumber dengan nama ini sudah ada.",
+  "The name of this source in the list of sources.": "Nama sumber ini dalam daftar sumber."
 }

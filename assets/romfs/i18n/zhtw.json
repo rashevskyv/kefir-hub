@@ -3245,5 +3245,7 @@
   "Safety copy of the replaced save:": "被替換存檔的安全副本：",
   "Safety copies of the replaced saves:": "被替換存檔的安全副本：",
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "更新資料與DLC沒有主程式將無法執行。\n若遊戲位於遊戲卡匣上，請保留它們。",
-  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "若要復原：開啟檔案瀏覽器，選擇 recovery.zip，按 + 並選擇還原存檔資料。"
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "若要復原：開啟檔案瀏覽器，選擇 recovery.zip，按 + 並選擇還原存檔資料。",
+  "A source with this name already exists.": "已存在同名的來源。",
+  "The name of this source in the list of sources.": "此來源在來源列表中的名稱。"
 }
