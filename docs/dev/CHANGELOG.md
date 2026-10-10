@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.050 — Settings > Sources > Options > Enter/Connect opens every configured protocol (it said "Browsing is not supported for this protocol yet." for FTP, HTTP and WebDAV)
+- `settings_menu.cpp`: the menu entry opens the File Browser on the location, like the row itself does. The string stays in i18n (unused keys are not removed here).
+- host tests: not run (one branch removed) · nro: not built (change is a deleted branch) · switch: pending.
+- Verified on the console with 0.14.049 before this: WebDAV with the password typed by the user: Test Connection ok, root and `sphaira-saves` listed, a backup zip opens (HEAD + ranges, 2 hidden entries), leaving the browser with it open; Saves > Sync with cloud (WebDAV) uploaded the SD backups of Celeste to `sphaira-saves/Celeste/Account/` on the server. Not explained: one Hub crash at 16:59 right after `[FILE] open net_f4f7071a:/nfs-save-backup.zip` while the NFS test server was being removed (no crash report was written).
+
 ## v0.14.049 — Scripted input: `text <string>` answers the system keyboard (0.14.048 had it behind DOCS_DEMO, which release builds do not define)
 - `demo_cmd.hpp` / `demo_input.cpp` / `swkbd.cpp`: a queued `text <string>` line is returned by the next keyboard (Rename, Create Folder, Go to path) without opening it, so a test run can type; `hub-input.ps1` joins `text name` given as two words. Nothing changes unless "Scripted input" is on.
 - host tests: pass (test_demo_cmd) · nro: built · switch: verified — on FTP Rename (folder t1 -> t3) and Create Folder (t2) typed by the script, the server has them; Create File makes no file on FTP (an empty upload is never started, as before). Sources through the form on the console: NFS (nfs://45.134.218.34/srv/kefir-test over the internet: list with sizes and dates, a .zip opens as a folder, files marked read-only) works; SMB could not be tried from this network (the provider drops outbound 445; Hub's SMB has no port field, libsmb2 connects to 445 only); WebDAV with a password and Restore save data from a network zip are still pending.
