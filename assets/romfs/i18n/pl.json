@@ -3172,5 +3172,20 @@
   "Wi-Fi (same network)": "Wi-Fi (ta sama sieć)",
   "USB install is not part of this build": "Instalacja przez USB nie jest częścią tej wersji",
   "Next group": "Następna grupa",
-  "Previous group": "Poprzednia grupa"
+  "Previous group": "Poprzednia grupa",
+  "Installed without the base game:": "Zainstalowano bez gry podstawowej:",
+  "Scripted input": "Wejście skryptowe",
+  "Queued again: ": "Ponownie w kolejce: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: naciśnij przyciski z /config/kefir/demo/input.txt (jedna nazwa na linię: A, B, Up...; czekać N; zrzut zapisuje otwarte ekrany do state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Aplikacja instalacyjna z PC oczekuje.\nZatrzymać MTP i otworzyć Instalację z PC (USB)?",
+  "Restore completed.": "Przywracanie zakończone.",
+  "Already up to date:": "Wszystko jest aktualne:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Przywracanie zatrzymane. Ostatni zapis mógł zostać zmieniony i nie został sprawdzony.",
+  "Restore stopped.": "Przywracanie zatrzymane.",
+  "Backups created:": "Utworzone kopie zapasowe:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Każdy zapis jest przywracany osobno. Jeśli jeden się nie powiedzie, kolejne zapisy nie zostaną przywrócone.\n",
+  "Safety copy of the replaced save:": "Kopia zapasowa zastąpionego stanu gry:",
+  "Safety copies of the replaced saves:": "Kopie bezpieczeństwa zastąpionych zapisów:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Aktualizacje i DLC nie działają bez gry podstawowej.\nZachowaj je, jeśli gra jest na kartridżu.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Aby cofnąć: otwórz Przeglądarkę plików, wybierz recovery.zip, naciśnij + i wybierz Przywróć dane zapisu."
 }

@@ -3172,5 +3172,20 @@
   "Wi-Fi (same network)": "Wi-Fi (jaringan yang sama)",
   "USB install is not part of this build": "Instalasi USB bukan bagian dari build ini",
   "Next group": "Grup berikutnya",
-  "Previous group": "Grup sebelumnya"
+  "Previous group": "Grup sebelumnya",
+  "Installed without the base game:": "Dipasang tanpa permainan dasar:",
+  "Scripted input": "Masukan skrip",
+  "Queued again: ": "Masuk antrean lagi: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: tekan tombol dari /config/kefir/demo/input.txt (satu nama per baris: A, B, Up...; tunggu N; dump menulis layar terbuka ke state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Aplikasi instal PC sedang menunggu.\nHentikan MTP dan buka Instal PC (USB)?",
+  "Restore completed.": "Pemulihan selesai.",
+  "Already up to date:": "Sudah terbaru:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Pemulihan dihentikan. Simpanan terakhir mungkin telah berubah dan belum diperiksa.",
+  "Restore stopped.": "Pemulihan dihentikan.",
+  "Backups created:": "Cadangan yang dibuat:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Setiap penyimpanan dipulihkan secara mandiri. Jika satu gagal, penyimpanan setelahnya tidak dipulihkan.\n",
+  "Safety copy of the replaced save:": "Salinan cadangan penyimpanan yang diganti:",
+  "Safety copies of the replaced saves:": "Salinan cadangan dari simpanan yang diganti:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Pembaruan dan DLC tidak berfungsi tanpa game dasarnya.\nSimpan jika game berada di kartu game.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Untuk membatalkan: buka Peramban Berkas, pilih recovery.zip, tekan + dan pilih Pulihkan data penyimpanan."
 }

@@ -3173,5 +3173,19 @@
   "Wi-Fi (same network)": "Wi-Fi (same network)",
   "USB install is not part of this build": "USB install is not part of this build",
   "Next group": "Next group",
-  "Previous group": "Previous group"
+  "Previous group": "Previous group",
+  "Installed without the base game:": "Installed without the base game:",
+  "Scripted input": "Scripted input",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "A PC install app is waiting.\nStop MTP and open PC Install (USB)?",
+  "Restore completed.": "Restore completed.",
+  "Already up to date:": "Already up to date:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Restore stopped. The last save may be changed, and it was not checked.",
+  "Restore stopped.": "Restore stopped.",
+  "Backups created:": "Backups created:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Each save is restored on its own. If one fails, the saves after it are not restored.\n",
+  "Safety copy of the replaced save:": "Safety copy of the replaced save:",
+  "Safety copies of the replaced saves:": "Safety copies of the replaced saves:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."
 }

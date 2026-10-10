@@ -72,11 +72,11 @@ void Menu::ShowRestoreConfirm(
     const fs::FsPath& backup_root) {
 
     const auto accounts = App::GetAccountList();
-    const auto account_of = [this, &accounts](const Entry& src, const Entry& dst) -> std::string {
+    const auto account_of = [&accounts](const Entry& src, const Entry& dst) -> std::string {
         if (src.save_data_type != FsSaveDataType_Account) {
             return {};
         }
-        auto name = this->GetAccountName(dst.uid);
+        auto name = AccountLabel(dst.uid, accounts);
         return name.empty() ? FormatBackupAccount(src, accounts) : name;
     };
     const auto dest_of = [](const Entry& dst, const std::string& acc_str) -> std::string {
@@ -108,7 +108,7 @@ void Menu::ShowRestoreConfirm(
             prompt += "… +" + std::to_string(sources->size() - MAX_LINES) + "\n";
         }
         prompt += "\n";
-        prompt += "Restores are performed individually (not atomic: later items may fail if an error occurs).\n"_i18n;
+        prompt += "Each save is restored on its own. If one fails, the saves after it are not restored.\n"_i18n;
     } else {
         const auto& src = sources->front();
         const auto& dst = targets->front();
@@ -253,28 +253,26 @@ void Menu::ExecuteRestore(
         }
 
         if (!recovery_paths->empty()) {
-            std::string prefix;
+            std::string rec_msg;
             if (R_SUCCEEDED(rc)) {
-                prefix = (recovery_paths->size() == 1)
-                    ? "Restore completed.\nSafety recovery archive:\n"_i18n
-                    : "Restore completed.\nSafety recovery archive(s):\n"_i18n;
+                rec_msg = "Restore completed."_i18n;
             } else if (*last_item_is_raw) {
-                prefix = "Restore stopped.\nSafety recovery archive(s) retained:\n"_i18n;
-            } else if (!*last_item_is_raw && *last_mutation_started) {
-                prefix = (recovery_paths->size() == 1)
-                    ? "Restore stopped: target save may have changed and restored contents are unverified.\nSafety recovery archive retained:\n"_i18n
-                    : "Restore stopped: current target save may have changed and restored contents are unverified.\nSafety recovery archive(s) retained:\n"_i18n;
+                rec_msg = "Restore stopped."_i18n;
+            } else if (*last_mutation_started) {
+                rec_msg = "Restore stopped. The last save may be changed, and it was not checked."_i18n;
             } else {
-                prefix = (recovery_paths->size() == 1)
-                    ? "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n
-                    : "Restore stopped before current target save was modified.\nSafety recovery archive(s) retained:\n"_i18n;
+                rec_msg = "Restore stopped before current target save was modified."_i18n;
             }
-            std::string rec_msg = prefix;
+            rec_msg += "\n";
+            rec_msg += (recovery_paths->size() == 1)
+                ? "Safety copy of the replaced save:"_i18n
+                : "Safety copies of the replaced saves:"_i18n;
+            rec_msg += "\n";
             for (const auto& rp : *recovery_paths) {
                 rec_msg += rp.s;
                 rec_msg += "\n";
             }
-            rec_msg += "\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+            rec_msg += "\n" + "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."_i18n;
             App::Push<OptionBox>(rec_msg, "OK"_i18n);
         } else if (R_FAILED(rc)) {
             if (!*last_item_is_raw && !*last_mutation_started && !*last_item_created_slot_retained) {
@@ -375,7 +373,7 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
                     } else {
                         prefix = "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n;
                     }
-                    const std::string msg = prefix + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+                    const std::string msg = prefix + recovery_path->toString() + "\n\n" + "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."_i18n;
                     App::Push<OptionBox>(msg, "OK"_i18n);
                 } else if (R_FAILED(rc)) {
                     if (!*mutation_started) {

@@ -498,9 +498,10 @@ void Menu::PromptSaveTypeOptions(SaveOp op) {
             all_acc->Depends([state](){ return state->accounts_available; }, "No backups found in this location."_i18n);
         }
 
+        const auto account_labels = AccountPickerItems(m_accounts);
         for (size_t i = 0; i < m_accounts.size(); i++) {
             auto* entry = options->Add<SidebarEntryCheckbox>(
-                std::string{"    "} + m_accounts[i].nickname,
+                std::string{"    "} + account_labels[i],
                 [state, i](){ return i < state->account_enabled.size() && state->account_enabled[i]; },
                 [state, i](bool enabled) {
                     if (i >= state->account_enabled.size()) return;

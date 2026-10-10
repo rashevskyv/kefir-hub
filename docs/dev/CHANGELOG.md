@@ -3,6 +3,14 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.043 — Saves: users with one nickname told apart, plain result texts, restore picker starts on the backup owner, same-second backups of two users no longer collide
+- Found by driving the console with Scripted input (Saves → Deleted Games: backup of one game, of all 8, restore for two users; no crash on 0.14.042).
+- `save_backup_pub.cpp`: the DBI file name has no user (`<tid>_A_<time>_<index>.zip`), so two users' saves of one game in the same second got one name and the second failed the batch with "path already exists"; a taken name now moves to the next free second. The "N backup(s) created, M already up to date." box is two lines, "Backups created: N" / "Already up to date: M".
+- `save_game_group.cpp` `AccountIndexOf` / `AccountLabel`: both [[Restore for user]] pickers start on the backup owner (was always the first user); the [[ACCOUNTS]] rows in the options panel and the restore confirmation show "nin10do (B486)" when two users share a nickname.
+- `popup_list.cpp`: the list title scrolls (ScrollingText, as the multi-select popup) instead of running off the screen ("Restore for user (game · owner · date)").
+- Restore texts without "(s)", arrows and "not atomic": status line + "Safety copy/copies of the replaced save(s):" + "To undo: open File Browser, select recovery.zip, press + and choose Restore save data." (also in the file browser restore). New keys translated into all 26 languages (tools/i18n-translate, uk reviewed by hand); this also fills the 6 keys of 0.14.037–039 that were en/uk only.
+- host tests: pass (quick, i18n contract) · nro: not built (changed files pass -fsyntax-only) · switch: pending — Saves → Deleted Games → select all → backup: two-line summary; restore a game with two users: picker title scrolls, cursor on the owner, confirmation shows "(B486)" / "(9BBD)", result text has no "(s)".
+
 ## v0.14.042 — Scripted input: `shot` saves the screen as JPEG; hub-input.ps1 keeps every bare word as a command
 - New command `shot` (`demo_cmd.hpp`, `demo_input.cpp`): caps:sc `capsscCaptureJpegScreenShot` (layer stack Default, 1 s timeout) writes `/config/kefir/demo/shot.jpg`; `hub-input.ps1 ... shot -Shot out.jpg` copies it to the PC, so an agent sees dialogs and the cursor, not only the screen stack.
 - `hub-input.ps1`: `PositionalBinding = $false` — PowerShell bound bare words to `-Device` / `-Storage`, so `-Ftp <ip> R "wait 1" dump` sent only `dump`.

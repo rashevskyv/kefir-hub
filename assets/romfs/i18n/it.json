@@ -3177,5 +3177,20 @@
   "Wi-Fi (same network)": "Wi-Fi (stessa rete)",
   "USB install is not part of this build": "L'installazione USB non fa parte di questa build",
   "Next group": "Gruppo successivo",
-  "Previous group": "Gruppo precedente"
+  "Previous group": "Gruppo precedente",
+  "Installed without the base game:": "Installato senza il gioco base:",
+  "Scripted input": "Input da script",
+  "Queued again: ": "In coda di nuovo: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: premi i pulsanti da /config/kefir/demo/input.txt (un nome per riga: A, B, Up...; attendi N; il dump scrive le schermate aperte in state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Un'applicazione di installazione PC è in attesa.\nVuoi arrestare MTP e aprire Installazione PC (USB)?",
+  "Restore completed.": "Ripristino completato.",
+  "Already up to date:": "Già aggiornato:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Ripristino interrotto. L'ultimo salvataggio potrebbe essere stato modificato e non è stato controllato.",
+  "Restore stopped.": "Ripristino interrotto.",
+  "Backups created:": "Backup creati:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Oggetti di salvataggio ripristinati singolarmente. In caso di errore, i salvataggi successivi non verranno ripristinati.\n",
+  "Safety copy of the replaced save:": "Copia di sicurezza del salvataggio sostituito:",
+  "Safety copies of the replaced saves:": "Copie di sicurezza dei salvataggi sostituiti:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Aggiornamenti e DLC non funzionano senza il gioco base.\nTienili se il gioco è su una scheda di gioco.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Per annullare: apri File Browser, seleziona recovery.zip, premi + e scegli Ripristina dati di salvataggio."
 }

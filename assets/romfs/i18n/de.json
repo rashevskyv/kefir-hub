@@ -3178,5 +3178,20 @@
   "Wi-Fi (same network)": "Wi-Fi (gleiches Netzwerk)",
   "USB install is not part of this build": "USB-Installation ist nicht Teil dieses Builds",
   "Next group": "Nächste Gruppe",
-  "Previous group": "Vorherige Gruppe"
+  "Previous group": "Vorherige Gruppe",
+  "Installed without the base game:": "Ohne das Basisspiel installiert:",
+  "Scripted input": "Skript-Eingabe",
+  "Queued again: ": "Erneut eingereiht: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: Tasten aus /config/kefir/demo/input.txt drücken (ein Name pro Zeile: A, B, Up...; warte N; Dump schreibt offene Bildschirme nach state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Eine PC-Installations-App wartet.\nMTP stoppen und PC-Install (USB) öffnen?",
+  "Restore completed.": "Wiederherstellung abgeschlossen.",
+  "Already up to date:": "Bereits auf dem neuesten Stand:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Wiederherstellung angehalten. Der letzte Spielstand wurde möglicherweise geändert und wurde nicht überprüft.",
+  "Restore stopped.": "Wiederherstellung gestoppt.",
+  "Backups created:": "Erstellte Backups:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Jeder Spielstand wird einzeln wiederhergestellt. Schlägt einer fehl, werden die nachfolgenden Spielstände nicht wiederhergestellt.\n",
+  "Safety copy of the replaced save:": "Sicherheitskopie des ersetzten Speicherstands:",
+  "Safety copies of the replaced saves:": "Sicherheitskopien der ersetzten Spielstände:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Updates und DLCs funktionieren ohne das Hauptspiel nicht.\nBehalte sie, wenn sich das Spiel auf einer Gamecard befindet.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Zum Rückgängigmachen: Dateibrowser öffnen, recovery.zip auswählen, + drücken und „Spielstand wiederherstellen“ wählen."
 }

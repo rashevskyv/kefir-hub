@@ -3172,5 +3172,20 @@
   "Wi-Fi (same network)": "Wi-Fi (sama võrk)",
   "USB install is not part of this build": "USB-install ei kuulu selle versiooni koosseisu",
   "Next group": "Järgmine rühm",
-  "Previous group": "Eelmine rühm"
+  "Previous group": "Eelmine rühm",
+  "Installed without the base game:": "Installitud ilma põhimänguta:",
+  "Scripted input": "Skripti sisend",
+  "Queued again: ": "Järjekorras uuesti: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Silumine: vajuta nuppe failist /config/kefir/demo/input.txt (üks nimi rea kohta: A, B, Up...; oota N; tõmmis kirjutab avatud ekraanid faili state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Arvuti installirakendus ootab.\nPeatan MTP ja avan PC Install (USB)?",
+  "Restore completed.": "Taastamine on lõpetatud.",
+  "Already up to date:": "Juba ajakohane:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Taastamine peatatud. Viimane salvestis võib olla muutunud ja seda ei kontrollitud.",
+  "Restore stopped.": "Taastamine peatatud.",
+  "Backups created:": "Loodud varukoopiad:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Iga salvestus taastatakse eraldi. Kui üks ebaõnnestub, siis järgmisi ei taastata.\n",
+  "Safety copy of the replaced save:": "Asendatud salvestusfaili varukoopia:",
+  "Safety copies of the replaced saves:": "Asendatud salvestiste turvakoopiad:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Uuendused ja DLC-d ei tööta ilma põhimänguta.\nJäta need alles, kui mäng on mängukaardil.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Tagasivõtmiseks: ava failibrauser, vali recovery.zip, vajuta + ja vali salvestusandmete taastamine."
 }

@@ -90,8 +90,10 @@ if ($Lines -and $Lines.Count) {
     [IO.File]::WriteAllText($local, (($Lines -join "`n") + "`n"))
     if ($Ftp) { Ftp-Push $local '/config/kefir/demo/input.txt' }
     else { Push-File (Get-MtpFolder @('config', 'kefir', 'demo')) $local }
-    # the console reads the file within 100 ms and presses one button per 350 ms.
-    Start-Sleep -Milliseconds (500 + 400 * $Lines.Count)
+    # the console reads the file within 100 ms, presses one button per 350 ms and honours every "wait N";
+    # state.txt and shot.jpg are rewritten only after the whole queue, so wait for all of it.
+    $waits = ($Lines | Where-Object { $_ -match '^\s*wait\s+([\d.]+)\s*$' } | ForEach-Object { [double]$Matches[1] } | Measure-Object -Sum).Sum
+    Start-Sleep -Milliseconds ([int](1000 + 400 * $Lines.Count + 1000 * $waits))
 }
 
 if ($State) {

@@ -3178,5 +3178,20 @@
   "Wi-Fi (same network)": "Wi-Fi (même réseau)",
   "USB install is not part of this build": "L'installation USB ne fait pas partie de cette version",
   "Next group": "Groupe suivant",
-  "Previous group": "Groupe précédent"
+  "Previous group": "Groupe précédent",
+  "Installed without the base game:": "Installé sans le jeu de base :",
+  "Scripted input": "Entrée scriptée",
+  "Queued again: ": "Remis en file d'attente : ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Débogage : appuyez sur les boutons de /config/kefir/demo/input.txt (un nom par ligne : A, B, Up... ; attendez N ; le dump écrit les écrans ouverts dans state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Une application d'installation PC est en attente.\nArrêter le MTP et ouvrir l'installation PC (USB) ?",
+  "Restore completed.": "Restauration terminée.",
+  "Already up to date:": "Déjà à jour :",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Restauration arrêtée. La dernière sauvegarde a peut-être été modifiée et n'a pas été vérifiée.",
+  "Restore stopped.": "Restauration arrêtée.",
+  "Backups created:": "Sauvegardes créées :",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Chaque sauvegarde est restaurée individuellement. Si l'une échoue, les sauvegardes suivantes ne seront pas restaurées.\n",
+  "Safety copy of the replaced save:": "Copie de sauvegarde des données remplacées :",
+  "Safety copies of the replaced saves:": "Copies de sécurité des sauvegardes remplacées :",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Les mises à jour et les DLC ne fonctionnent pas sans le jeu de base.\nConservez-les si le jeu est sur une carte de jeu.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Pour annuler : ouvrez l'explorateur de fichiers, sélectionnez recovery.zip, appuyez sur + et choisissez Restaurer les données de sauvegarde."
 }

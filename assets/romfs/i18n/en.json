@@ -3178,5 +3178,14 @@
   "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.",
   "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "A PC install app is waiting.\nStop MTP and open PC Install (USB)?",
   "Scripted input": "Scripted input",
-  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt)."
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).",
+  "Already up to date:": "Already up to date:",
+  "Backups created:": "Backups created:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Each save is restored on its own. If one fails, the saves after it are not restored.\n",
+  "Restore completed.": "Restore completed.",
+  "Restore stopped.": "Restore stopped.",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Restore stopped. The last save may be changed, and it was not checked.",
+  "Safety copies of the replaced saves:": "Safety copies of the replaced saves:",
+  "Safety copy of the replaced save:": "Safety copy of the replaced save:",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."
 }

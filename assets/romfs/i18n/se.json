@@ -3177,5 +3177,20 @@
   "Wi-Fi (same network)": "Wi-Fi (samma nätverk)",
   "USB install is not part of this build": "USB-installation ingår inte i den här versionen",
   "Next group": "Nästa grupp",
-  "Previous group": "Föregående grupp"
+  "Previous group": "Föregående grupp",
+  "Installed without the base game:": "Installerat utan grundspelet:",
+  "Scripted input": "Skriptinmatning",
+  "Queued again: ": "I kö igen: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Felsökning: tryck på knappar från /config/kefir/demo/input.txt (ett namn per rad: A, B, Up...; vänta N; dump skriver öppna skärmar till state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "En PC-installationsapp väntar.\nStoppa MTP och öppna PC-installation (USB)?",
+  "Restore completed.": "Återställningen är klar.",
+  "Already up to date:": "Redan uppdaterad:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Återställning stoppades. Den senaste sparfilen kan ha ändrats och har inte kontrollerats.",
+  "Restore stopped.": "Återställning stoppad.",
+  "Backups created:": "Skapade säkerhetskopior:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Varje sparfil återställs för sig. Om en misslyckas återställs inte sparfilerna efter den.\n",
+  "Safety copy of the replaced save:": "Säkerhetskopia av den ersatta sparfilen:",
+  "Safety copies of the replaced saves:": "Säkerhetskopior av de ersatta sparfilerna:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Uppdateringar och DLC fungerar inte utan basspelet.\nBehåll dem om spelet finns på ett spelkort.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Gör så här för att ångra: öppna filbläddraren, välj recovery.zip, tryck på + och välj Återställ spara data."
 }

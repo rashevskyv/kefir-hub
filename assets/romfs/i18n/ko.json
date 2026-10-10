@@ -3177,5 +3177,20 @@
   "Wi-Fi (same network)": "Wi-Fi (동일 네트워크)",
   "USB install is not part of this build": "이 빌드에는 USB 설치가 포함되어 있지 않습니다",
   "Next group": "다음 그룹",
-  "Previous group": "이전 그룹"
+  "Previous group": "이전 그룹",
+  "Installed without the base game:": "기본 게임 없이 설치됨:",
+  "Scripted input": "스크립트 입력",
+  "Queued again: ": "다시 대기열 추가됨: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "디버그: /config/kefir/demo/input.txt에서 버튼 누르기 (줄당 하나의 이름: A, B, Up...; N 대기; 덤프는 열린 화면을 state.txt에 기록합니다).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "PC 설치 앱이 대기 중입니다.\nMTP를 중지하고 PC 설치 (USB)를 여시겠습니까?",
+  "Restore completed.": "복원이 완료되었습니다.",
+  "Already up to date:": "이미 최신 버전입니다:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "복원이 중단되었습니다. 마지막 저장 데이터가 변경되었을 수 있으며 확인되지 않았습니다.",
+  "Restore stopped.": "복원이 중지되었습니다.",
+  "Backups created:": "생성된 백업:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "각 세이브 파일은 개별적으로 복원됩니다. 하나가 실패하면 그 이후의 세이브는 복원되지 않습니다.\n",
+  "Safety copy of the replaced save:": "교체된 세이브 데이터의 안전 복사본:",
+  "Safety copies of the replaced saves:": "대체된 저장 데이터의 안전한 복사본:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "업데이트와 DLC는 기본 게임 없이는 작동하지 않습니다.\n게임이 게임 카드에 있는 경우 유지하세요.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "취소하려면: 파일 브라우저를 열고 recovery.zip을 선택한 후, +를 누르고 저장 데이터 복원을 선택하세요."
 }

@@ -3230,5 +3230,20 @@
   "Wi-Fi (same network)": "Wi-Fi（相同網路）",
   "USB install is not part of this build": "此版本不包含 USB 安裝功能",
   "Next group": "下一組",
-  "Previous group": "上一組"
+  "Previous group": "上一組",
+  "Installed without the base game:": "未包含基礎遊戲已安裝：",
+  "Scripted input": "腳本輸入",
+  "Queued again: ": "重新排隊：",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "除錯：從 /config/kefir/demo/input.txt 按下按鈕（每行一個名稱：A, B, Up...；等待 N；傾印將開啟的畫面寫入 state.txt）。",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "PC 安裝應用程式正在等待。\n停止 MTP 並開啟 PC 安裝 (USB)？",
+  "Restore completed.": "還原已完成。",
+  "Already up to date:": "已是最新版本：",
+  "Restore stopped. The last save may be changed, and it was not checked.": "還原已停止。最後的存檔可能已被更改，且未經過檢查。",
+  "Restore stopped.": "已停止還原。",
+  "Backups created:": "已建立的備份：",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "每個存檔將單獨恢復。若其中一個失敗，其後的存檔將不會被恢復。\n",
+  "Safety copy of the replaced save:": "被替換存檔的安全副本：",
+  "Safety copies of the replaced saves:": "被替換存檔的安全副本：",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "更新資料與DLC沒有主程式將無法執行。\n若遊戲位於遊戲卡匣上，請保留它們。",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "若要復原：開啟檔案瀏覽器，選擇 recovery.zip，按 + 並選擇還原存檔資料。"
 }

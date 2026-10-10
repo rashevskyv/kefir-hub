@@ -3172,5 +3172,20 @@
   "Wi-Fi (same network)": "Wi-Fi (tā pati tīkla)",
   "USB install is not part of this build": "USB instalēšana nav šīs versijas sastāvdaļa",
   "Next group": "Nākamā grupa",
-  "Previous group": "Iepriekšējā grupa"
+  "Previous group": "Iepriekšējā grupa",
+  "Installed without the base game:": "Instalēts bez pamata spēles:",
+  "Scripted input": "Skripta ievade",
+  "Queued again: ": "Atkal rindā: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Atkļūdošana: nospiediet pogas no /config/kefir/demo/input.txt (viens nosaukums rindiņā: A, B, Up...; gaidīt N; dumps ieraksta atvērtos ekranus failā state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Datora instalēšanas lietotne gaida.\nApturēt MTP un atvērt Datora instalēšanu (USB)?",
+  "Restore completed.": "Atjaunošana pabeigta.",
+  "Already up to date:": "Jau ir jaunākā versija:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Atjaunošana apturēta. Pēdējais saglabājums varētu būt mainīts, un tas netika pārbaudīts.",
+  "Restore stopped.": "Atjaunot pārtraukts.",
+  "Backups created:": "Izveidotās dublējumkopijas:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Katrs saglabājums tiek atjaunots atsevišķi. Ja viens neizdodas, sekojošie saglabājumi netiek atjaunoti.\n",
+  "Safety copy of the replaced save:": "Aizvietotā saglabājuma drošības kopija:",
+  "Safety copies of the replaced saves:": "Nomainīto saglabāšanas failu drošības kopijas:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Atjauninājumi un DLC nedarbojas bez pamatspēles.\nSaglabājiet tos, ja spēle ir spēļu kartē.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Lai atsauktu: atveriet failu pārlūku, atlasiet recovery.zip, nospiediet + un izvēlieties Atjaunot saglabāšanas datus."
 }

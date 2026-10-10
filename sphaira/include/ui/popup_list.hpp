@@ -69,6 +69,7 @@ private:
 
     std::unique_ptr<List> m_list{};
     ScrollingText m_scroll_text{};
+    ScrollingText m_scroll_title{};
 
     float m_yoff{};
     float m_line_top{};

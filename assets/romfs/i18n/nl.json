@@ -3177,5 +3177,20 @@
   "Wi-Fi (same network)": "Wi-Fi (zelfde netwerk)",
   "USB install is not part of this build": "USB-installatie maakt geen deel uit van deze build",
   "Next group": "Volgende groep",
-  "Previous group": "Vorige groep"
+  "Previous group": "Vorige groep",
+  "Installed without the base game:": "Geïnstalleerd zonder de basisgame:",
+  "Scripted input": "Gescripte invoer",
+  "Queued again: ": "Opnieuw in de wachtrij: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Debug: druk op knoppen uit /config/kefir/demo/input.txt (één naam per regel: A, B, Up...; wacht N; dump schrijft open schermen naar state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Een pc-installatie-app wacht.\nMTP stoppen en PC Install (USB) openen?",
+  "Restore completed.": "Herstel voltooid.",
+  "Already up to date:": "Al bijgewerkt:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Herstel gestopt. De laatste opslag kan zijn gewijzigd en is niet gecontroleerd.",
+  "Restore stopped.": "Herstel gestopt.",
+  "Backups created:": "Gemaakte back-ups:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Elke save wordt apart hersteld. Als er één mislukt, worden de saves daarna niet hersteld.\n",
+  "Safety copy of the replaced save:": "Veiligheidskopie van de vervangen opslag:",
+  "Safety copies of the replaced saves:": "Veiligheidskopieën van de vervangen opslagen:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Updates en DLC's werken niet zonder de basisgame.\nBewaar ze als de game op een gamekaart staat.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Ongedaan maken: open Bestandsverkenner, selecteer recovery.zip, druk op + en kies 'Opslaggegevens herstellen'."
 }

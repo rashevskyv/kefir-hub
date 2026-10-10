@@ -62,6 +62,24 @@ auto AccountPickerItems(const std::vector<AccountProfileBase>& accounts) -> std:
     return items;
 }
 
+auto AccountIndexOf(const AccountUid& uid, const std::vector<AccountProfileBase>& accounts) -> s64 {
+    for (size_t i = 0; i < accounts.size(); i++) {
+        if (!std::memcmp(&accounts[i].uid, &uid, sizeof(uid))) {
+            return static_cast<s64>(i);
+        }
+    }
+    return 0;
+}
+
+auto AccountLabel(const AccountUid& uid, const std::vector<AccountProfileBase>& accounts) -> std::string {
+    for (size_t i = 0; i < accounts.size(); i++) {
+        if (!std::memcmp(&accounts[i].uid, &uid, sizeof(uid))) {
+            return AccountPickerItems(accounts)[i];
+        }
+    }
+    return {};
+}
+
 auto BackupPickerTitle(const Entry& seed, const std::vector<AccountProfileBase>& accounts) -> std::string {
     // two backups of one game from different users look the same otherwise.
     std::string title = "Restore for user"_i18n + " (";

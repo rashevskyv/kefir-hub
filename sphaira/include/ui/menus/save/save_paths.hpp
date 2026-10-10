@@ -148,6 +148,10 @@ struct BackupSecondaryColumns {
 auto FormatBackupAccount(const Entry& e, const std::vector<AccountProfileBase>& accounts) -> std::string;
 // nicknames for a "pick a user" list; accounts that share a nickname get a uid suffix.
 auto AccountPickerItems(const std::vector<AccountProfileBase>& accounts) -> std::vector<std::string>;
+// the account's row in AccountPickerItems; 0 when the uid is not on this console.
+auto AccountIndexOf(const AccountUid& uid, const std::vector<AccountProfileBase>& accounts) -> s64;
+// the account as AccountPickerItems shows it ("nin10do (B486)" when two users share a nickname); empty when not on this console.
+auto AccountLabel(const AccountUid& uid, const std::vector<AccountProfileBase>& accounts) -> std::string;
 // "Restore for user (game · backup owner · date)": tells apart backups of one game from different users.
 auto BackupPickerTitle(const Entry& seed, const std::vector<AccountProfileBase>& accounts) -> std::string;
 // whose backups a Backups-tab game tile holds: the user, or the save type for a device/BCAT tile.

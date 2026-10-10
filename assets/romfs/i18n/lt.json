@@ -3172,5 +3172,20 @@
   "Wi-Fi (same network)": "Wi-Fi (tas pats tinklas)",
   "USB install is not part of this build": "USB diegimas nėra šios versijos dalis",
   "Next group": "Kita grupė",
-  "Previous group": "Ankstesnė grupė"
+  "Previous group": "Ankstesnė grupė",
+  "Installed without the base game:": "Įdiegta be pagrindinio žaidimo:",
+  "Scripted input": "Skripto įvestis",
+  "Queued again: ": "Vėl eilėje: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Derinimas: spauskite mygtukus iš /config/kefir/demo/input.txt (vienas pavadinimas eilutėje: A, B, Up...; laukti N; kopija įrašo atidarytus ekranus į state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Kompiuterio diegimo programėlė laukia.\nSustabdyti MTP ir atidaryti Kompiuterio diegimą (USB)?",
+  "Restore completed.": "Atkūrimas baigtas.",
+  "Already up to date:": "Jau naujausia versija:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Atstatymas sustabdytas. Paskutinis išsaugojimas galėjo būti pakeistas ir nebuvo patikrintas.",
+  "Restore stopped.": "Atstatymas sustabdytas.",
+  "Backups created:": "Sukurtos atsarginės kopijos:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Kiekvienas įrašas atkuriamas atskirai. Jei vienas nepavyksta, po jo esantys įrašai neatkuriami.\n",
+  "Safety copy of the replaced save:": "Pakeisto išsaugojimo atsarginė kopija:",
+  "Safety copies of the replaced saves:": "Pakeistų išsaugojimų saugos kopijos:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Atnaujinimai ir papildymai neveikia be pagrindinio žaidimo.\nPasilikite juos, jei žaidimas yra žaidimo kortelėje.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Norėdami anuliuoti: atidarykite failų naršyklę, pasirinkite „recovery.zip“, paspauskite „+“ ir pasirinkite „Atkurti išsaugojimo duomenis“."
 }

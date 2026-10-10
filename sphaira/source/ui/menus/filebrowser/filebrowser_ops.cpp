@@ -158,7 +158,7 @@ void FsView::RestoreSaveFile(const FileEntry& entry) {
                         } else {
                             prefix = "Restore stopped before target save was modified.\nSafety recovery archive retained:\n"_i18n;
                         }
-                        const std::string msg = prefix + recovery_path->toString() + "\n\n" + "Manual recovery: open File Browser -> select recovery.zip -> Restore to confirmed target slot."_i18n;
+                        const std::string msg = prefix + recovery_path->toString() + "\n\n" + "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."_i18n;
                         App::Push<OptionBox>(msg, "OK"_i18n);
                     } else if (R_FAILED(rc)) {
                         if (!*mutation_started) {

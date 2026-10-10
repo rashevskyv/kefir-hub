@@ -60,6 +60,14 @@
 
 Kefir Hub копіює лише змінені збереження. Він порівнює кожне збереження з його найновішою копією у вибраному [[Location]]. Якщо збереження не змінилося від тієї копії, Kefir Hub його пропускає, тож у папці не буде двох однакових копій. Якщо нічого не змінилося, з'явиться [[All selected saves are already up to date.]] Порожні збереження теж пропускаються; якщо нічого не записано, ви побачите [[No save data found for this title]].
 
+<!-- draft
+- v0.14.043: when some selected saves were backed up and some were unchanged, the dialog reads "[[Backups created:]] N" and "[[Already up to date:]] M" on two lines
+- v0.14.043: two users with the same nickname are told apart everywhere in Saves by the last 4 characters of their user ID, for example "nin10do (B486)" and "nin10do (9BBD)": in the [[ACCOUNTS]] list of [[Backup Options]] / [[Restore Options]] and in the restore confirmation
+- v0.14.043: [[Restore for user]] puts the cursor on the user who made that backup
+- v0.14.043: after a restore the dialog lists the [[Safety copies of the replaced saves:]] and says how to undo: [[File Browser]] → `recovery.zip` → **+** → [[Restore save data]]
+- v0.14.043: backups of two users of one game made within the same second no longer fail the whole batch; the second file gets the next second in its name
+-->
+
 ## Де лежать резервні копії
 Типова папка: `/dumps` на карті пам'яті.
 

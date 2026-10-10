@@ -428,7 +428,7 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
             }
             const auto chosen_uid = accounts[*op_index].uid;
             RestoreSingleBackupGroup(std::move(group), &chosen_uid, false, location, backup_root);
-        });
+        }, AccountIndexOf(group.uid, accounts));
         if (return_to_actions) {
             auto* raw = popup.get();
             popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, group]() {
@@ -581,7 +581,7 @@ void Menu::PromptBatchRestoreTargets(
             *shared_uid = chosen_uid;
         }
         resolve_for_uid(&chosen_uid);
-    });
+    }, AccountIndexOf(current_seed.uid, *accounts));
     if (return_to_actions) {
         auto* raw = popup.get();
         popup->SetAction(Button::B, Action{"Back"_i18n, [this, raw, seeds]() {

@@ -3172,5 +3172,20 @@
   "Wi-Fi (same network)": "Wi-Fi (aynı ağ)",
   "USB install is not part of this build": "USB kurulumu bu derlemenin bir parçası değil",
   "Next group": "Sonraki grup",
-  "Previous group": "Önceki grup"
+  "Previous group": "Önceki grup",
+  "Installed without the base game:": "Temel oyun olmadan yüklendi:",
+  "Scripted input": "Betik girişi",
+  "Queued again: ": "Tekrar kuyrukta: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Hata Ayıklama: /config/kefir/demo/input.txt dosyasından düğmelere basın (satır başına bir ad: A, B, Up...; N bekleyin; döküm açık ekranları state.txt dosyasına yazar).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Bir PC yükleme uygulaması bekleniyor.\nMTP durdurulsun ve PC Yükleme (USB) açılsın mı?",
+  "Restore completed.": "Geri yükleme tamamlandı.",
+  "Already up to date:": "Zaten güncel:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Geri yükleme durduruldu. Son kayıt değiştirilmiş olabilir ve kontrol edilmedi.",
+  "Restore stopped.": "Geri yükleme durduruldu.",
+  "Backups created:": "Oluşturulan yedekler:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Her kayıt dosyası ayrı ayrı geri yüklenir. Biri başarısız olursa, sonrakiler geri yüklenmez.\n",
+  "Safety copy of the replaced save:": "Değiştirilen kaydın güvenlik kopyası:",
+  "Safety copies of the replaced saves:": "Değiştirilen kayıtların güvenlik kopyaları:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Güncellemeler ve DLC'ler ana oyun olmadan çalışmaz.\nOyun kartuştaysa bunları saklayın.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Geri almak için: Dosya Tarayıcı'yı açın, recovery.zip öğesini seçin, + tuşuna basın ve Kayıt verilerini geri yükle seçeneğini seçin."
 }

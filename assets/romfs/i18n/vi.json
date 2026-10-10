@@ -3177,5 +3177,20 @@
   "Wi-Fi (same network)": "Wi-Fi (cùng mạng)",
   "USB install is not part of this build": "Cài đặt USB không phải là một phần của bản dựng này",
   "Next group": "Nhóm tiếp theo",
-  "Previous group": "Nhóm trước"
+  "Previous group": "Nhóm trước",
+  "Installed without the base game:": "Đã cài đặt mà không có trò chơi cơ bản:",
+  "Scripted input": "Đầu vào kịch bản",
+  "Queued again: ": "Đã đưa vào hàng đợi lại: ",
+  "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt).": "Gỡ lỗi: nhấn các nút từ /config/kefir/demo/input.txt (mỗi tên một dòng: A, B, Up...; đợi N; kết xuất ghi các màn hình đang mở vào state.txt).",
+  "A PC install app is waiting.\nStop MTP and open PC Install (USB)?": "Ứng dụng cài đặt PC đang chờ.\nDừng MTP và mở Cài đặt từ PC (USB)?",
+  "Restore completed.": "Đã hoàn tất khôi phục.",
+  "Already up to date:": "Đã là phiên bản mới nhất:",
+  "Restore stopped. The last save may be changed, and it was not checked.": "Đã dừng khôi phục. Bản lưu cuối cùng có thể đã thay đổi và chưa được kiểm tra.",
+  "Restore stopped.": "Đã dừng khôi phục.",
+  "Backups created:": "Bản sao lưu đã tạo:",
+  "Each save is restored on its own. If one fails, the saves after it are not restored.\n": "Mỗi bản lưu được khôi phục riêng lẻ. Nếu một bản thất bại, các bản lưu sau đó sẽ không được khôi phục.\n",
+  "Safety copy of the replaced save:": "Bản sao lưu của dữ liệu lưu đã thay thế:",
+  "Safety copies of the replaced saves:": "Bản sao an toàn của các tệp lưu trữ được thay thế:",
+  "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card.": "Bản cập nhật và DLC không hoạt động nếu không có trò chơi gốc.\nGiữ lại nếu trò chơi nằm trên thẻ game.",
+  "To undo: open File Browser, select recovery.zip, press + and choose Restore save data.": "Để hoàn tác: mở Trình duyệt tệp, chọn recovery.zip, nhấn + và chọn Khôi phục dữ liệu lưu."
 }

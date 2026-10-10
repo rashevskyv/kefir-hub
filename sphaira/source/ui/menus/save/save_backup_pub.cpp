@@ -80,8 +80,8 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             if (*up_to_date && !created) {
                 App::Push<OptionBox>("All selected saves are already up to date."_i18n, "OK"_i18n);
             } else if (*up_to_date) {
-                App::Push<OptionBox>(std::to_string(created) + " " + "backup(s) created, "_i18n +
-                    std::to_string(*up_to_date) + " " + "already up to date."_i18n, "OK"_i18n);
+                App::Push<OptionBox>("Backups created:"_i18n + " " + std::to_string(created) + "\n" +
+                    "Already up to date:"_i18n + " " + std::to_string(*up_to_date), "OK"_i18n);
             } else {
                 App::Notify(created ? "Backup successful!"_i18n : "No save data found for this title"_i18n);
             }
@@ -382,12 +382,17 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
     // restore them and vice versa. system saves keep the sphaira format.
     const auto dbi_format = !IsSystemLikeSave(e.save_data_type);
 
-    const auto now = std::time(NULL);
-    const auto now_tm = *std::localtime(&now);
-
-    const auto path = dbi_format
-        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, now_tm, backup_root))
+    // the DBI name has no user in it (<tid>_A_<time>_<index>.zip): two users' saves of one game
+    // backed up within the same second got one name, and the second failed the whole batch with
+    // "path already exists". A taken name moves to the next free second.
+    auto now = std::time(NULL);
+    auto path = dbi_format
+        ? fs::AppendPath(fs->Root(), BuildDbiSavePath(e, *std::localtime(&now), backup_root))
         : fs::AppendPath(fs->Root(), BuildSavePath(e, is_auto, backup_root));
+    for (int i = 0; dbi_format && i < 60 && fs->FileExists(path); i++) {
+        now++;
+        path = fs::AppendPath(fs->Root(), BuildDbiSavePath(e, *std::localtime(&now), backup_root));
+    }
     const bool is_sd = (location.entry.type == dump::DumpLocationType_SdCard);
     if (is_sd) {
         fs::FsNativeSd sd_fs;
