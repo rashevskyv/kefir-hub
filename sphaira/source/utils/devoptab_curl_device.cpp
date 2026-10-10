@@ -241,6 +241,37 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
 
     bool is_ftp = url.starts_with("ftp://") || url.starts_with("ftps://");
     if (is_ftp) {
+        const auto key = ftp_key(path);
+        if (key == "/") {
+            st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
+            st->st_nlink = 1;
+            return 0;
+        }
+
+        // answer from the listing of the parent folder (one LIST, then every
+        // name in it is known); a name the listing lacks does not exist.
+        const auto parent = ftp_key(key.substr(0, key.find_last_of('/')));
+        for (int attempt = 0; attempt < 2; attempt++) {
+            {
+                SCOPED_MUTEX(&m_handle_mutex);
+                if (const auto it = m_ftp_stat.find(key); it != m_ftp_stat.end()) {
+                    *st = it->second;
+                    return 0;
+                }
+                if (m_ftp_listed.count(parent)) {
+                    return -ENOENT;
+                }
+            }
+
+            alignas(CurlDirState) unsigned char dir_buf[sizeof(CurlDirState)];
+            const auto rc = devoptab_diropen(dir_buf, parent.c_str());
+            devoptab_dirclose(dir_buf);
+            if (rc != 0) {
+                break;
+            }
+        }
+
+        // the folder could not be listed: guess from the name, as before.
         std::string p_str = path;
         if (p_str.ends_with('/') || p_str.find('.') == std::string::npos) {
             st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
@@ -323,6 +354,16 @@ int MountCurlDevice::devoptab_lstat(const char *path, struct stat *st) {
 int MountCurlDevice::devoptab_unlink(const char *path) {
     SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(path, false);
+    if (url.starts_with("ftp://") || url.starts_with("ftps://")) {
+        // ftp has no DELETE verb: DELE removes a file, RMD an (empty) folder.
+        const auto key = ftp_key(path);
+        const auto it = m_ftp_stat.find(key);
+        const bool is_dir = it != m_ftp_stat.end() && S_ISDIR(it->second.st_mode);
+        const auto rc = ftp_quote({std::string(is_dir ? "RMD " : "DELE ") + ftp_rel_path(path)});
+        m_ftp_stat.clear();
+        m_ftp_listed.clear();
+        return rc;
+    }
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
     curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -343,18 +384,15 @@ int MountCurlDevice::devoptab_rmdir(const char *path) {
 int MountCurlDevice::devoptab_mkdir(const char *path, int mode) {
     SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(path, true);
+    if (url.starts_with("ftp://") || url.starts_with("ftps://")) {
+        const auto rc = ftp_quote({"MKD " + ftp_rel_path(path)});
+        m_ftp_stat.clear();
+        m_ftp_listed.clear();
+        return rc;
+    }
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
-    bool is_ftp = url.starts_with("ftp://") || url.starts_with("ftps://");
-    // the quote list must outlive curl_easy_perform() below.
-    struct curl_slist* list = nullptr;
-    ON_SCOPE_EXIT(curl_slist_free_all(list));
-    if (is_ftp) {
-        list = curl_slist_append(nullptr, (std::string("MKD ") + path).c_str());
-        curl_easy_setopt(transfer_curl, CURLOPT_POSTQUOTE, list);
-    } else {
-        curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MKCOL");
-    }
+    curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MKCOL");
     if (curl_perform_cancellable(transfer_curl) == CURLE_OK) {
         long code{};
         curl_easy_getinfo(transfer_curl, CURLINFO_RESPONSE_CODE, &code);
@@ -369,6 +407,12 @@ int MountCurlDevice::devoptab_rename(const char *oldName, const char *newName) {
     SCOPED_MUTEX(&m_handle_mutex);
     std::string url = build_url(oldName, false);
     std::string dst_url = build_url(newName, false);
+    if (url.starts_with("ftp://") || url.starts_with("ftps://")) {
+        const auto rc = ftp_quote({"RNFR " + ftp_rel_path(oldName), "RNTO " + ftp_rel_path(newName)});
+        m_ftp_stat.clear();
+        m_ftp_listed.clear();
+        return rc;
+    }
     curl_easy_reset(transfer_curl);
     curl_set_common_options(transfer_curl, url);
     curl_easy_setopt(transfer_curl, CURLOPT_CUSTOMREQUEST, "MOVE");
@@ -383,6 +427,42 @@ int MountCurlDevice::devoptab_rename(const char *oldName, const char *newName) {
         }
     }
     return -EIO;
+}
+
+std::string MountCurlDevice::ftp_rel_path(const std::string& path) const {
+    // relative to the login folder, like the path of the url build_url makes.
+    std::string out = m_url_path;
+    if (out.ends_with('/')) {
+        out.pop_back();
+    }
+    out += ftp_key(path);
+    out.erase(0, out.find_first_not_of('/'));
+    return out;
+}
+
+// runs ftp commands on the connection and nothing else. caller holds m_handle_mutex.
+int MountCurlDevice::ftp_quote(const std::vector<std::string>& commands) {
+    curl_easy_reset(transfer_curl);
+    curl_set_common_options(transfer_curl, build_url("/", true));
+    curl_easy_setopt(transfer_curl, CURLOPT_NOBODY, 1L);
+    // a reused connection still stands in the last folder listed, and these
+    // names are relative to the login folder: log in again, then drop it.
+    curl_easy_setopt(transfer_curl, CURLOPT_FRESH_CONNECT, 1L);
+    curl_easy_setopt(transfer_curl, CURLOPT_FORBID_REUSE, 1L);
+
+    struct curl_slist* list = nullptr;
+    ON_SCOPE_EXIT(curl_slist_free_all(list));
+    for (const auto& c : commands) {
+        list = curl_slist_append(list, c.c_str());
+    }
+    curl_easy_setopt(transfer_curl, CURLOPT_QUOTE, list);
+
+    const auto res = curl_perform_cancellable(transfer_curl);
+    if (res != CURLE_OK) {
+        log_write("[CURL] ftp command failed: %s\n", curl_easy_strerror(res));
+        return -EIO;
+    }
+    return 0;
 }
 
 } // namespace sphaira::devoptab::common

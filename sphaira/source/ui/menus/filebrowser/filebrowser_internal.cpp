@@ -29,6 +29,15 @@ std::string MakeNetworkRoot(std::string_view url) {
     return MakeNetworkDeviceName(url) + ":/";
 }
 
+std::string DisplayPath(const FsEntry& entry, const std::string& path) {
+    const std::string root = entry.root.toString();
+    const std::string name = entry.name.toString();
+    if (entry.type == FsType::Network && !name.empty() && !root.empty() && path.starts_with(root)) {
+        return name + ":/" + path.substr(root.size());
+    }
+    return path;
+}
+
 
 
 #ifdef BUILD_SMB2

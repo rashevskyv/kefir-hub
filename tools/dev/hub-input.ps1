@@ -21,6 +21,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# `wait 2` typed without quotes arrives as two words: join "wait" with the number after it (also "lang uk").
+$joined = @()
+for ($i = 0; $i -lt @($Lines).Count; $i++) {
+    if (($Lines[$i] -in 'wait', 'lang') -and $i + 1 -lt @($Lines).Count) { $joined += "$($Lines[$i]) $($Lines[$i + 1])"; $i++ }
+    else { $joined += $Lines[$i] }
+}
+$Lines = $joined
+
 # ---- MTP transport (Shell COM) ----
 function Get-MtpFolder([string[]]$path) {
     $shell = New-Object -ComObject Shell.Application

@@ -511,7 +511,8 @@ Result FileGetSizeAndTimestamp(fs::Fs* m_fs, const FsPath& path, FsTimeStampRaw*
         struct stat st;
         R_UNLESS(!lstat(path, &st), Result_FsFailedStdioStat);
 
-        ts->is_valid = true;
+        // a server that does not say when (ftp listing) leaves 0: no date beats "01/01/1970".
+        ts->is_valid = st.st_mtim.tv_sec > 0;
         ts->created = st.st_ctim.tv_sec;
         ts->modified = st.st_mtim.tv_sec;
         ts->accessed = st.st_atim.tv_sec;

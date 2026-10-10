@@ -7,9 +7,22 @@
 #include <string>
 
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <sys/stat.h>
 
 namespace sphaira::devoptab::common {
+
+// "/dir/name" form of a path (leading slash, no trailing slash): key of the ftp stat cache.
+inline std::string ftp_key(std::string path) {
+    if (path.empty() || path[0] != '/') {
+        path.insert(0, 1, '/');
+    }
+    while (path.size() > 1 && path.back() == '/') {
+        path.pop_back();
+    }
+    return path;
+}
 
 inline const char* curl_url_strerror_wrap(CURLUcode code) {
     switch (code) {
@@ -119,6 +132,14 @@ private:
         NotSphaira,
     };
     SphairaShareState m_sphaira_state{SphairaShareState::Unknown};
+
+    // ftp has no stat: what the last LIST of each folder said (size, type), so
+    // lstat answers from it, and a name that is not in the listing does not
+    // exist. Keys are "/dir/name". Guarded by m_handle_mutex.
+    std::unordered_map<std::string, struct stat> m_ftp_stat{};
+    std::unordered_set<std::string> m_ftp_listed{};
+    std::string ftp_rel_path(const std::string& path) const;
+    int ftp_quote(const std::vector<std::string>& commands);
 };
 
 } // namespace sphaira::devoptab::common

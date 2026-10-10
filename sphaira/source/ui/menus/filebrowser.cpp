@@ -136,6 +136,15 @@ Menu::Menu(u32 flags, const FsEntry& initial_entry, const fs::FsPath& initial_pa
 }
 
 Menu::~Menu() {
+    // the views (and a copied archive) own their filesystems. A zip opened
+    // from a network share closes its file in its destructor, which needs the
+    // device still mounted: members would only be destroyed after the unmount
+    // below, so the closing seek hit an empty devoptab slot (data abort).
+    view = nullptr;
+    view_left.reset();
+    view_right.reset();
+    m_selected.Reset();
+
 #ifdef BUILD_SMB2
     if (g_smb2fs) {
         delete g_smb2fs;
@@ -324,7 +333,7 @@ void Menu::SetSplitScreen(bool enable) {
                     view->OnFocusLost();
                     view = new_view;
                     view->OnFocusGained();
-                    SetTitleSubHeading(view->m_path, true);
+                    SetTitleSubHeading(DisplayPath(view->GetFsEntry(), view->m_path.toString()), true);
                     UpdateSubheading();
                 }
             };

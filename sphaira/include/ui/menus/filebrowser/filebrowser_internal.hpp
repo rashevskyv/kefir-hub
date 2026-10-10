@@ -22,6 +22,8 @@ inline constexpr FsEntry FS_ENTRIES[]{
 
 auto MakeNetworkDeviceName(std::string_view url) -> std::string;
 auto MakeNetworkRoot(std::string_view url) -> std::string;
+// the path for the title: a network mount point (net_1a2b3c4d:/) is shown as the name of the source.
+auto DisplayPath(const FsEntry& entry, const std::string& path) -> std::string;
 
 #ifdef BUILD_SMB2
 extern int g_smb_ref_count; // main thread only (FsView::SetFs, ~FsView)

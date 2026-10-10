@@ -127,7 +127,7 @@ auto FsView::Scan(const fs::FsPath& new_path, bool is_walk_up) -> Result {
 #if DOCS_DEMO
     m_menu->SetTitleSubHeading(demo::DisplayPath(m_path.toString()), true);
 #else
-    m_menu->SetTitleSubHeading(m_path, true);
+    m_menu->SetTitleSubHeading(DisplayPath(m_fs_entry, m_path.toString()), true);
 #endif
     m_selected_count = 0;
 

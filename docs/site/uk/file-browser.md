@@ -157,6 +157,12 @@
 - v0.14.045: [[Server URL]] starts empty and shows an example of the address for the protocol (WebDAV `https://example.com/dav`, HTTP `http://192.168.1.10:8080/`, NFS `nfs://192.168.1.10/export`)
 -->
 
+<!-- draft
+- v0.14.046: a network source in the File Browser shows its name in the title (`FTP:/`), not the internal mount name
+- v0.14.046: on FTP, files show their real size, [[Delete]], [[Rename]] and [[Create Folder]] work; a date is shown only when the server gives one
+- v0.14.046: a .zip opens as a folder on every source, a network share included (A on the file); [[Restore save data]] is offered for a .zip
+-->
+
 <!-- shot: file-browser-sources | Sources panel: Mount list with microSD card, a USB drive and an SMB share -->
 
 ## Перегляд ZIP-архіву

@@ -359,6 +359,15 @@ int MountCurlDevice::devoptab_open(void *fileStruct, const char *path, int flags
             state->~CurlFileState();
             return -EIO;
         }
+    } else if (state->url.starts_with("ftp://") || state->url.starts_with("ftps://")) {
+        // ftp answers a HEAD with no size: the listing of the folder has it.
+        struct stat st{};
+        if (devoptab_lstat(path, &st) == -ENOENT) {
+            curl_easy_cleanup(state->curl);
+            state->~CurlFileState();
+            return -ENOENT;
+        }
+        state->size = st.st_size > 0 ? (size_t)st.st_size : 0;
     } else {
         log_write("[CURL] devoptab_open: performing HEAD request for %s\n", state->url.c_str());
         curl_set_common_options(state->curl, state->url);
@@ -414,6 +423,12 @@ int MountCurlDevice::devoptab_close(void *fd) {
             curl_easy_cleanup(state->curl);
         }
         state->curl = nullptr;
+    }
+    if (state->write_mode) {
+        // the file changed on the server: the cached listing is stale.
+        SCOPED_MUTEX(&m_handle_mutex);
+        m_ftp_stat.clear();
+        m_ftp_listed.clear();
     }
     state->~CurlFileState();
     return 0;

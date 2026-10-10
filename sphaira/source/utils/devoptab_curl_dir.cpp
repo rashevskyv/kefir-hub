@@ -365,6 +365,17 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
             entry.st.st_nlink = 1;
             state->entries.push_back(entry);
         }
+
+        // remember the listing so lstat can answer for each name in it.
+        const auto dir_key = ftp_key(path ? path : "/");
+        for (auto it = m_ftp_stat.begin(); it != m_ftp_stat.end();) {
+            const auto slash = it->first.find_last_of('/');
+            it = ftp_key(it->first.substr(0, slash)) == dir_key ? m_ftp_stat.erase(it) : std::next(it);
+        }
+        for (const auto& e : state->entries) {
+            m_ftp_stat[ftp_key(e.fullpathname)] = e.st;
+        }
+        m_ftp_listed.insert(dir_key);
     } else if (webdav) {
         size_t pos = 0;
         while ((pos = find_xml_tag(lc, pos, "response")) != std::string::npos) {
