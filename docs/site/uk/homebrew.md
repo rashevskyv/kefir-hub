@@ -47,6 +47,10 @@
 
 Щоб зняти вибір із застосунку, натисніть на ньому **X** ще раз.
 
+<!-- draft
+- v0.14.057: **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. **B** with nothing selected exits as before (it used to close Kefir Hub at once, with the selection)
+-->
+
 ## Видалення застосунку
 1. Виберіть застосунок або кілька.
 2. Натисніть **+** і виберіть [[Delete]].

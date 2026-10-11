@@ -3,6 +3,7 @@
 #include "ui/menus/homebrew.hpp"
 #include "option.hpp"
 
+#include <cstring>
 #include <string_view>
 #include <vector>
 #include <switch.h>
@@ -35,8 +36,12 @@ inline auto GetNroFilename(const NroEntry& e) -> std::string {
     return filename;
 }
 
+// The stub is the "Removed" notice entry the scan adds when there is no Kefir Updater. It has no
+// file. A real Kefir Updater lives at the same path, so the path alone does not tell them apart:
+// only the stub carries the version text "Removed" (set in homebrew_scan.cpp).
 inline auto IsKefirUpdaterStub(const NroEntry& e) -> bool {
-    return e.path == KEFIR_UPDATER_STUB_PATH;
+    return e.path == KEFIR_UPDATER_STUB_PATH &&
+        !std::strcmp(e.nacp.display_version, "Removed");
 }
 
 inline auto IsKefirUpdaterEntry(const NroEntry& e) -> bool {

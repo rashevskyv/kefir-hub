@@ -241,11 +241,7 @@ MainMenu::MainMenu() {
     UpdateBackAction();
     AddOnLRPress();
 
-    for (auto [button, action] : m_actions) {
-        if (button != Button::START) {
-            m_current_menu->SetAction(button, action);
-        }
-    }
+    CopyActionsToCurrentMenu();
 }
 
 MainMenu::~MainMenu() {
@@ -288,10 +284,20 @@ void MainMenu::SwitchTo(MenuBase* menu) {
     AddOnLRPress();
     m_current_menu->OnFocusGained();
 
+    CopyActionsToCurrentMenu();
+}
+
+// The main screen keeps its own B: it clears a selection made with X / Y and only then exits.
+// Copying "Exit" over it closed Kefir Hub with titles still selected.
+void MainMenu::CopyActionsToCurrentMenu() {
     for (auto [button, action] : m_actions) {
-        if (button != Button::START) {
-            m_current_menu->SetAction(button, action);
+        if (button == Button::START) {
+            continue;
         }
+        if (button == Button::B && m_current_menu == m_centre_menu.get()) {
+            continue;
+        }
+        m_current_menu->SetAction(button, action);
     }
 }
 

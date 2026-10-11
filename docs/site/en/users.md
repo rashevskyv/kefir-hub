@@ -138,8 +138,6 @@ console.
 
    Completed backups and safety backups are kept. If cleanup fails, Kefir Hub shows an error.
 
-<!-- shot: users-unfinished-dump | Unfinished TegraExplorer dump with Cancel, Don't remind again and Retry -->
-
 ### Restore
 !!! warning
     Restore replaces **all** profiles on this console with the ones in the backup. With play hours, the play history

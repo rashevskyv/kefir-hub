@@ -48,6 +48,7 @@ private:
     void SwitchTo(MenuBase* menu);
     void AddOnLRPress();
     void UpdateBackAction();
+    void CopyActionsToCurrentMenu();
 
 private:
     std::unique_ptr<MenuBase> m_centre_menu{};

@@ -1151,9 +1151,6 @@
         "sharing-web-album": {
             "user": true
         },
-        "users-unfinished-dump": {
-            "user": true
-        },
         "system-tools-system-info": {
             "steps": [
                 "R",

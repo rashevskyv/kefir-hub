@@ -139,8 +139,6 @@ Kefir Hub може створити таку прив'язку без інтер
 
    Готові резервні копії та страхові копії зберігаються. Якщо очищення не вдалося, Kefir Hub показує помилку.
 
-<!-- shot: users-unfinished-dump | Unfinished TegraExplorer dump with Cancel, Don't remind again and Retry -->
-
 ### Відновлення {#restore}
 !!! warning
     Відновлення замінює **всі** профілі на цій консолі профілями з копії. Якщо відновлювати й години, журнал гри

@@ -3,6 +3,15 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.058 — A real Kefir Updater can be selected (X / Y), starred and deleted like any app
+- Owner report: X / Y in the Homebrew list skipped Kefir Updater. `IsKefirUpdaterStub()` recognised the "Removed" notice entry by its path `/switch/kefir-updater/kefir-updater.nro`, which is also where the real Kefir Updater lives, so the real one was treated as the stub (not selectable, no star, not in the selected set). The stub is now `path == that path` and version text `Removed` (only the scan's stub entry has it), see `homebrew_internal.hpp`.
+- host tests: not run (UI) · nro: pending · switch: pending (X on Kefir Updater marks it; Y marks it with the rest).
+
+## v0.14.057 — Main screen: B clears the X / Y selection instead of closing Kefir Hub; unfinished-dump doc shot dropped
+- Owner report: with titles selected by X / Y, **B** closed Kefir Hub. `MainMenu` copied its own B ("Exit", `App::Exit`) over the Homebrew menu's B, which clears a selection and only then exits. `MainMenu::CopyActionsToCurrentMenu()` (`main_menu.cpp`, used by the constructor and `SwitchTo`) no longer copies B onto the main screen; the Tools screen still gets "Back".
+- Docs: the `users-unfinished-dump` shot marker, recipe entry and file are removed (the owner does not want to reproduce that state).
+- host tests: not run (UI action wiring) · nro: pending · switch: pending (X on two apps, B: marks go, Kefir Hub stays; B again: exits).
+
 ## v0.14.056 — Saves: a game that is on the HOME menu is "Installed", also an archived one and a cartridge game with the card out
 - Owner report: the save of a game played from a cartridge was listed under "Deleted Games". `Menu::BuildInstalledAppIds()` (`save_menu_scan.cpp`) took "installed" to mean a base program on SD / NAND / game card. The rule is now what the HOME menu shows: an application record whose base program is known on any storage (an archived game has it with storage None), or a record with no content at all (a cartridge game with the card out). Not installed: only update/DLC left, no base program entry. Such a record is logged (`[saves] <id>: record without content`).
 - Assumed, not checked on a console yet: a record of a removed cartridge has an empty content list. The log line shows it; if the game is still under "Deleted Games" the assumption is wrong.
