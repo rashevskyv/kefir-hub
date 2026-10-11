@@ -8,6 +8,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "ui/menus/dbi_menu.hpp"
+#include "ui/first_start.hpp"
 #include "ui/option_box.hpp"
 #include "usb_install_probe.hpp"
 
@@ -26,6 +27,11 @@ namespace sphaira {
 extern App* g_app;
 
 void App::PollUsbStorage() {
+    // the first set-up (language, HOME icon advice) comes before any PC Install window
+    // or MTP offer: a PC with a USB install app plugged in must not take the screen.
+    if (ui::FirstStartActive()) {
+        return;
+    }
     bool host_changed = false;
     if (auto* ev = usbHsFsGetStatusChangeUserEvent(); ev) {
         host_changed = R_SUCCEEDED(waitSingle(waiterForUEvent(ev), 0));
@@ -204,6 +210,9 @@ void App::OfferOpenUsbDrive(std::string name, std::string mount, u32 flags) {
 }
 
 void App::OfferPcInstallSwitch() {
+    if (ui::FirstStartActive()) {
+        return;
+    }
     if (!haze::IsRunning() || usb_probe::GetState() != usb_probe::State::Idle) {
         return;
     }

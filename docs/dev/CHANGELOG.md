@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.055 — PC Install and MTP offers wait for the first set-up (a PC with DBI Backend plugged in took the screen before the language was chosen)
+- Owner report: with a PC running DBI Backend Qt connected, Kefir Hub opened the PC Install (USB) window at the first start, before the language was chosen. `App::PollUsbStorage()` and `App::OfferPcInstallSwitch()` (`app_usb.cpp`) now return at once while the first-start page is open (`ui::FirstStartActive()`, set in the `FirstStart` constructor and cleared in its destructor); the USB poll resumes when the page closes.
+- host tests: not run (UI/USB flow) · nro: pending · switch: pending (config.ini without `language`, USB cable to a PC with DBI Backend: the language list and the page come first; PC Install opens only after OK).
+
 ## v0.14.054 — Firmware install no longer leaves a hole in the heap (Hub crashed in malloc after a firmware install)
 - Found on the console: after a manual firmware install (22.5.0 on emuMMC) Hub crashed in `_malloc_r` (Data Abort, crash reports 01791704128 and 01791707336, identical stacks) as soon as something allocated 512 KiB (the scripted `shot`). The install had completed. Cause (from the registers: the new top-chunk header falls at the end of the 512 KiB block): `amssuSetupUpdate(nullptr, ...)` let libnx allocate the 1 MiB transfer memory (no access for us, `Perm_None`) and `tmemClose` returned it to malloc while ams:su may still hold it; a later large malloc carved a block from it and wrote a chunk header into a page we cannot access. Not proven by a test on the console yet.
 - `ams_su.c`: one update buffer, allocated once and never returned to malloc (`aligned_alloc`, kept for the process); cleanup closes only the handle (`tmemCloseHandle`). `kefir_firmware_ops.cpp`: `HeapProbe()` mallocs 512 KiB after each stage and after ams:su is closed and logs `[fw] heap after <stage>` (a crash would show the stage).

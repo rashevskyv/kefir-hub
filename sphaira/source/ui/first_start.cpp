@@ -3,11 +3,25 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include <atomic>
 
 namespace sphaira::ui {
 
+namespace {
+std::atomic<bool> g_first_start_active{false};
+} // namespace
+
+auto FirstStartActive() -> bool {
+    return g_first_start_active.load();
+}
+
 FirstStart::FirstStart() {
     m_pos = Vec4{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT};
+    g_first_start_active = true;
+}
+
+FirstStart::~FirstStart() {
+    g_first_start_active = false;
 }
 
 void FirstStart::Update(Controller* controller, TouchInfo* touch) {

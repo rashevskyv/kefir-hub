@@ -10,8 +10,13 @@ namespace sphaira::ui {
 // says what the HOME Menu icon is for comes after it, in the chosen language
 // (A = OK). A language other than the one the start began in rebuilds the main
 // menu in it; there is no restart.
+// True from the first-start page opening until it closes. Nothing may reach for the
+// USB port (PC Install, MTP offers) before the user has finished the first set-up.
+auto FirstStartActive() -> bool;
+
 struct FirstStart final : Widget {
     FirstStart();
+    ~FirstStart() override;
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
