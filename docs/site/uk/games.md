@@ -143,9 +143,7 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 
 Зі списку **+** → [[Create save]] створює стандартне збереження для всіх позначених ігор для вибраного користувача. Ігри, у яких це збереження вже є, пропускаються.
 
-<!-- draft
-- v0.14.040: when a game is under the cursor (or several are ticked), the storage row of the memory where it is installed shows "<game size> / <free space>" (for example "6.2 GB / 41.3 GB"), not the game size alone; the other row keeps showing free space
--->
+Коли гра під курсором або кілька ігор позначено, рядок сховища пам'яті, де встановлена гра, показує «розмір гри / вільне місце» (наприклад, «6.2 ГБ / 41.3 ГБ») замість самого розміру гри; решта рядків показують вільне місце, як і раніше.
 
 ## Сортування, пошук і фільтри
 Натисніть **+**:
@@ -154,9 +152,7 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 - [[Sort By]] → [[Sort]]: [[Updated]], [[Alphabetical]], [[Publisher]], [[Storage]], [[Last played]], [[Play time]]; [[Order]]: [[Descending]] або [[Ascending]].
 - [[Sort By]] → [[Update play time]] — зчитує загальний час гри для кожної гри з журналу консолі й сортує за ним. Запустіть це перед сортуванням за [[Play time]].
 
-<!-- draft
-- v0.14.036: new sort field [[Size]] after [[Play time]]: the installed size of the game (base game, updates and DLC on the memory card, system memory and game card); [[Descending]] puts the biggest game first; the list may pause a moment while the sizes of all games are read (also for [[Storage]])
--->
+[[Size]] з'являється після [[Play time]] як новий варіант сортування: це встановлений розмір гри (основна гра, оновлення та DLC на карті пам'яті, системній пам'яті й картриджі). [[Descending]] ставитиме найбільшу гру першою. Список може на мить призупинитися, поки зчитуються розміри всіх ігор (це стосується і [[Storage]]).
 - [[Search]] — введіть частину назви, щоб лишилися тільки відповідні ігри. [[Clear search]] знову показує всі ігри.
 
 ## Параметри
