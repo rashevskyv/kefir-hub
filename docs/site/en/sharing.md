@@ -24,18 +24,12 @@ To move data to a second console, see [Console Transfer](console-transfer.md).
 1. Connect the console to Wi-Fi or LAN.
 2. Open [[Tools]], press **+** and select [[Web Server]]. In Applet Mode, choose [[Start anyway]] in the panel that
    opens first (see [Install from a browser](install/network.md#browser)).
-3. The [[Web Sharing Server]] window shows a QR code and an address, for example `http://kefir.local`. When port 80
-   is taken, the address has a port from 8080 to 8090, for example `http://kefir.local:8080`.
+3. The [[Web Sharing Server]] window shows a QR code and the console's IP address, for example `http://192.168.50.69` (with a port when 80 is taken, for example `http://192.168.50.69:8080`), the address the QR code opens.
 4. Scan the QR code with a phone, or type the address into a browser on a PC on the same network.
-
-<!-- draft
-- v0.14.051: the [[Web Sharing Server]] window shows the console's IP address (for example `http://192.168.50.69`, with a port when 80 is taken), the address the QR code opens; it no longer shows `kefir.local`, which many phones cannot find. The text about `kefir.local` in this section and in Troubleshooting must say: use the address shown in the window
--->
 
 <!-- shot: sharing-web-server | Web Sharing Server window: QR code, the console IP address, "Press B to Stop Server" -->
 
-If the address with `kefir.local` does not open, use the IP address shown at the top of the console screen,
-for example `http://192.168.1.5` (add `:8080` or the port the address had).
+If the address does not open, use the address shown in the window.
 
 ### What the page can do {#web-page}
 
@@ -249,8 +243,7 @@ Anyone on your network can send and start an app this way. Turn [[Nxlink]] off i
 **[[Web Server]] is grey.** The console has no network connection. Press it anyway: Kefir Hub says
 [[The console has no internet connection.]] and offers to connect.
 
-**The browser cannot open `kefir.local`.** Some phones and PCs do not find `.local` names. Type the IP address from
-the top of the console screen instead, with the port if the address had one.
+**The browser cannot open the address.** Type the address shown in the window instead.
 
 **The page does not open at all.** The PC or phone is on another network, or on a guest Wi-Fi that keeps devices
 apart. Connect both to the same home network. If Kefir Hub showed

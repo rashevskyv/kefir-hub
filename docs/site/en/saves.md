@@ -15,6 +15,10 @@ The screen has three tabs. Switch with **L** and **R**, or tap a tab.
 | [[Deleted Games]] | Saves that are still on the console for games you have uninstalled. |
 | [[Backups]] | Backups found on the microSD card, grouped by the app that made them: [[Kefir Hub]], [[DBI]], [[JKSV]], [[Checkpoint]], [[Other]]. |
 
+<!-- draft
+- v0.14.056: [[Installed Games]] lists every game that has an icon on the HOME menu, with or without the game itself on the console: a game on the memory card or in the console memory, an archived game (its save is kept), and a cartridge game whose card is not inserted. [[Deleted Games]] lists only saves of games that have no icon on the HOME menu
+-->
+
 The line under the title shows which users and which save types are listed. By default you see only the current user's normal game saves (`Account` type).
 
 ### Save-type badges
@@ -60,13 +64,7 @@ When it finishes you see [[Backup successful!]].
 
 Kefir Hub backs up only saves that changed. It compares each save with its newest backup in the chosen [[Location]]. A save that has not changed since that backup is skipped, so the folder never gets two identical copies. If nothing changed you see [[All selected saves are already up to date.]] A save with no files in it is skipped too; if nothing was written you see [[No save data found for this title]].
 
-<!-- draft
-- v0.14.043: when some selected saves were backed up and some were unchanged, the dialog reads "[[Backups created:]] N" and "[[Already up to date:]] M" on two lines
-- v0.14.043: two users with the same nickname are told apart everywhere in Saves by the last 4 characters of their user ID, for example "nin10do (B486)" and "nin10do (9BBD)": in the [[ACCOUNTS]] list of [[Backup Options]] / [[Restore Options]] and in the restore confirmation
-- v0.14.043: [[Restore for user]] puts the cursor on the user who made that backup
-- v0.14.043: after a restore the dialog lists the [[Safety copies of the replaced saves:]] and says how to undo: [[File Browser]] → `recovery.zip` → **+** → [[Restore save data]]
-- v0.14.043: backups of two users of one game made within the same second no longer fail the whole batch; the second file gets the next second in its name
--->
+When some selected saves were backed up and some were unchanged, the dialog reads "[[Backups created:]] N" and "[[Already up to date:]] M" on two lines. Two users with the same nickname are told apart everywhere in Saves by the last 4 characters of their user ID, for example "nin10do (B486)" and "nin10do (9BBD)": in the [[ACCOUNTS]] list of [[Backup Options]] / [[Restore Options]] and in the restore confirmation. [[Restore for user]] puts the cursor on the user who made that backup. After a restore the dialog lists the [[Safety copies of the replaced saves:]] and says how to undo: [[File Browser]] → `recovery.zip` → **+** → [[Restore save data]]. Backups of two users of one game made within the same second no longer fail the whole batch; the second file gets the next second in its name.
 
 ## Where backups are stored
 Default folder: `/dumps` on the microSD card.

@@ -47,6 +47,10 @@ Stars work only while [[Sort]] is one of the `(Star)` variants.
 
 Press **X** again on an app to unselect it.
 
+<!-- draft
+- v0.14.057: **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. **B** with nothing selected exits as before (it used to close Kefir Hub at once, with the selection)
+-->
+
 ## Delete an app
 1. Select the app, or several apps.
 2. Press **+** and choose [[Delete]].

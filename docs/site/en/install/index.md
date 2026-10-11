@@ -114,9 +114,7 @@ MTP, FTP and web-browser installs always import the tickets.
 
 ## Problems {#problems}
 
-<!-- draft
-- v0.14.037: after an install (any way: file browser, PC Install, MTP, FTP, browser) that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows one box listing those titles, "Installed without the base game"; [[Keep]] (default) leaves them, [[Delete]] removes them (saves are kept); keep them when the base game is on a game card, or install the base game afterwards; the box also appears for the DBI/PC queue
--->
+After an install from any source that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows a box listing those titles as "Installed without the base game". Select [[Keep]] to leave them or [[Delete]] to remove them, noting that saves are kept. Keep them if the base game is on a game card or if you plan to install the base game afterwards. This box also appears for the DBI and PC queue.
 
 **"Installing is disabled" with a path through Menu (Y) → Advanced.** That path is out of date. Turn installing on in [[Tools]] → [[Settings]] → [[Install]] (see [Turn installing on](#enable)).
 

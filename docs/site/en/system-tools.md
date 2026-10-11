@@ -6,12 +6,6 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 
 <!-- shot: system-tools-list | Tools submenu: one list under three captions — Diagnostics, Settings, Maintenance -->
 
-<!-- draft
-- the list has three captions (v0.14.018): [[Diagnostics]], [[Settings]], [[Maintenance]]; the cursor skips a caption, tapping one does nothing
-- v0.14.027: compact rows, every caption and item fits on one screen without scrolling; the item name is on the left, its description on the right of the same row
-- the NAND zero-fill item was removed in v0.14.018; [[Fill free SD space with zeros]] stays, now under [[Maintenance]]
--->
-
 | Group | Item | What it is |
 |---|---|---|
 | [[Diagnostics]] | [[System information]] | Console, Atmosphère, storage, power, battery, hardware and play activity. See [System information](#system-information). |
@@ -29,23 +23,15 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 
 <!-- shot: system-tools-system-info | System information: Console group open, parameter → value rows, other groups closed -->
 
-<!-- draft
-- replaces the text report (v0.14.019): no file is written to the memory card any more
-- one list of groups: [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], [[Play activity]]; the first group is open at start
-- press **A** on a group, or tap it, to open or close it; **A** on a row opens or closes the group the row belongs to; **Y** opens all groups or closes all
-- v0.14.030: **left** / **right** page through the rows (as in the file browser); **L** / **R** ([[Previous group]], [[Next group]]) move to the previous / next group and open it
-- each open group shows rows parameter → value; the number on the right of a closed group is its row count
-- v0.14.027 look (v0.14.029: no side bar): a group is a filled band, the open group has its title in the accent colour and its rows indented; parameter names are bold, values are in the accent colour
-- [[Console]]: firmware version, name and hash; model; hardware type and SoC; retail or development unit; burnt fuses; DRAM id; device id; kiosk; charger HiZ; serial number; console nickname; language; region; parental controls
-- [[Serial number]] is the real one. [[Serial number source]] says where it was read: [[System settings]], [[PRODINFO partition]] or [[Backup file]] with the file path (Atmosphère `/atmosphere/automatic_backups`, hekate `/backup`). When the system returns a blank serial (Atmosphère blank_prodinfo, Incognito), the row [[Serial number (system)]] shows that blank value. The number is never computed or guessed; if no source has it, the value is [[Not available]]
-- [[Atmosphere]]: version, key generation, target firmware, supported firmware, git commit, RCM bug patched, emuMMC (partition or file), blank PRODINFO, PRODINFO writes allowed, USB 3.0 forced
-- [[Storage]]: system memory used and free; microSD used and free, speed mode, user and protected area; microSD CID: maker, OEM id, product, revision, serial, month made
-- [[Power]]: charger, charging allowed, enough power, charging now, fast charging, USB charger type, USB power role, every current and voltage limit, HiZ, controller power supply, OTG, power delivery state (firmware 17.0.0 or newer for most rows)
-- [[Battery]]: charge, raw charge, health, temperature, voltage; from the fuel gauge: design capacity, full capacity now, remaining capacity, charge cycles, age, current, average current, cell voltage, cell temperature, time to empty
-- [[Hardware]]: Bluetooth and Wi-Fi MAC, configuration id, battery lot, serial number from the calibration data
-- [[Play activity]]: installed games, total play time, total launches, most played game
-- a group whose service cannot be read is not shown
--->
+Each group shows rows of parameters and values. The list includes [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], and [[Play activity]]. The first group opens automatically at start, and a group whose service cannot be read is hidden. Press **A** on a group or tap it to open or close it, or press **A** on any row to open or close its parent group. Press **Y** to open or close all groups at once. Press **left** or **right** to page through the rows, or press **L** ([[Previous group]]) and **R** ([[Next group]]) to jump directly to the previous or next group and open it. The number on the right of a closed group indicates its row count.
+
+- [[Console]]: firmware version, name and hash; model; hardware type and SoC; retail or development unit; burnt fuses; DRAM id; device id; kiosk; charger HiZ; serial number; console nickname; language; region; parental controls. The [[Serial number]] is the real one, while [[Serial number source]] indicates where it was read from, such as [[System settings]], [[PRODINFO partition]], or a [[Backup file]] with its path (Atmosphère `/atmosphere/automatic_backups`, hekate `/backup`). If the system returns a blank serial due to features like Atmosphère blank_prodinfo or Incognito, [[Serial number (system)]] shows that blank value. If no source contains it, the value is [[Not available]].
+- [[Atmosphere]]: version, key generation, target firmware, supported firmware, git commit, RCM bug patched, emuMMC type (partition or file), blank PRODINFO, PRODINFO writes allowed, and USB 3.0 forced.
+- [[Storage]]: system memory used and free; microSD used and free, speed mode, user and protected area; and microSD CID details including maker, OEM id, product, revision, serial, and month made.
+- [[Power]]: charger status, charging allowed, power sufficiency, current charging state, fast charging, USB charger type, USB power role, current and voltage limits, HiZ state, controller power supply, OTG, and power delivery state on firmware 17.0.0 or newer.
+- [[Battery]]: charge level, raw charge, health, temperature, voltage, design capacity, full capacity now, remaining capacity, charge cycles, age, current, average current, cell voltage, cell temperature, and time to empty.
+- [[Hardware]]: Bluetooth and Wi-Fi MAC addresses, configuration ID, battery lot, and the serial number from the calibration data.
+- [[Play activity]]: installed games, total play time, total launches, and most played game.
 
 ## [[Module Manager]]
 
