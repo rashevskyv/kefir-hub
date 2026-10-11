@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <malloc.h>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -420,18 +421,34 @@ void CleanupManualFirmwareStaging() {
     }
 }
 
+// A crash in malloc right after a firmware install (Data Abort at address 0 in
+// _malloc_r, seen on the console) means the heap was damaged during it. This asks the
+// allocator for a big block after each stage and logs the answer, so the log names
+// the first stage after which the heap is broken (the process dies in the probe).
+static void HeapProbe(const char* stage) {
+    auto* p = std::malloc(0x80000);
+    const auto mi = mallinfo();
+    log_write("[fw] heap after %s: probe %s, arena %zu, in use %zu, free %zu\n",
+        stage, p ? "ok" : "NULL", (size_t)mi.arena, (size_t)mi.uordblks, (size_t)mi.fordblks);
+    std::free(p);
+}
+
 auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPath& path, bool apply_downgrade_fix, DowngradeFixResult* out_fix, bool is_manual_folder) -> Result {
+    // declared first, so it runs last: after ams:su and its transfer memory are closed
+    ON_SCOPE_EXIT(HeapProbe("ams:su closed"));
     Result rc = amssuInitialize();
     if (R_FAILED(rc)) {
         return rc;
     }
     ON_SCOPE_EXIT(amssuExit());
 
+    HeapProbe("start");
     constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
     const auto service_path = BuildFirmwareServicePath(path);
     pbox->NewTransfer("Setting up system update...");
     R_TRY(amssuSetupUpdate(nullptr, UPDATE_TASK_BUFFER_SIZE, service_path.c_str(), use_exfat));
 
+    HeapProbe("setup");
     AsyncResult prepare{};
     R_TRY(amssuRequestPrepareUpdate(&prepare));
     ON_SCOPE_EXIT(asyncResultClose(&prepare));
@@ -458,6 +475,7 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
         svcSleepThread(50'000'000);
     }
 
+    HeapProbe("prepare");
     if (apply_downgrade_fix) {
         pbox->NewTransfer("Staging downgrade fix...");
         DowngradeFixResult fix{};
@@ -489,6 +507,7 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
         }
     }
 
+    HeapProbe("apply");
     // Clean themes and translations unconditionally on ANY firmware installation (both update and downgrade)
     // to prevent Atmosphere fatal crash 2162-0002 and mismatched qlaunch components on reboot.
     pbox->NewTransfer("Removing themes and translations...");
@@ -497,7 +516,9 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
         out_fix->cleanup_failed = !cleanup_ok;
     }
 
+    HeapProbe("themes cleanup");
     CleanupFirmwareFiles(pbox, path, is_manual_folder);
+    HeapProbe("files cleanup");
 
     R_SUCCEED();
 }
