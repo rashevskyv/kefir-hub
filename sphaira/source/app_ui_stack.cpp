@@ -5,6 +5,8 @@
 #include "ui/error_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/main_menu.hpp"
+#include "title_info.hpp"
 #include <switch.h>
 #include <algorithm>
 #include <atomic>
@@ -52,6 +54,18 @@ auto App::PopToMenu() -> void {
 
         p->SetPop();
     }
+}
+
+auto App::RebuildMenusForLanguage() -> void {
+    title::Clear(); // game names are loaded in the UI language
+    auto& widgets = g_app->m_widgets;
+    for (auto& w : widgets) {
+        w->SetPop();
+    }
+    // at the bottom: the frame loop pops the dead ones from the top and the new menu
+    // is left, gaining focus. Inserted, not pushed, so the caller (a widget that is
+    // itself in the list) is never destroyed while it is running.
+    widgets.insert(widgets.begin(), std::make_unique<ui::menu::main::MainMenu>());
 }
 
 auto App::Pop() -> void {

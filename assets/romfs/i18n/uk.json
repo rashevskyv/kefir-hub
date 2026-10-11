@@ -2764,7 +2764,7 @@
   "Restoring user profile": "Відновлення профілю користувача",
   "SELECTION": "ВИБІР",
   "Safety backup of existing console saves could not be completed. Restore aborted to protect NAND.": "Не вдалося створити безпечну резервну копію існуючих збережень консолі. Відновлення скасовано для захисту NAND.",
-  "Scan the QR code with phone or open URL on PC to send text. Press B to cancel.": "Відскануйте QR-код телефоном або відкрийте URL на ПК для надсилання тексту. Натисніть B для скасування.",
+  "Scan the QR code with phone or open URL on PC to send text. Press B to cancel.": "Скануйте QR-код телефоном або відкрийте URL на ПК. B — скасувати.",
   "Select all": "Вибрати все",
   "Select all backups in the list.": "Вибрати всі резервні копії у списку.",
   "Select input method:": "Виберіть метод введення:",

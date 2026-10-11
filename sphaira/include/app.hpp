@@ -89,6 +89,9 @@ public:
 
     // pops all widgets above a menu
     static void PopToMenu();
+    // a new main menu (labels are translated when a menu is built) under the open
+    // widgets, which are all popped: the UI language changed without a restart.
+    static void RebuildMenusForLanguage();
     static void Pop();
 
     // true if currently on the main screen (Homebrew menu)

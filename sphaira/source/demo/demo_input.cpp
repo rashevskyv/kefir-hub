@@ -11,6 +11,7 @@
 #include "ui/menus/menu_base.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <deque>
 #include <mutex>
 #include <string>
@@ -97,19 +98,29 @@ void Shot() {
         log_write("[demo] shot: caps:sc unavailable\n");
         return;
     }
-    std::vector<u8> jpeg(0x80000);
+    // malloc, not a vector: during an install memory is short and a failed
+    // allocation here must skip the shot, not take the app down.
+    constexpr size_t JPEG_MAX = 0x80000;
+    auto* jpeg = static_cast<u8*>(std::malloc(JPEG_MAX));
+    if (!jpeg) {
+        capsscExit();
+        log_write("[demo] shot: no memory\n");
+        return;
+    }
     u64 size{};
-    const auto rc = capsscCaptureJpegScreenShot(&size, jpeg.data(), jpeg.size(), ViLayerStack_Default, 1'000'000'000);
+    const auto rc = capsscCaptureJpegScreenShot(&size, jpeg, JPEG_MAX, ViLayerStack_Default, 1'000'000'000);
     capsscExit();
-    if (R_FAILED(rc) || !size || size > jpeg.size()) {
+    if (R_FAILED(rc) || !size || size > JPEG_MAX) {
         log_write("[demo] shot failed: 0x%X\n", rc);
+        std::free(jpeg);
         return;
     }
     if (auto f = std::fopen(SHOT_JPG, "wb")) {
-        std::fwrite(jpeg.data(), 1, size, f);
+        std::fwrite(jpeg, 1, size, f);
         std::fclose(f);
         log_write("[demo] shot written (%lu bytes)\n", size);
     }
+    std::free(jpeg);
 }
 
 } // namespace
