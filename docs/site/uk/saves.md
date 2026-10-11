@@ -15,6 +15,10 @@
 | [[Deleted Games]] | Збереження, які лишилися на консолі від видалених ігор. |
 | [[Backups]] | Резервні копії, знайдені на карті пам'яті, згруповані за програмою, що їх зробила: [[Kefir Hub]], [[DBI]], [[JKSV]], [[Checkpoint]], [[Other]]. |
 
+<!-- draft
+- v0.14.056: [[Installed Games]] lists every game that has an icon on the HOME menu, with or without the game itself on the console: a game on the memory card or in the console memory, an archived game (its save is kept), and a cartridge game whose card is not inserted. [[Deleted Games]] lists only saves of games that have no icon on the HOME menu
+-->
+
 Рядок під заголовком показує, чиї збереження і яких типів зараз у списку. Спочатку видно тільки звичайні збереження ігор (тип `Account`) поточного користувача.
 
 ### Плашки типів збережень

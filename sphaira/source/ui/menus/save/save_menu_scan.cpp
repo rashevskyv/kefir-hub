@@ -472,14 +472,22 @@ void Menu::BuildInstalledAppIds() {
             if (!app_id) {
                 continue;
             }
-            // an archived game keeps its record and content list with storage None, and update/DLC
-            // can outlive the base: installed means the base program is on a storage.
-            title::MetaEntries installed_content;
-            if (R_FAILED(title::GetMetaEntries(app_id, installed_content, title::ContentFlag_Application)) ||
-                std::ranges::none_of(installed_content, [](const auto& m) {
-                    return m.storageID == NcmStorageId_SdCard || m.storageID == NcmStorageId_BuiltInUser || m.storageID == NcmStorageId_GameCard;
-                })) {
+            // "installed" means what the HOME menu shows: an icon for the game. That is the
+            // case for a game on a storage, an archived one (record + base program entry with
+            // storage None) and a cartridge game whose card is out (the record stays with no
+            // content at all). Not shown: only update/DLC left behind, no base program entry.
+            // Such a game is listed with its save under "Installed", not under "Deleted".
+            title::MetaEntries content;
+            const auto content_rc = title::GetMetaEntries(app_id, content, title::ContentFlag_All);
+            const bool has_base = std::ranges::any_of(content, [](const auto& m) {
+                return m.meta_type == NcmContentMetaType_Application;
+            });
+            const bool no_content = R_FAILED(content_rc) || content.empty();
+            if (!has_base && !no_content) {
                 continue;
+            }
+            if (no_content) {
+                log_write("[saves] %016lX: record without content (game card out?), listed as installed\n", app_id);
             }
 
             // 0x05… ids (forwarders, but also YouTube 05003A400C3DA000) count as installed so their

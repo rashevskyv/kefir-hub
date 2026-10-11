@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.056 — Saves: a game that is on the HOME menu is "Installed", also an archived one and a cartridge game with the card out
+- Owner report: the save of a game played from a cartridge was listed under "Deleted Games". `Menu::BuildInstalledAppIds()` (`save_menu_scan.cpp`) took "installed" to mean a base program on SD / NAND / game card. The rule is now what the HOME menu shows: an application record whose base program is known on any storage (an archived game has it with storage None), or a record with no content at all (a cartridge game with the card out). Not installed: only update/DLC left, no base program entry. Such a record is logged (`[saves] <id>: record without content`).
+- Assumed, not checked on a console yet: a record of a removed cartridge has an empty content list. The log line shows it; if the game is still under "Deleted Games" the assumption is wrong.
+- host tests: not run (libnx ns calls) · nro: pending · switch: pending (a cartridge game with the card out: its save is under Installed Games).
+
 ## v0.14.055 — PC Install and MTP offers wait for the first set-up (a PC with DBI Backend plugged in took the screen before the language was chosen)
 - Owner report: with a PC running DBI Backend Qt connected, Kefir Hub opened the PC Install (USB) window at the first start, before the language was chosen. `App::PollUsbStorage()` and `App::OfferPcInstallSwitch()` (`app_usb.cpp`) now return at once while the first-start page is open (`ui::FirstStartActive()`, set in the `FirstStart` constructor and cleared in its destructor); the USB poll resumes when the page closes.
 - host tests: not run (UI/USB flow) · nro: pending · switch: pending (config.ini without `language`, USB cable to a PC with DBI Backend: the language list and the page come first; PC Install opens only after OK).
