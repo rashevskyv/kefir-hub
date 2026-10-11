@@ -17,8 +17,6 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 <!-- shot: install-index-enable-warning | Ban warning dialog with Back and Enable buttons -->
 
-<!-- TODO(verify): plan D.2 removes this switch -->
-
 ## Виберіть спосіб {#methods}
 
 | Спосіб | Що потрібно | Перегляд перед встановленням | Сторінка |
@@ -70,7 +68,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 | [[Allow downgrade]] | Дозволяє встановити оновлення, старіше за встановлене. Коли вимкнено, старіше оновлення пропускається. | Вимк. |
 | [[Skip if already installed]] | Що робити з уже встановленим вмістом: [[Reinstall]], [[Skip]] або [[Prompt]] (щоразу питати [[Already installed. Reinstall?]]). | [[Skip]] |
 | [[Save options globally]] | Увімкнено: зміни в [[Options]] черги зберігаються в налаштуваннях. Вимкнено: діють лише для поточної черги. | Увімк. |
-| [[Boost CPU during transfer]] | Під час передавання процесор працює швидше. | Увімк. |
+| [[Boost CPU during transfer]] | Під час передавання процесор працює швидше. | Вимк. |
 | [[Screen off (Minus)]] | Що робить **−**, поки працює черга, див. [Вимкніть екран](sd-card.md#screen-off). | — |
 
 [[What to install]]
@@ -92,10 +90,10 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 | [[Skip RSA header verify]] | Пропускає перевірку підпису Nintendo на заголовках даних. Потрібно для конвертованих NSP/XCI. | Увімк. |
 | [[Skip RSA NPDM verify]] | Не реалізовано, ні на що не впливає. | Увімк. |
 | [[Ignore origin flag]] | Ігнорує позначку, звідки вміст: з картриджа чи з eShop. Встановлений вміст із позначкою картриджа зазвичай не запускається. | Вимк. |
-| [[Convert ticket on install]] | Перетворює персональні тікети на загальні. Потрібні ключі консолі. | Увімк. |
+| [[Convert ticket on install]] | Перетворює персональні тікети на загальні. Потрібні ключі консолі. | Вимк. |
 | [[Convert to standard crypto]] | Встановлює гру так, щоб їй не був потрібен тікет. Потрібні ключі консолі. | Вимк. |
 | [[Re-encrypt to master key 0]] | Перешифровує ключі гри, щоб їх могла прочитати будь-яка прошивка. Гра все одно може не працювати; краще оновити прошивку. Потрібні ключі консолі. | Вимк. |
-| [[Lower required firmware]] | Знижує версію прошивки, яку вимагає гра. Не допоможе, якщо грі потрібні ключі, яких ваша прошивка не має. | Увімк. |
+| [[Lower required firmware]] | Знижує версію прошивки, яку вимагає гра. Не допоможе, якщо грі потрібні ключі, яких ваша прошивка не має. | Вимк. |
 
 У меню [[Options]] черги (натисніть **+** у черзі) є [[Skip if already installed]], [[Install location]] і налаштування резерву, тож їх можна змінити для одного сеансу. Див. [Параметри черги](sd-card.md#queue-options).
 
@@ -114,9 +112,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 ## Проблеми {#problems}
 
-<!-- draft
-- v0.14.037: after an install (any way: file browser, PC Install, MTP, FTP, browser) that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows one box listing those titles, "Installed without the base game"; [[Keep]] (default) leaves them, [[Delete]] removes them (saves are kept); keep them when the base game is on a game card, or install the base game afterwards; the box also appears for the DBI/PC queue
--->
+Після встановлення будь-яким способом (через файловий менеджер, ПК, MTP, FTP або браузер), якщо залишається оновлення або DLC без основної гри, Kefir Hub приблизно через п'ять секунд після останнього файлу показує одне вікно зі списком таких назв із написом «Installed without the base game». Параметр [[Keep]] (типово) залишає їх, а [[Delete]] видаляє їх (збереження залишаються). Залишайте їх, якщо основна гра на картриджі, або встановіть основну гру згодом. Це вікно також з'являється для черги DBI/PC.
 
 **Повідомлення про вимкнене встановлення радить шлях через Menu (Y) → Advanced.** Цей шлях застарів. Увімкніть встановлення в [[Tools]] → [[Settings]] → [[Install]] (див. [Увімкніть встановлення](#enable)).
 

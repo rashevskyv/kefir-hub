@@ -6,12 +6,6 @@
 
 <!-- shot: system-tools-list | Tools submenu: one list under three captions — Diagnostics, Settings, Maintenance -->
 
-<!-- draft
-- the list has three captions (v0.14.018): [[Diagnostics]], [[Settings]], [[Maintenance]]; the cursor skips a caption, tapping one does nothing
-- v0.14.027: compact rows, every caption and item fits on one screen without scrolling; the item name is on the left, its description on the right of the same row
-- the NAND zero-fill item was removed in v0.14.018; [[Fill free SD space with zeros]] stays, now under [[Maintenance]]
--->
-
 | Група | Пункт | Що це |
 |---|---|---|
 | [[Diagnostics]] | [[System information]] | Консоль, Atmosphère, пам'ять, живлення, батарея, обладнання та ігрова активність. Див. [Системна інформація](#system-information). |
@@ -29,23 +23,21 @@
 
 <!-- shot: system-tools-system-info | System information: Console group open, parameter → value rows, other groups closed -->
 
-<!-- draft
-- replaces the text report (v0.14.019): no file is written to the memory card any more
-- one list of groups: [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], [[Play activity]]; the first group is open at start
-- press **A** on a group, or tap it, to open or close it; **A** on a row opens or closes the group the row belongs to; **Y** opens all groups or closes all
-- v0.14.030: **left** / **right** page through the rows (as in the file browser); **L** / **R** ([[Previous group]], [[Next group]]) move to the previous / next group and open it
-- each open group shows rows parameter → value; the number on the right of a closed group is its row count
-- v0.14.027 look (v0.14.029: no side bar): a group is a filled band, the open group has its title in the accent colour and its rows indented; parameter names are bold, values are in the accent colour
-- [[Console]]: firmware version, name and hash; model; hardware type and SoC; retail or development unit; burnt fuses; DRAM id; device id; kiosk; charger HiZ; serial number; console nickname; language; region; parental controls
-- [[Serial number]] is the real one. [[Serial number source]] says where it was read: [[System settings]], [[PRODINFO partition]] or [[Backup file]] with the file path (Atmosphère `/atmosphere/automatic_backups`, hekate `/backup`). When the system returns a blank serial (Atmosphère blank_prodinfo, Incognito), the row [[Serial number (system)]] shows that blank value. The number is never computed or guessed; if no source has it, the value is [[Not available]]
-- [[Atmosphere]]: version, key generation, target firmware, supported firmware, git commit, RCM bug patched, emuMMC (partition or file), blank PRODINFO, PRODINFO writes allowed, USB 3.0 forced
-- [[Storage]]: system memory used and free; microSD used and free, speed mode, user and protected area; microSD CID: maker, OEM id, product, revision, serial, month made
-- [[Power]]: charger, charging allowed, enough power, charging now, fast charging, USB charger type, USB power role, every current and voltage limit, HiZ, controller power supply, OTG, power delivery state (firmware 17.0.0 or newer for most rows)
-- [[Battery]]: charge, raw charge, health, temperature, voltage; from the fuel gauge: design capacity, full capacity now, remaining capacity, charge cycles, age, current, average current, cell voltage, cell temperature, time to empty
-- [[Hardware]]: Bluetooth and Wi-Fi MAC, configuration id, battery lot, serial number from the calibration data
-- [[Play activity]]: installed games, total play time, total launches, most played game
-- a group whose service cannot be read is not shown
--->
+- Список груп замінює колишній текстовий звіт (v0.14.019): файл більше не записується на карту пам'яті.
+- Групи містять такі пункти: [[Console]], [[Atmosphere]], [[Storage]], [[Power]], [[Battery]], [[Hardware]], [[Play activity]]; перша група відкрита за замовчуванням.
+- Натисніть **A** на групі або торкніться її, щоб відкрити чи закрити її. Натискання **A** на рядку відкриває або закриває групу, до якої він належить. **Y** відкриває або закриває всі групи одразу.
+- У версії v0.14.030 клавіші **ліворуч** / **праворуч** гортають сторінки рядків (як у файловому браузері); **L** / **R** ([[Previous group]], [[Next group]]) переміщують до попередньої чи наступної групи та відкривають її.
+- Кожна відкрита група показує рядки параметр → значення. Число праворуч від закритої групи вказує кількість рядків у ній.
+- Зовнішній вигляд відповідає стилю v0.14.027 (у v0.14.029 бічну панель прибрано): група виглядає як заповнена смуга, назва відкритої групи виділена акцентним кольором, а її рядки мають відступ; назви параметрів жирні, а значення — в акцентному кольорі.
+- [[Console]]: версія прошивки, назва й хеш; модель; тип апаратного забезпечення та SoC; роздрібна чи розробницька консоль; пропалені запобіжники; ідентифікатор DRAM; ідентифікатор пристрою; кіоск; зарядний пристрій HiZ; серійний номер; псевдонім консолі; мова; регіон; батьківський контроль.
+- [[Serial number]] є справжнім серійним номером. [[Serial number source]] вказує джерело його зчитування: [[System settings]], розділ [[PRODINFO partition]] або файл резервної копії (Backup file) із зазначенням шляху (Atmosphère `/atmosphere/automatic_backups`, hekate `/backup`). Якщо система повертає порожній серійний номер (при використанні Atmosphère blank_prodinfo чи Incognito), рядок [[Serial number (system)]] показує це порожнє значення. Номер ніколи не обчислюється і не вгадується; якщо жодне джерело його не містить, відображається [[Not available]].
+- [[Atmosphere]]: версія, генерація ключів, цільова прошивка, підтримувана прошивка, коміт git, виправлення помилки RCM, emuMMC (розділ або файл), пустий PRODINFO, дозвіл на запис у PRODINFO, примусове ввімкнення USB 3.0.
+- [[Storage]]: використана та вільна системна пам'ять; використана та вільна пам'ять microSD, режим швидкості, користувацька та захищена області; CID microSD: виробник, ідентифікатор OEM, продукт, версія, серійний номер, місяць виготовлення.
+- [[Power]]: зарядний пристрій, дозвіл на заряджання, достатня потужність, стан заряджання зараз, швидке заряджання, тип зарядного пристрою USB, роздача живлення USB, усі обмеження струму та напруги, HiZ, живлення контролера, OTG, стан постачання живлення (для більшості рядків потрібна прошивка 17.0.0 або новіша).
+- [[Battery]]: заряд, необроблений заряд, стан здоров'я, температура, напруга; дані палиміра (fuel gauge): розрахункова ємність, поточна повна ємність, залишок ємності, цикли заряджання, знос, сила струму, середній струм, напруга комірки, температура комірки, час до розряджання.
+- [[Hardware]]: MAC-адреси Bluetooth та Wi-Fi, ідентифікатор конфігурації, партія акумулятора, серійний номер із даних калібрування.
+- [[Play activity]]: встановлені ігри, загальний час гри, загальна кількість запусків, гра з найбільшою кількістю годин.
+- Група, служба якої не може бути прочитана, не відображається.
 
 ## [[Module Manager]]
 
@@ -205,7 +197,7 @@
 ## Заповнення вільного місця на SD нулями { #fill-free-sd-space-with-zeros }
 
 Записує нулі в місце на карті пам'яті, яке не зайняте файлами. Файли, ігри й збереження лишаються як були.
-Корисно перед продажем чи передачею карти: видалені дані вже не відновити.
+Корисно перед продажем чи передачею карти: видалені дані вже не відновити. Пункт заповнення NAND нулями було видалено у версії v0.14.018, проте пункт [[Fill free SD space with zeros]] залишається доступним тепер під розділом [[Maintenance]].
 
 **Де:** [[Tools]] → [[Tools]] → [[Fill free SD space with zeros]]
 

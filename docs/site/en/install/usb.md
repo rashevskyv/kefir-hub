@@ -23,15 +23,12 @@ Turn installing on first (see [Turn installing on](index.md#enable)).
 ## Install games {#install}
 
 1. Open [[PC Install (USB)]]. The console shows [[Waiting for PC]] and a badge with the USB speed.
-
-<!-- draft
-- v0.14.038: when the cable was already in and MTP is running, a PC install app started afterwards cannot reach the console over USB (MTP and the install link are different USB devices); if the app writes a file named `kefir-hub.pc-install` to any MTP storage (or you copy a file with that name to the memory card in Explorer), Kefir Hub asks "A PC install app is waiting. Stop MTP and open PC Install (USB)?": [[PC Install (USB)]] stops MTP and looks for the app for a few seconds as on plug-in, [[No]] keeps MTP; the file is removed from the card
--->
-2. Connect the cable and start the PC app.
-3. In the PC app, add the files and start the transfer.
-4. The console reads the list and checks every package. Nothing is installed yet.
-5. The queue opens. Check the targets and sizes, select what you want, and press **A** ([[Install selected]]).
-6. Wait for the [[Session summary]].
+2. If the cable was already in and MTP is running, start the PC install app afterwards. If it cannot reach the console over USB because MTP and the install link are different USB devices, write a file named `kefir-hub.pc-install` to any MTP storage or copy a file with that name to the memory card in Explorer. Kefir Hub asks "A PC install app is waiting. Stop MTP and open PC Install (USB)?": [[PC Install (USB)]] stops MTP and looks for the app for a few seconds as on plug-in, [[No]] keeps MTP; the file is removed from the card.
+3. Connect the cable and start the PC app.
+4. In the PC app, add the files and start the transfer.
+5. The console reads the list and checks every package. Nothing is installed yet.
+6. The queue opens. Check the targets and sizes, select what you want, and press **A** ([[Install selected]]).
+7. Wait for the [[Session summary]].
 
 The queue, the progress screen, minimizing, screen off and the summary work the same as for files on the microSD card. See [Review the queue](sd-card.md#queue) and the sections after it.
 
@@ -40,22 +37,11 @@ The queue, the progress screen, minimizing, screen off and the summary work the 
 
 ## Open automatically on connect {#auto-open}
 
-<!-- draft
-- new in v0.14.023, setting [[PC Install on connect]] (on by default) in Settings → Network
-- handheld console plugged into a computer by cable: after 2 seconds Kefir Hub opens the USB install link and waits a few seconds for a PC app that is already running (DBI Backend, ns-usbloader, Goldleaf); if one answers, [[PC Install (USB)]] opens by itself with the file list already loaded; if nobody answers, MTP starts as before
-- the PC app must be started before or right after plugging in; Kefir Hub cannot start the app on the computer
-- turn the setting off to always get MTP on connect
--->
+Set [[PC Install on connect]] (on by default) in Settings → Network. When a handheld console is plugged into a computer by cable, after 2 seconds Kefir Hub opens the USB install link and waits a few seconds for a PC app that is already running (DBI Backend, ns-usbloader, Goldleaf). If one answers, [[PC Install (USB)]] opens by itself with the file list already loaded. If nobody answers, MTP starts as before. The PC app must be started before or right after plugging in; Kefir Hub cannot start the app on the computer. Turn the setting off to always get MTP on connect.
 
 ## Change the queue from the PC {#live-queue}
 
-<!-- draft
-- new in v0.14.026, DBI Backend Qt with the queue plan command: the sync now runs both ways. A tick removed or a target changed on the console (**X**, **Y**, **L3**) is sent to the PC within a moment and stays; it no longer comes back on the next poll
-- the PC app shows for every [[Auto]] package where the console will really put it ("Auto → SD" / "Auto → NAND"), from the console's plan
-- the PC app's NAND and microSD bars are drawn like the console's: before the install the selected packages are projected into the free space (red when they do not fit), the row under the mouse in amber at the head; while installing, the remaining bytes of the active package
-- **+** → [[Sort]] on the console keeps its order while the PC keeps updating the queue; new keys [[Target]] (microSD first) and [[Status]] (ticked, unticked, already installed, failed analysis)
--->
-
+With DBI Backend Qt and the queue plan command, the sync runs both ways. A tick removed or a target changed on the console (**X**, **Y**, **L3**) is sent to the PC within a moment and stays; it no longer comes back on the next poll. The PC app shows for every [[Auto]] package where the console will really put it ("Auto → SD" / "Auto → NAND"), from the console's plan. The PC app's NAND and microSD bars are drawn like the console's: before the install the selected packages are projected into the free space (red when they do not fit), the row under the mouse in amber at the head; while installing, the remaining bytes of the active package. **+** → [[Sort]] on the console keeps its order while the PC keeps updating the queue; new keys [[Target]] (microSD first) and [[Status]] (ticked, unticked, already installed, failed analysis).
 
 With DBI Backend Qt the queue stays in sync with the PC app:
 

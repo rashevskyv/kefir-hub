@@ -28,7 +28,7 @@
 якщо карта — єдине джерело.
 
 Заголовок показує поточний шлях і позицію в списку. Коли є вибрані елементи, там також видно [[Selected]]
-з кількістю та їхнім загальним розміром. Біля папок указано, скільки в них файлів і папок.
+з кількістю та їхнім загальним розміром. Біля папок указано, скільки в них файлів і папок (у форматі «Файлів: N» / «Папок: N»).
 
 Деякі папки мають опис поруч із назвою:
 
@@ -119,7 +119,7 @@
 
 Якщо джерел більше, ніж сама карта пам'яті, натисніть **B** у кореневій папці карти, щоб побачити всі джерела,
 і натисніть **A** на потрібному. Або натисніть **+**, виберіть [[Sources]] і вкажіть джерело в пункті [[Mount]].
-Поточне джерело позначено `->`.
+Поточне джерело позначено позначкою вибору.
 
 ### Відкриття USB-накопичувача
 1. Під'єднайте накопичувач.
@@ -130,48 +130,21 @@
 [[USB storage read-only]].
 
 ### Додавання мережевої папки
-1. Натисніть **+**, виберіть [[Sources]], потім [[Add network location]].
-2. Виберіть протокол у [[Select Protocol]].
-3. Введіть назву, наприклад `My NAS`. Якщо замість назви ввести адресу (наприклад, `192.168.1.10/games`),
-   Kefir Hub використає її як адресу сервера.
-4. Перейдіть до списку джерел (**B** у кореневій папці карти), наведіть курсор на нову папку, натисніть **+**
-   і виберіть [[Edit Source]].
-5. Заповніть адресу сервера, назву спільної папки чи порт, а також ім'я користувача й пароль, якщо сервер їх потребує.
-6. Виберіть [[Test Connection]].
-7. Поверніться назад і натисніть **A** на мережевій папці, щоб її відкрити.
+1. Натисніть **+**, виберіть [[Sources]], потім [[Add network location]] (або [[Settings]] → [[Sources]] → [[+ Add network location]]).
+2. Виберіть протокол.
+3. Джерело створюється одразу з назвою протоколу як його ім'ям (наприклад, «WebDAV», «WebDAV (2)») і відкривається сторінка його налаштувань: [[Name]], [[Protocol]], поля адреси ([[Server URL]] для WebDAV/HTTP/NFS, [[Server IP / Hostname]] + [[Share Name]] для SMB, [[Server IP / Hostname]] + [[Port]] для FTP), [[Username]], [[Password]], [[Test Connection]].
+4. Для кожного поля вводу Kefir Hub запитує спосіб введення: [[Manual (Keyboard)]] або [[From Phone / PC]] (QR-код та адреса для введення у браузері на тій самій мережі Wi-Fi, що зручно для довгих адрес і паролів). У вікні очікування показується IP-адреса консолі (наприклад, `192.168.50.69/input`) та QR-код, який відкриває цю адресу; `kefir.local` більше не використовується, оскільки багато телефонів не можуть знайти імена `.local`. Вибір способу введення тепер має три кнопки: [[Back]], [[Manual (Keyboard)]], [[From Phone / PC]] (кнопка **B** означає назад); вікно очікування можна закрити в будь-який момент кнопкою **B**, а сторінка у браузері працює мовою Hub, приховує пароль під час введення та повідомляє, коли текст надійшов.
+5. [[Server URL]] за замовчуванням порожнє і показує приклад адреси для протоколу (WebDAV `[https://example.com/dav](https://example.com/dav)`, HTTP `[http://192.168.1.10:8080/](http://192.168.1.10:8080/)`, NFS `nfs://192.168.1.10/export`).
+6. [[Test Connection]] повідомляє причину невдачі: [[The server refused the login. Check the username and password.]] або [[Could not reach the server. Check the address and that the server is on.]].
+7. Натисніть **B**, щоб повернутися до списку джерел, де з'явиться нове джерело (після налаштування воно також одразу доступне в [[Mount]] та у Файловому браузері).
 
-У списку джерел **+** має також [[Rename Source]], [[Properties]] і [[Delete Source]] для джерела під курсором.
-Ті самі налаштування є в [[Settings]] → [[Sources]], див. [Налаштування](settings.md).
+Мережеві джерела у Файловому браузері показують своє назву в заголовку (наприклад, `FTP:/`), а не внутрішню назву монтування. На FTP файли показують свій реальний розмір, працюють [[Delete]], [[Rename]] та [[Create Folder]]; дата показується лише тоді, коли сервер її надає. На FTP папка видаляється разом із усім вмістом, копіювання/вставлення всередині спільної папки переміщує елементи, а вставлення поверх наявної назви запитує [[Replace?]]. `.zip` відкривається як папка на будь-якому джерелі, включно з мережевими папками (натиснувши **A** на файлі), і для нього пропонується [[Restore save data]]. [[Extract selection]] в архіві пропонується лише тоді, коли `.zip` лежить на карті пам'яті; архів на мережевій папці можна переглядати та переглядати його файли, але не можна розпаковувати на карту (попередньо скопіюйте `.zip` на карту). ZIP-архів відкривається як папка на карті пам'яті та на мережевих папках (але не на USB-накопичувачах). Коли ви підіймаєтеся вище з папки, заголовок зберігає назву джерела (`FTP:/`, `WebDAV:/photos`).
 
-<!-- draft
-- v0.14.044: new steps for "Add a network share": 1) **+** → [[Sources]] → [[Add network location]] (or [[Settings]] → [[Sources]] → [[+ Add network location]]); 2) choose the protocol; 3) the source is created at once with the protocol as its name ("WebDAV", "WebDAV (2)") and its settings page opens: [[Name]], [[Protocol]], the address fields ([[Server URL]] for WebDAV/HTTP/NFS, [[Server IP / Hostname]] + [[Share Name]] for SMB, [[Server IP / Hostname]] + [[Port]] for FTP), [[Username]], [[Password]], [[Test Connection]]; 4) **B** returns to the list of sources with the new one in it. No more name-only first step and no need to find the empty source and choose [[Edit Source]].
-- v0.14.044: every field of a source asks how to type: [[Manual (Keyboard)]] or [[From Phone / PC]] (a QR code and an address to type it in a browser on the same Wi-Fi) — handy for long addresses and passwords
-- v0.14.044: Ukrainian: the screen title is "Файловий браузер" like the tile in Tools; folder rows read "Файлів: N" / "Папок: N"
--->
+Існують певні обмеження: FTP [[Create File]] не створює файл (порожній файл неможливо завантажити; [[Create Folder]] працює); NFS доступне лише для читання; SMB підключається лише до порту 445 (поле порту відсутнє); архів на HTTP-сервері відкривається лише тоді, коли сервер підтримує диапазони байтів (nginx та Apache підтримують, швидкий `python -m http.server` — ні).
 
-<!-- draft
-- v0.14.045: in [[Mount]] the current source has only the check mark (no `->` in front of it); a source whose name already says its protocol is listed without it ("FTP", not "FTP (FTP)")
-- v0.14.045: after [[Add network location]] and the settings page, **B** returns to the File Browser; the new source is in the list of sources and in [[Mount]]
-- v0.14.045: typing from a phone or PC: the choice now has three buttons, [[Back]], [[Manual (Keyboard)]], [[From Phone / PC]] (B = Back); the wait screen shows both addresses, `kefir.local` and the console IP, and the QR code opens the IP one (works on every phone); B on the wait screen closes it at once; the browser page is in the Hub language, hides a password while you type it, and says when the text arrived
-- v0.14.045: [[Test Connection]] says why it failed: [[The server refused the login. Check the username and password.]] or [[Could not reach the server. Check the address and that the server is on.]]
-- v0.14.045: [[Server URL]] starts empty and shows an example of the address for the protocol (WebDAV `https://example.com/dav`, HTTP `http://192.168.1.10:8080/`, NFS `nfs://192.168.1.10/export`)
--->
+У [[Settings]] → [[Sources]]: кнопка **+** ([[Options]]) → [[Enter/Connect]] відкриває Файловий браузер на цьому джерелі для кожного протоколу (SMB, NFS, WebDAV, FTP, HTTP); раніше повідомлялося, що перегляд не підтримується для FTP, HTTP та WebDAV.
 
-<!-- draft
-- v0.14.046: a network source in the File Browser shows its name in the title (`FTP:/`), not the internal mount name
-- v0.14.046: on FTP, files show their real size, [[Delete]], [[Rename]] and [[Create Folder]] work; a date is shown only when the server gives one
-- v0.14.046: a .zip opens as a folder on every source, a network share included (A on the file); [[Restore save data]] is offered for a .zip
--->
-
-<!-- draft
-- v0.14.047: on FTP, [[Delete]] on a folder removes it with everything inside; Cut / Paste inside a share moves; Paste onto a name that exists asks [[Replace?]]
-- v0.14.047: [[Extract selection]] in an archive is offered only when the .zip lives on the memory card; an archive on a network share can be browsed and its files viewed, but not extracted onto the card (copy the .zip to the card first)
-- v0.14.047: a .zip opens as a folder on the memory card and on network shares (not on USB drives)
-- v0.14.047: the title keeps the source name (`FTP:/`, `WebDAV:/photos`) when you walk up out of a folder
-- Limits to state plainly: FTP [[Create File]] makes no file (an empty file cannot be uploaded; [[Create Folder]] works); NFS is read-only; SMB connects to port 445 only (no port field); an archive on an HTTP server opens only when the server supports byte ranges (nginx and Apache do; a quick `python -m http.server` does not)
-- v0.14.050: sources in [[Settings]] → [[Sources]]: **+** ([[Options]]) → [[Enter/Connect]] opens the File Browser on that source for every protocol (SMB, NFS, WebDAV, FTP, HTTP); before it said browsing was not supported for FTP, HTTP and WebDAV
-- v0.14.051: the windows with a QR code (typing from a phone or PC, Web Sharing Server, Console Transfer, SteamGridDB API key) show the console's IP address (for example `192.168.50.69/input`), the same address the QR code opens; `kefir.local` is no longer shown there because many phones cannot find `.local` names
--->
+Ті самі налаштування є в [[Settings]] → [[Sources]], див. [Налаштування](settings.md). У списку джерел **+** має також [[Rename Source]], [[Properties]] і [[Delete Source]] для джерела під курсором.
 
 <!-- shot: file-browser-add-source | Source settings page of a network source: Name, Protocol, Server IP / Hostname, Port, Username, Password, Test Connection -->
 <!-- shot: file-browser-remote-input | Wait screen for typing from a phone: QR code, the console IP address, "Press B to cancel" -->

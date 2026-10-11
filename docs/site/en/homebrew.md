@@ -47,9 +47,7 @@ Stars work only while [[Sort]] is one of the `(Star)` variants.
 
 Press **X** again on an app to unselect it.
 
-<!-- draft
-- v0.14.057: **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. **B** with nothing selected exits as before (it used to close Kefir Hub at once, with the selection)
--->
+Pressing **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. Pressing **B** with nothing selected exits as before.
 
 ## Delete an app
 1. Select the app, or several apps.
@@ -131,4 +129,3 @@ Deeper folders need a [search folder](#add-a-search-folder). A name that starts 
 **An app is hidden and I cannot unhide it.** Turn on [[Show Hidden]]. Kefir Hub has no command to hide or unhide an
 app. Apps are marked hidden in `/config/kefir/playlog.ini`: a `hidden` line under the app's path.
 Delete that line to unhide the app.
-

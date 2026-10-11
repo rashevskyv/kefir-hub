@@ -15,9 +15,7 @@
 | [[Deleted Games]] | Збереження, які лишилися на консолі від видалених ігор. |
 | [[Backups]] | Резервні копії, знайдені на карті пам'яті, згруповані за програмою, що їх зробила: [[Kefir Hub]], [[DBI]], [[JKSV]], [[Checkpoint]], [[Other]]. |
 
-<!-- draft
-- v0.14.056: [[Installed Games]] lists every game that has an icon on the HOME menu, with or without the game itself on the console: a game on the memory card or in the console memory, an archived game (its save is kept), and a cartridge game whose card is not inserted. [[Deleted Games]] lists only saves of games that have no icon on the HOME menu
--->
+На вкладці [[Installed Games]] показано кожну гру, яка має піктограму в головному меню, незалежно від того, чи присутня сама гра на консолі: гру на карті пам'яті чи в пам'яті консолі, архівовану гру (чиє збереження зберігається), а також гру на картриджі, чия картка не вставлена. На вкладці [[Deleted Games]] відображаються лише збереження ігор, які не мають піктограми в головному меню.
 
 Рядок під заголовком показує, чиї збереження і яких типів зараз у списку. Спочатку видно тільки звичайні збереження ігор (тип `Account`) поточного користувача.
 
@@ -64,13 +62,7 @@
 
 Kefir Hub копіює лише змінені збереження. Він порівнює кожне збереження з його найновішою копією у вибраному [[Location]]. Якщо збереження не змінилося від тієї копії, Kefir Hub його пропускає, тож у папці не буде двох однакових копій. Якщо нічого не змінилося, з'явиться [[All selected saves are already up to date.]] Порожні збереження теж пропускаються; якщо нічого не записано, ви побачите [[No save data found for this title]].
 
-<!-- draft
-- v0.14.043: when some selected saves were backed up and some were unchanged, the dialog reads "[[Backups created:]] N" and "[[Already up to date:]] M" on two lines
-- v0.14.043: two users with the same nickname are told apart everywhere in Saves by the last 4 characters of their user ID, for example "nin10do (B486)" and "nin10do (9BBD)": in the [[ACCOUNTS]] list of [[Backup Options]] / [[Restore Options]] and in the restore confirmation
-- v0.14.043: [[Restore for user]] puts the cursor on the user who made that backup
-- v0.14.043: after a restore the dialog lists the [[Safety copies of the replaced saves:]] and says how to undo: [[File Browser]] → `recovery.zip` → **+** → [[Restore save data]]
-- v0.14.043: backups of two users of one game made within the same second no longer fail the whole batch; the second file gets the next second in its name
--->
+Коли частина вибраних збережень була скопійована, а інша частина залишилася незмінною, у діалоговому вікні з'являються рядки "[[Backups created:]] N" та "[[Already up to date:]] M". Два користувачі з однаковим псевдонімом розрізняються скрізь у розділі збережень за останніми 4 символами їхнього ідентифікатора користувача, наприклад "nin10do (B486)" та "nin10do (9BBD)": у списку [[ACCOUNTS]] параметрів резервного копіювання чи відновлення, а також під час підтвердження відновлення. Пункт [[Restore for user]] встановлює курсор на користувача, який створив цю резервну копію. Після відновлення діалогове вікно перелічує [[Safety copies of the replaced saves:]] та вказує, як скасувати дію: [[File Browser]] → `recovery.zip` → **+** → [[Restore save data]]. Резервні копії двох користувачів однієї гри, зроблені протягом однієї секунди, більше не призводять до збою всього пакету; другий файл отримує наступну секунду у своєму імені.
 
 ## Де лежать резервні копії
 Типова папка: `/dumps` на карті пам'яті.

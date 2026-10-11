@@ -23,15 +23,12 @@
 ## Встановіть ігри {#install}
 
 1. Відкрийте [[PC Install (USB)]]. Консоль покаже [[Waiting for PC]] і значок зі швидкістю USB.
-
-<!-- draft
-- v0.14.038: when the cable was already in and MTP is running, a PC install app started afterwards cannot reach the console over USB (MTP and the install link are different USB devices); if the app writes a file named `kefir-hub.pc-install` to any MTP storage (or you copy a file with that name to the memory card in Explorer), Kefir Hub asks "A PC install app is waiting. Stop MTP and open PC Install (USB)?": [[PC Install (USB)]] stops MTP and looks for the app for a few seconds as on plug-in, [[No]] keeps MTP; the file is removed from the card
--->
-2. Під'єднайте кабель і запустіть програму на ПК.
-3. У програмі на ПК додайте файли й почніть передавання.
-4. Консоль прочитає список і перевірить кожен пакет. Поки що нічого не встановлюється.
-5. Відкриється черга. Перевірте сховища й розміри, виберіть потрібне й натисніть **A** ([[Install selected]]).
-6. Дочекайтеся [[Session summary]].
+2. Якщо кабель уже під'єднано і запущено MTP, програма для встановлення з ПК не зможе зв'язатися з консоллю через USB, оскільки MTP та з'єднання для встановлення є різними USB-пристроями. Якщо програма запише файл із назвою `kefir-hub.pc-install` на будь-яке сховище MTP (або ви скопіюєте файл із такою назвою на карту пам'яті через Провідник), Kefir Hub запитає «A PC install app is waiting. Stop MTP and open PC Install (USB)?». Натисніть [[PC Install (USB)]], щоб зупинити MTP і на кілька секунд розпочати пошук програми так само, як під час під'єднання кабелю, або [[No]], щоб залишити MTP. Після цього файл буде видалено з карти пам'яті.
+3. Під'єднайте кабель і запустіть програму на ПК.
+4. У програмі на ПК додайте файли й почніть передавання.
+5. Консоль прочитає список і перевірить кожен пакет. Поки що нічого не встановлюється.
+6. Відкриється черга. Перевірте сховища й розміри, виберіть потрібне й натисніть **A** ([[Install selected]]).
+7. Дочекайтеся [[Session summary]].
 
 Черга, екран ходу встановлення, згортання, вимкнення екрана та підсумок працюють так само, як для файлів на карті пам'яті. Див. [Перегляньте чергу](sd-card.md#queue) і наступні розділи.
 
@@ -40,22 +37,16 @@
 
 ## Автоматичне відкриття при під'єднанні {#auto-open}
 
-<!-- draft
-- new in v0.14.023, setting [[PC Install on connect]] (on by default) in Settings → Network
-- handheld console plugged into a computer by cable: after 2 seconds Kefir Hub opens the USB install link and waits a few seconds for a PC app that is already running (DBI Backend, ns-usbloader, Goldleaf); if one answers, [[PC Install (USB)]] opens by itself with the file list already loaded; if nobody answers, MTP starts as before
-- the PC app must be started before or right after plugging in; Kefir Hub cannot start the app on the computer
-- turn the setting off to always get MTP on connect
--->
+Увімкніть параметр [[PC Install on connect]] (увімкнений за замовчуванням) у меню Settings → Network. Коли портативну консоль під'єднують кабелем до комп'ютера, за 2 секунди Kefir Hub відкриває посилання для встановлення через USB і очікує кілька секунд на програму для ПК, яка вже запущена (DBI Backend, ns-usbloader, Goldleaf). Якщо якась із програм відповідає, автоматично відкривається [[PC Install (USB)]] із уже завантаженим списком файлів. Якщо ніхто не відповідає, запускається MTP, як і раніше. Програму на ПК необхідно запустити до або одразу після під'єднання кабелю, оскільки Kefir Hub не може самостійно запустити програму на комп'ютері. Вимкніть цей параметр, щоб при під'єднанні завжди відкривалося MTP.
 
 ## Змінюйте чергу з ПК {#live-queue}
 
-<!-- draft
-- new in v0.14.026, DBI Backend Qt with the queue plan command: the sync now runs both ways. A tick removed or a target changed on the console (**X**, **Y**, **L3**) is sent to the PC within a moment and stays; it no longer comes back on the next poll
-- the PC app shows for every [[Auto]] package where the console will really put it ("Auto → SD" / "Auto → NAND"), from the console's plan
-- the PC app's NAND and microSD bars are drawn like the console's: before the install the selected packages are projected into the free space (red when they do not fit), the row under the mouse in amber at the head; while installing, the remaining bytes of the active package
-- **+** → [[Sort]] on the console keeps its order while the PC keeps updating the queue; new keys [[Target]] (microSD first) and [[Status]] (ticked, unticked, already installed, failed analysis)
--->
+Завдяки підтримці команди плану черги в DBI Backend Qt синхронізація тепер працює в обидва боки:
 
+- Знята позначка або змінена ціль на консолі (**X**, **Y**, **L3**) миттєво надсилається на ПК і зберігається; вона більше не повертається назад під час наступного опитування.
+- Програма на ПК показує для кожного пакета [[Auto]], куди саме консоль його збереже ("Auto → SD" / "Auto → NAND"), згідно з планом консолі.
+- Смужки NAND та micro-SD у програмі на ПК відображаються так само, як і на консолі: перед встановленням вибрані пакети проєктуються на вільний рядок (він стає червоним, якщо вони не поміщаються), а рядок під курсором миші підсвічується бурштиновим кольором на початку; під час встановлення показуються байти активного пакета, що залишилися.
+- Пункт **+** → [[Sort]] на консолі зберігає свій порядок, поки ПК продовжує оновлювати чергу. З'явилися нові ключі [[Target]] (microSD першою) та [[Status]] (позначено, не позначено, уже встановлено, помилка аналізу).
 
 З DBI Backend Qt черга синхронізується з програмою на ПК:
 
