@@ -34,21 +34,12 @@ Kefir Hub встановлює, показує й видаляє файли чи
 
 <!-- shot: cheats-select | Cheat list for one game: game name and Build ID at the top, three cheats ticked [X] -->
 
-Нові чити додаються до наявного файлу читів гри; чити з такою самою назвою пропускаються. В одному файлі може бути щонайбільше 128 читів — більше Atmosphère не читає, тож зайві не встановлюються.
-
-<!-- draft
-- replaces the 128 limit sentence above (v0.14.032): one file holds at most 127 cheats plus one master code {..}; Atmosphere reads none of the file when one rule is broken, so Kefir Hub now writes only what it accepts: a second master code, a cheat longer than 256 code words and cheats past 127 are skipped, and a message says how many ("Atmosphere limits: skipped N cheat(s)")
-- the whole file is checked again each time cheats are added, also the cheats that were in it before; manual import uses the same check
-- Build ID fix (v0.14.032): when the game was running or no prod.keys were found, Kefir Hub read the Build ID with its bytes reversed, so the file got a wrong name and Atmosphere did not load it; files made that way can be renamed with Y (Fix BID) in the game's cheat file list
--->
+Нові чити додаються до наявного файлу читів гри; чити з такою самою назвою пропускаються. Один файл може містити щонайбільше 127 читів та один майстер-код; якщо порушено хоча б одне правило, Atmosphère не читає весь файл, тому Kefir Hub записує лише те, що приймає: другий майстер-код, чити довші за 256 кодових слів і чити після 127-го пропускаються, а повідомлення вказує їхню кількість («Atmosphere limits: skipped N cheat(s)»). Весь файл перевіряється заново щоразу, коли додаються чити, а також ті чити, що вже були в ньому; ручний імпорт використовує ту саму перевірку. Коли гра була запущена або не знайдено prod.keys, Kefir Hub зчитував Build ID із перевернутими байтами, через що файл отримував неправильну назву й Atmosphère його не завантажувала; файли, створені таким чином, можна перейменувати за допомогою **Y** ([[Fix BID]]) у списку файлів читів гри.
 
 !!! tip
     Запустіть гру один раз, закрийте її, а тоді завантажуйте. Найнадійніше Kefir Hub визначає Build ID із запущеної або встановленої гри. Якщо не вдається, він шукає версію онлайн, а це для деяких ігор може дати хибний результат.
 
-<!-- draft
-- v0.14.033: Kefir dumps the console keys (prod.keys) at boot, so this is rare; when Kefir Hub needs them to read the Build ID and /switch/prod.keys is missing, it says so and offers to dump them now with Lockpick_RCM (the console restarts into the payload); if Lockpick_RCM is not in /bootloader/payloads, the message says to put it there
-- this replaces the online version guess in the tip above for the no-keys case; the same offer appears for manual import and Fix BID
--->
+Kefir вивантажує ключі консолі (prod.keys) під час завантаження, тому це трапляється рідко; коли Kefir Hub потрібні вони для зчитування Build ID і відсутній файл `/switch/prod.keys`, він повідомляє про це та пропонує вивантажити їх зараз за допомогою Lockpick_RCM (консоль перезавантажується в пейлоад); якщо Lockpick_RCM немає в `/bootloader/payloads`, у повідомленні зазначено покласти його туди. Ця пропозиція з'являється також для ручного імпорту та [[Fix BID]].
 
 ## Імпортувати файл читів
 Для файлу `.txt` з читами, який ви скопіювали на карту пам'яті.

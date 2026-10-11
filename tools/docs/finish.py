@@ -155,6 +155,11 @@ def finish_page(path, lang, style, args):
 
 
 def main():
+    # a redirected console is cp1251 on this PC: the reasons printed below carry the
+    # model's text (arrows, Ukrainian) and raised UnicodeEncodeError in the middle of a run.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", type=Path, default=ROOT / "docs" / "site")
     ap.add_argument("--url", default="http://127.0.0.1:8081/v1/chat/completions")

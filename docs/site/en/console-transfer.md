@@ -24,13 +24,10 @@ Before launching TegraExplorer, Kefir Hub compares the memory-card payload with 
 
 What is **not** moved:
 
-<!-- draft
-- installed games are moved now (v0.14.020), see [Move installed games](#move-installed-games); the old "not moved" bullet about games is gone
--->
 - Game saves. Copying them with the profiles would take too long. Back them up in [[Saves]] and move the
-  backups with [[Share Save Backups]], see [Move save backups](#move-save-backups).
+backups with [[Share Save Backups]], see [Move save backups](#move-save-backups).
 - [[Share User Backups]] shares the profile backups in `/config/kefir/account_backups/`. Restoring them on the
-  receiving console is not available yet.
+receiving console is not available yet.
 
 ## Before you start
 - Both consoles are on the same local network (the same Wi-Fi, not a guest network).
@@ -42,7 +39,7 @@ What is **not** moved:
 ## Start sharing on the sending console
 1. Open [[Tools]] → [[Console Transfer]].
 2. Choose what to share and press **A**. If the console is offline, Kefir Hub asks you to connect first.
-3. The server screen opens with the address (for example `http://192.168.1.20`) and a QR code.
+3. The server screen opens with the address (for example `[http://192.168.1.20](http://192.168.1.20)`) and a QR code.
    Write down the IP address: you type it on the receiving console.
 4. Keep this screen open until the receiving side has finished. Press **B** to stop sharing.
 
@@ -99,17 +96,27 @@ On the receiving console:
 <!-- shot: console-transfer-send-games | Send installed games sidebar: Choose games "0 / 6", Start sharing -->
 <!-- shot: console-transfer-receive-games | Receive games sidebar on the other console: Choose games with all ticked, Install -->
 
-<!-- draft
-- new in v0.14.020; both consoles on the same Wi-Fi; the receiving console needs installing enabled (the usual enable-install prompt appears otherwise)
-- sending console: [[Tools]] → [[Console Transfer]] → [[Send installed games]]; Kefir Hub reads the installed games (a progress box), then a sidebar: [[Choose games]] opens a tick list (**A** ticks one, **X** all, **Y** none, **B** closes), the row shows "ticked / total"; [[Start sharing]] starts the server screen (address + QR, **B** stops) titled [[Send installed games]]; with nothing ticked the message [[No games chosen]] appears
-- what is offered per game: the base game, every installed update and every installed DLC, as NSP files built from the installed content (nothing is written to the memory card); the server screen shows "Sending: <file>" with a progress bar while the other console downloads
-- receiving console: [[Tools]] → [[Console Transfer]] → [[Receive games]]; type the sending console's address (same keyboard and port rules as for profiles); Kefir Hub fetches the list ([[Fetching game list...]]); if the other console offers nothing, a message says to open [[Send installed games]] there first
-- then a sidebar: [[Choose games]] (every offered game is ticked; the tick list shows size and file count per game), [[Install]]; the files of each game install one after another with the normal install progress; at the end "Installed N games"; a failure shows [[Install failed!]]
-- the sending console's server also still serves the memory card listing at its address, like every share
-- sending console sidebar now offers [[Send over Wi-Fi]] and [[Send by USB cable]] (v0.14.027); receiving console first asks [[How is the other console connected?]]: [[Wi-Fi (same network)]] or [[USB cable]]
-- USB cable: a USB-C to USB-C cable between the two consoles; the sending console acts as the USB host and sends the chosen games (one NSP per base, update and DLC) the way Dump → [[USB transfer (Switch 2 Switch)]] does; the receiving console opens its [[PC Install (USB)]] screen, the list arrives by itself, then the usual queue: select and press **A** ([[Install selected]])
-- cable sending ignores the [[USB transfer stream]] dump option (stream mode is never used between two consoles)
--->
+Both consoles must be on the same Wi-Fi network. The receiving console needs installing enabled; the usual enable-install prompt appears otherwise.
+
+On the sending console:
+1. Open [[Tools]] → [[Console Transfer]] → [[Send installed games]]. Kefir Hub reads the installed games and shows a progress box.
+2. In the sidebar, select [[Choose games]] to open the tick list. Press **A** to tick or untick a game, **X** to tick all, **Y** to untick all, and **B** to close. The row shows ticked and total counts.
+3. Select [[Start sharing]]. If nothing is ticked, the message [[No games chosen]] appears.
+4. The server screen opens titled [[Send installed games]] with the address, a QR code, and a progress bar showing "Sending: <file>" while the other console downloads. Press **B** to stop.
+
+Each offered game includes the base game, every installed update, and every installed DLC, built as NSP files from the installed content without writing to the memory card. The sending console's server also serves the memory card listing at its address, like every share.
+
+On the receiving console:
+1. Open [[Tools]] → [[Console Transfer]] → [[Receive games]].
+2. Type the sending console's address, using the same keyboard and port rules as for profiles. Kefir Hub fetches the list, showing [[Fetching game list...]]. If the other console offers nothing, a message prompts you to open [[Send installed games]] there first.
+3. In the sidebar, select [[Choose games]] to view the tick list with every offered game ticked, along with its size and file count. Select [[Install]].
+4. The files of each game install one after another with the normal install progress. At the end, the screen shows "Installed N games". If an installation fails, it shows [[Install failed!]].
+
+You can also send games over a USB-C to USB-C cable between the two consoles:
+1. On the sending console sidebar, choose [[Send by USB cable]].
+2. On the receiving console, when asked [[How is the other console connected?]], choose [[USB cable]] (or [[Wi-Fi (same network)]] for Wi-Fi).
+3. The sending console acts as the USB host and sends the chosen games (one NSP per base game, update, and DLC) the way Dump → [[USB transfer (Switch 2 Switch)]] does, ignoring the [[USB transfer stream]] dump option.
+4. The receiving console opens its [[PC Install (USB)]] screen, the list arrives by itself, and you select the games in the queue and press **A** ([[Install selected]]).
 
 ## Move save backups
 1. On the sending console, back up the saves you need in [[Saves]]. See [Saves](saves.md).

@@ -9,8 +9,6 @@
 
 <!-- shot: console-transfer-menu | Console Transfer screen: Send installed games and Receive games on top, then the seven share items -->
 
-Перед запуском TegraExplorer Kefir Hub порівнює версію на карті пам’яті з вбудованою копією. Якщо файл відсутній, Hub встановлює свою копію. Якщо версія на карті старіша, Hub оновлює її. Однакову або новішу версію залишає. Якщо встановлення не вдалося, Hub не запускає payload.
-
 ## Що можна перенести {#what-you-can-move}
 | Що | Консоль-відправник | Консоль-отримувач |
 |---|---|---|
@@ -24,9 +22,6 @@
 
 Що **не** переноситься:
 
-<!-- draft
-- installed games are moved now (v0.14.020), see [Перенести встановлені ігри](#move-installed-games); the old "not moved" bullet about games is gone
--->
 - Ігрові збереження. Копіювати їх разом із профілями було б надто довго. Зробіть їхні копії в [[Saves]] і
   перенесіть копії через [[Share Save Backups]], див. [Перенести копії збережень](#move-save-backups).
 - [[Share User Backups]] відкриває доступ до копій профілів у `/config/kefir/account_backups/`. Відновити їх на
@@ -42,7 +37,7 @@
 ## Відкрийте доступ на консолі-відправнику {#start-sharing-on-the-sending-console}
 1. Відкрийте [[Tools]] → [[Console Transfer]].
 2. Виберіть, що передати, і натисніть **A**. Якщо консоль не в мережі, Kefir Hub спершу запропонує підключитися.
-3. Відкриється екран сервера з адресою (наприклад, `http://192.168.1.20`) і QR-кодом.
+3. Відкриється екран сервера з адресою (наприклад, `[http://192.168.1.20](http://192.168.1.20)`) і QR-кодом.
    Запишіть IP-адресу: її треба ввести на консолі-отримувачі.
 4. Не закривайте цей екран, доки отримувач не закінчить. Натисніть **B**, щоб припинити доступ.
 
@@ -98,17 +93,23 @@
 <!-- shot: console-transfer-send-games | Send installed games sidebar: Choose games "0 / 6", Start sharing -->
 <!-- shot: console-transfer-receive-games | Receive games sidebar on the other console: Choose games with all ticked, Install -->
 
-<!-- draft
-- new in v0.14.020; both consoles on the same Wi-Fi; the receiving console needs installing enabled (the usual enable-install prompt appears otherwise)
-- sending console: [[Tools]] → [[Console Transfer]] → [[Send installed games]]; Kefir Hub reads the installed games (a progress box), then a sidebar: [[Choose games]] opens a tick list (**A** ticks one, **X** all, **Y** none, **B** closes), the row shows "ticked / total"; [[Start sharing]] starts the server screen (address + QR, **B** stops) titled [[Send installed games]]; with nothing ticked the message [[No games chosen]] appears
-- what is offered per game: the base game, every installed update and every installed DLC, as NSP files built from the installed content (nothing is written to the memory card); the server screen shows "Sending: <file>" with a progress bar while the other console downloads
-- receiving console: [[Tools]] → [[Console Transfer]] → [[Receive games]]; type the sending console's address (same keyboard and port rules as for profiles); Kefir Hub fetches the list ([[Fetching game list...]]); if the other console offers nothing, a message says to open [[Send installed games]] there first
-- then a sidebar: [[Choose games]] (every offered game is ticked; the tick list shows size and file count per game), [[Install]]; the files of each game install one after another with the normal install progress; at the end "Installed N games"; a failure shows [[Install failed!]]
-- the sending console's server also still serves the memory card listing at its address, like every share
-- sending console sidebar now offers [[Send over Wi-Fi]] and [[Send by USB cable]] (v0.14.027); receiving console first asks [[How is the other console connected?]]: [[Wi-Fi (same network)]] or [[USB cable]]
-- USB cable: a USB-C to USB-C cable between the two consoles; the sending console acts as the USB host and sends the chosen games (one NSP per base, update and DLC) the way Dump → [[USB transfer (Switch 2 Switch)]] does; the receiving console opens its [[PC Install (USB)]] screen, the list arrives by itself, then the usual queue: select and press **A** ([[Install selected]])
-- cable sending ignores the [[USB transfer stream]] dump option (stream mode is never used between two consoles)
--->
+Функція доступна починаючи з версії v0.14.020 для обох консолей у тій самій мережі Wi-Fi. На консолі-отримувачі має бути ввімкнено встановлення ігор; інакше з'явиться звичний запит на його ввімкнення.
+
+На консолі-відправнику відкрийте [[Tools]] → [[Console Transfer]] → [[Send installed games]]. Kefir Hub зчитає встановлені ігри, показавши індикатор виконання, після чого з'явиться бічна панель: пункт [[Choose games]] відкриває список із позначками (кнопка **A** ставлять позначку, **X** вибирає всі, **Y** знімає всі, **B** закриває список), а в рядку відображається співвідношення вибраних ігор до загальної кількості. Натисніть [[Start sharing]], щоб відкрити екран сервера з адресою та QR-кодом і назвою [[Send installed games]] (кнопка **B** зупиняє роботу сервера). Якщо не вибрано жодної гри, з'явиться повідомлення [[No games chosen]].
+
+Для кожної гри пропонуються основна гра, усі встановлені оновлення та всі встановлені DLC у вигляді NSP-файлів, сформованих із наявного вмісту (на карту пам'яті нічого не записується). На екрані сервера відображається рядок «Sending: <file>» разом із індикатором виконання, доки інша консоль завантажує дані.
+
+На консолі-отримувачі відкрийте [[Tools]] → [[Console Transfer]] → [[Receive games]] і введіть IP-адресу консолі-відправника, використовуючи такі самі правила введення та портів, як і для профілів. Kefir Hub завантажить список ігор, показуючи статус [[Fetching game list...]]. Якщо на іншій консолі нічого не пропонується, з'явиться повідомлення з вимогою спершу відкрити там [[Send installed games]].
+
+Далі з'явиться бічна панель із пунктами [[Choose games]] (усі запропоновані ігри за замовчуванням позначені, а в списку показано розмір і кількість файлів для кожної гри) та [[Install]]. Файли кожної гри встановлюються послідовно зі звичайним індикатором виконання. Після завершення з'явиться повідомлення про успішне встановлення N ігор, а в разі помилки — [[Install failed!]].
+
+Сервер консолі-відправника також продовжує надавати доступ до вмісту карти пам'яті за своєю адресою, як і будь-який інший спільний ресурс.
+
+Починаючи з версії v0.14.027, бічна панель на консолі-відправнику пропонує варіанти [[Send over Wi-Fi]] та [[Send by USB cable]], а консоль-отримувач спочатку запитує [[How is the other console connected?]] з варіантами [[Wi-Fi (same network)]] або [[USB cable]].
+
+У режимі USB-кабелю використовується кабель USB-C — USB-C між двома консолями. Консоль-відправник виступає в ролі USB-хоста та надсилає вибрані ігри (по одному NSP-файлу для базової гри, оновлень і DLC) так само, як це робить функція Dump → [[USB transfer (Switch 2 Switch)]]. Консоль-отримувач відкриває екран [[PC Install (USB)]], список надходить автоматично, після чого стає доступною звичайна черга: виберіть потрібні елементи й натисніть **A** ([[Install selected]]).
+
+Передача через кабель ігнорує опцію дампа [[USB transfer stream]], оскільки потоковий режим ніколи не використовується між двома консолями.
 
 ## Перенести копії збережень {#move-save-backups}
 1. На консолі-відправнику зробіть копії потрібних збережень у [[Saves]]. Див. [Збереження](saves.md).

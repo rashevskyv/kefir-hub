@@ -35,17 +35,9 @@ Turn it off to get the old Homebrew Menu back: Kefir Hub asks [[Restore hbmenu?]
 
 <!-- shot: index-first-start | First start page in the chosen language: Kefir Hub title, HOME Menu icon advice, A = OK -->
 
-<!-- draft
-- new in v0.14.025: the first start opens a full page in the console's language, not the main menu with a list on top; the menu is not drawn until the language is chosen
-- the page says: Kefir Hub adds its own icon to the HOME Menu; start it from that icon from now on (all memory, USB port); the Homebrew Menu and the Album give only a part
-- press **A** ([[Choose language]]) to open the [[Language]] list; it opens on the console's language
-- a language other than the page's own: a dialog says Kefir Hub restarts now, start it from the HOME Menu icon if it does not come back; [[OK]] restarts; the same language: no restart, the main screen appears at once
-- v0.14.053: the order changed: the [[Language]] list opens first, at once, over a page with only the Kefir Hub title; after the choice the page with the HOME Menu icon advice follows, already in the chosen language, with [[OK]]; until the first set-up is done (language chosen, [[OK]] pressed) Kefir Hub does not open PC Install (USB) or ask about MTP even when a PC with a USB install app is plugged in; after [[OK]] the main screen appears in the chosen language, with no restart (the earlier lines about a restart dialog no longer hold). The page has no [[Choose language]] button any more (this replaces the two lines above about the button and the dialog)
--->
-1. Pick your language. The list opens on the console language. Kefir Hub restarts once so that every
-   menu, tile and dialog uses it. You can change it later, see
-   [Getting started](getting-started.md#change-the-language).
-2. If some user profiles on the console are not linked to a Nintendo Account, Kefir Hub offers to link them.
+1. Pick your language. The [[Language]] list opens first, at once, over a page with only the Kefir Hub title.
+2. After the choice, the page with the HOME Menu icon advice follows, already in the chosen language, with [[OK]]. Until the first set-up is done (language chosen, [[OK]] pressed) Kefir Hub does not open PC Install (USB) or ask about MTP even when a PC with a USB install app is plugged in. After [[OK]] the main screen appears in the chosen language, with no restart.
+3. If some user profiles on the console are not linked to a Nintendo Account, Kefir Hub offers to link them.
    See [Users](users.md).
 
 ## The two tabs

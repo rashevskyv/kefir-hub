@@ -15,9 +15,7 @@ The screen has three tabs. Switch with **L** and **R**, or tap a tab.
 | [[Deleted Games]] | Saves that are still on the console for games you have uninstalled. |
 | [[Backups]] | Backups found on the microSD card, grouped by the app that made them: [[Kefir Hub]], [[DBI]], [[JKSV]], [[Checkpoint]], [[Other]]. |
 
-<!-- draft
-- v0.14.056: [[Installed Games]] lists every game that has an icon on the HOME menu, with or without the game itself on the console: a game on the memory card or in the console memory, an archived game (its save is kept), and a cartridge game whose card is not inserted. [[Deleted Games]] lists only saves of games that have no icon on the HOME menu
--->
+[[Installed Games]] lists every game that has an icon on the HOME menu, with or without the game itself on the console: a game on the memory card or in the console memory, an archived game (its save is kept), and a cartridge game whose card is not inserted. [[Deleted Games]] lists only saves of games that have no icon on the HOME menu.
 
 The line under the title shows which users and which save types are listed. By default you see only the current user's normal game saves (`Account` type).
 
