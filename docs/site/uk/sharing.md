@@ -26,17 +26,12 @@
 1. Підключіть консоль до Wi-Fi або LAN.
 2. Відкрийте [[Tools]], натисніть **+** і виберіть [[Web Server]]. У режимі Applet Mode в панелі, що відкриється
    спершу, виберіть [[Start anyway]] (див. [Встановлення з браузера](install/network.md#browser)).
-3. Вікно [[Web Sharing Server]] покаже QR-код і адресу, наприклад `http://kefir.local`. Якщо порт 80 зайнятий,
-   в адресі буде порт від 8080 до 8090, наприклад `http://kefir.local:8080`.
+3. Вікно [[Web Sharing Server]] покаже IP-адресу консолі (наприклад `http://192.168.50.69`, а також порт, якщо 80 зайнятий) та адресу, яку відкриває QR-код.
 4. Відскануйте QR-код телефоном або введіть адресу в браузері на ПК у тій самій мережі.
-
-<!-- draft
-- v0.14.051: the [[Web Sharing Server]] window shows the console's IP address (for example `http://192.168.50.69`, with a port when 80 is taken), the address the QR code opens; it no longer shows `kefir.local`, which many phones cannot find. The text about `kefir.local` in this section and in Troubleshooting must say: use the address shown in the window
--->
 
 <!-- shot: sharing-web-server | Web Sharing Server window: QR code, the console IP address, "Press B to Stop Server" -->
 
-Якщо адреса з `kefir.local` не відкривається, використайте IP-адресу, яку видно вгорі екрана консолі, наприклад
+Якщо адреса не відкривається, використайте IP-адресу, яку видно вгорі екрана консолі, наприклад
 `http://192.168.1.5` (додайте `:8080` або той порт, що був в адресі).
 
 ### Що вміє сторінка {#web-page}
@@ -250,7 +245,7 @@ USB-накопичувачі, і консоль показує [[USB storage tur
 **Пункт [[Web Server]] сірий.** Консоль не підключено до мережі. Натисніть його все одно: Kefir Hub повідомить
 [[The console has no internet connection.]] і запропонує підключитися.
 
-**Браузер не відкриває `kefir.local`.** Деякі телефони й ПК не знаходять адрес `.local`. Введіть замість неї
+**Браузер не відкриває адресу.** Деякі телефони й ПК не знаходять адрес `.local`. Введіть замість неї
 IP-адресу з верхньої частини екрана консолі, з портом, якщо він був в адресі.
 
 **Сторінка не відкривається взагалі.** ПК чи телефон в іншій мережі або в гостьовій Wi-Fi, яка ізолює пристрої.

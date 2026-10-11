@@ -36,18 +36,9 @@ Kefir Hub — це homebrew-застосунок (`.nro`), тому він за�
 
 <!-- shot: index-first-start | First start page in the chosen language: Kefir Hub title, HOME Menu icon advice, A = OK -->
 
-<!-- draft
-- new in v0.14.025: the first start opens a full page in the console's language, not the main menu with a list on top; the menu is not drawn until the language is chosen
-- the page says: Kefir Hub adds its own icon to the HOME Menu; start it from that icon from now on (all memory, USB port); the Homebrew Menu and the Album give only a part
-- press **A** ([[Choose language]]) to open the [[Language]] list; it opens on the console's language
-- a language other than the page's own: a dialog says Kefir Hub restarts now, start it from the HOME Menu icon if it does not come back; [[OK]] restarts; the same language: no restart, the main screen appears at once
-- v0.14.053: the order changed: the [[Language]] list opens first, at once, over a page with only the Kefir Hub title; after the choice the page with the HOME Menu icon advice follows, already in the chosen language, with [[OK]]; until the first set-up is done (language chosen, [[OK]] pressed) Kefir Hub does not open PC Install (USB) or ask about MTP even when a PC with a USB install app is plugged in; after [[OK]] the main screen appears in the chosen language, with no restart (the earlier lines about a restart dialog no longer hold). The page has no [[Choose language]] button any more (this replaces the two lines above about the button and the dialog)
--->
-1. Виберіть мову. Список відкривається на мові консолі. Kefir Hub один раз перезапуститься, щоб усі
-   меню, плитки й діалоги були цією мовою. Згодом мову можна змінити, див.
-   [Початок роботи](getting-started.md#change-the-language).
-2. Якщо деякі профілі користувачів на консолі не прив'язані до облікового запису Nintendo, Kefir Hub запропонує
-   їх прив'язати. Див. [Користувачі](users.md).
+1. Виберіть мову у списку [[Language]], який з'являється одразу поверх сторінки з назвою Kefir Hub.
+2. Після вибору мови з'явиться сторінка з порадою щодо іконки в HOME Menu та кнопкою [[OK]]. Доки первинне настроювання не буде завершено і не буде натиснуто [[OK]], Kefir Hub не відкриває встановлення з ПК через USB і не запитує про MTP, навіть якщо підключено ПК із програмою для встановлення.
+3. Після натискання [[OK]] з'явиться головний екран вибраною мовою без перезапуску.
 
 ## Дві вкладки
 У Kefir Hub є дві вкладки. Натисніть **R**, щоб перейти на [[Tools]], натисніть **L** або **B**, щоб повернутися на
