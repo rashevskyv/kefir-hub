@@ -52,6 +52,10 @@
 | **+** | [[Options]]: [[More by Author]], [[Leave Feedback]], [[Visit Website]] |
 | **B** | [[Back]] |
 
+<!-- draft
+- [[Details]] and [[Changelog]] show formatted text: bold, italic, headings, bullet and numbered lists, quotes, code and horizontal rules. Links show only their text. Images and HTML tags are not shown.
+-->
+
 [[Visit Website]] видно, лише якщо в застосунку є сайт і Kefir Hub працює як повноцінний застосунок (а не з Альбому).
 
 ### Знайдіть застосунок

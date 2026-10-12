@@ -52,6 +52,10 @@ On the app page:
 | **+** | [[Options]]: [[More by Author]], [[Leave Feedback]], [[Visit Website]] |
 | **B** | [[Back]] |
 
+<!-- draft
+- [[Details]] and [[Changelog]] show formatted text: bold, italic, headings, bullet and numbered lists, quotes, code and horizontal rules. Links show only their text. Images and HTML tags are not shown.
+-->
+
 [[Visit Website]] is shown only when the app has a website and Kefir Hub runs as a full application (not from the Album).
 
 ### Find an app

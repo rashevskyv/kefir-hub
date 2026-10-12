@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.062 — App Store: app descriptions and release notes show formatted text
+- The app page's description ([[Details]]) and [[Changelog]] render Markdown instead of raw symbols: bold, italic, headings (three sizes), bullet and numbered lists with nesting, quotes, code, horizontal rules, tables as cells joined by "|". Links show only their text; images and HTML tags are dropped (`<br>` breaks the line); entities are decoded; fenced and inline code stay verbatim. Parser: `markdown_lite` (`sphaira/source/markdown_lite.cpp`, libnx-free, host-tested in `tests/test_markdown_lite.cpp`). The renderer is an opt-in mode of `ScrollableText`; plain mode (cheats, file viewer) is unchanged.
+- The console font has no bold or italic face: bold is drawn twice, italic is dimmer. Task-list boxes show as `[ ]` / `[x]`. Emoji depend on the font. Long text still scrolls with the left stick, 4096-character cut as before.
+- host tests: pass (full `tests/run.sh`) · nro: built · switch: pending (check bold, headings, list indent, and a long release body on the app page).
+
 ## v0.14.061 — App Store: an app found on the card gets an update from any source
 - An app that is on the memory card but was not installed through the store (status Local) is now compared with the version of every source (default store, user sources, Ports). A newer version shows the update icon and the app sorts to the top, like any other update (`version::IsNewer`; an unparseable version stays Local).
 - host tests: not run (one-line change in the scan) · nro: pending · switch: pending.

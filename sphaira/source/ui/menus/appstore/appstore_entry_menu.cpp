@@ -115,8 +115,8 @@ EntryMenu::EntryMenu(Entry& entry, const LazyImage& default_icon, Menu& menu)
 
     SetTitleSubHeading("by " + m_entry.author, true);
 
-    m_details = std::make_unique<ScrollableText>(m_entry.details, 0, 374, 250, 768, 18);
-    m_changelog = std::make_unique<ScrollableText>(m_entry.changelog, 0, 374, 250, 768, 18);
+    m_details = std::make_unique<ScrollableText>(m_entry.details, 0, 374, 250, 768, 18, true);
+    m_changelog = std::make_unique<ScrollableText>(m_entry.changelog, 0, 374, 250, 768, 18, true);
 
     m_show_changlog ^= 1;
     ShowChangelogAction();
