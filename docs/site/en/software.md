@@ -52,9 +52,7 @@ On the app page:
 | **+** | [[Options]]: [[More by Author]], [[Leave Feedback]], [[Visit Website]] |
 | **B** | [[Back]] |
 
-<!-- draft
-- [[Details]] and [[Changelog]] show formatted text: bold, italic, headings, bullet and numbered lists, quotes, code and horizontal rules. Links show only their text. Images and HTML tags are not shown.
--->
+[[Details]] and [[Changelog]] show formatted text: bold, italic, headings, bullet and numbered lists, quotes, code and horizontal rules. Links show only their text. Images and HTML tags are not shown.
 
 [[Visit Website]] is shown only when the app has a website and Kefir Hub runs as a full application (not from the Album).
 
@@ -148,7 +146,6 @@ In [[Extract Options]]:
 
 **An app shows as installed but its files are gone.** For apps without a single launchable file (for example sysmodules), the App Store trusts its own install record. Choose [[Remove]] (it works even when the files are already gone), then [[Install]] again.
 
-<!-- draft
-- [[Options]] of the App Store has [[Update all apps]]: it installs every available update from all sources (the default store, your own sources, Ports) in one go; an app that fails does not stop the others and the end shows how many were updated and how many failed.
-- A panel title that is too long scrolls instead of being cut off.
--->
+[[Options]] of the App Store has [[Update all apps]]: it installs every available update from all sources (the default store, your own sources, Ports) in one go; an app that fails does not stop the others and the end shows how many were updated and how many failed.
+
+A panel title that is too long scrolls instead of being cut off.
