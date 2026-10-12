@@ -333,6 +333,20 @@ void ThreadFunc(void*) {
 
 } // namespace
 
+auto IsHubForwarderInstalled() -> bool {
+    return IsInstalled(KEFIR_HUB_FORWARDER_TID);
+}
+
+auto PointHubForwarderAtHbmenu() -> bool {
+    if (!IsInstalled(KEFIR_HUB_FORWARDER_TID)) {
+        return true;
+    }
+    if (!App::GetReplaceHbmenuEnable()) {
+        return false; // the target would be this executable, not /hbmenu.nro
+    }
+    return InstallKefirHubForwarder(KEFIR_HUB_FORWARDER_TID);
+}
+
 void StartCheck() {
     if (g_thread_created.exchange(true)) {
         return;

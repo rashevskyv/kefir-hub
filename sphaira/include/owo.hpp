@@ -54,6 +54,10 @@ struct OwoConfig {
     std::optional<u64> title_id{};
 };
 
+// The title id a forwarder gets when none is set: SHA-256(nro_path + args), `args` as it is
+// written into the forwarder (the nro path first, then the extra arguments).
+auto owo_default_title_id(const std::string& nro_path, const std::string& args) -> u64;
+
 auto install_forwarder(OwoConfig& config, NcmStorageId storage_id) -> Result;
 auto install_forwarder(ui::ProgressBox* pbox, OwoConfig& config, NcmStorageId storage_id) -> Result;
 

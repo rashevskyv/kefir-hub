@@ -32,13 +32,10 @@
 | [[12 Hour Time]] | Показує годинник у 12-годинному форматі. | Вимк. |
 | [[Clock sync]] | У фоні звіряє годинник консолі з сервером точного часу в інтернеті. | Увімк. |
 | [[Logging]] | Записує журнал у `/config/kefir/log.txt`. Сповільнює Kefir Hub; вмикайте лише для звіту про проблему. Див. [Як отримати журнал](troubleshooting.md#get-the-log). | Вимк. |
+| [[Scripted input]] | Для розробників: Kefir Hub натискає кнопки, перелічені у файлі `/config/kefir/demo/input.txt` на карті пам'яті (одна назва кнопки в рядку: A, B, X, Y, L, R, ZL, ZR, Plus, Minus, L3, R3, Up, Down, Left, Right; `wait N` робить паузу на N секунд; `dump` записує відкриті екрани в `state.txt` у тій самій теці; `shot` зберігає екран як `shot.jpg` у тій самій теці). Файл зчитується і видаляється за мить. У звичайній роботі тримайте вимкненим. | Вимк. |
 | [[About]] | Показує встановлену версію і примітки до найновішого випуску. | |
 | [[Restart Kefir Hub]] | Закриває і знову відкриває Kefir Hub. | |
 | [[Exit]] | Закриває Kefir Hub. | |
-
-<!-- draft
-- v0.14.039: new row for the settings table, after [[Logging]]: [[Scripted input]] (default off) — for developers: Kefir Hub presses the buttons listed in `/config/kefir/demo/input.txt` on the memory card (one button name per line: A, B, X, Y, L, R, ZL, ZR, Plus, Minus, L3, R3, Up, Down, Left, Right; `wait N` pauses N seconds; `dump` writes the open screens to `state.txt` in the same folder; v0.14.042: `shot` saves the screen as `shot.jpg` in the same folder); the file is read and removed within a moment; leave it off in normal use
--->
 
 ### Оновлення Kefir Hub {#update-kefir-hub}
 

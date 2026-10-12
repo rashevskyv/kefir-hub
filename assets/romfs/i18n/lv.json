@@ -3198,5 +3198,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Neizdevās sasniegt serveri. Pārbaudiet adresi un pārliecinieties, ka serveris ir ieslēgts.",
   "The server refused the login. Check the username and password.": "Serveris noraidīja pieteikšanos. Pārbaudiet lietotājvārdu un paroli.",
   "Type or paste the text first.": "Vispirms ievadiet vai ielīmējiet tekstu.",
-  "Type or paste the text, then press Send.": "Ievadiet vai ielīmējiet tekstu, pēc tam nospiediet Sūtīt."
+  "Type or paste the text, then press Send.": "Ievadiet vai ielīmējiet tekstu, pēc tam nospiediet Sūtīt.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub jau ir instalēts kā Homebrew izvēlne.\nŠis fails ir otrā kopija. Vai to dzēst?",
+  "Ports": "Porti"
 }

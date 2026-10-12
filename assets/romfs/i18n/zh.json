@@ -3256,5 +3256,7 @@
   "Could not reach the server. Check the address and that the server is on.": "无法连接到服务器。请检查地址以及服务器是否已开启。",
   "The server refused the login. Check the username and password.": "服务器拒绝登录。请检查用户名和密码。",
   "Type or paste the text first.": "请先输入或粘贴文本。",
-  "Type or paste the text, then press Send.": "输入或粘贴文本，然后按“发送”。"
+  "Type or paste the text, then press Send.": "输入或粘贴文本，然后按“发送”。",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub 已被安装为您的自制软件菜单。\n此文件是重复副本。是否删除它？",
+  "Ports": "端口"
 }

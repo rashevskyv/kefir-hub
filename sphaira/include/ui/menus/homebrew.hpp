@@ -86,6 +86,9 @@ private:
     auto GetSelectedEntries() const -> std::vector<NroEntry>;
     void StarHomebrew(bool star);
     void DeleteHomebrew();
+    // Kefir Hub is the Homebrew Menu and this entry is a second copy of it: offer to delete it.
+    // Returns true when the question was asked (the caller must not launch the entry).
+    auto OfferDeleteHubCopy(const NroEntry& e) -> bool;
 
     auto IsStarEnabled() -> bool {
         return m_sort.Get() >= SortType_UpdatedStar;

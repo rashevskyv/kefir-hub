@@ -207,6 +207,12 @@ fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path) {
         return "/switch/sphaira.nro";
     }
 
+    // Running as /hbmenu.nro with no copy among the apps (the owner deleted it): update
+    // /hbmenu.nro itself and do not bring the second copy back.
+    if (!running_exe_path.empty()) {
+        return "/hbmenu.nro";
+    }
+
     // Default standard path
     return "/switch/kefir-hub/kefir-hub.nro";
 }

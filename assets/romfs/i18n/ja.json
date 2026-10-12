@@ -3203,5 +3203,7 @@
   "Could not reach the server. Check the address and that the server is on.": "サーバーに接続できませんでした。アドレスとサーバーの電源が入っているか確認してください。",
   "The server refused the login. Check the username and password.": "サーバーがログインを拒否しました。ユーザー名とパスワードを確認してください。",
   "Type or paste the text first.": "最初にテキストを入力または貼り付けてください。",
-  "Type or paste the text, then press Send.": "テキストを入力または貼り付けて、「送信」を押してください。"
+  "Type or paste the text, then press Send.": "テキストを入力または貼り付けて、「送信」を押してください。",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hubはすでにホームbrewメニューとしてインストールされています。\nこのファイルは2つ目のコピーです。削除しますか？",
+  "Ports": "ポート"
 }

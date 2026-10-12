@@ -13,6 +13,7 @@
 #include "ui/forwarder_editor.hpp"
 #include "nacp_util.hpp"
 #include "owo.hpp"
+#include "forwarder_auto_install.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
@@ -160,6 +161,74 @@ void Menu::StarHomebrew(bool star) {
     SortAndFindLastFile();
 }
 
+
+// Declared in app.cpp.
+} // namespace sphaira::ui::menu::homebrew
+namespace sphaira { bool IsKefirHubNacp(const NacpStruct& nacp); }
+namespace sphaira::ui::menu::homebrew {
+
+auto Menu::OfferDeleteHubCopy(const NroEntry& e) -> bool {
+    // Only when Kefir Hub really is /hbmenu.nro (Replace hbmenu on exit): it then starts from
+    // there and from its HOME icon, and a second copy among the apps is clutter that starts
+    // Hub inside Hub. Never the running file (the exit copy needs it) and never /hbmenu.nro.
+    // the list entry keeps only the short NACP: compare the name the same way IsKefirHubNacp does.
+    const char* entry_name = e.GetName();
+    if (!App::GetReplaceHbmenuEnable() ||
+        (std::strcmp(entry_name, "Kefir Hub") != 0 && std::strcmp(entry_name, "sphaira") != 0)) {
+        return false;
+    }
+    if (!strcasecmp(e.path.s, "/hbmenu.nro") || !strcasecmp(e.path.s, App::GetExePath().s)) {
+        return false;
+    }
+    NacpStruct hbmenu_nacp{};
+    if (R_FAILED(nro_get_nacp("/hbmenu.nro", hbmenu_nacp)) || !IsKefirHubNacp(hbmenu_nacp)) {
+        return false;
+    }
+    // A HOME tile made for this very file (its title id comes from the path) would stop
+    // working: leave the file and say nothing, as before.
+    const u64 own_tile_tid = owo_default_title_id(e.path.toString(), e.path.toString());
+    bool own_tile = false;
+    if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(own_tile_tid, &own_tile)) && own_tile) {
+        return false;
+    }
+    // The HOME icon of Kefir Hub is reinstalled to point at /hbmenu.nro before the delete;
+    // that needs the emuMMC (the same rule as the automatic forwarder install).
+    if (forwarder_auto::IsHubForwarderInstalled() && !App::IsEmummc()) {
+        return false;
+    }
+
+    const fs::FsPath path = e.path;
+    App::Push<OptionBox>(
+        "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?"_i18n,
+        "Keep"_i18n, "Delete"_i18n, 0, [this, path](auto op_index){
+            if (!op_index || !*op_index) {
+                return;
+            }
+            // a thread: the icon reinstall takes a few seconds. The file is deleted only after
+            // the icon is known to point at /hbmenu.nro.
+            App::Push<ProgressBox>(0, "Deleting"_i18n, "", [path](auto pbox) -> Result {
+                if (!forwarder_auto::PointHubForwarderAtHbmenu()) {
+                    R_THROW(Result_FsInvalidType);
+                }
+                fs::FsNativeSd fs;
+                const auto star_path = GenerateStarPath(path);
+                if (fs.FileExists(star_path)) {
+                    R_TRY(fs.DeleteFile(star_path));
+                }
+                R_TRY(fs.DeleteFile(path));
+                R_SUCCEED();
+            }, [this](Result rc){
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Delete failed!"_i18n);
+                } else {
+                    App::Notify("Delete successful!"_i18n);
+                }
+                ScanHomebrew();
+            });
+        }, e.image
+    );
+    return true;
+}
 
 void Menu::DeleteHomebrew() {
     const auto targets = GetSelectedEntries();

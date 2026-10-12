@@ -3230,5 +3230,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Não foi possível conectar ao servidor. Verifique o endereço e se o servidor está ligado.",
   "The server refused the login. Check the username and password.": "O servidor recusou o login. Verifique o nome de usuário e a senha.",
   "Type or paste the text first.": "Digite ou cole o texto primeiro.",
-  "Type or paste the text, then press Send.": "Digite ou cole o texto e pressione Enviar."
+  "Type or paste the text, then press Send.": "Digite ou cole o texto e pressione Enviar.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "O Kefir Hub já está instalado como seu Menu Homebrew.\nEste arquivo é uma segunda cópia. Deseja excluí-lo?",
+  "Ports": "Portas"
 }

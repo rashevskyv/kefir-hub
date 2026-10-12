@@ -33,6 +33,17 @@ constexpr const u8 HBL_NPDM_DATA[]{
     #embed <exefs/main.npdm>
 };
 
+} // namespace
+
+auto owo_default_title_id(const std::string& nro_path, const std::string& args) -> u64 {
+    u64 hash_data[SHA256_HASH_SIZE / sizeof(u64)];
+    const auto hash_path = nro_path + args;
+    sha256CalculateHash(hash_data, hash_path.data(), hash_path.length());
+    return 0x0500000000000000 | (hash_data[0] & 0x00FFFFFFFFFFF000);
+}
+
+namespace {
+
 auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStorageId storage_id) -> Result {
     if (pbox) {
         pbox->SetTitle(config.name);
@@ -62,10 +73,7 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
     }
 
     // create tid by using explicit id or a hash over path + args
-    u64 hash_data[SHA256_HASH_SIZE / sizeof(u64)];
-    const auto hash_path = config.nro_path + config.args;
-    sha256CalculateHash(hash_data, hash_path.data(), hash_path.length());
-    const u64 default_tid = 0x0500000000000000 | (hash_data[0] & 0x00FFFFFFFFFFF000);
+    const u64 default_tid = owo_default_title_id(config.nro_path, config.args);
     const u64 tid = config.title_id.value_or(default_tid);
     const u64 old_tid = 0x0100000000000000 | (tid & 0x00FFFFFFFFFFF000);
 

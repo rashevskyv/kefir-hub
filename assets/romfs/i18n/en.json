@@ -3198,5 +3198,7 @@
   "The console did not accept the text.": "The console did not accept the text.",
   "The server refused the login. Check the username and password.": "The server refused the login. Check the username and password.",
   "Type or paste the text first.": "Type or paste the text first.",
-  "Type or paste the text, then press Send.": "Type or paste the text, then press Send."
+  "Type or paste the text, then press Send.": "Type or paste the text, then press Send.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?",
+  "Ports": "Ports"
 }

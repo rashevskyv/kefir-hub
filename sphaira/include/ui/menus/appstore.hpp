@@ -128,7 +128,7 @@ enum Filter {
     Filter_Themes,
     Filter_Legacy,
     Filter_Misc,
-    Filter_Recompiles,
+    Filter_Ports,
     Filter_MAX,
 };
 

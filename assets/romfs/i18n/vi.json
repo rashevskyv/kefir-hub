@@ -3203,5 +3203,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Không thể kết nối đến máy chủ. Kiểm tra lại địa chỉ và đảm bảo máy chủ đang bật.",
   "The server refused the login. Check the username and password.": "Máy chủ đã từ chối đăng nhập. Kiểm tra tên người dùng và mật khẩu.",
   "Type or paste the text first.": "Nhập hoặc dán văn bản trước.",
-  "Type or paste the text, then press Send.": "Nhập hoặc dán văn bản, sau đó nhấn Gửi."
+  "Type or paste the text, then press Send.": "Nhập hoặc dán văn bản, sau đó nhấn Gửi.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub đã được cài đặt làm Menu Homebrew của bạn.\nTệp này là một bản sao thứ hai. Bạn có muốn xóa nó không?",
+  "Ports": "Cổng"
 }

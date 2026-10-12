@@ -22,7 +22,7 @@ int main() {
 
     // Source list: defaults first, then the user file (comments, blanks, CRLF, trailing slash, duplicates)
     auto sources = DefaultSources();
-    assert(sources.size() == 2 && sources[0] == SOURCE_FORTHEUSERS && sources[1] == SOURCE_KEFIR_RECOMPILES);
+    assert(sources.size() == 2 && sources[0] == SOURCE_FORTHEUSERS && sources[1] == SOURCE_EMURADAR_PORTS);
     AppendSourceList("# my stores\r\n\r\n  https://a.b/store/  # trailing slash\r\nftp://nope\nhttps://a.b/store\nhttp://c.d\n", sources);
     assert(sources.size() == 4);
     assert(sources[2] == "https://a.b/store");

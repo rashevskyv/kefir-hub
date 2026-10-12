@@ -3,6 +3,16 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.060 — App Store: the Recompiles filter is "Ports" and reads the Emu Radar Store
+- Owner report: the Recompiles filter was empty. The built-in source `kefir-store` was never created and `sources.json` held only an example. The filter is now **Ports** (ports, recompilations and decompilations together: categories `port`, `recompile`, `decomp`; `Filter_Ports`), the label "Recompiles" is gone (uk: "Порти"). The built-in source is `https://raw.githubusercontent.com/rashevskyv/emuradar-store/main` (`SOURCE_EMURADAR_PORTS`): a catalog built daily from the SwitchPorts list by a workflow in that repository; each package is the NRO only and is fetched from a release asset (`download` field), see the repository README.
+- 1 new key ("Ports") in all 26 languages. host tests: pass after the rename (test_appstore_util) · nro: pending · switch: pending (the filter lists the ports once the repository is published).
+
+## v0.14.059 — Offer to delete a second copy of Kefir Hub when it is already the Homebrew Menu
+- Owner request: with Kefir Hub installed instead of the Homebrew Menu (Replace hbmenu on exit, `/hbmenu.nro` is Kefir Hub), a Kefir Hub NRO that shows among the apps is clutter. A on it now asks "Kefir Hub is already installed as your Homebrew Menu. This file is a second copy. Delete it?" (Keep / Delete) instead of starting a second Hub (`Menu::OfferDeleteHubCopy`, `homebrew_ops.cpp`). Not asked for the running file, for `/hbmenu.nro`, or when `/hbmenu.nro` is not Kefir Hub. Deleting also removes its star file.
+- Owner's condition: the HOME icon must not point at the deleted file. Before the delete `forwarder_auto::PointHubForwarderAtHbmenu()` reinstalls the Kefir Hub icon (title id `05C838DF22834000`) with `/hbmenu.nro` as its target; if that fails the file is kept ("Delete failed!"). The question is not asked when a tile made for this very file exists (`owo_default_title_id(path, path)`, shared with `owo.cpp`), or when the icon is installed and the console is not on emuMMC (the automatic install refuses there too).
+- `auto_update.cpp`: when running as `/hbmenu.nro` and no copy exists among the apps, the update goes to `/hbmenu.nro` instead of recreating `/switch/kefir-hub/kefir-hub.nro`.
+- 1 new key in all 26 languages (tools/i18n-translate). host tests: not run (UI) · nro: pending · switch: pending (copy of Kefir Hub in /switch with Replace hbmenu on: A asks; Delete removes it; Hub still starts from the HOME icon).
+
 ## v0.14.058 — A real Kefir Updater can be selected (X / Y), starred and deleted like any app
 - Owner report: X / Y in the Homebrew list skipped Kefir Updater. `IsKefirUpdaterStub()` recognised the "Removed" notice entry by its path `/switch/kefir-updater/kefir-updater.nro`, which is also where the real Kefir Updater lives, so the real one was treated as the stub (not selectable, no star, not in the selected set). The stub is now `path == that path` and version text `Removed` (only the scan's stub entry has it), see `homebrew_internal.hpp`.
 - host tests: not run (UI) · nro: pending · switch: pending (X on Kefir Updater marks it; Y marks it with the rest).

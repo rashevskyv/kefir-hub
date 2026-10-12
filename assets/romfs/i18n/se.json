@@ -3203,5 +3203,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Kunde inte nå servern. Kontrollera adressen och att servern är på.",
   "The server refused the login. Check the username and password.": "Servern nekade inloggning. Kontrollera användarnamn och lösenord.",
   "Type or paste the text first.": "Skriv eller klistra in texten först.",
-  "Type or paste the text, then press Send.": "Skriv eller klistra in texten och tryck på Skicka."
+  "Type or paste the text, then press Send.": "Skriv eller klistra in texten och tryck på Skicka.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub är redan installerad som din Homebrew-meny.\nDenna fil är en andra kopia. Vill du radera den?",
+  "Ports": "Portar"
 }

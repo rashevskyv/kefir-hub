@@ -3203,5 +3203,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Kan geen verbinding maken met de server. Controleer het adres en of de server aanstaat.",
   "The server refused the login. Check the username and password.": "De server heeft de aanmelding geweigerd. Controleer de gebruikersnaam en het wachtwoord.",
   "Type or paste the text first.": "Typ of plak eerst de tekst.",
-  "Type or paste the text, then press Send.": "Typ of plak de tekst en druk op Verzenden."
+  "Type or paste the text, then press Send.": "Typ of plak de tekst en druk op Verzenden.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub is al geïnstalleerd als je Homebrew-menu.\nDit bestand is een tweede kopie. Wil je dit verwijderen?",
+  "Ports": "Poorten"
 }

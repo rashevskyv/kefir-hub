@@ -3198,5 +3198,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Nepavyko pasiekti serverio. Patikrinkite adresą ir įsitikinkite, kad serveris įjungtas.",
   "The server refused the login. Check the username and password.": "Serveris atmetė prisijungimą. Patikrinkite naudotojo vardą ir slaptažodį.",
   "Type or paste the text first.": "Pirmiausia įveskite arba įklijuokite tekstą.",
-  "Type or paste the text, then press Send.": "Įveskite arba įklijuokite tekstą, tada paspauskite Siųsti."
+  "Type or paste the text, then press Send.": "Įveskite arba įklijuokite tekstą, tada paspauskite Siųsti.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "„Kefir Hub“ jau įdiegta kaip „Homebrew“ meniu.\nŠis failas yra antra kopija. Pašalinti?",
+  "Ports": "Prievadai"
 }

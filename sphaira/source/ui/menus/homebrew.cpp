@@ -48,6 +48,8 @@ Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
         std::make_pair(Button::A, Action{"Launch"_i18n, [this](){
             if (!g_kefir_updater_notice_ack.Get() && IsKefirUpdaterEntry(GetEntry())) {
                 ShowKefirUpdaterRemovedDialog();
+            } else if (OfferDeleteHubCopy(GetEntry())) {
+                // asked instead of starting a second Kefir Hub
             } else {
                 nro_launch(GetEntry().path);
             }

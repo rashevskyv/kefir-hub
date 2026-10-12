@@ -76,7 +76,7 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
             filter_items.push_back("Themes"_i18n);
             filter_items.push_back("Legacy"_i18n);
             filter_items.push_back("Misc"_i18n);
-            filter_items.push_back("Recompiles"_i18n);
+            filter_items.push_back("Ports"_i18n);
 
             SidebarEntryArray::Items sort_items;
             sort_items.push_back("Updated"_i18n);

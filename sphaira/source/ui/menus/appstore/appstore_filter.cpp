@@ -58,8 +58,10 @@ void Menu::ScanHomebrew() {
             m_entries_index[Filter_Themes].push_back(i);
         } else if (e.category == std::string_view{"legacy"}) {
             m_entries_index[Filter_Legacy].push_back(i);
-        } else if (e.category == std::string_view{"recompile"}) {
-            m_entries_index[Filter_Recompiles].push_back(i);
+        } else if (e.category == std::string_view{"port"} || e.category == std::string_view{"recompile"} ||
+                   e.category == std::string_view{"decomp"}) {
+            // ports, recompilations and decompilations are one filter: Ports
+            m_entries_index[Filter_Ports].push_back(i);
         } else {
             m_entries_index[Filter_Misc].push_back(i);
         }

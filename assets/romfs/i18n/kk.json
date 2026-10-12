@@ -3198,5 +3198,7 @@
   "Could not reach the server. Check the address and that the server is on.": "Серверге қосылу мүмкін емес. Мекенжайды және сервердің қосулы екенін тексеріңіз.",
   "The server refused the login. Check the username and password.": "Сервер кіруді қабылдамады. Пайдаланушы аты мен құпия сөзді тексеріңіз.",
   "Type or paste the text first.": "Алдымен мәтінді енгізіңіз немесе көшіріп қойыңыз.",
-  "Type or paste the text, then press Send.": "Мәтінді теріңіз немесе көшіріп қойыңыз, содан кейін Жіберу батырмасын басыңыз."
+  "Type or paste the text, then press Send.": "Мәтінді теріңіз немесе көшіріп қойыңыз, содан кейін Жіберу батырмасын басыңыз.",
+  "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub Homebrew мәзірі ретінде орнатылған.\nБұл файл - екінші көшірме. Оны жою керек пе?",
+  "Ports": "Порттар"
 }

@@ -32,10 +32,12 @@ inline auto ResolveAppstoreZipUrl(std::string_view name, std::string_view title,
 
 // hbstore-compatible sources. Every base serves /repo.json, /packages/<name>/icon.png and /zips/<name>.zip.
 constexpr const char* SOURCE_FORTHEUSERS = "https://switch.cdn.fortheusers.org";
-constexpr const char* SOURCE_KEFIR_RECOMPILES = "https://raw.githubusercontent.com/rashevskyv/kefir-store/main";
+// Emu Radar Store: Switch ports, recompilations and decompilations, built from the SwitchPorts list
+// (repository emuradar-store; the packages are the NRO of each port, hosted as release assets).
+constexpr const char* SOURCE_EMURADAR_PORTS = "https://raw.githubusercontent.com/rashevskyv/emuradar-store/main";
 
 inline auto DefaultSources() -> std::vector<std::string> {
-    return {SOURCE_FORTHEUSERS, SOURCE_KEFIR_RECOMPILES};
+    return {SOURCE_FORTHEUSERS, SOURCE_EMURADAR_PORTS};
 }
 
 // user file: one base url per line, '#' starts a comment, a trailing '/' is dropped.

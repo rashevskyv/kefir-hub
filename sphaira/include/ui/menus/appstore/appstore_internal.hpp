@@ -44,7 +44,7 @@ inline constexpr const char* FILTER_STR[] = {
     "Themes",
     "Legacy",
     "Misc",
-    "Recompiles",
+    "Ports",
 };
 
 inline constexpr const char* SORT_STR[] = {
