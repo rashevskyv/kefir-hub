@@ -3205,5 +3205,12 @@
   "Type or paste the text first.": "Typ of plak eerst de tekst.",
   "Type or paste the text, then press Send.": "Typ of plak de tekst en druk op Verzenden.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub is al geïnstalleerd als je Homebrew-menu.\nDit bestand is een tweede kopie. Wil je dit verwijderen?",
-  "Ports": "Poorten"
+  "Ports": "Poorten",
+  "Update was cancelled.": "Update is geannuleerd.",
+  "Update all apps": "Alle apps bijwerken",
+  "Install every available update, from all sources.": "Installeer elke beschikbare update uit alle bronnen.",
+  "Everything is up to date.": "Alles is up-to-date.",
+  "Updated: ": "Bijgewerkt: ",
+  "Updating ": "Bijwerken ",
+  "all apps": "Alle apps"
 }

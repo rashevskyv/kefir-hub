@@ -3200,5 +3200,12 @@
   "Type or paste the text first.": "Увядзіце ці ўстаўце спачатку тэкст.",
   "Type or paste the text, then press Send.": "Увядзіце або ўстаўце тэкст, затым націсніце Адправіць.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub ужо ўсталяваны як ваша Homebrew Menu.\nГэты файл — другая копія. Выдаліць яго?",
-  "Ports": "Порты"
+  "Ports": "Порты",
+  "Update was cancelled.": "Абнаўленне было адменена.",
+  "Update all apps": "Абнавіць усе праграмы",
+  "Install every available update, from all sources.": "Устанавіць усе даступныя абнаўленні з усіх крыніц.",
+  "Everything is up to date.": "Усё абноўлена.",
+  "Updated: ": "Абноўлена: ",
+  "Updating ": "Абнаўленне ",
+  "all apps": "Усе прыкладанні"
 }

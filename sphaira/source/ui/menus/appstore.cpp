@@ -13,10 +13,12 @@
 #include "image.hpp"
 #include "i18n.hpp"
 #include "swkbd.hpp"
+#include "ui/menus/homebrew.hpp"
 #include <switch.h>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 #include <vector>
 
 namespace sphaira::ui::menu::appstore {
@@ -125,6 +127,10 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
                     log_write("got %s\n", out.c_str());
                 }
             }, "Search for apps by name or keyword."_i18n);
+
+            options->Add<SidebarEntryCallback>("Update all apps"_i18n, [this](){
+                UpdateAllApps();
+            }, "Install every available update, from all sources."_i18n);
         }})
     );
 
@@ -160,6 +166,63 @@ Menu::Menu(u32 flags) : grid::Menu{"AppStore"_i18n, flags} {
 
 Menu::~Menu() {
 
+}
+
+void Menu::UpdateAllApps() {
+    // copies: the list can be rebuilt (rescan) while the worker thread runs
+    auto todo = std::make_shared<std::vector<Entry>>();
+    for (const auto& e : m_entries) {
+        if (e.status == EntryStatus::Update) {
+            todo->push_back(e);
+        }
+    }
+
+    if (todo->empty()) {
+        App::Notify("Everything is up to date."_i18n);
+        return;
+    }
+
+    auto done = std::make_shared<std::vector<u8>>(todo->size(), 0);
+    App::Push<ProgressBox>(m_default_image.image, "Updating "_i18n, "all apps"_i18n, [todo, done](auto pbox) -> Result {
+        for (u64 i = 0; i < todo->size(); i++) {
+            if (pbox->ShouldExit()) {
+                return Result_TransferCancelled;
+            }
+            const auto rc = InstallApp(pbox, (*todo)[i]);
+            if (rc == Result_TransferCancelled) {
+                return rc;
+            }
+            (*done)[i] = R_SUCCEEDED(rc); // a failed app does not stop the rest
+        }
+        R_SUCCEED();
+    }, [this, todo, done](Result rc){
+        homebrew::SignalChange();
+
+        u64 ok{};
+        for (u64 i = 0; i < todo->size(); i++) {
+            if (!(*done)[i]) {
+                continue;
+            }
+            ok++;
+            for (auto& e : m_entries) {
+                if (e.name == (*todo)[i].name) {
+                    e.status = EntryStatus::Installed;
+                    e.installed_version = IsRetroArchPackage(e) ? "Nightly" : e.version;
+                }
+            }
+        }
+        SetDirty();
+        SortAndFindLastFile();
+
+        const auto failed = todo->size() - ok;
+        if (rc == Result_TransferCancelled) {
+            App::Push<OptionBox>("Update was cancelled."_i18n + "\n" + std::to_string(ok) + " / " + std::to_string(todo->size()), "OK"_i18n);
+        } else if (failed) {
+            App::Push<OptionBox>("Updated: "_i18n + std::to_string(ok) + "\n" + "Failed: "_i18n + std::to_string(failed), "OK"_i18n);
+        } else {
+            App::Notify("Updated: "_i18n + std::to_string(ok));
+        }
+    });
 }
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {

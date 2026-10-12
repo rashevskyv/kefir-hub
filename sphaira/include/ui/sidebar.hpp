@@ -295,6 +295,7 @@ private:
 private:
     std::string m_title;
     std::string m_sub;
+    ScrollingText m_scrolling_panel_title{};
     Side m_side;
     Items m_items;
     s64 m_index{};

@@ -3200,5 +3200,12 @@
   "Type or paste the text first.": "Ketik atau tempel teks terlebih dahulu.",
   "Type or paste the text, then press Send.": "Ketik atau tempel teks, lalu tekan Kirim.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub sudah terinstal sebagai Homebrew Menu Anda.\nBerkas ini adalah salinan kedua. Hapus?",
-  "Ports": "Port"
+  "Ports": "Port",
+  "Update was cancelled.": "Pembaruan dibatalkan.",
+  "Update all apps": "Perbarui semua aplikasi",
+  "Install every available update, from all sources.": "Instal setiap pembaruan yang tersedia, dari semua sumber.",
+  "Everything is up to date.": "Semua sudah yang terbaru.",
+  "Updated: ": "Diperbarui: ",
+  "Updating ": "Memperbarui ",
+  "all apps": "Semua aplikasi"
 }

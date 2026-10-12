@@ -3200,5 +3200,12 @@
   "Type or paste the text first.": "Sisestage või kleepige tekst esmalt.",
   "Type or paste the text, then press Send.": "Sisestage või kleepige tekst, seejärel vajutage Saada.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub on juba Homebrew Menüüna installitud.\nSee fail on teine koopia. Kas kustutada?",
-  "Ports": "Pordid"
+  "Ports": "Pordid",
+  "Update was cancelled.": "Uuendamine tühistati.",
+  "Update all apps": "Uuenda kõiki rakendusi",
+  "Install every available update, from all sources.": "Installi kõik saadaolevad värskendused kõigist allikatest.",
+  "Everything is up to date.": "Kõik on ajakohane.",
+  "Updated: ": "Uuendatud: ",
+  "Updating ": "Uuendamine ",
+  "all apps": "Kõik rakendused"
 }

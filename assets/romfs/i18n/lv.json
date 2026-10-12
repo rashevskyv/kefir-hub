@@ -3200,5 +3200,12 @@
   "Type or paste the text first.": "Vispirms ievadiet vai ielīmējiet tekstu.",
   "Type or paste the text, then press Send.": "Ievadiet vai ielīmējiet tekstu, pēc tam nospiediet Sūtīt.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub jau ir instalēts kā Homebrew izvēlne.\nŠis fails ir otrā kopija. Vai to dzēst?",
-  "Ports": "Porti"
+  "Ports": "Porti",
+  "Update was cancelled.": "Atjaunināšana tika atcelta.",
+  "Update all apps": "Atjaunināt visas lietotnes",
+  "Install every available update, from all sources.": "Instalēt visus pieejamos atjauninājumus no visiem avotiem.",
+  "Everything is up to date.": "Viss ir jaunākajā versijā.",
+  "Updated: ": "Atjaunināts: ",
+  "Updating ": "Atjaunina ",
+  "all apps": "Visas lietotnes"
 }

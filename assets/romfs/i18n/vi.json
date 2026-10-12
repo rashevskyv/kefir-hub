@@ -3205,5 +3205,12 @@
   "Type or paste the text first.": "Nhập hoặc dán văn bản trước.",
   "Type or paste the text, then press Send.": "Nhập hoặc dán văn bản, sau đó nhấn Gửi.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub đã được cài đặt làm Menu Homebrew của bạn.\nTệp này là một bản sao thứ hai. Bạn có muốn xóa nó không?",
-  "Ports": "Cổng"
+  "Ports": "Cổng",
+  "Update was cancelled.": "Bản cập nhật đã bị hủy.",
+  "Update all apps": "Cập nhật tất cả ứng dụng",
+  "Install every available update, from all sources.": "Cài đặt mọi bản cập nhật có sẵn từ tất cả các nguồn.",
+  "Everything is up to date.": "Mọi thứ đã được cập nhật.",
+  "Updated: ": "Đã cập nhật: ",
+  "Updating ": "Đang cập nhật ",
+  "all apps": "Tất cả ứng dụng"
 }

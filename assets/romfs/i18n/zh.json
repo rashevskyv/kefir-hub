@@ -3258,5 +3258,12 @@
   "Type or paste the text first.": "请先输入或粘贴文本。",
   "Type or paste the text, then press Send.": "输入或粘贴文本，然后按“发送”。",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub 已被安装为您的自制软件菜单。\n此文件是重复副本。是否删除它？",
-  "Ports": "端口"
+  "Ports": "端口",
+  "Update was cancelled.": "更新已取消。",
+  "Update all apps": "更新所有应用",
+  "Install every available update, from all sources.": "安装来自所有来源的所有可用更新。",
+  "Everything is up to date.": "一切已是最新版本。",
+  "Updated: ": "已更新：",
+  "Updating ": "正在更新",
+  "all apps": "所有应用"
 }

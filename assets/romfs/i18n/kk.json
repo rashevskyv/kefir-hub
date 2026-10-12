@@ -3200,5 +3200,12 @@
   "Type or paste the text first.": "Алдымен мәтінді енгізіңіз немесе көшіріп қойыңыз.",
   "Type or paste the text, then press Send.": "Мәтінді теріңіз немесе көшіріп қойыңыз, содан кейін Жіберу батырмасын басыңыз.",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hub Homebrew мәзірі ретінде орнатылған.\nБұл файл - екінші көшірме. Оны жою керек пе?",
-  "Ports": "Порттар"
+  "Ports": "Порттар",
+  "Update was cancelled.": "Жаңарту тоқтатылды.",
+  "Update all apps": "Барлық қолданбаларды жаңарту",
+  "Install every available update, from all sources.": "Барлық көздерден қолжетімді барлық жаңартуларды орнату.",
+  "Everything is up to date.": "Барлығы жаңартылған.",
+  "Updated: ": "Жаңартылды: ",
+  "Updating ": "Жаңартылуда ",
+  "all apps": "Барлық қолданбалар"
 }

@@ -174,6 +174,8 @@ private:
     void ScanHomebrew();
     void Sort();
     void SortAndFindLastFile();
+    // installs every entry that has an update, from every source, one after another
+    void UpdateAllApps();
     void SetFilter();
     void SetSearch(const std::string& term);
     void OnLayoutChange();

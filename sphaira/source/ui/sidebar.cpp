@@ -258,7 +258,15 @@ auto Sidebar::Update(Controller* controller, TouchInfo* touch) -> void {
 
 auto Sidebar::Draw(NVGcontext* vg, Theme* theme) -> void {
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_SIDEBAR));
-    gfx::drawText(vg, m_title_pos, m_title_size, theme->GetColour(ThemeEntryID_TEXT), m_title.c_str());
+    // the title scrolls when it does not fit next to the sub heading
+    float title_w = m_pos.w - 60.f;
+    if (!m_sub.empty()) {
+        float sub_bounds[4];
+        nvgFontSize(vg, 16);
+        nvgTextBounds(vg, 0, 0, m_sub.c_str(), nullptr, sub_bounds);
+        title_w -= (sub_bounds[2] - sub_bounds[0]) + 16.f;
+    }
+    m_scrolling_panel_title.Draw(vg, true, m_title_pos.x, m_title_pos.y, title_w, m_title_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), m_title);
     if (!m_sub.empty()) {
         gfx::drawTextArgs(vg, m_pos.x + m_pos.w - 30.f, m_title_pos.y + 10.f, 16, NVG_ALIGN_TOP | NVG_ALIGN_RIGHT, theme->GetColour(ThemeEntryID_TEXT_INFO), m_sub.c_str());
     }

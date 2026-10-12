@@ -147,3 +147,8 @@ In [[Extract Options]]:
 **"Failed to download application".** The App Store server could not be reached. Check the internet connection and try again.
 
 **An app shows as installed but its files are gone.** For apps without a single launchable file (for example sysmodules), the App Store trusts its own install record. Choose [[Remove]] (it works even when the files are already gone), then [[Install]] again.
+
+<!-- draft
+- [[Options]] of the App Store has [[Update all apps]]: it installs every available update from all sources (the default store, your own sources, Ports) in one go; an app that fails does not stop the others and the end shows how many were updated and how many failed.
+- A panel title that is too long scrolls instead of being cut off.
+-->

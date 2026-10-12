@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.063 — App Store: "Update all apps"; long panel titles scroll
+- Owner report: the panel title "AppStore Options" did not fit and was cut off. Every side panel (`Sidebar`) now scrolls its title when it does not fit next to the sub heading (same `ScrollingText` as the rows). New option **Update all apps** in the App Store options installs every entry with the update status, from all sources, one after another in one progress box; a failed app does not stop the rest; the end shows the count (OptionBox on failures or cancel).
+- 8 new keys (translations via tools/i18n-translate). host tests: pass · nro: built · switch: pending.
+
 ## v0.14.062 — App Store: app descriptions and release notes show formatted text
 - The app page's description ([[Details]]) and [[Changelog]] render Markdown instead of raw symbols: bold, italic, headings (three sizes), bullet and numbered lists with nesting, quotes, code, horizontal rules, tables as cells joined by "|". Links show only their text; images and HTML tags are dropped (`<br>` breaks the line); entities are decoded; fenced and inline code stay verbatim. Parser: `markdown_lite` (`sphaira/source/markdown_lite.cpp`, libnx-free, host-tested in `tests/test_markdown_lite.cpp`). The renderer is an opt-in mode of `ScrollableText`; plain mode (cheats, file viewer) is unchanged.
 - The console font has no bold or italic face: bold is drawn twice, italic is dimmer. Task-list boxes show as `[ ]` / `[x]`. Emoji depend on the font. Long text still scrolls with the left stick, 4096-character cut as before.

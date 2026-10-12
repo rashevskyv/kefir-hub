@@ -3205,5 +3205,12 @@
   "Type or paste the text first.": "最初にテキストを入力または貼り付けてください。",
   "Type or paste the text, then press Send.": "テキストを入力または貼り付けて、「送信」を押してください。",
   "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?": "Kefir Hubはすでにホームbrewメニューとしてインストールされています。\nこのファイルは2つ目のコピーです。削除しますか？",
-  "Ports": "ポート"
+  "Ports": "ポート",
+  "Update was cancelled.": "アップデートがキャンセルされました。",
+  "Update all apps": "すべてのアプリを更新",
+  "Install every available update, from all sources.": "すべてのソースから利用可能なすべてのアップデートをインストールします。",
+  "Everything is up to date.": "すべて最新の状態です。",
+  "Updated: ": "更新日時: ",
+  "Updating ": "更新中",
+  "all apps": "すべてのアプリ"
 }
