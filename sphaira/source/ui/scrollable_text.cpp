@@ -295,7 +295,7 @@ void ScrollableText::Draw(NVGcontext* vg, Theme* theme) {
             if (y + m.h < top || y > bottom) {
                 continue;
             }
-            const auto c = theme->GetColour(m.kind == MdMarkKind::Bar ? ThemeEntryID_FOCUS : ThemeEntryID_TEXT_INFO);
+            const auto c = theme->GetColour(m.kind == MdMarkKind::Bar ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO);
             nvgBeginPath(vg);
             if (m.kind == MdMarkKind::Dot) {
                 nvgCircle(vg, m.x + m.w / 2, y + m.h / 2, m.w / 2);
@@ -315,7 +315,7 @@ void ScrollableText::Draw(NVGcontext* vg, Theme* theme) {
             // no bold or italic font: bold is drawn twice, italic is dimmer
             const bool faux_bold = r.style == MdStyle::Bold || r.style == MdStyle::Heading;
             const auto c = theme->GetColour(r.style == MdStyle::Italic ? ThemeEntryID_TEXT_INFO
-                : (r.style == MdStyle::Code || r.style == MdStyle::Heading) ? ThemeEntryID_FOCUS
+                : (r.style == MdStyle::Code || r.style == MdStyle::Heading) ? ThemeEntryID_TEXT_SELECTED
                 : ThemeEntryID_TEXT);
             nvgFontSize(vg, r.size);
             nvgFillColor(vg, c);
