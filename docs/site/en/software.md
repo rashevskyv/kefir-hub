@@ -143,3 +143,7 @@ In [[Extract Options]]:
 **"Failed to download application".** The App Store server could not be reached. Check the internet connection and try again.
 
 **An app shows as installed but its files are gone.** For apps without a single launchable file (for example sysmodules), the App Store trusts its own install record. Choose [[Remove]] (it works even when the files are already gone), then [[Install]] again.
+
+<!-- draft
+- A newer version of an app that was found on the memory card without store data (any source: the default store, your own sources, Ports) is offered as an update, with the update icon, at the top of the list.
+-->

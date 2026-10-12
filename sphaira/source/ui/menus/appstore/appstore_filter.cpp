@@ -8,6 +8,7 @@
 #include "swkbd.hpp"
 #include "nro.hpp"
 #include "nacp_util.hpp"
+#include "version_compare.hpp"
 #include <switch.h>
 #include <algorithm>
 #include <cstdio>
@@ -113,7 +114,8 @@ void Menu::ScanHomebrew() {
                         // - sys-clk
 
                         if (!filtered) {
-                            e.status = EntryStatus::Local;
+                            // installed outside the store: any source (default, user, Ports) with a newer version offers an update
+                            e.status = version::IsNewer(e.installed_version, e.version) ? EntryStatus::Update : EntryStatus::Local;
                         } else {
                             log_write("filtered: %s path: %s\n", e.name.c_str(), e.binary.c_str());
                         }

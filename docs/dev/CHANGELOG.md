@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.061 — App Store: an app found on the card gets an update from any source
+- An app that is on the memory card but was not installed through the store (status Local) is now compared with the version of every source (default store, user sources, Ports). A newer version shows the update icon and the app sorts to the top, like any other update (`version::IsNewer`; an unparseable version stays Local).
+- host tests: not run (one-line change in the scan) · nro: pending · switch: pending.
+
 ## v0.14.060 — App Store: the Recompiles filter is "Ports" and reads the Emu Radar Store
 - Owner report: the Recompiles filter was empty. The built-in source `kefir-store` was never created and `sources.json` held only an example. The filter is now **Ports** (ports, recompilations and decompilations together: categories `port`, `recompile`, `decomp`; `Filter_Ports`), the label "Recompiles" is gone (uk: "Порти"). The built-in source is `https://raw.githubusercontent.com/rashevskyv/emuradar-store/main` (`SOURCE_EMURADAR_PORTS`): a catalog built daily from the SwitchPorts list by a workflow in that repository; each package is the NRO only and is fetched from a release asset (`download` field), see the repository README.
 - 1 new key ("Ports") in all 26 languages. host tests: pass after the rename (test_appstore_util) · nro: pending · switch: pending (the filter lists the ports once the repository is published).
