@@ -36,7 +36,7 @@ memory card but not installed through the store.
 1. Select an app and press **A** ([[Info]]). The app page opens with the description, version, size and downloads.
 2. The available actions depend on the app's status:
     - [[Install]] — the app is not installed.
-    - [[Update]] — a newer version is available, or the app was found on the memory card without store data.
+    - [[Update]] — a newer version is available in any source (the default store, your own sources, Ports), including for an app found on the memory card without store data. Updates are listed first..
     - [[Launch]] — start the installed app.
     - [[Remove]] — delete the app's files ("Completely remove …?").
 3. Use **D-pad** up/down to choose an action, then press **A**. [[Launch]] and [[Remove]] ask for confirmation.
@@ -143,7 +143,3 @@ In [[Extract Options]]:
 **"Failed to download application".** The App Store server could not be reached. Check the internet connection and try again.
 
 **An app shows as installed but its files are gone.** For apps without a single launchable file (for example sysmodules), the App Store trusts its own install record. Choose [[Remove]] (it works even when the files are already gone), then [[Install]] again.
-
-<!-- draft
-- A newer version of an app that was found on the memory card without store data (any source: the default store, your own sources, Ports) is offered as an update, with the update icon, at the top of the list.
--->
