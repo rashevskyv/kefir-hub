@@ -10,6 +10,7 @@
 #include "nro.hpp"
 #include "owo.hpp"
 #include "ui/option_box.hpp"
+#include "ui/first_start.hpp"
 #include <switch.h>
 #include <vector>
 #include <string>
@@ -21,6 +22,9 @@ namespace sphaira::forwarder_auto {
 namespace {
 
 std::atomic_bool g_stop_requested{false};
+// A notice that came while the first-start language list was open: the key is a string literal, so it is
+// translated when it is shown, in the language that was chosen.
+std::atomic<const char*> g_deferred_notice{nullptr};
 std::atomic_bool g_thread_active{false};
 std::atomic_bool g_thread_created{false};
 Thread g_check_thread{};
@@ -211,9 +215,17 @@ void NotifyUi(const Plan& plan) {
         return;
     }
 
-    const auto msg = i18n::get(key);
-    evman::push(evman::FunctionalEventData{[msg]() {
-        App::Push<ui::OptionBox>(msg, "OK"_i18n, [](auto){});
+    // On the first start the welcome page explains the HOME icon; the notice must neither cut the
+    // language list nor be shown before the language is chosen. Other notices wait for the page to close.
+    const bool welcome_covers = plan.notice == Notice::PreferHomeIcon && plan.install_new;
+    evman::push(evman::FunctionalEventData{[key, welcome_covers]() {
+        if (ui::FirstStartActive()) {
+            if (!welcome_covers) {
+                g_deferred_notice = key;
+            }
+            return;
+        }
+        App::Push<ui::OptionBox>(i18n::get(key), "OK"_i18n, [](auto){});
     }}, false);
 }
 
@@ -332,6 +344,12 @@ void ThreadFunc(void*) {
 }
 
 } // namespace
+
+void ShowDeferredNotice() {
+    if (const auto* key = g_deferred_notice.exchange(nullptr)) {
+        App::Push<ui::OptionBox>(i18n::get(key), "OK"_i18n, [](auto){});
+    }
+}
 
 auto IsHubForwarderInstalled() -> bool {
     return IsInstalled(KEFIR_HUB_FORWARDER_TID);

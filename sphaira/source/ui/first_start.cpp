@@ -3,6 +3,7 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include "forwarder_auto_install.hpp"
 #include <atomic>
 
 namespace sphaira::ui {
@@ -48,6 +49,8 @@ void FirstStart::Update(Controller* controller, TouchInfo* touch) {
                 } else {
                     SetPop();
                 }
+                // a forwarder notice that arrived during the start, now in the chosen language
+                forwarder_auto::ShowDeferredNotice();
             }})
         );
     }
@@ -82,7 +85,7 @@ void FirstStart::Draw(NVGcontext* vg, Theme* theme) {
         y += (bounds[3] - bounds[1]) + 28.f;
     };
 
-    para("Kefir Hub adds its own icon to the HOME Menu. From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part."_i18n);
+    para("Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part."_i18n);
 
     gfx::drawRect(vg, 0.f, SCREEN_HEIGHT - 70.f, SCREEN_WIDTH, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
     gfx::drawTextArgs(vg, SCREEN_WIDTH - 60.f, SCREEN_HEIGHT - 35.f, 22.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,

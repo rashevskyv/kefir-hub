@@ -69,3 +69,7 @@ Kefir Hub has two tabs. Press **R** to go to [[Tools]], press **L** or **B** to 
 - Update Kefir and the firmware: [Updater](updater.md)
 - Share the memory card with a PC over MTP, FTP or a browser: [Sharing](sharing.md)
 - Fix a problem: [Troubleshooting](troubleshooting.md)
+
+<!-- draft
+- On the first start nothing interrupts the language list: the notice about the HOME Menu icon (forwarder) is not shown before the language is chosen. The welcome page, written in the chosen language, says that Kefir Hub is installing its own icon on the HOME Menu; any other notice about the forwarder appears after you press OK on that page.
+-->

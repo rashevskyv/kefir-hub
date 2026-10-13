@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.067 — First start: the forwarder notice no longer cuts the language list
+- Owner report: on the first start the language list was cut by the notice about the HOME icon (forwarder), shown in English because the language was not chosen yet. `forwarder_auto::NotifyUi` pushed an OptionBox through `evman` while the list was open. Now, while `ui::FirstStartActive()`, the notice is not shown: the install notice of the first start is covered by the welcome page (its text now says the icon is being installed), any other notice is kept as a key and shown by `forwarder_auto::ShowDeferredNotice()` when the page is closed, translated into the chosen language.
+- 1 changed key (welcome page text). host tests: pass · nro: pending · switch: pending (first start with no language chosen: list, then the page, then no English notice).
+
 ## v0.14.066 — Cheats: "Match Build ID exactly" moved to the START options
 - Owner feedback: a switch is not a menu row of the Cheats list. The row is removed; **START** on the Cheats screen opens "Cheats Options" with **Match Build ID exactly** (On / Off, `SidebarEntryBool`), and the same switch is in the START options of the game list for "Download Exact Cheats". Behaviour from 0.14.065 is unchanged (off = the closest game version's cheats are written under the game's own Build ID).
 - The keys of the two 0.14.065 row subtitles are replaced by one info text. host tests: pass · nro: pending · switch: pending.

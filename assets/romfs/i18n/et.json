@@ -3212,5 +3212,6 @@
   "Match Build ID exactly": "Ühildada Build ID täpselt",
   "Cheats of another game version are used": "Kasutatakse teise mänguversiooni kood",
   "On: only cheats made for your game version": "Sees: ainult sinu mänguversioonile tehtud koodid",
-  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Sees: pakutakse ainult sinu mänguversiooni jaoks mõeldud koodipettusi. Väljas: kui ükski ei sobi, kasutatakse lähima mänguversiooni omi."
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Sees: pakutakse ainult sinu mänguversiooni jaoks mõeldud koodipettusi. Väljas: kui ükski ei sobi, kasutatakse lähima mänguversiooni omi.",
+  "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub installib nüüd oma ikooni HOME-menüüsse (käiviti). Nüüdsest alates käivita Kefir Hub selle ikooni kaudu: nii saab see kogu mälu ja USB-pordi. Homebrew Menu ja Album annavad sellele vaid osa."
 }

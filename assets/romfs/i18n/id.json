@@ -3212,5 +3212,6 @@
   "Match Build ID exactly": "Cocokkan Build ID secara persis",
   "Cheats of another game version are used": "Cheat dari versi gim lain digunakan",
   "On: only cheats made for your game version": "Aktif: hanya cheat untuk versi game Anda",
-  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Aktif: hanya cheat untuk versi gim Anda yang ditawarkan. Nonaktif: jika tidak ada yang cocok, cheat dari versi gim terdekat akan digunakan."
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Aktif: hanya cheat untuk versi gim Anda yang ditawarkan. Nonaktif: jika tidak ada yang cocok, cheat dari versi gim terdekat akan digunakan.",
+  "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub sekarang memasang ikon sendiri di Menu HOME (sebuah forwarder). Mulai sekarang jalankan Kefir Hub dari ikon tersebut: aplikasi ini akan mendapatkan seluruh memori dan port USB. Menu Homebrew dan Album hanya memberikannya sebagian."
 }
