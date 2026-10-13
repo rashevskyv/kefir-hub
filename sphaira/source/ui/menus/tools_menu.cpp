@@ -210,7 +210,7 @@ void FillSdWithZeros() {
             return;
         }
         App::Push<ui::ProgressBox>(0, "Filling with zeros"_i18n, "microSD card"_i18n, [](auto pbox) -> Result {
-            return zero_fill::FillFreeSpace(NcmStorageId_SdCard, pbox);
+            return zero_fill::FillSdFreeSpace(pbox);
         }, [](Result rc){
             if (R_SUCCEEDED(rc)) {
                 App::Notify("Free space filled with zeros"_i18n);

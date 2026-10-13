@@ -3214,10 +3214,9 @@
   "On: only cheats made for your game version": "Ieslēgts: tikai kodi jūsu spēles versijai",
   "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Ieslēgts: tiek piedāvāti tikai jūsu spēles versijai paredzēti čīti. Izslēgts: ja neviens neder, tiek izmantoti tuvākās spēles versijas čīti.",
   "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub tagad instalē savu ikonu HOME izvēlnē (palaidēju). Turpmāk palaidiet Kefir Hub no šīs ikonas: tā iegūs visu atmiņu un USB portu. Homebrew izvēlne un albums tai piešķir tikai daļu.",
-  "Step 2 of 3: writing zeros": "2. solis no 3: raksta nulles",
-  "Step 3 of 3: removing the temporary file, do not turn the console off...": "Solis 3 no 3: dzēš pagaidu failu, neizslēdziet konsoli...",
   "Cleanup stopped. Cleaned: ": "Tīrīšana apturēta. Iztīrīts: ",
   "Finish or stop the running transfer first.": "Vispirms pabeidziet vai pārtrauciet pašreizējo pārsūtīšanu.",
-  "Step 1 of 3: reserving the free space": "1. solis no 3: rezervē brīvo vietu",
-  "Re-enabling MTP": "Atkārtoti iespējo MTP"
+  "Re-enabling MTP": "Atkārtoti iespējo MTP",
+  "Step 1 of 2: writing zeros": "1. solis no 2: raksta nulles",
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "2. solis no 2: dzēš pagaidu failu, neizslēdziet konsoli..."
 }

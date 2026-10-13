@@ -19,6 +19,7 @@
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "utils/devoptab_common.hpp"
 #include "utils/devoptab_curl_thread.hpp"
+#include "zero_fill.hpp"
 
 extern "C" NVGcontext* nvgCreateDk(nvg::DkRenderer* renderer, int flags);
 #include <minIni.h>
@@ -450,6 +451,9 @@ App::App(const char* argv0) {
 
 
     mark("config + emummc");
+
+    // a fill with zeros that a crash or a power-off stopped leaves a card-sized file: free the card.
+    zero_fill::RemoveLeftover();
 
     if (App::GetFtpEnable()) {
         ftpsrv::Init();

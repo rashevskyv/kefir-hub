@@ -3272,10 +3272,9 @@
   "On: only cheats made for your game version": "开：仅限此游戏版本的作弊码",
   "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "开启：仅提供为您当前游戏版本制作的金手指。关闭：当没有完全匹配时，将使用最接近的游戏版本的金手指。",
   "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub 正在主菜单（HOME 菜单）安装它自己的图标（一个引导程序）。从现在开始请通过该图标启动 Kefir Hub：这样它就能获得所有的内存和 USB 端口。而通过自制程序菜单（Homebrew Menu）和相册启动只能获得一部分。",
-  "Step 2 of 3: writing zeros": "第 2 步，共 3 步：正在写入零",
-  "Step 3 of 3: removing the temporary file, do not turn the console off...": "第 3/3 步：正在删除临时文件，请勿关闭主机...",
   "Cleanup stopped. Cleaned: ": "清理已停止。已清理：",
   "Finish or stop the running transfer first.": "请先完成或停止正在进行的传输。",
-  "Step 1 of 3: reserving the free space": "步骤 1/3：正在预留空闲空间",
-  "Re-enabling MTP": "正在重新启用 MTP"
+  "Re-enabling MTP": "正在重新启用 MTP",
+  "Step 1 of 2: writing zeros": "第 1/2 步：正在写入零",
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "步骤 2/2：正在删除临时文件，请勿关闭主机..."
 }

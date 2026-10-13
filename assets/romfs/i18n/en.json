@@ -3217,7 +3217,6 @@
   "Cleanup stopped. Cleaned: ": "Cleanup stopped. Cleaned: ",
   "Finish or stop the running transfer first.": "Finish or stop the running transfer first.",
   "Re-enabling MTP": "Re-enabling MTP",
-  "Step 1 of 3: reserving the free space": "Step 1 of 3: reserving the free space",
-  "Step 2 of 3: writing zeros": "Step 2 of 3: writing zeros",
-  "Step 3 of 3: removing the temporary file, do not turn the console off...": "Step 3 of 3: removing the temporary file, do not turn the console off..."
+  "Step 1 of 2: writing zeros": "Step 1 of 2: writing zeros",
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Step 2 of 2: removing the temporary file, do not turn the console off..."
 }

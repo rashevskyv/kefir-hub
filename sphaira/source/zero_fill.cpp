@@ -1,12 +1,12 @@
 #include "zero_fill.hpp"
 #include "defines.hpp"
 #include "app.hpp"
+#include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 #include "ui/menus/grid_menu_base.hpp"
 
 #include <algorithm>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -17,6 +17,13 @@ namespace {
 // ponytail: fixed 64 MiB, measure what HOS needs if a fill ever fails a system write.
 constexpr s64 RESERVE = 64LL * 1024 * 1024;
 
+// one fixed path, so a file left by a crash or a power-off is found and removed at the next start.
+constexpr char TEMP_FILE[] = "/kefir-hub-zero-fill.tmp";
+
+// short writes keep each fs call short: the menu behind polls the card's free space and a slow
+// card would otherwise hold it for seconds per write.
+constexpr s64 CHUNK_SIZE = 1024 * 1024;
+
 auto Seconds(u64 start_tick) -> double {
     return armTicksToNs(armGetSystemTick() - start_tick) / 1e9;
 }
@@ -25,17 +32,34 @@ auto Size(s64 bytes) -> std::string {
     return ui::menu::grid::FormatBytes(static_cast<u64>(std::max<s64>(0, bytes)));
 }
 
+void RemoveTempFile(fs::FsNativeSd& fs) {
+    if (!fs.FileExists(TEMP_FILE)) {
+        return;
+    }
+    const auto t = armGetSystemTick();
+    const auto rc = fs.DeleteFile(TEMP_FILE);
+    log_write("[ZERO] temporary file removed rc 0x%X in %.1fs\n", rc, Seconds(t));
+}
+
 } // namespace
 
-Result FillFreeSpace(NcmStorageId storage_id, ui::ProgressBox* pbox) {
-    NcmContentStorage cs{};
-    R_TRY(ncmOpenContentStorage(std::addressof(cs), storage_id));
-    ON_SCOPE_EXIT(ncmContentStorageClose(std::addressof(cs)));
+void RemoveLeftover() {
+    fs::FsNativeSd fs;
+    RemoveTempFile(fs);
+}
+
+Result FillSdFreeSpace(ui::ProgressBox* pbox) {
+    // hours on a slow card: the console must not sleep and the screen must not dim.
+    App::SetAutoSleepDisabled(true);
+    ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));
+
+    fs::FsNativeSd fs;
+    RemoveTempFile(fs);
 
     s64 free_space{};
-    R_TRY(ncmContentStorageGetFreeSpaceSize(std::addressof(cs), std::addressof(free_space)));
+    R_TRY(fs.GetFreeSpace("/", std::addressof(free_space)));
     const s64 size = free_space - RESERVE;
-    log_write("[ZERO] storage %u free %lld fill %lld\n", (unsigned)storage_id, (long long)free_space, (long long)size);
+    log_write("[ZERO] sd free %lld fill %lld\n", (long long)free_space, (long long)size);
     if (size <= 0) {
         R_SUCCEED();
     }
@@ -43,53 +67,41 @@ Result FillFreeSpace(NcmStorageId storage_id, ui::ProgressBox* pbox) {
     // the write speed plot, as in the install view
     pbox->SetShowGraph(true);
 
-    NcmPlaceHolderId placeholder_id{};
-    R_TRY(ncmContentStorageGeneratePlaceHolderId(std::addressof(cs), std::addressof(placeholder_id)));
-    NcmContentId content_id{};
-    static_assert(sizeof(content_id) == sizeof(placeholder_id));
-    std::memcpy(std::addressof(content_id), std::addressof(placeholder_id), sizeof(content_id));
+    // the file grows with each write: no up-front reservation, so the progress and Stop work at once.
+    R_TRY(fs.CreateFile(TEMP_FILE, 0, FsCreateOption_BigFile));
 
-    // step 1: the system reserves one temporary file as big as the free space. No bytes move yet, so
-    // there is no speed to show and Stop works only once this call returns.
-    pbox->SetHideSpeed(true);
-    pbox->NewTransfer(std::string{"Step 1 of 3: reserving the free space"_i18n} + " (" + Size(size) + ")");
-    auto t0 = armGetSystemTick();
-    R_TRY(ncmContentStorageCreatePlaceHolder(std::addressof(cs), std::addressof(content_id), std::addressof(placeholder_id), size));
-    log_write("[ZERO] reserved in %.1fs\n", Seconds(t0));
-
-    // the placeholder is the whole point only while it is being written; it never stays.
-    // deleting it releases the whole file, which takes as long as the system needs: say so.
+    // the file is the whole point only while it is being written; it never stays.
+    // freeing a card-sized file takes as long as the card needs: say so.
     ON_SCOPE_EXIT(
         pbox->SetHideSpeed(true);
-        pbox->NewTransfer("Step 3 of 3: removing the temporary file, do not turn the console off..."_i18n);
-        const auto t = armGetSystemTick();
-        ncmContentStorageDeletePlaceHolder(std::addressof(cs), std::addressof(placeholder_id));
-        log_write("[ZERO] placeholder removed in %.1fs\n", Seconds(t));
+        pbox->NewTransfer("Step 2 of 2: removing the temporary file, do not turn the console off..."_i18n);
+        RemoveTempFile(fs);
     );
 
-    // same chunk sizing as the title move: each write is one transaction on bis.
-    const s64 chunk_size = App::IsFileBaseEmummc() ? 512LL * 1024 : 4LL * 1024 * 1024;
-    const std::vector<u8> zeros(chunk_size);
+    {
+        fs::File f;
+        R_TRY(fs.OpenFile(TEMP_FILE, FsOpenMode_Write | FsOpenMode_Append, std::addressof(f)));
+        const std::vector<u8> zeros(CHUNK_SIZE);
 
-    // step 2: the writing, with speed, remaining time and the plot.
-    pbox->SetHideSpeed(false);
-    pbox->NewTransfer("Step 2 of 3: writing zeros"_i18n).UpdateTransfer(0, size);
-    t0 = armGetSystemTick();
-    u64 label_tick = t0;
-    for (s64 offset = 0; offset < size; ) {
-        R_TRY(pbox->ShouldExitResult());
-        const auto n = std::min(chunk_size, size - offset);
-        R_TRY(ncmContentStorageWritePlaceHolder(std::addressof(cs), std::addressof(placeholder_id), offset, zeros.data(), n));
-        offset += n;
-        pbox->UpdateTransfer(offset, size);
+        pbox->SetHideSpeed(false);
+        pbox->NewTransfer("Step 1 of 2: writing zeros"_i18n).UpdateTransfer(0, size);
+        const auto t0 = armGetSystemTick();
+        u64 label_tick = t0;
+        for (s64 offset = 0; offset < size; ) {
+            R_TRY(pbox->ShouldExitResult());
+            const auto n = std::min(CHUNK_SIZE, size - offset);
+            R_TRY(f.Write(offset, zeros.data(), n, FsWriteOption_None));
+            offset += n;
+            pbox->UpdateTransfer(offset, size);
 
-        // how much is done, once a second
-        if (Seconds(label_tick) >= 1.0) {
-            label_tick = armGetSystemTick();
-            pbox->SetTransfer(std::string{"Step 2 of 3: writing zeros"_i18n} + ": " + Size(offset) + " / " + Size(size));
+            // how much is done, once a second
+            if (Seconds(label_tick) >= 1.0) {
+                label_tick = armGetSystemTick();
+                pbox->SetTransfer(std::string{"Step 1 of 2: writing zeros"_i18n} + ": " + Size(offset) + " / " + Size(size));
+            }
         }
-    }
-    log_write("[ZERO] written %lld in %.1fs\n", (long long)size, Seconds(t0));
+        log_write("[ZERO] written %lld in %.1fs\n", (long long)size, Seconds(t0));
+    } // the file is closed here, before the removal above
 
     R_SUCCEED();
 }

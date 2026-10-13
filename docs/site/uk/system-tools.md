@@ -207,6 +207,15 @@
 
 Під час запису Kefir Hub лишає 64 МБ вільними, щоб система могла зберігати свої дані.
 
+<!-- draft
+- the fill writes one temporary file, /kefir-hub-zero-fill.tmp, that grows until the card is full; nothing is reserved up front
+- two steps on screen: "Step 1 of 2: writing zeros" with written / total, speed, time left and a write speed graph; "Step 2 of 2: removing the temporary file, do not turn the console off"
+- **B** stops within a second; the temporary file is then removed
+- the console does not sleep and the screen does not dim while the fill runs
+- after a crash or a power-off during a fill, Kefir Hub removes the temporary file at its next start
+- the card gets real zeros (the file is not encrypted)
+-->
+
 ## Проблеми
 
 **«Could not start this module.»** Деякі модулі запускаються лише під час завантаження. Увімкніть [[Autostart]] і перезавантажте консоль.
