@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.065 — Cheats: "Match Build ID exactly" can be turned off
+- Owner request: the user must be able to switch the Build ID check off when downloading cheats. New item **Match Build ID exactly** in the Cheats menu (on by default, key `cheats/match_build_id_exactly`). Off: when the nx-cheats-db file has no cheats for the game's own Build ID, the set of the closest Build ID is taken and written under the game's own Build ID (`ParseNxDbCheatsOrClosest`; the notice "Cheats of another game version are used" shows). The database carries no game version, so "closest" is the most complete set, the one listed last on a tie (`PickClosestBuildId`, test `test_cheat_closest_bid`).
+- Cheat files hold no Build ID inside (it is the file name and the database key), so nothing is edited in the text; EdiZon loads the file because its name is the running game's Build ID. Codes made for another version may not work.
+- 4 new keys (tools/i18n-translate). host tests: pass · nro: pending · switch: pending (download cheats for a game version that is not in the database with the switch off).
+
 ## v0.14.064 — Markdown view: code and headings are readable
 - Seen on the console (Burnout 3 release notes): code spans and headings were drawn in `ThemeEntryID_FOCUS`, almost black on the dark panel. They (and the quote bar) now use `ThemeEntryID_TEXT_SELECTED`.
 - host tests: not run (colour only) · nro: built · switch: pending.

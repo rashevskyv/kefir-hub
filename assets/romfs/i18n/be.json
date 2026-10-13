@@ -3207,5 +3207,9 @@
   "Everything is up to date.": "Усё абноўлена.",
   "Updated: ": "Абноўлена: ",
   "Updating ": "Абнаўленне ",
-  "all apps": "Усе прыкладанні"
+  "all apps": "Усе прыкладанні",
+  "Off: the closest game version is used when none fits": "Выключана: выкарыстоўваецца бліжэйшая версія гульні, калі ніводная не падыходзіць",
+  "Match Build ID exactly": "Дакладна супадаць з Build ID",
+  "Cheats of another game version are used": "Выкарыстоўваюцца чыты для іншай версіі гульні",
+  "On: only cheats made for your game version": "Укл.: толькі чыты для вашай версіі гульні"
 }

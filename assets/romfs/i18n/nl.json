@@ -3212,5 +3212,9 @@
   "Everything is up to date.": "Alles is up-to-date.",
   "Updated: ": "Bijgewerkt: ",
   "Updating ": "Bijwerken ",
-  "all apps": "Alle apps"
+  "all apps": "Alle apps",
+  "Off: the closest game version is used when none fits": "Uit: de dichtstbijzijnde gameversie wordt gebruikt als er geen past",
+  "Match Build ID exactly": "Build-ID exact overeenkomend",
+  "Cheats of another game version are used": "Er worden cheats van een andere spelversie gebruikt",
+  "On: only cheats made for your game version": "Aan: alleen cheats voor jouw spelversie"
 }

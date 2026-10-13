@@ -3207,5 +3207,9 @@
   "Everything is up to date.": "Kõik on ajakohane.",
   "Updated: ": "Uuendatud: ",
   "Updating ": "Uuendamine ",
-  "all apps": "Kõik rakendused"
+  "all apps": "Kõik rakendused",
+  "Off: the closest game version is used when none fits": "Väljas: kui ükski ei sobi, kasutatakse lähimat mänguversiooni",
+  "Match Build ID exactly": "Ühildada Build ID täpselt",
+  "Cheats of another game version are used": "Kasutatakse teise mänguversiooni kood",
+  "On: only cheats made for your game version": "Sees: ainult sinu mänguversioonile tehtud koodid"
 }

@@ -38,12 +38,21 @@ using namespace detail;
 // CheatsMenu - Main menu with cheat management options
 // ============================================================
 
+namespace {
+auto MatchBuildIdInfo() -> std::string {
+    return CheatsMatchBuildIdExactly()
+        ? "On: only cheats made for your game version"_i18n
+        : "Off: the closest game version is used when none fits"_i18n;
+}
+} // namespace
+
 CheatsMenu::CheatsMenu() : MenuBase{"Cheats"_i18n, MenuFlag_None} {
     // Main cheat management options
     m_items = {
         {"Download Kefir Cheats"_i18n, "Full KefirUpdater cheats pack"_i18n},
         {"Download 60FPS/GFX Cheats"_i18n, "KefirUpdater performance/graphics pack"_i18n},
         {"Download Exact Cheats"_i18n, "Select game and match Build ID"_i18n},
+        {"Match Build ID exactly"_i18n, MatchBuildIdInfo()},
         {"Import From File"_i18n, "Import a local cheat .txt file"_i18n},
         {"View Cheats"_i18n, "View installed cheat codes"_i18n},
         {"Delete All Cheats"_i18n, "Delete all existing cheat codes"_i18n},
@@ -134,7 +143,11 @@ void CheatsMenu::OnSelect() {
         case 2: // Download exact cheats from nx-cheats-db
             App::Push<CheatGameSelectMenu>(CheatSource::NxDb);
             break;
-        case 3: // Import local cheat file
+        case 3: // Match Build ID exactly: on / off
+            SetCheatsMatchBuildIdExactly(!CheatsMatchBuildIdExactly());
+            m_items[3].second = MatchBuildIdInfo();
+            break;
+        case 4: // Import local cheat file
             App::Push<filepicker::Menu>(
                 [](const fs::FsPath& path) -> bool {
                     App::Push<CheatGameSelectMenu>(CheatSource::ManualFile, path);
@@ -143,10 +156,10 @@ void CheatsMenu::OnSelect() {
                 std::vector<std::string>{"txt"}
             );
             break;
-        case 4: // View Cheats
+        case 5: // View Cheats
             App::Push<CheatViewMenu>();
             break;
-        case 5: // Delete All Cheats
+        case 6: // Delete All Cheats
             App::Push<OptionBox>(
                 "Delete all existing cheat codes?\nThis will remove ALL cheat files\nfor ALL installed games."_i18n,
                 "Cancel"_i18n, "Delete"_i18n, 1,
@@ -169,7 +182,7 @@ void CheatsMenu::OnSelect() {
                 }
             );
             break;
-        case 6: // Delete Orphaned Cheats
+        case 7: // Delete Orphaned Cheats
             App::Push<ProgressBox>(0, "Scanning..."_i18n, "Cheats"_i18n,
                 [](auto pbox) -> Result {
                     return DeleteOrphanedCheats();
@@ -187,7 +200,7 @@ void CheatsMenu::OnSelect() {
                 }
             );
             break;
-        case 7: // Clear Cheats Cache
+        case 8: // Clear Cheats Cache
             App::Push<OptionBox>(
                 "Clear cached cheats database?"_i18n,
                 "Cancel"_i18n, "Clear"_i18n, 0,

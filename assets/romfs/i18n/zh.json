@@ -3265,5 +3265,9 @@
   "Everything is up to date.": "一切已是最新版本。",
   "Updated: ": "已更新：",
   "Updating ": "正在更新",
-  "all apps": "所有应用"
+  "all apps": "所有应用",
+  "Off: the closest game version is used when none fits": "关闭：当没有匹配的版本时，将使用最接近的游戏版本",
+  "Match Build ID exactly": "完全匹配 Build ID",
+  "Cheats of another game version are used": "正在使用另一游戏版本的作弊码",
+  "On: only cheats made for your game version": "开：仅限此游戏版本的作弊码"
 }

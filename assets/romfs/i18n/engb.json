@@ -3207,5 +3207,9 @@
   "Everything is up to date.": "Everything is up to date.",
   "Updated: ": "Updated: ",
   "Updating ": "Updating ",
-  "all apps": "All apps"
+  "all apps": "All apps",
+  "Off: the closest game version is used when none fits": "Off: the closest game version is used when none fits",
+  "Match Build ID exactly": "Match Build ID exactly",
+  "Cheats of another game version are used": "Cheats of another game version are used",
+  "On: only cheats made for your game version": "On: only cheats made for your game version"
 }

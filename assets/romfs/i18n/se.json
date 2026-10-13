@@ -3212,5 +3212,9 @@
   "Everything is up to date.": "Allt är uppdaterat.",
   "Updated: ": "Uppdaterad: ",
   "Updating ": "Uppdaterar ",
-  "all apps": "Alla appar"
+  "all apps": "Alla appar",
+  "Off: the closest game version is used when none fits": "Av: närmaste spelversion används om ingen passar",
+  "Match Build ID exactly": "Matcha Build ID exakt",
+  "Cheats of another game version are used": "Fusk från en annan spelversion används",
+  "On: only cheats made for your game version": "På: endast fusk för din spelversion"
 }

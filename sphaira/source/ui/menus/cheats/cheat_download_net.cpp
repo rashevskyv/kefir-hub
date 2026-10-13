@@ -192,7 +192,11 @@ void CheatDownloadMenu::FetchKefirCheatsFromGithub(const std::string& build_id) 
             std::string resolved_build_id = NormalizeBuildId(build_id);
 
             if (!resolved_build_id.empty()) {
-                m_cheats = ParseNxDbCheats(content, resolved_build_id);
+                bool used_closest{};
+                m_cheats = ParseNxDbCheatsOrClosest(content, resolved_build_id, !CheatsMatchBuildIdExactly(), &used_closest);
+                if (used_closest) {
+                    App::Notify("Cheats of another game version are used"_i18n);
+                }
             }
 
             const auto build_ids = ExtractNxDbBuildIds(content);
@@ -269,7 +273,11 @@ void CheatDownloadMenu::FetchNxDbCheatsFromGithub(const std::string& build_id) {
             log_write("[Cheats] Cheat file response size: %zu bytes\n", content.size());
 
             // Parse the cheat JSON
-            m_cheats = ParseNxDbCheats(content, build_id);
+            bool used_closest{};
+            m_cheats = ParseNxDbCheatsOrClosest(content, build_id, !CheatsMatchBuildIdExactly(), &used_closest);
+            if (used_closest) {
+                App::Notify("Cheats of another game version are used"_i18n);
+            }
 
             if (m_cheats.empty()) {
                 log_write("[Cheats] Build ID %s not found in cheats file\n", build_id.c_str());

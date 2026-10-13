@@ -3213,5 +3213,9 @@
   "Everything is up to date.": "Alles ist auf dem neuesten Stand.",
   "Updated: ": "Aktualisiert: ",
   "Updating ": "Aktualisiere ",
-  "all apps": "Alle Apps"
+  "all apps": "Alle Apps",
+  "Off: the closest game version is used when none fits": "Aus: Die nächstgelegene Spielversion wird verwendet, wenn keine passt",
+  "Match Build ID exactly": "Build-ID exakt abgleichen",
+  "Cheats of another game version are used": "Es werden Cheats einer anderen Spielversion verwendet",
+  "On: only cheats made for your game version": "An: Nur Cheats für deine Spielversion"
 }

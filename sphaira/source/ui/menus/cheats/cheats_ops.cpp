@@ -409,6 +409,18 @@ auto DeleteOrphanedCheats() -> Result {
     return deleted_count;
 }
 
+namespace {
+option::OptionBool g_match_build_id{"cheats", "match_build_id_exactly", true};
+} // namespace
+
+auto CheatsMatchBuildIdExactly() -> bool {
+    return g_match_build_id.Get();
+}
+
+void SetCheatsMatchBuildIdExactly(bool value) {
+    g_match_build_id.Set(value);
+}
+
 } // namespace detail
 
 using namespace detail;
@@ -559,6 +571,5 @@ void PromptKefirCheatsDownload(const char* title, const char* url) {
         }
     );
 }
-
 
 } // namespace sphaira::ui::menu::hats

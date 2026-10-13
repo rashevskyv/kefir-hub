@@ -47,6 +47,7 @@ namespace detail {
     auto ParseNxDbCheats(const std::string& json_str, const std::string& target_build_id) -> std::vector<CheatEntry>;
     auto ParseCheatslipsCheats(const std::string& json_str, const std::string& target_build_id) -> std::vector<CheatEntry>;
     auto ExtractNxDbBuildIds(const std::string& json_str) -> std::vector<std::string>;
+    auto ParseNxDbCheatsOrClosest(const std::string& json_str, const std::string& target_build_id, bool allow_closest, bool* used_closest) -> std::vector<CheatEntry>;
 }
 
 } // namespace sphaira::ui::menu::hats

@@ -3207,5 +3207,9 @@
   "Everything is up to date.": "Semua sudah yang terbaru.",
   "Updated: ": "Diperbarui: ",
   "Updating ": "Memperbarui ",
-  "all apps": "Semua aplikasi"
+  "all apps": "Semua aplikasi",
+  "Off: the closest game version is used when none fits": "Nonaktif: versi game terdekat digunakan jika tidak ada yang cocok",
+  "Match Build ID exactly": "Cocokkan Build ID secara persis",
+  "Cheats of another game version are used": "Cheat dari versi gim lain digunakan",
+  "On: only cheats made for your game version": "Aktif: hanya cheat untuk versi game Anda"
 }

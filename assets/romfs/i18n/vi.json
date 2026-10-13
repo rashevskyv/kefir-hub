@@ -3212,5 +3212,9 @@
   "Everything is up to date.": "Mọi thứ đã được cập nhật.",
   "Updated: ": "Đã cập nhật: ",
   "Updating ": "Đang cập nhật ",
-  "all apps": "Tất cả ứng dụng"
+  "all apps": "Tất cả ứng dụng",
+  "Off: the closest game version is used when none fits": "Tắt: phiên bản trò chơi gần nhất được sử dụng khi không có phiên bản nào phù hợp",
+  "Match Build ID exactly": "Khớp chính xác Build ID",
+  "Cheats of another game version are used": "Đang sử dụng mã gian lận của phiên bản trò chơi khác",
+  "On: only cheats made for your game version": "Bật: chỉ các mã gian lận dành cho phiên bản trò chơi của bạn"
 }

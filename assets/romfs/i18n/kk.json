@@ -3207,5 +3207,9 @@
   "Everything is up to date.": "Барлығы жаңартылған.",
   "Updated: ": "Жаңартылды: ",
   "Updating ": "Жаңартылуда ",
-  "all apps": "Барлық қолданбалар"
+  "all apps": "Барлық қолданбалар",
+  "Off: the closest game version is used when none fits": "Өшірулі: егер ешқайсысы сәйкес келмесе, ең жақын ойын нұсқасы қолданылады",
+  "Match Build ID exactly": "Build ID дәл сәйкестендіру",
+  "Cheats of another game version are used": "Ойынның басқа нұсқасының читері қолданылуда",
+  "On: only cheats made for your game version": "Қосулы: тек сіздің ойын нұсқасына арналған читтер"
 }

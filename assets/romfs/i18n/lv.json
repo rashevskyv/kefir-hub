@@ -3207,5 +3207,9 @@
   "Everything is up to date.": "Viss ir jaunākajā versijā.",
   "Updated: ": "Atjaunināts: ",
   "Updating ": "Atjaunina ",
-  "all apps": "Visas lietotnes"
+  "all apps": "Visas lietotnes",
+  "Off: the closest game version is used when none fits": "Izslēgts: ja neviena neder, tiek izmantota tuvākā spēles versija",
+  "Match Build ID exactly": "Precīzi sakrist ar Build ID",
+  "Cheats of another game version are used": "Tiek izmantoti citas spēles versijas čiti",
+  "On: only cheats made for your game version": "Ieslēgts: tikai kodi jūsu spēles versijai"
 }

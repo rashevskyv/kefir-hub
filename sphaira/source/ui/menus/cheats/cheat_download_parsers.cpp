@@ -3,6 +3,7 @@
 #include "ui/menus/cheats/cheats_dmnt.hpp"
 #include "ui/menus/cheats/cheats_lookup.hpp"
 #include "ui/menus/cheats/cheats_db.hpp"
+#include "ui/menus/cheats/cheat_closest_bid.hpp"
 
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -537,4 +538,61 @@ auto ExtractNxDbBuildIds(const std::string& json_str) -> std::vector<std::string
     build_ids.erase(std::unique(build_ids.begin(), build_ids.end()), build_ids.end());
     return build_ids;
 }
+
+// Cheats of the game's own Build ID; when it has none and `allow_closest` is on,
+// the cheats of the closest Build ID in the file, written under the game's own.
+auto ParseNxDbCheatsOrClosest(const std::string& json_str, const std::string& target_build_id, bool allow_closest, bool* used_closest) -> std::vector<CheatEntry> {
+    if (used_closest) {
+        *used_closest = false;
+    }
+
+    auto cheats = ParseNxDbCheats(json_str, target_build_id);
+    if (!cheats.empty() || !allow_closest) {
+        return cheats;
+    }
+
+    yyjson_doc* doc = yyjson_read(json_str.data(), json_str.size(), 0);
+    if (!doc) {
+        return cheats;
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* root = yyjson_doc_get_root(doc);
+    if (!yyjson_is_obj(root)) {
+        return cheats;
+    }
+
+    std::vector<BuildIdCheats> sets;
+    yyjson_val* key;
+    yyjson_obj_iter iter;
+    yyjson_obj_iter_init(root, &iter);
+    while ((key = yyjson_obj_iter_next(&iter))) {
+        const char* key_str = yyjson_get_str(key);
+        yyjson_val* value = yyjson_obj_iter_get_val(key);
+        if (!key_str || !yyjson_is_obj(value)) {
+            continue;
+        }
+        const auto len = std::strlen(key_str);
+        if (len == 16 || len == 32) {
+            sets.push_back({NormalizeBuildId(key_str), yyjson_obj_size(value)});
+        }
+    }
+
+    const auto closest = PickClosestBuildId(sets);
+    if (closest.empty()) {
+        return cheats;
+    }
+
+    log_write("[Cheats] Build ID %s has no cheats, using the closest: %s\n", target_build_id.c_str(), closest.c_str());
+    cheats = ParseNxDbCheats(json_str, closest);
+    const auto own = NormalizeBuildId(target_build_id);
+    for (auto& c : cheats) {
+        c.build_id = own;
+    }
+    if (used_closest) {
+        *used_closest = !cheats.empty();
+    }
+    return cheats;
+}
+
 } // namespace sphaira::ui::menu::hats::detail
