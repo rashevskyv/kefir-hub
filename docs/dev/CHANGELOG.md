@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.070 — FTP: the one-time turn-on of 0.14.069 is removed
+- Owner: keep it as before. FTP is on by default (0.14.068); a saved choice, on or off, stays as it is. 0.14.069 was a test build that turned FTP on once on the test console; it stays only in that build.
+- host tests: not run (startup only) · nro: not built · switch: pending.
+
 ## v0.14.069 — FTP: a console with an old "off" default gets it turned on once
 - Owner: FTP not on by default is a bug. 0.14.068 changed the default, but a config that was ever saved holds `ftp_enabled=0` as if chosen, so existing consoles (the test console 192.168.50.103) stayed off. Now, once per console (`config/ftp_on_by_default_applied`), an off FTP is turned on at start; switching it off afterwards sticks. This also turns it on for someone who had it off on purpose (anonymous access to the card), once.
 - host tests: not run (startup) · nro: pending · switch: pending (FTP on :5000 after the first start of this version).
