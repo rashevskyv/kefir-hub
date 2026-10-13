@@ -451,6 +451,19 @@ App::App(const char* argv0) {
 
     mark("config + emummc");
 
+    // FTP used to be off by default, and a config that was ever saved holds that "off" as if the user
+    // had chosen it. Once, per console: turn it on. Switching it off afterwards sticks.
+    {
+        static option::OptionBool ftp_on_by_default{"config", "ftp_on_by_default_applied", false};
+        if (!ftp_on_by_default.Get()) {
+            ftp_on_by_default.Set(true);
+            if (!App::GetFtpEnable()) {
+                log_write("[config] FTP was off from an old default: turned on once\n");
+                m_ftp_enabled.Set(true); // the server starts just below
+            }
+        }
+    }
+
     if (App::GetFtpEnable()) {
         ftpsrv::Init();
         // enables background install for files dropped into the FTP "install" folder.
