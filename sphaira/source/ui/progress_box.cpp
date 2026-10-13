@@ -365,6 +365,14 @@ auto ProgressBox::CopyFile(const fs::FsPath& src_path, const fs::FsPath& dst_pat
     return CopyFile(&fs, src_path, dst_path, single_threaded);
 }
 
+auto ProgressBox::SetShowGraph(bool show) -> ProgressBox& {
+    m_show_graph = show;
+    // a taller popup keeps the plot between the text lines and the bar
+    m_pos.h = show ? 455.f : 315.f;
+    m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
+    return *this;
+}
+
 void ProgressBox::Yield() {
     svcSleepThread(YieldType_ToAnyThread);
 }

@@ -83,11 +83,12 @@ The file is renamed to the current Build ID. The codes inside are not changed: c
 | Pack download (temporary) | `/config/kefir-updater/cheats.zip` |
 
 ## Options
-In the game list of [[Download Exact Cheats]] and [[Import From File]], press **+** for [[Cheats Options]]:
+On the [[Cheats]] screen and in the game list of [[Download Exact Cheats]] and [[Import From File]], press **+** for [[Cheats Options]]:
 
 | Option | What it does | Default |
 |---|---|---|
 | [[Layout]] | [[Icon]], [[Grid]] or [[HB Menu]]. | [[Icon]] |
+| [[Match Build ID exactly]] | When switched off and the database has no cheats for the game's own Build ID, Kefir Hub takes the cheats of the closest game version in the database and saves them under the game's own Build ID, accompanied by a notice. | On |
 
 Press **X** ([[Refresh]]) there to scan the games again.
 
@@ -101,7 +102,3 @@ Press **X** ([[Refresh]]) there to scan the games again.
 **[[No installed cheats found]].** No installed game has a cheat file.
 
 **[[Failed to install cheats pack]].** Check the internet connection and the free space on the microSD card, then try again.
-
-<!-- draft
-- The options of the Cheats screen (**START**) and of the game list for [[Download Exact Cheats]] have [[Match Build ID exactly]] (on by default). When it is switched off and the database has no cheats for the game's own Build ID, Kefir Hub takes the cheats of the closest game version in the database and saves them under the game's own Build ID; a notice says so. The codes may not work or may misbehave, as they were made for another version.
--->

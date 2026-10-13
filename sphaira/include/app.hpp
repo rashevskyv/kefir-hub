@@ -471,7 +471,7 @@ public:
     option::OptionString m_mtp_name_install{INI_SECTION, "mtp_name_install", ""};
     // extra MTP storage folders, '|'-separated absolute paths ('|' is illegal in FAT names).
     option::OptionString m_mtp_folders{INI_SECTION, "mtp_folders", ""};
-    option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", false};
+    option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", true};
     option::OptionBool m_ftp_anon{INI_SECTION, "ftp_anon", true};
     option::OptionString m_ftp_user{INI_SECTION, "ftp_user", ""};
     option::OptionString m_ftp_pass{INI_SECTION, "ftp_pass", ""};

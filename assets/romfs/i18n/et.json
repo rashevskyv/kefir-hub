@@ -3213,5 +3213,11 @@
   "Cheats of another game version are used": "Kasutatakse teise mänguversiooni kood",
   "On: only cheats made for your game version": "Sees: ainult sinu mänguversioonile tehtud koodid",
   "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Sees: pakutakse ainult sinu mänguversiooni jaoks mõeldud koodipettusi. Väljas: kui ükski ei sobi, kasutatakse lähima mänguversiooni omi.",
-  "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub installib nüüd oma ikooni HOME-menüüsse (käiviti). Nüüdsest alates käivita Kefir Hub selle ikooni kaudu: nii saab see kogu mälu ja USB-pordi. Homebrew Menu ja Album annavad sellele vaid osa."
+  "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub installib nüüd oma ikooni HOME-menüüsse (käiviti). Nüüdsest alates käivita Kefir Hub selle ikooni kaudu: nii saab see kogu mälu ja USB-pordi. Homebrew Menu ja Album annavad sellele vaid osa.",
+  "Step 2 of 3: writing zeros": "Samm 2 / 3: nullide kirjutamine",
+  "Step 3 of 3: removing the temporary file, do not turn the console off...": "Samm 3 / 3: eemaldan ajutist faili, ära lülita konsooli välja...",
+  "Cleanup stopped. Cleaned: ": "Puhastamine peatatud. Puhastatud: ",
+  "Finish or stop the running transfer first.": "Lõpeta või peata käimasolev edastus esmalt.",
+  "Step 1 of 3: reserving the free space": "Samm 1/3: vaba ruumi eraldamine",
+  "Re-enabling MTP": "MTP uuesti lubamine"
 }

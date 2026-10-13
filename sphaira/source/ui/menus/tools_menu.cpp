@@ -124,14 +124,25 @@ void OpenCleanup() {
     sidebar->Add<SidebarEntryBool>("Folders of removed games"_i18n, opts->contents_folders, "Mods and cheats folders in /atmosphere/contents for games that are no longer on the console. Sysmodules are kept."_i18n);
     sidebar->Add<SidebarEntryBool>("Saves of removed users"_i18n, opts->deleted_user_saves, "Saves of users that are no longer on the console. They cannot be restored afterwards."_i18n);
     sidebar->Add<SidebarEntryCallback>("Run selected"_i18n, [opts](){
+        // an install that is minimized is still running; its unfinished files would be removed
+        if (App::GetProgressActive()) {
+            App::Notify("Finish or stop the running transfer first."_i18n);
+            return;
+        }
         auto report = std::make_shared<cleanup::Report>();
         App::Push<ui::ProgressBox>(0, "Clean system junk"_i18n, "", [opts, report](auto pbox) -> Result {
             return cleanup::Run(pbox, *opts, *report);
         }, [report](Result rc){
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Cleaned: "_i18n + std::to_string(report->removed) + " · SD +" + grid::FormatBytes(static_cast<u64>(report->freed_sd)) +
-                    " · NAND +" + grid::FormatBytes(static_cast<u64>(report->freed_nand)));
-            } else if (rc != Result_TransferCancelled) {
+            if (R_SUCCEEDED(rc) || rc == Result_TransferCancelled) {
+                // a stopped run reports what it did before it stopped
+                std::string text = (R_SUCCEEDED(rc) ? "Cleaned: "_i18n : "Cleanup stopped. Cleaned: "_i18n) + std::to_string(report->removed) +
+                    " · SD +" + grid::FormatBytes(static_cast<u64>(report->freed_sd)) +
+                    " · NAND +" + grid::FormatBytes(static_cast<u64>(report->freed_nand));
+                if (report->skipped) {
+                    text += " · " + "Skipped: "_i18n + std::to_string(report->skipped);
+                }
+                App::Notify(text);
+            } else {
                 App::PushErrorBox(rc, "Cleanup failed!"_i18n);
             }
         });

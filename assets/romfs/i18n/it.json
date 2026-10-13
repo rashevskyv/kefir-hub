@@ -3218,5 +3218,11 @@
   "Cheats of another game version are used": "Si stanno usando trucchi di un'altra versione del gioco",
   "On: only cheats made for your game version": "Attivo: solo trucchi per la tua versione di gioco",
   "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Attivo: vengono offerti solo i trucchi per la tua versione di gioco. Disattivo: se nessuno corrisponde, vengono usati quelli della versione più vicina.",
-  "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub sta installando la sua icona nel menu HOME (un forwarder). Da ora in poi avvia Kefir Hub da quell'icona: otterrà così tutta la memoria e la porta USB. Il menu Homebrew e l'Album gliene danno solo una parte."
+  "Kefir Hub is now installing its own icon on the HOME Menu (a forwarder). From now on start Kefir Hub from that icon: it then gets all the memory and the USB port. The Homebrew Menu and the Album give it only a part.": "Kefir Hub sta installando la sua icona nel menu HOME (un forwarder). Da ora in poi avvia Kefir Hub da quell'icona: otterrà così tutta la memoria e la porta USB. Il menu Homebrew e l'Album gliene danno solo una parte.",
+  "Step 2 of 3: writing zeros": "Passaggio 2 di 3: scrittura zeri",
+  "Step 3 of 3: removing the temporary file, do not turn the console off...": "Passaggio 3 di 3: rimozione del file temporaneo in corso, non spegnere la console...",
+  "Cleanup stopped. Cleaned: ": "Pulizia interrotta. Puliti: ",
+  "Finish or stop the running transfer first.": "Prima termina o interrompi il trasferimento in corso.",
+  "Step 1 of 3: reserving the free space": "Passaggio 1 di 3: prenotazione spazio libero",
+  "Re-enabling MTP": "Riattivazione MTP"
 }

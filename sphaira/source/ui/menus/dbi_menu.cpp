@@ -14,6 +14,8 @@
 #include "ui/error_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
+#include "ui/progress_box.hpp"
+#include "evman.hpp"
 #include "ui/sidebar.hpp"
 #include "swkbd.hpp"
 #include "usb/usbds.hpp"
@@ -191,15 +193,27 @@ Menu::~Menu() {
         m_usb_source->SignalCancel();
     }
     if (m_thread_created) {
+        const TimeStamp join_ts;
         threadWaitForExit(&m_thread);
         threadClose(&m_thread);
+        log_write("[PERF] dbi session worker joined in %zums\n", (size_t)join_ts.GetMs());
     }
     m_screensaver.FlushPendingBrightness();
     m_usb_source.reset();
 
     if (m_was_mtp_enabled) {
-        App::Notify("Re-enabled MTP"_i18n);
-        App::SetMtpEnable(true);
+        // turning MTP on scans every save and title: with a progress box after this menu is gone
+        // instead of a frozen screen on Back.
+        evman::push(evman::FunctionalEventData{[]() {
+            App::Push<ui::ProgressBox>(0, "Re-enabling MTP"_i18n, "", [](auto) -> Result {
+                const TimeStamp ts;
+                App::SetMtpEnable(true);
+                log_write("[PERF] MTP re-enabled in %zums\n", (size_t)ts.GetMs());
+                R_SUCCEED();
+            }, [](Result) {
+                App::Notify("Re-enabled MTP"_i18n);
+            });
+        }}, false);
     } else {
         if (App::GetHddEnable()) {
             if (App::GetWriteProtect()) {

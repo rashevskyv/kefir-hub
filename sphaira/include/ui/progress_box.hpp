@@ -53,6 +53,9 @@ struct ProgressBox final : Widget, InstallProgress {
     // than real bytes, where a "MiB/s" figure derived from those units would be
     // meaningless. the percentage and bar keep working.
     auto SetHideSpeed(bool hide) -> ProgressBox& { m_hide_speed = hide; return *this; }
+    // adds a live write-speed plot (grid in MiB/s, line, "Now" readout) above the bar, the way the
+    // DBI install view draws it. Makes the box taller; call once before the first transfer.
+    auto SetShowGraph(bool show) -> ProgressBox&;
     auto NewTransferForce(const std::string& transfer) -> ProgressBox&;
     auto UpdateTransferForce(s64 offset, s64 size) -> ProgressBox&;
 
@@ -156,6 +159,12 @@ private:
     s64 m_last_offset{};
     s64 m_speed{};
     std::array<s64, 8> m_speed_samples{};
+    // one sample per 0.5 s, kept for the optional speed plot.
+    static constexpr size_t GRAPH_HISTORY = 120;
+    std::array<s64, GRAPH_HISTORY> m_graph{};
+    size_t m_graph_count{};
+    size_t m_graph_index{};
+    std::atomic<bool> m_show_graph{false};
     size_t m_speed_sample_count{};
     size_t m_speed_sample_index{};
     TimeStamp m_timestamp{};

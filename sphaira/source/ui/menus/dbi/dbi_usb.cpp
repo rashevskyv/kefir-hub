@@ -409,7 +409,7 @@ void Menu::ThreadFunction() {
         }
 
         if (!m_session_failed) {
-            m_usb_source->Finished(FINISHED_TIMEOUT);
+            m_usb_source->Finished(m_cancel_requested ? FINISHED_TIMEOUT_CANCELLED : FINISHED_TIMEOUT);
         }
         if (m_cancel_requested) {
             m_state = State::Cancelled;

@@ -12,7 +12,8 @@ struct Options {
     bool orphans_nand{true};
     bool placeholders_sd{true};
     bool placeholders_nand{true};
-    bool unused_tickets{true};
+    // off by default: a ticket cannot be brought back without a backup of it.
+    bool unused_tickets{false};
     bool erpt_reports{true};
     bool contents_folders{true};
     // off by default: these are a person's saves, gone for good once deleted.
@@ -23,6 +24,8 @@ struct Report {
     s64 freed_sd{};
     s64 freed_nand{};
     u32 removed{};
+    // steps that did nothing because a list they depend on could not be read
+    u32 skipped{};
 };
 
 Result Run(ui::ProgressBox* pbox, const Options& options, Report& out);

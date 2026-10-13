@@ -40,6 +40,8 @@ Turn it off to get the old Homebrew Menu back: Kefir Hub asks [[Restore hbmenu?]
 3. If some user profiles on the console are not linked to a Nintendo Account, Kefir Hub offers to link them.
    See [Users](users.md).
 
+Nothing interrupts the language list. The notice about the HOME Menu icon (forwarder) waits until you have chosen the language; the first-start page then says, in your language, that Kefir Hub is installing its own icon on the HOME Menu. Any other notice about the forwarder appears after you press OK on that page.
+
 ## The two tabs
 Kefir Hub has two tabs. Press **R** to go to [[Tools]], press **L** or **B** to go back to [[Homebrew]].
 
@@ -69,7 +71,3 @@ Kefir Hub has two tabs. Press **R** to go to [[Tools]], press **L** or **B** to 
 - Update Kefir and the firmware: [Updater](updater.md)
 - Share the memory card with a PC over MTP, FTP or a browser: [Sharing](sharing.md)
 - Fix a problem: [Troubleshooting](troubleshooting.md)
-
-<!-- draft
-- On the first start nothing interrupts the language list: the notice about the HOME Menu icon (forwarder) is not shown before the language is chosen. The welcome page, written in the chosen language, says that Kefir Hub is installing its own icon on the HOME Menu; any other notice about the forwarder appears after you press OK on that page.
--->

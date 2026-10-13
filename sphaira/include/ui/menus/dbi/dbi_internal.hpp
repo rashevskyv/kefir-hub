@@ -12,6 +12,8 @@ namespace sphaira::ui::menu::dbi {
 constexpr u64 CONNECTION_TIMEOUT = UINT64_MAX;
 constexpr u64 TRANSFER_TIMEOUT = UINT64_MAX;
 constexpr u64 FINISHED_TIMEOUT = 1e+9 * 3;
+// after Back / cancel: the exit command is still sent, but nobody waits seconds for the PC to read it.
+constexpr u64 FINISHED_TIMEOUT_CANCELLED = 1e+9 * 0.25;
 constexpr size_t MAX_LOG_LINES = 128;
 // how long to wait for the host to re-enumerate us and answer the replayed
 // handshake after the link dropped. Bounded, unlike the session timeouts

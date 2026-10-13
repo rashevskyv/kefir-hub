@@ -14,8 +14,12 @@
 #include <array>
 #include <cstring>
 #include <set>
+#include <span>
 #include <vector>
 
+// Every step is fail-closed: when a list it depends on (installed titles, game records, users) could
+// not be read, the step does nothing and is counted as skipped. An unreadable or empty list must
+// never make every file, ticket, folder or save look like a leftover.
 namespace sphaira::cleanup {
 namespace {
 
@@ -27,11 +31,17 @@ auto ToId(const void* p) -> Id16 {
     return id;
 }
 
+auto SameKey(const NcmContentMetaKey& a, const NcmContentMetaKey& b) -> bool {
+    return a.id == b.id && a.version == b.version && a.type == b.type;
+}
+
 struct Storage {
     NcmStorageId id{};
     NcmContentStorage cs{};
     NcmContentMetaDatabase db{};
     bool open{};
+    // false when the list of installed titles could not be read.
+    bool keys_ok{};
     std::vector<NcmContentMetaKey> keys{};
 
     explicit Storage(NcmStorageId storage_id) : id{storage_id} {
@@ -46,27 +56,37 @@ struct Storage {
     }
 
     void LoadKeys() {
-        if (R_FAILED(ncm::ListAllKeys(&db, keys))) {
+        keys_ok = R_SUCCEEDED(ncm::ListAllKeys(&db, keys));
+        if (!keys_ok) {
             keys.clear();
         }
     }
 
-    // every content id a registered title still uses, its own meta nca included.
-    auto ReferencedContent() -> std::set<Id16> {
-        std::set<Id16> out;
+    auto Ready() const -> bool {
+        return open && keys_ok;
+    }
+
+    // every content id the registered titles still use, their own meta nca included; the titles in
+    // `except` are left out (they are about to be removed). False when one title could not be read.
+    auto Referenced(std::set<Id16>& out, std::span<const NcmContentMetaKey> except = {}) -> bool {
         for (const auto& key : keys) {
+            if (std::ranges::any_of(except, [&key](const auto& e){ return SameKey(e, key); })) {
+                continue;
+            }
             std::vector<NcmContentInfo> infos;
-            if (R_SUCCEEDED(ncm::GetContentInfos(&db, &key, infos))) {
-                for (const auto& info : infos) {
-                    out.emplace(ToId(&info.content_id));
-                }
+            if (R_FAILED(ncm::GetContentInfos(&db, &key, infos))) {
+                log_write("[CLEAN] cannot read the contents of %016lX\n", key.id);
+                return false;
+            }
+            for (const auto& info : infos) {
+                out.emplace(ToId(&info.content_id));
             }
             NcmContentId meta_id;
             if (R_SUCCEEDED(ncmContentMetaDatabaseGetContentIdByType(&db, &meta_id, &key, NcmContentType_Meta))) {
                 out.emplace(ToId(&meta_id));
             }
         }
-        return out;
+        return true;
     }
 
     auto FreeSpace() -> s64 {
@@ -76,8 +96,13 @@ struct Storage {
     }
 };
 
-Result DeleteOrphans(ui::ProgressBox* pbox, Storage& st, u32& removed) {
-    const auto used = st.ReferencedContent();
+Result DeleteOrphans(ui::ProgressBox* pbox, Storage& st, Report& out) {
+    std::set<Id16> used;
+    if (!st.Ready() || !st.Referenced(used)) {
+        log_write("[CLEAN] lost content: skipped, the installed titles are not readable\n");
+        out.skipped++;
+        R_SUCCEED();
+    }
     s32 count{};
     R_TRY(ncmContentStorageGetContentCount(&st.cs, &count));
     std::vector<NcmContentId> ids(count);
@@ -89,7 +114,7 @@ Result DeleteOrphans(ui::ProgressBox* pbox, Storage& st, u32& removed) {
     for (const auto& id : ids) {
         R_TRY(pbox->ShouldExitResult());
         if (!used.contains(ToId(&id)) && R_SUCCEEDED(ncmContentStorageDelete(&st.cs, &id))) {
-            removed++;
+            out.removed++;
         }
     }
     R_SUCCEED();
@@ -112,7 +137,7 @@ Result RemoveFromRecord(u64 app_id, const NcmContentMetaKey& key) {
         }
     }
     const auto before = records.size();
-    std::erase_if(records, [&key](const auto& r){ return r.key.id == key.id && r.key.version == key.version && r.key.type == key.type; });
+    std::erase_if(records, [&key](const auto& r){ return SameKey(r.key, key); });
     if (records.size() == before || records.empty()) {
         R_SUCCEED();
     }
@@ -120,7 +145,7 @@ Result RemoveFromRecord(u64 app_id, const NcmContentMetaKey& key) {
     return ns::PushApplicationRecord(am.get(), app_id, records.data(), records.size());
 }
 
-Result DeleteOldUpdates(ui::ProgressBox* pbox, std::span<Storage*> storages, u32& removed) {
+Result DeleteOldUpdates(ui::ProgressBox* pbox, std::span<Storage*> storages, Report& out) {
     struct Where { Storage* st; NcmContentMetaKey key; };
     std::vector<Where> all;
     std::vector<PatchRef> patches;
@@ -132,14 +157,78 @@ Result DeleteOldUpdates(ui::ProgressBox* pbox, std::span<Storage*> storages, u32
             }
         }
     }
+
+    // per storage: the files the kept titles use. An old patch may share a file with the newest one.
+    std::vector<Where> doomed;
     for (const auto i : OldUpdates(patches)) {
-        R_TRY(pbox->ShouldExitResult());
-        const auto& w = all[i];
-        log_write("[CLEAN] old update %016lX v%u\n", w.key.id, w.key.version);
-        if (R_SUCCEEDED(ncm::DeleteKey(&w.st->cs, &w.st->db, &w.key))) {
-            RemoveFromRecord(ncm::GetAppId(w.key), w.key);
-            removed++;
+        doomed.push_back(all[i]);
+    }
+    struct Keep { Storage* st; std::set<Id16> ids; bool ok; };
+    std::vector<Keep> keeps;
+    for (auto* st : storages) {
+        std::vector<NcmContentMetaKey> except;
+        for (const auto& w : doomed) {
+            if (w.st == st) {
+                except.push_back(w.key);
+            }
         }
+        Keep k{st, {}, st->Ready()};
+        if (k.ok && !except.empty()) {
+            k.ok = st->Referenced(k.ids, except);
+        }
+        keeps.push_back(std::move(k));
+    }
+
+    for (const auto& w : doomed) {
+        R_TRY(pbox->ShouldExitResult());
+        const auto keep = std::ranges::find_if(keeps, [&w](const auto& k){ return k.st == w.st; });
+        if (keep == keeps.end() || !keep->ok) {
+            log_write("[CLEAN] old update %016lX v%u: skipped, the installed titles are not readable\n", w.key.id, w.key.version);
+            out.skipped++;
+            continue;
+        }
+        log_write("[CLEAN] old update %016lX v%u\n", w.key.id, w.key.version);
+
+        std::vector<NcmContentInfo> infos;
+        if (R_FAILED(ncm::GetContentInfos(&w.st->db, &w.key, infos))) {
+            out.skipped++;
+            continue;
+        }
+        NcmContentId meta_id;
+        if (R_SUCCEEDED(ncmContentMetaDatabaseGetContentIdByType(&w.st->db, &meta_id, &w.key, NcmContentType_Meta))) {
+            NcmContentInfo meta_info{};
+            meta_info.content_id = meta_id;
+            infos.push_back(meta_info);
+        }
+
+        bool failed = false;
+        for (const auto& info : infos) {
+            if (keep->ids.contains(ToId(&info.content_id))) {
+                continue; // shared with a title that stays
+            }
+            if (R_FAILED(ncmContentStorageDelete(&w.st->cs, &info.content_id))) {
+                // it may be gone already (the meta nca is listed twice on some titles)
+                bool present{};
+                if (R_SUCCEEDED(ncmContentStorageHas(&w.st->cs, &present, &info.content_id)) && present) {
+                    failed = true;
+                }
+            }
+        }
+        if (failed) {
+            log_write("[CLEAN] old update %016lX: a file could not be deleted, the title is kept\n", w.key.id);
+            out.skipped++;
+            continue;
+        }
+
+        if (R_FAILED(ncmContentMetaDatabaseRemove(&w.st->db, &w.key)) || R_FAILED(ncmContentMetaDatabaseCommit(&w.st->db))) {
+            out.skipped++;
+            continue;
+        }
+        const auto rc = RemoveFromRecord(ncm::GetAppId(w.key), w.key);
+        if (R_FAILED(rc)) {
+            log_write("[CLEAN] application record of %016lX not updated: 0x%X\n", ncm::GetAppId(w.key), rc);
+        }
+        out.removed++;
     }
     for (auto* st : storages) {
         st->LoadKeys();
@@ -147,13 +236,22 @@ Result DeleteOldUpdates(ui::ProgressBox* pbox, std::span<Storage*> storages, u32
     R_SUCCEED();
 }
 
-Result DeleteUnusedTickets(std::span<Storage*> storages, u32& removed) {
+Result DeleteUnusedTickets(ui::ProgressBox* pbox, std::span<Storage*> storages, Report& out) {
+    // a ticket is unused only when every installed title, on both storages, was read and none needs it.
     std::set<Id16> used;
     for (auto* st : storages) {
+        if (!st->Ready()) {
+            log_write("[CLEAN] tickets: skipped, the installed titles are not readable\n");
+            out.skipped++;
+            R_SUCCEED();
+        }
         for (const auto& key : st->keys) {
+            R_TRY(pbox->ShouldExitResult());
             std::vector<NcmContentInfo> infos;
             if (R_FAILED(ncm::GetContentInfos(&st->db, &key, infos))) {
-                continue;
+                log_write("[CLEAN] tickets: skipped, cannot read %016lX\n", key.id);
+                out.skipped++;
+                R_SUCCEED();
             }
             for (const auto& info : infos) {
                 NcmRightsId rid{};
@@ -186,33 +284,41 @@ Result DeleteUnusedTickets(std::span<Storage*> storages, u32& removed) {
     collect(es::CountPersonalizedTicket, es::ListPersonalizedTicket);
     log_write("[CLEAN] %zu unused tickets (%zu rights ids in use)\n", unused.size(), used.size());
     if (!unused.empty()) {
+        R_TRY(pbox->ShouldExitResult());
         R_TRY(es::DeleteTicket(unused.data(), unused.size()));
-        removed += unused.size();
+        out.removed += unused.size();
     }
     R_SUCCEED();
 }
 
-void DeleteFolderContents(fs::Fs& fs, const fs::FsPath& dir, u32& removed) {
+Result DeleteFolderContents(ui::ProgressBox* pbox, fs::Fs& fs, const fs::FsPath& dir, u32& removed) {
     fs::Dir d;
     std::vector<FsDirectoryEntry> entries;
     if (R_FAILED(fs.OpenDirectory(dir, FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &d)) || R_FAILED(d.ReadAll(entries))) {
-        return;
+        R_SUCCEED();
     }
     for (const auto& e : entries) {
+        R_TRY(pbox->ShouldExitResult());
         const auto path = fs::AppendPath(dir, e.name);
         if (R_SUCCEEDED(e.type == FsDirEntryType_Dir ? fs.DeleteDirectoryRecursively(path) : fs.DeleteFile(path))) {
             removed++;
         }
     }
+    R_SUCCEED();
 }
 
 // folders for games that are no longer on the console; sysmodules never match IsGameContentsFolder.
-void DeleteStaleContentsFolders(fs::Fs& fs, u32& removed) {
+Result DeleteStaleContentsFolders(ui::ProgressBox* pbox, fs::Fs& fs, Report& out) {
     std::set<u64> known;
     std::vector<NsApplicationRecord> records(1000);
+    bool listed = true;
     for (s32 offset = 0;;) {
         s32 count{};
-        if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &count)) || !count) {
+        if (R_FAILED(nsListApplicationRecord(records.data(), records.size(), offset, &count))) {
+            listed = false;
+            break;
+        }
+        if (!count) {
             break;
         }
         for (s32 i = 0; i < count; i++) {
@@ -220,31 +326,46 @@ void DeleteStaleContentsFolders(fs::Fs& fs, u32& removed) {
         }
         offset += count;
     }
+    // no records at all can only be a failed read on a console that has games: do nothing.
+    if (!listed || known.empty()) {
+        log_write("[CLEAN] contents folders: skipped, the game records are not readable\n");
+        out.skipped++;
+        R_SUCCEED();
+    }
+
     fs::Dir d;
     std::vector<FsDirectoryEntry> entries;
     if (R_FAILED(fs.OpenDirectory("/atmosphere/contents", FsDirOpenMode_ReadDirs, &d)) || R_FAILED(d.ReadAll(entries))) {
-        return;
+        R_SUCCEED();
     }
     for (const auto& e : entries) {
+        R_TRY(pbox->ShouldExitResult());
         const auto tid = forced_language::ParseTitleId(e.name);
         if (!IsGameContentsFolder(e.name) || known.contains(tid)) {
             continue;
         }
         log_write("[CLEAN] stale contents folder %s\n", e.name);
         if (R_SUCCEEDED(fs.DeleteDirectoryRecursively(fs::AppendPath("/atmosphere/contents", e.name)))) {
-            removed++;
+            out.removed++;
         }
     }
+    R_SUCCEED();
 }
 
-void DeleteSavesOfRemovedUsers(u32& removed) {
+Result DeleteSavesOfRemovedUsers(ui::ProgressBox* pbox, Report& out) {
     std::vector<AccountUid> users;
     for (const auto& acc : App::GetAccountList()) {
         users.push_back(acc.uid);
     }
+    // the list is empty when the account service failed: every save would look like a removed user's.
+    if (users.empty()) {
+        log_write("[CLEAN] saves: skipped, the user list is not readable\n");
+        out.skipped++;
+        R_SUCCEED();
+    }
     FsSaveDataInfoReader reader;
     if (R_FAILED(fsOpenSaveDataInfoReader(&reader, FsSaveDataSpaceId_User))) {
-        return;
+        R_SUCCEED();
     }
     std::vector<u64> to_delete;
     FsSaveDataInfo info;
@@ -262,10 +383,12 @@ void DeleteSavesOfRemovedUsers(u32& removed) {
     }
     fsSaveDataInfoReaderClose(&reader);
     for (const auto id : to_delete) {
+        R_TRY(pbox->ShouldExitResult());
         if (R_SUCCEEDED(fsDeleteSaveDataFileSystemBySaveDataSpaceId(FsSaveDataSpaceId_User, id))) {
-            removed++;
+            out.removed++;
         }
     }
+    R_SUCCEED();
 }
 
 } // namespace
@@ -280,54 +403,36 @@ Result Run(ui::ProgressBox* pbox, const Options& o, Report& out) {
     sd_fs.GetFreeSpace("/", &sd_fs_before);
     const auto nand_before = nand.FreeSpace();
 
-    const auto step = [pbox](const char* name) {
+    // a step that is cancelled or fails ends the run, but the report below still counts what was
+    // done, so a stopped cleanup says how much it freed.
+    Result rc = 0;
+    const auto step = [&](bool enabled, const char* name, auto fn) {
+        if (!enabled || R_FAILED(rc)) {
+            return;
+        }
         pbox->NewTransfer(i18n::get(name));
-        return pbox->ShouldExitResult();
+        rc = pbox->ShouldExitResult();
+        if (R_SUCCEEDED(rc)) {
+            rc = fn();
+        }
     };
 
-    if (o.old_updates) {
-        R_TRY(step("Deleting old game updates"));
-        R_TRY(DeleteOldUpdates(pbox, both, out.removed));
-    }
-    if (o.orphans_sd && sd.open) {
-        R_TRY(step("Deleting lost content on the SD card"));
-        R_TRY(DeleteOrphans(pbox, sd, out.removed));
-    }
-    if (o.orphans_nand && nand.open) {
-        R_TRY(step("Deleting lost content in system memory"));
-        R_TRY(DeleteOrphans(pbox, nand, out.removed));
-    }
-    if (o.placeholders_sd && sd.open) {
-        R_TRY(step("Deleting unfinished installs"));
-        ncmContentStorageCleanupAllPlaceHolder(&sd.cs);
-    }
-    if (o.placeholders_nand && nand.open) {
-        R_TRY(step("Deleting unfinished installs"));
-        ncmContentStorageCleanupAllPlaceHolder(&nand.cs);
-    }
-    if (o.unused_tickets) {
-        R_TRY(step("Deleting unused tickets"));
-        R_TRY(DeleteUnusedTickets(both, out.removed));
-    }
-    if (o.erpt_reports) {
-        R_TRY(step("Deleting error reports"));
-        DeleteFolderContents(sd_fs, "/atmosphere/erpt_reports", out.removed);
-    }
-    if (o.contents_folders) {
-        R_TRY(step("Deleting folders of removed games"));
-        DeleteStaleContentsFolders(sd_fs, out.removed);
-    }
-    if (o.deleted_user_saves) {
-        R_TRY(step("Deleting saves of removed users"));
-        DeleteSavesOfRemovedUsers(out.removed);
-    }
+    step(o.old_updates, "Deleting old game updates", [&]{ return DeleteOldUpdates(pbox, both, out); });
+    step(o.orphans_sd && sd.open, "Deleting lost content on the SD card", [&]{ return DeleteOrphans(pbox, sd, out); });
+    step(o.orphans_nand && nand.open, "Deleting lost content in system memory", [&]{ return DeleteOrphans(pbox, nand, out); });
+    step(o.placeholders_sd && sd.open, "Deleting unfinished installs", [&]{ log_write("[CLEAN] placeholders on SD: 0x%X\n", ncmContentStorageCleanupAllPlaceHolder(&sd.cs)); return Result{0}; });
+    step(o.placeholders_nand && nand.open, "Deleting unfinished installs", [&]{ log_write("[CLEAN] placeholders in NAND: 0x%X\n", ncmContentStorageCleanupAllPlaceHolder(&nand.cs)); return Result{0}; });
+    step(o.unused_tickets, "Deleting unused tickets", [&]{ return DeleteUnusedTickets(pbox, both, out); });
+    step(o.erpt_reports, "Deleting error reports", [&]{ return DeleteFolderContents(pbox, sd_fs, "/atmosphere/erpt_reports", out.removed); });
+    step(o.contents_folders, "Deleting folders of removed games", [&]{ return DeleteStaleContentsFolders(pbox, sd_fs, out); });
+    step(o.deleted_user_saves, "Deleting saves of removed users", [&]{ return DeleteSavesOfRemovedUsers(pbox, out); });
 
     s64 sd_fs_after{};
     sd_fs.GetFreeSpace("/", &sd_fs_after);
     out.freed_sd = std::max<s64>(0, sd_fs_after - sd_fs_before);
     out.freed_nand = std::max<s64>(0, nand.FreeSpace() - nand_before);
-    log_write("[CLEAN] removed %u, freed sd %lld nand %lld\n", out.removed, (long long)out.freed_sd, (long long)out.freed_nand);
-    R_SUCCEED();
+    log_write("[CLEAN] removed %u, skipped %u, freed sd %lld nand %lld, result 0x%X\n", out.removed, out.skipped, (long long)out.freed_sd, (long long)out.freed_nand, rc);
+    return rc;
 }
 
 } // namespace sphaira::cleanup

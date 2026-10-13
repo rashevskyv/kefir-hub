@@ -75,6 +75,87 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
     gfx::drawTextArgs(vg, x + w - 15.f, y + 8.f, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", expand_buf);
 }
 
+// write-speed plot as in the DBI install view: 1/2/5 x 10^n MiB/s grid, newest sample on the right,
+// a "Now" figure averaged over the last few samples. `history` is a ring, `index` the next slot.
+template<size_t N>
+void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::array<s64, N>& history, size_t count, size_t index) {
+    const auto blue = nvgRGBA(52, 152, 219, 255);
+    const float pad = 4.f;
+    constexpr double MIB = 1024.0 * 1024.0;
+
+    gfx::drawRect(vg, plot, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+
+    double now_mib = 0.0;
+    if (count) {
+        const size_t n = std::min<size_t>(count, 4);
+        s64 sum = 0;
+        for (size_t i = 0; i < n; i++) {
+            sum += history[(index + N - 1 - i) % N];
+        }
+        now_mib = (double)sum / (double)n / MIB;
+    }
+    gfx::drawTextArgs(vg, plot.x + plot.w + 12.f, plot.y + 2.f, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", "Now"_i18n.c_str());
+    char buf[32]{};
+    std::snprintf(buf, sizeof(buf), "%.1f MiB/s", now_mib);
+    gfx::drawTextBold(vg, plot.x + plot.w + 12.f, plot.y + plot.h * 0.5f, 16.f, blue, buf, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+    if (count < 2) {
+        return;
+    }
+
+    s64 peak = 1;
+    for (size_t i = 0; i < count; i++) {
+        peak = std::max(peak, history[(index + N - count + i) % N]);
+    }
+    const double peak_mib = (double)peak / MIB;
+    const auto nice_step = [](double range) -> double {
+        double s = 1.0;
+        while (true) {
+            if (range <= s) return s;
+            if (range <= s * 2.0) return s * 2.0;
+            if (range <= s * 5.0) return s * 5.0;
+            s *= 10.0;
+        }
+    };
+    const double step_mib = nice_step(std::max(peak_mib, 1.0) / 4.0);
+    int steps = 1;
+    while (step_mib * steps < peak_mib) steps++;
+    const double top = step_mib * steps * MIB;
+
+    nvgSave(vg);
+    nvgIntersectScissor(vg, plot.x, plot.y, plot.w, plot.h);
+    auto grid = theme->GetColour(ThemeEntryID_TEXT);
+    grid.a = 0.12f;
+    const float inner_h = plot.h - pad * 2.f;
+    for (int k = 0; k <= steps; k++) {
+        const float gy = plot.y + plot.h - pad - inner_h * (float)k / (float)steps;
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, plot.x + pad, gy);
+        nvgLineTo(vg, plot.x + plot.w - pad, gy);
+        nvgStrokeColor(vg, grid);
+        nvgStrokeWidth(vg, 1.f);
+        nvgStroke(vg);
+        if (k > 0) {
+            gfx::drawTextArgs(vg, plot.x + pad + 4.f, gy + 2.f, 12.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO),
+                k == steps ? "%g MiB/s" : "%g", step_mib * k);
+        }
+    }
+
+    nvgBeginPath(vg);
+    for (size_t i = 0; i < count; i++) {
+        const auto slot = N - count + i; // the newest sample sits on the right edge
+        const float x = plot.x + pad + (plot.w - pad * 2.f) * slot / (N - 1);
+        const double frac = std::clamp((double)history[(index + N - count + i) % N] / top, 0.0, 1.0);
+        const float y = plot.y + plot.h - pad - inner_h * (float)frac;
+        if (i == 0) nvgMoveTo(vg, x, y);
+        else nvgLineTo(vg, x, y);
+    }
+    nvgStrokeColor(vg, blue);
+    nvgStrokeWidth(vg, 2.f);
+    nvgStroke(vg);
+    nvgRestore(vg);
+}
+
 } // namespace
 
 auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
@@ -95,6 +176,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         m_speed_samples[m_speed_sample_index] = static_cast<s64>(current_speed);
         m_speed_sample_index = (m_speed_sample_index + 1) % m_speed_samples.size();
         m_speed_sample_count = std::min(m_speed_sample_count + 1, m_speed_samples.size());
+        m_graph[m_graph_index] = static_cast<s64>(current_speed);
+        m_graph_index = (m_graph_index + 1) % m_graph.size();
+        m_graph_count = std::min(m_graph_count + 1, m_graph.size());
 
         s64 speed_sum{};
         for (size_t i = 0; i < m_speed_sample_count; i++) {
@@ -111,6 +195,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto speed = m_speed;
     const auto speed_sample_count = m_speed_sample_count;
     const auto last_offset = m_last_offset;
+    const auto graph = m_graph;
+    const auto graph_count = m_graph_count;
+    const auto graph_index = m_graph_index;
     // synthetic-unit transfers keep a meaningful ETA (units-left / units-per-sec
     // is still real seconds) but a bytes-derived "MiB/s" would be nonsense, so
     // only the speed figure is suppressed, not the time remaining.
@@ -169,6 +256,10 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     if (image) {
         gfx::drawImage(vg, GetX() + 25, GetY() + 25, 120, 120, image, 5);
+    }
+
+    if (m_show_graph && !m_detached) {
+        DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index);
     }
 
     // shapes.
