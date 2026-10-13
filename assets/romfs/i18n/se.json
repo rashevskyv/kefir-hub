@@ -3216,5 +3216,6 @@
   "Off: the closest game version is used when none fits": "Av: närmaste spelversion används om ingen passar",
   "Match Build ID exactly": "Matcha Build ID exakt",
   "Cheats of another game version are used": "Fusk från en annan spelversion används",
-  "On: only cheats made for your game version": "På: endast fusk för din spelversion"
+  "On: only cheats made for your game version": "På: endast fusk för din spelversion",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "På: endast fusk gjorda för din spelversion erbjuds. Av: när inget passar används fusk från den närmaste spelversionen."
 }

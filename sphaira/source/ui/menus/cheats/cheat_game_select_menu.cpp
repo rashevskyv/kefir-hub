@@ -313,6 +313,10 @@ void CheatGameSelectMenu::DisplayOptions() {
         m_layout.Set(index_out + 1);
         OnLayoutChange();
     }, current_layout - 1, "Choose how the cheat game list is displayed on screen."_i18n)->SetIcon(ActionIcon::Layout);
+
+    options->Add<SidebarEntryBool>("Match Build ID exactly"_i18n, CheatsMatchBuildIdOption(),
+        "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used."_i18n,
+        "On"_i18n, "Off"_i18n);
 }
 
 void CheatGameSelectMenu::FreeGames() {

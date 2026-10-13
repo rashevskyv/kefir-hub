@@ -6,6 +6,7 @@
 #include "ui/menus/cheats/cheats_db.hpp"
 #include "ui/menus/cheats/cheat_files_menu.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "ui/error_box.hpp"
 #include "app.hpp"
@@ -413,12 +414,21 @@ namespace {
 option::OptionBool g_match_build_id{"cheats", "match_build_id_exactly", true};
 } // namespace
 
+auto CheatsMatchBuildIdOption() -> option::OptionBool& {
+    return g_match_build_id;
+}
+
 auto CheatsMatchBuildIdExactly() -> bool {
     return g_match_build_id.Get();
 }
 
-void SetCheatsMatchBuildIdExactly(bool value) {
-    g_match_build_id.Set(value);
+void ShowCheatsOptions() {
+    auto options = std::make_unique<Sidebar>("Cheats Options"_i18n, Sidebar::Side::RIGHT);
+    ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    options->Add<SidebarEntryBool>("Match Build ID exactly"_i18n, g_match_build_id,
+        "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used."_i18n,
+        "On"_i18n, "Off"_i18n);
 }
 
 } // namespace detail

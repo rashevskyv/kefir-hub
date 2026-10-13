@@ -1,5 +1,7 @@
 #pragma once
 
+#include "option.hpp"
+
 #include "ui/menus/cheats_menu.hpp"
 #include <string>
 
@@ -25,7 +27,9 @@ auto ClearCheatsCache() -> Result;
 // "Match Build ID exactly" (on by default): when off, a game version that has no cheats in the
 // database gets the cheats of the closest version, written under its own Build ID.
 auto CheatsMatchBuildIdExactly() -> bool;
-void SetCheatsMatchBuildIdExactly(bool value);
+auto CheatsMatchBuildIdOption() -> option::OptionBool&;
+// START on the cheat screens: the options sidebar with "Match Build ID exactly".
+void ShowCheatsOptions();
 auto DeleteAllCheats() -> Result;
 auto DeleteOrphanedCheats() -> Result;
 

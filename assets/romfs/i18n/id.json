@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Nonaktif: versi game terdekat digunakan jika tidak ada yang cocok",
   "Match Build ID exactly": "Cocokkan Build ID secara persis",
   "Cheats of another game version are used": "Cheat dari versi gim lain digunakan",
-  "On: only cheats made for your game version": "Aktif: hanya cheat untuk versi game Anda"
+  "On: only cheats made for your game version": "Aktif: hanya cheat untuk versi game Anda",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Aktif: hanya cheat untuk versi gim Anda yang ditawarkan. Nonaktif: jika tidak ada yang cocok, cheat dari versi gim terdekat akan digunakan."
 }

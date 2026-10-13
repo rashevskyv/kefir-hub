@@ -3216,5 +3216,6 @@
   "Off: the closest game version is used when none fits": "オフ: 一致するものがない場合、最も近いゲームバージョンが使用されます",
   "Match Build ID exactly": "ビルドIDを完全に一致させる",
   "Cheats of another game version are used": "別のゲームバージョンのチートが使用されています",
-  "On: only cheats made for your game version": "オン: このゲームバージョン用のチートのみ"
+  "On: only cheats made for your game version": "オン: このゲームバージョン用のチートのみ",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "オン: お使いのゲームバージョン専用のチートのみが表示されます。オフ: 一致するものがない場合、最も近いバージョンのチートが使用されます。"
 }

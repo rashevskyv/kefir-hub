@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Kapalı: Hiçbiri uymadığında en yakın oyun sürümü kullanılır",
   "Match Build ID exactly": "Build ID'yi tam eşleştir",
   "Cheats of another game version are used": "Başka bir oyun sürümünün hileleri kullanılıyor",
-  "On: only cheats made for your game version": "Açık: yalnızca oyun sürümünüze uygun hileler"
+  "On: only cheats made for your game version": "Açık: yalnızca oyun sürümünüze uygun hileler",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Açık: yalnızca oyun sürümünüze uygun hileler sunulur. Kapalı: uyan yoksa, en yakın oyun sürümünün hileleri kullanılır."
 }

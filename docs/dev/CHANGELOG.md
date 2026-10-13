@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.066 — Cheats: "Match Build ID exactly" moved to the START options
+- Owner feedback: a switch is not a menu row of the Cheats list. The row is removed; **START** on the Cheats screen opens "Cheats Options" with **Match Build ID exactly** (On / Off, `SidebarEntryBool`), and the same switch is in the START options of the game list for "Download Exact Cheats". Behaviour from 0.14.065 is unchanged (off = the closest game version's cheats are written under the game's own Build ID).
+- The keys of the two 0.14.065 row subtitles are replaced by one info text. host tests: pass · nro: pending · switch: pending.
+
 ## v0.14.065 — Cheats: "Match Build ID exactly" can be turned off
 - Owner request: the user must be able to switch the Build ID check off when downloading cheats. New item **Match Build ID exactly** in the Cheats menu (on by default, key `cheats/match_build_id_exactly`). Off: when the nx-cheats-db file has no cheats for the game's own Build ID, the set of the closest Build ID is taken and written under the game's own Build ID (`ParseNxDbCheatsOrClosest`; the notice "Cheats of another game version are used" shows). The database carries no game version, so "closest" is the most complete set, the one listed last on a tie (`PickClosestBuildId`, test `test_cheat_closest_bid`).
 - Cheat files hold no Build ID inside (it is the file name and the database key), so nothing is edited in the text; EdiZon loads the file because its name is the running game's Build ID. Codes made for another version may not work.

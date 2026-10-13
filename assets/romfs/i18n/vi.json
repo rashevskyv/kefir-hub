@@ -3216,5 +3216,6 @@
   "Off: the closest game version is used when none fits": "Tắt: phiên bản trò chơi gần nhất được sử dụng khi không có phiên bản nào phù hợp",
   "Match Build ID exactly": "Khớp chính xác Build ID",
   "Cheats of another game version are used": "Đang sử dụng mã gian lận của phiên bản trò chơi khác",
-  "On: only cheats made for your game version": "Bật: chỉ các mã gian lận dành cho phiên bản trò chơi của bạn"
+  "On: only cheats made for your game version": "Bật: chỉ các mã gian lận dành cho phiên bản trò chơi của bạn",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Bật: chỉ cung cấp các mã gian lận dành riêng cho phiên bản trò chơi của bạn. Tắt: khi không có mã nào phù hợp, mã của phiên bản trò chơi gần nhất sẽ được sử dụng."
 }

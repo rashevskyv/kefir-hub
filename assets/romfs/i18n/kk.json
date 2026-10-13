@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Өшірулі: егер ешқайсысы сәйкес келмесе, ең жақын ойын нұсқасы қолданылады",
   "Match Build ID exactly": "Build ID дәл сәйкестендіру",
   "Cheats of another game version are used": "Ойынның басқа нұсқасының читері қолданылуда",
-  "On: only cheats made for your game version": "Қосулы: тек сіздің ойын нұсқасына арналған читтер"
+  "On: only cheats made for your game version": "Қосулы: тек сіздің ойын нұсқасына арналған читтер",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Қосулы: тек ойын нұсқасына арналған читтер ұсынылады. Өшірулі: сәйкестері болмаса, ең жақын ойын нұсқасының читтері қолданылады."
 }

@@ -3269,5 +3269,6 @@
   "Off: the closest game version is used when none fits": "關閉：當沒有符合的版本時，將使用最接近的遊戲版本",
   "Match Build ID exactly": "完全符合 Build ID",
   "Cheats of another game version are used": "正在使用另一遊戲版本的修改作弊碼",
-  "On: only cheats made for your game version": "開啟：僅限此遊戲版本的金手指"
+  "On: only cheats made for your game version": "開啟：僅限此遊戲版本的金手指",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "開啟：僅提供為您目前遊戲版本製作的金手指。關閉：當沒有完全符合時，將使用最接近之遊戲版本的金手指。"
 }

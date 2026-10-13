@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Väljas: kui ükski ei sobi, kasutatakse lähimat mänguversiooni",
   "Match Build ID exactly": "Ühildada Build ID täpselt",
   "Cheats of another game version are used": "Kasutatakse teise mänguversiooni kood",
-  "On: only cheats made for your game version": "Sees: ainult sinu mänguversioonile tehtud koodid"
+  "On: only cheats made for your game version": "Sees: ainult sinu mänguversioonile tehtud koodid",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Sees: pakutakse ainult sinu mänguversiooni jaoks mõeldud koodipettusi. Väljas: kui ükski ei sobi, kasutatakse lähima mänguversiooni omi."
 }

@@ -3216,5 +3216,6 @@
   "Off: the closest game version is used when none fits": "Disattivato: viene utilizzata la versione del gioco più vicina se nessuna corrisponde",
   "Match Build ID exactly": "Corrispondi esattamente al Build ID",
   "Cheats of another game version are used": "Si stanno usando trucchi di un'altra versione del gioco",
-  "On: only cheats made for your game version": "Attivo: solo trucchi per la tua versione di gioco"
+  "On: only cheats made for your game version": "Attivo: solo trucchi per la tua versione di gioco",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Attivo: vengono offerti solo i trucchi per la tua versione di gioco. Disattivo: se nessuno corrisponde, vengono usati quelli della versione più vicina."
 }

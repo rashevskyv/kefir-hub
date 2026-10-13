@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Išjungta: jei netinka nė viena, naudojama artimiausia žaidimo versija",
   "Match Build ID exactly": "Tiksliai sutapdinti „Build ID“",
   "Cheats of another game version are used": "Naudojami kito žaidimo versijos kodai (čytai)",
-  "On: only cheats made for your game version": "Įjungta: tik kodai jūsų žaidimo versijai"
+  "On: only cheats made for your game version": "Įjungta: tik kodai jūsų žaidimo versijai",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Įjungta: siūlomi tik jūsų žaidimo versijai skirti kodai. Išjungta: jei netinka jokie, naudojami artimiausios žaidimo versijos kodai."
 }

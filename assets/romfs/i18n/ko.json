@@ -3216,5 +3216,6 @@
   "Off: the closest game version is used when none fits": "끄기: 일치하는 버전이 없을 경우 가장 가까운 게임 버전이 사용됩니다",
   "Match Build ID exactly": "빌드 ID 정확히 일치",
   "Cheats of another game version are used": "다른 게임 버전의 치트가 사용되고 있습니다",
-  "On: only cheats made for your game version": "켜짐: 해당 게임 버전의 치트만"
+  "On: only cheats made for your game version": "켜짐: 해당 게임 버전의 치트만",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "켜짐: 게임 버전 전용 치트만 제공됩니다. 꺼짐: 일치하는 것이 없으면 가장 가까운 버전의 치트가 사용됩니다."
 }

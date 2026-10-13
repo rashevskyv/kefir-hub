@@ -3217,5 +3217,6 @@
   "Off: the closest game version is used when none fits": "Aus: Die nächstgelegene Spielversion wird verwendet, wenn keine passt",
   "Match Build ID exactly": "Build-ID exakt abgleichen",
   "Cheats of another game version are used": "Es werden Cheats einer anderen Spielversion verwendet",
-  "On: only cheats made for your game version": "An: Nur Cheats für deine Spielversion"
+  "On: only cheats made for your game version": "An: Nur Cheats für deine Spielversion",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Ein: Es werden nur Cheats für deine Spielversion angeboten. Aus: Wenn keine passen, werden die Cheats der nächstgelegenen Spielversion verwendet."
 }

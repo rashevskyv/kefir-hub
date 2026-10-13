@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Izslēgts: ja neviena neder, tiek izmantota tuvākā spēles versija",
   "Match Build ID exactly": "Precīzi sakrist ar Build ID",
   "Cheats of another game version are used": "Tiek izmantoti citas spēles versijas čiti",
-  "On: only cheats made for your game version": "Ieslēgts: tikai kodi jūsu spēles versijai"
+  "On: only cheats made for your game version": "Ieslēgts: tikai kodi jūsu spēles versijai",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Ieslēgts: tiek piedāvāti tikai jūsu spēles versijai paredzēti čīti. Izslēgts: ja neviens neder, tiek izmantoti tuvākās spēles versijas čīti."
 }

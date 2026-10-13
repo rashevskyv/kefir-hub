@@ -3211,5 +3211,6 @@
   "Cheats of another game version are used": "Cheats of another game version are used",
   "Match Build ID exactly": "Match Build ID exactly",
   "Off: the closest game version is used when none fits": "Off: the closest game version is used when none fits",
-  "On: only cheats made for your game version": "On: only cheats made for your game version"
+  "On: only cheats made for your game version": "On: only cheats made for your game version",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used."
 }

@@ -3211,5 +3211,6 @@
   "Off: the closest game version is used when none fits": "Выключана: выкарыстоўваецца бліжэйшая версія гульні, калі ніводная не падыходзіць",
   "Match Build ID exactly": "Дакладна супадаць з Build ID",
   "Cheats of another game version are used": "Выкарыстоўваюцца чыты для іншай версіі гульні",
-  "On: only cheats made for your game version": "Укл.: толькі чыты для вашай версіі гульні"
+  "On: only cheats made for your game version": "Укл.: толькі чыты для вашай версіі гульні",
+  "On: only cheats made for your game version are offered. Off: when none fit, the cheats of the closest game version are used.": "Укл.: прапаноўваюцца толькі чыты для вашай версіі гульні. Выкл.: калі няма падыходных, выкарыстоўваюцца чыты бліжэйшай версіі гульні."
 }

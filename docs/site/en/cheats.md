@@ -103,5 +103,5 @@ Press **X** ([[Refresh]]) there to scan the games again.
 **[[Failed to install cheats pack]].** Check the internet connection and the free space on the microSD card, then try again.
 
 <!-- draft
-- The Cheats menu has [[Match Build ID exactly]] (on by default). When it is switched off and the database has no cheats for the game's own Build ID, Kefir Hub takes the cheats of the closest game version in the database and saves them under the game's own Build ID; a notice says so. The codes may not work or may misbehave, as they were made for another version.
+- The options of the Cheats screen (**START**) and of the game list for [[Download Exact Cheats]] have [[Match Build ID exactly]] (on by default). When it is switched off and the database has no cheats for the game's own Build ID, Kefir Hub takes the cheats of the closest game version in the database and saves them under the game's own Build ID; a notice says so. The codes may not work or may misbehave, as they were made for another version.
 -->
