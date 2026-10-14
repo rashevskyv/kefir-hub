@@ -3256,5 +3256,8 @@
   "the save is in use: close the game": "セーブデータが使用中です：ゲームを終了してください",
   "the backup does not match this game or user": "バックアップはこのゲームまたはユーザーと一致しません",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "ゲームがバックグラウンドで中断されています。先に終了してください：動作中はセーブデータを置き換えることができません。",
-  "the backup is a raw save file, which cannot be restored": "バックアップは生セーブファイルのため復元できません"
+  "the backup is a raw save file, which cannot be restored": "バックアップは生セーブファイルのため復元できません",
+  "Checking backups...": "バックアップを確認中...",
+  "Saves to restore: ": "復元するセーブデータ: ",
+  "Done:": "完了:"
 }

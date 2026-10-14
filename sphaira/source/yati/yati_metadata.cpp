@@ -422,6 +422,17 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
         R_TRY(avmPushLaunchVersion(app_id, latest_version_num));
     }
     log_write("pushed\n");
+
+    // HOME lists the newest record first, so every install pushed Kefir Hub's own icon (started as
+    // a title) to the end. Touch our own record after it: the icon the user started from stays first.
+    if (App::IsApplication()) {
+        u64 own_id{};
+        if (R_SUCCEEDED(svcGetInfo(&own_id, InfoType_ProgramId, CUR_PROCESS_HANDLE, 0)) && own_id && own_id != app_id && R_SUCCEEDED(nsInitialize())) {
+            log_write("[yati] own HOME icon kept first: 0x%X\n", nsTouchApplication(own_id));
+            nsExit();
+        }
+    }
+
     if (cnmt.key.type == NcmContentMetaType_Patch || cnmt.key.type == NcmContentMetaType_AddOnContent) {
         orphan_content::NoteInstalled(app_id);
     }

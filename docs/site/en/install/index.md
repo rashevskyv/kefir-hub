@@ -19,6 +19,10 @@ If you start an install from the File Browser while installing is off, Kefir Hub
 
 <!-- TODO(verify): plan D.2 removes this switch -->
 
+<!-- draft
+- after a game is installed, Kefir Hub keeps its own HOME Menu icon first when it was started from that icon; before, every install pushed it to the end of the list
+-->
+
 ## Choose a method {#methods}
 
 | Method | You need | Review before install | Page |

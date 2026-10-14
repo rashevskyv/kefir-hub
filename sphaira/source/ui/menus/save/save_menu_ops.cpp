@@ -12,6 +12,7 @@
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
 #include "account/account_link.hpp"
+#include "ui/menus/filebrowser.hpp"
 #include <vector>
 #include <string>
 #include <memory>
@@ -84,6 +85,30 @@ auto RestoreFailureReason(Result rc) -> std::string {
     return buf;
 }
 
+// bytes of a backup archive, or of all the files of a backup folder: the restore order.
+auto BackupBytes(fs::Fs* fs, const fs::FsPath& path, bool is_directory) -> s64 {
+    FsDirEntryType type{};
+    if (is_directory || (R_SUCCEEDED(fs->GetEntryType(path, &type)) && type == FsDirEntryType_Dir)) {
+        filebrowser::FsDirCollections collections;
+        if (R_FAILED(filebrowser::FsView::get_collections(fs, path, "", collections, true))) {
+            return 0;
+        }
+        s64 total = 0;
+        for (const auto& c : collections) {
+            for (const auto& f : c.files) {
+                total += std::max<s64>(0, f.file_size);
+            }
+        }
+        return total;
+    }
+    fs::File file;
+    s64 size = 0;
+    if (R_SUCCEEDED(fs->OpenFile(path, FsOpenMode_Read, &file))) {
+        file.GetSize(&size);
+    }
+    return size;
+}
+
 } // namespace
 
 // One confirmation for the whole restore: which game goes to which user.
@@ -111,19 +136,15 @@ void Menu::ShowRestoreConfirm(
         return "• " + std::string{dst.GetName()} + (who.empty() ? std::string{} : " — " + who) + "\n";
     };
 
-    std::string prompt = (sources->size() > 1 ? "Restore selected saves?"_i18n : "Restore selected save?"_i18n) + "\n\n";
-    constexpr size_t MAX_LINES = 6; // the box has no scrolling
-    for (size_t i = 0; i < sources->size() && i < MAX_LINES; i++) {
-        prompt += line_of((*sources)[i], (*targets)[i]);
-    }
-    if (sources->size() > MAX_LINES) {
-        prompt += "… +" + std::to_string(sources->size() - MAX_LINES) + "\n";
-    }
-    if (sources->size() == 1) {
+    // many saves: the user has just picked them, a list would only repeat it (and could not show all).
+    std::string prompt;
+    if (sources->size() > 1) {
+        prompt = "Saves to restore: "_i18n + std::to_string(sources->size()) + "\n\n";
+    } else {
         const auto& src = sources->front();
-        prompt += "  " + std::string(GetBackupSourceLabel(src.backup_source)) + ", " + FormatBackupTimestamp(src.backup_members.front().ts, false) + "\n";
+        prompt = "Restore selected save?"_i18n + "\n\n" + line_of(src, targets->front());
+        prompt += "  " + std::string(GetBackupSourceLabel(src.backup_source)) + ", " + FormatBackupTimestamp(src.backup_members.front().ts, false) + "\n\n";
     }
-    prompt += "\n";
 
     if (sources->size() > 1) {
         prompt += "If a save cannot be restored, the others still are; the ones that failed are listed at the end."_i18n + "\n";
@@ -187,7 +208,19 @@ void Menu::ExecuteRestore(
         fs::FsStdio stdio_fs;
         fs::FsNativeSd sd_fs;
 
+        // the big saves last: when the console memory runs out, the smaller ones are already in.
+        std::vector<std::pair<s64, size_t>> order;
+        order.reserve(sources->size());
         for (size_t i = 0; i < sources->size(); i++) {
+            const auto& member = (*sources)[i].backup_members.front();
+            fs::Fs* fs = member.path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
+            order.emplace_back(BackupBytes(fs, member.path, member.is_directory), i);
+        }
+        std::stable_sort(order.begin(), order.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+
+        for (size_t n = 0; n < order.size(); n++) {
+            const size_t i = order[n].second;
+            pbox->SetOverall(static_cast<s64>(n), static_cast<s64>(order.size()));
             if (R_FAILED(pbox->ShouldExitResult())) {
                 *stopped = true;
                 break;
@@ -204,8 +237,6 @@ void Menu::ExecuteRestore(
             } else {
                 pbox->SetImage(0);
             }
-            pbox->UpdateTransfer(i + 1, sources->size());
-
             const fs::FsPath file_path = src.backup_members.front().path;
             const auto& member = src.backup_members.front();
             fs::Fs* probe_fs = file_path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
@@ -253,6 +284,9 @@ void Menu::ExecuteRestore(
                 continue;
             }
             (*restored)++;
+        }
+        if (!*stopped) {
+            pbox->SetOverall(static_cast<s64>(order.size()), static_cast<s64>(order.size()));
         }
 
         R_SUCCEED();

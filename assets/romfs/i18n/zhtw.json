@@ -3309,5 +3309,8 @@
   "the save is in use: close the game": "存檔正在使用中：請關閉遊戲",
   "the backup does not match this game or user": "備份與此遊戲或使用者不符",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "遊戲正在背景暫停。請先關閉它：執行時無法替換其存檔。",
-  "the backup is a raw save file, which cannot be restored": "備份是原始存檔檔案，無法復原"
+  "the backup is a raw save file, which cannot be restored": "備份是原始存檔檔案，無法復原",
+  "Checking backups...": "正在檢查備份...",
+  "Saves to restore: ": "要還原的存檔：",
+  "Done:": "完成："
 }

@@ -168,6 +168,13 @@ Kefir Hub бере:
 - the note to close the running game shows only when a game is really suspended in the background (Kefir Hub started from the Homebrew Menu or the Album); started as a title, Kefir Hub is that game itself. The note about MTP is gone: Kefir Hub checks by itself whether a PC holds a save open
 -->
 
+<!-- draft
+- several saves: the confirmation no longer lists them (they were just selected); it says how many ("[[Saves to restore: ]] N")
+- the restore box has a second bar for the whole restore: "[[Done:]] 3 / 40" with a percentage, above the bar of the current save
+- the biggest saves are restored last: when the console memory runs out, the smaller ones are already in
+- in a bulk restore the backup check box says "[[Checking backups...]]" with which one of how many
+-->
+
 ## Скасувати відновлення
 Страхувальна копія з `/dumps/recovery/` — це звичайний ZIP збереження в тому стані, який був до відновлення.
 

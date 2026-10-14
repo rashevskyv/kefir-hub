@@ -3256,5 +3256,8 @@
   "the save is in use: close the game": "sparfilen används: stäng spelet",
   "the backup does not match this game or user": "säkerhetskopieringen matchar inte detta spel eller denna användare",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Ett spel är pausat i bakgrunden. Stäng det först: dess sparfil kan inte ersättas medan det körs.",
-  "the backup is a raw save file, which cannot be restored": "säkerhetskopieringen är en rå sparfil som inte kan återställas"
+  "the backup is a raw save file, which cannot be restored": "säkerhetskopieringen är en rå sparfil som inte kan återställas",
+  "Checking backups...": "Kontrollerar säkerhetskopior...",
+  "Saves to restore: ": "Sparfiler att återställa: ",
+  "Done:": "Klar:"
 }

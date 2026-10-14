@@ -3256,5 +3256,8 @@
   "the save is in use: close the game": "dữ liệu lưu đang được sử dụng: hãy đóng trò chơi",
   "the backup does not match this game or user": "bản sao lưu không khớp với trò chơi hoặc người dùng này",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Một trò chơi đang bị tạm dừng ở nền. Hãy đóng nó trước: không thể thay thế tệp lưu khi trò chơi đang chạy.",
-  "the backup is a raw save file, which cannot be restored": "bản sao lưu là tệp lưu thô, không thể khôi phục"
+  "the backup is a raw save file, which cannot be restored": "bản sao lưu là tệp lưu thô, không thể khôi phục",
+  "Checking backups...": "Đang kiểm tra bản sao lưu...",
+  "Saves to restore: ": "Bản lưu để khôi phục: ",
+  "Done:": "Hoàn tất:"
 }

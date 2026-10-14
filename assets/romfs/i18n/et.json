@@ -3251,5 +3251,8 @@
   "the save is in use: close the game": "salvestus on kasutusel: sulge mäng",
   "the backup does not match this game or user": "varukoopia ei vasta sellele mängule ega kasutajale",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Mäng on taustal peatatud. Sulge see esmalt: selle salvestust ei saa töötamise ajal asendada.",
-  "the backup is a raw save file, which cannot be restored": "varukoopia on töötlemata salvestusfail, mida ei saa taastada"
+  "the backup is a raw save file, which cannot be restored": "varukoopia on töötlemata salvestusfail, mida ei saa taastada",
+  "Checking backups...": "Varukoopiate kontrollimine...",
+  "Saves to restore: ": "Taastatavad salvestised: ",
+  "Done:": "Valmis:"
 }

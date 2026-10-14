@@ -3251,5 +3251,8 @@
   "the save is in use: close the game": "kayıt dosyası kullanımda: oyunu kapatın",
   "the backup does not match this game or user": "yedekleme bu oyun veya kullanıcıyla eşleşmiyor",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Arka planda askıya alınmış bir oyun var. Önce onu kapatın: çalışırken kayıt dosyası değiştirilemez.",
-  "the backup is a raw save file, which cannot be restored": "yedek, geri yüklenemeyen ham bir kayıt dosyasıdır"
+  "the backup is a raw save file, which cannot be restored": "yedek, geri yüklenemeyen ham bir kayıt dosyasıdır",
+  "Checking backups...": "Yedekler kontrol ediliyor...",
+  "Saves to restore: ": "Geri yüklenecek kayıtlar: ",
+  "Done:": "Tamamlandı:"
 }

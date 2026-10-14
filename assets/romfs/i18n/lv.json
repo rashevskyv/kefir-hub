@@ -3251,5 +3251,8 @@
   "the save is in use: close the game": "saglabāšanas fails tiek izmantots: aizveriet spēli",
   "the backup does not match this game or user": "dublējums neatbilst šai spēlei vai lietotājam",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Spēle ir apturēta fonā. Vispirms aizveriet to: tās saglabāšanas failu nevar aizstāt, kamēr tā darbojas.",
-  "the backup is a raw save file, which cannot be restored": "rezerves kopija ir neapstrādāts saglabāšanas fails, ko nevar atjaunot"
+  "the backup is a raw save file, which cannot be restored": "rezerves kopija ir neapstrādāts saglabāšanas fails, ko nevar atjaunot",
+  "Checking backups...": "Pārbauda dublējumus...",
+  "Saves to restore: ": "Atjaunojamie saglabājumi: ",
+  "Done:": "Gatavs:"
 }

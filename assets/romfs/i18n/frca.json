@@ -3257,5 +3257,8 @@
   "the save is in use: close the game": "la sauvegarde est en cours d'utilisation : fermez le jeu",
   "the backup does not match this game or user": "la sauvegarde ne correspond pas à ce jeu ou à cet utilisateur",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Un jeu est suspendu en arrière-plan. Fermez-le d'abord : sa sauvegarde ne peut pas être remplacée pendant son exécution.",
-  "the backup is a raw save file, which cannot be restored": "la sauvegarde est un fichier de données brut qui ne peut pas être restauré"
+  "the backup is a raw save file, which cannot be restored": "la sauvegarde est un fichier de données brut qui ne peut pas être restauré",
+  "Checking backups...": "Vérification des sauvegardes...",
+  "Saves to restore: ": "Sauvegardes à restaurer : ",
+  "Done:": "Terminé :"
 }

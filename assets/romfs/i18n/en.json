@@ -3251,5 +3251,8 @@
   "error": "error",
   "the backup does not match this game or user": "the backup does not match this game or user",
   "the backup is a raw save file, which cannot be restored": "the backup is a raw save file, which cannot be restored",
-  "the save is in use: close the game": "the save is in use: close the game"
+  "the save is in use: close the game": "the save is in use: close the game",
+  "Checking backups...": "Checking backups...",
+  "Done:": "Done:",
+  "Saves to restore: ": "Saves to restore: "
 }

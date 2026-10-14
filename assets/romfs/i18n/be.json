@@ -3251,5 +3251,8 @@
   "the save is in use: close the game": "захаванне выкарыстоўваецца: зачыніце гульню",
   "the backup does not match this game or user": "рэзервовая копія не адпавядае гэтай гульні ці карыстачу",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Гульня прыпынена ў фонавым рэжыме. Спачатку закрыйце яе: яе захаванне не можа быць заменена падчас працы.",
-  "the backup is a raw save file, which cannot be restored": "рэзервовая копія з'яўляецца сырым файлам захавання, які немагчыма аднавіць"
+  "the backup is a raw save file, which cannot be restored": "рэзервовая копія з'яўляецца сырым файлам захавання, які немагчыма аднавіць",
+  "Checking backups...": "Праверка рэзервовых копій...",
+  "Saves to restore: ": "Захаванні для аднаўлення: ",
+  "Done:": "Гатова:"
 }

@@ -3251,5 +3251,8 @@
   "the save is in use: close the game": "the save is in use: close the game",
   "the backup does not match this game or user": "the backup does not match this game or user",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.",
-  "the backup is a raw save file, which cannot be restored": "the backup is a raw save file, which cannot be restored"
+  "the backup is a raw save file, which cannot be restored": "the backup is a raw save file, which cannot be restored",
+  "Checking backups...": "Checking backups...",
+  "Saves to restore: ": "Saves to restore: ",
+  "Done:": "Done:"
 }

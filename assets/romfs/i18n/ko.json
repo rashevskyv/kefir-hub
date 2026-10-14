@@ -3256,5 +3256,8 @@
   "the save is in use: close the game": "세이브 데이터가 사용 중입니다: 게임을 종료하세요",
   "the backup does not match this game or user": "백업이 이 게임 또는 사용자와 일치하지 않습니다",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "게임이 백그라운드에서 일시 중단되었습니다. 실행 중에는 세이브 데이터를 교체할 수 없으므로 먼저 종료하세요.",
-  "the backup is a raw save file, which cannot be restored": "백업은 원시 세이브 파일이므로 복원할 수 없습니다"
+  "the backup is a raw save file, which cannot be restored": "백업은 원시 세이브 파일이므로 복원할 수 없습니다",
+  "Checking backups...": "백업 확인 중...",
+  "Saves to restore: ": "복원할 세이브 데이터: ",
+  "Done:": "완료:"
 }

@@ -297,7 +297,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         return;
     }
 
-    if (m_detached) {
+    // a job over many items (a bulk restore) has a second bar for the whole job: room for it.
+    const s64 overall_total = m_overall_total.load();
+    const s64 overall_done = std::clamp<s64>(m_overall_done.load(), 0, std::max<s64>(overall_total, 0));
+    const bool show_overall = overall_total > 0 && !m_detached && !m_show_graph;
+    if (m_detached || show_overall) {
         m_pos.h = 360.f;
         m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
     }
@@ -324,6 +328,18 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     if (m_show_graph && !m_detached) {
         DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index,
             average_speed, transfer_seconds, left_bytes);
+    }
+
+    if (show_overall) {
+        // the whole job: "Done: 3 / 40" and its own bar, above the bar of the current item.
+        const Vec4 bar{prog_bar.x, prog_bar.y - 34.f, prog_bar.w, 8.f};
+        const auto fraction = static_cast<float>(overall_done) / static_cast<float>(overall_total);
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
+        gfx::drawTextArgs(vg, bar.x, bar.y - 6.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "%s %lld / %lld", "Done:"_i18n.c_str(), static_cast<long long>(overall_done), static_cast<long long>(overall_total));
+        gfx::drawTextArgs(vg, bar.x + bar.w + 15.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT),
+            "%d%%", static_cast<int>(fraction * 100.f));
     }
 
     // shapes.

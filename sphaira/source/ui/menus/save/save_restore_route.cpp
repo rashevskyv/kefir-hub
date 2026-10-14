@@ -271,7 +271,7 @@ static void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candid
     App::Push(std::move(popup));
 }
 
-void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const fs::FsPath& archive_path, std::function<void(std::optional<Entry>)> cb) {
+void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const fs::FsPath& archive_path, std::function<void(std::optional<Entry>)> cb, size_t step, size_t count) {
 
     const auto outcome = bundle::EvaluateRestoreDestination(
         false, group.save_data_type, group.save_data_rank, group.save_data_index, group.application_id);
@@ -296,7 +296,10 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
     };
     auto ctx = std::make_shared<PlanContext>();
 
-    App::Push<ProgressBox>(0, "Checking backup..."_i18n, "",
+    // in a bulk restore the box comes once per save: say which one of how many.
+    const std::string check_title = count > 1 ? "Checking backups..."_i18n : "Checking backup..."_i18n;
+    const std::string check_step = count > 1 ? std::to_string(step + 1) + " / " + std::to_string(count) : std::string{};
+    App::Push<ProgressBox>(0, check_title, check_step,
         [archive_path, group, dest_uid, ctx](auto pbox) -> Result {
             pbox->SetHideSpeed(true);
             pbox->SetTransfer("Verifying archive..."_i18n);
@@ -555,13 +558,13 @@ void Menu::PromptBatchRestoreTargets(
     };
 
     const auto& current_seed = (*seeds)[step];
-    const auto resolve_for_uid = [this, &current_seed, on_target_resolved](const AccountUid* uid) {
+    const auto resolve_for_uid = [this, &current_seed, on_target_resolved, step, seeds](const AccountUid* uid) {
         const auto candidates = FindLiveRestoreCandidates(current_seed, uid);
         if (candidates.empty()) {
             const auto archive_path = current_seed.backup_members.empty()
                 ? current_seed.backup_path
                 : current_seed.backup_members.front().path;
-            PlanRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved);
+            PlanRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved, step, seeds->size());
             return;
         }
         ResolveRestoreTarget(current_seed, uid, on_target_resolved);

@@ -17,6 +17,10 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 <!-- shot: install-index-enable-warning | Ban warning dialog with Back and Enable buttons -->
 
+<!-- draft
+- after a game is installed, Kefir Hub keeps its own HOME Menu icon first when it was started from that icon; before, every install pushed it to the end of the list
+-->
+
 ## Виберіть спосіб {#methods}
 
 | Спосіб | Що потрібно | Перегляд перед встановленням | Сторінка |

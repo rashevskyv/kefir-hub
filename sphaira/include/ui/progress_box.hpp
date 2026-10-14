@@ -57,6 +57,8 @@ struct ProgressBox final : Widget, InstallProgress {
     // adds a live write-speed plot (grid in MiB/s, line, "Now" readout) above the bar, the way the
     // DBI install view draws it. Makes the box taller; call once before the first transfer.
     auto SetShowGraph(bool show) -> ProgressBox&;
+    // a second bar for a job over many items: `done` of `total` items, shown above the item's own bar.
+    void SetOverall(s64 done, s64 total) { m_overall_done = done; m_overall_total = total; }
     auto NewTransferForce(const std::string& transfer) -> ProgressBox&;
     auto UpdateTransferForce(s64 offset, s64 size) -> ProgressBox&;
 
@@ -166,6 +168,8 @@ private:
     size_t m_graph_count{};
     size_t m_graph_index{};
     std::atomic<bool> m_show_graph{false};
+    std::atomic<s64> m_overall_done{0};
+    std::atomic<s64> m_overall_total{0};
     // whole-transfer average, refreshed with the samples once a second so the figures do not flicker.
     double m_average{};
     size_t m_speed_sample_count{};

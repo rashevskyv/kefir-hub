@@ -3251,5 +3251,8 @@
   "the save is in use: close the game": "žaidimo įrašas naudojamas: uždarykite žaidimą",
   "the backup does not match this game or user": "atsarginė kopija neatitinka šio žaidimo ar vartotojo",
   "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Žaidimas pristabdytas fone. Pirmiausia jį uždarykite: jo išsaugojimo negalima pakeisti jam veikiant.",
-  "the backup is a raw save file, which cannot be restored": "atsarginė kopija yra neapdorotas išsaugojimo failas, kurio negalima atkurti"
+  "the backup is a raw save file, which cannot be restored": "atsarginė kopija yra neapdorotas išsaugojimo failas, kurio negalima atkurti",
+  "Checking backups...": "Tikrinamos atsarginės kopijos...",
+  "Saves to restore: ": "Atstatomi įrašai: ",
+  "Done:": "Atlikta:"
 }
