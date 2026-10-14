@@ -3242,5 +3242,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "記録のみが残っています。データ本体は本体から消失しています。これはユーザーパーティションがフォーマットされたとき（圧縮されたemuMMCを作成した際など）に発生します。このようなセーブデータはバックアップや復元ができません。記録を削除しますか？",
   "Restore for a specific user": "特定のユーザーのデータを復元",
   "Backup actions": "バックアップの操作",
-  "Restore, check or delete the selected backups.": "選択したバックアップを復元、確認、または削除します。"
+  "Restore, check or delete the selected backups.": "選択したバックアップを復元、確認、または削除します。",
+  "Not restored:": "復元されませんでした:",
+  "Restored: ": "復元完了: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(セーブデータが変更されている可能性があります。コピーは /dumps/recovery にあります)",
+  "A new save was created for a failed restore; it stays empty.": "復元失敗のため新しいセーブデータを作成しました。空のままになります。",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "置き換えられたセーブデータのコピーは /dumps/recovery にあります。元に戻すには、ファイルブラウザで recovery.zip を開き、+を押して「セーブデータを復元」を選択してください。",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "セーブデータを復元できなかった場合でも、他のデータは復元されます。失敗したものは最後に一覧表示されます。",
+  "Without a copy": "コピーなし",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "セーブデータが上書きされる前に、microSDカード（/dumps/recovery）にコピーが保存されます。",
+  "Stopped before the end.": "途中で停止しました。",
+  "error": "エラー",
+  "the save is in use: close the game": "セーブデータが使用中です：ゲームを終了してください",
+  "the backup does not match this game or user": "バックアップはこのゲームまたはユーザーと一致しません",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "ゲームがバックグラウンドで中断されています。先に終了してください：動作中はセーブデータを置き換えることができません。",
+  "the backup is a raw save file, which cannot be restored": "バックアップは生セーブファイルのため復元できません"
 }

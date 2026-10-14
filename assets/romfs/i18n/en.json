@@ -3237,5 +3237,19 @@
   "Saves without data: ": "Saves without data: ",
   "Backup actions": "Backup actions",
   "Restore for a specific user": "Restore for a specific user",
-  "Restore, check or delete the selected backups.": "Restore, check or delete the selected backups."
+  "Restore, check or delete the selected backups.": "Restore, check or delete the selected backups.",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(the save may be changed; its copy is in /dumps/recovery)",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.",
+  "A new save was created for a failed restore; it stays empty.": "A new save was created for a failed restore; it stays empty.",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "If a save cannot be restored, the others still are; the ones that failed are listed at the end.",
+  "Not restored:": "Not restored:",
+  "Restored: ": "Restored: ",
+  "Stopped before the end.": "Stopped before the end.",
+  "Without a copy": "Without a copy",
+  "error": "error",
+  "the backup does not match this game or user": "the backup does not match this game or user",
+  "the backup is a raw save file, which cannot be restored": "the backup is a raw save file, which cannot be restored",
+  "the save is in use: close the game": "the save is in use: close the game"
 }

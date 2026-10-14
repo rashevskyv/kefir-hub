@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.085 — Bulk save restore: names, keeps going past a failure with a report, "Without a copy", no needless warnings
+- Owner on .85: the confirmation listed "Title <id> → New slot (user)", one failure stopped the rest, and it always said "close the running game and disable MTP". Now: `ShowRestoreConfirm` loads the control data of each target and lists "• Game — user"; `ExecuteRestore` records each failure (`RestoreFailureReason`: save in use, backup does not match, raw save file, error code) and goes on; the end shows "Restored: N / M" and "Not restored:" with reasons, a note for a kept empty new save, and where the safety copies are. A third button "Without a copy" sets `Entry::skip_recovery`, which skips the recovery archive in `RestoreSaveZip` (folders go through it too). The game note shows only when Kefir Hub runs as an applet and a game is suspended (`account_link::HasSuspendedApplication`, now declared); the MTP note is gone (`haze::ReleaseSaveMounts` already refuses while a PC holds a save).
+- host tests: pass (quick) · nro: built · switch: pending (.85 bulk restore).
+
 ## v0.14.084 — Screensaver: the whole block drifts in one whole-pixel step
 - Owner: the saver moved pixel by pixel and its parts did not move together. Text glyphs land on whole pixels (fontstash) while bars and lines took fractional positions, so at the slow drift they stepped apart; the speed graph also stayed at the screen centre horizontally. Now the drift centre is rounded to whole pixels and the graph sits on it like the rest.
 - host tests: pass (quick) · nro: built · switch: pending (saver on an install or a long job).

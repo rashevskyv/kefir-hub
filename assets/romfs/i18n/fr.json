@@ -3243,5 +3243,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Seuls leurs enregistrements subsistent : les données ont disparu de la console. Cela se produit après le formatage de la partition utilisateur, par exemple lors de la création d'une emuMMC compressée. Ces sauvegardes ne peuvent pas être sauvegardées ou restaurées. Supprimer les enregistrements ?",
   "Restore for a specific user": "Restaurer pour un utilisateur spécifique",
   "Backup actions": "Actions de sauvegarde",
-  "Restore, check or delete the selected backups.": "Restaurer, vérifier ou supprimer les sauvegardes sélectionnées."
+  "Restore, check or delete the selected backups.": "Restaurer, vérifier ou supprimer les sauvegardes sélectionnées.",
+  "Not restored:": "Non restauré :",
+  "Restored: ": "Restauré : ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(la sauvegarde a peut-être été modifiée ; une copie se trouve dans /dumps/recovery)",
+  "A new save was created for a failed restore; it stays empty.": "Une nouvelle sauvegarde a été créée pour une restauration échouée ; elle reste vide.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Les copies des sauvegardes remplacées se trouvent dans /dumps/recovery. Pour annuler : ouvrez son recovery.zip dans le gestionnaire de fichiers, appuyez sur + et choisissez Restaurer les données de sauvegarde.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Si une sauvegarde ne peut pas être restaurée, les autres le sont toujours ; celles qui ont échoué sont listées à la fin.",
+  "Without a copy": "Sans copie",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Avant qu'une sauvegarde ne soit remplacée, une copie est conservée sur la carte microSD (/dumps/recovery).",
+  "Stopped before the end.": "Arrêté avant la fin.",
+  "error": "erreur",
+  "the save is in use: close the game": "la sauvegarde est en cours d'utilisation : fermez le jeu",
+  "the backup does not match this game or user": "la sauvegarde ne correspond pas à ce jeu ou à cet utilisateur",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Un jeu est suspendu en arrière-plan. Fermez-le d'abord : sa sauvegarde ne peut pas être remplacée pendant son exécution.",
+  "the backup is a raw save file, which cannot be restored": "la sauvegarde est un fichier brut qui ne peut pas être restauré"
 }

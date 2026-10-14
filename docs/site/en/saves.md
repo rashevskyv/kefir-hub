@@ -160,6 +160,13 @@ To restore a save for a game you have uninstalled, either keep the console's sav
 ## Restore several saves at once
 Select several saves (or several backup groups), then choose [[Restore]]. [[Restore for user]] asks once which user gets all of them; pick [[Choose for each save]] there to answer for every save separately. If two of the selected backups are the same game from different users, it asks for each save; the question names the game, whose backup it is and its date. Give each backup a different user, or restore just one of them. Then one dialog lists every save and where it goes; confirm it with [[Yes]]. The saves are restored one by one: if one fails, the ones before it stay restored.
 
+<!-- draft
+- the confirmation lists each game by name with the user it goes to (no title ids, no "slot" words)
+- a save that cannot be restored no longer stops the rest: it is skipped, the others are restored, and the end shows "[[Restored: ]] N / M" and, under "[[Not restored:]]", each failed game with the reason (save in use, backup does not match, raw save file, error code)
+- a third button, [[Without a copy]], restores without first keeping a copy of the save that is replaced; [[Restore]] keeps the copy in /dumps/recovery as before
+- the note to close the running game shows only when a game is really suspended in the background (Kefir Hub started from the Homebrew Menu or the Album); started as a title, Kefir Hub is that game itself. The note about MTP is gone: Kefir Hub checks by itself whether a PC holds a save open
+-->
+
 ## Undo a restore
 The safety copy from `/dumps/recovery/` is an ordinary save ZIP of the save as it was before the restore.
 

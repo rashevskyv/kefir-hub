@@ -74,6 +74,8 @@ struct Entry final : FsSaveDataInfo {
     BackupSource backup_source{BackupSource::Other};
 
     bool is_planned_create{};
+    // restore target only: replace the live save without the safety copy (the user chose so).
+    bool skip_recovery{};
     SaveCreationRequest creation_request{};
     bool is_game_parent{};
     std::vector<Entry> children{};
@@ -267,7 +269,8 @@ private:
         std::shared_ptr<std::vector<Entry>> sources,
         std::shared_ptr<std::vector<Entry>> targets,
         const dump::DumpLocation& location,
-        const fs::FsPath& backup_root);
+        const fs::FsPath& backup_root,
+        bool make_safety_copy = true);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
     void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt);

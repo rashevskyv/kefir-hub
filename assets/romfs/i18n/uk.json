@@ -3237,5 +3237,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Від них лишилися тільки записи: самих даних на консолі вже немає. Так буває після форматування розділу користувача, наприклад коли створюють стиснену emuMMC. Такі збереження не можна ні скопіювати в бекап, ні відновити. Видалити ці записи?",
   "Restore for a specific user": "Відновити для певного користувача",
   "Backup actions": "Дії з резервною копією",
-  "Restore, check or delete the selected backups.": "Відновити, перевірити або видалити вибрані резервні копії."
+  "Restore, check or delete the selected backups.": "Відновити, перевірити або видалити вибрані резервні копії.",
+  "Not restored:": "Не відновлено:",
+  "Restored: ": "Відновлено: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(збереження могло бути змінене; його копія знаходиться в /dumps/recovery)",
+  "A new save was created for a failed restore; it stays empty.": "Для невдалого відновлення було створено нове збереження; воно лишається порожнім.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Копії замінених збережень знаходяться в /dumps/recovery. Щоб скасувати: відкрийте його recovery.zip у файловому браузері, натисніть + та виберіть «Відновити дані збереження».",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Якщо якесь збереження не вдасться відновити, решту буде відновлено, а невдалі буде перелічено в кінці.",
+  "Without a copy": "Без копії",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Перед заміною збереження його копія зберігається на карті microSD (/dumps/recovery).",
+  "Stopped before the end.": "Зупинено перед завершенням.",
+  "error": "помилка",
+  "the save is in use: close the game": "збереження використовується: закрийте гру",
+  "the backup does not match this game or user": "резервна копія не відповідає цій грі чи користувачу",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Гра призупинена у фоновому режимі. Спочатку закрийте її: збереження не може бути замінене під час її роботи.",
+  "the backup is a raw save file, which cannot be restored": "резервна копія є сирим файлом збереження, який неможливо відновити"
 }

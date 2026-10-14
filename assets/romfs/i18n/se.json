@@ -3242,5 +3242,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Endast posterna finns kvar: datan har försvunnit från konsolen. Detta händer efter att användarpartitionen har formaterats, till exempel när en komprimerad emuMMC skapas. Sådana sparfiler kan inte säkerhetskopieras eller återställas. Ta bort posterna?",
   "Restore for a specific user": "Återställ för en specifik användare",
   "Backup actions": "Säkerhetskopieringsåtgärder",
-  "Restore, check or delete the selected backups.": "Återställ, kontrollera eller radera de valda säkerhetskopiorna."
+  "Restore, check or delete the selected backups.": "Återställ, kontrollera eller radera de valda säkerhetskopiorna.",
+  "Not restored:": "Ej återställd:",
+  "Restored: ": "Återställd: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(sparfilen kan ha ändrats; en kopia finns i /dumps/recovery)",
+  "A new save was created for a failed restore; it stays empty.": "En ny sparfil skapades för en misslyckad återställning; den förblir tom.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Kopior av de ersatta sparfilerna finns i /dumps/recovery. För att ångra: öppna dess recovery.zip i filbläddraren, tryck på + och välj Återställ sparadota.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Om en sparfil inte kan återställas återställs de andra ändå; de som misslyckades listas i slutet.",
+  "Without a copy": "Utan kopia",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Innan en sparning ersätts sparas en kopia av den på microSD-kortet (/dumps/recovery).",
+  "Stopped before the end.": "Stoppades före slutet.",
+  "error": "fel",
+  "the save is in use: close the game": "sparfilen används: stäng spelet",
+  "the backup does not match this game or user": "säkerhetskopieringen matchar inte detta spel eller denna användare",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Ett spel är pausat i bakgrunden. Stäng det först: dess sparfil kan inte ersättas medan det körs.",
+  "the backup is a raw save file, which cannot be restored": "säkerhetskopieringen är en rå sparfil som inte kan återställas"
 }

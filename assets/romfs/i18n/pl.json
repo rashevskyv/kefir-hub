@@ -3237,5 +3237,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Zostały tylko wpisy: dane zniknęły z konsoli. Dzieje się tak po sformatowaniu partycji użytkownika, na przykład podczas tworzenia skompresowanego emuMMC. Takich zapisów nie można utworzyć w kopii zapasowej ani przywrócić. Usunąć wpisy?",
   "Restore for a specific user": "Przywróć dla określonego użytkownika",
   "Backup actions": "Działania kopii zapasowej",
-  "Restore, check or delete the selected backups.": "Przywróć, sprawdź lub usuń wybrane kopie zapasowe."
+  "Restore, check or delete the selected backups.": "Przywróć, sprawdź lub usuń wybrane kopie zapasowe.",
+  "Not restored:": "Nie przywrócono:",
+  "Restored: ": "Przywrócono: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(zapis mógł ulec zmianie; jego kopia znajduje się w /dumps/recovery)",
+  "A new save was created for a failed restore; it stays empty.": "Utworzono nowy zapis dla nieudanego przywracania; pozostaje pusty.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Kopie zastąpionych zapisów znajdują się w /dumps/recovery. Aby cofnąć: otwórz jego recovery.zip w Przeglądarce plików, naciśnij + i wybierz Przywróć dane zapisu.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Jeśli któregoś zapisu nie uda się przywrócić, pozostałe nadal zostaną; te, które się nie powiodły, zostaną wymienione na końcu.",
+  "Without a copy": "Bez kopii",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Przed zastąpieniem zapisu jego kopia jest zachowywana na karcie microSD (/dumps/recovery).",
+  "Stopped before the end.": "Zatrzymano przed końcem.",
+  "error": "błąd",
+  "the save is in use: close the game": "zapis jest używany: zamknij grę",
+  "the backup does not match this game or user": "kopia zapasowa nie pasuje do tej gry lub użytkownika",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Gra jest wstrzymana w tle. Zamknij ją najpierw: jej stanu zapisu nie można zastąpić, gdy jest uruchomiona.",
+  "the backup is a raw save file, which cannot be restored": "kopia zapasowa to surowy plik zapisu, którego nie można przywrócić"
 }

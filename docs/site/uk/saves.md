@@ -161,6 +161,13 @@ Kefir Hub бере:
 ## Відновити кілька збережень разом
 Позначте кілька збережень (або кілька груп копій) і виберіть [[Restore]]. [[Restore for user]] один раз питає, якому користувачу віддати всі збереження; виберіть там [[Choose for each save]], щоб відповісти для кожного окремо. Якщо серед позначених є копії однієї гри від різних користувачів, питання ставиться для кожного збереження; у ньому видно гру, чия це копія і її дату. Віддайте кожну копію іншому користувачу або відновіть лише одну з них. Далі одне вікно показує всі збереження й куди вони підуть; підтвердіть його кнопкою [[Yes]]. Збереження відновлюються по одному: якщо одне не вдасться, попередні лишаться відновленими.
 
+<!-- draft
+- the confirmation lists each game by name with the user it goes to (no title ids, no "slot" words)
+- a save that cannot be restored no longer stops the rest: it is skipped, the others are restored, and the end shows "[[Restored: ]] N / M" and, under "[[Not restored:]]", each failed game with the reason (save in use, backup does not match, raw save file, error code)
+- a third button, [[Without a copy]], restores without first keeping a copy of the save that is replaced; [[Restore]] keeps the copy in /dumps/recovery as before
+- the note to close the running game shows only when a game is really suspended in the background (Kefir Hub started from the Homebrew Menu or the Album); started as a title, Kefir Hub is that game itself. The note about MTP is gone: Kefir Hub checks by itself whether a PC holds a save open
+-->
+
 ## Скасувати відновлення
 Страхувальна копія з `/dumps/recovery/` — це звичайний ZIP збереження в тому стані, який був до відновлення.
 

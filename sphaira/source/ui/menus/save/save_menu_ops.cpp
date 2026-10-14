@@ -11,6 +11,7 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
+#include "account/account_link.hpp"
 #include <vector>
 #include <string>
 #include <memory>
@@ -64,7 +65,28 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
     ShowRestoreConfirm(src_ptr, dst_ptr, location, backup_root);
 }
 
-// One confirmation for the whole restore: what is restored and where it goes.
+namespace {
+
+// why one save of a restore did not go through, in words.
+auto RestoreFailureReason(Result rc) -> std::string {
+    const auto value = R_VALUE(rc);
+    if (value == R_VALUE(Result_RawSaveRestoreUnsupported)) {
+        return "the backup is a raw save file, which cannot be restored"_i18n;
+    }
+    if (value == FsError_TargetLocked) {
+        return "the save is in use: close the game"_i18n;
+    }
+    if (value == FsError_PathNotFound) {
+        return "the backup does not match this game or user"_i18n;
+    }
+    char buf[48];
+    std::snprintf(buf, sizeof(buf), "%s %04u-%04u", "error"_i18n.c_str(), 2000 + R_MODULE(rc), R_DESCRIPTION(rc));
+    return buf;
+}
+
+} // namespace
+
+// One confirmation for the whole restore: which game goes to which user.
 void Menu::ShowRestoreConfirm(
     std::shared_ptr<std::vector<Entry>> sources,
     std::shared_ptr<std::vector<Entry>> targets,
@@ -72,96 +94,109 @@ void Menu::ShowRestoreConfirm(
     const fs::FsPath& backup_root) {
 
     const auto accounts = App::GetAccountList();
-    const auto account_of = [&accounts](const Entry& src, const Entry& dst) -> std::string {
-        if (src.save_data_type != FsSaveDataType_Account) {
-            return {};
-        }
-        auto name = AccountLabel(dst.uid, accounts);
-        return name.empty() ? FormatBackupAccount(src, accounts) : name;
-    };
-    const auto dest_of = [](const Entry& dst, const std::string& acc_str) -> std::string {
-        if (dst.is_planned_create) {
-            const auto what = dst.save_data_type == FsSaveDataType_Account ? acc_str : std::string(GetSaveTypeLabel(dst.save_data_type));
-            return "New slot ("_i18n + what + ")";
-        }
-        if (dst.save_data_type != FsSaveDataType_Account) {
-            return GetSaveTypeLabel(dst.save_data_type);
-        }
-        std::string dest_str = "Account: "_i18n + acc_str;
-        if (dst.save_data_index != 0) {
-            dest_str += " [slot "_i18n + std::to_string(dst.save_data_index) + "]";
-        }
-        return dest_str;
-    };
-
-    std::string prompt;
-    if (sources->size() > 1) {
-        prompt = "Restore selected saves?"_i18n + "\n\n";
-        constexpr size_t MAX_LINES = 6; // the box has no scrolling
-        for (size_t i = 0; i < sources->size() && i < MAX_LINES; i++) {
-            const auto& src = (*sources)[i];
-            const auto& dst = (*targets)[i];
-            const std::string name = (src.GetName() && src.GetName()[0] != '\0') ? src.GetName() : GetSaveTypeLabel(src.save_data_type);
-            prompt += "• " + name + " → " + dest_of(dst, account_of(src, dst)) + "\n";
-        }
-        if (sources->size() > MAX_LINES) {
-            prompt += "… +" + std::to_string(sources->size() - MAX_LINES) + "\n";
-        }
-        prompt += "\n";
-        prompt += "Each save is restored on its own. If one fails, the saves after it are not restored.\n"_i18n;
-    } else {
-        const auto& src = sources->front();
-        const auto& dst = targets->front();
-        const auto& newest = src.backup_members.front();
-        const std::string acc_str = account_of(src, dst);
-        const char* slash = std::strrchr(newest.path.s, '/');
-        const std::string filename = slash ? (slash + 1) : newest.path.s;
-
-        prompt = "Restore selected save?"_i18n + "\n\n";
-        prompt += "• [" + std::string(GetSaveTypeLabel(src.save_data_type)) + "] ";
-        if (!acc_str.empty()) {
-            prompt += acc_str;
-            if (src.save_data_index != 0) {
-                prompt += " (slot "_i18n + std::to_string(src.save_data_index) + ")";
-            }
-            prompt += " • ";
-        }
-        prompt += std::string(GetBackupSourceLabel(src.backup_source)) + " (" + FormatBackupTimestamp(newest.ts, false) + ")\n";
-        prompt += "  " + "Archive: "_i18n + filename + "\n";
-        prompt += "  " + "Target: "_i18n + dest_of(dst, acc_str) + "\n\n";
+    // the game name comes with the control data; without it the list showed bare title ids.
+    for (auto& dst : *targets) {
+        detail::LoadControlEntry(dst);
     }
-    prompt += "A safety recovery backup will be created on SD before overwriting.\nPlease close the running game and disable MTP."_i18n;
-
-    App::Push<OptionBox>(prompt, "No"_i18n, "Yes"_i18n, [this, sources, targets, location, backup_root](auto choice) {
-        if (choice && *choice == 1) {
-            ExecuteRestore(sources, targets, location, backup_root);
+    const auto line_of = [&accounts](const Entry& src, const Entry& dst) -> std::string {
+        std::string who;
+        if (src.save_data_type == FsSaveDataType_Account) {
+            who = AccountLabel(dst.uid, accounts);
+            if (who.empty()) {
+                who = FormatBackupAccount(src, accounts);
+            }
+        } else {
+            who = GetSaveTypeLabel(dst.save_data_type);
         }
-    });
+        return "• " + std::string{dst.GetName()} + (who.empty() ? std::string{} : " — " + who) + "\n";
+    };
+
+    std::string prompt = (sources->size() > 1 ? "Restore selected saves?"_i18n : "Restore selected save?"_i18n) + "\n\n";
+    constexpr size_t MAX_LINES = 6; // the box has no scrolling
+    for (size_t i = 0; i < sources->size() && i < MAX_LINES; i++) {
+        prompt += line_of((*sources)[i], (*targets)[i]);
+    }
+    if (sources->size() > MAX_LINES) {
+        prompt += "… +" + std::to_string(sources->size() - MAX_LINES) + "\n";
+    }
+    if (sources->size() == 1) {
+        const auto& src = sources->front();
+        prompt += "  " + std::string(GetBackupSourceLabel(src.backup_source)) + ", " + FormatBackupTimestamp(src.backup_members.front().ts, false) + "\n";
+    }
+    prompt += "\n";
+
+    if (sources->size() > 1) {
+        prompt += "If a save cannot be restored, the others still are; the ones that failed are listed at the end."_i18n + "\n";
+    }
+    const bool replaces_live = std::any_of(targets->begin(), targets->end(), [](const Entry& dst) { return !dst.is_planned_create; });
+    if (replaces_live) {
+        prompt += "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery)."_i18n + "\n";
+    }
+    // started as a title, Kefir Hub is the running game itself; only a game suspended under the
+    // Homebrew Menu or the Album can hold a save open.
+    if (App::IsApplet() && account_link::HasSuspendedApplication()) {
+        prompt += "A game is suspended in the background. Close it first: its save cannot be replaced while it runs."_i18n;
+    }
+
+    const auto run = [this, sources, targets, location, backup_root](bool make_safety_copy) {
+        ExecuteRestore(sources, targets, location, backup_root, make_safety_copy);
+    };
+    if (replaces_live) {
+        App::Push<OptionBox>(prompt, "No"_i18n, "Without a copy"_i18n, "Restore"_i18n, 2, [run](auto choice) {
+            if (choice && *choice == 1) {
+                run(false);
+            } else if (choice && *choice == 2) {
+                run(true);
+            }
+        });
+    } else {
+        App::Push<OptionBox>(prompt, "No"_i18n, "Restore"_i18n, [run](auto choice) {
+            if (choice && *choice == 1) {
+                run(true);
+            }
+        });
+    }
 }
 
 void Menu::ExecuteRestore(
     std::shared_ptr<std::vector<Entry>> sources,
     std::shared_ptr<std::vector<Entry>> targets,
     const dump::DumpLocation& location,
-    const fs::FsPath& backup_root) {
+    const fs::FsPath& backup_root,
+    bool make_safety_copy) {
 
+    static_cast<void>(location); // every backup path is absolute: the location is not needed here
+    static_cast<void>(backup_root);
     App::PopToMenu();
-    auto restored = std::make_shared<size_t>(0);
-    auto skipped = std::make_shared<size_t>(0);
-    auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
-    auto last_mutation_started = std::make_shared<bool>(false);
-    auto last_item_is_raw = std::make_shared<bool>(false);
-    auto last_item_created_slot_retained = std::make_shared<bool>(false);
+    for (auto& dst : *targets) {
+        dst.skip_recovery = !make_safety_copy;
+    }
 
-    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources, targets, location, backup_root, restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](auto pbox) mutable -> Result {
+    struct Failure {
+        std::string name;
+        std::string reason;
+    };
+    auto restored = std::make_shared<size_t>(0);
+    auto failures = std::make_shared<std::vector<Failure>>();
+    auto stopped = std::make_shared<bool>(false);
+    auto created_slot_kept = std::make_shared<bool>(false);
+    auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
+
+    // one save that fails is listed and skipped; the others are still restored.
+    App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources, targets, restored, failures, stopped, created_slot_kept, recovery_paths](auto pbox) mutable -> Result {
         fs::FsStdio stdio_fs;
         fs::FsNativeSd sd_fs;
 
         for (size_t i = 0; i < sources->size(); i++) {
+            if (R_FAILED(pbox->ShouldExitResult())) {
+                *stopped = true;
+                break;
+            }
             auto& src = (*sources)[i];
             auto& dst = (*targets)[i];
             detail::LoadControlEntry(dst);
-            pbox->SetTitle(dst.GetName());
+            const std::string name = dst.GetName();
+            pbox->SetTitle(name);
             if (dst.image) {
                 pbox->SetImage(dst.image);
             } else if (auto data = title::Get(dst.application_id); data && !data->icon.empty()) {
@@ -179,39 +214,23 @@ void Menu::ExecuteRestore(
             const bool is_dir_on_disk = (R_SUCCEEDED(probe_fs->GetEntryType(file_path, &entry_type)) && entry_type == FsDirEntryType_Dir);
             const bool is_folder = member.is_directory || is_dir_on_disk;
 
-            const bool is_raw = !is_folder && IsDisaSaveFile(probe_fs, file_path);
-            *last_item_is_raw = is_raw;
-            *last_mutation_started = false;
-            *last_item_created_slot_retained = false;
-
-            if (is_raw) {
-                return Result_RawSaveRestoreUnsupported;
+            if (!is_folder && IsDisaSaveFile(probe_fs, file_path)) {
+                failures->push_back({name, RestoreFailureReason(Result_RawSaveRestoreUnsupported)});
+                continue;
             }
 
             const char* filename = std::strrchr(file_path.s, '/');
             filename = filename ? filename + 1 : file_path.s;
             BackupArchiveInfo check_info{};
-
-            if (is_folder) {
-                if (!is_dir_on_disk || !InspectBackupFolder(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                    !MatchesSelectedBackup(check_info, src)) {
-                    log_write("Backup folder reinspection failed or identity mismatch for %s\n", file_path.s);
-                    return FsError_PathNotFound;
-                }
-            } else {
-                if (!InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info) ||
-                    !MatchesSelectedBackup(check_info, src)) {
-                    log_write("Backup archive reinspection failed or identity mismatch for %s\n", file_path.s);
-                    return FsError_PathNotFound;
-                }
+            const bool inspected = is_folder
+                ? (is_dir_on_disk && InspectBackupFolder(probe_fs, file_path, filename, src.dbi_game_dir, check_info))
+                : InspectBackupArchive(probe_fs, file_path, filename, src.dbi_game_dir, check_info);
+            if (!inspected || !MatchesSelectedBackup(check_info, src) || !MatchesRestoreDestination(check_info, dst)) {
+                log_write("Backup reinspection failed or identity mismatch for %s\n", file_path.s);
+                failures->push_back({name, RestoreFailureReason(FsError_PathNotFound)});
+                continue;
             }
 
-            if (!MatchesRestoreDestination(check_info, dst)) {
-                log_write("Destination slot identity mismatch for %s\n", file_path.s);
-                return FsError_PathNotFound;
-            }
-
-            *last_mutation_started = false;
             pbox->SetActionName("Restore"_i18n);
             fs::FsPath item_recovery_path;
             bool item_mutation_started = false;
@@ -221,64 +240,54 @@ void Menu::ExecuteRestore(
                 recovery_paths->push_back(item_recovery_path);
             }
             if (R_FAILED(restore_rc)) {
-                *last_mutation_started = item_mutation_started;
-                *last_item_created_slot_retained = item_created_slot_retained;
-                return restore_rc;
+                if (restore_rc == Result_TransferCancelled) {
+                    *stopped = true;
+                    break;
+                }
+                auto reason = RestoreFailureReason(restore_rc);
+                if (item_mutation_started) {
+                    reason += " " + "(the save may be changed; its copy is in /dumps/recovery)"_i18n;
+                }
+                failures->push_back({name, reason});
+                *created_slot_kept = *created_slot_kept || item_created_slot_retained;
+                continue;
             }
             (*restored)++;
         }
 
         R_SUCCEED();
-    }, [restored, skipped, recovery_paths, last_mutation_started, last_item_is_raw, last_item_created_slot_retained](Result rc){
+    }, [sources, restored, failures, stopped, created_slot_kept, recovery_paths](Result rc) {
         if (R_FAILED(rc)) {
-            if (*last_item_created_slot_retained) {
-                App::Push<OptionBox>("Save slot was created, but restore did not finish.\nThe save slot remains available for retry or manual management.\nNo safety recovery archive was created because the slot was newly created."_i18n, "OK"_i18n);
-            } else if (*last_item_is_raw) {
-                App::Push<OptionBox>(save::GetRawRestoreUnsupportedMessage(), "OK"_i18n);
-            } else if (rc == Result_TransferCancelled) {
-                App::Notify("Restore cancelled."_i18n); // the user stopped it: not an error
-            } else {
-                App::PushErrorBox(rc, "Restore failed!"_i18n);
-            }
-        } else {
-            if (*restored) {
-                App::Notify("Restore successful!"_i18n);
-            } else {
-                App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
-            }
-
-            if (*skipped) {
-                App::Notify(std::to_string(*skipped) + " saves skipped");
-            }
+            App::PushErrorBox(rc, "Restore failed!"_i18n);
+            return;
+        }
+        const auto total = sources->size();
+        if (total == 1 && *restored == 1 && recovery_paths->empty()) {
+            App::Notify("Restore successful!"_i18n);
+            return;
         }
 
+        std::string msg = "Restored: "_i18n + std::to_string(*restored) + " / " + std::to_string(total) + "\n";
+        if (*stopped) {
+            msg += "Stopped before the end."_i18n + "\n";
+        }
+        if (!failures->empty()) {
+            msg += "\n" + "Not restored:"_i18n + "\n";
+            constexpr size_t MAX_LINES = 6; // the box has no scrolling
+            for (size_t i = 0; i < failures->size() && i < MAX_LINES; i++) {
+                msg += "• " + (*failures)[i].name + ": " + (*failures)[i].reason + "\n";
+            }
+            if (failures->size() > MAX_LINES) {
+                msg += "… +" + std::to_string(failures->size() - MAX_LINES) + "\n";
+            }
+        }
+        if (*created_slot_kept) {
+            msg += "\n" + "A new save was created for a failed restore; it stays empty."_i18n + "\n";
+        }
         if (!recovery_paths->empty()) {
-            std::string rec_msg;
-            if (R_SUCCEEDED(rc)) {
-                rec_msg = "Restore completed."_i18n;
-            } else if (*last_item_is_raw) {
-                rec_msg = "Restore stopped."_i18n;
-            } else if (*last_mutation_started) {
-                rec_msg = "Restore stopped. The last save may be changed, and it was not checked."_i18n;
-            } else {
-                rec_msg = "Restore stopped before current target save was modified."_i18n;
-            }
-            rec_msg += "\n";
-            rec_msg += (recovery_paths->size() == 1)
-                ? "Safety copy of the replaced save:"_i18n
-                : "Safety copies of the replaced saves:"_i18n;
-            rec_msg += "\n";
-            for (const auto& rp : *recovery_paths) {
-                rec_msg += rp.s;
-                rec_msg += "\n";
-            }
-            rec_msg += "\n" + "To undo: open File Browser, select recovery.zip, press + and choose Restore save data."_i18n;
-            App::Push<OptionBox>(rec_msg, "OK"_i18n);
-        } else if (R_FAILED(rc)) {
-            if (!*last_item_is_raw && !*last_mutation_started && !*last_item_created_slot_retained) {
-                App::Push<OptionBox>("Restore stopped before current target save was modified."_i18n, "OK"_i18n);
-            }
+            msg += "\n" + "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data."_i18n;
         }
+        App::Push<OptionBox>(msg, "OK"_i18n);
     });
 }
 

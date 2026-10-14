@@ -3242,5 +3242,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Chỉ còn lại các bản ghi: dữ liệu đã biến mất khỏi máy. Điều này xảy ra sau khi phân vùng người dùng được định dạng, ví dụ khi tạo một emuMMC nén. Các dữ liệu lưu này không thể sao lưu hoặc khôi phục. Xóa các bản ghi?",
   "Restore for a specific user": "Khôi phục cho người dùng cụ thể",
   "Backup actions": "Tác vụ sao lưu",
-  "Restore, check or delete the selected backups.": "Khôi phục, kiểm tra hoặc xóa các bản sao lưu đã chọn."
+  "Restore, check or delete the selected backups.": "Khôi phục, kiểm tra hoặc xóa các bản sao lưu đã chọn.",
+  "Not restored:": "Chưa được khôi phục:",
+  "Restored: ": "Đã khôi phục: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(bản lưu có thể đã bị thay đổi; bản sao nằm ở /dumps/recovery)",
+  "A new save was created for a failed restore; it stays empty.": "Đã tạo một bản lưu mới cho quá trình khôi phục thất bại; nó vẫn trống.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Các bản sao của dữ liệu lưu đã thay thế nằm ở /dumps/recovery. Để hoàn tác: mở file recovery.zip trong Trình duyệt tệp, nhấn + và chọn Khôi phục dữ liệu lưu.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Nếu không thể khôi phục một bản lưu, các bản khác vẫn được khôi phục; những bản thất bại sẽ được liệt kê ở cuối.",
+  "Without a copy": "Không có bản sao",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Trước khi dữ liệu lưu được thay thế, một bản sao sẽ được lưu trên thẻ microSD (/dumps/recovery).",
+  "Stopped before the end.": "Đã dừng trước khi kết thúc.",
+  "error": "lỗi",
+  "the save is in use: close the game": "dữ liệu lưu đang được sử dụng: hãy đóng trò chơi",
+  "the backup does not match this game or user": "bản sao lưu không khớp với trò chơi hoặc người dùng này",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Một trò chơi đang bị tạm dừng ở nền. Hãy đóng nó trước: không thể thay thế tệp lưu khi trò chơi đang chạy.",
+  "the backup is a raw save file, which cannot be restored": "bản sao lưu là tệp lưu thô, không thể khôi phục"
 }

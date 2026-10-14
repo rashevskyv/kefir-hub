@@ -3237,5 +3237,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Yalnızca kayıtlar kaldı: veriler konsoldan silindi. Bu, kullanıcı bölümü biçimlendirildiğinde, örneğin sıkıştırılmış bir emuMMC oluşturulduğunda gerçekleşir. Bu tür kayıtların yedeği alınamaz veya geri yüklenemez. Kayıtlar kaldırılsın mı?",
   "Restore for a specific user": "Belirli bir kullanıcı için geri yükle",
   "Backup actions": "Yedekleme eylemleri",
-  "Restore, check or delete the selected backups.": "Seçilen yedeklemeleri geri yükleyin, kontrol edin veya silin."
+  "Restore, check or delete the selected backups.": "Seçilen yedeklemeleri geri yükleyin, kontrol edin veya silin.",
+  "Not restored:": "Geri yüklenmedi:",
+  "Restored: ": "Geri Yüklendi: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(kayıt dosyası değiştirilmiş olabilir; kopyası /dumps/recovery içindedir)",
+  "A new save was created for a failed restore; it stays empty.": "Başarısız bir geri yükleme için yeni bir kayıt oluşturuldu; boş kalıyor.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "Değiştirilen kayıtların kopyaları /dumps/recovery konumundadır. Geri almak için: Dosya Tarayıcısı'nda recovery.zip dosyasını açın, + tuşuna basın ve Kayıt verilerini geri yükle seçeneğini seçin.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Bir kayıt dosyası geri yüklenemezse diğerleri yine de yüklenir; başarısız olanlar sonda listelenir.",
+  "Without a copy": "Kopyasız",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Bir kayıt dosyası değiştirilmeden önce, microSD kartta (/dumps/recovery) bir kopyası saklanır.",
+  "Stopped before the end.": "Sondan önce durduruldu.",
+  "error": "hata",
+  "the save is in use: close the game": "kayıt dosyası kullanımda: oyunu kapatın",
+  "the backup does not match this game or user": "yedekleme bu oyun veya kullanıcıyla eşleşmiyor",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Arka planda askıya alınmış bir oyun var. Önce onu kapatın: çalışırken kayıt dosyası değiştirilemez.",
+  "the backup is a raw save file, which cannot be restored": "yedek, geri yüklenemeyen ham bir kayıt dosyasıdır"
 }

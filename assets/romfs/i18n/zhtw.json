@@ -3295,5 +3295,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "僅保留了記錄：資料已從主機中消失。這在使用者分割區被格式化後發生（例如製作了壓縮的 emuMMC 時）。此類存檔無法備份或復原。要移除這些記錄嗎？",
   "Restore for a specific user": "為指定使用者還原",
   "Backup actions": "備份操作",
-  "Restore, check or delete the selected backups.": "還原、檢查或刪除選定的備份。"
+  "Restore, check or delete the selected backups.": "還原、檢查或刪除選定的備份。",
+  "Not restored:": "未復原：",
+  "Restored: ": "已還原: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "（存檔可能已被修改；其副本位於 /dumps/recovery）",
+  "A new save was created for a failed restore; it stays empty.": "已為失敗的還原建立一個新存檔；它將保持為空。",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "被取代的存檔複本位於 /dumps/recovery。若要復原：在檔案瀏覽器中開啟對應的 recovery.zip，按下 + 並選擇還原存檔資料。",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "如果某個存檔無法恢復，其他存檔仍會恢復；失敗的存檔會列在最後。",
+  "Without a copy": "不複製",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "在替換存檔之前，其副本將保留在 microSD 卡（/dumps/recovery）上。",
+  "Stopped before the end.": "在結束前已停止。",
+  "error": "錯誤",
+  "the save is in use: close the game": "存檔正在使用中：請關閉遊戲",
+  "the backup does not match this game or user": "備份與此遊戲或使用者不符",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "遊戲正在背景暫停。請先關閉它：執行時無法替換其存檔。",
+  "the backup is a raw save file, which cannot be restored": "備份是原始存檔檔案，無法復原"
 }

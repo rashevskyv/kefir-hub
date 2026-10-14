@@ -3269,5 +3269,19 @@
   "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Apenas os registos restam: os dados desapareceram da consola. Isto acontece após a partição de utilizador ser formatada, por exemplo, quando é criada uma emuMMC comprimida. Tais gravações não podem ser copiadas nem restauradas. Remover os registos?",
   "Restore for a specific user": "Restaurar para um utilizador específico",
   "Backup actions": "Ações de cópia de segurança",
-  "Restore, check or delete the selected backups.": "Restaurar, verificar ou eliminar as cópias de segurança selecionadas."
+  "Restore, check or delete the selected backups.": "Restaurar, verificar ou eliminar as cópias de segurança selecionadas.",
+  "Not restored:": "Não restaurado:",
+  "Restored: ": "Restaurado: ",
+  "(the save may be changed; its copy is in /dumps/recovery)": "(o save pode ter sido alterado; a sua cópia está em /dumps/recovery)",
+  "A new save was created for a failed restore; it stays empty.": "Foi criada uma nova gravação para um restauro falhado; permanece vazia.",
+  "Copies of the replaced saves are in /dumps/recovery. To undo one: open its recovery.zip in the File Browser, press + and choose Restore save data.": "As cópias dos salvamentos substituídos estão em /dumps/recovery. Para anular: abra o recovery.zip no Explorador de Ficheiros, prima + e escolha Restaurar dados de salvamento.",
+  "If a save cannot be restored, the others still are; the ones that failed are listed at the end.": "Se um save não puder ser restaurado, os outros ainda serão; os que falharam são listados no final.",
+  "Without a copy": "Sem cópia",
+  "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery).": "Antes de um progresso ser substituído, uma cópia dele é guardada no cartão microSD (/dumps/recovery).",
+  "Stopped before the end.": "Parado antes do fim.",
+  "error": "erro",
+  "the save is in use: close the game": "o progresso está em uso: feche o jogo",
+  "the backup does not match this game or user": "o backup não corresponde a este jogo ou utilizador",
+  "A game is suspended in the background. Close it first: its save cannot be replaced while it runs.": "Um jogo está suspenso em segundo plano. Feche-o primeiro: o seu salvamento não pode ser substituído enquanto estiver a ser executado.",
+  "the backup is a raw save file, which cannot be restored": "o backup é um ficheiro desave bruto, que não pode ser restaurado"
 }

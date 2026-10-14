@@ -58,5 +58,7 @@ auto CanOfferLaunchLink() -> bool;
 auto IsLinkGated(std::string& out_reason) -> bool;
 void SetLaunchLinkPrompted(bool val = true);
 auto ConsumeAccountDaemonsTerminated() -> bool;
+// true when a game is suspended in the background (Kefir Hub started as an applet).
+auto HasSuspendedApplication() -> bool;
 
 } // namespace sphaira::account_link
