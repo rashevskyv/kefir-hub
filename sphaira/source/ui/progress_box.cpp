@@ -118,6 +118,35 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
         m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
     }
 
+    // a long job (the speed graph is on) can run for hours: Minus, or the blank timeout of the
+    // settings, hands the screen to the screensaver; any input brings the box back.
+    if (m_show_graph && !m_detached) {
+        if (!m_saver_action) {
+            m_saver_action = true;
+            m_last_input.Update();
+            SetAction(Button::SELECT, Action{"Screen off"_i18n, [this](){ m_saver.Start(); }});
+        }
+        if (m_saver.IsActive()) {
+            m_saver.Update(controller, touch);
+            if (m_saver.WantsWake(controller, touch)) {
+                m_saver.Stop();
+                m_saver.FlushPendingBrightness();
+                m_last_input.Update();
+            }
+            if (ShouldExit()) {
+                SetPop();
+            }
+            return; // the waking press must not also reach Stop
+        }
+        if (controller->m_kdown || touch->is_touching) {
+            m_last_input.Update();
+        }
+        const auto timeout = App::GetBlankTimeout();
+        if (timeout > 0 && m_last_input.GetSeconds() >= static_cast<u64>(timeout)) {
+            m_saver.Start();
+        }
+    }
+
     Widget::Update(controller, touch);
 
     if (ShouldExit()) {

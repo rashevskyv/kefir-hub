@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.075 — Progress box: figures change once a second; Minus / inactivity timeout starts the screensaver for long jobs
+- Owner on .103 (0.14.074 fills fine): the figures flickered several times a second before the speed settled. Now the samples are taken once a second and Average / Time left are computed with them, so every number moves once a second (the graph keeps 120 s of history).
+- Owner request: a screensaver for long jobs, handy on OLED. A box with the speed graph (fill with zeros) gets Minus "Screen off" in the footer and also starts the saver after the "Inactivity timeout" of the settings; the saver shows the action, the step with written / total, average speed, time left, time elapsed, the bar and the write graph (read line hidden, `SaverInfo::has_read`); the "Installed" counter is shown only when there are packages. Any input brings the box back without stopping the job.
+- host tests: pass (quick) · nro: built · switch: pending (fill on .103: Minus, wake, timeout).
+
 ## v0.14.074 — Fill with zeros: screen kept on by user-activity reports; a 1 ms pause per MiB lets other card users in
 - On .103 (0.14.073) the UI froze at "Time elapsed 4s": that was the test tooling (a screenshot written to the card from the UI thread, plus the Scripted input file poll every 100 ms), queued behind the fill. The screen still dimmed although the media playback state was set (Hub started from the Homebrew Menu). Now the fill loop calls `appletReportUserIsActive()` every 10 s and sleeps 1 ms after each 1 MiB write.
 - host tests: pass (quick) · nro: built · switch: pending (fill on .103 with Scripted input off: no dimming, B responds).

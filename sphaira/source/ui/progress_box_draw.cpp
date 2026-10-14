@@ -186,7 +186,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     std::vector<u8> image_data{};
     std::swap(m_image_data, image_data);
     const double elapsed = m_timestamp.GetSecondsD();
-    if (elapsed >= 0.5) {
+    // once a second: every figure on the box changes with the samples, faster reads as flicker.
+    if (elapsed >= 1.0) {
         m_timestamp.Update();
         const s64 bytes_sent = m_offset - m_last_offset;
         m_last_offset = m_offset;
@@ -208,6 +209,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             speed_sum += m_speed_samples[i];
         }
         m_speed = speed_sum / static_cast<s64>(m_speed_sample_count);
+
+        const double since_start = m_transfer_start.GetSecondsD();
+        m_average = since_start > 0.0 ? static_cast<double>(m_offset) / since_start : 0.0;
     }
 
     const auto action = m_action;
@@ -222,7 +226,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto graph_count = m_graph_count;
     const auto graph_index = m_graph_index;
     const double transfer_seconds = m_transfer_start.GetSecondsD();
-    const double average_speed = transfer_seconds > 0.0 ? static_cast<double>(offset) / transfer_seconds : 0.0;
+    const double average_speed = m_average;
+    // "left" from the sampled offset, so it moves with the other figures once a second.
+    const s64 left_bytes = std::max<s64>(0, size - m_last_offset);
     // synthetic-unit transfers keep a meaningful ETA (units-left / units-per-sec
     // is still real seconds) but a bytes-derived "MiB/s" would be nonsense, so
     // only the speed figure is suppressed, not the time remaining.
@@ -241,6 +247,29 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         FreeImage();
         image = m_image = nvgCreateImageMem(vg, 0, image_data.data(), image_data.size());
         m_own_image = true;
+    }
+
+    if (m_saver.OwnsScreen()) {
+        SaverInfo info{};
+        info.status = action;
+        info.file = transfer;
+        info.ratio = size > 0 ? std::clamp(static_cast<double>(offset) / static_cast<double>(size), 0.0, 1.0) : 0.0;
+        info.speed_mib = average_speed / (1024.0 * 1024.0);
+        if (average_speed >= 1.0) {
+            info.eta = ShortDuration(static_cast<double>(left_bytes) / average_speed);
+        }
+        info.elapsed_ns = static_cast<u64>(transfer_seconds * 1e9);
+        // the saver plots 96 samples of a read and a write line; a box has only the one speed.
+        info.has_graph = true;
+        info.has_read = false;
+        const size_t n = std::min<size_t>(graph_count, info.write_history.size());
+        for (size_t i = 0; i < n; i++) {
+            info.write_history[i] = graph[(graph_index + graph.size() - n + i) % graph.size()];
+        }
+        info.history_count = n;
+        info.history_index = n % info.write_history.size();
+        m_saver.Draw(vg, theme, info);
+        return;
     }
 
     if (m_minimized) {
@@ -285,7 +314,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     if (m_show_graph && !m_detached) {
         DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index,
-            average_speed, transfer_seconds, std::max<s64>(0, size - offset));
+            average_speed, transfer_seconds, left_bytes);
     }
 
     // shapes.

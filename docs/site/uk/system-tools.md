@@ -211,6 +211,8 @@
 - the fill writes one temporary file, /kefir-hub-zero-fill.tmp, that grows until the card is full; nothing is reserved up front
 - two steps on screen: "Step 1 of 2: writing zeros" with written / total, speed, time left and a write speed graph with the current ("Now") and the average speed of the whole fill, the time elapsed and the time left at the average speed; "Step 2 of 2: removing the temporary file, do not turn the console off"
 - **B** stops within a second; the temporary file is then removed
+- **Minus** ([[Screen off]]) shows the screensaver with the step, written / total, average speed, time left, time elapsed and the graph; with [[Inactivity timeout]] set it starts by itself; any button brings the progress back
+- the figures change once a second
 - the console does not sleep and the screen does not dim while the fill runs
 - after a crash or a power-off during a fill, Kefir Hub removes the temporary file at its next start
 - the card gets real zeros (the file is not encrypted)

@@ -339,8 +339,10 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
             gfx::drawRect(vg, bar, nvgRGBA(255, 255, 255, 40), 7.f);
         }
         gfx::drawRect(vg, bar.x, bar.y, std::max(4.f, bar.w * (float)info.ratio), bar.h, accent_col, 7.f);
-        gfx::drawTextArgs(vg, left, y, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, dim_col, "%s: %zu",
-            "Installed"_i18n.c_str(), info.installed);
+        if (info.package_count) {
+            gfx::drawTextArgs(vg, left, y, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, dim_col, "%s: %zu",
+                "Installed"_i18n.c_str(), info.installed);
+        }
         gfx::drawTextArgs(vg, left + BLOCK_W, y, 22.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, accent_col,
             "%.0f%%", info.ratio * 100.0);
         y += bar_h;
@@ -436,7 +438,9 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
         };
 
         nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
-        draw_line(info.read_history, red);
+        if (info.has_read) {
+            draw_line(info.read_history, red);
+        }
         draw_line(info.write_history, blue);
 
         nvgRestore(vg);

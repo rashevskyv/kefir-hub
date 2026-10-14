@@ -51,6 +51,7 @@ struct SaverInfo {
 
     // Live R/W speed graph history
     bool has_graph{false};
+    bool has_read{true};       // false: only the write line (a progress box has one speed)
     size_t history_count{0};
     size_t history_index{0};
     std::array<s64, 96> read_history{};

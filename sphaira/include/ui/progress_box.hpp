@@ -3,6 +3,7 @@
 #include "ui/widget.hpp"
 #include "ui/install_progress.hpp"
 #include "ui/scrolling_text.hpp"
+#include "ui/screensaver.hpp"
 #include "fs.hpp"
 #include <functional>
 #include <span>
@@ -165,6 +166,8 @@ private:
     size_t m_graph_count{};
     size_t m_graph_index{};
     std::atomic<bool> m_show_graph{false};
+    // whole-transfer average, refreshed with the samples once a second so the figures do not flicker.
+    double m_average{};
     size_t m_speed_sample_count{};
     size_t m_speed_sample_index{};
     TimeStamp m_timestamp{};
@@ -186,6 +189,10 @@ private:
     std::atomic<bool> m_hide_speed{false};
     bool m_detached{false};
     bool m_minimized{false};
+    // long jobs (the ones with the speed graph): Minus or the blank timeout starts the screensaver.
+    Screensaver m_saver{};
+    TimeStamp m_last_input{};
+    bool m_saver_action{};
     std::vector<CompatibilityWarning> m_compat_warnings{};
 };
 
