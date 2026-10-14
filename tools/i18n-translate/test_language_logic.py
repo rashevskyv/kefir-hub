@@ -66,10 +66,8 @@ def test_list_formed_from_existing_jsons():
     langs = scan_valid_languages_python()
     assert len(langs) == 26, f"Expected 26 valid languages, found {len(langs)}"
     codes = {l["code"] for l in langs}
-    assert "uk" in codes
-    assert "en" in codes
-    assert "zhtw" in codes
-    assert "es419" in codes
+    missing = {"uk", "en", "zhtw", "es419"} - codes
+    assert not missing, f"Languages missing from the list: {sorted(missing)}"
     assert "ru" not in codes
 
 

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.078 — Tests: deslop findings in the Python tests removed (18 -> 0)
+- Owner ran /deslop on Kefir Hub: the Picoripi deslop engine over this checkout (74 Python files) found 14 `setattr` with a literal name (mutator lambdas repeating the field name: now a (field, value) table and one `setattr`), 2 duplicate cancel lambdas (one hook factory) and 2 "generic substring" hits (set membership: now one subset check).
+- host tests: pass (the 4 touched tests) · nro: not built (tests only) · switch: n/a.
+
 ## v0.14.077 — Saver shows current speed; USB PC install: Back closes when the PC is gone, faster exit; safer Hub and Kefir updates
 - Saver of a long job: `SaverInfo::now_mib` (the plot's "Now") shown as "X MiB/s (Average Y)" (owner on .103; installs keep one figure). 0.14.076 was skipped (built while sources changed).
 - USB PC install (owner: Back after the graph shows the queue list even with no PC, and leaving it freezes ~3 s): Back on the summary closes the session when `usbDsGetState` is not Configured; `dbi::Menu::~Menu` re-signals the USB cancel every 50 ms until the worker exits (the self-clearing event woke only one of the blocked transfers: live-queue poll 1 s + finish 0.25 s); `[PERF]` for the usb source close and the usb drive re-init.

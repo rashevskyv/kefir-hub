@@ -212,17 +212,17 @@ def test_synthetic_model_fixtures() -> None:
 
     # Fixture 2: Mismatch of each of the 7 identity fields (separately testing both UID halves)
     field_mutations = [
-        ("application_id", lambda a: setattr(a, "application_id", 0x0100000000099999)),
-        ("system_save_data_id", lambda a: setattr(a, "system_save_data_id", 0x8000000000000001)),
-        ("uid0", lambda a: setattr(a, "uid0", 0x9999999999999999)),
-        ("uid1", lambda a: setattr(a, "uid1", 0xAAAAAAAAAAAAAAAA)),
-        ("save_data_type", lambda a: setattr(a, "save_data_type", 3)),  # FsSaveDataType_Device = 3
-        ("save_data_rank", lambda a: setattr(a, "save_data_rank", 1)),
-        ("save_data_index", lambda a: setattr(a, "save_data_index", 1)),
+        ("application_id", 0x0100000000099999),
+        ("system_save_data_id", 0x8000000000000001),
+        ("uid0", 0x9999999999999999),
+        ("uid1", 0xAAAAAAAAAAAAAAAA),
+        ("save_data_type", 3),  # FsSaveDataType_Device = 3
+        ("save_data_rank", 1),
+        ("save_data_index", 1),
     ]
-    for field_name, mutator in field_mutations:
+    for field_name, wrong_value in field_mutations:
         target, summary, live = make_valid_fixture()
-        mutator(live.attr)
+        setattr(live.attr, field_name, wrong_value)
         rc = sim.execute(target, summary, live)
         check(rc == FS_ERROR_PATH_NOT_FOUND,
               f"Identity mismatch on '{field_name}' must return FsError_PathNotFound")

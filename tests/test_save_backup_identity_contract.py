@@ -210,19 +210,19 @@ def test_behavioral_fixtures() -> None:
         # Fixture 2: Per-field mismatch matrix for each of the 7 fields
         # ----------------------------------------------------------------------
         mismatch_mutations = [
-            ("application_id", lambda a: setattr(a, "application_id", 0x0100000000099999)),
-            ("uid_low", lambda a: setattr(a, "uid_low", 0x9999999999999999)),
-            ("uid_high", lambda a: setattr(a, "uid_high", 0xAAAAAAAAAAAAAAAA)),  # UID-high-only mismatch!
-            ("system_save_data_id", lambda a: setattr(a, "system_save_data_id", 0x8000000000000001)),
-            ("save_data_type", lambda a: setattr(a, "save_data_type", FS_SAVE_DATA_TYPE_DEVICE)),
-            ("save_data_rank", lambda a: setattr(a, "save_data_rank", 1)),
-            ("save_data_index", lambda a: setattr(a, "save_data_index", 5)),
+            ("application_id", 0x0100000000099999),
+            ("uid_low", 0x9999999999999999),
+            ("uid_high", 0xAAAAAAAAAAAAAAAA),  # UID-high-only mismatch!
+            ("system_save_data_id", 0x8000000000000001),
+            ("save_data_type", FS_SAVE_DATA_TYPE_DEVICE),
+            ("save_data_rank", 1),
+            ("save_data_index", 5),
         ]
 
-        for field_name, mutator in mismatch_mutations:
+        for field_name, wrong_value in mismatch_mutations:
             entry_attr = make_valid_attr()
             live_attr = make_valid_attr()
-            mutator(live_attr)  # Mutate live extra data attribute
+            setattr(live_attr, field_name, wrong_value)  # Mutate live extra data attribute
 
             extra_bytes = encode_extra_data(live_attr)
             entry = SelectedEntry(save_data_id=0xABCDE, save_data_space_id=FS_SAVE_DATA_SPACE_ID_USER, attr=entry_attr)

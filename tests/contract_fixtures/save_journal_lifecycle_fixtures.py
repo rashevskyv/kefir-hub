@@ -299,10 +299,15 @@ def test_behavioral_fixtures() -> None:
     # Cancellation is delivered inside the operation, then observed at its next gate.
     for operation in ("create_commit", "chunk_commit", "reopen"):
         fs, pb = ModelNativeFs(), MockProgressBox()
+        def cancel_on_commit(prefix, pb=pb):
+            def hook(context):
+                if context.startswith(prefix):
+                    pb.cancelled = True
+            return hook
         if operation == "create_commit":
-            fs.on_commit = lambda context: setattr(pb, "cancelled", True) if context.startswith("file_create:") else None
+            fs.on_commit = cancel_on_commit("file_create:")
         elif operation == "chunk_commit":
-            fs.on_commit = lambda context: setattr(pb, "cancelled", True) if context.startswith("chunk:") else None
+            fs.on_commit = cancel_on_commit("chunk:")
         else:
             opens = []
             def cancel_reopen(path):
