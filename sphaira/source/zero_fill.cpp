@@ -87,17 +87,26 @@ Result FillSdFreeSpace(ui::ProgressBox* pbox) {
         pbox->NewTransfer("Step 1 of 2: writing zeros"_i18n).UpdateTransfer(0, size);
         const auto t0 = armGetSystemTick();
         u64 label_tick = t0;
+        u64 active_tick = t0;
         for (s64 offset = 0; offset < size; ) {
             R_TRY(pbox->ShouldExitResult());
             const auto n = std::min(CHUNK_SIZE, size - offset);
             R_TRY(f.Write(offset, zeros.data(), n, FsWriteOption_None));
             offset += n;
             pbox->UpdateTransfer(offset, size);
+            // back to back writes would keep every other user of the card (the menu, the log) waiting.
+            svcSleepThread(1'000'000);
 
             // how much is done, once a second
             if (Seconds(label_tick) >= 1.0) {
                 label_tick = armGetSystemTick();
                 pbox->SetTransfer(std::string{"Step 1 of 2: writing zeros"_i18n} + ": " + Size(offset) + " / " + Size(size));
+            }
+            // started from the Homebrew Menu the media playback state does not stop the screen dimming:
+            // count as user activity.
+            if (Seconds(active_tick) >= 10.0) {
+                active_tick = armGetSystemTick();
+                appletReportUserIsActive();
             }
         }
         log_write("[ZERO] written %lld in %.1fs\n", (long long)size, Seconds(t0));

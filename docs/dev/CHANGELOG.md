@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.074 — Fill with zeros: screen kept on by user-activity reports; a 1 ms pause per MiB lets other card users in
+- On .103 (0.14.073) the UI froze at "Time elapsed 4s": that was the test tooling (a screenshot written to the card from the UI thread, plus the Scripted input file poll every 100 ms), queued behind the fill. The screen still dimmed although the media playback state was set (Hub started from the Homebrew Menu). Now the fill loop calls `appletReportUserIsActive()` every 10 s and sleeps 1 ms after each 1 MiB write.
+- host tests: pass (quick) · nro: built · switch: pending (fill on .103 with Scripted input off: no dimming, B responds).
+
 ## v0.14.073 — Fill with zeros on a slow card: the UI no longer waits on the card; graph shows time elapsed and time left
 - Seen on 192.168.50.103: during the fill the screen went off, and after waking it the Hub did not react to buttons (restart needed). Likely cause: `MenuBase::GetPolledData` asks the card's free space every 15 s on the UI thread, and that call waits behind the fill's writes, so input, HOME and sleep/resume stall. Now the periodic storage poll is skipped while a ProgressBox is active (explicit refreshes stay).
 - Owner request: the graph column shows Now, Average, Time elapsed and Time left; with the graph shown, the time left under the bar also uses the average speed.
