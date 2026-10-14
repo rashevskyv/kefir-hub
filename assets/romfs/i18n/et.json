@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Samm 2 / 2: ajutise faili eemaldamine, ära lülita konsooli välja...",
   "Average": "Keskmine",
   "Time left": "Jäänud aeg",
-  "Time elapsed": "Kulunud aeg"
+  "Time elapsed": "Kulunud aeg",
+  "Not in the list, not checked: ": "Loendis pole, kontrollimata: ",
+  "Check game updates": "Kontrolli mängu värskendusi",
+  "All checked games are up to date": "Kõik kontrollitud mängud on ajakohased",
+  "Downloading the list of updates": "Uuenduste loendi allalaadimine",
+  "Find installed games that have a newer update.": "Leia installitud mängud, millel on uuem värskendus.",
+  "Could not check game updates": "Mängu uuendusi ei õnnestunud kontrollida",
+  "Game updates": "Mängu uuendused",
+  "Reading installed games": "Installitud mängude lugemine",
+  "Updates available: ": "Saadaolevad värskendused: "
 }

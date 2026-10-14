@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "2-қадам (барлығы 2): уақытша файл жойылуда, консольді өшірмеңіз...",
   "Average": "Орташа",
   "Time left": "Қалған уақыт",
-  "Time elapsed": "Өткен уақыт"
+  "Time elapsed": "Өткен уақыт",
+  "Not in the list, not checked: ": "Тізімде жоқ, тексерілмеген: ",
+  "Check game updates": "Ойын жаңартуларын тексеру",
+  "All checked games are up to date": "Барлық тексерілген ойындар жаңартылған",
+  "Downloading the list of updates": "Жаңартулар тізімі жүктелуде",
+  "Find installed games that have a newer update.": "Жаңа жаңартуы бар орнатылған ойындарды табу.",
+  "Could not check game updates": "Ойын жаңартуларын тексеру мүмкін болмады",
+  "Game updates": "Ойын жаңартулары",
+  "Reading installed games": "Орнатылған ойындарды оқу",
+  "Updates available: ": "Қолжетімді жаңартулар: "
 }

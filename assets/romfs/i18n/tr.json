@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Adım 2 / 2: geçici dosya siliniyor, konsolu kapatmayın...",
   "Average": "Ortalama",
   "Time left": "Kalan süre",
-  "Time elapsed": "Geçen süre"
+  "Time elapsed": "Geçen süre",
+  "Not in the list, not checked: ": "Listede değil, kontrol edilmedi: ",
+  "Check game updates": "Oyun güncellemelerini kontrol et",
+  "All checked games are up to date": "Kontrol edilen tüm oyunlar güncel",
+  "Downloading the list of updates": "Güncelleme listesi indiriliyor",
+  "Find installed games that have a newer update.": "Daha yeni bir güncellemesi olan yüklü oyunları bul.",
+  "Could not check game updates": "Oyun güncellemeleri kontrol edilemedi",
+  "Game updates": "Oyun güncellemeleri",
+  "Reading installed games": "Yüklü oyunlar okunuyor",
+  "Updates available: ": "Güncellemeler mevcut: "
 }

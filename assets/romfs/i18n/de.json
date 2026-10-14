@@ -3227,5 +3227,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Schritt 2 von 2: Temporäre Datei wird gelöscht, bitte schalte die Konsole nicht aus...",
   "Average": "Durchschnitt",
   "Time left": "Verbleibende Zeit",
-  "Time elapsed": "Verstrichene Zeit"
+  "Time elapsed": "Verstrichene Zeit",
+  "Not in the list, not checked: ": "Nicht in der Liste, nicht überprüft: ",
+  "Check game updates": "Nach Spielupdates suchen",
+  "All checked games are up to date": "Alle überprüften Spiele sind auf dem neuesten Stand",
+  "Downloading the list of updates": "Aktualisierungsliste wird heruntergeladen",
+  "Find installed games that have a newer update.": "Installierte Spiele mit neueren Updates finden.",
+  "Could not check game updates": "Spielupdates konnten nicht überprüft werden",
+  "Game updates": "Spiele-Updates",
+  "Reading installed games": "Installierte Spiele lesen",
+  "Updates available: ": "Verfügbare Updates: "
 }

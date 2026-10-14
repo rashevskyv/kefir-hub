@@ -3226,5 +3226,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Bước 2 trên 2: đang xóa tệp tạm, vui lòng không tắt máy...",
   "Average": "Trung bình",
   "Time left": "Thời gian còn lại",
-  "Time elapsed": "Thời gian đã trôi qua"
+  "Time elapsed": "Thời gian đã trôi qua",
+  "Not in the list, not checked: ": "Không có trong danh sách, chưa kiểm tra: ",
+  "Check game updates": "Kiểm tra cập nhật trò chơi",
+  "All checked games are up to date": "Tất cả các trò chơi đã kiểm tra đều được cập nhật",
+  "Downloading the list of updates": "Đang tải danh sách bản cập nhật",
+  "Find installed games that have a newer update.": "Tìm các trò chơi đã cài đặt có bản cập nhật mới hơn.",
+  "Could not check game updates": "Không thể kiểm tra cập nhật trò chơi",
+  "Game updates": "Bản cập nhật trò chơi",
+  "Reading installed games": "Đang đọc các trò chơi đã cài đặt",
+  "Updates available: ": "Bản cập nhật khả dụng: "
 }

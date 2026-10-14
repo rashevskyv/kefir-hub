@@ -3226,5 +3226,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Steg 2 av 2: tar bort temporär fil, stäng inte av konsolen...",
   "Average": "Genomsnitt",
   "Time left": "Återstående tid",
-  "Time elapsed": "Förfluten tid"
+  "Time elapsed": "Förfluten tid",
+  "Not in the list, not checked: ": "Inte i listan, inte kontrollerat: ",
+  "Check game updates": "Sök efter speluppdateringar",
+  "All checked games are up to date": "Alla kontrollerade spel är uppdaterade",
+  "Downloading the list of updates": "Laddar ner uppdateringslistan",
+  "Find installed games that have a newer update.": "Hitta installerade spel som har en nyare uppdatering.",
+  "Could not check game updates": "Kunde inte söka efter speluppdateringar",
+  "Game updates": "Speluppdateringar",
+  "Reading installed games": "Läser installerade spel",
+  "Updates available: ": "Tillgängliga uppdateringar: "
 }

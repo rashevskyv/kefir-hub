@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Langkah 2 dari 2: menghapus file sementara, jangan matikan konsol...",
   "Average": "Rata-rata",
   "Time left": "Sisa waktu",
-  "Time elapsed": "Waktu berlalu"
+  "Time elapsed": "Waktu berlalu",
+  "Not in the list, not checked: ": "Tidak ada dalam daftar, tidak diperiksa: ",
+  "Check game updates": "Periksa pembaruan game",
+  "All checked games are up to date": "Semua game yang diperiksa sudah diperbarui",
+  "Downloading the list of updates": "Mengunduh daftar pembaruan",
+  "Find installed games that have a newer update.": "Cari game terinstal yang memiliki pembaruan lebih baru.",
+  "Could not check game updates": "Tidak dapat memeriksa pembaruan game",
+  "Game updates": "Pembaruan game",
+  "Reading installed games": "Membaca game yang terpasang",
+  "Updates available: ": "Pembaruan tersedia: "
 }

@@ -3279,5 +3279,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "步驟 2/2：正在刪除暫存檔，請勿關閉主機...",
   "Average": "平均",
   "Time left": "剩餘時間",
-  "Time elapsed": "已過時間"
+  "Time elapsed": "已過時間",
+  "Not in the list, not checked: ": "不在列表中，未檢查：",
+  "Check game updates": "檢查遊戲更新",
+  "All checked games are up to date": "所有檢查的遊戲均已是最新",
+  "Downloading the list of updates": "正在下載更新清單",
+  "Find installed games that have a newer update.": "尋找有可用新更新的已安裝遊戲。",
+  "Could not check game updates": "無法檢查遊戲更新",
+  "Game updates": "遊戲更新",
+  "Reading installed games": "正在讀取已安裝的遊戲",
+  "Updates available: ": "可用更新： "
 }

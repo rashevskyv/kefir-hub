@@ -17,6 +17,15 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | [[Maintenance]] | [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free SD space with zeros](#fill-free-sd-space-with-zeros). |
 | [[Maintenance]] | [[Remove parental controls]] | Planned; opens a "Coming soon" message. |
 
+<!-- draft
+- new row under [[Diagnostics]]: [[Check game updates]] ("[[Find installed games that have a newer update.]]"); add it to the table above and give it a short section
+- it downloads the list of the latest game updates that Kefir Updater used (switch-cheats-db, about 21 000 games, 3.6 MB) and compares it with the installed version of every game
+- the page [[Game updates]] lists only the games with a newer update: name on the left, installed update and newest update on the right, for example v1 → v6 (the update number, as elsewhere in Kefir Hub); the caption on top says how many ([[Updates available: ]])
+- games the list does not know (homebrew forwarders, very new or rare games) are not checked; the caption at the bottom counts them ([[Not in the list, not checked: ]])
+- with nothing to update: the notice "[[All checked games are up to date]]"
+- **B** stops the download; it needs the internet
+-->
+
 ## [[System information]]
 
 **Where:** [[Tools]] → [[Tools]] → [[System information]]

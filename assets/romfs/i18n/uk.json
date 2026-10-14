@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Крок 2 з 2: видалення тимчасового файлу, не вимикайте консоль...",
   "Average": "Середнє",
   "Time left": "Залишилося часу",
-  "Time elapsed": "Минуло часу"
+  "Time elapsed": "Минуло часу",
+  "Not in the list, not checked: ": "Немає в списку, не перевірено: ",
+  "Check game updates": "Перевірити оновлення ігор",
+  "All checked games are up to date": "Усі перевірені ігри оновлені",
+  "Downloading the list of updates": "Завантаження списку оновлень",
+  "Find installed games that have a newer update.": "Знайти встановлені ігри, які мають новіше оновлення.",
+  "Could not check game updates": "Не вдалося перевірити оновлення ігор",
+  "Game updates": "Оновлення ігор",
+  "Reading installed games": "Читання встановлених ігор",
+  "Updates available: ": "Доступні оновлення: "
 }

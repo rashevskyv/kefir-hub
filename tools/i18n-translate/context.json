@@ -20,5 +20,7 @@
   "Dump": "Verb/action: export a game or card to a file.",
   "Mount": "Make a drive or folder available (USB drive, MTP, network share).",
   "Restore": "Put a save or backup back onto the console.",
-  "Sources": "Places the file browser can open: microSD card, USB drives, network locations."
+  "Sources": "Places the file browser can open: microSD card, USB drives, network locations.",
+  "Not in the list, not checked: ": "Caption before a number on the Check game updates page: how many installed games the online list of updates does not contain, so their updates were not checked (verified). 'checked' = verified, not 'selected'. Keep the trailing ': '.",
+  "Could not check game updates": "Error title: checking for updates of all installed games failed. Plural 'games'."
 }

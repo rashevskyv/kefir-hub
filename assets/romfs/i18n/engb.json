@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Step 2 of 2: removing the temporary file, do not turn the console off...",
   "Average": "Average",
   "Time left": "Time left",
-  "Time elapsed": "Time elapsed"
+  "Time elapsed": "Time elapsed",
+  "Not in the list, not checked: ": "Not in the list, not checked: ",
+  "Check game updates": "Check for game updates",
+  "All checked games are up to date": "All checked games are up to date",
+  "Downloading the list of updates": "Downloading the list of updates",
+  "Find installed games that have a newer update.": "Find installed games that have a newer update.",
+  "Could not check game updates": "Could not check game updates",
+  "Game updates": "Game updates",
+  "Reading installed games": "Reading installed games",
+  "Updates available: ": "Updates available: "
 }

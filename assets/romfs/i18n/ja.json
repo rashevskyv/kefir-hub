@@ -3226,5 +3226,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "ステップ 2 / 2: 一時ファイルを削除しています。本体の電源を切らないでください...",
   "Average": "平均",
   "Time left": "残り時間",
-  "Time elapsed": "経過時間"
+  "Time elapsed": "経過時間",
+  "Not in the list, not checked: ": "リスト外、未チェック：",
+  "Check game updates": "ゲームの更新を確認",
+  "All checked games are up to date": "チェックしたゲームはすべて最新です",
+  "Downloading the list of updates": "アップデートリストをダウンロード中",
+  "Find installed games that have a newer update.": "新しいアップデートがあるインストール済みゲームを検索する",
+  "Could not check game updates": "ゲームの更新データの確認に失敗しました",
+  "Game updates": "ゲームの更新データ",
+  "Reading installed games": "インストール済みゲームを読み込み中",
+  "Updates available: ": "利用可能なアップデート: "
 }

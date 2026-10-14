@@ -3226,5 +3226,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Stap 2 van 2: tijdelijk bestand verwijderen, console niet uitschakelen...",
   "Average": "Gemiddeld",
   "Time left": "Resterende tijd",
-  "Time elapsed": "Verstreken tijd"
+  "Time elapsed": "Verstreken tijd",
+  "Not in the list, not checked: ": "Niet in de lijst, niet gecontroleerd: ",
+  "Check game updates": "Controleren op game-updates",
+  "All checked games are up to date": "Alle gecontroleerde games zijn up-to-date",
+  "Downloading the list of updates": "Lijst met updates downloaden",
+  "Find installed games that have a newer update.": "Geïnstalleerde games met een nieuwere update zoeken.",
+  "Could not check game updates": "Kan game-updates niet controleren",
+  "Game updates": "Game-updates",
+  "Reading installed games": "Geïnstalleerde games lezen",
+  "Updates available: ": "Beschikbare updates: "
 }

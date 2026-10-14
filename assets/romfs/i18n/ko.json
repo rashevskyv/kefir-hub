@@ -3226,5 +3226,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "2단계 중 2단계: 임시 파일을 삭제하는 중입니다. 본원의 전원을 끄지 마세요...",
   "Average": "평균",
   "Time left": "남은 시간",
-  "Time elapsed": "경과 시간"
+  "Time elapsed": "경과 시간",
+  "Not in the list, not checked: ": "목록에 없음, 확인되지 않음: ",
+  "Check game updates": "게임 업데이트 확인",
+  "All checked games are up to date": "확인된 모든 게임이 최신 버전입니다",
+  "Downloading the list of updates": "업데이트 목록 다운로드 중",
+  "Find installed games that have a newer update.": "새로운 업데이트가 있는 설치된 게임 찾기",
+  "Could not check game updates": "게임 업데이트를 확인할 수 없습니다",
+  "Game updates": "게임 업데이트",
+  "Reading installed games": "설치된 게임 읽는 중",
+  "Updates available: ": "사용 가능한 업데이트: "
 }

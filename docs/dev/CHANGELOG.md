@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.080 — Tools → Tools → Check game updates (the Kefir Updater "Outdated titles", back in the Hub)
+- Owner request. Downloads switch-cheats-db `versions.json` (the list Kefir Updater used; 21121 titles, 3.6 MB), reads installed games with `hats::detail::EnumerateInstalledGames()` and shows the outdated ones on a `SystemToolsMenu(title, rows)` page: name, "v<installed> → v<latest>" (update number, version >> 16, as in the ownfoil views), a caption with the count and one with the games the list does not know (not checked). Nothing to update → a notice. Pure part `game_updates.hpp` (`FindOutdated`, `UpdateLabel`) with `tests/test_game_updates.cpp`. New results `GameUpdatesListDownload/Parse`. The page shows 11 rows and scrolls.
+- Known edge: a game record whose content is not on the card reports version 0 and can show as outdated. Coverage is what the cheats DB knows (games with cheats), like Kefir Updater.
+- host tests: pass (test_game_updates; quick) · nro: built · switch: pending (.103 busy with the fill, .69 offline).
+
 ## v0.14.079 — Refactor: SystemToolsMenu moves to system_tools_menu.cpp (no behaviour change)
 - tools_menu.cpp was 605 lines (limit 600); the system tools page and its helpers (ComingSoon, OpenCleanup, FillSdWithZeros, Tool) move as they are. tools_menu.cpp 400, system_tools_menu.cpp 233.
 - host tests: not run (move only) · nro: built with v0.14.080 · switch: n/a.

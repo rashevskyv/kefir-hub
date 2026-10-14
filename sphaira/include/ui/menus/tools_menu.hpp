@@ -62,6 +62,8 @@ private:
 
 struct SystemToolsMenu final : MenuBase {
     SystemToolsMenu();
+    // the same page for any rows: label on the left, description on the right, captions between.
+    SystemToolsMenu(const std::string& title, std::vector<settings::SettingsItem> items);
     ~SystemToolsMenu() = default;
 
     auto GetShortTitle() const -> const char* override { return "Tools"; }

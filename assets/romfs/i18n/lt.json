@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "2 veiksmas iš 2: šalinamas laikinasis failas, neišjunkite konsolės...",
   "Average": "Vidurkis",
   "Time left": "Liko laiko",
-  "Time elapsed": "Praėjęs laikas"
+  "Time elapsed": "Praėjęs laikas",
+  "Not in the list, not checked: ": "Sąraše nėra, nepatikrinta: ",
+  "Check game updates": "Tikrinti žaidimo atnaujinimus",
+  "All checked games are up to date": "Visi patikrinti žaidimai yra atnaujinti",
+  "Downloading the list of updates": "Atsisiunčiamas atnaujinimų sąrašas",
+  "Find installed games that have a newer update.": "Rasti įdiegtus žaidimus, turinčius naujesnį atnaujinimą.",
+  "Could not check game updates": "Nepavyko patikrinti žaidimų atnaujinimų",
+  "Game updates": "Žaidimų atnaujinimai",
+  "Reading installed games": "Skaitomi įdiegti žaidimai",
+  "Updates available: ": "Galimi naujinimai: "
 }

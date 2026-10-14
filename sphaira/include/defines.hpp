@@ -251,6 +251,11 @@ enum class SphairaResult : Result {
 
     // libarchive could not read an archive (rar, 7z, tar, gz, xz) being extracted.
     ArchiveRead,
+
+    // the list of the latest game updates (switch-cheats-db versions.json) could not be
+    // downloaded / read.
+    GameUpdatesListDownload,
+    GameUpdatesListParse,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -390,6 +395,8 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(NetNoConnection),
     MAKE_SPHAIRA_RESULT_ENUM(YatiHttpReadFailed),
     MAKE_SPHAIRA_RESULT_ENUM(ArchiveRead),
+    MAKE_SPHAIRA_RESULT_ENUM(GameUpdatesListDownload),
+    MAKE_SPHAIRA_RESULT_ENUM(GameUpdatesListParse),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

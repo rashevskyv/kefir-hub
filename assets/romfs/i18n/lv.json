@@ -3221,5 +3221,14 @@
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "2. solis no 2: dzēš pagaidu failu, neizslēdziet konsoli...",
   "Average": "Vidēji",
   "Time left": "Atlikušais laiks",
-  "Time elapsed": "Pagājušais laiks"
+  "Time elapsed": "Pagājušais laiks",
+  "Not in the list, not checked: ": "Sarakstā nav, pārbaudīts nav: ",
+  "Check game updates": "Pārbaudīt spēles atjauninājumus",
+  "All checked games are up to date": "Visas pārbaudītās spēles ir jaunākās versijas",
+  "Downloading the list of updates": "Lejupielādē atjauninājumu sarakstu",
+  "Find installed games that have a newer update.": "Atrast instalētās spēles, kurām ir jaunāks atjauninājums.",
+  "Could not check game updates": "Nevarēja pārbaudīt spēļu atjauninājumus",
+  "Game updates": "Spēļu atjauninājumi",
+  "Reading installed games": "Nolasa instalētās spēles",
+  "Updates available: ": "Pieejamie atjauninājumi: "
 }

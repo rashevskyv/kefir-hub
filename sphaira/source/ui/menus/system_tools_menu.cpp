@@ -10,6 +10,7 @@
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/nvg_util.hpp"
+#include "game_updates.hpp"
 #include "zero_fill.hpp"
 #include "system_cleanup.hpp"
 
@@ -93,11 +94,11 @@ auto Tool(std::string label, std::string description, std::function<void()> acti
 
 } // namespace
 
-SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
-    // one list, three captions. The cursor steps over the captions.
-    m_items = {
+// one list, three captions. The cursor steps over the captions.
+SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
         settings::MakeHeader("Diagnostics"_i18n),
         Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, sysinfo::Open),
+        Tool("Check game updates"_i18n, "Find installed games that have a newer update."_i18n, game_updates::Open),
         settings::MakeHeader("Settings"_i18n),
         Tool("Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
@@ -115,19 +116,24 @@ SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
-    };
+    }} {
+}
 
-    this->SetActions(
-        std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }}),
-        std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
-    );
+SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings::SettingsItem> items)
+    : MenuBase{title, MenuFlag_None}, m_items{std::move(items)} {
+    // a page of plain results has nothing to open.
+    if (std::any_of(m_items.begin(), m_items.end(), [](const auto& item) { return bool(item.action); })) {
+        SetAction(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }});
+    }
+    SetAction(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }});
 
-    // compact rows: every caption and item fits on one screen, no scrolling.
-    // the list area is as tall as its rows plus room for the cursor outline,
-    // so the last row and its frame are never cut by the list's own clip.
+    // compact rows: the tools list fits on one screen. A longer list (a page of results)
+    // shows 11 rows and scrolls. The list area is as tall as its rows plus room for the
+    // cursor outline, so the last row and its frame are never cut by the list's own clip.
     constexpr float row_h = 44.f;
-    m_list = std::make_unique<List>(1, static_cast<s64>(m_items.size()),
-        Vec4{75.f, 132.f, 1145.f, row_h * static_cast<float>(m_items.size()) + 8.f}, Vec4{75.f, 132.f, 1130.f, row_h});
+    const auto rows = std::min<s64>(static_cast<s64>(m_items.size()), 11);
+    m_list = std::make_unique<List>(1, rows,
+        Vec4{75.f, 132.f, 1145.f, row_h * static_cast<float>(rows) + 8.f}, Vec4{75.f, 132.f, 1130.f, row_h});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
     SetIndex(0);
