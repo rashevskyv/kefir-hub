@@ -1,0 +1,233 @@
+#include "ui/menus/tools_menu.hpp"
+
+#include "ui/menus/uninstaller_menu.hpp"
+#include "ui/menus/users_menu.hpp"
+#include "ui/menus/wifi_menu.hpp"
+#include "ui/menus/settings/settings_fancurve.hpp"
+#include "ui/menus/settings/settings_internal.hpp"
+#include "ui/menus/system_info_menu.hpp"
+#include "ui/sidebar.hpp"
+#include "ui/option_box.hpp"
+#include "ui/progress_box.hpp"
+#include "ui/nvg_util.hpp"
+#include "zero_fill.hpp"
+#include "system_cleanup.hpp"
+
+#include "app.hpp"
+#include "defines.hpp"
+#include "i18n.hpp"
+#include "log.hpp"
+
+#include <algorithm>
+
+namespace sphaira::ui::menu::tools {
+namespace {
+
+void ComingSoon() {
+    App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
+}
+
+void OpenCleanup() {
+    auto opts = std::make_shared<cleanup::Options>();
+    auto sidebar = std::make_unique<Sidebar>("Clean system junk"_i18n, Sidebar::Side::RIGHT);
+    sidebar->Add<SidebarEntryBool>("Old game updates"_i18n, opts->old_updates, "Updates older than the newest one installed for the same game."_i18n);
+    sidebar->Add<SidebarEntryBool>("Lost content on the SD card"_i18n, opts->orphans_sd, "Game files no installed game uses any more."_i18n);
+    sidebar->Add<SidebarEntryBool>("Lost content in system memory"_i18n, opts->orphans_nand, "Game files no installed game uses any more."_i18n);
+    sidebar->Add<SidebarEntryBool>("Unfinished installs on the SD card"_i18n, opts->placeholders_sd, "Pieces left by installs that stopped half way."_i18n);
+    sidebar->Add<SidebarEntryBool>("Unfinished installs in system memory"_i18n, opts->placeholders_nand, "Pieces left by installs that stopped half way."_i18n);
+    sidebar->Add<SidebarEntryBool>("Unused tickets"_i18n, opts->unused_tickets, "Tickets of games that are no longer installed."_i18n);
+    sidebar->Add<SidebarEntryBool>("Error reports"_i18n, opts->erpt_reports, "Crash reports in /atmosphere/erpt_reports."_i18n);
+    sidebar->Add<SidebarEntryBool>("Folders of removed games"_i18n, opts->contents_folders, "Mods and cheats folders in /atmosphere/contents for games that are no longer on the console. Sysmodules are kept."_i18n);
+    sidebar->Add<SidebarEntryBool>("Saves of removed users"_i18n, opts->deleted_user_saves, "Saves of users that are no longer on the console. They cannot be restored afterwards."_i18n);
+    sidebar->Add<SidebarEntryCallback>("Run selected"_i18n, [opts](){
+        // an install that is minimized is still running; its unfinished files would be removed
+        if (App::GetProgressActive()) {
+            App::Notify("Finish or stop the running transfer first."_i18n);
+            return;
+        }
+        auto report = std::make_shared<cleanup::Report>();
+        App::Push<ui::ProgressBox>(0, "Clean system junk"_i18n, "", [opts, report](auto pbox) -> Result {
+            return cleanup::Run(pbox, *opts, *report);
+        }, [report](Result rc){
+            if (R_SUCCEEDED(rc) || rc == Result_TransferCancelled) {
+                // a stopped run reports what it did before it stopped
+                std::string text = (R_SUCCEEDED(rc) ? "Cleaned: "_i18n : "Cleanup stopped. Cleaned: "_i18n) + std::to_string(report->removed) +
+                    " · SD +" + grid::FormatBytes(static_cast<u64>(report->freed_sd)) +
+                    " · NAND +" + grid::FormatBytes(static_cast<u64>(report->freed_nand));
+                if (report->skipped) {
+                    text += " · " + "Skipped: "_i18n + std::to_string(report->skipped);
+                }
+                App::Notify(text);
+            } else {
+                App::PushErrorBox(rc, "Cleanup failed!"_i18n);
+            }
+        });
+    }, true);
+    App::Push(std::move(sidebar));
+}
+
+// microSD only: the NAND variant was removed in v0.14.018.
+void FillSdWithZeros() {
+    App::Push<ui::OptionBox>(
+        "Overwrite all free space on the microSD card with zeros? Files are not touched. It can take a long time."_i18n,
+        "Back"_i18n, "Fill"_i18n, 1, [](auto op_index){
+        if (!op_index || !*op_index) {
+            return;
+        }
+        App::Push<ui::ProgressBox>(0, "Filling with zeros"_i18n, "microSD card"_i18n, [](auto pbox) -> Result {
+            return zero_fill::FillSdFreeSpace(pbox);
+        }, [](Result rc){
+            if (R_SUCCEEDED(rc)) {
+                App::Notify("Free space filled with zeros"_i18n);
+            } else if (rc != Result_TransferCancelled) {
+                App::PushErrorBox(rc, "Fill failed!"_i18n);
+            }
+        });
+    });
+}
+
+// a plain row of the system tools list: label, description, action.
+auto Tool(std::string label, std::string description, std::function<void()> action) -> settings::SettingsItem {
+    return { std::move(label), std::move(description), {}, std::move(action), settings::SettingsItemKind::Normal };
+}
+
+} // namespace
+
+SystemToolsMenu::SystemToolsMenu() : MenuBase{"Tools"_i18n, MenuFlag_None} {
+    // one list, three captions. The cursor steps over the captions.
+    m_items = {
+        settings::MakeHeader("Diagnostics"_i18n),
+        Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, sysinfo::Open),
+        settings::MakeHeader("Settings"_i18n),
+        Tool("Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, [](){
+            App::Push<ui::menu::hats::UninstallerMenu>();
+        }),
+        Tool("Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, [](){
+            ui::menu::settings::OpenFanCurveMenu();
+        }),
+        Tool("Wi-Fi"_i18n, "Manage wireless connections."_i18n, [](){
+            App::Push<ui::menu::wifi::Menu>();
+        }),
+        Tool("Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, [](){
+            App::Push<ui::menu::users::Menu>();
+        }),
+        settings::MakeHeader("Maintenance"_i18n),
+        Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
+        Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
+        Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
+    };
+
+    this->SetActions(
+        std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }}),
+        std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
+    );
+
+    // compact rows: every caption and item fits on one screen, no scrolling.
+    // the list area is as tall as its rows plus room for the cursor outline,
+    // so the last row and its frame are never cut by the list's own clip.
+    constexpr float row_h = 44.f;
+    m_list = std::make_unique<List>(1, static_cast<s64>(m_items.size()),
+        Vec4{75.f, 132.f, 1145.f, row_h * static_cast<float>(m_items.size()) + 8.f}, Vec4{75.f, 132.f, 1130.f, row_h});
+    m_list->SetLayout(List::Layout::GRID);
+    m_list->SetPageJump(false);
+    SetIndex(0);
+}
+
+void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected) {
+    const float mid_y = v.y + v.h / 2.f;
+    if (item.kind == settings::SettingsItemKind::Header) {
+        // a caption: small, dimmed, with a rule running off to the right.
+        const auto colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        gfx::drawText(vg, v.x + 12.f, mid_y + 4.f, 15.f, colour, item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        float bounds[4];
+        nvgFontSize(vg, 15.f);
+        gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
+        const float rule_x = v.x + 12.f + (bounds[2] - bounds[0]) + 12.f;
+        gfx::drawRect(vg, rule_x, mid_y + 4.f, std::max(0.f, v.x + v.w - 12.f - rule_x), 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        return;
+    }
+
+    if (selected) {
+        gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+        gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 2.f, v.w, v.h - 4.f);
+    }
+    // name on the left, description on the right, each clipped to its half.
+    const float split = v.x + v.w * 0.36f;
+    nvgSave(vg);
+    nvgIntersectScissor(vg, v.x, v.y, split - v.x - 10.f, v.h);
+    gfx::drawText(vg, v.x + 24.f, mid_y, 19.f, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgRestore(vg);
+    nvgSave(vg);
+    nvgIntersectScissor(vg, split, v.y, v.x + v.w - 20.f - split, v.h);
+    gfx::drawText(vg, split, mid_y, 15.f, theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgRestore(vg);
+}
+
+void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
+    MenuBase::Update(controller, touch);
+    // left/right jump to the first item of the previous / next caption, so
+    // three presses walk Diagnostics → Settings → Maintenance and back.
+    if (controller && !m_items.empty() && (controller->GotDown(Button::RIGHT) || controller->GotDown(Button::LEFT))) {
+        const auto count = static_cast<s64>(m_items.size());
+        const auto is_header = [this](s64 i) { return m_items[i].kind == settings::SettingsItemKind::Header; };
+        // the caption this item belongs to.
+        s64 caption = m_index;
+        while (caption > 0 && !is_header(caption)) caption--;
+        s64 target = caption;
+        if (controller->GotDown(Button::RIGHT)) {
+            for (s64 i = caption + 1; i < count; i++) if (is_header(i)) { target = i; break; }
+            if (target == caption) target = 0; // wrap to the first caption
+        } else {
+            for (s64 i = caption - 1; i >= 0; i--) if (is_header(i)) { target = i; break; }
+            if (target == caption) { for (s64 i = count - 1; i > caption; i--) if (is_header(i)) { target = i; break; } }
+        }
+        App::PlaySoundEffect(SoundEffect_Focus);
+        SetIndex(target + 1); // first item under the caption (ResolveItemIndex skips captions anyway)
+    }
+    m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
+        if (touch && i < static_cast<s64>(m_items.size()) && m_items[i].kind == settings::SettingsItemKind::Header) {
+            return;
+        }
+        if (touch && m_index == i) {
+            FireAction(Button::A);
+        } else {
+            App::PlaySoundEffect(SoundEffect_Focus);
+            SetIndex(i);
+        }
+    }, this);
+}
+
+void SystemToolsMenu::Draw(NVGcontext* vg, Theme* theme) {
+    MenuBase::Draw(vg, theme);
+    m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
+        DrawRow(vg, theme, v, m_items[i], m_index == i);
+    });
+}
+
+void SystemToolsMenu::OnFocusGained() {
+    MenuBase::OnFocusGained();
+    SetIndex(m_index);
+}
+
+void SystemToolsMenu::SetIndex(s64 index) {
+    if (m_items.empty()) {
+        m_index = 0;
+        return;
+    }
+    m_index = settings::ResolveItemIndex(m_items, index, m_index);
+    if (!m_index) {
+        m_list->SetYoff(0);
+    } else {
+        m_list->EnsureVisible(m_index, m_items.size());
+    }
+    SetTitleSubHeading(m_items[m_index].description, true);
+    SetSubHeading("");
+}
+
+void SystemToolsMenu::OnSelect() {
+    if (!m_items.empty() && m_items[m_index].action) {
+        m_items[m_index].action();
+    }
+}
+
+} // namespace sphaira::ui::menu::tools

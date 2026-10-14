@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.079 — Refactor: SystemToolsMenu moves to system_tools_menu.cpp (no behaviour change)
+- tools_menu.cpp was 605 lines (limit 600); the system tools page and its helpers (ComingSoon, OpenCleanup, FillSdWithZeros, Tool) move as they are. tools_menu.cpp 400, system_tools_menu.cpp 233.
+- host tests: not run (move only) · nro: built with v0.14.080 · switch: n/a.
+
 ## v0.14.078 — Tests: deslop findings in the Python tests removed (18 -> 0)
 - Owner ran /deslop on Kefir Hub: the Picoripi deslop engine over this checkout (74 Python files) found 14 `setattr` with a literal name (mutator lambdas repeating the field name: now a (field, value) table and one `setattr`), 2 duplicate cancel lambdas (one hook factory) and 2 "generic substring" hits (set membership: now one subset check).
 - host tests: pass (the 4 touched tests) · nro: not built (tests only) · switch: n/a.
