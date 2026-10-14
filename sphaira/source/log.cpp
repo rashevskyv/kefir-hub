@@ -128,7 +128,10 @@ void log_write_arg_internal(const char* s, std::va_list* v) {
 
     char buf[512];
     buf[0] = '\0';
-    const auto len = std::snprintf(buf, sizeof(buf), "[%02u:%02u:%02u] -> ", tm.tm_hour, tm.tm_min, tm.tm_sec);
+    // wall time has whole seconds only; the uptime in ms gives the gaps between lines.
+    const auto up_ms = armTicksToNs(armGetSystemTick()) / 1000000;
+    const auto len = std::snprintf(buf, sizeof(buf), "[%02u:%02u:%02u %llu.%03llu] -> ", tm.tm_hour, tm.tm_min, tm.tm_sec,
+        (unsigned long long)(up_ms / 1000), (unsigned long long)(up_ms % 1000));
     if (len > 0 && (size_t)len < sizeof(buf)) {
         std::vsnprintf(buf + len, sizeof(buf) - len, s, *v);
     } else {

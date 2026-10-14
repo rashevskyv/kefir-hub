@@ -354,6 +354,13 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable shipped in v0.14.027 on the existing
       Dump → "USB transfer (Switch 2 Switch)" path (sender = usb:hs host, tinfoil protocol, receiver = PC Install
       (USB)); the 2026-10-07 note that cable was impossible was wrong — sphaira's uploader already runs the console as host.
+- [ ] F.17 **MTP many small files** (measured 2026-10-14, v0.14.087): Windows Explorer waits ~0.3 ms per file
+      already in the destination folder before each next file (1000 files ≈ 4 min; console side flat ~15 ms/file).
+      Hub cannot speed that up. (a) Accept archives (.zip/.7z/.rar) dropped over MTP and extract them on the console
+      (release install, phase 4 of the backend plan); (b) hint on the console when hundreds of small files arrive:
+      "faster: pack the folder into a zip"; (c) MTP progress: a whole-transfer line under the file bar (files, bytes,
+      time; no percent — MTP gives no total), and a real overall bar when DBI Backend Qt sends a manifest first;
+      (d) the MTP ProgressBox runs with cpu_boost (FastLoad lowers the GPU clock): UI drops to 36 fps during MTP.
 - [ ] F.16 **Delete homebrew with its folder and forwarder** (user, 2026-10-14). Homebrew menu Delete today removes only
       the `.nro` (`homebrew_ops.cpp:233-265`). New: one question "only the NRO / the NRO and its folder" when the NRO
       has its own folder (`/switch/<name>/<name>.nro`, or another folder holding only this NRO's files; never `/switch/`
