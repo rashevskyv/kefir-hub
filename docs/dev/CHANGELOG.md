@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.073 — Fill with zeros on a slow card: the UI no longer waits on the card; graph shows time elapsed and time left
+- Seen on 192.168.50.103: during the fill the screen went off, and after waking it the Hub did not react to buttons (restart needed). Likely cause: `MenuBase::GetPolledData` asks the card's free space every 15 s on the UI thread, and that call waits behind the fill's writes, so input, HOME and sleep/resume stall. Now the periodic storage poll is skipped while a ProgressBox is active (explicit refreshes stay).
+- Owner request: the graph column shows Now, Average, Time elapsed and Time left; with the graph shown, the time left under the bar also uses the average speed.
+- host tests: pass (quick) · nro: built · switch: pending (fill on .103: buttons respond, screen stays on, figures move).
+
 ## v0.14.072 — Speed graph: "Average" of the whole transfer under "Now"
 - Owner request: show the average speed next to the current one. `ProgressBox::m_transfer_start` resets with each new transfer; average = written / time since. Applies to every progress view with the graph (fill with zeros).
 - host tests: pass (quick) · nro: built · switch: pending.

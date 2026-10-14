@@ -76,10 +76,22 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
 }
 
 // write-speed plot as in the DBI install view: 1/2/5 x 10^n MiB/s grid, newest sample on the right,
-// a "Now" figure averaged over the last few samples and the "Average" of the whole transfer.
-// `history` is a ring, `index` the next slot.
+auto ShortDuration(double seconds) -> std::string {
+    const auto s = static_cast<u64>(std::max(0.0, seconds));
+    char buf[32]{};
+    if (s >= 3600) {
+        std::snprintf(buf, sizeof(buf), "%lluh %02llum", (unsigned long long)(s / 3600), (unsigned long long)(s % 3600 / 60));
+    } else {
+        std::snprintf(buf, sizeof(buf), "%llum %02llus", (unsigned long long)(s / 60), (unsigned long long)(s % 60));
+    }
+    return buf;
+}
+
+// a "Now" figure averaged over the last few samples, the "Average" of the whole transfer, the time
+// since it began and the time left at the average. `history` is a ring, `index` the next slot.
 template<size_t N>
-void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::array<s64, N>& history, size_t count, size_t index, double average) {
+void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::array<s64, N>& history, size_t count, size_t index,
+                   double average, double elapsed, s64 left_bytes) {
     const auto blue = nvgRGBA(52, 152, 219, 255);
     const float pad = 4.f;
     constexpr double MIB = 1024.0 * 1024.0;
@@ -95,14 +107,20 @@ void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::ar
         }
         now_mib = (double)sum / (double)n / MIB;
     }
-    const auto figure = [&](float y, const std::string& label, double mib) {
-        gfx::drawTextArgs(vg, plot.x + plot.w + 12.f, y, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", label.c_str());
-        char buf[32]{};
-        std::snprintf(buf, sizeof(buf), "%.1f MiB/s", mib);
-        gfx::drawTextBold(vg, plot.x + plot.w + 12.f, y + 18.f, 16.f, blue, buf, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+    const auto figure = [&](int row, const std::string& label, const std::string& value) {
+        const float y = plot.y + row * plot.h / 4.f;
+        gfx::drawTextArgs(vg, plot.x + plot.w + 12.f, y, 12.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", label.c_str());
+        gfx::drawTextBold(vg, plot.x + plot.w + 12.f, y + 13.f, 15.f, blue, value.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
     };
-    figure(plot.y + 8.f, "Now"_i18n, now_mib);
-    figure(plot.y + plot.h * 0.5f + 8.f, "Average"_i18n, average / MIB);
+    const auto mib = [](double v) {
+        char buf[32]{};
+        std::snprintf(buf, sizeof(buf), "%.1f MiB/s", v);
+        return std::string{buf};
+    };
+    figure(0, "Now"_i18n, mib(now_mib));
+    figure(1, "Average"_i18n, mib(average / MIB));
+    figure(2, "Time elapsed"_i18n, ShortDuration(elapsed));
+    figure(3, "Time left"_i18n, average > 0.0 ? ShortDuration((double)left_bytes / average) : std::string{"-"});
 
     if (count < 2) {
         return;
@@ -266,7 +284,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     if (m_show_graph && !m_detached) {
-        DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index, average_speed);
+        DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index,
+            average_speed, transfer_seconds, std::max<s64>(0, size - offset));
     }
 
     // shapes.
@@ -297,7 +316,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             }
 
             const auto left = std::max<s64>(0, size - last_offset);
-            const auto left_seconds = left / speed;
+            // with the plot on screen the time left follows its "Average", not the jumpy recent speed.
+            const s64 eta_speed = m_show_graph && average_speed >= 1.0 ? static_cast<s64>(average_speed) : speed;
+            const auto left_seconds = left / eta_speed;
             const auto hours = left_seconds / (60 * 60);
             const auto minutes = left_seconds % (60 * 60) / 60;
             const auto seconds = left_seconds % 60;

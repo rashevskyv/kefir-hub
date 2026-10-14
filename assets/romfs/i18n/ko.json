@@ -3224,5 +3224,7 @@
   "Re-enabling MTP": "MTP 다시 활성화 중",
   "Step 1 of 2: writing zeros": "1단계/2단계: 0 쓰는 중",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "2단계 중 2단계: 임시 파일을 삭제하는 중입니다. 본원의 전원을 끄지 마세요...",
-  "Average": "평균"
+  "Average": "평균",
+  "Time left": "남은 시간",
+  "Time elapsed": "경과 시간"
 }

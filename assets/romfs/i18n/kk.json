@@ -3219,5 +3219,7 @@
   "Re-enabling MTP": "MTP қайта қосылуда",
   "Step 1 of 2: writing zeros": "1-ші қадам (барлығы 2): нөлдерді жазу",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "2-қадам (барлығы 2): уақытша файл жойылуда, консольді өшірмеңіз...",
-  "Average": "Орташа"
+  "Average": "Орташа",
+  "Time left": "Қалған уақыт",
+  "Time elapsed": "Өткен уақыт"
 }

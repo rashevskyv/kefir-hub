@@ -3224,5 +3224,7 @@
   "Re-enabling MTP": "MTPを再有効化しています",
   "Step 1 of 2: writing zeros": "ステップ 1/2: ゼロを書き込んでいます",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "ステップ 2 / 2: 一時ファイルを削除しています。本体の電源を切らないでください...",
-  "Average": "平均"
+  "Average": "平均",
+  "Time left": "残り時間",
+  "Time elapsed": "経過時間"
 }

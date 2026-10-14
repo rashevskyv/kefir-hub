@@ -3219,5 +3219,7 @@
   "Re-enabling MTP": "MTP yeniden etkinleştiriliyor",
   "Step 1 of 2: writing zeros": "Adım 1 / 2: sıfırlar yazılıyor",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Adım 2 / 2: geçici dosya siliniyor, konsolu kapatmayın...",
-  "Average": "Ortalama"
+  "Average": "Ortalama",
+  "Time left": "Kalan süre",
+  "Time elapsed": "Geçen süre"
 }

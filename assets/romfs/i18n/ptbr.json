@@ -3251,5 +3251,7 @@
   "Re-enabling MTP": "Reativando MTP",
   "Step 1 of 2: writing zeros": "Passo 1 de 2: gravando zeros",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Passo 2 de 2: removendo o arquivo temporário, não desligue o console...",
-  "Average": "Média"
+  "Average": "Média",
+  "Time left": "Tempo restante",
+  "Time elapsed": "Tempo decorrido"
 }

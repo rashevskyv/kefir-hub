@@ -3277,5 +3277,7 @@
   "Re-enabling MTP": "正在重新啟用 MTP",
   "Step 1 of 2: writing zeros": "第 1/2 步：正在寫入零",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "步驟 2/2：正在刪除暫存檔，請勿關閉主機...",
-  "Average": "平均"
+  "Average": "平均",
+  "Time left": "剩餘時間",
+  "Time elapsed": "已過時間"
 }

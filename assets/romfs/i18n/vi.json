@@ -3224,5 +3224,7 @@
   "Re-enabling MTP": "Đang bật lại MTP",
   "Step 1 of 2: writing zeros": "Bước 1/2: đang ghi số không",
   "Step 2 of 2: removing the temporary file, do not turn the console off...": "Bước 2 trên 2: đang xóa tệp tạm, vui lòng không tắt máy...",
-  "Average": "Trung bình"
+  "Average": "Trung bình",
+  "Time left": "Thời gian còn lại",
+  "Time elapsed": "Thời gian đã trôi qua"
 }

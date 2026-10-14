@@ -116,7 +116,9 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         ssid_timestamp.Update();
     }
 
-    if (force_refresh || storage_timestamp.GetSeconds() >= 15) {
+    // a running job may hold the card for seconds per call (a slow card filling with zeros); the UI
+    // thread must not wait on it then, or buttons, HOME and sleep stop working. Keep the last values.
+    if (force_refresh || (!App::GetProgressActive() && storage_timestamp.GetSeconds() >= 15)) {
         fs::GetStorageSpaces(&data.nand_free, &data.nand_total, &data.sd_free, &data.sd_total);
         storage_timestamp.Update();
     }
