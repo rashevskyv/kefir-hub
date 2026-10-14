@@ -76,9 +76,10 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
 }
 
 // write-speed plot as in the DBI install view: 1/2/5 x 10^n MiB/s grid, newest sample on the right,
-// a "Now" figure averaged over the last few samples. `history` is a ring, `index` the next slot.
+// a "Now" figure averaged over the last few samples and the "Average" of the whole transfer.
+// `history` is a ring, `index` the next slot.
 template<size_t N>
-void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::array<s64, N>& history, size_t count, size_t index) {
+void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::array<s64, N>& history, size_t count, size_t index, double average) {
     const auto blue = nvgRGBA(52, 152, 219, 255);
     const float pad = 4.f;
     constexpr double MIB = 1024.0 * 1024.0;
@@ -94,10 +95,14 @@ void DrawSpeedPlot(NVGcontext* vg, Theme* theme, const Vec4& plot, const std::ar
         }
         now_mib = (double)sum / (double)n / MIB;
     }
-    gfx::drawTextArgs(vg, plot.x + plot.w + 12.f, plot.y + 2.f, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", "Now"_i18n.c_str());
-    char buf[32]{};
-    std::snprintf(buf, sizeof(buf), "%.1f MiB/s", now_mib);
-    gfx::drawTextBold(vg, plot.x + plot.w + 12.f, plot.y + plot.h * 0.5f, 16.f, blue, buf, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    const auto figure = [&](float y, const std::string& label, double mib) {
+        gfx::drawTextArgs(vg, plot.x + plot.w + 12.f, y, 13.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", label.c_str());
+        char buf[32]{};
+        std::snprintf(buf, sizeof(buf), "%.1f MiB/s", mib);
+        gfx::drawTextBold(vg, plot.x + plot.w + 12.f, y + 18.f, 16.f, blue, buf, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+    };
+    figure(plot.y + 8.f, "Now"_i18n, now_mib);
+    figure(plot.y + plot.h * 0.5f + 8.f, "Average"_i18n, average / MIB);
 
     if (count < 2) {
         return;
@@ -198,6 +203,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto graph = m_graph;
     const auto graph_count = m_graph_count;
     const auto graph_index = m_graph_index;
+    const double transfer_seconds = m_transfer_start.GetSecondsD();
+    const double average_speed = transfer_seconds > 0.0 ? static_cast<double>(offset) / transfer_seconds : 0.0;
     // synthetic-unit transfers keep a meaningful ETA (units-left / units-per-sec
     // is still real seconds) but a bytes-derived "MiB/s" would be nonsense, so
     // only the speed figure is suppressed, not the time remaining.
@@ -259,7 +266,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     if (m_show_graph && !m_detached) {
-        DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index);
+        DrawSpeedPlot(vg, theme, Vec4{m_pos.x + 70.f, m_pos.y + 196.f, m_pos.w - 220.f, 120.f}, graph, graph_count, graph_index, average_speed);
     }
 
     // shapes.

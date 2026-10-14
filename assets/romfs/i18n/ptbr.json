@@ -3250,5 +3250,6 @@
   "Finish or stop the running transfer first.": "Termine ou pare a transferência em andamento primeiro.",
   "Re-enabling MTP": "Reativando MTP",
   "Step 1 of 2: writing zeros": "Passo 1 de 2: gravando zeros",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Passo 2 de 2: removendo o arquivo temporário, não desligue o console..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Passo 2 de 2: removendo o arquivo temporário, não desligue o console...",
+  "Average": "Média"
 }

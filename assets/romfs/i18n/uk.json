@@ -3218,5 +3218,6 @@
   "Finish or stop the running transfer first.": "Спочатку завершіть або зупиніть поточне передавання.",
   "Re-enabling MTP": "Повторне ввімкнення MTP",
   "Step 1 of 2: writing zeros": "Крок 1 із 2: запис нулів",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Крок 2 з 2: видалення тимчасового файлу, не вимикайте консоль..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Крок 2 з 2: видалення тимчасового файлу, не вимикайте консоль...",
+  "Average": "Середнє"
 }

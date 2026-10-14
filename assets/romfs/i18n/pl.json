@@ -3218,5 +3218,6 @@
   "Finish or stop the running transfer first.": "Najpierw ukończ lub zatrzymaj bieżący przesył.",
   "Re-enabling MTP": "Ponowne włączanie MTP",
   "Step 1 of 2: writing zeros": "Krok 1 z 2: zapisywanie zer",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Krok 2 z 2: usuwanie pliku tymczasowego, nie wyłączaj konsoli..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Krok 2 z 2: usuwanie pliku tymczasowego, nie wyłączaj konsoli...",
+  "Average": "Średnia"
 }

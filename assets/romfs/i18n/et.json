@@ -3218,5 +3218,6 @@
   "Finish or stop the running transfer first.": "Lõpeta või peata käimasolev edastus esmalt.",
   "Re-enabling MTP": "MTP uuesti lubamine",
   "Step 1 of 2: writing zeros": "Samm 1 / 2: kirjutatakse nulle",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Samm 2 / 2: ajutise faili eemaldamine, ära lülita konsooli välja..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Samm 2 / 2: ajutise faili eemaldamine, ära lülita konsooli välja...",
+  "Average": "Keskmine"
 }

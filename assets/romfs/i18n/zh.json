@@ -3276,5 +3276,6 @@
   "Finish or stop the running transfer first.": "请先完成或停止正在进行的传输。",
   "Re-enabling MTP": "正在重新启用 MTP",
   "Step 1 of 2: writing zeros": "第 1/2 步：正在写入零",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "步骤 2/2：正在删除临时文件，请勿关闭主机..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "步骤 2/2：正在删除临时文件，请勿关闭主机...",
+  "Average": "平均"
 }

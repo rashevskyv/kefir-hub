@@ -3223,5 +3223,6 @@
   "Finish or stop the running transfer first.": "Slutför eller stoppa den pågående överföringen först.",
   "Re-enabling MTP": "Aktiverar MTP igen",
   "Step 1 of 2: writing zeros": "Steg 1 av 2: skriver nollor",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Steg 2 av 2: tar bort temporär fil, stäng inte av konsolen..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Steg 2 av 2: tar bort temporär fil, stäng inte av konsolen...",
+  "Average": "Genomsnitt"
 }

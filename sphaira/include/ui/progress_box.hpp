@@ -168,6 +168,8 @@ private:
     size_t m_speed_sample_count{};
     size_t m_speed_sample_index{};
     TimeStamp m_timestamp{};
+    // when the current transfer began: the plot's average speed.
+    TimeStamp m_transfer_start{};
     std::vector<u8> m_image_data{};
     int m_image_pending{};
     bool m_is_image_pending{};

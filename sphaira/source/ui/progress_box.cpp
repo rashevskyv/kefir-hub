@@ -166,6 +166,7 @@ auto ProgressBox::NewTransfer(const std::string& transfer)  -> ProgressBox& {
     m_speed_sample_count = 0;
     m_speed_sample_index = 0;
     m_timestamp.Update();
+    m_transfer_start.Update();
     mutexUnlock(&m_mutex);
     Yield();
     return *this;
@@ -182,6 +183,7 @@ auto ProgressBox::NewTransferForce(const std::string& transfer)  -> ProgressBox&
     m_speed_sample_count = 0;
     m_speed_sample_index = 0;
     m_timestamp.Update();
+    m_transfer_start.Update();
     mutexUnlock(&m_mutex);
     Yield();
     return *this;
@@ -207,6 +209,7 @@ auto ProgressBox::ResetTransferProgress() -> ProgressBox& {
     m_speed_sample_count = 0;
     m_speed_sample_index = 0;
     m_timestamp.Update();
+    m_transfer_start.Update();
     mutexUnlock(&m_mutex);
     Yield();
     return *this;

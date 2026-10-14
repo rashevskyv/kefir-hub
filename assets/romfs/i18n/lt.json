@@ -3218,5 +3218,6 @@
   "Finish or stop the running transfer first.": "Pirmiausia užbaikite arba sustabdykite vykstantį perkėlimą.",
   "Re-enabling MTP": "Iš naujo įjungiamas MTP",
   "Step 1 of 2: writing zeros": "1 veiksmas iš 2: rašomi nuliai",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "2 veiksmas iš 2: šalinamas laikinasis failas, neišjunkite konsolės..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "2 veiksmas iš 2: šalinamas laikinasis failas, neišjunkite konsolės...",
+  "Average": "Vidurkis"
 }

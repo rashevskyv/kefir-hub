@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.072 — Speed graph: "Average" of the whole transfer under "Now"
+- Owner request: show the average speed next to the current one. `ProgressBox::m_transfer_start` resets with each new transfer; average = written / time since. Applies to every progress view with the graph (fill with zeros).
+- host tests: pass (quick) · nro: built · switch: pending.
+
 ## v0.14.071 — Fill with zeros: a growing plain file instead of one card-sized placeholder; no sleep; leftover removed at start
 - Seen on 192.168.50.103 (slow card): step 1, one `ncmContentStorageCreatePlaceHolder` for ~48 GB, ran for minutes with no progress, Stop could not act and the card (FTP, log) was blocked. Now `/kefir-hub-zero-fill.tmp` (BigFile) grows by 1 MiB writes: progress, graph and Stop from the first second; 2 steps. The file is not encrypted, so the card gets real zeros. Auto sleep and dimming are off during the fill. `zero_fill::RemoveLeftover()` deletes the file at Hub start and before each fill.
 - host tests: pass (quick, i18n contract) · nro: built · switch: pending (fill on .103: progress, Stop, no dimming; leftover removed after a forced restart).

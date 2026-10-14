@@ -3223,5 +3223,6 @@
   "Finish or stop the running transfer first.": "진행 중인 전송을 먼저 완료하거나 중지하세요.",
   "Re-enabling MTP": "MTP 다시 활성화 중",
   "Step 1 of 2: writing zeros": "1단계/2단계: 0 쓰는 중",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "2단계 중 2단계: 임시 파일을 삭제하는 중입니다. 본원의 전원을 끄지 마세요..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "2단계 중 2단계: 임시 파일을 삭제하는 중입니다. 본원의 전원을 끄지 마세요...",
+  "Average": "평균"
 }

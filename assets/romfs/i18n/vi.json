@@ -3223,5 +3223,6 @@
   "Finish or stop the running transfer first.": "Hoàn tất hoặc dừng quá trình truyền đang chạy trước.",
   "Re-enabling MTP": "Đang bật lại MTP",
   "Step 1 of 2: writing zeros": "Bước 1/2: đang ghi số không",
-  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Bước 2 trên 2: đang xóa tệp tạm, vui lòng không tắt máy..."
+  "Step 2 of 2: removing the temporary file, do not turn the console off...": "Bước 2 trên 2: đang xóa tệp tạm, vui lòng không tắt máy...",
+  "Average": "Trung bình"
 }
