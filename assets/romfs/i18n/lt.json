@@ -3230,5 +3230,9 @@
   "Could not check game updates": "Nepavyko patikrinti žaidimų atnaujinimų",
   "Game updates": "Žaidimų atnaujinimai",
   "Reading installed games": "Skaitomi įdiegti žaidimai",
-  "Updates available: ": "Galimi naujinimai: "
+  "Updates available: ": "Galimi naujinimai: ",
+  "Removed: ": "Pašalinta: ",
+  "Removing saves without data": "Šalinami įrašai be duomenų",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Jų duomenų konsolėje nebėra, liko tik įrašas. Tai nutinka, kai vartotojo skaidinys buvo suformatuotas, pavyzdžiui, sukuriant suspaustą emuMMC. Šių išsaugojimų negalima sukurti atsarginės kopijos arba atkurti.",
+  "Found saves without data: ": "Rasti išsaugomieji failai be duomenų: "
 }

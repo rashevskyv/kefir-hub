@@ -3235,5 +3235,9 @@
   "Could not check game updates": "ゲームの更新データの確認に失敗しました",
   "Game updates": "ゲームの更新データ",
   "Reading installed games": "インストール済みゲームを読み込み中",
-  "Updates available: ": "利用可能なアップデート: "
+  "Updates available: ": "利用可能なアップデート: ",
+  "Removed: ": "削除済み: ",
+  "Removing saves without data": "データのないセーブデータを削除中",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "データは既に本体になく、記録のみが残っています。これはユーザーパーティションがフォーマットされた場合（圧縮emuMMCを作成した場合など）に発生します。これらのセーブデータはバックアップも復元もできません。",
+  "Found saves without data: ": "データのないセーブが見つかりました: "
 }

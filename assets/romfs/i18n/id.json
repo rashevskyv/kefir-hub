@@ -3230,5 +3230,9 @@
   "Could not check game updates": "Tidak dapat memeriksa pembaruan game",
   "Game updates": "Pembaruan game",
   "Reading installed games": "Membaca game yang terpasang",
-  "Updates available: ": "Pembaruan tersedia: "
+  "Updates available: ": "Pembaruan tersedia: ",
+  "Removed: ": "Dihapus: ",
+  "Removing saves without data": "Menghapus penyimpanan tanpa data",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Data mereka tidak lagi ada di konsol, hanya catatannya yang tersisa. Ini terjadi ketika partisi pengguna diformat, misalnya saat membuat emuMMC terkompresi. Simpanan ini tidak dapat dicadangkan atau dipulihkan.",
+  "Found saves without data: ": "Simpanan tanpa data ditemukan: "
 }

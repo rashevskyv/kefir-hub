@@ -3235,5 +3235,9 @@
   "Could not check game updates": "Không thể kiểm tra cập nhật trò chơi",
   "Game updates": "Bản cập nhật trò chơi",
   "Reading installed games": "Đang đọc các trò chơi đã cài đặt",
-  "Updates available: ": "Bản cập nhật khả dụng: "
+  "Updates available: ": "Bản cập nhật khả dụng: ",
+  "Removed: ": "Đã xóa: ",
+  "Removing saves without data": "Đang xóa dữ liệu lưu không có dữ liệu",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Dữ liệu của họ không còn trên máy nữa, chỉ còn lại bản ghi. Điều này xảy ra khi phân vùng người dùng đã được định dạng, ví dụ như khi tạo một emuMMC nén. Những tệp lưu này không thể sao lưu hoặc khôi phục.",
+  "Found saves without data: ": "Tìm thấy dữ liệu lưu không có dữ liệu: "
 }

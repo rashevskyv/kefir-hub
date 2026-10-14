@@ -35,6 +35,7 @@ enum FsError {
     FsError_PathNotFound = 0x202,
     FsError_PathNotFoundFsDev = 0x1002,
     FsError_PathAlreadyExists = 0x402,
+    FsError_TargetNotFound = 0x7D402,
     FsError_TargetLocked = 0xE02,
     FsError_NotImplemented = 0x177202,
     FsError_TooLongPath = 0x2EE602,

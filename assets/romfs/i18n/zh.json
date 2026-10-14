@@ -3288,5 +3288,9 @@
   "Could not check game updates": "无法检查游戏更新",
   "Game updates": "游戏更新",
   "Reading installed games": "正在读取已安装的游戏",
-  "Updates available: ": "可用更新： "
+  "Updates available: ": "可用更新： ",
+  "Removed: ": "已删除：",
+  "Removing saves without data": "正在删除无数据的存档",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "其数据已不在主机上，仅保留了记录。这通常发生在用户分区被格式化时，例如制作了压缩的 emuMMC。这些存档无法备份或恢复。",
+  "Found saves without data: ": "找到无数据的存档： "
 }

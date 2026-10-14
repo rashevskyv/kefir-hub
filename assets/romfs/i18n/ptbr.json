@@ -3262,5 +3262,9 @@
   "Could not check game updates": "Não foi possível verificar as atualizações dos jogos",
   "Game updates": "Atualizações de jogos",
   "Reading installed games": "Lendo jogos instalados",
-  "Updates available: ": "Atualizações disponíveis: "
+  "Updates available: ": "Atualizações disponíveis: ",
+  "Removed: ": "Removido: ",
+  "Removing saves without data": "Removendo salvamentos sem dados",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Os dados deles não estão mais no console, apenas o registro restou. Isso acontece quando a partição de usuário foi formatada, por exemplo, ao criar uma emuMMC compactada. Esses salvamentos não podem ser fazer backup ou restaurados.",
+  "Found saves without data: ": "Encontrados salvamentos sem dados: "
 }

@@ -3235,5 +3235,9 @@
   "Could not check game updates": "게임 업데이트를 확인할 수 없습니다",
   "Game updates": "게임 업데이트",
   "Reading installed games": "설치된 게임 읽는 중",
-  "Updates available: ": "사용 가능한 업데이트: "
+  "Updates available: ": "사용 가능한 업데이트: ",
+  "Removed: ": "제거됨: ",
+  "Removing saves without data": "데이터가 없는 세이브 데이터 제거 중",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "데이터가 더 이상 콘솔에 없고 기록만 남아 있습니다. 이는 사용자 파티션이 포맷되었을 때, 예를 들어 압축된 emuMMC를 만들었을 때 발생합니다. 이 세이브 데이터는 백업하거나 복원할 수 없습니다.",
+  "Found saves without data: ": "데이터가 없는 세이브를 찾았습니다: "
 }

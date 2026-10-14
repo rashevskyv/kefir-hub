@@ -3235,5 +3235,9 @@
   "Could not check game updates": "Kunde inte söka efter speluppdateringar",
   "Game updates": "Speluppdateringar",
   "Reading installed games": "Läser installerade spel",
-  "Updates available: ": "Tillgängliga uppdateringar: "
+  "Updates available: ": "Tillgängliga uppdateringar: ",
+  "Removed: ": "Borttagen: ",
+  "Removing saves without data": "Tar bort sparfilerna utan data",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Deras data finns inte längre på konsolen, bara posten finns kvar. Detta händer när användarpartitionen har formaterats, till exempel när en komprimerad emuMMC skapades. Dessa sparfiler kan inte säkerhetskopieras eller återställas.",
+  "Found saves without data: ": "Hittade sparfiler utan data: "
 }

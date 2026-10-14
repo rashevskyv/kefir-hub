@@ -3230,5 +3230,9 @@
   "Game updates": "Game updates",
   "Not in the list, not checked: ": "Not in the list, not checked: ",
   "Reading installed games": "Reading installed games",
-  "Updates available: ": "Updates available: "
+  "Updates available: ": "Updates available: ",
+  "Removed: ": "Removed: ",
+  "Removing saves without data": "Removing saves without data",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.",
+  "Found saves without data: ": "Found saves without data: "
 }

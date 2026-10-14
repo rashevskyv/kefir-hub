@@ -4,6 +4,7 @@
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_orphans.hpp"
 #include "ui/menus/save/save_bundle_util.hpp"
 #include "ui/menus/save_list_info.hpp"
 #include "save_menu_internal.hpp"
@@ -80,6 +81,7 @@ void Menu::ScanHomebrew(bool keep_backup_cache) {
     const auto account_indexes = GetSelectedAccountIndexes();
     BuildInstalledAppIds();
     const auto all_saves = DiscoverSaveDataInfo();
+    OfferToRemoveRecordsWithoutData(all_saves);
     std::unordered_map<u64, u64> save_sizes;
     std::vector<u64> game_order;
     std::unordered_map<u64, Entry> game_representatives;

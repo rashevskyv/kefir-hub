@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.080)
+set(sphaira_VERSION 0.14.081)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -323,6 +323,7 @@ add_executable(sphaira
     source/forced_language.cpp
     source/zero_fill.cpp
     source/game_updates.cpp
+    source/ui/menus/save/save_orphans.cpp
     source/orphan_content.cpp
     source/demo/demo_input.cpp
     source/system_cleanup.cpp

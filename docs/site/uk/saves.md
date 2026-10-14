@@ -175,6 +175,12 @@ Kefir Hub бере:
 2. У [[Delete Options]] виберіть користувачів і типи збережень, потім [[Delete Saves]].
 3. Підтвердіть кнопкою [[Delete]].
 
+<!-- draft
+- a save whose data is gone (the user partition was formatted, for example when a compressed emuMMC was made: the record stays, the data is not there) can now be deleted; before, deleting it failed with 2002-1002
+- the first time the saves open after Kefir Hub starts, it looks for such saves; when it finds some, it says how many and why, and offers [[Keep]] or [[Remove]]; [[Remove]] deletes all of them at once ("[[Removing saves without data]]") and shows how many were removed
+- these saves cannot be backed up or restored: there is nothing left to save
+-->
+
 ## Видалити резервні копії
 - Однієї гри: вкладка [[Backups]], **A** на грі → виберіть рядок → [[Delete]].
 - Лише старі: [[Delete older backups]] залишає найновішу копію в кожній групі.

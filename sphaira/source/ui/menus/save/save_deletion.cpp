@@ -8,6 +8,7 @@
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
+#include "ui/menus/save/save_orphans.hpp"
 #include <vector>
 #include <cstring>
 
@@ -21,6 +22,10 @@ auto DeleteLiveSaveEntry(const Entry& e) -> Result {
     const auto space_id = static_cast<FsSaveDataSpaceId>(e.save_data_space_id);
     const Result rc = fsDeleteSaveDataFileSystemBySaveDataSpaceId(space_id, e.save_data_id);
     log_write("[SAVE] fsDeleteSaveDataFileSystemBySaveDataSpaceId(0x%x, 0x%016lX): 0x%x\n", space_id, e.save_data_id, rc);
+    // the record is there, its file on the user partition is not (USER was formatted).
+    if (R_VALUE(rc) == FsError_TargetNotFound && space_id == FsSaveDataSpaceId_User) {
+        return DeleteRecordWithoutData(e.save_data_id);
+    }
     return rc;
 }
 

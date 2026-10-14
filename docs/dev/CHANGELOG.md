@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.081 — Saves: records without data (USER formatted, e.g. compressed emuMMC) can be deleted, and are offered for removal once per run
+- Owner on 192.168.50.85: deleting such a save failed with 2002-1002 (0x7D402, TargetNotFound): the save index (SYSTEM) keeps the record, fs looks for `/save/<id>` on USER first. `DeleteRecordWithoutData` puts an empty stand-in file there and deletes again (removed again if that fails); `DeleteLiveSaveEntry` uses it on TargetNotFound in the User space. `OfferToRemoveRecordsWithoutData` runs in the first save scan of a run: User-space records whose file is missing (only PathNotFound counts) → explanation, Keep / Remove, progress, "Removed: N / M", rescan. New `FsError_TargetNotFound`.
+- Hypothesis (fs needs the file to exist to drop the record) not proven on hardware yet; the stand-in is removed if the delete still fails.
+- host tests: pass (quick) · nro: built · switch: pending (owner's .85 with broken saves).
+
 ## v0.14.080 — Tools → Tools → Check game updates (the Kefir Updater "Outdated titles", back in the Hub)
 - Owner request. Downloads switch-cheats-db `versions.json` (the list Kefir Updater used; 21121 titles, 3.6 MB), reads installed games with `hats::detail::EnumerateInstalledGames()` and shows the outdated ones on a `SystemToolsMenu(title, rows)` page: name, "v<installed> → v<latest>" (update number, version >> 16, as in the ownfoil views), a caption with the count and one with the games the list does not know (not checked). Nothing to update → a notice. Pure part `game_updates.hpp` (`FindOutdated`, `UpdateLabel`) with `tests/test_game_updates.cpp`. New results `GameUpdatesListDownload/Parse`. The page shows 11 rows and scrolls.
 - Known edge: a game record whose content is not on the card reports version 0 and can show as outdated. Coverage is what the cheats DB knows (games with cheats), like Kefir Updater.

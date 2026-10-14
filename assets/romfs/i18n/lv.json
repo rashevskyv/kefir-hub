@@ -3230,5 +3230,9 @@
   "Could not check game updates": "Nevarēja pārbaudīt spēļu atjauninājumus",
   "Game updates": "Spēļu atjauninājumi",
   "Reading installed games": "Nolasa instalētās spēles",
-  "Updates available: ": "Pieejamie atjauninājumi: "
+  "Updates available: ": "Pieejamie atjauninājumi: ",
+  "Removed: ": "Noņemts: ",
+  "Removing saves without data": "Noņem saglabāšanas bez datiem",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Viņu datu konsolē vairs nav, ir palicis tikai ieraksts. Tas notiek, kad lietotāja nodalījums tika formatēts, piemēram, izveidojot saspiestu emuMMC. Šos saglabājumus nevar dublēt vai atjaunot.",
+  "Found saves without data: ": "Atrasti saglabājumi bez datiem: "
 }

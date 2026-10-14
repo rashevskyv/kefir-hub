@@ -3235,5 +3235,9 @@
   "Could not check game updates": "Kan game-updates niet controleren",
   "Game updates": "Game-updates",
   "Reading installed games": "Geïnstalleerde games lezen",
-  "Updates available: ": "Beschikbare updates: "
+  "Updates available: ": "Beschikbare updates: ",
+  "Removed: ": "Verwijderd: ",
+  "Removing saves without data": "Opslagen zonder data verwijderen",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Hun gegevens staan niet meer op de console, alleen het record is overgebleven. Dit gebeurt wanneer de gebruikerspartitie is geformatteerd, bijvoorbeeld toen er een gecomprimeerde emuMMC werd gemaakt. Deze saves kunnen niet worden geback-uped of hersteld.",
+  "Found saves without data: ": "Gegevensloze opslagbestanden gevonden: "
 }

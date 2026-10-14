@@ -3230,5 +3230,9 @@
   "Could not check game updates": "Не вдалося перевірити оновлення ігор",
   "Game updates": "Оновлення ігор",
   "Reading installed games": "Читання встановлених ігор",
-  "Updates available: ": "Доступні оновлення: "
+  "Updates available: ": "Доступні оновлення: ",
+  "Removed: ": "Видалено: ",
+  "Removing saves without data": "Видалення збережень без даних",
+  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Їхніх даних більше немає на консолі, залишився лише запис. Це трапляється, коли користувацький розділ було відформатовано, наприклад, під час створення стиснутої emuMMC. Ці збереження не можна резервні копії або відновлювати.",
+  "Found saves without data: ": "Знайдено збереження без даних: "
 }
