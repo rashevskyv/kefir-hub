@@ -3238,6 +3238,6 @@
   "Updates available: ": "利用可能なアップデート: ",
   "Removed: ": "削除済み: ",
   "Removing saves without data": "データのないセーブデータを削除中",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "データは既に本体になく、記録のみが残っています。これはユーザーパーティションがフォーマットされた場合（圧縮emuMMCを作成した場合など）に発生します。これらのセーブデータはバックアップも復元もできません。",
-  "Found saves without data: ": "データのないセーブが見つかりました: "
+  "Saves without data: ": "データのないセーブデータ: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "記録のみが残っています。データ本体は本体から消失しています。これはユーザーパーティションがフォーマットされたとき（圧縮されたemuMMCを作成した際など）に発生します。このようなセーブデータはバックアップや復元ができません。記録を削除しますか？"
 }

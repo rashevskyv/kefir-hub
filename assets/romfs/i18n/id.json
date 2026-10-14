@@ -3233,6 +3233,6 @@
   "Updates available: ": "Pembaruan tersedia: ",
   "Removed: ": "Dihapus: ",
   "Removing saves without data": "Menghapus penyimpanan tanpa data",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Data mereka tidak lagi ada di konsol, hanya catatannya yang tersisa. Ini terjadi ketika partisi pengguna diformat, misalnya saat membuat emuMMC terkompresi. Simpanan ini tidak dapat dicadangkan atau dipulihkan.",
-  "Found saves without data: ": "Simpanan tanpa data ditemukan: "
+  "Saves without data: ": "Simpanan tanpa data: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Hanya catatan mereka yang tersisa: data telah hilang dari konsol. Ini terjadi setelah partisi pengguna diformat, misalnya saat emuMMC terkompresi dibuat. Penyimpanan semacam itu tidak dapat dicadangkan atau dipulihkan. Hapus catatan?"
 }

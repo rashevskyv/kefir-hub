@@ -3233,6 +3233,6 @@
   "Updates available: ": "Dostępne aktualizacje: ",
   "Removed: ": "Usunięto: ",
   "Removing saves without data": "Usuwanie zapisów bez danych",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Ich danych nie ma już na konsoli, pozostał tylko wpis. Dzieje się tak, gdy partycja użytkownika została sformatowana, na przykład podczas tworzenia skompresowanego emuMMC. Tych zapisów nie można utworzyć kopii zapasowej ani przywrócić.",
-  "Found saves without data: ": "Znaleziono zapisy bez danych: "
+  "Saves without data: ": "Zapisy bez danych: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Zostały tylko wpisy: dane zniknęły z konsoli. Dzieje się tak po sformatowaniu partycji użytkownika, na przykład podczas tworzenia skompresowanego emuMMC. Takich zapisów nie można utworzyć w kopii zapasowej ani przywrócić. Usunąć wpisy?"
 }

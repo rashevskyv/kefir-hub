@@ -72,8 +72,8 @@ void OfferToRemoveRecordsWithoutData(const std::vector<FsSaveDataInfo>& saves) {
     // after the scan that found them: the menu is drawn by then.
     evman::push(evman::FunctionalEventData{[records]() {
         App::Push<OptionBox>(
-            std::string{"Found saves without data: "_i18n} + std::to_string(records->size()) + "\n\n" +
-            "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored."_i18n,
+            std::string{"Saves without data: "_i18n} + std::to_string(records->size()) + "\n\n" +
+            "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?"_i18n,
             "Keep"_i18n, "Remove"_i18n, 1, [records](auto op_index) {
             if (!op_index || *op_index != 1) {
                 return;

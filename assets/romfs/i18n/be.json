@@ -3233,6 +3233,6 @@
   "Updates available: ": "Даступныя абнаўленні: ",
   "Removed: ": "Выдалена: ",
   "Removing saves without data": "Выдаленне захаванняў без даных",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Іх даных больш няма на кансолі, застаўся толькі запіс. Гэта адбываецца, калі карыстальніцкі раздзел быў адфарматаваны, напрыклад, пры стварэнні сціснутай emuMMC. Гэтыя захаванні нельга стварыць рэзервовую копію або аднавіць.",
-  "Found saves without data: ": "Знойдзены захаванні без даных: "
+  "Saves without data: ": "Захаванні без даных: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Засталіся толькі запісы: даныя зніклі з кансолі. Гэта адбываецца пасля фарматавання карыстальніцкага раздзела, напрыклад, пры стварэнні сціснутай emuMMC. Такія захаванні нельга стварыць рэзервовую копію або аднавіць. Выдаліць запісы?"
 }

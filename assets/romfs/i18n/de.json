@@ -3239,6 +3239,6 @@
   "Updates available: ": "Verfügbare Updates: ",
   "Removed: ": "Entfernt: ",
   "Removing saves without data": "Spielstände ohne Daten entfernen",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Ihre Daten befinden sich nicht mehr auf der Konsole, nur noch der Eintrag ist übrig. Dies geschieht, wenn die Benutzerpartition formatiert wurde, zum Beispiel beim Erstellen einer komprimierten emuMMC. Diese Spielstände können nicht gesichert oder wiederhergestellt werden.",
-  "Found saves without data: ": "Spielstände ohne Daten gefunden: "
+  "Saves without data: ": "Speicherstände ohne Daten: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Es sind nur noch die Einträge übrig: Die Daten sind von der Konsole verschwunden. Dies geschieht nach dem Formatieren der Benutzerpartition, beispielsweise beim Erstellen einer komprimierten emuMMC. Solche Spielstände können weder gesichert noch wiederhergestellt werden. Einträge löschen?"
 }

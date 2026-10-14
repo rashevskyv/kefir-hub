@@ -3291,6 +3291,6 @@
   "Updates available: ": "可用更新： ",
   "Removed: ": "已移除：",
   "Removing saves without data": "正在刪除無資料的存檔",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "其資料已不在主機上，僅保留了記錄。這通常發生在使用者分區被格式化時，例如製作了壓縮的 emuMMC。這些存檔無法備份或恢復。",
-  "Found saves without data: ": "找到無資料的存檔： "
+  "Saves without data: ": "無資料的存檔：",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "僅保留了記錄：資料已從主機中消失。這在使用者分割區被格式化後發生（例如製作了壓縮的 emuMMC 時）。此類存檔無法備份或復原。要移除這些記錄嗎？"
 }

@@ -3238,6 +3238,6 @@
   "Updates available: ": "사용 가능한 업데이트: ",
   "Removed: ": "제거됨: ",
   "Removing saves without data": "데이터가 없는 세이브 데이터 제거 중",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "데이터가 더 이상 콘솔에 없고 기록만 남아 있습니다. 이는 사용자 파티션이 포맷되었을 때, 예를 들어 압축된 emuMMC를 만들었을 때 발생합니다. 이 세이브 데이터는 백업하거나 복원할 수 없습니다.",
-  "Found saves without data: ": "데이터가 없는 세이브를 찾았습니다: "
+  "Saves without data: ": "데이터가 없는 세이브: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "기록만 남아 있습니다: 데이터가 본체에서 사라졌습니다. 이는 사용자 파티션이 포맷된 후(예: 압축된 emuMMC가 생성될 때) 발생합니다. 이러한 세이브 데이터는 백업하거나 복원할 수 없습니다. 기록을 삭제하시겠습니까?"
 }

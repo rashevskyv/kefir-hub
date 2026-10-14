@@ -3233,6 +3233,6 @@
   "Updates available: ": "Saadaolevad värskendused: ",
   "Removed: ": "Eemaldatud: ",
   "Removing saves without data": "Salvestiste eemaldamine ilma andmeteta",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Nende andmed ei ole enam konsoolil, alles on vaid kirje. See juhtub, kui kasutaja partitsioon on vormindatud, näiteks tihendatud emuMMC loomisel. Neid salvestisi ei saa varundada ega taastada.",
-  "Found saves without data: ": "Andmeteta salvestised leitud: "
+  "Saves without data: ": "Salvestised andmeteta: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Alles on jäänud vaid kirjed: andmed on konsoolilt kadunud. See juhtub pärast kasutaja jaotise vormindamist, näiteks tihendatud emuMMC loomisel. Selliseid salvestusi ei saa varundada ega taastada. Kas eemaldada kirjed?"
 }

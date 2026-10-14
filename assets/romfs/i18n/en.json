@@ -3233,6 +3233,6 @@
   "Updates available: ": "Updates available: ",
   "Removed: ": "Removed: ",
   "Removing saves without data": "Removing saves without data",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.",
-  "Found saves without data: ": "Found saves without data: "
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?",
+  "Saves without data: ": "Saves without data: "
 }

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.082 — Saves without data: clearer prompt
+- Owner on .85 (0.14.081 worked: 42 records found and removed) found the prompt clumsy; the Ukrainian last sentence was broken. New text: "Saves without data: N" + "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?"; Ukrainian set by hand (the translator wrote a non-word).
+- host tests: pass (quick) · nro: built · switch: 0.14.081 removal verified on .85; text pending.
+
 ## v0.14.081 — Saves: records without data (USER formatted, e.g. compressed emuMMC) can be deleted, and are offered for removal once per run
 - Owner on 192.168.50.85: deleting such a save failed with 2002-1002 (0x7D402, TargetNotFound): the save index (SYSTEM) keeps the record, fs looks for `/save/<id>` on USER first. `DeleteRecordWithoutData` puts an empty stand-in file there and deletes again (removed again if that fails); `DeleteLiveSaveEntry` uses it on TargetNotFound in the User space. `OfferToRemoveRecordsWithoutData` runs in the first save scan of a run: User-space records whose file is missing (only PathNotFound counts) → explanation, Keep / Remove, progress, "Removed: N / M", rescan. New `FsError_TargetNotFound`.
 - Hypothesis (fs needs the file to exist to drop the record) not proven on hardware yet; the stand-in is removed if the delete still fails.

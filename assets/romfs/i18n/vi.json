@@ -3238,6 +3238,6 @@
   "Updates available: ": "Bản cập nhật khả dụng: ",
   "Removed: ": "Đã xóa: ",
   "Removing saves without data": "Đang xóa dữ liệu lưu không có dữ liệu",
-  "Their data is no longer on the console, only the record is left. This happens when the user partition was formatted, for example when a compressed emuMMC was made. These saves cannot be backed up or restored.": "Dữ liệu của họ không còn trên máy nữa, chỉ còn lại bản ghi. Điều này xảy ra khi phân vùng người dùng đã được định dạng, ví dụ như khi tạo một emuMMC nén. Những tệp lưu này không thể sao lưu hoặc khôi phục.",
-  "Found saves without data: ": "Tìm thấy dữ liệu lưu không có dữ liệu: "
+  "Saves without data: ": "Dữ liệu lưu không có dữ liệu: ",
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Chỉ còn lại các bản ghi: dữ liệu đã biến mất khỏi máy. Điều này xảy ra sau khi phân vùng người dùng được định dạng, ví dụ khi tạo một emuMMC nén. Các dữ liệu lưu này không thể sao lưu hoặc khôi phục. Xóa các bản ghi?"
 }
