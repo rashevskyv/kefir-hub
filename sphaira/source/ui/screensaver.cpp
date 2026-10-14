@@ -218,8 +218,10 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
 
     // two incommensurate periods, so the block never retraces the same path.
     const auto t = m_drift_accum > 0.f ? m_drift_accum : (float)m_drift.GetSecondsD();
-    float cx = SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x;
-    float cy = SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y;
+    // whole pixels: the font puts every glyph on a whole pixel while bars and lines take fractions,
+    // so at this slow drift the text stepped a pixel at a time and the rest slid on its own.
+    const float cx = std::round(SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x);
+    const float cy = std::round(SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y);
     const float left = cx - BLOCK_W / 2.f;
 
     // speed / eta / elapsed / battery share one line, so how many of them are
@@ -376,7 +378,8 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
         const auto red = nvgRGBA(231, 76, 60, 255);
         const auto blue = nvgRGBA(52, 152, 219, 255);
         const float graph_w = 600.f;
-        const Vec4 plot{(SCREEN_WIDTH - graph_w) / 2.f, y, graph_w, 95.f};
+        // on the drifting centre like the rest of the block (it used to stay at the screen centre).
+        const Vec4 plot{cx - graph_w / 2.f, y, graph_w, 95.f};
         const float pad = 4.f;
 
         gfx::drawRect(vg, plot, nvgRGBA(20, 20, 25, 220), 5.f);

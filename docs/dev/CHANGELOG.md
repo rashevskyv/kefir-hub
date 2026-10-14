@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.084 — Screensaver: the whole block drifts in one whole-pixel step
+- Owner: the saver moved pixel by pixel and its parts did not move together. Text glyphs land on whole pixels (fontstash) while bars and lines took fractional positions, so at the slow drift they stepped apart; the speed graph also stayed at the screen centre horizontally. Now the drift centre is rounded to whole pixels and the graph sits on it like the rest.
+- host tests: pass (quick) · nro: built · switch: pending (saver on an install or a long job).
+
 ## v0.14.083 — Backups: restore goes to the backup's own user without a question; Backup actions in START; owner caption fits
 - Owner on .85: a bulk restore asked "Restore for user" with one user ticked, although the backups were made with the same users. `MatchBackupUser` (`save_user_match.hpp`, host test `tests/test_save_user_match.cpp`): same uid, else the one console user with the backup's nickname (`backup_owner_name`), else ask. Used in `RestoreSingleBackupGroup` and per save in `PromptBatchRestoreTargets` (`auto_match`, off for the collision re-ask and "Choose for each save"). New A-menu item "Restore for a specific user" (force picker). The archive-picker path now keeps the uid by value (it held a pointer to a local that the deferred callback read).
 - START on the Backups tab: "Backup actions" (opens the A menu) replaces "Restore". The owner strip under a tile shrinks to 12 px when long, then scrolls on the selected tile (`m_owner_strip_scroll`) instead of a centred text cut on both sides.
