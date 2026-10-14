@@ -303,9 +303,16 @@ void Menu::DisplaySaveOptions() {
                 PromptSaveTypeOptions(SaveOp::Backup);
             }, "Backup selected saves."_i18n)->SetIcon(ActionIcon::Save);
         }
-        options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
-            PromptSaveTypeOptions(SaveOp::Restore);
-        }, "Restore selected saves."_i18n)->SetIcon(ActionIcon::Refresh);
+        if (m_category == Category::Backups) {
+            // the same menu as A: Restore, Restore for a specific user, Verify integrity...
+            options->Add<SidebarEntryCallback>("Backup actions"_i18n, [this](){
+                PromptSaveAction();
+            }, "Restore, check or delete the selected backups."_i18n)->SetIcon(ActionIcon::Refresh);
+        } else {
+            options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
+                PromptSaveTypeOptions(SaveOp::Restore);
+            }, "Restore selected saves."_i18n)->SetIcon(ActionIcon::Refresh);
+        }
         if (m_category != Category::Backups) {
             options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
                 PromptSaveTypeOptions(SaveOp::Delete);

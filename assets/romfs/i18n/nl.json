@@ -3239,5 +3239,8 @@
   "Removed: ": "Verwijderd: ",
   "Removing saves without data": "Opslagen zonder data verwijderen",
   "Saves without data: ": "Savegames zonder data: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Alleen de records zijn overgebleven: de data is verdwenen van de console. Dit gebeurt nadat de gebruikerspartitie is geformatteerd, bijvoorbeeld bij het maken van een gecomprimeerde emuMMC. Dergelijke saves kunnen niet worden geback-upte of hersteld. Records verwijderen?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Alleen de records zijn overgebleven: de data is verdwenen van de console. Dit gebeurt nadat de gebruikerspartitie is geformatteerd, bijvoorbeeld bij het maken van een gecomprimeerde emuMMC. Dergelijke saves kunnen niet worden geback-upte of hersteld. Records verwijderen?",
+  "Restore for a specific user": "Herstellen voor een specifieke gebruiker",
+  "Backup actions": "Backupacties",
+  "Restore, check or delete the selected backups.": "Geselecteerde backups herstellen, controleren of verwijderen."
 }

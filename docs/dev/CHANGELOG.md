@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.083 — Backups: restore goes to the backup's own user without a question; Backup actions in START; owner caption fits
+- Owner on .85: a bulk restore asked "Restore for user" with one user ticked, although the backups were made with the same users. `MatchBackupUser` (`save_user_match.hpp`, host test `tests/test_save_user_match.cpp`): same uid, else the one console user with the backup's nickname (`backup_owner_name`), else ask. Used in `RestoreSingleBackupGroup` and per save in `PromptBatchRestoreTargets` (`auto_match`, off for the collision re-ask and "Choose for each save"). New A-menu item "Restore for a specific user" (force picker). The archive-picker path now keeps the uid by value (it held a pointer to a local that the deferred callback read).
+- START on the Backups tab: "Backup actions" (opens the A menu) replaces "Restore". The owner strip under a tile shrinks to 12 px when long, then scrolls on the selected tile (`m_owner_strip_scroll`) instead of a centred text cut on both sides.
+- host tests: pass (test_save_user_match; quick) · nro: built · switch: pending (.85: bulk restore with the same users, Restore for a specific user, START → Backup actions, caption).
+
 ## v0.14.082 — Saves without data: clearer prompt
 - Owner on .85 (0.14.081 worked: 42 records found and removed) found the prompt clumsy; the Ukrainian last sentence was broken. New text: "Saves without data: N" + "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?"; Ukrainian set by hand (the translator wrote a non-word).
 - host tests: pass (quick) · nro: built · switch: 0.14.081 removal verified on .85; text pending.

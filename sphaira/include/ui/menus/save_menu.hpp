@@ -292,7 +292,7 @@ private:
     void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
     void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker = false, bool return_to_actions = false);
     void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
-    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false, std::shared_ptr<std::optional<AccountUid>> shared_uid = nullptr);
+    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false, std::shared_ptr<std::optional<AccountUid>> shared_uid = nullptr, bool auto_match = true);
     void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();
@@ -348,6 +348,7 @@ private:
     std::vector<u64> m_installed_apps{};
     std::unique_ptr<List> m_list{};
     ScrollingText m_hb_title_scroll{};
+    ScrollingText m_owner_strip_scroll{}; // the owner strip under a backup tile
     bool m_is_reversed{};
     bool m_dirty{};
     mutable std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()

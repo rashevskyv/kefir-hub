@@ -3234,5 +3234,8 @@
   "Removed: ": "Eemaldatud: ",
   "Removing saves without data": "Salvestiste eemaldamine ilma andmeteta",
   "Saves without data: ": "Salvestised andmeteta: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Alles on jäänud vaid kirjed: andmed on konsoolilt kadunud. See juhtub pärast kasutaja jaotise vormindamist, näiteks tihendatud emuMMC loomisel. Selliseid salvestusi ei saa varundada ega taastada. Kas eemaldada kirjed?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Alles on jäänud vaid kirjed: andmed on konsoolilt kadunud. See juhtub pärast kasutaja jaotise vormindamist, näiteks tihendatud emuMMC loomisel. Selliseid salvestusi ei saa varundada ega taastada. Kas eemaldada kirjed?",
+  "Restore for a specific user": "Taasta konkreetse kasutaja jaoks",
+  "Backup actions": "Varukoopia tegevused",
+  "Restore, check or delete the selected backups.": "Taasta, kontrolli või kustuta valitud varukoopiad."
 }

@@ -3239,5 +3239,8 @@
   "Removed: ": "Borttagen: ",
   "Removing saves without data": "Tar bort sparfilerna utan data",
   "Saves without data: ": "Sparfiler utan data: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Endast posterna finns kvar: datan har försvunnit från konsolen. Detta händer efter att användarpartitionen har formaterats, till exempel när en komprimerad emuMMC skapas. Sådana sparfiler kan inte säkerhetskopieras eller återställas. Ta bort posterna?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Endast posterna finns kvar: datan har försvunnit från konsolen. Detta händer efter att användarpartitionen har formaterats, till exempel när en komprimerad emuMMC skapas. Sådana sparfiler kan inte säkerhetskopieras eller återställas. Ta bort posterna?",
+  "Restore for a specific user": "Återställ för en specifik användare",
+  "Backup actions": "Säkerhetskopieringsåtgärder",
+  "Restore, check or delete the selected backups.": "Återställ, kontrollera eller radera de valda säkerhetskopiorna."
 }

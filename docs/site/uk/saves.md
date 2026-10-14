@@ -117,6 +117,13 @@ Kefir Hub копіює лише змінені збереження. Він по
 
 Перед перезаписом Kefir Hub зберігає поточне збереження як страхувальну копію в `/dumps/recovery/`. Після відновлення вікно покаже, де вона лежить. Наприкінці з'явиться [[Restore successful!]].
 
+<!-- draft
+- [[Restore]] no longer asks for the user when the backup's user is clear: the same user (made on this console), or else the one console user with the same name as in the backup (the same people on another console, or users made again); it asks only when no user, or two users with that name, fit
+- new item [[Restore for a specific user]] in the backup actions (**A**): always asks for the user
+- on the [[Backups]] tab, the START options start with [[Backup actions]]: the same menu as **A** ([[Restore]], [[Restore for a specific user]], [[Verify integrity]] and the rest); the old [[Restore]] item there is gone
+- the owner caption under a backup tile (for example "[[All saves (bundle)]]") gets a smaller font when it is long and scrolls on the selected tile; before, it was cut on both sides
+-->
+
 ## Відновити з вкладки [[Backups]]
 1. Відкрийте вкладку [[Backups]]. Кожна гра має плитку для кожного джерела копій. Плитка містить повний пакет цього джерела: збереження акаунтів, Device, BCAT і Cache.
 2. Наведіть на плитку й натисніть **A**. Відкриється [[Backup Action]].

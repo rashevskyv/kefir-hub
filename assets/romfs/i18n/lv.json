@@ -3234,5 +3234,8 @@
   "Removed: ": "Noņemts: ",
   "Removing saves without data": "Noņem saglabāšanas bez datiem",
   "Saves without data: ": "Saglabāšanas dati bez datiem: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Ir palikuši tikai ieraksti: dati ir pazuduši no konsoles. Tas notiek pēc lietotāja nodalījuma formatēšanas, piemēram, izveidojot saspiestu emuMMC. Šādus saglabājumus nevar dublēt vai atjaunot. Noņemt ierakstus?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Ir palikuši tikai ieraksti: dati ir pazuduši no konsoles. Tas notiek pēc lietotāja nodalījuma formatēšanas, piemēram, izveidojot saspiestu emuMMC. Šādus saglabājumus nevar dublēt vai atjaunot. Noņemt ierakstus?",
+  "Restore for a specific user": "Atjaunot konkrētam lietotājam",
+  "Backup actions": "Dublējuma darbības",
+  "Restore, check or delete the selected backups.": "Atjaunot, pārbaudīt vai dzēst atlasītās dublējumkopijas."
 }

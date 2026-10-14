@@ -3234,5 +3234,8 @@
   "Removed: ": "Видалено: ",
   "Removing saves without data": "Видалення збережень без даних",
   "Saves without data: ": "Збереження без даних: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Від них лишилися тільки записи: самих даних на консолі вже немає. Так буває після форматування розділу користувача, наприклад коли створюють стиснену emuMMC. Такі збереження не можна ні скопіювати в бекап, ні відновити. Видалити ці записи?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Від них лишилися тільки записи: самих даних на консолі вже немає. Так буває після форматування розділу користувача, наприклад коли створюють стиснену emuMMC. Такі збереження не можна ні скопіювати в бекап, ні відновити. Видалити ці записи?",
+  "Restore for a specific user": "Відновити для певного користувача",
+  "Backup actions": "Дії з резервною копією",
+  "Restore, check or delete the selected backups.": "Відновити, перевірити або видалити вибрані резервні копії."
 }

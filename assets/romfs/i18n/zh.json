@@ -3292,5 +3292,8 @@
   "Removed: ": "已删除：",
   "Removing saves without data": "正在删除无数据的存档",
   "Saves without data: ": "无数据的存档：",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "仅保留了记录：数据已从主机中消失。这在用户分区被格式化后发生（例如制作了压缩的 emuMMC 时）。此类存档无法备份或恢复。要移除这些记录吗？"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "仅保留了记录：数据已从主机中消失。这在用户分区被格式化后发生（例如制作了压缩的 emuMMC 时）。此类存档无法备份或恢复。要移除这些记录吗？",
+  "Restore for a specific user": "为指定用户恢复",
+  "Backup actions": "备份操作",
+  "Restore, check or delete the selected backups.": "还原、检查或删除选定的备份。"
 }

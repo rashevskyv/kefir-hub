@@ -3234,5 +3234,8 @@
   "Removed: ": "Kaldırıldı: ",
   "Removing saves without data": "Veri içermeyen kayıtlar kaldırılıyor",
   "Saves without data: ": "Verisiz kayıtlar: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Yalnızca kayıtlar kaldı: veriler konsoldan silindi. Bu, kullanıcı bölümü biçimlendirildiğinde, örneğin sıkıştırılmış bir emuMMC oluşturulduğunda gerçekleşir. Bu tür kayıtların yedeği alınamaz veya geri yüklenemez. Kayıtlar kaldırılsın mı?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Yalnızca kayıtlar kaldı: veriler konsoldan silindi. Bu, kullanıcı bölümü biçimlendirildiğinde, örneğin sıkıştırılmış bir emuMMC oluşturulduğunda gerçekleşir. Bu tür kayıtların yedeği alınamaz veya geri yüklenemez. Kayıtlar kaldırılsın mı?",
+  "Restore for a specific user": "Belirli bir kullanıcı için geri yükle",
+  "Backup actions": "Yedekleme eylemleri",
+  "Restore, check or delete the selected backups.": "Seçilen yedeklemeleri geri yükleyin, kontrol edin veya silin."
 }

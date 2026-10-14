@@ -352,9 +352,27 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             // the grid shows icons only: put the owner on a strip at the bottom of the icon.
             const Vec4 strip{image_v.x, image_v.y + image_v.h - 26.f, image_v.w, 26.f};
             gfx::drawRect(vg, strip, nvgRGBA(0, 0, 0, 170), 0.f);
+            // a long owner ("All saves (bundle)" in some languages) first gets a smaller font, then
+            // scrolls on the selected tile; centred text cut on both sides read as garbage.
+            const float avail_w = strip.w - 8.f;
+            float font_size = 16.f;
+            float bounds[4]{};
+            nvgFontSize(vg, font_size);
+            nvgTextBounds(vg, 0, 0, owner.c_str(), nullptr, bounds);
+            if (const float w = bounds[2] - bounds[0]; w > avail_w) {
+                font_size = std::max(12.f, font_size * avail_w / w);
+                nvgFontSize(vg, font_size);
+                nvgTextBounds(vg, 0, 0, owner.c_str(), nullptr, bounds);
+            }
+            const float text_w = bounds[2] - bounds[0];
             nvgSave(vg);
-            nvgIntersectScissor(vg, strip.x + 4.f, strip.y, strip.w - 8.f, strip.h);
-            gfx::drawTextArgs(vg, strip.x + strip.w / 2.f, strip.y + strip.h / 2.f, 16.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, nvgRGB(255, 255, 255), "%s", owner.c_str());
+            nvgIntersectScissor(vg, strip.x + 4.f, strip.y, avail_w, strip.h);
+            if (text_w > avail_w) {
+                m_owner_strip_scroll.Draw(vg, selected, strip.x + 4.f, strip.y + strip.h / 2.f, avail_w, font_size,
+                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, nvgRGB(255, 255, 255), owner);
+            } else {
+                gfx::drawText(vg, strip.x + (strip.w - text_w) / 2.f, strip.y + strip.h / 2.f, font_size, nvgRGB(255, 255, 255), owner.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            }
             nvgRestore(vg);
         }
 

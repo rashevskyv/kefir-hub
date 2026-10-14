@@ -3266,5 +3266,8 @@
   "Removed: ": "Removido: ",
   "Removing saves without data": "Removendo salvamentos sem dados",
   "Saves without data: ": "Salvamentos sem dados: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Apenas os registros restaram: os dados desapareceram do console. Isso acontece após a partição do usuário ser formatada, por exemplo, quando uma emuMMC compactada é criada. Tais salvamentos não podem ser feitos backup ou restaurados. Remover os registros?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Apenas os registros restaram: os dados desapareceram do console. Isso acontece após a partição do usuário ser formatada, por exemplo, quando uma emuMMC compactada é criada. Tais salvamentos não podem ser feitos backup ou restaurados. Remover os registros?",
+  "Restore for a specific user": "Restaurar para um usuário específico",
+  "Backup actions": "Ações de backup",
+  "Restore, check or delete the selected backups.": "Restaurar, verificar ou excluir os backups selecionados."
 }

@@ -188,6 +188,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
         VerifyIntegrity,
         DeleteOlder,
         Restore,
+        RestoreForUser,
         OpenFileBrowser,
         IndividualSaves,
         Delete,
@@ -202,6 +203,11 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
 
     std::vector<ActionItem> actions;
     actions.push_back({ActionType::Restore, "Restore"_i18n});
+    // Restore picks each backup's own user when it is clear; this one always asks.
+    const auto expanded = ExpandGameGroups(seeds);
+    if (std::any_of(expanded.begin(), expanded.end(), [](const Entry& e) { return e.save_data_type == FsSaveDataType_Account; })) {
+        actions.push_back({ActionType::RestoreForUser, "Restore for a specific user"_i18n});
+    }
 
     actions.push_back({ActionType::VerifyIntegrity, "Verify integrity"_i18n});
     actions.push_back({ActionType::DeleteOlder, "Delete older backups"_i18n});
@@ -244,6 +250,10 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
 
             case ActionType::Restore:
                 RestoreBackupGroups(actual_seeds, false, true);
+                break;
+
+            case ActionType::RestoreForUser:
+                RestoreBackupGroups(actual_seeds, true, true);
                 break;
 
             case ActionType::OpenFileBrowser: {

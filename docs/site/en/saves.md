@@ -117,6 +117,13 @@ To make Kefir Hub look in another folder too:
 
 Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps/recovery/`. After the restore a dialog shows where it is. When it finishes you see [[Restore successful!]].
 
+<!-- draft
+- [[Restore]] no longer asks for the user when the backup's user is clear: the same user (made on this console), or else the one console user with the same name as in the backup (the same people on another console, or users made again); it asks only when no user, or two users with that name, fit
+- new item [[Restore for a specific user]] in the backup actions (**A**): always asks for the user
+- on the [[Backups]] tab, the START options start with [[Backup actions]]: the same menu as **A** ([[Restore]], [[Restore for a specific user]], [[Verify integrity]] and the rest); the old [[Restore]] item there is gone
+- the owner caption under a backup tile (for example "[[All saves (bundle)]]") gets a smaller font when it is long and scrolls on the selected tile; before, it was cut on both sides
+-->
+
 ## Restore from the Backups tab
 1. Open the [[Backups]] tab. Each game has a tile for each backup source. A tile contains the complete save bundle for that source: user accounts, Device, BCAT, and Cache saves.
 2. Focus a tile and press **A**. [[Backup Action]] opens.

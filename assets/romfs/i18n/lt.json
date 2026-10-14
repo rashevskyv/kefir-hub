@@ -3234,5 +3234,8 @@
   "Removed: ": "Pašalinta: ",
   "Removing saves without data": "Šalinami įrašai be duomenų",
   "Saves without data: ": "Išsaugoti duomenys be failų: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Liko tik įrašai: duomenys dingo iš konsolės. Tai nutinka suformatavus vartotojo skirsnį, pavyzdžiui, sukuriant suspaustą emuMMC. Tokių išsaugojimų negalima sukurti atsarginės kopijos arba atkurti. Pašalinti įrašus?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Liko tik įrašai: duomenys dingo iš konsolės. Tai nutinka suformatavus vartotojo skirsnį, pavyzdžiui, sukuriant suspaustą emuMMC. Tokių išsaugojimų negalima sukurti atsarginės kopijos arba atkurti. Pašalinti įrašus?",
+  "Restore for a specific user": "Atkurti konkrečiam vartotojui",
+  "Backup actions": "Atsarginės kopijos veiksmai",
+  "Restore, check or delete the selected backups.": "Atkurti, patikrinti arba ištrinti pasirinktas atsargines kopijas."
 }

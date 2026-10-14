@@ -3239,5 +3239,8 @@
   "Removed: ": "Đã xóa: ",
   "Removing saves without data": "Đang xóa dữ liệu lưu không có dữ liệu",
   "Saves without data: ": "Dữ liệu lưu không có dữ liệu: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Chỉ còn lại các bản ghi: dữ liệu đã biến mất khỏi máy. Điều này xảy ra sau khi phân vùng người dùng được định dạng, ví dụ khi tạo một emuMMC nén. Các dữ liệu lưu này không thể sao lưu hoặc khôi phục. Xóa các bản ghi?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Chỉ còn lại các bản ghi: dữ liệu đã biến mất khỏi máy. Điều này xảy ra sau khi phân vùng người dùng được định dạng, ví dụ khi tạo một emuMMC nén. Các dữ liệu lưu này không thể sao lưu hoặc khôi phục. Xóa các bản ghi?",
+  "Restore for a specific user": "Khôi phục cho người dùng cụ thể",
+  "Backup actions": "Tác vụ sao lưu",
+  "Restore, check or delete the selected backups.": "Khôi phục, kiểm tra hoặc xóa các bản sao lưu đã chọn."
 }

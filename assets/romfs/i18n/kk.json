@@ -3234,5 +3234,8 @@
   "Removed: ": "Өшірілді: ",
   "Removing saves without data": "Деректері жоқ сақталымдарды жою",
   "Saves without data: ": "Деректері жоқ сақталымдар: ",
-  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Тек жазбалар қалды: деректер консольден жоғалған. Бұл пайдаланушы бөлімі пішімделгеннен кейін, мысалы, сығылған emuMMC жасалған кезде орын алады. Мұндай сақтауларды сақтық көшірмелеуге немесе қалпына келтіруге болмайды. Жазбаларды жою керек пе?"
+  "Only their records are left: the data is gone from the console. This happens after the user partition is formatted, for example when a compressed emuMMC is made. Such saves cannot be backed up or restored. Remove the records?": "Тек жазбалар қалды: деректер консольден жоғалған. Бұл пайдаланушы бөлімі пішімделгеннен кейін, мысалы, сығылған emuMMC жасалған кезде орын алады. Мұндай сақтауларды сақтық көшірмелеуге немесе қалпына келтіруге болмайды. Жазбаларды жою керек пе?",
+  "Restore for a specific user": "Белгілі бір пайдаланушы үшін қалпына келтіру",
+  "Backup actions": "Сақтық көшірме әрекеттері",
+  "Restore, check or delete the selected backups.": "Таңдалған сақтық көшірмелерді қалпына келтіру, тексеру немесе жою."
 }

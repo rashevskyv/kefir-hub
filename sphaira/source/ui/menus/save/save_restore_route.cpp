@@ -12,6 +12,7 @@
 #include "ui/menus/save/save_slot_backend.hpp"
 #include "ui/menus/save/save_bundle_util.hpp"
 #include "ui/menus/save/save_folder_discovery.hpp"
+#include "ui/menus/save/save_user_match.hpp"
 #include "save_menu_internal.hpp"
 #include "minizip_helper.hpp"
 #include <minizip/unzip.h>
@@ -34,6 +35,20 @@ struct ProbeFilesystem {
         return path.starts_with("ums") ? static_cast<fs::Fs*>(&stdio_fs) : static_cast<fs::Fs*>(&sd_fs);
     }
 };
+
+// the console user of this backup when it is clear (save_user_match.hpp), else nothing.
+auto MatchedUser(const Entry& backup, const std::vector<AccountProfileBase>& accounts) -> std::optional<AccountUid> {
+    std::vector<ConsoleUser> users;
+    users.reserve(accounts.size());
+    for (const auto& a : accounts) {
+        users.push_back({{a.uid.uid[0], a.uid.uid[1]}, std::string{a.nickname, strnlen(a.nickname, sizeof(a.nickname))}});
+    }
+    const std::uint64_t uid[2]{backup.uid.uid[0], backup.uid.uid[1]};
+    if (const auto i = MatchBackupUser(uid, backup.backup_owner_name, users)) {
+        return accounts[*i].uid;
+    }
+    return std::nullopt;
+}
 
 } // namespace
 
@@ -376,8 +391,10 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
     const auto on_account_ready = [this, group, location, backup_root](const AccountUid* explicit_uid) {
         const auto candidates = FindLiveRestoreCandidates(group, explicit_uid);
         if (candidates.empty()) {
-            const auto on_archive_selected = [this, group, explicit_uid, location, backup_root](const fs::FsPath& chosen_archive) {
-                PlanRestoreCreation(group, explicit_uid ? *explicit_uid : AccountUid{}, chosen_archive,
+            // the archive picker answers after this returns: keep the uid itself, not the caller's pointer.
+            const AccountUid dest_uid = explicit_uid ? *explicit_uid : AccountUid{};
+            const auto on_archive_selected = [this, group, dest_uid, location, backup_root](const fs::FsPath& chosen_archive) {
+                PlanRestoreCreation(group, dest_uid, chosen_archive,
                     [this, group, location, backup_root, chosen_archive](std::optional<Entry> target) mutable {
                         if (!target) return;
                         RestoreSavesPicked(std::move(*target), group, location, backup_root, chosen_archive);
@@ -418,6 +435,14 @@ void Menu::RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest
         if (accounts.empty()) {
             App::Push<OptionBox>("No user accounts found on this console."_i18n, "OK"_i18n);
             return;
+        }
+
+        // the backup's own user when it is clear: no question. "Restore for a specific user" asks.
+        if (!force_user_picker) {
+            if (const auto matched = MatchedUser(group, accounts)) {
+                on_account_ready(&*matched);
+                return;
+            }
         }
 
         const auto items = AccountPickerItems(accounts);
@@ -490,7 +515,7 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
     auto seen_target_keys = std::make_shared<std::set<std::string>>();
     PromptBatchRestoreTargets(std::make_shared<std::vector<Entry>>(std::move(groups)), 0,
         std::make_shared<std::vector<AccountProfileBase>>(accounts), resolved_targets, seen_target_keys,
-        location, backup_root, return_to_actions, shared_uid);
+        location, backup_root, return_to_actions, shared_uid, !force_user_picker);
 }
 
 void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, bool return_to_actions) {
@@ -503,14 +528,14 @@ void Menu::PromptBatchRestoreTargets(
     std::shared_ptr<std::vector<Entry>> resolved_targets,
     std::shared_ptr<std::set<std::string>> seen_target_keys,
     const dump::DumpLocation& location, const fs::FsPath& backup_root,
-    bool return_to_actions, std::shared_ptr<std::optional<AccountUid>> shared_uid) {
+    bool return_to_actions, std::shared_ptr<std::optional<AccountUid>> shared_uid, bool auto_match) {
 
     if (step >= seeds->size()) {
         RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root);
         return;
     }
 
-    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid](std::optional<Entry> target) {
+    const auto on_target_resolved = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid, auto_match](std::optional<Entry> target) {
         if (!target) {
             return;
         }
@@ -520,13 +545,13 @@ void Menu::PromptBatchRestoreTargets(
             // ask this save again, one by one (a shared answer would just repeat the clash).
             App::Push<OptionBox>("This user already gets another backup of this game. Choose another user, or restore one backup on its own."_i18n, "OK"_i18n,
                 [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions](auto) {
-                    if ((*seeds)[step].save_data_type == FsSaveDataType_Account) PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
+                    if ((*seeds)[step].save_data_type == FsSaveDataType_Account) PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, nullptr, false);
                 });
             return;
         }
 
         (*resolved_targets)[step] = std::move(*target);
-        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid);
+        PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid, auto_match);
     };
 
     const auto& current_seed = (*seeds)[step];
@@ -552,6 +577,14 @@ void Menu::PromptBatchRestoreTargets(
         return;
     }
 
+    // the backup's own user when it is clear: no question for this save.
+    if (auto_match) {
+        if (const auto matched = MatchedUser(current_seed, *accounts)) {
+            resolve_for_uid(&*matched);
+            return;
+        }
+    }
+
     // shared_uid: null = ask for every save; empty = ask once now; set = the user already answered.
     if (shared_uid && shared_uid->has_value()) {
         resolve_for_uid(&shared_uid->value());
@@ -570,7 +603,7 @@ void Menu::PromptBatchRestoreTargets(
             return;
         }
         if (shared_uid && *op_index == static_cast<s64>(accounts->size())) {
-            PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions);
+            PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, nullptr, false);
             return;
         }
         if (*op_index >= static_cast<s64>(accounts->size())) {
