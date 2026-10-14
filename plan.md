@@ -354,6 +354,14 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable shipped in v0.14.027 on the existing
       Dump → "USB transfer (Switch 2 Switch)" path (sender = usb:hs host, tinfoil protocol, receiver = PC Install
       (USB)); the 2026-10-07 note that cable was impossible was wrong — sphaira's uploader already runs the console as host.
+- [ ] F.16 **Delete homebrew with its folder and forwarder** (user, 2026-10-14). Homebrew menu Delete today removes only
+      the `.nro` (`homebrew_ops.cpp:233-265`). New: one question "only the NRO / the NRO and its folder" when the NRO
+      has its own folder (`/switch/<name>/<name>.nro`, or another folder holding only this NRO's files; never `/switch/`
+      itself), listing the folder size. Forwarders that start this NRO are listed in the same question and deleted with
+      it (`nsDeleteApplicationCompletely`). Finding them: Hub-made forwarders by title ID = `owo_default_title_id` of
+      every spelling of the path (with and without `sdmc:`, quoted); forwarders made by other tools by reading
+      `/nextNroPath` from the romfs of installed apps whose title ID is not `0100…`. Fix on the way: the existing lookup
+      at `homebrew_ops.cpp:189-191` hashes the path without `sdmc:`, so it misses forwarders made by `App::Install`.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.

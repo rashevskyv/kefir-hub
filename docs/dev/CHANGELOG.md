@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## unreleased
+- docs: plan.md F.16 — delete homebrew together with its folder and forwarders (queued, not started).
+
 ## v0.14.086 — Bulk restore: no list in the confirmation, a whole-job bar, big saves last, "Checking backups N / M"; HOME icon stays first after installs
 - Owner on .85: the confirmation showed 6 of 40 rows (pointless: the user just picked them) → "Saves to restore: N". `ProgressBox::SetOverall(done, total)` draws a second bar "Done: 3 / 40 · %" above the item bar (box 360 px). `ExecuteRestore` orders the saves by backup size (`BackupBytes`: archive size or the files of a folder), smallest first, so a full console memory hits the big ones last. `PlanRestoreCreation(…, step, count)`: "Checking backups..." + "i / N" in a bulk restore (was "Checking backup..." per save).
 - Owner: after installs the Kefir Hub HOME icon ended up last. After each pushed application record, a Hub running as a title calls `nsTouchApplication(own program id)` (yati_metadata.cpp) so its icon stays first. Unverified that HOME sorts by this event.
