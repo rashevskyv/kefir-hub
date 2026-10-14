@@ -194,12 +194,23 @@ Menu::~Menu() {
     }
     if (m_thread_created) {
         const TimeStamp join_ts;
+        // one signal wakes only one blocked transfer (the event clears itself), and the worker can
+        // block in several in a row (the live queue poll, then the finish): signal until it is gone.
+        while (R_FAILED(waitSingleHandle(m_thread.handle, 50'000'000))) {
+            if (m_usb_source) {
+                m_usb_source->SignalCancel();
+            }
+        }
         threadWaitForExit(&m_thread);
         threadClose(&m_thread);
         log_write("[PERF] dbi session worker joined in %zums\n", (size_t)join_ts.GetMs());
     }
     m_screensaver.FlushPendingBrightness();
-    m_usb_source.reset();
+    {
+        const TimeStamp ts;
+        m_usb_source.reset();
+        log_write("[PERF] dbi usb source closed in %zums\n", (size_t)ts.GetMs());
+    }
 
     if (m_was_mtp_enabled) {
         // turning MTP on scans every save and title: with a progress box after this menu is gone
@@ -216,10 +227,12 @@ Menu::~Menu() {
         }}, false);
     } else {
         if (App::GetHddEnable()) {
+            const TimeStamp ts;
             if (App::GetWriteProtect()) {
                 usbHsFsSetFileSystemMountFlags(UsbHsFsMountFlags_ReadOnly);
             }
             usbHsFsInitialize(1);
+            log_write("[PERF] usb drives back in %zums\n", (size_t)ts.GetMs());
         }
     }
 }

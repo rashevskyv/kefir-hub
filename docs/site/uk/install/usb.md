@@ -30,6 +30,11 @@
 6. Відкриється черга. Перевірте сховища й розміри, виберіть потрібне й натисніть **A** ([[Install selected]]).
 7. Дочекайтеся [[Session summary]].
 
+<!-- draft
+- after the [[Session summary]], **B** ([[Back]]) goes back to the queue list only while the PC is connected (cable in and the PC app talking to the console); with no PC it closes the session at once
+- leaving the session no longer freezes the screen for seconds
+-->
+
 Черга, екран ходу встановлення, згортання, вимкнення екрана та підсумок працюють так само, як для файлів на карті пам'яті. Див. [Перегляньте чергу](sd-card.md#queue) і наступні розділи.
 
 <!-- shot: install-usb-waiting | PC Install (USB) waiting screen with the USB 2.0 badge -->

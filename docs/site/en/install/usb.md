@@ -30,6 +30,11 @@ Turn installing on first (see [Turn installing on](index.md#enable)).
 6. The queue opens. Check the targets and sizes, select what you want, and press **A** ([[Install selected]]).
 7. Wait for the [[Session summary]].
 
+<!-- draft
+- after the [[Session summary]], **B** ([[Back]]) goes back to the queue list only while the PC is connected (cable in and the PC app talking to the console); with no PC it closes the session at once
+- leaving the session no longer freezes the screen for seconds
+-->
+
 The queue, the progress screen, minimizing, screen off and the summary work the same as for files on the microSD card. See [Review the queue](sd-card.md#queue) and the sections after it.
 
 <!-- shot: install-usb-waiting | PC Install (USB) waiting screen with the USB 2.0 badge -->

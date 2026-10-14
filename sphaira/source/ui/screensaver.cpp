@@ -232,8 +232,12 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     };
 
     if (FieldEnabled(SaverField_Speed)) {
-        char buf[32]{};
-        std::snprintf(buf, sizeof(buf), "%.1f MiB/s", info.speed_mib);
+        char buf[96]{};
+        if (info.now_mib >= 0.0) {
+            std::snprintf(buf, sizeof(buf), "%.1f MiB/s (%s %.1f)", info.now_mib, "Average"_i18n.c_str(), info.speed_mib);
+        } else {
+            std::snprintf(buf, sizeof(buf), "%.1f MiB/s", info.speed_mib);
+        }
         add_stat(buf);
     }
     if (FieldEnabled(SaverField_Eta) && !info.eta.empty()) {

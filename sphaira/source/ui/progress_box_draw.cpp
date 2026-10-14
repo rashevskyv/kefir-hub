@@ -255,6 +255,15 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         info.file = transfer;
         info.ratio = size > 0 ? std::clamp(static_cast<double>(offset) / static_cast<double>(size), 0.0, 1.0) : 0.0;
         info.speed_mib = average_speed / (1024.0 * 1024.0);
+        // "Now" as on the plot: the last few samples.
+        if (graph_count) {
+            const size_t k = std::min<size_t>(graph_count, 4);
+            s64 sum = 0;
+            for (size_t i = 0; i < k; i++) {
+                sum += graph[(graph_index + graph.size() - 1 - i) % graph.size()];
+            }
+            info.now_mib = static_cast<double>(sum) / static_cast<double>(k) / (1024.0 * 1024.0);
+        }
         if (average_speed >= 1.0) {
             info.eta = ShortDuration(static_cast<double>(left_bytes) / average_speed);
         }

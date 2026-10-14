@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.077 — Saver shows current speed; USB PC install: Back closes when the PC is gone, faster exit; safer Hub and Kefir updates
+- Saver of a long job: `SaverInfo::now_mib` (the plot's "Now") shown as "X MiB/s (Average Y)" (owner on .103; installs keep one figure). 0.14.076 was skipped (built while sources changed).
+- USB PC install (owner: Back after the graph shows the queue list even with no PC, and leaving it freezes ~3 s): Back on the summary closes the session when `usbDsGetState` is not Configured; `dbi::Menu::~Menu` re-signals the USB cancel every 50 ms until the worker exits (the self-clearing event woke only one of the blocked transfers: live-queue poll 1 s + finish 0.25 s); `[PERF]` for the usb source close and the usb drive re-init.
+- Updates (audit of Kefir/Hub update edge cases): Hub self-update checks the NRO header and its size and swaps through `<dest>.new` (a cut download or a full card no longer leaves a broken Hub); the download temp file is truncated on open; firmware install: Stop works while preparing and is deferred during the apply; Kefir install extracts to `/kefir.new` and replaces `/kefir` only after a complete extract.
+- host tests: pass (quick, i18n contract) · nro: built · switch: pending (USB install Back with/without PC; [PERF] lines; Hub update; Kefir update).
+
 ## v0.14.075 — Progress box: figures change once a second; Minus / inactivity timeout starts the screensaver for long jobs
 - Owner on .103 (0.14.074 fills fine): the figures flickered several times a second before the speed settled. Now the samples are taken once a second and Average / Time left are computed with them, so every number moves once a second (the graph keeps 120 s of history).
 - Owner request: a screensaver for long jobs, handy on OLED. A box with the speed graph (fill with zeros) gets Minus "Screen off" in the footer and also starts the saver after the "Inactivity timeout" of the settings; the saver shows the action, the step with written / total, average speed, time left, time elapsed, the bar and the write graph (read line hidden, `SaverInfo::has_read`); the "Installed" counter is shown only when there are packages. Any input brings the box back without stopping the job.

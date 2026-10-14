@@ -178,13 +178,26 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
         R_THROW(Result_AppstoreFailedZipDownload);
     }
 
+    // the Kefir payload installs from /kefir at the next boot: a broken archive or a Stop half-way
+    // must leave the old /kefir whole. Extract next to it, swap only after a complete extract.
+    constexpr fs::FsPath KEFIR_STAGING{"/kefir.new"};
+    if (fs.DirExists(KEFIR_STAGING)) {
+        R_TRY(fs.DeleteDirectoryRecursively(KEFIR_STAGING));
+    }
+    ON_SCOPE_EXIT(
+        if (fs.DirExists(KEFIR_STAGING)) {
+            fs.DeleteDirectoryRecursively(KEFIR_STAGING);
+        }
+    );
+    R_TRY(fs.CreateDirectoryRecursively(KEFIR_STAGING));
+
+    pbox->NewTransfer("Extracting to /kefir...");
+    R_TRY(thread::TransferUnzipAll(pbox, AMS_ZIP, &fs, KEFIR_STAGING));
+
     if (fs.DirExists(KEFIR_PATH)) {
         R_TRY(fs.DeleteDirectoryRecursively(KEFIR_PATH));
     }
-    R_TRY(fs.CreateDirectoryRecursively(KEFIR_PATH));
-
-    pbox->NewTransfer("Extracting to /kefir...");
-    R_TRY(thread::TransferUnzipAll(pbox, AMS_ZIP, &fs, KEFIR_PATH));
+    R_TRY(fs.RenameDirectory(KEFIR_STAGING, KEFIR_PATH));
     R_TRY(fs.Commit());
 
     if (fs.FileExists("/kefir/payload.bin")) {

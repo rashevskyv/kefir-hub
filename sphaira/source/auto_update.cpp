@@ -4,6 +4,7 @@
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "nro.hpp"
 #include "path_util.hpp"
 #include "ui/progress_box.hpp"
 
@@ -217,6 +218,53 @@ fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path) {
     return "/switch/kefir-hub/kefir-hub.nro";
 }
 
+namespace {
+
+// a download cut short or an error page saved as the update must never replace a working Hub:
+// the file has to start with an NRO header and be at least as long as that header says.
+bool IsCompleteNro(fs::FsNativeSd& fs, const fs::FsPath& path, s64* out_size) {
+    fs::File file;
+    if (R_FAILED(fs.OpenFile(path, FsOpenMode_Read, &file))) {
+        return false;
+    }
+    if (R_FAILED(file.GetSize(out_size))) {
+        return false;
+    }
+    struct {
+        NroStart start;
+        NroHeader header;
+    } head{};
+    u64 bytes_read{};
+    if (R_FAILED(file.Read(0, &head, sizeof(head), FsReadOption_None, &bytes_read)) || bytes_read != sizeof(head)) {
+        return false;
+    }
+    if (R_FAILED(nro_verify(std::span{reinterpret_cast<const u8*>(&head), sizeof(head)}))) {
+        return false;
+    }
+    return head.header.size >= sizeof(head) && static_cast<s64>(head.header.size) <= *out_size;
+}
+
+// copy next to the destination first, check the size, then swap: a full card or a power cut
+// during the copy leaves the old file in place instead of half a new one.
+bool ReplaceWithCopy(fs::FsNativeSd& fs, const fs::FsPath& dest, const fs::FsPath& src, s64 size) {
+    const fs::FsPath next{std::string{dest.s} + ".new"};
+    fs.DeleteFile(next);
+    s64 copied{-1};
+    if (R_FAILED(fs.copy_entire_file(next, src)) || !IsCompleteNro(fs, next, &copied) || copied != size) {
+        log_write("[AutoUpdate] Failed to copy %s to %s (%lld of %lld bytes)\n", src.s, next.s, (long long)copied, (long long)size);
+        fs.DeleteFile(next);
+        return false;
+    }
+    fs.DeleteFile(dest);
+    if (R_FAILED(fs.RenameFile(next, dest))) {
+        log_write("[AutoUpdate] Failed to rename %s to %s\n", next.s, dest.s);
+        return false;
+    }
+    return true;
+}
+
+} // namespace
+
 bool InstallNroUpdate(const fs::FsPath& staging_path, const fs::FsPath& dest_path, bool replace_hbmenu) {
     fs::FsNativeSd fs;
     if (!fs.FileExists(staging_path)) {
@@ -224,36 +272,20 @@ bool InstallNroUpdate(const fs::FsPath& staging_path, const fs::FsPath& dest_pat
         return false;
     }
 
-    fs::File file;
-    if (R_FAILED(fs.OpenFile(staging_path, FsOpenMode_Read, &file))) {
-        log_write("[AutoUpdate] Failed to open staging file: %s\n", staging_path.s);
-        return false;
-    }
-
     s64 file_size = 0;
-    const Result rc = file.GetSize(&file_size);
-    file.Close();
-
-    if (R_FAILED(rc) || file_size < 1024) {
-        log_write("[AutoUpdate] Staging file too small: %ld bytes\n", file_size);
+    if (!IsCompleteNro(fs, staging_path, &file_size)) {
+        log_write("[AutoUpdate] Staging file is not a complete NRO: %s (%lld bytes)\n", staging_path.s, (long long)file_size);
         return false;
     }
 
     fs.CreateDirectoryRecursivelyWithPath(dest_path);
 
-    // Delete existing destination file before copy to ensure clean overwrite
-    fs.DeleteFile(dest_path);
-
-    if (R_FAILED(fs.copy_entire_file(dest_path, staging_path))) {
-        log_write("[AutoUpdate] Failed to copy %s to %s\n", staging_path.s, dest_path.s);
+    if (!ReplaceWithCopy(fs, dest_path, staging_path, file_size)) {
         return false;
     }
 
-    if (replace_hbmenu) {
-        fs.DeleteFile("/hbmenu.nro");
-        if (R_FAILED(fs.copy_entire_file("/hbmenu.nro", staging_path))) {
-            log_write("[AutoUpdate] Warning: failed to copy update to /hbmenu.nro\n");
-        }
+    if (replace_hbmenu && !ReplaceWithCopy(fs, "/hbmenu.nro", staging_path, file_size)) {
+        log_write("[AutoUpdate] Warning: failed to copy update to /hbmenu.nro\n");
     }
 
     return true;

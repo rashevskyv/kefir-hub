@@ -455,6 +455,8 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
     pbox->NewTransfer("Preparing system update...");
 
     while (true) {
+        // nothing is written to the system until the apply below: Stop is safe here.
+        R_TRY(pbox->ShouldExitResult());
         rc = asyncResultWait(&prepare, 0);
         if (R_FAILED(rc) && rc != 0xea01) {
             return rc;
@@ -476,6 +478,11 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
     }
 
     HeapProbe("prepare");
+    // last point where Stop leaves the console as it was. From here on a confirmed Stop waits for
+    // the end: a firmware applied half-way does not boot.
+    R_TRY(pbox->ShouldExitResult());
+    pbox->SetCancelDeferred(true);
+    ON_SCOPE_EXIT(pbox->SetCancelDeferred(false));
     if (apply_downgrade_fix) {
         pbox->NewTransfer("Staging downgrade fix...");
         DowngradeFixResult fix{};

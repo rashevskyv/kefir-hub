@@ -124,6 +124,11 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
             log_write("failed to open file: %s\n", tmp_buf.s);
             return {};
         }
+        // a temp file left by an earlier, longer download keeps its tail after the new bytes.
+        if (R_FAILED(chunk.f.SetSize(0))) {
+            log_write("failed to truncate file: %s\n", tmp_buf.s);
+            return {};
+        }
 
         // only add etag if the dst file still exists.
         if ((e.GetFlags() & Flag_Cache) && fs::FileExists(&fs.m_fs, e.GetPath())) {

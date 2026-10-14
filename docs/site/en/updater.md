@@ -61,6 +61,10 @@ After the reboot the update finishes by itself. You do not need to do anything.
 
 Press **B** in the changelog window to cancel. Nothing is downloaded until you press [[Install]].
 
+<!-- draft
+- the new Kefir is unpacked next to the old one first; the old /kefir is replaced only when the archive unpacked completely, so a broken download or **B** during unpacking leaves the previous Kefir to install at the next reboot
+-->
+
 ## Update the firmware
 
 1. In the **FIRMWARE** section, select a version and press **A**.
@@ -75,6 +79,11 @@ Press **B** in the changelog window to cancel. Nothing is downloaded until you p
 <!-- shot: updater-firmware-confirm | Install firmware prompt with version, sysMMC/emuMMC target, FAT32 + exFAT line, Cancel / Install buttons -->
 
 The downloaded firmware files (`/firmware` and the archive) are deleted after a successful install.
+
+<!-- draft
+- **B** (Stop) works while the update is being prepared ("Preparing system update..."); nothing on the console changes then
+- once "Applying system update..." starts, Stop waits for the end: a firmware cut off half-way would not boot
+-->
 
 ## Install a firmware from the memory card
 
@@ -161,6 +170,10 @@ With [[Ask]], this prompt appears once per launch when a new version exists:
 <!-- shot: updater-hub-update-prompt | "A new version is available. Update now?" prompt with Later / Skip this update / Update -->
 
 The update replaces the Kefir Hub file you started. If [[Replace hbmenu on exit]] is on, `/hbmenu.nro` is replaced too.
+
+<!-- draft
+- the downloaded Kefir Hub file is checked before it replaces the running one (it must be a complete NRO); an interrupted download or a full memory card leaves the current Kefir Hub working
+-->
 
 ## Options
 

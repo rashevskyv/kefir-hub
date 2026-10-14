@@ -43,6 +43,7 @@ struct SaverInfo {
     size_t failed{};
     double ratio{};            // whole-queue progress, 0..1
     double speed_mib{};        // average write rate
+    double now_mib{-1.0};      // current rate, shown before the average when set (>= 0)
     std::string eta{};         // empty until there are enough samples
     u64 elapsed_ns{};
 

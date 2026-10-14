@@ -61,6 +61,10 @@
 
 Щоб скасувати, натисніть **B** у вікні змін. Нічого не завантажується, доки ви не натиснете [[Install]].
 
+<!-- draft
+- the new Kefir is unpacked next to the old one first; the old /kefir is replaced only when the archive unpacked completely, so a broken download or **B** during unpacking leaves the previous Kefir to install at the next reboot
+-->
+
 ## Оновіть прошивку
 
 1. У розділі **FIRMWARE** виберіть версію й натисніть **A**.
@@ -75,6 +79,11 @@
 <!-- shot: updater-firmware-confirm | Install firmware prompt with version, sysMMC/emuMMC target, FAT32 + exFAT line, Cancel / Install buttons -->
 
 Після успішного встановлення завантажені файли прошивки (`/firmware` і архів) видаляються.
+
+<!-- draft
+- **B** (Stop) works while the update is being prepared ("Preparing system update..."); nothing on the console changes then
+- once "Applying system update..." starts, Stop waits for the end: a firmware cut off half-way would not boot
+-->
 
 ## Установіть прошивку з карти пам'яті
 
@@ -162,6 +171,10 @@ Kefir Hub перевіряє наявність власної нової вер
 <!-- shot: updater-hub-update-prompt | "A new version is available. Update now?" prompt with Later / Skip this update / Update -->
 
 Оновлення замінює той файл Kefir Hub, з якого ви його запустили. Якщо ввімкнено [[Replace hbmenu on exit]], замінюється також `/hbmenu.nro`.
+
+<!-- draft
+- the downloaded Kefir Hub file is checked before it replaces the running one (it must be a complete NRO); an interrupted download or a full memory card leaves the current Kefir Hub working
+-->
 
 ## Параметри
 

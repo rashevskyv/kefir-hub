@@ -56,6 +56,15 @@ void Menu::UpdateActions() {
         SetAction(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }});
     } else if (state == State::Summary && !m_session_failed) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
+            // the queue list is there to send more from the PC: with the cable out (or the PC not
+            // talking to the console) nothing can come, so Back closes the session instead.
+            UsbState usb_state{UsbState_Detached};
+            if (m_usb_source && (R_FAILED(usbDsGetState(&usb_state)) || usb_state != UsbState_Configured)) {
+                log_write("[dbi] summary Back: PC not connected (usb state %d), closing the session\n", (int)usb_state);
+                m_should_exit = true;
+                SetPop();
+                return;
+            }
             {
                 SCOPED_MUTEX(&m_mutex);
                 RecomputePlan(true);
