@@ -3,19 +3,22 @@
 Kefir Hub встановлює ігри, оновлення та DLC з файлів-пакетів. Ця сторінка допоможе вибрати спосіб і пояснює налаштування, спільні для всіх способів.
 
 !!! warning
-    За встановлення ігор, які ви не купували, консоль можуть заблокувати в онлайн-сервісах Nintendo. Перш ніж увімкнути встановлення, Kefir Hub показує попередження [[WARNING: Installing apps will lead to a ban!]].
+    За встановлення ігор, які ви не купували, консоль можуть заблокувати в онлайн-сервісах Nintendo.
 
-## Увімкніть встановлення {#enable}
+## Попередження про бан на sysMMC {#ban-warning}
 
-Доки ви його не ввімкнете, встановлення вимкнене. Для sysMMC і для emuMMC є окремі перемикачі.
+<!-- draft
+- Installing is always allowed. There is no switch to turn installing on.
+- On emuMMC Kefir Hub shows no warning before an install.
+- On sysMMC Kefir Hub shows [[This console is running sysMMC. Installing here can get the console banned from Nintendo online services.]] before the install starts, with the buttons [[Back]], [[Install]] and [[Don't show again]].
+- [[Back]] cancels the install. [[Install]] starts it, and the warning appears again next time. [[Don't show again]] turns the warning off and starts the install.
+- The warning appears before every install from: the File Browser (Install, Install recursively, **A** on an NSP or XCI file), Install Forwarder in the File Browser and in Homebrew, Ownfoil, Console Transfer (receive games), and PC Install (USB).
+- MTP and network stream installs (FTP, the web server) show no warning.
+- To turn the warning back on: [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]]. The same option is in the sidebar, Menu (**Y**) → Advanced → Install options.
+- Ini key `install_ban_warning`. Default: on.
+-->
 
-1. Відкрийте [[Tools]] → [[Settings]] → [[Install]].
-2. Виберіть [[Enable sysMMC]] або [[Enable emuMMC]] — залежно від того, що у вас запущено.
-3. Прочитайте попередження й виберіть [[Enable]].
-
-Якщо почати встановлення з файлового менеджера, коли воно вимкнене, Kefir Hub запитає [[Installing is disabled, enable now?]]. Виберіть [[Enable]], і з'явиться те саме попередження.
-
-<!-- shot: install-index-enable-warning | Ban warning dialog with Back and Enable buttons -->
+<!-- shot: install-index-ban-warning | Ban warning dialog on sysMMC with Back, Install and Don't show again buttons -->
 
 <!-- draft
 - after a game is installed, Kefir Hub keeps its own HOME Menu icon first when it was started from that icon; before, every install pushed it to the end of the list
@@ -66,8 +69,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 | Параметр | Що робить | Типово |
 |---|---|---|
-| [[Enable sysMMC]] | Дозволяє встановлення, коли запущено sysMMC. | Вимк. |
-| [[Enable emuMMC]] | Дозволяє встановлення, коли запущено emuMMC. | Вимк. |
+| [[Ban warning on sysMMC]] | Попереджає перед кожним встановленням, коли консоль працює на sysMMC, див. [Попередження про бан на sysMMC](#ban-warning). | Увімк. |
 | [[Install location]] | Куди йдуть пакети, див. [Куди встановлюються ігри](#location). | [[Automatic]] |
 | [[Allow downgrade]] | Дозволяє встановити оновлення, старіше за встановлене. Коли вимкнено, старіше оновлення пропускається. | Вимк. |
 | [[Skip if already installed]] | Що робити з уже встановленим вмістом: [[Reinstall]], [[Skip]] або [[Prompt]] (щоразу питати [[Already installed. Reinstall?]]). | [[Skip]] |
@@ -117,8 +119,6 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 ## Проблеми {#problems}
 
 Після встановлення будь-яким способом (через файловий менеджер, ПК, MTP, FTP або браузер), якщо залишається оновлення або DLC без основної гри, Kefir Hub приблизно через п'ять секунд після останнього файлу показує одне вікно зі списком таких назв із написом «Installed without the base game». Параметр [[Keep]] (типово) залишає їх, а [[Delete]] видаляє їх (збереження залишаються). Залишайте їх, якщо основна гра на картриджі, або встановіть основну гру згодом. Це вікно також з'являється для черги DBI/PC.
-
-**Повідомлення про вимкнене встановлення радить шлях через Menu (Y) → Advanced.** Цей шлях застарів. Увімкніть встановлення в [[Tools]] → [[Settings]] → [[Install]] (див. [Увімкніть встановлення](#enable)).
 
 **Гру встановлено, але консоль каже, що запустити її поки не можна.** Грі потрібна новіша системна прошивка, ніж на консолі. Оновіть прошивку й Kefir (див. [Оновлення](../updater.md)). Перевстановлювати гру не потрібно.
 

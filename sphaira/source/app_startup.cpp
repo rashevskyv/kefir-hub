@@ -302,8 +302,7 @@ App::App(const char* argv0) {
             else if (app->m_left_menu.LoadFrom(Key, Value)) {}
             else if (app->m_right_menu.LoadFrom(Key, Value)) {}
             else if (app->m_god_mode.LoadFrom(Key, Value)) {}
-            else if (app->m_install_sysmmc.LoadFrom(Key, Value)) {}
-            else if (app->m_install_emummc.LoadFrom(Key, Value)) {}
+            else if (app->m_install_ban_warning.LoadFrom(Key, Value)) {}
             else if (app->m_install_location.LoadFrom(Key, Value)) {}
             else if (app->m_forwarder_address_space.LoadFrom(Key, Value)) {}
             else if (app->m_forwarder_profile_select.LoadFrom(Key, Value)) {}

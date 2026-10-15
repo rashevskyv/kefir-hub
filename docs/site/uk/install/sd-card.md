@@ -4,7 +4,9 @@
 
 **Де:** [[Tools]] → [[File Browser]]
 
-Спершу увімкніть встановлення (див. [Увімкніть встановлення](index.md#enable)).
+<!-- draft
+- On sysMMC Kefir Hub shows the ban warning before the install queue opens. See [Ban warning on sysMMC](index.md#ban-warning).
+-->
 
 ## Встановіть один файл {#one-file}
 

@@ -3276,5 +3276,9 @@
   "the romfs folder has no files": "romfsフォルダーにファイルがありません",
   "no romfs folder": "romfsフォルダーがありません",
   "packed": "パックス済み",
-  "romfs.bin already exists": "romfs.bin はすでに存在します"
+  "romfs.bin already exists": "romfs.bin はすでに存在します",
+  "Don't show again": "今後表示しない",
+  "Ban warning on sysMMC": "sysMMCでのBAN警告",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "この本体はsysMMCで動作しています。ここにインストールすると、任天堂のオンラインサービスから本体がBANされる可能性があります。",
+  "Warn before every install while the console runs sysMMC.": "sysMMC起動中はインストールごとに警告する。"
 }

@@ -353,7 +353,7 @@ void AddInstallShareOptions(Sidebar* options) {
 
 #if ENABLE_NETWORK_INSTALL
     options->Add<SidebarEntryCallback>("PC Install (USB)"_i18n, [](){
-        App::Push<ui::menu::dbi::Menu>(MenuFlag_None);
+        App::ConfirmInstall([](){ App::Push<ui::menu::dbi::Menu>(MenuFlag_None); });
     }, "Install games from a PC over USB: DBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy."_i18n);
 #endif
 

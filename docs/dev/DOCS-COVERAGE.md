@@ -54,7 +54,8 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 ## Install
 | Feature | UI | Code | Page | Status |
 |---|---|---|---|---|
-| Install enable switch + ban warning | Settings → Install | settings_categories.cpp:137-168 | install/index#enable | doc (USB/MTP/FTP/web skip the switch: bug) |
+| Install enable switch (Enable sysMMC/emuMMC) | Settings → Install | — | — | removed in v0.14.090 |
+| Ban warning on sysMMC (before each install, Don't show again) | Settings → Install; sidebar Menu (Y) → Advanced → Install options | app_settings.cpp (ConfirmInstall), app_display_options.cpp | install/index#ban-warning | doc (TODO verify: network share installs) |
 | Methods, formats, Applet Mode NSZ limit | — | filebrowser_assoc.hpp:43, yati.cpp:403 | install/index#methods, #formats | doc |
 | Install location (5 modes), auto balancing, reserve space, per-package target | Settings → Install; queue options | install_plan.hpp, dbi_menu_options.cpp | install/index#location | doc |
 | Install options (3 groups) | Settings → Install | settings_categories.cpp:436-514 | install/index#install-options | doc |

@@ -2,7 +2,7 @@
 **Length:** ~5.5 min · **Docs:** install/index.md, install/sd-card.md, install/usb.md, install/mtp.md
 **Before recording:**
 - Console UI language: Ukrainian. Kefir Hub started in Title Mode (game held with R, or the Title Mode forwarder icon).
-- Installing is **Off** for the running system (Settings → Install → Enable sysMMC / Enable emuMMC), so scenes 5–6 can turn it on. Install location: Automatic.
+- Installing is always allowed. Run on sysMMC so the ban warning shows: Settings → Install → Ban warning on sysMMC is **On** (default). Install location: Automatic.
 - microSD: a folder such as `/games` with 3 small NSP/NSZ files of games you own, one subfolder with another package (for Install recursively), and one broken `.nsp` (for example a truncated copy) for the Analysis failed row.
 - None of the games used in this video is installed yet (Skip if already installed = Skip would skip them). Uninstall them between takes.
 - Enough free space on the microSD card and in system memory for all test packages.
@@ -16,8 +16,8 @@
 | 2 | talking head | — | Спершу попередження. За встановлення ігор, які ви не купували, консоль можуть заблокувати в онлайн-сервісах Nintendo. | First, a warning. Installing games you did not buy can get your console banned from Nintendo's online services. |
 | 3 | talking head | — | Kefir Hub встановлює файли NSP, NSZ, XCI і XCZ. NSZ і XCZ — це стиснені файли, вони розпаковуються під час встановлення й потребують більше пам'яті. | Kefir Hub installs NSP, NSZ, XCI and XCZ files. NSZ and XCZ are compressed; they are unpacked during the install and need more memory. |
 | 4 | HOME Menu: Kefir Hub icon | Start Kefir Hub from the Title Mode icon | Тому запускайте Kefir Hub у режимі тайтла: затисніть R під час запуску гри або скористайтеся іконкою Kefir Hub у HOME Menu. Як її додати, показано в першому відео. | So start Kefir Hub in Title Mode: hold R while you start a game, or use the Kefir Hub icon on the HOME Menu. The first video shows how to add it. |
-| 5 | install-index-settings-install | Tools, Settings, Install | Встановлення спершу вимкнене. Відкрийте «Інструменти», «Налаштування», «Встановити». | Installing is off at first. Open Tools, Settings, Install. |
-| 6 | install-index-enable-warning | Select Enable sysMMC (or Enable emuMMC), then Enable | Виберіть «Увімкнути на sysMMC» або «Увімкнути на emuMMC», залежно від того, що у вас запущено. Прочитайте попередження й виберіть «Увімкнути». | Choose "Enable sysMMC" or "Enable emuMMC", depending on which one you are running. Read the warning and choose Enable. |
+| 5 | install-index-settings-install | Tools, Settings, Install | Відкрийте «Інструменти», «Налаштування», «Встановити». Тут є пункт «Попередження про бан на sysMMC». | Open Tools, Settings, Install. Here is the option Ban warning on sysMMC. |
+| 6 | install-index-ban-warning | Start any install on sysMMC (for example scene 9); the warning appears; choose Install | На sysMMC перед кожним встановленням з'являється попередження про бан. Виберіть «Встановити», щоб продовжити. Вибір «Не показувати знову» вимикає попередження. | On sysMMC a ban warning appears before every install. Choose Install to go on. Don't show again turns the warning off. |
 | 7 | install-index-settings-install | Highlight Install location | Пункт «Ставити в» визначає, куди піде гра: на карту пам'яті чи в пам'ять системи. Типове значення «Автоматично» вибирає сховище так, щоб вільне місце на обох лишалося якомога рівнішим. | "Install location" decides where a game goes: the microSD card or system memory. The default, Automatic, picks the storage that keeps free space on both as even as possible. |
 | 8 | file-browser-list | B back to Tools, open File Browser, go to /games | Почнемо з карти пам'яті. Відкрийте «Інструменти», «Файловий браузер» і перейдіть до папки з іграми. | Let's start with the microSD card. Open Tools, File Browser, and go to the folder with your games. |
 | 9 | install-sd-card-queue-review | Highlight one NSP, press A | Щоб встановити один файл, наведіть на нього й натисніть A. Відкриється «Черга встановлення». Вона спершу перевіряє файл і ще нічого не встановлює. | To install one file, highlight it and press A. The Install queue opens. It checks the file first and does not install anything yet. |
@@ -49,6 +49,6 @@
 | 35 | index-tools-tab | — | Детальніше читайте на сторінці «Встановлення ігор» у документації. Там є окремі сторінки для карти пам'яті, USB і MTP. | For more, read the Installing games page in the documentation. It has separate pages for the microSD card, USB and MTP. |
 
 ## Open questions
-- install/index.md: plan D.2 removes the Enable sysMMC / Enable emuMMC switch. Scenes 5–6 stay until then; cut them and re-record when D.2 ships. (TODO(verify))
+- install/index.md: the ban warning dialog (scene 6) and the option screen (scene 5) are not recorded yet. Record them on sysMMC; the old enable footage is obsolete. (TODO(verify))
 - install/usb.md: does Windows need a USB driver (for example libusbK via Zadig) for DBI Backend / ns-usbloader? Not mentioned in the voiceover. (TODO(verify))
 - install/usb.md: which DBI Backend Qt version supports the live queue (scene 24), and where to download it? (TODO(verify))

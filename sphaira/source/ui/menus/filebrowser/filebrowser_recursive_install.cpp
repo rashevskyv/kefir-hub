@@ -71,11 +71,6 @@ auto FsView::GetRecursiveInstallTargets() const -> std::vector<fs::FsPath> {
 }
 
 void FsView::InstallFolderRecursively() {
-    if (!App::GetInstallEnable()) {
-        App::ShowEnableInstallPrompt();
-        return;
-    }
-
     const auto root_paths = GetRecursiveInstallTargets();
     if (root_paths.empty()) {
         return;

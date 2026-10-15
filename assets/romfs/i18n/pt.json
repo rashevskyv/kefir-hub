@@ -3303,5 +3303,9 @@
   "the romfs folder has no files": "a pasta romfs não tem ficheiros",
   "no romfs folder": "nenhuma pasta romfs",
   "packed": "empacotado",
-  "romfs.bin already exists": "romfs.bin já existe"
+  "romfs.bin already exists": "romfs.bin já existe",
+  "Don't show again": "Não voltar a mostrar",
+  "Ban warning on sysMMC": "Aviso de banimento na sysMMC",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Esta consola está a executar o sysMMC. Instalar aqui pode fazer com que a consola seja banida dos serviços online da Nintendo.",
+  "Warn before every install while the console runs sysMMC.": "Avisar antes de cada instalação enquanto a consola estiver a correr a sysMMC."
 }

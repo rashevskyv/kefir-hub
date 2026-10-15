@@ -1017,25 +1017,6 @@
                 "wait 1.5"
             ]
         },
-        "install-index-enable-warning": {
-            "ini": {
-                "config.install_emummc": "0",
-                "config.install_sysmmc": "0"
-            },
-            "steps": [
-                "R",
-                "wait 1",
-                "Down 2",
-                "Right",
-                "A",
-                "wait 1.5",
-                "Down 6",
-                "Right",
-                "Down",
-                "A",
-                "wait 1.5"
-            ]
-        },
         "users-nand-library": {
             "steps": [
                 "R",

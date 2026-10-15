@@ -49,9 +49,7 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
                 }
 
                 if (m_option_index == 0) {
-                    if (!App::GetInstallEnable()) {
-                        App::ShowEnableInstallPrompt();
-                    } else {
+                    App::ConfirmInstall([this](){
                         log_write("[GC] doing install A\n");
                         App::Push<ui::ProgressBox>(m_icon, "Installing "_i18n, m_entries[m_entry_index].lang_entry.name, [this](auto pbox) -> Result {
                             auto source = std::make_unique<GcSource>(m_entries[m_entry_index], m_fs.get());
@@ -63,7 +61,7 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
                                 App::Notify("Gc install success!"_i18n);
                             }
                         });
-                    }
+                    });
                 } else {
                     auto options = std::make_unique<Sidebar>("Select content to dump"_i18n, Sidebar::Side::RIGHT);
                     ON_SCOPE_EXIT(App::Push(std::move(options)));

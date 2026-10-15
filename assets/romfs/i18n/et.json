@@ -3271,5 +3271,9 @@
   "the romfs folder has no files": "romfs kaustas pole faile",
   "no romfs folder": "romfs-kausta pole",
   "packed": "pakitud",
-  "romfs.bin already exists": "romfs.bin on juba olemas"
+  "romfs.bin already exists": "romfs.bin on juba olemas",
+  "Don't show again": "Ära näita uuesti",
+  "Ban warning on sysMMC": "Banii hoiatus sysMMC-l",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "See konsool töötab sysMMC-l. Siia installimine võib tuua kaasa konsooli bännimise Nintendo võrguteenustest.",
+  "Warn before every install while the console runs sysMMC.": "Hoiata enne iga installimist, kui konsool töötab sysMMC-s."
 }

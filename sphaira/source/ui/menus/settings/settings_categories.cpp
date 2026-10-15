@@ -135,39 +135,6 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     return items;
 }
 
-void ToggleInstallOption(option::OptionBool& option) {
-    if (option.Get()) {
-        option.Set(false);
-        return;
-    }
-
-    App::Push<OptionBox>(
-        "WARNING: Installing apps will lead to a ban!"_i18n,
-        "Back"_i18n,
-        "Enable"_i18n,
-        0,
-        [&option](auto op_index){
-            if (op_index && *op_index) {
-                option.Set(true);
-                App::Notify("Installing enabled!"_i18n);
-            }
-        }
-    );
-}
-
-auto MakeInstallToggle(std::string label, std::string description, option::OptionBool& option) -> SettingsItem {
-    return {
-        std::move(label),
-        std::move(description),
-        [&option](){
-            return OnOff(option.Get());
-        },
-        [&option](){
-            ToggleInstallOption(option);
-        }
-    };
-}
-
 auto LanguageValue() -> std::string {
     const auto* def = i18n::FindLanguageByCode(App::GetLanguage());
     if (def) {
@@ -439,8 +406,7 @@ void Menu::BuildCategories() {
             "Install behavior and safety switches."_i18n,
             {
                 MakeHeader("Where and when"_i18n),
-                MakeInstallToggle("Enable sysMMC"_i18n, "Allow installing while running sysMMC."_i18n, app->m_install_sysmmc),
-                MakeInstallToggle("Enable emuMMC"_i18n, "Allow installing while running emuMMC."_i18n, app->m_install_emummc),
+                MakeOptionItem("Ban warning on sysMMC"_i18n, "Warn before every install while the console runs sysMMC."_i18n, app->m_install_ban_warning),
                 { "Install location"_i18n, "Choose system memory or microSD card."_i18n, [](){
                     const auto loc = App::GetInstallLocation();
                     if (loc >= 0 && loc < 5) {

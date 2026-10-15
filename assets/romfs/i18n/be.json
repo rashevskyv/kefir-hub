@@ -3271,5 +3271,9 @@
   "the romfs folder has no files": "папка romfs не змяшчае файлаў",
   "no romfs folder": "няма папкі romfs",
   "packed": "запакаваны",
-  "romfs.bin already exists": "romfs.bin ужо існуе"
+  "romfs.bin already exists": "romfs.bin ужо існуе",
+  "Don't show again": "Не паказваць зноў",
+  "Ban warning on sysMMC": "Папярэджанне аб бане на sysMMC",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Гэтая кансоль працуе на sysMMC. Устаноўка сюды можа прывесці да блакіроўкі кансолі ў онлайн-сервісах Nintendo.",
+  "Warn before every install while the console runs sysMMC.": "Папярэджваць перад кожнай устаноўкай, пакуль кансоль працуе на sysMMC."
 }

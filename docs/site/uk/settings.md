@@ -141,13 +141,11 @@ Kefir Hub перевіряє наявність нової версії один
 Поведінка встановлення і запобіжники. Що робить кожен параметр — на сторінці [Встановлення](install/index.md).
 
 !!! warning
-    Встановлення ігор може призвести до бану консолі. [[Enable sysMMC]] і [[Enable emuMMC]] вимкнені, доки ви
-    не підтвердите [[WARNING: Installing apps will lead to a ban!]] кнопкою [[Enable]].
+    Встановлення ігор може призвести до бану консолі. На sysMMC Kefir Hub попереджає перед кожним встановленням.
 
 | Параметр | Типово |
 |---|---|
-| [[Enable sysMMC]] | Вимк. |
-| [[Enable emuMMC]] | Вимк. |
+| [[Ban warning on sysMMC]] | Увімк. |
 | [[Install location]] | [[Automatic]] |
 | [[Allow downgrade]] | Вимк. |
 | [[Skip if already installed]] | [[Skip]] |
@@ -243,6 +241,6 @@ Kefir Hub перевіряє наявність нової версії один
 [[MTP]] і [[USB storage]] вимикають одне одного: Kefir Hub показує [[MTP turned off to free the USB port]] або
 [[USB storage turned off to free the USB port]]. Виберіть те, що вам потрібно.
 
-**Нічого не встановлюється.** Для системи, яку ви запустили, вимкнено [[Enable sysMMC]] або [[Enable emuMMC]]. Див. [Встановлення](install/index.md).
+**Кожне встановлення питає підтвердження.** Консоль працює на sysMMC, і [[Ban warning on sysMMC]] увімкнено. Виберіть [[Install]], щоб встановити. Виберіть [[Don't show again]], щоб вимкнути попередження. Див. [Встановлення](install/index.md#ban-warning).
 
 *Під час кожного запуску Kefir Hub показує [[Warning! Logs are enabled, Kefir Hub will run slowly!]]* Вимкніть [[Logging]].

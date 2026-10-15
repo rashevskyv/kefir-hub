@@ -170,16 +170,15 @@ void FsView::DisplayOptions() {
 
     if (m_entries_current.size()) {
         if (check_all_ext(INSTALL_EXTENSIONS)) {
-            auto entry = options->Add<SidebarEntryCallback>("Install"_i18n, [this](){
-                InstallFiles();
+            options->Add<SidebarEntryCallback>("Install"_i18n, [this](){
+                App::ConfirmInstall([this](){ InstallFiles(); });
             }, "Install the selected NSP/XCI file(s) to the console."_i18n);
-            entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
         }
 #if ENABLE_NETWORK_INSTALL
         if (!GetRecursiveInstallTargets().empty()) {
-            auto entry = options->Add<SidebarEntryCallback>("Install recursively"_i18n, [this](){ InstallFolderRecursively(); },
-                "Scan selected folder(s) recursively for packages and open the install queue."_i18n);
-            entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
+            options->Add<SidebarEntryCallback>("Install recursively"_i18n, [this](){
+                App::ConfirmInstall([this](){ InstallFolderRecursively(); });
+            }, "Scan selected folder(s) recursively for packages and open the install queue."_i18n);
         }
 #endif
     }
@@ -226,10 +225,9 @@ void FsView::DisplayOptions() {
 
     if (IsSd() && m_entries_current.size() && !m_selected_count) {
         if (GetEntry().IsFile() && (path::EqualsIC(GetEntry().GetExtension(), "nro") || !m_menu->FindFileAssocFor().empty())) {
-            auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){;
-                InstallForwarder();
+            options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
+                App::ConfirmInstall([this](){ InstallForwarder(); });
             }, "Install a forwarder shortcut for this file."_i18n);
-            entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
         }
         if (GetEntry().IsFile() && path::EqualsIC(GetEntry().GetExtension(), "bin")) {
             auto launch_entry = options->Add<SidebarEntryCallback>("Launch payload"_i18n, [this](){

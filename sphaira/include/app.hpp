@@ -170,9 +170,9 @@ public:
     static auto GetAccountLinkPromptSkip() -> bool;
     static void SetAccountLinkPromptSkip(bool skip);
     static auto GetReplaceHbmenuEnable() -> bool;
-    static auto GetInstallEnable() -> bool;
-    static auto GetInstallSysmmcEnable() -> bool;
-    static auto GetInstallEmummcEnable() -> bool;
+    // installing on sysMMC can get the console banned: warn there before every install unless the user
+    // chose "Don't show again". Runs `run` at once on emuMMC, after "Install" on sysMMC; "Back" cancels.
+    static void ConfirmInstall(std::function<void()> run);
     static auto GetInstallSdEnable() -> bool;
     static auto GetInstallLocation() -> long;
     static auto GetInstallReserveMb() -> long;
@@ -280,11 +280,6 @@ public:
     static void DisplayInstallOptions(bool left_side = true);
     static void DisplayForwarderOptions(bool left_side = true);
     static void DisplayDumpOptions(bool left_side = true);
-
-    // helper for sidebar options to toggle install on/off
-    static void ShowEnableInstallPromptOption(option::OptionBool& option, bool& enable);
-    // displays an option box to enable installing, shows warning.
-    static void ShowEnableInstallPrompt();
 
     void Draw();
     // per frame timing summary + stall reporting into the log.
@@ -508,8 +503,7 @@ public:
     option::OptionLong m_saver_fields{INI_SECTION, "saver_fields", ui::SaverField_ALL};
 
     // install options
-    option::OptionBool m_install_sysmmc{INI_SECTION, "install_sysmmc", false};
-    option::OptionBool m_install_emummc{INI_SECTION, "install_emummc", false};
+    option::OptionBool m_install_ban_warning{INI_SECTION, "install_ban_warning", true};
     option::OptionLong m_install_location{INI_SECTION, "install_location", 4};
     // forwarder npdm address space: 0 = auto, 1 = 36-bit, 2 = 39-bit. see owo.cpp.
     option::OptionLong m_forwarder_address_space{INI_SECTION, "forwarder_address_space", 0};
@@ -578,10 +572,6 @@ public:
     // rather than doing work. Without it every frame reads as one vsync period
     // and there is no telling headroom from a cpu bound frame.
     double m_frame_wait_accum_ms{};
-
-    static constexpr const char* INSTALL_DEPENDS_STR =
-        "Installing is disabled.\n\n"
-        "Enable in the options by selecting Menu (Y) -> Advanced -> Install options -> Enable.";
 
 private: // from nanovg decko3d example by adubbz
     // triple buffered: with two, acquireImage blocks at the top of Draw() until

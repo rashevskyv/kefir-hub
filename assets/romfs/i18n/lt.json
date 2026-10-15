@@ -3271,5 +3271,9 @@
   "the romfs folder has no files": "romfs aplanke nėra failų",
   "no romfs folder": "nėra romfs aplanko",
   "packed": "supakuota",
-  "romfs.bin already exists": "romfs.bin jau egzistuoja"
+  "romfs.bin already exists": "romfs.bin jau egzistuoja",
+  "Don't show again": "Daugiau neberodyti",
+  "Ban warning on sysMMC": "Ban įspėjimas sysMMC",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Šioje konsolėje veikia sysMMC. Diegimas čia gali uždrausti konsolei naudotis „Nintendo“ internetinėmis paslaugomis.",
+  "Warn before every install while the console runs sysMMC.": "Įspėti prieš kiekvieną diegimą, kai konsolė veikia sysMMC režimu."
 }

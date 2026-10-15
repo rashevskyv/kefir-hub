@@ -101,20 +101,23 @@ auto App::GetReplaceHbmenuEnable() -> bool {
     return g_app->m_replace_hbmenu.Get();
 }
 
-auto App::GetInstallEnable() -> bool {
-    if (IsEmummc()) {
-        return GetInstallEmummcEnable();
-    } else {
-        return GetInstallSysmmcEnable();
+void App::ConfirmInstall(std::function<void()> run) {
+    if (IsEmummc() || !g_app->m_install_ban_warning.Get()) {
+        run();
+        return;
     }
-}
-
-auto App::GetInstallSysmmcEnable() -> bool {
-    return g_app->m_install_sysmmc.GetOr("install");
-}
-
-auto App::GetInstallEmummcEnable() -> bool {
-    return g_app->m_install_emummc.GetOr("install");
+    App::Push<ui::OptionBox>(
+        "This console is running sysMMC. Installing here can get the console banned from Nintendo online services."_i18n,
+        "Back"_i18n, "Install"_i18n, "Don't show again"_i18n, 0, [run](auto op_index){
+            if (!op_index || *op_index == 0) {
+                return;
+            }
+            if (*op_index == 2) {
+                g_app->m_install_ban_warning.Set(false);
+            }
+            run();
+        }
+    );
 }
 
 auto App::GetInstallSdEnable() -> bool {

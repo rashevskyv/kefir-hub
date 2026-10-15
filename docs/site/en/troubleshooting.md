@@ -54,10 +54,6 @@ screen can update only a few times per second. The transfer keeps going and fini
 
 **Kefir Hub is slow overall.** Check that [[Logging]] is off.
 
-*Installing is refused, or Kefir Hub asks [[Installing is disabled, enable now?]].* Installing is off for the
-system you are running. Turn on [[Enable sysMMC]] or [[Enable emuMMC]] in [[Settings]] → [[Install]]. Read the
-ban warning first. See [Install](install/index.md).
-
 *[[Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.]]*
 Kefir Hub was started from the Album and has little memory. Start it from its HOME Menu icon instead. To create the
 icon, open [[Tools]], press **+** ([[Install & Share]]) and choose [[Install Title Mode forwarder]]. See [Getting started](getting-started.md).

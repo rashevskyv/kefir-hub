@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.090 — installing is always allowed; on sysMMC a ban warning before each install
+- Removed Settings → Install "Enable sysMMC/emuMMC" and the "Installing is disabled, enable now?" prompt. On emuMMC nothing is asked. On sysMMC every install (file browser, A on NSP/XCI, forwarders, game card, Ownfoil, Console Transfer receive, PC Install USB) first shows the ban warning: Back / Install / Don't show again. Settings → Install → "Ban warning on sysMMC" (ini `install_ban_warning`, default on) turns it back on. MTP/FTP stream installs still ask nothing. Docs: enable steps removed, warning drafted (shots `install-index-ban-warning`, `install-index-settings-install` to take).
+- host tests: pass (quick) · nro: built (0.14.092, all three) · switch: pending
+
 ## v0.14.089 — romfs.bin packing: Stop works inside a large file
 - `romfs_pack.cpp`: Stop was checked only between files, so one 2 GB mod file was packed to the end after Stop was confirmed. Now checked on every 1 MiB write. Found on the console.
 - Console check (.69, FAT32 card, AMS 1.12.0): both menu entries shown; 3784 entries packed in ~4 s and 40784 entries (40005 files) in ~33 s, images byte-identical after hactool extract; a 4.5 GiB image (BigFile on FAT32) packed in 140 s, the file inside hashes right; fs.mitm serves all 3005 files of a packed romfs.bin with the right sha256 (read through the Hub title's own romfs); a batch of two packs the largest first and forecasts only the largest; Stop leaves `romfs/` and no `.part`; a 40k-file folder frees ~2.4 GB of FAT32 clusters.

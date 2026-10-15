@@ -157,7 +157,7 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                             }
                         });
                 } else if (path::IsAnyOfIC(entry.GetExtension(), INSTALL_EXTENSIONS)) {
-                    InstallFiles();
+                    App::ConfirmInstall([this](){ InstallFiles(); });
                 } else if (IsSd() && path::IsAnyOfIC(entry.GetExtension(), IMAGE_EXTENSIONS)) {
                     OpenImageViewer();
                 } else if ((IsSd() || m_fs_entry.type == FsType::Network) && path::IsAnyOfIC(entry.GetExtension(), ZIP_EXTENSIONS)) {

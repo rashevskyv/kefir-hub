@@ -4,7 +4,9 @@ Install NSP, NSZ, XCI and XCZ files that are already on the microSD card. The sa
 
 **Where:** [[Tools]] → [[File Browser]]
 
-Turn installing on first (see [Turn installing on](index.md#enable)).
+<!-- draft
+- On sysMMC Kefir Hub shows the ban warning before the install queue opens. See [Ban warning on sysMMC](index.md#ban-warning).
+-->
 
 ## Install one file {#one-file}
 

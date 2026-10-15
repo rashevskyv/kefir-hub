@@ -4,7 +4,9 @@ Connect the console to a PC with a USB cable and it shows up in the PC's file ma
 
 **Where:** on the PC, the drive named `Install (NSP, XCI, NSZ, XCZ)`
 
-Turn installing on first (see [Turn installing on](index.md#enable)).
+<!-- draft
+- MTP installs show no ban warning, also on sysMMC. See [Ban warning on sysMMC](index.md#ban-warning).
+-->
 
 ## Start MTP {#start}
 

@@ -3276,5 +3276,9 @@
   "the romfs folder has no files": "thư mục romfs không có tệp nào",
   "no romfs folder": "không có thư mục romfs",
   "packed": "đã đóng gói",
-  "romfs.bin already exists": "romfs.bin đã tồn tại"
+  "romfs.bin already exists": "romfs.bin đã tồn tại",
+  "Don't show again": "Không hiển thị lại",
+  "Ban warning on sysMMC": "Cảnh báo ban trên sysMMC",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Bảng điều khiển này đang chạy sysMMC. Cài đặt ở đây có thể khiến bảng điều khiển bị cấm khỏi các dịch vụ trực tuyến của Nintendo.",
+  "Warn before every install while the console runs sysMMC.": "Cảnh báo trước mỗi lần cài đặt khi máy đang chạy sysMMC."
 }

@@ -340,12 +340,7 @@ void Send(std::vector<u64> preselected) {
 
 void ReceiveOverWifi();
 
-void Receive() {
-    if (!App::GetInstallEnable()) {
-        App::ShowEnableInstallPrompt();
-        return;
-    }
-
+void ReceiveConfirmed() {
     PopupList::Items items{"Wi-Fi (same network)"_i18n, "USB cable"_i18n};
     App::Push<PopupList>("How is the other console connected?"_i18n, items, [](auto op_index){
         if (!op_index) {
@@ -384,6 +379,10 @@ void ReceiveOverWifi() {
             ShowReceivePicker(base_url, games);
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
     });
+}
+
+void Receive() {
+    App::ConfirmInstall(ReceiveConfirmed);
 }
 
 } // namespace sphaira::ui::menu::games_transfer

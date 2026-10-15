@@ -54,10 +54,6 @@
 
 **Kefir Hub загалом працює повільно.** Перевірте, що [[Logging]] вимкнено.
 
-*Встановлення не відбувається, або Kefir Hub питає [[Installing is disabled, enable now?]]* Для системи, яку ви
-запустили, встановлення вимкнено. Увімкніть [[Enable sysMMC]] або [[Enable emuMMC]] у [[Settings]] → [[Install]].
-Спершу прочитайте попередження про бан. Див. [Встановлення](install/index.md).
-
 *[[Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.]]*
 Kefir Hub запущено з Альбому, і йому бракує пам'яті. Запускайте його з іконки на HOME Menu. Щоб створити
 іконку, відкрийте [[Tools]], натисніть **+** ([[Install & Share]]) і виберіть [[Install Title Mode forwarder]]. Див. [Початок роботи](getting-started.md).

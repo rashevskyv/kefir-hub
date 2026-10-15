@@ -6,7 +6,9 @@ Send games from a PC to the console over a USB cable. Kefir Hub works with the P
 
 The same item is in the **+** menu of the Homebrew tab.
 
-Turn installing on first (see [Turn installing on](index.md#enable)).
+<!-- draft
+- On sysMMC Kefir Hub shows the ban warning when you choose PC Install (USB). See [Ban warning on sysMMC](index.md#ban-warning).
+-->
 
 <!-- shot: install-usb-sidebar | Install & Share menu with PC Install (USB) highlighted -->
 

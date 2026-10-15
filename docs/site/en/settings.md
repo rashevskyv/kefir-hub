@@ -141,13 +141,11 @@ By default both [[MTP]] and [[USB storage]] are on: a computer on the cable gets
 Install behaviour and safety switches. What each option does is on the [Install](install/index.md) page.
 
 !!! warning
-    Installing games can get the console banned. [[Enable sysMMC]] and [[Enable emuMMC]] are off until you
-    confirm [[WARNING: Installing apps will lead to a ban!]] with [[Enable]].
+    Installing games can get the console banned. On sysMMC, Kefir Hub warns before every install.
 
 | Option | Default |
 |---|---|
-| [[Enable sysMMC]] | Off |
-| [[Enable emuMMC]] | Off |
+| [[Ban warning on sysMMC]] | On |
 | [[Install location]] | [[Automatic]] |
 | [[Allow downgrade]] | Off |
 | [[Skip if already installed]] | [[Skip]] |
@@ -243,6 +241,6 @@ Deleting the file from Kefir Hub's own file browser does not work reliably: Kefi
 [[MTP]] and [[USB storage]] switch each other off: Kefir Hub shows [[MTP turned off to free the USB port]] or
 [[USB storage turned off to free the USB port]]. Pick the one you need.
 
-**I cannot install anything.** [[Enable sysMMC]] or [[Enable emuMMC]] is off for the system you are running. See [Install](install/index.md).
+**Every install asks for confirmation.** The console runs sysMMC and [[Ban warning on sysMMC]] is on. Choose [[Install]] to install. Choose [[Don't show again]] to stop the warning. See [Install](install/index.md#ban-warning).
 
 *Kefir Hub shows [[Warning! Logs are enabled, Kefir Hub will run slowly!]] at every start.* Turn [[Logging]] off.

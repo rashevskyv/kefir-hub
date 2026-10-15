@@ -3,21 +3,22 @@
 Kefir Hub installs games, game updates and DLC from package files. This page helps you pick a method and explains the settings that apply to all of them.
 
 !!! warning
-    Installing games that you did not buy can get your console banned from Nintendo's online services. Kefir Hub shows [[WARNING: Installing apps will lead to a ban!]] before it lets you turn installing on.
+    Installing games that you did not buy can get your console banned from Nintendo's online services.
 
-## Turn installing on {#enable}
+## Ban warning on sysMMC {#ban-warning}
 
-Installing is off until you turn it on. There is a separate switch for sysMMC and for emuMMC.
+<!-- draft
+- Installing is always allowed. There is no switch to turn installing on.
+- On emuMMC Kefir Hub shows no warning before an install.
+- On sysMMC Kefir Hub shows [[This console is running sysMMC. Installing here can get the console banned from Nintendo online services.]] before the install starts, with the buttons [[Back]], [[Install]] and [[Don't show again]].
+- [[Back]] cancels the install. [[Install]] starts it, and the warning appears again next time. [[Don't show again]] turns the warning off and starts the install.
+- The warning appears before every install from: the File Browser (Install, Install recursively, **A** on an NSP or XCI file), Install Forwarder in the File Browser and in Homebrew, Ownfoil, Console Transfer (receive games), and PC Install (USB).
+- MTP and network stream installs (FTP, the web server) show no warning.
+- To turn the warning back on: [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]]. The same option is in the sidebar, Menu (**Y**) → Advanced → Install options.
+- Ini key `install_ban_warning`. Default: on.
+-->
 
-1. Open [[Tools]] → [[Settings]] → [[Install]].
-2. Select [[Enable sysMMC]] or [[Enable emuMMC]], whichever you are running.
-3. Read the warning and select [[Enable]].
-
-If you start an install from the File Browser while installing is off, Kefir Hub asks [[Installing is disabled, enable now?]]. Select [[Enable]] to get to the same warning.
-
-<!-- shot: install-index-enable-warning | Ban warning dialog with Back and Enable buttons -->
-
-<!-- TODO(verify): plan D.2 removes this switch -->
+<!-- shot: install-index-ban-warning | Ban warning dialog on sysMMC with Back, Install and Don't show again buttons -->
 
 <!-- draft
 - after a game is installed, Kefir Hub keeps its own HOME Menu icon first when it was started from that icon; before, every install pushed it to the end of the list
@@ -68,8 +69,7 @@ In the install queue you can also set the target of one package: highlight it an
 
 | Option | What it does | Default |
 |---|---|---|
-| [[Enable sysMMC]] | Allows installing while sysMMC is running. | Off |
-| [[Enable emuMMC]] | Allows installing while emuMMC is running. | Off |
+| [[Ban warning on sysMMC]] | Warns before every install while the console runs sysMMC, see [Ban warning on sysMMC](#ban-warning). | On |
 | [[Install location]] | Where packages go, see [Where games go](#location). | [[Automatic]] |
 | [[Allow downgrade]] | Lets you install a game update older than the one installed. When off, an older update is skipped. | Off |
 | [[Skip if already installed]] | What to do with content that is already installed: [[Reinstall]], [[Skip]], or [[Prompt]] (ask [[Already installed. Reinstall?]] each time). | [[Skip]] |
@@ -119,8 +119,6 @@ MTP, FTP and web-browser installs always import the tickets.
 ## Problems {#problems}
 
 After an install from any source that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows a box listing those titles as "Installed without the base game". Select [[Keep]] to leave them or [[Delete]] to remove them, noting that saves are kept. Keep them if the base game is on a game card or if you plan to install the base game afterwards. This box also appears for the DBI and PC queue.
-
-**"Installing is disabled" with a path through Menu (Y) → Advanced.** That path is out of date. Turn installing on in [[Tools]] → [[Settings]] → [[Install]] (see [Turn installing on](#enable)).
 
 **"The title was installed successfully, but cannot run on this console yet".** The game needs newer system firmware than the console has. Update the firmware and Kefir (see [Updater](../updater.md)). You do not need to install the game again.
 

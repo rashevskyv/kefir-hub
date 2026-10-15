@@ -327,11 +327,6 @@ void FsView::OnPasteCallback(bool replace_existing) {
 }
 
 void FsView::InstallFiles() {
-    if (!App::GetInstallEnable()) {
-        App::ShowEnableInstallPrompt();
-        return;
-    }
-
     const auto targets = GetSelectedEntries();
 
 #if ENABLE_NETWORK_INSTALL

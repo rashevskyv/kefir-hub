@@ -77,12 +77,11 @@ It starts the app in title mode, with full memory.
 
 !!! warning
     A forwarder is installed like a game. Installing anything other than official content can get the console
-    banned when it goes online. Kefir Hub asks you to turn installing on first and warns about this.
+    banned when it goes online.
 
 1. Select one app (no other apps selected).
 2. Press **+** and choose [[Install Forwarder]] under [[FORWARDER]].
-3. If installing is off, Kefir Hub asks [[Installing is disabled, enable now?]] Choose [[Enable]], read the warning
-   and choose [[Enable]] again.
+3. On sysMMC, Kefir Hub shows the ban warning first. Choose [[Install]] to go on. See [Ban warning on sysMMC](install/index.md#ban-warning).
 4. If [[Ask every time]] is off, the forwarder is created at once with the default options.
    If it is on, the forwarder editor opens: change the title, author, version or icon, then choose [[Create Forwarder]].
 5. Go back to the HOME Menu. The new icon is there.

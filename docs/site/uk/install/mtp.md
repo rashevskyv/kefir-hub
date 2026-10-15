@@ -4,7 +4,9 @@
 
 **Де:** на ПК — диск `Install (NSP, XCI, NSZ, XCZ)`
 
-Спершу увімкніть встановлення (див. [Увімкніть встановлення](index.md#enable)).
+<!-- draft
+- MTP installs show no ban warning, also on sysMMC. See [Ban warning on sysMMC](index.md#ban-warning).
+-->
 
 ## Запустіть MTP {#start}
 

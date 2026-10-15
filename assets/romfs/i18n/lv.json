@@ -3271,5 +3271,9 @@
   "the romfs folder has no files": "romfs mapē nav failu",
   "no romfs folder": "nav romfs mapes",
   "packed": "iepakots",
-  "romfs.bin already exists": "romfs.bin jau pastāv"
+  "romfs.bin already exists": "romfs.bin jau pastāv",
+  "Don't show again": "Vairs nerādīt",
+  "Ban warning on sysMMC": "Ban brīdinājums uz sysMMC",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Šī konsole darbojas ar sysMMC. Instalēšana šeit var izraisīt konsoles bloķēšanu no Nintendo tiešsaistes pakalpojumiem.",
+  "Warn before every install while the console runs sysMMC.": "Brīdināt pirms katras instalēšanas, kamēr konsole darbojas sysMMC režīmā."
 }

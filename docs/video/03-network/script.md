@@ -1,7 +1,7 @@
 # 03. Network installs and file access: web page, FTP, Ownfoil
 **Length:** ~6 min · **Docs:** install/network.md, sharing.md
 **Before recording:**
-- Console UI language: Ukrainian. Kefir Hub started in Title Mode. Installing enabled (Settings → Install → Enable sysMMC / Enable emuMMC).
+- Console UI language: Ukrainian. Kefir Hub started in Title Mode. Installing is always allowed; on sysMMC the ban warning appears before an Ownfoil install.
 - Home Wi-Fi (not a guest network). Console, Windows PC and a phone on the same network; the console header shows the network name and IP.
 - PC: a browser, FileZilla (or WinSCP), and 2 small game files of games you own that are not installed on the console.
 - FTP is **Off** at the start (Settings → Network → FTP), FTP settings left at defaults (Anonymous on, port 5000).
@@ -44,7 +44,7 @@
 | 30 | network-ownfoil-servers | Press X, highlight Add server | Якщо сервер не знайшовся, натисніть X і виберіть «Додати сервер». Введіть назву й локальну адресу з портом, наприклад 192.168.1.10:8465, і виберіть «Зберегти». | If the server is not found, press X and choose "Add server". Enter a name and the local address with its port, for example 192.168.1.10:8465, and choose Save. |
 | 31 | network-ownfoil-catalog | Open the server, press Y | Каталог відкривається на розділі «Нові ігри»: це ігри, яких ще немає на консолі. Y перемикає на «Оновлення», «DLC», «Усі ігри» або «Пошук». | The catalog opens on New games: games that are not on the console yet. Y switches to Updates, DLC, All games or Search. |
 | 32 | network-ownfoil-install-panel | Select a game, press A | Виберіть гру й натисніть A. На панелі виберіть версію і в пункті «Доповнення» позначте потрібні DLC. | Pick a game and press A. In the panel, choose the version and tick the DLC you want under "Add-on content". |
-| 33 | network-ownfoil-install-panel | Select the last entry | Останній пункт запускає встановлення. Він називається «Встановити», «Оновити» або «Відкотити», залежно від вибраної версії. Вікно прогресу покаже завантаження й встановлення. | The last entry starts the install. It is called Install, Update or Downgrade, depending on the version you chose. A progress window shows the download and the install. |
+| 33 | network-ownfoil-install-panel | Select the last entry | Останній пункт запускає встановлення. Він називається «Встановити», «Оновити» або «Відкотити», залежно від вибраної версії. На sysMMC спершу з'являється попередження про бан. Вікно прогресу покаже завантаження й встановлення. | The last entry starts the install. It is called Install, Update or Downgrade, depending on the version you chose. On sysMMC, a ban warning appears first. A progress window shows the download and the install. |
 | 34 | sharing-mount-popup | File Browser, highlight /games, press +, choose Mount | Наостанок: можна поділитися однією папкою. У розділі «Файловий браузер» виділіть папку, натисніть плюс і виберіть «Змонтувати». Далі виберіть MTP, FTP або HTTP. | Finally, you can share a single folder. In the File Browser highlight a folder, press plus and choose Mount. Then pick MTP, FTP or HTTP. |
 | 35 | sharing-mount-popup | — | Монтування не ховає решту карти: вебсторінка й FTP і далі мають доступ до всіх папок. Щоб припинити, виберіть «Розмонтувати» в тій самій панелі. | Mounting does not hide the rest of the card: the web page and FTP can still reach every folder. To stop sharing, choose Unmount in the same panel. |
 | 36 | index-tools-tab | — | Ігри також можна встановлювати з мережевої папки SMB, NFS чи WebDAV. Про це й про все інше читайте на сторінках «Встановлення через мережу» і «Доступ до файлів з ПК» у документації. | You can also install from a network share over SMB, NFS or WebDAV. For that and more, read the Install over the network and Share files with a PC pages in the documentation. |
@@ -52,4 +52,4 @@
 ## Open questions
 - install/network.md: the FTP install router may also send a game file dropped into the top of the microSD card folder (sdmc:/) to the installer. Scene 25 only warns about the server's top level. (TODO(verify))
 - sharing.md: exact names the FTP program shows at the top level (sdmc / sdmc: / install). Scene 23 says "the microSD card and a folder named install"; adjust to what FileZilla actually shows. (TODO(verify))
-- install/index.md: plan D.2 removes the Enable sysMMC / Enable emuMMC switch; drop it from "Before recording" when D.2 ships. (TODO(verify))
+- install/network.md: the ban warning on sysMMC before an Ownfoil install (scene 33) is not in the footage yet. Add it when recorded. (TODO(verify))

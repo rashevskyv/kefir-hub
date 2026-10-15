@@ -3271,5 +3271,9 @@
   "the romfs folder has no files": "romfs қалшытында файлдар жоқ",
   "no romfs folder": "romfs бумасы жоқ",
   "packed": "буып-түйілген",
-  "romfs.bin already exists": "romfs.bin бұрыннан бар"
+  "romfs.bin already exists": "romfs.bin бұрыннан бар",
+  "Don't show again": "Қайта көрсетпеу",
+  "Ban warning on sysMMC": "sysMMC-те бандану ескертуі",
+  "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Бұл консоль sysMMC жүйесінде жұмыс істейді. Мұнда орнату консольді Nintendo онлайн қызметтерінен бұғаттауы мүмкін.",
+  "Warn before every install while the console runs sysMMC.": "Консоль sysMMC режимінде жұмыс істеп тұрғанда әр орнату алдында ескерту."
 }

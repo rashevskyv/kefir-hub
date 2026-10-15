@@ -12,7 +12,10 @@ own Ownfoil server, or from a network share. The console and the other device mu
 
 ## Before you start {#before}
 
-- Turn installing on. See [Turn installing on](index.md#enable).
+<!-- draft
+- Ownfoil installs show the ban warning on sysMMC before the install starts. Browser and FTP installs show no warning. See [Ban warning on sysMMC](index.md#ban-warning).
+- TODO(verify): whether installs from a network share show the ban warning on sysMMC.
+-->
 - Connect the console to Wi-Fi or a LAN adapter. The top of the screen shows the network name and the console's
   IP address, for example `MyWiFi · 192.168.1.5`. Without a connection it shows [[No Internet]].
 - Use the same network on both devices. A guest Wi-Fi usually keeps devices apart, so the PC cannot reach the

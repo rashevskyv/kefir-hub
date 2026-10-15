@@ -255,7 +255,7 @@ Context: `docs/dev/AUDIT-2026-10-02-docs.md`. When a task changes behaviour, upd
       (separate repo). Then replace the TODO in `docs/site/*/install/usb.md#requirements` and the site `inc/zadig.txt`.
       Done in DBI Backend Qt 2.9.0: bundled libusb-1.0, WinUSB installed by the app (UAC), udev rule on Linux.
       Hub unchanged (no MS OS 2.0 descriptors: usb:ds exposes only interface-level control requests). Console test pending.
-- [ ] D.2 **Remove the install-enable switch** (Settings → Install → Enable sysMMC/emuMMC and the ban-warning prompt).
+- [x] D.2 **Remove the install-enable switch** (Settings → Install → Enable sysMMC/emuMMC and the ban-warning prompt).
       Installing is always allowed. Drop `install/index.md#enable` and the "turn installing on" steps (docs, site, video 02).
 - [ ] D.3 **Bring back restoring profile backups.** Backups from Delete user and Console Transfer → Share User Backups
       can be made but not restored (dead `users_restore*`, `users_manage*`). Give them a menu entry.

@@ -122,7 +122,7 @@ void TitleMenu::ShowInstallOptions() {
     }
 
     *install = options->Add<SidebarEntryCallback>(GetInstallLabel(), [this](){
-        Install();
+        App::ConfirmInstall([this](){ Install(); });
     }, "Download and install selection."_i18n);
 
     // asked as the menu draws, so the version, the add-ons and Allow downgrade all
@@ -139,11 +139,6 @@ void TitleMenu::ShowInstallOptions() {
 }
 
 void TitleMenu::Install() {
-    if (!App::GetInstallEnable()) {
-        App::ShowEnableInstallPrompt();
-        return;
-    }
-
     // one file can carry several of the chosen apps, so they are gathered by
     // download: each file is fetched once and installs only what was chosen of it.
     struct Target {

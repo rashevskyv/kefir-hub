@@ -96,7 +96,10 @@ On the receiving console:
 <!-- shot: console-transfer-send-games | Send installed games sidebar: Choose games "0 / 6", Start sharing -->
 <!-- shot: console-transfer-receive-games | Receive games sidebar on the other console: Choose games with all ticked, Install -->
 
-Both consoles must be on the same Wi-Fi network. The receiving console needs installing enabled; the usual enable-install prompt appears otherwise.
+Both consoles must be on the same Wi-Fi network. <!-- draft
+- On the receiving console, on sysMMC, Kefir Hub shows the ban warning before the games install. See [Ban warning on sysMMC](install/index.md#ban-warning).
+-->
+
 
 On the sending console:
 1. Open [[Tools]] → [[Console Transfer]] → [[Send installed games]]. Kefir Hub reads the installed games and shows a progress box.

@@ -6,7 +6,9 @@
 
 Той самий пункт є в меню **+** на вкладці домашніх програм.
 
-Спершу увімкніть встановлення (див. [Увімкніть встановлення](index.md#enable)).
+<!-- draft
+- On sysMMC Kefir Hub shows the ban warning when you choose PC Install (USB). See [Ban warning on sysMMC](index.md#ban-warning).
+-->
 
 <!-- shot: install-usb-sidebar | Install & Share menu with PC Install (USB) highlighted -->
 

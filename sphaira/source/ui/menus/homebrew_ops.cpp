@@ -369,10 +369,9 @@ void Menu::DisplayOptions() {
         if (targets.size() == 1 && m_selected_count == 0) {
             options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
 
-            auto entry = options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
-                InstallHomebrew();
+            options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
+                App::ConfirmInstall([this](){ InstallHomebrew(); });
             }, "Add this homebrew to the HOME menu as its own tile."_i18n);
-            entry->Depends(App::GetInstallEnable, i18n::get(App::INSTALL_DEPENDS_STR), App::ShowEnableInstallPrompt);
 
             options->Add<SidebarEntryBool>("Ask every time"_i18n, App::GetApp()->m_forwarder_ask,
                 "Open the forwarder editor when creating a forwarder instead of using the defaults from Settings."_i18n);
