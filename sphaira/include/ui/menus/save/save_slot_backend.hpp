@@ -95,15 +95,18 @@ struct SaveGrowResult {
 
 auto ValidateCreationRequest(const SaveCreationRequest& req) -> SaveBackendStatus;
 
-// Plans a new primary slot for Account (selected_uid), Device or BCAT (uid must be zero) saves.
+// Plans a new primary slot for Account (selected_uid), Device, BCAT or Cache (uid must be zero) saves.
 // Sizes and owner come from the installed game's control data, else from the archive metadata.
+// Only a Cache storage takes a slot index other than 0 and the SD card (SdUser) as its space.
 auto PlanAccountSaveCreation(
     u64 application_id,
     const AccountUid& selected_uid,
     const SaveArchiveSizing* archive_sizing,
     SaveCreationRequest& out_request,
     SaveBackendStatus* out_status = nullptr,
-    u8 save_data_type = FsSaveDataType_Account
+    u8 save_data_type = FsSaveDataType_Account,
+    u16 save_data_index = 0,
+    FsSaveDataSpaceId space_id = FsSaveDataSpaceId_User
 ) -> Result;
 
 auto InspectSaveArchiveAdmission(

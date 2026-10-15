@@ -81,7 +81,8 @@ auto QuerySaveDataSpaceFreeBytes(FsSaveDataSpaceId space_id, s64* out_free_bytes
 } // namespace
 
 bool IsCreatableSaveType(u8 type) {
-    return type == FsSaveDataType_Account || type == FsSaveDataType_Device || type == FsSaveDataType_Bcat;
+    return type == FsSaveDataType_Account || type == FsSaveDataType_Device || type == FsSaveDataType_Bcat ||
+        type == FsSaveDataType_Cache;
 }
 
 bool IsZeroUid(const AccountUid& uid) {
@@ -94,9 +95,11 @@ constexpr u64 kBcatProgramId = 0x010000000000000CULL;
 
 auto ValidateCreationRequest(const SaveCreationRequest& req) -> SaveBackendStatus {
     if (!IsCreatableSaveType(req.attr.save_data_type)) return SaveBackendStatus::UnsupportedSaveType;
-    if (req.space_id != FsSaveDataSpaceId_User) return SaveBackendStatus::UnsupportedSpace;
+    const bool is_cache = req.attr.save_data_type == FsSaveDataType_Cache;
+    // a Cache storage may live on the SD card and in a slot other than 0; every other type is slot 0 in User.
+    if (req.space_id != FsSaveDataSpaceId_User && !(is_cache && req.space_id == FsSaveDataSpaceId_SdUser)) return SaveBackendStatus::UnsupportedSpace;
     if (req.attr.save_data_rank != FsSaveDataRank_Primary) return SaveBackendStatus::UnsupportedRank;
-    if (req.attr.save_data_index != 0) return SaveBackendStatus::UnsupportedIndex;
+    if (req.attr.save_data_index != 0 && !is_cache) return SaveBackendStatus::UnsupportedIndex;
     if (req.attr.system_save_data_id != 0) return SaveBackendStatus::UnsupportedSaveType;
     if (req.attr.application_id == 0) return SaveBackendStatus::InvalidApplicationId;
     if (req.attr.save_data_type == FsSaveDataType_Account) {
@@ -118,13 +121,20 @@ auto PlanAccountSaveCreation(
     const SaveArchiveSizing* archive_sizing,
     SaveCreationRequest& out_request,
     SaveBackendStatus* out_status,
-    u8 save_data_type
+    u8 save_data_type,
+    u16 save_data_index,
+    FsSaveDataSpaceId space_id
 ) -> Result {
     if (!IsCreatableSaveType(save_data_type)) {
         if (out_status) *out_status = SaveBackendStatus::UnsupportedSaveType;
         return FsError_PathNotFound;
     }
     const bool is_account = save_data_type == FsSaveDataType_Account;
+    const bool is_cache = save_data_type == FsSaveDataType_Cache;
+    if (!is_cache && save_data_index != 0) {
+        if (out_status) *out_status = SaveBackendStatus::UnsupportedIndex;
+        return FsError_PathNotFound;
+    }
 
     if (application_id == 0) {
         if (out_status) *out_status = SaveBackendStatus::InvalidApplicationId;
@@ -180,6 +190,13 @@ auto PlanAccountSaveCreation(
         } else if (save_data_type == FsSaveDataType_Device) {
             base_data_u64 = nacp.device_save_data_size ? nacp.device_save_data_size : nacp.device_save_data_size_max;
             base_journal_u64 = nacp.device_save_data_journal_size ? nacp.device_save_data_journal_size : nacp.device_save_data_journal_size_max;
+        } else if (is_cache) {
+            base_data_u64 = nacp.cache_storage_size;
+            base_journal_u64 = nacp.cache_storage_journal_size;
+            // the backup's own owner wins: the restore checks the archive owner against the request.
+            if (archive_sizing && archive_sizing->has_metadata && archive_sizing->owner_id) {
+                owner_id = archive_sizing->owner_id;
+            }
         } else {
             base_data_u64 = nacp.bcat_delivery_cache_storage_size;
             base_journal_u64 = kBcatSaveDataJournalSize;
@@ -237,7 +254,7 @@ auto PlanAccountSaveCreation(
             if (out_status) *out_status = SaveBackendStatus::UnsupportedRank;
             return FsError_PathNotFound;
         }
-        if (archive_sizing->attr.save_data_index != 0) {
+        if (archive_sizing->attr.save_data_index != save_data_index) {
             if (out_status) *out_status = SaveBackendStatus::UnsupportedIndex;
             return FsError_PathNotFound;
         }
@@ -265,8 +282,8 @@ auto PlanAccountSaveCreation(
     out_request.attr.system_save_data_id = 0;
     out_request.attr.save_data_type = save_data_type;
     out_request.attr.save_data_rank = FsSaveDataRank_Primary;
-    out_request.attr.save_data_index = 0;
-    out_request.space_id = FsSaveDataSpaceId_User;
+    out_request.attr.save_data_index = save_data_index;
+    out_request.space_id = is_cache ? space_id : FsSaveDataSpaceId_User;
     out_request.data_size = final_data;
     out_request.journal_size = final_journal;
     out_request.owner_id = owner_id;
@@ -507,7 +524,7 @@ auto GetBackendStatusMessage(SaveBackendStatus status, const char* game_name) ->
             std::snprintf(msg, sizeof(msg), "%s is not installed. Install the game to restore its save."_i18n.c_str(), game_name);
             return msg;
         }
-        case SaveBackendStatus::UnsupportedSaveType: return "Save slot creation is only supported for Account, Device and BCAT saves."_i18n;
+        case SaveBackendStatus::UnsupportedSaveType: return "Save slot creation is only supported for Account, Device, BCAT and Cache saves."_i18n;
         case SaveBackendStatus::UnsupportedSpace: return "Save slot creation is only supported in User space."_i18n;
         case SaveBackendStatus::UnsupportedRank: return "Save slot creation is only supported for primary save slots."_i18n;
         case SaveBackendStatus::UnsupportedIndex: return "Save slot creation is only supported for slot index 0."_i18n;

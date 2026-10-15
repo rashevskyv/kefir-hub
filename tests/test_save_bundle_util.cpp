@@ -146,8 +146,12 @@ static void test_missing_live_destinations() {
     assert(EvaluateRestoreDestination(false, 1 /* Account */, 0, 1 /* Slot 1 */, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
     assert(EvaluateRestoreDestination(false, 1 /* Account */, 0, 0, 0 /* Invalid App ID */) == RestoreDestinationOutcome::UnsupportedMissingDestination);
 
-    // Cache and system saves -> UnsupportedMissingDestination
-    assert(EvaluateRestoreDestination(false, 5 /* Cache */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+    // Cache storage can be created, in any slot (YouTube keeps its data there)
+    assert(EvaluateRestoreDestination(false, 5 /* Cache */, 0, 0, app_id) == RestoreDestinationOutcome::PlanCreation);
+    assert(EvaluateRestoreDestination(false, 5 /* Cache */, 0, 3 /* Slot 3 */, app_id) == RestoreDestinationOutcome::PlanCreation);
+    assert(EvaluateRestoreDestination(false, 5 /* Cache */, 0, 0, 0 /* Invalid App ID */) == RestoreDestinationOutcome::UnsupportedMissingDestination);
+
+    // Temporary and system saves -> UnsupportedMissingDestination
     assert(EvaluateRestoreDestination(false, 4 /* Temporary */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
     assert(EvaluateRestoreDestination(false, 0 /* System */, 0, 0, app_id) == RestoreDestinationOutcome::UnsupportedMissingDestination);
 }

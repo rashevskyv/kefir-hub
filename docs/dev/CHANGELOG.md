@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.095 — restoring a Cache save (YouTube) creates the missing Cache storage
+- A Cache backup (DBI letter C, e.g. YouTube `01003A400C3DA000_C_…zip`) with no Cache storage on the console failed with "only Account, Device and BCAT". Now the slot is created like DBI does: Cache type, the backup's slot index, SD (SdUser) when the backup came from there, sizes from the backup or the game's cache_storage_size/journal, owner from the backup.
+- host tests: pass (quick; test_save_bundle_util Cache cases) · nro: built · switch: pending (restore YouTube with no cache present; YouTube keeps its data)
+
 ## v0.14.094 — the HOME icon notice and the sysMMC ban warning explain themselves
 - Auto forwarder notice (emuMMC only): why the icon (applet = little memory, NSZ can fail), what to do (open Hub from the icon next time), what it is (only starts /switch/kefir-hub.nro). sysMMC ban warning: what Nintendo sees, which services can be banned, emuMMC is safer. Ukrainian wording fixed by hand. plan.md F.18: battery desync root cause and the agreed fix.
 - host tests: pass (quick) · nro: built (0.14.095) · switch: pending

@@ -158,11 +158,13 @@ enum class RestoreDestinationOutcome {
     UnsupportedMissingDestination,
 };
 
-// Account, Device and BCAT primary slots can be created from the game's control data or from the
-// archive metadata (DBI does the same without the game installed). Cache/Temporary/System cannot.
+// Account, Device, BCAT and Cache primary slots can be created from the game's control data or from the
+// archive metadata (DBI does the same without the game installed). A game may have several Cache
+// storages (index 0..cache_storage_index_max); every other type has only slot 0. Temporary/System cannot.
 inline bool CanCreateLiveSlot(uint8_t save_data_type, uint8_t rank, uint16_t index, uint64_t application_id) {
-    const bool creatable_type = save_data_type == 1 /* Account */ || save_data_type == 2 /* BCAT */ || save_data_type == 3 /* Device */;
-    return creatable_type && rank == 0 /* Primary */ && index == 0 && application_id != 0;
+    const bool is_cache = save_data_type == 5 /* Cache */;
+    const bool creatable_type = save_data_type == 1 /* Account */ || save_data_type == 2 /* BCAT */ || save_data_type == 3 /* Device */ || is_cache;
+    return creatable_type && rank == 0 /* Primary */ && (index == 0 || is_cache) && application_id != 0;
 }
 
 inline RestoreDestinationOutcome EvaluateRestoreDestination(

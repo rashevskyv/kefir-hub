@@ -106,8 +106,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
                 archive_meta.meta.attr.save_data_type != e.creation_request.attr.save_data_type ||
                 archive_meta.meta.attr.save_data_rank != FsSaveDataRank_Primary ||
                 e.creation_request.attr.save_data_rank != FsSaveDataRank_Primary ||
-                archive_meta.meta.attr.save_data_index != 0 ||
-                e.creation_request.attr.save_data_index != 0 ||
+                archive_meta.meta.attr.save_data_index != e.creation_request.attr.save_data_index ||
                 archive_meta.meta.owner_id != e.creation_request.owner_id) {
                 log_write("Archive metadata identity mismatch with planned save creation request\n");
                 return FsError_PathNotFound;

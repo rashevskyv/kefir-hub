@@ -276,8 +276,9 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
     const auto outcome = bundle::EvaluateRestoreDestination(
         false, group.save_data_type, group.save_data_rank, group.save_data_index, group.application_id);
     if (outcome == bundle::RestoreDestinationOutcome::UnsupportedMissingDestination) {
-        if (group.save_data_type != FsSaveDataType_Account && group.save_data_type != FsSaveDataType_Device && group.save_data_type != FsSaveDataType_Bcat) {
-            App::Push<OptionBox>("Save slot creation is only supported for Account, Device and BCAT saves."_i18n, "OK"_i18n);
+        if (group.save_data_type != FsSaveDataType_Account && group.save_data_type != FsSaveDataType_Device &&
+            group.save_data_type != FsSaveDataType_Bcat && group.save_data_type != FsSaveDataType_Cache) {
+            App::Push<OptionBox>("Save slot creation is only supported for Account, Device, BCAT and Cache saves."_i18n, "OK"_i18n);
         } else if (group.application_id == 0) {
             App::Push<OptionBox>("Save slot creation is only supported for installed titles."_i18n, "OK"_i18n);
         } else {
@@ -321,10 +322,13 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
             }
             if (pbox->ShouldExit()) return Result_TransferCancelled;
 
+            // a Cache storage goes back to its slot, and to the SD card when the backup came from there.
+            const auto space = group.backup_space_known && group.save_data_space_id == FsSaveDataSpaceId_SdUser
+                ? FsSaveDataSpaceId_SdUser : FsSaveDataSpaceId_User;
             ctx->plan_rc = PlanAccountSaveCreation(
                 group.application_id, dest_uid,
                 &ctx->admission.sizing,
-                ctx->req, &ctx->status, group.save_data_type);
+                ctx->req, &ctx->status, group.save_data_type, group.save_data_index, space);
             if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
                 return ctx->plan_rc ? ctx->plan_rc : static_cast<Result>(FsError_InvalidSize);
             }
