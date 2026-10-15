@@ -388,6 +388,17 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       every spelling of the path (with and without `sdmc:`, quoted); forwarders made by other tools by reading
       `/nextNroPath` from the romfs of installed apps whose title ID is not `0100…`. Fix on the way: the existing lookup
       at `homebrew_ops.cpp:189-191` hashes the path without `sdmc:`, so it misses forwarders made by `App::Install`.
+- [ ] F.20 **Repack with mods** (user, 2026-10-15): Games list, one or several selected games → "Repack" submenu:
+      (1) pack the mod's romfs into romfs.bin (done in v0.14.088, needs the submenu entry); (2) the whole game as NSP
+      with the mod baked into the program NCA; (3) update + DLC + mod as NSP; (4) Atmosphère IPS exefs patches
+      (`atmosphere/exefs_patches/*/<build id>.ips`) baked into the exefs NSO. Rebuilt NCAs carry no valid signature:
+      they install and start only with sigpatches. New code goes to `source/repack/`. Order: (a) console spike: patch
+      NCA with a plain (non-BKTR) romfs + rewritten Patch cnmt, installed by Hub — does HOS start it? If not, a
+      one-entry BKTR (whole range from the patch); (b) BKTR reader (indirect + AesCtrEx) to merge base + update romfs,
+      host test against a dumped update; (c) streaming romfs NCA writer, two passes (hash, then write); (d) cnmt
+      rewrite for Application, Patch, AddOnContent; (e) NSP stream that mixes generated and copied NCAs; (f) Repack
+      submenu (single game in details, several in the list), "Create repack" and "Pack into romfs.bin" move into it;
+      (g) IPS: NSO LZ4 decompress, IPS/IPS32 apply (+0x100 header bias), exefs PFS0 rebuild; (h) DLC romfs mods.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
