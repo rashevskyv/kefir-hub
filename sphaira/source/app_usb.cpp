@@ -16,6 +16,7 @@
 #include <switch.h>
 
 #include <algorithm>
+#include <atomic>
 #include <iterator>
 #include <ranges>
 #include <string>
@@ -25,6 +26,18 @@
 namespace sphaira {
 
 extern App* g_app;
+
+namespace {
+// "No" to PC Install for this cable: the backend then sees MTP and drops its marker to ask again.
+// Its marker is removed without a question until the cable is unplugged.
+std::atomic<bool> g_pc_install_declined{false};
+
+void DeletePcInstallMarker() {
+    fs::FsPath marker;
+    std::snprintf(marker, sizeof(marker), "/%s", App::PC_INSTALL_MARKER);
+    fs::FsNativeSd{}.DeleteFile(marker);
+}
+} // namespace
 
 void App::PollUsbStorage() {
     // the first set-up (language, HOME icon advice) comes before any PC Install window
@@ -72,6 +85,7 @@ void App::PollUsbStorage() {
                             return;
                         }
                         found->first.reset();
+                        g_pc_install_declined = true;
                         g_app->TryStartAutoMtp();
                     });
                 return;
@@ -166,6 +180,7 @@ void App::PollUsbStorage() {
             m_usb_mounts.size(), haze::IsRunning() ? 1 : 0, pc_enumerated ? 1 : 0);
         if (charger == PsmChargerType_Unconnected) {
             m_usb_pending_mtp = false;
+            g_pc_install_declined = false;
             if (m_usb_auto_mtp) {
                 RestoreUsbAfterAutoMtp();
             } else if (haze::IsRunning() && !pc_enumerated) {
@@ -232,6 +247,11 @@ void App::OfferPcInstallSwitch() {
     if (!haze::IsRunning() || usb_probe::GetState() != usb_probe::State::Idle) {
         return;
     }
+    if (g_pc_install_declined) {
+        log_write("[USB] PC install marker ignored: declined for this cable\n");
+        DeletePcInstallMarker();
+        return;
+    }
     if (!g_app->m_widgets.empty() && g_app->m_widgets.back()->IsModal()) {
         return;
     }
@@ -239,10 +259,12 @@ void App::OfferPcInstallSwitch() {
     App::Push<ui::OptionBox>("A PC install app is waiting.\nStop MTP and open PC Install (USB)?"_i18n,
         "No"_i18n, "PC Install (USB)"_i18n, 1, [](auto op_index) {
             // the marker is a real file when it was dropped on the memory card.
-            fs::FsPath marker;
-            std::snprintf(marker, sizeof(marker), "/%s", PC_INSTALL_MARKER);
-            fs::FsNativeSd{}.DeleteFile(marker);
-            if (!op_index || !*op_index || !haze::IsRunning()) {
+            DeletePcInstallMarker();
+            if (!op_index || !*op_index) {
+                g_pc_install_declined = true;
+                return;
+            }
+            if (!haze::IsRunning()) {
                 return;
             }
             // the PC asked for this switch, so its install app is waiting: open PC Install (USB) at once.

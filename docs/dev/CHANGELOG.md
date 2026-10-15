@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.098 — "No" to PC Install holds for the whole cable connection
+- `app_usb.cpp`: after "No" the Hub starts MTP; DBI Backend then sees MTP and drops its marker, so a second "Stop MTP and open PC Install?" came 1–2 s later. A "No" to either question now holds until the cable is unplugged; the backend's marker is removed without asking (logged).
+- host tests: not run (UI flow only) · nro: built · switch: pending (.69: plug in with DBI Backend running, answer No)
+
 ## v0.14.097 — Clean system junk opens from the bottom with tick boxes and a "Start cleanup" row
 - `PopupList` gets a check-list mode (`SetChecks`: A toggles a row's tick box and keeps the list open; later rows act) and a second, smaller line per row (`SetDescriptions`). Tools → Clean system junk uses it instead of the right sidebar, where the long names did not fit. Docs: system-tools EN/UK; the install page no longer quotes the old ban-warning text.
 - host tests: pass (quick) · nro: built · switch: pending
