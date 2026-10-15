@@ -399,6 +399,9 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       rewrite for Application, Patch, AddOnContent; (e) NSP stream that mixes generated and copied NCAs; (f) Repack
       submenu (single game in details, several in the list), "Create repack" and "Pack into romfs.bin" move into it;
       (g) IPS: NSO LZ4 decompress, IPS/IPS32 apply (+0x100 header bias), exefs PFS0 rebuild; (h) DLC romfs mods.
+      Spike (a) done 2026-10-15 on the console: SteamWorld Dig 2 update 4.1.1 rebuilt with a plain romfs (merged base +
+      update + mod), IVFC as owo_nca, cnmt program entry patched; Hub installed it, the game ran with the mod. So the
+      writer needs no BKTR; only the reader (b) does.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
