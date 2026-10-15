@@ -84,13 +84,13 @@ auto Menu::ComputeGridSections() const -> GridSections {
                     // the first label without a whole empty row.
                     cur_disp = compact_grid ? 0 : g.row;
                 } else {
+                    // every later source gets an empty row for its label, so tile rows keep the
+                    // same gap as in the other tabs.
                     const s64 rem = cur_disp % g.row;
                     if (rem != 0) {
                         cur_disp += (g.row - rem);
                     }
-                    if (!compact_grid) {
-                        cur_disp += g.row;
-                    }
+                    cur_disp += g.row;
                 }
 
                 GridSections::Section sec;
@@ -283,8 +283,8 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         // Paint the section rule first so the selected title label stays above it.
         for (const auto& sec : g.sections) {
             if (sec.has_divider && disp == sec.first_display) {
-                DrawSectionDivider(vg, theme, v, g, sec.label,
-                    m_category == Category::Backups && m_layout.Get() == grid::LayoutType_Grid);
+                // the first label sits in the room under the tabs; later ones fill their empty row.
+                DrawSectionDivider(vg, theme, v, g, sec.label, sec.first_display == 0);
                 break;
             }
         }

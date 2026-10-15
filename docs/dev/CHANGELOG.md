@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.092 — Saves → Backups grid: same 10 px row gap as the other tabs
+- The Backups grid kept a 60 px gap under every row for source labels. Now 10 px like Installed/Deleted games; the first source label stays above the first row, every later source gets an empty row for its label.
+- host tests: pass (quick) · nro: built (0.14.092, all three) · switch: pending
+
 ## v0.14.091 — jobs over many items: thin item bar on top, thick whole-job bar below; bulk save backup gets it too
 - `progress_box_draw.cpp`: with a whole-job bar the current item's bar is thin and on top, the job's bar thick at the bottom with "Done: N / M". Bulk save backup (and `BackupSavesOn`) now sets the whole-job bar when more than one save is backed up.
 - host tests: pass (quick) · nro: built (0.14.092, all three) · switch: pending
