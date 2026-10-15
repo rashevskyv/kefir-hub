@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "yedek, geri yüklenemeyen ham bir kayıt dosyasıdır",
   "Checking backups...": "Yedekler kontrol ediliyor...",
   "Saves to restore: ": "Geri yüklenecek kayıtlar: ",
-  "Done:": "Tamamlandı:"
+  "Done:": "Tamamlandı:",
+  "Keep folders": "Klasörleri tut",
+  "Needed: ": "Gerekli: ",
+  "Delete folders": "Klasörleri sil",
+  "Not enough free space on the memory card. Nothing was packed.": "Hafıza kartında yeterli boş alan yok. Hiçbir şey paketlenmedi.",
+  "Free: ": "Boş: ",
+  "Counting files": "Dosyalar sayılıyor",
+  "Pack into romfs.bin": "romfs.bin içine paketle",
+  "Packing failed!": "Paketlenemedi!",
+  "Packing": "Paketleniyor",
+  "cancelled": "İptal edildi",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Modun romfs klasörünü tek bir romfs.bin dosyası haline getirin. Böylece Atmosphere binlerce dosya yerine tek bir dosyayı okur.",
+  "failed": "Başarısız",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "romfs klasörleri romfs.bin içine paketlensin mi?\nAtmosphere binlerce dosya yerine tek bir dosya okur. romfs klasöründe bırakılan dosyalar romfs.bin dosyasına göre önceliklidir.",
+  "the romfs folder has no files": "romfs klasöründe dosya yok",
+  "no romfs folder": "romfs klasörü yok",
+  "packed": "paketlendi",
+  "romfs.bin already exists": "romfs.bin zaten var"
 }

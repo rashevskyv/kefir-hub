@@ -3312,5 +3312,22 @@
   "the backup is a raw save file, which cannot be restored": "備份是原始存檔檔案，無法復原",
   "Checking backups...": "正在檢查備份...",
   "Saves to restore: ": "要還原的存檔：",
-  "Done:": "完成："
+  "Done:": "完成：",
+  "Keep folders": "保留資料夾",
+  "Needed: ": "需要：",
+  "Delete folders": "刪除資料夾",
+  "Not enough free space on the memory card. Nothing was packed.": "記憶卡可用空間不足。未打包任何內容。",
+  "Free: ": "可用：",
+  "Counting files": "正在計算檔案",
+  "Pack into romfs.bin": "打包至 romfs.bin",
+  "Packing failed!": "打包失敗！",
+  "Packing": "打包中",
+  "cancelled": "已取消",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "將 mod 的 romfs 資料夾打包成單一 romfs.bin 檔案。Atmosphere 之後將讀取一個檔案而非數千個檔案。",
+  "failed": "失敗",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "將 romfs 資料夾打包為 romfs.bin？\n此後 Atmosphere 將讀取單一檔案，而不是數千個檔案。留在 romfs 資料夾中的檔案優先於 romfs.bin。",
+  "the romfs folder has no files": "romfs 資料夾中沒有檔案",
+  "no romfs folder": "沒有 romfs 資料夾",
+  "packed": "已打包",
+  "romfs.bin already exists": "romfs.bin 已存在"
 }

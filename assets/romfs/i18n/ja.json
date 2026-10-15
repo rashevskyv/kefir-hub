@@ -3259,5 +3259,22 @@
   "the backup is a raw save file, which cannot be restored": "バックアップは生セーブファイルのため復元できません",
   "Checking backups...": "バックアップを確認中...",
   "Saves to restore: ": "復元するセーブデータ: ",
-  "Done:": "完了:"
+  "Done:": "完了:",
+  "Keep folders": "フォルダを保持する",
+  "Needed: ": "必要: ",
+  "Delete folders": "フォルダを削除",
+  "Not enough free space on the memory card. Nothing was packed.": "メモリーカードの空き容量が不足しています。何もパックされませんでした。",
+  "Free: ": "空き: ",
+  "Counting files": "ファイルをカウント中",
+  "Pack into romfs.bin": "romfs.binにパック",
+  "Packing failed!": "パッキングに失敗しました！",
+  "Packing": "パッキング中",
+  "cancelled": "キャンセル済み",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "モジュのromfsフォルダを1つのromfs.binファイルにパックします。これにより、Atmosphereは何千ものファイルの代わりに1つのファイルを読み込みます。",
+  "failed": "失敗",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "romfsフォルダーを romfs.bin にパックしますか？\nAtmosphereは数千個のファイルの代わりに1つのファイルを読み込むようになります。romfsフォルダーに残されたファイルは romfs.bin よりも優先されます。",
+  "the romfs folder has no files": "romfsフォルダーにファイルがありません",
+  "no romfs folder": "romfsフォルダーがありません",
+  "packed": "パックス済み",
+  "romfs.bin already exists": "romfs.bin はすでに存在します"
 }

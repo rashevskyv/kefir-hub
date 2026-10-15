@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "рэзервовая копія з'яўляецца сырым файлам захавання, які немагчыма аднавіць",
   "Checking backups...": "Праверка рэзервовых копій...",
   "Saves to restore: ": "Захаванні для аднаўлення: ",
-  "Done:": "Гатова:"
+  "Done:": "Гатова:",
+  "Keep folders": "Захаваць папкі",
+  "Needed: ": "Патрабуецца: ",
+  "Delete folders": "Выдаліць папкі",
+  "Not enough free space on the memory card. Nothing was packed.": "Недастаткова вольнага месца на карце памяці. Нічога не было запакавана.",
+  "Free: ": "Вольна: ",
+  "Counting files": "Падлік файлаў",
+  "Pack into romfs.bin": "Pack into romfs.bin",
+  "Packing failed!": "Пакаванне не ўдалося!",
+  "Packing": "Пакаванне",
+  "cancelled": "скасавана",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Збярыце папку romfs моды ў адзін файл romfs.bin. Затым Atmosphere чытае адзін файл замест тысяч.",
+  "failed": "не ўдалося",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Упакаваць папка romfs у romfs.bin?\nAtmosphere будзе чытаць адзін файл замест тысячаў. Файлы, якія засталіся ў папцы romfs, маюць прыярытэт перад romfs.bin.",
+  "the romfs folder has no files": "папка romfs не змяшчае файлаў",
+  "no romfs folder": "няма папкі romfs",
+  "packed": "запакаваны",
+  "romfs.bin already exists": "romfs.bin ужо існуе"
 }

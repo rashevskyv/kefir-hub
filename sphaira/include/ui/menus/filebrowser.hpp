@@ -19,6 +19,10 @@ namespace sphaira::location {
 struct Entry;
 }
 
+namespace sphaira::ui {
+class Sidebar;
+}
+
 #include "ui/menus/filebrowser_entry.hpp"
 
 namespace sphaira::ui::menu::filebrowser {
@@ -80,6 +84,8 @@ private:
     void ZipFiles(fs::FsPath zip_path);
     void UploadFiles();
     void ShareFolder();
+    // "Pack into romfs.bin" for mod folders under /atmosphere/contents.
+    void AddRomfsPackOption(Sidebar* options);
 
     auto Scan(const fs::FsPath& new_path, bool is_walk_up = false) -> Result;
 

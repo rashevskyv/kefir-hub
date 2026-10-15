@@ -3259,5 +3259,22 @@
   "the backup is a raw save file, which cannot be restored": "säkerhetskopieringen är en rå sparfil som inte kan återställas",
   "Checking backups...": "Kontrollerar säkerhetskopior...",
   "Saves to restore: ": "Sparfiler att återställa: ",
-  "Done:": "Klar:"
+  "Done:": "Klar:",
+  "Keep folders": "Behåll mappar",
+  "Needed: ": "Krävs: ",
+  "Delete folders": "Radera mappar",
+  "Not enough free space on the memory card. Nothing was packed.": "Inte tillräckligt med ledigt utrymme på minneskortet. Inget packades.",
+  "Free: ": "Ledigt: ",
+  "Counting files": "Räknar filer",
+  "Pack into romfs.bin": "Packa in i romfs.bin",
+  "Packing failed!": "Packningen misslyckades!",
+  "Packing": "Packar",
+  "cancelled": "Avbruten",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Packa moddens romfs-mapp till en enda romfs.bin-fil. Atmosphere läser sedan en fil istället för tusentals.",
+  "failed": "Misslyckades",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Vill du packa romfs-mapparna till romfs.bin?\nAtmosphere läser sedan en fil istället för tusentals. Filer som lämnas kvar i romfs-mappen prioriteras över romfs.bin.",
+  "the romfs folder has no files": "romfs-mappen har inga filer",
+  "no romfs folder": "ingen romfs-mapp",
+  "packed": "pakad",
+  "romfs.bin already exists": "romfs.bin finns redan"
 }

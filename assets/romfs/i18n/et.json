@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "varukoopia on töötlemata salvestusfail, mida ei saa taastada",
   "Checking backups...": "Varukoopiate kontrollimine...",
   "Saves to restore: ": "Taastatavad salvestised: ",
-  "Done:": "Valmis:"
+  "Done:": "Valmis:",
+  "Keep folders": "Säilita kaustad",
+  "Needed: ": "Vajalik: ",
+  "Delete folders": "Kustuta kaustad",
+  "Not enough free space on the memory card. Nothing was packed.": "Mälukaardil pole piisavalt vaba ruumi. Midagi ei pakitud.",
+  "Free: ": "Vaba: ",
+  "Counting files": "Failide loendamine",
+  "Pack into romfs.bin": "Paki romfs.bin sisse",
+  "Packing failed!": "Pakkimine ebaõnnestus!",
+  "Packing": "Pakkimine",
+  "cancelled": "Tühistatud",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Paki modifikatsiooni romfs-kaust ühte romfs.bin faili. Atmosphere loeb seejärel tuhandete asemel ühte faili.",
+  "failed": "Ebaõnnestus",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Kas pakkida romfs kaustad failiks romfs.bin?\nAtmosphere loeb siis tuhandete failide asemel ühte faili. Kausta romfs jäänud failid on romfs.bin-i ees eelistatud.",
+  "the romfs folder has no files": "romfs kaustas pole faile",
+  "no romfs folder": "romfs-kausta pole",
+  "packed": "pakitud",
+  "romfs.bin already exists": "romfs.bin on juba olemas"
 }

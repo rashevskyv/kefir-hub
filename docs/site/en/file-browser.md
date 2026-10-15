@@ -32,6 +32,9 @@ The header shows the current path and the position in the list. When items are s
 Some folders get a description next to their name:
 
 - in `/atmosphere/contents/`, each title ID folder shows the game or system module name;
+<!-- draft
+- in `/atmosphere/contents/`, select title folders (or stand on one, or open one) → **+** → [[Pack into romfs.bin]] packs the `romfs` folder of each of them into `romfs.bin`, one after another; same dialog and free-space check as in [Games](games.md#mods-folder)
+-->
 - files and folders of the Kefir package (card root, `atmosphere/`, `bootloader/`, `config/`, `switch/` and others)
   show what they are for. The full list is on [What is on the microSD card](card-contents.md).
 

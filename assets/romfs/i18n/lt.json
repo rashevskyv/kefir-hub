@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "atsarginė kopija yra neapdorotas išsaugojimo failas, kurio negalima atkurti",
   "Checking backups...": "Tikrinamos atsarginės kopijos...",
   "Saves to restore: ": "Atstatomi įrašai: ",
-  "Done:": "Atlikta:"
+  "Done:": "Atlikta:",
+  "Keep folders": "Išsaugoti aplankus",
+  "Needed: ": "Reikia: ",
+  "Delete folders": "Ištrinti aplankus",
+  "Not enough free space on the memory card. Nothing was packed.": "Atminties kortelėje nėra pakankamai laisvos vietos. Niekas nebuvo supakuota.",
+  "Free: ": "Laisva: ",
+  "Counting files": "Failų skaičiavimas",
+  "Pack into romfs.bin": "Supakuoti į romfs.bin",
+  "Packing failed!": "Pakavimas nepavyko!",
+  "Packing": "Pakavimas",
+  "cancelled": "Atšaukta",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Supakuokite modifikacijos romfs aplanką į vieną romfs.bin failą. Tuomet Atmosphere skitys vieną failą vietoje tūkstančių.",
+  "failed": "Nepavyko",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Supakuoti romfs aplankus į romfs.bin?\nTada „Atmosphere“ skaito vieną failą vietoj tūkstančių. Aplanke romfs likę failai turi pirmenybę prieš romfs.bin.",
+  "the romfs folder has no files": "romfs aplanke nėra failų",
+  "no romfs folder": "nėra romfs aplanko",
+  "packed": "supakuota",
+  "romfs.bin already exists": "romfs.bin jau egzistuoja"
 }

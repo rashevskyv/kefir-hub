@@ -33,6 +33,9 @@
 Деякі папки мають опис поруч із назвою:
 
 - у `/atmosphere/contents/` кожна папка з ID тайтла показує назву гри або системного модуля;
+<!-- draft
+- in `/atmosphere/contents/`, select title folders (or stand on one, or open one) → **+** → [[Pack into romfs.bin]] packs the `romfs` folder of each of them into `romfs.bin`, one after another; same dialog and free-space check as in [Games](games.md#mods-folder)
+-->
 - файли й папки пакета Kefir (корінь карти, `atmosphere/`, `bootloader/`, `config/`, `switch/` та інші) показують,
   для чого вони. Повний список: [Що лежить на карті памʼяті](card-contents.md).
 

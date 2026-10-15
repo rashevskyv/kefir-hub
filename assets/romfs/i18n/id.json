@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "cadangan adalah file penyimpanan mentah, yang tidak dapat dipulihkan",
   "Checking backups...": "Memeriksa cadangan...",
   "Saves to restore: ": "Simpanan untuk dipulihkan: ",
-  "Done:": "Selesai:"
+  "Done:": "Selesai:",
+  "Keep folders": "Simpan folder",
+  "Needed: ": "Diperlukan: ",
+  "Delete folders": "Hapus folder",
+  "Not enough free space on the memory card. Nothing was packed.": "Ruang kosong pada kartu memori tidak cukup. Tidak ada yang dikemas.",
+  "Free: ": "Kosong: ",
+  "Counting files": "Menghitung file",
+  "Pack into romfs.bin": "Kemas ke romfs.bin",
+  "Packing failed!": "Gagal mengemas!",
+  "Packing": "Mengemas",
+  "cancelled": "Dibatalkan",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Kemas folder romfs mod ke dalam satu file romfs.bin. Atmosphere kemudian akan membaca satu file alih-alih ribuan.",
+  "failed": "Gagal",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Kemas folder romfs ke dalam romfs.bin?\nAtmosphere kemudian akan membaca satu file alih-alih ribuan. File yang tersisa di folder romfs diprioritaskan di atas romfs.bin.",
+  "the romfs folder has no files": "folder romfs tidak memiliki file",
+  "no romfs folder": "tidak ada folder romfs",
+  "packed": "dikemas",
+  "romfs.bin already exists": "romfs.bin sudah ada"
 }

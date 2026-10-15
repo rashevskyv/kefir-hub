@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.088 — pack a mod's romfs folder into romfs.bin
+- Games → details → **+** → "Pack into romfs.bin", and the file browser in `/atmosphere/contents` (several title folders at once): `<id>/romfs/` becomes one uncompressed `<id>/romfs.bin` that Atmosphère's fs.mitm layers like the loose files. One dialog first: keep or delete the folders. Free space is forecast before writing (delete: the largest image, packed first; keep: all images) plus 64 MB, and checked again per title; the image is written as `romfs.bin.part` at full size, renamed, then the folder is deleted. File data is ordered by full path, as fs.mitm requires. Hash helpers shared with `owo_romfs.cpp`.
+- host tests: pass (new `test_romfs_pack_layout`; a 3051-entry image extracts byte-identical with hactool) · nro: built · switch: pending (fs.mitm reads the image in a game, >4 GiB BigFile, 40k-file pack time, delete after pack)
+
 ## v0.14.087 — log lines carry uptime in ms
 - `log.cpp`: each line is `[HH:MM:SS <uptime s>.<ms>]`, so gaps between lines are measurable. Used to time MTP: copying 1000 × 4 KB files from Explorer, the console spends a flat ~15 ms per file; the wait for the PC's next command grows with the files already in the folder (9 ms → 349 ms; 100 files into a 1000-file folder wait ~330 ms each). FTP to the same folder stays flat at ~40 files/s. The slowdown is on the Windows side; DBI 912 answers the same MTP queries from memory too.
 - host tests: not run (log format only) · nro: built · switch: verified (.69, title mode)

@@ -78,6 +78,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Create repack | Details + | game_details_ops.cpp:190 | games#create-one-merged-nsp-repack | doc |
 | Delete game (keeps saves) | + → Delete | game_internal.cpp:458 | games#delete-a-game | doc |
 | Mods folder | details / + | game_details_ops.cpp:167 | games#mods-folder | doc |
+| Pack mods into romfs.bin | details / + ; file browser /atmosphere/contents / + | romfs_pack.cpp, filebrowser_romfs_pack.cpp | games#mods-folder, file-browser | draft |
 | Save slots: create, increase size, info | Details → Saves | game_save_manager.cpp | games#manage-save-slots | doc |
 | Sort, search, filters, options | + | game_menu.cpp, game_scan.cpp | games#sort-search-and-filter, #options | doc |
 | Saves tabs, filters, per-game view, save-type badges | Game Tools → Saves | save_menu*.cpp | saves#find-your-way-around | doc |

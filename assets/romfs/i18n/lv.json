@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "rezerves kopija ir neapstrādāts saglabāšanas fails, ko nevar atjaunot",
   "Checking backups...": "Pārbauda dublējumus...",
   "Saves to restore: ": "Atjaunojamie saglabājumi: ",
-  "Done:": "Gatavs:"
+  "Done:": "Gatavs:",
+  "Keep folders": "Saglabāt mapes",
+  "Needed: ": "Nepieciešams: ",
+  "Delete folders": "Dzēst mapes",
+  "Not enough free space on the memory card. Nothing was packed.": "Atmiņas kartē nepietiek brīvas vietas. Nekas netika iepakots.",
+  "Free: ": "Brīvs: ",
+  "Counting files": "Failu skaitīšana",
+  "Pack into romfs.bin": "Iepakot romfs.bin",
+  "Packing failed!": "Iepakošana neizdevās!",
+  "Packing": "Iepakošana",
+  "cancelled": "Atcelts",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Iepako moda romfs mapi vienā romfs.bin failā. Atmosphere pēc tam nolasa vienu failu tūkstošu vietā.",
+  "failed": "Neizdevās",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Iepakot romfs mapes failā romfs.bin?\nAtmosphere tad nolasīs vienu failu tūkstošu vietā. Mapē romfs palikušajiem failiem ir prioritāte pār romfs.bin.",
+  "the romfs folder has no files": "romfs mapē nav failu",
+  "no romfs folder": "nav romfs mapes",
+  "packed": "iepakots",
+  "romfs.bin already exists": "romfs.bin jau pastāv"
 }

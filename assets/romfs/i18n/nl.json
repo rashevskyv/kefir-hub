@@ -3259,5 +3259,22 @@
   "the backup is a raw save file, which cannot be restored": "de backup is een ruw opslagbestand, dat niet kan worden hersteld",
   "Checking backups...": "Back-ups controleren...",
   "Saves to restore: ": "Te herstellen savegames: ",
-  "Done:": "Klaar:"
+  "Done:": "Klaar:",
+  "Keep folders": "Mappen behouden",
+  "Needed: ": "Vereist: ",
+  "Delete folders": "Mappen verwijderen",
+  "Not enough free space on the memory card. Nothing was packed.": "Niet genoeg vrije ruimte op de geheugenkaart. Er is niets ingepakt.",
+  "Free: ": "Vrij: ",
+  "Counting files": "Bestanden tellen",
+  "Pack into romfs.bin": "Inpakken in romfs.bin",
+  "Packing failed!": "Inpakken mislukt!",
+  "Packing": "Inpakken",
+  "cancelled": "Geannuleerd",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Pak de romfs-map van de mod in één romfs.bin-bestand. Atmosphere leest dan één bestand in plaats van duizenden.",
+  "failed": "Mislukt",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "De romfs-mappen in romfs.bin pakken?\nAtmosphere leest dan één bestand in plaats van duizenden. Bestanden die in de romfs-map achterblijven, krijgen voorrang op romfs.bin.",
+  "the romfs folder has no files": "de romfs-map bevat geen bestanden",
+  "no romfs folder": "geen romfs-map",
+  "packed": "ingepakt",
+  "romfs.bin already exists": "romfs.bin bestaat al"
 }

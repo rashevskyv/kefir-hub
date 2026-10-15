@@ -1,4 +1,5 @@
 #include "owo_internal.hpp"
+#include "romfs_pack_layout.hpp"
 #include "yati/nx/crypto.hpp"
 #include <switch.h>
 #include <cstring>
@@ -55,16 +56,6 @@ auto romfs_get_fentry(romfs_file *files, u32 offset) -> romfs_file* {
     return (romfs_file*)((u8*)files + offset);
 }
 
-auto calc_path_hash(u32 parent, const u8 *path, u32 start, u32 path_len) -> u32 {
-    u32 hash = parent ^ 123456789;
-    for (u32 i = 0; i < path_len; i++) {
-        hash = (hash >> 5) | (hash << 27);
-        hash ^= path[start + i];
-    }
-
-    return hash;
-}
-
 auto align(u32 offset, u32 alignment) -> u32 {
     const u32 mask = ~(alignment - 1);
     return (offset + (alignment - 1)) & mask;
@@ -73,21 +64,6 @@ auto align(u32 offset, u32 alignment) -> u32 {
 auto align64(u64 offset, u64 alignment) -> u64 {
     const u64 mask = ~(u64)(alignment - 1);
     return (offset + (alignment - 1)) & mask;
-}
-
-auto romfs_get_hash_table_count(u32 num_entries) -> u32 {
-    if (num_entries < 3) {
-        return 3;
-    } else if (num_entries < 19) {
-        return num_entries | 1;
-    }
-
-    u32 count = num_entries;
-    while (count % 2 == 0 || count % 3 == 0 || count % 5 == 0 || count % 7 == 0 || count % 11 == 0 || count % 13 == 0 || count % 17 == 0) {
-        count++;
-    }
-
-    return count;
 }
 
 void romfs_visit_dir(const FileEntries& entries, romfs_dirent_ctx_t *parent, romfs_ctx_t *romfs_ctx) {
@@ -150,8 +126,8 @@ void build_romfs_into_file(const FileEntries& entries, BufHelper& buf) {
 
     /* Visit all directories. */
     romfs_visit_dir(entries, root_ctx, &romfs_ctx);
-    const u32 dir_hash_table_entry_count = romfs_get_hash_table_count(romfs_ctx.num_dirs);
-    const u32 file_hash_table_entry_count = romfs_get_hash_table_count(romfs_ctx.num_files);
+    const u32 dir_hash_table_entry_count = romfs_pack::HashTableCount(romfs_ctx.num_dirs);
+    const u32 file_hash_table_entry_count = romfs_pack::HashTableCount(romfs_ctx.num_files);
     romfs_ctx.dir_hash_table_size = 4 * dir_hash_table_entry_count;
     romfs_ctx.file_hash_table_size = 4 * file_hash_table_entry_count;
 
@@ -191,7 +167,7 @@ void build_romfs_into_file(const FileEntries& entries, BufHelper& buf) {
         cur_entry->dataSize = (cur_file->size);
 
         const u32 name_size = e.name.length() - 1;
-        const u32 hash = calc_path_hash(cur_file->parent->entry_offset, (const u8 *)e.name.c_str(), 1, name_size);
+        const u32 hash = romfs_pack::PathHash(cur_file->parent->entry_offset, e.name.c_str() + 1, name_size);
         cur_entry->nextHash = file_hash_table[hash % file_hash_table_entry_count];
         file_hash_table[hash % file_hash_table_entry_count] = (cur_file->entry_offset);
 
@@ -211,7 +187,7 @@ void build_romfs_into_file(const FileEntries& entries, BufHelper& buf) {
         cur_entry->childDir = cur_dir->child == NULL ? ROMFS_ENTRY_EMPTY : cur_dir->child->entry_offset;
         cur_entry->childFile = cur_dir->file == NULL ? ROMFS_ENTRY_EMPTY : cur_dir->file->entry_offset;
 
-        const auto hash = calc_path_hash(0, 0, 0, 0);
+        const auto hash = romfs_pack::PathHash(0, nullptr, 0);
         cur_entry->nextHash = dir_hash_table[hash % dir_hash_table_entry_count];
         dir_hash_table[hash % dir_hash_table_entry_count] = (cur_dir->entry_offset);
 

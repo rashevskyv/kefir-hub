@@ -125,6 +125,13 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 - **+** → [[Open mods folder]] відкриває її у файловому менеджері. Якщо папки немає, пункт називається [[Create mods folder]]; підтвердіть кнопкою [[Create]].
 - Зі списку **+** → [[Create mods folders]] створює папку для кожної позначеної гри.
 - **+** → [[Delete mods]] видаляє все в папці, крім `cheats/`; чити керуються в розділі [Чити](cheats.md).
+<!-- draft
+- **+** → [[Pack into romfs.bin]] is shown when the game has a `romfs` folder in its mods folder. It packs `<Title ID>/romfs/` into one file `<Title ID>/romfs.bin`, without compression; Atmosphère reads it the same way, but opens one file instead of thousands
+- first a dialog: [[Back]], [[Keep folders]] or [[Delete folders]]. Files left in `romfs/` take priority over `romfs.bin`, so keeping the folder gives no gain
+- free space is checked before anything is written. With [[Delete folders]] only the largest `romfs.bin` must fit: titles are packed largest first and each `romfs/` folder is deleted right after its file is written. With [[Keep folders]] all files together must fit. 64 MB always stay free. If it does not fit, nothing is packed and the dialog shows the space needed and free
+- a title that already has `romfs.bin` is skipped (the old file is not overwritten); a half-written file is named `romfs.bin.part` and is removed on cancel or error
+- the end report lists each title: packed (size), skipped (reason) or failed (error code)
+-->
 
 Порожня папка нічого не робить — скопіюйте в неї файли мода.
 

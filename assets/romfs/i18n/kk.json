@@ -3254,5 +3254,22 @@
   "the backup is a raw save file, which cannot be restored": "сақтық көшірме - бұл қалпына келтіруге болмайтын шикі сақтау файлы",
   "Checking backups...": "Резервтік көшірмелерді тексеру...",
   "Saves to restore: ": "Қалпына келтірілетін сақтаулар: ",
-  "Done:": "Дайын:"
+  "Done:": "Дайын:",
+  "Keep folders": "Папкаларды сақтау",
+  "Needed: ": "Қажет: ",
+  "Delete folders": "Қалталарды жою",
+  "Not enough free space on the memory card. Nothing was packed.": "Жад картасында бос орын жеткіліксіз. Ештеңе буып-түйілмеді.",
+  "Free: ": "Бос: ",
+  "Counting files": "Файлдарды санау",
+  "Pack into romfs.bin": "romfs.bin ішіне жинақтау",
+  "Packing failed!": "Бумау сәтсіз аяқталды!",
+  "Packing": "Бумалау",
+  "cancelled": "Болдырылмады",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Модтың romfs қалтасын бір romfs.bin файлына жинақтаңыз. Содан кейін Atmosphere мыңдаған файлдың орнына бір файлды оқиды.",
+  "failed": "Сәтсіз",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "romfs қалталарын romfs.bin ішіне бумалау керек пе?\nСодан кейін Atmosphere мыңдаған файлдың орнына бір файлды оқиды. romfs қалтасында қалған файлдар romfs.bin-нен басым болады.",
+  "the romfs folder has no files": "romfs қалшытында файлдар жоқ",
+  "no romfs folder": "romfs бумасы жоқ",
+  "packed": "буып-түйілген",
+  "romfs.bin already exists": "romfs.bin бұрыннан бар"
 }

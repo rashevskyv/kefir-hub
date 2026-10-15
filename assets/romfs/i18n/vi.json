@@ -3259,5 +3259,22 @@
   "the backup is a raw save file, which cannot be restored": "bản sao lưu là tệp lưu thô, không thể khôi phục",
   "Checking backups...": "Đang kiểm tra bản sao lưu...",
   "Saves to restore: ": "Bản lưu để khôi phục: ",
-  "Done:": "Hoàn tất:"
+  "Done:": "Hoàn tất:",
+  "Keep folders": "Giữ thư mục",
+  "Needed: ": "Cần thiết: ",
+  "Delete folders": "Xóa thư mục",
+  "Not enough free space on the memory card. Nothing was packed.": "Không đủ dung lượng trống trên thẻ nhớ. Không có gì được đóng gói.",
+  "Free: ": "Trống: ",
+  "Counting files": "Đang đếm tệp",
+  "Pack into romfs.bin": "Đóng gói vào romfs.bin",
+  "Packing failed!": "Đóng gói thất bại!",
+  "Packing": "Đang đóng gói",
+  "cancelled": "Đã hủy",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Nén thư mục romfs của bản mod thành một tệp romfs.bin duy nhất. Atmosphere sau đó sẽ đọc một tệp thay vì hàng nghìn tệp.",
+  "failed": "Thất bại",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "Đóng gói các thư mục romfs thành romfs.bin?\nAtmosphere sau đó sẽ đọc một tệp thay vì hàng nghìn tệp. Các tệp còn lại trong thư mục romfs sẽ được ưu tiên hơn romfs.bin.",
+  "the romfs folder has no files": "thư mục romfs không có tệp nào",
+  "no romfs folder": "không có thư mục romfs",
+  "packed": "đã đóng gói",
+  "romfs.bin already exists": "romfs.bin đã tồn tại"
 }

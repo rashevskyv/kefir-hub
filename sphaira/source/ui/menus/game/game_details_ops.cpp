@@ -1,6 +1,7 @@
 #include "ui/menus/game/game_details_internal.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "forced_language.hpp"
+#include "romfs_pack.hpp"
 #include "control_patch.hpp"
 #include "ui/list.hpp"
 #include "ui/sidebar.hpp"
@@ -364,6 +365,14 @@ void DbiDetailsMenu::ShowGameActions() {
         options->Add<SidebarEntryCallback>("Restrictions"_i18n, [this](){
             ShowRestrictions();
         }, "Linked Nintendo Account, screenshots and video capture. Changing them needs sigpatches."_i18n)->SetIcon(ActionIcon::Edit);
+        if (CurrentEntry().layeredfs && romfs_pack::CanPack(title::GetContentsPath(CurrentEntry().app_id))) {
+            options->Add<SidebarEntryCallback>("Pack into romfs.bin"_i18n, [this](){
+                romfs_pack::PackTitles({title::GetContentsPath(CurrentEntry().app_id)}, [this](){
+                    ProbeModsFolder(CurrentEntry());
+                    LoadGame();
+                });
+            }, true, "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands."_i18n)->SetIcon(ActionIcon::Compress);
+        }
         if (CurrentEntry().layeredfs) {
             options->Add<SidebarEntryCallback>("Delete mods"_i18n, [this](){
                 const auto app_id = CurrentEntry().app_id;

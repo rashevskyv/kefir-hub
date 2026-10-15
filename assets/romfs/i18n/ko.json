@@ -3259,5 +3259,22 @@
   "the backup is a raw save file, which cannot be restored": "백업은 원시 세이브 파일이므로 복원할 수 없습니다",
   "Checking backups...": "백업 확인 중...",
   "Saves to restore: ": "복원할 세이브 데이터: ",
-  "Done:": "완료:"
+  "Done:": "완료:",
+  "Keep folders": "폴더 유지",
+  "Needed: ": "필요: ",
+  "Delete folders": "폴더 삭제",
+  "Not enough free space on the memory card. Nothing was packed.": "메모리 카드의 여유 공간이 부족합니다. 패키징된 항목이 없습니다.",
+  "Free: ": "여유 공간: ",
+  "Counting files": "파일 세는 중",
+  "Pack into romfs.bin": "romfs.bin으로 패킹",
+  "Packing failed!": "압축 실패!",
+  "Packing": "패키징 중",
+  "cancelled": "취소됨",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "모드의 romfs 폴더를 하나의 romfs.bin 파일로 패킹합니다. Atmosphere가 수천 개의 파일 대신 하나의 파일을 읽게 됩니다.",
+  "failed": "실패",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "romfs 폴더를 romfs.bin으로 패킹하시겠습니까?\n이제 Atmosphere는 수천 개의 파일 대신 하나의 파일을 읽습니다. romfs 폴더에 남아 있는 파일은 romfs.bin보다 우선시됩니다.",
+  "the romfs folder has no files": "romfs 폴더에 파일이 없습니다",
+  "no romfs folder": "romfs 폴더가 없습니다",
+  "packed": "패킹됨",
+  "romfs.bin already exists": "romfs.bin이(가) 이미 존재합니다"
 }

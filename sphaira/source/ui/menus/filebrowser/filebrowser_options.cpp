@@ -199,6 +199,7 @@ void FsView::DisplayOptions() {
             RestoreSaveFile(GetEntry());
         }, "Restore this save backup directory to the console."_i18n);
     }
+    AddRomfsPackOption(options.get());
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
         options->Add<SidebarEntryCallback>("View as text"_i18n, [this](){

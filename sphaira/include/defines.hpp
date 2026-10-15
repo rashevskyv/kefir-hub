@@ -257,6 +257,9 @@ enum class SphairaResult : Result {
     // downloaded / read.
     GameUpdatesListDownload,
     GameUpdatesListParse,
+
+    // a mod file changed size while it was being packed into romfs.bin.
+    RomfsPackSourceChanged,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -398,6 +401,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(ArchiveRead),
     MAKE_SPHAIRA_RESULT_ENUM(GameUpdatesListDownload),
     MAKE_SPHAIRA_RESULT_ENUM(GameUpdatesListParse),
+    MAKE_SPHAIRA_RESULT_ENUM(RomfsPackSourceChanged),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

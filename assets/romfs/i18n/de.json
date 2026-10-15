@@ -3260,5 +3260,22 @@
   "the backup is a raw save file, which cannot be restored": "Das Backup ist eine rohe Save-Datei, die nicht wiederhergestellt werden kann",
   "Checking backups...": "Backups werden überprüft...",
   "Saves to restore: ": "Wiederherzustellende Speicherstände: ",
-  "Done:": "Fertig:"
+  "Done:": "Fertig:",
+  "Keep folders": "Ordner behalten",
+  "Needed: ": "Benötigt: ",
+  "Delete folders": "Ordner löschen",
+  "Not enough free space on the memory card. Nothing was packed.": "Nicht genügend freier Speicherplatz auf der Speicherkarte. Nichts wurde gepackt.",
+  "Free: ": "Frei: ",
+  "Counting files": "Dateien zählen",
+  "Pack into romfs.bin": "In romfs.bin packen",
+  "Packing failed!": "Packen fehlgeschlagen!",
+  "Packing": "Packen",
+  "cancelled": "Abgebrochen",
+  "Pack the mod's romfs folder into one romfs.bin file. Atmosphere then reads one file instead of thousands.": "Packe den RomFS-Ordner des Mods in eine romfs.bin-Datei. Atmosphere liest dann eine Datei statt Tausenden.",
+  "failed": "Fehlgeschlagen",
+  "Pack the romfs folders into romfs.bin?\nAtmosphere then reads one file instead of thousands. Files left in the romfs folder take priority over romfs.bin.": "romfs-Ordner in romfs.bin packen?\nAtmosphere liest dann eine Datei statt Tausenden. Im romfs-Ordner verbleibende Dateien haben Vorrang vor romfs.bin.",
+  "the romfs folder has no files": "Der romfs-Ordner enthält keine Dateien",
+  "no romfs folder": "kein romfs-Ordner",
+  "packed": "gepackt",
+  "romfs.bin already exists": "romfs.bin existiert bereits"
 }
