@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.089 — romfs.bin packing: Stop works inside a large file
+- `romfs_pack.cpp`: Stop was checked only between files, so one 2 GB mod file was packed to the end after Stop was confirmed. Now checked on every 1 MiB write. Found on the console.
+- Console check (.69, FAT32 card, AMS 1.12.0): both menu entries shown; 3784 entries packed in ~4 s and 40784 entries (40005 files) in ~33 s, images byte-identical after hactool extract; a 4.5 GiB image (BigFile on FAT32) packed in 140 s, the file inside hashes right; fs.mitm serves all 3005 files of a packed romfs.bin with the right sha256 (read through the Hub title's own romfs); a batch of two packs the largest first and forecasts only the largest; Stop leaves `romfs/` and no `.part`; a 40k-file folder frees ~2.4 GB of FAT32 clusters.
+- host tests: pass · nro: built · switch: verified (pack, hactool, fs.mitm read, BigFile, Stop, batch); not checked: a game started with a 40k-file romfs.bin, the "not enough space" refusal
+
 ## v0.14.088 — pack a mod's romfs folder into romfs.bin
 - Games → details → **+** → "Pack into romfs.bin", and the file browser in `/atmosphere/contents` (several title folders at once): `<id>/romfs/` becomes one uncompressed `<id>/romfs.bin` that Atmosphère's fs.mitm layers like the loose files. One dialog first: keep or delete the folders. Free space is forecast before writing (delete: the largest image, packed first; keep: all images) plus 64 MB, and checked again per title; the image is written as `romfs.bin.part` at full size, renamed, then the folder is deleted. File data is ordered by full path, as fs.mitm requires. Hash helpers shared with `owo_romfs.cpp`.
 - host tests: pass (new `test_romfs_pack_layout`; a 3051-entry image extracts byte-identical with hactool) · nro: built · switch: pending (fs.mitm reads the image in a game, >4 GiB BigFile, 40k-file pack time, delete after pack)

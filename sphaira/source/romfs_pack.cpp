@@ -119,7 +119,9 @@ auto WriteImage(ui::ProgressBox* pbox, fs::File& f, const fs::FsPath& romfs, fs:
     u64 base = DATA_OFFSET; // image offset of buf[0]
     u64 used = 0;
     s64 done = 0;
+    // checked per MiB, not only per file: one multi-GB file must not hold Stop off until it is copied.
     const auto flush = [&]() -> Result {
+        R_TRY(pbox->ShouldExitResult());
         R_TRY(f.Write(base, buf.data(), used, FsWriteOption_None));
         base += used;
         used = 0;
