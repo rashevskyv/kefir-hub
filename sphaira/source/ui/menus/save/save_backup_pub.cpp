@@ -41,7 +41,12 @@ void Menu::BackupSaves(std::vector<Entry> entries) {
 
 auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs::FsPath& backup_root) -> Result {
     const auto location = MakeSdCardDumpLocation();
+    const auto total = static_cast<s64>(entries.size() > 1 ? entries.size() : 0);
+    s64 done = 0;
+    // the caller may go on with other steps in the same box: hide the whole-job bar afterwards.
+    ON_SCOPE_EXIT(pbox->SetOverall(0, 0));
     for (auto& e : entries) {
+        pbox->SetOverall(done++, total);
         R_TRY(pbox->ShouldExitResult());
         detail::LoadControlEntry(e);
         R_TRY(BackupSaveInternal(pbox, location, e, App::GetSaveCompressBackup(), false, backup_root));
@@ -60,7 +65,11 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             ? static_cast<fs::Fs*>(&stdio_fs)
             : static_cast<fs::Fs*>(&sd_fs);
         const bool can_probe = location.entry.type == dump::DumpLocationType_SdCard || location.entry.type == dump::DumpLocationType_Stdio;
+        // several saves: a whole-job bar under the bar of the current save.
+        const auto total = static_cast<s64>(entries.size() > 1 ? entries.size() : 0);
+        ON_SCOPE_EXIT(pbox->SetOverall(total, total));
         for (size_t i = 0; i < entries.size(); i++) {
+            pbox->SetOverall(static_cast<s64>(i), total);
             auto& e = entries[i];
             // the entry may not have loaded yet.
             detail::LoadControlEntry(e);

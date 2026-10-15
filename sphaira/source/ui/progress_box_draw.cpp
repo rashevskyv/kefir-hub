@@ -317,6 +317,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto end_y = m_pos.y + m_pos.h;
     const auto progress_bar_w = m_pos.w - 230;
     const Vec4 prog_bar = { center_x - progress_bar_w / 2, end_y - (m_detached ? 160.f : 115.f), progress_bar_w, 12 };
+    // a job over many items: the current item's thin bar on top, the whole job's thick bar at the bottom.
+    const Vec4 item_bar = show_overall ? Vec4{prog_bar.x, prog_bar.y - 40.f, prog_bar.w, 8.f} : prog_bar;
 
     nvgSave(vg);
     nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
@@ -331,11 +333,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     if (show_overall) {
-        // the whole job: "Done: 3 / 40" and its own bar, above the bar of the current item.
-        const Vec4 bar{prog_bar.x, prog_bar.y - 34.f, prog_bar.w, 8.f};
+        // the whole job: "Done: 3 / 40" and its own bar, below the bar of the current item.
+        const Vec4 bar = prog_bar;
         const auto fraction = static_cast<float>(overall_done) / static_cast<float>(overall_total);
-        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3);
-        gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
+        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 5);
+        gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5);
         gfx::drawTextArgs(vg, bar.x, bar.y - 6.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
             "%s %lld / %lld", "Done:"_i18n.c_str(), static_cast<long long>(overall_done), static_cast<long long>(overall_total));
         gfx::drawTextArgs(vg, bar.x + bar.w + 15.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT),
@@ -348,15 +350,15 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         const auto pad = 15.F;
         const float rounding = 5;
 
-        gfx::drawRect(vg, prog_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
+        gfx::drawRect(vg, item_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
         // some transfer sources (e.g. the MTP copy callback) report a running
         // byte offset against a per-chunk size rather than the file total, which
         // would drive the bar/percentage past 100%. clamp the displayed fraction
         // so the bar never overflows; raw offset is still used for speed/ETA.
         const s64 draw_offset = std::clamp<s64>(offset, 0, size);
         const u32 percentage = ((double)draw_offset / (double)size) * 100.0;
-        gfx::drawRect(vg, prog_bar.x, prog_bar.y, ((float)draw_offset / (float)size) * prog_bar.w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
-        gfx::drawTextArgs(vg, prog_bar.x + prog_bar.w + pad, prog_bar.y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%u%%", percentage);
+        gfx::drawRect(vg, item_bar.x, item_bar.y, ((float)draw_offset / (float)size) * item_bar.w, item_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
+        gfx::drawTextArgs(vg, item_bar.x + item_bar.w + pad, item_bar.y + item_bar.h / 2.f, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), "%u%%", percentage);
 
         if (speed_sample_count >= 3 && speed > 0) {
             const double speed_mb = (double)speed / (1024.0 * 1024.0);
@@ -401,16 +403,16 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         const auto pad = 15.F;
         const float rounding = 5;
 
-        gfx::drawRect(vg, prog_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
+        gfx::drawRect(vg, item_bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), rounding);
         // the segment travels from fully outside the left edge to fully past
         // the right edge, clipped to the bar, so it leaves and re-enters
         // instead of vanishing the moment it touches the right end.
-        const float chase_w = prog_bar.w * 0.25f;
+        const float chase_w = item_bar.w * 0.25f;
         const double phase = std::fmod((double)(armTicksToNs(armGetSystemTick()) / 1000000ULL) / 2000.0, 1.0);
-        const float chase_x = prog_bar.x - chase_w + (float)phase * (prog_bar.w + chase_w);
+        const float chase_x = item_bar.x - chase_w + (float)phase * (item_bar.w + chase_w);
         nvgSave(vg);
-        nvgIntersectScissor(vg, prog_bar.x, prog_bar.y, prog_bar.w, prog_bar.h);
-        gfx::drawRect(vg, chase_x, prog_bar.y, chase_w, prog_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
+        nvgIntersectScissor(vg, item_bar.x, item_bar.y, item_bar.w, item_bar.h);
+        gfx::drawRect(vg, chase_x, item_bar.y, chase_w, item_bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), rounding);
         nvgRestore(vg);
 
         char done_str[32];
@@ -419,7 +421,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         } else {
             std::snprintf(done_str, sizeof(done_str), "%.1f KiB", (double)offset / 1024.0);
         }
-        gfx::drawTextArgs(vg, prog_bar.x + prog_bar.w + pad, prog_bar.y, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", done_str);
+        gfx::drawTextArgs(vg, item_bar.x + item_bar.w + pad, item_bar.y + item_bar.h / 2.f, font_size, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), "%s", done_str);
 
         if (speed_sample_count >= 3 && speed > 0 && !hide_speed) {
             const double speed_mb = (double)speed / (1024.0 * 1024.0);
