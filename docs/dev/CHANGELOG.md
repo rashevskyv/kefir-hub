@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.100 — PC Install (USB) writes a release's ports, translations and mods to the microSD
+- DBI Backend Qt 2.9.11+ sends each chosen option of a release as `<game> - <option>.kefir-sd.tar`. New `sd_bundle.cpp` reads it as one stream (live queue, retry and status as for packages) and writes the members to the microSD; an archive member (zip/7z/rar) is extracted with its `.kefir/rules`. Never written: `Nintendo/`, `emuMMC/`, `bootloader/`, and a port's existing `save/` files. `archive::ExtractMapped` = the extractor with an entry map and the install progress interface; the file browser's Extract is unchanged.
+- host tests: pass (new test_sd_bundle_rules) · nro: built · switch: pending (DKC: 3 stubs + 3 ports; Phoenix Wright zip mod)
+
 ## v0.14.099 — wide check lists with scrolling descriptions; «тікети» in Ukrainian
 - `PopupList`: check lists and two-line rows use the full width (1180 px); the selected row's description scrolls when it does not fit; every bottom list is clipped between its two lines, so no row draws over the header line. uk.json: «квиток» → «тікет» (10 strings); translate.py rule 10 keeps it.
 - host tests: pass · nro: built · switch: pending (.69: Tools → Clean system junk)

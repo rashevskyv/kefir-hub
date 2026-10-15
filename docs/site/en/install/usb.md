@@ -58,6 +58,17 @@ With DBI Backend Qt the queue stays in sync with the PC app:
 
 <!-- TODO(verify): which DBI Backend Qt version supports the live queue, and where can users download it? -->
 
+## Releases with ports, translations and mods {#releases}
+
+<!-- draft
+- DBI Backend Qt 2.9.10+: a dropped folder with ports, port files, translations or mods opens "Choose what to install": one block per game, a tick box per option, pre-ticked in the PC's language (then English); one mod is ticked only when the game has exactly one; all ports of a shared switch/ folder (Donkey Kong Country 1-3) are ticked. "Choose What to Install..." in the queue row's menu changes it until the game starts. The choice is kept in presets.
+- a mod with its own update: that update is installed instead of the newer one in the release
+- each ticked option becomes one queue row "<game> - <option>.kefir-sd.tar" after the game's packages, target SD card; Kefir Hub 0.14.100+ writes its files to the microSD; archives (zip, 7z, rar) are sent as they are and extracted on the console
+- never written: Nintendo/, emuMMC/, bootloader/; a port's save files that are already on the console stay
+- USB only for now; an older Kefir Hub marks such a row as failed and goes on with the queue
+-->
+<!-- shot: install-usb-release-dialog | DBI Backend Qt: Choose what to install, Donkey Kong Country Trilogy -->
+
 ## The USB speed badge {#usb-speed}
 
 The waiting screen shows the USB mode:

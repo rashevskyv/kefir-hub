@@ -1,6 +1,7 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi/dbi_internal.hpp"
+#include "sd_bundle_rules.hpp"
 #include "path_util.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -62,6 +63,17 @@ s64 QueuePackageSize(const QueueEntry& entry) {
 // how much a package is expected to write. Deferred entries only know their
 // (possibly compressed) source size, so they get the same 1.6x factor that
 // yati::ChooseInstallTarget uses, otherwise the plan under-books their space.
+Result AnalyzeQueueName(yati::source::Usb* source, const std::string& name, yati::InstallAnalysis& out) {
+    if (sd_bundle::IsBundleName(name)) {
+        out = {};
+        out.source_size = out.install_size = std::max<s64>(0, source->GetFileSize(name));
+        out.suggested_sd = true;
+        R_SUCCEED();
+    }
+    source->SetFileNameForTranfser(name);
+    return yati::AnalyzeSource(source, fs::FsPath{name}, out);
+}
+
 s64 PlanSize(const QueueEntry& entry) {
     if (!entry.analysis_deferred) {
         return std::max<s64>(0, entry.analysis.install_size);

@@ -1,6 +1,8 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi/dbi_internal.hpp"
+#include "sd_bundle.hpp"
+#include "sd_bundle_rules.hpp"
 #include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
@@ -108,8 +110,7 @@ void Menu::ThreadFunction() {
             if (m_cancel_requested || GetToken().stop_requested()) break;
             QueueEntry entry{};
             entry.file_name = name;
-            m_usb_source->SetFileNameForTranfser(name);
-            entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, entry.analysis);
+            entry.analysis_result = AnalyzeQueueName(m_usb_source.get(), name, entry.analysis);
             s64 pc_size = m_usb_source->GetFileSize(name);
             if (pc_size > 0) {
                 entry.analysis.source_size = pc_size;
@@ -244,8 +245,7 @@ void Menu::ThreadFunction() {
                 if (m_cancel_requested) break;
 
                 if (analysis_deferred) {
-                    m_usb_source->SetFileNameForTranfser(name);
-                    const auto a_rc = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{name}, analysis);
+                    const auto a_rc = AnalyzeQueueName(m_usb_source.get(), name, analysis);
                     {
                         SCOPED_MUTEX(&m_mutex);
                         m_queue[i].analysis = analysis;
@@ -307,7 +307,10 @@ void Menu::ThreadFunction() {
                             }
                         });
                     }
-                    install_rc = yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                    // a microSD bundle goes through the same retry, live queue and status path.
+                    install_rc = sd_bundle::IsBundleName(name)
+                        ? sd_bundle::Receive(this, m_usb_source.get(), m_usb_source->GetFileSize(name))
+                        : yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
                     if (sync_supported) {
                         m_usb_source->SetPostReadHook(nullptr);
                     }

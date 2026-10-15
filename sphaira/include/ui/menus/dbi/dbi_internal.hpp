@@ -29,6 +29,10 @@ auto ResultText(Result rc) -> std::string;
 auto IsDbiSessionError(Result rc) -> bool;
 void AddSizeSaturated(s64& total, s64 value);
 s64 PlanSize(const QueueEntry& entry);
+
+// a queue name's analysis. A microSD bundle from the PC (sd_bundle_rules.hpp) is no package: it
+// writes its own size to the microSD, which the PC marks as its target.
+Result AnalyzeQueueName(yati::source::Usb* source, const std::string& name, yati::InstallAnalysis& out);
 s64 QueuePackageSize(const QueueEntry& entry);
 bool IsEntryAlreadyInstalled(const QueueEntry& entry);
 bool IsBaseMissing(const QueueEntry& entry);

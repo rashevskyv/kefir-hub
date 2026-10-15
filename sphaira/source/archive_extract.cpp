@@ -8,6 +8,7 @@
 #include <archive_entry.h>
 #include <algorithm>
 #include <cstdio>
+#include <functional>
 #include <vector>
 
 namespace sphaira::archive {
@@ -41,7 +42,7 @@ la_int64_t OnSeek(struct archive*, void* user, la_int64_t offset, int whence) {
     return src->off;
 }
 
-Result WriteEntry(ui::ProgressBox* pbox, struct archive* a, fs::Fs* fs, const fs::FsPath& dest, const Source& src) {
+Result WriteEntry(ui::InstallProgress* pbox, struct archive* a, fs::Fs* fs, const fs::FsPath& dest, const Source& src) {
     R_TRY(fs->CreateDirectoryRecursivelyWithPath(dest));
     fs->DeleteFile(dest);
     R_TRY(fs->CreateFile(dest));
@@ -52,7 +53,7 @@ Result WriteEntry(ui::ProgressBox* pbox, struct archive* a, fs::Fs* fs, const fs
     size_t size;
     la_int64_t offset;
     while (true) {
-        R_TRY(pbox->ShouldExitResult());
+        R_TRY(pbox->CheckCancelled());
         const auto r = archive_read_data_block(a, &block, &size, &offset);
         if (r == ARCHIVE_EOF) {
             R_SUCCEED();
@@ -62,13 +63,14 @@ Result WriteEntry(ui::ProgressBox* pbox, struct archive* a, fs::Fs* fs, const fs
             R_THROW(Result_ArchiveRead);
         }
         R_TRY(out.Write(offset, block, size, FsWriteOption_None));
-        pbox->UpdateTransfer(src.off, src.size);
+        pbox->UpdateInstallTransfer(src.off, src.size);
     }
 }
 
-} // namespace
+// where an entry goes, or nullopt to skip it; `is_dir` entries only make their folder.
+using Place = std::function<std::optional<fs::FsPath>(const char* name, bool raw, bool is_dir)>;
 
-Result Extract(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& archive_path, const fs::FsPath& out_dir) {
+Result Run(ui::InstallProgress* pbox, fs::Fs* fs, const fs::FsPath& archive_path, const Place& place) {
     Source src;
     R_TRY(fs->OpenFile(archive_path, FsOpenMode_Read, &src.file));
     R_TRY(src.file.GetSize(&src.size));
@@ -87,10 +89,10 @@ Result Extract(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& archive_path
         R_THROW(Result_ArchiveRead);
     }
 
-    pbox->NewTransfer("Extracting "_i18n).UpdateTransfer(0, src.size);
+    pbox->UpdateInstallTransfer(0, src.size);
     struct archive_entry* entry;
     while (true) {
-        R_TRY(pbox->ShouldExitResult());
+        R_TRY(pbox->CheckCancelled());
         const auto r = archive_read_next_header(a, &entry);
         if (r == ARCHIVE_EOF) {
             break;
@@ -105,24 +107,51 @@ Result Extract(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& archive_path
             name = archive_entry_pathname(entry);
         }
         const bool raw = archive_format(a) == ARCHIVE_FORMAT_RAW;
-        const auto rel = OutputPath(name ? name : "", raw, archive_path.s);
         const auto type = archive_entry_filetype(entry);
-        if (!rel || (type != AE_IFREG && type != AE_IFDIR)) {
+        const auto dest = (type == AE_IFREG || type == AE_IFDIR) ? place(name ? name : "", raw, type == AE_IFDIR) : std::nullopt;
+        if (!dest) {
             log_write("[ARCHIVE] skipping %s\n", name ? name : "(no name)");
             archive_read_data_skip(a);
             continue;
         }
 
-        const auto dest = fs::AppendPath(out_dir, rel->c_str());
-        pbox->SetTransfer(*rel);
         if (type == AE_IFDIR) {
-            R_TRY(fs->CreateDirectoryRecursively(dest));
+            R_TRY(fs->CreateDirectoryRecursively(*dest));
         } else {
-            R_TRY(WriteEntry(pbox, a, fs, dest, src));
+            R_TRY(WriteEntry(pbox, a, fs, *dest, src));
         }
     }
 
     R_SUCCEED();
+}
+
+} // namespace
+
+Result Extract(ui::ProgressBox* pbox, fs::Fs* fs, const fs::FsPath& archive_path, const fs::FsPath& out_dir) {
+    pbox->NewTransfer("Extracting "_i18n);
+    const auto place = [&](const char* name, bool raw, bool) -> std::optional<fs::FsPath> {
+        const auto rel = OutputPath(name, raw, archive_path.s);
+        if (!rel) {
+            return std::nullopt;
+        }
+        pbox->SetTransfer(*rel);
+        return fs::AppendPath(out_dir, rel->c_str());
+    };
+    return Run(pbox, fs, archive_path, place);
+}
+
+Result ExtractMapped(ui::InstallProgress* progress, fs::Fs* fs, const fs::FsPath& archive_path, const EntryMap& map) {
+    const auto place = [&](const char* name, bool, bool is_dir) -> std::optional<fs::FsPath> {
+        if (is_dir) {
+            return std::nullopt; // folders come with their files
+        }
+        const auto dest = map(name);
+        if (!dest) {
+            return std::nullopt;
+        }
+        return fs::FsPath{*dest};
+    };
+    return Run(progress, fs, archive_path, place);
 }
 
 } // namespace sphaira::archive

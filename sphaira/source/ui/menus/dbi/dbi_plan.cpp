@@ -199,8 +199,7 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
                 QueueEntry entry{};
                 entry.file_name = item.name;
                 if (m_usb_source) {
-                    m_usb_source->SetFileNameForTranfser(item.name);
-                    entry.analysis_result = yati::AnalyzeSource(m_usb_source.get(), fs::FsPath{item.name}, entry.analysis);
+                    entry.analysis_result = AnalyzeQueueName(m_usb_source.get(), item.name, entry.analysis);
                     s64 pc_size = m_usb_source->GetFileSize(item.name);
                     if (pc_size > 0) {
                         entry.analysis.source_size = pc_size;
