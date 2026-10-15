@@ -100,10 +100,10 @@ void ParseChangelogInline(const std::string& text, std::vector<ChangelogSegment>
         if (text[i] == '`') {
             const auto end = text.find('`', i + 1);
             if (end != std::string::npos) {
+                // grey marks code; the backticks themselves are dropped, or a wrap can leave
+                // the closing one alone at the start of the next line.
                 flush();
-                AddChangelogSegment(out, "`", bold, underline, colour);
                 ParseChangelogInline(text.substr(i + 1, end - i - 1), out, false, underline, ChangelogTextColour::Gray);
-                AddChangelogSegment(out, "`", bold, underline, colour);
                 i = end + 1;
                 continue;
             }

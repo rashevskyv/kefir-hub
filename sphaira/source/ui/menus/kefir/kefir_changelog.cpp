@@ -362,12 +362,22 @@ void KefirChangelogBox::Draw(NVGcontext* vg, Theme* theme) {
 
     const auto footer = m_loading ? "Loading changelog..."_i18n :
         (m_unlocked ? (m_button_focused ? "Press A to Install."_i18n : "Scroll down to select Install."_i18n) : "Scroll to the bottom to unlock Install."_i18n);
-    gfx::drawText(vg, m_pos.x + 42.f, m_pos.y + m_pos.h - 52.f, 17.f,
-        theme->GetColour(m_unlocked ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR),
-        footer.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-
     // Draw button centered horizontally
     m_install_button_rect = Vec4{m_pos.x + (m_pos.w - 220.f) / 2.f, m_pos.y + m_pos.h - 64.f, 220.f, 46.f};
+
+    // the hint shares the row with the button: wrap it in the space left of the button,
+    // centred on the button, so a long translation never runs under it.
+    const float hint_x = m_pos.x + 42.f;
+    const float hint_w = m_install_button_rect.x - hint_x - 16.f;
+    float hint_bounds[4]{};
+    nvgSave(vg);
+    nvgFontSize(vg, 17.f);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+    nvgTextBoxBounds(vg, hint_x, 0.f, hint_w, footer.c_str(), nullptr, hint_bounds);
+    nvgRestore(vg);
+    const float hint_h = hint_bounds[3] - hint_bounds[1];
+    gfx::drawTextBox(vg, hint_x, m_install_button_rect.y + (m_install_button_rect.h - hint_h) / 2.f, 17.f, hint_w,
+        theme->GetColour(m_unlocked ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR), footer.c_str());
 
     nvgSave(vg);
     if (m_button_focused) {
