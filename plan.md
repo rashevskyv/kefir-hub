@@ -366,6 +366,13 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       MMC's set:sys at every start, one cycle count for all MMCs; (d) the page shows the restore flag and both
       snapshots and walks the fix in order (100 % → re-init on the MMC booted next → two full cycles → copy to others);
       (e) sys-clk-OC (separate repo): HOS charging current by default, no charge cut-off by default.
+      Calibration wizard (user, 2026-10-15): diagnosis → charge to 100 % (charge terminated) → reset from factory data
+      (backup, gates: charger, full, >4.1 V; verify) → drain under load until the console turns off (max brightness,
+      no sleep/dim, 3 cores + GPU load, live graph; load off above 60 °C battery; handheld only) → charge → second
+      cycle → snapshot to SD. Progress file on SD rewritten every few seconds while draining; next start resumes.
+      While unfinished, arm the Ultrahand boot notification (reuse account_restore's kefir-reopen.notify mechanism)
+      with the current step ("put on the charger and open Kefir Hub"); remove it when done or cancelled.
+      Order: (1) read-only Battery page + backup; (2) wizard without reset; (3) reset + shared SD snapshot.
 - [ ] F.17 **MTP many small files** (measured 2026-10-14, v0.14.087): Windows Explorer waits ~0.3 ms per file
       already in the destination folder before each next file (1000 files ≈ 4 min; console side flat ~15 ms/file).
       Hub cannot speed that up. (a) Accept archives (.zip/.7z/.rar) dropped over MTP and extract them on the console

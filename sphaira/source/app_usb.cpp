@@ -36,8 +36,11 @@ void App::PollUsbStorage() {
     if (auto* ev = usbHsFsGetStatusChangeUserEvent(); ev) {
         host_changed = R_SUCCEEDED(waitSingle(waiterForUEvent(ev), 0));
     }
+    // a finished install probe is picked up on the next frame, not on the next one-second tick.
+    const auto probe = usb_probe::GetState();
+    const bool probe_done = probe == usb_probe::State::Found || probe == usb_probe::State::NotFound;
     const bool timed = !m_usb_poll_primed || m_usb_poll_ts.GetSeconds() >= 1;
-    if (!timed && !host_changed) {
+    if (!timed && !host_changed && !probe_done) {
         return;
     }
     if (timed) {
@@ -242,14 +245,14 @@ void App::OfferPcInstallSwitch() {
             if (!op_index || !*op_index || !haze::IsRunning()) {
                 return;
             }
-            log_write("[USB] PC install marker: stopping MTP, probing for the install host\n");
-            haze::Exit();
-            // PollUsbStorage opens PC Install (USB) when the host answers and
-            // restarts MTP when nobody does.
-            usb_probe::Start();
-            if (usb_probe::GetState() == usb_probe::State::Idle) {
-                g_app->TryStartAutoMtp();
-            }
+            // the PC asked for this switch, so its install app is waiting: open PC Install (USB) at once.
+            // That screen waits for the PC itself and fills the queue when the list arrives; a probe
+            // first only added its own wait plus up to a second of the USB poll.
+            App::ConfirmInstall([]() {
+                log_write("[USB] PC install marker: stopping MTP, opening PC Install (USB)\n");
+                haze::Exit();
+                App::Push<ui::menu::dbi::Menu>(ui::menu::MenuFlag_None);
+            });
         });
 }
 
