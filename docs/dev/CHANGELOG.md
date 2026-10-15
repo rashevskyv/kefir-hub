@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.099 — wide check lists with scrolling descriptions; «тікети» in Ukrainian
+- `PopupList`: check lists and two-line rows use the full width (1180 px); the selected row's description scrolls when it does not fit; every bottom list is clipped between its two lines, so no row draws over the header line. uk.json: «квиток» → «тікет» (10 strings); translate.py rule 10 keeps it.
+- host tests: pass · nro: built · switch: pending (.69: Tools → Clean system junk)
+
 ## v0.14.098 — "No" to PC Install holds for the whole cable connection
 - `app_usb.cpp`: after "No" the Hub starts MTP; DBI Backend then sees MTP and drops its marker, so a second "Stop MTP and open PC Install?" came 1–2 s later. A "No" to either question now holds until the cable is unplugged; the backend's marker is removed without asking (logged).
 - host tests: not run (UI flow only) · nro: built · switch: pending (.69: plug in with DBI Backend running, answer No)

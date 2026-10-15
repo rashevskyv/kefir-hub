@@ -53,7 +53,10 @@ RULES:
 7. If the text is a bare technical token, file extension or path, return it unchanged.
 8. Punctuate the way the target language does: the existing zh/ja files use fullwidth 。！（）.
 9. If the input has a "context" field, it says where the string appears in the UI. Use it to pick the
-   right meaning (verb or noun, which screen), but translate only "text"."""
+   right meaning (verb or noun, which screen), but translate only "text".
+10. Glossary: "ticket" is a Switch content-rights file (eShop ticket, title key), not a travel or
+   event ticket. Use the word the Switch homebrew scene uses, usually a transliteration: uk тікет /
+   тікети, ru тикет; never uk "квиток", ru "билет"."""
 
 
 def build_prompt(codes):

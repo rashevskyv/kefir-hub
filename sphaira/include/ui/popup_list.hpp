@@ -52,10 +52,16 @@ public:
     // list; the rows after them (e.g. "Start") run the callback and close it as usual.
     auto SetChecks(std::shared_ptr<std::vector<bool>> checks) -> PopupList&;
     // a second, smaller line under each row's text. size must match the item count or it is ignored.
-    auto SetDescriptions(std::vector<std::string> descriptions) -> PopupList& { m_descriptions = std::move(descriptions); return *this; }
+    auto SetDescriptions(std::vector<std::string> descriptions) -> PopupList& {
+        m_descriptions = std::move(descriptions);
+        UseFullWidth();
+        return *this;
+    }
 
 private:
     void SetIndex(s64 index);
+    // check lists and two-line rows use the whole screen width instead of the centred 720 px block.
+    void UseFullWidth();
 
 private:
     static constexpr Vec2 m_title_pos{70.f, 28.f};
@@ -79,6 +85,8 @@ private:
     std::unique_ptr<List> m_list{};
     ScrollingText m_scroll_text{};
     ScrollingText m_scroll_title{};
+    ScrollingText m_scroll_desc{};
+    bool m_full_width{};
 
     float m_yoff{};
     float m_line_top{};

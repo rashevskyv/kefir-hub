@@ -181,6 +181,9 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
     const float icon_gutter = has_icons ? 34.f : 0.f;
     const float gutter = marker_gutter + icon_gutter;
 
+    // a row scrolled half out of view must not draw over the lines above and below the list.
+    nvgSave(vg);
+    nvgIntersectScissor(vg, 0.f, m_line_top + 1.f, SCREEN_WIDTH, m_line_bottom - m_line_top - 1.f);
     m_list->Draw(vg, theme, m_items.size(), m_index, [this, has_markers, has_icons, marker_gutter, gutter](auto* vg, auto* theme, auto v, auto i) {
         const auto& [x, y, w, h] = v;
         auto colour = ThemeEntryID_TEXT;
@@ -239,12 +242,18 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
         const auto title_y = has_desc ? mid_y - 11.f : mid_y;
         m_scroll_text.Draw(vg, selected, text_x, title_y, text_clip_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(colour), m_items[i]);
         if (has_desc) {
-            nvgSave(vg);
-            nvgIntersectScissor(vg, text_x, y, text_clip_w, h);
-            gfx::drawText(vg, text_x, mid_y + 13.f, 16.f, m_descriptions[i].c_str(), NULL, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO));
-            nvgRestore(vg);
+            // the selected row's description scrolls when it is longer than the row.
+            if (selected) {
+                m_scroll_desc.Draw(vg, true, text_x, mid_y + 13.f, text_clip_w, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), m_descriptions[i]);
+            } else {
+                nvgSave(vg);
+                nvgIntersectScissor(vg, text_x, y, text_clip_w, h);
+                gfx::drawText(vg, text_x, mid_y + 13.f, 16.f, m_descriptions[i].c_str(), NULL, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO));
+                nvgRestore(vg);
+            }
         }
     });
+    nvgRestore(vg);
 
     Widget::Draw(vg, theme);
 }
@@ -265,7 +274,21 @@ void PopupList::SetIndex(s64 index) {
 
 auto PopupList::SetChecks(std::shared_ptr<std::vector<bool>> checks) -> PopupList& {
     m_checks = std::move(checks);
+    UseFullWidth();
     return *this;
+}
+
+void PopupList::UseFullWidth() {
+    if (m_full_width) {
+        return;
+    }
+    m_full_width = true;
+    const auto yoff = m_list->GetYoff();
+    Vec4 v{50.f, m_line_top + 1.f + 42.f, 1180.f, m_block.h};
+    const Vec4 pos{0, m_line_top, SCREEN_WIDTH, m_line_bottom - m_line_top};
+    m_list = std::make_unique<List>(1, 6, pos, v);
+    m_list->SetScrollBarPos(1250, m_line_top + 20, m_line_bottom - m_line_top - 40);
+    m_list->SetYoff(yoff);
 }
 
 auto PopupList::SetAllowCancel(bool allow) -> PopupList& {
