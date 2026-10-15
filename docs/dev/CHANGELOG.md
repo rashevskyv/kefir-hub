@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.093 — PC install app found on cable connect: ask before opening PC Install (USB)
+- `app_usb.cpp`: when the USB probe found a waiting PC install app, the Hub opened PC Install (USB) without a question; only the MTP-marker path asked. Now: "A PC install app is waiting. Open PC Install (USB)?" — Open (sysMMC ban warning applies) / No (frees the port, starts MTP).
+- host tests: not run (UI flow only) · nro: built · switch: pending (DBI Backend running, plug the cable)
+
 ## v0.14.092 — Saves → Backups grid: same 10 px row gap as the other tabs
 - The Backups grid kept a 60 px gap under every row for source labels. Now 10 px like Installed/Deleted games; the first source label stays above the first row, every later source gets an empty row for its label.
 - host tests: pass (quick) · nro: built (0.14.092, all three) · switch: pending

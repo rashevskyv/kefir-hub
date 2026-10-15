@@ -56,8 +56,21 @@ void App::PollUsbStorage() {
             usb_probe::Finish(source, names);
 #if ENABLE_NETWORK_INSTALL
             if (source) {
-                log_write("[USB] install host answered; opening PC Install (USB)\n");
-                App::Push<ui::menu::dbi::Menu>(ui::menu::MenuFlag_None, std::move(source), std::move(names));
+                // the PC answered: ask before taking the screen. "No" frees the port and starts MTP.
+                log_write("[USB] install host answered; asking before PC Install (USB)\n");
+                auto found = std::make_shared<std::pair<std::unique_ptr<yati::source::Usb>, std::vector<std::string>>>(
+                    std::move(source), std::move(names));
+                App::Push<ui::OptionBox>("A PC install app is waiting.\nOpen PC Install (USB)?"_i18n,
+                    "No"_i18n, "PC Install (USB)"_i18n, 1, [found](auto op_index) {
+                        if (op_index && *op_index) {
+                            App::ConfirmInstall([found]() {
+                                App::Push<ui::menu::dbi::Menu>(ui::menu::MenuFlag_None, std::move(found->first), std::move(found->second));
+                            });
+                            return;
+                        }
+                        found->first.reset();
+                        g_app->TryStartAutoMtp();
+                    });
                 return;
             }
 #endif

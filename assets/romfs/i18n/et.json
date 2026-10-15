@@ -3275,5 +3275,6 @@
   "Don't show again": "Ära näita uuesti",
   "Ban warning on sysMMC": "Banii hoiatus sysMMC-l",
   "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "See konsool töötab sysMMC-l. Siia installimine võib tuua kaasa konsooli bännimise Nintendo võrguteenustest.",
-  "Warn before every install while the console runs sysMMC.": "Hoiata enne iga installimist, kui konsool töötab sysMMC-s."
+  "Warn before every install while the console runs sysMMC.": "Hoiata enne iga installimist, kui konsool töötab sysMMC-s.",
+  "A PC install app is waiting.\nOpen PC Install (USB)?": "Arvuti installimisrakendus ootab.\nAva arvuti install (USB)?"
 }

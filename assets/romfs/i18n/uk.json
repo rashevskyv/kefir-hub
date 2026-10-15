@@ -3275,5 +3275,6 @@
   "Don't show again": "Більше не показувати",
   "Ban warning on sysMMC": "Попередження про бан на sysMMC",
   "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "Ця консоль працює на sysMMC. Встановлення сюди може призвести до блокування консолі в онлайн-сервісах Nintendo.",
-  "Warn before every install while the console runs sysMMC.": "Попереджати перед кожним встановленням, поки консоль працює на sysMMC."
+  "Warn before every install while the console runs sysMMC.": "Попереджати перед кожним встановленням, поки консоль працює на sysMMC.",
+  "A PC install app is waiting.\nOpen PC Install (USB)?": "Програма встановлення з ПК чекає.\nВідкрити «Встановлення з ПК (USB)»?"
 }

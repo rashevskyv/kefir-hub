@@ -3280,5 +3280,6 @@
   "Don't show again": "今後表示しない",
   "Ban warning on sysMMC": "sysMMCでのBAN警告",
   "This console is running sysMMC. Installing here can get the console banned from Nintendo online services.": "この本体はsysMMCで動作しています。ここにインストールすると、任天堂のオンラインサービスから本体がBANされる可能性があります。",
-  "Warn before every install while the console runs sysMMC.": "sysMMC起動中はインストールごとに警告する。"
+  "Warn before every install while the console runs sysMMC.": "sysMMC起動中はインストールごとに警告する。",
+  "A PC install app is waiting.\nOpen PC Install (USB)?": "PCインストールアプリが待機中です。\nPCインストール (USB) を開きますか？"
 }
