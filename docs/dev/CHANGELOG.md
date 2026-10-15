@@ -45,6 +45,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: not run (log format only) · nro: built · switch: verified (.69, title mode)
 
 ## unreleased
+- docs: romfs.bin verified in a game on .69 (Kefir 925): SteamWorld Dig 2 ran with a Hub-packed image holding all 412 of its own files plus 40005 extra (40417 entries, fs.mitm build in game memory); a one-file mod packed by Hub changed the in-game "Use" prompt; an image with data out of fs.mitm's order made the game start without mods and Ultrahand showed the Kefirosphere "mods not applied" notice; packing refused with "not enough space" (keep: sum of images) and went through (delete: largest image) on a card filled to 73 MB free.
 - fix: Kefir update changelog: the red "scroll to the bottom" hint wraps in the space left of Install instead of running under it; code spans drop their backticks (grey marks them), so a wrap no longer leaves a lone backtick. No version bump: lands on top of 0.14.092 from a parallel session. switch: verified (.69, Kefir 925 changelog dialog).
 - docs: plan.md F.18 — battery gauge tool (Battery Desync Fix reversed, queued).
 - docs: plan.md F.16 — delete homebrew together with its folder and forwarders (queued, not started).
