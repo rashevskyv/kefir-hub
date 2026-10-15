@@ -46,37 +46,6 @@ auto Name(const fs::FsPath& dir) -> std::string {
     return s.substr(s.rfind('/') + 1);
 }
 
-// every file and folder under `root`, paths relative to it.
-auto Walk(ui::ProgressBox* pbox, fs::Fs& fs, const fs::FsPath& root, std::vector<Entry>& out) -> Result {
-    std::vector<std::string> stack{""};
-    std::vector<FsDirectoryEntry> buf(64);
-    while (!stack.empty()) {
-        R_TRY(pbox->ShouldExitResult());
-        const auto rel = std::move(stack.back());
-        stack.pop_back();
-
-        fs::Dir dir;
-        R_TRY(fs.OpenDirectory(rel.empty() ? root : fs::AppendPath(root, rel), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir));
-        for (;;) {
-            s64 count{};
-            R_TRY(dir.Read(&count, buf.size(), buf.data()));
-            if (count <= 0) {
-                break;
-            }
-            for (s64 i = 0; i < count; i++) {
-                const auto& e = buf[i];
-                auto path = rel.empty() ? std::string{e.name} : rel + "/" + e.name;
-                if (e.type == FsDirEntryType_Dir) {
-                    stack.push_back(path);
-                    out.push_back({std::move(path), 0, true});
-                } else {
-                    out.push_back({std::move(path), static_cast<u64>(e.file_size), false});
-                }
-            }
-        }
-    }
-    R_SUCCEED();
-}
 
 auto Scan(ui::ProgressBox* pbox, fs::Fs& fs, const fs::FsPath& dir, Title& out) -> Result {
     out = Title{dir};
@@ -92,7 +61,7 @@ auto Scan(ui::ProgressBox* pbox, fs::Fs& fs, const fs::FsPath& dir, Title& out) 
     }
 
     std::vector<Entry> entries;
-    R_TRY(Walk(pbox, fs, romfs, entries));
+    R_TRY(WalkDir(pbox, fs, romfs, entries));
     if (std::none_of(entries.begin(), entries.end(), [](auto& e) { return !e.is_dir; })) {
         out.skip = "the romfs folder has no files"_i18n;
         R_SUCCEED();
@@ -175,7 +144,7 @@ auto PackOne(ui::ProgressBox* pbox, fs::Fs& fs, const Title& t, bool delete_sour
 
     pbox->NewTransfer("Counting files"_i18n);
     std::vector<Entry> entries;
-    R_TRY(Walk(pbox, fs, romfs, entries));
+    R_TRY(WalkDir(pbox, fs, romfs, entries));
     const auto layout = BuildLayout(entries);
 
     // a leftover of a run cut off by a power loss.
@@ -298,6 +267,37 @@ void ShowReport(Result rc, const Report& report) {
 }
 
 } // namespace
+
+auto WalkDir(ui::ProgressBox* pbox, fs::Fs& fs, const fs::FsPath& root, std::vector<Entry>& out) -> Result {
+    std::vector<std::string> stack{""};
+    std::vector<FsDirectoryEntry> buf(64);
+    while (!stack.empty()) {
+        R_TRY(pbox->ShouldExitResult());
+        const auto rel = std::move(stack.back());
+        stack.pop_back();
+
+        fs::Dir dir;
+        R_TRY(fs.OpenDirectory(rel.empty() ? root : fs::AppendPath(root, rel), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir));
+        for (;;) {
+            s64 count{};
+            R_TRY(dir.Read(&count, buf.size(), buf.data()));
+            if (count <= 0) {
+                break;
+            }
+            for (s64 i = 0; i < count; i++) {
+                const auto& e = buf[i];
+                auto path = rel.empty() ? std::string{e.name} : rel + "/" + e.name;
+                if (e.type == FsDirEntryType_Dir) {
+                    stack.push_back(path);
+                    out.push_back({std::move(path), 0, true});
+                } else {
+                    out.push_back({std::move(path), static_cast<u64>(e.file_size), false});
+                }
+            }
+        }
+    }
+    R_SUCCEED();
+}
 
 auto CanPack(const fs::FsPath& title_dir) -> bool {
     fs::FsNativeSd fs;

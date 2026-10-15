@@ -2,6 +2,8 @@
 
 #include "fs.hpp"
 #include "yati/container/base.hpp"
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 #include <switch.h>
@@ -33,6 +35,12 @@ struct NspEntry {
         u8 storage_id{};
     };
 
+    // an NCA that is not in ncm: a repack builds it on the fly.
+    struct Generated {
+        NcmContentId content_id{};
+        std::shared_ptr<yati::source::Base> data{};
+    };
+
     // application name.
     std::string application_name{};
     // name of the nsp (name [id][v0][BASE].nsp).
@@ -47,6 +55,8 @@ struct NspEntry {
     s64 nsp_size{};
     // mapping from each NCA content ID to its original NCM storage ID.
     std::vector<NcaStorage> nca_storage{};
+    // read instead of ncm for these content ids.
+    std::vector<Generated> generated{};
     // copy of the icon, if invalid, it will use the default icon.
     int icon{};
 
@@ -68,7 +78,11 @@ Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder,
 // builds one streamed NSP containing BASE, latest UPD, and all DLC for app_id.
 Result BuildMergedNspEntry(u64 app_id, const char* name, NspEntry& out);
 
+// edits the components of a merged NSP before it is laid out: a repack swaps an NCA for a rebuilt
+// one (new content id and size in the content info) and adds its data to `generated`.
+using ContentEdit = std::function<Result(std::vector<ContentInfoEntry>& entries, std::vector<NspEntry::Generated>& generated)>;
+
 // builds one streamed NSP containing selected installed components (BASE, latest UPD, DLC) for app_id.
-Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& out);
+Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& out, const ContentEdit& edit = {});
 
 } // namespace sphaira::title

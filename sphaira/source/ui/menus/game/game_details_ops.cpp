@@ -2,6 +2,7 @@
 #include "ui/menus/game_menu.hpp"
 #include "forced_language.hpp"
 #include "romfs_pack.hpp"
+#include "repack/repack.hpp"
 #include "control_patch.hpp"
 #include "ui/list.hpp"
 #include "ui/sidebar.hpp"
@@ -242,6 +243,7 @@ void DbiDetailsMenu::ShowCreateRepackSidebar() {
         const bool has_base = flags & title::ContentFlag_Application;
         const bool has_patch = flags & title::ContentFlag_Patch;
         const bool has_dlc = flags & title::ContentFlag_AddOnContent;
+        const bool has_mod = repack::HasRomfsMod(entry.app_id);
 
         if (!has_base && !has_patch && !has_dlc) {
             App::Notify("No repackable content available"_i18n);
@@ -252,6 +254,7 @@ void DbiDetailsMenu::ShowCreateRepackSidebar() {
             bool base{true};
             bool patch{true};
             bool dlc{true};
+            bool mod{true};
         };
         auto state = std::make_shared<State>();
 
@@ -267,8 +270,11 @@ void DbiDetailsMenu::ShowCreateRepackSidebar() {
         if (has_dlc) {
             options->Add<SidebarEntryCheckbox>("AddOnContent/DLC"_i18n, [state](){ return state->dlc; }, [state](bool val){ state->dlc = val; }, "Include all installed DLC."_i18n);
         }
+        if (has_mod) {
+            options->Add<SidebarEntryCheckbox>("Bake in the mod"_i18n, [state](){ return state->mod; }, [state](bool val){ state->mod = val; }, "Put the LayeredFS mod of this game (romfs folder or romfs.bin) into the update, or into the base when the update is left out. The repack then installs only with sigpatches."_i18n);
+        }
 
-        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this, entry, state, has_base, has_patch, has_dlc](){
+        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this, entry, state, has_base, has_patch, has_dlc, has_mod](){
             u32 selected_flags = 0;
             if (has_base && state->base) {
                 selected_flags |= title::ContentFlag_Application;
@@ -283,6 +289,13 @@ void DbiDetailsMenu::ShowCreateRepackSidebar() {
             if (selected_flags == 0) {
                 App::Notify("No components selected"_i18n);
                 return;
+            }
+            if (has_mod && state->mod) {
+                if (!(selected_flags & (title::ContentFlag_Application | title::ContentFlag_Patch))) {
+                    App::Notify("The mod needs the base or the update in the repack"_i18n);
+                    return;
+                }
+                selected_flags |= repack::FLAG_WITH_MOD;
             }
 
             m_repack_callback(entry, selected_flags);

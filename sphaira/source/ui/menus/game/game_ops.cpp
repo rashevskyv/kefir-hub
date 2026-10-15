@@ -9,6 +9,7 @@
 #include "i18n.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
+#include "repack/repack.hpp"
 
 #include <memory>
 #include <utility>
@@ -105,15 +106,10 @@ void Menu::DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selecti
     });
 }
 
-void Menu::CreateRepack(Entry entry, u32 flags) {
-    LoadControlEntry(entry);
+namespace {
 
-    title::NspEntry nsp_entry;
-    if (const auto rc = title::BuildMergedNspEntry(entry.app_id, entry.GetName(), flags, nsp_entry); R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Failed to prepare repack NSP"_i18n);
-        return;
-    }
-
+// the merged NSP goes to /games on the SD card.
+void DumpRepack(const Entry& entry, title::NspEntry&& nsp_entry) {
     nsp_entry.icon = entry.image;
 
     std::vector<title::NspEntry> entries;
@@ -128,6 +124,26 @@ void Menu::CreateRepack(Entry entry, u32 flags) {
     location.entry = {dump::DumpLocationType_SdCard, 0};
 
     dump::Dump(source, location, paths, [](Result){});
+}
+
+} // namespace
+
+void Menu::CreateRepack(Entry entry, u32 flags) {
+    LoadControlEntry(entry);
+
+    if (flags & repack::FLAG_WITH_MOD) {
+        repack::PrepareModRepack(entry.app_id, entry.GetName(), flags, [entry](title::NspEntry&& nsp) {
+            DumpRepack(entry, std::move(nsp));
+        });
+        return;
+    }
+
+    title::NspEntry nsp_entry;
+    if (const auto rc = title::BuildMergedNspEntry(entry.app_id, entry.GetName(), flags, nsp_entry); R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to prepare repack NSP"_i18n);
+        return;
+    }
+    DumpRepack(entry, std::move(nsp_entry));
 }
 
 void Menu::CreateSaves(AccountUid uid) {

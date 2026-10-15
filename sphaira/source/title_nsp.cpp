@@ -233,6 +233,12 @@ Result NspEntry::Read(void* buf, s64 off, s64 size, u64* bytes_read) {
 
             if (collection.name.ends_with(".nca")) {
                 const auto id = ncm::GetContentIdFromStr(collection.name.c_str());
+                const auto gen = std::ranges::find_if(generated, [&id](const auto& g) {
+                    return 0 == std::memcmp(&g.content_id, &id, sizeof(id));
+                });
+                if (gen != generated.end()) {
+                    return gen->data->Read(buf, off, size, bytes_read);
+                }
                 const auto it = std::ranges::find_if(nca_storage, [&id](const auto& entry) {
                     return 0 == std::memcmp(&entry.content_id, &id, sizeof(id));
                 });
@@ -300,7 +306,7 @@ Result BuildMergedNspEntry(u64 app_id, const char* name, NspEntry& out) {
     return BuildMergedNspEntry(app_id, name, default_flags, out);
 }
 
-Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& out) {
+Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& out, const ContentEdit& edit) {
     constexpr u32 supported_flags = ContentFlag_Application | ContentFlag_Patch | ContentFlag_AddOnContent;
     flags &= supported_flags;
     R_UNLESS(flags, Result_GameNoNspEntriesBuilt);
@@ -379,7 +385,13 @@ Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& ou
     const std::string filename = FormatMergedNspFilename(safe_name, app_id, has_base, has_patch, patch_version, dlc_count);
     fs::FsPath path = filename.c_str();
 
-    return BuildNspEntryFromInfoEntries(name, path, content_entries, keys, out);
+    std::vector<NspEntry::Generated> generated;
+    if (edit) {
+        R_TRY(edit(content_entries, generated));
+    }
+    R_TRY(BuildNspEntryFromInfoEntries(name, path, content_entries, keys, out));
+    out.generated = std::move(generated);
+    R_SUCCEED();
 }
 
 } // namespace sphaira::title

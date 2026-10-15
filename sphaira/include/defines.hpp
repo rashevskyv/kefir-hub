@@ -260,6 +260,15 @@ enum class SphairaResult : Result {
 
     // a mod file changed size while it was being packed into romfs.bin.
     RomfsPackSourceChanged,
+
+    // repack: an NCA layout the repack code does not handle (sparse, compressed, no romfs).
+    RepackUnsupportedNca,
+    // repack: a malformed BKTR table in an update NCA.
+    RepackBadBktr,
+    // repack: a romfs image (game or romfs.bin) with malformed tables.
+    RepackBadRomfs,
+    // repack: the title has no mod files to bake in.
+    RepackNoMod,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -402,6 +411,10 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(GameUpdatesListDownload),
     MAKE_SPHAIRA_RESULT_ENUM(GameUpdatesListParse),
     MAKE_SPHAIRA_RESULT_ENUM(RomfsPackSourceChanged),
+    MAKE_SPHAIRA_RESULT_ENUM(RepackUnsupportedNca),
+    MAKE_SPHAIRA_RESULT_ENUM(RepackBadBktr),
+    MAKE_SPHAIRA_RESULT_ENUM(RepackBadRomfs),
+    MAKE_SPHAIRA_RESULT_ENUM(RepackNoMod),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM
