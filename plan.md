@@ -354,6 +354,12 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       Wi-Fi shipped in v0.14.020 (web server /games + yati HTTP install). Cable shipped in v0.14.027 on the existing
       Dump → "USB transfer (Switch 2 Switch)" path (sender = usb:hs host, tinfoil protocol, receiver = PC Install
       (USB)); the 2026-10-07 note that cable was impossible was wrong — sphaira's uploader already runs the console as host.
+- [ ] F.18 **Battery gauge (Battery Desync Fix)** in Tools → Tools → Maintenance (user, 2026-10-15). Reverse of
+      CTCaer battery_desync_fix 1.5.1 (static only): WSL `/home/xhr/re-work/bdf-151/FINDINGS.md` (tables, 44-step chip
+      sequence, batt.cal = libnx SetSysPtmFuelGaugeParameter, set:sys 86/87/172/173, CAL0 BIS 0x1B @0x2CE0/0x4310,
+      i2c Max17050 writes with read-back). (a) read-only page: chip state, HOS-saved parameters, CAL0 battery type,
+      verdict, "Back up" (batt.cal-compatible + register dump); (b) restore and factory re-init with automatic backup,
+      read-back verify, next steps, per-MMC note; pure parts (table choice, struct, math) in a header with host tests.
 - [ ] F.17 **MTP many small files** (measured 2026-10-14, v0.14.087): Windows Explorer waits ~0.3 ms per file
       already in the destination folder before each next file (1000 files ≈ 4 min; console side flat ~15 ms/file).
       Hub cannot speed that up. (a) Accept archives (.zip/.7z/.rar) dropped over MTP and extract them on the console

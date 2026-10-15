@@ -17,6 +17,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: not run (log format only) · nro: built · switch: verified (.69, title mode)
 
 ## unreleased
+- docs: plan.md F.18 — battery gauge tool (Battery Desync Fix reversed, queued).
 - docs: plan.md F.16 — delete homebrew together with its folder and forwarders (queued, not started).
 
 ## v0.14.086 — Bulk restore: no list in the confirmation, a whole-job bar, big saves last, "Checking backups N / M"; HOME icon stays first after installs
