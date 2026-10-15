@@ -10,7 +10,7 @@ Kefir Hub installs games, game updates and DLC from package files. This page hel
 <!-- draft
 - Installing is always allowed. There is no switch to turn installing on.
 - On emuMMC Kefir Hub shows no warning before an install.
-- On sysMMC Kefir Hub shows [[This console is running sysMMC. Installing here can get the console banned from Nintendo online services.]] before the install starts, with the buttons [[Back]], [[Install]] and [[Don't show again]].
+- On sysMMC Kefir Hub shows a ban warning (what Nintendo can see, which online services it can ban, that emuMMC is safer) before the install starts, with the buttons [[Back]], [[Install]] and [[Don't show again]].
 - [[Back]] cancels the install. [[Install]] starts it, and the warning appears again next time. [[Don't show again]] turns the warning off and starts the install.
 - The warning appears before every install from: the File Browser (Install, Install recursively, **A** on an NSP or XCI file), Install Forwarder in the File Browser and in Homebrew, Ownfoil, Console Transfer (receive games), and PC Install (USB).
 - MTP and network stream installs (FTP, the web server) show no warning.

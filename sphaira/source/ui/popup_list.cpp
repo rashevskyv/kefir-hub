@@ -96,6 +96,11 @@ PopupList::PopupList(std::string title, Items items, Callback cb, s64 index)
             if (m_disabled && m_disabled(m_index)) {
                 return;
             }
+            if (m_checks && m_index >= 0 && m_index < static_cast<s64>(m_checks->size())) {
+                (*m_checks)[m_index] = !(*m_checks)[m_index];
+                App::PlaySoundEffect(SoundEffect_Focus);
+                return;
+            }
             if (m_callback) {
                 m_callback(m_index);
             }
@@ -190,8 +195,25 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
 
         const auto mid_y = y + (h / 2.f);
 
-        if (m_menu_style) {
-            // action menu: no value tick, a right chevron per row.
+        const bool is_check = m_checks && i < static_cast<s64>(m_checks->size());
+        if (is_check) {
+            // tick box on the right: hollow when off, filled with a tick when on.
+            const float box = 26.f;
+            const float bx = x + w - m_text_xoffset - box;
+            const float by = mid_y - box / 2.f;
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, bx, by, box, box, 4.f);
+            if ((*m_checks)[i]) {
+                nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
+                nvgFill(vg);
+                gfx::drawText(vg, bx + box / 2.f, mid_y, 20.f, "", NULL, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_POPUP));
+            } else {
+                nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
+                nvgStrokeWidth(vg, 2.f);
+                nvgStroke(vg);
+            }
+        } else if (m_menu_style || m_checks) {
+            // action menu (or the action rows of a check list): no value tick, a right chevron per row.
             DrawChevron(vg, x + w - 24.f, mid_y, theme->GetColour(ThemeEntryID_TEXT));
         } else if (m_starting_index == i) {
             colour = ThemeEntryID_TEXT_SELECTED;
@@ -213,7 +235,15 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
 
         const auto text_x = x + m_text_xoffset + gutter;
         const auto text_clip_w = w - 60.f - m_text_xoffset - gutter;
-        m_scroll_text.Draw(vg, selected, text_x, mid_y, text_clip_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(colour), m_items[i]);
+        const bool has_desc = m_descriptions.size() == m_items.size() && !m_descriptions[i].empty();
+        const auto title_y = has_desc ? mid_y - 11.f : mid_y;
+        m_scroll_text.Draw(vg, selected, text_x, title_y, text_clip_w, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(colour), m_items[i]);
+        if (has_desc) {
+            nvgSave(vg);
+            nvgIntersectScissor(vg, text_x, y, text_clip_w, h);
+            gfx::drawText(vg, text_x, mid_y + 13.f, 16.f, m_descriptions[i].c_str(), NULL, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO));
+            nvgRestore(vg);
+        }
     });
 
     Widget::Draw(vg, theme);
@@ -231,6 +261,11 @@ auto PopupList::OnFocusLost() noexcept -> void {
 
 void PopupList::SetIndex(s64 index) {
     m_index = index;
+}
+
+auto PopupList::SetChecks(std::shared_ptr<std::vector<bool>> checks) -> PopupList& {
+    m_checks = std::move(checks);
+    return *this;
 }
 
 auto PopupList::SetAllowCancel(bool allow) -> PopupList& {

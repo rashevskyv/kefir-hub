@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.097 — Clean system junk opens from the bottom with tick boxes and a "Start cleanup" row
+- `PopupList` gets a check-list mode (`SetChecks`: A toggles a row's tick box and keeps the list open; later rows act) and a second, smaller line per row (`SetDescriptions`). Tools → Clean system junk uses it instead of the right sidebar, where the long names did not fit. Docs: system-tools EN/UK; the install page no longer quotes the old ban-warning text.
+- host tests: pass (quick) · nro: built · switch: pending
+
 ## v0.14.096 — PC Install (USB) opens at once after "+" on the backend's request
 - `app_usb.cpp`: after the MTP-marker prompt the Hub ran a USB probe and opened PC Install only on the next one-second USB poll (~1.5 s). Now it stops MTP and opens PC Install (USB) at once; the screen waits for the PC and fills the queue itself. A finished cable-connect probe is picked up on the next frame instead of the next second.
 - host tests: not run (UI flow only) · nro: built · switch: pending (backend asks for PC Install while MTP runs)

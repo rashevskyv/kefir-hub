@@ -185,7 +185,7 @@ Deletes what installs and removed games leave behind.
 
 **Where:** [[Tools]] → [[Tools]] → [[Clean system junk]]
 
-Turn off what you want to keep, then choose [[Run selected]]. The message at the end tells how much space came free.
+The list opens from the bottom. Press A on a row to tick or untick it, then choose [[Start cleanup]]. The message at the end tells how much space came free.
 
 | Item | What it deletes |
 |---|---|

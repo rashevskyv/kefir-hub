@@ -3,6 +3,7 @@
 #include "ui/widget.hpp"
 #include "ui/scrolling_text.hpp"
 #include "ui/list.hpp"
+#include <memory>
 #include <optional>
 
 namespace sphaira::ui {
@@ -47,6 +48,12 @@ public:
 
     auto SetAllowCancel(bool allow) -> PopupList&;
 
+    // check list: the first checks->size() rows get a tick box that A toggles without closing the
+    // list; the rows after them (e.g. "Start") run the callback and close it as usual.
+    auto SetChecks(std::shared_ptr<std::vector<bool>> checks) -> PopupList&;
+    // a second, smaller line under each row's text. size must match the item count or it is ignored.
+    auto SetDescriptions(std::vector<std::string> descriptions) -> PopupList& { m_descriptions = std::move(descriptions); return *this; }
+
 private:
     void SetIndex(s64 index);
 
@@ -66,6 +73,8 @@ private:
     bool m_allow_cancel{true};
     std::vector<bool> m_markers{};
     std::vector<std::optional<ActionIcon>> m_icons{};
+    std::shared_ptr<std::vector<bool>> m_checks{};
+    std::vector<std::string> m_descriptions{};
 
     std::unique_ptr<List> m_list{};
     ScrollingText m_scroll_text{};

@@ -7,6 +7,7 @@
 #include "ui/menus/settings/settings_internal.hpp"
 #include "ui/menus/system_info_menu.hpp"
 #include "ui/sidebar.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/nvg_util.hpp"
@@ -29,18 +30,41 @@ void ComingSoon() {
 }
 
 void OpenCleanup() {
+    // a list from the bottom with a tick box per kind of junk, then one row that starts the cleanup.
     auto opts = std::make_shared<cleanup::Options>();
-    auto sidebar = std::make_unique<Sidebar>("Clean system junk"_i18n, Sidebar::Side::RIGHT);
-    sidebar->Add<SidebarEntryBool>("Old game updates"_i18n, opts->old_updates, "Updates older than the newest one installed for the same game."_i18n);
-    sidebar->Add<SidebarEntryBool>("Lost content on the SD card"_i18n, opts->orphans_sd, "Game files no installed game uses any more."_i18n);
-    sidebar->Add<SidebarEntryBool>("Lost content in system memory"_i18n, opts->orphans_nand, "Game files no installed game uses any more."_i18n);
-    sidebar->Add<SidebarEntryBool>("Unfinished installs on the SD card"_i18n, opts->placeholders_sd, "Pieces left by installs that stopped half way."_i18n);
-    sidebar->Add<SidebarEntryBool>("Unfinished installs in system memory"_i18n, opts->placeholders_nand, "Pieces left by installs that stopped half way."_i18n);
-    sidebar->Add<SidebarEntryBool>("Unused tickets"_i18n, opts->unused_tickets, "Tickets of games that are no longer installed."_i18n);
-    sidebar->Add<SidebarEntryBool>("Error reports"_i18n, opts->erpt_reports, "Crash reports in /atmosphere/erpt_reports."_i18n);
-    sidebar->Add<SidebarEntryBool>("Folders of removed games"_i18n, opts->contents_folders, "Mods and cheats folders in /atmosphere/contents for games that are no longer on the console. Sysmodules are kept."_i18n);
-    sidebar->Add<SidebarEntryBool>("Saves of removed users"_i18n, opts->deleted_user_saves, "Saves of users that are no longer on the console. They cannot be restored afterwards."_i18n);
-    sidebar->Add<SidebarEntryCallback>("Run selected"_i18n, [opts](){
+    bool* const fields[] = {
+        &opts->old_updates, &opts->orphans_sd, &opts->orphans_nand, &opts->placeholders_sd, &opts->placeholders_nand,
+        &opts->unused_tickets, &opts->erpt_reports, &opts->contents_folders, &opts->deleted_user_saves,
+    };
+    PopupList::Items items{
+        "Old game updates"_i18n, "Lost content on the SD card"_i18n, "Lost content in system memory"_i18n,
+        "Unfinished installs on the SD card"_i18n, "Unfinished installs in system memory"_i18n, "Unused tickets"_i18n,
+        "Error reports"_i18n, "Folders of removed games"_i18n, "Saves of removed users"_i18n,
+        "Start cleanup"_i18n,
+    };
+    std::vector<std::string> descriptions{
+        "Updates older than the newest one installed for the same game."_i18n,
+        "Game files no installed game uses any more."_i18n,
+        "Game files no installed game uses any more."_i18n,
+        "Pieces left by installs that stopped half way."_i18n,
+        "Pieces left by installs that stopped half way."_i18n,
+        "Tickets of games that are no longer installed."_i18n,
+        "Crash reports in /atmosphere/erpt_reports."_i18n,
+        "Mods and cheats folders in /atmosphere/contents for games that are no longer on the console. Sysmodules are kept."_i18n,
+        "Saves of users that are no longer on the console. They cannot be restored afterwards."_i18n,
+        "Removes everything ticked above."_i18n,
+    };
+    auto checks = std::make_shared<std::vector<bool>>();
+    for (auto* f : fields) {
+        checks->push_back(*f);
+    }
+    auto popup = std::make_unique<PopupList>("Clean system junk"_i18n, std::move(items), [opts, checks, fields](auto op_index){
+        if (!op_index) {
+            return;
+        }
+        for (size_t i = 0; i < checks->size(); i++) {
+            *fields[i] = (*checks)[i];
+        }
         // an install that is minimized is still running; its unfinished files would be removed
         if (App::GetProgressActive()) {
             App::Notify("Finish or stop the running transfer first."_i18n);
@@ -63,8 +87,9 @@ void OpenCleanup() {
                 App::PushErrorBox(rc, "Cleanup failed!"_i18n);
             }
         });
-    }, true);
-    App::Push(std::move(sidebar));
+    });
+    popup->SetChecks(checks).SetDescriptions(std::move(descriptions));
+    App::Push(std::move(popup));
 }
 
 // microSD only: the NAND variant was removed in v0.14.018.
