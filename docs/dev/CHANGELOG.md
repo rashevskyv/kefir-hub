@@ -29,7 +29,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: not run (log format only) · nro: built · switch: verified (.69, title mode)
 
 ## unreleased
-- fix: Kefir update changelog: the red "scroll to the bottom" hint wraps in the space left of Install instead of running under it; code spans drop their backticks (grey marks them), so a wrap no longer leaves a lone backtick. No version bump: sphaira/CMakeLists.txt carries another session's uncommitted 0.14.092. switch: verified (.69, Kefir 925 changelog dialog).
+- fix: Kefir update changelog: the red "scroll to the bottom" hint wraps in the space left of Install instead of running under it; code spans drop their backticks (grey marks them), so a wrap no longer leaves a lone backtick. No version bump: lands on top of 0.14.092 from a parallel session. switch: verified (.69, Kefir 925 changelog dialog).
 - docs: plan.md F.18 — battery gauge tool (Battery Desync Fix reversed, queued).
 - docs: plan.md F.16 — delete homebrew together with its folder and forwarders (queued, not started).
 
