@@ -107,7 +107,7 @@ void App::ConfirmInstall(std::function<void()> run) {
         return;
     }
     App::Push<ui::OptionBox>(
-        "This console is running sysMMC. Installing here can get the console banned from Nintendo online services."_i18n,
+        "This console is running sysMMC, its original system. Nintendo can see games and forwarders (HOME Menu icons for homebrew) that were not installed from the eShop, and can ban the console from its online services: eShop, game updates, online play.\n\nInstalling in emuMMC is safer. Install here only if this console does not go online from sysMMC."_i18n,
         "Back"_i18n, "Install"_i18n, "Don't show again"_i18n, 0, [run](auto op_index){
             if (!op_index || *op_index == 0) {
                 return;

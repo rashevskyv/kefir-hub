@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.094 — the HOME icon notice and the sysMMC ban warning explain themselves
+- Auto forwarder notice (emuMMC only): why the icon (applet = little memory, NSZ can fail), what to do (open Hub from the icon next time), what it is (only starts /switch/kefir-hub.nro). sysMMC ban warning: what Nintendo sees, which services can be banned, emuMMC is safer. Ukrainian wording fixed by hand. plan.md F.18: battery desync root cause and the agreed fix.
+- host tests: pass (quick) · nro: built (0.14.095) · switch: pending
+
 ## v0.14.093 — PC install app found on cable connect: ask before opening PC Install (USB)
 - `app_usb.cpp`: when the USB probe found a waiting PC install app, the Hub opened PC Install (USB) without a question; only the MTP-marker path asked. Now: "A PC install app is waiting. Open PC Install (USB)?" — Open (sysMMC ban warning applies) / No (frees the port, starts MTP).
 - host tests: not run (UI flow only) · nro: built · switch: pending (DBI Backend running, plug the cable)

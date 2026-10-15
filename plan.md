@@ -360,6 +360,12 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       i2c Max17050 writes with read-back). (a) read-only page: chip state, HOS-saved parameters, CAL0 battery type,
       verdict, "Back up" (batt.cal-compatible + register dump); (b) restore and factory re-init with automatic backup,
       read-back verify, next steps, per-MMC note; pure parts (table choice, struct, math) in a header with host tests.
+      Root cause (fw 21.0.0 ptm RE, `/home/xhr/re-work/psm-fw/NOTES.md`; agreed 2026-10-15): HOS writes the set:sys
+      snapshot into the chip only when MiscCFG bit 15 is set (after a chip POR); each MMC keeps its own snapshot and
+      cycle baseline. (c) one shared snapshot on the SD (chip read over i2c, never written) copied into the current
+      MMC's set:sys at every start, one cycle count for all MMCs; (d) the page shows the restore flag and both
+      snapshots and walks the fix in order (100 % → re-init on the MMC booted next → two full cycles → copy to others);
+      (e) sys-clk-OC (separate repo): HOS charging current by default, no charge cut-off by default.
 - [ ] F.17 **MTP many small files** (measured 2026-10-14, v0.14.087): Windows Explorer waits ~0.3 ms per file
       already in the destination folder before each next file (1000 files ≈ 4 min; console side flat ~15 ms/file).
       Hub cannot speed that up. (a) Accept archives (.zip/.7z/.rar) dropped over MTP and extract them on the console

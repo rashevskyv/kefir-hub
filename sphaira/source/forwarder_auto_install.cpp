@@ -204,9 +204,9 @@ void NotifyUi(const Plan& plan) {
         break;
     case Notice::PreferHomeIcon:
         if (plan.install_new && plan.delete_old) {
-            key = "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album. An old Homebrew Menu forwarder is being removed now because it can cause errors.";
+            key = "Kefir Hub is adding its own icon to the HOME Menu.\n\nStarted from Album or the Homebrew Menu, Kefir Hub runs as an applet with little memory, so large installs (NSZ) can fail. Started from its HOME Menu icon, it gets all the memory, like a game.\n\nNext time, press HOME and open Kefir Hub from its new icon. The icon only starts /switch/kefir-hub.nro and takes almost no space.\n\nAn old Homebrew Menu forwarder is being removed now because it can cause errors.";
         } else if (plan.install_new) {
-            key = "Kefir Hub is installing a HOME Menu icon so you can launch it like a normal app, without Album.";
+            key = "Kefir Hub is adding its own icon to the HOME Menu.\n\nStarted from Album or the Homebrew Menu, Kefir Hub runs as an applet with little memory, so large installs (NSZ) can fail. Started from its HOME Menu icon, it gets all the memory, like a game.\n\nNext time, press HOME and open Kefir Hub from its new icon. The icon only starts /switch/kefir-hub.nro and takes almost no space.";
         } else {
             key = "An old Homebrew Menu forwarder is being removed from the HOME Menu because it can cause errors. Next time, launch Kefir Hub from its HOME Menu icon, not Album.";
         }
