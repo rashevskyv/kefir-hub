@@ -165,7 +165,7 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
         // try to append header chunk.
         auto temp = curl_slist_append(list, header_str.c_str());
         if (temp) {
-            log_write("adding header: %s\n", header_str.c_str());
+            log_write("adding header: %s\n", key.c_str()); // the name only: values can be tokens
             list = temp;
         } else {
             log_write("failed to append header\n");
@@ -365,7 +365,7 @@ auto UploadInternal(CURL* curl, const Api& e) -> ApiResult {
         // try to append header chunk.
         auto temp = curl_slist_append(list, header_str.c_str());
         if (temp) {
-            log_write("adding header: %s\n", header_str.c_str());
+            log_write("adding header: %s\n", key.c_str()); // the name only: values can be tokens
             list = temp;
         } else {
             log_write("failed to append header\n");

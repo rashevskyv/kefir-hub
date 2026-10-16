@@ -41,7 +41,6 @@ inline constexpr const char* NX_DB_PATH = "/config/kefir/cheats/cheats-db";
 inline constexpr const char* NX_DB_VERSIONS_FILE = "versions.json";
 inline constexpr const char* NX_DB_GITHUB_BASE = "https://raw.githubusercontent.com/sthetix/nx-cheats-db/main";
 inline constexpr const char* NX_DB_VERSIONS_URL = "https://raw.githubusercontent.com/sthetix/nx-cheats-db/main/versions.json";
-inline constexpr const char* AIO_TOKEN_PATH = "/config/aio-switch-updater/token.json";
 inline constexpr const char* CHEAT_METADATA_CACHE_PATH = "/config/kefir/cheats/cheat-metadata.json";
 inline constexpr u32 CHEAT_METADATA_CACHE_VERSION = 2; // 2: Build IDs are no longer byte-reversed
 inline constexpr const char* KEFIR_CHEATS_URL = "https://github.com/HamletDuFromage/switch-cheats-db/releases/latest/download/contents.zip";

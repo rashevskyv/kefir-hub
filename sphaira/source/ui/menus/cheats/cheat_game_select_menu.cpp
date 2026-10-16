@@ -134,9 +134,7 @@ CheatGameSelectMenu::CheatGameSelectMenu(CheatSource source)
                             // Delete token file
                             fs::FsNativeSd fs;
                             fs.DeleteFile(TOKEN_PATH);
-                            // Also try AIO path
-                            fs.DeleteFile(AIO_TOKEN_PATH);
-                            App::Notify("Logged out from CheatSlips");
+                            App::Notify("Logged out from CheatSlips"_i18n);
                         }
                     );
                 } else {
@@ -391,7 +389,7 @@ void CheatGameSelectMenu::OnSelect() {
     if (m_source == CheatSource::Cheatslips) {
         auto token = GetCheatslipsToken();
         if (token.empty()) {
-            // No token, prompt for login (like aio-switch-updater)
+            // No token, prompt for login
             App::Push<OptionBox>(
                 "No CheatSlips token found.\nLogin for higher quotas?",
                 "Cancel"_i18n, "Login", 1,

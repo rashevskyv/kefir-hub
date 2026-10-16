@@ -3455,5 +3455,6 @@
   "FAT32 support only": "Лише підтримка FAT32",
   "Do not power off the console during installation.": "Не вимикайте консоль під час встановлення.",
   "the current Kefir does not support it, and no Kefir update was found.": "поточний Kefir її не підтримує, а оновлення Kefir не знайдено.",
-  "not installed": "не встановлено"
+  "not installed": "не встановлено",
+  "Logged out from CheatSlips": "Ви вийшли з CheatSlips"
 }

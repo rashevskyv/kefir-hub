@@ -32,59 +32,35 @@
 namespace sphaira::ui::menu::hats {
 namespace detail {
 auto GetCheatslipsToken() -> std::string {
+    // never log the token or the file contents: logs are on by default and users share them
     fs::FsNativeSd fs;
-
-    // our token first, then the one aio-switch-updater saved
-    const char* token_paths[] = {TOKEN_PATH, AIO_TOKEN_PATH};
-
-    for (const char* token_path : token_paths) {
-        if (!fs.FileExists(token_path)) {
-            log_write("[Cheats] Token file not found at %s\n", token_path);
-            continue;
-        }
-
-        log_write("[Cheats] Found token file at %s\n", token_path);
-
-        std::vector<u8> data;
-        Result rc = fs.read_entire_file(token_path, data);
-        if (R_FAILED(rc)) {
-            log_write("[Cheats] Failed to read token file, result: %x\n", rc);
-            continue;
-        }
-
-        log_write("[Cheats] Read %zu bytes from token file\n", data.size());
-
-        // Null-terminate for JSON parsing
-        data.push_back(0);
-
-        const auto data_len = std::strlen(reinterpret_cast<char*>(data.data()));
-        yyjson_doc* doc = yyjson_read((char*)data.data(), data_len, 0);
-        if (!doc) {
-            log_write("[Cheats] Failed to parse token JSON, raw data: %s\n", (char*)data.data());
-            continue;
-        }
-
-        ON_SCOPE_EXIT(yyjson_doc_free(doc));
-
-        yyjson_val* root = yyjson_doc_get_root(doc);
-        if (!yyjson_is_obj(root)) {
-            log_write("[Cheats] Token JSON is not an object\n");
-            continue;
-        }
-
-        yyjson_val* token_val = yyjson_obj_get(root, "token");
-        if (token_val && yyjson_is_str(token_val)) {
-            const char* token = yyjson_get_str(token_val);
-            log_write("[Cheats] Loaded saved token from %s: %s\n", token_path, token);
-            // Copy the token string since the doc will be freed
-            return std::string(token);
-        }
-
-        log_write("[Cheats] No token field in JSON from %s\n", token_path);
+    if (!fs.FileExists(TOKEN_PATH)) {
+        log_write("[Cheats] no CheatSlips token saved\n");
+        return "";
     }
 
-    log_write("[Cheats] No valid token found in any location\n");
-    return "";
+    std::vector<u8> data;
+    if (const Result rc = fs.read_entire_file(TOKEN_PATH, data); R_FAILED(rc)) {
+        log_write("[Cheats] failed to read the token file: 0x%X\n", rc);
+        return "";
+    }
+    data.push_back(0); // null-terminate for JSON parsing
+
+    const auto data_len = std::strlen(reinterpret_cast<char*>(data.data()));
+    yyjson_doc* doc = yyjson_read((char*)data.data(), data_len, 0);
+    if (!doc) {
+        log_write("[Cheats] the token file is not JSON\n");
+        return "";
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+
+    yyjson_val* token_val = yyjson_obj_get(yyjson_doc_get_root(doc), "token");
+    if (!token_val || !yyjson_is_str(token_val)) {
+        log_write("[Cheats] no token field in the token file\n");
+        return "";
+    }
+    log_write("[Cheats] CheatSlips token loaded\n");
+    return std::string(yyjson_get_str(token_val)); // a copy: the doc is freed on return
 }
 
 // Authenticate with CheatSlips API and get token
@@ -142,7 +118,7 @@ auto AuthenticateCheatslips(const std::string& email, const std::string& passwor
     yyjson_val* token_val = yyjson_obj_get(resp_root, "token");
     if (token_val && yyjson_is_str(token_val)) {
         const char* token = yyjson_get_str(token_val);
-        log_write("[Cheats] Authentication successful, token: %s\n", token);
+        log_write("[Cheats] CheatSlips sign-in done\n");
         // Copy the token string since the doc will be freed
         return std::string(token);
     }
@@ -153,8 +129,6 @@ auto AuthenticateCheatslips(const std::string& email, const std::string& passwor
         log_write("[Cheats] Auth error: %s\n", yyjson_get_str(error_val));
     }
 
-    // Log full response for debugging
-    log_write("[Cheats] Auth response: %s\n", reinterpret_cast<char*>(result.data.data()));
 
     return "";
 }
@@ -199,7 +173,7 @@ auto SaveCheatslipsToken(const std::string& token) -> void {
         return;
     }
 
-    log_write("[Cheats] Saved CheatSlips token to file, JSON: %s\n", json);
+    log_write("[Cheats] CheatSlips token saved\n");
 }
 
 

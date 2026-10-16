@@ -3463,5 +3463,6 @@
   "FAT32 support only": "FAT32 support only",
   "Do not power off the console during installation.": "Do not power off the console during installation.",
   "the current Kefir does not support it, and no Kefir update was found.": "the current Kefir does not support it, and no Kefir update was found.",
-  "not installed": "not installed"
+  "not installed": "not installed",
+  "Logged out from CheatSlips": "Logged out from CheatSlips"
 }

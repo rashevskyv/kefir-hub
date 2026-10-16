@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.122 — CheatSlips token only in our folder and never in the log
+- aio-switch-updater token fallback (/config/aio-switch-updater/token.json) removed from sign-in and log-out. The token, the token file, the sign-in response and HTTP header values are no longer written to log.txt (logs are on by default and users share them): curl logs only header names.
+- host tests: quick pass · nro: built · switch: pending (CheatSlips sign-in, download, log-out; log.txt has no token)
+
 ## v0.14.121 — Kefir version comes only from /switch/kefir-updater/version
 - `getHatsVersion` (HATS_VERSION.txt / HATS-*.txt in the SD root) removed; it was a fallback of `getKefirVersion` from the HATS pack, not ours. No version file → the header shows no Kefir, the Updater shows "not installed" and the changelog lists only the target version (0.14.120).
 - Cheats data folder /config/hats-tools → /config/kefir/cheats (CheatSlips token, cheats-db cache, metadata cache, payload-launch.ini); app start moves the old folder once when the new one does not exist. The hekate entry the Hub writes for a payload reboot is now [Kefir Hub] instead of [HATS Payload].
