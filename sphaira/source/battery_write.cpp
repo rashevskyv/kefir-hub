@@ -8,6 +8,9 @@
 #include "battery_page.hpp"
 #include "battery_internal.hpp"
 #include "battery_init.hpp"
+#include "battery_wizard.hpp"
+#include "system_info.hpp"
+#include "ui/menus/system_info_menu.hpp"
 #include "fuel_gauge.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
@@ -22,6 +25,8 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -32,6 +37,30 @@ namespace {
 using namespace detail;
 
 constexpr u16 MIN_FULL_MV = 4100;
+constexpr const char* STATE_PATH = "/config/kefir/battery/calibration.txt";
+
+auto LoadState() -> wizard::State {
+    std::vector<u8> data;
+    if (R_FAILED(fs::FsNativeSd{}.read_entire_file(STATE_PATH, data))) {
+        return {};
+    }
+    return wizard::Parse({reinterpret_cast<const char*>(data.data()), data.size()});
+}
+
+void SaveState(const wizard::State& st) {
+    fs::FsNativeSd fs;
+    fs.CreateDirectoryRecursively(BACKUP_DIR);
+    const auto text = wizard::Format(st);
+    fs.write_entire_file(STATE_PATH, std::vector<u8>(text.begin(), text.end()));
+}
+
+// HOS's cycle total x100 for this MMC: its copy plus what the chip counted since the last fold-in
+auto CycleTotal(const Snapshot& s) -> u32 {
+    const u16 reg = s.regs[MAX17050_Cycles];
+    return s.hos.cycles_actual + (reg > 0x60 ? reg - 0x60u : 0u);
+}
+
+void OpenWizard();
 
 // this MMC's copy := the chip's nine parameters; `cycles` replaces the count when given.
 auto SaveCopy(FuelGauge& g, std::optional<u32> cycles) -> Result {
@@ -146,10 +175,10 @@ void Done(Result rc, const std::string& ok_text, const std::shared_ptr<std::stri
     }
     log_write("[Battery] write result 0x%X %s\n", rc, failed->c_str());
     if (R_SUCCEEDED(rc)) {
-        App::Push<ui::OptionBox>(ok_text, "OK"_i18n, [](auto) { Open(); });
+        App::Push<ui::OptionBox>(ok_text, "OK"_i18n, [](auto) { OpenWizard(); });
     } else {
         App::Push<ui::OptionBox>("The chip was not changed as planned. A backup was saved first; Restore from the last backup puts it back."_i18n
-                                 + (failed->empty() ? std::string{} : "\n\n" + *failed), "OK"_i18n, [](auto) { Open(); });
+                                 + (failed->empty() ? std::string{} : "\n\n" + *failed), "OK"_i18n, [](auto) { OpenWizard(); });
     }
 }
 
@@ -177,6 +206,7 @@ auto ReadCharge() -> ChargeState {
 auto WaitForFull(ui::ProgressBox* pbox) -> Result {
     App::SetAutoSleepDisabled(true);
     ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));
+    pbox->SetHideSpeed(true); // a charge has no transfer speed or ETA
     std::string last;
     while (true) {
         R_TRY(pbox->ShouldExitResult());
@@ -184,9 +214,10 @@ auto WaitForFull(ui::ProgressBox* pbox) -> Result {
         if (c.charger && c.pct >= 100 && c.mv >= MIN_FULL_MV) {
             R_SUCCEED();
         }
-        std::string text = !c.charger ? "Connect the charger"_i18n
-            : c.pct < 100 ? "Charging to 100%, then the reset starts by itself"_i18n
-            : "Topping up the cell: "_i18n + std::to_string(c.mv) + " / " + std::to_string(MIN_FULL_MV) + " mV";
+        const auto charge = "Battery charge: "_i18n + std::to_string(c.pct) + "%. ";
+        std::string text = !c.charger ? charge + "Connect the charger"_i18n
+            : c.pct < 100 ? charge + "Charging to 100%, then the battery calibration resets by itself"_i18n
+            : charge + "Topping up the cell: "_i18n + std::to_string(c.mv) + " / " + std::to_string(MIN_FULL_MV) + " mV";
         if (text != last) {
             pbox->NewTransfer(text);
             last = text;
@@ -200,7 +231,7 @@ auto WaitForFull(ui::ProgressBox* pbox) -> Result {
 
 void RunReset() {
     auto failed = std::make_shared<std::string>();
-    App::Push<ui::ProgressBox>(0, "Reset from factory data"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
+    App::Push<ui::ProgressBox>(0, "Reset battery calibration to factory values"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
         R_TRY(WaitForFull(pbox));
         auto s = Read();
         R_UNLESS(s.gauge, Result_ArchiveRead);
@@ -218,10 +249,15 @@ void RunReset() {
             cycles = std::max(cycles, s.other->cal.cycles);
         }
         R_TRY(SaveCopy(g, cycles));
+        wizard::State st;
+        st.reset_at = static_cast<u64>(std::time(nullptr));
+        st.reset_mmc = s.emummc ? wizard::EMUMMC : wizard::SYSMMC;
+        st.total_at_reset = cycles; // the reset set the chip's Cycles register to 0x60: no delta
+        SaveState(st);
         log_write("[Battery] factory init done (table v%d '%c'), cycles %u\n", s.cal0_version, s.cal0_vendor ? s.cal0_vendor : '?', cycles);
         R_SUCCEED();
     }, [failed](Result rc) {
-        Done(rc, "The fuel gauge now runs the factory model.\n\nNext: charge to 100%, then use the console on battery until it switches off, and charge it again. Twice. The chip learns the battery on these cycles.\n\nUntil then do not let the battery run flat in the other MMC. Open this page there once and choose Match the other MMC."_i18n, failed);
+        Done(rc, "The battery calibration now starts from the factory values. Next: two full cycles, the steps below show them."_i18n, failed);
     });
 }
 
@@ -260,6 +296,10 @@ void RunMatch() {
         FuelGauge g;
         R_UNLESS(g.open, Result_ArchiveRead);
         R_TRY(SaveCopy(g, std::max(s.hos.cycles_actual, s.other->cal.cycles)));
+        if (auto st = LoadState(); st.reset_at) {
+            st.match_at[s.emummc ? wizard::EMUMMC : wizard::SYSMMC] = static_cast<u64>(std::time(nullptr));
+            SaveState(st);
+        }
         log_write("[Battery] matched the other MMC: cycles %u\n", std::max(s.hos.cycles_actual, s.other->cal.cycles));
         R_SUCCEED();
     }, [failed](Result rc) {
@@ -267,38 +307,148 @@ void RunMatch() {
     });
 }
 
+void AskReset() {
+    if (App::GetProgressActive()) {
+        App::Notify("Finish or stop the running transfer first."_i18n);
+        return;
+    }
+    App::Push<ui::OptionBox>(
+        "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Kefir Hub waits on the charger until the battery is full, then resets. Afterwards the console needs two full cycles (empty, then full) to learn the battery."_i18n,
+        "Back"_i18n, "Reset"_i18n, 0, [](auto o) {
+            if (o && *o == 1) {
+                RunReset();
+            }
+        });
+}
+
+auto Info(const std::string& text) -> std::function<void()> {
+    return [text]() { App::Push<ui::OptionBox>(text, "OK"_i18n); };
+}
+
+auto DateOf(u64 t) -> std::string {
+    char buf[32];
+    const auto tt = static_cast<time_t>(t);
+    std::strftime(buf, sizeof(buf), "%d.%m %H:%M", std::localtime(&tt));
+    return buf;
+}
+
+// the steps with their state; A on a step does it or says what to do.
+auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_info::Group> {
+    PsmChargerType charger{};
+    u32 pct{};
+    psmGetChargerType(&charger);
+    psmGetBatteryChargePercentage(&pct);
+    const int mmc = s.emummc ? wizard::EMUMMC : wizard::SYSMMC;
+    const wizard::Live live{CycleTotal(s), charger != PsmChargerType_Unconnected, pct, mmc, s.other.has_value(),
+                            static_cast<u64>(std::time(nullptr))};
+    if (wizard::Advance(st, live)) {
+        SaveState(st);
+    }
+    const auto other_name = mmc == wizard::EMUMMC ? std::string{"sysMMC"} : std::string{"emuMMC"};
+    const auto reset_name = st.reset_mmc == wizard::EMUMMC ? std::string{"emuMMC"} : std::string{"sysMMC"};
+    const auto match_in = st.reset_mmc == wizard::EMUMMC ? std::string{"sysMMC"} : std::string{"emuMMC"};
+
+    system_info::Group steps{"Calibration steps"_i18n, {}};
+    for (const auto& v : wizard::Steps(st, live)) {
+        system_info::Row r;
+        const bool done = v.mark == wizard::Mark::Done;
+        const bool next = v.mark == wizard::Mark::Next;
+        r.done = done;
+        r.warn = next;
+        const auto pct_text = [](u32 x) { return std::to_string(std::min<u32>(x, 999)) + "%"; };
+        switch (v.step) {
+            case wizard::Step::CheckOther:
+                r.label = "1. Open this page in the other MMC"_i18n;
+                r.value = done ? "Done"_i18n : "Next: boot "_i18n + other_name + ", Tools → Tools → Battery";
+                r.action = Info("Both MMCs keep their own copy of the battery model and their own cycle count. Boot the other MMC once and open Tools → Tools → Battery there; the page saves its copy to the microSD, so this one can compare them."_i18n);
+                break;
+            case wizard::Step::Reset:
+                r.label = "2. Reset battery calibration to factory values"_i18n;
+                r.value = done ? "Done "_i18n + DateOf(st.reset_at) + ", " + reset_name : next ? "Next: press A (waits on the charger for 100%)"_i18n : "";
+                r.action = AskReset;
+                break;
+            case wizard::Step::Cycle1:
+            case wizard::Step::Cycle2: {
+                const bool first = v.step == wizard::Step::Cycle1;
+                const u32 target = first ? wizard::CYCLE_DONE : 2 * wizard::CYCLE_DONE;
+                const u32 from = first ? 0 : wizard::CYCLE_DONE;
+                const u32 got = v.discharged > from ? v.discharged - from : 0;
+                r.label = first ? "3. First cycle: on battery until it switches off, then to 100%"_i18n
+                                : "4. Second cycle: the same once more"_i18n;
+                if (done) {
+                    r.value = "Done "_i18n + DateOf(first ? st.full1_at : st.full2_at);
+                } else if (next) {
+                    r.value = v.discharged >= target ? "Discharged: now charge to 100% and open this page"_i18n
+                                                     : "Discharged "_i18n + pct_text(got) + " of 90%";
+                }
+                r.action = Info("Unplug the charger and use the console until it switches off by itself (a game, the screen bright, no sleep). Then charge it to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
+                break;
+            }
+            case wizard::Step::MatchOther:
+                r.label = "5. In the other MMC: Match the other MMC"_i18n;
+                if (done) {
+                    r.value = "Done"_i18n;
+                } else if (next) {
+                    r.value = mmc == st.reset_mmc ? "Next: boot "_i18n + match_in + ", open this page, A on this step"
+                                                  : "Next: press A here"_i18n;
+                }
+                r.action = mmc == st.reset_mmc && st.reset_at
+                    ? Info("Boot the other MMC, open Tools → Tools → Battery → + and press A on this step there. Its copy then takes the calibrated model and one cycle count for both MMCs; the chip is not written."_i18n)
+                    : std::function<void()>{RunMatch};
+                break;
+            case wizard::Step::Finished:
+                r.label = "Calibration finished"_i18n;
+                r.value = done ? "Yes"_i18n : "";
+                r.action = Info("When all steps are done, both MMCs hold the same calibrated model and one cycle count. Check the first row of Tools → Tools → Battery: the full capacity should now be close to the design capacity, or show the battery's real wear."_i18n);
+                break;
+        }
+        steps.rows.push_back(std::move(r));
+    }
+
+    const auto full = s.regs[MAX17050_FullCap];
+    const auto design = s.regs[MAX17050_DesignCap];
+    system_info::Group now{"Now"_i18n, {
+        {"Battery charge"_i18n, std::to_string(pct) + "%" + (charger != PsmChargerType_Unconnected ? " · " + "on the charger"_i18n : std::string{})},
+        {"Full capacity / design"_i18n, std::to_string(full / 2) + " / " + std::to_string(design / 2) + " mAh", CapacityLow(full, design)},
+    }};
+    if (st.reset_at && !st.full2_at) {
+        now.rows.push_back({"Careful"_i18n, "Until step 4 is done, do not let the battery run flat in "_i18n + match_in, true});
+    }
+
+    system_info::Group more{"More"_i18n, {}};
+    system_info::Row restore{"Restore from the last backup"_i18n, "Undo: the newest backup of this MMC back into the chip"_i18n};
+    restore.action = RunRestore;
+    more.rows.push_back(std::move(restore));
+    system_info::Row match{"Match the other MMC"_i18n, "No chip write: this MMC's copy = chip, one cycle count"_i18n};
+    match.action = RunMatch;
+    more.rows.push_back(std::move(match));
+
+    return {std::move(steps), std::move(now), std::move(more)};
+}
+
+void OpenWizard() {
+    auto groups = std::make_shared<std::vector<system_info::Group>>();
+    App::Push<ui::ProgressBox>(0, "Reading"_i18n, "Battery calibration"_i18n, [groups](auto) -> Result {
+        auto s = Read();
+        R_UNLESS(s.gauge, Result_ArchiveRead);
+        auto st = LoadState();
+        *groups = WizardGroups(s, st);
+        R_SUCCEED();
+    }, [groups](Result rc) {
+        if (R_SUCCEEDED(rc)) {
+            App::Push<ui::menu::sysinfo::Menu>("Battery calibration"_i18n, std::move(*groups), "Back up"_i18n, []() {
+                std::string name;
+                const auto rc = Backup(Read(), name);
+                App::Notify(R_SUCCEEDED(rc) ? "Saved: "_i18n + name + ".cal" : std::string{"Backup failed"_i18n});
+            });
+        }
+    });
+}
+
 } // namespace
 
 void OpenCalibrate() {
-    ui::PopupList::Items items{"Reset from factory data"_i18n, "Restore from the last backup"_i18n, "Match the other MMC"_i18n};
-    auto popup = std::make_unique<ui::PopupList>("Calibrate"_i18n, std::move(items), [](auto op) {
-        if (!op) {
-            return;
-        }
-        if (*op == 0) {
-            if (App::GetProgressActive()) {
-                App::Notify("Finish or stop the running transfer first."_i18n);
-                return;
-            }
-            App::Push<ui::OptionBox>(
-                "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Kefir Hub waits on the charger until the battery is full, then resets. Afterwards the console needs two full cycles (empty, then full) to learn the battery."_i18n,
-                "Back"_i18n, "Reset"_i18n, 0, [](auto o) {
-                    if (o && *o == 1) {
-                        RunReset();
-                    }
-                });
-        } else if (*op == 1) {
-            RunRestore();
-        } else {
-            RunMatch();
-        }
-    });
-    popup->SetDescriptions({
-        "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Waits on the charger for 100% first."_i18n,
-        "Battery Desync Fix Y: the last backup of this MMC back into the chip."_i18n,
-        "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs."_i18n,
-    });
-    App::Push(std::move(popup));
+    OpenWizard();
 }
 
 } // namespace sphaira::battery

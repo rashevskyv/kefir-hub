@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,9 @@ struct Row {
     std::string label;
     std::string value;
     bool warn{};       // value drawn orange: something to act on (Tools → Battery)
-    std::string help{}; // shown with + on the row; empty = no help
+    std::string help{}; // shown with A on the row; empty = no help
+    std::function<void()> action{}; // A runs this instead of the help (calibration wizard steps)
+    bool done{};        // value drawn green: a finished step
 };
 
 struct Group {

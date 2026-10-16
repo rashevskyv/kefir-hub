@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
 
+## v0.14.111 — Battery calibration wizard: the steps with their state, A runs or explains each
+- + on the Battery page opens "Battery calibration": 1 open the page in the other MMC, 2 reset battery calibration to factory values, 3/4 two cycles, 5 match in the other MMC, finished; done steps green, the next one orange. Progress lives in `/config/kefir/battery/calibration.txt` (both MMCs); a cycle counts once 90 % was discharged since the last step (HOS cycle total: copy + chip delta) and the console is at 100 % on the charger, so the Hub need not run while it drains (`battery_wizard.hpp`, host test). "Reset from factory data" is now "Reset battery calibration to factory values"; the wait line says "Battery charge: N%" and hides the transfer speed/ETA. Rows can carry an action (system_info::Row::action).
+- host tests: pass (test_battery_wizard) · nro: built · switch: pending (.141)
+
 ## v0.14.110 — Reset from factory data waits on the charger for 100 %, then resets by itself
 - Instead of refusing below 100 %, the reset box says "Connect the charger" / "Charging to 100%, then the reset starts by itself" / "Topping up the cell" with the % bar, keeps the console awake and runs the reset when charger + 100 % + 4.1 V hold; B cancels ("the chip was not changed").
 - host tests: pass · nro: built · switch: .141 waiting screen at 60 % on the charger (reset itself pending); the ETA/speed line of the box is meaningless here (to hide in the wizard)

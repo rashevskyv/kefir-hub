@@ -197,7 +197,7 @@ Create, rename, back up and link console user profiles. See [Users](users.md).
 - first row of [[Verdict]]: [[Full capacity / design]] in mAh and %; more than 10 % under design is drawn orange and counts as desync (" — desync, the saved copy too")
 - [[Charge cycles: this / other MMC]] in orange when the two MMCs count a cycle or more apart (Lite: the charge voltage limit follows the count)
 - A on a row shows what it means; A on a section caption opens or closes it
-- **+** ([[Calibrate]]): [[Reset from factory data]] (needs the charger and 100 %: writes the factory battery model into the chip, backup first, then this MMC's copy; afterwards two full cycles), [[Restore from the last backup]] (the newest backup of this MMC back into the chip), [[Match the other MMC]] (no chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs)
+- **+** ([[Calibrate]]): [[Reset battery calibration to factory values]] (needs the charger and 100 %: writes the factory battery model into the chip, backup first, then this MMC's copy; afterwards two full cycles), [[Restore from the last backup]] (the newest backup of this MMC back into the chip), [[Match the other MMC]] (no chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs)
 - after a reset: do not let the battery run flat in the other MMC before the two cycles are done; open the page there once and choose [[Match the other MMC]]
 - why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions
 -->
