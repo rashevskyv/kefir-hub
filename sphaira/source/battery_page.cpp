@@ -14,6 +14,8 @@
 
 #include <switch.h>
 #include <array>
+#include <cstring>
+#include <optional>
 #include <cstdio>
 #include <ctime>
 #include <memory>
@@ -38,6 +40,7 @@ struct Snapshot {
     int cal0_version{-1};
     std::string lot;
     bool emummc{};
+    std::optional<CopyFile> other; // the other MMC's copy file
 };
 
 auto Fmt(const char* fmt, auto... args) -> std::string {
@@ -45,6 +48,8 @@ auto Fmt(const char* fmt, auto... args) -> std::string {
     std::snprintf(buf, sizeof(buf), fmt, args...);
     return buf;
 }
+
+void SyncCopies(Snapshot& s);
 
 auto Read() -> Snapshot {
     Snapshot s;
@@ -96,7 +101,35 @@ auto Read() -> Snapshot {
         }
         fsStorageClose(&cal0);
     }
+    SyncCopies(s);
     return s;
+}
+
+auto CopyPath(bool emummc) -> fs::FsPath {
+    return fs::FsPath{std::string{BACKUP_DIR} + (emummc ? "/emummc-copy.cal" : "/sysmmc-copy.cal")};
+}
+
+// every open saves this MMC's copy and reads the other MMC's, so opening the page once in each MMC is enough.
+void SyncCopies(Snapshot& s) {
+    fs::FsNativeSd fs;
+    if (R_FAILED(fs.GetFsOpenResult())) {
+        return;
+    }
+    if (s.hos_ok) {
+        fs.CreateDirectoryRecursively(BACKUP_DIR);
+        CopyFile mine{};
+        static_assert(sizeof(mine.cal) == sizeof(s.hos));
+        std::memcpy(&mine.cal, &s.hos, sizeof(mine.cal));
+        mine.saved_at = static_cast<u64>(std::time(nullptr));
+        const auto* p = reinterpret_cast<const u8*>(&mine);
+        fs.write_entire_file(CopyPath(s.emummc), std::vector<u8>(p, p + sizeof(mine)));
+    }
+    std::vector<u8> data;
+    if (R_SUCCEEDED(fs.read_entire_file(CopyPath(!s.emummc), data)) && data.size() == sizeof(CopyFile)) {
+        CopyFile other{};
+        std::memcpy(&other, data.data(), sizeof(other));
+        s.other = other;
+    }
 }
 
 auto ChipParams(const Snapshot& s) -> Params {
@@ -118,7 +151,16 @@ auto MmcName(const Snapshot& s) -> std::string {
 
 auto FindingRow(const Diagnosis& r) -> system_info::Row {
     switch (r.finding) {
-        case Finding::NoSign: return {"Verdict"_i18n, "No sign of desync on this MMC"_i18n};
+        case Finding::NoSign: return {"Verdict"_i18n, "No sign of desync found"_i18n};
+        case Finding::OtherDiffers: return {"Chip vs other MMC's copy"_i18n, "Differ: "_i18n + r.detail};
+        case Finding::OtherUnknown: return {"Other MMC"_i18n, "Not checked: boot it and open this page once"_i18n};
+        case Finding::SocGap:
+        case Finding::SocGapLoaded: {
+            const auto sp = r.detail.find(' ');
+            const auto text = r.detail.substr(0, sp) + "% / " + r.detail.substr(sp + 1) + "%";
+            return {"Charge: shown / by voltage"_i18n, text + (r.finding == Finding::SocGap ? " " + "at rest: the % is wrong"_i18n
+                                                                                          : " " + "under load: check with the charger out"_i18n)};
+        }
         case Finding::RestorePending: return {"Restore flag (MiscCFG bit 15)"_i18n, "Set: HOS rewrites the chip from this MMC at the next start"_i18n};
         case Finding::PowerOnReset: return {"Restart flag (Status POR)"_i18n, "Set: the chip restarted and was not set up since"_i18n};
         case Finding::CopyDiffers: return {"Chip vs this MMC's copy"_i18n, "Differ: "_i18n + r.detail};
@@ -146,6 +188,12 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
     Input in{chip, hos, s.regs[MAX17050_MiscCFG], s.regs[MAX17050_Status], s.regs[MAX17050_DesignCap],
              s.regs[MAX17050_FullCap], s.cal0_version, s.setcal_version, s.reliability};
     in.hos_read = s.hos_ok;
+    if (s.other) {
+        in.other = ParamsOf(s.other->cal);
+    }
+    in.rep_soc = s.regs[MAX17050_RepSOC] >> 8;
+    in.vf_soc = s.regs[MAX17050_VFSOC] >> 8;
+    in.avg_current_ma = static_cast<int>(static_cast<s16>(s.regs[MAX17050_AvgCurrent]) * 0.15625);
     system_info::Group verdict{"Verdict"_i18n, {}};
     for (const auto& r : Diagnose(in)) {
         verdict.rows.push_back(FindingRow(r));
@@ -168,7 +216,8 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
     out.push_back(std::move(params));
 
     out.push_back({"Fuel gauge (chip)"_i18n, {
-        {"Charge"_i18n, Fmt("%u%%", s.regs[MAX17050_RepSOC] >> 8)},
+        {"Charge: shown / by voltage"_i18n, Fmt("%u%% / %u%%", s.regs[MAX17050_RepSOC] >> 8, s.regs[MAX17050_VFSOC] >> 8)},
+        {"Average current"_i18n, Fmt("%.0f mA", static_cast<s16>(s.regs[MAX17050_AvgCurrent]) * 0.15625)},
         {"Remaining capacity"_i18n, Fmt("%u mAh", s.regs[MAX17050_RepCap] / 2)},
         {"Full capacity now"_i18n, Fmt("%u mAh", s.regs[MAX17050_FullCap] / 2)},
         {"Design capacity"_i18n, Fmt("%u mAh", s.regs[MAX17050_DesignCap] / 2)},

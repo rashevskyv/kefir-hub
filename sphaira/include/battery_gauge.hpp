@@ -9,6 +9,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,25 @@ inline auto Pack(const Params& chip, std::uint16_t hos_pad, std::uint32_t hos_cy
     return out;
 }
 
+// this MMC's set:sys copy as the page saves it on every open (<mmc>-copy.cal), so the page opened in the
+// other MMC can compare the chip with it.
+struct CopyFile {
+    BattCal cal;
+    std::uint64_t saved_at; // unix time
+};
+static_assert(sizeof(CopyFile) == 32);
+
+inline auto ParamsOf(const BattCal& c) -> Params {
+    Params p;
+    std::memcpy(p.v.data(), c.params, sizeof(c.params));
+    return p;
+}
+
+// SOC points between the charge the chip reports and the charge its voltage model gives; at rest a bigger
+// gap is the wrong-% symptom. Under load the cell voltage is off its rest value, so the gap means little.
+inline constexpr int SOC_GAP = 10;
+inline constexpr int REST_MA = 100;
+
 enum class Finding {
     RestorePending,  // MiscCFG bit 15: the chip lost power; HOS writes this MMC's copy at the next start
     PowerOnReset,    // Status bit 1: the chip restarted and nobody has cleared the flag yet
@@ -51,7 +71,12 @@ enum class Finding {
     BrokenModel,     // learned full capacity below half the design capacity: no battery wears that far, the
                      // chip learned a wrong model (detail: percent; "copy" when this MMC's copy is just as low)
     LowCapacity,     // 50..70 % of the design capacity: wear, or the start of a bad model
-    NoSign,          // none of the desync signs on this MMC
+    OtherDiffers,    // the other MMC's saved copy differs from the chip: if the chip loses power while that
+                     // MMC runs, HOS writes the old copy back (detail: parameter names)
+    OtherUnknown,    // the page was not opened in the other MMC yet
+    SocGap,          // at rest: reported % and %-by-voltage differ by SOC_GAP or more (detail: "84 73")
+    SocGapLoaded,    // the same gap under load: read again with the charger out (detail: "84 73")
+    NoSign,          // none of the desync signs; still says what was not checked (OtherUnknown, SocGapLoaded)
 };
 
 struct Input {
@@ -65,6 +90,10 @@ struct Input {
     int setcal_version{-1};
     int cycle_reliability{-1}; // set:sys 172; -1 = not read (before 7.0.0)
     bool hos_read{true};        // false: set:sys could not be read; `hos` is not compared
+    std::optional<Params> other; // the other MMC's copy, when its page was opened
+    int rep_soc{-1};             // % the chip reports (RepSOC high byte)
+    int vf_soc{-1};              // % from the voltage model (VFSOC high byte)
+    int avg_current_ma{};        // AvgCurrent, + = charging
 };
 
 struct Diagnosis {
@@ -106,8 +135,27 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     } else if (in.design_cap && in.full_cap * 10u < in.design_cap * 7u) {
         out.push_back({Finding::LowCapacity, std::to_string(in.full_cap * 100u / in.design_cap)});
     }
-    // restore flag, POR, a copy that differs and a broken model are the desync signs.
-    const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty() && in.hos_read && !broken;
+    std::string other_differ;
+    for (size_t i = 0; in.other && i < in.chip.v.size(); i++) {
+        if (in.chip.v[i] != in.other->v[i]) {
+            other_differ += (other_differ.empty() ? "" : ", ") + std::string{PARAM_NAMES[i]};
+        }
+    }
+    if (!other_differ.empty()) {
+        out.push_back({Finding::OtherDiffers, other_differ});
+    }
+    bool gap_at_rest = false;
+    if (in.rep_soc >= 0 && in.vf_soc >= 0 && (in.rep_soc - in.vf_soc >= SOC_GAP || in.vf_soc - in.rep_soc >= SOC_GAP)) {
+        const auto soc = std::to_string(in.rep_soc) + " " + std::to_string(in.vf_soc);
+        gap_at_rest = in.avg_current_ma > -REST_MA && in.avg_current_ma < REST_MA;
+        out.push_back({gap_at_rest ? Finding::SocGap : Finding::SocGapLoaded, soc});
+    }
+    if (!in.other) {
+        out.push_back({Finding::OtherUnknown, {}});
+    }
+    // restore flag, POR, copies that differ, a broken model and a gap at rest are the desync signs.
+    const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty() && in.hos_read && !broken
+        && other_differ.empty() && !gap_at_rest;
     if (no_sign) {
         out.insert(out.begin(), {Finding::NoSign, {}});
     }

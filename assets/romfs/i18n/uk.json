@@ -3327,5 +3327,12 @@
   "Not compared: the copy could not be read": "Не порівняно: копію не вдалося прочитати",
   "Desync: learned capacity": "Розсинхрон: вивчена ємність",
   "of design, the saved copy too": "від заводської, у збереженій копії так само",
-  "of design: the chip's model is broken": "від заводської: модель у чипі зламана"
+  "of design: the chip's model is broken": "від заводської: модель у чипі зламана",
+  "No sign of desync found": "Ознак розсинхрону не знайдено",
+  "Chip vs other MMC's copy": "Чип і копія іншого MMC",
+  "Other MMC": "Інший MMC",
+  "Not checked: boot it and open this page once": "Не перевірено: завантажте його і відкрийте цю сторінку",
+  "Charge: shown / by voltage": "Заряд: показаний / за напругою",
+  "at rest: the % is wrong": "у спокої: відсоток хибний",
+  "under load: check with the charger out": "під навантаженням: перевірте без зарядки"
 }

@@ -3335,5 +3335,12 @@
   "Not compared: the copy could not be read": "Not compared: the copy could not be read",
   "Desync: learned capacity": "Desync: learned capacity",
   "of design, the saved copy too": "of design, the saved copy too",
-  "of design: the chip's model is broken": "of design: the chip's model is broken"
+  "of design: the chip's model is broken": "of design: the chip's model is broken",
+  "No sign of desync found": "No sign of desync found",
+  "Chip vs other MMC's copy": "Chip vs other MMC's copy",
+  "Other MMC": "Other MMC",
+  "Not checked: boot it and open this page once": "Not checked: boot it and open this page once",
+  "Charge: shown / by voltage": "Charge: shown / by voltage",
+  "at rest: the % is wrong": "at rest: the % is wrong",
+  "under load: check with the charger out": "under load: check with the charger out"
 }

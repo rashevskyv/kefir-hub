@@ -34,7 +34,11 @@ std::atomic<bool> g_pc_install_declined{false};
 
 // a plain 5 V charger and a PC both report a LowPower charger, so auto MTP starts for both. Only a PC
 // configures the USB device; until then say nothing, and stop MTP when nobody answered.
-constexpr u64 PC_ANSWER_SECONDS = 8;
+// 20 s covers a first-time Windows MTP driver install; a host that gave the console an address (Address) and is
+// still installing its driver keeps it waiting. A charger can hold the port in Default (seen on .141), so not that.
+constexpr u64 PC_ANSWER_SECONDS = 20;
+// never wait longer than this, whatever the state.
+constexpr u64 PC_ANSWER_MAX_SECONDS = 60;
 std::atomic<bool> g_mtp_waiting_for_pc{false};
 TimeStamp g_mtp_wait_ts{};
 
@@ -126,9 +130,12 @@ void App::PollUsbStorage() {
         g_mtp_waiting_for_pc = false;
         log_write("[USB] PC answered over MTP\n");
         App::Notify("Computer connected — MTP started"_i18n);
-    } else if (g_mtp_waiting_for_pc && g_mtp_wait_ts.GetSeconds() >= PC_ANSWER_SECONDS) {
+    } else if (g_mtp_waiting_for_pc && g_mtp_wait_ts.GetSeconds() >= PC_ANSWER_SECONDS
+               && (usb_state != UsbState_Address
+                   || g_mtp_wait_ts.GetSeconds() >= PC_ANSWER_MAX_SECONDS)) {
         g_mtp_waiting_for_pc = false;
-        log_write("[USB] no PC answered in %lus: a charger only; stopping MTP\n", PC_ANSWER_SECONDS);
+        log_write("[USB] no PC answered in %lus (state %u): a charger only; stopping MTP\n",
+            g_mtp_wait_ts.GetSeconds(), static_cast<unsigned>(usb_state));
         if (m_usb_auto_mtp) {
             RestoreUsbAfterAutoMtp();
         } else {
