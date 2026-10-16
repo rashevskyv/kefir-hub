@@ -3435,5 +3435,8 @@
   "Extracting firmware...": "Розпакування прошивки...",
   "Removing firmware files...": "Видалення файлів прошивки...",
   "Setting up system update...": "Підготовка оновлення системи...",
-  "No internet connection. The list loads when the console connects.": "Немає з'єднання з інтернетом. Список завантажиться, щойно консоль підключиться."
+  "No internet connection. The list loads when the console connects.": "Немає з'єднання з інтернетом. Список завантажиться, щойно консоль підключиться.",
+  "GPU": "Відеопроцесор",
+  "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%.": "Kefir Hub навантажує процесор і відеопроцесор, щоб розрядити батарею. Консоль вимкнеться сама; потім зарядіть її до 100%.",
+  "CPU": "Процесор"
 }

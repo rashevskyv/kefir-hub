@@ -3443,5 +3443,8 @@
   "Extracting firmware...": "Extracting firmware...",
   "Removing firmware files...": "Removing firmware files...",
   "Setting up system update...": "Setting up system update...",
-  "No internet connection. The list loads when the console connects.": "No internet connection. The list loads when the console connects."
+  "No internet connection. The list loads when the console connects.": "No internet connection. The list loads when the console connects.",
+  "GPU": "GPU",
+  "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%.": "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%.",
+  "CPU": "CPU"
 }

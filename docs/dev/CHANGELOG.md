@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.119 — battery drain: live CPU, GPU, power and temperature charts
+- Drain page: four charts that scroll every 250 ms over 30 s (Task Manager style): CPU (one line per load core, from `svcGetInfo(IdleTickCount)` read on that core), GPU (nvgpu `PMU_GET_GPU_LOAD` 0x80044715 on /dev/nvhost-ctrl-gpu), power in W (VCell × Current), temperature with the 60 °C line. The slow charge graph is gone; elapsed time has seconds; the status line says the Hub loads the CPU and GPU. 0.14.118 (bar meters) was a test build only.
+- host tests: not run (UI only) · nro: built · switch: .141 shows CPU 100/100/100 %, GPU 96 %, 3.3 W, 39.7 °C (screenshot)
+
 ## v0.14.117 — interface translation picks the fitting system language; updater texts translated; logs on by default
 - Translate Interface: "Load translations" runs without Hold A (the English-only "Fetch translations …" prompt is gone). A translation goes over the current system language only (`translation_match.hpp`, host test): US/EU in NX-Translation is the language variant (en-US/en-GB, es-419/es, fr-CA/fr, pt-BR/pt), the old code compared it with the console region and showed every option on a miss. One fit → one "X replaces Y, reboot" box (+ the other-firmware warning in the same box); no fit → the system languages it replaces and the path to the language setting in the system's own words (English from NX-Translation english.txt). Reinstall: a file the system holds (TargetLocked) no longer aborts — the delete skips it, `CopyFileSimple` accepts it when the bytes are the same (0xE02 on .89 while the translation was in place).
 - Updater: offline shows "No internet connection …" instead of "Failed to load updater lists."; Downloading/Extracting/Copying/Removing lines are i18n. Logging (`log_enabled`) defaults to on during development (owner turns it off for release). Drain: the load circles are drawn under the page background (0.14.116, not shipped alone).
