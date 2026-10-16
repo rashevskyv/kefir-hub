@@ -59,7 +59,7 @@ auto Read() -> Snapshot {
             }
         }
     }
-    // own reference: the session opened at start-up may have been closed by another module
+    // the Hub keeps no set:sys session open; every module opens its own
     const bool setsys = R_SUCCEEDED(setsysInitialize());
     ON_SCOPE_EXIT({
         if (setsys) {

@@ -8,7 +8,7 @@ Entries without a detail line are commit titles only; their verification state w
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
 
 ## v0.14.104 — Battery page: the system's copy is read through its own set:sys reference
-- On .69 the start-up set:sys session no longer answered (GetPtmFuelGaugeParameter failed), so 0.14.103 compared the chip with itself and the backup refused. The page now opens its own set:sys reference; if the copy still cannot be read it says "Not compared" instead of "no sign", and the backup keeps the chip dump (.cal with 0 cycles).
+- The Hub keeps no set:sys session open (every module opens and closes its own), so 0.14.103's GetPtmFuelGaugeParameter failed, the page compared the chip with itself and the backup refused. The page now opens set:sys itself; if the copy still cannot be read it says "Not compared" instead of "no sign", and the backup keeps the chip dump (.cal with 0 cycles).
 - host tests: pass · nro: built · switch: .69 emuMMC: copy read, 9 parameters equal, verdict "no sign"; X wrote 24-byte .cal (decoded = page values, 25.89 cycles) and the .txt dump
 
 ## v0.14.103 — Tools → Battery: fuel gauge against this MMC's saved copy, verdict, backup (F.18 step 1)
