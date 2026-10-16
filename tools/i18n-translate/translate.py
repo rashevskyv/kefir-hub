@@ -185,7 +185,9 @@ def source_strings(src=None):
             text = path.read_text(encoding="utf-8", errors="replace")
             for m in I18N_LITERAL.finditer(text):
                 try:
-                    literal = codecs.decode(m.group(1), "unicode_escape")
+                    # unicode_escape reads its input as latin-1: protect non-ASCII text (°, …) by escaping it first,
+                    # or "°C" comes back as "Â°C" and a broken key lands in en.json
+                    literal = codecs.decode(m.group(1).encode("latin-1", "backslashreplace"), "unicode_escape")
                 except Exception:  # noqa: BLE001 - an odd escape is not worth dying over
                     literal = m.group(1)
                 if literal.strip():

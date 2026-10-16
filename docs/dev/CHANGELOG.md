@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.123 — all 25 languages complete for the release
+- tools/i18n-translate sync decoded literals with `unicode_escape` straight on text, turning °, →, ·, è into mojibake keys ("Â°C", "â†’") that the code never asks for; fixed (latin-1 backslashreplace first) and every mojibake key removed from all JSON files. 190 new strings translated in 24 languages (Turkish four by hand: the model writes "%100", which the format check rejects).
+- host tests: i18n deployment contract pass, quick pass · nro: built · switch: pending
+
 ## v0.14.122 — CheatSlips token only in our folder and never in the log
 - aio-switch-updater token fallback (/config/aio-switch-updater/token.json) removed from sign-in and log-out. The token, the token file, the sign-in response and HTTP header values are no longer written to log.txt (logs are on by default and users share them): curl logs only header names.
 - host tests: quick pass · nro: built · switch: pending (CheatSlips sign-in, download, log-out; log.txt has no token)
