@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.115 — battery drain screen: a live battery, the time left and a charge graph; no dimming
+- Drain page: a big battery that fills by charge (green → orange → red, it pulses under load), "Draining for", the gauge's time to switch-off (TTE), mV · mA · °C, a one-hour charge graph (a point every 20 s); 80 full-screen gradient circles a frame drawn over the page. Dimming off with `lblDisableDimming` + idle detection `ExtendedUnsafe`, re-applied with full brightness every 10 s; both restored on exit.
+- host tests: not run · nro: built · switch: drain runs on .141 (−778 mA vs −634 mA in 0.14.114, log "drain load on"); no dimming over a long run pending
+
 ## v0.14.102 — Kefir Settings: 40MB Memory only where it still matters
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)

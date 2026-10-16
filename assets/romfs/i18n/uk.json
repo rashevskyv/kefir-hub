@@ -3420,5 +3420,7 @@
   "First cycle": "Перший цикл",
   "Second cycle": "Другий цикл",
   "Drain the battery now? Unplug the charger and keep the console in your hands. Kefir Hub sets the screen to full brightness and loads the CPU and GPU until the console switches itself off; the load pauses above 60 °C. Afterwards charge it to 100% and open Kefir Hub.": "Розрядити батарею зараз? Від'єднайте зарядку і тримайте консоль у руках. Kefir Hub увімкне максимальну яскравість і навантажить процесор і відеопроцесор, доки консоль не вимкнеться сама; вище 60 °C навантаження стає на паузу. Після цього зарядіть до 100% і відкрийте Kefir Hub.",
-  "Next: A starts the drain. Done: ": "Далі: A запускає розряд. Виконано: "
+  "Next: A starts the drain. Done: ": "Далі: A запускає розряд. Виконано: ",
+  "Draining for": "Розряд триває",
+  "Switch-off in about": "Вимкнення приблизно через"
 }
