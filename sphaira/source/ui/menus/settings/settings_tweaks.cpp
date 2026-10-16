@@ -425,14 +425,14 @@ void RemoveSphairaFanSysmodule() {
         "/atmosphere/contents/00FF46554E43544C",
         "/atmosphere/contents/00FF000053504846",
     };
-    if (!fs::DirExists(folders[0]) && !fs::DirExists(folders[1])) {
-        return;
-    }
-
+    // stop it also when its files are already gone: it keeps running until reboot.
     if (R_SUCCEEDED(pmshellInitialize())) {
         pmshellTerminateProgram(SPHAIRA_FAN_PROGRAM_ID);
         pmshellTerminateProgram(SPHAIRA_OLD_FAN_PROGRAM_ID);
         pmshellExit();
+    }
+    if (!fs::DirExists(folders[0]) && !fs::DirExists(folders[1])) {
+        return;
     }
     for (const auto folder : folders) {
         DeletePath(folder);
