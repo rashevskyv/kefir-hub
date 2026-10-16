@@ -214,10 +214,11 @@ auto WaitForFull(ui::ProgressBox* pbox) -> Result {
         if (c.charger && c.pct >= 100 && c.mv >= MIN_FULL_MV) {
             R_SUCCEED();
         }
-        const auto charge = "Battery charge: "_i18n + std::to_string(c.pct) + "%. ";
-        std::string text = !c.charger ? charge + "Connect the charger"_i18n
-            : c.pct < 100 ? charge + "Charging to 100%, then the battery calibration resets by itself"_i18n
-            : charge + "Topping up the cell: "_i18n + std::to_string(c.mv) + " / " + std::to_string(MIN_FULL_MV) + " mV";
+        // the text changes only with the state: a new text restarts the box's clock, and the time left
+        // it shows is then the real time to a full battery. The % is beside the bar.
+        std::string text = !c.charger ? "Connect the charger"_i18n
+            : c.pct < 100 ? "Charging the battery to 100%"_i18n
+            : "Topping up the cell to 4.1 V"_i18n;
         if (text != last) {
             pbox->NewTransfer(text);
             last = text;
@@ -231,7 +232,7 @@ auto WaitForFull(ui::ProgressBox* pbox) -> Result {
 
 void RunReset() {
     auto failed = std::make_shared<std::string>();
-    App::Push<ui::ProgressBox>(0, "Reset battery calibration to factory values"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
+    App::Push<ui::ProgressBox>(0, "Battery calibration reset"_i18n, "Then the factory values are written"_i18n, [failed](auto pbox) -> Result {
         R_TRY(WaitForFull(pbox));
         auto s = Read();
         R_UNLESS(s.gauge, Result_ArchiveRead);
@@ -358,12 +359,12 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
         const auto pct_text = [](u32 x) { return std::to_string(std::min<u32>(x, 999)) + "%"; };
         switch (v.step) {
             case wizard::Step::CheckOther:
-                r.label = "1. Open this page in the other MMC"_i18n;
+                r.label = "1. Other MMC checked"_i18n;
                 r.value = done ? "Done"_i18n : "Next: boot "_i18n + other_name + ", Tools → Tools → Battery";
                 r.action = Info("Both MMCs keep their own copy of the battery model and their own cycle count. Boot the other MMC once and open Tools → Tools → Battery there; the page saves its copy to the microSD, so this one can compare them."_i18n);
                 break;
             case wizard::Step::Reset:
-                r.label = "2. Reset battery calibration to factory values"_i18n;
+                r.label = "2. Calibration reset"_i18n;
                 r.value = done ? "Done "_i18n + DateOf(st.reset_at) + ", " + reset_name : next ? "Next: press A (waits on the charger for 100%)"_i18n : "";
                 r.action = AskReset;
                 break;
@@ -373,19 +374,19 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                 const u32 target = first ? wizard::CYCLE_DONE : 2 * wizard::CYCLE_DONE;
                 const u32 from = first ? 0 : wizard::CYCLE_DONE;
                 const u32 got = v.discharged > from ? v.discharged - from : 0;
-                r.label = first ? "3. First cycle: on battery until it switches off, then to 100%"_i18n
-                                : "4. Second cycle: the same once more"_i18n;
+                r.label = first ? "3. First cycle"_i18n
+                                : "4. Second cycle"_i18n;
                 if (done) {
                     r.value = "Done "_i18n + DateOf(first ? st.full1_at : st.full2_at);
                 } else if (next) {
                     r.value = v.discharged >= target ? "Discharged: now charge to 100% and open this page"_i18n
-                                                     : "Discharged "_i18n + pct_text(got) + " of 90%";
+                                                     : "On battery until it switches off: "_i18n + pct_text(got) + " of 90%";
                 }
                 r.action = Info("Unplug the charger and use the console until it switches off by itself (a game, the screen bright, no sleep). Then charge it to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
                 break;
             }
             case wizard::Step::MatchOther:
-                r.label = "5. In the other MMC: Match the other MMC"_i18n;
+                r.label = "5. Match in the other MMC"_i18n;
                 if (done) {
                     r.value = "Done"_i18n;
                 } else if (next) {
