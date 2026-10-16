@@ -69,6 +69,9 @@ struct InstallProgress {
     virtual void UpdateInstallReadWrite(s64 read_offset, s64 write_offset) {}
     virtual void InstallYield() = 0;
     virtual bool PromptReinstall(const std::string& title_name) { return false; }
+    // an update older than the installed one (a mod may need it): true = install it, the game goes back
+    // to that version. Versions are the raw patch versions. Without a prompt it is skipped, as before.
+    virtual bool PromptDowngrade(const std::string& title_name, u32 installed, u32 incoming) { return false; }
     // called when the current title/content is skipped because it is already
     // installed (skip_if_already_installed). Lets the UI report it distinctly.
     virtual void OnInstallSkipped() {}

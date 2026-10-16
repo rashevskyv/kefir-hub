@@ -223,8 +223,12 @@ Result Yati::GetLatestVersion(const CnmtCollection& cnmt, u32& version_out, bool
                 // check if we are downgrading
                 if (cnmt.key.type == NcmContentMetaType_Patch) {
                     if (cnmt.key.type == key.type && cnmt.key.version < key.version && !config.allow_downgrade) {
-                        log_write("skipping due to it being lower\n");
-                        skip = true;
+                        if (pbox->PromptDowngrade(cnmt.name, key.version, cnmt.key.version)) {
+                            log_write("user allowed the downgrade to %u\n", cnmt.key.version);
+                        } else {
+                            log_write("skipping due to it being lower\n");
+                            skip = true;
+                        }
                     }
                 } else {
                     version_out = std::max(version_out, key.version);

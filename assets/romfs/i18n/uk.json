@@ -3291,5 +3291,6 @@
   "Install for ticked games": "Встановити для позначених ігор",
   "Adds the pack's cheats to these games. Cheats you already have stay as they are.": "Додає чіти з набору до цих ігор. Ваші наявні чіти не змінюються.",
   "Tick at least one game": "Позначте хоча б одну гру",
-  "The installed version could not be checked.": "Не вдалося перевірити встановлену версію."
+  "The installed version could not be checked.": "Не вдалося перевірити встановлену версію.",
+  "This update (v%u) is older than the one on the console (v%u). Install it? The game goes back to v%u. Some mods need an older update.": "Це оновлення (v%u) старіше за встановлене на консолі (v%u). Встановити його? Гра повернеться до v%u. Деяким модам потрібне старіше оновлення."
 }

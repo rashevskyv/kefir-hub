@@ -3299,5 +3299,6 @@
   "Repacking": "Repacking",
   "The mod needs the base or the update in the repack": "The mod needs the base or the update in the repack",
   "The mods folder has no files.": "The mods folder has no files.",
-  "The installed version could not be checked.": "The installed version could not be checked."
+  "The installed version could not be checked.": "The installed version could not be checked.",
+  "This update (v%u) is older than the one on the console (v%u). Install it? The game goes back to v%u. Some mods need an older update.": "This update (v%u) is older than the one on the console (v%u). Install it? The game goes back to v%u. Some mods need an older update."
 }

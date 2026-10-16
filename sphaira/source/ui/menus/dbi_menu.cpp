@@ -428,7 +428,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
     if (prompt) {
         int expected = -1;
         if (prompt->choice.compare_exchange_strong(expected, -2)) {
-            std::string msg = prompt->title + "\n\n" + "Already installed. Reinstall?"_i18n;
+            std::string msg = prompt->title + "\n\n" + prompt->question;
             App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0, [prompt](std::optional<s64> choice) {
                 if (choice && *choice == 1) {
                     prompt->choice = 1; // Yes

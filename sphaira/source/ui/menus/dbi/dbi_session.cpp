@@ -399,6 +399,18 @@ void InstallSession::InstallYield() {
 }
 
 bool InstallSession::PromptReinstall(const std::string& title_name) {
+    return Ask(title_name, "Already installed. Reinstall?"_i18n);
+}
+
+bool InstallSession::PromptDowngrade(const std::string& title_name, u32 installed, u32 incoming) {
+    // patch versions are major << 16; the release names them v2, v4
+    char text[512];
+    std::snprintf(text, sizeof(text), "This update (v%u) is older than the one on the console (v%u). Install it? The game goes back to v%u. Some mods need an older update."_i18n.c_str(),
+        incoming >> 16, installed >> 16, incoming >> 16);
+    return Ask(title_name, text);
+}
+
+bool InstallSession::Ask(const std::string& title_name, const std::string& question) {
     {
         SCOPED_MUTEX(&m_mutex);
         if (m_current_file_reinstall_choice.has_value()) {
@@ -413,6 +425,7 @@ bool InstallSession::PromptReinstall(const std::string& title_name) {
 
     auto data = std::make_shared<PromptData>();
     data->title = display_name;
+    data->question = question;
 
     {
         SCOPED_MUTEX(&m_mutex);

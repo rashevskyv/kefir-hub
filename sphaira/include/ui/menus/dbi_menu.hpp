@@ -127,6 +127,9 @@ struct InstallSession : MenuBase, InstallProgress {
     void UpdateInstallReadWrite(s64 read_offset, s64 write_offset) override;
     void InstallYield() override;
     bool PromptReinstall(const std::string& title_name) override;
+    bool PromptDowngrade(const std::string& title_name, u32 installed, u32 incoming) override;
+    // shows "<title>\n\n<question>" with No / Yes on the UI thread and waits; one answer per package.
+    bool Ask(const std::string& title_name, const std::string& question);
     void OnInstallSkipped() override;
     void OnCompatibilityWarning(const CompatibilityWarning& warning) override;
     void SetInstallTarget(bool to_sd) override;
@@ -238,6 +241,7 @@ protected:
 
     struct PromptData {
         std::string title;
+        std::string question;
         std::atomic<int> choice{-1};
     };
     std::shared_ptr<PromptData> m_prompt_data{};
