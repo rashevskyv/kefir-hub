@@ -18,7 +18,8 @@ struct Menu final : MenuBase {
     explicit Menu(std::vector<system_info::Group> groups);
     // the same page for another set of groups (Tools → Battery): its own title, every group open,
     // and one extra action on X.
-    Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action);
+    Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action,
+         std::string plus_label = {}, std::function<void()> plus_action = {});
     ~Menu() = default;
 
     auto GetShortTitle() const -> const char* override { return "System information"; }

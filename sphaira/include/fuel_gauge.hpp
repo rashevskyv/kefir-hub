@@ -1,8 +1,8 @@
 #pragma once
 
-// MAX17050 fuel gauge registers, read over the i2c service. Read only: a read sends the
-// register number, then receives two bytes. Scaling per the datasheet with the 10 mOhm
-// sense resistor every Switch model uses.
+// MAX17050 fuel gauge registers over the i2c service. A read sends the register number, then
+// receives two bytes; a write sends {reg, lo, hi}. Only Tools → Battery → Calibrate writes
+// (battery_write.cpp). Scaling per the datasheet with the 10 mOhm sense resistor every Switch uses.
 // ponytail: fixed 10 mOhm Rsense; make it a knob only if a board ever differs.
 
 #include <switch.h>
@@ -37,6 +37,7 @@ constexpr u8 MAX17050_VFSOC = 0xFF;
 struct FuelGauge {
     I2cSession session{};
     bool open{};
+    Result last_rc{}; // of the last write
 
     FuelGauge() {
         open = R_SUCCEEDED(i2cInitialize()) && R_SUCCEEDED(i2cOpenSession(&session, I2cDevice_Max17050));
@@ -54,12 +55,50 @@ struct FuelGauge {
         if (!open) {
             return std::nullopt;
         }
+        // one command list (BDF 0x2ee0): send the register with Start, receive 2 bytes with Start+Stop.
+        // Two separate calls let psm's own gauge reads in between, and the value came from another register
+        // (seen on .141: a POR flag that was not there).
+        const u8 cmd[] = {0x40, 0x01, reg, 0xC1, 0x02};
         u16 value{};
-        if (R_FAILED(i2csessionSendAuto(&session, &reg, sizeof(reg), I2cTransactionOption_Start)) ||
-            R_FAILED(i2csessionReceiveAuto(&session, &value, sizeof(value), I2cTransactionOption_All))) {
-            return std::nullopt;
+        for (int i = 0; i < 5; i++) {
+            if (R_SUCCEEDED(i2csessionExecuteCommandList(&session, &value, sizeof(value), cmd, sizeof(cmd)))) {
+                return value;
+            }
+            svcSleepThread(1'000'000);
         }
-        return value;
+        return std::nullopt;
+    }
+
+    // BDF's write: up to 5 tries, 1 ms apart.
+    auto Write(u8 reg, u16 value) -> bool {
+        if (!open) {
+            return false;
+        }
+        const u8 buf[3] = {reg, static_cast<u8>(value & 0xFF), static_cast<u8>(value >> 8)};
+        for (int i = 0; i < 5; i++) {
+            last_rc = i2csessionSendAuto(&session, buf, sizeof(buf), I2cTransactionOption_All);
+            if (R_SUCCEEDED(last_rc)) {
+                return true;
+            }
+            svcSleepThread(1'000'000);
+        }
+        return false;
+    }
+
+    // BDF's write-verify helper: up to 8 rounds of write + read-back; true once the chip holds `value`.
+    auto WriteVerify(u8 reg, u16 value) -> bool {
+        for (int round = 0; round < 8; round++) {
+            if (!Write(reg, value)) {
+                continue;
+            }
+            for (int i = 0; i < 5; i++) {
+                if (const auto v = Read(reg); v && *v == value) {
+                    return true;
+                }
+                svcSleepThread(1'000'000);
+            }
+        }
+        return false;
     }
 
     // capacity registers: 5 uVh / Rsense = 0.5 mAh per lsb.

@@ -1,6 +1,7 @@
 // Tools → Battery (F.18 step 1): read only. The fuel gauge chip against the copy HOS keeps for this
 // MMC, a verdict, and a backup in Battery Desync Fix's batt.cal format plus a full register dump.
 #include "battery_page.hpp"
+#include "battery_internal.hpp"
 #include "battery_gauge.hpp"
 #include "fuel_gauge.hpp"
 #include "system_info.hpp"
@@ -22,27 +23,7 @@
 #include <string>
 
 namespace sphaira::battery {
-namespace {
-
-constexpr const char* BACKUP_DIR = "/config/kefir/battery";
-// CAL0 (PRODINFO) offsets the Battery Desync Fix reads: BatteryLot and the raw BatteryVersion.
-constexpr s64 CAL0_BATTERY_LOT = 0x2CE0;
-constexpr s64 CAL0_BATTERY_VERSION = 0x4310;
-
-struct Snapshot {
-    bool gauge{};
-    std::array<u16, 256> regs{};
-    std::array<bool, 256> read{};
-    bool hos_ok{};
-    SetSysPtmFuelGaugeParameter hos{};
-    int reliability{-1};
-    int setcal_version{-1};
-    int cal0_version{-1};
-    std::string lot;
-    bool emummc{};
-    std::optional<CopyFile> other; // the other MMC's copy file
-    int psm_percent{-1};           // what the console shows (psm)
-};
+namespace detail {
 
 auto Fmt(const char* fmt, auto... args) -> std::string {
     char buf[200];
@@ -99,6 +80,10 @@ auto Read() -> Snapshot {
         u8 v{};
         if (R_SUCCEEDED(fsStorageRead(&cal0, CAL0_BATTERY_VERSION, &v, 1))) {
             s.cal0_version = v;
+        }
+        char lot[0x18]{};
+        if (R_SUCCEEDED(fsStorageRead(&cal0, CAL0_BATTERY_LOT, lot, sizeof(lot)))) {
+            s.cal0_vendor = lot[7];
         }
         fsStorageClose(&cal0);
     }
@@ -357,7 +342,9 @@ void BackUp() {
     });
 }
 
-} // namespace
+} // namespace detail
+
+using namespace detail;
 
 void Open() {
     auto groups = std::make_shared<std::vector<system_info::Group>>();
@@ -366,7 +353,8 @@ void Open() {
         R_SUCCEED();
     }, [groups](Result rc) {
         if (R_SUCCEEDED(rc)) {
-            App::Push<ui::menu::sysinfo::Menu>("Battery"_i18n, std::move(*groups), "Back up"_i18n, BackUp);
+            App::Push<ui::menu::sysinfo::Menu>("Battery"_i18n, std::move(*groups), "Back up"_i18n, BackUp,
+                                               "Calibrate"_i18n, OpenCalibrate);
         }
     });
 }

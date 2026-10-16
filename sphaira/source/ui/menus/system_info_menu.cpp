@@ -77,8 +77,12 @@ Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System informatio
     SetIndex(0);
 }
 
-Menu::Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action)
+Menu::Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action,
+           std::string plus_label, std::function<void()> plus_action)
     : Menu{std::move(groups)} {
+    if (plus_action) {
+        SetAction(Button::START, Action{std::move(plus_label), std::move(plus_action)});
+    }
     SetTitle(std::move(title));
     m_open.assign(m_groups.size(), true);
     SetAction(Button::X, Action{std::move(x_label), std::move(x_action)});
