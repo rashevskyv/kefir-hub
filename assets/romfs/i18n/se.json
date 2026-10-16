@@ -608,7 +608,7 @@
   "Fan preset is empty": "Fläktförinställningen är tom",
   "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again.": "Den installerade översättningen kunde inte ersättas.\nTa bort den och starta om konsolen?\nInstallera översättningen igen efter omstarten.",
   "Removing": "Tar bort",
-  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Misslyckades med att aktivera fläktmodulen.\n\nÄndringarna tillämpas vid nästa omstart.\n\nHåll A för att starta om nu och tillämpa ändringarna.",
+  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Fläktkurva sparad.\n\nÄndringarna tillämpas vid nästa omstart.\n\nHåll A för att starta om nu och tillämpa ändringarna.",
   "Saved fan preset: ": "Sparad fläktinställning: ",
   "Failed to save fan preset": "Misslyckades att spara fläktinställningen",
   "Fan curve needs at least two points": "Fläktkurvan behöver minst två punkter",

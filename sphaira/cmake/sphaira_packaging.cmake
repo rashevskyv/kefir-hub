@@ -21,24 +21,6 @@ add_custom_target(sphaira_romfs_sync
 add_dependencies(sphaira_romfs sphaira_romfs_sync)
 set_property(TARGET sphaira_romfs APPEND PROPERTY DKP_ASSET_FILES ${sphaira_romfs_source_files})
 
-# embed the fan sysmodule so the fan curve menu can install it on demand
-set(sphaira_fan_romfs_dir ${CMAKE_CURRENT_BINARY_DIR}/romfs/sysmodule)
-add_custom_command(
-    OUTPUT ${sphaira_fan_romfs_dir}/exefs.nsp ${sphaira_fan_romfs_dir}/toolbox.json
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${sphaira_fan_romfs_dir}
-    COMMAND ${CMAKE_COMMAND} -E copy ${SPHAIRA_FAN_EXEFS_NSP} ${sphaira_fan_romfs_dir}/exefs.nsp
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/sysmodule/toolbox.json ${sphaira_fan_romfs_dir}/toolbox.json
-    DEPENDS sphaira_fan_exefs ${CMAKE_SOURCE_DIR}/sysmodule/toolbox.json
-    COMMENT "Embedding fan sysmodule into romfs"
-    VERBATIM
-)
-add_custom_target(sphaira_fan_romfs DEPENDS ${sphaira_fan_romfs_dir}/exefs.nsp)
-add_dependencies(sphaira_romfs sphaira_fan_romfs)
-set_property(TARGET sphaira_romfs APPEND PROPERTY DKP_ASSET_FILES
-    ${sphaira_fan_romfs_dir}/exefs.nsp
-    ${sphaira_fan_romfs_dir}/toolbox.json
-)
-
 # wait until hbl is built first as we need the exefs to embed
 add_dependencies(sphaira hbl_nso hbl_npdm)
 

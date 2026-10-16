@@ -19,20 +19,11 @@ struct FanCurveSensorSample {
 
 auto EvaluateFanPercent(const std::vector<FanCurvePoint>& curve, float temp_c) -> float;
 
-// installs the romfs-embedded fan sysmodule first, if the user wants it.
 void OpenFanCurveMenu();
 
-#pragma pack(push, 1)
-struct SphairaFanState {
-    u32 magic;
-    u32 version;
-    s32 temp_milli_c;
-    float fan_level;
-    u64 timestamp_ns;
-    u32 sysmodule_active;
-};
-#pragma pack(pop)
-
+// While the fan curve menu is open, Kefir Hub takes the fan from tc and drives it
+// with the curve on screen, so every edit is heard at once. The destructor gives
+// the fan back to tc, which uses the saved curve after the next reboot.
 struct FanCurveSensorReader final {
     FanCurveSensorReader();
     ~FanCurveSensorReader();
@@ -41,10 +32,22 @@ struct FanCurveSensorReader final {
     auto GetSample() const -> const FanCurveSensorSample*;
 
 private:
+    auto ReadTemperature(s32& out_milli_c) -> bool;
+
     FanCurveSensorSample m_sample{};
     u64 m_last_update_ns{};
+    u64 m_last_poll_ns{};
     float m_displayed_fan_percent{-1.0f};
+    s32 m_temp_milli_c{};
+    bool m_temp_valid{};
+    s32 m_set_fan_percent{-1};
     bool m_ts_available{};
+    bool m_ts_session_open{};
+    TsSession m_ts_session{};
+    bool m_tc_available{};
+    bool m_fan_available{};
+    bool m_fan_controller_open{};
+    FanController m_fan_controller{};
 };
 
 auto FanCurveProfileLabel(bool docked) -> const char*;
@@ -88,7 +91,7 @@ private:
     void RemovePoint();
     void SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent);
     auto HandleGraphTouch(TouchInfo* touch) -> bool;
-    void ApplyCurves(FanCurveApplyMode mode);
+    void ApplyCurves();
     void OnBack();
     auto ActiveCurve() -> std::vector<FanCurvePoint>&;
     auto ActiveCurve() const -> const std::vector<FanCurvePoint>&;
@@ -104,8 +107,6 @@ private:
 private:
     std::vector<FanCurvePoint> m_handheld_curve;
     std::vector<FanCurvePoint> m_docked_curve;
-    std::vector<FanCurvePoint> m_applied_handheld_curve;
-    std::vector<FanCurvePoint> m_applied_docked_curve;
     std::vector<FanCurvePoint> m_handheld_control_points;
     std::vector<FanCurvePoint> m_docked_control_points;
     std::vector<s32> m_handheld_original_temps;
@@ -115,7 +116,6 @@ private:
     bool m_dirty{};
     bool m_editing{};
     bool m_touch_dragging{};
-    bool m_sysmodule_enabled{};
     bool m_helper_curve_mode{false}; // disabled by default (auxiliary mode)
     std::unique_ptr<FanCurveSensorReader> m_sensor_reader;
     std::unique_ptr<List> m_list;

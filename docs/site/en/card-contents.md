@@ -52,7 +52,6 @@ System modules shipped by Kefir, by folder name under `contents/`:
 
 | Folder | Module | What it does |
 |---|---|---|
-| `00FF46554E43544C` | FunControl | Fan curve. |
 | `010000000000bd00` | MissionControl | Third-party Bluetooth controllers. |
 | `420000000000000B` | sys-patch | Signature and other patches applied at boot. |
 | `420000000007E51A` | nx-ovlloader | Loads Tesla and Ultrahand overlays. |

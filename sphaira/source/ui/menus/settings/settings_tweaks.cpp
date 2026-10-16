@@ -420,79 +420,28 @@ auto IsFanCurveEnabled() -> bool {
     return IniValueEquals("/atmosphere/config/system_settings.ini", "tc", "use_configurations_on_fwdbg", "u8!0x1");
 }
 
-auto IsSphairaFanSysmoduleInstalled() -> bool {
-    return fs::FileExists("/atmosphere/contents/00FF46554E43544C/exefs.nsp");
-}
-
-auto IsSphairaFanSysmoduleRunning() -> bool {
-    if (!IsSphairaFanSysmoduleInstalled()) {
-        return false;
-    }
-
-    Result rc = pmshellInitialize();
-    if (R_FAILED(rc)) {
-        return false;
-    }
-
-    u64 pid{};
-    rc = pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID);
-    pmshellExit();
-    return R_SUCCEEDED(rc);
-}
-
-auto EnsureSphairaFanSysmoduleInstalled() -> Result {
-    R_UNLESS(IsSphairaFanSysmoduleInstalled(), FsError_PathNotFound);
-    R_SUCCEED();
-}
-
-auto InstallSphairaFanSysmodule() -> Result {
-    R_TRY(romfsInit());
-    ON_SCOPE_EXIT(romfsExit());
-
-    R_TRY(CopyFileSimple("romfs:/sysmodule/exefs.nsp", SPHAIRA_FAN_EXEFS_PATH));
-    R_TRY(CopyFileSimple("romfs:/sysmodule/toolbox.json", "/atmosphere/contents/00FF46554E43544C/toolbox.json"));
-    fsdevCommitDevice("sdmc");
-    R_SUCCEED();
-}
-
-auto RestartSphairaFanSysmodule() -> Result {
-    R_TRY(EnsureSphairaFanSysmoduleInstalled());
-
-    if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
-        DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
-    }
-
-    Result rc = pmshellInitialize();
-    R_TRY(rc);
-
-    pmshellTerminateProgram(SPHAIRA_FAN_PROGRAM_ID);
-    pmshellTerminateProgram(SPHAIRA_OLD_FAN_PROGRAM_ID);
-    svcSleepThread(100000000);
-
-    const NcmProgramLocation location{
-        .program_id = SPHAIRA_FAN_PROGRAM_ID,
-        .storageID = NcmStorageId_None,
+void RemoveSphairaFanSysmodule() {
+    constexpr const char* folders[]{
+        "/atmosphere/contents/00FF46554E43544C",
+        "/atmosphere/contents/00FF000053504846",
     };
-    u64 pid{};
-    rc = pmshellLaunchProgram(PmLaunchFlag_None, &location, &pid);
-    if (R_SUCCEEDED(rc)) {
-        Result check_rc = rc;
-        for (u32 i = 0; i < 5; i++) {
-            svcSleepThread(100000000);
-            check_rc = pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID);
-            if (R_SUCCEEDED(check_rc)) {
-                break;
-            }
-        }
-        rc = check_rc;
+    if (!fs::DirExists(folders[0]) && !fs::DirExists(folders[1])) {
+        return;
     }
-    pmshellExit();
-    R_TRY(rc);
 
-    R_SUCCEED();
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        pmshellTerminateProgram(SPHAIRA_FAN_PROGRAM_ID);
+        pmshellTerminateProgram(SPHAIRA_OLD_FAN_PROGRAM_ID);
+        pmshellExit();
+    }
+    for (const auto folder : folders) {
+        DeletePath(folder);
+    }
+    DeletePath("/switch/sphaira/fan_status.bin");
+    fsdevCommitDevice("sdmc");
 }
 
-auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, FanCurveApplyMode mode) -> Result {
+auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked) -> Result {
     const auto handheld_value = FormatAtmosphereFanCurve(handheld);
     const auto docked_value = FormatAtmosphereFanCurve(docked);
 
@@ -500,9 +449,6 @@ auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vecto
     R_TRY(SetIniRawValue("/atmosphere/config/system_settings.ini", "tc", "tskin_rate_table_handheld_on_fwdbg", handheld_value));
     R_TRY(SetIniRawValue("/atmosphere/config/system_settings.ini", "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
     fsdevCommitDevice("sdmc");
-
-    R_TRY(RestartSphairaFanSysmodule());
-
     R_SUCCEED();
 }
 

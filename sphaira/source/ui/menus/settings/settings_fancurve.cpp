@@ -15,59 +15,14 @@
 namespace sphaira::ui::menu::settings {
 
 void OpenFanCurveMenu() {
-    if (detail::IsSphairaFanSysmoduleInstalled()) {
-        App::Push<FanCurveMenu>();
-        return;
-    }
-
-    App::Push<OptionBox>(
-        "Fan control can use the Kefir fan module, which applies curves without a reboot and reads the sensors live.\n\nInstall it now?"_i18n,
-        "No"_i18n,
-        "Install"_i18n,
-        1,
-        [](auto op_index){
-            if (!op_index || !*op_index) {
-                App::Push<FanCurveMenu>();
-                return;
-            }
-
-            if (R_FAILED(detail::InstallSphairaFanSysmodule())) {
-                App::Push<OptionBox>("Failed to install the fan module."_i18n, "OK"_i18n);
-                return;
-            }
-
-            if (R_SUCCEEDED(detail::RestartSphairaFanSysmodule())) {
-                App::Notify("Fan module installed"_i18n);
-                App::Push<FanCurveMenu>();
-                return;
-            }
-
-            App::Push<OptionBox>(
-                "Fan module installed, but it needs a reboot before it can start.\n\nReboot now?"_i18n,
-                "Later"_i18n,
-                "Reboot"_i18n,
-                1,
-                [](auto reboot_index){
-                    if (reboot_index && *reboot_index) {
-                        detail::RebootAfterSetting();
-                    } else {
-                        App::Push<FanCurveMenu>();
-                    }
-                }
-            );
-        }
-    );
+    App::Push<FanCurveMenu>();
 }
 
 
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
-    if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
-        detail::DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
-    }
-
-    if (!detail::IsSphairaFanSysmoduleRunning() && detail::IsSphairaFanSysmoduleInstalled()) {
-        detail::RestartSphairaFanSysmodule();
-    }
+    // the menu drives the fan itself now (FanCurveSensorReader): the old module
+    // would fight it, and after a reboot tc applies the saved curve without it.
+    detail::RemoveSphairaFanSysmodule();
 
     m_handheld_curve = detail::ReadFanCurve(
         "tskin_rate_table_handheld_on_fwdbg",
@@ -79,8 +34,6 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
         "tskin_rate_table_console",
         detail::DefaultDockedFanCurve()
     );
-    m_applied_handheld_curve = m_handheld_curve;
-    m_applied_docked_curve = m_docked_curve;
     
     // Initialize Bezier control points from loaded curves
     m_docked = false;
@@ -89,7 +42,6 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
     InitializeControlPointsFromCurve();
     m_docked = false;
 
-    m_sysmodule_enabled = detail::IsSphairaFanSysmoduleRunning();
     m_sensor_reader = std::make_unique<FanCurveSensorReader>();
     RefreshActions();
 
@@ -119,9 +71,6 @@ void FanCurveMenu::RefreshActions() {
         return;
     }
 
-    const auto apply_label = "Apply"_i18n;
-    const auto apply_mode = FanCurveApplyMode::Live;
-
     SetActions(
         std::make_pair(Button::A, Action{"Edit"_i18n, [this](){
             SetEditing(true);
@@ -147,8 +96,8 @@ void FanCurveMenu::RefreshActions() {
         std::make_pair(Button::R2, Action{"Save Preset"_i18n, [this](){
             DisplaySavePreset();
         }}),
-        std::make_pair(Button::START, Action{apply_label, [this, apply_mode](){
-            ApplyCurves(apply_mode);
+        std::make_pair(Button::START, Action{"Apply"_i18n, [this](){
+            ApplyCurves();
         }})
     );
 
@@ -270,8 +219,8 @@ void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     if (m_sensor_reader) {
-        const auto& applied_curve = m_docked ? m_applied_docked_curve : m_applied_handheld_curve;
-        m_sensor_reader->Update(applied_curve);
+        // the fan follows the curve on screen, so the user hears each edit.
+        m_sensor_reader->Update(ActiveCurve());
     }
 
     if (HandleGraphTouch(touch)) {

@@ -50,5 +50,4 @@ add_compile_options(
 )
 
 add_subdirectory(hbl)
-add_subdirectory(sysmodule)
 add_subdirectory(sphaira)

@@ -652,7 +652,7 @@
   "Fan preset is empty": "O perfil da ventoinha está vazio",
   "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again.": "Não foi possível substituir a tradução instalada.\nRemovê-la e reiniciar a consola?\nApós reiniciar, instale a tradução novamente.",
   "Removing": "Removendo",
-  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Falha ao ativar o módulo da ventoinha.\n\nAs alterações serão aplicadas na próxima reinicialização.\n\nSegure A para reiniciar agora e aplicar as alterações.",
+  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Curva de ventoinha guardada.\n\nAs alterações serão aplicadas na próxima reinicialização.\n\nSegure A para reiniciar agora e aplicar as alterações.",
   "Saved fan preset: ": "Predefinição do ventilador salva: ",
   "Failed to save fan preset": "Falha ao salvar predefinição do ventilador",
   "Fan curve needs at least two points": "A curva da ventoinha precisa de pelo menos dois pontos",

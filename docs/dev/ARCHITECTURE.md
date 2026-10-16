@@ -25,7 +25,6 @@ Graph: `graphify explain "<symbol>"`, `graphify path "A" "B"` (repo-root `graphi
 | `sphaira/include/` | Headers. Libnx-free pure logic lives here (`path_util.hpp`, `install_plan.hpp`, ...) and gets host tests |
 | `sphaira/cmake/` | Reproducible patches for fetched deps (`patch_libhaze*.cmake`, ftpsrv) |
 | `hbl/` | Homebrew loader embedded in forwarders (C) |
-| `sysmodule/` | `sphaira_fan` / FunControl fan sysmodule (C) |
 | `assets/romfs/` | Bundled data: `i18n/*.json`, TegraExplorer payload and `.te` scripts, assoc files, modules catalog |
 | `tests/` | Host tests (see Build and test) |
 | `tools/` | `i18n-translate/` (translation batch tool), `module_catalog/` (sysmodule catalog generator) |

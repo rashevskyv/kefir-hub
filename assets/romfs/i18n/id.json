@@ -508,7 +508,7 @@
   "Apply": "Terapkan",
   "Module activated": "Modul diaktifkan",
   "Failed to activate module": "Gagal mengaktifkan modul",
-  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Gagal mengaktifkan modul kipas.\n\nPerubahan akan diterapkan pada _reboot_ berikutnya.\n\nTahan A untuk melakukan _reboot_ sekarang dan terapkan perubahan.",
+  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Kurva kipas disimpan.\n\nPerubahan akan diterapkan pada _reboot_ berikutnya.\n\nTahan A untuk melakukan _reboot_ sekarang dan terapkan perubahan.",
   "Current Kefir:": "Kefir Saat Ini:",
   "Latest Kefir:": "Kefir Terbaru:",
   "Current Firmware:": "Firmware Saat Ini:",

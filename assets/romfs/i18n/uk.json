@@ -576,7 +576,7 @@
   "Apply": "Застосувати",
   "Module activated": "Модуль активований",
   "Failed to activate module": "Не вдалося активувати модуль",
-  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Не вдалося активувати модуль кулера.\n\nЗміни застосуються при наступному перезавантаженні.\n\nЗатисніть A для перезавантаження зараз.",
+  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Криву вентилятора збережено.\n\nЗміни застосуються при наступному перезавантаженні.\n\nЗатисніть A для перезавантаження зараз.",
   "Current Kefir:": "Поточний Kefir:",
   "Latest Kefir:": "Останній Kefir:",
   "Current Firmware:": "Поточна прошивка:",

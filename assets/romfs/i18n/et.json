@@ -408,7 +408,7 @@
   "Apply": "Rakenda",
   "Module activated": "Moodul on aktiveeritud",
   "Failed to activate module": "Mooduli aktiveerimine ebaõnnestus",
-  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Ventilaatori mooduli aktiveerimine ebaõnnestus.\n\nMuudatused rakenduvad järgmisel taaskäivitusel.\n\nHoia A all, et kohe taaskäivitada ja muudatused rakendada.",
+  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Ventilaatori kõver salvestatud.\n\nMuudatused rakenduvad järgmisel taaskäivitusel.\n\nHoia A all, et kohe taaskäivitada ja muudatused rakendada.",
   "Current Kefir:": "Praegune Kefir:",
   "Latest Kefir:": "Viimane Kefir:",
   "Current Firmware:": "Praegune püsivara:",

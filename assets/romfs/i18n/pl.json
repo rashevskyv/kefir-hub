@@ -458,7 +458,7 @@
   "Apply": "Zastosuj",
   "Module activated": "Moduł aktywowany",
   "Failed to activate module": "Nie udało się aktywować modułu",
-  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Nie udało się aktywować modułu wentylatora.\n\nZmiany zostaną zastosowane po następnym ponowne uruchomieniu.\n\nPrzytrzymaj A, aby uruchomić ponownie teraz i zastosować zmiany.",
+  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Zapisano krzywą wentylatora.\n\nZmiany zostaną zastosowane po następnym ponowne uruchomieniu.\n\nPrzytrzymaj A, aby uruchomić ponownie teraz i zastosować zmiany.",
   "Current Kefir:": "Aktualny Kefir:",
   "Latest Kefir:": "Najnowszy Kefir:",
   "Current Firmware:": "Aktualne oprogramowanie:",
