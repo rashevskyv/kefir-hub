@@ -3282,5 +3282,22 @@
   "Save slot creation is only supported for Account, Device, BCAT and Cache saves.": "Save slot creation is only supported for Account, Device, BCAT and Cache saves.",
   "This console is running sysMMC, its original system. Nintendo can see games and forwarders (HOME Menu icons for homebrew) that were not installed from the eShop, and can ban the console from its online services: eShop, game updates, online play.\n\nInstalling in emuMMC is safer. Install here only if this console does not go online from sysMMC.": "This console is running sysMMC, its original system. Nintendo can see games and forwarders (HOME Menu icons for homebrew) that were not installed from the eShop, and can ban the console from its online services: eShop, game updates, online play.\n\nInstalling in emuMMC is safer. Install here only if this console does not go online from sysMMC.",
   "Removes everything ticked above.": "Removes everything ticked above.",
-  "Start cleanup": "Start cleanup"
+  "Start cleanup": "Start cleanup",
+  "Writing files to the microSD": "Writing files to the microSD",
+  "Pick the installed games to add 60 FPS and graphics cheats to": "Pick the installed games to add 60 FPS and graphics cheats to",
+  "No installed game has cheats in this pack": "No installed game has cheats in this pack",
+  "For the installed version.": "For the installed version.",
+  "Only for other versions of the game; may not work.": "Only for other versions of the game; may not work.",
+  "Install for ticked games": "Install for ticked games",
+  "Adds the pack's cheats to these games. Cheats you already have stay as they are.": "Adds the pack's cheats to these games. Cheats you already have stay as they are.",
+  "Tick at least one game": "Tick at least one game",
+  "Bake in the mod": "Bake in the mod",
+  "Hashing the new program NCA": "Hashing the new program NCA",
+  "Hashing the new romfs": "Hashing the new romfs",
+  "Put the LayeredFS mod of this game (romfs folder or romfs.bin) into the update, or into the base when the update is left out. The repack then installs only with sigpatches.": "Put the LayeredFS mod of this game (romfs folder or romfs.bin) into the update, or into the base when the update is left out. The repack then installs only with sigpatches.",
+  "Reading the game romfs": "Reading the game romfs",
+  "Repacking": "Repacking",
+  "The mod needs the base or the update in the repack": "The mod needs the base or the update in the repack",
+  "The mods folder has no files.": "The mods folder has no files.",
+  "The installed version could not be checked.": "The installed version could not be checked."
 }

@@ -9,6 +9,8 @@
 using sphaira::ui::menu::hats::detail::SanitizeCheatText;
 using sphaira::ui::menu::hats::detail::DMNT_MAX_CHEATS;
 using sphaira::ui::menu::hats::detail::DMNT_MAX_OPCODES;
+using sphaira::ui::menu::hats::detail::MergeCheatText;
+using sphaira::ui::menu::hats::detail::ParsePackCheatPath;
 
 namespace {
 
@@ -76,6 +78,28 @@ void RejectsUtf16() {
     assert(SanitizeCheatText(utf16).text.empty());
 }
 
+void MergeKeepsUserCheats() {
+    const std::string user = "{Master}\n04000000 00000000 00000001\n\n[Infinite HP]\n04000000 00000010 00000063\n";
+    const std::string pack = "{Pack master}\n04000000 00000000 00000002\n\n[Infinite HP]\n04000000 00000010 00000000\n\n"
+                             "[60 FPS]\n04000000 00000020 0000003C\n";
+    const auto out = MergeCheatText(user, pack);
+    assert(out.added == 1);
+    assert(out.text.find("00000063") != std::string::npos);  // the user's version of a same-name cheat stays
+    assert(out.text.find("[60 FPS]") != std::string::npos);
+    assert(out.text.find("{Pack master}") == std::string::npos && out.dropped == 1); // one master only
+    assert(MergeCheatText(out.text, pack).added == 0);         // a second install adds nothing
+    assert(MergeCheatText("", pack).added == 2);                // no file yet: the pack as it is
+}
+
+void ParsesPackPaths() {
+    const auto p = ParsePackCheatPath("contents/01009790186FE000/cheats/8915848314513cbd.txt");
+    assert(p && p->title_id == 0x01009790186FE000ULL && p->build_id == "8915848314513CBD");
+    assert(ParsePackCheatPath("titles/01009790186FE000/cheats/8915848314513CBD.txt"));
+    assert(!ParsePackCheatPath("contents/01009790186FE000/Smurfs Kart.txt"));
+    assert(!ParsePackCheatPath("contents/01009790186FE000/cheats/short.txt"));
+    assert(!ParsePackCheatPath("contents/0100979018/cheats/8915848314513CBD.txt"));
+}
+
 } // namespace
 
 int main() {
@@ -84,5 +108,7 @@ int main() {
     CapsCheatCount();
     DropsOversizedCheat();
     RejectsUtf16();
+    MergeKeepsUserCheats();
+    ParsesPackPaths();
     std::puts("test_cheat_text: ok");
 }

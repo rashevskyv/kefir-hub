@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -159,6 +160,75 @@ inline auto SanitizeCheatText(std::string_view in) -> SanitizedCheats {
         out.text += '\n';
     }
     return out;
+}
+
+struct MergedCheats {
+    std::string text;
+    std::size_t added{};   // cheats from `incoming` whose name was not in `existing`
+    std::size_t dropped{}; // over dmnt's limits after the merge
+};
+
+// `incoming` added to a cheat file the user already has: cheats with a name already in it stay
+// as they are, the others are appended. Used for packs, so they never replace the user's cheats.
+inline auto MergeCheatText(std::string_view existing, std::string_view incoming) -> MergedCheats {
+    const auto base = SanitizeCheatText(existing).text;
+    std::vector<std::string> names;
+    std::string add;
+    std::size_t added = 0;
+    const auto scan = [&names](const std::string& text, auto&& on_block) {
+        std::size_t pos = 0;
+        while (pos < text.size()) {
+            auto end = text.find("\n\n", pos); // SanitizeCheatText ends every block with an empty line
+            end = end == std::string::npos ? text.size() : end + 2;
+            const auto block = text.substr(pos, end - pos);
+            on_block(block, GetCheatHeaderName(block.substr(0, block.find('\n'))));
+            pos = end;
+        }
+    };
+    scan(base, [&names](const std::string&, const std::string& name) { names.push_back(name); });
+    scan(SanitizeCheatText(incoming).text, [&](const std::string& block, const std::string& name) {
+        if (std::find(names.begin(), names.end(), name) != names.end()) {
+            return;
+        }
+        names.push_back(name);
+        add += block;
+        added += block.front() == '[';
+    });
+    auto out = SanitizeCheatText(base + add);
+    return {std::move(out.text), added, out.dropped};
+}
+
+struct PackCheatPath {
+    unsigned long long title_id{};
+    std::string build_id; // 16 hex digits, upper case
+};
+
+// a cheat file inside a pack zip: "contents/<title id>/cheats/<build id>.txt" (also "titles/").
+inline auto ParsePackCheatPath(std::string_view path) -> std::optional<PackCheatPath> {
+    const auto hex = [](std::string_view s) {
+        return s.size() == 16 && std::all_of(s.begin(), s.end(), [](char c) { return std::isxdigit(static_cast<unsigned char>(c)); });
+    };
+    for (const std::string_view root : {"contents/", "titles/", "atmosphere/contents/"}) {
+        if (!path.starts_with(root)) {
+            continue;
+        }
+        const auto rest = path.substr(root.size());
+        const auto tid = rest.substr(0, 16);
+        constexpr std::string_view mid = "/cheats/";
+        if (!hex(tid) || rest.substr(16, mid.size()) != mid) {
+            return std::nullopt;
+        }
+        const auto file = rest.substr(16 + mid.size());
+        if (file.size() != 20 || !file.ends_with(".txt") || !hex(file.substr(0, 16))) {
+            return std::nullopt;
+        }
+        PackCheatPath out{std::stoull(std::string{tid}, nullptr, 16), std::string{file.substr(0, 16)}};
+        for (auto& c : out.build_id) {
+            c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        }
+        return out;
+    }
+    return std::nullopt;
 }
 
 } // namespace sphaira::ui::menu::hats::detail

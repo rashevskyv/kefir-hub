@@ -22,6 +22,15 @@ Kefir Hub installs, shows and deletes cheat files. It does not turn single cheat
 
 The pack comes from the switch-cheats-db project and is unpacked into `/atmosphere`. Existing cheat files with the same name are overwritten. You need an internet connection.
 
+<!-- draft
+- [[Download 60FPS/GFX Cheats]] no longer installs the whole pack: after the download a list from the bottom shows only the installed games that have cheats in it, with a tick box each; [[Install for ticked games]] adds the cheats to the ticked games only
+- under each game: [[For the installed version.]], [[Only for other versions of the game; may not work.]] or [[The installed version could not be checked.]]
+- the pack's cheats are added to the game's cheat file by name: cheats you already have (same name) stay as they are, other games are not touched; the file still goes through the dmnt limits
+- nothing installed has cheats in the pack: [[No installed game has cheats in this pack]]
+- [[Download Kefir Cheats]] still unpacks the whole pack and overwrites files with the same name
+-->
+<!-- shot: cheats-gfx-picker | 60FPS/GFX Cheats list with one installed game and the install row -->
+
 ## Download cheats for one game
 1. Choose [[Download Exact Cheats]].
 2. A list of your installed games opens. Focus a game and press **A**.

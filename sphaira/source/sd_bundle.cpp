@@ -3,6 +3,7 @@
 #include "archive_extract.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 
 #include <archive.h>
@@ -96,6 +97,7 @@ Result ReadRules(struct archive* a, const Stream& s, std::vector<Rule>& rules) {
 
 Result Receive(ui::InstallProgress* p, yati::source::Base* source, s64 size) {
     R_UNLESS(size > 0, Result_ArchiveRead);
+    p->SetInstallTransfer("Writing files to the microSD"_i18n); // else the last package's step stays on screen
     fs::FsNativeSd fs;
     Stream s{source, size};
 

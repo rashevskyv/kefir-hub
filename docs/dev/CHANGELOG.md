@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.101 — 60FPS/GFX cheats per game, added by name; «чіти» in Ukrainian
+- Cheats → Download 60FPS/GFX Cheats (`cheats_gfx_pack.cpp`): the pack is read in memory; a check list shows only installed games it has cheats for (for the installed version / other versions only / not checked, Build ID from the cache or the installed NCA); only ticked games get cheats, merged by name into their files (`MergeCheatText`), so the user's cheats and other games stay. PC Install: a microSD bundle shows "Writing files to the microSD" instead of the last package's step. uk: «чити» → «чіти» (46 strings, 6 doc pages), glossary rule extended.
+- host tests: pass (test_cheat_text: merge, pack paths) · nro: built · switch: pending (picker shown on .69 before the Build ID fix: BOTW listed)
+
 ## v0.14.100 — PC Install (USB) writes a release's ports, translations and mods to the microSD
 - DBI Backend Qt 2.9.11+ sends each chosen option of a release as `<game> - <option>.kefir-sd.tar`. New `sd_bundle.cpp` reads it as one stream (live queue, retry and status as for packages) and writes the members to the microSD; an archive member (zip/7z/rar) is extracted with its `.kefir/rules`. Never written: `Nintendo/`, `emuMMC/`, `bootloader/`, and a port's existing `save/` files. `archive::ExtractMapped` = the extractor with an entry map and the install progress interface; the file browser's Extract is unchanged.
 - host tests: pass (new test_sd_bundle_rules) · nro: built · switch: pending (DKC: 3 stubs + 3 ports; Phoenix Wright zip mod)

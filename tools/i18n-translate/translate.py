@@ -56,7 +56,8 @@ RULES:
    right meaning (verb or noun, which screen), but translate only "text".
 10. Glossary: "ticket" is a Switch content-rights file (eShop ticket, title key), not a travel or
    event ticket. Use the word the Switch homebrew scene uses, usually a transliteration: uk тікет /
-   тікети, ru тикет; never uk "квиток", ru "билет"."""
+   тікети, ru тикет; never uk "квиток", ru "билет".
+    "cheat" (game cheat codes) is uk чіт / чіти, never "чит" / "чити"."""
 
 
 def build_prompt(codes):

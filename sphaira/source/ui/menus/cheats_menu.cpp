@@ -1,5 +1,6 @@
 #include "ui/menus/cheats_menu.hpp"
 #include "ui/menus/cheats/cheats_ops.hpp"
+#include "ui/menus/cheats/cheats_gfx_pack.hpp"
 #include "ui/menus/cheats/cheat_files_menu.hpp"
 #include "ui/menus/cheats/cheat_game_select_menu.hpp"
 #include "ui/menus/cheats/cheats_dmnt.hpp"
@@ -42,7 +43,7 @@ CheatsMenu::CheatsMenu() : MenuBase{"Cheats"_i18n, MenuFlag_None} {
     // Main cheat management options
     m_items = {
         {"Download Kefir Cheats"_i18n, "Full KefirUpdater cheats pack"_i18n},
-        {"Download 60FPS/GFX Cheats"_i18n, "KefirUpdater performance/graphics pack"_i18n},
+        {"Download 60FPS/GFX Cheats"_i18n, "Pick the installed games to add 60 FPS and graphics cheats to"_i18n},
         {"Download Exact Cheats"_i18n, "Select game and match Build ID"_i18n},
         {"Import From File"_i18n, "Import a local cheat .txt file"_i18n},
         {"View Cheats"_i18n, "View installed cheat codes"_i18n},
@@ -132,7 +133,7 @@ void CheatsMenu::OnSelect() {
             PromptKefirCheatsDownload("Kefir Cheats", KEFIR_CHEATS_URL);
             break;
         case 1: // Download KefirUpdater 60FPS/GFX pack
-            PromptKefirCheatsDownload("60FPS/GFX Cheats", KEFIR_CHEATS_GFX_URL);
+            PromptGfxCheatsDownload(); // the user picks the games; nothing else is touched
             break;
         case 2: // Download exact cheats from nx-cheats-db
             App::Push<CheatGameSelectMenu>(CheatSource::NxDb);

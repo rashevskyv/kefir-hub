@@ -41,7 +41,7 @@ Kefir записує на карту памʼяті ці папки й файл�
 | `config/stratosphere.ini` | Опції власних модулів Atmosphère. |
 | `config/system_settings_stock.ini` | Друга копія `system_settings.ini`, яку тримає Kefir. |
 | `config_templates/` | Еталонні копії Atmosphère з поясненням кожного ключа. При завантаженні не читаються. |
-| `contents/<id>/` | Одна папка на системний модуль або гру. Id гри містить моди (`exefs/`, `romfs/`) і чити. Id модуля містить сам модуль (`exefs.nsp`), `flags/boot2.flag` (запуск при завантаженні) та `toolbox.json` (назва в оверлеї Sysmodules). |
+| `contents/<id>/` | Одна папка на системний модуль або гру. Id гри містить моди (`exefs/`, `romfs/`) і чіти. Id модуля містить сам модуль (`exefs.nsp`), `flags/boot2.flag` (запуск при завантаженні) та `toolbox.json` (назва в оверлеї Sysmodules). |
 | `exefs_patches/` | Патчі, які Atmosphère застосовує до системних модулів у памʼяті. `disable_ca_verification` дозволяє консолі працювати з серверами з власними сертифікатами; `bluetooth_patches` і `btm_patches` потрібні MissionControl; `fatal_force_extra_info` показує повні дані при фатальній помилці. |
 | `nro_patches/` | Те саме для `.nro`. |
 | `hosts/default.txt` | Правила hosts, які Atmosphère застосовує до мережі консолі (блокувати або перенаправити домен). У Kefir порожній. |
@@ -92,7 +92,7 @@ Kefir записує на карту памʼяті ці папки й файл�
 
 | Шлях | Що це |
 |---|---|
-| `.overlays/` | Оверлеї (відкрити: **L + хрестовина вниз + правий стік**): `ovlmenu.ovl` (меню Ultrahand), `ovlSysmodules.ovl`, `ovlEdiZon.ovl` (чити), `NX-FanControl.ovl`, `sys-patch-overlay.ovl`. |
+| `.overlays/` | Оверлеї (відкрити: **L + хрестовина вниз + правий стік**): `ovlmenu.ovl` (меню Ultrahand), `ovlSysmodules.ovl`, `ovlEdiZon.ovl` (чіти), `NX-FanControl.ovl`, `sys-patch-overlay.ovl`. |
 | `.packages/` | Пакети Ultrahand: Kefir Menu (Settings, Software, Theme, Translate Interface). |
 | `kefir-hub.nro` | Kefir Hub. |
 | `kefir-updater/` | Оновлювач Kefir: `kefir-updater.nro`, `update.te` (скрипт, який виконує TegraExplorer), `version` (встановлена версія Kefir). |

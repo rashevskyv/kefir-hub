@@ -93,7 +93,7 @@
 
 ## Видалити гру
 1. Позначте ігри (або наведіть на одну) і натисніть **+**.
-2. Виберіть [[Delete]] і підтвердіть кнопкою [[Delete]]. Якщо в позначеної гри є моди, у питанні буде ще [[Delete with mods]]: моди гри теж видаляться (чити залишаться).
+2. Виберіть [[Delete]] і підтвердіть кнопкою [[Delete]]. Якщо в позначеної гри є моди, у питанні буде ще [[Delete with mods]]: моди гри теж видаляться (чіти залишаться).
 
 Буде видалено встановлену основну гру, оновлення й DLC, і гра зникне зі списку. **Збереження залишаються** — після цього вони видні в [[Saves]] на вкладці [[Deleted Games]]. Щоб прибрати й збереження, видаліть їх у розділі [Збереження](saves.md#delete-a-save-from-the-console).
 
@@ -124,7 +124,7 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 - На екрані подробиць [[Mods folder]] показує [[Not found]], [[Empty]] або [[Found]] з розміром модів.
 - **+** → [[Open mods folder]] відкриває її у файловому менеджері. Якщо папки немає, пункт називається [[Create mods folder]]; підтвердіть кнопкою [[Create]].
 - Зі списку **+** → [[Create mods folders]] створює папку для кожної позначеної гри.
-- **+** → [[Delete mods]] видаляє все в папці, крім `cheats/`; чити керуються в розділі [Чити](cheats.md).
+- **+** → [[Delete mods]] видаляє все в папці, крім `cheats/`; чіти керуються в розділі [Чіти](cheats.md).
 <!-- draft
 - **+** → [[Pack into romfs.bin]] is shown when the game has a `romfs` folder in its mods folder. It packs `<Title ID>/romfs/` into one file `<Title ID>/romfs.bin`, without compression; Atmosphère reads it the same way, but opens one file instead of thousands
 - first a dialog: [[Back]], [[Keep folders]] or [[Delete folders]]. Files left in `romfs/` take priority over `romfs.bin`, so keeping the folder gives no gain
