@@ -558,7 +558,7 @@
   "Apply": "Ужыць",
   "Module activated": "Модуль актываваны",
   "Failed to activate module": "Не ўдалося актываваць модуль",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Крывая вентылятара захавана.\n\nЗмены прыменяцца пры наступнай перазагрузцы.\n\nУтрымлівайце A, каб перазагрузіцца зараз і прымяніць змены.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Не ўдалося актываваць модуль вентылятара.\n\nЗмены прыменяцца пры наступнай перазагрузцы.\n\nУтрымлівайце A, каб перазагрузіцца зараз і прымяніць змены.",
   "Current Kefir:": "Бягучы Kefir:",
   "Latest Kefir:": "Апошні Kefir:",
   "Current Firmware:": "Бягучая прашыўка:",

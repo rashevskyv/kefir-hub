@@ -473,7 +473,7 @@
   "Apply": "Applica",
   "Module activated": "Modulo attivato",
   "Failed to activate module": "Impossibile attivare il modulo",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Curva della ventola salvata.\n\nLe modifiche saranno applicate al prossimo riavvio.\n\nTieni premuto A per riavviare ora e applicare le modifiche.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Impossibile attivare il modulo della ventola.\n\nLe modifiche saranno applicate al prossimo riavvio.\n\nTieni premuto A per riavviare ora e applicare le modifiche.",
   "Updater": "Aggiornatore",
   "Update Kefir, firmware and network downloads.": "Aggiorna Kefir, il firmware e i download di rete.",
   "Kefir Settings": "Impostazioni Kefir",

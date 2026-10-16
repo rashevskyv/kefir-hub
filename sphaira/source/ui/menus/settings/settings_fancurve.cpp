@@ -6,6 +6,7 @@
 #include "ui/popup_list.hpp"
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
+#include "log.hpp"
 #include "i18n.hpp"
 #include <cmath>
 #include <algorithm>
@@ -20,9 +21,9 @@ void OpenFanCurveMenu() {
 
 
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
-    // the menu drives the fan itself now (FanCurveSensorReader): the old module
-    // would fight it, and after a reboot tc applies the saved curve without it.
-    detail::RemoveSphairaFanSysmodule();
+    // the menu drives the fan itself while it is open (FanCurveSensorReader); a module
+    // that runs a curve applied earlier this boot is started again when the menu closes.
+    m_live_curve = detail::StopSphairaFanSysmodule();
 
     m_handheld_curve = detail::ReadFanCurve(
         "tskin_rate_table_handheld_on_fwdbg",
@@ -51,7 +52,19 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
     SetIndex(0);
 }
 
-FanCurveMenu::~FanCurveMenu() = default;
+FanCurveMenu::~FanCurveMenu() {
+    // gives the fan back to tc first.
+    m_sensor_reader.reset();
+
+    // tc reads the curve at boot only: until the next reboot the module keeps the new one.
+    if (m_live_curve) {
+        const auto rc = detail::StartSphairaFanSysmodule();
+        if (R_FAILED(rc)) {
+            // no UI here: this also runs while the app exits.
+            log_write("[FAN] failed to start the fan module: 0x%X\n", rc);
+        }
+    }
+}
 
 
 void FanCurveMenu::RefreshActions() {

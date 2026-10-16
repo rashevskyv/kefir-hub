@@ -109,9 +109,9 @@ The curve is written to Atmosphère's `system_settings.ini`.
 While this screen is open, Kefir Hub controls the fan itself. The fan follows the curve on the screen,
 so you hear each change at once. When you leave the screen, the console controls the fan again.
 
-The console reads the curve only when it starts. After [[Apply]], reboot the console.
-
-Older Kefir Hub versions used the FunControl fan module. Kefir Hub removes it when you open this screen.
+[[Apply]] saves both curves. When you leave the screen, Kefir Hub starts its fan module with the new curve.
+The module runs until the next reboot. After a reboot the console applies the saved curve itself, and the module does not run.
+The module leaves no files on the microSD card.
 
 ### Edit the curve
 
@@ -119,7 +119,7 @@ Older Kefir Hub versions used the FunControl fan module. Kefir Hub removes it wh
 2. Select a point with **D-pad** up/down, or tap it on the graph.
 3. Press **A** ([[Edit]]). Use **D-pad** left/right to change the temperature and up/down to change the fan speed. Press **A** or **B** ([[Done]]) to stop editing.
 4. **L** ([[Add Point]]) adds a point; **R** ([[Remove Point]]) removes the selected point. A curve needs at least two points.
-5. Press **+** ([[Apply]]) to save both curves. Hold **A** to reboot now, or the curves apply after the next reboot.
+5. Press **+** ([[Apply]]) to save both curves. They stay active when you leave the screen.
 
 Points stay in order: a point cannot move past its neighbours.
 
@@ -243,6 +243,6 @@ Kefir Hub keeps 64 MB free while it writes, so the system can still save its own
 
 **"Could not start this module."** Some modules load only at boot. Set [[Autostart]] and reboot.
 
-**The fan does not follow the new curve after [[Apply]].** Reboot the console. The console reads the curve only when it starts.
+**"Failed to install the fan module."** The curve is saved, but until the next reboot the fan uses the previous curve. Reboot the console.
 
 **"No saved Wi-Fi networks".** Add a network in the console's System Settings first.

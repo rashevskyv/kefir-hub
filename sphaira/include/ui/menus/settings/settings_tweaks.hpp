@@ -84,7 +84,10 @@ auto FanCustomPresetLabels(bool docked) -> std::vector<std::string>;
 auto FormatFanCurveTable(std::vector<FanCurvePoint> curve) -> std::string;
 auto FormatAtmosphereFanCurve(std::vector<FanCurvePoint> curve) -> std::string;
 auto IsFanCurveEnabled() -> bool;
-void RemoveSphairaFanSysmodule();
+// stops the fan module; returns true if it was running (a curve was applied this boot).
+auto StopSphairaFanSysmodule() -> bool;
+// starts the romfs fan module with the saved curve; it runs until the next reboot.
+auto StartSphairaFanSysmodule() -> Result;
 auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked) -> Result;
 auto SaveCustomFanPreset(s64 index, bool docked, const std::vector<FanCurvePoint>& curve, const std::string& name) -> Result;
 

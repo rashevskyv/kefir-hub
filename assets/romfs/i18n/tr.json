@@ -407,7 +407,7 @@
   "Apply": "Uygula",
   "Module activated": "Modül etkinleştirildi",
   "Failed to activate module": "Modül etkinleştirilemedi",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Fan eğrisi kaydedildi.\n\nDeğişiklikler bir sonraki yeniden başlatmada uygulanacaktır.\n\nŞimdi yeniden başlatmak ve değişiklikleri uygulamak için A tuşunu basılı tutun.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Fan modülü etkinleştirilemedi.\n\nDeğişiklikler bir sonraki yeniden başlatmada uygulanacaktır.\n\nŞimdi yeniden başlatmak ve değişiklikleri uygulamak için A tuşunu basılı tutun.",
   "Current Kefir:": "Mevcut Kefir:",
   "Latest Kefir:": "En Son Kefir:",
   "Current Firmware:": "Mevcut Ürün Yazılımı:",

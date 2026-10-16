@@ -608,7 +608,7 @@
   "Fan preset is empty": "Ventilator-preset is leeg",
   "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again.": "De geïnstalleerde vertaling kon niet worden vervangen.\nVerwijderen en de console opnieuw opstarten?\nInstalleer de vertaling opnieuw na het opstarten.",
   "Removing": "Verwijderen",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Ventilatorcurve opgeslagen.\n\nWijzigingen worden toegepast bij de volgende herstart.\n\nHoud A ingedrukt om nu te herstarten en wijzigingen toe te passen.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Fanmodule activeren mislukt.\n\nWijzigingen worden toegepast bij de volgende herstart.\n\nHoud A ingedrukt om nu te herstarten en wijzigingen toe te passen.",
   "Saved fan preset: ": "Ventilator-preset Opgeslagen: ",
   "Failed to save fan preset": "Opslaan van ventilatorinstelling mislukt",
   "Fan curve needs at least two points": "Ventilatortcurve heeft ten minste twee punten nodig",

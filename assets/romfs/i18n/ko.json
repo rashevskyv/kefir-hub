@@ -473,7 +473,7 @@
   "Apply": "적용",
   "Module activated": "모듈이 활성화되었습니다",
   "Failed to activate module": "모듈 활성화에 실패했습니다",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "팬 커브가 저장되었습니다.\n\n변경 사항은 다음 부팅 시 적용됩니다.\n\n지금 A를 길게 눌러 재부팅하고 변경 사항을 적용하세요.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "팬 모듈 활성화에 실패했습니다.\n\n변경 사항은 다음 부팅 시 적용됩니다.\n\n지금 A를 길게 눌러 재부팅하고 변경 사항을 적용하세요.",
   "Updater": "업데이트 관리자",
   "Update Kefir, firmware and network downloads.": "Kefir, 펌웨어 및 네트워크 다운로드 항목을 업데이트합니다.",
   "Kefir Settings": "Kefir 설정",

@@ -40,6 +40,7 @@ namespace {
 
 // the preview runs the fan at 100% on a hot SoC, whatever the curve on screen says.
 constexpr s32 FAN_PREVIEW_FULL_SPEED_MILLI_C{80000};
+constexpr u64 FAN_ACTUAL_REFRESH_NS{100000000};
 
 } // namespace
 
@@ -52,7 +53,9 @@ FanCurveSensorReader::FanCurveSensorReader() {
     m_tc_available = R_SUCCEEDED(tcInitialize());
     m_fan_available = R_SUCCEEDED(fanInitialize());
     if (m_tc_available && m_fan_available) {
-        m_fan_controller_open = R_SUCCEEDED(fanOpenController(&m_fan_controller, detail::FAN_DEVICE_CODE_PWM));
+        const auto rc = fanOpenController(&m_fan_controller, detail::FAN_DEVICE_CODE_PWM);
+        log_write("[FAN] fan controller open: 0x%X\n", rc);
+        m_fan_controller_open = R_SUCCEEDED(rc);
         if (m_fan_controller_open) {
             tcDisableFanControl();
         }
@@ -104,8 +107,6 @@ auto FanCurveSensorReader::ReadTemperature(s32& out_milli_c) -> bool {
 
 void FanCurveSensorReader::Update(const std::vector<FanCurvePoint>& active_curve) {
     const auto now = armTicksToNs(armGetSystemTick());
-    const float dt = m_last_update_ns ? std::min(static_cast<float>(now - m_last_update_ns) / 1e9f, 0.1f) : 0.05f;
-    m_last_update_ns = now;
 
     // Update runs every frame: poll the sensor at the refresh rate only.
     if (!m_last_poll_ns || now - m_last_poll_ns >= detail::FAN_SENSOR_REFRESH_NS) {
@@ -126,29 +127,23 @@ void FanCurveSensorReader::Update(const std::vector<FanCurvePoint>& active_curve
         }
     }
 
+    // the marker shows the fan's real speed: it speeds up and slows down slower than the target.
+    if (m_fan_controller_open && (!m_last_fan_poll_ns || now - m_last_fan_poll_ns >= FAN_ACTUAL_REFRESH_NS)) {
+        m_last_fan_poll_ns = now;
+        float level{};
+        // libnx dispatches IController 2, which is GetActualRotationSpeedLevel on 7.0.0+ (switchbrew).
+        m_actual_fan_valid = R_SUCCEEDED(fanControllerGetRotationSpeedLevel(&m_fan_controller, &level));
+        m_actual_fan_percent = level * 100.0f;
+    }
+
     if (!m_temp_valid) {
         m_sample = {};
         return;
     }
 
-    // the drawn level eases toward the target like the real fan does.
-    if (m_displayed_fan_percent < 0.0f) {
-        m_displayed_fan_percent = target_fan;
-    } else {
-        const float diff = target_fan - m_displayed_fan_percent;
-        const float abs_diff = std::abs(diff);
-        if (abs_diff < 0.2f) {
-            m_displayed_fan_percent = target_fan;
-        } else {
-            const float speed_rate = (diff >= 0.0f) ? 25.0f : 18.0f; // 25% per sec up, 18% per sec down
-            const float max_step = std::min(abs_diff, speed_rate * dt);
-            m_displayed_fan_percent += (diff >= 0.0f ? max_step : -max_step);
-        }
-    }
-
     m_sample.valid = true;
     m_sample.temp_milli_c = m_temp_milli_c;
-    m_sample.fan_percent = static_cast<s32>(m_displayed_fan_percent + 0.5f);
+    m_sample.fan_percent = static_cast<s32>((m_actual_fan_valid ? m_actual_fan_percent : target_fan) + 0.5f);
 }
 
 auto FanCurveSensorReader::GetSample() const -> const FanCurveSensorSample* {
@@ -529,16 +524,8 @@ void FanCurveMenu::ApplyCurves() {
                 return;
             }
             m_dirty = false;
-            // tc reads the curve from system_settings.ini at boot only.
-            App::Push<HoldConfirmBox>(
-                "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes."_i18n,
-                3.f,
-                [](bool confirmed){
-                    if (confirmed) {
-                        detail::RebootAfterSetting();
-                    }
-                }
-            );
+            m_live_curve = true;
+            App::Notify("Fan curve applied"_i18n);
         }
     );
 }

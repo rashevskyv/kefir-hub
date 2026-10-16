@@ -474,7 +474,7 @@
   "Apply": "Anwenden",
   "Module activated": "Modul aktiviert",
   "Failed to activate module": "Modul konnte nicht aktiviert werden",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Lüfterkurve gespeichert.\n\nÄnderungen werden beim nächsten Neustart wirksam.\n\nHalte A gedrückt, um jetzt neu zu starten und die Änderungen zu übernehmen.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Lüftermodul konnte nicht aktiviert werden.\n\nÄnderungen werden beim nächsten Neustart wirksam.\n\nHalte A gedrückt, um jetzt neu zu starten und die Änderungen zu übernehmen.",
   "Updater": "Updater",
   "Update Kefir, firmware and network downloads.": "Aktualisiere Kefir, Firmware und Netzwerk-Downloads.",
   "Kefir Settings": "Kefir-Einstellungen",

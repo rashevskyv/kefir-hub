@@ -473,7 +473,7 @@
   "Apply": "適用",
   "Module activated": "モジュールを有効化しました",
   "Failed to activate module": "モジュールの有効化に失敗しました",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "ファンカーブを保存しました。\n\n変更は次回の再起動時に適用されます。\n\nAボタンを長押しすると今すぐ再起動して変更を適用します。",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "ファンモジュールの有効化に失敗しました。\n\n変更は次回の再起動時に適用されます。\n\nAボタンを長押しすると今すぐ再起動して変更を適用します。",
   "Updater": "アップデーター",
   "Update Kefir, firmware and network downloads.": "Kefir、ファームウェア、およびネットワークからのダウンロードを更新します。",
   "Kefir Settings": "Kefir設定",

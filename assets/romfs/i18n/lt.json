@@ -483,7 +483,7 @@
   "Apply": "Pritaikyti",
   "Module activated": "Modulis aktyvuotas",
   "Failed to activate module": "Nepavyko aktyvuoti modulio",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Ventiliatoriaus kreivė išsaugota.\n\nPakeitimai įsigalios kito paleidimo metu.\n\nLaikykite A, kad paleistumėte iš naujo dabar ir pritaikytumėte pakeitimus.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Nepavyko aktyvuoti ventiliatoriaus modulio.\n\nPakeitimai įsigalios kito paleidimo metu.\n\nLaikykite A, kad paleistumėte iš naujo dabar ir pritaikytumėte pakeitimus.",
   "Current Kefir:": "Dabartinis Kefir:",
   "Latest Kefir:": "Naujausias Kefir:",
   "Current Firmware:": "Dabartinė programinė įranga:",

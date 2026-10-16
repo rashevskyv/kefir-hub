@@ -608,7 +608,7 @@
   "Fan preset is empty": "Hồ sơ quạt đang trống",
   "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again.": "Không thể thay thế bản dịch đã cài đặt.\nXóa nó và khởi động lại máy?\nSau khi khởi động lại, hãy cài đặt lại bản dịch.",
   "Removing": "Đang xóa",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Đã lưu đường cong quạt.\n\nCác thay đổi sẽ có hiệu lực trong lần khởi động lại tiếp theo.\n\nGiữ A để khởi động lại ngay và áp dụng thay đổi.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Không thể kích hoạt module quạt.\n\nCác thay đổi sẽ có hiệu lực trong lần khởi động lại tiếp theo.\n\nGiữ A để khởi động lại ngay và áp dụng thay đổi.",
   "Saved fan preset: ": "Đã lưu cấu hình quạt: ",
   "Failed to save fan preset": "Không thể lưu cài đặt quạt",
   "Fan curve needs at least two points": "Đường cong quạt cần ít nhất hai điểm",

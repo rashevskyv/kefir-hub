@@ -3,9 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
-## v0.14.106 — Fan curve without the FunControl sysmodule
-- The fan curve menu drives the fan itself (tc off while it is open, always back on when it closes), so each edit is heard at once; Apply only writes the [tc] keys and asks for a reboot. The sysmodule is gone from the build; opening the menu removes it from the SD. It left the fan with no controller when terminated, held ptm sessions until reboot and wrote fan_status.bin every 500 ms. The sensor reader keeps one ts session and polls every 500 ms instead of a session per frame.
-- host tests: pass (the i18n completeness contract already failed on master) · nro: built before the rebase onto 0.14.105 · switch: 50.69: preview heard, module folder gone, curve works after Apply + reboot
+## v0.14.106 — Fan curve: live preview in the menu, the fan module only after Apply
+- The fan curve menu drives the fan itself (tc off while it is open), so each edit is heard at once, and the marker shows the fan's actual speed. Apply writes the [tc] keys; on leaving the menu Kefir Hub starts the fan module from romfs and deletes its files right away, so it runs until reboot only (tc applies the saved curve at boot) and can never autostart. Before the module is stopped, the menu takes the fan; the module no longer writes fan_status.bin every 500 ms or re-reads the ini. The sensor reader keeps one ts session instead of one per frame.
+- host tests: pass (the i18n completeness contract already failed on master) · nro: built · switch: 50.69: preview heard; module-after-Apply and the reboot check pending
 
 ## v0.14.102 — Kefir Settings: 40MB Memory only where it still matters
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.

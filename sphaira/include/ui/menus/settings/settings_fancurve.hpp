@@ -35,9 +35,10 @@ private:
     auto ReadTemperature(s32& out_milli_c) -> bool;
 
     FanCurveSensorSample m_sample{};
-    u64 m_last_update_ns{};
     u64 m_last_poll_ns{};
-    float m_displayed_fan_percent{-1.0f};
+    u64 m_last_fan_poll_ns{};
+    float m_actual_fan_percent{};
+    bool m_actual_fan_valid{};
     s32 m_temp_milli_c{};
     bool m_temp_valid{};
     s32 m_set_fan_percent{-1};
@@ -116,6 +117,7 @@ private:
     bool m_dirty{};
     bool m_editing{};
     bool m_touch_dragging{};
+    bool m_live_curve{};
     bool m_helper_curve_mode{false}; // disabled by default (auxiliary mode)
     std::unique_ptr<FanCurveSensorReader> m_sensor_reader;
     std::unique_ptr<List> m_list;

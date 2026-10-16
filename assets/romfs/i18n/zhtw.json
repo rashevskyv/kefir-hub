@@ -675,7 +675,7 @@
   "Fan preset is empty": "風扇預設為空",
   "The installed translation could not be replaced.\nRemove it and reboot the console?\nAfter the reboot, install the translation again.": "無法替換已安裝的翻譯。\n是否將其刪除並重啟主機?\n重啟後請重新安裝翻譯。",
   "Removing": "正在移除",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "風扇風速曲線已儲存.\n\n修改將在下次重啟後生效.\n\n按住 A 立即重啟並應用修改.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "無法啟用風扇模組.\n\n修改將在下次重啟後生效.\n\n按住 A 立即重啟並應用修改.",
   "Saved fan preset: ": "已儲存風扇預設: ",
   "Failed to save fan preset": "儲存風扇預設失敗",
   "Fan curve needs at least two points": "風扇曲線至少需要兩個控制點",

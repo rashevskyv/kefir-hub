@@ -408,7 +408,7 @@
   "Apply": "Қолдану",
   "Module activated": "Модуль қосылды",
   "Failed to activate module": "Модульді қосу мүмкін болмады",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Желдеткіш қисық сызығы сақталды.\n\nӨзгерістер келесі қайта жүктеу кезінде қолданылады.\n\nҚазір қайта жүктеп, өзгерістерді қолдану үшін A пернесін басып тұрыңыз.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Желдеткіш модулін қосу мүмкін болмады.\n\nӨзгерістер келесі қайта жүктеу кезінде қолданылады.\n\nҚазір қайта жүктеп, өзгерістерді қолдану үшін A пернесін басып тұрыңыз.",
   "Current Kefir:": "Ағымдағы Kefir:",
   "Latest Kefir:": "Соңғы Kefir:",
   "Current Firmware:": "Ағымдағы прошивка:",

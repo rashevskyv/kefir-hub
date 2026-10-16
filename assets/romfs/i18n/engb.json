@@ -458,7 +458,7 @@
   "Apply": "Apply",
   "Module activated": "Module activated",
   "Failed to activate module": "Failed to activate module",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.",
   "Current Kefir:": "Current Kefir:",
   "Latest Kefir:": "Latest Kefir:",
   "Current Firmware:": "Current Firmware:",

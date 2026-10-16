@@ -333,7 +333,7 @@
   "Apply": "Lietot",
   "Module activated": "Modulis aktivizēts",
   "Failed to activate module": "Neizdevās aktivizēt moduli",
-  "Fan curve saved.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Ventilatora līkne saglabāta.\n\nIzmaiņas stāsies spēkā nākamajā reizē, kad ierīce tiks restartēta.\n\nTuriet nospiestu A, lai restartētu tūlīt un lietotu izmaiņas.",
+  "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes.": "Neizdevās aktivizēt ventilatora moduli.\n\nIzmaiņas stāsies spēkā nākamajā reizē, kad ierīce tiks restartēta.\n\nTuriet nospiestu A, lai restartētu tūlīt un lietotu izmaiņas.",
   "Current Kefir:": "Pašreizējais Kefir:",
   "Latest Kefir:": "Jaunākais Kefir:",
   "Current Firmware:": "Pašreizējā programmaparatūra:",
