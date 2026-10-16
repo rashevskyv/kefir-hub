@@ -477,8 +477,8 @@ auto RemoveUltrahandBootHook() -> Result {
 
 } // namespace
 
-auto ArmReopenHubHint() -> void {
-    const auto msg = SanitizeNotifyText("Open Kefir Hub to finish."_i18n);
+auto ArmReopenHubHint(const std::string& message, bool show_now) -> void {
+    const auto msg = SanitizeNotifyText(message.empty() ? "Open Kefir Hub to finish."_i18n : message);
     fs::FsNativeSd sd;
     sd.CreateDirectoryRecursively("/config/kefir");
     sd.CreateDirectoryRecursively("/config/ultrahand/notifications");
@@ -487,7 +487,9 @@ auto ArmReopenHubHint() -> void {
 
     const auto json = std::string{"{\"text\":\""} + msg +
         "\",\"duration\":0,\"title\":\"Kefir Hub\",\"priority\":20}\n";
-    sd.write_entire_file(kNotifyJsonPath, std::vector<u8>(json.begin(), json.end()));
+    if (show_now) {
+        sd.write_entire_file(kNotifyJsonPath, std::vector<u8>(json.begin(), json.end()));
+    }
     UpsertUltrahandBootHook(msg);
     log_write("[RESTORE] armed Ultrahand reopen-hub hint\n");
 }

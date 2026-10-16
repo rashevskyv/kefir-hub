@@ -3418,5 +3418,15 @@
   "3. First cycle": "3. First cycle",
   "4. Second cycle": "4. Second cycle",
   "5. Match in the other MMC": "5. Match in the other MMC",
-  "On battery until it switches off: ": "On battery until it switches off: "
+  "Battery drain": "Battery drain",
+  "Stop draining? The cycle then needs to be finished another way.": "Stop draining? The cycle then needs to be finished another way.",
+  "Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate.": "Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate.",
+  "Paused: unplug the charger": "Paused: unplug the charger",
+  "Paused: take the console out of the dock": "Paused: take the console out of the dock",
+  "Paused: the battery is hot, waiting until it cools to 55 °C": "Paused: the battery is hot, waiting until it cools to 55 °C",
+  "Draining. The console will switch itself off; then charge it to 100% and open Kefir Hub.": "Draining. The console will switch itself off; then charge it to 100% and open Kefir Hub.",
+  "First cycle": "First cycle",
+  "Second cycle": "Second cycle",
+  "Drain the battery now? Unplug the charger and keep the console in your hands. Kefir Hub sets the screen to full brightness and loads the CPU and GPU until the console switches itself off; the load pauses above 60 °C. Afterwards charge it to 100% and open Kefir Hub.": "Drain the battery now? Unplug the charger and keep the console in your hands. Kefir Hub sets the screen to full brightness and loads the CPU and GPU until the console switches itself off; the load pauses above 60 °C. Afterwards charge it to 100% and open Kefir Hub.",
+  "Next: A starts the drain. Done: ": "Next: A starts the drain. Done: "
 }

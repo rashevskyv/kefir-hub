@@ -12,6 +12,7 @@
 #include "system_info.hpp"
 #include "ui/menus/system_info_menu.hpp"
 #include "fuel_gauge.hpp"
+#include "account/account_restore.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
@@ -344,6 +345,7 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                             static_cast<u64>(std::time(nullptr))};
     if (wizard::Advance(st, live)) {
         SaveState(st);
+        account_restore::ClearReopenHubHint(); // the drain notice did its job
     }
     const auto other_name = mmc == wizard::EMUMMC ? std::string{"sysMMC"} : std::string{"emuMMC"};
     const auto reset_name = st.reset_mmc == wizard::EMUMMC ? std::string{"emuMMC"} : std::string{"sysMMC"};
@@ -380,7 +382,11 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                     r.value = "Done "_i18n + DateOf(first ? st.full1_at : st.full2_at);
                 } else if (next) {
                     r.value = v.discharged >= target ? "Discharged: now charge to 100% and open this page"_i18n
-                                                     : "On battery until it switches off: "_i18n + pct_text(got) + " of 90%";
+                                                     : "Next: A starts the drain. Done: "_i18n + pct_text(got) + " / 90%";
+                }
+                if (next && v.discharged < target) {
+                    r.action = [first]() { OpenDrain(first ? 1 : 2); };
+                    break;
                 }
                 r.action = Info("Unplug the charger and use the console until it switches off by itself (a game, the screen bright, no sleep). Then charge it to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
                 break;

@@ -1,4 +1,5 @@
 #include "image.hpp"
+#include "jpeg_probe.hpp"
 
 // disable warnings for stb
 #pragma GCC diagnostic push
@@ -211,7 +212,8 @@ auto ImageLoadFromMemory(std::span<const u8> data, u32 flags) -> ImageResult {
     }
 
 #ifdef USE_NVJPG
-    if (flags & ImageFlag_JPEG) {
+    // nvjpg draws garbage for some valid JPEGs (4:4:0, progressive): those go to stb_image
+    if ((flags & ImageFlag_JPEG) && image::NvjpgSupports(data)) {
         auto shared_vec = std::make_shared<std::vector<u8>>(data.size());
         std::memcpy(shared_vec->data(), data.data(), shared_vec->size());
         auto result = ImageLoadInternalNvjpg(nj::Image{shared_vec}, false);
@@ -229,6 +231,10 @@ auto ImageLoadFromMemory(std::span<const u8> data, u32 flags) -> ImageResult {
 auto ImageLoadFromFile(const fs::FsPath& file, u32 flags) -> ImageResult {
 #ifdef USE_NVJPG
     if (flags & ImageFlag_JPEG) {
+        std::vector<u8> head;
+        if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(file, head)) && !image::NvjpgSupports(head)) {
+            return ImageLoadFromMemory(head, 0);
+        }
         auto result = ImageLoadInternalNvjpg(nj::Image{file}, false);
         return result.data.empty() ? ImageLoadFromFile(file, 0) : result;
     }
@@ -247,8 +253,8 @@ auto ImageLoadIcon(std::span<const u8> data) -> ImageResult {
     }
 
 #ifdef USE_NVJPG
-    const bool is_jpeg = data.size() >= 3 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF;
-    if (is_jpeg) {
+    // homebrew icons too: the NFS Most Wanted port icon is 4:4:0, which nvjpg draws as noise
+    if (image::NvjpgSupports(data)) {
         auto shared_vec = std::make_shared<std::vector<u8>>(data.size());
         std::memcpy(shared_vec->data(), data.data(), shared_vec->size());
         auto result = ImageLoadInternalNvjpg(nj::Image{shared_vec}, true);

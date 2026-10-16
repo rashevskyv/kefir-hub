@@ -100,7 +100,9 @@ auto LaunchTegraDump() -> bool;
 
 // One-shot Ultrahand [on-boot] toast: overlay cannot launch the HOME forwarder
 // or NRO, so after CFW start the user is told to open Kefir Hub.
-auto ArmReopenHubHint() -> void;
+// `message` replaces "Open Kefir Hub to finish." (battery calibration drain).
+// show_now = false: only the boot notice (Ultrahand shows a .notify file the moment it appears).
+auto ArmReopenHubHint(const std::string& message = {}, bool show_now = true) -> void;
 auto ClearReopenHubHint() -> Result;
 
 // After Hub confirms a finished nand dump: drop handshake temps only.
