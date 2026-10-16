@@ -25,7 +25,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     nvgText(vg, 81.f, info_y, current_kefir_lbl.c_str(), nullptr);
     float ck_bounds[4]{};
     nvgTextBounds(vg, 80.f, info_y, current_kefir_lbl.c_str(), nullptr, ck_bounds);
-    nvgText(vg, ck_bounds[2] + 7.f, info_y, m_current_kefir.c_str(), nullptr);
+    // no /switch/kefir-updater/version: Kefir is not installed here (plain Atmosphere or another pack), or the file was deleted
+    const auto current_kefir = detail::IsKnownVersion(m_current_kefir) ? m_current_kefir : "not installed"_i18n;
+    nvgText(vg, ck_bounds[2] + 7.f, info_y, current_kefir.c_str(), nullptr);
 
     // Latest Kefir
     const std::string latest_kefir_lbl = "Latest Kefir:"_i18n;

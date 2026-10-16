@@ -332,6 +332,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         struct ServiceBadgeItem {
             const char* name;
             bool is_active;
+            bool blue{}; // LOG: shown only while logging is on, so the user knows log.txt is written
         };
 
         const float storage_left = label_x;
@@ -342,6 +343,9 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         badges.push_back({"FTP", pdata.ftp_running});
         if (pdata.usb3_enabled) {
             badges.push_back({"USB 3.0", true});
+        }
+        if (App::GetLogEnable()) {
+            badges.push_back({"LOG", true, true});
         }
 
         nvgFontSize(vg, badge_font);
@@ -364,14 +368,14 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             const float text_w = bounds[2] - bounds[0];
             const float bw = text_w + 24.f;
 
-            const NVGcolor bg_col = b.is_active
-                ? nvgRGBA(28, 68, 42, 220)
+            const NVGcolor bg_col = b.blue ? nvgRGBA(26, 54, 96, 220)
+                : b.is_active ? nvgRGBA(28, 68, 42, 220)
                 : nvgRGBA(55, 55, 58, 160);
-            const NVGcolor dot_col = b.is_active
-                ? nvgRGBA(76, 210, 120, 255)
+            const NVGcolor dot_col = b.blue ? nvgRGBA(96, 165, 250, 255)
+                : b.is_active ? nvgRGBA(76, 210, 120, 255)
                 : nvgRGBA(130, 130, 135, 200);
-            const NVGcolor text_col = b.is_active
-                ? nvgRGBA(225, 255, 235, 255)
+            const NVGcolor text_col = b.blue ? nvgRGBA(219, 234, 254, 255)
+                : b.is_active ? nvgRGBA(225, 255, 235, 255)
                 : theme->GetColour(ThemeEntryID_TEXT_INFO);
 
             // Container

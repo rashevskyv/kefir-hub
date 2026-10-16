@@ -26,15 +26,23 @@ struct State {
     std::uint64_t full1_at{};       // first cycle: discharged CYCLE_DONE, then full on the charger
     std::uint64_t full2_at{};
     std::uint64_t match_at[2]{};    // Match the other MMC ran in sysMMC / emuMMC
+    // per cycle (index 0 = first): when the Hub's drain began, when the console first showed 0 %, and the last
+    // time the drain page saw the console on; alive - zero = how long it ran after showing 0 %
+    std::uint64_t drain_at[2]{};
+    std::uint64_t zero_at[2]{};
+    std::uint64_t alive_at[2]{};
     friend bool operator==(const State&, const State&) = default;
 };
 
 inline auto Format(const State& s) -> std::string {
-    char buf[256];
+    char buf[512];
     std::snprintf(buf, sizeof(buf),
-        "reset_at=%llu\nreset_mmc=%d\ntotal_at_reset=%u\nfull1_at=%llu\nfull2_at=%llu\nmatch_sysmmc_at=%llu\nmatch_emummc_at=%llu\n",
+        "reset_at=%llu\nreset_mmc=%d\ntotal_at_reset=%u\nfull1_at=%llu\nfull2_at=%llu\nmatch_sysmmc_at=%llu\nmatch_emummc_at=%llu\n"
+        "drain1_at=%llu\nzero1_at=%llu\nalive1_at=%llu\ndrain2_at=%llu\nzero2_at=%llu\nalive2_at=%llu\n",
         (unsigned long long)s.reset_at, s.reset_mmc, s.total_at_reset, (unsigned long long)s.full1_at,
-        (unsigned long long)s.full2_at, (unsigned long long)s.match_at[SYSMMC], (unsigned long long)s.match_at[EMUMMC]);
+        (unsigned long long)s.full2_at, (unsigned long long)s.match_at[SYSMMC], (unsigned long long)s.match_at[EMUMMC],
+        (unsigned long long)s.drain_at[0], (unsigned long long)s.zero_at[0], (unsigned long long)s.alive_at[0],
+        (unsigned long long)s.drain_at[1], (unsigned long long)s.zero_at[1], (unsigned long long)s.alive_at[1]);
     return buf;
 }
 
@@ -57,6 +65,12 @@ inline auto Parse(std::string_view text) -> State {
         else if (key == "full2_at") s.full2_at = v;
         else if (key == "match_sysmmc_at") s.match_at[SYSMMC] = v;
         else if (key == "match_emummc_at") s.match_at[EMUMMC] = v;
+        else if (key == "drain1_at") s.drain_at[0] = v;
+        else if (key == "zero1_at") s.zero_at[0] = v;
+        else if (key == "alive1_at") s.alive_at[0] = v;
+        else if (key == "drain2_at") s.drain_at[1] = v;
+        else if (key == "zero2_at") s.zero_at[1] = v;
+        else if (key == "alive2_at") s.alive_at[1] = v;
     }
     return s;
 }
@@ -90,6 +104,35 @@ inline auto Advance(State& s, const Live& l) -> bool {
         return true;
     }
     return false;
+}
+
+// The drain page, about once a second for cycle 1 or 2: the drain start survives Hub restarts, the first 0 %
+// is kept, alive moves on. true = something other than alive changed (worth saving at once).
+inline auto NoteDrain(State& s, int cycle, std::uint64_t now, int shown_pct) -> bool {
+    if (cycle < 1 || cycle > 2) {
+        return false;
+    }
+    const int c = cycle - 1;
+    bool changed = false;
+    if (!s.drain_at[c]) {
+        s.drain_at[c] = now;
+        changed = true;
+    }
+    if (shown_pct == 0 && !s.zero_at[c]) {
+        s.zero_at[c] = now;
+        changed = true;
+    }
+    s.alive_at[c] = now;
+    return changed;
+}
+
+// seconds the console ran after it first showed 0 % in this cycle (up to the last time the page saw it); 0 = unknown
+inline auto AfterZero(const State& s, int cycle) -> std::uint64_t {
+    const int c = cycle - 1;
+    if (c < 0 || c > 1 || !s.zero_at[c] || s.alive_at[c] < s.zero_at[c]) {
+        return 0;
+    }
+    return s.alive_at[c] - s.zero_at[c];
 }
 
 enum class Step { CheckOther, Reset, Cycle1, Cycle2, MatchOther, Finished };

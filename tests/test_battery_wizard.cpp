@@ -62,5 +62,19 @@ int main() {
     v = Steps(st, l);
     assert(MarkOf(v, Step::MatchOther) == Mark::Done && MarkOf(v, Step::Finished) == Mark::Done);
 
+    // the drain time survives a Hub restart; the time after 0 % runs up to the last time the page saw the console
+    State d;
+    assert(NoteDrain(d, 1, 100, 80) && d.drain_at[0] == 100);
+    assert(!NoteDrain(d, 1, 160, 79) && d.drain_at[0] == 100 && d.alive_at[0] == 160); // only alive moved
+    assert(AfterZero(d, 1) == 0);
+    d = Parse(Format(d));                                   // the Hub restarts
+    assert(d.drain_at[0] == 100 && d.alive_at[0] == 160);
+    assert(!NoteDrain(d, 1, 200, -1) && d.drain_at[0] == 100); // -1: not read yet, not a 0 %
+    assert(NoteDrain(d, 1, 900, 0) && d.zero_at[0] == 900);
+    assert(!NoteDrain(d, 1, 1320, 0) && d.zero_at[0] == 900);   // the first 0 % stays
+    assert(AfterZero(d, 1) == 420 && AfterZero(d, 2) == 0);
+    assert(NoteDrain(d, 2, 5000, 90) && d.drain_at[1] == 5000 && d.drain_at[0] == 100);
+    assert(Parse(Format(d)) == d);
+
     std::puts("test_battery_wizard: ok");
 }

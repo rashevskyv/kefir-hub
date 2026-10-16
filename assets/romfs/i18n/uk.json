@@ -3438,5 +3438,22 @@
   "No internet connection. The list loads when the console connects.": "Немає з'єднання з інтернетом. Список завантажиться, щойно консоль підключиться.",
   "GPU": "Відеопроцесор",
   "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%.": "Kefir Hub навантажує процесор і відеопроцесор, щоб розрядити батарею. Консоль вимкнеться сама; потім зарядіть її до 100%.",
-  "CPU": "Процесор"
+  "CPU": "Процесор",
+  "Running after 0% for": "Працює після 0% уже",
+  "after 0%: ": "після 0%: ",
+  "Not enough free space on the microSD card.": "На карті пам'яті недостатньо вільного місця.",
+  "Free:": "Вільно:",
+  "needed:": "потрібно:",
+  "Delete something you do not need (old backups, games) and try again.": "Видаліть щось непотрібне (старі резервні копії, ігри) і спробуйте знову.",
+  "Failed to extract": "Не вдалося розпакувати",
+  "Failed to download": "Не вдалося завантажити",
+  "Failed to install": "Не вдалося встановити",
+  "Download firmware": "Завантажити прошивку",
+  "It is unpacked to /firmware, the archive is deleted after that.": "Її буде розпаковано в /firmware, після цього архів видаляється.",
+  "Install firmware": "Встановити прошивку",
+  "FAT32 + exFAT support": "Підтримка FAT32 + exFAT",
+  "FAT32 support only": "Лише підтримка FAT32",
+  "Do not power off the console during installation.": "Не вимикайте консоль під час встановлення.",
+  "the current Kefir does not support it, and no Kefir update was found.": "поточний Kefir її не підтримує, а оновлення Kefir не знайдено.",
+  "not installed": "не встановлено"
 }

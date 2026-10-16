@@ -40,6 +40,10 @@ using namespace detail;
 constexpr u16 MIN_FULL_MV = 4100;
 constexpr const char* STATE_PATH = "/config/kefir/battery/calibration.txt";
 
+} // namespace
+
+namespace detail {
+
 auto LoadState() -> wizard::State {
     std::vector<u8> data;
     if (R_FAILED(fs::FsNativeSd{}.read_entire_file(STATE_PATH, data))) {
@@ -54,6 +58,10 @@ void SaveState(const wizard::State& st) {
     const auto text = wizard::Format(st);
     fs.write_entire_file(STATE_PATH, std::vector<u8>(text.begin(), text.end()));
 }
+
+} // namespace detail
+
+namespace {
 
 // HOS's cycle total x100 for this MMC: its copy plus what the chip counted since the last fold-in
 auto CycleTotal(const Snapshot& s) -> u32 {
@@ -380,6 +388,9 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                                 : "4. Second cycle"_i18n;
                 if (done) {
                     r.value = "Done "_i18n + DateOf(first ? st.full1_at : st.full2_at);
+                    if (const auto after = wizard::AfterZero(st, first ? 1 : 2)) {
+                        r.value += " · " + "after 0%: "_i18n + std::to_string(after / 60) + " " + "min"_i18n;
+                    }
                 } else if (next) {
                     r.value = v.discharged >= target ? "Discharged: now charge to 100% and open this page"_i18n
                                                      : "Next: A starts the drain. Done: "_i18n + pct_text(got) + " / 90%";

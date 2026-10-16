@@ -3,6 +3,14 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.120 — drain time survives Hub restarts, time after 0 %; SD space check before Kefir/firmware downloads
+- Calibration state file gains drain1/2_at, zero1/2_at, alive1/2_at (`wizard::NoteDrain`, `AfterZero`, host test): "Draining for" counts from the first drain start of the cycle, not from the last Hub start; the first 0 % the console shows (psm, also the big number now) is kept, alive is written every 30 s; the page shows "Running after 0% for", the wizard's done cycle shows "after 0%: N min".
+- Crash fix (report from a console with plain Atmosphère, 0x767 right after "changelog_full" downloaded): without /switch/kefir-updater/version the Kefir changelog listed versions 1..927 and drew every line, overflowing the GPU command buffer. Now an unknown installed version lists only the target (`kefir_changelog_range.hpp`, host test) and `RenderChangelogText` draws only lines inside the visible area. Reproduced on .69 with 0.14.120 before the fix (version file renamed).
+- 0 % counts when psm or the gauge reads 0 (on .141 HOS still showed 1 % with the gauge at 0 % and 4 min left).
+- Header: a blue "LOG" badge next to MTP/FTP while logging is on (default on since 0.14.117). Updater: "Current Kefir: not installed" instead of "Not Found" when /switch/kefir-updater/version is missing.
+- Updater: Kefir needs 700 MB free on the microSD, firmware 1000 MB; below that a box shows free and needed MB and nothing downloads. Firmware/Kefir prompts and error titles are i18n.
+- host tests: quick pass, test_battery_wizard, test_kefir_changelog_range pass · nro: built · switch: LOG badge seen on .69; pending: changelog without version file (.69), drain to 0 % with a Hub restart, a near-full SD
+
 ## v0.14.119 — battery drain: live CPU, GPU, power and temperature charts
 - Drain page: four charts that scroll every 250 ms over 30 s (Task Manager style): CPU (one line per load core, from `svcGetInfo(IdleTickCount)` read on that core), GPU (nvgpu `PMU_GET_GPU_LOAD` 0x80044715 on /dev/nvhost-ctrl-gpu), power in W (VCell × Current), temperature with the 60 °C line. The slow charge graph is gone; elapsed time has seconds; the status line says the Hub loads the CPU and GPU. 0.14.118 (bar meters) was a test build only.
 - host tests: not run (UI only) · nro: built · switch: .141 shows CPU 100/100/100 %, GPU 96 %, 3.3 W, 39.7 °C (screenshot)

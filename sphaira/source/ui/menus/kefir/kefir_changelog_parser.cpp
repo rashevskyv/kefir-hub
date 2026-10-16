@@ -1,4 +1,5 @@
 #include "ui/menus/kefir/kefir_changelog.hpp"
+#include "ui/menus/kefir/kefir_changelog_range.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
 #include "ui/nvg_util.hpp"
 #include "utils/utils.hpp"
@@ -345,8 +346,13 @@ auto RenderChangelogText(NVGcontext* vg, Theme* theme, const std::string& text, 
         }
 
         const auto display = is_md_header ? StripMarkdownAtx(line, md_level) : line;
+        // measure first and draw only what reaches the visible area: drawing every line of a long changelog
+        // overflowed the GPU command buffer and crashed the Hub
         auto height = is_blank ? line_height * 0.55f :
-            RenderChangelogLine(vg, theme, display, area.x, y, area.w, font_size, line_height, render);
+            RenderChangelogLine(vg, theme, display, area.x, y, area.w, font_size, line_height, false);
+        if (render && !is_blank && y + height >= area.y && y <= area.y + area.h) {
+            RenderChangelogLine(vg, theme, display, area.x, y, area.w, font_size, line_height, true);
+        }
         if (is_header && !is_blank) {
             height += 6.f;
         }
@@ -428,15 +434,7 @@ auto BuildKefirChangelogText(const std::string& raw, const std::string& current_
 
     should_skip = (latest_available_ver != target_ver);
 
-    int start_ver = 0;
-    int end_ver = target_ver;
-
-    if (current_ver == target_ver) {
-        start_ver = target_ver;
-        end_ver = target_ver;
-    } else {
-        start_ver = current_ver + 1;
-    }
+    const auto [start_ver, end_ver] = ChangelogRange(current_ver, target_ver);
 
     std::string version_content;
     bool found_any = false;

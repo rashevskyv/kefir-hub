@@ -3446,5 +3446,22 @@
   "No internet connection. The list loads when the console connects.": "No internet connection. The list loads when the console connects.",
   "GPU": "GPU",
   "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%.": "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%.",
-  "CPU": "CPU"
+  "CPU": "CPU",
+  "Running after 0% for": "Running after 0% for",
+  "after 0%: ": "after 0%: ",
+  "Not enough free space on the microSD card.": "Not enough free space on the microSD card.",
+  "Free:": "Free:",
+  "needed:": "needed:",
+  "Delete something you do not need (old backups, games) and try again.": "Delete something you do not need (old backups, games) and try again.",
+  "Failed to extract": "Failed to extract",
+  "Failed to download": "Failed to download",
+  "Failed to install": "Failed to install",
+  "Download firmware": "Download firmware",
+  "It is unpacked to /firmware, the archive is deleted after that.": "It is unpacked to /firmware, the archive is deleted after that.",
+  "Install firmware": "Install firmware",
+  "FAT32 + exFAT support": "FAT32 + exFAT support",
+  "FAT32 support only": "FAT32 support only",
+  "Do not power off the console during installation.": "Do not power off the console during installation.",
+  "the current Kefir does not support it, and no Kefir update was found.": "the current Kefir does not support it, and no Kefir update was found.",
+  "not installed": "not installed"
 }

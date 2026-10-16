@@ -3,6 +3,7 @@
 // Tools → Battery internals shared by the page (battery_page.cpp) and the chip writes (battery_write.cpp).
 
 #include "battery_gauge.hpp"
+#include "battery_wizard.hpp"
 #include "fs.hpp"
 
 #include <switch.h>
@@ -40,5 +41,8 @@ auto Backup(const Snapshot& s, std::string& name) -> Result;
 auto ChipParams(const Snapshot& s) -> Params;
 auto HosParams(const Snapshot& s) -> Params;
 auto MmcName(const Snapshot& s) -> std::string;
+// the calibration wizard's state file (battery_write.cpp)
+auto LoadState() -> wizard::State;
+void SaveState(const wizard::State& st);
 
 } // namespace sphaira::battery::detail

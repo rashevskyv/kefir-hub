@@ -11,6 +11,7 @@
 #include "net.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
+#include "log.hpp"
 #include "utils/utils.hpp"
 #include "text_helper.hpp"
 #include "path_util.hpp"
@@ -21,6 +22,29 @@
 
 namespace sphaira::ui::menu::kefir {
 using namespace detail;
+
+namespace {
+
+// what a download needs on the microSD: the archive plus what it unpacks to, with a margin
+constexpr s64 KEFIR_NEED_MB = 700;    // user, 2026-10-16: Kefir needs 600-700 MB
+constexpr s64 FIRMWARE_NEED_MB = 1000; // a firmware zip is ~400 MB and unpacks to about the same
+
+// false = not enough: a box with the free and the needed space is shown. An unreadable free space lets it try.
+bool EnoughSdSpace(s64 need_mb) {
+    s64 free{};
+    if (R_FAILED(fs::FsNativeSd{}.GetFreeSpace("/", &free)) || free <= 0 || free >= (need_mb << 20)) {
+        return true;
+    }
+    log_write("[kefir] not enough SD space: %lld MB free, %lld MB needed\n", (long long)(free >> 20), (long long)need_mb);
+    App::Push<OptionBox>(
+        "Not enough free space on the microSD card."_i18n + "\n\n" +
+            "Free:"_i18n + " " + std::to_string(free >> 20) + " MB · " + "needed:"_i18n + " " + std::to_string(need_mb) + " MB\n\n" +
+            "Delete something you do not need (old backups, games) and try again."_i18n,
+        "OK"_i18n);
+    return false;
+}
+
+} // namespace
 
 void Menu::OpenSelected() {
     if (m_entries.empty() || m_index >= static_cast<s64>(m_entries.size())) {
@@ -79,7 +103,7 @@ void Menu::StartManualZipFirmware(const fs::FsPath& zip_path) {
                 if (rc == Result_TransferCancelled) {
                     return;
                 }
-                App::PushErrorBox(rc, "Failed to extract " + name);
+                App::PushErrorBox(rc, "Failed to extract"_i18n + " " + name);
                 return;
             }
 
@@ -88,6 +112,9 @@ void Menu::StartManualZipFirmware(const fs::FsPath& zip_path) {
 }
 
 void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_success) {
+    if (!EnoughSdSpace(KEFIR_NEED_MB)) {
+        return;
+    }
     App::Push<KefirChangelogBox>(entry,
         [this, entry, on_success = std::move(on_success)]() mutable {
             net::RequireConnection([this, entry, on_success = std::move(on_success)]() mutable {
@@ -101,9 +128,9 @@ void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_succ
                                 return;
                             }
                             if (rc == Result_AppstoreFailedZipDownload) {
-                                App::PushErrorBox(rc, "Failed to download " + entry.name);
+                                App::PushErrorBox(rc, "Failed to download"_i18n + " " + entry.name);
                             } else {
-                                App::PushErrorBox(rc, "Failed to install " + entry.name);
+                                App::PushErrorBox(rc, "Failed to install"_i18n + " " + entry.name);
                             }
                             return;
                         }
@@ -128,6 +155,9 @@ void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_succ
 }
 
 void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) {
+    if (!EnoughSdSpace(FIRMWARE_NEED_MB)) {
+        return;
+    }
     if (!skip_support_check && !IsFirmwareSupported(entry.name)) {
         PromptKefirThenFirmware(entry);
         return;
@@ -145,10 +175,7 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
         return;
     }
 
-    std::string message = "Download firmware " + entry.name + "?\n\n";
-    message += "It will be staged at ";
-    message += FIRMWARE_ZIP;
-    message += " and extracted to /firmware.";
+    const std::string message = "Download firmware"_i18n + " " + entry.name + "?\n\n" + "It is unpacked to /firmware, the archive is deleted after that."_i18n;
 
     App::Push<OptionBox>(message, "Cancel"_i18n, "Download"_i18n, 1,
         [this, entry](auto op_index) {
@@ -171,7 +198,7 @@ void Menu::StartFirmwareDownload(const UpdaterEntry& entry, std::optional<bool> 
                     if (rc == Result_TransferCancelled) {
                         return;
                     }
-                    App::PushErrorBox(rc, "Failed to download " + entry.name);
+                    App::PushErrorBox(rc, "Failed to download"_i18n + " " + entry.name);
                     return;
                 }
 
@@ -253,9 +280,9 @@ void Menu::PromptInstallFirmware(const std::string& display_name, const fs::FsPa
                                    R_SUCCEEDED(validation->validation.exfat_result);
 
             auto prompt_install_confirm = [this, display_name, path, version, use_exfat, origin_zip, is_manual_folder](bool apply_fix) {
-                std::string message = "Install firmware " + version + " on " + detail::GetFirmwareTargetName() + "?\n\n";
-                message += use_exfat ? "FAT32 + exFAT support\n" : "FAT32 support only\n";
-                message += "Do not power off the console during installation.";
+                std::string message = "Install firmware"_i18n + " " + version + " → " + detail::GetFirmwareTargetName() + "?\n\n";
+                message += (use_exfat ? "FAT32 + exFAT support"_i18n : "FAT32 support only"_i18n) + "\n";
+                message += "Do not power off the console during installation."_i18n;
 
                 App::Push<OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1,
                     [this, display_name, path, apply_fix, origin_zip, is_manual_folder](auto op_index) {
@@ -432,7 +459,7 @@ void Menu::InstallFirmware(const std::string& display_name, const fs::FsPath& pa
 void Menu::PromptKefirThenFirmware(const UpdaterEntry& firmware_entry) {
     UpdaterEntry kefir_entry;
     if (!FindKefirUpdate(kefir_entry)) {
-        App::Push<ErrorBox>(0x1, "Firmware " + firmware_entry.name + " is not supported by the current Kefir, and no Kefir update entry was found.");
+        App::Push<ErrorBox>(0x1, "Firmware"_i18n + " " + firmware_entry.name + ": " + "the current Kefir does not support it, and no Kefir update was found."_i18n);
         return;
     }
 

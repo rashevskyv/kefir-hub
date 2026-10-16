@@ -4,6 +4,7 @@
 // and while docked. An Ultrahand boot notice tells the user what to do after the switch-off.
 #include "battery_page.hpp"
 #include "fuel_gauge.hpp"
+#include "battery_internal.hpp"
 #include "account/account_restore.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/nvg_util.hpp"
@@ -18,6 +19,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <deque>
 #include <initializer_list>
 #include <memory>
@@ -87,6 +89,8 @@ struct DrainMenu final : ui::menu::MenuBase {
         }
         appletGetIdleTimeDetectionExtension(&m_saved_idle);
         appletSetIdleTimeDetectionExtension(AppletIdleTimeDetectionExtension_ExtendedUnsafe);
+        m_state = detail::LoadState();
+        NoteState(true);
         account_restore::ArmReopenHubHint("Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate."_i18n, false);
 
         g_stop = false;
@@ -148,7 +152,10 @@ struct DrainMenu final : ui::menu::MenuBase {
         m_poll.Update();
         m_read = true;
         FuelGauge g;
-        if (const auto v = g.Read(MAX17050_RepSOC)) m_pct = *v >> 8;
+        u32 shown{};
+        if (R_SUCCEEDED(psmGetBatteryChargePercentage(&shown))) m_pct = static_cast<int>(shown); // what the console shows
+        if (const auto v = g.Read(MAX17050_RepSOC)) m_gauge_pct = *v >> 8;
+        NoteState(false);
         if (const auto v = g.Read(MAX17050_Temp)) m_temp = static_cast<s16>(*v) / 256.0;
         if (const auto v = g.Read(MAX17050_TTE)) m_tte_s = *v == 0xFFFF ? 0 : static_cast<u64>(*v * 5.625);
         if (m_lbl && m_reapply.GetSeconds() >= 10) {
@@ -175,6 +182,26 @@ struct DrainMenu final : ui::menu::MenuBase {
             : m_docked ? "Paused: take the console out of the dock"_i18n
             : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
             : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
+    }
+
+    // the drain start, the first 0 % and the last time seen on go to the wizard's state file, so a Hub restart
+    // keeps them; alive is written every 30 s
+    void NoteState(bool force) {
+        const auto now = static_cast<u64>(std::time(nullptr));
+        if (wizard::NoteDrain(m_state, m_cycle, now, ZeroSeen() ? 0 : m_pct) || force || m_saved.GetSeconds() >= 30) {
+            m_saved.Update();
+            detail::SaveState(m_state);
+        }
+    }
+
+    // HOS can switch off while it still shows 1 % (on .141 the gauge read 0 % with psm at 1 %): either one at 0 counts
+    auto ZeroSeen() const -> bool {
+        return m_read && (m_pct == 0 || m_gauge_pct == 0);
+    }
+
+    auto Since(const std::uint64_t at) const -> u64 {
+        const auto now = static_cast<u64>(std::time(nullptr));
+        return at && now > at ? now - at : 0;
     }
 
     static void Push(std::deque<float>& d, float v) {
@@ -342,8 +369,10 @@ struct DrainMenu final : ui::menu::MenuBase {
         const float fx = 560.f;
         const auto title = (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
         ui::gfx::drawTextArgs(vg, fx, 125.f, 30.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", title.c_str());
-        ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(m_since.GetSeconds()).c_str());
-        if (m_tte_s) {
+        ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(Since(m_state.drain_at[m_cycle - 1])).c_str());
+        if (const auto zero = m_state.zero_at[m_cycle - 1]) {
+            ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, warn, "%s %s", "Running after 0% for"_i18n.c_str(), HoursMinutesSeconds(Since(zero)).c_str());
+        } else if (m_tte_s) {
             ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Switch-off in about"_i18n.c_str(), HoursMinutes(m_tte_s).c_str());
         }
         ui::gfx::drawTextBox(vg, fx, 222.f, 20.f, 600.f, m_hot || m_charger || m_docked ? warn : info, m_status.c_str());
@@ -379,7 +408,8 @@ private:
     bool m_saved_auto{};
     TimeStamp m_poll{};
     bool m_read{};
-    int m_pct{};
+    int m_pct{-1}; // psm, what the console shows; -1 until read
+    int m_gauge_pct{-1}; // the fuel gauge's own RepSOC
     int m_mv{};
     int m_ma{};
     double m_temp{};
@@ -391,7 +421,8 @@ private:
     bool m_saved_dimming{};
     AppletIdleTimeDetectionExtension m_saved_idle{};
     TimeStamp m_reapply{};
-    TimeStamp m_since{};
+    wizard::State m_state;
+    TimeStamp m_saved{};
     u64 m_tte_s{};
     bool m_nv{};
     bool m_gpu_fd_ok{};
