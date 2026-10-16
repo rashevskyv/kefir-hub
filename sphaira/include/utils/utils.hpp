@@ -52,7 +52,7 @@ bool findTegraExplorerPayload(fs::FsPath& out);
 bool restoreHekateIni();
 
 
-// Swap payload.bin with HATS installer (no reboot)
+// Swap payload.bin with the given payload (no reboot)
 // Returns true on success, false on failure
 bool swapPayload(const char* path);
 

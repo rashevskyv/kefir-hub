@@ -34,7 +34,7 @@ namespace detail {
 auto GetCheatslipsToken() -> std::string {
     fs::FsNativeSd fs;
 
-    // List of token paths to check (HATS-Tools first, then AIO for compatibility)
+    // our token first, then the one aio-switch-updater saved
     const char* token_paths[] = {TOKEN_PATH, AIO_TOKEN_PATH};
 
     for (const char* token_path : token_paths) {
@@ -164,7 +164,7 @@ auto SaveCheatslipsToken(const std::string& token) -> void {
     fs::FsNativeSd fs;
 
     // Create directory if needed
-    fs.CreateDirectoryRecursively("/config/hats-tools");
+    fs.CreateDirectoryRecursively(CHEATS_DATA_DIR);
 
     // Create JSON document
     yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
@@ -228,7 +228,7 @@ auto DeleteAllCheatsForTitle(u64 title_id) -> bool {
     return false;
 }
 
-// Clear cached cheats database from /config/hats-tools/cheats-db
+// Clear cached cheats database from /config/kefir/cheats/cheats-db
 auto ClearCheatsCache() -> Result {
     fs::FsNativeSd fs;
 

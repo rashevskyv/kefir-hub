@@ -2,65 +2,10 @@
 #include "fs.hpp"
 #include "log.hpp"
 
-#include <dirent.h>
 #include <cstring>
 #include <string>
 
 namespace sphaira::hats {
-
-std::string getHatsVersion() {
-    std::string hatsVersion = "Not Found";
-
-    auto dir = opendir("/");
-    if (!dir) {
-        return hatsVersion;
-    }
-
-    while (auto d = readdir(dir)) {
-        if (d->d_type != DT_REG) {
-            continue;
-        }
-
-        const char* name = d->d_name;
-
-        // Check for fixed filename HATS_VERSION.txt
-        if (std::strcmp(name, "HATS_VERSION.txt") == 0) {
-            // Read the version from the file (first line is "# HATS-YYYY-MM-DD-hash")
-            std::string path = "/" + std::string(name);
-            FILE* f = fopen(path.c_str(), "r");
-            if (f) {
-                char line[64];
-                if (fgets(line, sizeof(line), f)) {
-                    // Remove trailing newline
-                    size_t len = std::strlen(line);
-                    if (len > 0 && line[len - 1] == '\n') {
-                        line[len - 1] = '\0';
-                    }
-                    // Skip leading "# " if present
-                    const char* start = line;
-                    if (std::strncmp(line, "# ", 2) == 0) {
-                        start = line + 2;
-                    }
-                    hatsVersion = std::string(start);
-                }
-                fclose(f);
-                break;
-            }
-        }
-
-        // Legacy support: check for old HATS-*.txt format
-        size_t len = std::strlen(name);
-        if (len > 9 && std::strncmp(name, "HATS-", 5) == 0 &&
-            std::strcmp(name + len - 4, ".txt") == 0 &&
-            hatsVersion == "Not Found") {
-            hatsVersion = std::string(name, len - 4);
-            break;
-        }
-    }
-
-    closedir(dir);
-    return hatsVersion;
-}
 
 std::string getSystemFirmware() {
     SetSysFirmwareVersion ver;
@@ -117,11 +62,6 @@ std::string getKefirVersion() {
         } else {
             fclose(f);
         }
-    }
-
-    std::string hats = getHatsVersion();
-    if (hats != "Not Found" && hats != "Unknown") {
-        return hats;
     }
 
     return "";

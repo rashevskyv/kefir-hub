@@ -57,7 +57,7 @@ auto GetBuildIdFailureMessage(BuildIdFailureReason reason) -> std::string {
 
 bool WritePayloadLaunchConfig(const fs::FsPath& payload_path) {
     fs::FsNativeSd fs;
-    fs.CreateDirectoryRecursively("/config/hats-tools");
+    fs.CreateDirectoryRecursively(CHEATS_DATA_DIR);
 
     std::string payload_path_fatfs = static_cast<const char*>(payload_path);
     if (payload_path_fatfs.starts_with('/')) {

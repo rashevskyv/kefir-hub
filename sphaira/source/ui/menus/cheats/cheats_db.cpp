@@ -105,7 +105,7 @@ auto LoadCheatMetadataCacheUnlocked() -> std::unordered_map<u64, CachedCheatMeta
 
 auto SaveCheatMetadataCacheUnlocked(const std::unordered_map<u64, CachedCheatMetadata>& entries) -> bool {
     fs::FsNativeSd fs;
-    fs.CreateDirectoryRecursively("/config/hats-tools");
+    fs.CreateDirectoryRecursively(CHEATS_DATA_DIR);
 
     yyjson_mut_doc* doc = yyjson_mut_doc_new(nullptr);
     if (!doc) {

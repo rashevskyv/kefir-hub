@@ -100,7 +100,7 @@ namespace {
             "autonogc=1\n"
             "updater2p=1\n"
             "\n"
-            "[HATS Payload]\n"
+            "[Kefir Hub]\n"
             "payload=%s\n",
             rel_p.c_str()
         );

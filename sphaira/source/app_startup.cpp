@@ -279,6 +279,10 @@ App::App(const char* argv0) {
     }
 
     fs.CreateDirectoryRecursively(paths::DATA_ROOT);
+    // cheats data from the HATS-Tools days (CheatSlips token, database cache) moves into our folder once
+    if (fs.DirExists("/config/hats-tools") && !fs.DirExists(paths::DATA_ROOT + "/cheats")) {
+        fs.RenameDirectory("/config/hats-tools", paths::DATA_ROOT + "/cheats");
+    }
     fs.CreateDirectory(paths::DATA_ROOT + "/assoc");
     fs.CreateDirectory(paths::DATA_ROOT + "/themes");
     fs.CreateDirectory(paths::DATA_ROOT + "/github");

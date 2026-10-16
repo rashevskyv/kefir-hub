@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.121 — Kefir version comes only from /switch/kefir-updater/version
+- `getHatsVersion` (HATS_VERSION.txt / HATS-*.txt in the SD root) removed; it was a fallback of `getKefirVersion` from the HATS pack, not ours. No version file → the header shows no Kefir, the Updater shows "not installed" and the changelog lists only the target version (0.14.120).
+- Cheats data folder /config/hats-tools → /config/kefir/cheats (CheatSlips token, cheats-db cache, metadata cache, payload-launch.ini); app start moves the old folder once when the new one does not exist. The hekate entry the Hub writes for a payload reboot is now [Kefir Hub] instead of [HATS Payload].
+- host tests: quick pass · nro: built · switch: pending (CheatSlips login survives the move; payload reboot entry name in hekate)
+
 ## v0.14.120 — drain time survives Hub restarts, time after 0 %; SD space check before Kefir/firmware downloads
 - Calibration state file gains drain1/2_at, zero1/2_at, alive1/2_at (`wizard::NoteDrain`, `AfterZero`, host test): "Draining for" counts from the first drain start of the cycle, not from the last Hub start; the first 0 % the console shows (psm, also the big number now) is kept, alive is written every 30 s; the page shows "Running after 0% for", the wizard's done cycle shows "after 0%: N min".
 - Crash fix (report from a console with plain Atmosphère, 0x767 right after "changelog_full" downloaded): without /switch/kefir-updater/version the Kefir changelog listed versions 1..927 and drew every line, overflowing the GPU command buffer. Now an unknown installed version lists only the target (`kefir_changelog_range.hpp`, host test) and `RenderChangelogText` draws only lines inside the visible area. Reproduced on .69 with 0.14.120 before the fix (version file renamed).
