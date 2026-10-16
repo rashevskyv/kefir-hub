@@ -312,6 +312,11 @@ auto ConsumeAccountDaemonsTerminated() -> bool {
 }
 
 auto CanOfferLaunchLink() -> bool {
+    // donor links on sysMMC get the console banned once it goes online: never offered by itself there.
+    if (!App::IsEmummc()) {
+        log_write("[ACC] CanOfferLaunchLink: sysMMC, never offered\n");
+        return false;
+    }
     if (g_launch_link_prompted) {
         log_write("[ACC] CanOfferLaunchLink: already prompted this session\n");
         return false;

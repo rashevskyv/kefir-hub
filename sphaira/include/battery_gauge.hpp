@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <optional>
 #include <string>
@@ -60,6 +61,12 @@ inline auto ParamsOf(const BattCal& c) -> Params {
 // gap is the wrong-% symptom (the voltage model allows for the discharge current; a Switch in use always
 // draws 0.5..1 A, seen -638 mA on .141). While charging the cell sits above its rest voltage: only a hint.
 inline constexpr int SOC_GAP = 10;
+// learned full capacity this many % under the design capacity counts as desync (user, 2026-10-16).
+inline constexpr unsigned CAPACITY_LOSS = 10;
+
+inline auto CapacityLow(std::uint16_t full, std::uint16_t design) -> bool {
+    return design && full * 100u < design * (100u - CAPACITY_LOSS);
+}
 inline constexpr int CHARGING_MA = 100;
 
 enum class Finding {
@@ -69,12 +76,13 @@ enum class Finding {
     CopyUnknown,     // this MMC's copy could not be read, so the chip is not compared with it
     VersionMismatch, // CAL0 battery version and set:cal disagree
     LiteNoCycles,    // Lite (version 2) with cycle count reliability off: the charge limit falls back
-    BrokenModel,     // learned full capacity below half the design capacity: no battery wears that far, the
-                     // chip learned a wrong model (detail: percent; "copy" when this MMC's copy is just as low)
-    LowCapacity,     // 50..70 % of the design capacity: wear, or the start of a bad model
+    BrokenModel,     // learned full capacity more than CAPACITY_LOSS % under the design capacity: the chip's
+                     // model is off (detail: percent; "copy" when this MMC's copy is just as low)
     OtherDiffers,    // the other MMC's saved copy differs from the chip: if the chip loses power while that
                      // MMC runs, HOS writes the old copy back (detail: parameter names)
     OtherUnknown,    // the page was not opened in the other MMC yet
+    CyclesDiffer,    // the MMCs count different charge cycles (detail: "294.97 371.96", this MMC first);
+                     // on a Lite the charge voltage limit follows the count, so it changes with the MMC
     SocGap,          // on battery: reported % and %-by-voltage differ by SOC_GAP or more (detail: "84 73")
     SocGapLoaded,    // the same gap while charging: read again with the charger out (detail: "84 73")
     NoSign,          // none of the desync signs; still says what was not checked (OtherUnknown, SocGapLoaded)
@@ -95,6 +103,8 @@ struct Input {
     int rep_soc{-1};             // % the chip reports (RepSOC high byte)
     int vf_soc{-1};              // % from the voltage model (VFSOC high byte)
     int avg_current_ma{};        // AvgCurrent, + = charging
+    std::uint32_t hos_cycles{};   // this MMC's cycle count x100
+    std::uint32_t other_cycles{}; // the other MMC's, x100 (with `other`)
 };
 
 struct Diagnosis {
@@ -129,12 +139,10 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
         out.push_back({Finding::LiteNoCycles, {}});
     }
     // FullCap is the second model parameter; the copy's FullCap is in hos.v[2].
-    const bool broken = in.design_cap && in.full_cap * 2u < in.design_cap;
+    const bool broken = CapacityLow(in.full_cap, in.design_cap);
     if (broken) {
-        const bool copy_too = in.hos_read && in.hos.v[2] * 2u < in.design_cap;
+        const bool copy_too = in.hos_read && CapacityLow(in.hos.v[2], in.design_cap);
         out.insert(out.begin(), {Finding::BrokenModel, std::to_string(in.full_cap * 100u / in.design_cap) + (copy_too ? " copy" : "")});
-    } else if (in.design_cap && in.full_cap * 10u < in.design_cap * 7u) {
-        out.push_back({Finding::LowCapacity, std::to_string(in.full_cap * 100u / in.design_cap)});
     }
     std::string other_differ;
     for (size_t i = 0; in.other && i < in.chip.v.size(); i++) {
@@ -144,6 +152,14 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     }
     if (!other_differ.empty()) {
         out.push_back({Finding::OtherDiffers, other_differ});
+    }
+    // a full cycle apart or more (x100 units); seen on .141: sysMMC 294.97, emuMMC 371.96
+    const bool cycles_differ = in.other && in.hos_read
+        && (in.hos_cycles > in.other_cycles ? in.hos_cycles - in.other_cycles : in.other_cycles - in.hos_cycles) >= 100;
+    if (cycles_differ) {
+        char buf[48];
+        std::snprintf(buf, sizeof(buf), "%.2f %.2f", in.hos_cycles / 100.0, in.other_cycles / 100.0);
+        out.push_back({Finding::CyclesDiffer, buf});
     }
     bool gap_at_rest = false;
     if (in.rep_soc >= 0 && in.vf_soc >= 0 && (in.rep_soc - in.vf_soc >= SOC_GAP || in.vf_soc - in.rep_soc >= SOC_GAP)) {
@@ -156,7 +172,7 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     }
     // restore flag, POR, copies that differ, a broken model and a gap at rest are the desync signs.
     const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty() && in.hos_read && !broken
-        && other_differ.empty() && !gap_at_rest;
+        && other_differ.empty() && !gap_at_rest && !cycles_differ;
     if (no_sign) {
         out.insert(out.begin(), {Finding::NoSign, {}});
     }

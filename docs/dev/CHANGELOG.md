@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
 
+## v0.14.108 — Battery: capacity under 90 % of design is desync, shown first in orange; MMC cycle counts compared; donor links never offered on sysMMC; a second Hub copy can be launched
+- Battery: "Full capacity / design" is the first verdict row, orange and "desync" under 90 % (user rule); the other MMC's cycle count is compared (.141: emuMMC 371.96 vs sysMMC 294.97, both copies' model equal); A on a row shows its help (A on a caption toggles). Account link: the launch offer is skipped on sysMMC; a manual link on sysMMC warns about the ban first (Back is default). Homebrew: the second-Kefir-Hub-copy question has Keep / Launch / Delete, Launch default (debug copies).
+- host tests: pass · nro: built · switch: .141 battery verdict shows 3032 / 3600 (84%) orange and cycles 371.96 / 294.97 orange; sysMMC link guard and the copy Launch button pending
+
 ## v0.14.107 — Battery: the % check counts on battery, not only at rest; the console's own % shown
 - A Switch in use always draws 0.5..1 A (.141: -638 mA, -457 mA), so the "at rest" (< 100 mA) rule never fired. Now any time it is not charging counts; charging stays a hint. New row "Charge on the console screen" (psm). uk: "Remaining capacity" was «Залишок пам'яті» (memory) → «Залишковий заряд».
 - host tests: pass · nro: built · switch: .141 on battery 12:03: screen 85 %, chip 84 %, by voltage 78 %, -457 mA → no sign; emuMMC copy = chip; sysMMC not checked yet

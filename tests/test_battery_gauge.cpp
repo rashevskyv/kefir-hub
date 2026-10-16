@@ -59,13 +59,12 @@ void RestoreFlagAndPorComeFirst() {
 
 void InformationalFindingsKeepNoSign() {
     // Lite: version 2, reliability off, worn battery; no desync sign
-    Input in{Sample(), Sample(), 0, 0, 0x2476, 0x1600, 1, 2, 0, true, std::nullopt, -1, -1, 0};
+    Input in{Sample(), Sample(), 0, 0, 0x2476, 0x2300, 1, 2, 0, true, std::nullopt, -1, -1, 0};
     const auto r = Diagnose(Known(in));
-    assert(r.size() == 4);
+    assert(r.size() == 3);
     assert(r[0].finding == Finding::NoSign);
     assert(r[1].finding == Finding::VersionMismatch);
     assert(r[2].finding == Finding::LiteNoCycles);
-    assert(r[3].finding == Finding::LowCapacity && r[3].detail == "60");
 }
 
 void UnknownVersionsAreNotCompared() {
@@ -124,6 +123,27 @@ void CopyFileLayout() {
     assert(ParamsOf(f.cal) == Sample() && f.cal.cycles == 37196);
 }
 
+void NinetyPercentRule() {
+    // .141: 3032 of 3600 mAh = 84 %: desync, the copy is as low
+    auto p = Sample();
+    p.v[2] = 0x17B0;
+    Input in{p, p, 0, 0, 0x1C20, 0x17B0, 2, 2, 1, true, std::nullopt, -1, -1, 0};
+    auto r = Diagnose(Known(in));
+    assert(r[0].finding == Finding::BrokenModel && r[0].detail == "84 copy");
+    assert(CapacityLow(0x194F, 0x1C20));   // 6479 of 7200: just under 90 %
+    assert(!CapacityLow(0x1950, 0x1C20));  // 6480: exactly 90 %
+}
+
+void CyclesApartAcrossMmcs() {
+    Input in{Sample(), Sample(), 0, 0, 0x2476, 0x2300, 2, 2, 1, true, Sample(), -1, -1, 0};
+    in.hos_cycles = 37196;
+    in.other_cycles = 29497;
+    const auto r = Diagnose(in);
+    assert(r.size() == 1 && r[0].finding == Finding::CyclesDiffer && r[0].detail == "371.96 294.97");
+    in.other_cycles = 37150; // under one cycle apart: fine
+    assert(Diagnose(in)[0].finding == Finding::NoSign);
+}
+
 } // namespace
 
 int main() {
@@ -137,5 +157,7 @@ int main() {
     CollapsedCapacityIsDesync();
     OtherMmcAndSocGap();
     CopyFileLayout();
+    NinetyPercentRule();
+    CyclesApartAcrossMmcs();
     std::puts("test_battery_gauge: ok");
 }

@@ -20,6 +20,10 @@ an app in the [File Browser](file-browser.md).
 
 When you exit the app, the Homebrew Menu (`/hbmenu.nro`) opens again.
 
+<!-- draft
+- a second Kefir Hub file among the apps (when Kefir Hub is your Homebrew Menu): A asks [[Keep]] / [[Launch]] / [[Delete]]; [[Launch]] is the default, so a debug copy still starts
+-->
+
 ## Sort and change the layout
 1. Press **+** ([[Options]]).
 2. Change [[Sort]], [[Order]], [[Layout]] or [[Show Hidden]]. The list updates at once.

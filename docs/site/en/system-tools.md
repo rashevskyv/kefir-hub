@@ -194,6 +194,9 @@ Create, rename, back up and link console user profiles. See [Users](users.md).
 - every open saves this MMC's copy (`/config/kefir/battery/<mmc>-copy.cal`); opened once in the other MMC, the page also shows [[Chip vs other MMC's copy]]; until then [[Other MMC]]: [[Not checked: boot it and open this page once]]
 - [[Charge: shown / by voltage]]: the % the console shows and the % from the cell voltage; 10+ points apart on battery (the console in normal use is fine) = the % is wrong; while charging only a hint; [[Charge on the console screen]] is the % HOS shows
 - [[No sign of desync found]] only when the other MMC was checked and the % was read on battery
+- first row of [[Verdict]]: [[Full capacity / design]] in mAh and %; more than 10 % under design is drawn orange and counts as desync (" — desync, the saved copy too")
+- [[Charge cycles: this / other MMC]] in orange when the two MMCs count a cycle or more apart (Lite: the charge voltage limit follows the count)
+- A on a row shows what it means; A on a section caption opens or closes it
 - why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions
 -->
 <!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->

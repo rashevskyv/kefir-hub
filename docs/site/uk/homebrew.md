@@ -20,6 +20,10 @@
 
 Коли ви вийдете із застосунку, знову відкриється Homebrew Menu (`/hbmenu.nro`).
 
+<!-- draft
+- a second Kefir Hub file among the apps (when Kefir Hub is your Homebrew Menu): A asks [[Keep]] / [[Launch]] / [[Delete]]; [[Launch]] is the default, so a debug copy still starts
+-->
+
 ## Сортування й вигляд
 1. Натисніть **+** ([[Options]]).
 2. Змініть [[Sort]], [[Order]], [[Layout]] або [[Show Hidden]]. Список оновиться одразу.

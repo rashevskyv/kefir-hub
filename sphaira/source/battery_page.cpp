@@ -156,29 +156,72 @@ auto MmcName(const Snapshot& s) -> std::string {
 auto FindingRow(const Diagnosis& r) -> system_info::Row {
     switch (r.finding) {
         case Finding::NoSign: return {"Verdict"_i18n, "No sign of desync found"_i18n};
-        case Finding::OtherDiffers: return {"Chip vs other MMC's copy"_i18n, "Differ: "_i18n + r.detail};
+        case Finding::OtherDiffers: return {"Chip vs other MMC's copy"_i18n, "Differ: "_i18n + r.detail, true};
+        case Finding::CyclesDiffer: {
+            const auto sp = r.detail.find(' ');
+            return {"Charge cycles: this / other MMC"_i18n, r.detail.substr(0, sp) + " / " + r.detail.substr(sp + 1), true};
+        }
         case Finding::OtherUnknown: return {"Other MMC"_i18n, "Not checked: boot it and open this page once"_i18n};
         case Finding::SocGap:
         case Finding::SocGapLoaded: {
             const auto sp = r.detail.find(' ');
             const auto text = r.detail.substr(0, sp) + "% / " + r.detail.substr(sp + 1) + "%";
             return {"Charge: shown / by voltage"_i18n, text + (r.finding == Finding::SocGap ? " " + "on battery: the % is wrong"_i18n
-                                                                                          : " " + "while charging: check with the charger out"_i18n)};
+                                                                                          : " " + "while charging: check with the charger out"_i18n),
+                    r.finding == Finding::SocGap};
         }
-        case Finding::RestorePending: return {"Restore flag (MiscCFG bit 15)"_i18n, "Set: HOS rewrites the chip from this MMC at the next start"_i18n};
-        case Finding::PowerOnReset: return {"Restart flag (Status POR)"_i18n, "Set: the chip restarted and was not set up since"_i18n};
-        case Finding::CopyDiffers: return {"Chip vs this MMC's copy"_i18n, "Differ: "_i18n + r.detail};
+        case Finding::RestorePending: return {"Restore flag (MiscCFG bit 15)"_i18n, "Set: HOS rewrites the chip from this MMC at the next start"_i18n, true};
+        case Finding::PowerOnReset: return {"Restart flag (Status POR)"_i18n, "Set: the chip restarted and was not set up since"_i18n, true};
+        case Finding::CopyDiffers: return {"Chip vs this MMC's copy"_i18n, "Differ: "_i18n + r.detail, true};
         case Finding::CopyUnknown: return {"Chip vs this MMC's copy"_i18n, "Not compared: the copy could not be read"_i18n};
         case Finding::VersionMismatch: return {"Battery version"_i18n, "CAL0 and set:cal disagree"_i18n};
         case Finding::LiteNoCycles: return {"Cycle count"_i18n, "Not trusted: charge limit falls back to 4.192 V"_i18n};
         case Finding::BrokenModel: {
             const bool copy = r.detail.ends_with(" copy");
             const auto pct = r.detail.substr(0, r.detail.find(' '));
-            return {"Desync: learned capacity"_i18n, pct + "% " + (copy ? "of design, the saved copy too"_i18n : "of design: the chip's model is broken"_i18n)};
+            return {"Desync: learned capacity"_i18n, pct + "% " + (copy ? "of design, the saved copy too"_i18n : "of design: the chip's model is off"_i18n), true};
         }
-        case Finding::LowCapacity: return {"Learned capacity"_i18n, r.detail + "% " + "of design: worn or mislearned"_i18n};
     }
     return {};
+}
+
+// + on a row: what it means. Keyed by the row label (translated), model rows by register name.
+void AddHelp(std::vector<system_info::Group>& groups) {
+    const std::pair<std::string, std::string> help[] = {
+        {"Full capacity / design"_i18n, "Full capacity is what the fuel gauge chip has learned the battery holds now; design is the factory capacity. More than 10% under design means the chip's battery model is off: the % runs out early or jumps. Calibration relearns it."_i18n},
+        {"Desync: learned capacity"_i18n, "Full capacity is what the fuel gauge chip has learned the battery holds now; design is the factory capacity. More than 10% under design means the chip's battery model is off: the % runs out early or jumps. Calibration relearns it."_i18n},
+        {"Charge: shown / by voltage"_i18n, "Shown: the % the chip gives by counting the current that goes in and out. By voltage: the % the chip works out from the cell voltage alone. A wrong battery model makes them drift apart. A few points is normal; 10 or more on battery means the shown % is wrong. While charging the voltage reads high, so compare on battery."_i18n},
+        {"Charge on the console screen"_i18n, "The % in the corner of the screen. HOS takes the chip's %, rounds it and scales it to the charge limit, so it can be a few points above the chip's."_i18n},
+        {"Average current"_i18n, "Current over the last minute. Minus: the battery is discharging. Plus: it is charging."_i18n},
+        {"Remaining capacity"_i18n, "The charge the chip counts as left in the battery, in mAh."_i18n},
+        {"Full capacity now"_i18n, "What the chip has learned the battery holds when full."_i18n},
+        {"Design capacity"_i18n, "The battery's factory capacity, written into the chip when it was set up."_i18n},
+        {"Cell voltage"_i18n, "The battery voltage now, under the current load."_i18n},
+        {"Open-circuit voltage"_i18n, "The chip's estimate of the voltage with no load; the % by voltage comes from it."_i18n},
+        {"Cycles register"_i18n, "The chip counts up to about 2 cycles, then HOS adds them to its own counter (Charge cycles) and resets the chip's."_i18n},
+        {"Charge cycles"_i18n, "Full charge cycles HOS has counted for this battery, kept in this MMC's system settings."_i18n},
+        {"MiscCFG / Status"_i18n, "Chip flags. MiscCFG bit 15 (8000): the chip lost power and waits for HOS to write its model back. Status bit 1 (0002): the chip restarted."_i18n},
+        {"Other MMC"_i18n, "sysMMC and emuMMC each keep their own copy of the chip's model. Open this page once in the other MMC; the page then compares the chip with that copy."_i18n},
+        {"Chip vs other MMC's copy"_i18n, "If the chip loses power while the other MMC runs, HOS writes that MMC's older copy back into the chip; the % then jumps."_i18n},
+        {"Charge cycles: this / other MMC"_i18n, "Each MMC counts charge cycles on its own. On a Lite the charge voltage limit drops as the count grows, so the battery charges to a different voltage in each MMC. One count for both MMCs (from the SD) comes with the calibration step."_i18n},
+        {"Chip vs this MMC's copy"_i18n, "HOS keeps a copy of the chip's model in this MMC's system settings and writes it back after the chip lost power."_i18n},
+        {"Verdict"_i18n, "Desync signs: capacity more than 10% under design, the % by voltage 10+ points away on battery, the chip and a saved copy differing, a pending restore. Orange values need action."_i18n},
+    };
+    const auto model = "A learned parameter of the chip's battery model: the chip's value / this MMC's saved copy. HOS writes the copy back into the chip after the chip lost power. ≠ marks a difference."_i18n;
+    for (auto& g : groups) {
+        for (auto& r : g.rows) {
+            for (const auto& [label, text] : help) {
+                if (r.label == label) {
+                    r.help = text;
+                }
+            }
+            for (const auto* name : PARAM_NAMES) {
+                if (r.label.starts_with(name)) {
+                    r.help = model;
+                }
+            }
+        }
+    }
 }
 
 auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
@@ -194,12 +237,23 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
     in.hos_read = s.hos_ok;
     if (s.other) {
         in.other = ParamsOf(s.other->cal);
+        in.other_cycles = s.other->cal.cycles;
     }
+    in.hos_cycles = s.hos.cycles_actual;
     in.rep_soc = s.regs[MAX17050_RepSOC] >> 8;
     in.vf_soc = s.regs[MAX17050_VFSOC] >> 8;
     in.avg_current_ma = static_cast<int>(static_cast<s16>(s.regs[MAX17050_AvgCurrent]) * 0.15625);
-    system_info::Group verdict{"Verdict"_i18n, {}};
+    // the number that decides it, first: what the chip thinks the battery holds against the factory value
+    const auto full = s.regs[MAX17050_FullCap];
+    const auto design = s.regs[MAX17050_DesignCap];
+    system_info::Group verdict{"Verdict"_i18n, {{"Full capacity / design"_i18n,
+        Fmt("%u / %u mAh (%u%%)", full / 2, design / 2, design ? full * 100u / design : 0u), CapacityLow(full, design)}}};
     for (const auto& r : Diagnose(in)) {
+        if (r.finding == Finding::BrokenModel) {
+            // the capacity row above already shows the numbers: say what they mean there
+            verdict.rows[0].value += r.detail.ends_with(" copy") ? " — " + "desync, the saved copy too"_i18n : " — " + "desync"_i18n;
+            continue;
+        }
         verdict.rows.push_back(FindingRow(r));
     }
     out.push_back(std::move(verdict));
@@ -250,6 +304,7 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
         bat.rows.push_back({"Battery lot"_i18n, s.lot});
     }
     out.push_back(std::move(bat));
+    AddHelp(out);
     return out;
 }
 

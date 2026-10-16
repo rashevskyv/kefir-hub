@@ -198,10 +198,15 @@ auto Menu::OfferDeleteHubCopy(const NroEntry& e) -> bool {
     }
 
     const fs::FsPath path = e.path;
+    // Launch stays possible: a second copy can be a debug build the user wants to run.
     App::Push<OptionBox>(
-        "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Delete it?"_i18n,
-        "Keep"_i18n, "Delete"_i18n, 0, [this, path](auto op_index){
+        "Kefir Hub is already installed as your Homebrew Menu.\nThis file is a second copy. Launch it or delete it?"_i18n,
+        "Keep"_i18n, "Launch"_i18n, "Delete"_i18n, 1, [this, path](auto op_index){
             if (!op_index || !*op_index) {
+                return;
+            }
+            if (*op_index == 1) {
+                nro_launch(path);
                 return;
             }
             // a thread: the icon reinstall takes a few seconds. The file is deleted only after

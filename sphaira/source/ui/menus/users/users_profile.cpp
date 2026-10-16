@@ -240,12 +240,27 @@ void Menu::ConfirmLinkNintendoAccount() {
         return;
     }
 
+    const auto confirm = [this]() {
+        App::Push<OptionBox>(
+            "Link all currently unlinked profiles using built-in Nintendo Account donors? Each unlinked profile receives a different donor. Already linked profiles will not be changed. The console will reboot immediately."_i18n,
+            "Cancel"_i18n, "Link and reboot"_i18n, 1,
+            [this](auto op) {
+                if (op && *op == 1) {
+                    RunLinkNintendoAccount();
+                }
+            });
+    };
+    if (App::IsEmummc()) {
+        confirm();
+        return;
+    }
+    // sysMMC: a donor account on the original system is a ban as soon as the console goes online.
     App::Push<OptionBox>(
-        "Link all currently unlinked profiles using built-in Nintendo Account donors? Each unlinked profile receives a different donor. Already linked profiles will not be changed. The console will reboot immediately."_i18n,
-        "Cancel"_i18n, "Link and reboot"_i18n, 1,
-        [this](auto op) {
+        "This console is running sysMMC, its original system. A donor Nintendo Account linked here gets the console banned as soon as sysMMC goes online. Link accounts only in emuMMC.\n\nLink here anyway?"_i18n,
+        "Back"_i18n, "Link anyway"_i18n, 0,
+        [confirm](auto op) {
             if (op && *op == 1) {
-                RunLinkNintendoAccount();
+                confirm();
             }
         });
 }

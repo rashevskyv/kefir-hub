@@ -1,4 +1,5 @@
 #include "ui/menus/system_info_menu.hpp"
+#include "ui/option_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/progress_box.hpp"
 #include "app.hpp"
@@ -9,6 +10,9 @@
 #include <memory>
 
 namespace sphaira::ui::menu::sysinfo {
+
+// orange, for values that need action; the theme has only a red error colour.
+const NVGcolor WARN_COLOUR = nvgRGB(0xF5, 0x9E, 0x0B);
 namespace {
 
 constexpr float ROW_H = 56.f;
@@ -78,6 +82,19 @@ Menu::Menu(std::string title, std::vector<system_info::Group> groups, std::strin
     SetTitle(std::move(title));
     m_open.assign(m_groups.size(), true);
     SetAction(Button::X, Action{std::move(x_label), std::move(x_action)});
+    // A on a row explains it; A on a section caption still opens and closes it.
+    SetAction(Button::A, Action{"Open / Help"_i18n, [this](){
+        if (m_rows.empty()) {
+            return;
+        }
+        const auto& at = m_rows[m_index];
+        if (at.row < 0) {
+            ToggleGroup(at.group);
+            return;
+        }
+        const auto& r = m_groups[at.group].rows[at.row];
+        App::Push<OptionBox>(r.label + "\n\n" + (r.help.empty() ? "No help for this row."_i18n : r.help), "OK"_i18n);
+    }});
     Rebuild();
     SetIndex(0);
 }
@@ -203,7 +220,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const float value_x = v.x + v.w * VALUE_X;
         const auto label_col = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         DrawClipped(vg, v.x + 54.f, mid_y, value_x - v.x - 66.f, 18.f, label_col, r.label.c_str(), true);
-        DrawClipped(vg, value_x, mid_y, v.x + v.w - 20.f - value_x, 18.f, accent, r.value.c_str());
+        DrawClipped(vg, value_x, mid_y, v.x + v.w - 20.f - value_x, 18.f, r.warn ? WARN_COLOUR : accent, r.value.c_str());
     });
 }
 

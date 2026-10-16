@@ -11,6 +11,8 @@ namespace sphaira::system_info {
 struct Row {
     std::string label;
     std::string value;
+    bool warn{};       // value drawn orange: something to act on (Tools → Battery)
+    std::string help{}; // shown with + on the row; empty = no help
 };
 
 struct Group {
