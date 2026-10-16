@@ -277,7 +277,8 @@ void Menu::FetchLinks() {
             std::string latest_kefir;
             if (!result.success || !ParseUpdaterLinks(result.path, entries, latest_kefir)) {
                 m_retry_on_connect = !net::IsConnectedCached();
-                m_error_message = "Failed to load updater lists.";
+                m_error_message = m_retry_on_connect ? "No internet connection. The list loads when the console connects."_i18n
+                                                     : "Failed to load updater lists."_i18n;
                 m_index = 0;
                 SetIndex(0);
                 return false;
@@ -289,7 +290,7 @@ void Menu::FetchLinks() {
             m_latest_kefir = latest_kefir.empty() ? "Unknown" : latest_kefir;
 
             if (entries.empty()) {
-                m_error_message = "No Kefir or firmware downloads found.";
+                m_error_message = "No Kefir or firmware downloads found."_i18n;
             }
 
             m_index = 0;

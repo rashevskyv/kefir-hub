@@ -1,5 +1,6 @@
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "fs.hpp"
+#include "log.hpp"
 #include "utils/utils.hpp"
 #include <minIni.h>
 #include <dirent.h>
@@ -154,6 +155,24 @@ auto EnsureParentDirectory(const std::string& path) -> Result {
     R_SUCCEED();
 }
 
+static bool SameFileContents(const std::string& a, const std::string& b) {
+    FILE* fa = std::fopen(a.c_str(), "rb");
+    FILE* fb = fa ? std::fopen(b.c_str(), "rb") : nullptr;
+    bool same = fa && fb;
+    std::array<char, 16 * 1024> ba{}, bb{};
+    while (same) {
+        const auto na = std::fread(ba.data(), 1, ba.size(), fa);
+        const auto nb = std::fread(bb.data(), 1, bb.size(), fb);
+        same = na == nb && !std::memcmp(ba.data(), bb.data(), na);
+        if (!na) {
+            break;
+        }
+    }
+    if (fa) std::fclose(fa);
+    if (fb) std::fclose(fb);
+    return same;
+}
+
 auto CopyFileSimple(const std::string& src, const std::string& dst) -> Result {
     R_TRY(EnsureParentDirectory(dst));
 
@@ -164,8 +183,15 @@ auto CopyFileSimple(const std::string& src, const std::string& dst) -> Result {
 
     FILE* out = std::fopen(dst.c_str(), "wb");
     if (!out) {
+        const auto rc = fsdevGetLastResult();
         std::fclose(in);
-        R_THROW(fsdevGetLastResult());
+        // The system keeps some files open (the romfs of a running applet, a shared font); such a file cannot
+        // be rewritten, but when it already holds the same bytes the copy is done.
+        if (rc == FsError_TargetLocked && SameFileContents(src, dst)) {
+            R_SUCCEED();
+        }
+        log_write("[copy] %s: 0x%X\n", dst.c_str(), rc);
+        R_THROW(rc);
     }
 
     std::array<char, 64 * 1024> buf{};

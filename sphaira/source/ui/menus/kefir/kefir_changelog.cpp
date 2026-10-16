@@ -104,7 +104,7 @@ auto MergeDirectory(ProgressBox* pbox, fs::FsNativeSd& fs, const fs::FsPath& src
             if (fs.FileExists(dst_path)) {
                 R_TRY(fs.DeleteFile(dst_path));
             }
-            pbox->NewTransfer("Copying " + dst_path.toString());
+            pbox->NewTransfer("Copying"_i18n + " " + dst_path.toString());
             R_TRY(pbox->CopyFile(&fs, src_path, dst_path, true));
         }
     }
@@ -118,7 +118,7 @@ auto CopyIfExists(ProgressBox* pbox, fs::FsNativeSd& fs, const fs::FsPath& src, 
     }
 
     R_TRY(fs.CreateDirectoryRecursivelyWithPath(dst));
-    pbox->NewTransfer("Copying " + dst.toString());
+    pbox->NewTransfer("Copying"_i18n + " " + dst.toString());
     return pbox->CopyFile(&fs, src, dst, true);
 }
 
@@ -165,7 +165,7 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
         fs.DeleteFile(AMS_ZIP);
     }
 
-    pbox->NewTransfer("Downloading " + entry.name);
+    pbox->NewTransfer("Downloading"_i18n + " " + entry.name);
     const auto result = curl::Api().ToFile(
         curl::Url{entry.url},
         curl::Path{AMS_ZIP},
@@ -191,7 +191,7 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
     );
     R_TRY(fs.CreateDirectoryRecursively(KEFIR_STAGING));
 
-    pbox->NewTransfer("Extracting to /kefir...");
+    pbox->NewTransfer("Extracting to /kefir..."_i18n);
     R_TRY(thread::TransferUnzipAll(pbox, AMS_ZIP, &fs, KEFIR_STAGING));
 
     if (fs.DirExists(KEFIR_PATH)) {
@@ -204,7 +204,7 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
         if (fs.FileExists("/payload.bin")) {
             R_TRY(fs.DeleteFile("/payload.bin"));
         }
-        pbox->NewTransfer("Copying /payload.bin");
+        pbox->NewTransfer("Copying"_i18n + " /payload.bin");
         R_TRY(pbox->CopyFile(&fs, "/kefir/payload.bin", "/payload.bin", true));
     }
 

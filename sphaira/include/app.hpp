@@ -475,7 +475,7 @@ public:
     option::OptionBool m_hdd_write_protect{INI_SECTION, "hdd_write_protect", false};
     option::OptionString m_webdav_url{INI_SECTION, "webdav_url", ""};
 
-    option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", false};
+    option::OptionBool m_log_enabled{INI_SECTION, "log_enabled", true}; // on while in development; the owner turns it off for the release
     // debug: button presses from /config/kefir/demo/input.txt (demo_cmd.hpp), for tests over MTP.
     option::OptionBool m_script_input{INI_SECTION, "script_input", false};
     option::OptionLong m_auto_update{INI_SECTION, "auto_update", 1}; // Silent; 0=Off, 2=Ask; old 3 (On demand) maps to Silent

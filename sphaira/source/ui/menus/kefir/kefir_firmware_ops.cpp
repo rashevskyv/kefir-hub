@@ -397,7 +397,7 @@ void CleanupFirmwareFiles(ProgressBox* pbox, const fs::FsPath& path, bool is_man
     }
 
     if (pbox) {
-        pbox->NewTransfer("Removing firmware files...");
+        pbox->NewTransfer("Removing firmware files..."_i18n);
     }
 
     if (fs.DirExists(firmware_path)) {
@@ -445,7 +445,7 @@ auto InstallValidatedFirmware(ProgressBox* pbox, bool use_exfat, const fs::FsPat
     HeapProbe("start");
     constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
     const auto service_path = BuildFirmwareServicePath(path);
-    pbox->NewTransfer("Setting up system update...");
+    pbox->NewTransfer("Setting up system update..."_i18n);
     R_TRY(amssuSetupUpdate(nullptr, UPDATE_TASK_BUFFER_SIZE, service_path.c_str(), use_exfat));
 
     HeapProbe("setup");

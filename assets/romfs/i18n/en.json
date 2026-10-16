@@ -3430,5 +3430,18 @@
   "Drain the battery now? Unplug the charger and keep the console in your hands. Kefir Hub sets the screen to full brightness and loads the CPU and GPU until the console switches itself off; the load pauses above 60 °C. Afterwards charge it to 100% and open Kefir Hub.": "Drain the battery now? Unplug the charger and keep the console in your hands. Kefir Hub sets the screen to full brightness and loads the CPU and GPU until the console switches itself off; the load pauses above 60 °C. Afterwards charge it to 100% and open Kefir Hub.",
   "Next: A starts the drain. Done: ": "Next: A starts the drain. Done: ",
   "Draining for": "Draining for",
-  "Switch-off in about": "Switch-off in about"
+  "Switch-off in about": "Switch-off in about",
+  "%s replaces only these system languages:%s\n\nSet one of them in %s, then select %s again.": "%s replaces only these system languages:%s\n\nSet one of them in %s, then select %s again.",
+  "%s replaces %s. The console reboots after the install.": "%s replaces %s. The console reboots after the install.",
+  "This translation was made for firmware %s; some system text can be missing or untranslated.": "This translation was made for firmware %s; some system text can be missing or untranslated.",
+  "Firmware: ": "Firmware: ",
+  "Console Firmware: ": "Console Firmware: ",
+  "Failed to load updater lists.": "Failed to load updater lists.",
+  "No Kefir or firmware downloads found.": "No Kefir or firmware downloads found.",
+  "Extracting to /kefir...": "Extracting to /kefir...",
+  "Extracting to /firmware...": "Extracting to /firmware...",
+  "Extracting firmware...": "Extracting firmware...",
+  "Removing firmware files...": "Removing firmware files...",
+  "Setting up system update...": "Setting up system update...",
+  "No internet connection. The list loads when the console connects.": "No internet connection. The list loads when the console connects."
 }

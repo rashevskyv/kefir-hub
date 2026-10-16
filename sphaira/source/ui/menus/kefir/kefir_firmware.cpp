@@ -251,7 +251,7 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
         fs.DeleteFile(FIRMWARE_ZIP);
     }
 
-    pbox->NewTransfer("Downloading " + entry.name);
+    pbox->NewTransfer("Downloading"_i18n + " " + entry.name);
     const auto result = curl::Api().ToFile(
         curl::Url{entry.url},
         curl::Path{FIRMWARE_ZIP},
@@ -269,7 +269,7 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
     }
     R_TRY(fs.CreateDirectoryRecursively(FIRMWARE_DEST));
 
-    pbox->NewTransfer("Extracting to /firmware...");
+    pbox->NewTransfer("Extracting to /firmware..."_i18n);
     R_TRY(thread::TransferUnzipAll(pbox, FIRMWARE_ZIP, &fs, FIRMWARE_DEST));
     R_TRY(fs.Commit());
 
@@ -292,7 +292,7 @@ auto ExtractManualFirmwareZip(ProgressBox* pbox, const fs::FsPath& zip_path) -> 
     }
     R_TRY(fs.CreateDirectoryRecursively(MANUAL_FIRMWARE_DEST));
 
-    pbox->NewTransfer("Extracting firmware...");
+    pbox->NewTransfer("Extracting firmware..."_i18n);
     const Result rc = thread::TransferUnzipAll(pbox, zip_path, &fs, MANUAL_FIRMWARE_DEST);
     if (R_FAILED(rc)) {
         if (fs.DirExists(MANUAL_FIRMWARE_DEST)) {

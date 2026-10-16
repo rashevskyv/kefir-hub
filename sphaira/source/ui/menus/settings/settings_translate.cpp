@@ -3,6 +3,7 @@
 #include "ui/menus/settings/settings_kefir.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
+#include "ui/menus/settings/translation_match.hpp"
 #include "ui/menus/settings/translation_policy.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
 #include "hats_version.hpp"
@@ -15,10 +16,11 @@
 #include "ui/hold_confirm_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
-#include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 
 #include <algorithm>
+#include <cstring>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <utility>
@@ -29,67 +31,86 @@ namespace {
 
 using namespace detail;
 
-bool IsOptionApplicable(const std::pair<std::string, std::string>& option, SetLanguage console_lang, SetRegion console_region) {
-    std::string label = option.first;
-    std::string dir = option.second;
-    std::transform(label.begin(), label.end(), label.begin(), [](unsigned char c){ return std::tolower(c); });
-    std::transform(dir.begin(), dir.end(), dir.begin(), [](unsigned char c){ return std::tolower(c); });
-    std::string opt = label + " " + dir;
+// "en-US", "ru", "es-419", ...: the language the system menus are shown in
+auto SystemLanguageCode() -> std::string {
+    u64 code{};
+    if (R_FAILED(setGetSystemLanguage(&code))) {
+        return {};
+    }
+    char s[sizeof(code) + 1]{};
+    std::memcpy(s, &code, sizeof(code));
+    return s;
+}
 
-    // Detect language of the option
-    bool opt_is_english = (opt.find("english") != std::string::npos || opt.find("en-") != std::string::npos || opt == "en" || opt.find(" en") != std::string::npos);
-    bool opt_is_russian = (opt.find("russian") != std::string::npos || opt.find("ru-") != std::string::npos || opt == "ru" || opt.find(" ru") != std::string::npos);
-    bool opt_is_french = (opt.find("french") != std::string::npos || opt.find("fr-") != std::string::npos || opt == "fr" || opt.find(" fr") != std::string::npos);
-    bool opt_is_german = (opt.find("german") != std::string::npos || opt.find("de-") != std::string::npos || opt == "de" || opt.find(" de") != std::string::npos);
-    bool opt_is_italian = (opt.find("italian") != std::string::npos || opt.find("it-") != std::string::npos || opt == "it" || opt.find(" it") != std::string::npos);
-    bool opt_is_spanish = (opt.find("spanish") != std::string::npos || opt.find("es-") != std::string::npos || opt == "es" || opt.find(" es") != std::string::npos);
-    bool opt_is_chinese = (opt.find("chinese") != std::string::npos || opt.find("zh-") != std::string::npos || opt == "zh" || opt.find(" zh") != std::string::npos);
-    bool opt_is_korean = (opt.find("korean") != std::string::npos || opt.find("ko-") != std::string::npos || opt == "ko" || opt.find(" ko") != std::string::npos);
-    bool opt_is_dutch = (opt.find("dutch") != std::string::npos || opt.find("nl-") != std::string::npos || opt == "nl" || opt.find(" nl") != std::string::npos);
-    bool opt_is_portuguese = (opt.find("portuguese") != std::string::npos || opt.find("pt-") != std::string::npos || opt == "pt" || opt.find(" pt") != std::string::npos);
-    bool opt_is_japanese = (opt.find("japanese") != std::string::npos || opt.find("ja-") != std::string::npos || opt == "ja" || opt.find(" ja") != std::string::npos);
+// Replaces the first %s in fmt with each arg in turn.
+auto Fill(std::string fmt, std::initializer_list<std::string> args) -> std::string {
+    size_t from = 0;
+    for (const auto& a : args) {
+        const auto pos = fmt.find("%s", from);
+        if (pos == std::string::npos) {
+            break;
+        }
+        fmt.replace(pos, 2, a);
+        from = pos + a.size();
+    }
+    return fmt;
+}
 
-    // Check if console language matches
-    bool lang_matches = false;
-    if (opt_is_english && (console_lang == SetLanguage_ENUS || console_lang == SetLanguage_ENGB)) lang_matches = true;
-    else if (opt_is_russian && console_lang == SetLanguage_RU) lang_matches = true;
-    else if (opt_is_french && (console_lang == SetLanguage_FR || console_lang == SetLanguage_FRCA)) lang_matches = true;
-    else if (opt_is_german && console_lang == SetLanguage_DE) lang_matches = true;
-    else if (opt_is_italian && console_lang == SetLanguage_IT) lang_matches = true;
-    else if (opt_is_spanish && (console_lang == SetLanguage_ES || console_lang == SetLanguage_ES419)) lang_matches = true;
-    else if (opt_is_chinese && (console_lang == SetLanguage_ZHCN || console_lang == SetLanguage_ZHTW || console_lang == SetLanguage_ZHHANS || console_lang == SetLanguage_ZHHANT)) lang_matches = true;
-    else if (opt_is_korean && console_lang == SetLanguage_KO) lang_matches = true;
-    else if (opt_is_dutch && console_lang == SetLanguage_NL) lang_matches = true;
-    else if (opt_is_portuguese && (console_lang == SetLanguage_PT || console_lang == SetLanguage_PTBR)) lang_matches = true;
-    else if (opt_is_japanese && console_lang == SetLanguage_JA) lang_matches = true;
-    else if (!opt_is_english && !opt_is_russian && !opt_is_french && !opt_is_german && !opt_is_italian && 
-             !opt_is_spanish && !opt_is_chinese && !opt_is_korean && !opt_is_dutch && !opt_is_portuguese && !opt_is_japanese) {
-        lang_matches = true;
+auto InstallTranslation(const InterfaceTranslationEntry& entry, const std::string& dir) {
+    App::Push<ProgressBox>(
+        0,
+        "Installing"_i18n,
+        entry.name,
+        [entry, dir](auto pbox) -> Result {
+            return InstallInterfaceTranslation(pbox, entry, dir);
+        },
+        [](Result rc){
+            if (R_FAILED(rc)) {
+                App::PushErrorBox(rc, "Failed to install translation"_i18n);
+            }
+        }
+    );
+}
+
+// The translation goes over the system language the console uses now; when it has no folder for that
+// language, say which system languages it replaces and where the setting is, in the system's own words.
+auto OpenTranslation(const InterfaceTranslationEntry& entry, const FirmwareCompatibility& compat) {
+    const auto code = SystemLanguageCode();
+    const auto it = std::find_if(entry.replacements.cbegin(), entry.replacements.cend(), [&](const auto& r) {
+        return translation::Fits(r.second, code);
+    });
+
+    if (it == entry.replacements.cend()) {
+        std::string langs;
+        for (const auto& [label, dir] : entry.replacements) {
+            const auto name = translation::SystemLanguageName(dir);
+            langs += "\n• " + (name.empty() ? label : name);
+        }
+        App::Push<OptionBox>(
+            Fill("%s replaces only these system languages:%s\n\nSet one of them in %s, then select %s again."_i18n,
+                 {entry.name, langs, translation::LanguageSettingPath(code), entry.name}),
+            "OK"_i18n
+        );
+        return;
     }
 
-    // Detect region of the option
-    bool opt_is_usa = (opt.find("american") != std::string::npos || opt.find("usa") != std::string::npos || opt.find("-us") != std::string::npos || opt.find("419") != std::string::npos || opt.find("-br") != std::string::npos);
-    bool opt_is_eur = (opt.find("europe") != std::string::npos || opt.find("eur") != std::string::npos || opt.find("-gb") != std::string::npos || opt.find("british") != std::string::npos);
-    bool opt_is_jpn = (opt.find("japan") != std::string::npos || opt.find("jpn") != std::string::npos || opt.find("-jp") != std::string::npos);
-    bool opt_is_aus = (opt.find("australia") != std::string::npos || opt.find("aus") != std::string::npos);
-    bool opt_is_chn = (opt.find("china") != std::string::npos || opt.find("chn") != std::string::npos || opt.find("-cn") != std::string::npos);
-    bool opt_is_kor = (opt.find("korea") != std::string::npos || opt.find("kor") != std::string::npos || opt.find("-kr") != std::string::npos);
-    bool opt_is_twn = (opt.find("taiwan") != std::string::npos || opt.find("twn") != std::string::npos || opt.find("-tw") != std::string::npos);
-
-    // Check if console region matches
-    bool region_matches = false;
-    if (opt_is_usa && console_region == SetRegion_USA) region_matches = true;
-    else if (opt_is_eur && console_region == SetRegion_EUR) region_matches = true;
-    else if (opt_is_jpn && console_region == SetRegion_JPN) region_matches = true;
-    else if (opt_is_aus && (console_region == SetRegion_AUS || console_region == SetRegion_EUR)) region_matches = true;
-    else if (opt_is_chn && console_region == SetRegion_CHN) region_matches = true;
-    else if (opt_is_kor && console_region == SetRegion_HTK) region_matches = true;
-    else if (opt_is_twn && console_region == SetRegion_HTK) region_matches = true;
-    else if (!opt_is_usa && !opt_is_eur && !opt_is_jpn && !opt_is_aus && !opt_is_chn && !opt_is_kor && !opt_is_twn) {
-        region_matches = true;
+    const auto dir = it->second;
+    auto msg = Fill("%s replaces %s. The console reboots after the install."_i18n,
+                    {entry.name, translation::SystemLanguageName(dir).empty() ? it->first : translation::SystemLanguageName(dir)});
+    if (entry.warning_required) {
+        const auto target_fw = ExtractFirmwareFromTag(compat.target_tag);
+        msg += "\n\n" + Fill("This translation was made for firmware %s; some system text can be missing or untranslated."_i18n,
+                             {target_fw.empty() ? std::string{"?"} : target_fw});
     }
-
-    return lang_matches && region_matches;
+    App::Push<OptionBox>(
+        msg,
+        "Cancel"_i18n, "Install"_i18n, 1,
+        [entry, dir](auto op_index){
+            if (op_index && *op_index == 1) {
+                InstallTranslation(entry, dir);
+            }
+        }
+    );
 }
 
 auto FormatUnavailableMsg(const std::string& fw) -> std::string {
@@ -156,7 +177,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
     if (!compat.available) {
         const auto msg = FormatUnavailableMsg(fw);
         items.emplace_back(SettingsItem{
-            "Console Firmware: " + fw,
+            "Console Firmware: "_i18n + fw,
             msg,
             [](){ return "Unsupported"_i18n; },
             [msg]() {
@@ -178,13 +199,10 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(MakePackageAction({
         has_cache ? "Refresh translations"_i18n : "Load translations"_i18n,
-        "Firmware: " + fw,
+        "Firmware: "_i18n + fw,
         [compat, fw](auto pbox) -> Result {
             return FetchAndCacheTranslations(pbox, compat.target_tag, compat.metadata_tag, fw, compat.warning_required);
         },
-        true,
-        "Fetch translations for firmware " + fw + "?\n\nHold A to continue.",
-        0.5f,
     }));
 
     items.emplace_back(MakeRemoveTranslationItem());
@@ -195,95 +213,7 @@ auto BuildTranslateItems() -> std::vector<SettingsItem> {
             {},
             {},
             [entry, compat](){
-                const auto& options = entry.replacements;
-                if (options.empty()) {
-                    App::PushErrorBox(Result_FsEmpty, "No replacement languages found"_i18n);
-                    return;
-                }
-
-                u64 languageCode{};
-                SetLanguage console_lang = SetLanguage_ENGB;
-                if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
-                    setMakeLanguage(languageCode, &console_lang);
-                }
-                SetRegion console_reg = SetRegion_EUR;
-                setGetRegionCode(&console_reg);
-
-                std::vector<std::pair<std::string, std::string>> applicable_options;
-                for (const auto& opt : options) {
-                    if (IsOptionApplicable(opt, console_lang, console_reg)) {
-                        applicable_options.push_back(opt);
-                    }
-                }
-
-                const bool has_direct_match = !applicable_options.empty();
-                const auto& choices = has_direct_match ? applicable_options : options;
-
-                PopupList::Items labels;
-                labels.reserve(choices.size());
-                for (const auto& [label, dir] : choices) {
-                    labels.push_back(label);
-                }
-
-                App::Push<PopupList>(
-                    has_direct_match ? "Replace language"_i18n : "Select language to replace"_i18n,
-                    labels,
-                    [entry, choices, compat](auto index){
-                        if (!index) {
-                            return;
-                        }
-
-                        const auto& dir = choices[*index].second;
-                        const auto start_install = [entry, dir]() {
-                            App::Push<HoldConfirmBox>(
-                                "This will replace the selected system interface language and reboot the console."_i18n,
-                                0.5f,
-                                [entry, dir](bool confirmed){
-                                    if (!confirmed) {
-                                        return;
-                                    }
-
-                                    App::Push<ProgressBox>(
-                                        0,
-                                        "Installing"_i18n,
-                                        entry.name,
-                                        [entry, dir](auto pbox) -> Result {
-                                            return InstallInterfaceTranslation(pbox, entry, dir);
-                                        },
-                                        [](Result rc){
-                                            if (R_SUCCEEDED(rc)) {
-                                                return;
-                                            }
-
-                                            App::PushErrorBox(rc, "Failed to install translation"_i18n);
-                                        }
-                                    );
-                                }
-                            );
-                        };
-
-                        if (entry.warning_required) {
-                            const auto target_fw = ExtractFirmwareFromTag(compat.target_tag);
-                            std::string warn_msg = "This translation was made for firmware 20.4.0.\n\nIt may work on your firmware, but some system text can be missing, untranslated, or displayed incorrectly. A translation matching your firmware will be used automatically when it becomes available."_i18n;
-                            if (!target_fw.empty()) {
-                                if (const auto pos = warn_msg.find("20.4.0"); pos != std::string::npos) {
-                                    warn_msg.replace(pos, 6, target_fw);
-                                }
-                            }
-                            App::Push<OptionBox>(
-                                warn_msg,
-                                "Cancel"_i18n, "Continue"_i18n, 1,
-                                [start_install](auto op_index){
-                                    if (op_index && *op_index == 1) {
-                                        start_install();
-                                    }
-                                }
-                            );
-                        } else {
-                            start_install();
-                        }
-                    }
-                );
+                OpenTranslation(entry, compat);
             },
             SettingsItemKind::Folder,
         });

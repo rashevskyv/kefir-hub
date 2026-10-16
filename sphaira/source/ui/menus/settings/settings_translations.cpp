@@ -415,7 +415,7 @@ auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) 
     ));
     R_TRY(DownloadFile(
         pbox,
-        "Downloading " + entry.name + " translation...",
+        "Downloading"_i18n + " " + entry.name + "...",
         entry.translation_url,
         "/switch/DBI/translation_new.bin"
     ));
@@ -502,8 +502,9 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
         if (pbox) {
             pbox->NewTransfer("Removing previous translation..."_i18n);
         }
+        // a file the running system holds (TargetLocked) stays; CopyFileSimple accepts it when it is the same
         for (const auto path : TRANSLATION_PATHS) {
-            if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev) {
+            if (const auto rc = DeletePath(path); R_FAILED(rc) && rc != FsError_PathNotFound && rc != FsError_PathNotFoundFsDev && rc != FsError_TargetLocked) {
                 R_THROW(rc);
             }
         }

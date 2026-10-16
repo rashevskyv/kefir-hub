@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.117 — interface translation picks the fitting system language; updater texts translated; logs on by default
+- Translate Interface: "Load translations" runs without Hold A (the English-only "Fetch translations …" prompt is gone). A translation goes over the current system language only (`translation_match.hpp`, host test): US/EU in NX-Translation is the language variant (en-US/en-GB, es-419/es, fr-CA/fr, pt-BR/pt), the old code compared it with the console region and showed every option on a miss. One fit → one "X replaces Y, reboot" box (+ the other-firmware warning in the same box); no fit → the system languages it replaces and the path to the language setting in the system's own words (English from NX-Translation english.txt). Reinstall: a file the system holds (TargetLocked) no longer aborts — the delete skips it, `CopyFileSimple` accepts it when the bytes are the same (0xE02 on .89 while the translation was in place).
+- Updater: offline shows "No internet connection …" instead of "Failed to load updater lists."; Downloading/Extracting/Copying/Removing lines are i18n. Logging (`log_enabled`) defaults to on during development (owner turns it off for release). Drain: the load circles are drawn under the page background (0.14.116, not shipped alone).
+- host tests: not run (WSL down, D: full) · nro: not built · switch: pending (.89 translation reinstall, offline updater, drain look on .141)
+
 ## v0.14.115 — battery drain screen: a live battery, the time left and a charge graph; no dimming
 - Drain page: a big battery that fills by charge (green → orange → red, it pulses under load), "Draining for", the gauge's time to switch-off (TTE), mV · mA · °C, a one-hour charge graph (a point every 20 s); 80 full-screen gradient circles a frame drawn over the page. Dimming off with `lblDisableDimming` + idle detection `ExtendedUnsafe`, re-applied with full brightness every 10 s; both restored on exit.
 - host tests: not run · nro: built · switch: drain runs on .141 (−778 mA vs −634 mA in 0.14.114, log "drain load on"); no dimming over a long run pending

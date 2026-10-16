@@ -3422,5 +3422,18 @@
   "Drain the battery now? Unplug the charger and keep the console in your hands. Kefir Hub sets the screen to full brightness and loads the CPU and GPU until the console switches itself off; the load pauses above 60 °C. Afterwards charge it to 100% and open Kefir Hub.": "Розрядити батарею зараз? Від'єднайте зарядку і тримайте консоль у руках. Kefir Hub увімкне максимальну яскравість і навантажить процесор і відеопроцесор, доки консоль не вимкнеться сама; вище 60 °C навантаження стає на паузу. Після цього зарядіть до 100% і відкрийте Kefir Hub.",
   "Next: A starts the drain. Done: ": "Далі: A запускає розряд. Виконано: ",
   "Draining for": "Розряд триває",
-  "Switch-off in about": "Вимкнення приблизно через"
+  "Switch-off in about": "Вимкнення приблизно через",
+  "%s replaces only these system languages:%s\n\nSet one of them in %s, then select %s again.": "%s замінює лише ці мови системи:%s\n\nУвімкніть одну з них у %s, потім знову виберіть %s.",
+  "%s replaces %s. The console reboots after the install.": "%s замінить %s. Після встановлення консоль перезавантажиться.",
+  "This translation was made for firmware %s; some system text can be missing or untranslated.": "Цей переклад зроблено для прошивки %s; частина системного тексту може бути відсутня або неперекладена.",
+  "Firmware: ": "Прошивка: ",
+  "Console Firmware: ": "Прошивка консолі: ",
+  "Failed to load updater lists.": "Не вдалося завантажити списки оновлень.",
+  "No Kefir or firmware downloads found.": "Не знайдено завантажень Kefir або прошивки.",
+  "Extracting to /kefir...": "Розпакування в /kefir...",
+  "Extracting to /firmware...": "Розпакування в /firmware...",
+  "Extracting firmware...": "Розпакування прошивки...",
+  "Removing firmware files...": "Видалення файлів прошивки...",
+  "Setting up system update...": "Підготовка оновлення системи...",
+  "No internet connection. The list loads when the console connects.": "Немає з'єднання з інтернетом. Список завантажиться, щойно консоль підключиться."
 }

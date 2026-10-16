@@ -168,7 +168,6 @@ struct DrainMenu final : ui::menu::MenuBase {
     }
 
     void Draw(NVGcontext* vg, Theme* theme) override {
-        MenuBase::Draw(vg, theme); // first: the load circles go over the page background, where they are seen
         m_t += 0.02f;
         if (g_load) {
             for (int i = 0; i < CIRCLES; i++) {
@@ -182,6 +181,7 @@ struct DrainMenu final : ui::menu::MenuBase {
                 nvgFill(vg);
             }
         }
+        MenuBase::Draw(vg, theme); // after the load: the page background covers the circles, the GPU still draws them
 
         const auto text = theme->GetColour(ThemeEntryID_TEXT);
         const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
