@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
 
+## v0.14.105 — a plain 5 V charger no longer reports "Computer connected"; a collapsed capacity is a desync sign
+- `app_usb.cpp`: a 5 V charger and a PC both read as a LowPower charger, so auto MTP started and said "Computer connected" for a charger. The notice now waits until the PC configures the USB device; with no answer in 8 s MTP stops and the port is freed. Battery: learned FullCap below half the design capacity = "Desync: learned capacity" (and whether the saved copy is as low); 50..70 % stays wear.
+- host tests: pass · nro: built · switch: .141 with a 5 V charger: "no PC answered in 8s: a charger only; stopping MTP", MTP badge off
+
 ## v0.14.104 — Battery page: the system's copy is read through its own set:sys reference
 - The Hub keeps no set:sys session open (every module opens and closes its own), so 0.14.103's GetPtmFuelGaugeParameter failed, the page compared the chip with itself and the backup refused. The page now opens set:sys itself; if the copy still cannot be read it says "Not compared" instead of "no sign", and the backup keeps the chip dump (.cal with 0 cycles).
 - host tests: pass · nro: built · switch: .69 emuMMC: copy read, 9 parameters equal, verdict "no sign"; X wrote 24-byte .cal (decoded = page values, 25.89 cycles) and the .txt dump

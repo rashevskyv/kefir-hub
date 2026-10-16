@@ -51,13 +51,13 @@ void RestoreFlagAndPorComeFirst() {
 
 void InformationalFindingsKeepNoSign() {
     // Lite: version 2, reliability off, worn battery; no desync sign
-    Input in{Sample(), Sample(), 0, 0, 0x2476, 0x1000, 1, 2, 0};
+    Input in{Sample(), Sample(), 0, 0, 0x2476, 0x1600, 1, 2, 0};
     const auto r = Diagnose(in);
     assert(r.size() == 4);
     assert(r[0].finding == Finding::NoSign);
     assert(r[1].finding == Finding::VersionMismatch);
     assert(r[2].finding == Finding::LiteNoCycles);
-    assert(r[3].finding == Finding::LowCapacity && r[3].detail == "43");
+    assert(r[3].finding == Finding::LowCapacity && r[3].detail == "60");
 }
 
 void UnknownVersionsAreNotCompared() {
@@ -75,6 +75,18 @@ void UnreadCopyIsNotCompared() {
     assert(r.size() == 1 && r[0].finding == Finding::CopyUnknown); // no "no sign" without the copy
 }
 
+void CollapsedCapacityIsDesync() {
+    // a console from the field: FullCap 36 mAh against 3600 mAh design, and this MMC's copy is the same
+    auto p = Sample();
+    p.v[2] = 0x0048;
+    Input in{p, p, 0, 0, 0x1C20, 0x0048, 0, 0, 1};
+    const auto r = Diagnose(in);
+    assert(r.size() == 1 && r[0].finding == Finding::BrokenModel && r[0].detail == "1 copy");
+    in.hos.v[2] = 0x1C00; // the copy still has a sane FullCap: it differs and is not "copy"
+    const auto r2 = Diagnose(in);
+    assert(r2[0].finding == Finding::BrokenModel && r2[0].detail == "1" && r2[1].finding == Finding::CopyDiffers);
+}
+
 } // namespace
 
 int main() {
@@ -85,5 +97,6 @@ int main() {
     InformationalFindingsKeepNoSign();
     UnknownVersionsAreNotCompared();
     UnreadCopyIsNotCompared();
+    CollapsedCapacityIsDesync();
     std::puts("test_battery_gauge: ok");
 }

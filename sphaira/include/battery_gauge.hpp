@@ -48,7 +48,9 @@ enum class Finding {
     CopyUnknown,     // this MMC's copy could not be read, so the chip is not compared with it
     VersionMismatch, // CAL0 battery version and set:cal disagree
     LiteNoCycles,    // Lite (version 2) with cycle count reliability off: the charge limit falls back
-    LowCapacity,     // learned full capacity below 70 % of the design capacity: worn or mislearned
+    BrokenModel,     // learned full capacity below half the design capacity: no battery wears that far, the
+                     // chip learned a wrong model (detail: percent; "copy" when this MMC's copy is just as low)
+    LowCapacity,     // 50..70 % of the design capacity: wear, or the start of a bad model
     NoSign,          // none of the desync signs on this MMC
 };
 
@@ -96,11 +98,16 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     if (in.setcal_version == 2 && in.cycle_reliability == 0) {
         out.push_back({Finding::LiteNoCycles, {}});
     }
-    if (in.design_cap && in.full_cap * 10u < in.design_cap * 7u) {
+    // FullCap is the second model parameter; the copy's FullCap is in hos.v[2].
+    const bool broken = in.design_cap && in.full_cap * 2u < in.design_cap;
+    if (broken) {
+        const bool copy_too = in.hos_read && in.hos.v[2] * 2u < in.design_cap;
+        out.insert(out.begin(), {Finding::BrokenModel, std::to_string(in.full_cap * 100u / in.design_cap) + (copy_too ? " copy" : "")});
+    } else if (in.design_cap && in.full_cap * 10u < in.design_cap * 7u) {
         out.push_back({Finding::LowCapacity, std::to_string(in.full_cap * 100u / in.design_cap)});
     }
-    // the first three are the desync signs; without them the page says so first.
-    const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty() && in.hos_read;
+    // restore flag, POR, a copy that differs and a broken model are the desync signs.
+    const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty() && in.hos_read && !broken;
     if (no_sign) {
         out.insert(out.begin(), {Finding::NoSign, {}});
     }

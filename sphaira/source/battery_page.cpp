@@ -125,6 +125,11 @@ auto FindingRow(const Diagnosis& r) -> system_info::Row {
         case Finding::CopyUnknown: return {"Chip vs this MMC's copy"_i18n, "Not compared: the copy could not be read"_i18n};
         case Finding::VersionMismatch: return {"Battery version"_i18n, "CAL0 and set:cal disagree"_i18n};
         case Finding::LiteNoCycles: return {"Cycle count"_i18n, "Not trusted: charge limit falls back to 4.192 V"_i18n};
+        case Finding::BrokenModel: {
+            const bool copy = r.detail.ends_with(" copy");
+            const auto pct = r.detail.substr(0, r.detail.find(' '));
+            return {"Desync: learned capacity"_i18n, pct + "% " + (copy ? "of design, the saved copy too"_i18n : "of design: the chip's model is broken"_i18n)};
+        }
         case Finding::LowCapacity: return {"Learned capacity"_i18n, r.detail + "% " + "of design: worn or mislearned"_i18n};
     }
     return {};
