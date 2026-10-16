@@ -4,7 +4,9 @@
 #include "ui/menus/menu_base.hpp"
 #include "system_info.hpp"
 
+#include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace sphaira::ui::menu::sysinfo {
@@ -14,6 +16,9 @@ namespace sphaira::ui::menu::sysinfo {
 // or closes every group.
 struct Menu final : MenuBase {
     explicit Menu(std::vector<system_info::Group> groups);
+    // the same page for another set of groups (Tools → Battery): its own title, every group open,
+    // and one extra action on X.
+    Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action);
     ~Menu() = default;
 
     auto GetShortTitle() const -> const char* override { return "System information"; }

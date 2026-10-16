@@ -73,6 +73,15 @@ Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System informatio
     SetIndex(0);
 }
 
+Menu::Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action)
+    : Menu{std::move(groups)} {
+    SetTitle(std::move(title));
+    m_open.assign(m_groups.size(), true);
+    SetAction(Button::X, Action{std::move(x_label), std::move(x_action)});
+    Rebuild();
+    SetIndex(0);
+}
+
 void Menu::Rebuild() {
     m_rows.clear();
     for (s64 g = 0; g < static_cast<s64>(m_groups.size()); g++) {

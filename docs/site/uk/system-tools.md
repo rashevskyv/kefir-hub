@@ -13,6 +13,7 @@
 | [[Settings]] | [[Fan curve]] | Криві швидкості вентилятора для портативного режиму й док-станції. |
 | [[Settings]] | [[Wi-Fi]] | Збережені мережі Wi-Fi. |
 | [[Settings]] | [[Users]] | Профілі користувачів консолі. Див. [Користувачі](users.md). |
+| [[Maintenance]] | [[Battery]] | Стан датчика заряду і збереженої копії, висновок, резервна копія. Див. [Батарея](#battery). |
 | [[Maintenance]] | [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
 | [[Maintenance]] | [[Fill free SD space with zeros]] | Заповнює нулями вільне місце на карті пам'яті. Див. [Заповнення вільного місця на SD нулями](#fill-free-sd-space-with-zeros). |
 | [[Maintenance]] | [[Remove parental controls]] | Заплановано; показує повідомлення «Coming soon». |
@@ -184,6 +185,21 @@
 ## [[Users]]
 
 Створення, перейменування, резервне копіювання й прив'язка профілів користувачів консолі. Див. [Користувачі](users.md).
+
+## Батарея {#battery}
+
+**Де:** [[Tools]] → [[Tools]] → [[Battery]]
+
+<!-- draft
+- read only: nothing is written to the fuel gauge chip or to the system settings in this version
+- [[Verdict]]: [[No sign of desync on this MMC]], or the signs found: [[Restore flag (MiscCFG bit 15)]] (the chip lost power; HOS writes this MMC's saved copy at the next start), [[Restart flag (Status POR)]], [[Chip vs this MMC's copy]] with the parameters that differ; also [[Battery version]] (CAL0 and set:cal disagree), [[Cycle count]] (Lite: not trusted, charge limit 4.192 V), [[Learned capacity]] below 70 % of design
+- "Model: chip / sysMMC|emuMMC": the nine learned parameters (RCOMP0, TempCo, FullCap, FullCapNom, IAvgEmpty, QRTable00..30) as chip / saved copy, hex, capacities also in mAh; a row that differs is marked ≠
+- [[Fuel gauge (chip)]]: charge, remaining, full and design capacity, cell and open-circuit voltage, cycles register, MiscCFG / Status
+- [[Saved by the system]]: charge cycles and cycle count reliability of the MMC you are in; sysMMC and emuMMC each keep their own copy, so open the page in both
+- **X** ([[Back up]]): `/config/kefir/battery/<date>-<sysmmc|emummc>.cal` (24 bytes, the `batt.cal` format of Battery Desync Fix; copy it to `/switch/batt.cal` to use it there) and a `.txt` beside it with all 256 chip registers, the saved copy, battery versions and lot
+- why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions
+-->
+<!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->
 
 ## Очищення системи { #clean-system-junk }
 

@@ -1,4 +1,5 @@
 #include "ui/menus/tools_menu.hpp"
+#include "battery_page.hpp"
 
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/users_menu.hpp"
@@ -138,6 +139,7 @@ SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
             App::Push<ui::menu::users::Menu>();
         }),
         settings::MakeHeader("Maintenance"_i18n),
+        Tool("Battery"_i18n, "Fuel gauge state, the system's saved copy and a backup."_i18n, battery::Open),
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
