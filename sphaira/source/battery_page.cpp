@@ -41,6 +41,7 @@ struct Snapshot {
     std::string lot;
     bool emummc{};
     std::optional<CopyFile> other; // the other MMC's copy file
+    int psm_percent{-1};           // what the console shows (psm)
 };
 
 auto Fmt(const char* fmt, auto... args) -> std::string {
@@ -101,6 +102,9 @@ auto Read() -> Snapshot {
         }
         fsStorageClose(&cal0);
     }
+    if (u32 pct{}; R_SUCCEEDED(psmGetBatteryChargePercentage(&pct))) {
+        s.psm_percent = static_cast<int>(pct);
+    }
     SyncCopies(s);
     return s;
 }
@@ -158,8 +162,8 @@ auto FindingRow(const Diagnosis& r) -> system_info::Row {
         case Finding::SocGapLoaded: {
             const auto sp = r.detail.find(' ');
             const auto text = r.detail.substr(0, sp) + "% / " + r.detail.substr(sp + 1) + "%";
-            return {"Charge: shown / by voltage"_i18n, text + (r.finding == Finding::SocGap ? " " + "at rest: the % is wrong"_i18n
-                                                                                          : " " + "under load: check with the charger out"_i18n)};
+            return {"Charge: shown / by voltage"_i18n, text + (r.finding == Finding::SocGap ? " " + "on battery: the % is wrong"_i18n
+                                                                                          : " " + "while charging: check with the charger out"_i18n)};
         }
         case Finding::RestorePending: return {"Restore flag (MiscCFG bit 15)"_i18n, "Set: HOS rewrites the chip from this MMC at the next start"_i18n};
         case Finding::PowerOnReset: return {"Restart flag (Status POR)"_i18n, "Set: the chip restarted and was not set up since"_i18n};
@@ -218,6 +222,7 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
     out.push_back({"Fuel gauge (chip)"_i18n, {
         {"Charge: shown / by voltage"_i18n, Fmt("%u%% / %u%%", s.regs[MAX17050_RepSOC] >> 8, s.regs[MAX17050_VFSOC] >> 8)},
         {"Average current"_i18n, Fmt("%.0f mA", static_cast<s16>(s.regs[MAX17050_AvgCurrent]) * 0.15625)},
+        {"Charge on the console screen"_i18n, s.psm_percent >= 0 ? Fmt("%d%%", s.psm_percent) : std::string{"-"}},
         {"Remaining capacity"_i18n, Fmt("%u mAh", s.regs[MAX17050_RepCap] / 2)},
         {"Full capacity now"_i18n, Fmt("%u mAh", s.regs[MAX17050_FullCap] / 2)},
         {"Design capacity"_i18n, Fmt("%u mAh", s.regs[MAX17050_DesignCap] / 2)},

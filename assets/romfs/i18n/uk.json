@@ -3113,7 +3113,7 @@
   "Power source voltage limit": "Ліміт напруги джерела живлення",
   "Reading": "Читання",
   "Serial number (calibration)": "Серійний номер (калібрування)",
-  "Remaining capacity": "Залишок пам'яті",
+  "Remaining capacity": "Залишковий заряд",
   "Serial number (system)": "Серійний номер (система)",
   "Receive games": "Отримати ігри",
   "Sharing ": "Спільний доступ ",
@@ -3333,6 +3333,7 @@
   "Other MMC": "Інший MMC",
   "Not checked: boot it and open this page once": "Не перевірено: завантажте його і відкрийте цю сторінку",
   "Charge: shown / by voltage": "Заряд: показаний / за напругою",
-  "at rest: the % is wrong": "у спокої: відсоток хибний",
-  "under load: check with the charger out": "під навантаженням: перевірте без зарядки"
+  "on battery: the % is wrong": "від батареї: відсоток хибний",
+  "while charging: check with the charger out": "під час заряджання: перевірте без зарядки",
+  "Charge on the console screen": "Заряд на екрані консолі"
 }

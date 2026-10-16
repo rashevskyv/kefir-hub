@@ -105,7 +105,7 @@ void OtherMmcAndSocGap() {
     assert(r[1].finding == Finding::SocGapLoaded && r[1].detail == "84 73");
     assert(r[2].finding == Finding::OtherUnknown);
 
-    in.avg_current_ma = -40; // at rest: a sign
+    in.avg_current_ma = -638; // on battery in normal use (.141): a sign
     auto other = Sample();
     other.v[2] = 0x2000;
     in.other = other;

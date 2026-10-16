@@ -56,10 +56,11 @@ inline auto ParamsOf(const BattCal& c) -> Params {
     return p;
 }
 
-// SOC points between the charge the chip reports and the charge its voltage model gives; at rest a bigger
-// gap is the wrong-% symptom. Under load the cell voltage is off its rest value, so the gap means little.
+// SOC points between the charge the chip reports and the charge its voltage model gives. On battery a bigger
+// gap is the wrong-% symptom (the voltage model allows for the discharge current; a Switch in use always
+// draws 0.5..1 A, seen -638 mA on .141). While charging the cell sits above its rest voltage: only a hint.
 inline constexpr int SOC_GAP = 10;
-inline constexpr int REST_MA = 100;
+inline constexpr int CHARGING_MA = 100;
 
 enum class Finding {
     RestorePending,  // MiscCFG bit 15: the chip lost power; HOS writes this MMC's copy at the next start
@@ -74,8 +75,8 @@ enum class Finding {
     OtherDiffers,    // the other MMC's saved copy differs from the chip: if the chip loses power while that
                      // MMC runs, HOS writes the old copy back (detail: parameter names)
     OtherUnknown,    // the page was not opened in the other MMC yet
-    SocGap,          // at rest: reported % and %-by-voltage differ by SOC_GAP or more (detail: "84 73")
-    SocGapLoaded,    // the same gap under load: read again with the charger out (detail: "84 73")
+    SocGap,          // on battery: reported % and %-by-voltage differ by SOC_GAP or more (detail: "84 73")
+    SocGapLoaded,    // the same gap while charging: read again with the charger out (detail: "84 73")
     NoSign,          // none of the desync signs; still says what was not checked (OtherUnknown, SocGapLoaded)
 };
 
@@ -147,7 +148,7 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     bool gap_at_rest = false;
     if (in.rep_soc >= 0 && in.vf_soc >= 0 && (in.rep_soc - in.vf_soc >= SOC_GAP || in.vf_soc - in.rep_soc >= SOC_GAP)) {
         const auto soc = std::to_string(in.rep_soc) + " " + std::to_string(in.vf_soc);
-        gap_at_rest = in.avg_current_ma > -REST_MA && in.avg_current_ma < REST_MA;
+        gap_at_rest = in.avg_current_ma < CHARGING_MA;
         out.push_back({gap_at_rest ? Finding::SocGap : Finding::SocGapLoaded, soc});
     }
     if (!in.other) {

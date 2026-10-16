@@ -3341,6 +3341,7 @@
   "Other MMC": "Other MMC",
   "Not checked: boot it and open this page once": "Not checked: boot it and open this page once",
   "Charge: shown / by voltage": "Charge: shown / by voltage",
-  "at rest: the % is wrong": "at rest: the % is wrong",
-  "under load: check with the charger out": "under load: check with the charger out"
+  "on battery: the % is wrong": "on battery: the % is wrong",
+  "while charging: check with the charger out": "while charging: check with the charger out",
+  "Charge on the console screen": "Charge on the console screen"
 }
