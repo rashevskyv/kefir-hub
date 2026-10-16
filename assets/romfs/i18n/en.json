@@ -3382,12 +3382,13 @@
   "The chip and this MMC's copy now hold the backup's model.": "The chip and this MMC's copy now hold the backup's model.",
   "The other MMC was not checked yet: boot it and open this page once.": "The other MMC was not checked yet: boot it and open this page once.",
   "This MMC's copy now holds the chip's model and the larger cycle count of the two MMCs.": "This MMC's copy now holds the chip's model and the larger cycle count of the two MMCs.",
-  "Connect the charger first.": "Connect the charger first.",
-  "Charge to 100% first. Now: ": "Charge to 100% first. Now: ",
-  "The battery is not full yet: ": "The battery is not full yet: ",
-  "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Afterwards the console needs two full cycles (empty, then full) to learn the battery.": "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Afterwards the console needs two full cycles (empty, then full) to learn the battery.",
   "Reset": "Reset",
-  "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Needs the charger and 100%.": "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Needs the charger and 100%.",
   "Battery Desync Fix Y: the last backup of this MMC back into the chip.": "Battery Desync Fix Y: the last backup of this MMC back into the chip.",
-  "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs.": "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs."
+  "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs.": "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs.",
+  "Connect the charger": "Connect the charger",
+  "Charging to 100%, then the reset starts by itself": "Charging to 100%, then the reset starts by itself",
+  "Topping up the cell: ": "Topping up the cell: ",
+  "Cancelled: the chip was not changed": "Cancelled: the chip was not changed",
+  "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Kefir Hub waits on the charger until the battery is full, then resets. Afterwards the console needs two full cycles (empty, then full) to learn the battery.": "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Kefir Hub waits on the charger until the battery is full, then resets. Afterwards the console needs two full cycles (empty, then full) to learn the battery.",
+  "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Waits on the charger for 100% first.": "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Waits on the charger for 100% first."
 }

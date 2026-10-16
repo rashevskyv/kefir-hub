@@ -3374,12 +3374,13 @@
   "The chip and this MMC's copy now hold the backup's model.": "Чип і копія цього MMC тепер містять модель із резервної копії.",
   "The other MMC was not checked yet: boot it and open this page once.": "Інший MMC ще не перевірено: завантажте його і відкрийте цю сторінку.",
   "This MMC's copy now holds the chip's model and the larger cycle count of the two MMCs.": "Копія цього MMC тепер містить модель чипа і більший з двох лічильників циклів.",
-  "Connect the charger first.": "Спершу під'єднайте зарядку.",
-  "Charge to 100% first. Now: ": "Спершу зарядіть до 100%. Зараз: ",
-  "The battery is not full yet: ": "Батарея ще не повна: ",
-  "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Afterwards the console needs two full cycles (empty, then full) to learn the battery.": "Записати заводську модель батареї в датчик заряду? Вивчені значення чипа буде замінено; перед цим збережеться резервна копія. Після цього консолі потрібні два повні цикли (до нуля, потім до повного), щоб вивчити батарею.",
   "Reset": "Скинути",
-  "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Needs the charger and 100%.": "Як X у Battery Desync Fix: заводська модель для цієї батареї, потім копія цього MMC. Потрібні зарядка і 100%.",
   "Battery Desync Fix Y: the last backup of this MMC back into the chip.": "Як Y у Battery Desync Fix: остання резервна копія цього MMC назад у чип.",
-  "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs.": "Без запису в чип: копія цього MMC бере модель чипа і більший з двох лічильників циклів."
+  "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs.": "Без запису в чип: копія цього MMC бере модель чипа і більший з двох лічильників циклів.",
+  "Connect the charger": "Під'єднайте зарядку",
+  "Charging to 100%, then the reset starts by itself": "Заряджання до 100%, потім скидання почнеться саме",
+  "Topping up the cell: ": "Дозаряджання елемента: ",
+  "Cancelled: the chip was not changed": "Скасовано: чип не змінено",
+  "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Kefir Hub waits on the charger until the battery is full, then resets. Afterwards the console needs two full cycles (empty, then full) to learn the battery.": "Записати заводську модель батареї в датчик заряду? Вивчені значення чипа буде замінено; перед цим збережеться резервна копія. Kefir Hub чекатиме на зарядці, доки батарея не стане повною, і тоді скине. Після цього консолі потрібні два повні цикли (до нуля, потім до повного), щоб вивчити батарею.",
+  "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Waits on the charger for 100% first.": "Як X у Battery Desync Fix: заводська модель для цієї батареї, потім копія цього MMC. Спершу чекає на зарядці 100%."
 }

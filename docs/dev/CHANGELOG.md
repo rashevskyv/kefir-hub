@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
 
+## v0.14.110 — Reset from factory data waits on the charger for 100 %, then resets by itself
+- Instead of refusing below 100 %, the reset box says "Connect the charger" / "Charging to 100%, then the reset starts by itself" / "Topping up the cell" with the % bar, keeps the console awake and runs the reset when charger + 100 % + 4.1 V hold; B cancels ("the chip was not changed").
+- host tests: pass · nro: built · switch: .141 waiting screen at 60 % on the charger (reset itself pending); the ETA/speed line of the box is meaningless here (to hide in the wizard)
+
 ## v0.14.109 — Battery → Calibrate: reset from factory data, restore from the last backup, match the other MMC (F.18 stage A)
 - `battery_write.cpp` (+ on the Battery page): BDF X as the step list in `battery_init.hpp` (7 tables byte-for-byte from bdf.nro, host test), gated on charger + 100 % + > 4.1 V, backup first, model table re-locked on a failed verify; afterwards MiscCFG bit 15 is cleared (psm restores a MMC's old copy into the chip only while it is set, psm-fw NOTES) and this MMC's copy takes the new model with the larger cycle count of the two MMCs. Restore = BDF Y from the newest `<stamp>-<mmc>.cal`. Match = no chip write: this MMC's copy = chip model, cycles = max of both MMCs. `FuelGauge::Read` is now one i2c command list like BDF: two calls let psm's reads in between and returned another register (a false POR flag on .141). set:sys is opened by the write code itself.
 - host tests: pass (test_battery_init) · nro: built · switch: .141 emuMMC: two reads identical, Restore (no-op) 0x0, Match 0x0 (cycles 371.96); Reset pending (needs charger and 100 %), Match in sysMMC pending

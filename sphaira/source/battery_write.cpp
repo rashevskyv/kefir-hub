@@ -140,6 +140,10 @@ auto LatestBackup(bool emummc) -> std::optional<BattCal> {
 }
 
 void Done(Result rc, const std::string& ok_text, const std::shared_ptr<std::string>& failed) {
+    if (rc == Result_TransferCancelled) {
+        App::Notify("Cancelled: the chip was not changed"_i18n);
+        return;
+    }
     log_write("[Battery] write result 0x%X %s\n", rc, failed->c_str());
     if (R_SUCCEEDED(rc)) {
         App::Push<ui::OptionBox>(ok_text, "OK"_i18n, [](auto) { Open(); });
@@ -149,9 +153,55 @@ void Done(Result rc, const std::string& ok_text, const std::shared_ptr<std::stri
     }
 }
 
+struct ChargeState {
+    bool charger{};
+    u32 pct{};
+    u32 mv{};
+};
+
+auto ReadCharge() -> ChargeState {
+    ChargeState c;
+    PsmChargerType charger{};
+    psmGetChargerType(&charger);
+    c.charger = charger != PsmChargerType_Unconnected;
+    psmGetBatteryChargePercentage(&c.pct);
+    FuelGauge g;
+    if (const auto v = g.Read(MAX17050_VCell)) {
+        c.mv = static_cast<u32>((*v >> 3) * 0.625);
+    }
+    return c;
+}
+
+// the reset needs a full battery: the model starts from "full" and the chip learns from there. The box
+// waits on the charger (no auto sleep) until then; B cancels.
+auto WaitForFull(ui::ProgressBox* pbox) -> Result {
+    App::SetAutoSleepDisabled(true);
+    ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));
+    std::string last;
+    while (true) {
+        R_TRY(pbox->ShouldExitResult());
+        const auto c = ReadCharge();
+        if (c.charger && c.pct >= 100 && c.mv >= MIN_FULL_MV) {
+            R_SUCCEED();
+        }
+        std::string text = !c.charger ? "Connect the charger"_i18n
+            : c.pct < 100 ? "Charging to 100%, then the reset starts by itself"_i18n
+            : "Topping up the cell: "_i18n + std::to_string(c.mv) + " / " + std::to_string(MIN_FULL_MV) + " mV";
+        if (text != last) {
+            pbox->NewTransfer(text);
+            last = text;
+        }
+        pbox->UpdateTransfer(c.pct, 100);
+        for (int i = 0; i < 20 && !pbox->ShouldExit(); i++) {
+            svcSleepThread(100'000'000ULL);
+        }
+    }
+}
+
 void RunReset() {
     auto failed = std::make_shared<std::string>();
     App::Push<ui::ProgressBox>(0, "Reset from factory data"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
+        R_TRY(WaitForFull(pbox));
         auto s = Read();
         R_UNLESS(s.gauge, Result_ArchiveRead);
         std::string name;
@@ -217,29 +267,6 @@ void RunMatch() {
     });
 }
 
-// the reset needs a full battery: the model starts from "full" and the chip learns from there.
-auto ResetGate(std::string& why) -> bool {
-    PsmChargerType charger{};
-    u32 pct{};
-    psmGetChargerType(&charger);
-    psmGetBatteryChargePercentage(&pct);
-    FuelGauge g;
-    const auto vcell = g.Read(MAX17050_VCell);
-    const u32 mv = vcell ? static_cast<u32>((*vcell >> 3) * 0.625) : 0;
-    if (charger == PsmChargerType_Unconnected) {
-        why = "Connect the charger first."_i18n;
-    } else if (pct < 100) {
-        why = "Charge to 100% first. Now: "_i18n + std::to_string(pct) + "%";
-    } else if (mv < MIN_FULL_MV) {
-        why = "The battery is not full yet: "_i18n + std::to_string(mv) + " mV";
-    } else if (App::GetProgressActive()) {
-        why = "Finish or stop the running transfer first."_i18n;
-    } else {
-        return true;
-    }
-    return false;
-}
-
 } // namespace
 
 void OpenCalibrate() {
@@ -249,13 +276,12 @@ void OpenCalibrate() {
             return;
         }
         if (*op == 0) {
-            std::string why;
-            if (!ResetGate(why)) {
-                App::Push<ui::OptionBox>(why, "OK"_i18n);
+            if (App::GetProgressActive()) {
+                App::Notify("Finish or stop the running transfer first."_i18n);
                 return;
             }
             App::Push<ui::OptionBox>(
-                "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Afterwards the console needs two full cycles (empty, then full) to learn the battery."_i18n,
+                "Write the factory battery model into the fuel gauge? The chip's learned values are replaced; a backup is saved first. Kefir Hub waits on the charger until the battery is full, then resets. Afterwards the console needs two full cycles (empty, then full) to learn the battery."_i18n,
                 "Back"_i18n, "Reset"_i18n, 0, [](auto o) {
                     if (o && *o == 1) {
                         RunReset();
@@ -268,7 +294,7 @@ void OpenCalibrate() {
         }
     });
     popup->SetDescriptions({
-        "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Needs the charger and 100%."_i18n,
+        "Battery Desync Fix X: the factory model for this battery, then this MMC's copy. Waits on the charger for 100% first."_i18n,
         "Battery Desync Fix Y: the last backup of this MMC back into the chip."_i18n,
         "No chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs."_i18n,
     });
