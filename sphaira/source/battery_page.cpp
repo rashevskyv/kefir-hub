@@ -59,7 +59,18 @@ auto Read() -> Snapshot {
             }
         }
     }
-    s.hos_ok = R_SUCCEEDED(setsysGetPtmFuelGaugeParameter(&s.hos));
+    // own reference: the session opened at start-up may have been closed by another module
+    const bool setsys = R_SUCCEEDED(setsysInitialize());
+    ON_SCOPE_EXIT({
+        if (setsys) {
+            setsysExit();
+        }
+    });
+    if (const auto rc = setsysGetPtmFuelGaugeParameter(&s.hos); R_SUCCEEDED(rc)) {
+        s.hos_ok = true;
+    } else {
+        log_write("[Battery] set:sys GetPtmFuelGaugeParameter: 0x%X\n", rc);
+    }
     if (hosversionAtLeast(7, 0, 0)) {
         SetSysPtmCycleCountReliability rel{};
         if (R_SUCCEEDED(setsysGetPtmCycleCountReliability(&rel))) {
@@ -111,6 +122,7 @@ auto FindingRow(const Diagnosis& r) -> system_info::Row {
         case Finding::RestorePending: return {"Restore flag (MiscCFG bit 15)"_i18n, "Set: HOS rewrites the chip from this MMC at the next start"_i18n};
         case Finding::PowerOnReset: return {"Restart flag (Status POR)"_i18n, "Set: the chip restarted and was not set up since"_i18n};
         case Finding::CopyDiffers: return {"Chip vs this MMC's copy"_i18n, "Differ: "_i18n + r.detail};
+        case Finding::CopyUnknown: return {"Chip vs this MMC's copy"_i18n, "Not compared: the copy could not be read"_i18n};
         case Finding::VersionMismatch: return {"Battery version"_i18n, "CAL0 and set:cal disagree"_i18n};
         case Finding::LiteNoCycles: return {"Cycle count"_i18n, "Not trusted: charge limit falls back to 4.192 V"_i18n};
         case Finding::LowCapacity: return {"Learned capacity"_i18n, r.detail + "% " + "of design: worn or mislearned"_i18n};
@@ -125,9 +137,10 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
         return out;
     }
     const auto chip = ChipParams(s);
-    const auto hos = s.hos_ok ? HosParams(s) : chip;
+    const auto hos = HosParams(s);
     Input in{chip, hos, s.regs[MAX17050_MiscCFG], s.regs[MAX17050_Status], s.regs[MAX17050_DesignCap],
              s.regs[MAX17050_FullCap], s.cal0_version, s.setcal_version, s.reliability};
+    in.hos_read = s.hos_ok;
     system_info::Group verdict{"Verdict"_i18n, {}};
     for (const auto& r : Diagnose(in)) {
         verdict.rows.push_back(FindingRow(r));
@@ -138,11 +151,11 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
     system_info::Group params{"Model: chip / "_i18n + MmcName(s), {}};
     for (size_t i = 0; i < PARAM_REGS.size(); i++) {
         const bool cap = i == 2 || i == 3; // FullCap, FullCapNom: 0.5 mAh per lsb
-        std::string v = Fmt("%04X / %04X", chip.v[i], hos.v[i]);
+        std::string v = s.hos_ok ? Fmt("%04X / %04X", chip.v[i], hos.v[i]) : Fmt("%04X / ----", chip.v[i]);
         if (cap) {
-            v += Fmt("  (%u / %u mAh)", chip.v[i] / 2, hos.v[i] / 2);
+            v += s.hos_ok ? Fmt("  (%u / %u mAh)", chip.v[i] / 2, hos.v[i] / 2) : Fmt("  (%u mAh)", chip.v[i] / 2);
         }
-        params.rows.push_back({std::string{PARAM_NAMES[i]} + (chip.v[i] == hos.v[i] ? "" : "  ≠"), v});
+        params.rows.push_back({std::string{PARAM_NAMES[i]} + (s.hos_ok && chip.v[i] != hos.v[i] ? "  ≠" : ""), v});
     }
     if (!s.hos_ok) {
         params.rows.push_back({"System copy"_i18n, "Cannot read set:sys"_i18n});
@@ -182,7 +195,7 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
 }
 
 auto Backup(const Snapshot& s, std::string& name) -> Result {
-    R_UNLESS(s.gauge && s.hos_ok, Result_ArchiveRead);
+    R_UNLESS(s.gauge, Result_ArchiveRead);
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
     fs.CreateDirectoryRecursively(BACKUP_DIR);
@@ -201,7 +214,7 @@ auto Backup(const Snapshot& s, std::string& name) -> Result {
     txt += Fmt("battery version: CAL0 %d, set:cal %d; lot %s\n", s.cal0_version, s.setcal_version, s.lot.c_str());
     txt += Fmt("cycle count reliability: %d\n", s.reliability);
     const auto hos = HosParams(s);
-    txt += "set:sys PtmFuelGaugeParameter:";
+    txt += s.hos_ok ? "set:sys PtmFuelGaugeParameter:" : "set:sys PtmFuelGaugeParameter: not read; the .cal has 0 cycles\nlast value seen:";
     for (const auto v : hos.v) {
         txt += Fmt(" %04X", v);
     }

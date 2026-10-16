@@ -402,6 +402,21 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       Spike (a) done 2026-10-15 on the console: SteamWorld Dig 2 update 4.1.1 rebuilt with a plain romfs (merged base +
       update + mod), IVFC as owo_nca, cnmt program entry patched; Hub installed it, the game ran with the mod. So the
       writer needs no BKTR; only the reader (b) does.
+- [ ] F.21 **Joy-Con pairing and Wi-Fi sync between sysMMC and emuMMC** (user, 2026-10-16; later). Controllers paired
+      in one MMC after the emuMMC was made work only there. Today a TegraExplorer script ("…Sync") copies Bluetooth
+      pairings, Wi-Fi networks and (to check) the theme colour from sysMMC to emuMMC. First: find and read that script
+      in the TE assets, list what it copies (which system saves / files, decrypted how). Then in Tools: a page that shows
+      both sides (controllers, networks, theme), lets the user pick what to copy and in which direction, does the
+      decrypt / copy itself like the account backup and Activity Log work did; fallback: run the TE script from a menu
+      item with a short how-to.
+- [ ] F.22 **Activity Log inside the Hub** (user, 2026-10-16; later; reverses the 2026-10-03 "not taken" for the
+      activity log). Play time per game from the real sources DBI reads (pdm), so it survives firmware changes and does
+      not break like nx-activity-log; the screen looks like nx-activity-log (per-game totals, launches, first / last
+      played, timeline).
+- [ ] F.23 **Kefir Updater replaced by a guided tour** (user, 2026-10-16; later). Kefir Updater goes away with the Hub.
+      When the user opens Kefir Updater (or its launcher), say it is no longer used and that the Hub updates Kefir, then
+      walk them there with the scripted-input engine (demo input): press the buttons on screen step by step, show each
+      menu passed, stop on the Hub's update page. Replaces today's unclear text instruction.
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.

@@ -3323,5 +3323,6 @@
   "Verdict": "Висновок",
   "Version: CAL0 / set:cal": "Версія: CAL0 / set:cal",
   "of design: worn or mislearned": "від заводської: знос або хибне навчання",
-  "Fuel gauge state, the system's saved copy and a backup.": "Стан датчика заряду, копія системи і резервна копія."
+  "Fuel gauge state, the system's saved copy and a backup.": "Стан датчика заряду, копія системи і резервна копія.",
+  "Not compared: the copy could not be read": "Не порівняно: копію не вдалося прочитати"
 }

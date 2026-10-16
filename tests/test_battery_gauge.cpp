@@ -66,6 +66,15 @@ void UnknownVersionsAreNotCompared() {
     assert(r.size() == 1 && r[0].finding == Finding::NoSign);
 }
 
+void UnreadCopyIsNotCompared() {
+    auto hos = Sample();
+    hos.v[0] = 0;
+    Input in{Sample(), hos, 0, 0, 0x2476, 0x2300, 0, 0, 1};
+    in.hos_read = false;
+    const auto r = Diagnose(in);
+    assert(r.size() == 1 && r[0].finding == Finding::CopyUnknown); // no "no sign" without the copy
+}
+
 } // namespace
 
 int main() {
@@ -75,5 +84,6 @@ int main() {
     RestoreFlagAndPorComeFirst();
     InformationalFindingsKeepNoSign();
     UnknownVersionsAreNotCompared();
+    UnreadCopyIsNotCompared();
     std::puts("test_battery_gauge: ok");
 }

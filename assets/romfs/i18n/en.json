@@ -3331,5 +3331,6 @@
   "Verdict": "Verdict",
   "Version: CAL0 / set:cal": "Version: CAL0 / set:cal",
   "of design: worn or mislearned": "of design: worn or mislearned",
-  "Fuel gauge state, the system's saved copy and a backup.": "Fuel gauge state, the system's saved copy and a backup."
+  "Fuel gauge state, the system's saved copy and a backup.": "Fuel gauge state, the system's saved copy and a backup.",
+  "Not compared: the copy could not be read": "Not compared: the copy could not be read"
 }

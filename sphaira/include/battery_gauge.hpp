@@ -45,6 +45,7 @@ enum class Finding {
     RestorePending,  // MiscCFG bit 15: the chip lost power; HOS writes this MMC's copy at the next start
     PowerOnReset,    // Status bit 1: the chip restarted and nobody has cleared the flag yet
     CopyDiffers,     // the chip and this MMC's copy differ (detail: which parameters)
+    CopyUnknown,     // this MMC's copy could not be read, so the chip is not compared with it
     VersionMismatch, // CAL0 battery version and set:cal disagree
     LiteNoCycles,    // Lite (version 2) with cycle count reliability off: the charge limit falls back
     LowCapacity,     // learned full capacity below 70 % of the design capacity: worn or mislearned
@@ -61,6 +62,7 @@ struct Input {
     int cal0_version{-1};  // raw CAL0 byte at 0x4310; -1 = not read
     int setcal_version{-1};
     int cycle_reliability{-1}; // set:sys 172; -1 = not read (before 7.0.0)
+    bool hos_read{true};        // false: set:sys could not be read; `hos` is not compared
 };
 
 struct Diagnosis {
@@ -77,13 +79,16 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
         out.push_back({Finding::PowerOnReset, {}});
     }
     std::string differ;
-    for (size_t i = 0; i < in.chip.v.size(); i++) {
+    for (size_t i = 0; in.hos_read && i < in.chip.v.size(); i++) {
         if (in.chip.v[i] != in.hos.v[i]) {
             differ += (differ.empty() ? "" : ", ") + std::string{PARAM_NAMES[i]};
         }
     }
     if (!differ.empty()) {
         out.push_back({Finding::CopyDiffers, differ});
+    }
+    if (!in.hos_read) {
+        out.push_back({Finding::CopyUnknown, {}});
     }
     if (in.cal0_version >= 0 && in.setcal_version >= 0 && in.cal0_version != in.setcal_version) {
         out.push_back({Finding::VersionMismatch, {}});
@@ -95,7 +100,7 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
         out.push_back({Finding::LowCapacity, std::to_string(in.full_cap * 100u / in.design_cap)});
     }
     // the first three are the desync signs; without them the page says so first.
-    const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty();
+    const bool no_sign = !(in.misccfg & 0x8000) && !(in.status & 0x0002) && differ.empty() && in.hos_read;
     if (no_sign) {
         out.insert(out.begin(), {Finding::NoSign, {}});
     }

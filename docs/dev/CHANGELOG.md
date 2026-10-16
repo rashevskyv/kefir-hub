@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
 - host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
 
+## v0.14.104 — Battery page: the system's copy is read through its own set:sys reference
+- On .69 the start-up set:sys session no longer answered (GetPtmFuelGaugeParameter failed), so 0.14.103 compared the chip with itself and the backup refused. The page now opens its own set:sys reference; if the copy still cannot be read it says "Not compared" instead of "no sign", and the backup keeps the chip dump (.cal with 0 cycles).
+- host tests: pass · nro: built · switch: .69 emuMMC: copy read, 9 parameters equal, verdict "no sign"; X wrote 24-byte .cal (decoded = page values, 25.89 cycles) and the .txt dump
+
 ## v0.14.103 — Tools → Battery: fuel gauge against this MMC's saved copy, verdict, backup (F.18 step 1)
 - Read only. `battery_page.cpp` reads all 256 MAX17050 registers, set:sys PtmFuelGaugeParameter and cycle reliability, set:cal battery version and lot, CAL0 0x4310; `battery_gauge.hpp` (host test) packs the BDF batt.cal and diagnoses: restore flag (MiscCFG bit 15), POR, chip ≠ saved copy (named), version mismatch, Lite cycles, low learned capacity. X writes `/config/kefir/battery/<stamp>-<mmc>.cal` + `.txt`. `FuelGauge` moved to `fuel_gauge.hpp` (System information unchanged). sysinfo::Menu got a titled variant with an X action.
 - host tests: pass (test_battery_gauge) · nro: built · switch: pending (.69: chip rows = System information Battery; backup .cal = page values)
