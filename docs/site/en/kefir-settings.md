@@ -30,6 +30,11 @@ so it shows the real state, not what you last chose.
 | [[8GB DRAM status]] | Only for consoles with physically soldered 8GB RAM. Reboots into TegraExplorer to apply or remove the 8GB configuration. If the console boots with it On, the 8GB RAM is there and works. | `/tegraexplorer/scripts/Remove_8GB-RAM_config.te` exists. A console without 8GB RAM does not boot with it on, so On shows only on a real 8GB console. | Off |
 | [[Translate Interface]] | Opens the system translation tools. See below. | — | — |
 
+<!-- draft
+- [[40MB Memory]] is shown only when the firmware is below 23.0.0 or Kefir is below 926 (or its version file cannot be read)
+- reason: from Kefir 926 (Atmosphère 1.12.1) firmware 23.0.0+ already gives 40 MB, so the switch is not needed there
+-->
+
 !!! warning
     [[Redirect Emunand saves to SD]] changes where emuMMC saves are read from. Saves can look missing until you turn it off again.
 

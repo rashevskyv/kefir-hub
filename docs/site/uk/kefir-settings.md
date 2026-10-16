@@ -30,6 +30,11 @@
 | [[8GB DRAM status]] | Лише для консолей із фізично впаяними 8 ГБ оперативної пам'яті. Перезавантажує консоль у TegraExplorer, щоб застосувати або прибрати конфігурацію 8 ГБ. Якщо консоль завантажилася з увімкненим параметром, 8 ГБ на місці й працюють. | існує `/tegraexplorer/scripts/Remove_8GB-RAM_config.te`. Консоль без 8 ГБ з увімкненим параметром не завантажується, тож «увімкнено» буває лише на справжній консолі з 8 ГБ. | Вимк. |
 | [[Translate Interface]] | Відкриває інструменти перекладу системи. Див. нижче. | — | — |
 
+<!-- draft
+- [[40MB Memory]] is shown only when the firmware is below 23.0.0 or Kefir is below 926 (or its version file cannot be read)
+- reason: from Kefir 926 (Atmosphère 1.12.1) firmware 23.0.0+ already gives 40 MB, so the switch is not needed there
+-->
+
 !!! warning
     [[Redirect Emunand saves to SD]] змінює місце, звідки читаються збереження emuMMC. Доки ви не вимкнете параметр, збереження можуть здаватися зниклими.
 

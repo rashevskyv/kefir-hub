@@ -4,6 +4,8 @@
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
+#include "ui/menus/kefir/kefir_firmware.hpp"
+#include "version_compare.hpp"
 
 #include "app.hpp"
 #include "fs.hpp"
@@ -23,6 +25,7 @@ namespace sphaira::ui::menu::settings {
 using namespace detail;
 
 constexpr const char* ATMOSPHERE_CONFIG = "/atmosphere/config/system_settings.ini";
+constexpr const char* KEFIR_VERSION_PATH = "/switch/kefir-updater/version";
 
 void ToggleKefirSetting(const KefirSetting& setting) {
     const auto enabled = !setting.get();
@@ -142,16 +145,20 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "",
         0.5f,
     }));
-    items.emplace_back(MakeKefirToggle({
-        "40MB Memory"_i18n,
-        "Toggle the 40MB applet memory patch."_i18n,
-        [](){
-            return IniValueEquals(ATMOSPHERE_CONFIG, "atmosphere", "force_40mb_applet", "u8!0x1");
-        },
-        Apply40Mb,
-        "",
-        0.5f,
-    }));
+    // Atmosphère 1.12.1 (Kefir 926) gives 40MB by default on 23.0.0+, so the toggle is only for
+    // older Kefir or older firmware. An unreadable version file parses as lower, so the toggle stays visible.
+    if (hosversionBefore(23, 0, 0) || version::IsLower(kefir::detail::ReadFirstLine(KEFIR_VERSION_PATH), "926")) {
+        items.emplace_back(MakeKefirToggle({
+            "40MB Memory"_i18n,
+            "Toggle the 40MB applet memory patch."_i18n,
+            [](){
+                return IniValueEquals(ATMOSPHERE_CONFIG, "atmosphere", "force_40mb_applet", "u8!0x1");
+            },
+            Apply40Mb,
+            "",
+            0.5f,
+        }));
+    }
     items.emplace_back(SettingsItem{
         "USB 3.0"_i18n,
         "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot."_i18n,

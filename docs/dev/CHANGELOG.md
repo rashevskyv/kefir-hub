@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.102 — Kefir Settings: 40MB Memory only where it still matters
+- Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.
+- host tests: pass (quick) · nro: not built · switch: pending (Kefir 926 on 23.0.x hides it; firmware < 23 shows it)
+
 ## v0.14.101 — 60FPS/GFX cheats per game, added by name; «чіти» in Ukrainian
 - Cheats → Download 60FPS/GFX Cheats (`cheats_gfx_pack.cpp`): the pack is read in memory; a check list shows only installed games it has cheats for (for the installed version / other versions only / not checked, Build ID from the cache or the installed NCA); only ticked games get cheats, merged by name into their files (`MergeCheatText`), so the user's cheats and other games stay. PC Install: a microSD bundle shows "Writing files to the microSD" instead of the last package's step. uk: «чити» → «чіти» (46 strings, 6 doc pages), glossary rule extended.
 - host tests: pass (test_cheat_text: merge, pack paths) · nro: built · switch: pending (picker shown on .69 before the Build ID fix: BOTW listed)
