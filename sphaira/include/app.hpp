@@ -159,6 +159,8 @@ public:
     static auto GetWriteProtect() -> bool;
     static auto GetWebdavUrlName() -> std::string;
     static auto GetLogEnable() -> bool;
+    // MTP was started because USB power appeared and no computer has answered yet (a charger-only cable looks the same)
+    static auto IsMtpWaitingForPc() -> bool;
     static auto GetScriptInput() -> bool;
     // file name a PC install app writes over MTP to ask for PC Install (USB).
     static constexpr const char* PC_INSTALL_MARKER = "kefir-hub.pc-install";

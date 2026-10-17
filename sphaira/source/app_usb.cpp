@@ -49,6 +49,10 @@ void DeletePcInstallMarker() {
 }
 } // namespace
 
+auto App::IsMtpWaitingForPc() -> bool {
+    return g_mtp_waiting_for_pc && haze::IsRunning();
+}
+
 void App::PollUsbStorage() {
     // the first set-up (language, HOME icon advice) comes before any PC Install window
     // or MTP offer: a PC with a USB install app plugged in must not take the screen.
@@ -141,6 +145,7 @@ void App::PollUsbStorage() {
         } else {
             haze::Exit();
         }
+        App::Notify("No computer answered over USB. The cable may only charge: use a data cable and a USB port of the PC."_i18n);
     }
 
     // USB install owns usb:ds without haze while a PC is sending files.

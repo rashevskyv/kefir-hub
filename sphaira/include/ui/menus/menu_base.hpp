@@ -28,6 +28,7 @@ struct PolledData {
     s64 sd_total{};
     // Background service status
     bool mtp_running{};
+    bool mtp_waiting{}; // started, but no computer has answered yet
     bool ftp_running{};
     bool usb3_enabled{};
     bool is_emummc{};

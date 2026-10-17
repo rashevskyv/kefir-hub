@@ -67,6 +67,7 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.strength = {};
         data.ip = {};
         data.mtp_running = haze::IsRunning();
+        data.mtp_waiting = App::IsMtpWaitingForPc();
         data.ftp_running = ftpsrv::IsRunning();
 
         static std::string s_cached_sys_version{};

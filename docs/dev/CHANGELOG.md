@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.127 — MTP is not shown as on until a computer answers
+- USB power starts MTP at once (a PC cannot enumerate the console otherwise), but the header badge is amber "MTP…" while no computer has answered (`App::IsMtpWaitingForPc`), green "MTP" only after one did. When the 20 s pass with nobody answering (state Default: a charger-only cable, as in the .69 log) the Hub stops MTP and says so: "No computer answered over USB. The cable may only charge …". Other languages need `tools/i18n-translate`.
+- host tests: quick pass · nro: built · switch: pending (a cable that charges but carries no data; .69 was off the network, .141 is mid-drain and was not touched)
+
 ## v0.14.126 — help for a cycle step names both ways; CPU meter reads the core it runs on
 - The help on A for the cycle steps now gives two ways: use the console yourself until it switches off, or let the Hub drain it (A on the next step). 0.14.125 pinned each load thread to its core; 0.14.126 asks `svcGetInfo(IdleTickCount)` for the current core (-1) and logs the result once ("idle ticks rc …"). Under load the meters read CPU 100/100/100 %, GPU 100 %, 3.3 W on .141. Not yet seen: the CPU meter on the paused page (charger in) falling to ~0 %; it showed 100 % in 0.14.124 and the cause is not confirmed.
 - Only uk.json has the new help text; the other languages need `tools/i18n-translate` before the next release.

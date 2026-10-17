@@ -333,13 +333,14 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             const char* name;
             bool is_active;
             bool blue{}; // LOG: shown only while logging is on, so the user knows log.txt is written
+            bool amber{}; // MTP started, no computer answered yet: not "on" until one does
         };
 
         const float storage_left = label_x;
         const float storage_span_w = std::max(0.f, storage_right - storage_left);
 
         std::vector<ServiceBadgeItem> badges;
-        badges.push_back({"MTP", pdata.mtp_running});
+        badges.push_back({pdata.mtp_waiting ? "MTP…" : "MTP", pdata.mtp_running && !pdata.mtp_waiting, false, pdata.mtp_waiting});
         badges.push_back({"FTP", pdata.ftp_running});
         if (pdata.usb3_enabled) {
             badges.push_back({"USB 3.0", true});
@@ -368,13 +369,16 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             const float text_w = bounds[2] - bounds[0];
             const float bw = text_w + 24.f;
 
-            const NVGcolor bg_col = b.blue ? nvgRGBA(26, 54, 96, 220)
+            const NVGcolor bg_col = b.amber ? nvgRGBA(96, 64, 12, 220)
+                : b.blue ? nvgRGBA(26, 54, 96, 220)
                 : b.is_active ? nvgRGBA(28, 68, 42, 220)
                 : nvgRGBA(55, 55, 58, 160);
-            const NVGcolor dot_col = b.blue ? nvgRGBA(96, 165, 250, 255)
+            const NVGcolor dot_col = b.amber ? nvgRGBA(245, 158, 11, 255)
+                : b.blue ? nvgRGBA(96, 165, 250, 255)
                 : b.is_active ? nvgRGBA(76, 210, 120, 255)
                 : nvgRGBA(130, 130, 135, 200);
-            const NVGcolor text_col = b.blue ? nvgRGBA(219, 234, 254, 255)
+            const NVGcolor text_col = b.amber ? nvgRGBA(254, 243, 199, 255)
+                : b.blue ? nvgRGBA(219, 234, 254, 255)
                 : b.is_active ? nvgRGBA(225, 255, 235, 255)
                 : theme->GetColour(ThemeEntryID_TEXT_INFO);
 
