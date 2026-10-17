@@ -31,12 +31,16 @@ namespace {
 constexpr double HOT_C = 60.0;  // user, 2026-10-15: no load above 60 °C
 constexpr double COOL_C = 55.0;
 constexpr int LOAD_CORES = 3;
+// 59 is the lowest time-sliced priority band of Horizon: a busy thread there shares the core. At 0x2C (cooperative) it
+// never yields and hangs the Hub; at 0x3F it got no time at all.
+constexpr int LOAD_PRIO = 59;
 // few draws, each filling most of the screen: the GPU fill rate is the load. 700 small circles a frame
 // overflowed deko3d's per-frame command buffer (crash in dkCmdBufBindTextures on .141).
 constexpr int CIRCLES = 80;
 // below this shown charge the load goes off and only the bright screen drains the battery: on a worn battery the
 // voltage under load collapses from about 30 % and the console cuts off before the chip sees a real empty
 constexpr int GENTLE_PCT = 35;
+constexpr float NOMINAL_V = 3.7f; // for Wh from mAh
 constexpr double CHARGING_MA = 100.0; // an average current above this into the battery = on a charger
 constexpr u64 LIVE_MS = 250;   // one point of the live charts
 constexpr size_t LIVE_N = 120; // 30 s on a chart
@@ -54,7 +58,9 @@ void Burn(void* arg) {
     const auto core = reinterpret_cast<uintptr_t>(arg);
     // pinned: the idle-tick call answers only for the core the caller runs on, and a sleeping thread
     // that wakes on another core made it fail and left the chart at 100 %
-    svcSetThreadCoreMask(CUR_THREAD_HANDLE, static_cast<s32>(core), 1u << core);
+    const Result mask_rc = svcSetThreadCoreMask(CUR_THREAD_HANDLE, static_cast<s32>(core), 1u << core);
+    log_write("[Battery] burn thread %zu started, core mask rc 0x%X\n", static_cast<size_t>(core), mask_rc);
+    bool first_chunk = true;
     volatile double x = 1.0001;
     while (!g_stop) {
         if (!g_load) {
@@ -65,7 +71,12 @@ void Burn(void* arg) {
         for (int i = 0; i < 200000; i++) {
             x = std::sqrt(x * 1.0000001 + 0.5);
         }
-        g_busy[core] += armGetSystemTick() - t0;
+        const u64 spent = armGetSystemTick() - t0;
+        g_busy[core] += spent;
+        if (first_chunk) {
+            first_chunk = false;
+            log_write("[Battery] burn thread %zu first chunk took %llu ticks\n", static_cast<size_t>(core), (unsigned long long)spent);
+        }
     }
 }
 
@@ -105,9 +116,13 @@ struct DrainMenu final : ui::menu::MenuBase {
         g_stop = false;
         g_load = false;
         for (int i = 0; i < LOAD_CORES; i++) {
-            if (R_SUCCEEDED(threadCreate(&m_threads[i], Burn, reinterpret_cast<void*>(static_cast<uintptr_t>(i)), nullptr, 0x4000, 0x3F, i))) {
-                threadStart(&m_threads[i]);
+            const Result create_rc = threadCreate(&m_threads[i], Burn, reinterpret_cast<void*>(static_cast<uintptr_t>(i)), nullptr, 0x4000, LOAD_PRIO, i);
+            if (R_SUCCEEDED(create_rc)) {
+                const Result start_rc = threadStart(&m_threads[i]);
+                log_write("[Battery] burn thread %d created, start rc 0x%X\n", i, start_rc);
                 m_started[i] = true;
+            } else {
+                log_write("[Battery] burn thread %d NOT created: 0x%X\n", i, create_rc);
             }
         }
         if (R_SUCCEEDED(nvInitialize())) {
@@ -164,6 +179,9 @@ struct DrainMenu final : ui::menu::MenuBase {
         u32 shown{};
         if (R_SUCCEEDED(psmGetBatteryChargePercentage(&shown))) m_pct = static_cast<int>(shown); // what the console shows
         if (const auto v = g.Read(MAX17050_RepSOC)) m_gauge_pct = *v >> 8;
+        // 0.5 mAh per step (10 mOhm sense resistor, as the Battery page reads it)
+        if (const auto v = g.Read(MAX17050_RepCap)) m_cap_rem_mah = static_cast<int>(*v) / 2;
+        if (const auto v = g.Read(MAX17050_FullCap)) m_cap_full_mah = static_cast<int>(*v) / 2;
         NoteState(false);
         // one line a minute: if the console cuts off early (HOS shuts down on voltage while the % is still high),
         // the log shows what the gauge and the voltage were doing
@@ -202,8 +220,10 @@ struct DrainMenu final : ui::menu::MenuBase {
         } else if (m_step == DrainStep::Charging) {
             m_status = "The battery ran down: this cycle's discharge is done. Keep the charger in until 100%; the cycle then counts by itself."_i18n;
         } else if (m_step == DrainStep::NotEmptyYet) {
-            m_status = m_cycle == 2 && m_state.full1_at ? "The first cycle is counted. Unplug the charger: the second cycle starts."_i18n
-                : "Paused: the charger is in, but the battery has not run down yet. Unplug the charger and the drain goes on."_i18n;
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), " %u%% / %u%%", m_cycle_got, wizard::CYCLE_DONE);
+            m_status = "Charging, the drain is paused. Discharged in this cycle:"_i18n + buf + ". "
+                + "Charge to 100% and unplug the charger: the drain goes on. Or unplug it now to drain further first."_i18n;
         } else {
             m_status = m_docked ? "Paused: take the console out of the dock"_i18n
                 : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
@@ -232,6 +252,9 @@ struct DrainMenu final : ui::menu::MenuBase {
             account_restore::ClearReopenHubHint();
             log_write("[Battery] cycle %d counted on the drain page (total %u)\n", m_cycle, *total);
         }
+        const auto done = wizard::Discharged(m_state, live);
+        const auto before = static_cast<std::uint32_t>(m_cycle - 1) * wizard::CYCLE_DONE;
+        m_cycle_got = done > before ? done - before : 0;
         m_step = wizard::DrainStepOf(m_state, live, m_cycle);
         if (m_step == DrainStep::CycleCounted && m_cycle == 1) {
             m_cycle = 2;
@@ -294,7 +317,9 @@ struct DrainMenu final : ui::menu::MenuBase {
         if (mv && ma) {
             m_mv = static_cast<int>((*mv >> 3) * 0.625);
             m_ma = static_cast<int>(*ma);
-            Push(m_watts, m_mv / 1000.f * std::abs(m_ma) / 1000.f);
+            const float w = m_mv / 1000.f * std::abs(m_ma) / 1000.f;
+            Push(m_watts, w);
+            (m_ma < 0 ? m_wh_out : m_wh_in) += w * (LIVE_MS / 1000.f) / 3600.f; // Wh over one sample
         }
         if (const auto v = g.Read(MAX17050_Temp)) {
             Push(m_temps, static_cast<s16>(*v) / 256.f);
@@ -432,22 +457,32 @@ struct DrainMenu final : ui::menu::MenuBase {
         const auto title = (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
         ui::gfx::drawTextArgs(vg, fx, 125.f, 30.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", title.c_str());
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);
-        if (m_step == wizard::DrainStep::Charging) {
-            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Discharge done"_i18n.c_str());
-            ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %d%% / 100%%", "Charging:"_i18n.c_str(), m_pct);
+        if (m_charger && m_step != wizard::DrainStep::CycleCounted) {
+            // on the charger the page is about charging, whatever the cycle step is
+            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+                m_step == wizard::DrainStep::Charging ? good : text, "%s %d%% / 100%%", "Charging:"_i18n.c_str(), m_pct);
         } else if (m_step == wizard::DrainStep::CycleCounted) {
             ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Both cycles done"_i18n.c_str());
         } else {
             ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(m_state.drain_s[m_cycle - 1]).c_str());
         }
-        const bool draining = m_step == wizard::DrainStep::Draining || m_step == wizard::DrainStep::NotEmptyYet;
+        const bool draining = !m_charger && (m_step == wizard::DrainStep::Draining || m_step == wizard::DrainStep::NotEmptyYet);
         if (const auto zero = m_state.zero_at[m_cycle - 1]; draining && zero) {
             ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, warn, "%s %s", "Running after 0% for"_i18n.c_str(), HoursMinutesSeconds(Since(zero)).c_str());
         } else if (draining && m_tte_s) {
             ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Switch-off in about"_i18n.c_str(), HoursMinutes(m_tte_s).c_str());
         }
+        // the energy: what the battery holds now / when full, and what went out or in during this visit
+        if (m_cap_full_mah > 0) {
+            const float full_wh = m_cap_full_mah * NOMINAL_V / 1000.f;
+            const float rem_wh = std::max(0, m_cap_rem_mah) * NOMINAL_V / 1000.f;
+            char e[128];
+            std::snprintf(e, sizeof(e), m_charger ? "%.1f / %.1f Wh · %d mAh · +%.2f Wh" : "%.1f / %.1f Wh · %d mAh · -%.2f Wh",
+                rem_wh, full_wh, m_cap_full_mah, m_charger ? m_wh_in : m_wh_out);
+            ui::gfx::drawTextArgs(vg, fx, 237.f, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s %s", "Energy:"_i18n.c_str(), e);
+        }
         const bool attention = m_hot || m_docked || m_step == wizard::DrainStep::NotEmptyYet;
-        ui::gfx::drawTextBox(vg, fx, 222.f, 20.f, 600.f, attention ? warn : info, m_status.c_str());
+        ui::gfx::drawTextBox(vg, fx, 254.f, 18.f, 600.f, attention ? warn : info, m_status.c_str());
 
         // the live charts, 2 x 2
         const float cx = 120.f, cy = 290.f, cw = 510.f, ch = 152.f, gap = 20.f;
@@ -496,6 +531,11 @@ private:
     wizard::State m_state;
     TimeStamp m_trace{};
     u64 m_last_note{};
+    int m_cap_rem_mah{-1};
+    int m_cap_full_mah{-1};
+    float m_wh_in{};
+    float m_wh_out{};
+    u32 m_cycle_got{};
     wizard::DrainStep m_step{wizard::DrainStep::Draining};
     TimeStamp m_step_poll{};
     bool m_step_read{};

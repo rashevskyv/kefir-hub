@@ -3464,5 +3464,8 @@
   "Chinese (Traditional)": "Chinese (Traditional)",
   "Portuguese (Brazil)": "Portuguese (Brazil)",
   "firmware": "firmware",
-  "or newer": "or newer"
+  "or newer": "or newer",
+  "Charging, the drain is paused. Discharged in this cycle:": "Charging, the drain is paused. Discharged in this cycle:",
+  "Charge to 100% and unplug the charger: the drain goes on. Or unplug it now to drain further first.": "Charge to 100% and unplug the charger: the drain goes on. Or unplug it now to drain further first.",
+  "Energy:": "Energy:"
 }

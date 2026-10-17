@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.138 — drain page: charging phase and energy; load threads at the time-sliced priority
+- On the charger the page says "Charging: N% / 100%" with how much of this cycle's discharge is done ("Discharged in this cycle: 78% / 90%"), not "Draining for". A new line "Energy: 5.2 / 13.3 Wh · 3600 mAh · -0.8 Wh" (RepCap/FullCap at 0.5 mAh a step, 3.7 V nominal; the last figure is what went out, or in on the charger, during this visit).
+- Load threads: 0.14.133 showed CPU 0 % under load, i.e. the 0x3F threads got no time. 0.14.137 (test build) put them at 0x2C: that is a cooperative priority, the busy loops never yielded and the Hub hung on .141 (only a power-button reset helps). Horizon time-slices only the band 59..63, so the threads now run at 59 (PRIO_PREEMPTIVE). Each thread logs its creation, the core-mask result and the first chunk.
+- host tests: quick (see build) · nro: built · switch: pending (.141 needs a reset; then CPU meter under load)
+
 ## v0.14.135 — System information names the DRAM chip, the fuse firmware and the language
 - Console: "DRAM ID 21 (Samsung K4U6E3S4AB-MGCL 4GB)" (hekate sdram.h table, DBI's own list has the same chips); "Burnt fuses 24 (firmware 23.0.0 or newer)" (Atmosphère `FuseVersionIncrementFirmwares`); "Language: Russian (ru)". uk label "DRAM ID", not "ІД DRAM". `console_tables.hpp` + host test. DBI 912's screen (read from our Ghidra export) has no SDK row; its other fields are the ones we already show.
 - host tests: test_console_tables pass, quick (see build) · nro: built · switch: pending
