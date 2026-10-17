@@ -1,4 +1,5 @@
 #include "system_info.hpp"
+#include "console_tables.hpp"
 #include "system_info_internal.hpp"
 #include "system_info_parse.hpp"
 #include "app.hpp"
@@ -164,10 +165,14 @@ auto CollectConsole() -> Group {
         g.Line("Unit"_i18n, v ? "Retail"_i18n : "Development"_i18n);
     }
     if (GetSpl(SplConfigItem_Version, v)) {
-        g.Line("Burnt fuses"_i18n, Fmt("%lu", v));
+        // the count says how new the console's firmware has been: 24 = it ran 23.0.0
+        const auto fw = console::FuseFirmware(v);
+        g.Line("Burnt fuses"_i18n, fw.empty() ? Fmt("%lu", v)
+            : Fmt("%lu (", v) + "firmware"_i18n + " " + std::string{fw} + " " + "or newer"_i18n + ")");
     }
     if (GetSpl(SplConfigItem_DramId, v)) {
-        g.Line("DRAM id"_i18n, Fmt("%lu", v));
+        const auto chip = console::DramChip(v);
+        g.Line("DRAM id"_i18n, chip.empty() ? Fmt("%lu", v) : Fmt("%lu (", v) + std::string{chip} + ")");
     }
     if (GetSpl(SplConfigItem_DeviceId, v)) {
         g.Line("Device id"_i18n, Fmt("%016lX", v));
@@ -194,7 +199,7 @@ auto CollectConsole() -> Group {
     if (R_SUCCEEDED(setGetSystemLanguage(&lang))) {
         char code[9]{};
         std::memcpy(code, &lang, 8);
-        g.Line("Language"_i18n, code);
+        g.Line("Language"_i18n, i18n::get(console::LanguageName(code)) + " (" + code + ")");
     }
     SetRegion region{};
     if (R_SUCCEEDED(setGetRegionCode(&region))) {

@@ -3455,5 +3455,14 @@
   "Both cycles done": "Both cycles done",
   "Two ways to run the battery down; unplug the charger first.\n\n1. Use the console as usual (a game, the screen bright, no sleep) until it switches off by itself.\n2. Let Kefir Hub do it: press A on this step (when it is the next one) and the Hub runs the battery down with the screen at full brightness and the CPU and GPU under load.\n\nThen charge to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC.": "Two ways to run the battery down; unplug the charger first.\n\n1. Use the console as usual (a game, the screen bright, no sleep) until it switches off by itself.\n2. Let Kefir Hub do it: press A on this step (when it is the next one) and the Hub runs the battery down with the screen at full brightness and the CPU and GPU under load.\n\nThen charge to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC.",
   "No computer answered over USB. The cable may only charge: use a data cable and a USB port of the PC.": "No computer answered over USB. The cable may only charge: use a data cable and a USB port of the PC.",
-  "Below 35%: the load is off, only the bright screen drains the battery, so the console reaches empty gently. It switches itself off; then charge it to 100%.": "Below 35%: the load is off, only the bright screen drains the battery, so the console reaches empty gently. It switches itself off; then charge it to 100%."
+  "Below 35%: the load is off, only the bright screen drains the battery, so the console reaches empty gently. It switches itself off; then charge it to 100%.": "Below 35%: the load is off, only the bright screen drains the battery, so the console reaches empty gently. It switches itself off; then charge it to 100%.",
+  "English (US)": "English (US)",
+  "English (UK)": "English (UK)",
+  "Spanish (Latin America)": "Spanish (Latin America)",
+  "French (Canada)": "French (Canada)",
+  "Chinese (Simplified)": "Chinese (Simplified)",
+  "Chinese (Traditional)": "Chinese (Traditional)",
+  "Portuguese (Brazil)": "Portuguese (Brazil)",
+  "firmware": "firmware",
+  "or newer": "or newer"
 }

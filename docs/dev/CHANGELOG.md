@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.135 — System information names the DRAM chip, the fuse firmware and the language
+- Console: "DRAM ID 21 (Samsung K4U6E3S4AB-MGCL 4GB)" (hekate sdram.h table, DBI's own list has the same chips); "Burnt fuses 24 (firmware 23.0.0 or newer)" (Atmosphère `FuseVersionIncrementFirmwares`); "Language: Russian (ru)". uk label "DRAM ID", not "ІД DRAM". `console_tables.hpp` + host test. DBI 912's screen (read from our Ghidra export) has no SDK row; its other fields are the ones we already show.
+- host tests: test_console_tables pass, quick (see build) · nro: built · switch: pending
+
 ## v0.14.134 — Check game updates no longer overflows its thread stack
 - Crash report (Hub 0.14.130, Data Abort, SP below the stack region, X02 = 0x24000): `GetTitleName` held a 147 KB `NsApplicationControlData` on the stack of the ProgressBox worker thread (132 KB). The buffer is on the heap now. Symbolized on a rebuild of the 0.14.130 commit.
 - host tests: quick pass · nro: built · switch: .69 Check game updates ran over 23 games, no crash; menu exit gave no new crash report
