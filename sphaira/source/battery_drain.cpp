@@ -34,6 +34,9 @@ constexpr int LOAD_CORES = 3;
 // few draws, each filling most of the screen: the GPU fill rate is the load. 700 small circles a frame
 // overflowed deko3d's per-frame command buffer (crash in dkCmdBufBindTextures on .141).
 constexpr int CIRCLES = 80;
+// below this shown charge the load goes off and only the bright screen drains the battery: on a worn battery the
+// voltage under load collapses from about 30 % and the console cuts off before the chip sees a real empty
+constexpr int GENTLE_PCT = 35;
 constexpr double CHARGING_MA = 100.0; // an average current above this into the battery = on a charger
 constexpr u64 LIVE_MS = 250;   // one point of the live charts
 constexpr size_t LIVE_N = 120; // 30 s on a chart
@@ -167,6 +170,12 @@ struct DrainMenu final : ui::menu::MenuBase {
         if (R_SUCCEEDED(psmGetBatteryChargePercentage(&shown))) m_pct = static_cast<int>(shown); // what the console shows
         if (const auto v = g.Read(MAX17050_RepSOC)) m_gauge_pct = *v >> 8;
         NoteState(false);
+        // one line a minute: if the console cuts off early (HOS shuts down on voltage while the % is still high),
+        // the log shows what the gauge and the voltage were doing
+        if (m_trace.GetSeconds() >= 60) {
+            m_trace.Update();
+            log_write("[Battery] trace psm %d%% gauge %d%% %d mV %d mA %.1f C step %d\n", m_pct, m_gauge_pct, m_mv, m_ma, m_temp, static_cast<int>(m_step));
+        }
         if (const auto v = g.Read(MAX17050_Temp)) m_temp = static_cast<s16>(*v) / 256.0;
         if (const auto v = g.Read(MAX17050_TTE)) m_tte_s = *v == 0xFFFF ? 0 : static_cast<u64>(*v * 5.625);
         if (m_lbl && m_reapply.GetSeconds() >= 10) {
@@ -187,7 +196,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         } else if (m_temp <= COOL_C) {
             m_hot = false;
         }
-        const bool load = !m_charger && !m_docked && !m_hot;
+        const bool load = !m_charger && !m_docked && !m_hot && !(m_pct >= 0 && m_pct <= GENTLE_PCT);
         if (load != g_load) {
             log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
         }
@@ -203,7 +212,8 @@ struct DrainMenu final : ui::menu::MenuBase {
         } else {
             m_status = m_docked ? "Paused: take the console out of the dock"_i18n
                 : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
-                : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
+                : m_pct >= 0 && m_pct <= GENTLE_PCT ? "Below 35%: the load is off, only the bright screen drains the battery, so the console reaches empty gently. It switches itself off; then charge it to 100%."_i18n
+            : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
         }
     }
 
@@ -489,6 +499,7 @@ private:
     TimeStamp m_reapply{};
     wizard::State m_state;
     bool m_idle_logged{};
+    TimeStamp m_trace{};
     TimeStamp m_since_open{};
     wizard::DrainStep m_step{wizard::DrainStep::Draining};
     TimeStamp m_step_poll{};
