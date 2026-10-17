@@ -50,7 +50,10 @@ void DeletePcInstallMarker() {
 } // namespace
 
 auto App::IsMtpWaitingForPc() -> bool {
-    return g_mtp_waiting_for_pc && haze::IsRunning();
+    // from the moment USB power is seen: the settle delay and the install-host probe come before MTP starts
+    const auto probe = usb_probe::GetState();
+    return (g_mtp_waiting_for_pc && haze::IsRunning()) || probe == usb_probe::State::Running
+        || (g_app && g_app->m_usb_pending_mtp);
 }
 
 void App::PollUsbStorage() {

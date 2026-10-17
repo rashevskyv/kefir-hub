@@ -66,7 +66,7 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.status = {};
         data.strength = {};
         data.ip = {};
-        data.mtp_running = haze::IsRunning();
+        data.mtp_running = haze::IsRunning() || App::IsMtpWaitingForPc();
         data.mtp_waiting = App::IsMtpWaitingForPc();
         data.ftp_running = ftpsrv::IsRunning();
 

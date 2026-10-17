@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.128 — MTP wait shown from the moment USB power appears, one second shorter
+- The amber "MTP…" now covers the settle delay and the install-host probe, not only the time after MTP started. `UsbDs::WaitUntilConfigured` no longer re-attaches when the probe's time is already up (it cost DETACH_SETTLE_NS = 1 s before MTP could start). .69: probe start → MTP started 3.3 s (was 4.4 s).
+- host tests: quick pass · nro: built · switch: .69 log timeline measured; amber from the first second pending a look with a fresh cable plug
+
 ## v0.14.127 — MTP is not shown as on until a computer answers
 - USB power starts MTP at once (a PC cannot enumerate the console otherwise), but the header badge is amber "MTP…" while no computer has answered (`App::IsMtpWaitingForPc`), green "MTP" only after one did. When the 20 s pass with nobody answering (state Default: a charger-only cable, as in the .69 log) the Hub stops MTP and says so: "No computer answered over USB. The cable may only charge …". Other languages need `tools/i18n-translate`.
 - host tests: quick pass · nro: built · switch: pending (a cable that charges but carries no data; .69 was off the network, .141 is mid-drain and was not touched)

@@ -302,7 +302,10 @@ Result UsbDs::WaitUntilConfigured(u64 timeout) {
 
         rc = usbDsGetState(&state);
 
-        if (R_SUCCEEDED(rc) && silent && state != UsbState_Configured) {
+        // a re-attach costs DETACH_SETTLE_NS: pointless when the time is up anyway (it only delayed the
+        // "no PC" answer by a second)
+        const bool expired = has_timeout && armGetSystemTick() >= deadline;
+        if (R_SUCCEEDED(rc) && silent && !expired && state != UsbState_Configured) {
             log_write("[USBDS] host has not enumerated us (state: %s)\n", GetUsbDsStateStr(state));
             Reattach();
         }
