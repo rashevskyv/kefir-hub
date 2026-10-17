@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.130 — translations for 0.14.124–129 in all 25 languages
+- 9 new strings translated; the cycle help text went language by language (a newline mismatch in ptbr/zhtw blocked it for every language at once); Turkish by hand with the percent sign after the number (100%).
+- host tests: i18n deployment contract pass, quick (see build) · nro: built · switch: pending
+
 ## v0.14.129 — FunControl is removed at every start
 - `RemoveFunControl` (fancontrol_cleanup.cpp): if /atmosphere/contents/00FF46554E43544C or /switch/.overlays/NX-FanControl.ovl exists, the Hub stops the FunControl sysmodule (pmshell), deletes both and logs each step; a console without them is not touched or logged. The fan-curve editor in the settings sources is unreachable (no menu entry) and still there.
 - host tests: quick pass · nro: built · switch: .69 had both; terminate rc 0x20F (not running), both removed (rc 0), lists empty after
