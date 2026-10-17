@@ -429,6 +429,13 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       then starts a TegraExplorer script (or the same payload); the Hub does not write PRODINFO itself in HOS. Needs
       a decision on which fields change and a hardware test on a Chinese unit before anything ships.
 
+- [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
+      the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable
+      to start". Likely cause: the archive (concatenation) bit lost on the NCA folders in `/Nintendo/Contents/registered`; the
+      other idea (re-keying NAX0 to a new sdseed, from a DBI developer) only matters across consoles. Research asks which it
+      is and what the console can repair itself. Then a Hub tool "Repair SD card": check the layout, set the archive bit,
+      report what it did. Needs the research result and a test with a deliberately broken copy.
+
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
 
