@@ -5,6 +5,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "net.hpp"
+#include "nxlink.h"
 #include "web.hpp"
 
 int main(int argc, char** argv) {
@@ -196,6 +197,10 @@ void userAppExit(void) {
 
     sphaira::WebShareStop();
     sphaira::net::Exit();
+
+    // the nxlink thread polls sockets: it must be gone before socketExit, whatever the setting says now
+    // (crash report 2026-10-17: Data Abort in poll() -> _socketGetFd while userAppExit ran). Safe to repeat.
+    nxlinkExit();
 
     nvExit();
     socketExit();

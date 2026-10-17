@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.131 — the nxlink thread is stopped before the network is closed at exit
+- Crash report from a user (Kefir 927, firmware 23.0.1, Hub 0.14.123, Data Abort at address 0, "while installing"): the crashed thread is the nxlink loop inside `poll()` -> `_socketGetFd` (libnx socket.c:295) while another thread runs `userAppExit` -> `socketExit`. The nxlink thread was only stopped when `App::GetNxlinkEnable()` is true; `userAppExit` now calls `nxlinkExit()` (idempotent) before `socketExit`. Addresses resolved with a rebuild of the 0.14.123 commit (different build id, same code). Why the Hub was exiting during the install is not known; the user's log.prev.txt would tell. The `Nintendo/Contents/placehld` leftover after the crash is a separate issue.
+- host tests: quick pass · nro: built · switch: pending
+
 ## v0.14.130 — translations for 0.14.124–129 in all 25 languages
 - 9 new strings translated; the cycle help text went language by language (a newline mismatch in ptbr/zhtw blocked it for every language at once); Turkish by hand with the percent sign after the number (100%).
 - host tests: i18n deployment contract pass, quick (see build) · nro: built · switch: pending
