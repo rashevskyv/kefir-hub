@@ -1,5 +1,6 @@
 #include "app_frame_buffer.hpp"
 #include "app.hpp"
+#include "fancontrol_cleanup.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "log.hpp"
@@ -417,6 +418,9 @@ App::App(const char* argv0) {
         splGetConfig((SplConfigItem)65010, &out);
         log_write("[ams] usb 3.0 enabled: %lu\n", out);
     }
+
+    // FunControl is gone from Kefir: remove it from a console that still has it
+    RemoveFunControl();
 
     // get emummc config.
     alignas(0x1000) AmsEmummcPaths paths{};

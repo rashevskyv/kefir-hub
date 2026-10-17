@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.129 — FunControl is removed at every start
+- `RemoveFunControl` (fancontrol_cleanup.cpp): if /atmosphere/contents/00FF46554E43544C or /switch/.overlays/NX-FanControl.ovl exists, the Hub stops the FunControl sysmodule (pmshell), deletes both and logs each step; a console without them is not touched or logged. The fan-curve editor in the settings sources is unreachable (no menu entry) and still there.
+- host tests: quick pass · nro: built · switch: .69 had both; terminate rc 0x20F (not running), both removed (rc 0), lists empty after
+
 ## v0.14.128 — MTP wait shown from the moment USB power appears, one second shorter
 - The amber "MTP…" now covers the settle delay and the install-host probe, not only the time after MTP started. `UsbDs::WaitUntilConfigured` no longer re-attaches when the probe's time is already up (it cost DETACH_SETTLE_NS = 1 s before MTP could start). .69: probe start → MTP started 3.3 s (was 4.4 s).
 - host tests: quick pass · nro: built · switch: .69 log timeline measured; amber from the first second pending a look with a fresh cable plug
