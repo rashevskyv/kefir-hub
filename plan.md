@@ -418,6 +418,17 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       walk them there with the scripted-input engine (demo input): press the buttons on screen step by step, show each
       menu passed, stop on the Hub's update page. Replaces today's unclear text instruction.
 
+- [ ] F.24 **Console colours: Switch Lite body, Joy-Con** (user, 2026-10-17; later). A page to change the colours the system
+      shows for the console (the Lite's shell colour, the Joy-Con colours): pick from the real Nintendo colour list (names and
+      values from Switchbrew, offline copy in the Hub), or type any colour as hex. Joy-Con colours: from the same list, or
+      hex. The change is written to the console's colour data (CAL0 / the controller colour store) with a backup before it;
+      check how libnx/Atmosphere exposes it (set:sys / `PRODINFO`) before choosing the path. Lite only for the body colour.
+- [ ] F.25 **Region change from a Chinese console to a global one** (user, 2026-10-17; later). Chinese consoles are made for
+      the Chinese market and have no language choice. The region and language data live in PRODINFO (CAL0, "ProdInfo"). Today
+      it is done with a payload. The Hub gets the interface (what to change, a backup of PRODINFO first, a clear warning) and
+      then starts a TegraExplorer script (or the same payload); the Hub does not write PRODINFO itself in HOS. Needs
+      a decision on which fields change and a hardware test on a Chinese unit before anything ships.
+
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
 
