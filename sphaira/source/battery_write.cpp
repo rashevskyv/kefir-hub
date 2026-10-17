@@ -59,6 +59,23 @@ void SaveState(const wizard::State& st) {
     fs.write_entire_file(STATE_PATH, std::vector<u8>(text.begin(), text.end()));
 }
 
+auto CycleTotalNow() -> std::optional<u32> {
+    if (R_FAILED(setsysInitialize())) {
+        return std::nullopt;
+    }
+    ON_SCOPE_EXIT(setsysExit());
+    SetSysPtmFuelGaugeParameter p{};
+    if (R_FAILED(setsysGetPtmFuelGaugeParameter(&p))) {
+        return std::nullopt;
+    }
+    FuelGauge g;
+    const auto reg = g.Read(MAX17050_Cycles);
+    if (!reg) {
+        return std::nullopt;
+    }
+    return p.cycles_actual + (*reg > 0x60 ? *reg - 0x60u : 0u);
+}
+
 } // namespace detail
 
 namespace {
@@ -399,7 +416,7 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                     r.action = [first]() { OpenDrain(first ? 1 : 2); };
                     break;
                 }
-                r.action = Info("Unplug the charger and use the console until it switches off by itself (a game, the screen bright, no sleep). Then charge it to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
+                r.action = Info("Two ways to run the battery down; unplug the charger first.\n\n1. Use the console as usual (a game, the screen bright, no sleep) until it switches off by itself.\n2. Let Kefir Hub do it: press A on this step (when it is the next one) and the Hub runs the battery down with the screen at full brightness and the CPU and GPU under load.\n\nThen charge to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
                 break;
             }
             case wizard::Step::MatchOther:

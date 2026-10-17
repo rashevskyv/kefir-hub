@@ -3445,5 +3445,13 @@
   "The other console offers no games.\n\nOn it, open Console Transfer → Send installed games first.": "На іншій консолі немає ігор.\n\nНа ній відкрийте Перенесення консолі → Спочатку надішліть встановлені ігри.",
   "The other console opens Console Transfer → Receive games → Wi-Fi and enters this console's address.": "Інша консоль відкриває Перенесення консолі → Отримати ігри → Wi-Fi та вводить адресу цієї консолі.",
   "• That puts the old profiles back and cancels this restore.": "• Це повертає старі профілі та скасовує це відновлення.",
-  "• Open Kefir Hub yourself. We will continue the restore.": "• Відкрийте Kefir Hub самостійно. Ми продовжимо відновлення."
+  "• Open Kefir Hub yourself. We will continue the restore.": "• Відкрийте Kefir Hub самостійно. Ми продовжимо відновлення.",
+  "Both cycles are done. Press B and finish step 5 in the wizard: match in the other MMC.": "Обидва цикли завершено. Натисніть B і виконайте в майстрі крок 5: узгодження в іншому MMC.",
+  "The battery ran down: this cycle's discharge is done. Keep the charger in until 100%; the cycle then counts by itself.": "Батарея розрядилася: розряд цього циклу завершено. Тримайте зарядку до 100%, тоді цикл зарахується сам.",
+  "The first cycle is counted. Unplug the charger: the second cycle starts.": "Перший цикл зараховано. Від'єднайте зарядку: почнеться другий цикл.",
+  "Paused: the charger is in, but the battery has not run down yet. Unplug the charger and the drain goes on.": "Пауза: зарядку під'єднано, а батарея ще не розрядилася. Від'єднайте зарядку, і розряд продовжиться.",
+  "Discharge done": "Розряд завершено",
+  "Charging:": "Заряджання:",
+  "Both cycles done": "Обидва цикли завершено",
+  "Two ways to run the battery down; unplug the charger first.\n\n1. Use the console as usual (a game, the screen bright, no sleep) until it switches off by itself.\n2. Let Kefir Hub do it: press A on this step (when it is the next one) and the Hub runs the battery down with the screen at full brightness and the CPU and GPU under load.\n\nThen charge to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC.": "Є два способи розрядити батарею; спершу від'єднайте зарядку.\n\n1. Користуйтеся консоллю як завжди (гра, яскравий екран, без сну), доки вона не вимкнеться сама.\n2. Нехай це зробить Kefir Hub: натисніть A на цьому кроці (коли він наступний), і Hub розряджатиме батарею з повною яскравістю екрана та навантаженням на процесор і відеопроцесор.\n\nПотім зарядіть до 100% і відкрийте цю сторінку: крок зараховується, коли з попереднього кроку використано 90% батареї. На цих циклах чип вивчає справжню ємність батареї.\n\nДоки обидва цикли не завершено, не давайте батареї сісти до нуля в іншому MMC."
 }

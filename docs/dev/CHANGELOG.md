@@ -3,6 +3,15 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.126 — help for a cycle step names both ways; CPU meter reads the core it runs on
+- The help on A for the cycle steps now gives two ways: use the console yourself until it switches off, or let the Hub drain it (A on the next step). 0.14.125 pinned each load thread to its core; 0.14.126 asks `svcGetInfo(IdleTickCount)` for the current core (-1) and logs the result once ("idle ticks rc …"). Under load the meters read CPU 100/100/100 %, GPU 100 %, 3.3 W on .141. Not yet seen: the CPU meter on the paused page (charger in) falling to ~0 %; it showed 100 % in 0.14.124 and the cause is not confirmed.
+- Only uk.json has the new help text; the other languages need `tools/i18n-translate` before the next release.
+- host tests: test_battery_wizard pass (0.14.124) · nro: built · switch: help text seen on .141; paused-page CPU meter pending
+
+## v0.14.124 — battery drain page knows the phase of the cycle and counts it itself
+- `wizard::DrainStepOf` (host test, the .141 night as the case): on battery → drain; charger in before the discharge is done → "the battery has not run down yet, unplug"; discharge done → "Discharge done, Charging: N% / 100%, the cycle counts by itself"; full → the page runs `Advance` like the wizard, logs it and moves to the second cycle ("The first cycle is counted. Unplug the charger: the second cycle starts."); both done → step 5. A charging current above 100 mA also counts as a charger. The drain start is recorded only on battery. `detail::CycleTotalNow` reads the cycle total without a full page read.
+- host tests: test_battery_wizard pass, quick (see build) · nro: built · switch: pending (.141 full on the charger after cycle 1)
+
 ## v0.14.123 — all 25 languages complete for the release
 - tools/i18n-translate sync decoded literals with `unicode_escape` straight on text, turning °, →, ·, è into mojibake keys ("Â°C", "â†’") that the code never asks for; fixed (latin-1 backslashreplace first) and every mojibake key removed from all JSON files. 190 new strings translated in 24 languages (Turkish four by hand: the model writes "%100", which the format check rejects).
 - host tests: i18n deployment contract pass, quick pass · nro: built · switch: pending

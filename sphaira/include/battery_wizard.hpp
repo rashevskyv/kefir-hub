@@ -135,6 +135,24 @@ inline auto AfterZero(const State& s, int cycle) -> std::uint64_t {
     return s.alive_at[c] - s.zero_at[c];
 }
 
+// Where the drain page is in cycle 1 or 2 (call Advance first, so a full battery has been counted already).
+enum class DrainStep {
+    Draining,     // on battery
+    NotEmptyYet,  // the charger is in before this cycle's discharge is done
+    Charging,     // this cycle's discharge is done, charging up to 100 %
+    CycleCounted, // this cycle is counted
+};
+
+inline auto DrainStepOf(const State& s, const Live& l, int cycle) -> DrainStep {
+    if ((cycle == 1 && s.full1_at) || (cycle == 2 && s.full2_at)) {
+        return DrainStep::CycleCounted;
+    }
+    if (!l.charger) {
+        return DrainStep::Draining;
+    }
+    return Discharged(s, l) >= CYCLE_DONE * static_cast<std::uint32_t>(cycle) ? DrainStep::Charging : DrainStep::NotEmptyYet;
+}
+
 enum class Step { CheckOther, Reset, Cycle1, Cycle2, MatchOther, Finished };
 enum class Mark { Done, Next, Later };
 

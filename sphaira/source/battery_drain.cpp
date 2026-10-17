@@ -34,6 +34,7 @@ constexpr int LOAD_CORES = 3;
 // few draws, each filling most of the screen: the GPU fill rate is the load. 700 small circles a frame
 // overflowed deko3d's per-frame command buffer (crash in dkCmdBufBindTextures on .141).
 constexpr int CIRCLES = 80;
+constexpr double CHARGING_MA = 100.0; // an average current above this into the battery = on a charger
 constexpr u64 LIVE_MS = 250;   // one point of the live charts
 constexpr size_t LIVE_N = 120; // 30 s on a chart
 
@@ -44,15 +45,22 @@ std::atomic<bool> g_load{false};
 std::atomic<bool> g_stop{false};
 // idle ticks of each load core, read on that core (svcGetInfo IdleTickCount only answers for the caller's core)
 std::atomic<u64> g_idle[LOAD_CORES]{};
+std::atomic<u32> g_idle_rc[LOAD_CORES]{};
 
 void Burn(void* arg) {
     const auto core = reinterpret_cast<uintptr_t>(arg);
+    // pinned: the idle-tick call answers only for the core the caller runs on, and a sleeping thread
+    // that wakes on another core made it fail and left the chart at 100 %
+    svcSetThreadCoreMask(CUR_THREAD_HANDLE, static_cast<s32>(core), 1u << core);
     volatile double x = 1.0001;
     while (!g_stop) {
         u64 idle{};
-        if (R_SUCCEEDED(svcGetInfo(&idle, InfoType_IdleTickCount, INVALID_HANDLE, core))) {
+        // -1 = the core this thread runs on (it is pinned above)
+        const Result rc = svcGetInfo(&idle, InfoType_IdleTickCount, INVALID_HANDLE, static_cast<u64>(-1));
+        if (R_SUCCEEDED(rc)) {
             g_idle[core] = idle;
         }
+        g_idle_rc[core] = rc;
         if (!g_load) {
             svcSleepThread(50'000'000ULL);
             continue;
@@ -90,6 +98,9 @@ struct DrainMenu final : ui::menu::MenuBase {
         appletGetIdleTimeDetectionExtension(&m_saved_idle);
         appletSetIdleTimeDetectionExtension(AppletIdleTimeDetectionExtension_ExtendedUnsafe);
         m_state = detail::LoadState();
+        PsmChargerType charger_now{};
+        psmGetChargerType(&charger_now);
+        m_charger = charger_now != PsmChargerType_Unconnected;
         NoteState(true);
         account_restore::ArmReopenHubHint("Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate."_i18n, false);
 
@@ -166,7 +177,10 @@ struct DrainMenu final : ui::menu::MenuBase {
         }
         PsmChargerType charger{};
         psmGetChargerType(&charger);
-        m_charger = charger != PsmChargerType_Unconnected;
+        // a charging current also means a charger (psm can lag behind a cable plugged in at 0 %)
+        const auto avg = g.Current(MAX17050_AvgCurrent);
+        m_charger = charger != PsmChargerType_Unconnected || (avg && *avg > CHARGING_MA);
+        UpdateStep();
         m_docked = appletGetOperationMode() == AppletOperationMode_Console;
         if (m_temp >= HOT_C) {
             m_hot = true;
@@ -178,17 +192,54 @@ struct DrainMenu final : ui::menu::MenuBase {
             log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
         }
         g_load = load;
-        m_status = m_charger ? "Paused: unplug the charger"_i18n
-            : m_docked ? "Paused: take the console out of the dock"_i18n
-            : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
-            : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
+        using wizard::DrainStep;
+        if (m_step == DrainStep::CycleCounted) {
+            m_status = "Both cycles are done. Press B and finish step 5 in the wizard: match in the other MMC."_i18n;
+        } else if (m_step == DrainStep::Charging) {
+            m_status = "The battery ran down: this cycle's discharge is done. Keep the charger in until 100%; the cycle then counts by itself."_i18n;
+        } else if (m_step == DrainStep::NotEmptyYet) {
+            m_status = m_cycle == 2 && m_state.full1_at ? "The first cycle is counted. Unplug the charger: the second cycle starts."_i18n
+                : "Paused: the charger is in, but the battery has not run down yet. Unplug the charger and the drain goes on."_i18n;
+        } else {
+            m_status = m_docked ? "Paused: take the console out of the dock"_i18n
+                : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
+                : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
+        }
+    }
+
+    // which phase of the cycle this is; a full battery on the charger counts the cycle here, like the wizard does,
+    // and the page moves on to the second cycle
+    void UpdateStep() {
+        using wizard::DrainStep;
+        if (m_step_poll.GetSeconds() < 5 && m_step_read) {
+            return;
+        }
+        m_step_poll.Update();
+        m_step_read = true;
+        const auto total = detail::CycleTotalNow();
+        if (!total) {
+            return;
+        }
+        const wizard::Live live{*total, m_charger, static_cast<std::uint32_t>(std::max(m_pct, 0)), 0, false,
+                                static_cast<u64>(std::time(nullptr))};
+        if (wizard::Advance(m_state, live)) {
+            detail::SaveState(m_state);
+            account_restore::ClearReopenHubHint();
+            log_write("[Battery] cycle %d counted on the drain page (total %u)\n", m_cycle, *total);
+        }
+        m_step = wizard::DrainStepOf(m_state, live, m_cycle);
+        if (m_step == DrainStep::CycleCounted && m_cycle == 1) {
+            m_cycle = 2;
+            m_step = wizard::DrainStepOf(m_state, live, m_cycle);
+        }
     }
 
     // the drain start, the first 0 % and the last time seen on go to the wizard's state file, so a Hub restart
     // keeps them; alive is written every 30 s
     void NoteState(bool force) {
         const auto now = static_cast<u64>(std::time(nullptr));
-        if (wizard::NoteDrain(m_state, m_cycle, now, ZeroSeen() ? 0 : m_pct) || force || m_saved.GetSeconds() >= 30) {
+        const bool changed = !m_charger && wizard::NoteDrain(m_state, m_cycle, now, ZeroSeen() ? 0 : m_pct);
+        if (changed || force || m_saved.GetSeconds() >= 30) {
             m_saved.Update();
             detail::SaveState(m_state);
         }
@@ -213,6 +264,11 @@ struct DrainMenu final : ui::menu::MenuBase {
 
     // CPU load from each load core's idle ticks, GPU load from nvgpu, power and temperature from the gauge
     void SampleLive() {
+        if (!m_idle_logged && m_since_open.GetSeconds() >= 2) {
+            m_idle_logged = true;
+            log_write("[Battery] idle ticks rc 0x%X 0x%X 0x%X, now %llu %llu %llu\n", (u32)g_idle_rc[0], (u32)g_idle_rc[1], (u32)g_idle_rc[2],
+                (unsigned long long)g_idle[0], (unsigned long long)g_idle[1], (unsigned long long)g_idle[2]);
+        }
         const u64 tick = armGetSystemTick();
         for (int i = 0; i < LOAD_CORES; i++) {
             const u64 idle = g_idle[i];
@@ -369,13 +425,23 @@ struct DrainMenu final : ui::menu::MenuBase {
         const float fx = 560.f;
         const auto title = (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
         ui::gfx::drawTextArgs(vg, fx, 125.f, 30.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", title.c_str());
-        ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(Since(m_state.drain_at[m_cycle - 1])).c_str());
-        if (const auto zero = m_state.zero_at[m_cycle - 1]) {
+        const auto good = nvgRGB(0x4C, 0xAF, 0x50);
+        if (m_step == wizard::DrainStep::Charging) {
+            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Discharge done"_i18n.c_str());
+            ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %d%% / 100%%", "Charging:"_i18n.c_str(), m_pct);
+        } else if (m_step == wizard::DrainStep::CycleCounted) {
+            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Both cycles done"_i18n.c_str());
+        } else {
+            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(Since(m_state.drain_at[m_cycle - 1])).c_str());
+        }
+        const bool draining = m_step == wizard::DrainStep::Draining || m_step == wizard::DrainStep::NotEmptyYet;
+        if (const auto zero = m_state.zero_at[m_cycle - 1]; draining && zero) {
             ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, warn, "%s %s", "Running after 0% for"_i18n.c_str(), HoursMinutesSeconds(Since(zero)).c_str());
-        } else if (m_tte_s) {
+        } else if (draining && m_tte_s) {
             ui::gfx::drawTextArgs(vg, fx, 200.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Switch-off in about"_i18n.c_str(), HoursMinutes(m_tte_s).c_str());
         }
-        ui::gfx::drawTextBox(vg, fx, 222.f, 20.f, 600.f, m_hot || m_charger || m_docked ? warn : info, m_status.c_str());
+        const bool attention = m_hot || m_docked || m_step == wizard::DrainStep::NotEmptyYet;
+        ui::gfx::drawTextBox(vg, fx, 222.f, 20.f, 600.f, attention ? warn : info, m_status.c_str());
 
         // the live charts, 2 x 2
         const float cx = 120.f, cy = 290.f, cw = 510.f, ch = 152.f, gap = 20.f;
@@ -422,6 +488,11 @@ private:
     AppletIdleTimeDetectionExtension m_saved_idle{};
     TimeStamp m_reapply{};
     wizard::State m_state;
+    bool m_idle_logged{};
+    TimeStamp m_since_open{};
+    wizard::DrainStep m_step{wizard::DrainStep::Draining};
+    TimeStamp m_step_poll{};
+    bool m_step_read{};
     TimeStamp m_saved{};
     u64 m_tte_s{};
     bool m_nv{};

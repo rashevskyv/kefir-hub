@@ -76,5 +76,21 @@ int main() {
     assert(NoteDrain(d, 2, 5000, 90) && d.drain_at[1] == 5000 && d.drain_at[0] == 100);
     assert(Parse(Format(d)) == d);
 
+    // the drain page's phases: the night on .141 (drained, put on the charger, full in the morning)
+    State c{1000, EMUMMC, 37196, 0, 0, {0, 0}};
+    Live on{37196 + 40, false, 30, EMUMMC, false, 2000};
+    assert(DrainStepOf(c, on, 1) == DrainStep::Draining);
+    on.charger = true;
+    assert(DrainStepOf(c, on, 1) == DrainStep::NotEmptyYet);  // plugged in too early
+    on.total = 37196 + 98;
+    on.pct = 94;
+    assert(!Advance(c, on) && DrainStepOf(c, on, 1) == DrainStep::Charging);
+    on.pct = 100;
+    on.now = 3000;
+    assert(Advance(c, on) && DrainStepOf(c, on, 1) == DrainStep::CycleCounted);
+    assert(DrainStepOf(c, on, 2) == DrainStep::NotEmptyYet);   // the second cycle: unplug to start
+    on.charger = false;
+    assert(DrainStepOf(c, on, 2) == DrainStep::Draining);
+
     std::puts("test_battery_wizard: ok");
 }

@@ -44,5 +44,7 @@ auto MmcName(const Snapshot& s) -> std::string;
 // the calibration wizard's state file (battery_write.cpp)
 auto LoadState() -> wizard::State;
 void SaveState(const wizard::State& st);
+// HOS's cycle total x100 now (this MMC's set:sys copy + the chip's Cycles delta), without a full Read()
+auto CycleTotalNow() -> std::optional<u32>;
 
 } // namespace sphaira::battery::detail
