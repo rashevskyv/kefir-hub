@@ -75,6 +75,8 @@ int main() {
     assert(AfterZero(d, 1) == 420 && AfterZero(d, 2) == 0);
     assert(NoteDrain(d, 2, 5000, 90) && d.drain_at[1] == 5000 && d.drain_at[0] == 100);
     assert(Parse(Format(d)) == d);
+    d.drain_s[1] = 23400;
+    assert(Parse(Format(d)).drain_s[1] == 23400 && Parse(Format(d)) == d);
 
     // the drain page's phases: the night on .141 (drained, put on the charger, full in the morning)
     State c{1000, EMUMMC, 37196, 0, 0, {0, 0}};

@@ -46,9 +46,9 @@ constexpr u32 NVGPU_GET_GPU_LOAD = 0x80044715;
 
 std::atomic<bool> g_load{false};
 std::atomic<bool> g_stop{false};
-// idle ticks of each load core, read on that core (svcGetInfo IdleTickCount only answers for the caller's core)
-std::atomic<u64> g_idle[LOAD_CORES]{};
-std::atomic<u32> g_idle_rc[LOAD_CORES]{};
+// ticks each load thread spent burning: busy ticks / elapsed ticks is the load the Hub puts on that core.
+// (svcGetInfo IdleTickCount answers 0 here, which drew every core at 100 % even on the charger.)
+std::atomic<u64> g_busy[LOAD_CORES]{};
 
 void Burn(void* arg) {
     const auto core = reinterpret_cast<uintptr_t>(arg);
@@ -57,20 +57,15 @@ void Burn(void* arg) {
     svcSetThreadCoreMask(CUR_THREAD_HANDLE, static_cast<s32>(core), 1u << core);
     volatile double x = 1.0001;
     while (!g_stop) {
-        u64 idle{};
-        // -1 = the core this thread runs on (it is pinned above)
-        const Result rc = svcGetInfo(&idle, InfoType_IdleTickCount, INVALID_HANDLE, static_cast<u64>(-1));
-        if (R_SUCCEEDED(rc)) {
-            g_idle[core] = idle;
-        }
-        g_idle_rc[core] = rc;
         if (!g_load) {
             svcSleepThread(50'000'000ULL);
             continue;
         }
+        const u64 t0 = armGetSystemTick();
         for (int i = 0; i < 200000; i++) {
             x = std::sqrt(x * 1.0000001 + 0.5);
         }
+        g_busy[core] += armGetSystemTick() - t0;
     }
 }
 
@@ -249,6 +244,12 @@ struct DrainMenu final : ui::menu::MenuBase {
     void NoteState(bool force) {
         const auto now = static_cast<u64>(std::time(nullptr));
         const bool changed = !m_charger && wizard::NoteDrain(m_state, m_cycle, now, ZeroSeen() ? 0 : m_pct);
+        // time on battery only: the seconds since the last note, when no charger was in (a gap longer than a
+        // minute is a restart or a switch-off, not drain time)
+        if (!m_charger && m_last_note && now > m_last_note && now - m_last_note <= 60) {
+            m_state.drain_s[m_cycle - 1] += now - m_last_note;
+        }
+        m_last_note = now;
         if (changed || force || m_saved.GetSeconds() >= 30) {
             m_saved.Update();
             detail::SaveState(m_state);
@@ -274,18 +275,13 @@ struct DrainMenu final : ui::menu::MenuBase {
 
     // CPU load from each load core's idle ticks, GPU load from nvgpu, power and temperature from the gauge
     void SampleLive() {
-        if (!m_idle_logged && m_since_open.GetSeconds() >= 2) {
-            m_idle_logged = true;
-            log_write("[Battery] idle ticks rc 0x%X 0x%X 0x%X, now %llu %llu %llu\n", (u32)g_idle_rc[0], (u32)g_idle_rc[1], (u32)g_idle_rc[2],
-                (unsigned long long)g_idle[0], (unsigned long long)g_idle[1], (unsigned long long)g_idle[2]);
-        }
         const u64 tick = armGetSystemTick();
         for (int i = 0; i < LOAD_CORES; i++) {
-            const u64 idle = g_idle[i];
+            const u64 busy = g_busy[i];
             if (m_tick && tick > m_tick) {
-                Push(m_cpu[i], 100.f - std::min(100.f, (idle - m_idle[i]) * 100.f / (tick - m_tick)));
+                Push(m_cpu[i], std::min(100.f, (busy - m_busy[i]) * 100.f / (tick - m_tick)));
             }
-            m_idle[i] = idle;
+            m_busy[i] = busy;
         }
         m_tick = tick;
         u32 gpu{};
@@ -442,7 +438,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         } else if (m_step == wizard::DrainStep::CycleCounted) {
             ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Both cycles done"_i18n.c_str());
         } else {
-            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(Since(m_state.drain_at[m_cycle - 1])).c_str());
+            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(m_state.drain_s[m_cycle - 1]).c_str());
         }
         const bool draining = m_step == wizard::DrainStep::Draining || m_step == wizard::DrainStep::NotEmptyYet;
         if (const auto zero = m_state.zero_at[m_cycle - 1]; draining && zero) {
@@ -498,9 +494,8 @@ private:
     AppletIdleTimeDetectionExtension m_saved_idle{};
     TimeStamp m_reapply{};
     wizard::State m_state;
-    bool m_idle_logged{};
     TimeStamp m_trace{};
-    TimeStamp m_since_open{};
+    u64 m_last_note{};
     wizard::DrainStep m_step{wizard::DrainStep::Draining};
     TimeStamp m_step_poll{};
     bool m_step_read{};
@@ -514,7 +509,7 @@ private:
     std::deque<float> m_gpu;
     std::deque<float> m_watts;
     std::deque<float> m_temps;
-    u64 m_idle[LOAD_CORES]{};
+    u64 m_busy[LOAD_CORES]{};
     u64 m_tick{};
 };
 

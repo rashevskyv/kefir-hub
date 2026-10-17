@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.133 — CPU meter measures the Hub's own load; drain time counts only battery seconds
+- The CPU chart read `svcGetInfo(IdleTickCount)`, which answers 0 here, so every core showed 100 % even on the charger. The load threads now count their own busy ticks (0 % when the load is off, 100 % under it). "Draining for" counts seconds on battery (`drain_s` in calibration.txt), not wall time since the first start (it showed 6:33 with the charger hours in).
+- host tests: test_battery_wizard pass, quick (see build) · nro: built · switch: .141 on the charger shows CPU 0 %, drain time 0:00:00
+
 ## v0.14.132 — drain page logs a trace line every minute
 - `[Battery] trace psm % gauge % mV mA °C step`: on .141 cycle 2 the console cut off at ~21 % shown (blinking battery, then off, 27 % at rest) and log.prev.txt had nothing about it; the trace shows the voltage under load next time.
 - Below 35 % shown (`GENTLE_PCT`, user: many consoles fail after 30 %) the drain drops the CPU/GPU load and keeps only full brightness, so the console runs down to a real empty instead of cutting off on a voltage collapse under load.

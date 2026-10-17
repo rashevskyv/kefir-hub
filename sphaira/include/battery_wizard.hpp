@@ -31,18 +31,21 @@ struct State {
     std::uint64_t drain_at[2]{};
     std::uint64_t zero_at[2]{};
     std::uint64_t alive_at[2]{};
+    std::uint64_t drain_s[2]{}; // seconds spent on battery in this cycle's drain (the charger hours do not count)
     friend bool operator==(const State&, const State&) = default;
 };
 
 inline auto Format(const State& s) -> std::string {
-    char buf[512];
+    char buf[640];
     std::snprintf(buf, sizeof(buf),
         "reset_at=%llu\nreset_mmc=%d\ntotal_at_reset=%u\nfull1_at=%llu\nfull2_at=%llu\nmatch_sysmmc_at=%llu\nmatch_emummc_at=%llu\n"
-        "drain1_at=%llu\nzero1_at=%llu\nalive1_at=%llu\ndrain2_at=%llu\nzero2_at=%llu\nalive2_at=%llu\n",
+        "drain1_at=%llu\nzero1_at=%llu\nalive1_at=%llu\ndrain2_at=%llu\nzero2_at=%llu\nalive2_at=%llu\n"
+        "drain1_s=%llu\ndrain2_s=%llu\n",
         (unsigned long long)s.reset_at, s.reset_mmc, s.total_at_reset, (unsigned long long)s.full1_at,
         (unsigned long long)s.full2_at, (unsigned long long)s.match_at[SYSMMC], (unsigned long long)s.match_at[EMUMMC],
         (unsigned long long)s.drain_at[0], (unsigned long long)s.zero_at[0], (unsigned long long)s.alive_at[0],
-        (unsigned long long)s.drain_at[1], (unsigned long long)s.zero_at[1], (unsigned long long)s.alive_at[1]);
+        (unsigned long long)s.drain_at[1], (unsigned long long)s.zero_at[1], (unsigned long long)s.alive_at[1],
+        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1]);
     return buf;
 }
 
@@ -71,6 +74,8 @@ inline auto Parse(std::string_view text) -> State {
         else if (key == "drain2_at") s.drain_at[1] = v;
         else if (key == "zero2_at") s.zero_at[1] = v;
         else if (key == "alive2_at") s.alive_at[1] = v;
+        else if (key == "drain1_s") s.drain_s[0] = v;
+        else if (key == "drain2_s") s.drain_s[1] = v;
     }
     return s;
 }
