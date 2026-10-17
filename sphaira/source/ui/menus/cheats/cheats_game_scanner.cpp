@@ -8,6 +8,7 @@
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/nca.hpp"
 #include "ui/menus/cheats/cheats_lookup.hpp"
+#include <memory>
 #include <switch.h>
 #include <algorithm>
 #include <cstring>
@@ -145,7 +146,10 @@ auto GetTitleName(u64 title_id) -> std::string {
     }
 
     const auto try_get_name = [&](NsApplicationControlSource source, u64 source_title_id) -> std::string {
-        NsApplicationControlData control_data{};
+        // 147 KB: on the stack it overflowed the 132 KB stack of a ProgressBox thread (crash report 2026-10-17,
+        // Tools > Check game updates), so it lives on the heap
+        const auto control_ptr = std::make_unique<NsApplicationControlData>();
+        auto& control_data = *control_ptr;
         u64 actual_size = 0;
         const auto rc = nsGetApplicationControlData(
             source,
