@@ -187,9 +187,7 @@ void Poll() {
         version = g_job.version;
     }
     App::Push<ui::OptionBox>(
-        "Kefir Hub was updated to"_i18n + " " + version + ".
-
-" + "The new version runs after a restart. Restart now?"_i18n,
+        "Kefir Hub was updated to"_i18n + " " + version + ".\n\n" + "The new version runs after a restart. Restart now?"_i18n,
         "Later"_i18n, "Restart Kefir Hub"_i18n, 1, [](auto op) {
             if (op && *op == 1) {
                 RestartIntoNew();
