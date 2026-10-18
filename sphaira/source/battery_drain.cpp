@@ -481,10 +481,10 @@ struct DrainMenu final : ui::menu::MenuBase {
             ui::gfx::drawTextArgs(vg, fx, 237.f, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s %s", "Energy:"_i18n.c_str(), e);
         }
         const bool attention = m_hot || m_docked || m_step == wizard::DrainStep::NotEmptyYet;
-        ui::gfx::drawTextBox(vg, fx, 254.f, 18.f, 600.f, attention ? warn : info, m_status.c_str());
+        ui::gfx::drawTextBox(vg, fx, 254.f, 17.f, 560.f, attention ? warn : info, m_status.c_str());
 
         // the live charts, 2 x 2
-        const float cx = 120.f, cy = 290.f, cw = 510.f, ch = 152.f, gap = 20.f;
+        const float cx = 120.f, cy = 332.f, cw = 510.f, ch = 138.f, gap = 20.f;
         char v[64];
         std::snprintf(v, sizeof(v), "%.0f%% · %.0f%% · %.0f%%", Last(m_cpu[0]), Last(m_cpu[1]), Last(m_cpu[2]));
         Chart(vg, cx, cy, cw, ch, "CPU"_i18n, v,

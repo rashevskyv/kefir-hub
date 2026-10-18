@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.145 — drain page: the status text no longer runs into the charts
+- The status text (three lines on the longest) overlapped the top chart row and its right edge: it is 17 px in 560 px now, and the 2x2 charts start lower (y 332, 138 px high). .141 under 0.14.144 showed CPU 96/99/100 % under load: the priority-59 threads work.
+- host tests: quick (see build) · nro: built · switch: pending (not sent: a drain was running on .141)
+
 ## v0.14.144 — a menu on the cycle steps (start / do again / about); the calibration page follows the console
 - A on step 3 or 4: "Start the drain", "Do this cycle again", "About this step". Each cycle is measured from its own start (`State::start`, `wizard::Redo`): cycle 2 from the moment cycle 1 counted, or from the moment it was redone, so a cycle that was counted although it was not drained (.141: cycle 2 "done" at 100 % with HOS's cycle counter, which also moves while charging) can be done again; redoing 1 redoes 2 and 5.
 - The page rebuilds its rows every 3 s, when it gets the focus back and after a redo (`sysinfo::Menu` rebuild callback), so "100 % on the charger" follows the cable. Reverts nothing of 0.14.142's unplug start. 0.14.143 (step 5 text as whole sentences) is part of it.
