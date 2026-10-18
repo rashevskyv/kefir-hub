@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.158 — PC install: no checkmark flicker, no "without base game" question mid-install
+The PC's reply right after the console sent its plan carried the old tick, so the checkmark vanished for one poll: ticks and targets are now kept for 1.5 s after a plan send. The "installed without the base game" question waits until the queue install ends (it fired after the update, before the base game).
+host tests: not run, nro: not built, switch: pending (PC Install: toggle with X; install update + base + DLC)
+
 ## v0.14.157 — the fan curve works as on the fan-inproc branch again
 - The fan-inproc branch (v0.14.106: while the fan curve menu is open the Hub drives the fan itself from the curve on screen, the menu gives the fan back to tc when it closes; Apply writes the [tc] keys and asks for a reboot; no module) was never merged into master, so master still asked to install the fan module and "100 %" on the screen did not turn the fan. It is merged now; the 0.14.156 edits to settings_fancurve*/settings_tweaks (no install question, reboot text) are superseded by the branch's versions.
 - host tests: quick (see build) · nro: built · switch: pending

@@ -4,6 +4,7 @@
 #include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
+#include "orphan_content.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
@@ -216,6 +217,7 @@ bool InstallSession::AllPackagesTerminal() const {
 }
 
 void InstallSession::TransitionToSummary(bool failed) {
+    orphan_content::SetInstallRunning(false);
     {
         SCOPED_MUTEX(&m_mutex);
         if (m_state == State::Cancelled) {
@@ -256,6 +258,7 @@ void InstallSession::ToggleErrorView() {
 }
 
 void InstallSession::BeginSessionStats() {
+    orphan_content::SetInstallRunning(true); // no "update without base" question while packages are still going in
     SCOPED_MUTEX(&m_mutex);
     m_stats = {};
     m_errors.clear();

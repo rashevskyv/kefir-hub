@@ -231,6 +231,11 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
         std::vector<QueueEntry> new_queue;
         new_queue.reserve(items.size());
 
+        // The PC applies the console's plan after it arrives; a reply fetched right after the send still has the
+        // old tick, and taking it over made the checkmark vanish for one poll. Ignore ticks/targets for 1.5 s.
+        const u64 sent = m_plan_sent_tick.load();
+        const bool plan_in_flight = sent && armTicksToNs(armGetSystemTick() - sent) < 1'500'000'000ull;
+
         for (const auto& item : items) {
             auto it = existing_map.find(item.name);
             if (it != existing_map.end()) {
@@ -240,7 +245,7 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
                 // a tick or target changed on the console keeps its value until the PC
                 // has been told (SendQueuePlanIfChanged); otherwise this poll would
                 // put the tick straight back.
-                if (!entry.sync_dirty) {
+                if (!entry.sync_dirty && !plan_in_flight) {
                     bool new_sel = item.selected && R_SUCCEEDED(entry.analysis_result);
                     if (entry.selected != new_sel) {
                         entry.selected = new_sel;
@@ -520,6 +525,7 @@ void Menu::SendQueuePlanIfChanged() {
         return;
     }
     m_sent_plan_digest = digest;
+    m_plan_sent_tick = armGetSystemTick();
     SCOPED_MUTEX(&m_mutex);
     for (auto& e : m_queue) {
         e.sync_dirty = false;

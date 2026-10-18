@@ -28,6 +28,7 @@ Mutex g_mutex{};
 std::set<u64> g_pending{};
 // tick of the last NoteInstalled; 0 = nothing pending.
 std::atomic<u64> g_last_tick{};
+std::atomic<bool> g_running{};
 
 bool HasBase(u64 app_id) {
     title::MetaEntries entries;
@@ -85,9 +86,15 @@ void NoteInstalled(u64 app_id) {
     g_last_tick = armGetSystemTick();
 }
 
+void SetInstallRunning(bool running) {
+    if (g_running.exchange(running) && !running && g_last_tick) {
+        g_last_tick = armGetSystemTick();
+    }
+}
+
 void Poll() {
     const auto last = g_last_tick.load();
-    if (!last || App::GetProgressActive() || armTicksToNs(armGetSystemTick() - last) < QUIET_NS) {
+    if (!last || g_running || App::GetProgressActive() || armTicksToNs(armGetSystemTick() - last) < QUIET_NS) {
         return;
     }
 

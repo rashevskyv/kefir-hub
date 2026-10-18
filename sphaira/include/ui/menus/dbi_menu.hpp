@@ -303,6 +303,8 @@ private:
     void SendQueuePlanIfChanged();
 
     u32 m_last_acked_revision{0};
+    // tick of the last plan sent to the PC: its next replies may still carry the old selection (see ApplyLiveQueue)
+    std::atomic<u64> m_plan_sent_tick{0};
     std::string m_sent_plan_digest{};
 
     std::unique_ptr<yati::source::Usb> m_usb_source{};

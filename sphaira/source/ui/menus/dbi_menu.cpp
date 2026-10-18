@@ -4,6 +4,7 @@
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "ui/menus/install_plan.hpp"
 #include "haze_helper.hpp"
+#include "orphan_content.hpp"
 #include "ftpsrv_helper.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
@@ -52,6 +53,7 @@ InstallSession::InstallSession(const std::string& title, u32 flags, TransportOri
 }
 
 InstallSession::~InstallSession() {
+    orphan_content::SetInstallRunning(false);
     m_cancel_requested = true;
     m_stop_source.request_stop();
     ueventSignal(&m_cancel_event);
