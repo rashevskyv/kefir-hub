@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.150 — the Updater shows the store as the source of firmware
+- Plain-version firmware entries (23.0.1, 22.5.0, 22.1.0 …) show `github.com/kefircfw/nx-firmware/.../manifests/<v>.json` instead of the old THZoria zip; the zip stays the fallback, built in code (`ZipUrlOf`) when the store lacks the version or is unreachable. Rebootless entries keep their zip.
+- host tests: quick (see build) · nro: built · switch: seen on .69
+
 ## v0.14.149 — firmware from the store (only the missing NCAs); featured.json decides what the Updater lists; the two progress bars match
 - Updater → firmware: `kefir_firmware_store.cpp` reads the store's manifest (kefircfw/nx-firmware), copies the NCAs the console's system storage already holds (checked by SHA-256, `fw_store.hpp` + host test) and downloads the rest (checked, one retry); /firmware ends up as the zip's folder, so validation and the install prompt are unchanged. A version the store lacks (Rebootless) or an unreachable store falls back to the zip. .69, 22.5.0 → 23.0.1: 37 NCAs from the console, 201 downloaded (245 of 340 MB); 22.5.0 and 23.0.1 really share only 37.
 - The list: nx-links' firmware entries plus the versions in the store's `featured.json` (23.0.1 for now); the 92 versions of the store are not listed. The owner edits featured.json on the server.

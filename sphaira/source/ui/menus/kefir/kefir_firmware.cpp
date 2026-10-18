@@ -262,7 +262,7 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
 
     pbox->NewTransfer("Downloading"_i18n + " " + entry.name);
     const auto result = curl::Api().ToFile(
-        curl::Url{entry.url},
+        curl::Url{ZipUrlOf(entry)},
         curl::Path{FIRMWARE_ZIP},
         curl::OnProgress{pbox->OnDownloadProgressCallback()}
     );

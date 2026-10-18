@@ -76,6 +76,7 @@ auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) ->
 // the firmware store (kefir_firmware_store.cpp): "22.5.0" for a plain version entry, empty otherwise; the download
 // fills /firmware NCA by NCA (Result_FsEmpty: not in the store, use the zip)
 auto StoreVersionOf(const UpdaterEntry& entry) -> std::string;
+auto ZipUrlOf(const UpdaterEntry& entry) -> std::string;
 void AppendStoreFirmwares(const fs::FsPath& index_path, std::vector<UpdaterEntry>& entries);
 auto DownloadFirmwareFromStore(ProgressBox* pbox, const std::string& version) -> Result;
 auto SelectableCount(const std::vector<UpdaterEntry>& entries) -> s64;

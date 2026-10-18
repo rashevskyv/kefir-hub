@@ -8,6 +8,7 @@
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "path_util.hpp"
 #include "ui/progress_box.hpp"
 
 #include <yyjson.h>
@@ -202,6 +203,15 @@ auto DownloadNca(const Store& store, const fwstore::Nca& nca, const std::string&
 
 } // namespace
 
+// the zip of a version, for the case the store cannot serve it
+auto ZipUrlOf(const UpdaterEntry& entry) -> std::string {
+    if (path::EndsWithIC(entry.url, ".zip")) {
+        return entry.url;
+    }
+    const auto v = StoreVersionOf(entry);
+    return v.empty() ? entry.url : "https://github.com/THZoria/NX_Firmware/releases/download/" + v + "/Firmware." + v + ".zip";
+}
+
 // "22.5.0" from an updater entry name; empty for names that are not a plain version (and for Rebootless packs, which
 // the store does not hold)
 auto StoreVersionOf(const UpdaterEntry& entry) -> std::string {
@@ -317,8 +327,16 @@ void AppendStoreFirmwares(const fs::FsPath& featured_path, std::vector<UpdaterEn
             return e.type == UpdaterEntryType::Firmware && e.name == version;
         });
         if (!known) {
-            entries.push_back({UpdaterEntryType::Firmware, version,
-                "https://github.com/THZoria/NX_Firmware/releases/download/" + version + "/Firmware." + version + ".zip", false});
+            entries.push_back({UpdaterEntryType::Firmware, version, {}, false});
+        }
+    }
+    // every plain version is served by the store now: the list shows that source, not the old zip (the zip is still
+    // the fallback, see ZipUrlOf)
+    for (auto& e : entries) {
+        if (e.type == UpdaterEntryType::Firmware) {
+            if (const auto v = StoreVersionOf(e); !v.empty()) {
+                e.url = "https://github.com/kefircfw/nx-firmware/blob/main/manifests/" + v + ".json";
+            }
         }
     }
     // the firmware entries newest first, the Kefir ones stay where they are
