@@ -3501,5 +3501,7 @@
   "Back up the chip's values": "Back up the chip's values",
   "Writing the Atmosphere fan curve": "Writing the Atmosphere fan curve",
   "Failed to save the fan curve": "Failed to save the fan curve",
-  "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.": "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now."
+  "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.": "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.",
+  "Kefir Hub was updated to": "Kefir Hub was updated to",
+  "The new version runs after a restart. Restart now?": "The new version runs after a restart. Restart now?"
 }

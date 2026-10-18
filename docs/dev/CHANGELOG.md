@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.160 — update window: version once; restart after the update
+The "Updating" box named the version twice (title and line): the lines say only Downloading / Installing now. An update the user accepted restarts the Hub by itself into the installed copy. A silent background update asks "Restart now?" or "Later". New keys (en, uk): "Kefir Hub was updated to", "The new version runs after a restart. Restart now?" — other languages at the next translate.
+host tests: not run, nro: not built, switch: pending (accept an update in Notify mode; run a Silent update)
+
 ## v0.14.159 — translations for the new strings in all shipped languages
 48 new keys filled in 24 languages (translate.py; Turkish battery line by hand because of the % check). i18n contract passes.
 host tests: i18n contract pass, nro: built, switch: pending

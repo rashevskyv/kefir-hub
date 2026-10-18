@@ -157,6 +157,13 @@ void SetJobState(JobState state);
 void SetJobProgress(float progress);
 void SetAvailable(std::string version, std::string url);
 auto ConsumeNotifyPrompt() -> bool;
+
+// Runs the installed copy: the one the update just wrote, not necessarily the file that is running now.
+void RestartIntoNew();
+
+// Once per frame from the App loop: after a silent update (nobody asked for it) tells the user and asks
+// whether to restart now. A confirmed update never asks, it restarts by itself.
+void Poll();
 void StartDownload();
 #endif
 

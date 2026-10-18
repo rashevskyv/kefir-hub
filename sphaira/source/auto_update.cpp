@@ -6,6 +6,7 @@
 #include "log.hpp"
 #include "nro.hpp"
 #include "path_util.hpp"
+#include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 
 #include <algorithm>
@@ -20,6 +21,7 @@ namespace {
 std::mutex g_job_mutex;
 Job g_job{};
 bool g_notify_shown{}; // guarded by g_job_mutex
+bool g_ready_prompt{}; // a silent update finished and the user was not told yet; guarded by g_job_mutex
 
 } // namespace
 
@@ -102,7 +104,10 @@ void StartSilentDownload(const std::string& url, const fs::FsPath& temp_path) {
                 SetJobState(JobState::Failed);
                 return false;
             }
-            ApplyStaging(temp_path);
+            if (ApplyStaging(temp_path)) {
+                std::lock_guard lock(g_job_mutex);
+                g_ready_prompt = true;
+            }
             return true;
         }}
     );
@@ -119,7 +124,7 @@ void StartTransferDownload(const std::string& url, const std::string& version, c
     auto pbox = std::make_unique<ui::ProgressBox>(
         0, "Updating"_i18n, version,
         [url, version, temp_path](ui::ProgressBox* pbox) -> Result {
-            pbox->NewTransfer("Downloading "_i18n + version);
+            pbox->NewTransfer("Downloading"_i18n); // the version is already the box title
             const auto result = curl::Api().ToFile(
                 curl::Url{url},
                 curl::Path{temp_path},
@@ -139,7 +144,7 @@ void StartTransferDownload(const std::string& url, const std::string& version, c
                 R_THROW(Result_CurlFailedEasyInit);
             }
 
-            pbox->NewTransfer("Installing "_i18n + version);
+            pbox->NewTransfer("Installing"_i18n);
             if (!ApplyStaging(temp_path)) {
                 R_THROW(Result_CurlFailedEasyInit);
             }
@@ -153,7 +158,8 @@ void StartTransferDownload(const std::string& url, const std::string& version, c
                 App::Notify("Failed"_i18n);
                 return;
             }
-            App::Notify("Ready — restart"_i18n);
+            // the user accepted this update on screen: the new version starts now
+            RestartIntoNew();
         }
     );
 
@@ -164,6 +170,32 @@ void StartTransferDownload(const std::string& url, const std::string& version, c
 }
 
 } // namespace
+
+void RestartIntoNew() {
+    nro_launch(ResolveInstallDestination(App::GetExePath()));
+    App::Exit();
+}
+
+void Poll() {
+    std::string version;
+    {
+        std::lock_guard lock(g_job_mutex);
+        if (!g_ready_prompt || g_job.state != JobState::Ready || App::GetProgressActive()) {
+            return;
+        }
+        g_ready_prompt = false;
+        version = g_job.version;
+    }
+    App::Push<ui::OptionBox>(
+        "Kefir Hub was updated to"_i18n + " " + version + ".
+
+" + "The new version runs after a restart. Restart now?"_i18n,
+        "Later"_i18n, "Restart Kefir Hub"_i18n, 1, [](auto op) {
+            if (op && *op == 1) {
+                RestartIntoNew();
+            }
+        });
+}
 
 void StartDownload() {
     Job job;
