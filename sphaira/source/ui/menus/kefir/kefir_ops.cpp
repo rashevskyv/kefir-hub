@@ -175,7 +175,7 @@ void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) 
         return;
     }
 
-    const std::string message = "Download firmware"_i18n + " " + entry.name + "?\n\n" + "It is unpacked to /firmware, the archive is deleted after that."_i18n;
+    const std::string message = "Download firmware"_i18n + " " + entry.name + "?\n\n" + "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware."_i18n;
 
     App::Push<OptionBox>(message, "Cancel"_i18n, "Download"_i18n, 1,
         [this, entry](auto op_index) {

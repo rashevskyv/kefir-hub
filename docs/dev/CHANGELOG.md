@@ -3,6 +3,13 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.149 — firmware from the store (only the missing NCAs); featured.json decides what the Updater lists; the two progress bars match
+- Updater → firmware: `kefir_firmware_store.cpp` reads the store's manifest (kefircfw/nx-firmware), copies the NCAs the console's system storage already holds (checked by SHA-256, `fw_store.hpp` + host test) and downloads the rest (checked, one retry); /firmware ends up as the zip's folder, so validation and the install prompt are unchanged. A version the store lacks (Rebootless) or an unreachable store falls back to the zip. .69, 22.5.0 → 23.0.1: 37 NCAs from the console, 201 downloaded (245 of 340 MB); 22.5.0 and 23.0.1 really share only 37.
+- The list: nx-links' firmware entries plus the versions in the store's `featured.json` (23.0.1 for now); the 92 versions of the store are not listed. The owner edits featured.json on the server.
+- The confirm text no longer says the archive is deleted. Per-file downloads cost ~0.7 s each (the whole 201 files ~5 min): parallel downloads are a possible next step.
+- The whole-job progress bar is as thin (8 px) as the item bar, in every place that shows the pair (save restore, backups, romfs pack): both are drawn in `progress_box_draw.cpp`.
+- host tests: test_fw_store pass, quick pass · nro: built · switch: .69 list and download seen; install prompt pending
+
 ## v0.14.145 — drain page: the status text no longer runs into the charts
 - The status text (three lines on the longest) overlapped the top chart row and its right edge: it is 17 px in 560 px now, and the 2x2 charts start lower (y 332, 138 px high). .141 under 0.14.144 showed CPU 96/99/100 % under load: the priority-59 threads work.
 - host tests: quick (see build) · nro: built · switch: pending (not sent: a drain was running on .141)

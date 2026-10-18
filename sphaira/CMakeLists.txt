@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.145)
+set(sphaira_VERSION 0.14.149)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -87,6 +87,7 @@ add_executable(sphaira
     source/ui/menus/kefir/kefir_changelog.cpp
     source/ui/menus/kefir/kefir_changelog_parser.cpp
     source/ui/menus/kefir/kefir_firmware.cpp
+    source/ui/menus/kefir/kefir_firmware_store.cpp
     source/ui/menus/kefir/kefir_firmware_ops.cpp
     source/ui/menus/main_menu.cpp
     source/ui/menus/menu_base.cpp

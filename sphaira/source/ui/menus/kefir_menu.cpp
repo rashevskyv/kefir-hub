@@ -263,6 +263,7 @@ void Menu::FetchLinks() {
     SetIndex(0);
 
     fs::FsNativeSd().CreateDirectoryRecursively(CACHE_DIR);
+    static const auto STORE_INDEX_CACHE = std::string{CACHE_DIR} + "/fw-featured.json";
 
     curl::Api().ToFileAsync(
         curl::Url{NXLINKS_URL},
@@ -295,6 +296,24 @@ void Menu::FetchLinks() {
 
             m_index = 0;
             SetIndex(0);
+
+            // the versions the owner features on the store's server (featured.json) join the list: 23.0.1 and so on
+            curl::Api().ToFileAsync(
+                curl::Url{"https://raw.githubusercontent.com/kefircfw/nx-firmware/main/featured.json"},
+                curl::Path{STORE_INDEX_CACHE},
+                curl::Flags{curl::Flag_Cache},
+                curl::StopToken{this->GetToken()},
+                curl::OnComplete{[this, entries, latest_kefir](auto& store) mutable {
+                    if (!store.success) {
+                        return false;
+                    }
+                    detail::AppendStoreFirmwares(store.path, entries);
+                    BuildSectionedEntries(m_entries, entries);
+                    m_tile_entries = TileSlots(m_entries);
+                    SetIndex(m_index);
+                    return true;
+                }}
+            );
             return true;
         }}
     );

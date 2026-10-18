@@ -242,6 +242,15 @@ auto TypeLabel(UpdaterEntryType type) -> const char* {
 }
 
 auto DownloadAndExtractFirmware(ProgressBox* pbox, const UpdaterEntry& entry) -> Result {
+    // the firmware store first: only the NCAs the console does not have already are downloaded
+    if (const auto version = StoreVersionOf(entry); !version.empty()) {
+        const auto rc = DownloadFirmwareFromStore(pbox, version);
+        if (R_SUCCEEDED(rc) || rc == Result_TransferCancelled || rc == Result_GameMoveNotEnoughSpace) {
+            return rc;
+        }
+        log_write("[fwstore] not used (0x%X): the zip is downloaded instead\n", rc);
+    }
+
     fs::FsNativeSd fs;
     R_TRY(fs.GetFsOpenResult());
 

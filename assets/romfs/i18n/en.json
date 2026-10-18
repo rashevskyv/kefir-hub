@@ -3432,7 +3432,6 @@
   "Failed to download": "Failed to download",
   "Failed to install": "Failed to install",
   "Download firmware": "Download firmware",
-  "It is unpacked to /firmware, the archive is deleted after that.": "It is unpacked to /firmware, the archive is deleted after that.",
   "Install firmware": "Install firmware",
   "FAT32 + exFAT support": "FAT32 + exFAT support",
   "FAT32 support only": "FAT32 support only",
@@ -3486,5 +3485,8 @@
   "Do it again": "Do it again",
   "Could not read the battery": "Could not read the battery",
   "The cycle is measured again from now": "The cycle is measured again from now",
-  "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ": "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: "
+  "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ": "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ",
+  "Checking the firmware store": "Checking the firmware store",
+  "Copying from the console": "Copying from the console",
+  "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.": "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware."
 }

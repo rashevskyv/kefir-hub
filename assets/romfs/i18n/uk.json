@@ -3424,7 +3424,6 @@
   "Failed to download": "Не вдалося завантажити",
   "Failed to install": "Не вдалося встановити",
   "Download firmware": "Завантажити прошивку",
-  "It is unpacked to /firmware, the archive is deleted after that.": "Її буде розпаковано в /firmware, після цього архів видаляється.",
   "Install firmware": "Встановити прошивку",
   "FAT32 + exFAT support": "Підтримка FAT32 + exFAT",
   "FAT32 support only": "Лише підтримка FAT32",
@@ -3486,5 +3485,8 @@
   "Do it again": "Зробити знову",
   "Could not read the battery": "Не вдалося прочитати батарею",
   "The cycle is measured again from now": "Цикл міряється знову від зараз",
-  "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ": "Далі: від'єднайте зарядку, і Hub почне розряд, або натисніть A для меню. Виконано: "
+  "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ": "Далі: від'єднайте зарядку, і Hub почне розряд, або натисніть A для меню. Виконано: ",
+  "Checking the firmware store": "Перевірка сховища прошивок",
+  "Copying from the console": "Копіювання з консолі",
+  "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.": "Завантажуються лише файли, яких у консолі ще немає; прошивка готується в /firmware."
 }

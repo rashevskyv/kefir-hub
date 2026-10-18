@@ -317,8 +317,10 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const auto end_y = m_pos.y + m_pos.h;
     const auto progress_bar_w = m_pos.w - 230;
     const Vec4 prog_bar = { center_x - progress_bar_w / 2, end_y - (m_detached ? 160.f : 115.f), progress_bar_w, 12 };
-    // a job over many items: the current item's thin bar on top, the whole job's thick bar at the bottom.
-    const Vec4 item_bar = show_overall ? Vec4{prog_bar.x, prog_bar.y - 40.f, prog_bar.w, 8.f} : prog_bar;
+    // a job over many items: the current item's bar on top, the whole job's bar at the bottom; both as thin (8 px),
+    // so the two read as one pair wherever this box is used (save restore, backups, ...)
+    constexpr float PAIR_BAR_H = 8.f;
+    const Vec4 item_bar = show_overall ? Vec4{prog_bar.x, prog_bar.y - 40.f, prog_bar.w, PAIR_BAR_H} : prog_bar;
 
     nvgSave(vg);
     nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
@@ -333,8 +335,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     if (show_overall) {
-        // the whole job: "Done: 3 / 40" and its own bar, below the bar of the current item.
-        const Vec4 bar = prog_bar;
+        // the whole job: "Done: 3 / 40" and its own bar, below the bar of the current item, as thin as it.
+        const Vec4 bar = {prog_bar.x, prog_bar.y + (prog_bar.h - PAIR_BAR_H) / 2.f, prog_bar.w, PAIR_BAR_H};
         const auto fraction = static_cast<float>(overall_done) / static_cast<float>(overall_total);
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 5);
         gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5);
