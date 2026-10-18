@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.159 — translations for the new strings in all shipped languages
+48 new keys filled in 24 languages (translate.py; Turkish battery line by hand because of the % check). i18n contract passes.
+host tests: i18n contract pass, nro: built, switch: pending
+
 ## v0.14.158 — PC install: no checkmark flicker, no "without base game" question mid-install
 The PC's reply right after the console sent its plan carried the old tick, so the checkmark vanished for one poll: ticks and targets are now kept for 1.5 s after a plan send. The "installed without the base game" question waits until the queue install ends (it fired after the update, before the base game).
 host tests: not run, nro: not built, switch: pending (PC Install: toggle with X; install update + base + DLC)
