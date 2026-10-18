@@ -179,4 +179,33 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     return out;
 }
 
+// "Align the charge to the voltage" (the MAX17050's own open-circuit-voltage estimate VFSOC, as Atmosphère seeds the chip
+// after a power-on reset): RemCapMIX = VFSOC x FullCapNom, RemCapREP = MIX x FullCap / FullCapNom, RepSOC = VFSOC.
+// Learned parameters, cycles and dQacc/dPacc stay as they are.
+struct AlignInput {
+    std::uint16_t vfsoc{};      // 0xFF: 1/256 %
+    std::uint16_t repsoc{};     // 0x06: 1/256 %
+    std::uint16_t full_cap{};   // 0x10
+    std::uint16_t full_cap_nom{}; // 0x23
+    bool charger{};
+};
+struct AlignPlan {
+    bool ok{};
+    std::uint16_t mix{}, rep{}, soc{};
+};
+// only when the chip reports far more than the voltage says, the voltage says near empty, and no charger is in
+inline auto PlanAlign(const AlignInput& in) -> AlignPlan {
+    constexpr std::uint16_t MAX_TARGET = 10u << 8;  // the voltage says at most 10 %
+    constexpr std::uint16_t MIN_GAP = 15u << 8;     // and the chip is 15 points or more above it
+    if (in.charger || !in.full_cap || !in.full_cap_nom || in.vfsoc > MAX_TARGET || in.repsoc < in.vfsoc + MIN_GAP) {
+        return {};
+    }
+    AlignPlan p;
+    p.soc = in.vfsoc;
+    p.mix = static_cast<std::uint16_t>(static_cast<std::uint32_t>(in.vfsoc) * in.full_cap_nom / 0x6400);
+    p.rep = static_cast<std::uint16_t>(static_cast<std::uint32_t>(p.mix) * in.full_cap / in.full_cap_nom);
+    p.ok = true;
+    return p;
+}
+
 } // namespace sphaira::battery

@@ -159,5 +159,17 @@ int main() {
     CopyFileLayout();
     NinetyPercentRule();
     CyclesApartAcrossMmcs();
+    // align the charge to the voltage (.141: Hekate 3193 mV, chip 32 %, the voltage says near empty)
+    {
+        const auto plan = PlanAlign({static_cast<std::uint16_t>(3 << 8), static_cast<std::uint16_t>(32 << 8), 0x1C20, 0x2C78, false});
+        assert(plan.ok && plan.soc == (3 << 8));
+        assert(plan.mix == (3 * 256 * 0x2C78 / 0x6400));
+        assert(plan.rep == plan.mix * 0x1C20 / 0x2C78);
+        assert(!PlanAlign({static_cast<std::uint16_t>(3 << 8), static_cast<std::uint16_t>(32 << 8), 0x1C20, 0x2C78, true}).ok);  // charger in
+        assert(!PlanAlign({static_cast<std::uint16_t>(40 << 8), static_cast<std::uint16_t>(80 << 8), 0x1C20, 0x2C78, false}).ok); // the voltage says 40 %
+        assert(!PlanAlign({static_cast<std::uint16_t>(8 << 8), static_cast<std::uint16_t>(15 << 8), 0x1C20, 0x2C78, false}).ok);  // only 7 points apart
+        assert(!PlanAlign({0, 0, 0, 0, false}).ok);
+    }
+
     std::puts("test_battery_gauge: ok");
 }

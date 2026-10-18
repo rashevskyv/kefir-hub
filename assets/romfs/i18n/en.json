@@ -3489,5 +3489,9 @@
   "Copying from the console": "Copying from the console",
   "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.": "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.",
   "INSTALLED": "INSTALLED",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%."
+  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.",
+  "Align the charge to the voltage": "Align the charge to the voltage",
+  "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says": "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says",
+  "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.",
+  "The chip's charge now follows the voltage. Switch the console off and on, then charge it fully.": "The chip's charge now follows the voltage. Switch the console off and on, then charge it fully."
 }

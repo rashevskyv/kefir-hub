@@ -3489,5 +3489,9 @@
   "Copying from the console": "Копіювання з консолі",
   "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.": "Завантажуються лише файли, яких у консолі ще немає; прошивка готується в /firmware.",
   "INSTALLED": "ВСТАНОВЛЕНА",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Нижче 35%: навантаження вимкнено, екран притемнено, тож консоль плавно доходить до справжнього нуля. Вона вимкнеться сама; тоді зарядіть її до 100%."
+  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Нижче 35%: навантаження вимкнено, екран притемнено, тож консоль плавно доходить до справжнього нуля. Вона вимкнеться сама; тоді зарядіть її до 100%.",
+  "Align the charge to the voltage": "Вирівняти заряд за напругою",
+  "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says": "Користуйтеся одразу після того, як консоль сама вимкнулася на 20–30 %: заряд чіпа ставиться за його напругою",
+  "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Зараз не можна: зарядка має бути вийнята, напруга має казати 10% або менше, а чіп має показувати щонайменше на 15 пунктів більше за напругу.",
+  "The chip's charge now follows the voltage. Switch the console off and on, then charge it fully.": "Заряд чіпа тепер відповідає напрузі. Вимкніть і ввімкніть консоль, потім зарядіть її повністю."
 }

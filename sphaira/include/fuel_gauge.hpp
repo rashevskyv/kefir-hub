@@ -12,6 +12,7 @@ namespace sphaira {
 
 constexpr u8 MAX17050_Status = 0x00;
 constexpr u8 MAX17050_RepCap = 0x05;
+constexpr u8 MAX17050_MixCap = 0x0F; // RemCapMIX
 constexpr u8 MAX17050_RepSOC = 0x06;
 constexpr u8 MAX17050_Age = 0x07;
 constexpr u8 MAX17050_Temp = 0x08;

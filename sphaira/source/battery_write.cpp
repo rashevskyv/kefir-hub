@@ -310,6 +310,43 @@ void RunRestore() {
     });
 }
 
+// "Align the charge to the voltage": the chip reports far more charge than its own voltage estimate (VFSOC) says, so
+// RemCapMIX, RemCapREP and RepSOC are set to what the voltage says. Meant for the moment the console switches itself
+// off at 20-30 %. Everything the chip learned stays as it is; a full charge afterwards lets it learn again.
+void RunAlign() {
+    auto failed = std::make_shared<std::string>();
+    App::Push<ui::ProgressBox>(0, "Align the charge to the voltage"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
+        FuelGauge g;
+        R_UNLESS(g.open, Result_ArchiveRead);
+        PsmChargerType charger{};
+        psmGetChargerType(&charger);
+        const auto vfsoc = g.Read(MAX17050_VFSOC);
+        const auto repsoc = g.Read(MAX17050_RepSOC);
+        const auto full = g.Read(MAX17050_FullCap);
+        const auto nom = g.Read(MAX17050_FullCapNom);
+        R_UNLESS(vfsoc && repsoc && full && nom, Result_ArchiveRead);
+        const auto plan = PlanAlign({*vfsoc, *repsoc, *full, *nom, charger != PsmChargerType_Unconnected});
+        log_write("[Battery] align: voltage says %u/256 %%, chip says %u/256 %%, charger %d -> %s\n", *vfsoc, *repsoc,
+            charger != PsmChargerType_Unconnected, plan.ok ? "write" : "refused");
+        if (!plan.ok) {
+            *failed = "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage."_i18n;
+            R_THROW(Result_ArchiveRead);
+        }
+        std::string name;
+        R_TRY(Backup(Read(), name)); // what is in the chip now, before the change
+        const bool ok = g.WriteVerify(MAX17050_MixCap, plan.mix);
+        svcSleepThread(350'000'000);
+        const bool ok_rep = g.Write(MAX17050_RepCap, plan.rep);
+        const bool ok_soc = g.Write(MAX17050_RepSOC, plan.soc);
+        const auto after = g.Read(MAX17050_RepSOC);
+        log_write("[Battery] align: MIX %04X %d, REP %04X %d, SOC %04X %d; chip now %u/256 %%\n", plan.mix, ok, plan.rep, ok_rep, plan.soc, ok_soc, after ? *after : 0);
+        R_UNLESS(ok && ok_rep && ok_soc, Result_ArchiveRead);
+        R_SUCCEED();
+    }, [failed](Result rc) {
+        Done(rc, "The chip's charge now follows the voltage. Switch the console off and on, then charge it fully."_i18n, failed);
+    });
+}
+
 void RunMatch() {
     auto failed = std::make_shared<std::string>();
     App::Push<ui::ProgressBox>(0, "Match the other MMC"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
@@ -492,6 +529,10 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
     system_info::Row restore{"Restore from the last backup"_i18n, "Undo: the newest backup of this MMC back into the chip"_i18n};
     restore.action = RunRestore;
     more.rows.push_back(std::move(restore));
+    system_info::Row align{"Align the charge to the voltage"_i18n,
+                           "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says"_i18n};
+    align.action = RunAlign;
+    more.rows.push_back(std::move(align));
     system_info::Row match{"Match the other MMC"_i18n, "No chip write: this MMC's copy = chip, one cycle count"_i18n};
     match.action = RunMatch;
     more.rows.push_back(std::move(match));

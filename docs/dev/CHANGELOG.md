@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.153 — "Align the charge to the voltage": the chip's charge follows its own voltage estimate
+- Wizard → More: when the charger is out, the chip's voltage estimate (VFSOC) says 10 % or less and RepSOC shows 15+ points more (.141: Hekate 3193 mV, chip 32 %, HOS 24 %), the Hub backs the registers up and writes RemCapMIX (0x0F), then RemCapREP (0x05) and RepSOC (0x06), the order Atmosphère's driver seeds the chip after a power-on reset (research of the MAX17050 drivers: Atmosphère powctl_max17050_driver.cpp, Linux max17042, hekate max17050.c). Learned parameters, cycles, dQacc/dPacc stay. `PlanAlign` is pure (host test). Temporary by design: a full charge afterwards lets the chip learn FullCap again.
+- host tests: test_battery_gauge pass (align cases), quick pass · nro: built · switch: pending (.141 was off)
+
 ## v0.14.152 — screen restored after a drain that did not end; dimmed screen below 35 %; the installed firmware is yellow
 - The drain saves the brightness and the automatic-brightness flag in /config/kefir/battery/brightness.txt and deletes the file when it restores them; the Hub's start restores them from the file after a crash or a switch-off (`RestoreDrainBrightness`). Automatic brightness is turned off and the brightness set to the maximum on every model while draining; below 35 % the load goes off and the brightness drops to 2 % (a low current, so the console runs down to a real empty).
 - Updater: the entry equal to the firmware the console runs is yellow with INSTALLED, instead of white, in the list and the tiles.
