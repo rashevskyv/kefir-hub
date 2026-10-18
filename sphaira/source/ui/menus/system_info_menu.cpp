@@ -50,6 +50,23 @@ void DrawClipped(NVGcontext* vg, float x, float y, float w, float size, const NV
     nvgRestore(vg);
 }
 
+// a value that does not fit on one line wraps inside the row (up to three smaller lines) instead of being cut off
+void DrawValue(NVGcontext* vg, float x, float row_y, float row_h, float w, const NVGcolor& c, const std::string& text) {
+    float b[4]{};
+    nvgSave(vg);
+    nvgFontSize(vg, 18.f);
+    nvgTextBounds(vg, 0.f, 0.f, text.c_str(), nullptr, b);
+    nvgRestore(vg);
+    if (b[2] - b[0] <= w) {
+        DrawClipped(vg, x, row_y + row_h / 2.f, w, 18.f, c, text.c_str());
+        return;
+    }
+    nvgSave(vg);
+    nvgIntersectScissor(vg, x, row_y + 2.f, w, row_h - 4.f);
+    gfx::drawTextBox(vg, x, row_y + 6.f, 15.f, w, c, text.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.12f);
+    nvgRestore(vg);
+}
+
 } // namespace
 
 Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System information"_i18n, MenuFlag_None}, m_groups{std::move(groups)} {
@@ -231,7 +248,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const float value_x = v.x + v.w * VALUE_X;
         const auto label_col = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
         DrawClipped(vg, v.x + 54.f, mid_y, value_x - v.x - 66.f, 18.f, label_col, r.label.c_str(), true);
-        DrawClipped(vg, value_x, mid_y, v.x + v.w - 20.f - value_x, 18.f, r.warn ? WARN_COLOUR : r.done ? DONE_COLOUR : accent, r.value.c_str());
+        DrawValue(vg, value_x, v.y, v.h, v.x + v.w - 20.f - value_x, r.warn ? WARN_COLOUR : r.done ? DONE_COLOUR : accent, r.value);
     });
 }
 

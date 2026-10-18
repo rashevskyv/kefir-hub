@@ -141,7 +141,8 @@ auto MmcName(const Snapshot& s) -> std::string {
 auto FindingRow(const Diagnosis& r) -> system_info::Row {
     switch (r.finding) {
         case Finding::NoSign: return {"Verdict"_i18n, "No sign of desync found"_i18n};
-        case Finding::OtherDiffers: return {"Chip vs other MMC's copy"_i18n, "Differ: "_i18n + r.detail, true};
+        case Finding::OtherDiffers: return {"Chip vs other MMC's copy"_i18n, "Differ: "_i18n + r.detail + ". " +
+            "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same."_i18n, true};
         case Finding::CyclesDiffer: {
             const auto sp = r.detail.find(' ');
             return {"Charge cycles: this / other MMC"_i18n, r.detail.substr(0, sp) + " / " + r.detail.substr(sp + 1), true};

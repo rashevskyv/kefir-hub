@@ -3472,5 +3472,6 @@
   "To install them: close Kefir Hub, start any game while holding R (Title Mode) and open Kefir Hub from there.": "Щоб їх встановити: закрийте Kefir Hub, запустіть будь-яку гру, утримуючи R (режим тайтлу), і відкрийте Kefir Hub звідти.",
   "Skip them": "Пропустити їх",
   "Try anyway": "Спробувати все одно",
-  "If the base game failed to install a moment ago, keep it and install the base game again: the update then works.": "Якщо базова гра щойно не встановилася, залиште його і встановіть базову гру ще раз: тоді оновлення запрацює."
+  "If the base game failed to install a moment ago, keep it and install the base game again: the update then works.": "Якщо базова гра щойно не встановилася, залиште його і встановіть базову гру ще раз: тоді оновлення запрацює.",
+  "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same.": "Інший MMC ще тримає стару модель; крок 5 майстра калібрування зробить їх однаковими."
 }

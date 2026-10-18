@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.141 — long values in System information / Battery wrap instead of being cut
+- A value wider than its column is drawn on up to three lines inside the row (`DrawValue`), so "Differ: RCOMP0, TempCo, FullCap, …" reads in full; that row now also says the other MMC still holds the old model and step 5 matches it.
+- host tests: quick pass · nro: built · switch: seen on .141 (all three lines visible)
+
 ## v0.14.140 — Applet Mode warns before NSZ/XCZ installs; orphan update hint; quiet nxlink retry
 - Log of .45 (0.14.136, Applet Mode): all 11 NSZ failed at the first zstd chunk ("ZSTD_decompressStream ... Allocation error: not enough memory", YatiInvalidNczZstdError), the 50 MB ones too: the applet heap cannot hold the zstd window. PC Install now asks before it starts when Applet Mode meets NSZ/XCZ: Cancel / Skip them / Try anyway, with how to start in Title Mode (R held while launching a game).
 - The Inmost update (plain NCAs) installed while its NSZ base failed, so "installed without the base game" offered to delete it (it defaults to Keep); the prompt now says to keep it and install the base again.
