@@ -1,5 +1,6 @@
 #include "auto_update.hpp"
 #include "app.hpp"
+#include "defines.hpp"
 #include "download.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
@@ -122,7 +123,7 @@ void StartTransferDownload(const std::string& url, const std::string& version, c
     }
 
     auto pbox = std::make_unique<ui::ProgressBox>(
-        0, "Updating"_i18n, version,
+        0, "Updating"_i18n, std::string{APP_VERSION} + " -> " + version, // from which version to which
         [url, version, temp_path](ui::ProgressBox* pbox) -> Result {
             pbox->NewTransfer("Downloading"_i18n); // the version is already the box title
             const auto result = curl::Api().ToFile(
