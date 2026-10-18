@@ -611,4 +611,46 @@ void OpenCalibrate() {
     OpenWizard();
 }
 
+void PollInterruptedDrain() {
+    static bool finished = false;
+    static TimeStamp since_start{};
+    if (finished) {
+        return;
+    }
+    if (!DrainWasInterrupted()) {
+        finished = true;
+        return;
+    }
+    // wait until the UI has settled and nothing else runs
+    if (since_start.GetSeconds() < 8 || App::GetProgressActive()) {
+        return;
+    }
+    finished = true;
+    FuelGauge g;
+    if (!g.open) {
+        return;
+    }
+    PsmChargerType charger{};
+    psmGetChargerType(&charger);
+    const auto vfsoc = g.Read(MAX17050_VFSOC);
+    const auto repsoc = g.Read(MAX17050_RepSOC);
+    const auto full = g.Read(MAX17050_FullCap);
+    const auto nom = g.Read(MAX17050_FullCapNom);
+    if (!vfsoc || !repsoc || !full || !nom) {
+        return;
+    }
+    if (!PlanAlign({*vfsoc, *repsoc, *full, *nom, charger != PsmChargerType_Unconnected}).ok) {
+        return;
+    }
+    log_write("[Battery] the drain was cut short and the chip is off: voltage %u/256 %%, chip %u/256 %%\n", *vfsoc, *repsoc);
+    const std::string text = "The console switched itself off during the battery drain, and the chip still shows"_i18n + " " +
+        std::to_string(*repsoc >> 8) + "% " + "while its voltage says"_i18n + " " + std::to_string(*vfsoc >> 8) + "%.\n\n" +
+        "Set the chip's charge to what the voltage says? Then charge the console fully."_i18n;
+    App::Push<ui::OptionBox>(text, "Later"_i18n, "Align now"_i18n, 1, [](auto op) {
+        if (op && *op == 1) {
+            RunAlign();
+        }
+    });
+}
+
 } // namespace sphaira::battery

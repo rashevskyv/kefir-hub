@@ -15,6 +15,10 @@ void OpenDrain(int cycle);
 void StartDrain(int cycle);
 // at the Hub's start: restores the brightness a drain that did not end properly left changed
 void RestoreDrainBrightness();
+// true when this start found the leftovers of a drain that did not end properly (the console switched itself off)
+auto DrainWasInterrupted() -> bool;
+// from the app loop: after such a drain, once the UI is up, checks the chip against its voltage estimate and offers to align it
+void PollInterruptedDrain();
 // true after the user stopped a drain; cleared when the charger goes in (so Back from the drain page does not
 // start it again at once)
 auto AutoDrainSuppressed() -> bool;

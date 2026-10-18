@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.154 — after a drain the console cut short, the Hub offers to align the chip by itself
+- `RestoreDrainBrightness` marks a drain that did not end by the user's Stop (the console switched off, the Hub died); `PollInterruptedDrain` (app loop, 8 s after the start, once) then compares the chip with its voltage estimate and asks: "The console switched itself off during the battery drain, and the chip still shows 30 % while its voltage says 3 %. Set the chip's charge to what the voltage says?" (Later / Align now). Same guards as the manual action; nothing is written without the answer.
+- host tests: quick pass · nro: built · switch: pending
+
 ## v0.14.153 — "Align the charge to the voltage": the chip's charge follows its own voltage estimate
 - Wizard → More: when the charger is out, the chip's voltage estimate (VFSOC) says 10 % or less and RepSOC shows 15+ points more (.141: Hekate 3193 mV, chip 32 %, HOS 24 %), the Hub backs the registers up and writes RemCapMIX (0x0F), then RemCapREP (0x05) and RepSOC (0x06), the order Atmosphère's driver seeds the chip after a power-on reset (research of the MAX17050 drivers: Atmosphère powctl_max17050_driver.cpp, Linux max17042, hekate max17050.c). Learned parameters, cycles, dQacc/dPacc stay. `PlanAlign` is pure (host test). Temporary by design: a full charge afterwards lets the chip learn FullCap again.
 - host tests: test_battery_gauge pass (align cases), quick pass · nro: built · switch: pending (.141 was off)

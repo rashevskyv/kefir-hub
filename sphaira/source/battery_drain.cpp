@@ -619,11 +619,18 @@ void SetAutoDrainSuppressed(bool v) { g_auto_suppressed = v; }
 
 // at the Hub's start: a drain that ended without restoring the screen (crash, switch-off, the Hub killed) leaves its
 // file behind; put the brightness and the automatic brightness back as they were
+namespace {
+std::atomic<bool> g_drain_interrupted{false};
+} // namespace
+
+auto DrainWasInterrupted() -> bool { return g_drain_interrupted; }
+
 void RestoreDrainBrightness() {
     const auto kept = ReadSavedBrightness();
     if (!kept) {
         return;
     }
+    g_drain_interrupted = true; // the drain did not end by the user: the console switched off or the Hub died
     if (R_SUCCEEDED(lblInitialize())) {
         lblSetCurrentBrightnessSetting(kept->brightness);
         if (kept->auto_on) {

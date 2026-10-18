@@ -1,5 +1,6 @@
 #include "app_frame_buffer.hpp"
 #include "orphan_content.hpp"
+#include "battery_page.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "evman.hpp"
@@ -160,6 +161,7 @@ void App::Loop() {
 
         this->Poll();
         orphan_content::Poll();
+        battery::PollInterruptedDrain();
         this->Update();
         this->Draw();
 
