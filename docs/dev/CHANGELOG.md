@@ -3,6 +3,15 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.144 — a menu on the cycle steps (start / do again / about); the calibration page follows the console
+- A on step 3 or 4: "Start the drain", "Do this cycle again", "About this step". Each cycle is measured from its own start (`State::start`, `wizard::Redo`): cycle 2 from the moment cycle 1 counted, or from the moment it was redone, so a cycle that was counted although it was not drained (.141: cycle 2 "done" at 100 % with HOS's cycle counter, which also moves while charging) can be done again; redoing 1 redoes 2 and 5.
+- The page rebuilds its rows every 3 s, when it gets the focus back and after a redo (`sysinfo::Menu` rebuild callback), so "100 % on the charger" follows the cable. Reverts nothing of 0.14.142's unplug start. 0.14.143 (step 5 text as whole sentences) is part of it.
+- host tests: test_battery_wizard pass (redo case), quick pass · nro: built · switch: menu seen on .141
+
+## v0.14.142 — the drain starts by itself when the charger comes out; a full battery counts with the charger out
+- Calibration page: with a drain cycle as the next step, unplugging the charger starts the drain (the page ticks once a second, `AutoDrainTick`); "Back" from the drain page does not restart it until the charger goes in again. The step text says so. A full battery (psm 100 %) now counts the cycle also when the charger is already out (users unplug before opening the page: .141 showed "Discharged: now charge…" at 100 %). Step 3-5 sentences are translated as whole sentences (a half-English "завантажте sysMMC, open this page").
+- host tests: test_battery_wizard pass, quick (see build) · nro: built · switch: .141 counted cycle 2 on opening the page at 100 %; the unplug start is not seen yet (both cycles are done now)
+
 ## v0.14.141 — long values in System information / Battery wrap instead of being cut
 - A value wider than its column is drawn on up to three lines inside the row (`DrawValue`), so "Differ: RCOMP0, TempCo, FullCap, …" reads in full; that row now also says the other MMC still holds the old model and step 5 matches it.
 - host tests: quick pass · nro: built · switch: seen on .141 (all three lines visible)

@@ -19,7 +19,8 @@ struct Menu final : MenuBase {
     // the same page for another set of groups (Tools → Battery): its own title, every group open,
     // and one extra action on X.
     Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action,
-         std::string plus_label = {}, std::function<void()> plus_action = {});
+         std::string plus_label = {}, std::function<void()> plus_action = {}, std::function<void()> tick = {},
+         std::function<std::vector<system_info::Group>()> rebuild = {});
     ~Menu() = default;
 
     auto GetShortTitle() const -> const char* override { return "System information"; }
@@ -48,9 +49,19 @@ private:
     std::vector<Row> m_rows;
     s64 m_index{};
     std::unique_ptr<List> m_list;
+    std::function<void()> m_tick; // runs about once a second while this page is the active one
+    TimeStamp m_tick_ts{};
+    // gives the groups again, so the figures follow the console (charger in or out, the %): every 3 s, when the page
+    // gets the focus back and after RequestRebuild()
+    std::function<std::vector<system_info::Group>()> m_rebuild;
+    TimeStamp m_rebuild_ts{};
+    void SetGroups(std::vector<system_info::Group> groups);
 };
 
 // collects the data in a ProgressBox, then pushes the menu.
 void Open();
+
+// asks the open page that has a rebuild function to rebuild at its next update.
+void RequestRebuild();
 
 } // namespace sphaira::ui::menu::sysinfo

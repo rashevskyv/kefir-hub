@@ -11,5 +11,11 @@ void OpenCalibrate();
 
 // steps 3 and 4: drain under load until the console switches off (battery_drain.cpp).
 void OpenDrain(int cycle);
+// the same without the question, for the wizard's automatic start when the charger comes out
+void StartDrain(int cycle);
+// true after the user stopped a drain; cleared when the charger goes in (so Back from the drain page does not
+// start it again at once)
+auto AutoDrainSuppressed() -> bool;
+void SetAutoDrainSuppressed(bool v);
 
 } // namespace sphaira::battery

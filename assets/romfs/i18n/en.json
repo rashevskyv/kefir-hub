@@ -3473,5 +3473,18 @@
   "Skip them": "Skip them",
   "Try anyway": "Try anyway",
   "If the base game failed to install a moment ago, keep it and install the base game again: the update then works.": "If the base game failed to install a moment ago, keep it and install the base game again: the update then works.",
-  "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same.": "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same."
+  "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same.": "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same.",
+  "Cycle counted": "Cycle counted",
+  "The charger is out: the drain starts": "The charger is out: the drain starts",
+  "Next: boot %s, Tools → Tools → Battery": "Next: boot %s, Tools → Tools → Battery",
+  "Next: boot %s, open this page, A on this step": "Next: boot %s, open this page, A on this step",
+  "Start the drain": "Start the drain",
+  "Do this cycle again": "Do this cycle again",
+  "About this step": "About this step",
+  "Cycle": "Cycle",
+  "Mark this cycle as not done and measure it again from now on? A following cycle is measured again with it.": "Mark this cycle as not done and measure it again from now on? A following cycle is measured again with it.",
+  "Do it again": "Do it again",
+  "Could not read the battery": "Could not read the battery",
+  "The cycle is measured again from now": "The cycle is measured again from now",
+  "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ": "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: "
 }

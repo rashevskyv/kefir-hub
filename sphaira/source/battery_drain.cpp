@@ -87,6 +87,7 @@ struct DrainMenu final : ui::menu::MenuBase {
                 "Back"_i18n, "Stop"_i18n, 0, [this](auto op) {
                     if (op && *op == 1) {
                         account_restore::ClearReopenHubHint();
+                        SetAutoDrainSuppressed(true); // the user stopped it: the wizard must not restart it now
                         SetPop();
                     }
                 });
@@ -252,9 +253,7 @@ struct DrainMenu final : ui::menu::MenuBase {
             account_restore::ClearReopenHubHint();
             log_write("[Battery] cycle %d counted on the drain page (total %u)\n", m_cycle, *total);
         }
-        const auto done = wizard::Discharged(m_state, live);
-        const auto before = static_cast<std::uint32_t>(m_cycle - 1) * wizard::CYCLE_DONE;
-        m_cycle_got = done > before ? done - before : 0;
+        m_cycle_got = wizard::Got(m_state, live, m_cycle);
         m_step = wizard::DrainStepOf(m_state, live, m_cycle);
         if (m_step == DrainStep::CycleCounted && m_cycle == 1) {
             m_cycle = 2;
@@ -554,6 +553,17 @@ private:
 };
 
 } // namespace
+
+namespace {
+std::atomic<bool> g_auto_suppressed{false};
+} // namespace
+
+auto AutoDrainSuppressed() -> bool { return g_auto_suppressed; }
+void SetAutoDrainSuppressed(bool v) { g_auto_suppressed = v; }
+
+void StartDrain(int cycle) {
+    App::Push<DrainMenu>(cycle);
+}
 
 void OpenDrain(int cycle) {
     App::Push<ui::OptionBox>(

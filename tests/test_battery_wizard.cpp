@@ -42,7 +42,8 @@ int main() {
     assert(Steps(st, l)[2].mark == Mark::Next && Steps(st, l)[2].discharged == 50);
     l.total = 37196 + 95;
     l.charger = false;
-    assert(!Advance(st, l));                       // discharged, not on the charger yet
+    l.pct = 80;
+    assert(!Advance(st, l));                       // discharged, not full yet
     l.charger = true;
     l.pct = 99;
     assert(!Advance(st, l));                       // not full
@@ -52,6 +53,11 @@ int main() {
     l.total = 37196 + 185;
     l.now = 3000;
     assert(Advance(st, l) && st.full2_at == 3000);
+
+    // 100 % with the charger already pulled still counts
+    State un{1000, EMUMMC, 37196, 0, 0, {0, 0}};
+    Live out{37196 + 98, false, 100, EMUMMC, true, 2500};
+    assert(Advance(un, out) && un.full1_at == 2500);
 
     // the other MMC must match after the second cycle
     v = Steps(st, l);
@@ -93,6 +99,20 @@ int main() {
     assert(DrainStepOf(c, on, 2) == DrainStep::NotEmptyYet);   // the second cycle: unplug to start
     on.charger = false;
     assert(DrainStepOf(c, on, 2) == DrainStep::Draining);
+
+    // "Do this cycle again": the .141 case, cycle 2 counted although it was not really drained
+    State r{1000, EMUMMC, 37196, 1500, 2500, {0, 0}};
+    r.start[1] = 37196 + 98;
+    Live now{37196 + 190, false, 100, EMUMMC, true, 3000};
+    assert(Got(r, now, 2) == 92);
+    Redo(r, 2, now.total);
+    assert(r.full2_at == 0 && r.full1_at == 1500 && r.start[1] == now.total);
+    assert(Got(r, now, 2) == 0 && !Advance(r, now));          // 100 % at once does not count it again
+    now.total += 91;
+    assert(Advance(r, now) && r.full2_at == 3000);            // 91 more discharged, full: counted
+    Redo(r, 1, now.total);                                    // redoing cycle 1 redoes cycle 2 with it
+    assert(r.full1_at == 0 && r.full2_at == 0 && r.start[0] == now.total && r.start[1] == 0);
+    assert(Parse(Format(r)) == r);
 
     std::puts("test_battery_wizard: ok");
 }

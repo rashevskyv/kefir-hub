@@ -32,20 +32,24 @@ struct State {
     std::uint64_t zero_at[2]{};
     std::uint64_t alive_at[2]{};
     std::uint64_t drain_s[2]{}; // seconds spent on battery in this cycle's drain (the charger hours do not count)
+    // HOS cycle total x100 where each cycle is measured from (0 = not set: cycle 1 from the reset, cycle 2 from the
+    // moment cycle 1 counted). "Redo this cycle" sets it to the total now, so a cycle that did not really happen can
+    // be done again.
+    std::uint32_t start[2]{};
     friend bool operator==(const State&, const State&) = default;
 };
 
 inline auto Format(const State& s) -> std::string {
-    char buf[640];
+    char buf[768];
     std::snprintf(buf, sizeof(buf),
         "reset_at=%llu\nreset_mmc=%d\ntotal_at_reset=%u\nfull1_at=%llu\nfull2_at=%llu\nmatch_sysmmc_at=%llu\nmatch_emummc_at=%llu\n"
         "drain1_at=%llu\nzero1_at=%llu\nalive1_at=%llu\ndrain2_at=%llu\nzero2_at=%llu\nalive2_at=%llu\n"
-        "drain1_s=%llu\ndrain2_s=%llu\n",
+        "drain1_s=%llu\ndrain2_s=%llu\nstart1=%u\nstart2=%u\n",
         (unsigned long long)s.reset_at, s.reset_mmc, s.total_at_reset, (unsigned long long)s.full1_at,
         (unsigned long long)s.full2_at, (unsigned long long)s.match_at[SYSMMC], (unsigned long long)s.match_at[EMUMMC],
         (unsigned long long)s.drain_at[0], (unsigned long long)s.zero_at[0], (unsigned long long)s.alive_at[0],
         (unsigned long long)s.drain_at[1], (unsigned long long)s.zero_at[1], (unsigned long long)s.alive_at[1],
-        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1]);
+        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1], s.start[0], s.start[1]);
     return buf;
 }
 
@@ -76,6 +80,8 @@ inline auto Parse(std::string_view text) -> State {
         else if (key == "alive2_at") s.alive_at[1] = v;
         else if (key == "drain1_s") s.drain_s[0] = v;
         else if (key == "drain2_s") s.drain_s[1] = v;
+        else if (key == "start1") s.start[0] = static_cast<std::uint32_t>(v);
+        else if (key == "start2") s.start[1] = static_cast<std::uint32_t>(v);
     }
     return s;
 }
@@ -94,17 +100,53 @@ inline auto Discharged(const State& s, const Live& l) -> std::uint32_t {
     return l.total > s.total_at_reset ? l.total - s.total_at_reset : 0;
 }
 
+// where cycle 1 or 2 is measured from (see State::start)
+inline auto CycleStart(const State& s, int cycle) -> std::uint32_t {
+    if (cycle == 1) {
+        return s.start[0] ? s.start[0] : s.total_at_reset;
+    }
+    return s.start[1] ? s.start[1] : s.total_at_reset + CYCLE_DONE;
+}
+
+// x100 discharged in this cycle so far
+inline auto Got(const State& s, const Live& l, int cycle) -> std::uint32_t {
+    const auto from = CycleStart(s, cycle);
+    return l.total > from ? l.total - from : 0;
+}
+
+// "Redo this cycle": measure it again from now; a later cycle and the match step are redone with it.
+inline void Redo(State& s, int cycle, std::uint32_t total_now) {
+    const int c = cycle - 1;
+    if (c < 0 || c > 1) {
+        return;
+    }
+    for (int i = c; i < 2; i++) {
+        s.drain_at[i] = s.zero_at[i] = s.alive_at[i] = s.drain_s[i] = 0;
+        s.start[i] = 0;
+    }
+    s.start[c] = total_now;
+    if (c == 0) {
+        s.full1_at = 0;
+    }
+    s.full2_at = 0;
+    s.match_at[SYSMMC] = s.match_at[EMUMMC] = 0;
+}
+
 // records a finished cycle: enough discharged since the last mark, now full on the charger. true = state changed.
 inline auto Advance(State& s, const Live& l) -> bool {
-    if (!s.reset_at || !l.charger || l.pct < 100) {
+    // psm shows 100 only when the battery is full: a full battery counts with the charger out too (the user pulls
+    // the cable and opens the page afterwards, so the "on the charger" moment is easy to miss)
+    if (!s.reset_at || l.pct < 100) {
         return false;
     }
-    const auto d = Discharged(s, l);
-    if (!s.full1_at && d >= CYCLE_DONE) {
+    if (!s.full1_at && Got(s, l, 1) >= CYCLE_DONE) {
         s.full1_at = l.now;
+        if (!s.start[1]) {
+            s.start[1] = l.total; // cycle 2 is measured from here
+        }
         return true;
     }
-    if (s.full1_at && !s.full2_at && d >= 2 * CYCLE_DONE) {
+    if (s.full1_at && !s.full2_at && Got(s, l, 2) >= CYCLE_DONE) {
         s.full2_at = l.now;
         return true;
     }
@@ -155,7 +197,7 @@ inline auto DrainStepOf(const State& s, const Live& l, int cycle) -> DrainStep {
     if (!l.charger) {
         return DrainStep::Draining;
     }
-    return Discharged(s, l) >= CYCLE_DONE * static_cast<std::uint32_t>(cycle) ? DrainStep::Charging : DrainStep::NotEmptyYet;
+    return Got(s, l, cycle) >= CYCLE_DONE ? DrainStep::Charging : DrainStep::NotEmptyYet;
 }
 
 enum class Step { CheckOther, Reset, Cycle1, Cycle2, MatchOther, Finished };
@@ -164,11 +206,10 @@ enum class Mark { Done, Next, Later };
 struct View {
     Step step;
     Mark mark;
-    std::uint32_t discharged{}; // for the cycle steps: x100 since the reset
+    std::uint32_t discharged{}; // for the cycle steps: x100 in that cycle so far
 };
 
 inline auto Steps(const State& s, const Live& l) -> std::vector<View> {
-    const auto d = Discharged(s, l);
     const int other = s.reset_mmc == SYSMMC ? EMUMMC : SYSMMC;
     const bool matched = s.full2_at && s.match_at[other] > s.full2_at;
     const bool done[] = {l.other_known || s.reset_at, s.reset_at != 0, s.full1_at != 0, s.full2_at != 0, matched, matched};
@@ -182,7 +223,7 @@ inline auto Steps(const State& s, const Live& l) -> std::vector<View> {
             m = Mark::Next;
             next_given = true;
         }
-        out.push_back({static_cast<Step>(i), m, d});
+        out.push_back({static_cast<Step>(i), m, i == 2 ? Got(s, l, 1) : i == 3 ? Got(s, l, 2) : 0u});
     }
     return out;
 }

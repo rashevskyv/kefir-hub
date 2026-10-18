@@ -3473,5 +3473,18 @@
   "Skip them": "Пропустити їх",
   "Try anyway": "Спробувати все одно",
   "If the base game failed to install a moment ago, keep it and install the base game again: the update then works.": "Якщо базова гра щойно не встановилася, залиште його і встановіть базову гру ще раз: тоді оновлення запрацює.",
-  "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same.": "Інший MMC ще тримає стару модель; крок 5 майстра калібрування зробить їх однаковими."
+  "The other MMC still holds the old model; step 5 of the calibration wizard makes it the same.": "Інший MMC ще тримає стару модель; крок 5 майстра калібрування зробить їх однаковими.",
+  "Cycle counted": "Цикл зараховано",
+  "The charger is out: the drain starts": "Зарядку від'єднано: починається розряд",
+  "Next: boot %s, Tools → Tools → Battery": "Далі: завантажте %s, Інструменти → Інструменти → Батарея",
+  "Next: boot %s, open this page, A on this step": "Далі: завантажте %s, відкрийте цю сторінку, A на цьому кроці",
+  "Start the drain": "Почати розряд",
+  "Do this cycle again": "Зробити цей цикл знову",
+  "About this step": "Про цей крок",
+  "Cycle": "Цикл",
+  "Mark this cycle as not done and measure it again from now on? A following cycle is measured again with it.": "Позначити цей цикл невиконаним і міряти його знову від зараз? Наступний цикл теж міряється знову.",
+  "Do it again": "Зробити знову",
+  "Could not read the battery": "Не вдалося прочитати батарею",
+  "The cycle is measured again from now": "Цикл міряється знову від зараз",
+  "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: ": "Далі: від'єднайте зарядку, і Hub почне розряд, або натисніть A для меню. Виконано: "
 }

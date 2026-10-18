@@ -352,6 +352,48 @@ auto Info(const std::string& text) -> std::function<void()> {
     return [text]() { App::Push<ui::OptionBox>(text, "OK"_i18n); };
 }
 
+// A on a cycle step: start the drain, do the cycle again, or read about it
+auto CycleMenu(int cycle, std::function<void()> help) -> std::function<void()> {
+    return [cycle, help]() {
+        ui::PopupList::Items items{"Start the drain"_i18n, "Do this cycle again"_i18n, "About this step"_i18n};
+        App::Push<ui::PopupList>("Cycle"_i18n + " " + std::to_string(cycle), items, [cycle, help](std::optional<s64> index) {
+            if (!index) {
+                return;
+            }
+            if (*index == 0) {
+                OpenDrain(cycle);
+            } else if (*index == 1) {
+                App::Push<ui::OptionBox>("Mark this cycle as not done and measure it again from now on? A following cycle is measured again with it."_i18n,
+                    "Back"_i18n, "Do it again"_i18n, 0, [cycle](auto op) {
+                        if (!op || *op != 1) {
+                            return;
+                        }
+                        const auto total = CycleTotalNow();
+                        if (!total) {
+                            App::Notify("Could not read the battery"_i18n);
+                            return;
+                        }
+                        auto st = LoadState();
+                        wizard::Redo(st, cycle, *total);
+                        SaveState(st);
+                        ui::menu::sysinfo::RequestRebuild();
+                        App::Notify("The cycle is measured again from now"_i18n);
+                    });
+            } else {
+                help();
+            }
+        });
+    };
+}
+
+// replaces the %s of an already translated sentence
+auto Fill(std::string fmt, const std::string& arg) -> std::string {
+    if (const auto pos = fmt.find("%s"); pos != std::string::npos) {
+        fmt.replace(pos, 2, arg);
+    }
+    return fmt;
+}
+
 auto DateOf(u64 t) -> std::string {
     char buf[32];
     const auto tt = static_cast<time_t>(t);
@@ -387,7 +429,7 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
         switch (v.step) {
             case wizard::Step::CheckOther:
                 r.label = "1. Other MMC checked"_i18n;
-                r.value = done ? "Done"_i18n : "Next: boot "_i18n + other_name + ", Tools → Tools → Battery";
+                r.value = done ? "Done"_i18n : Fill("Next: boot %s, Tools → Tools → Battery"_i18n, other_name);
                 r.action = Info("Both MMCs keep their own copy of the battery model and their own cycle count. Boot the other MMC once and open Tools → Tools → Battery there; the page saves its copy to the microSD, so this one can compare them."_i18n);
                 break;
             case wizard::Step::Reset:
@@ -398,9 +440,8 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
             case wizard::Step::Cycle1:
             case wizard::Step::Cycle2: {
                 const bool first = v.step == wizard::Step::Cycle1;
-                const u32 target = first ? wizard::CYCLE_DONE : 2 * wizard::CYCLE_DONE;
-                const u32 from = first ? 0 : wizard::CYCLE_DONE;
-                const u32 got = v.discharged > from ? v.discharged - from : 0;
+                const u32 target = wizard::CYCLE_DONE;
+                const u32 got = v.discharged;
                 r.label = first ? "3. First cycle"_i18n
                                 : "4. Second cycle"_i18n;
                 if (done) {
@@ -410,13 +451,10 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                     }
                 } else if (next) {
                     r.value = v.discharged >= target ? "Discharged: now charge to 100% and open this page"_i18n
-                                                     : "Next: A starts the drain. Done: "_i18n + pct_text(got) + " / 90%";
+                                                     : "Next: unplug the charger and the Hub starts the drain, or press A for the menu. Done: "_i18n + pct_text(got) + " / 90%";
                 }
-                if (next && v.discharged < target) {
-                    r.action = [first]() { OpenDrain(first ? 1 : 2); };
-                    break;
-                }
-                r.action = Info("Two ways to run the battery down; unplug the charger first.\n\n1. Use the console as usual (a game, the screen bright, no sleep) until it switches off by itself.\n2. Let Kefir Hub do it: press A on this step (when it is the next one) and the Hub runs the battery down with the screen at full brightness and the CPU and GPU under load.\n\nThen charge to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
+                const auto help = Info("Two ways to run the battery down; unplug the charger first.\n\n1. Use the console as usual (a game, the screen bright, no sleep) until it switches off by itself.\n2. Let Kefir Hub do it: press A on this step (when it is the next one) and the Hub runs the battery down with the screen at full brightness and the CPU and GPU under load.\n\nThen charge to 100% and open this page: the step counts once 90% of the battery was used since the last step. The chip learns the battery's real capacity on these cycles.\n\nUntil both cycles are done, do not let the battery run flat in the other MMC."_i18n);
+                r.action = st.reset_at ? CycleMenu(first ? 1 : 2, help) : help;
                 break;
             }
             case wizard::Step::MatchOther:
@@ -424,7 +462,7 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                 if (done) {
                     r.value = "Done"_i18n;
                 } else if (next) {
-                    r.value = mmc == st.reset_mmc ? "Next: boot "_i18n + match_in + ", open this page, A on this step"
+                    r.value = mmc == st.reset_mmc ? Fill("Next: boot %s, open this page, A on this step"_i18n, match_in)
                                                   : "Next: press A here"_i18n;
                 }
                 r.action = mmc == st.reset_mmc && st.reset_at
@@ -461,6 +499,45 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
     return {std::move(steps), std::move(now), std::move(more)};
 }
 
+// Runs about once a second while the calibration page is open. When a drain cycle is the next step and the charger is
+// out, the Hub starts the drain by itself: "charge to 100 %, unplug the charger, and the Hub drains the console".
+void AutoDrainTick() {
+    PsmChargerType charger{};
+    psmGetChargerType(&charger);
+    if (charger != PsmChargerType_Unconnected) {
+        SetAutoDrainSuppressed(false); // a new charge: the next unplug may start the drain again
+        return;
+    }
+    if (AutoDrainSuppressed() || App::GetProgressActive()) {
+        return;
+    }
+    const auto total = CycleTotalNow();
+    u32 pct{};
+    psmGetBatteryChargePercentage(&pct);
+    if (!total) {
+        return;
+    }
+    auto st = LoadState();
+    const wizard::Live live{*total, false, pct, 0, false, static_cast<u64>(std::time(nullptr))};
+    if (wizard::Advance(st, live)) {
+        SaveState(st);
+        App::Notify("Cycle counted"_i18n);
+    }
+    for (const auto& v : wizard::Steps(st, live)) {
+        if (v.mark != wizard::Mark::Next) {
+            continue;
+        }
+        if ((v.step == wizard::Step::Cycle1 || v.step == wizard::Step::Cycle2) && st.reset_at) {
+            const int cycle = v.step == wizard::Step::Cycle1 ? 1 : 2;
+            if (v.discharged < wizard::CYCLE_DONE) {
+                App::Notify("The charger is out: the drain starts"_i18n);
+                StartDrain(cycle);
+            }
+        }
+        return;
+    }
+}
+
 void OpenWizard() {
     auto groups = std::make_shared<std::vector<system_info::Group>>();
     App::Push<ui::ProgressBox>(0, "Reading"_i18n, "Battery calibration"_i18n, [groups](auto) -> Result {
@@ -475,6 +552,13 @@ void OpenWizard() {
                 std::string name;
                 const auto rc = Backup(Read(), name);
                 App::Notify(R_SUCCEEDED(rc) ? "Saved: "_i18n + name + ".cal" : std::string{"Backup failed"_i18n});
+            }, std::string{}, std::function<void()>{}, AutoDrainTick, []() -> std::vector<system_info::Group> {
+                auto snap = Read();
+                if (!snap.gauge) {
+                    return {};
+                }
+                auto state = LoadState();
+                return WizardGroups(snap, state);
             });
         }
     });

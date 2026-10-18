@@ -6,6 +6,7 @@
 #include "defines.hpp"
 #include "i18n.hpp"
 
+#include <atomic>
 #include <algorithm>
 #include <memory>
 
@@ -49,6 +50,8 @@ void DrawClipped(NVGcontext* vg, float x, float y, float w, float size, const NV
     }
     nvgRestore(vg);
 }
+
+std::atomic<bool> g_rebuild_requested{false};
 
 // a value that does not fit on one line wraps inside the row (up to three smaller lines) instead of being cut off
 void DrawValue(NVGcontext* vg, float x, float row_y, float row_h, float w, const NVGcolor& c, const std::string& text) {
@@ -97,8 +100,11 @@ Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System informatio
 }
 
 Menu::Menu(std::string title, std::vector<system_info::Group> groups, std::string x_label, std::function<void()> x_action,
-           std::string plus_label, std::function<void()> plus_action)
+           std::string plus_label, std::function<void()> plus_action, std::function<void()> tick,
+           std::function<std::vector<system_info::Group>()> rebuild)
     : Menu{std::move(groups)} {
+    m_tick = std::move(tick);
+    m_rebuild = std::move(rebuild);
     if (plus_action) {
         SetAction(Button::START, Action{std::move(plus_label), std::move(plus_action)});
     }
@@ -195,6 +201,16 @@ void Menu::SetIndex(s64 index) {
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+    if (m_tick && m_tick_ts.GetSeconds() >= 1) {
+        m_tick_ts.Update();
+        m_tick();
+    }
+    if (m_rebuild && (g_rebuild_requested.exchange(false) || m_rebuild_ts.GetSeconds() >= 3)) {
+        m_rebuild_ts.Update();
+        if (auto fresh = m_rebuild(); !fresh.empty()) {
+            SetGroups(std::move(fresh));
+        }
+    }
     m_list->OnUpdate(controller, touch, m_index, m_rows.size(), [this](bool touch, auto i) {
         if (i < 0 || i >= static_cast<s64>(m_rows.size())) {
             return;
@@ -252,9 +268,32 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     });
 }
 
+void Menu::SetGroups(std::vector<system_info::Group> groups) {
+    const auto old_open = m_open;
+    m_groups = std::move(groups);
+    m_open.assign(m_groups.size(), true);
+    for (size_t i = 0; i < m_open.size() && i < old_open.size(); i++) {
+        m_open[i] = old_open[i];
+    }
+    Rebuild();
+    if (m_index >= static_cast<s64>(m_rows.size())) {
+        m_index = std::max<s64>(0, static_cast<s64>(m_rows.size()) - 1);
+    }
+}
+
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    if (m_rebuild) {
+        if (auto fresh = m_rebuild(); !fresh.empty()) {
+            SetGroups(std::move(fresh));
+        }
+        m_rebuild_ts.Update();
+    }
     SetIndex(m_index);
+}
+
+void RequestRebuild() {
+    g_rebuild_requested = true;
 }
 
 void Open() {
