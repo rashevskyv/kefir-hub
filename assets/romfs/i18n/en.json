@@ -3497,5 +3497,9 @@
   "The console switched itself off during the battery drain, and the chip still shows": "The console switched itself off during the battery drain, and the chip still shows",
   "while its voltage says": "while its voltage says",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Set the chip's charge to what the voltage says? Then charge the console fully.",
-  "Align now": "Align now"
+  "Align now": "Align now",
+  "Back up the chip's values": "Back up the chip's values",
+  "Writing the Atmosphere fan curve": "Writing the Atmosphere fan curve",
+  "Failed to save the fan curve": "Failed to save the fan curve",
+  "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.": "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now."
 }

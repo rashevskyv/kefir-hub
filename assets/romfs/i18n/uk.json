@@ -3497,5 +3497,9 @@
   "The console switched itself off during the battery drain, and the chip still shows": "Консоль сама вимкнулася під час розряду батареї, а чіп ще показує",
   "while its voltage says": "хоча за його напругою",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Виставити заряд чіпа за напругою? Потім зарядіть консоль повністю.",
-  "Align now": "Вирівняти зараз"
+  "Align now": "Вирівняти зараз",
+  "Back up the chip's values": "Зберегти значення чіпа",
+  "Writing the Atmosphere fan curve": "Запис кривої кулера Atmosphère",
+  "Failed to save the fan curve": "Не вдалося зберегти криву кулера",
+  "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.": "Криву кулера збережено. Вона застосується після наступного перезавантаження.\n\nУтримуйте A, щоб перезавантажити зараз."
 }

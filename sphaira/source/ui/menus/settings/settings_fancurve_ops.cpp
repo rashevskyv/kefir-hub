@@ -504,27 +504,27 @@ void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
         "Applying"_i18n,
         "Fan curve",
         [handheld, docked, mode, live_apply](auto pbox) -> Result {
-            pbox->NewTransfer("Writing Atmosphere fan curve and restarting fan module...");
+            pbox->NewTransfer("Writing the Atmosphere fan curve"_i18n);
             return detail::ApplyFanCurves(handheld, docked, mode);
         },
         [this, live_apply, handheld, docked](Result rc){
             if (R_FAILED(rc)) {
-                App::Push<HoldConfirmBox>(
-                    "Failed to activate fan module.\n\nChanges will apply on next reboot.\n\nHold A to reboot now and apply changes."_i18n,
-                    3.f,
-                    [](bool confirmed){
-                        if (confirmed) {
-                            detail::RebootAfterSetting();
-                        }
-                    }
-                );
-                m_dirty = false;
+                App::PushErrorBox(rc, "Failed to save the fan curve"_i18n);
                 return;
             }
             m_applied_handheld_curve = handheld;
             m_applied_docked_curve = docked;
             m_dirty = false;
-            App::Notify("Fan curve applied"_i18n);
+            // saved to the Atmosphère config: the fan follows it from the next start
+            App::Push<HoldConfirmBox>(
+                "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now."_i18n,
+                3.f,
+                [](bool confirmed){
+                    if (confirmed) {
+                        detail::RebootAfterSetting();
+                    }
+                }
+            );
         }
     );
 }

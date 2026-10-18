@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.156 — calibration page layout (metrics strip, Actions menu); no question about the fan module
+- Calibration page: "Now" (charge, full capacity, the warning) is a strip of figures above the steps (`Group::metrics`); the "More" group is gone: X opens "Actions" (back up, align the charge to the voltage, restore from the last backup, match the other MMC). 0.14.155 and 0.14.156 together.
+- Fan curve: the "install the Kefir fan module?" question is gone (the module is not shipped: no romfs/sysmodule; the Hub removes it at start, 0.14.129). Saving a curve writes the Atmosphère config and says it applies after a reboot (Hold A to reboot); it used to end with "Failed to activate fan module" every time because it tried to restart the missing module.
+- host tests: quick pass · nro: built · switch: pending
+
 ## v0.14.154 — after a drain the console cut short, the Hub offers to align the chip by itself
 - `RestoreDrainBrightness` marks a drain that did not end by the user's Stop (the console switched off, the Hub died); `PollInterruptedDrain` (app loop, 8 s after the start, once) then compares the chip with its voltage estimate and asks: "The console switched itself off during the battery drain, and the chip still shows 30 % while its voltage says 3 %. Set the chip's charge to what the voltage says?" (Later / Align now). Same guards as the manual action; nothing is written without the answer.
 - host tests: quick pass · nro: built · switch: pending

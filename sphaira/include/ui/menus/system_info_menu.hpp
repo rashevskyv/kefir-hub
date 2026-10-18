@@ -56,6 +56,8 @@ private:
     std::function<std::vector<system_info::Group>()> m_rebuild;
     TimeStamp m_rebuild_ts{};
     void SetGroups(std::vector<system_info::Group> groups);
+    void TakeMetrics(std::vector<system_info::Group>& groups);
+    std::vector<system_info::Row> m_metrics; // the strip above the list
 };
 
 // collects the data in a ProgressBox, then pushes the menu.

@@ -389,6 +389,28 @@ auto Info(const std::string& text) -> std::function<void()> {
     return [text]() { App::Push<ui::OptionBox>(text, "OK"_i18n); };
 }
 
+// X on the calibration page: what can be done to the chip and the copies
+void ActionsMenu() {
+    ui::PopupList::Items items{"Back up the chip's values"_i18n, "Align the charge to the voltage"_i18n,
+                               "Restore from the last backup"_i18n, "Match the other MMC"_i18n};
+    App::Push<ui::PopupList>("Actions"_i18n, items, [](std::optional<s64> index) {
+        if (!index) {
+            return;
+        }
+        switch (*index) {
+            case 0: {
+                std::string name;
+                const auto rc = Backup(Read(), name);
+                App::Notify(R_SUCCEEDED(rc) ? "Saved: "_i18n + name + ".cal" : std::string{"Backup failed"_i18n});
+                break;
+            }
+            case 1: RunAlign(); break;
+            case 2: RunRestore(); break;
+            case 3: RunMatch(); break;
+        }
+    });
+}
+
 // A on a cycle step: start the drain, do the cycle again, or read about it
 auto CycleMenu(int cycle, std::function<void()> help) -> std::function<void()> {
     return [cycle, help]() {
@@ -521,23 +543,12 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
         {"Battery charge"_i18n, std::to_string(pct) + "%" + (charger != PsmChargerType_Unconnected ? " · " + "on the charger"_i18n : std::string{})},
         {"Full capacity / design"_i18n, std::to_string(full / 2) + " / " + std::to_string(design / 2) + " mAh", CapacityLow(full, design)},
     }};
+    now.metrics = true; // drawn as the strip of figures above the steps
     if (st.reset_at && !st.full2_at) {
         now.rows.push_back({"Careful"_i18n, "Until step 4 is done, do not let the battery run flat in "_i18n + match_in, true});
     }
 
-    system_info::Group more{"More"_i18n, {}};
-    system_info::Row restore{"Restore from the last backup"_i18n, "Undo: the newest backup of this MMC back into the chip"_i18n};
-    restore.action = RunRestore;
-    more.rows.push_back(std::move(restore));
-    system_info::Row align{"Align the charge to the voltage"_i18n,
-                           "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says"_i18n};
-    align.action = RunAlign;
-    more.rows.push_back(std::move(align));
-    system_info::Row match{"Match the other MMC"_i18n, "No chip write: this MMC's copy = chip, one cycle count"_i18n};
-    match.action = RunMatch;
-    more.rows.push_back(std::move(match));
-
-    return {std::move(steps), std::move(now), std::move(more)};
+    return {std::move(steps), std::move(now)};
 }
 
 // Runs about once a second while the calibration page is open. When a drain cycle is the next step and the charger is
@@ -589,11 +600,7 @@ void OpenWizard() {
         R_SUCCEED();
     }, [groups](Result rc) {
         if (R_SUCCEEDED(rc)) {
-            App::Push<ui::menu::sysinfo::Menu>("Battery calibration"_i18n, std::move(*groups), "Back up"_i18n, []() {
-                std::string name;
-                const auto rc = Backup(Read(), name);
-                App::Notify(R_SUCCEEDED(rc) ? "Saved: "_i18n + name + ".cal" : std::string{"Backup failed"_i18n});
-            }, std::string{}, std::function<void()>{}, AutoDrainTick, []() -> std::vector<system_info::Group> {
+            App::Push<ui::menu::sysinfo::Menu>("Battery calibration"_i18n, std::move(*groups), "Actions"_i18n, ActionsMenu, std::string{}, std::function<void()>{}, AutoDrainTick, []() -> std::vector<system_info::Group> {
                 auto snap = Read();
                 if (!snap.gauge) {
                     return {};

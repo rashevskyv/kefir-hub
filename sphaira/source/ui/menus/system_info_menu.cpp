@@ -19,6 +19,7 @@ const NVGcolor DONE_COLOUR = nvgRGB(0x4C, 0xAF, 0x50);
 namespace {
 
 constexpr float ROW_H = 56.f;
+constexpr float METRICS_H = 78.f;
 // the value column starts here (fraction of the row width); both columns are
 // clipped to their own box so a long value never runs under the next column.
 constexpr float VALUE_X = 0.42f;
@@ -72,7 +73,25 @@ void DrawValue(NVGcontext* vg, float x, float row_y, float row_h, float w, const
 
 } // namespace
 
-Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System information"_i18n, MenuFlag_None}, m_groups{std::move(groups)} {
+// a group marked `metrics` leaves the list and becomes the strip of figures above it
+void Menu::TakeMetrics(std::vector<system_info::Group>& groups) {
+    m_metrics.clear();
+    std::vector<system_info::Group> rest;
+    for (auto& g : groups) {
+        if (g.metrics) {
+            for (auto& r : g.rows) {
+                m_metrics.push_back(std::move(r));
+            }
+        } else {
+            rest.push_back(std::move(g));
+        }
+    }
+    groups = std::move(rest);
+}
+
+Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System information"_i18n, MenuFlag_None} {
+    TakeMetrics(groups);
+    m_groups = std::move(groups);
     m_open.assign(m_groups.size(), false);
     if (!m_open.empty()) {
         m_open[0] = true;
@@ -92,7 +111,9 @@ Menu::Menu(std::vector<system_info::Group> groups) : MenuBase{"System informatio
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
     );
 
-    m_list = std::make_unique<List>(1, 8, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, ROW_H});
+    // the strip of figures takes the top of the page; the list starts below it
+    const float top = m_metrics.empty() ? 0.f : METRICS_H + 10.f;
+    m_list = std::make_unique<List>(1, 8, Vec4{75.f, 132.f + top, 1145.f, 462.f - top}, Vec4{75.f, 132.f + top, 1130.f, ROW_H});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(true);
     Rebuild();
@@ -229,6 +250,29 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
+    if (!m_metrics.empty()) {
+        // the figures of the moment: label small, value large, one cell each
+        const float x = 75.f, y = 128.f, w = 1130.f;
+        gfx::drawRect(vg, x, y, w, METRICS_H, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 8.f);
+        const float cell = w / static_cast<float>(m_metrics.size());
+        for (size_t i = 0; i < m_metrics.size(); i++) {
+            const auto& r = m_metrics[i];
+            const float cx = x + cell * static_cast<float>(i) + 18.f;
+            const auto col = r.warn ? WARN_COLOUR : r.done ? DONE_COLOUR : theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+            gfx::drawText(vg, cx, y + 8.f, 14.f, theme->GetColour(ThemeEntryID_TEXT_INFO), r.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+            float b[4]{};
+            nvgSave(vg);
+            nvgFontSize(vg, 24.f);
+            nvgTextBounds(vg, 0.f, 0.f, r.value.c_str(), nullptr, b);
+            nvgRestore(vg);
+            if (b[2] - b[0] <= cell - 36.f) {
+                gfx::drawText(vg, cx, y + 30.f, 24.f, col, r.value.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+            } else {
+                gfx::drawTextBox(vg, cx, y + 28.f, 15.f, cell - 36.f, col, r.value.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP, nullptr, 1.1f);
+            }
+        }
+    }
+
     m_list->Draw(vg, theme, m_rows.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& row = m_rows[i];
         const auto& group = m_groups[row.group];
@@ -270,6 +314,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
 void Menu::SetGroups(std::vector<system_info::Group> groups) {
     const auto old_open = m_open;
+    TakeMetrics(groups);
     m_groups = std::move(groups);
     m_open.assign(m_groups.size(), true);
     for (size_t i = 0; i < m_open.size() && i < old_open.size(); i++) {

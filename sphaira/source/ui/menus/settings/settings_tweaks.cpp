@@ -501,8 +501,8 @@ auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vecto
     R_TRY(SetIniRawValue("/atmosphere/config/system_settings.ini", "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
     fsdevCommitDevice("sdmc");
 
-    R_TRY(RestartSphairaFanSysmodule());
-
+    // The curve is in the Atmosphère config and applies after a reboot. There is no fan module to restart any more
+    // (it is not shipped and is removed at start); asking it to restart made every apply report a failure.
     R_SUCCEED();
 }
 

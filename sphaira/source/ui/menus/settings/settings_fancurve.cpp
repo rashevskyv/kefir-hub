@@ -15,48 +15,10 @@
 namespace sphaira::ui::menu::settings {
 
 void OpenFanCurveMenu() {
-    if (detail::IsSphairaFanSysmoduleInstalled()) {
-        App::Push<FanCurveMenu>();
-        return;
-    }
-
-    App::Push<OptionBox>(
-        "Fan control can use the Kefir fan module, which applies curves without a reboot and reads the sensors live.\n\nInstall it now?"_i18n,
-        "No"_i18n,
-        "Install"_i18n,
-        1,
-        [](auto op_index){
-            if (!op_index || !*op_index) {
-                App::Push<FanCurveMenu>();
-                return;
-            }
-
-            if (R_FAILED(detail::InstallSphairaFanSysmodule())) {
-                App::Push<OptionBox>("Failed to install the fan module."_i18n, "OK"_i18n);
-                return;
-            }
-
-            if (R_SUCCEEDED(detail::RestartSphairaFanSysmodule())) {
-                App::Notify("Fan module installed"_i18n);
-                App::Push<FanCurveMenu>();
-                return;
-            }
-
-            App::Push<OptionBox>(
-                "Fan module installed, but it needs a reboot before it can start.\n\nReboot now?"_i18n,
-                "Later"_i18n,
-                "Reboot"_i18n,
-                1,
-                [](auto reboot_index){
-                    if (reboot_index && *reboot_index) {
-                        detail::RebootAfterSetting();
-                    } else {
-                        App::Push<FanCurveMenu>();
-                    }
-                }
-            );
-        }
-    );
+    // The Kefir fan module is no longer shipped (romfs has no sysmodule folder) and the Hub removes any copy at start
+    // (fancontrol_cleanup.cpp): the curves are written to the Atmosphère config and apply after a reboot. The old
+    // "install the fan module" question could only fail, so it is gone.
+    App::Push<FanCurveMenu>();
 }
 
 

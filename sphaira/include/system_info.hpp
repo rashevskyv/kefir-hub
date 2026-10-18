@@ -21,6 +21,7 @@ struct Row {
 struct Group {
     std::string title;
     std::vector<Row> rows;
+    bool metrics{}; // not a list group: its rows are drawn as a strip of figures above the list (calibration wizard)
 };
 
 // Reads every group. Talks to a dozen services and walks the installed games,
