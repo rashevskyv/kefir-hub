@@ -31,17 +31,11 @@ struct PackageAction {
     float hold_seconds{0.5f};
 };
 
-enum class FanCurveApplyMode {
-    Live,
-    Reboot,
-};
-
 namespace detail {
 
 inline const auto FAN_PRESETS_CONFIG = paths::DATA_ROOT + "/fan_curve_presets.ini";
 constexpr u64 SPHAIRA_FAN_PROGRAM_ID{0x00FF46554E43544CULL};
 constexpr u64 SPHAIRA_OLD_FAN_PROGRAM_ID{0x00FF000053504846ULL};
-constexpr const char* SPHAIRA_FAN_EXEFS_PATH = "/atmosphere/contents/00FF46554E43544C/exefs.nsp";
 
 constexpr s32 FAN_TABLE_TEMP_MIN{-1000000};
 constexpr s32 FAN_TABLE_TEMP_MAX{1000000};
@@ -90,12 +84,11 @@ auto FanCustomPresetLabels(bool docked) -> std::vector<std::string>;
 auto FormatFanCurveTable(std::vector<FanCurvePoint> curve) -> std::string;
 auto FormatAtmosphereFanCurve(std::vector<FanCurvePoint> curve) -> std::string;
 auto IsFanCurveEnabled() -> bool;
-auto IsSphairaFanSysmoduleInstalled() -> bool;
-auto IsSphairaFanSysmoduleRunning() -> bool;
-auto EnsureSphairaFanSysmoduleInstalled() -> Result;
-auto InstallSphairaFanSysmodule() -> Result;
-auto RestartSphairaFanSysmodule() -> Result;
-auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, FanCurveApplyMode mode) -> Result;
+// stops the fan module; returns true if it was running (a curve was applied this boot).
+auto StopSphairaFanSysmodule() -> bool;
+// starts the romfs fan module with the saved curve; it runs until the next reboot.
+auto StartSphairaFanSysmodule() -> Result;
+auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked) -> Result;
 auto SaveCustomFanPreset(s64 index, bool docked, const std::vector<FanCurvePoint>& curve, const std::string& name) -> Result;
 
 } // namespace detail

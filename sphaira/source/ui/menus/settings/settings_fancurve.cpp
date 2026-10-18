@@ -6,6 +6,7 @@
 #include "ui/popup_list.hpp"
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
+#include "log.hpp"
 #include "i18n.hpp"
 #include <cmath>
 #include <algorithm>
@@ -15,21 +16,14 @@
 namespace sphaira::ui::menu::settings {
 
 void OpenFanCurveMenu() {
-    // The Kefir fan module is no longer shipped (romfs has no sysmodule folder) and the Hub removes any copy at start
-    // (fancontrol_cleanup.cpp): the curves are written to the Atmosphère config and apply after a reboot. The old
-    // "install the fan module" question could only fail, so it is gone.
     App::Push<FanCurveMenu>();
 }
 
 
 FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
-    if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
-        detail::DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
-    }
-
-    if (!detail::IsSphairaFanSysmoduleRunning() && detail::IsSphairaFanSysmoduleInstalled()) {
-        detail::RestartSphairaFanSysmodule();
-    }
+    // the menu drives the fan itself while it is open (FanCurveSensorReader); a module
+    // that runs a curve applied earlier this boot is started again when the menu closes.
+    m_live_curve = detail::StopSphairaFanSysmodule();
 
     m_handheld_curve = detail::ReadFanCurve(
         "tskin_rate_table_handheld_on_fwdbg",
@@ -41,8 +35,6 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
         "tskin_rate_table_console",
         detail::DefaultDockedFanCurve()
     );
-    m_applied_handheld_curve = m_handheld_curve;
-    m_applied_docked_curve = m_docked_curve;
     
     // Initialize Bezier control points from loaded curves
     m_docked = false;
@@ -51,7 +43,6 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
     InitializeControlPointsFromCurve();
     m_docked = false;
 
-    m_sysmodule_enabled = detail::IsSphairaFanSysmoduleRunning();
     m_sensor_reader = std::make_unique<FanCurveSensorReader>();
     RefreshActions();
 
@@ -61,7 +52,19 @@ FanCurveMenu::FanCurveMenu() : MenuBase{"Fan curve", MenuFlag_None} {
     SetIndex(0);
 }
 
-FanCurveMenu::~FanCurveMenu() = default;
+FanCurveMenu::~FanCurveMenu() {
+    // gives the fan back to tc first.
+    m_sensor_reader.reset();
+
+    // tc reads the curve at boot only: until the next reboot the module keeps the new one.
+    if (m_live_curve) {
+        const auto rc = detail::StartSphairaFanSysmodule();
+        if (R_FAILED(rc)) {
+            // no UI here: this also runs while the app exits.
+            log_write("[FAN] failed to start the fan module: 0x%X\n", rc);
+        }
+    }
+}
 
 
 void FanCurveMenu::RefreshActions() {
@@ -80,9 +83,6 @@ void FanCurveMenu::RefreshActions() {
         );
         return;
     }
-
-    const auto apply_label = "Apply"_i18n;
-    const auto apply_mode = FanCurveApplyMode::Live;
 
     SetActions(
         std::make_pair(Button::A, Action{"Edit"_i18n, [this](){
@@ -109,8 +109,8 @@ void FanCurveMenu::RefreshActions() {
         std::make_pair(Button::R2, Action{"Save Preset"_i18n, [this](){
             DisplaySavePreset();
         }}),
-        std::make_pair(Button::START, Action{apply_label, [this, apply_mode](){
-            ApplyCurves(apply_mode);
+        std::make_pair(Button::START, Action{"Apply"_i18n, [this](){
+            ApplyCurves();
         }})
     );
 
@@ -232,8 +232,8 @@ void FanCurveMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
     if (m_sensor_reader) {
-        const auto& applied_curve = m_docked ? m_applied_docked_curve : m_applied_handheld_curve;
-        m_sensor_reader->Update(applied_curve);
+        // the fan follows the curve on screen, so the user hears each edit.
+        m_sensor_reader->Update(ActiveCurve());
     }
 
     if (HandleGraphTouch(touch)) {

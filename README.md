@@ -54,7 +54,7 @@ Full guides live in the [Documentation Wiki](docs/wiki/Home.md). One line per fe
 
 **System** — [Firmware & Downgrades](docs/wiki/Firmware-and-Downgrades.md), [System Utilities](docs/wiki/System-and-Tools.md)
 - Firmware install from ZIP or folder, automated post-downgrade fix, theme and translation cleanup.
-- Module Manager with RAM telemetry, fan curves with the FunControl sysmodule, system interface translations.
+- Module Manager with RAM telemetry, fan curves with live preview, system interface translations.
 - Forwarder Editor with SteamGridDB, themes and Theme Creator, DBI management, AppStore, auto-update, file association.
 
 **Interface** — [Interface & Navigation](docs/wiki/Interface-and-Navigation.md)

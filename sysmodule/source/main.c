@@ -10,7 +10,6 @@
 #define CONFIG_PATH "sdmc:/atmosphere/config/system_settings.ini"
 #define FAN_MAX_SEGMENTS 16
 #define FAN_LOOP_SLEEP_NS 500000000LL
-#define FAN_RELOAD_TICKS 4
 
 typedef struct {
     s32 temp_min_milli_c;
@@ -263,16 +262,6 @@ static bool parse_fan_table(const char* value, FanTable* out) {
     return true;
 }
 
-#pragma pack(push, 1)
-typedef struct {
-    u32 magic;
-    u32 version;
-    s32 temp_milli_c;
-    float fan_level;
-    u64 timestamp_ns;
-    u32 sysmodule_active;
-} SphairaFanState;
-#pragma pack(pop)
 
 static bool ReadSocTemperatureMilliC(s32* out_temp_milli_c) {
     if (!out_temp_milli_c) return false;
@@ -484,19 +473,10 @@ int main(int argc, char* argv[]) {
         g_tc_fan_control_disabled = R_SUCCEEDED(tcDisableFanControl());
     }
 
-    u32 reload_tick = 0;
+    // Kefir Hub starts this module after the user leaves the fan curve menu with a new curve
+    // and terminates it before it opens the menu again: the curve read above stays valid until
+    // then. After a reboot tc applies the same curve itself and this module does not run.
     while (true) {
-        if (++reload_tick >= FAN_RELOAD_TICKS) {
-            FanConfig next_config;
-            if (load_config(&next_config)) {
-                if (!next_config.enabled) {
-                    break;
-                }
-                config = next_config;
-            }
-            reload_tick = 0;
-        }
-
         s32 temp_milli_c = 0;
         bool temp_ok = ReadSocTemperatureMilliC(&temp_milli_c);
 
@@ -507,33 +487,7 @@ int main(int argc, char* argv[]) {
 
         fanControllerSetRotationSpeedLevel(&controller, fan_level);
 
-        float actual_level = fan_level;
-        fanControllerGetRotationSpeedLevel(&controller, &actual_level);
-
-        SphairaFanState state = {0};
-        state.magic = 0x46414E53;
-        state.version = 1;
-        state.temp_milli_c = temp_milli_c;
-        state.fan_level = actual_level;
-        state.timestamp_ns = armTicksToNs(armGetSystemTick());
-        state.sysmodule_active = 1;
-
-        FILE* fp_state = fopen("sdmc:/switch/sphaira/fan_status.bin", "wb");
-        if (fp_state) {
-            fwrite(&state, sizeof(state), 1, fp_state);
-            fclose(fp_state);
-        }
-
         svcSleepThread(FAN_LOOP_SLEEP_NS);
-    }
-
-    SphairaFanState state = {0};
-    state.magic = 0x46414E53;
-    state.sysmodule_active = 0;
-    FILE* fp_state = fopen("sdmc:/switch/sphaira/fan_status.bin", "wb");
-    if (fp_state) {
-        fwrite(&state, sizeof(state), 1, fp_state);
-        fclose(fp_state);
     }
 
     fanControllerClose(&controller);

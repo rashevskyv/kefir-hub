@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.157 — the fan curve works as on the fan-inproc branch again
+- The fan-inproc branch (v0.14.106: while the fan curve menu is open the Hub drives the fan itself from the curve on screen, the menu gives the fan back to tc when it closes; Apply writes the [tc] keys and asks for a reboot; no module) was never merged into master, so master still asked to install the fan module and "100 %" on the screen did not turn the fan. It is merged now; the 0.14.156 edits to settings_fancurve*/settings_tweaks (no install question, reboot text) are superseded by the branch's versions.
+- host tests: quick (see build) · nro: built · switch: pending
+
 ## v0.14.156 — calibration page layout (metrics strip, Actions menu); no question about the fan module
 - Calibration page: "Now" (charge, full capacity, the warning) is a strip of figures above the steps (`Group::metrics`); the "More" group is gone: X opens "Actions" (back up, align the charge to the voltage, restore from the last backup, match the other MMC). 0.14.155 and 0.14.156 together.
 - Fan curve: the "install the Kefir fan module?" question is gone (the module is not shipped: no romfs/sysmodule; the Hub removes it at start, 0.14.129). Saving a curve writes the Atmosphère config and says it applies after a reboot (Hold A to reboot); it used to end with "Failed to activate fan module" every time because it tried to restart the missing module.
@@ -140,6 +144,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## v0.14.115 — battery drain screen: a live battery, the time left and a charge graph; no dimming
 - Drain page: a big battery that fills by charge (green → orange → red, it pulses under load), "Draining for", the gauge's time to switch-off (TTE), mV · mA · °C, a one-hour charge graph (a point every 20 s); 80 full-screen gradient circles a frame drawn over the page. Dimming off with `lblDisableDimming` + idle detection `ExtendedUnsafe`, re-applied with full brightness every 10 s; both restored on exit.
 - host tests: not run · nro: built · switch: drain runs on .141 (−778 mA vs −634 mA in 0.14.114, log "drain load on"); no dimming over a long run pending
+
+## v0.14.106 — Fan curve: live preview in the menu, the fan module only after Apply
+- The fan curve menu drives the fan itself (tc off while it is open), so each edit is heard at once, and the marker shows the fan's actual speed. Apply writes the [tc] keys; on leaving the menu Kefir Hub starts the fan module from romfs and deletes its files right away, so it runs until reboot only (tc applies the saved curve at boot) and can never autostart. Before the module is stopped, the menu takes the fan; the module no longer writes fan_status.bin every 500 ms or re-reads the ini. The sensor reader keeps one ts session instead of one per frame.
+- host tests: pass (the i18n completeness contract already failed on master) · nro: built · switch: 50.69: preview heard; module-after-Apply and the reboot check pending
 
 ## v0.14.102 — Kefir Settings: 40MB Memory only where it still matters
 - Kefir Settings → 40MB Memory (`settings_kefir.cpp`) is shown only on firmware below 23.0.0 or Kefir below 926 (an unreadable `/switch/kefir-updater/version` keeps it shown): Atmosphère 1.12.1 in Kefir 926 already gives 40 MB on 23.0.0+. Docs: drafts on the EN/UK Kefir Settings pages.

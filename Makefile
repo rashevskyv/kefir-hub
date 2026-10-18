@@ -10,7 +10,6 @@ SPHAIRA_FAN_TITLE_ID := 00FF46554E43544C
 # Шлях до зібраного NRO
 SOURCE_NRO_DIR := $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)/switch/kefir-hub
 SOURCE_NRO_FILE := $(SOURCE_NRO_DIR)/kefir-hub.nro
-SOURCE_SYSMODULE_DIR := $(SPHAIRA_ROOT_DIR)/build/$(SPHAIRA_BUILD_PRESET)/atmosphere/contents/$(SPHAIRA_FAN_TITLE_ID)
 
 # Куди копіювати NRO
 DEST_DIR := $(abspath $(SPHAIRA_ROOT_DIR)/../_kefir/kefir)
@@ -68,10 +67,8 @@ copy: build
 	@echo ">>> Copying $(SOURCE_NRO_FILE) to $(DEST_NRO_FILE)..."
 	@mkdir -p $(DEST_DIR)
 	@cp $(SOURCE_NRO_FILE) $(DEST_NRO_FILE)
-	@echo ">>> Copying Kefir fan sysmodule to $(DEST_CONTENTS_DIR)..."
-	@mkdir -p $(DEST_CONTENTS_DIR)
+	@# the fan sysmodule is gone: Kefir Hub drives the fan from the fan curve menu.
 	@rm -rf $(DEST_SYSMODULE_DIR)
-	@cp -r $(SOURCE_SYSMODULE_DIR) $(DEST_CONTENTS_DIR)/
 	@echo ">>> Copied successfully."
 
 # Збірка та відправка через nxlink
@@ -82,10 +79,8 @@ nxlink:
 
 # Відправка через FTP
 ftp pftp:
-	@echo ">>> Uploading NRO and sysmodule to $(FTP_IP):$(FTP_PORT) via FTP..."
+	@echo ">>> Uploading NRO to $(FTP_IP):$(FTP_PORT) via FTP..."
 	curl --ftp-create-dirs -T $(SOURCE_NRO_FILE) ftp://$(FTP_IP):$(FTP_PORT)/switch/kefir-hub/kefir-hub.nro
-	curl --ftp-create-dirs -T $(SOURCE_SYSMODULE_DIR)/exefs.nsp ftp://$(FTP_IP):$(FTP_PORT)/atmosphere/contents/$(SPHAIRA_FAN_TITLE_ID)/exefs.nsp
-	curl --ftp-create-dirs -T $(SOURCE_SYSMODULE_DIR)/toolbox.json ftp://$(FTP_IP):$(FTP_PORT)/atmosphere/contents/$(SPHAIRA_FAN_TITLE_ID)/toolbox.json
 	@echo ">>> FTP upload complete."
 
 # Очищення
@@ -107,7 +102,7 @@ help:
 	@echo "  make copy          - Build (if needed) and copy result"
 	@echo "  make nxlink        - Send the built NRO via nxlink to $(NXLINK_IP)"
 	@echo "  make nxlink <ip>   - Same, but to the given address (e.g. make nxlink 192.168.50.11)"
-	@echo "  make ftp / pftp    - Send the built NRO and sysmodule via FTP to $(FTP_IP):$(FTP_PORT)"
+	@echo "  make ftp / pftp    - Send the built NRO via FTP to $(FTP_IP):$(FTP_PORT)"
 	@echo "  make ftp <ip>      - Same, but to the given address"
 	@echo "  make clean         - Remove build artifacts and copied NRO"
 	@echo "  make help          - Show this help message"

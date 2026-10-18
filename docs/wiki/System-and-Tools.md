@@ -31,8 +31,8 @@ The project includes a developer-focused Python utility (`tools/module_catalog/u
 
 Customize thermal profiles under **Tools -> Tools -> Fan curves** (also available in Kefir Settings):
 - **Handheld & Docked Profiles:** Set custom fan speed curves independently for handheld and docked modes.
-- **Dynamic Live Apply:** When the companion `sphaira_fan` sysmodule (`00FF46554E43544C` / `FunControl`) is active, fan curve modifications apply immediately without rebooting.
-- **Fallback Persistence:** If the sysmodule is inactive, curves are saved to `/atmosphere/config/system_settings.ini` to take effect on subsequent boots.
+- **Live preview:** While the fan curve screen is open, Kefir Hub drives the fan with the curve on the screen. On exit, the console's own fan control takes over again.
+- **Saved curve:** **Apply** writes the curves to `/atmosphere/config/system_settings.ini`. On leaving the screen, the `sphaira_fan` module (`00FF46554E43544C`) runs the new curve until the next reboot; after a reboot tc applies it natively. The module is started from Kefir Hub's romfs and leaves no files on the SD.
 - **Non-Conflicting Thermal Queries:** Reads SoC temperatures via the native `ts` (Thermal Measurement) service, avoiding IPC collisions with Atmosphere's `ptm`.
 - **Live Sysmodule Telemetry:** The background module exports state telemetry (`/switch/sphaira/fan_status.bin`), providing real-time hardware status to Sphaira.
 - **Physical Fan Motor Inertia Modeling:** UI graph markers smoothly model physical motor spin-up and spin-down acceleration/deceleration response.

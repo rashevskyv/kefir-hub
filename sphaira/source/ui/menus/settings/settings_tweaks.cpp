@@ -420,79 +420,69 @@ auto IsFanCurveEnabled() -> bool {
     return IniValueEquals("/atmosphere/config/system_settings.ini", "tc", "use_configurations_on_fwdbg", "u8!0x1");
 }
 
-auto IsSphairaFanSysmoduleInstalled() -> bool {
-    return fs::FileExists("/atmosphere/contents/00FF46554E43544C/exefs.nsp");
-}
+namespace {
 
-auto IsSphairaFanSysmoduleRunning() -> bool {
-    if (!IsSphairaFanSysmoduleInstalled()) {
-        return false;
+constexpr const char* SPHAIRA_FAN_FOLDER = "/atmosphere/contents/00FF46554E43544C";
+constexpr const char* SPHAIRA_OLD_FAN_FOLDER = "/atmosphere/contents/00FF000053504846";
+
+void DeleteSphairaFanFiles() {
+    // no files on the SD: the module can never start at boot, a stale copy cannot outlive an update.
+    for (const auto folder : {SPHAIRA_FAN_FOLDER, SPHAIRA_OLD_FAN_FOLDER}) {
+        if (fs::DirExists(folder)) {
+            DeletePath(folder);
+        }
     }
-
-    Result rc = pmshellInitialize();
-    if (R_FAILED(rc)) {
-        return false;
+    if (fs::FileExists("/switch/sphaira/fan_status.bin")) {
+        DeletePath("/switch/sphaira/fan_status.bin");
     }
-
-    u64 pid{};
-    rc = pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID);
-    pmshellExit();
-    return R_SUCCEEDED(rc);
-}
-
-auto EnsureSphairaFanSysmoduleInstalled() -> Result {
-    R_UNLESS(IsSphairaFanSysmoduleInstalled(), FsError_PathNotFound);
-    R_SUCCEED();
-}
-
-auto InstallSphairaFanSysmodule() -> Result {
-    R_TRY(romfsInit());
-    ON_SCOPE_EXIT(romfsExit());
-
-    R_TRY(CopyFileSimple("romfs:/sysmodule/exefs.nsp", SPHAIRA_FAN_EXEFS_PATH));
-    R_TRY(CopyFileSimple("romfs:/sysmodule/toolbox.json", "/atmosphere/contents/00FF46554E43544C/toolbox.json"));
     fsdevCommitDevice("sdmc");
-    R_SUCCEED();
 }
 
-auto RestartSphairaFanSysmodule() -> Result {
-    R_TRY(EnsureSphairaFanSysmoduleInstalled());
+} // namespace
 
-    if (fs::FileExists("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag")) {
-        DeletePath("/atmosphere/contents/00FF46554E43544C/flags/boot2.flag");
+auto StopSphairaFanSysmodule() -> bool {
+    bool was_running{};
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        u64 pid{};
+        was_running = R_SUCCEEDED(pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID));
+        // terminating skips the module's __appExit, so tc stays disabled: the caller
+        // must take the fan right after (FanCurveSensorReader does).
+        pmshellTerminateProgram(SPHAIRA_FAN_PROGRAM_ID);
+        pmshellTerminateProgram(SPHAIRA_OLD_FAN_PROGRAM_ID);
+        // the caller opens the fan controller next: wait until the module has let it go.
+        for (u32 i = 0; was_running && i < 10 && R_SUCCEEDED(pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID)); i++) {
+            svcSleepThread(50000000);
+        }
+        pmshellExit();
     }
+    log_write("[FAN] fan module was running: %d\n", was_running);
+    DeleteSphairaFanFiles();
+    return was_running;
+}
 
-    Result rc = pmshellInitialize();
-    R_TRY(rc);
+auto StartSphairaFanSysmodule() -> Result {
+    {
+        R_TRY(romfsInit());
+        ON_SCOPE_EXIT(romfsExit());
+        R_TRY(CopyFileSimple("romfs:/sysmodule/exefs.nsp", std::string{SPHAIRA_FAN_FOLDER} + "/exefs.nsp"));
+        fsdevCommitDevice("sdmc");
+    }
+    ON_SCOPE_EXIT(DeleteSphairaFanFiles());
 
-    pmshellTerminateProgram(SPHAIRA_FAN_PROGRAM_ID);
-    pmshellTerminateProgram(SPHAIRA_OLD_FAN_PROGRAM_ID);
-    svcSleepThread(100000000);
+    R_TRY(pmshellInitialize());
+    ON_SCOPE_EXIT(pmshellExit());
 
     const NcmProgramLocation location{
         .program_id = SPHAIRA_FAN_PROGRAM_ID,
         .storageID = NcmStorageId_None,
     };
     u64 pid{};
-    rc = pmshellLaunchProgram(PmLaunchFlag_None, &location, &pid);
-    if (R_SUCCEEDED(rc)) {
-        Result check_rc = rc;
-        for (u32 i = 0; i < 5; i++) {
-            svcSleepThread(100000000);
-            check_rc = pmshellGetProcessId(&pid, SPHAIRA_FAN_PROGRAM_ID);
-            if (R_SUCCEEDED(check_rc)) {
-                break;
-            }
-        }
-        rc = check_rc;
-    }
-    pmshellExit();
-    R_TRY(rc);
-
+    // loader maps the module during launch, so its files can go right after.
+    R_TRY(pmshellLaunchProgram(PmLaunchFlag_None, &location, &pid));
     R_SUCCEED();
 }
 
-auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked, FanCurveApplyMode mode) -> Result {
+auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vector<FanCurvePoint>& docked) -> Result {
     const auto handheld_value = FormatAtmosphereFanCurve(handheld);
     const auto docked_value = FormatAtmosphereFanCurve(docked);
 
@@ -500,9 +490,6 @@ auto ApplyFanCurves(const std::vector<FanCurvePoint>& handheld, const std::vecto
     R_TRY(SetIniRawValue("/atmosphere/config/system_settings.ini", "tc", "tskin_rate_table_handheld_on_fwdbg", handheld_value));
     R_TRY(SetIniRawValue("/atmosphere/config/system_settings.ini", "tc", "tskin_rate_table_console_on_fwdbg", docked_value));
     fsdevCommitDevice("sdmc");
-
-    // The curve is in the Atmosphère config and applies after a reboot. There is no fan module to restart any more
-    // (it is not shipped and is removed at start); asking it to restart made every apply report a failure.
     R_SUCCEED();
 }
 

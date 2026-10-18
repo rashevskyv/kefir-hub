@@ -7,6 +7,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/hold_confirm_box.hpp"
 #include "app.hpp"
+#include "log.hpp"
 #include "i18n.hpp"
 #include "swkbd.hpp"
 #include <cmath>
@@ -35,103 +36,114 @@ auto EvaluateFanPercent(const std::vector<FanCurvePoint>& curve, float temp_c) -
     return static_cast<float>(curve.back().fan_percent);
 }
 
+namespace {
+
+// the preview runs the fan at 100% on a hot SoC, whatever the curve on screen says.
+constexpr s32 FAN_PREVIEW_FULL_SPEED_MILLI_C{80000};
+constexpr u64 FAN_ACTUAL_REFRESH_NS{100000000};
+
+} // namespace
+
 FanCurveSensorReader::FanCurveSensorReader() {
     m_ts_available = R_SUCCEEDED(tsInitialize());
+    if (m_ts_available) {
+        m_ts_session_open = R_SUCCEEDED(tsOpenSession(&m_ts_session, TsDeviceCode_LocationExternal));
+    }
+
+    m_tc_available = R_SUCCEEDED(tcInitialize());
+    m_fan_available = R_SUCCEEDED(fanInitialize());
+    if (m_tc_available && m_fan_available) {
+        const auto rc = fanOpenController(&m_fan_controller, detail::FAN_DEVICE_CODE_PWM);
+        log_write("[FAN] fan controller open: 0x%X\n", rc);
+        m_fan_controller_open = R_SUCCEEDED(rc);
+        if (m_fan_controller_open) {
+            tcDisableFanControl();
+        }
+    }
 }
 
 FanCurveSensorReader::~FanCurveSensorReader() {
+    if (m_tc_available) {
+        // always, not only when this menu disabled it: a FunControl module that was
+        // terminated before this release left tc disabled until the next reboot.
+        tcEnableFanControl();
+        bool enabled{};
+        tcIsFanControlEnabled(&enabled);
+        log_write("[FAN] tc fan control enabled: %d\n", enabled);
+        tcExit();
+    }
+    if (m_fan_controller_open) {
+        fanControllerClose(&m_fan_controller);
+    }
+    if (m_fan_available) {
+        fanExit();
+    }
+    if (m_ts_session_open) {
+        tsSessionClose(&m_ts_session);
+    }
     if (m_ts_available) {
         tsExit();
     }
 }
 
+auto FanCurveSensorReader::ReadTemperature(s32& out_milli_c) -> bool {
+    if (m_ts_session_open) {
+        float temp_c{};
+        if (R_SUCCEEDED(tsSessionGetTemperature(&m_ts_session, &temp_c)) && temp_c > 0.0f) {
+            out_milli_c = static_cast<s32>(temp_c * 1000.0f);
+            return true;
+        }
+    }
+
+    // firmware older than 8.0.0 has no ts sessions.
+    s32 temp_milli_c{};
+    if (m_ts_available && R_SUCCEEDED(tsGetTemperatureMilliC(TsLocation_External, &temp_milli_c)) && temp_milli_c > 0) {
+        out_milli_c = temp_milli_c;
+        return true;
+    }
+
+    return false;
+}
+
 void FanCurveSensorReader::Update(const std::vector<FanCurvePoint>& active_curve) {
     const auto now = armTicksToNs(armGetSystemTick());
-    const float dt = m_last_update_ns ? std::min(static_cast<float>(now - m_last_update_ns) / 1e9f, 0.1f) : 0.05f;
-    m_last_update_ns = now;
 
-    FanCurveSensorSample next{};
-    SphairaFanState sys_state{};
-    bool sys_ok = false;
-
-    FILE* fp = fopen("/switch/sphaira/fan_status.bin", "rb");
-    if (fp) {
-        if (fread(&sys_state, sizeof(sys_state), 1, fp) == 1) {
-            if (sys_state.magic == 0x46414E53 && sys_state.sysmodule_active == 1) {
-                if (now >= sys_state.timestamp_ns && (now - sys_state.timestamp_ns) < 3000000000ULL) {
-                    sys_ok = true;
-                }
-            }
-        }
-        fclose(fp);
+    // Update runs every frame: poll the sensor at the refresh rate only.
+    if (!m_last_poll_ns || now - m_last_poll_ns >= detail::FAN_SENSOR_REFRESH_NS) {
+        m_last_poll_ns = now;
+        m_temp_valid = ReadTemperature(m_temp_milli_c);
     }
 
-    if (sys_ok) {
-        next.temp_milli_c = sys_state.temp_milli_c;
-        next.valid = true;
-    } else if (m_ts_available) {
-        s32 temp_milli_c = 0;
-        s32 temp_c = 0;
-        TsSession session;
-        if (R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationExternal))) {
-            float temp_f = 0.0f;
-            Result rc = tsSessionGetTemperature(&session, &temp_f);
-            tsSessionClose(&session);
-            if (R_SUCCEEDED(rc) && temp_f > 0.0f) {
-                next.temp_milli_c = static_cast<s32>(temp_f * 1000.0f);
-                next.valid = true;
-            }
-        }
-        if (!next.valid && R_SUCCEEDED(tsOpenSession(&session, TsDeviceCode_LocationInternal))) {
-            float temp_f = 0.0f;
-            Result rc = tsSessionGetTemperature(&session, &temp_f);
-            tsSessionClose(&session);
-            if (R_SUCCEEDED(rc) && temp_f > 0.0f) {
-                next.temp_milli_c = static_cast<s32>(temp_f * 1000.0f);
-                next.valid = true;
-            }
-        }
-        if (!next.valid && R_SUCCEEDED(tsGetTemperature(TsLocation_External, &temp_c)) && temp_c > 0) {
-            next.temp_milli_c = temp_c * 1000;
-            next.valid = true;
-        }
-        if (!next.valid && R_SUCCEEDED(tsGetTemperature(TsLocation_Internal, &temp_c)) && temp_c > 0) {
-            next.temp_milli_c = temp_c * 1000;
-            next.valid = true;
-        }
-        if (!next.valid && R_SUCCEEDED(tsGetTemperatureMilliC(TsLocation_External, &temp_milli_c)) && temp_milli_c > 0) {
-            next.temp_milli_c = temp_milli_c;
-            next.valid = true;
+    float target_fan = 100.0f;
+    if (m_temp_valid && m_temp_milli_c < FAN_PREVIEW_FULL_SPEED_MILLI_C) {
+        target_fan = EvaluateFanPercent(active_curve, static_cast<float>(m_temp_milli_c) / 1000.0f);
+    }
+
+    if (m_fan_controller_open) {
+        const auto percent = static_cast<s32>(target_fan + 0.5f);
+        if (percent != m_set_fan_percent &&
+            R_SUCCEEDED(fanControllerSetRotationSpeedLevel(&m_fan_controller, static_cast<float>(percent) / 100.0f))) {
+            m_set_fan_percent = percent;
         }
     }
 
-    if (next.valid) {
-        float target_fan = -1.0f;
-        if (sys_ok) {
-            target_fan = sys_state.fan_level * 100.0f;
-        } else {
-            const float temp_deg = static_cast<float>(next.temp_milli_c) / 1000.0f;
-            target_fan = EvaluateFanPercent(active_curve, temp_deg);
-        }
-
-        if (m_displayed_fan_percent < 0.0f) {
-            m_displayed_fan_percent = target_fan;
-        } else {
-            const float diff = target_fan - m_displayed_fan_percent;
-            const float abs_diff = std::abs(diff);
-            if (abs_diff < 0.2f) {
-                m_displayed_fan_percent = target_fan;
-            } else {
-                const float speed_rate = (diff >= 0.0f) ? 25.0f : 18.0f; // 25% per sec up, 18% per sec down
-                const float max_step = std::min(abs_diff, speed_rate * dt);
-                m_displayed_fan_percent += (diff >= 0.0f ? max_step : -max_step);
-            }
-        }
-
-        next.fan_percent = static_cast<s32>(m_displayed_fan_percent + 0.5f);
+    // the marker shows the fan's real speed: it speeds up and slows down slower than the target.
+    if (m_fan_controller_open && (!m_last_fan_poll_ns || now - m_last_fan_poll_ns >= FAN_ACTUAL_REFRESH_NS)) {
+        m_last_fan_poll_ns = now;
+        float level{};
+        // libnx dispatches IController 2, which is GetActualRotationSpeedLevel on 7.0.0+ (switchbrew).
+        m_actual_fan_valid = R_SUCCEEDED(fanControllerGetRotationSpeedLevel(&m_fan_controller, &level));
+        m_actual_fan_percent = level * 100.0f;
     }
 
-    m_sample = next;
+    if (!m_temp_valid) {
+        m_sample = {};
+        return;
+    }
+
+    m_sample.valid = true;
+    m_sample.temp_milli_c = m_temp_milli_c;
+    m_sample.fan_percent = static_cast<s32>((m_actual_fan_valid ? m_actual_fan_percent : target_fan) + 0.5f);
 }
 
 auto FanCurveSensorReader::GetSample() const -> const FanCurveSensorSample* {
@@ -494,37 +506,26 @@ void FanCurveMenu::SetSelectedPoint(s64 index, s32 temp_c, s32 fan_percent) {
 }
 
 
-void FanCurveMenu::ApplyCurves(FanCurveApplyMode mode) {
+void FanCurveMenu::ApplyCurves() {
     const auto handheld = m_handheld_curve;
     const auto docked = m_docked_curve;
-    const bool live_apply = mode == FanCurveApplyMode::Live;
 
     App::Push<ProgressBox>(
         0,
         "Applying"_i18n,
         "Fan curve",
-        [handheld, docked, mode, live_apply](auto pbox) -> Result {
-            pbox->NewTransfer("Writing the Atmosphere fan curve"_i18n);
-            return detail::ApplyFanCurves(handheld, docked, mode);
+        [handheld, docked](auto pbox) -> Result {
+            pbox->NewTransfer("Writing Atmosphere fan curve...");
+            return detail::ApplyFanCurves(handheld, docked);
         },
-        [this, live_apply, handheld, docked](Result rc){
+        [this](Result rc){
             if (R_FAILED(rc)) {
-                App::PushErrorBox(rc, "Failed to save the fan curve"_i18n);
+                App::PushErrorBox(rc, "Apply fan curve"_i18n);
                 return;
             }
-            m_applied_handheld_curve = handheld;
-            m_applied_docked_curve = docked;
             m_dirty = false;
-            // saved to the Atmosphère config: the fan follows it from the next start
-            App::Push<HoldConfirmBox>(
-                "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now."_i18n,
-                3.f,
-                [](bool confirmed){
-                    if (confirmed) {
-                        detail::RebootAfterSetting();
-                    }
-                }
-            );
+            m_live_curve = true;
+            App::Notify("Fan curve applied"_i18n);
         }
     );
 }
