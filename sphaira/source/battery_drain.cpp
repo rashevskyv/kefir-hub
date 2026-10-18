@@ -11,6 +11,7 @@
 #include "ui/option_box.hpp"
 #include "app.hpp"
 #include "defines.hpp"
+#include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 
@@ -23,6 +24,7 @@
 #include <deque>
 #include <initializer_list>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace sphaira::battery {
@@ -40,6 +42,7 @@ constexpr int CIRCLES = 80;
 // below this shown charge the load goes off and only the bright screen drains the battery: on a worn battery the
 // voltage under load collapses from about 30 % and the console cuts off before the chip sees a real empty
 constexpr int GENTLE_PCT = 35;
+constexpr float MIN_BRIGHTNESS = 0.02f; // the lowest the screen still shows something
 constexpr float NOMINAL_V = 3.7f; // for Wh from mAh
 constexpr double CHARGING_MA = 100.0; // an average current above this into the battery = on a charger
 constexpr u64 LIVE_MS = 250;   // one point of the live charts
@@ -80,6 +83,39 @@ void Burn(void* arg) {
     }
 }
 
+constexpr const char* BRIGHTNESS_FILE = "/config/kefir/battery/brightness.txt";
+
+struct SavedBrightness {
+    float brightness{};
+    bool auto_on{};
+};
+
+auto ReadSavedBrightness() -> std::optional<SavedBrightness> {
+    std::vector<u8> data;
+    if (R_FAILED(fs::FsNativeSd{}.read_entire_file(BRIGHTNESS_FILE, data)) || data.empty()) {
+        return std::nullopt;
+    }
+    const std::string text(reinterpret_cast<const char*>(data.data()), data.size());
+    float b{};
+    int a{};
+    if (std::sscanf(text.c_str(), "brightness=%f\nauto=%d", &b, &a) != 2 || b < 0.f || b > 1.f) {
+        return std::nullopt;
+    }
+    return SavedBrightness{b, a != 0};
+}
+
+void WriteSavedBrightness(float brightness, bool auto_on) {
+    char buf[64];
+    const auto n = std::snprintf(buf, sizeof(buf), "brightness=%.4f\nauto=%d\n", brightness, auto_on ? 1 : 0);
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/config/kefir/battery");
+    sd.write_entire_file(BRIGHTNESS_FILE, std::vector<u8>(buf, buf + n));
+}
+
+void DeleteSavedBrightness() {
+    fs::FsNativeSd{}.DeleteFile(BRIGHTNESS_FILE);
+}
+
 struct DrainMenu final : ui::menu::MenuBase {
     explicit DrainMenu(int cycle) : MenuBase{"Battery drain"_i18n, ui::menu::MenuFlag_None}, m_cycle{cycle} {
         SetAction(Button::B, Action{"Stop"_i18n, [this]() {
@@ -98,6 +134,15 @@ struct DrainMenu final : ui::menu::MenuBase {
         if ((m_lbl = R_SUCCEEDED(lblInitialize()))) {
             lblGetCurrentBrightnessSetting(&m_saved_brightness);
             lblIsAutoBrightnessControlEnabled(&m_saved_auto);
+            // a file from an earlier drain (the Hub was left, or died, before it could restore) holds the real values;
+            // what the screen shows now is the drain's own full brightness
+            if (const auto kept = ReadSavedBrightness()) {
+                m_saved_brightness = kept->brightness;
+                m_saved_auto = kept->auto_on;
+            } else {
+                WriteSavedBrightness(m_saved_brightness, m_saved_auto);
+            }
+            // automatic brightness off and the brightness at the maximum on every model: the drain goes faster
             if (m_saved_auto) {
                 lblDisableAutoBrightnessControl();
             }
@@ -156,6 +201,7 @@ struct DrainMenu final : ui::menu::MenuBase {
                 lblEnableDimming();
             }
             lblExit();
+            DeleteSavedBrightness();
         }
         appletSetIdleTimeDetectionExtension(m_saved_idle);
         appletSetMediaPlaybackState(false);
@@ -196,7 +242,7 @@ struct DrainMenu final : ui::menu::MenuBase {
             // the system can switch dimming back on; the screen must stay at full brightness
             m_reapply.Update();
             lblDisableDimming();
-            lblSetCurrentBrightnessSetting(1.0f);
+            lblSetCurrentBrightnessSetting(m_dimmed ? MIN_BRIGHTNESS : 1.0f);
         }
         PsmChargerType charger{};
         psmGetChargerType(&charger);
@@ -215,6 +261,15 @@ struct DrainMenu final : ui::menu::MenuBase {
             log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
         }
         g_load = load;
+        // below GENTLE_PCT the screen goes to the minimum too: the lowest current that still drains the battery, so
+        // the console reaches a real empty at rest-like load instead of cutting off on a voltage collapse
+        if (m_lbl) {
+            const bool gentle = m_pct >= 0 && m_pct <= GENTLE_PCT && !m_charger;
+            if (gentle != m_dimmed) {
+                m_dimmed = gentle;
+                lblSetCurrentBrightnessSetting(gentle ? MIN_BRIGHTNESS : 1.0f);
+            }
+        }
         using wizard::DrainStep;
         if (m_step == DrainStep::CycleCounted) {
             m_status = "Both cycles are done. Press B and finish step 5 in the wizard: match in the other MMC."_i18n;
@@ -228,7 +283,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         } else {
             m_status = m_docked ? "Paused: take the console out of the dock"_i18n
                 : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
-                : m_pct >= 0 && m_pct <= GENTLE_PCT ? "Below 35%: the load is off, only the bright screen drains the battery, so the console reaches empty gently. It switches itself off; then charge it to 100%."_i18n
+                : m_pct >= 0 && m_pct <= GENTLE_PCT ? "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%."_i18n
             : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
         }
     }
@@ -535,6 +590,7 @@ private:
     float m_wh_in{};
     float m_wh_out{};
     u32 m_cycle_got{};
+    bool m_dimmed{};
     wizard::DrainStep m_step{wizard::DrainStep::Draining};
     TimeStamp m_step_poll{};
     bool m_step_read{};
@@ -560,6 +616,24 @@ std::atomic<bool> g_auto_suppressed{false};
 
 auto AutoDrainSuppressed() -> bool { return g_auto_suppressed; }
 void SetAutoDrainSuppressed(bool v) { g_auto_suppressed = v; }
+
+// at the Hub's start: a drain that ended without restoring the screen (crash, switch-off, the Hub killed) leaves its
+// file behind; put the brightness and the automatic brightness back as they were
+void RestoreDrainBrightness() {
+    const auto kept = ReadSavedBrightness();
+    if (!kept) {
+        return;
+    }
+    if (R_SUCCEEDED(lblInitialize())) {
+        lblSetCurrentBrightnessSetting(kept->brightness);
+        if (kept->auto_on) {
+            lblEnableAutoBrightnessControl();
+        }
+        lblExit();
+        log_write("[Battery] screen restored after an unfinished drain (brightness %.2f, auto %d)\n", kept->brightness, kept->auto_on ? 1 : 0);
+    }
+    DeleteSavedBrightness();
+}
 
 void StartDrain(int cycle) {
     App::Push<DrainMenu>(cycle);

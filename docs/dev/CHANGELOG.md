@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.152 — screen restored after a drain that did not end; dimmed screen below 35 %; the installed firmware is yellow
+- The drain saves the brightness and the automatic-brightness flag in /config/kefir/battery/brightness.txt and deletes the file when it restores them; the Hub's start restores them from the file after a crash or a switch-off (`RestoreDrainBrightness`). Automatic brightness is turned off and the brightness set to the maximum on every model while draining; below 35 % the load goes off and the brightness drops to 2 % (a low current, so the console runs down to a real empty).
+- Updater: the entry equal to the firmware the console runs is yellow with INSTALLED, instead of white, in the list and the tiles.
+- host tests: quick (see build) · nro: built · switch: pending
+
 ## v0.14.150 — the Updater shows the store as the source of firmware
 - Plain-version firmware entries (23.0.1, 22.5.0, 22.1.0 …) show `github.com/kefircfw/nx-firmware/.../manifests/<v>.json` instead of the old THZoria zip; the zip stays the fallback, built in code (`ZipUrlOf`) when the store lacks the version or is unreachable. Rebootless entries keep their zip.
 - host tests: quick (see build) · nro: built · switch: seen on .69

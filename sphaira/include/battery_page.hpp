@@ -13,6 +13,8 @@ void OpenCalibrate();
 void OpenDrain(int cycle);
 // the same without the question, for the wizard's automatic start when the charger comes out
 void StartDrain(int cycle);
+// at the Hub's start: restores the brightness a drain that did not end properly left changed
+void RestoreDrainBrightness();
 // true after the user stopped a drain; cleared when the charger goes in (so Back from the drain page does not
 // start it again at once)
 auto AutoDrainSuppressed() -> bool;

@@ -82,6 +82,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 }
 
+// the firmware the console runs now: its entry is yellow, so it is clear it is the same version
+const NVGcolor INSTALLED_COLOUR = nvgRGB(0xF5, 0xC5, 0x18);
+
+bool Menu::IsInstalledFirmware(const UpdaterEntry& entry) const {
+    if (entry.type != UpdaterEntryType::Firmware || m_current_firmware.empty()) {
+        return false;
+    }
+    return entry.name == m_current_firmware || entry.name.rfind(m_current_firmware + " ", 0) == 0;
+}
+
 void Menu::DrawList(NVGcontext* vg, Theme* theme) {
     m_list->Draw(vg, theme, m_entries.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         const auto& entry = m_entries[i];
@@ -100,6 +110,7 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         const auto downgrade = entry.type == UpdaterEntryType::Firmware && IsDowngrade(entry.name);
         const auto unsupported = entry.type == UpdaterEntryType::Firmware && !IsFirmwareSupported(entry.name);
         const auto kefir_update = IsKefirUpdate(entry);
+        const bool installed = IsInstalledFirmware(entry);
         const auto text_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
         const auto name_id = unsupported ? ThemeEntryID_TEXT_INFO : (downgrade ? ThemeEntryID_ERROR : (kefir_update ? ThemeEntryID_TEXT_SELECTED : text_id));
 
@@ -118,15 +129,15 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         DrawUpdaterEntryIcon(vg, theme, entry, v.x + 15.f, v.y + 24.f, selected, unsupported);
 
         gfx::drawTextBox(vg, text_x, v.y + 11.f, 23.f, v.w - 230.f,
-            theme->GetColour(name_id), name.c_str());
+            installed ? INSTALLED_COLOUR : theme->GetColour(name_id), name.c_str());
 
         if (kefir_update) {
             gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED),
                 "UPDATE");
         } else if (entry.type != UpdaterEntryType::Kefir) {
-            const auto label = unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
-            const auto label_colour = (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
+            const auto label = installed ? std::string{"INSTALLED"_i18n} : unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type));
+            const auto label_colour = installed ? INSTALLED_COLOUR : (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
             gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, label_colour,
                 "%s", label.c_str());
@@ -188,7 +199,8 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         nvgRestore(vg);
 
         // Draw texts on the right side of the card
-        const auto name_colour = unsupported ? theme->GetColour(ThemeEntryID_TEXT_INFO) : downgrade ? theme->GetColour(ThemeEntryID_ERROR) :
+        const bool installed = IsInstalledFirmware(entry);
+        const auto name_colour = installed ? INSTALLED_COLOUR : unsupported ? theme->GetColour(ThemeEntryID_TEXT_INFO) : downgrade ? theme->GetColour(ThemeEntryID_ERROR) :
             (kefir_update ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT));
 
         std::string name = EntryDisplayName(entry);
@@ -203,8 +215,8 @@ void Menu::DrawTiles(NVGcontext* vg, Theme* theme) {
         gfx::drawTextBox(vg, text_x, tile.y + 24.f, 18.f, text_clip_w, name_colour, name.c_str());
 
         // 2. Type/Status
-        const auto type_label = kefir_update ? std::string{"UPDATE"} : (unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type)));
-        const auto type_colour = kefir_update ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : ((entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO));
+        const auto type_label = installed ? std::string{"INSTALLED"_i18n} : kefir_update ? std::string{"UPDATE"} : (unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE" : TypeLabel(entry.type)));
+        const auto type_colour = installed ? INSTALLED_COLOUR : kefir_update ? theme->GetColour(ThemeEntryID_TEXT_SELECTED) : ((entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO));
         gfx::drawTextBox(vg, text_x, tile.y + 68.f, 14.f, text_clip_w, type_colour, type_label.c_str());
 
         // 3. Description

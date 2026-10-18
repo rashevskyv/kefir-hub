@@ -1,6 +1,7 @@
 #include "app_frame_buffer.hpp"
 #include "app.hpp"
 #include "fancontrol_cleanup.hpp"
+#include "battery_page.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "log.hpp"
@@ -421,6 +422,8 @@ App::App(const char* argv0) {
 
     // FunControl is gone from Kefir: remove it from a console that still has it
     RemoveFunControl();
+    // a battery drain that ended without restoring the screen (crash, switch-off) leaves the brightness changed
+    battery::RestoreDrainBrightness();
 
     // get emummc config.
     alignas(0x1000) AmsEmummcPaths paths{};

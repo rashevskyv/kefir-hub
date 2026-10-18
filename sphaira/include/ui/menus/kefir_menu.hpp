@@ -59,6 +59,7 @@ private:
     void OpenSelected();
     void DisplayOptions();
     void OnLayoutChange();
+    bool IsInstalledFirmware(const UpdaterEntry& entry) const;
     void DrawList(NVGcontext* vg, Theme* theme);
     void DrawTiles(NVGcontext* vg, Theme* theme);
     void EnsureTileVisible();
