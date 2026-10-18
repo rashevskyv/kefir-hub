@@ -3467,5 +3467,10 @@
   "or newer": "або новіша",
   "Charging, the drain is paused. Discharged in this cycle:": "Заряджання, розряд на паузі. Розряджено в цьому циклі:",
   "Charge to 100% and unplug the charger: the drain goes on. Or unplug it now to drain further first.": "Зарядіть до 100% і від'єднайте зарядку: розряд продовжиться. Або від'єднайте зараз, щоб спершу розрядити ще.",
-  "Energy:": "Енергія:"
+  "Energy:": "Енергія:",
+  "of the selected packages are compressed (NSZ/XCZ). Kefir Hub is running in Applet Mode, which has too little memory to unpack them: they will not install.": "вибраних пакетів стиснені (NSZ/XCZ). Kefir Hub працює в режимі аплету, де замало пам'яті, щоб їх розпакувати: вони не встановляться.",
+  "To install them: close Kefir Hub, start any game while holding R (Title Mode) and open Kefir Hub from there.": "Щоб їх встановити: закрийте Kefir Hub, запустіть будь-яку гру, утримуючи R (режим тайтлу), і відкрийте Kefir Hub звідти.",
+  "Skip them": "Пропустити їх",
+  "Try anyway": "Спробувати все одно",
+  "If the base game failed to install a moment ago, keep it and install the base game again: the update then works.": "Якщо базова гра щойно не встановилася, залиште його і встановіть базову гру ще раз: тоді оновлення запрацює."
 }

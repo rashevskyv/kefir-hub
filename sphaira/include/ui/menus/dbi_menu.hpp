@@ -283,6 +283,7 @@ struct Menu final : InstallSession {
 
 private:
     void StartInstall();
+    void ContinueStartInstall();
     void ConfirmInstallPlan();
     void RecomputePlan(bool force_refresh = false);
     // "already installed" mode in force: the PC's when it sent one, else the

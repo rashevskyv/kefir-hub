@@ -31,6 +31,12 @@
 #include <unordered_set>
 
 namespace sphaira::ui::menu::dbi {
+namespace {
+auto IsCompressedPackage(const std::string& name) -> bool {
+    return path::EndsWithIC(name, ".nsz") || path::EndsWithIC(name, ".xcz");
+}
+} // namespace
+
 void Menu::StartInstall() {
     s64 sd_required{}, nand_required{};
     size_t count{};
@@ -57,6 +63,60 @@ void Menu::StartInstall() {
     if (!count) {
         App::Notify("Select at least one package"_i18n);
         return;
+    }
+    if (App::IsApplet()) {
+        // measured on a console: in Applet Mode every NSZ/XCZ failed at the first zstd chunk ("not enough memory"),
+        // the 50 MB ones too. Say so before anything starts, instead of after the whole queue failed.
+        size_t compressed{};
+        {
+            SCOPED_MUTEX(&m_mutex);
+            for (const auto& entry : m_queue) {
+                if (entry.selected && R_SUCCEEDED(entry.analysis_result) && IsCompressedPackage(entry.file_name)) {
+                    compressed++;
+                }
+            }
+        }
+        if (compressed) {
+            std::string msg = std::to_string(compressed) + " " + "of the selected packages are compressed (NSZ/XCZ). Kefir Hub is running in Applet Mode, which has too little memory to unpack them: they will not install."_i18n;
+            msg += "\n\n" + "To install them: close Kefir Hub, start any game while holding R (Title Mode) and open Kefir Hub from there."_i18n;
+            App::Push<OptionBox>(msg, "Cancel"_i18n, "Skip them"_i18n, "Try anyway"_i18n, 1, [this](auto choice) {
+                if (!choice || *choice == 0) {
+                    return;
+                }
+                if (*choice == 1) {
+                    SCOPED_MUTEX(&m_mutex);
+                    for (auto& entry : m_queue) {
+                        if (entry.selected && IsCompressedPackage(entry.file_name)) {
+                            entry.selected = false;
+                            entry.sync_dirty = true;
+                        }
+                    }
+                    RecomputePlan();
+                }
+                ContinueStartInstall();
+            });
+            return;
+        }
+    }
+    ContinueStartInstall();
+}
+
+void Menu::ContinueStartInstall() {
+    s64 sd_required{}, nand_required{};
+    {
+        SCOPED_MUTEX(&m_mutex);
+        size_t selected{};
+        for (const auto& entry : m_queue) {
+            if (!entry.selected || R_FAILED(entry.analysis_result)) continue;
+            selected++;
+            if (!entry.analysis_deferred && !TakesNoSpace(entry)) {
+                AddSizeSaturated(entry.planned_sd ? sd_required : nand_required, entry.analysis.install_size);
+            }
+        }
+        if (!selected) {
+            App::Notify("Select at least one package"_i18n);
+            return;
+        }
     }
     const auto spaces = GetPolledData(true);
     const bool global = App::GetSaveSettingsGlobally();

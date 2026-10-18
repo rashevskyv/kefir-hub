@@ -3,6 +3,13 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.140 — Applet Mode warns before NSZ/XCZ installs; orphan update hint; quiet nxlink retry
+- Log of .45 (0.14.136, Applet Mode): all 11 NSZ failed at the first zstd chunk ("ZSTD_decompressStream ... Allocation error: not enough memory", YatiInvalidNczZstdError), the 50 MB ones too: the applet heap cannot hold the zstd window. PC Install now asks before it starts when Applet Mode meets NSZ/XCZ: Cancel / Skip them / Try anyway, with how to start in Title Mode (R held while launching a game).
+- The Inmost update (plain NCAs) installed while its NSZ base failed, so "installed without the base game" offered to delete it (it defaults to Keep); the prompt now says to keep it and install the base again.
+- nxlink: a taken port 28280 made the thread retry every 100 ms and log each time (498 000 lines in .45's log); it logs the first failure and retries once a second.
+- Not done yet (plan F.27): the PC backend lists failed files first and ticks them, and the console offers to restart in Title Mode to continue them.
+- host tests: quick pass · nro: built · switch: pending (not sent to .45: an install was running there)
+
 ## v0.14.138 — drain page: charging phase and energy; load threads at the time-sliced priority
 - On the charger the page says "Charging: N% / 100%" with how much of this cycle's discharge is done ("Discharged in this cycle: 78% / 90%"), not "Draining for". A new line "Energy: 5.2 / 13.3 Wh · 3600 mAh · -0.8 Wh" (RepCap/FullCap at 0.5 mAh a step, 3.7 V nominal; the last figure is what went out, or in on the charger, during this visit).
 - Load threads: 0.14.133 showed CPU 0 % under load, i.e. the 0x3F threads got no time. 0.14.137 (test build) put them at 0x2C: that is a cooperative priority, the busy loops never yielded and the Hub hung on .141 (only a power-button reset helps). Horizon time-slices only the band 59..63, so the threads now run at 59 (PRIO_PREEMPTIVE). Each thread logs its creation, the core-mask result and the first chunk.

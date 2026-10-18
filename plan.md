@@ -436,6 +436,13 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       is and what the console can repair itself. Then a Hub tool "Repair SD card": check the layout, set the archive bit,
       report what it did. Needs the research result and a test with a deliberately broken copy.
 
+- [ ] F.27 **Failed installs: backend shows them first, retry in Title Mode** (user, 2026-10-18). After an install ends,
+      the PC backend (DBI Backend Qt) lists the files that failed at the top and keeps them ticked; the console offers to
+      restart Kefir Hub in Title Mode and go on with exactly those files (typical case: NSZ in Applet Mode, "not enough
+      memory"). Part 1 is in 0.14.140 (warning before the install). Part 2 needs the Hub to tell the backend the per-file
+      result (a new message of our USB protocol or a marker over MTP, like `kefir-hub.pc-install`) and a way to relaunch
+      into Title Mode with the failed list (the next start reads it from `/config/kefir/`).
+
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
 

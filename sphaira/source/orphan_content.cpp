@@ -54,6 +54,7 @@ void Ask(std::vector<u64> ids) {
         message += TitleName(id) + "\n";
     }
     message += "\n" + "Updates and DLC do not work without their base game.\nKeep them if the game is on a game card."_i18n;
+    message += "\n\n" + "If the base game failed to install a moment ago, keep it and install the base game again: the update then works."_i18n;
 
     App::Push<ui::OptionBox>(message, "Keep"_i18n, "Delete"_i18n, 0, [ids](auto op_index) {
         if (!op_index || *op_index != 1) {

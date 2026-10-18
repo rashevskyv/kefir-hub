@@ -245,6 +245,7 @@ void loop(void* args) {
         return false;
     };
 
+    bool bind_failed = false;
     while (!g_quit) {
         svcSleepThread(1e+8);
 
@@ -272,9 +273,16 @@ void loop(void* args) {
         }
 
         if (0 > bind(sock, (const sockaddr*)&servaddr, sizeof(servaddr))) {
-            log_write("failed to get bind(sock): 0x%X\n", socketGetLastResult());
+            // the port is taken (another Hub or an old session): retrying every 100 ms wrote 500 000 log lines in a
+            // day. Log the first failure of a streak, retry once a second.
+            if (!bind_failed) {
+                bind_failed = true;
+                log_write("failed to get bind(sock): 0x%X (retrying quietly every second)\n", socketGetLastResult());
+            }
+            svcSleepThread(900'000'000ULL);
             continue;
         }
+        bind_failed = false;
 
         if (0 > bind(sock_udp, (const sockaddr*)&servaddr, sizeof(servaddr))) {
             log_write("failed to get bind(sock_udp): 0x%X\n", socketGetLastResult());
