@@ -320,6 +320,16 @@ struct DrainMenu final : ui::menu::MenuBase {
     // keeps them; alive is written every 30 s
     void NoteState(bool force) {
         const auto now = static_cast<u64>(std::time(nullptr));
+        // a drain that starts from a full battery is a new drain: the time of an earlier, interrupted one (the
+        // battery was charged up again meanwhile) must not be shown as this one's
+        const bool fresh = !m_charger && (m_prev_charger || !m_noted_once) && m_read && m_pct >= 99 && !m_state.zero_at[m_cycle - 1];
+        if (fresh && m_state.drain_s[m_cycle - 1]) {
+            m_state.drain_s[m_cycle - 1] = 0;
+            m_state.drain_at[m_cycle - 1] = 0;
+            m_last_note = 0;
+        }
+        m_prev_charger = m_charger;
+        m_noted_once = m_noted_once || m_read;
         const bool changed = !m_charger && wizard::NoteDrain(m_state, m_cycle, now, ZeroSeen() ? 0 : m_pct);
         // time on battery only: the seconds since the last note, when no charger was in (a gap longer than a
         // minute is a restart or a switch-off, not drain time)
@@ -585,6 +595,8 @@ private:
     wizard::State m_state;
     TimeStamp m_trace{};
     u64 m_last_note{};
+    bool m_prev_charger{}; // the charger state at the last note
+    bool m_noted_once{};   // NoteState has seen a reading
     int m_cap_rem_mah{-1};
     int m_cap_full_mah{-1};
     float m_wh_in{};

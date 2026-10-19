@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.162 — drain time starts from zero when a drain starts from a full battery
+The drain page showed "Draining for 2:01:22" three minutes into a new drain: the time of an earlier, interrupted drain of the same cycle was kept. A drain that starts at 99-100 % on battery (after the charger, or when the page opens) now resets the cycle's drain time.
+host tests: not run, nro: not built, switch: pending (.141)
+
 ## v0.14.161 — update window shows the old and the new version
 The "Updating" box title reads "0.14.160 -> 0.14.161".
 host tests: not run, nro: not built, switch: pending
