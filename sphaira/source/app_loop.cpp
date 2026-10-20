@@ -163,6 +163,7 @@ void App::Loop() {
         this->Poll();
         orphan_content::Poll();
         battery::PollInterruptedDrain();
+        battery::PollHop();
         auto_update::Poll();
         this->Update();
         this->Draw();

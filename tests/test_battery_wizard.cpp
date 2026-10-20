@@ -62,9 +62,16 @@ int main() {
     // the other MMC must match after the second cycle
     v = Steps(st, l);
     assert(MarkOf(v, Step::Cycle2) == Mark::Done && MarkOf(v, Step::MatchOther) == Mark::Next);
-    st.match_at[SYSMMC] = 2500;                     // a match before the cycles finished does not count
-    assert(MarkOf(Steps(st, l), Step::MatchOther) == Mark::Next);
-    st.match_at[SYSMMC] = 3500;
+    State early = st;
+    early.full2_at = 0;
+    early.match_at[SYSMMC] = 100;                   // a match before the second cycle counted is voided when it counts
+    Live fullnow = l;
+    fullnow.pct = 100;
+    fullnow.total = st.total_at_reset + 2 * CYCLE_DONE + 10;
+    early.full1_at = 1;
+    early.start[1] = st.total_at_reset + CYCLE_DONE;
+    assert(Advance(early, fullnow) && early.full2_at && early.match_at[SYSMMC] == 0);
+    st.match_at[SYSMMC] = 1;                        // the other MMC's clock may be far behind: any stamp counts
     v = Steps(st, l);
     assert(MarkOf(v, Step::MatchOther) == Mark::Done && MarkOf(v, Step::Finished) == Mark::Done);
 

@@ -3503,5 +3503,21 @@
   "Failed to save the fan curve": "Failed to save the fan curve",
   "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.": "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.",
   "Kefir Hub was updated to": "Kefir Hub was updated to",
-  "The new version runs after a restart. Restart now?": "The new version runs after a restart. Restart now?"
+  "The new version runs after a restart. Restart now?": "The new version runs after a restart. Restart now?",
+  "hekate_ipl.ini was not found on the microSD.": "hekate_ipl.ini was not found on the microSD.",
+  "No hekate boot entry for": "No hekate boot entry for",
+  "hekate was not found in /bootloader/update.bin.": "hekate was not found in /bootloader/update.bin.",
+  "This hekate cannot start a payload for one boot.": "This hekate cannot start a payload for one boot.",
+  "The microSD could not be written.": "The microSD could not be written.",
+  "Could not switch:": "Could not switch:",
+  "Restart the console and choose the system yourself.": "Restart the console and choose the system yourself.",
+  "The last step is the match in": "The last step is the match in",
+  "Kefir Hub restarts into it, matches there as soon as you open it, and then offers to come back. Restart into": "Kefir Hub restarts into it, matches there as soon as you open it, and then offers to come back. Restart into",
+  "Battery calibration: open Kefir Hub to finish the match.": "Battery calibration: open Kefir Hub to finish the match.",
+  "Boot the other MMC yourself, open Tools → Tools → Battery → + and press A on step 5.": "Boot the other MMC yourself, open Tools → Tools → Battery → + and press A on step 5.",
+  "The match failed:": "The match failed:",
+  "Open Tools → Tools → Battery → + and press A on step 5 to try again.": "Open Tools → Tools → Battery → + and press A on step 5 to try again.",
+  "Calibration complete: both MMCs hold the same calibrated model and one cycle count.": "Calibration complete: both MMCs hold the same calibrated model and one cycle count.",
+  "Restart into": "Restart into",
+  "Stay here": "Stay here"
 }

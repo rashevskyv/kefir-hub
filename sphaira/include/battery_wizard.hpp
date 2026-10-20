@@ -36,6 +36,10 @@ struct State {
     // moment cycle 1 counted). "Redo this cycle" sets it to the total now, so a cycle that did not really happen can
     // be done again.
     std::uint32_t start[2]{};
+    // The hop to the other MMC for step 5: the MMC the Hub must be in to match (1 = sysMMC, 2 = emuMMC; 0 = none) and
+    // the MMC to offer going back to. Written before the reboot, cleared when the match is done.
+    std::uint32_t hop_to{};
+    std::uint32_t hop_from{};
     friend bool operator==(const State&, const State&) = default;
 };
 
@@ -44,12 +48,12 @@ inline auto Format(const State& s) -> std::string {
     std::snprintf(buf, sizeof(buf),
         "reset_at=%llu\nreset_mmc=%d\ntotal_at_reset=%u\nfull1_at=%llu\nfull2_at=%llu\nmatch_sysmmc_at=%llu\nmatch_emummc_at=%llu\n"
         "drain1_at=%llu\nzero1_at=%llu\nalive1_at=%llu\ndrain2_at=%llu\nzero2_at=%llu\nalive2_at=%llu\n"
-        "drain1_s=%llu\ndrain2_s=%llu\nstart1=%u\nstart2=%u\n",
+        "drain1_s=%llu\ndrain2_s=%llu\nstart1=%u\nstart2=%u\nhop_to=%u\nhop_from=%u\n",
         (unsigned long long)s.reset_at, s.reset_mmc, s.total_at_reset, (unsigned long long)s.full1_at,
         (unsigned long long)s.full2_at, (unsigned long long)s.match_at[SYSMMC], (unsigned long long)s.match_at[EMUMMC],
         (unsigned long long)s.drain_at[0], (unsigned long long)s.zero_at[0], (unsigned long long)s.alive_at[0],
         (unsigned long long)s.drain_at[1], (unsigned long long)s.zero_at[1], (unsigned long long)s.alive_at[1],
-        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1], s.start[0], s.start[1]);
+        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1], s.start[0], s.start[1], s.hop_to, s.hop_from);
     return buf;
 }
 
@@ -82,6 +86,8 @@ inline auto Parse(std::string_view text) -> State {
         else if (key == "drain2_s") s.drain_s[1] = v;
         else if (key == "start1") s.start[0] = static_cast<std::uint32_t>(v);
         else if (key == "start2") s.start[1] = static_cast<std::uint32_t>(v);
+        else if (key == "hop_to") s.hop_to = static_cast<std::uint32_t>(v);
+        else if (key == "hop_from") s.hop_from = static_cast<std::uint32_t>(v);
     }
     return s;
 }
@@ -148,6 +154,7 @@ inline auto Advance(State& s, const Live& l) -> bool {
     }
     if (s.full1_at && !s.full2_at && Got(s, l, 2) >= CYCLE_DONE) {
         s.full2_at = l.now;
+        s.match_at[SYSMMC] = s.match_at[EMUMMC] = 0; // a match from before the cycles are done is void
         return true;
     }
     return false;
@@ -211,7 +218,8 @@ struct View {
 
 inline auto Steps(const State& s, const Live& l) -> std::vector<View> {
     const int other = s.reset_mmc == SYSMMC ? EMUMMC : SYSMMC;
-    const bool matched = s.full2_at && s.match_at[other] > s.full2_at;
+    // no clock comparison: the two MMCs keep their own time, so a match made in the other one can look "older" than the cycle
+    const bool matched = s.full2_at && s.match_at[other];
     const bool done[] = {l.other_known || s.reset_at, s.reset_at != 0, s.full1_at != 0, s.full2_at != 0, matched, matched};
     std::vector<View> out;
     bool next_given = false;

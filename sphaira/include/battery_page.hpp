@@ -22,6 +22,10 @@ void PollInterruptedDrain();
 // true after the user stopped a drain; cleared when the charger goes in (so Back from the drain page does not
 // start it again at once)
 auto AutoDrainSuppressed() -> bool;
+// step 5, A in the MMC where the cycles were done: restart into the other MMC, match there, offer to come back
+void OfferHop();
+// from the app loop: a hop waits for this MMC, so the match runs by itself and the Hub offers to go back
+void PollHop();
 void SetAutoDrainSuppressed(bool v);
 
 } // namespace sphaira::battery

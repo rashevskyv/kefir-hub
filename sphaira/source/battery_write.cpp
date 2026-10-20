@@ -350,24 +350,12 @@ void RunAlign() {
 void RunMatch() {
     auto failed = std::make_shared<std::string>();
     App::Push<ui::ProgressBox>(0, "Match the other MMC"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
-        auto s = Read();
-        if (!s.other) {
-            *failed = "The other MMC was not checked yet: boot it and open this page once."_i18n;
-            R_THROW(Result_ArchiveRead);
-        }
-        std::string name;
-        R_TRY(Backup(s, name));
-        FuelGauge g;
-        R_UNLESS(g.open, Result_ArchiveRead);
-        R_TRY(SaveCopy(g, std::max(s.hos.cycles_actual, s.other->cal.cycles)));
-        if (auto st = LoadState(); st.reset_at) {
-            st.match_at[s.emummc ? wizard::EMUMMC : wizard::SYSMMC] = static_cast<u64>(std::time(nullptr));
-            SaveState(st);
-        }
-        log_write("[Battery] matched the other MMC: cycles %u\n", std::max(s.hos.cycles_actual, s.other->cal.cycles));
-        R_SUCCEED();
+        return detail::MatchNow(*failed);
     }, [failed](Result rc) {
-        Done(rc, "This MMC's copy now holds the chip's model and the larger cycle count of the two MMCs."_i18n, failed);
+        const auto st = LoadState();
+        const bool finished = st.full2_at && st.match_at[wizard::SYSMMC] + st.match_at[wizard::EMUMMC] > 0;
+        Done(rc, finished ? "Calibration complete: both MMCs hold the same calibrated model and one cycle count."_i18n
+                          : "This MMC's copy now holds the chip's model and the larger cycle count of the two MMCs."_i18n, failed);
     });
 }
 
@@ -525,7 +513,8 @@ auto WizardGroups(const Snapshot& s, wizard::State& st) -> std::vector<system_in
                                                   : "Next: press A here"_i18n;
                 }
                 r.action = mmc == st.reset_mmc && st.reset_at
-                    ? Info("Boot the other MMC, open Tools → Tools → Battery → + and press A on this step there. Its copy then takes the calibrated model and one cycle count for both MMCs; the chip is not written."_i18n)
+                    ? (st.full2_at && !done ? std::function<void()>{OfferHop}
+                                            : Info("Boot the other MMC, open Tools → Tools → Battery → + and press A on this step there. Its copy then takes the calibrated model and one cycle count for both MMCs; the chip is not written."_i18n))
                     : std::function<void()>{RunMatch};
                 break;
             case wizard::Step::Finished:
@@ -613,6 +602,30 @@ void OpenWizard() {
 }
 
 } // namespace
+
+namespace detail {
+
+auto MatchNow(std::string& failed) -> Result {
+    auto s = Read();
+    if (!s.other) {
+        failed = "The other MMC was not checked yet: boot it and open this page once."_i18n;
+        R_THROW(Result_ArchiveRead);
+    }
+    std::string name;
+    R_TRY(Backup(s, name));
+    FuelGauge g;
+    R_UNLESS(g.open, Result_ArchiveRead);
+    R_TRY(SaveCopy(g, std::max(s.hos.cycles_actual, s.other->cal.cycles)));
+    // only a match after both cycles counts as the calibration's last step
+    if (auto st = LoadState(); st.reset_at && st.full2_at) {
+        st.match_at[s.emummc ? wizard::EMUMMC : wizard::SYSMMC] = static_cast<u64>(std::time(nullptr));
+        SaveState(st);
+    }
+    log_write("[Battery] matched the other MMC: cycles %u\n", std::max(s.hos.cycles_actual, s.other->cal.cycles));
+    R_SUCCEED();
+}
+
+} // namespace detail
 
 void OpenCalibrate() {
     OpenWizard();

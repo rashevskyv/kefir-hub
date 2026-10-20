@@ -269,4 +269,8 @@ bool rebootToPayload(const char* path) {
     return false;
 }
 
+bool hekatePayloadApi() {
+    return isHekatePayloadApiSupported();
+}
+
 } // namespace sphaira::utils

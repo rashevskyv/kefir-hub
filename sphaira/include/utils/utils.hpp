@@ -68,6 +68,9 @@ Result requestForcedReboot();
 // Returns true on success, false on failure
 bool rebootToPayload(const char* path);
 
+// true when this hekate takes a one-shot payload request (the marker Kefir writes), so a payload can run for one boot only
+bool hekatePayloadApi();
+
 // Trims leading/trailing whitespace and removes surrounding quotes if present
 std::string Trim(std::string str);
 

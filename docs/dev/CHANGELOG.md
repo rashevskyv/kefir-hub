@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.163 — calibration step 5: no more "press A here" loop; the hop to the other MMC does it
+Step 5 counted as done only when the match time was later than the second cycle's time, but the two MMCs keep their own clocks: a match made in the other MMC could look older and the row stayed "Next: press A here". It now counts any match made after both cycles. The match popup says "Calibration complete" when it was the last step. New: when both cycles are done, A on step 5 offers to restart into the other MMC (hekate one-shot boot request), match there by itself when Kefir Hub opens, and offer to restart back.
+host tests: pass (test_battery_hop, test_battery_wizard), nro: not built, switch: pending (needs the hekate payload API marker and /bootloader/update.bin; try on .69 first)
+
 ## v0.14.162 — drain time starts from zero when a drain starts from a full battery
 The drain page showed "Draining for 2:01:22" three minutes into a new drain: the time of an earlier, interrupted drain of the same cycle was kept. A drain that starts at 99-100 % on battery (after the charger, or when the page opens) now resets the cycle's drain time.
 host tests: not run, nro: not built, switch: pending (.141)

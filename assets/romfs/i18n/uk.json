@@ -3503,5 +3503,21 @@
   "Failed to save the fan curve": "Не вдалося зберегти криву кулера",
   "The fan curve is saved. It applies after the next reboot.\n\nHold A to reboot now.": "Криву кулера збережено. Вона застосується після наступного перезавантаження.\n\nУтримуйте A, щоб перезавантажити зараз.",
   "Kefir Hub was updated to": "Kefir Hub оновлено до",
-  "The new version runs after a restart. Restart now?": "Нова версія запуститься після перезапуску. Перезапустити зараз?"
+  "The new version runs after a restart. Restart now?": "Нова версія запуститься після перезапуску. Перезапустити зараз?",
+  "hekate_ipl.ini was not found on the microSD.": "hekate_ipl.ini не знайдено на microSD.",
+  "No hekate boot entry for": "Немає пункту завантаження hekate для",
+  "hekate was not found in /bootloader/update.bin.": "hekate не знайдено в /bootloader/update.bin.",
+  "This hekate cannot start a payload for one boot.": "Цей hekate не вміє запускати payload на одне завантаження.",
+  "The microSD could not be written.": "Не вдалося записати на microSD.",
+  "Could not switch:": "Не вдалося переключитись:",
+  "Restart the console and choose the system yourself.": "Перезавантажте консоль і виберіть систему самі.",
+  "The last step is the match in": "Останній крок: узгодження в",
+  "Kefir Hub restarts into it, matches there as soon as you open it, and then offers to come back. Restart into": "Kefir Hub перезапустить консоль у неї, узгодить там, щойно ви його відкриєте, і запропонує повернутись. Перезапустити в",
+  "Battery calibration: open Kefir Hub to finish the match.": "Калібрування батареї: відкрийте Kefir Hub, щоб завершити узгодження.",
+  "Boot the other MMC yourself, open Tools → Tools → Battery → + and press A on step 5.": "Завантажте іншу систему самі, відкрийте Tools → Tools → Battery → + і натисніть A на кроці 5.",
+  "The match failed:": "Узгодження не вдалося:",
+  "Open Tools → Tools → Battery → + and press A on step 5 to try again.": "Відкрийте Tools → Tools → Battery → + і натисніть A на кроці 5, щоб спробувати ще раз.",
+  "Calibration complete: both MMCs hold the same calibrated model and one cycle count.": "Калібрування завершено: обидві системи мають однакову модель батареї та один лічильник циклів.",
+  "Restart into": "Перезапустити в",
+  "Stay here": "Лишитись тут"
 }
