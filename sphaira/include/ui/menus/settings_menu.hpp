@@ -33,6 +33,9 @@ struct SettingsItem {
     std::function<std::string()> value;
     std::function<void()> action;
     SettingsItemKind kind{SettingsItemKind::Normal};
+    // X on the row (the Web browser page: take a favourite off the list); empty = X does nothing there
+    std::function<void()> on_x{};
+    std::string x_label{};
     std::string id{};
     // set on a Folder row that opens *inside* the settings menu: the right pane
     // is replaced by these items while the category column stays put, with the

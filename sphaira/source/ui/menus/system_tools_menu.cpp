@@ -20,6 +20,10 @@
 #include "option.hpp"
 #include "swkbd.hpp"
 #include "web.hpp"
+#include "web_favorites.hpp"
+#include "fs.hpp"
+#include "ui/remote_input.hpp"
+#include <functional>
 #include "ui/menus/storage_menu.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -32,24 +36,6 @@ namespace {
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
-}
-
-// The console's own web browser (the NetFront applet, the one BrowseNX starts). It is a system applet with its own
-// memory needs: it opens fine when Kefir Hub runs with the full memory (Title Mode, started from a game).
-void OpenBrowser() {
-    static option::OptionString last_url{"web_browser", "last_url", "https://"};
-    const std::string initial = last_url.Get();
-    std::string url;
-    if (R_FAILED(swkbd::ShowText(url, "Web address"_i18n.c_str(), initial.c_str(), 1, 500)) || url.empty()) {
-        return;
-    }
-    if (!url.starts_with("http://") && !url.starts_with("https://")) {
-        url.insert(0, "https://");
-    }
-    last_url.Set(url);
-    if (R_FAILED(WebShow(url))) {
-        App::Push<ui::OptionBox>("The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it)."_i18n, "OK"_i18n);
-    }
 }
 
 void OpenCleanup() {
@@ -140,6 +126,107 @@ auto Tool(std::string label, std::string description, std::function<void()> acti
     return { std::move(label), std::move(description), {}, std::move(action), settings::SettingsItemKind::Normal };
 }
 
+// ---- Web browser: the console's own browser (the NetFront applet, the one BrowseNX starts) behind a page of favourites.
+// It is a system applet with its own memory needs: it opens fine when Kefir Hub runs with the full memory (Title Mode).
+constexpr const char* FAVOURITES_PATH = "/config/kefir/web_favorites.txt";
+
+auto LoadFavourites() -> std::vector<web::Favourite> {
+    std::vector<u8> data;
+    if (R_FAILED(fs::FsNativeSd().read_entire_file(FAVOURITES_PATH, data))) {
+        return {};
+    }
+    return web::Parse({reinterpret_cast<const char*>(data.data()), data.size()});
+}
+
+void SaveFavourites(const std::vector<web::Favourite>& list) {
+    const auto text = web::Format(list);
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/config/kefir");
+    sd.write_entire_file(FAVOURITES_PATH, std::vector<u8>(text.begin(), text.end()));
+    sd.Commit();
+}
+
+void OpenUrl(const std::string& url) {
+    if (R_FAILED(WebShow(url))) {
+        App::Push<ui::OptionBox>("The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it)."_i18n, "OK"_i18n);
+    }
+}
+
+// the address from the console's keyboard or sent from a phone or a computer (the QR page); the callback gets it tidied, never empty
+void AskAddress(const std::string& initial, std::function<void(const std::string&)> on_url) {
+    ui::remote_input::Options opts{};
+    opts.title = "Web address"_i18n;
+    opts.guide = "Type a web address or send it from a phone or a computer"_i18n;
+    opts.default_text = initial;
+    opts.placeholder = "https://...";
+    opts.max_length = 500;
+    ui::remote_input::PromptTextInput(opts, [on_url](const std::string& text) {
+        const auto url = web::NormalizeUrl(text);
+        if (!url.empty()) {
+            on_url(url);
+        }
+    });
+}
+
+void OpenBrowser() {
+    static option::OptionString last_url{"web_browser", "last_url", "https://"};
+    // the page is rebuilt after every change: the old one leaves and a new one is pushed
+    auto self = std::make_shared<SystemToolsMenu*>(nullptr);
+    const auto reopen = [self]() {
+        if (*self) {
+            (*self)->SetPop();
+        }
+        OpenBrowser();
+    };
+
+    const auto favourites = LoadFavourites();
+    std::vector<settings::SettingsItem> items;
+    items.push_back(settings::MakeHeader("Open"_i18n));
+    items.push_back(Tool("Enter an address"_i18n, "Type a web address, or send it from a phone or a computer, and open it."_i18n, []() {
+        AskAddress(last_url.Get(), [](const std::string& url) {
+            last_url.Set(url);
+            OpenUrl(url);
+        });
+    }));
+    items.push_back(settings::MakeHeader("Favourites"_i18n));
+    if (favourites.empty()) {
+        items.push_back(Tool("No favourites yet"_i18n, "Press Y to add a site."_i18n, nullptr));
+    }
+    for (size_t i = 0; i < favourites.size(); i++) {
+        const auto fav = favourites[i];
+        auto item = Tool(fav.title, fav.url, [fav]() { OpenUrl(fav.url); });
+        item.x_label = "Remove"_i18n;
+        item.on_x = [fav, i, reopen]() {
+            App::Push<ui::OptionBox>("Remove from favourites:"_i18n + " " + fav.title + "?", "Back"_i18n, "Remove"_i18n, 0, [i, reopen](auto op) {
+                if (!op || *op != 1) {
+                    return;
+                }
+                auto list = LoadFavourites();
+                if (web::Remove(list, i)) {
+                    SaveFavourites(list);
+                }
+                reopen();
+            });
+        };
+        items.push_back(std::move(item));
+    }
+
+    auto menu = std::make_unique<SystemToolsMenu>("Web browser"_i18n, std::move(items));
+    *self = menu.get();
+    menu->SetAction(Button::Y, Action{"Add favourite"_i18n, [reopen]() {
+        AskAddress({}, [reopen](const std::string& url) {
+            auto list = LoadFavourites();
+            if (web::Add(list, url)) {
+                SaveFavourites(list);
+            } else {
+                App::Notify("Already in the favourites"_i18n);
+            }
+            reopen();
+        });
+    }});
+    App::Push(std::move(menu));
+}
+
 } // namespace
 
 // one list, three captions. The cursor steps over the captions.
@@ -177,6 +264,14 @@ SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings:
         SetAction(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }});
     }
     SetAction(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }});
+    // a row may bring its own X (the Web browser page: take a favourite off the list)
+    if (std::any_of(m_items.begin(), m_items.end(), [](const auto& item) { return bool(item.on_x); })) {
+        SetAction(Button::X, Action{"Remove"_i18n, [this](){
+            if (m_index >= 0 && m_index < static_cast<s64>(m_items.size()) && m_items[m_index].on_x) {
+                m_items[m_index].on_x();
+            }
+        }});
+    }
 
     // compact rows: the tools list fits on one screen. A longer list (a page of results)
     // shows 11 rows and scrolls. The list area is as tall as its rows plus room for the

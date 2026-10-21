@@ -3594,5 +3594,14 @@
   "Web address": "Web address",
   "Web browser": "Web browser",
   "Open a web page in the console's own browser. Needs the full memory: start Kefir Hub from a game.": "Open a web page in the console's own browser. Needs the full memory: start Kefir Hub from a game.",
-  "The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it).": "The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it)."
+  "The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it).": "The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it).",
+  "Enter an address": "Enter an address",
+  "Type a web address, or send it from a phone or a computer, and open it.": "Type a web address, or send it from a phone or a computer, and open it.",
+  "Type a web address or send it from a phone or a computer": "Type a web address or send it from a phone or a computer",
+  "Favourites": "Favourites",
+  "No favourites yet": "No favourites yet",
+  "Press Y to add a site.": "Press Y to add a site.",
+  "Remove from favourites:": "Remove from favourites:",
+  "Add favourite": "Add favourite",
+  "Already in the favourites": "Already in the favourites"
 }

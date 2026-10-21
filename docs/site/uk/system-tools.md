@@ -241,7 +241,7 @@
 -->
 
 <!-- draft
-- [[Web browser]] (Tools, Settings group): asks for a web address with the keyboard (it remembers the last one; "https://" is added when missing) and opens it in the console's own browser, the same applet BrowseNX starts; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it); on firmware 23 it works fine this way
+- [[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); **Y** [[Add favourite]], **X** removes the selected favourite, **A** opens it in the console's own browser, the same applet BrowseNX starts; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it)
 -->
 
 ## Очищення системи { #clean-system-junk }
