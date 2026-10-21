@@ -438,8 +438,11 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       for 5 minutes (psm 100 % stays the counting rule); (c) enlarged battery: learned full capacity clearly above the
       design capacity gives the verdict "a larger battery is built in", the 10 % under-design rule must not misfire, and
       the page names what to check in CAL0 (battery type 02 = Lite, charge limit 4320 mV); (d) editing PRODINFO (battery
-      type, later the region of F.25) goes through one backed-up TegraExplorer-script path, not a write from HOS. Needs the
-      video's exact edit steps from the owner.
+      type, later the region of F.25) goes through one backed-up TegraExplorer-script path, not a write from HOS. The
+      edit (from the video, 2026-10-21): byte 0x4310 00 -> 02, then the CRC16 and the SHA256 of the BatteryVersion block;
+      the owner's Python script shows the block layout; (e) a "LiHV / LiPo" row from the CAL0 battery version (2 = LiHV,
+      4.32 V) on the Battery page; expected full capacity of an enlarged cell 7500-8000 mAh; the reset must not ask for
+      cycles (the SD copy keeps the count); see the doc.
 
 - [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
       the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable
