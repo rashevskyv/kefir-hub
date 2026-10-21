@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.182 — Web browser: favourites and an address from a phone
 Tools → Web browser is now a page: "Enter an address" (console keyboard or the QR page, so a phone or a PC can send it) and a list of favourites (Y adds, X removes, A opens), kept in /config/kefir/web_favorites.txt. Pure list logic in web_favorites.hpp.
-host tests: pass (test_web_favorites) | nro: built | switch: pending
+host tests: pass (test_web_favorites) | nro: built | switch: page, add from a PC, remove verified on .69 (2026-10-22); opening a site in the browser not yet tried
 
 ## v0.14.181 — Tools: Web browser (the console's own browser applet)
 Tools → Web browser: asks for an address (the last one is remembered, "https://" added when missing) and opens it through WebShow, the web applet that BrowseNX starts. It needs the full memory: Title Mode (start Hub from a game); fine on firmware 23.

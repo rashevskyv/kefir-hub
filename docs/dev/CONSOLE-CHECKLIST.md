@@ -4,9 +4,9 @@ Tick a line when it works on the console. Versions are the ones that introduced 
 
 ## Tools
 - [ ] **Web browser** (0.14.181, favourites in 0.14.182): Tools → Web browser opens a page with "Enter an address" and "Favourites".
-  - [ ] A on "Enter an address" opens the keyboard or the QR page; send an address from a phone; the browser opens it.
-  - [ ] Y adds a favourite (address typed or sent from a phone). The same address twice shows "Already in the favourites".
-  - [ ] X on a favourite asks, then removes it. A on a favourite opens it.
+  - [x] Page, Y add from the QR page (sent from a PC), X remove with the question: checked on .69, 2026-10-22.
+  - [ ] A on "Enter an address" or on a favourite really opens the site in the browser (not tried yet).
+  - [ ] The same address twice shows "Already in the favourites".
   - [ ] Start Hub from a normal Homebrew launch (applet mode): the error box about full memory appears, no crash.
 - [ ] **Storage manager** (0.14.177–0.14.180): ring chart, emuMMC as one container, Y "What is an emuMMC?", slice "Emulators and their games". Not yet done: system memory ring, delete/open actions.
 
