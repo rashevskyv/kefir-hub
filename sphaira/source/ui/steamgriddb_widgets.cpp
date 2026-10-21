@@ -25,6 +25,7 @@ namespace {
 
 // Up to this many pictures are all loaded at once; more than that: the first batch, then "load more".
 constexpr size_t LOAD_ALL_LIMIT = 10;
+constexpr size_t ENOUGH_PICTURES = 20;
 constexpr size_t MAX_PICTURE_SIZE = 8 * 1024 * 1024;
 constexpr size_t ICON_BATCH_SIZE = 5;
 // "load more" with fewer than this left would be a pointless button: those are loaded with the batch before.
@@ -50,7 +51,8 @@ struct SearchGamesState {
 struct SearchState {
     SearchError error{SearchError::None};
     std::string match_name;
-    std::vector<std::string> urls;
+    std::vector<std::string> urls;       // the small preview of each picture (falls back to the full one)
+    std::vector<std::string> full_urls;  // the full picture, same order
     std::vector<std::vector<u8>> icons;
     std::vector<std::string> icon_urls; // the picture each entry of `icons` came from (the crop editor loads the full one)
     size_t next_url_index{};
@@ -298,7 +300,7 @@ auto ParseGames(const std::vector<u8>& data, std::vector<GameInfo>& games) -> bo
     return !games.empty();
 }
 
-void AppendUrls(const std::vector<u8>& data, std::vector<std::string>& urls, std::unordered_set<std::string>& seen) {
+void AppendUrls(const std::vector<u8>& data, SearchState& state, std::unordered_set<std::string>& seen) {
     auto doc = yyjson_read(reinterpret_cast<const char*>(data.data()), data.size(), YYJSON_READ_NOFLAG);
     if (!doc) {
         return;
@@ -320,9 +322,13 @@ void AppendUrls(const std::vector<u8>& data, std::vector<std::string>& urls, std
         }
 
         std::string url{yyjson_get_str(value), yyjson_get_len(value)};
-        if (!url.empty() && seen.emplace(url).second) {
-            urls.emplace_back(std::move(url));
+        if (url.empty() || !seen.emplace(url).second) {
+            continue;
         }
+        auto thumb = yyjson_obj_get(entry, "thumb");
+        std::string preview = yyjson_is_str(thumb) ? std::string{yyjson_get_str(thumb), yyjson_get_len(thumb)} : url;
+        state.urls.emplace_back(std::move(preview));
+        state.full_urls.emplace_back(std::move(url));
     }
 }
 
@@ -345,20 +351,25 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
         const auto url_index = state.next_url_index++;
         pbox->NewTransfer("Downloading icon"_i18n).UpdateTransfer(batch_index, batch_size);
         pbox->SetOverall(static_cast<s64>(batch_index), static_cast<s64>(batch_size)); // the whole batch, besides the bar of each picture
-        const auto result = curl::Api().ToMemory(
-            curl::Url{state.urls[url_index]},
-            curl::StopToken{pbox->GetToken()},
-            curl::OnProgress{pbox->OnDownloadProgressCallback()}
-        );
-        if (!result.success || result.code < 200 || result.code >= 300) {
-            continue;
-        }
 
-        auto icon = NormalizeIcon(result.data);
+        std::vector<u8> icon;
+        for (const auto* url : {&state.urls[url_index], &state.full_urls[url_index]}) {
+            const auto result = curl::Api().ToMemory(
+                curl::Url{*url},
+                curl::StopToken{pbox->GetToken()},
+                curl::OnProgress{pbox->OnDownloadProgressCallback()}
+            );
+            if (result.success && result.code >= 200 && result.code < 300) {
+                icon = NormalizeIcon(result.data);
+            }
+            if (!icon.empty() || state.urls[url_index] == state.full_urls[url_index]) {
+                break; // got it, or the preview was the full picture already
+            }
+        }
         if (!icon.empty()) {
             pbox->SetImageDataConst(icon);
             state.icons.emplace_back(std::move(icon));
-            state.icon_urls.emplace_back(state.urls[url_index]);
+            state.icon_urls.emplace_back(state.full_urls[url_index]);
         }
     }
 
@@ -383,6 +394,9 @@ auto DownloadGameIcons(ProgressBox* pbox, const std::string& api_key, s64 game_i
 
     std::unordered_set<std::string> seen;
     for (const auto& url : urls) {
+        if (state.urls.size() >= ENOUGH_PICTURES) {
+            break; // plenty already: do not ask for the heroes and logos too
+        }
         const auto result = curl::Api().ToMemory(
             curl::Url{url},
             curl::Bearer{api_key},
@@ -395,7 +409,7 @@ auto DownloadGameIcons(ProgressBox* pbox, const std::string& api_key, s64 game_i
             R_SUCCEED();
         }
         if (error == SearchError::None) {
-            AppendUrls(result.data, state.urls, seen);
+            AppendUrls(result.data, state, seen);
         }
     }
 

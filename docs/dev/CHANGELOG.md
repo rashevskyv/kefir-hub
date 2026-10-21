@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.170 — SteamGridDB: faster loading (small previews, fewer lists)
+The grid downloads each picture's small preview (the API's thumb); the full picture only when the crop editor opens, or when the preview cannot be read. Heroes and logos are not requested when 20 pictures are already found.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.169 — SteamGridDB: overall progress bar for a batch of pictures
 Loading a batch of pictures shows one overall bar (done of the batch) besides the bar of the picture in progress. Verified on .69 (0.14.168): crop of a part of a picture works, both Conker builds listed.
 host tests: not run, nro: not built, switch: pending
