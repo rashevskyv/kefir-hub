@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.184 — Web browser: the marked favourite shows its mark under the cursor
+The mark bar is drawn after the cursor frame. Checked on .69 with 0.14.183: page, Add row, Options (Add, Open, Remove) work; opening a site starts the system web applet, which asks for a system update on this console (Cancel returns to the Hub).
+host tests: pass | nro: built | switch: pending
+
 ## v0.14.183 — Web browser: favourites marked like files
 "Add to favourites" is a row above the list; on a favourite X marks, Y inverts, START opens the context menu (Open, Add, Remove for the marked ones). The Web browser row description no longer runs off the line.
 host tests: pass | nro: built | switch: pending
