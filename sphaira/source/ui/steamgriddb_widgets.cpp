@@ -344,6 +344,7 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
 
         const auto url_index = state.next_url_index++;
         pbox->NewTransfer("Downloading icon"_i18n).UpdateTransfer(batch_index, batch_size);
+        pbox->SetOverall(static_cast<s64>(batch_index), static_cast<s64>(batch_size)); // the whole batch, besides the bar of each picture
         const auto result = curl::Api().ToMemory(
             curl::Url{state.urls[url_index]},
             curl::StopToken{pbox->GetToken()},
@@ -361,6 +362,7 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
         }
     }
 
+    pbox->SetOverall(0, 0);
     R_SUCCEED();
 }
 

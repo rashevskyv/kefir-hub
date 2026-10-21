@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.169 — SteamGridDB: overall progress bar for a batch of pictures
+Loading a batch of pictures shows one overall bar (done of the batch) besides the bar of the picture in progress. Verified on .69 (0.14.168): crop of a part of a picture works, both Conker builds listed.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.168 — NRO launched from Hub no longer crashes after a few seconds
 The USB install probe thread (cable plugged in) kept waiting in usb:ds after Hub exited; its wait timed out inside the next NRO (2168-0001, PC outside every module). App exit now cancels the probe waits and joins the thread (usb_probe::Stop) before the hand-off to hbl.
 host tests: pass, nro: built, switch: pending (cable in, launch NX-MCP from Hub and from hbmenu, exit, relaunch; FTP on and off; no new crash report)
