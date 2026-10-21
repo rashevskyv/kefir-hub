@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.168 — NRO launched from Hub no longer crashes after a few seconds
+The USB install probe thread (cable plugged in) kept waiting in usb:ds after Hub exited; its wait timed out inside the next NRO (2168-0001, PC outside every module). App exit now cancels the probe waits and joins the thread (usb_probe::Stop) before the hand-off to hbl.
+host tests: pass, nro: built, switch: pending (cable in, launch NX-MCP from Hub and from hbmenu, exit, relaunch; FTP on and off; no new crash report)
+
 ## v0.14.167 — Homebrew cards show the NRO file name on the second line
 The file name (e.g. DBI_good.nro) now always replaces the author line on the cards (grid and list); hbmenu layout unchanged.
 host tests: not run, nro: not built, switch: pending

@@ -33,6 +33,7 @@
 #include "swkbd.hpp"
 #include "utils/devoptab_curl_thread.hpp"
 #include "utils/devoptab_mtp.hpp"
+#include "usb_install_probe.hpp"
 #include <sys/statvfs.h>
 
 #include <nanovg_dk.h>
@@ -255,6 +256,8 @@ App::~App() {
 
     log_write_error("[SHUTDOWN] begin mtp");
     TimeStamp mtp_phase;
+    usb_probe::Stop();
+    mark("usb probe");
 #if ENABLE_NETWORK_INSTALL
     ui::menu::stream::BackgroundInstaller::TeardownWorker();
 #endif

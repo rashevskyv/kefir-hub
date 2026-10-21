@@ -24,18 +24,31 @@ bool g_thread_created{};
 std::mutex g_mutex;
 std::unique_ptr<yati::source::Usb> g_source;
 std::vector<std::string> g_names;
+// Stop() asks the thread to give up. The usb cancel event is one-shot (one
+// wait consumes it), so the thread also checks this flag between waits.
+std::atomic<bool> g_cancel{false};
+yati::source::Usb* g_live{}; // the thread's source while it runs; guarded by g_mutex
 
 #if ENABLE_NETWORK_INSTALL
 void ThreadFunc(void*) {
     auto source = std::make_unique<yati::source::Usb>(UINT64_MAX);
     std::vector<std::string> names;
     bool found = false;
+    {
+        std::scoped_lock lock{g_mutex};
+        g_live = source.get();
+    }
 
-    if (R_SUCCEEDED(source->GetOpenResult()) && R_SUCCEEDED(source->IsUsbConnected(ENUMERATE_TIMEOUT))) {
-        for (int i = 0; i < DETECT_ROUNDS && !found; i++) {
+    if (!g_cancel && R_SUCCEEDED(source->GetOpenResult()) && R_SUCCEEDED(source->IsUsbConnected(ENUMERATE_TIMEOUT))) {
+        for (int i = 0; i < DETECT_ROUNDS && !found && !g_cancel; i++) {
             found = R_SUCCEEDED(source->WaitForConnection(UINT64_MAX, names));
         }
     }
+    {
+        std::scoped_lock lock{g_mutex};
+        g_live = nullptr;
+    }
+    found = found && !g_cancel;
 
     if (found) {
         log_write("[USB] probe: %s host answered with %zu files\n",
@@ -64,6 +77,7 @@ void Start() {
     if (App::GetHddEnable()) {
         usbHsFsExit();
     }
+    g_cancel = false;
     g_state = State::Running;
     if (R_FAILED(utils::CreateThread(&g_thread, ThreadFunc, nullptr, 1024 * 64, PRIO_PREEMPTIVE))) {
         g_state = State::NotFound;
@@ -99,6 +113,28 @@ void Finish(std::unique_ptr<yati::source::Usb>& out_source, std::vector<std::str
         }
         usbHsFsInitialize(1);
     }
+    g_state = State::Idle;
+}
+
+void Stop() {
+    // the thread blocks in usb:ds waits (up to UINT64_MAX). Left running, it
+    // wakes inside the next NRO after hbl unmapped us: 2168-0001 a few seconds
+    // after launch. Cancel the waits and join it before App goes away.
+    g_cancel = true;
+    {
+        std::scoped_lock lock{g_mutex};
+        if (g_live) {
+            g_live->SignalCancel();
+        }
+    }
+    if (g_thread_created) {
+        threadWaitForExit(&g_thread);
+        threadClose(&g_thread);
+        g_thread_created = false;
+    }
+    std::scoped_lock lock{g_mutex};
+    g_source.reset(); // a Found link nobody collected still holds usb:ds
+    g_names.clear();
     g_state = State::Idle;
 }
 

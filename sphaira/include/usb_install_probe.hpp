@@ -27,5 +27,8 @@ void Start();
 auto GetState() -> State;
 // collects the thread and the result; resets to Idle. Only after Found/NotFound.
 void Finish(std::unique_ptr<yati::source::Usb>& out_source, std::vector<std::string>& out_names);
+// app exit: cancels the probe's usb waits, joins the thread, drops any result.
+// Safe when nothing runs. Must run before Kefir Hub hands over to hbl.
+void Stop();
 
 } // namespace sphaira::usb_probe
