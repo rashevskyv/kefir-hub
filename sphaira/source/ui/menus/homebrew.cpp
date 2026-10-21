@@ -190,7 +190,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
         const auto layout = m_layout.Get();
         const auto selected = pos == m_index;
-        DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), e.GetAuthor(), card_version.c_str(), e.selected);
+        // same title as another NRO: the file name takes the author's line, so the builds can be told apart
+        const auto subtitle = e.same_name && layout != grid::LayoutType_HbMenu ? GetNroFilename(e) : std::string{e.GetAuthor()};
+        DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
         DrawSelectionMark(vg, theme, layout, v, v, e.selected, m_selected_count > 0);
     });
 }

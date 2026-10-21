@@ -14,6 +14,11 @@ mark favorites, delete them, or add one to the HOME Menu as its own icon.
 Files and folders whose name starts with a dot are skipped. The list updates by itself when you add or remove
 an app in the [File Browser](file-browser.md).
 
+<!-- draft
+- a subfolder of `/switch/` with several `.nro` files shows all of them, also when one of them is named after the folder (before, only `<folder>/<folder>.nro` was listed and the rest were hidden)
+- two or more apps with the same title (builds of one app): each card shows its file name (for example `vktest.nro`) in place of the author, so they can be told apart; the hbmenu-style layout already shows file names
+-->
+
 ## Launch an app
 1. Select the app. The header shows its path and its position in the list.
 2. Press **A** ([[Launch]]). Kefir Hub closes and the app starts.

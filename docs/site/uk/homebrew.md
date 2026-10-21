@@ -14,6 +14,11 @@
 Файли й папки, назва яких починається з крапки, пропускаються. Список оновлюється сам, коли ви додаєте чи
 видаляєте застосунок у [Файловому браузері](file-browser.md).
 
+<!-- draft
+- a subfolder of `/switch/` with several `.nro` files shows all of them, also when one of them is named after the folder (before, only `<folder>/<folder>.nro` was listed and the rest were hidden)
+- two or more apps with the same title (builds of one app): each card shows its file name (for example `vktest.nro`) in place of the author, so they can be told apart; the hbmenu-style layout already shows file names
+-->
+
 ## Запуск застосунку
 1. Виберіть застосунок. У заголовку видно його шлях і позицію в списку.
 2. Натисніть **A** ([[Launch]]). Kefir Hub закриється, і застосунок запуститься.

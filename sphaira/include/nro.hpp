@@ -34,6 +34,7 @@ struct NroEntry {
     int x,y,w,h{}; // image
     bool is_nacp_valid{};
     bool selected{};
+    bool same_name{}; // another NRO has the same title: the card shows the file name to tell them apart
     std::optional<bool> has_star{std::nullopt};
 
     auto GetName() const -> const char* {

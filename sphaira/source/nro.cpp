@@ -108,18 +108,18 @@ auto nro_scan_internal(fs::Fs* fs, const fs::FsPath& path, std::vector<NroEntry>
         if (e.type == FsDirEntryType_Dir) {
             // assert(!root && "dir should only be scanned on non-root!");
             fs::FsPath fullpath;
-            std::snprintf(fullpath, sizeof(fullpath), "%s/%s/%s.nro", path.s, e.name, e.name);
-
-            // fast path for detecting an nro in a folder
-            NroEntry entry;
-            if (R_SUCCEEDED(nro_parse_internal(fs, fullpath, entry))) {
-                // log_write("NRO: fast path for: %s\n", fullpath);
-                nros.emplace_back(entry);
-            } else {
-                // slow path...
-                std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);
-                nro_scan_internal(fs, fullpath, nros, nested, scan_all_dir, false);
+            if (!scan_all_dir) {
+                // fast path: only <folder>/<folder>.nro
+                std::snprintf(fullpath, sizeof(fullpath), "%s/%s/%s.nro", path.s, e.name, e.name);
+                NroEntry entry;
+                if (R_SUCCEEDED(nro_parse_internal(fs, fullpath, entry))) {
+                    nros.emplace_back(entry);
+                    continue;
+                }
             }
+            // every .nro in the folder: a folder may hold several builds next to <folder>.nro
+            std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);
+            nro_scan_internal(fs, fullpath, nros, nested, scan_all_dir, false);
         } else if (e.type == FsDirEntryType_File && std::string_view{e.name}.ends_with(".nro")) {
             fs::FsPath fullpath;
             std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);

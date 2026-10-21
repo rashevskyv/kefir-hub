@@ -348,6 +348,13 @@ void Menu::ScanHomebrew() {
         }
     }
 
+    // builds of one app share the title; mark them so each card can show its file name
+    for (auto& a : m_entries) {
+        a.same_name = std::ranges::count_if(m_entries, [&a](const auto& b) {
+            return !std::strcmp(a.GetName(), b.GetName());
+        }) > 1;
+    }
+
     if (!g_kefir_updater_notice_ack.Get() && std::ranges::none_of(m_entries, [](const auto& entry) {
         return IsKefirUpdaterEntry(entry);
     })) {
