@@ -58,6 +58,10 @@ Press **X** again on an app to unselect it.
 
 Pressing **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. Pressing **B** with nothing selected exits as before.
 
+<!-- draft
+- when some apps are selected, **+** opens the options with [[SELECTED HOMEBREW]] at the top, above the sort and view options; with nothing selected the view options stay first and [[THIS HOMEBREW]] comes after them
+-->
+
 ## Delete an app
 
 <!-- draft

@@ -279,6 +279,117 @@ void Menu::DisplayOptions() {
     auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
 
+    // the actions on the homebrew: first in the list when some are selected, else after the view options
+    const auto add_targets = [&]() {
+        const auto targets = GetSelectedEntries();
+        if (!targets.empty()) {
+            fs::FsNativeSd fs;
+            bool has_unstarred = false;
+            bool has_starred = false;
+            for (const auto& t : targets) {
+                if (fs.FileExists(GenerateStarPath(t.path))) {
+                    has_starred = true;
+                } else {
+                    has_unstarred = true;
+                }
+            }
+
+            if (m_selected_count > 0) {
+                options->Add<SidebarEntryHeader>("SELECTED HOMEBREW"_i18n,
+                    std::to_string(targets.size()) + " " + "selected"_i18n);
+            } else {
+                options->Add<SidebarEntryHeader>("THIS HOMEBREW"_i18n);
+            }
+
+            if (targets.size() == 1 && m_selected_count == 0) {
+                options->Add<SidebarEntryCallback>("Edit name and icon"_i18n, [this](){
+                    CustomizeHomebrew();
+                }, "Change the name and icon stored inside the nro file itself. Affects every launcher, not just this one."_i18n)->SetIcon(ActionIcon::Edit);
+            }
+
+            if (has_unstarred) {
+                options->Add<SidebarEntryCallback>("Star"_i18n, [this](){
+                    StarHomebrew(true);
+                }, "Mark as favorite."_i18n)->SetIcon(ActionIcon::Star);
+            }
+
+            if (has_starred) {
+                options->Add<SidebarEntryCallback>("Unstar"_i18n, [this](){
+                    StarHomebrew(false);
+                }, "Remove favorite mark."_i18n)->SetIcon(ActionIcon::Star);
+            }
+
+            options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+                const auto targets = GetSelectedEntries();
+                if (targets.empty()) {
+                    return;
+                }
+                const auto msg = targets.size() == 1
+                    ? "Are you sure you want to delete "_i18n + targets.front().GetName() + "?"
+                    : "Are you sure you want to delete the selected homebrew?"_i18n;
+                if (targets.size() != 1) {
+                    App::Push<OptionBox>(
+                        msg,
+                        "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
+                            if (op_index && *op_index) {
+                                DeleteHomebrew();
+                            }
+                        }, targets.front().image
+                    );
+                    return;
+                }
+
+                // one app: its own folder and the HOME icons that start it are offered too
+                const auto plan = PlanDelete(targets.front().path);
+                auto text = msg;
+                if (!plan.folder.empty()) {
+                    text += "\n\n" + "Its folder:"_i18n + " " + plan.folder.toString() + " (" + grid::FormatBytes(static_cast<u64>(plan.folder_bytes)) + ")";
+                }
+                if (!plan.tiles.empty()) {
+                    text += "\n\n" + "The HOME icon that starts it is deleted too."_i18n;
+                }
+                if (plan.folder.empty()) {
+                    App::Push<OptionBox>(
+                        text,
+                        "Back"_i18n, "Delete"_i18n, 0, [this, plan](auto op_index){
+                            if (op_index && *op_index) {
+                                DeleteHomebrew(plan, false);
+                            }
+                        }, targets.front().image
+                    );
+                } else {
+                    App::Push<OptionBox>(
+                        text,
+                        "Back"_i18n, "Only the app"_i18n, "App and folder"_i18n, 0, [this, plan](auto op_index){
+                            if (op_index && *op_index) {
+                                DeleteHomebrew(plan, *op_index == 2);
+                            }
+                        }, targets.front().image
+                    );
+                }
+            }, true, "Permanently delete all selected homebrew."_i18n)->SetIcon(ActionIcon::Delete);
+
+            if (targets.size() == 1 && m_selected_count == 0) {
+                options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
+
+                options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
+                    App::ConfirmInstall([this](){ InstallHomebrew(); });
+                }, "Add this homebrew to the HOME menu as its own tile."_i18n);
+
+                options->Add<SidebarEntryBool>("Ask every time"_i18n, App::GetApp()->m_forwarder_ask,
+                    "Open the forwarder editor when creating a forwarder instead of using the defaults from Settings."_i18n);
+
+                options->Add<SidebarEntryCallback>("Forwarder options"_i18n, [](){
+                    App::DisplayForwarderOptions(false);
+                }, "Defaults baked into forwarders you create."_i18n);
+            }
+        }
+    };
+
+    if (m_selected_count > 0) {
+        add_targets();
+    }
+
     options->Add<SidebarEntryHeader>("SORT"_i18n);
 
     SidebarEntryArray::Items sort_items;
@@ -320,108 +431,8 @@ void Menu::DisplayOptions() {
         SortAndFindLastFile();
     }, "Shows all hidden homebrew."_i18n)->SetIcon(ActionIcon::Toggle);
 
-    const auto targets = GetSelectedEntries();
-    if (!targets.empty()) {
-        fs::FsNativeSd fs;
-        bool has_unstarred = false;
-        bool has_starred = false;
-        for (const auto& t : targets) {
-            if (fs.FileExists(GenerateStarPath(t.path))) {
-                has_starred = true;
-            } else {
-                has_unstarred = true;
-            }
-        }
-
-        if (m_selected_count > 0) {
-            options->Add<SidebarEntryHeader>("SELECTED HOMEBREW"_i18n,
-                std::to_string(targets.size()) + " " + "selected"_i18n);
-        } else {
-            options->Add<SidebarEntryHeader>("THIS HOMEBREW"_i18n);
-        }
-
-        if (targets.size() == 1 && m_selected_count == 0) {
-            options->Add<SidebarEntryCallback>("Edit name and icon"_i18n, [this](){
-                CustomizeHomebrew();
-            }, "Change the name and icon stored inside the nro file itself. Affects every launcher, not just this one."_i18n)->SetIcon(ActionIcon::Edit);
-        }
-
-        if (has_unstarred) {
-            options->Add<SidebarEntryCallback>("Star"_i18n, [this](){
-                StarHomebrew(true);
-            }, "Mark as favorite."_i18n)->SetIcon(ActionIcon::Star);
-        }
-
-        if (has_starred) {
-            options->Add<SidebarEntryCallback>("Unstar"_i18n, [this](){
-                StarHomebrew(false);
-            }, "Remove favorite mark."_i18n)->SetIcon(ActionIcon::Star);
-        }
-
-        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
-            const auto targets = GetSelectedEntries();
-            if (targets.empty()) {
-                return;
-            }
-            const auto msg = targets.size() == 1
-                ? "Are you sure you want to delete "_i18n + targets.front().GetName() + "?"
-                : "Are you sure you want to delete the selected homebrew?"_i18n;
-            if (targets.size() != 1) {
-                App::Push<OptionBox>(
-                    msg,
-                    "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
-                        if (op_index && *op_index) {
-                            DeleteHomebrew();
-                        }
-                    }, targets.front().image
-                );
-                return;
-            }
-
-            // one app: its own folder and the HOME icons that start it are offered too
-            const auto plan = PlanDelete(targets.front().path);
-            auto text = msg;
-            if (!plan.folder.empty()) {
-                text += "\n\n" + "Its folder:"_i18n + " " + plan.folder.toString() + " (" + grid::FormatBytes(static_cast<u64>(plan.folder_bytes)) + ")";
-            }
-            if (!plan.tiles.empty()) {
-                text += "\n\n" + "The HOME icon that starts it is deleted too."_i18n;
-            }
-            if (plan.folder.empty()) {
-                App::Push<OptionBox>(
-                    text,
-                    "Back"_i18n, "Delete"_i18n, 0, [this, plan](auto op_index){
-                        if (op_index && *op_index) {
-                            DeleteHomebrew(plan, false);
-                        }
-                    }, targets.front().image
-                );
-            } else {
-                App::Push<OptionBox>(
-                    text,
-                    "Back"_i18n, "Only the app"_i18n, "App and folder"_i18n, 0, [this, plan](auto op_index){
-                        if (op_index && *op_index) {
-                            DeleteHomebrew(plan, *op_index == 2);
-                        }
-                    }, targets.front().image
-                );
-            }
-        }, true, "Permanently delete all selected homebrew."_i18n)->SetIcon(ActionIcon::Delete);
-
-        if (targets.size() == 1 && m_selected_count == 0) {
-            options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
-
-            options->Add<SidebarEntryCallback>("Install Forwarder"_i18n, [this](){
-                App::ConfirmInstall([this](){ InstallHomebrew(); });
-            }, "Add this homebrew to the HOME menu as its own tile."_i18n);
-
-            options->Add<SidebarEntryBool>("Ask every time"_i18n, App::GetApp()->m_forwarder_ask,
-                "Open the forwarder editor when creating a forwarder instead of using the defaults from Settings."_i18n);
-
-            options->Add<SidebarEntryCallback>("Forwarder options"_i18n, [](){
-                App::DisplayForwarderOptions(false);
-            }, "Defaults baked into forwarders you create."_i18n);
-        }
+    if (m_selected_count == 0) {
+        add_targets();
     }
 
     AddInstallShareOptions(options.get());

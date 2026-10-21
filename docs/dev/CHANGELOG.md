@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.172 — Users: action icons; Homebrew: selected-homebrew actions first
+Every entry of the Users options has an action icon (create, rename, avatar, delete, backups, restore, link). In Homebrew, with apps selected, + shows the SELECTED HOMEBREW actions at the top of the options; with nothing selected the view options stay first. Doc draft: homebrew (EN+UK).
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.171 — Delete homebrew with its folder and its HOME icon (plan F.16; D.3 was already done)
 Delete on one app: when it lives alone in /switch/<folder>/ the question shows the folder with its size and offers "Only the app" / "App and folder" (never the running Hub's folder); HOME tiles made by Kefir Hub for this NRO (title id from the path, with and without sdmc:) are deleted with it. Forwarders made by other tools (read from /nextNroPath) are not covered yet. Plan D.3 ticked: Restore / Manage Backups / Restore from another console are in the Users menu.
 host tests: not run, nro: not built, switch: pending (delete an app that has a folder and a HOME icon)

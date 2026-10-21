@@ -373,45 +373,45 @@ void Menu::ShowContextMenu() {
     options->Add<SidebarEntryHeader>("PROFILE"_i18n);
     options->Add<SidebarEntryCallback>("Create user"_i18n, [this](){
         ConfirmCreate();
-    }, true, "Add a new local profile (up to 8)."_i18n);
+    }, true, "Add a new local profile (up to 8)."_i18n)->SetIcon(ActionIcon::Insert);
 
     if (!m_items.empty()) {
         options->Add<SidebarEntryCallback>("Rename"_i18n, [this](){
             ConfirmRename();
-        }, true, "Change this profile's display name."_i18n);
+        }, true, "Change this profile's display name."_i18n)->SetIcon(ActionIcon::Edit);
         options->Add<SidebarEntryCallback>("Change avatar"_i18n, [this](){
             ConfirmChangeAvatar();
-        }, true, "Pick an existing profile avatar, an SD image, or SteamGridDB."_i18n);
+        }, true, "Pick an existing profile avatar, an SD image, or SteamGridDB."_i18n)->SetIcon(ActionIcon::Edit);
         options->Add<SidebarEntryCallback>("Delete user"_i18n, [this](){
             ConfirmDelete();
-        }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n);
+        }, true, "Remove the profile after a hold confirm. You can back up first. Saves are deleted after."_i18n)->SetIcon(ActionIcon::Delete);
     }
 
     options->Add<SidebarEntryHeader>("CONSOLE MOVE"_i18n);
     options->Add<SidebarEntryCallback>("Backup profiles & play hours"_i18n, [this](){
         ConfirmNandBackup();
-    }, true, "All profiles on this console plus play hours, same user IDs. For moving to another console. If a save is locked, Hub skips it and leaves a TegraExplorer script."_i18n);
+    }, true, "All profiles on this console plus play hours, same user IDs. For moving to another console. If a save is locked, Hub skips it and leaves a TegraExplorer script."_i18n)->SetIcon(ActionIcon::Save);
     options->Add<SidebarEntryCallback>("Restore profiles & play hours"_i18n, [this](){
         ConfirmNandRestore();
-    }, true, "Write that pack into this console via TegraExplorer. Hours and profiles here are replaced. Back up SYSTEM first."_i18n);
+    }, true, "Write that pack into this console via TegraExplorer. Hours and profiles here are replaced. Back up SYSTEM first."_i18n)->SetIcon(ActionIcon::Undo);
     options->Add<SidebarEntryCallback>("Manage Backups"_i18n, [this](){
         ConfirmNandManage();
-    }, true, "Browse profiles & play hours packs under /config/kefir/nand_transfer."_i18n);
+    }, true, "Browse profiles & play hours packs under /config/kefir/nand_transfer."_i18n)->SetIcon(ActionIcon::Folder);
     options->Add<SidebarEntryCallback>("Receive from another console"_i18n, [this](){
         ReceiveNandFromAnotherConsole();
-    }, true, "Receive backup(s) from another console over Console Transfer."_i18n);
+    }, true, "Receive backup(s) from another console over Console Transfer."_i18n)->SetIcon(ActionIcon::Dump);
     options->Add<SidebarEntryCallback>("Restore from another console"_i18n, [this](){
         RestoreNandFromAnotherConsole();
-    }, true, "Download and restore a backup from another console over Console Transfer."_i18n);
+    }, true, "Download and restore a backup from another console over Console Transfer."_i18n)->SetIcon(ActionIcon::Redo);
 
     options->Add<SidebarEntryHeader>("NINTENDO ACCOUNT"_i18n);
     if (!m_items.empty()) {
         options->Add<SidebarEntryCallback>("Link Nintendo Account"_i18n, [this](){
             ConfirmLinkNintendoAccount();
-        }, true, "Link all currently unlinked profiles using built-in Nintendo Account donors. Each unlinked profile receives a different donor. Already linked profiles will not be changed. Console will reboot."_i18n);
+        }, true, "Link all currently unlinked profiles using built-in Nintendo Account donors. Each unlinked profile receives a different donor. Already linked profiles will not be changed. Console will reboot."_i18n)->SetIcon(ActionIcon::Join);
         options->Add<SidebarEntryCallback>("Unlink Nintendo Account"_i18n, [this](){
             ConfirmUnlinkNintendoAccount();
-        }, true, "Remove Nintendo Account link data from selected profiles, or from all linked profiles if none are selected. Console will reboot."_i18n);
+        }, true, "Remove Nintendo Account link data from selected profiles, or from all linked profiles if none are selected. Console will reboot."_i18n)->SetIcon(ActionIcon::Cut);
     }
 
     options->Add<SidebarEntryHeader>("VIEW"_i18n);

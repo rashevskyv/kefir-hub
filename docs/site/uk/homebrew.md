@@ -56,6 +56,10 @@
 
 Щоб зняти вибір із застосунку, натисніть на ньому **X** ще раз. Натискання **B**, коли вибрано застосунки, знімає вибір з усіх них, а малюнки позначок зникають; водночас Kefir Hub залишається відкритим (на відміну від натискання **B** без вибраних застосунків, яке одразу закриває застосунок).
 
+<!-- draft
+- when some apps are selected, **+** opens the options with [[SELECTED HOMEBREW]] at the top, above the sort and view options; with nothing selected the view options stay first and [[THIS HOMEBREW]] comes after them
+-->
+
 ## Видалення застосунку
 
 <!-- draft
