@@ -70,7 +70,7 @@ auto ReadText(const char* path) -> std::string {
 
 void WriteText(const char* path, const std::string& text) {
     fs::FsNativeSd sd;
-    sd.CreateDirectoryRecursively(BACKUP_DIR);
+    sd.CreateDirectoryRecursively(detail::BACKUP_DIR);
     sd.write_entire_file(path, std::vector<u8>(text.begin(), text.end()));
     sd.Commit();
 }
@@ -98,10 +98,10 @@ auto ApplyVersion(int version, std::string& why) -> Result {
     char stamp[32];
     const auto now = std::time(nullptr);
     std::strftime(stamp, sizeof(stamp), "%Y%m%d-%H%M%S", std::localtime(&now));
-    const std::string backup = std::string{BACKUP_DIR} + "/prodinfo-" + stamp + ".bin";
+    const std::string backup = std::string{detail::BACKUP_DIR} + "/prodinfo-" + stamp + ".bin";
     {
         fs::FsNativeSd sd;
-        sd.CreateDirectoryRecursively(BACKUP_DIR);
+        sd.CreateDirectoryRecursively(detail::BACKUP_DIR);
         R_TRY(sd.write_entire_file(backup.c_str(), before));
         R_TRY(sd.Commit());
         std::vector<std::uint8_t> back;
