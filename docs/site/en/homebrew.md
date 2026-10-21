@@ -82,6 +82,9 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
 - [[SteamGridDB]] offers every static PNG/JPEG picture of the game: icons first, then covers of any size, heroes and logos; a non-square picture is cropped to its centre square (not stretched)
 - in the list of found games **Y** ([[Search]]) opens the keyboard with the current text ([[Search SteamGridDB]]) and searches again
 - when no game matches, Kefir Hub says [[No game by this name on SteamGridDB]] and opens the keyboard at once; a game without pictures says [[No pictures for this game on SteamGridDB]]
+- a picked picture opens in the crop editor (zoom, move; **A** [[Apply]]), so only a part of it can become the icon
+- up to 10 pictures load at once; with more, 5 load first and [[Load more]] adds 5 each time (when 1-3 would be left they load with the batch before)
+- found games and downloaded pictures stay until Kefir Hub restarts: going back in does not download again
 -->
 
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->

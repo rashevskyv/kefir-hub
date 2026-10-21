@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 The USB install probe thread (cable plugged in) kept waiting in usb:ds after Hub exited; its wait timed out inside the next NRO (2168-0001, PC outside every module). App exit now cancels the probe waits and joins the thread (usb_probe::Stop) before the hand-off to hbl.
 host tests: pass, nro: built, switch: pending (cable in, launch NX-MCP from Hub and from hbmenu, exit, relaunch; FTP on and off; no new crash report)
 
+## v0.14.168 — SteamGridDB: crop the picture, batches of 5, cache until restart
+A picked picture opens in the crop editor (zoom, move), so a part of it can become the icon (before: the whole picture at once). Up to 10 pictures load together; more: 5 first, then "Load more" with batches of 5, and a rest of 1-3 pictures is loaded with the batch before (no button for it). Found games and downloaded pictures are kept until the app restarts: going back into the same search or game does not download again.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.167 — Homebrew cards show the NRO file name on the second line
 The file name (e.g. DBI_good.nro) now always replaces the author line on the cards (grid and list); hbmenu layout unchanged.
 host tests: not run, nro: not built, switch: pending

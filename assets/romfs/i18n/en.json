@@ -3525,5 +3525,7 @@
   "The console restarts after this.": "The console restarts after this.",
   "No pictures for this game on SteamGridDB": "No pictures for this game on SteamGridDB",
   "No game by this name on SteamGridDB": "No game by this name on SteamGridDB",
-  "Search SteamGridDB": "Search SteamGridDB"
+  "Search SteamGridDB": "Search SteamGridDB",
+  "Load more": "Load more",
+  "Could not download the picture": "Could not download the picture"
 }

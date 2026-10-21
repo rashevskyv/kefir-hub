@@ -6,6 +6,7 @@
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "ui/image_crop.hpp"
 #include "ui/list.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/progress_box.hpp"
@@ -14,6 +15,7 @@
 #include <yyjson.h>
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <unordered_set>
 #include <utility>
@@ -21,7 +23,12 @@
 namespace sphaira::ui::steamgriddb {
 namespace {
 
-constexpr size_t ICON_BATCH_SIZE = 4;
+// Up to this many pictures are all loaded at once; more than that: the first batch, then "load more".
+constexpr size_t LOAD_ALL_LIMIT = 10;
+constexpr size_t MAX_PICTURE_SIZE = 8 * 1024 * 1024;
+constexpr size_t ICON_BATCH_SIZE = 5;
+// "load more" with fewer than this left would be a pointless button: those are loaded with the batch before.
+constexpr size_t MIN_LEFT_FOR_BUTTON = 4;
 
 enum class SearchError {
     None,
@@ -45,8 +52,13 @@ struct SearchState {
     std::string match_name;
     std::vector<std::string> urls;
     std::vector<std::vector<u8>> icons;
+    std::vector<std::string> icon_urls; // the picture each entry of `icons` came from (the crop editor loads the full one)
     size_t next_url_index{};
 };
+
+// Kept until the app restarts: going back into the same game or the same search does not download again.
+std::map<s64, std::shared_ptr<SearchState>> g_icon_cache;
+std::map<std::string, std::vector<GameInfo>> g_game_cache; // by the typed query
 
 auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result;
 
@@ -111,7 +123,7 @@ public:
             if (index >= (s64)m_images.size()) {
                 const auto colour = theme->GetColour(m_index == index ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
                 gfx::drawText(vg, pos.x + pos.w / 2.f, pos.y + 72.f, 52.f, colour, "+", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-                gfx::drawText(vg, pos.x + pos.w / 2.f, pos.y + 132.f, 19.f, colour, "Load 4 More"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+                gfx::drawText(vg, pos.x + pos.w / 2.f, pos.y + 132.f, 19.f, colour, "Load more"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
                 const auto remaining = m_state->urls.size() - m_state->next_url_index;
                 const auto remaining_text = std::to_string(remaining) + " " + "remaining"_i18n;
                 gfx::drawText(vg, pos.x + pos.w / 2.f, pos.y + 165.f, 15.f, theme->GetColour(ThemeEntryID_TEXT_INFO), remaining_text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
@@ -146,10 +158,7 @@ private:
 
     void Activate() {
         if (m_index >= 0 && m_index < (s64)m_state->icons.size()) {
-            if (m_callback) {
-                m_callback(std::move(m_state->icons[m_index]));
-            }
-            SetPop();
+            OpenCrop(static_cast<size_t>(m_index));
             return;
         }
 
@@ -175,6 +184,60 @@ private:
                 if (m_state->icons.size() == previous_count) {
                     App::Notify("No more SteamGridDB icons could be downloaded"_i18n);
                 }
+            }
+        );
+    }
+
+    // the picture in full size goes to the crop editor (zoom, move), so a part of it can become the icon
+    void OpenCrop(size_t index) {
+        if (index >= m_state->icon_urls.size()) {
+            return;
+        }
+        const auto url = m_state->icon_urls[index];
+        auto raw = std::make_shared<std::vector<u8>>();
+        App::Push<ProgressBox>(
+            0, "Downloading icon"_i18n, m_state->match_name,
+            [url, raw](auto pbox) -> Result {
+                const auto result = curl::Api().ToMemory(
+                    curl::Url{url},
+                    curl::StopToken{pbox->GetToken()},
+                    curl::OnProgress{pbox->OnDownloadProgressCallback()}
+                );
+                if (pbox->ShouldExit()) {
+                    R_THROW(Result_TransferCancelled);
+                }
+                if (!result.success || result.code < 200 || result.code >= 300 || result.data.empty() || result.data.size() > MAX_PICTURE_SIZE) {
+                    R_THROW(Result_CurlFailedEasyInit);
+                }
+                *raw = result.data;
+                R_SUCCEED();
+            },
+            [weak_alive = std::weak_ptr<bool>(m_alive), this, raw](Result rc) {
+                const auto alive = weak_alive.lock();
+                if (!alive || !*alive || rc == Result_TransferCancelled) {
+                    return;
+                }
+                if (R_FAILED(rc)) {
+                    App::Notify("Could not download the picture"_i18n);
+                    return;
+                }
+                auto img = ImageLoadFromMemory(*raw);
+                if (img.data.empty() || img.w <= 0 || img.h <= 0) {
+                    App::Notify("Could not read that image."_i18n);
+                    return;
+                }
+                image_crop::Show(std::move(img), "SteamGridDB", [weak_alive, this](std::vector<u8> jpeg, std::string) {
+                    const auto alive_inner = weak_alive.lock();
+                    if (jpeg.empty()) {
+                        return;
+                    }
+                    if (m_callback) {
+                        m_callback(std::move(jpeg));
+                    }
+                    if (alive_inner && *alive_inner) {
+                        SetPop();
+                    }
+                });
             }
         );
     }
@@ -264,7 +327,14 @@ void AppendUrls(const std::vector<u8>& data, std::vector<std::string>& urls, std
 }
 
 auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
-    const auto batch_end = std::min(state.next_url_index + ICON_BATCH_SIZE, state.urls.size());
+    const auto remaining = state.urls.size() - state.next_url_index;
+    size_t take = ICON_BATCH_SIZE;
+    if (state.next_url_index == 0) {
+        take = remaining <= LOAD_ALL_LIMIT ? remaining : ICON_BATCH_SIZE; // few pictures: all of them
+    } else if (remaining < ICON_BATCH_SIZE + MIN_LEFT_FOR_BUTTON) {
+        take = remaining; // the rest would be 1-3 pictures behind a button: load them now
+    }
+    const auto batch_end = std::min(state.next_url_index + take, state.urls.size());
     const auto batch_size = batch_end - state.next_url_index;
 
     for (size_t batch_index = 0; state.next_url_index < batch_end; ++batch_index) {
@@ -287,6 +357,7 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
         if (!icon.empty()) {
             pbox->SetImageDataConst(icon);
             state.icons.emplace_back(std::move(icon));
+            state.icon_urls.emplace_back(state.urls[url_index]);
         }
     }
 
@@ -331,7 +402,7 @@ auto DownloadGameIcons(ProgressBox* pbox, const std::string& api_key, s64 game_i
         R_SUCCEED();
     }
 
-    state.icons.reserve(std::min(state.urls.size(), ICON_BATCH_SIZE));
+    state.icons.reserve(std::min(state.urls.size(), LOAD_ALL_LIMIT));
     R_TRY(DownloadIconBatch(pbox, state));
 
     if (state.icons.empty()) {
@@ -446,6 +517,20 @@ private:
         const auto game_id = game.id;
         const auto game_name = game.name;
 
+        if (const auto it = g_icon_cache.find(game_id); it != g_icon_cache.end() && !it->second->icons.empty()) {
+            // already downloaded in this run: open the same pictures at once
+            App::Push<IconGrid>(m_title, it->second, [weak_alive = std::weak_ptr<bool>(m_alive), this, callback = m_callback](std::vector<u8> icon) {
+                const auto alive_inner = weak_alive.lock();
+                if (alive_inner && *alive_inner) {
+                    SetPop();
+                }
+                if (callback) {
+                    callback(std::move(icon));
+                }
+            });
+            return;
+        }
+
         auto state = std::make_shared<SearchState>();
         state->match_name = game_name;
 
@@ -454,7 +539,7 @@ private:
             [state, api_key = m_api_key, game_id](auto pbox) -> Result {
                 return DownloadGameIcons(pbox, api_key, game_id, *state);
             },
-            [weak_alive = std::weak_ptr<bool>(m_alive), this, state, title = m_title, callback = m_callback](Result rc) {
+            [weak_alive = std::weak_ptr<bool>(m_alive), this, state, game_id, title = m_title, callback = m_callback](Result rc) {
                 const auto alive = weak_alive.lock();
                 if (!alive || !*alive) {
                     return;
@@ -466,6 +551,7 @@ private:
                     ShowSearchError(state->error);
                     return;
                 }
+                g_icon_cache[game_id] = state;
                 App::Push<IconGrid>(title, state, [weak_alive, this, callback](std::vector<u8> icon) {
                     const auto alive_inner = weak_alive.lock();
                     if (alive_inner && *alive_inner) {
@@ -514,6 +600,10 @@ auto SearchGames(ProgressBox* pbox, const std::string& api_key, const std::strin
 } // namespace
 
 void StartSearch(const std::string& api_key, const std::string& title, const IconCallback& callback) {
+    if (const auto it = g_game_cache.find(title); it != g_game_cache.end()) {
+        App::Push<GameSelect>(title, api_key, it->second, callback); // same search as before: no new request
+        return;
+    }
     auto state = std::make_shared<SearchGamesState>();
     App::Push<ProgressBox>(
         0, "Searching SteamGridDB"_i18n, title,
@@ -534,6 +624,7 @@ void StartSearch(const std::string& api_key, const std::string& title, const Ico
                 ShowSearchError(state->error);
                 return;
             }
+            g_game_cache[title] = state->games;
             App::Push<GameSelect>(title, api_key, std::move(state->games), callback);
         }
     );

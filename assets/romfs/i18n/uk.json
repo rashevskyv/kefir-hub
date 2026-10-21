@@ -3525,5 +3525,7 @@
   "The console restarts after this.": "Після цього консоль перезапуститься.",
   "No pictures for this game on SteamGridDB": "На SteamGridDB немає картинок для цієї гри",
   "No game by this name on SteamGridDB": "На SteamGridDB немає гри з такою назвою",
-  "Search SteamGridDB": "Пошук на SteamGridDB"
+  "Search SteamGridDB": "Пошук на SteamGridDB",
+  "Load more": "Завантажити ще",
+  "Could not download the picture": "Не вдалося завантажити картинку"
 }
