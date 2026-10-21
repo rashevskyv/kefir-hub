@@ -380,7 +380,7 @@ auto Info(const std::string& text) -> std::function<void()> {
 // X on the calibration page: what can be done to the chip and the copies
 void ActionsMenu() {
     ui::PopupList::Items items{"Back up the chip's values"_i18n, "Align the charge to the voltage"_i18n,
-                               "Restore from the last backup"_i18n, "Match the other MMC"_i18n};
+                               "Restore from the last backup"_i18n, "Match the other MMC"_i18n, "Battery type (PRODINFO)"_i18n};
     App::Push<ui::PopupList>("Actions"_i18n, items, [](std::optional<s64> index) {
         if (!index) {
             return;
@@ -395,6 +395,7 @@ void ActionsMenu() {
             case 1: RunAlign(); break;
             case 2: RunRestore(); break;
             case 3: RunMatch(); break;
+            case 4: OpenBatteryType(); break;
         }
     });
 }

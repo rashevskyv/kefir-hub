@@ -26,6 +26,10 @@ auto AutoDrainSuppressed() -> bool;
 void OfferHop();
 // from the app loop: a hop waits for this MMC, so the match runs by itself and the Hub offers to go back
 void PollHop();
+// Actions → Battery type: the battery version byte of PRODINFO (LiHV 4.32 V for a larger battery), backed up and verified
+void OpenBatteryType();
+// from the app loop: a PRODINFO change waits for the restart that opens Atmosphère's write lock, so it is done now
+void PollCal0Pending();
 void SetAutoDrainSuppressed(bool v);
 
 } // namespace sphaira::battery

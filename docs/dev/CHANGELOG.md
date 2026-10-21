@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.174 — Battery type (PRODINFO): LiHV for a larger battery (plan F.29 d)
+Actions → Battery type (PRODINFO): sets the battery version byte (0x4310) with its CRC16 and the CAL0 body hash (cal0_battery.hpp), after a backup that is read back and compared; the result is re-read and checked, the old values are put back on any doubt; a PRODINFO that fails its own checks is not touched. Atmosphère's write lock (exosphere.ini allow_writing_to_cal_sysmmc, system_settings.ini enable_hbl_bis_write) is opened by the Hub, the console restarts, the next start does the change and closes the lock.
+host tests: pass (quick), nro: not built, switch: pending — THE FIRST WRITE TO PRODINFO: do it on a console whose PRODINFO is backed up elsewhere (TegraExplorer dump), sysMMC first.
+
 ## v0.14.173 — Battery: a larger battery is recognised; charging hints (plan F.29 a, c)
 Learned capacity over 130 % of the design capacity: the Verdict says a larger battery is built in (not a desync), and with the battery type LiPo it names the fix (LiHV 4.32 V, PRODINFO battery version 2). The drain page's "battery ran down" text adds: keep the screen on while charging; after a red battery charge about 3 minutes before switching on. cal0_battery.hpp (CRC16, body hash, patch) has a host test and is not wired yet (F.29 d).
 host tests: pass (quick; test_battery_gauge, test_cal0_battery), nro: not built, switch: pending
