@@ -13,6 +13,7 @@
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include "net.hpp"
 #include "utils/utils.hpp"
 #include "version_compare.hpp"
 
@@ -82,11 +83,8 @@ void CheckLaunchAccountLinkPrompt() {
 
 } // namespace
 
-MainMenu::MainMenu() {
-    // Launch account-link prompt is deferred to OnFocusGained: Push from this
-    // constructor would emplace OptionBox before MainMenu is on the stack, so
-    // MainMenu would cover the dialog and it would never receive input.
-
+// one look at the newest GitHub release; at the start, and again when the console gets a network after being offline
+void MainMenu::CheckForUpdate() {
     const auto update_mode = static_cast<auto_update::Mode>(App::GetAutoUpdateMode());
     if (update_mode != auto_update::Mode::Off) {
         auto_update::SetJobState(auto_update::JobState::Checking);
@@ -224,6 +222,14 @@ MainMenu::MainMenu() {
             }
         });
     }
+}
+
+MainMenu::MainMenu() {
+    // Launch account-link prompt is deferred to OnFocusGained: Push from this
+    // constructor would emplace OptionBox before MainMenu is on the stack, so
+    // MainMenu would cover the dialog and it would never receive input.
+
+    CheckForUpdate();
 
     this->SetActions(
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
@@ -250,6 +256,18 @@ MainMenu::~MainMenu() {
 
 void MainMenu::Update(Controller* controller, TouchInfo* touch) {
     m_current_menu->Update(controller, touch);
+
+    // offline at the start: the check failed. Look again when the network comes up (also after a later reconnect),
+    // unless an update is already found, downloading or installed.
+    const bool net_up = net::IsConnectedCached();
+    if (net_up && !m_net_up && static_cast<auto_update::Mode>(App::GetAutoUpdateMode()) != auto_update::Mode::Off) {
+        const auto state = auto_update::GetJob().state;
+        if (state == auto_update::JobState::Failed || state == auto_update::JobState::Idle) {
+            log_write("[UpdateCheck] network is up: checking again\n");
+            CheckForUpdate();
+        }
+    }
+    m_net_up = net_up;
 }
 
 void MainMenu::Draw(NVGcontext* vg, Theme* theme) {

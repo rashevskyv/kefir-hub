@@ -87,7 +87,9 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         const auto& [x, y, w, h] = v;
         auto& e = GetEntry(i);
         const auto entry_i = m_entries_current.empty() ? 0u : (i < static_cast<s64>(m_entries_current.size()) ? m_entries_current[i] : 0u);
-        if (icon_grid && loaded < 2 && TryLoadThumb(entry_i)) {
+        // the list shows an NRO's own icon too; the grid loads every thumbnail. Two loads a frame keep scrolling smooth.
+        const bool nro = e.IsFile() && path::EqualsIC(e.GetExtension(), "nro");
+        if ((icon_grid || nro) && loaded < 2 && TryLoadThumb(entry_i)) {
             loaded++;
         }
 
@@ -214,7 +216,12 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
                 icon = ThemeEntryID_ICON_NRO;
             }
 
-            DrawElement(x + x_offset, y + 5, 50, 50, icon);
+            const int thumb = (nro && entry_i < m_thumbs.size()) ? m_thumbs[entry_i] : 0;
+            if (thumb > 0) {
+                gfx::drawImage(vg, x + x_offset, y + 5, 50, 50, thumb, 5.f);
+            } else {
+                DrawElement(x + x_offset, y + 5, 50, 50, icon);
+            }
         }
 
         // read-only marker: a small red "RO" chip on the icon corner for entries

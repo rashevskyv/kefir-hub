@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 #include <utility>
@@ -7,6 +8,7 @@
 #include "ui/progress_box.hpp"
 #include "fs.hpp"
 #include "app_paths.hpp"
+#include "i18n.hpp"
 
 namespace sphaira::ui::menu::settings {
 
@@ -43,6 +45,8 @@ auto RemoveInterfaceTranslation(ProgressBox* pbox) -> Result;
 auto RemoveInterfaceTranslationAndReboot(ProgressBox* pbox) -> Result;
 
 void RebootAfterSetting();
+// the Kefir Hub language that matches a system translation's name ("Ukrainian", "uk"), if Kefir Hub has one
+auto HubLanguageFor(const std::string& entry_name) -> std::optional<i18n::LanguageDef>;
 
 } // namespace detail
 } // namespace sphaira::ui::menu::settings

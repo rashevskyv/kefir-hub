@@ -39,6 +39,13 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 
 ### Update Kefir Hub {#update-kefir-hub}
 
+<!-- draft
+- the check runs at start and again whenever the network comes up after the console was offline (not while an update is found, downloading or installed); the old sentence "It does not check again when the network connects later" no longer holds
+- the [[Updating]] window title shows the old and the new version ("0.14.160 -> 0.14.161"); the lines under it say only [[Downloading]] and [[Installing]]
+- an update you accepted on screen ([[Ask]] → [[Update]], or [[Update Kefir Hub]] in [[About]]) restarts Kefir Hub by itself when it is installed
+- a [[Silent]] update asks when it is ready: [[Kefir Hub was updated to]] <version>, [[The new version runs after a restart. Restart now?]] with [[Later]] / [[Restart Kefir Hub]]
+-->
+
 **Where:** [[Settings]] → [[General]] → [[Auto-update]]
 
 | Option | What it does | Default |

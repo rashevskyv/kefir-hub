@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <algorithm>
+#include <optional>
 #include <cctype>
 #include <strings.h>
 #include <yyjson.h>
@@ -424,7 +425,7 @@ auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) 
     R_SUCCEED();
 }
 
-void TryAutoSwitchLanguage(const std::string& entry_name) {
+auto HubLanguageFor(const std::string& entry_name) -> std::optional<i18n::LanguageDef> {
     std::string entry_lower = entry_name;
     std::transform(entry_lower.begin(), entry_lower.end(), entry_lower.begin(), [](unsigned char c) {
         return std::tolower(c);
@@ -454,9 +455,10 @@ void TryAutoSwitchLanguage(const std::string& entry_name) {
             match_length = lang_lower.size();
         }
     }
-    if (match) {
-        App::SetLanguage(match->code, false);
+    if (!match) {
+        return std::nullopt;
     }
+    return *match;
 }
 
 auto HasInstalledTranslation() -> bool {
@@ -515,8 +517,7 @@ auto InstallInterfaceTranslation(ProgressBox* pbox, InterfaceTranslationEntry en
     R_TRY(DeletePath(source));
     R_TRY(DeletePath(extract_dir));
     fsdevCommitDevice("sdmc");
-    TryAutoSwitchLanguage(entry.name);
-    RebootAfterSetting();
+    // the caller asks about Kefir Hub's language, then restarts the console
     R_SUCCEED();
 }
 

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.164 — NRO icons in the file browser list; plan D.4, D.6, D.7
+File browser list view shows a .nro's own icon (grid did already). D.7: Kefir Settings USB 3.0 reads On only when the key is 0x1 (absent = Off, the Atmosphère default). D.4: after a system translation install Kefir Hub asks "Switch Kefir Hub to this language too?" (Keep / Switch language) instead of switching silently, then restarts. D.6: the update check runs again when the network comes up after being offline. Doc drafts (EN+UK): settings, file-browser, kefir-settings, system-tools (also the 0.14.160-163 update window and calibration hop).
+host tests: pass (quick), nro: not built, switch: pending
+
 ## v0.14.163 — calibration step 5: no more "press A here" loop; the hop to the other MMC does it
 Step 5 counted as done only when the match time was later than the second cycle's time, but the two MMCs keep their own clocks: a match made in the other MMC could look older and the row stayed "Next: press A here". It now counts any match made after both cycles. The match popup says "Calibration complete" when it was the last step. New: when both cycles are done, A on step 5 offers to restart into the other MMC (hekate one-shot boot request), match there by itself when Kefir Hub opens, and offer to restart back.
 host tests: pass (test_battery_hop, test_battery_wizard), nro: not built, switch: pending (needs the hekate payload API marker and /bootloader/update.bin; try on .69 first)

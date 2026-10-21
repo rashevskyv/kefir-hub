@@ -3519,5 +3519,8 @@
   "Open Tools → Tools → Battery → + and press A on step 5 to try again.": "Відкрийте Tools → Tools → Battery → + і натисніть A на кроці 5, щоб спробувати ще раз.",
   "Calibration complete: both MMCs hold the same calibrated model and one cycle count.": "Калібрування завершено: обидві системи мають однакову модель батареї та один лічильник циклів.",
   "Restart into": "Перезапустити в",
-  "Stay here": "Лишитись тут"
+  "Stay here": "Лишитись тут",
+  "Switch language": "Змінити мову",
+  "Switch Kefir Hub to this language too?": "Перемкнути Kefir Hub на цю мову теж?",
+  "The console restarts after this.": "Після цього консоль перезапуститься."
 }

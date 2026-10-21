@@ -209,6 +209,14 @@
 - after a reset: do not let the battery run flat in the other MMC before the two cycles are done; open the page there once and choose [[Match the other MMC]]
 - why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions
 -->
+<!-- draft
+- calibration step 5 ([[5. Match in the other MMC]]): with both cycles done, **A** on the step in the MMC where the cycles ran asks to restart into the other MMC ([[Later]] / [[Restart]]); hekate boots that MMC once, its `hekate_ipl.ini` is not changed
+- in the other MMC, about 10 s after Kefir Hub opens, the match runs by itself; then [[Calibration complete: both MMCs hold the same calibrated model and one cycle count.]] and [[Restart into]] the first MMC: [[Stay here]] / [[Restart]]
+- an Ultrahand notice after the reboot says [[Battery calibration: open Kefir Hub to finish the match.]]
+- needs `/bootloader/update.bin` (hekate), a hekate boot entry for that MMC (`emummc_force_disable=1` = sysMMC, `emummcforce=1` = emuMMC) and the Kefir hekate payload request; otherwise Kefir Hub says what is missing and the step works by hand as before
+- the step counts any match made after both cycles (the two MMCs keep their own clocks); the match window then says calibration is complete
+-->
+
 <!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->
 
 ## Очищення системи { #clean-system-junk }

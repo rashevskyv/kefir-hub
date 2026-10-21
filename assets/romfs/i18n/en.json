@@ -3519,5 +3519,8 @@
   "Open Tools → Tools → Battery → + and press A on step 5 to try again.": "Open Tools → Tools → Battery → + and press A on step 5 to try again.",
   "Calibration complete: both MMCs hold the same calibrated model and one cycle count.": "Calibration complete: both MMCs hold the same calibrated model and one cycle count.",
   "Restart into": "Restart into",
-  "Stay here": "Stay here"
+  "Stay here": "Stay here",
+  "Switch language": "Switch language",
+  "Switch Kefir Hub to this language too?": "Switch Kefir Hub to this language too?",
+  "The console restarts after this.": "The console restarts after this."
 }

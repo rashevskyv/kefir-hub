@@ -259,11 +259,11 @@ Context: `docs/dev/AUDIT-2026-10-02-docs.md`. When a task changes behaviour, upd
       Installing is always allowed. Drop `install/index.md#enable` and the "turn installing on" steps (docs, site, video 02).
 - [ ] D.3 **Bring back restoring profile backups.** Backups from Delete user and Console Transfer → Share User Backups
       can be made but not restored (dead `users_restore*`, `users_manage*`). Give them a menu entry.
-- [ ] D.4 **After installing a system interface translation, ask before switching Kefir Hub's language.** Today
+- [x] D.4 **After installing a system interface translation, ask before switching Kefir Hub's language.** Today
       `TryAutoSwitchLanguage` (settings_translations.cpp:427-518) switches it silently when a matching UI language
       exists. Offer it in a dialog instead.
-- [ ] D.6 **Auto-update check also on network connect**, not only once per launch (main_menu.cpp:90-226).
-- [ ] D.7 **Kefir Settings: USB 3.0 shows On when the key is absent** (settings_kefir.cpp:158-162). Every switch must
+- [x] D.6 **Auto-update check also on network connect**, not only once per launch (main_menu.cpp:90-226).
+- [x] D.7 **Kefir Settings: USB 3.0 shows On when the key is absent** (settings_kefir.cpp:158-162). Every switch must
       read Off by default.
 - [ ] D.5 `[USER]` Screenshots (`python docs/site/shotlist.py`) and video recording (`docs/video/*/script.md`).
 

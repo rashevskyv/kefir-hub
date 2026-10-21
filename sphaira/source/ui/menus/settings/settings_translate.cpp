@@ -64,10 +64,25 @@ auto InstallTranslation(const InterfaceTranslationEntry& entry, const std::strin
         [entry, dir](auto pbox) -> Result {
             return InstallInterfaceTranslation(pbox, entry, dir);
         },
-        [](Result rc){
+        [entry](Result rc){
             if (R_FAILED(rc)) {
                 App::PushErrorBox(rc, "Failed to install translation"_i18n);
+                return;
             }
+            // the translation needs a restart; ask about Kefir Hub's own language first instead of switching it silently
+            const auto lang = HubLanguageFor(entry.name);
+            if (!lang || lang->code == App::GetLanguage()) {
+                RebootAfterSetting();
+                return;
+            }
+            App::Push<OptionBox>(
+                "Switch Kefir Hub to this language too?"_i18n + "\n" + lang->name + "\n\n" + "The console restarts after this."_i18n,
+                "Keep"_i18n, "Switch language"_i18n, 1, [code = lang->code](auto op) {
+                    if (op && *op == 1) {
+                        App::SetLanguage(code, false);
+                    }
+                    RebootAfterSetting();
+                });
         }
     );
 }

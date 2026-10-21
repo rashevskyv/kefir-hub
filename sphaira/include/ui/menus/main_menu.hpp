@@ -49,6 +49,7 @@ private:
     void AddOnLRPress();
     void UpdateBackAction();
     void CopyActionsToCurrentMenu();
+    void CheckForUpdate();
 
 private:
     std::unique_ptr<MenuBase> m_centre_menu{};
@@ -60,6 +61,7 @@ private:
     std::string m_update_description{};
     UpdateState m_update_state{UpdateState::Pending};
     bool m_launch_link_prompt_checked{};
+    bool m_net_up{true}; // the network state seen last frame
 };
 
 } // namespace sphaira::ui::menu::main

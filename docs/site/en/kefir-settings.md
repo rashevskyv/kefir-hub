@@ -25,7 +25,7 @@ so it shows the real state, not what you last chose.
 |---|---|---|---|
 | [[Overclock status]] | Turns the Kefir overclock files on or off. Off removes the sys-clk module, its overlay and the overclock kips, and keeps a backup of the sys-clk config in `/config/oc_bkp`. On copies them back from `/config/oc`. Reboots. | `/atmosphere/kips/kefir.kip` exists | Off |
 | [[40MB Memory]] | Newer Atmosphère versions leave less memory for applets (homebrew started from the Album) and for LayeredFS game mods. This patch gives that memory back (`force_40mb_applet` in Atmosphère's `system_settings.ini`). Some games do not work properly with it on: if a game misbehaves, turn it off. Reboots. | the patch is set | Off |
-| [[USB 3.0]] | Force-enables USB 3.0 in Atmosphère. Turning it on warns that it can cause crashes, instability or problems with some USB devices (hold **A** to confirm). The change takes effect only after a reboot; Kefir Hub asks [[Later]] or [[Reboot]]. | the setting is not explicitly off | Off |
+| [[USB 3.0]] | Force-enables USB 3.0 in Atmosphère. Turning it on warns that it can cause crashes, instability or problems with some USB devices (hold **A** to confirm). The change takes effect only after a reboot; Kefir Hub asks [[Later]] or [[Reboot]]. | the setting is explicitly on | Off |
 | [[Redirect Emunand saves to SD]] | Experimental. Stores emuMMC saves on the memory card. Shown only when emuMMC is enabled. Turning it off also deletes `/config/redirect.bin`. Reboots. | the setting is on | Off |
 | [[8GB DRAM status]] | Only for consoles with physically soldered 8GB RAM. Reboots into TegraExplorer to apply or remove the 8GB configuration. If the console boots with it On, the 8GB RAM is there and works. | `/tegraexplorer/scripts/Remove_8GB-RAM_config.te` exists. A console without 8GB RAM does not boot with it on, so On shows only on a real 8GB console. | Off |
 | [[Translate Interface]] | Opens the system translation tools. See below. | — | — |
@@ -47,6 +47,11 @@ so it shows the real state, not what you last chose.
 [[Translate Interface]] replaces one of the console's own system languages (Home menu, System Settings and other
 system screens) with a community translation. If Kefir Hub has the same language, it switches its own interface
 to it as well, without asking, and then reboots.
+
+<!-- draft
+- after the install Kefir Hub no longer switches its own language silently: when it has the same language it asks [[Switch Kefir Hub to this language too?]] (the language name under it, [[The console restarts after this.]]) with [[Keep]] / [[Switch language]]; either answer restarts the console
+- when Kefir Hub already uses that language, or has none like it, the console restarts at once
+-->
 
 1. Open [[Kefir Settings]] → [[Translate Interface]].
 2. Select [[Load translations]] and hold **A** to download the list for your firmware. Later the item is called [[Refresh translations]].

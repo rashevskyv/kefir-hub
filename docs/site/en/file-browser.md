@@ -39,6 +39,11 @@ Some folders get a description next to their name:
   show what they are for. The full list is on [What is on the microSD card](card-contents.md).
 
 ## Open a file
+
+<!-- draft
+- in the list view a `.nro` row shows the app's own icon (the grid view already did); files without an icon keep the generic one
+- **A** on a `.nro` asks to launch it; **+** → [[Install Forwarder]] makes a HOME Menu icon for it (see [Make a forwarder](#make-a-forwarder))
+-->
 **A** on a file does what fits the file type:
 
 | File | What happens |

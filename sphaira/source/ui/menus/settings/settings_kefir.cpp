@@ -163,10 +163,10 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "USB 3.0"_i18n,
         "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot."_i18n,
         [](){
-            return OnOff(!IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x0"));
+            return OnOff(IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x1"));
         },
         [](){
-            const bool currently_enabled = !IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x0");
+            const bool currently_enabled = IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x1");
             const bool next_enabled = !currently_enabled;
             const auto save_setting = [next_enabled](){
                 const auto rc = SetIniValue(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", next_enabled ? "u8!0x1" : "u8!0x0");

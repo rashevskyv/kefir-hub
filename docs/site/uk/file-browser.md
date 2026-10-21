@@ -40,6 +40,11 @@
   для чого вони. Повний список: [Що лежить на карті памʼяті](card-contents.md).
 
 ## Відкриття файлу
+
+<!-- draft
+- in the list view a `.nro` row shows the app's own icon (the grid view already did); files without an icon keep the generic one
+- **A** on a `.nro` asks to launch it; **+** → [[Install Forwarder]] makes a HOME Menu icon for it (see [Make a forwarder](#make-a-forwarder))
+-->
 **A** на файлі робить те, що пасує до типу файлу:
 
 | Файл | Що відбувається |
