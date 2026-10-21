@@ -225,6 +225,12 @@
 
 <!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->
 
+<!-- draft
+- [[Storage manager]] (Tools): a ring of what fills the microSD card: [[Installed games]], [[Saves and album]], [[emuMMC (files)]], [[Atmosphère and Kefir]], [[Homebrew]], [[Dumps and backups]], [[Game files and ROMs]], [[Other files]] and [[Free space]], with the size and the percent of each; the centre shows the used and the total space; the system memory (used / total) is written under the list
+- **Up** / **Down** pick a slice; **A** opens its card: what it is, whether it can be deleted, where it is, why it is there
+- the folders are counted when the page opens (a progress bar shows the step); a partition emuMMC is outside the card's file system and is not in the ring
+-->
+
 ## Очищення системи { #clean-system-junk }
 
 Видаляє те, що лишається після встановлень і видалених ігор.

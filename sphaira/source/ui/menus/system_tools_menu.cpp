@@ -17,6 +17,7 @@
 #include "system_cleanup.hpp"
 
 #include "app.hpp"
+#include "ui/menus/storage_menu.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -140,6 +141,7 @@ SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
         }),
         settings::MakeHeader("Maintenance"_i18n),
         Tool("Battery"_i18n, "Fuel gauge state, the system's saved copy and a backup."_i18n, battery::Open),
+        Tool("Storage manager"_i18n, "What fills the microSD card: games, saves, emuMMC, homebrew and the rest."_i18n, ui::menu::storage::Open),
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),

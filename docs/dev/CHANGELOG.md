@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.175 — Storage manager (plan F.28, first version)
+Tools → Storage manager: a ring of what fills the microSD card (games, saves and album, emuMMC files, Atmosphère and Kefir, homebrew, dumps and backups, game files and ROMs, other, free) counted from folder sizes behind a progress bar; Up/Down pick a slice, A opens its card (what it is, can it go, where, why). storage_model.hpp has a host test. Not yet: games per system, the system memory as a ring, delete / open actions.
+host tests: pass (quick; test_storage_model), nro: not built, switch: pending
+
 ## v0.14.174 — Battery type (PRODINFO): LiHV for a larger battery (plan F.29 d)
 Actions → Battery type (PRODINFO): sets the battery version byte (0x4310) with its CRC16 and the CAL0 body hash (cal0_battery.hpp), after a backup that is read back and compared; the result is re-read and checked, the old values are put back on any doubt; a PRODINFO that fails its own checks is not touched. Atmosphère's write lock (exosphere.ini allow_writing_to_cal_sysmmc, system_settings.ini enable_hbl_bis_write) is opened by the Hub, the console restarts, the next start does the change and closes the lock.
 host tests: pass (quick), nro: not built, switch: pending — THE FIRST WRITE TO PRODINFO: do it on a console whose PRODINFO is backed up elsewhere (TegraExplorer dump), sysMMC first.
