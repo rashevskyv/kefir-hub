@@ -75,6 +75,12 @@ private:
     static constexpr float CHANGELOG_PREAMBLE_FONT_SIZE = 24.f;
     static constexpr float CHANGELOG_LINE_HEIGHT = 1.45f;
     static constexpr float CHANGELOG_SCROLL_STEP = 36.f;
+    // the stick: past the dead zone the text glides, the faster the more the stick is pushed, never beyond the cap (so a
+    // reader cannot fly through the notes); a page jump (Left/Right, L/R) waits at least this long after the last one
+    static constexpr int STICK_DEAD_ZONE = 6000;
+    static constexpr int STICK_MAX = 32000;
+    static constexpr float STICK_MAX_SPEED = 720.f; // px per second at full deflection: 20 lines
+    static constexpr u64 PAGE_MIN_NS = 220'000'000;
 
     void LoadChangelog();
     void ScrollBy(float amount);
@@ -95,6 +101,9 @@ private:
     bool m_installing{};
     bool m_button_focused{false};
     Vec4 m_install_button_rect{};
+    TimeStamp m_stick_time{};
+    TimeStamp m_page_time{};
+    float m_stick_rest{}; // the fraction of a pixel the stick has not scrolled yet
 };
 
 } // namespace sphaira::ui::menu::kefir

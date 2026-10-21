@@ -258,7 +258,8 @@ KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback)
         std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
             SetPop();
         }}),
-        std::make_pair(Button::UP | Button::LS_UP | Button::RS_UP, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
+        // the D-pad: Up/Down by a line (held: repeats), Left/Right by a page; the sticks glide in Update
+        std::make_pair(Button::UP, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
             if (m_button_focused) {
                 m_button_focused = false;
                 App::PlaySoundEffect(SoundEffect_Focus);
@@ -266,7 +267,7 @@ KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback)
                 ScrollBy(-CHANGELOG_SCROLL_STEP);
             }
         }}),
-        std::make_pair(Button::DOWN | Button::LS_DOWN | Button::RS_DOWN, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
+        std::make_pair(Button::DOWN, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
             if (!m_button_focused) {
                 if (m_scroll >= m_max_scroll - 0.5f) {
                     if (m_unlocked) {
@@ -282,14 +283,16 @@ KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback)
                 App::PlaySoundEffect(SoundEffect_Limit);
             }
         }}),
-        std::make_pair(Button::L | Button::L2, Action{[this](){
-            if (!m_button_focused) {
-                ScrollBy(-m_text_area.h);
+        std::make_pair(Button::LEFT | Button::L | Button::L2, Action{[this](){
+            if (!m_button_focused && m_page_time.GetNs() >= PAGE_MIN_NS) {
+                m_page_time.Update();
+                ScrollBy(-m_text_area.h + CHANGELOG_SCROLL_STEP); // a line of the old page stays in sight
             }
         }}),
-        std::make_pair(Button::R | Button::R2, Action{[this](){
-            if (!m_button_focused) {
-                ScrollBy(m_text_area.h);
+        std::make_pair(Button::RIGHT | Button::R | Button::R2, Action{[this](){
+            if (!m_button_focused && m_page_time.GetNs() >= PAGE_MIN_NS) {
+                m_page_time.Update();
+                ScrollBy(m_text_area.h - CHANGELOG_SCROLL_STEP);
             }
         }})
     );
@@ -299,6 +302,26 @@ KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback)
 
 void KefirChangelogBox::Update(Controller* controller, TouchInfo* touch) {
     Widget::Update(controller, touch);
+
+    // either stick: the text glides at a pace that follows how far it is pushed, capped
+    const auto dt = static_cast<float>(m_stick_time.GetNs()) / 1e9f;
+    m_stick_time.Update();
+    if (controller && !m_button_focused && !m_loading && m_max_scroll > 0.f) {
+        const int ly = controller->m_stick_l.y, ry = controller->m_stick_r.y;
+        const int y = std::abs(ly) >= std::abs(ry) ? ly : ry; // up is positive on the stick
+        const int mag = std::min(std::abs(y), STICK_MAX);
+        if (mag > STICK_DEAD_ZONE) {
+            const float t = static_cast<float>(mag - STICK_DEAD_ZONE) / static_cast<float>(STICK_MAX - STICK_DEAD_ZONE);
+            m_stick_rest += (y > 0 ? -1.f : 1.f) * t * t * STICK_MAX_SPEED * std::min(dt, 0.1f); // t*t: a light touch is gentle
+            const float whole = std::trunc(m_stick_rest);
+            if (whole != 0.f) {
+                m_stick_rest -= whole;
+                m_scroll = std::clamp(m_scroll + whole, 0.f, m_max_scroll);
+            }
+        } else {
+            m_stick_rest = 0.f;
+        }
+    }
 
     if (touch->is_clicked) {
         if (m_unlocked && touch->in_range(m_install_button_rect)) {

@@ -57,6 +57,10 @@ If it is not connected yet, the list loads by itself once it connects. Press **X
 
 After the reboot the update finishes by itself. You do not need to do anything.
 
+<!-- draft
+- in the changelog window: **Up** / **Down** scroll a line (held: repeats); **Left** / **Right** and **L** / **R** scroll a page, at most about four a second, with one line of the old page kept in sight; the sticks glide: the harder you push, the faster it scrolls (a light touch is slow, full push about 20 lines a second at most), so the notes cannot be skipped in a blink; [[Install]] is chosen with **Down** at the bottom
+-->
+
 <!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
 
 Press **B** in the changelog window to cancel. Nothing is downloaded until you press [[Install]].

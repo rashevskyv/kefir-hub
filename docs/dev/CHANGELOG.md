@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.178 — Kefir changelog: D-pad pages and a stick that glides at the pace it is pushed
+In the Kefir update changelog: Up/Down move by a line (held repeats), Left/Right and L/R by a page (at most one jump every 0.22 s, one line of the old page stays in sight); the sticks no longer step by lines: they glide, the harder the push the faster (squared, from 0 to 720 px/s, dead zone), so the notes cannot be skipped through in a blink. Install still unlocks only at the bottom.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.177 — Storage manager: the emuMMC as a container with its parts under it
 The list shows the emuMMC as one line (the sum) and indents what is inside it: the emuMMC itself (partition or files) and the games installed in it; choosing the line lights all its arcs in the ring and A explains what an emuMMC is. The ring puts the emuMMC's parts side by side (storage_model.hpp Rank, host test). The separate "What is an emuMMC?" row is gone.
 host tests: pass (test_storage_model), nro: not built, switch: pending

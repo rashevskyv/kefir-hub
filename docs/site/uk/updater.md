@@ -57,6 +57,10 @@
 
 Після перезавантаження оновлення завершується саме. Нічого робити не потрібно.
 
+<!-- draft
+- in the changelog window: **Up** / **Down** scroll a line (held: repeats); **Left** / **Right** and **L** / **R** scroll a page, at most about four a second, with one line of the old page kept in sight; the sticks glide: the harder you push, the faster it scrolls (a light touch is slow, full push about 20 lines a second at most), so the notes cannot be skipped in a blink; [[Install]] is chosen with **Down** at the bottom
+-->
+
 <!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
 
 Щоб скасувати, натисніть **B** у вікні змін. Нічого не завантажується, доки ви не натиснете [[Install]].
