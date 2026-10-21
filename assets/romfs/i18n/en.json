@@ -3531,5 +3531,9 @@
   "Its folder:": "Its folder:",
   "The HOME icon that starts it is deleted too.": "The HOME icon that starts it is deleted too.",
   "Only the app": "Only the app",
-  "App and folder": "App and folder"
+  "App and folder": "App and folder",
+  "Battery size": "Battery size",
+  "of the design capacity: a larger battery is built in": "of the design capacity: a larger battery is built in",
+  "The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery": "The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery",
+  "Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on.": "Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on."
 }

@@ -215,6 +215,9 @@
 - an Ultrahand notice after the reboot says [[Battery calibration: open Kefir Hub to finish the match.]]
 - needs `/bootloader/update.bin` (hekate), a hekate boot entry for that MMC (`emummc_force_disable=1` = sysMMC, `emummcforce=1` = emuMMC) and the Kefir hekate payload request; otherwise Kefir Hub says what is missing and the step works by hand as before
 - the step counts any match made after both cycles (the two MMCs keep their own clocks); the match window then says calibration is complete
+- [[Battery size]]: when the learned capacity is more than 130 % of the design capacity the Verdict says a larger battery is built in ([[of the design capacity: a larger battery is built in]]); with the battery type LiPo it adds [[The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery]]; this is not a desync sign
+- on the drain page, after the battery ran down: [[Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on.]]
+- advice from the community guide: a full cycle once a month keeps the capacity; a drop of about 300 mAh in use comes back with a normal discharge-charge cycle
 -->
 
 <!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->

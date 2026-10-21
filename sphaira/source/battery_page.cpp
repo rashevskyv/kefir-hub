@@ -162,6 +162,11 @@ auto FindingRow(const Diagnosis& r) -> system_info::Row {
         case Finding::CopyUnknown: return {"Chip vs this MMC's copy"_i18n, "Not compared: the copy could not be read"_i18n};
         case Finding::VersionMismatch: return {"Battery version"_i18n, "CAL0 and set:cal disagree"_i18n};
         case Finding::LiteNoCycles: return {"Cycle count"_i18n, "Not trusted: charge limit falls back to 4.192 V"_i18n};
+        case Finding::LargerBattery: {
+            const auto pct = r.detail.substr(0, r.detail.find(' '));
+            return {"Battery size"_i18n, pct + "% " + "of the design capacity: a larger battery is built in"_i18n
+                + (r.detail.ends_with(" lipo") ? ". " + "The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery"_i18n : std::string{})};
+        }
         case Finding::BrokenModel: {
             const bool copy = r.detail.ends_with(" copy");
             const auto pct = r.detail.substr(0, r.detail.find(' '));

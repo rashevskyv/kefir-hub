@@ -274,7 +274,8 @@ struct DrainMenu final : ui::menu::MenuBase {
         if (m_step == DrainStep::CycleCounted) {
             m_status = "Both cycles are done. Press B and finish step 5 in the wizard: match in the other MMC."_i18n;
         } else if (m_step == DrainStep::Charging) {
-            m_status = "The battery ran down: this cycle's discharge is done. Keep the charger in until 100%; the cycle then counts by itself."_i18n;
+            m_status = "The battery ran down: this cycle's discharge is done. Keep the charger in until 100%; the cycle then counts by itself."_i18n
+                + " " + "Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on."_i18n;
         } else if (m_step == DrainStep::NotEmptyYet) {
             char buf[64];
             std::snprintf(buf, sizeof(buf), " %u%% / %u%%", m_cycle_got, wizard::CYCLE_DONE);

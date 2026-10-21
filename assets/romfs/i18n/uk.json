@@ -3531,5 +3531,9 @@
   "Its folder:": "Її тека:",
   "The HOME icon that starts it is deleted too.": "Іконка в HOME Menu, що її запускає, теж буде видалена.",
   "Only the app": "Лише програма",
-  "App and folder": "Програма й тека"
+  "App and folder": "Програма й тека",
+  "Battery size": "Розмір батареї",
+  "of the design capacity: a larger battery is built in": "від проєктної ємності: вбудовано більшу батарею",
+  "The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery": "Тип батареї LiPo (4,2 В): щоб використати її повністю, виставте LiHV (4,32 В)",
+  "Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on.": "Тримайте екран увімкненим, поки заряджається. Після червоної батареї лишіть консоль на зарядці хвилини на 3, перш ніж вмикати."
 }

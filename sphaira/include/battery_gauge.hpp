@@ -68,6 +68,13 @@ inline auto CapacityLow(std::uint16_t full, std::uint16_t design) -> bool {
     return design && full * 100u < design * (100u - CAPACITY_LOSS);
 }
 inline constexpr int CHARGING_MA = 100;
+// learned full capacity this many % over the design capacity: a larger battery was built in (an 8600 mAh cell learns 7500-8000
+// against the 4300 of the original), not a fault.
+inline constexpr unsigned LARGER_BATTERY = 130;
+
+inline auto CapacityHigh(std::uint16_t full, std::uint16_t design) -> bool {
+    return design && full * 100u > design * LARGER_BATTERY;
+}
 
 enum class Finding {
     RestorePending,  // MiscCFG bit 15: the chip lost power; HOS writes this MMC's copy at the next start
@@ -85,6 +92,8 @@ enum class Finding {
                      // on a Lite the charge voltage limit follows the count, so it changes with the MMC
     SocGap,          // on battery: reported % and %-by-voltage differ by SOC_GAP or more (detail: "84 73")
     SocGapLoaded,    // the same gap while charging: read again with the charger out (detail: "84 73")
+    LargerBattery,   // the learned capacity is far above the design capacity (detail: percent; " lipo" when the type
+                     // is not LiHV: the charge limit is the original 4.2 V)
     NoSign,          // none of the desync signs; still says what was not checked (OtherUnknown, SocGapLoaded)
 };
 
@@ -137,6 +146,9 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
     }
     if (in.setcal_version == 2 && in.cycle_reliability == 0) {
         out.push_back({Finding::LiteNoCycles, {}});
+    }
+    if (CapacityHigh(in.full_cap, in.design_cap)) {
+        out.push_back({Finding::LargerBattery, std::to_string(in.full_cap * 100u / in.design_cap) + (in.setcal_version == 2 ? "" : " lipo")});
     }
     // FullCap is the second model parameter; the copy's FullCap is in hos.v[2].
     const bool broken = CapacityLow(in.full_cap, in.design_cap);
