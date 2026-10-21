@@ -443,6 +443,19 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       result (a new message of our USB protocol or a marker over MTP, like `kefir-hub.pc-install`) and a way to relaunch
       into Title Mode with the failed list (the next start reads it from `/config/kefir/`).
 
+- [ ] F.28 **Storage manager in Tools** (user, 2026-10-21). A page that shows what really fills the console, as a pie
+      (ring) chart: microSD and the internal memory, split into the parts the user knows: sysMMC (system NAND, with
+      the games installed there), emuMMC (its own files or partition, with the games installed there), installed games
+      by place (SD, system memory, game card is not counted), updates and DLC, saves (per user, device saves), Atmosphère
+      and Kefir files, homebrew, mods and cheats, dumps and backups (`/dumps`, `/backups`), caches and downloads,
+      "other" (the rest of the card), free space. Each slice is selectable; A on it opens a plain card: what it is,
+      whether it can be deleted and what happens then, where it is physically (path or partition), why it exists, how
+      big it is, and the action that fits (open in File Browser, delete, clean). Needs: size sources per slice (ncm
+      content storages for games, `fsGetTotalSpaceSize`/free for the card, folder walks with a progress bar for files,
+      the emuMMC partition size from `emummc.ini`), a pure model (slices, sizes, text keys) with a host test, the ring
+      drawn with nanovg arcs, texts in `en.json`/`uk.json`, docs page `docs/site/{en,uk}/system-tools.md` with a shot.
+      Never delete anything from this page without the same confirmations the File Browser uses.
+
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
 
