@@ -240,6 +240,10 @@
 - [[Game files (NSP, XCI)]] counts /games only; [[Emulators and their games]] counts the emulators (RetroArch, Tico) and the ROM folders: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico
 -->
 
+<!-- draft
+- [[Web browser]] (Tools, Settings group): asks for a web address with the keyboard (it remembers the last one; "https://" is added when missing) and opens it in the console's own browser, the same applet BrowseNX starts; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it); on firmware 23 it works fine this way
+-->
+
 ## Очищення системи { #clean-system-junk }
 
 Видаляє те, що лишається після встановлень і видалених ігор.

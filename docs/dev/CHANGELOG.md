@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.181 — Tools: Web browser (the console's own browser applet)
+Tools → Web browser: asks for an address (the last one is remembered, "https://" added when missing) and opens it through WebShow, the web applet that BrowseNX starts. It needs the full memory: Title Mode (start Hub from a game); fine on firmware 23.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.180 — Storage manager: a Y button for "What is an emuMMC?", emulators and their games counted
 Y opens the explanation of an emuMMC from anywhere on the page (A on the emuMMC line still does). "Game files and ROMs" is split: Game files (NSP, XCI) = /games; Emulators and their games = /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico (RetroArch, Tico and the ROM folders), with its own card.
 host tests: pass (quick), nro: not built, switch: pending

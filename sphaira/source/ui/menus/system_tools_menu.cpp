@@ -17,6 +17,9 @@
 #include "system_cleanup.hpp"
 
 #include "app.hpp"
+#include "option.hpp"
+#include "swkbd.hpp"
+#include "web.hpp"
 #include "ui/menus/storage_menu.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -29,6 +32,24 @@ namespace {
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
+}
+
+// The console's own web browser (the NetFront applet, the one BrowseNX starts). It is a system applet with its own
+// memory needs: it opens fine when Kefir Hub runs with the full memory (Title Mode, started from a game).
+void OpenBrowser() {
+    static option::OptionString last_url{"web_browser", "last_url", "https://"};
+    const std::string initial = last_url.Get();
+    std::string url;
+    if (R_FAILED(swkbd::ShowText(url, "Web address"_i18n.c_str(), initial.c_str(), 1, 500)) || url.empty()) {
+        return;
+    }
+    if (!url.starts_with("http://") && !url.starts_with("https://")) {
+        url.insert(0, "https://");
+    }
+    last_url.Set(url);
+    if (R_FAILED(WebShow(url))) {
+        App::Push<ui::OptionBox>("The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it)."_i18n, "OK"_i18n);
+    }
 }
 
 void OpenCleanup() {
@@ -136,6 +157,7 @@ SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
         Tool("Wi-Fi"_i18n, "Manage wireless connections."_i18n, [](){
             App::Push<ui::menu::wifi::Menu>();
         }),
+        Tool("Web browser"_i18n, "Open a web page in the console's own browser. Needs the full memory: start Kefir Hub from a game."_i18n, OpenBrowser),
         Tool("Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, [](){
             App::Push<ui::menu::users::Menu>();
         }),
