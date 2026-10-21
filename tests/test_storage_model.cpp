@@ -34,6 +34,10 @@ int main() {
     assert(BelongsToEmummc(Id::EmuGames) && !BelongsToEmummc(Id::Games) && !BelongsToEmummc(Id::Other));
     assert(Total(e) == 256 * GB);
 
+    // the emuMMC's parts sit together in the ring, after the system's games: the container reads as one block
+    const auto o = Build(256 * GB, 100 * GB, {{Id::Homebrew, 3 * GB}, {Id::EmuGames, 20 * GB}, {Id::Games, 40 * GB}, {Id::EmuPartition, 29 * GB}});
+    assert(o[0].id == Id::Games && o[1].id == Id::EmuPartition && o[2].id == Id::EmuGames && o[3].id == Id::Homebrew);
+
     // an unreadable card (0 total, 0 free) gives an empty ring, not a crash
     const auto none = Build(0, 0, {});
     assert(Total(none) == 0 && PerMille(none[0], Total(none)) == 0);

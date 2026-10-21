@@ -224,8 +224,7 @@ Create, rename, back up and link console user profiles. See [Users](users.md).
 - **Up** / **Down** pick a slice; **A** opens its card: what it is, whether it can be deleted, where it is, why it is there
 - the folders are counted when the page opens (a progress bar shows the step); a partition emuMMC is outside the card's file system and is not in the ring
 - the card is shown whole: the line under the list reads "microSD: total = N in the file system + M outside it"; a partition emuMMC is the part outside the file system, so no folder shows it
-- the emuMMC is one family in purple shades: [[emuMMC partition]] (outside the file system), [[emuMMC files]] (a file-based emuMMC) and [[Games in the emuMMC]] (its own Nintendo folder, from emummc.ini nintendo_path); the games of the original system are [[Games in the system (sysMMC)]]; the line [[emuMMC takes]] adds the family up
-- the last row [[What is an emuMMC?]] explains what an emuMMC is, why it is on the card and not in the internal memory, how it takes space (partition or files) and where its games go
+- the emuMMC is one container: the list has a line [[emuMMC]] with the sum, and its parts indented under it: [[emuMMC partition]] or [[emuMMC files]] (the emuMMC itself) and [[Games in the emuMMC]]; choosing the line lights all its parts in the ring; **A** on it explains what an emuMMC is
 -->
 
 ## Clean system junk

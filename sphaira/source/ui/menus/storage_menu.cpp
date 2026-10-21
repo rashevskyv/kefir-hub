@@ -156,14 +156,33 @@ auto ReadEmuConfig() -> EmuConfig {
     return c;
 }
 
+// a line of the list: a slice, or the emuMMC container that holds some of the slices
+struct Row {
+    bool group{};   // the emuMMC as a whole (its size is the sum of its parts)
+    bool child{};   // a part inside the emuMMC
+    size_t slice{}; // index into Data::slices (not for the group)
+    std::int64_t bytes{};
+};
+
 struct Menu final : MenuBase {
     explicit Menu(std::shared_ptr<Data> data) : MenuBase{"Storage manager"_i18n, MenuFlag_None}, m_data{std::move(data)} {
+        // the emuMMC is one container: a line for the whole, then its parts under it (the emuMMC itself, the games in it)
+        bool group_done = false;
+        for (size_t i = 0; i < m_data->slices.size(); i++) {
+            const auto& s = m_data->slices[i];
+            if (BelongsToEmummc(s.id) && !group_done) {
+                m_rows.push_back({true, false, 0, EmummcTotal(m_data->slices)});
+                group_done = true;
+            }
+            m_rows.push_back({false, BelongsToEmummc(s.id), i, s.bytes});
+        }
         SetAction(Button::A, Action{"Open"_i18n, [this]() {
-            if (static_cast<size_t>(m_index) >= m_data->slices.size()) {
-                App::Push<OptionBox>(AboutEmummc(), "OK"_i18n);
+            const auto& r = m_rows[m_index];
+            if (r.group) {
+                App::Push<OptionBox>("emuMMC"_i18n + ": " + grid::FormatBytes(static_cast<u64>(r.bytes)) + "\n\n" + AboutEmummc(), "OK"_i18n);
                 return;
             }
-            const auto& s = m_data->slices[m_index];
+            const auto& s = m_data->slices[r.slice];
             const auto text = Name(s.id) + ": " + grid::FormatBytes(static_cast<u64>(s.bytes)) + "\n\n" + Card(s.id);
             App::Push<OptionBox>(text, "OK"_i18n);
         }});
@@ -177,7 +196,7 @@ struct Menu final : MenuBase {
         if (!controller) {
             return;
         }
-        const auto n = static_cast<s64>(m_data->slices.size()) + 1; // the slices and "What is an emuMMC?"
+        const auto n = static_cast<s64>(m_rows.size());
         if (controller->GotDown(Button::DOWN) && m_index + 1 < n) {
             m_index++;
             App::PlaySoundEffect(SoundEffect_Focus);
@@ -202,7 +221,9 @@ struct Menu final : MenuBase {
             if (span <= 0.f) {
                 continue;
             }
-            const float out = static_cast<s64>(i) == m_index ? r_out + 10.f : r_out;
+            const auto& chosen = m_rows[m_index];
+            const bool lit = chosen.group ? BelongsToEmummc(s.id) : chosen.slice == i;
+            const float out = lit ? r_out + 10.f : r_out;
             nvgBeginPath(vg);
             nvgArc(vg, cx, cy, out, angle, angle + span, NVG_CW);
             nvgArc(vg, cx, cy, r_in, angle + span, angle, NVG_CCW);
@@ -215,26 +236,31 @@ struct Menu final : MenuBase {
         gfx::drawTextArgs(vg, cx, cy - 14.f, 28.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT), "%s", grid::FormatBytes(static_cast<u64>(used)).c_str());
         gfx::drawTextArgs(vg, cx, cy + 18.f, 17.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s %s", "of"_i18n.c_str(), grid::FormatBytes(static_cast<u64>(d.total)).c_str());
 
-        // the slices as a list; A on one opens its card
+        // the list: a slice per line, the emuMMC as one line with its parts indented under it; A opens a card
         const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
         float y = 138.f;
-        for (size_t i = 0; i <= d.slices.size(); i++, y += 38.f) {
+        for (size_t i = 0; i < m_rows.size(); i++, y += 36.f) {
+            const auto& r = m_rows[i];
             const bool sel = static_cast<s64>(i) == m_index;
             if (sel) {
-                gfx::drawRect(vg, 560.f, y - 17.f, 650.f, 34.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
-                gfx::drawRectOutline(vg, theme, 4.f, 560.f, y - 17.f, 650.f, 34.f);
+                gfx::drawRect(vg, 560.f, y - 16.f, 650.f, 32.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+                gfx::drawRectOutline(vg, theme, 4.f, 560.f, y - 16.f, 650.f, 32.f);
             }
             const auto text = theme->GetColour(sel ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
-            if (i == d.slices.size()) {
-                gfx::drawTextArgs(vg, 615.f, y, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", "What is an emuMMC?"_i18n.c_str());
-                continue;
+            const float indent = r.child ? 34.f : 0.f;
+            if (r.group) {
+                // the container: its parts' colours side by side in one swatch (never a box that looks like a checkbox)
+                gfx::drawRect(vg, 580.f, y - 9.f, 9.f, 18.f, Colour(Id::EmuPartition), 2.f);
+                gfx::drawRect(vg, 589.f, y - 9.f, 9.f, 18.f, Colour(Id::EmuGames), 2.f);
+            } else {
+                const auto& s = m_data->slices[r.slice];
+                gfx::drawRect(vg, 580.f + indent, y - 8.f, r.child ? 16.f : 18.f, r.child ? 16.f : 18.f, Colour(s.id), 4.f);
             }
-            const auto& s = d.slices[i];
-            gfx::drawRect(vg, 580.f, y - 9.f, 18.f, 18.f, Colour(s.id), 4.f);
-            gfx::drawTextArgs(vg, 612.f, y, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", Name(s.id).c_str());
-            const auto pm = PerMille(s, sum);
-            gfx::drawTextArgs(vg, 1010.f, y, 16.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info, "%d.%d%%", pm / 10, pm % 10);
-            gfx::drawTextArgs(vg, 1190.f, y, 17.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", grid::FormatBytes(static_cast<u64>(s.bytes)).c_str());
+            const auto label = r.group ? "emuMMC"_i18n : Name(m_data->slices[r.slice].id);
+            gfx::drawTextArgs(vg, 612.f + indent, y, r.group ? 19.f : 17.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", label.c_str());
+            const auto pm = PerMille(Slice{r.group ? Id::EmuData : m_data->slices[r.slice].id, r.bytes}, sum);
+            gfx::drawTextArgs(vg, 1010.f, y, 15.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, info, "%d.%d%%", pm / 10, pm % 10);
+            gfx::drawTextArgs(vg, 1190.f, y, 17.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", grid::FormatBytes(static_cast<u64>(r.bytes)).c_str());
         }
 
         // the totals: what the card is, and what the emuMMC takes of it, so no space is a mystery
@@ -243,14 +269,13 @@ struct Menu final : MenuBase {
             "microSD", grid::FormatBytes(static_cast<u64>(d.total)).c_str(),
             grid::FormatBytes(static_cast<u64>(d.visible)).c_str(), "in the file system"_i18n.c_str(),
             grid::FormatBytes(static_cast<u64>(outside)).c_str(), "outside it"_i18n.c_str());
-        const auto emu = EmummcTotal(d.slices);
-        gfx::drawTextArgs(vg, 560.f, 612.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s: %s   %s: %s / %s",
-            "emuMMC takes"_i18n.c_str(), grid::FormatBytes(static_cast<u64>(emu)).c_str(),
+        gfx::drawTextArgs(vg, 560.f, 612.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s: %s / %s",
             "System memory"_i18n.c_str(), grid::FormatBytes(static_cast<u64>(std::max<std::int64_t>(0, d.nand_total - d.nand_free))).c_str(),
             grid::FormatBytes(static_cast<u64>(d.nand_total)).c_str());
     }
 
     std::shared_ptr<Data> m_data;
+    std::vector<Row> m_rows;
     s64 m_index{};
 };
 

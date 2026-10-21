@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.177 — Storage manager: the emuMMC as a container with its parts under it
+The list shows the emuMMC as one line (the sum) and indents what is inside it: the emuMMC itself (partition or files) and the games installed in it; choosing the line lights all its arcs in the ring and A explains what an emuMMC is. The ring puts the emuMMC's parts side by side (storage_model.hpp Rank, host test). The separate "What is an emuMMC?" row is gone.
+host tests: pass (test_storage_model), nro: not built, switch: pending
+
 ## v0.14.176 — Storage manager: the whole card, the emuMMC as one family, "What is an emuMMC?"
 The ring is the whole card (the file system plus the partition outside it, from the SD user area), so a partition emuMMC shows as its own slice instead of "missing" free space. The emuMMC is one family: partition, files (emummc.ini path) and its own games (nintendo_path); the games of the original system are listed apart. Lines under the list: card = in the file system + outside it; emuMMC takes; system memory. A last row explains what an emuMMC is, why it is on the card and how it takes space. storage_model.hpp: EmuGames, EmuData, EmuPartition, EmummcTotal (host test).
 host tests: pass (quick), nro: not built, switch: pending (needs a card with an emuMMC partition and a file-based one)

@@ -26,6 +26,18 @@ inline auto BelongsToEmummc(Id id) -> bool {
     return id == Id::EmuGames || id == Id::EmuData || id == Id::EmuPartition;
 }
 
+// where a slice goes in the ring: the system's games, then the emuMMC with what is inside it (the emuMMC itself, then its
+// games), then the rest: the family sits together so it reads as one container
+inline auto Rank(Id id) -> int {
+    switch (id) {
+        case Id::Games: return 0;
+        case Id::EmuPartition:
+        case Id::EmuData: return 1;
+        case Id::EmuGames: return 2;
+        default: return 3;
+    }
+}
+
 struct Slice {
     Id id{};
     std::int64_t bytes{};
@@ -43,6 +55,7 @@ inline auto Build(std::int64_t total, std::int64_t free_bytes, const std::vector
             known += p.bytes;
         }
     }
+    std::stable_sort(out.begin(), out.end(), [](const Slice& a, const Slice& b) { return Rank(a.id) < Rank(b.id); });
     const auto used = std::max<std::int64_t>(0, total - free_bytes);
     out.push_back({Id::Other, std::max<std::int64_t>(0, used - known)});
     out.push_back({Id::Free, std::max<std::int64_t>(0, free_bytes)});
