@@ -246,10 +246,9 @@ void OpenBrowser() {
     App::Push(std::move(menu));
 }
 
-} // namespace
-
 // one list, three captions. The cursor steps over the captions.
-SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
+auto ToolItems() -> std::vector<settings::SettingsItem> {
+    std::vector<settings::SettingsItem> items {
         settings::MakeHeader("Diagnostics"_i18n),
         Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, sysinfo::Open),
         Tool("Check game updates"_i18n, "Find installed games that have a newer update."_i18n, game_updates::Open),
@@ -273,7 +272,17 @@ SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
-    }} {
+    };
+    // the system web applet of firmware 20.0.0 to 22.5.0 asks for a system update and does not open a page
+    if (!web::BrowserWorks(HOSVER_MAJOR(hosversionGet()), HOSVER_MINOR(hosversionGet()), HOSVER_MICRO(hosversionGet()))) {
+        std::erase_if(items, [](const auto& item) { return item.label == "Web browser"_i18n; });
+    }
+    return items;
+}
+
+} // namespace
+
+SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, ToolItems()} {
 }
 
 SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings::SettingsItem> items)

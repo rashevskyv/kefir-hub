@@ -11,6 +11,12 @@
 
 namespace sphaira::web {
 
+// the system web applet of firmware 20.0.0 through 22.5.0 asks for a system update and opens no page: do not offer it there
+inline auto BrowserWorks(unsigned major, unsigned minor, unsigned micro) -> bool {
+    const auto v = major * 10000u + minor * 100u + micro;
+    return v < 20u * 10000u || v > 22u * 10000u + 5u * 100u;
+}
+
 struct Favourite {
     std::string url;
     std::string title;

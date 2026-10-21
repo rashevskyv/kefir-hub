@@ -8,6 +8,10 @@
 using namespace sphaira::web;
 
 int main() {
+    // the browser is offered on firmware 19.x and before, and 22.5.1 and after (23.0.1 included), not between
+    assert(BrowserWorks(19, 0, 1) && BrowserWorks(18, 1, 0) && BrowserWorks(23, 0, 1) && BrowserWorks(22, 5, 1) && BrowserWorks(22, 6, 0));
+    assert(!BrowserWorks(20, 0, 0) && !BrowserWorks(21, 2, 0) && !BrowserWorks(22, 0, 0) && !BrowserWorks(22, 5, 0));
+
     // addresses: a missing scheme is added, spaces and the bare keyboard text are refused
     assert(NormalizeUrl("example.com/page") == "https://example.com/page");
     assert(NormalizeUrl("  http://example.com \n") == "http://example.com");

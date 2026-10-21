@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.185 — Web browser is hidden on firmware 20.0.0 to 22.5.0
+The system web applet asks for a system update there (seen on .69, 22.5.0) and opens no page, so the Tools list does not show it. `web::BrowserWorks` in web_favorites.hpp, host-tested.
+host tests: pass | nro: built | switch: pending (.69 22.5.0: the row must be gone; after the 23.0.1 update it must be back)
+
 ## v0.14.184 — Web browser: the marked favourite shows its mark under the cursor
 The mark bar is drawn after the cursor frame. Checked on .69 with 0.14.183: page, Add row, Options (Add, Open, Remove) work; opening a site starts the system web applet, which asks for a system update on this console (Cancel returns to the Hub).
 host tests: pass | nro: built | switch: pending
