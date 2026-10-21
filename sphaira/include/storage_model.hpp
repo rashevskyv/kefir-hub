@@ -9,9 +9,11 @@
 namespace sphaira::storage {
 
 enum class Id {
-    Games,     // installed games on the card (Nintendo/Contents)
-    Saves,     // saves and the album (Nintendo/save, Nintendo/Album)
-    Emummc,    // emuMMC files on the card
+    Games,        // games installed in the system (sysMMC): Nintendo/Contents
+    EmuGames,     // games installed in the emuMMC: its own Nintendo folder
+    EmuData,      // the emuMMC when it is files on the card (a copy of the system, its saves, its records)
+    EmuPartition, // the emuMMC when it is a partition: outside the file system, so no folder walk can see it
+    Saves,        // saves and the album (Nintendo/save, Nintendo/Album)
     System,    // Atmosphère, hekate, Kefir and the Hub's own files
     Homebrew,  // /switch
     Backups,   // dumps and backups
@@ -19,6 +21,10 @@ enum class Id {
     Other,     // the rest of the used space
     Free,
 };
+
+inline auto BelongsToEmummc(Id id) -> bool {
+    return id == Id::EmuGames || id == Id::EmuData || id == Id::EmuPartition;
+}
 
 struct Slice {
     Id id{};
@@ -47,6 +53,17 @@ inline auto Total(const std::vector<Slice>& slices) -> std::int64_t {
     std::int64_t sum = 0;
     for (const auto& s : slices) {
         sum += s.bytes;
+    }
+    return sum;
+}
+
+// everything the emuMMC takes, the games installed in it included
+inline auto EmummcTotal(const std::vector<Slice>& slices) -> std::int64_t {
+    std::int64_t sum = 0;
+    for (const auto& s : slices) {
+        if (BelongsToEmummc(s.id)) {
+            sum += s.bytes;
+        }
     }
     return sum;
 }

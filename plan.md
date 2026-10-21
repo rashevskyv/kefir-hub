@@ -473,8 +473,10 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       the emuMMC partition size from `emummc.ini`), a pure model (slices, sizes, text keys) with a host test, the ring
       drawn with nanovg arcs, texts in `en.json`/`uk.json`, docs page `docs/site/{en,uk}/system-tools.md` with a shot.
       Never delete anything from this page without the same confirmations the File Browser uses.
-      v1 (0.14.175): microSD ring from folder sizes, cards with text only; not yet: games per system (sysMMC / emuMMC),
-      system memory as a ring, the action buttons (open in File Browser, delete).
+      v1 (0.14.175-176): microSD ring from folder sizes and the card's own size; the emuMMC is one family (partition outside
+      the file system, files, its games from emummc.ini nintendo_path), "emuMMC takes" total, "What is an emuMMC?" card; cards with
+      text only. Not yet: system memory as a ring, games per user, the action buttons (open in File Browser, delete). Web
+      simulation of the page: artifact "Storage manager sim".
 
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.

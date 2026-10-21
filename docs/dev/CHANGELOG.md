@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.176 — Storage manager: the whole card, the emuMMC as one family, "What is an emuMMC?"
+The ring is the whole card (the file system plus the partition outside it, from the SD user area), so a partition emuMMC shows as its own slice instead of "missing" free space. The emuMMC is one family: partition, files (emummc.ini path) and its own games (nintendo_path); the games of the original system are listed apart. Lines under the list: card = in the file system + outside it; emuMMC takes; system memory. A last row explains what an emuMMC is, why it is on the card and how it takes space. storage_model.hpp: EmuGames, EmuData, EmuPartition, EmummcTotal (host test).
+host tests: pass (quick), nro: not built, switch: pending (needs a card with an emuMMC partition and a file-based one)
+
 ## v0.14.175 — Storage manager (plan F.28, first version)
 Tools → Storage manager: a ring of what fills the microSD card (games, saves and album, emuMMC files, Atmosphère and Kefir, homebrew, dumps and backups, game files and ROMs, other, free) counted from folder sizes behind a progress bar; Up/Down pick a slice, A opens its card (what it is, can it go, where, why). storage_model.hpp has a host test. Not yet: games per system, the system memory as a ring, delete / open actions.
 host tests: pass (quick; test_storage_model), nro: not built, switch: pending
