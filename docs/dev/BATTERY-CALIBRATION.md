@@ -1,8 +1,7 @@
 # Battery calibration: the community procedure vs the Kefir Hub wizard
 
 Source: a Russian-language guide "Battery desync fix, extended edition" (2026-10-21, given by the owner) plus the video
-"Switch OLED 8600mAh Battery Upgrade" (youtu.be/uNj7n0z4VEI; its content could not be read by the agent: the PRODINFO edit
-steps are taken from the guide's text only and must be checked on a console before anything is written).
+"Switch OLED 8600mAh Battery Upgrade" (youtu.be/uNj7n0z4VEI). The video has no voice; the owner pasted its on-screen steps on 2026-10-21 (section "The video, step by step").
 
 ## What the guide says
 
@@ -52,3 +51,23 @@ type byte **02** (00 = OLED, 02 = Lite). Cycles: the video shows the right arrow
   says what to change and why (charge limit 4320 mV), and offers the TegraExplorer script path (like F.25: backup of PRODINFO,
   a clear warning, a script; the Hub does not write PRODINFO itself in HOS).
 - never write PRODINFO without the CAL0 section CRC rewritten and a verified backup.
+
+## The video, step by step (enlarged 8600 mAh battery in a Switch OLED)
+
+- Why: the cell is rated 4.45 V; v1/v2/OLED charge only to 4.2 V (about 7000-7500 mAh). Setting BatteryVersion in PRODINFO makes
+  HOS treat it as a Lite battery: charge up to 4.32 V (about 7500-8000 mAh). Cost: the Lite charge current limit (1.6 A, not 2 A).
+- Steps: Lockpick_RCM (prod.keys) -> TegraExplorer: dump PRODINFO to `PRODINFO.bin` -> on a PC hex editor: offset **0x4310**, byte
+  **00 -> 02** -> a Python script fixes the **CRC16 and SHA256 hash** of the BatteryVersion block (without it HOS cannot read the
+  version and falls back to 00) -> TegraExplorer: restore the edited PRODINFO -> boot Atmosphère -> Battery Desync Fix NX.
+- Check: BDF must show **LiHV in white**. **LIPO in yellow** = PRODINFO was not changed correctly.
+- Then X (reset the calibration); when it asks for charge cycles: 0 and A; B to leave; reboot; **2-3 full cycles**.
+- Result seen: Hekate -> Console Info -> Battery Info: full capacity 7810 mAh after 3 cycles.
+
+Consequences for the Hub (plan F.29):
+- the cell type is already derivable: CAL0 battery version 2 = Lite table = LiHV 4.32 V, any other = LiPo 4.2 V (`ChooseTable`);
+  show it on the Battery page ("LiHV" / "LiPo") and in the wizard, so the owner sees at once whether PRODINFO took;
+- the wizard's reset must not ask for cycles: the count is kept by the SD copy (the video's "0" = start counting again);
+- the capacity checks (design 4600 / 3600) must know "larger battery": expected full capacity 7500-8000 mAh, not 4300;
+- the PRODINFO edit (byte 0x4310, CRC16, SHA256) is a TegraExplorer-script job (HOS cannot write CAL0): build the script from
+  the dump (dump, patch, verify, restore) and keep the dump as the rollback. The CRC16/SHA256 layout of the block must be read
+  from the owner's Python script before it is implemented.
