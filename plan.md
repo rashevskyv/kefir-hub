@@ -428,6 +428,18 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       it is done with a payload. The Hub gets the interface (what to change, a backup of PRODINFO first, a clear warning) and
       then starts a TegraExplorer script (or the same payload); the Hub does not write PRODINFO itself in HOS. Needs
       a decision on which fields change and a hardware test on a Chinese unit before anything ships.
+      Same tool also serves F.29 (battery type): one "edit PRODINFO" path with a backup, a field list per purpose,
+      the CAL0 section CRC rewritten, and a verification read. The owner will say where the fields are (2026-10-21).
+
+- [ ] F.29 **Battery calibration: the community guide merged in; enlarged batteries** (user, 2026-10-21). Full text and
+      the gap table in `docs/dev/BATTERY-CALIBRATION.md`. (a) texts: "charge ~3 minutes before switching on after the red
+      battery" (drain page, interrupted-drain notice), "keep the screen on while charging" (charging phase), the monthly
+      maintenance cycle in the docs; (b) "full" check: on the charger show the charge current and tell when it has been ~0
+      for 5 minutes (psm 100 % stays the counting rule); (c) enlarged battery: learned full capacity clearly above the
+      design capacity gives the verdict "a larger battery is built in", the 10 % under-design rule must not misfire, and
+      the page names what to check in CAL0 (battery type 02 = Lite, charge limit 4320 mV); (d) editing PRODINFO (battery
+      type, later the region of F.25) goes through one backed-up TegraExplorer-script path, not a write from HOS. Needs the
+      video's exact edit steps from the owner.
 
 - [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
       the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable
