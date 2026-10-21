@@ -3527,5 +3527,9 @@
   "No game by this name on SteamGridDB": "No game by this name on SteamGridDB",
   "Search SteamGridDB": "Search SteamGridDB",
   "Load more": "Load more",
-  "Could not download the picture": "Could not download the picture"
+  "Could not download the picture": "Could not download the picture",
+  "Its folder:": "Its folder:",
+  "The HOME icon that starts it is deleted too.": "The HOME icon that starts it is deleted too.",
+  "Only the app": "Only the app",
+  "App and folder": "App and folder"
 }

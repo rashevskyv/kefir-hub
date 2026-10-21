@@ -257,7 +257,7 @@ Context: `docs/dev/AUDIT-2026-10-02-docs.md`. When a task changes behaviour, upd
       Hub unchanged (no MS OS 2.0 descriptors: usb:ds exposes only interface-level control requests). Console test pending.
 - [x] D.2 **Remove the install-enable switch** (Settings → Install → Enable sysMMC/emuMMC and the ban-warning prompt).
       Installing is always allowed. Drop `install/index.md#enable` and the "turn installing on" steps (docs, site, video 02).
-- [ ] D.3 **Bring back restoring profile backups.** Backups from Delete user and Console Transfer → Share User Backups
+- [x] D.3 **Bring back restoring profile backups.** Backups from Delete user and Console Transfer → Share User Backups
       can be made but not restored (dead `users_restore*`, `users_manage*`). Give them a menu entry.
 - [x] D.4 **After installing a system interface translation, ask before switching Kefir Hub's language.** Today
       `TryAutoSwitchLanguage` (settings_translations.cpp:427-518) switches it silently when a matching UI language
@@ -380,7 +380,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       "faster: pack the folder into a zip"; (c) MTP progress: a whole-transfer line under the file bar (files, bytes,
       time; no percent — MTP gives no total), and a real overall bar when DBI Backend Qt sends a manifest first;
       (d) the MTP ProgressBox runs with cpu_boost (FastLoad lowers the GPU clock): UI drops to 36 fps during MTP.
-- [ ] F.16 **Delete homebrew with its folder and forwarder** (user, 2026-10-14). Homebrew menu Delete today removes only
+- [x] F.16 **Delete homebrew with its folder and forwarder** (user, 2026-10-14). Homebrew menu Delete today removes only
       the `.nro` (`homebrew_ops.cpp:233-265`). New: one question "only the NRO / the NRO and its folder" when the NRO
       has its own folder (`/switch/<name>/<name>.nro`, or another folder holding only this NRO's files; never `/switch/`
       itself), listing the folder size. Forwarders that start this NRO are listed in the same question and deleted with

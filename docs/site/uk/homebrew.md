@@ -57,6 +57,12 @@
 Щоб зняти вибір із застосунку, натисніть на ньому **X** ще раз. Натискання **B**, коли вибрано застосунки, знімає вибір з усіх них, а малюнки позначок зникають; водночас Kefir Hub залишається відкритим (на відміну від натискання **B** без вибраних застосунків, яке одразу закриває застосунок).
 
 ## Видалення застосунку
+
+<!-- draft
+- [[Delete]] on one app also looks at its own folder: when the app lives in `/switch/<folder>/` and no other `.nro` is inside, the question shows the folder and its size, with [[Only the app]] and [[App and folder]]; the folder of the running Kefir Hub is never offered
+- a HOME icon (forwarder) made by Kefir Hub that starts this app is deleted together with it, and the question says so ([[The HOME icon that starts it is deleted too.]])
+- with several apps selected the old question stays: only the `.nro` files go
+-->
 1. Виберіть застосунок або кілька.
 2. Натисніть **+** і виберіть [[Delete]].
 3. Підтвердьте кнопкою [[Delete]].

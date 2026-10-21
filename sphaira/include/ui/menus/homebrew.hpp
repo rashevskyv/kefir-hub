@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ui/menus/homebrew_delete.hpp"
+
 #include "ui/menus/grid_menu_base.hpp"
 #include "ui/list.hpp"
 #include "nro.hpp"
@@ -85,7 +87,7 @@ private:
     void ClearSelection();
     auto GetSelectedEntries() const -> std::vector<NroEntry>;
     void StarHomebrew(bool star);
-    void DeleteHomebrew();
+    void DeleteHomebrew(const DeletePlan& plan = {}, bool with_folder = false);
     // Kefir Hub is the Homebrew Menu and this entry is a second copy of it: offer to delete it.
     // Returns true when the question was asked (the caller must not launch the entry).
     auto OfferDeleteHubCopy(const NroEntry& e) -> bool;

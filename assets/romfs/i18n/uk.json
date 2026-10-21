@@ -3527,5 +3527,9 @@
   "No game by this name on SteamGridDB": "На SteamGridDB немає гри з такою назвою",
   "Search SteamGridDB": "Пошук на SteamGridDB",
   "Load more": "Завантажити ще",
-  "Could not download the picture": "Не вдалося завантажити картинку"
+  "Could not download the picture": "Не вдалося завантажити картинку",
+  "Its folder:": "Її тека:",
+  "The HOME icon that starts it is deleted too.": "Іконка в HOME Menu, що її запускає, теж буде видалена.",
+  "Only the app": "Лише програма",
+  "App and folder": "Програма й тека"
 }

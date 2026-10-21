@@ -235,13 +235,13 @@ auto Menu::OfferDeleteHubCopy(const NroEntry& e) -> bool {
     return true;
 }
 
-void Menu::DeleteHomebrew() {
+void Menu::DeleteHomebrew(const DeletePlan& plan, bool with_folder) {
     const auto targets = GetSelectedEntries();
     if (targets.empty()) {
         return;
     }
 
-    App::Push<ProgressBox>(0, "Deleting"_i18n, "", [targets](auto pbox) -> Result {
+    App::Push<ProgressBox>(0, "Deleting"_i18n, "", [targets, plan, with_folder](auto pbox) -> Result {
         fs::FsNativeSd fs;
         for (size_t i = 0; i < targets.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
@@ -255,6 +255,11 @@ void Menu::DeleteHomebrew() {
             }
 
             R_TRY(fs.DeleteFile(e.path));
+        }
+        // the plan exists for one app only: its HOME tiles go with it, its folder when the user chose that
+        DeleteTiles(plan);
+        if (with_folder && !plan.folder.empty()) {
+            R_TRY(fs::DeleteDirectoryRecursively(plan.folder));
         }
         return 0;
     }, [this](Result rc){
@@ -361,14 +366,46 @@ void Menu::DisplayOptions() {
             const auto msg = targets.size() == 1
                 ? "Are you sure you want to delete "_i18n + targets.front().GetName() + "?"
                 : "Are you sure you want to delete the selected homebrew?"_i18n;
-            App::Push<OptionBox>(
-                msg,
-                "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
-                    if (op_index && *op_index) {
-                        DeleteHomebrew();
-                    }
-                }, targets.front().image
-            );
+            if (targets.size() != 1) {
+                App::Push<OptionBox>(
+                    msg,
+                    "Back"_i18n, "Delete"_i18n, 0, [this](auto op_index){
+                        if (op_index && *op_index) {
+                            DeleteHomebrew();
+                        }
+                    }, targets.front().image
+                );
+                return;
+            }
+
+            // one app: its own folder and the HOME icons that start it are offered too
+            const auto plan = PlanDelete(targets.front().path);
+            auto text = msg;
+            if (!plan.folder.empty()) {
+                text += "\n\n" + "Its folder:"_i18n + " " + plan.folder.toString() + " (" + grid::FormatBytes(static_cast<u64>(plan.folder_bytes)) + ")";
+            }
+            if (!plan.tiles.empty()) {
+                text += "\n\n" + "The HOME icon that starts it is deleted too."_i18n;
+            }
+            if (plan.folder.empty()) {
+                App::Push<OptionBox>(
+                    text,
+                    "Back"_i18n, "Delete"_i18n, 0, [this, plan](auto op_index){
+                        if (op_index && *op_index) {
+                            DeleteHomebrew(plan, false);
+                        }
+                    }, targets.front().image
+                );
+            } else {
+                App::Push<OptionBox>(
+                    text,
+                    "Back"_i18n, "Only the app"_i18n, "App and folder"_i18n, 0, [this, plan](auto op_index){
+                        if (op_index && *op_index) {
+                            DeleteHomebrew(plan, *op_index == 2);
+                        }
+                    }, targets.front().image
+                );
+            }
         }, true, "Permanently delete all selected homebrew."_i18n)->SetIcon(ActionIcon::Delete);
 
         if (targets.size() == 1 && m_selected_count == 0) {

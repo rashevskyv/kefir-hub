@@ -59,6 +59,12 @@ Press **X** again on an app to unselect it.
 Pressing **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. Pressing **B** with nothing selected exits as before.
 
 ## Delete an app
+
+<!-- draft
+- [[Delete]] on one app also looks at its own folder: when the app lives in `/switch/<folder>/` and no other `.nro` is inside, the question shows the folder and its size, with [[Only the app]] and [[App and folder]]; the folder of the running Kefir Hub is never offered
+- a HOME icon (forwarder) made by Kefir Hub that starts this app is deleted together with it, and the question says so ([[The HOME icon that starts it is deleted too.]])
+- with several apps selected the old question stays: only the `.nro` files go
+-->
 1. Select the app, or several apps.
 2. Press **+** and choose [[Delete]].
 3. Confirm with [[Delete]].
