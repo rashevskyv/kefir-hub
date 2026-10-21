@@ -88,3 +88,15 @@ Hub would do (written fresh from this layout, not copied):
 So no TegraExplorer script is needed for the battery version: the Hub can do it in HOS (needs the write to the calibration
 partition to be allowed, as the NRO shows it is on the owner's setup). The pure parts (CRC16, hashes, the block patch) go into
 a header with a host test against the layout above. F.25 (region) can reuse the same backup/verify path, with other fields.
+
+## Letting the Hub write PRODINFO (Atmosphère rules, read from its source 2026-10-21)
+
+Atmosphère blocks writes to the calibration partition. Two switches open it, both read at start (so a reboot is needed):
+- `exosphere.ini`: `allow_writing_to_cal_sysmmc=1` (sysMMC only). With it on, Atmosphère first keeps its own secure backup of
+  the calibration data in unused space; if it cannot make that backup it leaves writes off (`amsmitm_prodinfo_utils.cpp`).
+- `atmosphere/config/system_settings.ini`, `[atmosphere]`: `enable_hbl_bis_write = u8!0x1` (BIS writes for homebrew;
+  `fs_mitm_service.cpp`).
+
+Flow for "Change battery type": check both switches; if off, say so, turn them on, store a pending marker, reboot; at the next
+start the Hub backs up PRODINFO to the SD (verified by reading it back), writes byte 0x4310, CRC16, body SHA-256, verifies, turns
+both switches off again and offers the reboot. The backup stays for the rollback.
