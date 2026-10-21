@@ -225,11 +225,13 @@ Create, rename, back up and link console user profiles. See [Users](users.md).
 <!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->
 
 <!-- draft
-- [[Storage manager]] (Tools): a ring of what fills the microSD card: [[Saves and album]], [[Atmosphère and Kefir]], [[Homebrew]], [[Dumps and backups]], [[Game files and ROMs]], [[Other files]] and [[Free space]], with the size and the percent of each; the centre shows the used and the total space; the system memory (used / total) is written under the list
+- [[Storage manager]] (Tools): a ring of what fills the microSD card: [[Saves and album]], [[Atmosphère and Kefir]], [[Homebrew]], [[Dumps and backups]], [[Game files (NSP, XCI)]], [[Emulators and their games]], [[Other files]] and [[Free space]], with the size and the percent of each; the centre shows the used and the total space; the system memory (used / total) is written under the list
 - **Up** / **Down** pick a slice; **A** opens its card: what it is, whether it can be deleted, where it is, why it is there
 - the folders are counted when the page opens (a progress bar shows the step); a partition emuMMC is outside the card's file system and is not in the ring
 - the card is shown whole: the line under the list reads "microSD: total = N in the file system + M outside it"; a partition emuMMC is the part outside the file system, so no folder shows it
 - the emuMMC is one container: the list has a line [[emuMMC]] with the sum, and its parts indented under it: [[emuMMC partition]] or [[emuMMC files]] (the emuMMC itself) and [[Games in the emuMMC]]; choosing the line lights all its parts in the ring; **A** on it explains what an emuMMC is
+- **Y** ([[What is an emuMMC?]]) opens the explanation of an emuMMC from anywhere on the page
+- [[Game files (NSP, XCI)]] counts /games only; [[Emulators and their games]] counts the emulators (RetroArch, Tico) and the ROM folders: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico
 -->
 
 ## Clean system junk

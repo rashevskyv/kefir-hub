@@ -17,7 +17,8 @@ enum class Id {
     System,    // Atmosphère, hekate, Kefir and the Hub's own files
     Homebrew,  // /switch
     Backups,   // dumps and backups
-    Files,     // game files and ROMs kept on the card
+    Files,     // game files (NSP, XCI) kept on the card
+    Emulators, // emulators (RetroArch, Tico...) with their cores, saves and the ROM folders
     Other,     // the rest of the used space
     Free,
 };

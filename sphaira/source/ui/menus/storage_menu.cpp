@@ -68,7 +68,8 @@ auto Name(Id id) -> std::string {
         case Id::System: return "Atmosphère and Kefir"_i18n;
         case Id::Homebrew: return "Homebrew"_i18n;
         case Id::Backups: return "Dumps and backups"_i18n;
-        case Id::Files: return "Game files and ROMs"_i18n;
+        case Id::Files: return "Game files (NSP, XCI)"_i18n;
+        case Id::Emulators: return "Emulators and their games"_i18n;
         case Id::Other: return "Other files"_i18n;
         case Id::Free: return "Free space"_i18n;
     }
@@ -90,7 +91,8 @@ auto Card(Id id) -> std::string {
         case Id::System: return "What: Atmosphère, the hekate bootloader, the Hub's own settings and the Kefir files.\n\nDelete: no. The console may stop starting. Cleanup of caches and old downloads is in Tools → Clean system junk.\n\nWhere: /atmosphere, /bootloader, /config, /kefir, /sept.\n\nWhy: the custom firmware and its modules, cheats and settings live here."_i18n;
         case Id::Homebrew: return "What: homebrew apps and their data.\n\nDelete: yes, an app at a time from the Homebrew tab (the question can also remove its folder and its HOME icon).\n\nWhere: /switch.\n\nWhy: the apps you launch from the Homebrew tab."_i18n;
         case Id::Backups: return "What: dumps of games, saves and system data you made, and backups of saves.\n\nDelete: yes, once a copy is safe elsewhere. They are the only copy until then.\n\nWhere: /dumps, /backups, /backup, /JKSV.\n\nWhy: kept so that a lost save or game can be put back."_i18n;
-        case Id::Files: return "What: game files (NSP, XCI) and emulator ROMs that you copied to the card.\n\nDelete: yes, in the File Browser. Installed games are not touched: these are only the files.\n\nWhere: /games, /roms, /ROMs, /retroarch.\n\nWhy: the source for installing or emulating."_i18n;
+        case Id::Files: return "What: game files (NSP, XCI) that you copied to the card to install them.\n\nDelete: yes, in the File Browser, once the game is installed. Installed games are not touched: these are only the files.\n\nWhere: /games.\n\nWhy: the source for installing."_i18n;
+        case Id::Emulators: return "What: emulators such as RetroArch and Tico, with their cores, settings and saves, and the ROM files of the games you play in them (one folder per system, for example /roms/snes).\n\nDelete: yes, a ROM or a folder at a time in the File Browser; to remove an emulator itself use its folder here or the Homebrew tab. Saves of the games sit beside them, so copy those first.\n\nWhere: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico.\n\nWhy: emulators need the games they run; they are not installed games and do not appear in the HOME menu unless you add a forwarder."_i18n;
         case Id::Other: return "What: files that no other slice counts: themes, pictures, documents, leftovers of other tools.\n\nDelete: look first in the File Browser. Anything you do not know is safer left.\n\nWhere: all over the card.\n\nWhy: it is what remains after the named parts."_i18n;
         case Id::Free: return "What: unused space on the card.\n\nDelete: nothing to delete. Keep some free: installs and updates need room, and a full card slows the console.\n\nWhere: the whole card.\n\nWhy: free space is where the next game, update or save will go."_i18n;
     }
@@ -108,6 +110,7 @@ auto Colour(Id id) -> NVGcolor {
         case Id::Homebrew: return nvgRGB(0x3F, 0xB5, 0x8B);
         case Id::Backups: return nvgRGB(0x2E, 0xB8, 0xC9);
         case Id::Files: return nvgRGB(0xC7, 0x7D, 0xB4);
+        case Id::Emulators: return nvgRGB(0xE0, 0x7A, 0x9B);
         case Id::Other: return nvgRGB(0x8A, 0x93, 0x9F);
         case Id::Free: return nvgRGB(0x33, 0x3B, 0x46);
     }
@@ -185,6 +188,9 @@ struct Menu final : MenuBase {
             const auto& s = m_data->slices[r.slice];
             const auto text = Name(s.id) + ": " + grid::FormatBytes(static_cast<u64>(s.bytes)) + "\n\n" + Card(s.id);
             App::Push<OptionBox>(text, "OK"_i18n);
+        }});
+        SetAction(Button::Y, Action{"What is an emuMMC?"_i18n, [this]() {
+            App::Push<OptionBox>(AboutEmummc(), "OK"_i18n);
         }});
         SetAction(Button::B, Action{"Back"_i18n, [this]() { SetPop(); }});
     }
@@ -318,7 +324,8 @@ void Open() {
             {Id::System, {"/atmosphere", "/bootloader", "/config", "/kefir", "/sept"}},
             {Id::Homebrew, {"/switch"}},
             {Id::Backups, {"/dumps", "/backups", "/backup", "/JKSV"}},
-            {Id::Files, {"/games", "/roms", "/ROMs", "/retroarch"}},
+            {Id::Files, {"/games"}},
+            {Id::Emulators, {"/roms", "/ROMs", "/retroarch", "/RetroArch", "/tico", "/Tico"}},
         };
         if (emu_nintendo_own) {
             parts.push_back({Id::EmuGames, {emu.nintendo + "/Contents"}});

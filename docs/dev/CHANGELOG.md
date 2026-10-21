@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.180 — Storage manager: a Y button for "What is an emuMMC?", emulators and their games counted
+Y opens the explanation of an emuMMC from anywhere on the page (A on the emuMMC line still does). "Game files and ROMs" is split: Game files (NSP, XCI) = /games; Emulators and their games = /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico (RetroArch, Tico and the ROM folders), with its own card.
+host tests: pass (quick), nro: not built, switch: pending
+
 ## v0.14.179 — Battery drain: screensaver against burn-in; storage manager hides the partition-table gap
 The drain page starts the screensaver after the install screen's idle time (120 s when that is off): black page, drifting readout with the cycle, battery bar, W / mA / temperature, Wh, time on battery and time to switch-off (charge % on the charger). A press wakes it and does nothing else; the load and the measuring continue; the drain does not touch the brightness while the saver owns it and re-applies its own after waking; auto sleep stays off. SaverInfo::stats_text lets a page give its own stats line. Storage manager: a card with less than 1 GiB beyond the file system no longer shows an "outside" part.
 host tests: not run, nro: not built, switch: pending (drain page left idle for 2 minutes; wake; check the brightness and that the drain goes on)
