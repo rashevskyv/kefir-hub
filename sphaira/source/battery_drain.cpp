@@ -10,6 +10,8 @@
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "app.hpp"
+#include "ui/screensaver.hpp"
+#include "ui/screensaver_timeout.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
@@ -44,6 +46,7 @@ constexpr int CIRCLES = 80;
 constexpr int GENTLE_PCT = 35;
 constexpr float MIN_BRIGHTNESS = 0.02f; // the lowest the screen still shows something
 constexpr float NOMINAL_V = 3.7f; // for Wh from mAh
+constexpr long SAVER_DEFAULT_S = 120; // idle seconds before the screensaver when the install screen's timeout is off
 constexpr double CHARGING_MA = 100.0; // an average current above this into the battery = on a charger
 constexpr u64 LIVE_MS = 250;   // one point of the live charts
 constexpr size_t LIVE_N = 120; // 30 s on a chart
@@ -212,7 +215,41 @@ struct DrainMenu final : ui::menu::MenuBase {
     auto GetShortTitle() const -> const char* override { return "Battery drain"; }
 
     void Update(Controller* controller, TouchInfo* touch) override {
-        MenuBase::Update(controller, touch);
+        // The panel shows the same still charts for hours at full brightness: after the idle time (the one set for the install
+        // screen, two minutes when that is off) the screensaver takes over with the numbers that matter. A press wakes it and
+        // does nothing else; the measuring below goes on behind it.
+        const double now_sec = m_idle_clock.GetSecondsD();
+        if (m_saver.IsActive()) {
+            m_saver.Update(controller, touch);
+            if (m_saver.WantsWake(controller, touch)) {
+                m_saver.Stop();
+                App::SetAutoSleepDisabled(true); // the saver's Stop lets the console sleep again: a sleeping console stops the drain
+                m_idle.Reset(now_sec);
+                m_reapply = {};
+                m_reapply_due = true; // the brightness the saver restored is put back to the drain's own
+                return;
+            }
+        } else {
+            MenuBase::Update(controller, touch);
+            ui::TimeoutInput in{};
+            if (controller) {
+                in.kdown = controller->m_kdown;
+                in.kheld = controller->m_kheld;
+                in.stick_l_x = controller->m_stick_l.x;
+                in.stick_l_y = controller->m_stick_l.y;
+                in.stick_r_x = controller->m_stick_r.x;
+                in.stick_r_y = controller->m_stick_r.y;
+            }
+            if (touch) {
+                in.is_touching = touch->is_touching;
+                in.is_clicked = touch->is_clicked;
+            }
+            const long timeout = App::GetBlankTimeout() > 0 ? App::GetBlankTimeout() : SAVER_DEFAULT_S;
+            if (m_idle.Update(ui::BlankPhase_Installing, false, timeout, in, now_sec)) {
+                m_saver.Start();
+                m_idle.Reset(now_sec);
+            }
+        }
         if (m_live.GetMs() >= LIVE_MS) {
             m_live.Update();
             SampleLive();
@@ -238,7 +275,8 @@ struct DrainMenu final : ui::menu::MenuBase {
         }
         if (const auto v = g.Read(MAX17050_Temp)) m_temp = static_cast<s16>(*v) / 256.0;
         if (const auto v = g.Read(MAX17050_TTE)) m_tte_s = *v == 0xFFFF ? 0 : static_cast<u64>(*v * 5.625);
-        if (m_lbl && m_reapply.GetSeconds() >= 10) {
+        if (m_lbl && !m_saver.IsActive() && (m_reapply.GetSeconds() >= 10 || m_reapply_due)) {
+            m_reapply_due = false;
             // the system can switch dimming back on; the screen must stay at full brightness
             m_reapply.Update();
             lblDisableDimming();
@@ -267,7 +305,9 @@ struct DrainMenu final : ui::menu::MenuBase {
             const bool gentle = m_pct >= 0 && m_pct <= GENTLE_PCT && !m_charger;
             if (gentle != m_dimmed) {
                 m_dimmed = gentle;
-                lblSetCurrentBrightnessSetting(gentle ? MIN_BRIGHTNESS : 1.0f);
+                if (!m_saver.IsActive()) { // the saver owns the brightness while it is on; the reapply puts this back after it
+                    lblSetCurrentBrightnessSetting(gentle ? MIN_BRIGHTNESS : 1.0f);
+                }
             }
         }
         using wizard::DrainStep;
@@ -489,6 +529,10 @@ struct DrainMenu final : ui::menu::MenuBase {
                 nvgFill(vg);
             }
         }
+        if (m_saver.OwnsScreen()) {
+            m_saver.Draw(vg, theme, SaverReadout()); // black page; the circles above keep the GPU busy underneath
+            return;
+        }
         MenuBase::Draw(vg, theme); // after the load: the page background covers the circles, the GPU still draws them
 
         const auto text = theme->GetColour(ThemeEntryID_TEXT);
@@ -572,7 +616,37 @@ struct DrainMenu final : ui::menu::MenuBase {
     }
 
 private:
+    // what the screensaver paints: the cycle, the battery bar, power and temperature, the energy, the time on battery
+    auto SaverReadout() const -> ui::SaverInfo {
+        ui::SaverInfo info;
+        info.status = m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n;
+        info.ratio = m_pct >= 0 ? m_pct / 100.0 : 0.0;
+        char line[160];
+        std::snprintf(line, sizeof(line), "%.1f W · %d mA · %.1f °C", Last(m_watts), std::abs(m_ma), m_temp);
+        info.file = line;
+        std::string stats;
+        if (m_cap_full_mah > 0) {
+            char e[64];
+            std::snprintf(e, sizeof(e), "%.1f / %.1f Wh", std::max(0, m_cap_rem_mah) * NOMINAL_V / 1000.f, m_cap_full_mah * NOMINAL_V / 1000.f);
+            stats = e;
+        }
+        if (m_charger) {
+            stats += (stats.empty() ? "" : "   ·   ") + "Charging:"_i18n + " " + std::to_string(std::max(0, m_pct)) + "%";
+        } else {
+            stats += (stats.empty() ? "" : "   ·   ") + HoursMinutesSeconds(m_state.drain_s[m_cycle - 1]);
+            if (m_tte_s) {
+                stats += "   ·   " + "Switch-off in about"_i18n + " " + HoursMinutes(m_tte_s);
+            }
+        }
+        info.stats_text = stats;
+        return info;
+    }
+
     int m_cycle;
+    ui::Screensaver m_saver{};
+    ui::InactivityTracker m_idle{};
+    TimeStamp m_idle_clock{};
+    bool m_reapply_due{};
     Thread m_threads[LOAD_CORES]{};
     bool m_started[LOAD_CORES]{};
     bool m_lbl{};

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.179 — Battery drain: screensaver against burn-in; storage manager hides the partition-table gap
+The drain page starts the screensaver after the install screen's idle time (120 s when that is off): black page, drifting readout with the cycle, battery bar, W / mA / temperature, Wh, time on battery and time to switch-off (charge % on the charger). A press wakes it and does nothing else; the load and the measuring continue; the drain does not touch the brightness while the saver owns it and re-applies its own after waking; auto sleep stays off. SaverInfo::stats_text lets a page give its own stats line. Storage manager: a card with less than 1 GiB beyond the file system no longer shows an "outside" part.
+host tests: not run, nro: not built, switch: pending (drain page left idle for 2 minutes; wake; check the brightness and that the drain goes on)
+
 ## v0.14.178 — Kefir changelog: D-pad pages and a stick that glides at the pace it is pushed
 In the Kefir update changelog: Up/Down move by a line (held repeats), Left/Right and L/R by a page (at most one jump every 0.22 s, one line of the old page stays in sight); the sticks no longer step by lines: they glide, the harder the push the faster (squared, from 0 to 720 px/s, dead zone), so the notes cannot be skipped through in a blink. Install still unlocks only at the bottom.
 host tests: not run, nro: not built, switch: pending

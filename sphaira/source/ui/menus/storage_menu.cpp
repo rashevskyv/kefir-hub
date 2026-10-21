@@ -302,8 +302,11 @@ void Open() {
             fsDeviceOperatorClose(&op);
         }
         // anything under 1 GiB is only the alignment of the partition table
-        const auto hidden = data->total - data->visible;
         constexpr std::int64_t ALIGNMENT = 1024LL * 1024 * 1024;
+        const auto hidden = data->total - data->visible;
+        if (hidden <= ALIGNMENT) {
+            data->total = data->visible; // only the alignment of the partition table: not a part of the card to show
+        }
 
         const auto emu = ReadEmuConfig();
         const bool emu_nintendo_own = !emu.nintendo.empty() && emu.nintendo != "/Nintendo";

@@ -45,6 +45,7 @@ struct SaverInfo {
     double speed_mib{};        // average write rate
     double now_mib{-1.0};      // current rate, shown before the average when set (>= 0)
     std::string eta{};         // empty until there are enough samples
+    std::string stats_text{};  // set: this line replaces speed / eta / elapsed (a page whose numbers are not an install's)
     u64 elapsed_ns{};
 
     bool is_complete{false};

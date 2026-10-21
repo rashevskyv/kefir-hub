@@ -210,6 +210,11 @@
 - why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions
 -->
 <!-- draft
+- the drain page starts the screensaver after the idle time set for the install screen (two minutes when that is off), to keep the panel from burning in: a black page with a drifting readout: the cycle, the battery bar and percent, power (W, mA) and temperature, the energy (Wh), the time on battery and the time to switch-off (on the charger: the charge %)
+- any button or a touch wakes it (that press does nothing else); the load and the measuring go on behind it; the stick moves the readout and sets its brightness and drift speed as on the install screen
+-->
+
+<!-- draft
 - calibration step 5 ([[5. Match in the other MMC]]): with both cycles done, **A** on the step in the MMC where the cycles ran asks to restart into the other MMC ([[Later]] / [[Restart]]); hekate boots that MMC once, its `hekate_ipl.ini` is not changed
 - in the other MMC, about 10 s after Kefir Hub opens, the match runs by itself; then [[Calibration complete: both MMCs hold the same calibrated model and one cycle count.]] and [[Restart into]] the first MMC: [[Stay here]] / [[Restart]]
 - an Ultrahand notice after the reboot says [[Battery calibration: open Kefir Hub to finish the match.]]

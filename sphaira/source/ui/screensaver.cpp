@@ -233,7 +233,10 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
         }
     };
 
-    if (FieldEnabled(SaverField_Speed)) {
+    if (!info.stats_text.empty()) {
+        add_stat(info.stats_text);
+    }
+    if (info.stats_text.empty() && FieldEnabled(SaverField_Speed)) {
         char buf[96]{};
         if (info.now_mib >= 0.0) {
             std::snprintf(buf, sizeof(buf), "%.1f MiB/s (%s %.1f)", info.now_mib, "Average"_i18n.c_str(), info.speed_mib);
@@ -242,10 +245,10 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
         }
         add_stat(buf);
     }
-    if (FieldEnabled(SaverField_Eta) && !info.eta.empty()) {
+    if (info.stats_text.empty() && FieldEnabled(SaverField_Eta) && !info.eta.empty()) {
         add_stat(info.eta + " " + "left"_i18n);
     }
-    if (FieldEnabled(SaverField_Elapsed) && info.elapsed_ns) {
+    if (info.stats_text.empty() && FieldEnabled(SaverField_Elapsed) && info.elapsed_ns) {
         add_stat(FormatElapsed(info.elapsed_ns));
     }
     if (FieldEnabled(SaverField_Battery)) {
