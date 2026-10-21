@@ -3593,15 +3593,14 @@
   "What: emulators such as RetroArch and Tico, with their cores, settings and saves, and the ROM files of the games you play in them (one folder per system, for example /roms/snes).\n\nDelete: yes, a ROM or a folder at a time in the File Browser; to remove an emulator itself use its folder here or the Homebrew tab. Saves of the games sit beside them, so copy those first.\n\nWhere: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico.\n\nWhy: emulators need the games they run; they are not installed games and do not appear in the HOME menu unless you add a forwarder.": "Що це: емулятори, як-от RetroArch і Tico, з їхніми ядрами, налаштуваннями та збереженнями, і ROM-файли ігор, у які ви в них граєте (по одній теці на систему, наприклад /roms/snes).\n\nВидалити: так, ROM чи теку по одній у файловому браузері; сам емулятор прибирайте його текою звідси або з вкладки Homebrew. Збереження ігор лежать поруч, тож спершу скопіюйте їх.\n\nДе: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico.\n\nНавіщо: емуляторам потрібні ігри, які вони запускають; це не встановлені ігри, і в меню HOME їх немає, поки ви не додасте форвардер.",
   "Web address": "Адреса сторінки",
   "Web browser": "Веб-браузер",
-  "Open a web page in the console's own browser. Needs the full memory: start Kefir Hub from a game.": "Відкрити сторінку у власному браузері консолі. Потрібна вся пам'ять: запустіть Kefir Hub із гри.",
   "The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it).": "Браузер не запустився. Йому потрібна вся пам'ять: запустіть Kefir Hub із гри (утримуйте R під час запуску).",
   "Enter an address": "Ввести адресу",
   "Type a web address, or send it from a phone or a computer, and open it.": "Ввести адресу сторінки або надіслати її з телефона чи комп'ютера й відкрити.",
   "Type a web address or send it from a phone or a computer": "Введіть адресу або надішліть її з телефона чи комп'ютера",
   "Favourites": "Обране",
-  "No favourites yet": "Обраного ще немає",
-  "Press Y to add a site.": "Натисніть Y, щоб додати сайт.",
   "Remove from favourites:": "Прибрати з обраного:",
-  "Add favourite": "Додати в обране",
-  "Already in the favourites": "Уже є в обраному"
+  "Already in the favourites": "Уже є в обраному",
+  "Add to favourites": "Додати в обране",
+  "Type a web address, or send it from a phone or a computer, and keep it here.": "Ввести адресу сторінки або надіслати її з телефона чи комп'ютера й зберегти тут.",
+  "Open a web page in the console's own browser. Needs the full memory.": "Відкрити сторінку у власному браузері консолі. Потрібна вся пам'ять."
 }

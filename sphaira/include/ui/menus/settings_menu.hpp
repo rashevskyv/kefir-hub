@@ -39,9 +39,9 @@ struct SettingsItem {
     // folder listed indented under its category. Built on open so the rows read
     // current state. When unset, a Folder row just runs its action.
     std::function<std::vector<SettingsItem>()> folder_items{};
-    // X on the row (the Web browser page: take a favourite off the list); empty = X does nothing there
-    std::function<void()> on_x{};
-    std::string x_label{};
+    // the Web browser page: a favourite row can be marked (X, Y) like files in the File Browser
+    bool selectable{false};
+    bool marked{false};
 };
 
 struct SettingsCategory {

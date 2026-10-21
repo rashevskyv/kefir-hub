@@ -168,17 +168,30 @@ void AskAddress(const std::string& initial, std::function<void(const std::string
     });
 }
 
+void AddFavourite(const std::function<void()>& reopen) {
+    AskAddress({}, [reopen](const std::string& url) {
+        auto list = LoadFavourites();
+        if (web::Add(list, url)) {
+            SaveFavourites(list);
+        } else {
+            App::Notify("Already in the favourites"_i18n);
+        }
+        reopen();
+    });
+}
+
 void OpenBrowser() {
     static option::OptionString last_url{"web_browser", "last_url", "https://"};
     // the page is rebuilt after every change: the old one leaves and a new one is pushed
     auto self = std::make_shared<SystemToolsMenu*>(nullptr);
-    const auto reopen = [self]() {
+    const std::function<void()> reopen = [self]() {
         if (*self) {
             (*self)->SetPop();
         }
         OpenBrowser();
     };
 
+    constexpr size_t FIRST_FAVOURITE_ROW = 4; // Open, Enter an address, Favourites, Add to favourites
     const auto favourites = LoadFavourites();
     std::vector<settings::SettingsItem> items;
     items.push_back(settings::MakeHeader("Open"_i18n));
@@ -189,41 +202,47 @@ void OpenBrowser() {
         });
     }));
     items.push_back(settings::MakeHeader("Favourites"_i18n));
-    if (favourites.empty()) {
-        items.push_back(Tool("No favourites yet"_i18n, "Press Y to add a site."_i18n, nullptr));
-    }
-    for (size_t i = 0; i < favourites.size(); i++) {
-        const auto fav = favourites[i];
-        auto item = Tool(fav.title, fav.url, [fav]() { OpenUrl(fav.url); });
-        item.x_label = "Remove"_i18n;
-        item.on_x = [fav, i, reopen]() {
-            App::Push<ui::OptionBox>("Remove from favourites:"_i18n + " " + fav.title + "?", "Back"_i18n, "Remove"_i18n, 0, [i, reopen](auto op) {
-                if (!op || *op != 1) {
-                    return;
-                }
-                auto list = LoadFavourites();
-                if (web::Remove(list, i)) {
-                    SaveFavourites(list);
-                }
-                reopen();
-            });
-        };
+    items.push_back(Tool("Add to favourites"_i18n, "Type a web address, or send it from a phone or a computer, and keep it here."_i18n, [reopen]() {
+        AddFavourite(reopen);
+    }));
+    for (const auto& fav : favourites) {
+        auto item = Tool(fav.title, fav.url, [url = fav.url]() { OpenUrl(url); });
+        item.selectable = true;
         items.push_back(std::move(item));
     }
 
     auto menu = std::make_unique<SystemToolsMenu>("Web browser"_i18n, std::move(items));
     *self = menu.get();
-    menu->SetAction(Button::Y, Action{"Add favourite"_i18n, [reopen]() {
-        AskAddress({}, [reopen](const std::string& url) {
-            auto list = LoadFavourites();
-            if (web::Add(list, url)) {
+    // START: the context menu. It works on the marked favourites (X, Y), or on the one under the cursor.
+    menu->SetOptions([reopen, favourites](const std::vector<size_t>& rows) {
+        auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+        options->Add<SidebarEntryCallback>("Add to favourites"_i18n, [reopen]() { AddFavourite(reopen); }, true);
+        if (rows.empty()) {
+            return;
+        }
+        if (rows.size() == 1) {
+            const auto url = favourites[rows[0] - FIRST_FAVOURITE_ROW].url;
+            options->Add<SidebarEntryCallback>("Open"_i18n, [url]() { OpenUrl(url); }, true);
+        }
+        options->Add<SidebarEntryCallback>("Remove"_i18n, [reopen, rows, favourites]() {
+            const auto text = rows.size() == 1
+                ? "Remove from favourites:"_i18n + " " + favourites[rows[0] - FIRST_FAVOURITE_ROW].title + "?"
+                : "Remove from favourites:"_i18n + " " + std::to_string(rows.size()) + "?";
+            App::Push<ui::OptionBox>(text, "Back"_i18n, "Remove"_i18n, 0, [reopen, rows](auto op) {
+                if (!op || *op != 1) {
+                    return;
+                }
+                auto list = LoadFavourites();
+                // from the end, so the earlier numbers stay right
+                for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+                    web::Remove(list, *it - FIRST_FAVOURITE_ROW);
+                }
                 SaveFavourites(list);
-            } else {
-                App::Notify("Already in the favourites"_i18n);
-            }
-            reopen();
-        });
-    }});
+                reopen();
+            });
+        }, true);
+    });
     App::Push(std::move(menu));
 }
 
@@ -244,7 +263,7 @@ SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, {
         Tool("Wi-Fi"_i18n, "Manage wireless connections."_i18n, [](){
             App::Push<ui::menu::wifi::Menu>();
         }),
-        Tool("Web browser"_i18n, "Open a web page in the console's own browser. Needs the full memory: start Kefir Hub from a game."_i18n, OpenBrowser),
+        Tool("Web browser"_i18n, "Open a web page in the console's own browser. Needs the full memory."_i18n, OpenBrowser),
         Tool("Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, [](){
             App::Push<ui::menu::users::Menu>();
         }),
@@ -264,11 +283,18 @@ SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings:
         SetAction(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }});
     }
     SetAction(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }});
-    // a row may bring its own X (the Web browser page: take a favourite off the list)
-    if (std::any_of(m_items.begin(), m_items.end(), [](const auto& item) { return bool(item.on_x); })) {
-        SetAction(Button::X, Action{"Remove"_i18n, [this](){
-            if (m_index >= 0 && m_index < static_cast<s64>(m_items.size()) && m_items[m_index].on_x) {
-                m_items[m_index].on_x();
+    // selectable rows (the Web browser favourites) are marked like files in the File Browser: X marks one, Y inverts all
+    if (std::any_of(m_items.begin(), m_items.end(), [](const auto& item) { return item.selectable; })) {
+        SetAction(Button::X, Action{"Select"_i18n, [this](){
+            if (m_items[m_index].selectable) {
+                m_items[m_index].marked = !m_items[m_index].marked;
+            }
+        }});
+        SetAction(Button::Y, Action{"Invert"_i18n, [this](){
+            for (auto& item : m_items) {
+                if (item.selectable) {
+                    item.marked = !item.marked;
+                }
             }
         }});
     }
@@ -299,6 +325,10 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
         return;
     }
 
+    if (item.marked) {
+        gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+        gfx::drawRect(vg, v.x, v.y + 6.f, 5.f, v.h - 12.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 2.f);
+    }
     if (selected) {
         gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
         gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 2.f, v.w, v.h - 4.f);
@@ -374,6 +404,25 @@ void SystemToolsMenu::SetIndex(s64 index) {
     }
     SetTitleSubHeading(m_items[m_index].description, true);
     SetSubHeading("");
+}
+
+auto SystemToolsMenu::TargetRows() const -> std::vector<size_t> {
+    std::vector<size_t> rows;
+    for (size_t i = 0; i < m_items.size(); i++) {
+        if (m_items[i].selectable && m_items[i].marked) {
+            rows.push_back(i);
+        }
+    }
+    if (rows.empty() && m_index >= 0 && m_index < static_cast<s64>(m_items.size()) && m_items[m_index].selectable) {
+        rows.push_back(static_cast<size_t>(m_index));
+    }
+    return rows;
+}
+
+void SystemToolsMenu::SetOptions(std::function<void(const std::vector<size_t>&)> cb) {
+    SetAction(Button::START, Action{"Options"_i18n, [this, cb = std::move(cb)](){
+        cb(TargetRows());
+    }});
 }
 
 void SystemToolsMenu::OnSelect() {

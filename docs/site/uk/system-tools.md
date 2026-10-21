@@ -241,7 +241,7 @@
 -->
 
 <!-- draft
-- [[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); **Y** [[Add favourite]], **X** removes the selected favourite, **A** opens it in the console's own browser, the same applet BrowseNX starts; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it)
+- [[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); [[Add to favourites]] sits above the list; on a favourite **A** opens it in the console's own browser (the same applet BrowseNX starts), **X** [[Select]]s it and **Y** [[Invert]]s the marks, as in the File Browser; **START** ([[Options]]) offers [[Open]], [[Add to favourites]] and [[Remove]] for the marked favourites, or for the one under the cursor when none is marked; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it)
 -->
 
 ## Очищення системи { #clean-system-junk }

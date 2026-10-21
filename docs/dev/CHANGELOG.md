@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.183 — Web browser: favourites marked like files
+"Add to favourites" is a row above the list; on a favourite X marks, Y inverts, START opens the context menu (Open, Add, Remove for the marked ones). The Web browser row description no longer runs off the line.
+host tests: pass | nro: built | switch: pending
+
 ## v0.14.182 — Web browser: favourites and an address from a phone
 Tools → Web browser is now a page: "Enter an address" (console keyboard or the QR page, so a phone or a PC can send it) and a list of favourites (Y adds, X removes, A opens), kept in /config/kefir/web_favorites.txt. Pure list logic in web_favorites.hpp.
 host tests: pass (test_web_favorites) | nro: built | switch: page, add from a PC, remove verified on .69 (2026-10-22); opening a site in the browser not yet tried

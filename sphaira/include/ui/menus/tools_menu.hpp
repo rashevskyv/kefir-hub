@@ -71,6 +71,11 @@ struct SystemToolsMenu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+    // rows marked with X / Y (selectable rows only), or the row under the cursor when none is marked and it is selectable
+    auto TargetRows() const -> std::vector<size_t>;
+    // START: the context menu of the page; gets TargetRows()
+    void SetOptions(std::function<void(const std::vector<size_t>&)> cb);
+
 private:
     void SetIndex(s64 index);
     void OnSelect();
