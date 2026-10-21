@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.166 — NRO launched from Hub no longer crashes after a few seconds
+The USB install probe thread (cable plugged in) kept waiting in usb:ds after Hub exited; its wait timed out inside the next NRO (2168-0001, PC outside every module). App exit now cancels the probe waits and joins the thread (usb_probe::Stop) before the hand-off to hbl.
+host tests: pass, nro: built, switch: pending (cable in, launch NX-MCP from Hub and from hbmenu, exit, relaunch; FTP on and off; no new crash report)
+
 ## v0.14.165 — SteamGridDB: any picture of the game, search again with Y
 Edit name and icon → SteamGridDB found the game but said no icons (Atomic Bomberman): only 1024/512 square covers and PNG/JPEG icons were asked for. Now icons, covers of any size, heroes and logos (static PNG/JPEG); a non-square picture is cropped to its centre square, then 256x256. Y (Search) in the game list edits the query; no match opens the keyboard at once. Doc draft: homebrew (EN+UK).
 host tests: not run, nro: not built, switch: pending
