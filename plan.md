@@ -438,7 +438,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       for 5 minutes (psm 100 % stays the counting rule); (c) enlarged battery: learned full capacity clearly above the
       design capacity gives the verdict "a larger battery is built in", the 10 % under-design rule must not misfire, and
       the page names what to check in CAL0 (battery type 02 = Lite, charge limit 4320 mV); (d) editing PRODINFO (battery
-      type, later the region of F.25) goes through one backed-up TegraExplorer-script path, not a write from HOS. The
+      type, later the region of F.25): the layout is known (BatteryVersionEditor V0.1, see the doc): backup, byte 0x4310, CRC16, SHA-256
+      of the body, verify; the Hub writes it itself from HOS (pure header + host test), TegraExplorer only as the fallback. The
       edit (from the video, 2026-10-21): byte 0x4310 00 -> 02, then the CRC16 and the SHA256 of the BatteryVersion block;
       the owner's Python script shows the block layout; (e) a "LiHV / LiPo" row from the CAL0 battery version (2 = LiHV,
       4.32 V) on the Battery page; expected full capacity of an enlarged cell 7500-8000 mAh; the reset must not ask for

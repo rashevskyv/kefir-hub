@@ -71,3 +71,20 @@ Consequences for the Hub (plan F.29):
 - the PRODINFO edit (byte 0x4310, CRC16, SHA256) is a TegraExplorer-script job (HOS cannot write CAL0): build the script from
   the dump (dump, patch, verify, restore) and keep the dump as the rollback. The CRC16/SHA256 layout of the block must be read
   from the owner's Python script before it is implemented.
+
+## The edit itself: BatteryVersionEditor (lulle2007200, GPL-2.0, release V0.1, 2026-10-21)
+
+A homebrew NRO that writes PRODINFO from HOS (`fsOpenBisStorage(CalibrationBinary)` under Atmosphère). What it does, and what the
+Hub would do (written fresh from this layout, not copied):
+1. back up the whole PRODINFO (`sdmc:/backup/prodinfo.bin`, numbered when it exists);
+2. read the 0x10-byte block at **0x4310**; byte 0 = the battery version (0 / 1 / 2); write it back;
+3. the last two bytes of the block (0x431E) = **CRC16 over the first 0xE bytes**: init 0x55AA, nibble table
+   `0000 CC01 D801 1400 F001 3C00 2800 E401 A001 6C00 7800 B401 5000 9C01 8801 4400`, two nibble steps per byte (low nibble first);
+4. the CAL0 body hash: **SHA-256 over [0x40, 0x40 + u32 at 0x08)**, written at **0x20**;
+5. verify: the client certificate hash (SHA-256 of [0xAE0, 0xAE0 + u32 at 0xAD0) against the hash at 0x12E0), the body hash and the CRC.
+   The cert hash is only checked, never rewritten;
+6. restore = copy the 0x10 block from the backup and redo steps 3-4. Reboot after.
+
+So no TegraExplorer script is needed for the battery version: the Hub can do it in HOS (needs the write to the calibration
+partition to be allowed, as the NRO shows it is on the owner's setup). The pure parts (CRC16, hashes, the block patch) go into
+a header with a host test against the layout above. F.25 (region) can reuse the same backup/verify path, with other fields.
