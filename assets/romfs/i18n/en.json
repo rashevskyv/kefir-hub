@@ -3522,5 +3522,8 @@
   "Stay here": "Stay here",
   "Switch language": "Switch language",
   "Switch Kefir Hub to this language too?": "Switch Kefir Hub to this language too?",
-  "The console restarts after this.": "The console restarts after this."
+  "The console restarts after this.": "The console restarts after this.",
+  "No pictures for this game on SteamGridDB": "No pictures for this game on SteamGridDB",
+  "No game by this name on SteamGridDB": "No game by this name on SteamGridDB",
+  "Search SteamGridDB": "Search SteamGridDB"
 }

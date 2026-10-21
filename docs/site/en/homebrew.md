@@ -73,6 +73,12 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
    [[Local File]] (an image on the memory card) or [[SteamGridDB]] (search online).
 4. Choose [[Save Changes]].
 
+<!-- draft
+- [[SteamGridDB]] offers every static PNG/JPEG picture of the game: icons first, then covers of any size, heroes and logos; a non-square picture is cropped to its centre square (not stretched)
+- in the list of found games **Y** ([[Search]]) opens the keyboard with the current text ([[Search SteamGridDB]]) and searches again
+- when no game matches, Kefir Hub says [[No game by this name on SteamGridDB]] and opens the keyboard at once; a game without pictures says [[No pictures for this game on SteamGridDB]]
+-->
+
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 
 ## Add an app to the HOME Menu (forwarder)

@@ -7,6 +7,8 @@
 #include "image.hpp"
 #include "option.hpp"
 #include "web.hpp"
+
+#include <algorithm>
 #include "ui/progress_box.hpp"
 
 namespace sphaira::ui::steamgriddb {
@@ -27,7 +29,24 @@ auto NormalizeIcon(std::span<const u8> icon) -> std::vector<u8> {
     if (icon.empty() || icon.size() > MAX_IMAGE_DOWNLOAD_SIZE) {
         return {};
     }
-    return ImageNormalizeIcon(icon);
+    auto img = ImageLoadFromMemory(icon);
+    if (img.data.empty() || img.w <= 0 || img.h <= 0) {
+        return {};
+    }
+    if (img.w != img.h) {
+        const int side = std::min(img.w, img.h);
+        img = ImageCrop(img.data, img.w, img.h, (img.w - side) / 2, (img.h - side) / 2, side, side);
+        if (img.data.empty()) {
+            return {};
+        }
+    }
+    if (img.w != 256) {
+        img = ImageResize(img.data, img.w, img.h, 256, 256);
+        if (img.data.empty()) {
+            return {};
+        }
+    }
+    return ImageConvertToJpg(img.data, img.w, img.h).data;
 }
 
 auto GetApiKey() -> std::string {

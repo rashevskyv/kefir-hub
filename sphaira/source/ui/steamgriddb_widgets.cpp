@@ -1,6 +1,7 @@
 #include "ui/steamgriddb_widgets.hpp"
 
 #include "app.hpp"
+#include "swkbd.hpp"
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -295,13 +296,20 @@ auto DownloadIconBatch(ProgressBox* pbox, SearchState& state) -> Result {
 auto DownloadGameIcons(ProgressBox* pbox, const std::string& api_key, s64 game_id, SearchState& state) -> Result {
     pbox->NewTransfer("Loading available icons"_i18n);
 
-    const std::string grids_url = "https://www.steamgriddb.com/api/v2/grids/game/" + std::to_string(game_id)
-        + "?dimensions=1024x1024,512x512&types=static&mimes=image/png,image/jpeg";
-    const std::string icons_url = "https://www.steamgriddb.com/api/v2/icons/game/" + std::to_string(game_id)
-        + "?types=static&mimes=image/png,image/jpeg";
+    // icons first (already square), then covers of any size, heroes and logos: each becomes a square crop.
+    // Only static PNG/JPEG: the console decodes neither .ico nor WebP.
+    const auto base = "https://www.steamgriddb.com/api/v2/";
+    const auto id = std::to_string(game_id);
+    const std::string filter = "?types=static&mimes=image/png,image/jpeg";
+    const std::string urls[] = {
+        base + std::string{"icons/game/"} + id + filter,
+        base + std::string{"grids/game/"} + id + filter,
+        base + std::string{"heroes/game/"} + id + filter,
+        base + std::string{"logos/game/"} + id + filter,
+    };
 
     std::unordered_set<std::string> seen;
-    for (const auto& url : {grids_url, icons_url}) {
+    for (const auto& url : urls) {
         const auto result = curl::Api().ToMemory(
             curl::Url{url},
             curl::Bearer{api_key},
@@ -342,11 +350,21 @@ void ShowSearchError(SearchError error) {
             App::Notify("Could not connect to SteamGridDB"_i18n);
             break;
         case SearchError::NotFound:
-            App::Notify("No matching SteamGridDB icons were found"_i18n);
+            App::Notify("No pictures for this game on SteamGridDB"_i18n);
             break;
         case SearchError::None:
             break;
     }
+}
+
+// the keyboard with the current query; true when a new search started
+auto AskSearch(const std::string& api_key, const std::string& title, const IconCallback& callback) -> bool {
+    std::string text;
+    if (R_FAILED(swkbd::ShowText(text, "Search SteamGridDB"_i18n.c_str(), title.c_str(), 1, 128)) || text.empty()) {
+        return false;
+    }
+    StartSearch(api_key, text, callback);
+    return true;
 }
 
 class GameSelect final : public Widget {
@@ -358,6 +376,12 @@ public:
     , m_callback{std::move(callback)} {
         SetActions(
             std::make_pair(Button::A, Action{"Select"_i18n, [this](){ Activate(); }}),
+            std::make_pair(Button::Y, Action{"Search"_i18n, [this](){
+                // another search replaces this list
+                if (AskSearch(m_api_key, m_title, m_callback)) {
+                    SetPop();
+                }
+            }}),
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }})
         );
 
@@ -498,6 +522,12 @@ void StartSearch(const std::string& api_key, const std::string& title, const Ico
         },
         [state, api_key, title, callback](Result rc) {
             if (R_FAILED(rc)) {
+                return;
+            }
+            if (state->error == SearchError::NotFound) {
+                // nothing by this name: let the user type another one at once
+                App::Notify("No game by this name on SteamGridDB"_i18n);
+                AskSearch(api_key, title, callback);
                 return;
             }
             if (state->error != SearchError::None) {

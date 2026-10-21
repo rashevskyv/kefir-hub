@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.165 — SteamGridDB: any picture of the game, search again with Y
+Edit name and icon → SteamGridDB found the game but said no icons (Atomic Bomberman): only 1024/512 square covers and PNG/JPEG icons were asked for. Now icons, covers of any size, heroes and logos (static PNG/JPEG); a non-square picture is cropped to its centre square, then 256x256. Y (Search) in the game list edits the query; no match opens the keyboard at once. Doc draft: homebrew (EN+UK).
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.164 — NRO icons in the file browser list; plan D.4, D.6, D.7
 File browser list view shows a .nro's own icon (grid did already). D.7: Kefir Settings USB 3.0 reads On only when the key is 0x1 (absent = Off, the Atmosphère default). D.4: after a system translation install Kefir Hub asks "Switch Kefir Hub to this language too?" (Keep / Switch language) instead of switching silently, then restarts. D.6: the update check runs again when the network comes up after being offline. Doc drafts (EN+UK): settings, file-browser, kefir-settings, system-tools (also the 0.14.160-163 update window and calibration hop).
 host tests: pass (quick), nro: not built, switch: pending
