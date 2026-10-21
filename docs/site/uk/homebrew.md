@@ -16,7 +16,7 @@
 
 <!-- draft
 - a subfolder of `/switch/` with several `.nro` files shows all of them, also when one of them is named after the folder (before, only `<folder>/<folder>.nro` was listed and the rest were hidden)
-- two or more apps with the same title (builds of one app): each card shows its file name (for example `vktest.nro`) in place of the author, so they can be told apart; the hbmenu-style layout already shows file names
+- each card shows the app's file name (for example `vktest.nro`) on the second line, in place of the author, so builds of one app with the same title can be told apart; the hbmenu-style layout already shows file names
 -->
 
 ## Запуск застосунку

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.167 — Homebrew cards show the NRO file name on the second line
+The file name (e.g. DBI_good.nro) now always replaces the author line on the cards (grid and list); hbmenu layout unchanged.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.166 — Homebrew lists every NRO of a folder; same titles show the file name
 A /switch/<folder>/ with <folder>.nro and other .nro files listed only <folder>.nro (the fast path returned early); now the whole folder is scanned. NROs with the same title (builds of one app) show their file name in the author line. Doc draft: homebrew (EN+UK).
 host tests: pass (quick), nro: not built, switch: pending
