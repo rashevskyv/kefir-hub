@@ -136,3 +136,13 @@ not needed and the wizard skips it (decide from the log, not from a guess).
 
 **Cautions:** high load at the maximum brightness heats the console: Hub logs the temperature and stops the load above the limit
 (value to decide); the cut-off depends on the load and the temperature, so a game that pulls more current stops earlier than the drain.
+
+**Transfer to the other MMC (decided 2026-10-22; replaces the hekate hop in the wizard).** After the report in emuMMC the Hub saves the
+calibrated model and the cycle count to the SD and sets a marker "calibrated in emuMMC, not yet applied to sysMMC". The report
+says: open the Hub in sysMMC. At every Hub start, in either system, the Hub compares the marker with the copy this system holds. If the
+SD copy is newer and the calibration was good (same battery model in CAL0), the Hub applies it **by itself**: backup of the current
+copy first, then the write, then the marker is cleared for this system. It tells the user with a notification (a toast) at the
+start: "Battery calibration was transferred from emuMMC." A failure gives an error toast and keeps the marker. It never overwrites a
+newer calibration (the marker carries a sequence number and the time). The same works the other way (sysMMC to emuMMC). The old
+hop (0.14.163) stays as a manual action only.
+
