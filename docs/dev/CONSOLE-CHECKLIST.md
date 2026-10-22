@@ -29,3 +29,6 @@ Tick a line when it works on the console. Versions are the ones that introduced 
 ## Before the next GitHub release (after 0.14.159)
 - [ ] Translate the new i18n keys into all languages (`tools/i18n-translate/translate.py` via the proxy).
 - [ ] `tests/test_i18n_deployment_contract.py` passes; release notes in `build/release_notes_*.md`.
+
+## MTP
+- [x] Copy many files from the PC: the box shows the file bar and the batch line (0.14.189, checked 2026-10-22).
