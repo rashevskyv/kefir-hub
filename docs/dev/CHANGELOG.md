@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.189 — MTP copy: the batch line also in the detached box
+The MTP box is drawn detached (no room above its bar), where 0.14.188 skipped the second line. Seen on .69: 250 files, the box had only the file bar. The batch bar now sits below the file bar there.
+host tests: not run (drawing) | nro: built | switch: pending
+
 ## v0.14.188 — MTP copy shows a whole-batch line
 The "Copying via MTP" box keeps the bar of the current file and adds a second one for the batch: the PC sends no total, so a moving segment and "Copied so far: N files, X MiB" (state: `files_done`/`bytes_done` in mtp_transfer_state.hpp, host-tested; `ProgressBox::SetOverallOpen`).
 host tests: pass (test_mtp_transfer_state) | nro: built | switch: pending (copy a folder from the PC)
