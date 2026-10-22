@@ -116,8 +116,12 @@ is done. The state is on the SD, so a restart or a cut-off does not lose the pla
    (the log keeps the brightness). Hub logs every second to the SD: voltage, current, gauge percent, temperature, load, brightness.
    The wizard tells the user: when the console switches off, switch it on again and open the wizard; do it as many times as the
    console starts, until it does not start at all. Each start continues the same step.
-2. **Charge about 3 minutes, switch on.** Hub sees the marker and sets this point as 0 % (action also in the Battery page menu
-   "More"), with the factory model (the guide resets at ~3.3 V). Open: the register for the zero (RemCap / RepSOC).
+2. **Charge about 3 minutes, switch on; the Hub sets the zero by itself** (a step of the wizard, no menu). The gauge stays powered by the
+   battery while the console is off, so it keeps counting the charge of these minutes (to confirm on a console). The last line
+   of the log before the cut-off holds X, what the gauge believed was left (the real value was 0, so X is its error). At the start
+   the Hub reads the counter N and writes N - X: the charge of the 3 minutes stays, the error goes. If the gauge was reset (the
+   counter is obviously fresh) or the log is missing, the Hub writes 0 and says so in the report; the next cut-off fixes it.
+   The factory model is written at the same time (the guide resets at ~3.3 V). Open: which register holds it (RemCap / RepSOC).
 3. **Cycle 1:** charge to 100 % ("full" by psm 100 %, later by the current ~0 for 5 minutes, screen on while charging), drain as in step 1.
 4. **Cycle 2:** the same.
 5. **Report:** the learned capacity (verdict, enlarged battery) and the gauge percent just before each cut-off (near 0 % = the gauge
