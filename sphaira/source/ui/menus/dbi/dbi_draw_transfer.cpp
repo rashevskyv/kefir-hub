@@ -144,18 +144,39 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
             theme->GetColour(ThemeEntryID_TEXT), "%s", title.c_str());
         nvgRestore(vg);
     }
-    // two bars: the current transfer on top, the whole queue underneath.
-    if (m_progress_size > 0) {
-        const Vec4 bar{70.f, GetY() + 65.f, 1140.f, 10.f};
-        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
-        gfx::drawRect(vg, bar.x, bar.y, bar.w * std::clamp<double>((double)m_progress_offset / m_progress_size, 0.0, 1.0), bar.h,
-            theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
-    }
-    if (!has_deferred_plan && m_plan_total_bytes > 0) {
-        const Vec4 bar{70.f, GetY() + 78.f, 1140.f, 10.f};
-        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
-        gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(overall_ratio), bar.h,
-            theme->GetColour(ThemeEntryID_HIGHLIGHT_1), 3.f);
+    // two bars of the same size, a percentage beside each: the current transfer on top, the whole queue underneath.
+    {
+        constexpr float BAR_W = 1090.f; // the rest of the 1140 px row is for the percentage
+        const auto pct_col = theme->GetColour(ThemeEntryID_TEXT);
+        const auto draw_bar = [&](float y, double ratio, bool known) {
+            const Vec4 bar{70.f, y, BAR_W, 10.f};
+            gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
+            if (known && ratio > 0.0) {
+                gfx::drawRect(vg, bar.x, bar.y, bar.w * static_cast<float>(ratio), bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3.f);
+            }
+            if (known) {
+                gfx::drawTextArgs(vg, bar.x + bar.w + 12.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, pct_col, "%.0f%%", ratio * 100.0);
+            } else {
+                gfx::drawTextArgs(vg, bar.x + bar.w + 12.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, pct_col, "--");
+            }
+        };
+        const bool current_known = m_progress_size > 0;
+        const double current_ratio = current_known
+            ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0;
+        // the whole queue: by bytes when the plan is known, else by packages (the finished ones plus the part of this one);
+        // a stream (MTP/FTP) does not say how many packages come, so its overall is unknown
+        bool overall_known = false;
+        double whole_ratio = 0.0;
+        if (!has_deferred_plan && m_plan_total_bytes > 0) {
+            overall_known = true;
+            whole_ratio = overall_ratio;
+        } else if (known_batch && !m_queue.empty()) {
+            overall_known = true;
+            const auto finished = static_cast<double>(std::min(m_current_package, m_queue.size()));
+            whole_ratio = std::clamp<double>((finished + current_ratio) / static_cast<double>(m_queue.size()), 0.0, 1.0);
+        }
+        draw_bar(GetY() + 65.f, current_ratio, current_known);
+        draw_bar(GetY() + 80.f, whole_ratio, overall_known);
     }
 
     // R/W speed graph: red = source read, blue = storage write.

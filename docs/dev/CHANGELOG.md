@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.192 — Install window: two bars of one size, a percentage beside each
+The install view (the one with the R/W graph) always draws the current-transfer bar and the whole-queue bar under it, same size, each with its percentage. The whole queue goes by bytes when the plan is known, else by packages (finished + part of the current one); a stream (MTP/FTP) has no known total, so its second bar is empty with "--". Before, the second bar was thin, in another colour and only drawn with a known byte plan.
+host tests: not run (drawing) | nro: built | switch: pending (install something)
+
 ## v0.14.191 — Long notifications wrap
 A toast wider than 760 px (the "low memory ... use Title Mode" one ran off both screen edges) is broken into up to 8 lines inside a box 760 px wide.
 host tests: not run (drawing) | nro: built | switch: pending (show a long toast)
