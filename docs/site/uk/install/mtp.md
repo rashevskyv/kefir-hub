@@ -84,4 +84,4 @@ MTP і USB-накопичувачі використовують той сами
 
 **Копіювання відхилено з повідомленням «Please launch MTP install menu before trying to install».** Таке буває лише на мить одразу після запуску MTP. Зачекайте кілька секунд або вимкніть і знову ввімкніть MTP, а тоді скопіюйте ще раз.
 
-<!-- draft: copying many files over MTP shows [[Copying via MTP]] with a bar for the current file and, below it, a second bar for the whole batch: a moving segment (the PC does not tell how many files or bytes come) and the line [[Copied so far:]] with the number of finished [[files]] and their size; the count starts again when the copy ends -->
+<!-- draft: copying many files over MTP shows [[Copying via MTP]] with one bar for the current file and, under it, the line [[Copied so far:]] with the number of finished [[files]], their size and the average speed of the whole copy; the count starts again when the copy ends (the PC does not tell the total, so there is no bar for the whole batch) -->

@@ -59,9 +59,15 @@ struct ProgressBox final : Widget, InstallProgress {
     auto SetShowGraph(bool show) -> ProgressBox&;
     // a second bar for a job over many items: `done` of `total` items, shown above the item's own bar.
     void SetOverall(s64 done, s64 total) { m_overall_done = done; m_overall_total = total; }
-    // a job over files of unknown number and size (the PC pushing files over MTP): a second line with a running count and a
-    // moving bar, no percentage
-    void SetOverallOpen(s64 files, s64 bytes) { m_overall_files = files; m_overall_bytes = bytes; m_overall_open = true; }
+    // a job over files of unknown number and size (the PC pushing files over MTP): a line with the running count and the average
+    // speed under the bar of the current file
+    void SetOverallOpen(s64 files, s64 bytes) {
+        m_overall_files = files;
+        m_overall_bytes = bytes;
+        if (!m_overall_open.exchange(true)) {
+            m_overall_start_tick = armGetSystemTick();
+        }
+    }
     auto NewTransferForce(const std::string& transfer) -> ProgressBox&;
     auto UpdateTransferForce(s64 offset, s64 size) -> ProgressBox&;
 
@@ -174,6 +180,7 @@ private:
     std::atomic<s64> m_overall_done{0};
     std::atomic<s64> m_overall_total{0};
     std::atomic<bool> m_overall_open{false};
+    std::atomic<u64> m_overall_start_tick{0};
     std::atomic<s64> m_overall_files{0};
     std::atomic<s64> m_overall_bytes{0};
     // whole-transfer average, refreshed with the samples once a second so the figures do not flicker.

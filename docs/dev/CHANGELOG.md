@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.190 — MTP copy: no second bar, a line with the count and the average speed
+The user did not want the moving second bar (0.14.188-189). The MTP box keeps one bar for the current file and a line under it: "Copied so far: N files, X MiB · Y MiB/s" (average of the whole copy).
+host tests: not run (drawing) | nro: built | switch: pending
+
 ## v0.14.189 — MTP copy: the batch line also in the detached box
 The MTP box is drawn detached (no room above its bar), where 0.14.188 skipped the second line. Seen on .69: 250 files, the box had only the file bar. The batch bar now sits below the file bar there.
 host tests: not run (drawing) | nro: built | switch: verified on .69 (2026-10-22): 250 files of 4 MiB from the PC, "Copied so far: 200 files, 800.0 MiB" with a moving segment under the file bar
