@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.190 — MTP copy: no second bar, a line with the count and the average speed
 The user did not want the moving second bar (0.14.188-189). The MTP box keeps one bar for the current file and a line under it: "Copied so far: N files, X MiB · Y MiB/s" (average of the whole copy).
-host tests: not run (drawing) | nro: built | switch: pending
+host tests: not run (drawing) | nro: built | switch: verified on .69 (2026-10-22): "Copied so far: 52 files, 208.0 MiB · 19.8 MiB/s" under one bar
 
 ## v0.14.189 — MTP copy: the batch line also in the detached box
 The MTP box is drawn detached (no room above its bar), where 0.14.188 skipped the second line. Seen on .69: 250 files, the box had only the file bar. The batch bar now sits below the file bar there.
