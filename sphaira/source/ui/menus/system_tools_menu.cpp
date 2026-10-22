@@ -181,6 +181,11 @@ void AddFavourite(const std::function<void()>& reopen) {
 }
 
 void OpenBrowser() {
+    // the system web applet of firmware 20.0.0 to 22.5.0 asks for a system update and opens no page: say so instead
+    if (!web::BrowserWorks(HOSVER_MAJOR(hosversionGet()), HOSVER_MINOR(hosversionGet()), HOSVER_MICRO(hosversionGet()))) {
+        App::Push<ui::OptionBox>("The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first."_i18n, "OK"_i18n);
+        return;
+    }
     static option::OptionString last_url{"web_browser", "last_url", "https://"};
     // the page is rebuilt after every change: the old one leaves and a new one is pushed
     auto self = std::make_shared<SystemToolsMenu*>(nullptr);
@@ -273,10 +278,6 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
     };
-    // the system web applet of firmware 20.0.0 to 22.5.0 asks for a system update and does not open a page
-    if (!web::BrowserWorks(HOSVER_MAJOR(hosversionGet()), HOSVER_MINOR(hosversionGet()), HOSVER_MICRO(hosversionGet()))) {
-        std::erase_if(items, [](const auto& item) { return item.label == "Web browser"_i18n; });
-    }
     return items;
 }
 

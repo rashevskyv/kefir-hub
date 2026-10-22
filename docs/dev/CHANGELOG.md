@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.186 — Web browser stays in the list; old firmware gets a message
+On firmware 20.0.0 to 22.5.0 the row opens a message (23.0.1 or newer is needed) instead of the system applet. 0.14.185 hid the row; verified there on .69 (22.5.0).
+host tests: pass | nro: not built | switch: pending (firmware update of .69 to 23.0.1 in progress)
+
 ## v0.14.185 — Web browser is hidden on firmware 20.0.0 to 22.5.0
 The system web applet asks for a system update there (seen on .69, 22.5.0) and opens no page, so the Tools list does not show it. `web::BrowserWorks` in web_favorites.hpp, host-tested.
 host tests: pass | nro: built | switch: pending (.69 22.5.0: the row must be gone; after the 23.0.1 update it must be back)
