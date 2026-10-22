@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.193 — Battery cut-off calibration: the pure rules (F.29 f, step 1)
+`battery_cutoff.hpp` + `test_battery_cutoff`: the zero after a cut-off (counter now minus the last logged value, plain 0 on a reset gauge / lost log / negative result), the load plan (max, then minimal from 3400 mV, latched; skipped when the first run shows a sag under 50 mV), the system id (sysMMC / partition emuMMC by sector / file-based by folder) and the ledger of where a calibration was made and written (decisions: apply, up to date, not good, other battery model). No UI yet.
+host tests: pass | nro: not built | switch: not applicable (no UI, no console write)
+
 ## v0.14.192 — Install window: two bars of one size, a percentage beside each
 The install view (the one with the R/W graph) always draws the current-transfer bar and the whole-queue bar under it, same size, each with its percentage. The whole queue goes by bytes when the plan is known, else by packages (finished + part of the current one); a stream (MTP/FTP) has no known total, so its second bar is empty with "--". Before, the second bar was thin, in another colour and only drawn with a known byte plan.
 host tests: not run (drawing) | nro: built | switch: pending (install something)
