@@ -100,3 +100,22 @@ Atmosphère blocks writes to the calibration partition. Two switches open it, bo
 Flow for "Change battery type": check both switches; if off, say so, turn them on, store a pending marker, reboot; at the next
 start the Hub backs up PRODINFO to the SD (verified by reading it back), writes byte 0x4310, CRC16, body SHA-256, verifies, turns
 both switches off again and offers the reboot. The backup stays for the rollback.
+
+## Cutoff pipeline (decided with the owner, 2026-10-22)
+
+Why: the percent of the gauge is not a safe guide. The owner saw the console cut off with the big battery icon at 35 %, and also
+show 0 % for an hour. What counts is the real cut-off (the console switches itself off, about 3.2 V under load).
+
+1. **Drain** from whatever the level is to the cut-off. No charge to 100 % first. The drain page keeps its load, writes a marker
+   "drain running" and, every second, the voltage, current and gauge percent to the SD (the last lines before the cut-off tell
+   how wrong the percent was).
+2. **Charge about 3 minutes**, switch on (the battery icon on black goes away, Atmosphère starts).
+3. **Set the zero.** The Hub finds the marker and offers the action in the Battery page menu "More": this point is 0 %. The action
+   also writes the factory model (the guide resets at ~3.3 V; this replaces "reset at 100 %"). Open: which register holds the
+   zero (RemCap / RepSOC); the 3 minutes of charge before the start leave an error of 1-2 % that the next cut-off removes.
+4. **Two cycles**: charge to 100 % ("full" by psm 100 %, later by the current ~0 for 5 minutes), drain to the cut-off.
+5. **Report**: learned capacity (verdict, enlarged battery), and the gauge percent just before each cut-off. Near 0 % = the gauge
+   agrees with the console.
+
+Note: the cut-off depends on the load and the temperature. A game that pulls more current stops earlier than the drain page.
+
