@@ -83,3 +83,5 @@ MTP і USB-накопичувачі використовують той сами
 **Файли NSZ не встановлюються.** У режимі аплету пам'яті мало; коли ПК під'єднується, консоль про це попереджає. Запустіть Kefir Hub у режимі тайтлу (див. [Підтримувані файли](index.md#formats)).
 
 **Копіювання відхилено з повідомленням «Please launch MTP install menu before trying to install».** Таке буває лише на мить одразу після запуску MTP. Зачекайте кілька секунд або вимкніть і знову ввімкніть MTP, а тоді скопіюйте ще раз.
+
+<!-- draft: copying many files over MTP shows [[Copying via MTP]] with a bar for the current file and, below it, a second bar for the whole batch: a moving segment (the PC does not tell how many files or bytes come) and the line [[Copied so far:]] with the number of finished [[files]] and their size; the count starts again when the copy ends -->

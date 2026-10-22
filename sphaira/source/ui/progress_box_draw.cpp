@@ -300,7 +300,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     // a job over many items (a bulk restore) has a second bar for the whole job: room for it.
     const s64 overall_total = m_overall_total.load();
     const s64 overall_done = std::clamp<s64>(m_overall_done.load(), 0, std::max<s64>(overall_total, 0));
-    const bool show_overall = overall_total > 0 && !m_detached && !m_show_graph;
+    const bool overall_open = m_overall_open.load();
+    const bool show_overall = (overall_total > 0 || overall_open) && !m_detached && !m_show_graph;
     if (m_detached || show_overall) {
         m_pos.h = 360.f;
         m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
@@ -337,13 +338,34 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     if (show_overall) {
         // the whole job: "Done: 3 / 40" and its own bar, below the bar of the current item, as thin as it.
         const Vec4 bar = {prog_bar.x, prog_bar.y + (prog_bar.h - PAIR_BAR_H) / 2.f, prog_bar.w, PAIR_BAR_H};
-        const auto fraction = static_cast<float>(overall_done) / static_cast<float>(overall_total);
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 5);
-        gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5);
-        gfx::drawTextArgs(vg, bar.x, bar.y - 6.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "%s %lld / %lld", "Done:"_i18n.c_str(), static_cast<long long>(overall_done), static_cast<long long>(overall_total));
-        gfx::drawTextArgs(vg, bar.x + bar.w + 15.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT),
-            "%d%%", static_cast<int>(fraction * 100.f));
+        if (overall_total > 0) {
+            const auto fraction = static_cast<float>(overall_done) / static_cast<float>(overall_total);
+            gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5);
+            gfx::drawTextArgs(vg, bar.x, bar.y - 6.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s %lld / %lld", "Done:"_i18n.c_str(), static_cast<long long>(overall_done), static_cast<long long>(overall_total));
+            gfx::drawTextArgs(vg, bar.x + bar.w + 15.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT),
+                "%d%%", static_cast<int>(fraction * 100.f));
+        } else {
+            // the total is not known: a segment runs along the bar, the line above counts what is copied
+            const double t = std::fmod(static_cast<double>(armTicksToNs(armGetSystemTick())) / 1e9, 1.6) / 1.6;
+            const float seg = bar.w * 0.25f;
+            const float x0 = bar.x + (bar.w + seg) * static_cast<float>(t) - seg;
+            const float xa = std::max(x0, bar.x);
+            const float xb = std::min(x0 + seg, bar.x + bar.w);
+            if (xb > xa) {
+                gfx::drawRect(vg, xa, bar.y, xb - xa, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5);
+            }
+            const double mib = static_cast<double>(m_overall_bytes.load()) / (1024.0 * 1024.0);
+            char size[32];
+            if (mib >= 1024.0) {
+                std::snprintf(size, sizeof(size), "%.2f GiB", mib / 1024.0);
+            } else {
+                std::snprintf(size, sizeof(size), "%.1f MiB", mib);
+            }
+            gfx::drawTextArgs(vg, bar.x, bar.y - 6.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
+                "%s %lld %s, %s", "Copied so far:"_i18n.c_str(), static_cast<long long>(m_overall_files.load()), "files"_i18n.c_str(), size);
+        }
     }
 
     // shapes.

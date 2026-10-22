@@ -208,7 +208,28 @@ static int test_transferred_bytes() {
     return 0;
 }
 
+// The running count of the "Copied so far" line: finished files and their bytes, reset when the box closes for good.
+static int test_running_count() {
+    MtpTransferState s;
+    OnInit(s);
+    OnFileStart(s);
+    OnFileDone(s, false, 1000);
+    OnFileStart(s);
+    OnFileDone(s, false, 500);
+    CHECK(s.files_done == 2 && s.bytes_done == 1500);
+    OnFileStart(s);
+    OnFileDone(s, true, 999); // a cancelled file is not counted
+    CHECK(s.files_done == 2 && s.bytes_done == 1500);
+    OnFileDone(s, false, -5); // a bad size adds no bytes
+    CHECK(s.files_done == 3 && s.bytes_done == 1500);
+    MarkHandled(s, s.seq);
+    CHECK(!OnUiClosed(s, true)); // nothing pending: the batch is over
+    CHECK(s.files_done == 0 && s.bytes_done == 0);
+    return 0;
+}
+
 int main() {
+    if (test_running_count()) return 1;
     if (test_normal_transfer()) return 1;
     if (test_second_file_reuses_the_box()) return 1;
     if (test_switch_side_cancel()) return 1;

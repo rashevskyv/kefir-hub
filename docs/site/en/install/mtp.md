@@ -83,3 +83,5 @@ The other drives on this page (saves, games) are described in [Sharing](../shari
 **NSZ files fail.** In Applet Mode memory is limited; when the PC connects, the console warns about it. Start Kefir Hub in Title Mode (see [Supported files](index.md#formats)).
 
 **The copy is refused with "Please launch MTP install menu before trying to install".** This can only appear for a moment right after MTP starts. Wait a few seconds, or turn MTP off and on, then copy again.
+
+<!-- draft: copying many files over MTP shows [[Copying via MTP]] with a bar for the current file and, below it, a second bar for the whole batch: a moving segment (the PC does not tell how many files or bytes come) and the line [[Copied so far:]] with the number of finished [[files]] and their size; the count starts again when the copy ends -->

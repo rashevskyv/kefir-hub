@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.188 — MTP copy shows a whole-batch line
+The "Copying via MTP" box keeps the bar of the current file and adds a second one for the batch: the PC sends no total, so a moving segment and "Copied so far: N files, X MiB" (state: `files_done`/`bytes_done` in mtp_transfer_state.hpp, host-tested; `ProgressBox::SetOverallOpen`).
+host tests: pass (test_mtp_transfer_state) | nro: built | switch: pending (copy a folder from the PC)
+
 ## v0.14.187 — Web browser: icons in the favourites options
 Add (star), Open (launch) and Remove (delete) in the START menu of the Web browser page have action icons, like other option menus.
 host tests: not run (UI only) | nro: built | switch: pending

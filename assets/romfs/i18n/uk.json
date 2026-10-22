@@ -3603,5 +3603,6 @@
   "Add to favourites": "Додати в обране",
   "Type a web address, or send it from a phone or a computer, and keep it here.": "Ввести адресу сторінки або надіслати її з телефона чи комп'ютера й зберегти тут.",
   "Open a web page in the console's own browser. Needs the full memory.": "Відкрити сторінку у власному браузері консолі. Потрібна вся пам'ять.",
-  "The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.": "Для браузера потрібна прошивка 23.0.1 або новіша. Спершу оновіть прошивку в Оновлювачі."
+  "The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.": "Для браузера потрібна прошивка 23.0.1 або новіша. Спершу оновіть прошивку в Оновлювачі.",
+  "Copied so far:": "Скопійовано:"
 }

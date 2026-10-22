@@ -15,6 +15,8 @@ struct MtpTransferState {
     bool ui_alive{};             // a progress box is open or queued to open
     std::uint64_t seq{};         // files announced by libhaze
     std::uint64_t handled_seq{}; // files the box has shown, or the user dismissed
+    std::uint64_t files_done{};  // files finished since the box opened (the PC sends no total: only a running count)
+    std::int64_t bytes_done{};   // their bytes
 };
 
 // A file is in flight, or one was announced that no box has covered yet.
@@ -46,10 +48,13 @@ constexpr bool OnFileStart(MtpTransferState& s) {
 }
 
 // libhaze finished a file; aborted = it was cancelled (either side) or the transport failed.
-constexpr void OnFileDone(MtpTransferState& s, bool aborted) {
+constexpr void OnFileDone(MtpTransferState& s, bool aborted, std::int64_t bytes = 0) {
     s.active = false;
     if (aborted) {
         s.aborted = true;
+    } else {
+        s.files_done++;
+        s.bytes_done += bytes > 0 ? bytes : 0;
     }
 }
 
@@ -89,6 +94,10 @@ constexpr bool OnUiLaunch(MtpTransferState& s, bool exiting) {
 // Returns true when a new box must be opened for a file that arrived meanwhile.
 constexpr bool OnUiClosed(MtpTransferState& s, bool can_relaunch) {
     s.ui_alive = can_relaunch && HasPendingWork(s);
+    if (!s.ui_alive) {
+        s.files_done = 0; // the batch is over: the next one counts from zero
+        s.bytes_done = 0;
+    }
     return s.ui_alive;
 }
 
@@ -97,6 +106,8 @@ constexpr void OnSessionEnd(MtpTransferState& s) {
     s.active = false;
     s.aborted = false;
     s.handled_seq = s.seq;
+    s.files_done = 0;
+    s.bytes_done = 0;
 }
 
 // MTP is starting. `aborted` is cleared separately at the top of Init().
@@ -105,6 +116,8 @@ constexpr void OnInit(MtpTransferState& s) {
     s.active = false;
     s.seq = 0;
     s.handled_seq = 0;
+    s.files_done = 0;
+    s.bytes_done = 0;
 }
 
 // Bytes done after a progress callback: libhaze reports (offset before the chunk, chunk size).

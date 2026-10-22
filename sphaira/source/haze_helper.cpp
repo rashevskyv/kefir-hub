@@ -51,6 +51,9 @@ bool HasActiveTransfer() {
 
 namespace {
 
+// bytes of the file in flight (the last progress report); guarded by g_mtp_ui_mutex
+s64 g_mtp_file_bytes = 0;
+
 void StartMtpProgressBox() {
     evman::push(evman::FunctionalEventData {
         []() {
@@ -91,6 +94,7 @@ void StartMtpProgressBox() {
                 {
                     SCOPED_MUTEX(&g_mtp_ui_mutex);
                     g_mtp_pbox = pbox;
+                    pbox->SetOverallOpen(static_cast<s64>(g_mtp_state.files_done), g_mtp_state.bytes_done);
                     current_filename = g_mtp_current_filename;
                     last_seq = g_mtp_state.seq;
                     is_active = g_mtp_state.active;
@@ -294,6 +298,7 @@ void haze_callback(const ::haze::CallbackData *data) {
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
                 g_mtp_current_filename = e.file.filename;
+                g_mtp_file_bytes = 0;
                 trigger_ui = OnFileStart(g_mtp_state);
             }
             ueventSignal(&g_mtp_done_event);
@@ -307,10 +312,12 @@ void haze_callback(const ::haze::CallbackData *data) {
         case ::haze::CallbackType_ReadProgress:
         case ::haze::CallbackType_WriteProgress: {
             SCOPED_MUTEX(&g_mtp_ui_mutex);
+            g_mtp_file_bytes = TransferredBytes(e.progress.offset, e.progress.size);
             if (g_mtp_pbox) {
-                const s64 transferred = TransferredBytes(e.progress.offset, e.progress.size);
+                const s64 transferred = g_mtp_file_bytes;
                 const s64 total = e.progress.total > 0 ? e.progress.total : 0;
                 g_mtp_pbox->UpdateTransferForce(transferred, total);
+                g_mtp_pbox->SetOverallOpen(static_cast<s64>(g_mtp_state.files_done), g_mtp_state.bytes_done + transferred);
             }
             break;
         }
@@ -320,7 +327,10 @@ void haze_callback(const ::haze::CallbackData *data) {
             log_write("[LIBHAZE] Transfer Finished: %s\n", e.file.filename);
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
-                OnFileDone(g_mtp_state, e.file.aborted);
+                OnFileDone(g_mtp_state, e.file.aborted, g_mtp_file_bytes);
+                if (g_mtp_pbox) {
+                    g_mtp_pbox->SetOverallOpen(static_cast<s64>(g_mtp_state.files_done), g_mtp_state.bytes_done);
+                }
             }
             ueventSignal(&g_mtp_done_event);
             break;
