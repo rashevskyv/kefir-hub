@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.186 — Web browser stays in the list; old firmware gets a message
 On firmware 20.0.0 to 22.5.0 the row opens a message (23.0.1 or newer is needed) instead of the system applet. 0.14.185 hid the row; verified there on .69 (22.5.0).
-host tests: pass | nro: not built | switch: pending (firmware update of .69 to 23.0.1 in progress)
+host tests: pass | nro: built | switch: verified on .69 after the update 22.5.0 -> 23.0.1 (2026-10-22): the page, the X mark bar under the cursor, a favourite opens example.com in the system browser, X closes it and the Hub returns. The message on 20.0.0-22.5.0 is not seen (needs an older firmware).
 
 ## v0.14.185 — Web browser is hidden on firmware 20.0.0 to 22.5.0
 The system web applet asks for a system update there (seen on .69, 22.5.0) and opens no page, so the Tools list does not show it. `web::BrowserWorks` in web_favorites.hpp, host-tested.

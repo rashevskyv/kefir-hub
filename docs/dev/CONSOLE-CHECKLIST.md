@@ -5,7 +5,8 @@ Tick a line when it works on the console. Versions are the ones that introduced 
 ## Tools
 - [ ] **Web browser** (0.14.181, favourites in 0.14.182): Tools → Web browser opens a page with "Enter an address" and "Favourites".
   - [x] Page, Y add from the QR page (sent from a PC), X remove with the question: checked on .69, 2026-10-22.
-  - [ ] A on "Enter an address" or on a favourite really opens the site in the browser (not tried yet).
+  - [x] A on a favourite opens the site in the system browser on firmware 23.0.1 (2026-10-22); X closes it, Hub returns. On 22.5.0 the applet asks for a system update.
+  - [ ] On firmware 20.0.0-22.5.0 the row shows "needs 23.0.1 or newer" (needs an old firmware).
   - [ ] The same address twice shows "Already in the favourites".
   - [ ] Start Hub from a normal Homebrew launch (applet mode): the error box about full memory appears, no crash.
 - [ ] **Storage manager** (0.14.177–0.14.180): ring chart, emuMMC as one container, Y "What is an emuMMC?", slice "Emulators and their games". Not yet done: system memory ring, delete/open actions.
