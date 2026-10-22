@@ -146,3 +146,13 @@ start: "Battery calibration was transferred from emuMMC." A failure gives an err
 newer calibration (the marker carries a sequence number and the time). The same works the other way (sysMMC to emuMMC). The old
 hop (0.14.163) stays as a manual action only.
 
+**Several emuMMCs (owner, 2026-10-22).** A user can have more than one emuMMC, so "the other MMC" is not enough. Every system the
+Hub can run in has an id: `sys` for sysMMC; for an emuMMC the kind plus its place from `emummc.ini` (the start sector of a
+partition, or the folder of a file-based one), shown with a name the user knows (the folder, or "emuMMC, sector 0x...").
+The Hub keeps a ledger on the SD (`/config/kefir/battery/ledger.json`): the calibration (sequence number, time, the id of the system
+it was made in) and, for every system, the sequence number last written there. At a Hub start the current id is looked up: if
+this is not the origin and its number is older than the newest calibration, the Hub writes the value **openly**: a toast ("Battery
+calibration of emuMMC `X` was written to `Y`"), a line in the Battery page history, and a record in the ledger ("written to emuMMC
+`Y` at time T, sequence N"). A system that never ran the Hub gets it at its first start. The ledger is the single place that
+answers "where was this written".
+
