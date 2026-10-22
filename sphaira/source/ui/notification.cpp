@@ -2,12 +2,16 @@
 #include "ui/nvg_util.hpp"
 #include "defines.hpp"
 #include "app.hpp"
+#include <algorithm>
 #include <optional>
 
 namespace sphaira::ui {
 namespace {
 
 constexpr u64 MAX_ENTRIES = 9;
+// a long text wraps to lines instead of running off the screen
+constexpr float MAX_WIDTH = 760.f;
+constexpr float LINE_HEIGHT = 24.f;
 
 } // namespace
 
@@ -37,6 +41,17 @@ auto NotifEntry::Draw(NVGcontext* vg, Theme* theme) -> void {
         nvgTextBounds(vg, 0, 0, this->m_text.c_str(), nullptr, bounds);
         // m_pos.w = std::max(bounds[2] - bounds[0] + 30.f, m_pos.w);
         m_pos.w = bounds[2] - bounds[0] + 30.f;
+        if (m_pos.w > MAX_WIDTH) {
+            m_pos.w = MAX_WIDTH;
+            NVGtextRow rows[8];
+            const auto n = nvgTextBreakLines(vg, m_text.c_str(), nullptr, MAX_WIDTH - 30.f, rows, 8);
+            for (int i = 0; i < n; i++) {
+                m_lines.emplace_back(rows[i].start, rows[i].end);
+            }
+            if (n > 1) {
+                m_pos.h = std::max(60.f, static_cast<float>(n) * LINE_HEIGHT + 24.f);
+            }
+        }
 
         switch (m_side) {
             case Side::LEFT:
@@ -49,6 +64,13 @@ auto NotifEntry::Draw(NVGcontext* vg, Theme* theme) -> void {
     }
 
     gfx::drawRectOutline(vg, theme, 4.f, m_pos);
+    if (m_lines.size() > 1) {
+        const float top = m_pos.y + (m_pos.h - static_cast<float>(m_lines.size()) * LINE_HEIGHT) / 2.f + LINE_HEIGHT / 2.f;
+        for (std::size_t i = 0; i < m_lines.size(); i++) {
+            gfx::drawText(vg, Vec2{m_pos.x + (m_pos.w / 2.f), top + static_cast<float>(i) * LINE_HEIGHT}, font_size, text_col, m_lines[i].c_str(), NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
+        }
+        return;
+    }
     gfx::drawText(vg, Vec2{m_pos.x + (m_pos.w / 2.f), m_pos.y + (m_pos.h / 2.f)}, font_size, text_col, m_text.c_str(), NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
 }
 

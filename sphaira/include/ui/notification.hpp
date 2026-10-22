@@ -3,6 +3,8 @@
 #include "object.hpp"
 
 #include <deque>
+#include <string>
+#include <vector>
 
 namespace sphaira::ui {
 
@@ -23,6 +25,7 @@ private:
 
 private:
     std::string m_text{};
+    std::vector<std::string> m_lines{}; // the text broken to fit MAX_WIDTH
     std::size_t m_count{180}; // count down to zero
     Side m_side{};
     bool m_bounds_measured{};

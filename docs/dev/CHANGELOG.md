@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.191 — Long notifications wrap
+A toast wider than 760 px (the "low memory ... use Title Mode" one ran off both screen edges) is broken into up to 8 lines inside a box 760 px wide.
+host tests: not run (drawing) | nro: built | switch: pending (show a long toast)
+
 ## v0.14.190 — MTP copy: no second bar, a line with the count and the average speed
 The user did not want the moving second bar (0.14.188-189). The MTP box keeps one bar for the current file and a line under it: "Copied so far: N files, X MiB · Y MiB/s" (average of the whole copy).
 host tests: not run (drawing) | nro: built | switch: verified on .69 (2026-10-22): "Copied so far: 52 files, 208.0 MiB · 19.8 MiB/s" under one bar
