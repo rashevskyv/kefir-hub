@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.187 — Web browser: icons in the favourites options
+Add (star), Open (launch) and Remove (delete) in the START menu of the Web browser page have action icons, like other option menus.
+host tests: not run (UI only) | nro: built | switch: pending
+
 ## v0.14.186 — Web browser stays in the list; old firmware gets a message
 On firmware 20.0.0 to 22.5.0 the row opens a message (23.0.1 or newer is needed) instead of the system applet. 0.14.185 hid the row; verified there on .69 (22.5.0).
 host tests: pass | nro: built | switch: verified on .69 after the update 22.5.0 -> 23.0.1 (2026-10-22): the page, the X mark bar under the cursor, a favourite opens example.com in the system browser, X closes it and the Hub returns. The message on 20.0.0-22.5.0 is not seen (needs an older firmware).

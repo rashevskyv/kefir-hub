@@ -222,13 +222,13 @@ void OpenBrowser() {
     menu->SetOptions([reopen, favourites](const std::vector<size_t>& rows) {
         auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
-        options->Add<SidebarEntryCallback>("Add to favourites"_i18n, [reopen]() { AddFavourite(reopen); }, true);
+        options->Add<SidebarEntryCallback>("Add to favourites"_i18n, [reopen]() { AddFavourite(reopen); }, true)->SetIcon(ActionIcon::Star);
         if (rows.empty()) {
             return;
         }
         if (rows.size() == 1) {
             const auto url = favourites[rows[0] - FIRST_FAVOURITE_ROW].url;
-            options->Add<SidebarEntryCallback>("Open"_i18n, [url]() { OpenUrl(url); }, true);
+            options->Add<SidebarEntryCallback>("Open"_i18n, [url]() { OpenUrl(url); }, true)->SetIcon(ActionIcon::Launch);
         }
         options->Add<SidebarEntryCallback>("Remove"_i18n, [reopen, rows, favourites]() {
             const auto text = rows.size() == 1
@@ -246,7 +246,7 @@ void OpenBrowser() {
                 SaveFavourites(list);
                 reopen();
             });
-        }, true);
+        }, true)->SetIcon(ActionIcon::Delete);
     });
     App::Push(std::move(menu));
 }
