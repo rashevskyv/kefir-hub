@@ -106,16 +106,29 @@ both switches off again and offers the reboot. The backup stays for the rollback
 Why: the percent of the gauge is not a safe guide. The owner saw the console cut off with the big battery icon at 35 %, and also
 show 0 % for an hour. What counts is the real cut-off (the console switches itself off, about 3.2 V under load).
 
-1. **Drain** from whatever the level is to the cut-off. No charge to 100 % first. The drain page keeps its load, writes a marker
-   "drain running" and, every second, the voltage, current and gauge percent to the SD (the last lines before the cut-off tell
-   how wrong the percent was).
-2. **Charge about 3 minutes**, switch on (the battery icon on black goes away, Atmosphère starts).
-3. **Set the zero.** The Hub finds the marker and offers the action in the Battery page menu "More": this point is 0 %. The action
-   also writes the factory model (the guide resets at ~3.3 V; this replaces "reset at 100 %"). Open: which register holds the
-   zero (RemCap / RepSOC); the 3 minutes of charge before the start leave an error of 1-2 % that the next cut-off removes.
-4. **Two cycles**: charge to 100 % ("full" by psm 100 %, later by the current ~0 for 5 minutes), drain to the cut-off.
-5. **Report**: learned capacity (verdict, enlarged battery), and the gauge percent just before each cut-off. Near 0 % = the gauge
-   agrees with the console.
+**Entry.** Tools > "Battery calibration", straight into the wizard (not through the Battery page; that page stays for the readings).
+The wizard first says the method, then shows the steps. Only the first step is active; each next one opens when the one before
+is done. The state is on the SD, so a restart or a cut-off does not lose the place.
 
-Note: the cut-off depends on the load and the temperature. A game that pulls more current stops earlier than the drain page.
+**Steps**
+1. **Drain to the dead battery.** The charger must be out (the wizard checks). Hub runs the maximum load (CPU and GPU) at the
+   maximum brightness. The screensaver starts on Minus, or after 3 minutes, at the maximum brightness; the stick lowers it
+   (the log keeps the brightness). Hub logs every second to the SD: voltage, current, gauge percent, temperature, load, brightness.
+   The wizard tells the user: when the console switches off, switch it on again and open the wizard; do it as many times as the
+   console starts, until it does not start at all. Each start continues the same step.
+2. **Charge about 3 minutes, switch on.** Hub sees the marker and sets this point as 0 % (action also in the Battery page menu
+   "More"), with the factory model (the guide resets at ~3.3 V). Open: the register for the zero (RemCap / RepSOC).
+3. **Cycle 1:** charge to 100 % ("full" by psm 100 %, later by the current ~0 for 5 minutes, screen on while charging), drain as in step 1.
+4. **Cycle 2:** the same.
+5. **Report:** the learned capacity (verdict, enlarged battery) and the gauge percent just before each cut-off (near 0 % = the gauge
+   agrees with the console).
 
+**Load plan of a drain.** Maximum load until the terminal voltage first falls to about 3.4 V (0.2 V above the expected cut-off
+of 3.2 V). From then on the load is minimal, and it stays minimal (latched: the voltage jumps up when the load drops, so a
+simple threshold would flip back and forth). Reason: under a high current the cell sags by current x internal resistance, the
+console cuts off early and leaves charge in the cell; at a low current the cut-off comes near the real empty, and the point is
+the same on every run. Cost: the last part takes longer; if the log of the first run shows a sag below 0.05 V the low-load tail is
+not needed and the wizard skips it (decide from the log, not from a guess).
+
+**Cautions:** high load at the maximum brightness heats the console: Hub logs the temperature and stops the load above the limit
+(value to decide); the cut-off depends on the load and the temperature, so a game that pulls more current stops earlier than the drain.

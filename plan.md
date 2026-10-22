@@ -446,12 +446,13 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       the owner's Python script shows the block layout; (e) a "LiHV / LiPo" row from the CAL0 battery version (2 = LiHV,
       4.32 V) on the Battery page; expected full capacity of an enlarged cell 7500-8000 mAh; the reset must not ask for
       cycles (the SD copy keeps the count); see the doc.
-      (f) **Cutoff pipeline** (user, 2026-10-22; replaces the "reset at 100 %" step): the gauge percent cannot be trusted (the
-      console may cut off at 35 %, or show 0 % for an hour), so the real cut-off is the zero. Order: drain from any level to the
-      cut-off (no charge to 100 % first); charge about 3 minutes and switch on; the Hub sees the marker and, from the Battery page
-      menu "More", sets this point as 0 % (and resets the model, as the guide does at ~3.3 V); then two full cycles (charge to
-      100 %, drain to the cut-off); the report compares the gauge's percent just before the cut-off (logged every second to the SD)
-      with 0 %. Design in `docs/dev/BATTERY-CALIBRATION.md`, "Cutoff pipeline". Check the register to write for the zero first.
+      (f) **Cutoff pipeline** (user, 2026-10-22): the gauge percent cannot be trusted (the console may cut off at 35 %, or show
+      0 % for an hour), so the real cut-off is the zero. A new entry Tools > "Battery calibration" opens a wizard (method, steps,
+      only the next step active): drain to the dead battery (maximum load and brightness, screensaver on Minus or after 3 min, the
+      stick lowers the brightness, every second logged to the SD, the user switches the console on again until it does not start),
+      charge ~3 min and set that point as 0 % (also in the Battery page menu "More"), two full cycles, a report with the gauge
+      percent before each cut-off. The last 0.2 V before the expected cut-off: minimal load, latched, skipped when the log shows
+      no sag. Full design in `docs/dev/BATTERY-CALIBRATION.md`, "Cutoff pipeline". Check the register for the zero first.
 
 - [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
       the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable
