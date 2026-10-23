@@ -183,6 +183,13 @@ auto ProgressBox::SetTitle(const std::string& title)  -> ProgressBox& {
     return *this;
 }
 
+auto ProgressBox::SetAltLine(const std::string& text) -> ProgressBox& {
+    mutexLock(&m_mutex);
+    m_alt = text;
+    mutexUnlock(&m_mutex);
+    return *this;
+}
+
 auto ProgressBox::NewTransfer(const std::string& transfer)  -> ProgressBox& {
     if (m_muted) return *this;
     mutexLock(&m_mutex);

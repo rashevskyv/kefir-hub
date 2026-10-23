@@ -495,14 +495,23 @@ ui::ProgressBox* WebGetProgressBox() {
     return g_web_pbox.load();
 }
 
-void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title) {
+auto WebAltLine(const WebShareResult& share) -> std::string {
+    if (share.url.empty() || share.url == share.ip_url) {
+        return {};
+    }
+    const auto scheme = share.url.find("://");
+    return "Or open:"_i18n + " " + (scheme == std::string::npos ? share.url : share.url.substr(scheme + 3));
+}
+
+void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title, const std::string& alt_line) {
     App::PopToMenu();
     // Route the server box through the detached-transfer path (like MTP) instead
     // of pushing it as a blocking widget. This grants it the same UX as other
     // transfers: R3 minimises it to a corner badge (so the menu stays usable
     // while the server / an install runs) and B / Stop cancels it.
     App::PushTransfer(std::make_unique<ui::ProgressBox>(qr_image, title, url,
-        [url](ui::ProgressBox* pbox) -> Result {
+        [url, alt_line](ui::ProgressBox* pbox) -> Result {
+            pbox->SetAltLine(alt_line);
             pbox->NewTransferForce(App::IsApplet()
                 ? "Applet Mode: keep this screen open; use the same non-guest Wi-Fi. Press B to stop."_i18n
                 : "Press B to Stop Server"_i18n);

@@ -3605,5 +3605,6 @@
   "Open a web page in the console's own browser. Needs the full memory.": "Відкрити сторінку у власному браузері консолі. Потрібна вся пам'ять.",
   "The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.": "Для браузера потрібна прошивка 23.0.1 або новіша. Спершу оновіть прошивку в Оновлювачі.",
   "Copied so far:": "Скопійовано:",
-  "Port taken from the address:": "Порт узято з адреси:"
+  "Port taken from the address:": "Порт узято з адреси:",
+  "Or open:": "Або відкрийте:"
 }

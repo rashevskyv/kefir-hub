@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.196 — Web windows: the IP address and, under it, the kefir.local name
+The address line and the QR stay the IP (it opens everywhere); a small second line "Or open: kefir.local/..." shows the name (`ProgressBox::SetAltLine`, `WebAltLine`) in the Web Sharing Server, Console Transfer, Send installed games, the HTTP mount, the typing-from-a-phone window and the SteamGridDB API key window. Two names on one line did not fit (0.14.051); two lines do.
+host tests: not run (drawing) | nro: built | switch: pending
+
 ## v0.14.195 — Network sources: "host:port" is split, the port asks with the number pad
 FTP location: typing `192.168.1.5:2121` (also `ftp://host:21/`, `[fe80::1]:21`) in Server IP / Hostname puts the digits into the Port row and says so; a bare IPv6 address, a port of 0 or over 65535 stay as typed (`net_address.hpp` + `test_net_address`). The Port row uses the console number pad (1 to 5 digits) instead of the phone / PC input.
 host tests: pass | nro: built | switch: pending (add an FTP source with host:port)

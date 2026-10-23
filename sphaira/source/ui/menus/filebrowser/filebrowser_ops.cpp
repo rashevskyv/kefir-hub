@@ -462,7 +462,7 @@ void FsView::ShareFolder() {
         return;
     }
 
-    WebPushServerProgressBox(result.url, result.qr_image, "StartWebServer"_i18n);
+    WebPushServerProgressBox(result.ip_url.empty() ? result.url : result.ip_url, result.qr_image, "StartWebServer"_i18n, WebAltLine(result));
 }
 
 } // namespace sphaira::ui::menu::filebrowser

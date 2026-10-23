@@ -93,7 +93,8 @@ void RequestApiKey(std::function<void(std::string)> on_key) {
 
     App::Push<ProgressBox>(
         share.qr_image, "SteamGridDB API key"_i18n, share.ip_url.substr(share.ip_url.find("://") + 3),
-        [](auto pbox) -> Result {
+        [alt_line = WebAltLine(share)](auto pbox) -> Result {
+            pbox->SetAltLine(alt_line);
             pbox->NewTransferForce(App::IsApplet()
                 ? "Applet Mode: keep this screen open; use the same non-guest Wi-Fi. Press B to cancel."_i18n
                 : "Scan the code with a phone on the same Wi-Fi, then paste the key there. Press B to cancel."_i18n);

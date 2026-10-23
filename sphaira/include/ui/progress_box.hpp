@@ -58,6 +58,7 @@ struct ProgressBox final : Widget, InstallProgress {
     // DBI install view draws it. Makes the box taller; call once before the first transfer.
     auto SetShowGraph(bool show) -> ProgressBox&;
     // a second bar for a job over many items: `done` of `total` items, shown above the item's own bar.
+    auto SetAltLine(const std::string& text) -> ProgressBox&;
     void SetOverall(s64 done, s64 total) { m_overall_done = done; m_overall_total = total; }
     // a job over files of unknown number and size (the PC pushing files over MTP): a line with the running count and the average
     // speed under the bar of the current file
@@ -165,6 +166,7 @@ private:
     // shared data start.
     std::string m_action{};
     std::string m_title{};
+    std::string m_alt{}; // a small second line under the title (the alternative web address)
     std::string m_transfer{};
     s64 m_size{};
     s64 m_offset{};
@@ -197,6 +199,7 @@ private:
 
     ScrollingText m_scroll_action{};
     ScrollingText m_scroll_title{};
+    ScrollingText m_scroll_alt{};
     ScrollingText m_scroll_transfer{};
 
     int m_cpuid{};

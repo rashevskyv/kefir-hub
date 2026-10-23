@@ -216,6 +216,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     const auto action = m_action;
     const auto title = m_title;
+    const auto alt = m_alt;
     const auto transfer = m_transfer;
     const auto size = m_size;
     const auto offset = m_offset;
@@ -474,6 +475,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     // outer scissor), which reads as overflow. now it scrolls within the box.
     draw_text(m_scroll_action, action, m_pos.y + 40, 24, 160, ThemeEntryID_TEXT);
     draw_text(m_scroll_title, title, m_pos.y + 100, 22, 160, ThemeEntryID_TEXT);
+    if (!alt.empty()) {
+        draw_text(m_scroll_alt, alt, m_pos.y + 130, 18, 160, ThemeEntryID_TEXT_INFO);
+    }
     if (!transfer.empty()) {
         draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 12, ThemeEntryID_TEXT_INFO);
     }

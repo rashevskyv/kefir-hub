@@ -269,3 +269,5 @@ again.
 
 **The FTP program was disconnected.** Changing [[FTP settings]] or mounting a folder over FTP restarts the server.
 Connect again.
+
+<!-- draft (0.14.196): every web window of the Hub (Web Sharing Server, Console Transfer, typing from a phone or PC, the SteamGridDB API key) shows the IP address the QR code opens, and under it a small line [[Or open:]] with the name kefir.local (for example `kefir.local/input`). The IP always works; the name works on a PC or an iPhone, and on many Android phones it does not resolve. -->

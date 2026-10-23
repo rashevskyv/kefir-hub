@@ -37,6 +37,9 @@ WebUploadState WebGetUploadState();
 bool WebShareIsRunning();
 void WebSetProgressBox(ui::ProgressBox* pbox);
 ui::ProgressBox* WebGetProgressBox();
-void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title);
+// the second line of a server window: "Or open: kefir.local/input" (the QR and the first line use the IP); empty when there is no other name
+auto WebAltLine(const WebShareResult& share) -> std::string;
+// alt_line: shown under the address (see WebAltLine)
+void WebPushServerProgressBox(const std::string& url, int qr_image, const std::string& title, const std::string& alt_line = {});
 
 } // namespace sphaira

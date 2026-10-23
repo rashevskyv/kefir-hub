@@ -195,7 +195,8 @@ void RequestRemoteText(const Options& options, OnCompleteCallback on_complete) {
     const auto shown_url = share.ip_url.substr(share.ip_url.find("://") + 3);
     App::Push<ProgressBox>(
         share.qr_image, options.title, shown_url,
-        [on_complete](auto pbox) -> Result {
+        [on_complete, alt_line = WebAltLine(share)](auto pbox) -> Result {
+            pbox->SetAltLine(alt_line);
             // waiting for text loses nothing: B leaves at once, no "Are you sure?".
             pbox->SetCancelWithoutConfirm(true);
             pbox->NewTransferForce(App::IsApplet()
