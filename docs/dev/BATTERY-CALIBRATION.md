@@ -185,8 +185,9 @@ already done ticked, the current step and its phase. Nothing is lost if the user
   Battery calibration. On return the Hub reads the battery: 100 % with the charger in = phase done; below 100 % with the charger out =
   "the charge was interrupted, charge again"; still charging = the time and the percent so far. (A short unplug in the middle cannot
   be seen by a Hub that was closed: a known limit, the gauge's own learning copes.)
-- **Drain phase.** The user may drain the console himself (play, leave it running) or let the Hub do it with its mechanism
-  (maximum load first, the tail mode after each cut-off). If he drained it himself, he switches the console on with the charger in and
+- **Drain phase.** One button only: "Start the drain" (the Hub's mechanism: maximum load first, the tail mode after each cut-off).
+  There is NO second button for a self-drain; the page only says in plain words that the user may also drain the console himself
+  (play, leave it running) and come back. If he drained it himself, he switches the console on with the charger in and
   opens the Hub: it sees a low battery, a charger just plugged in and the marker "drain phase", and asks one question "The console
   switched off from the drain?" (Yes / No); Yes completes the phase.
 - **Step 1 (the zero) is the exception:** it needs the Hub's own log (the value X), so the wizard says to keep the Hub running in
