@@ -105,11 +105,26 @@
     },
     intro: function () {
       return { title: TX('Battery calibration'), sub: TX('Step by step: drain, charge, report. The cut-off is the real end.'),
+        bar: [['B', TX('Back')], ['A', TX('Next')]], body:
+        txt(TX('Why this is needed'), 'head') +
+        txt(TX('With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest.'), 'para s') +
+        txt(TX('How it works'), 'head') +
+        txt(TX('We drain the battery to the very end: until the console switches itself off (about 3.2 V under load). That is the real zero. Then we charge and drain it fully, two times.'), 'para s') +
+        txt(TX('What you do'), 'head') +
+        txt(TX('Take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again. When it stops starting at all, plug the charger in and, as soon as the console starts, open Kefir Hub at once.'), 'para s') +
+        txt(TX('How long it takes'), 'head') +
+        txt(TX('Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup.'), 'para s') +
+        '<div class="btnrow">' + fi(esc(TX('Next')), function () { go('intro2'); }, 'btn') + '</div>' };
+    },
+    intro2: function () {
+      return { title: TX('What happens to the console'), sub: TX('Step by step: drain, charge, report. The cut-off is the real end.'),
         bar: [['B', TX('Back')], ['A', TX('Start calibration')]], body:
-        txt(TX('The percent of the gauge cannot be trusted. The real end is the cut-off: the console switches itself off under load.'), 'para s') +
-        txt(TX('Warning. The console will switch off and on many times. This is normal and needed. Switch it on each time, until it does not start at all.'), 'para s warnp') +
-        txt(TX('When it does not start any more: plug in the charger. It may not start at once. Let it lie on the charger for a while.'), 'para s warnp') +
-        txt(TX('As soon as the console starts, open Kefir Hub at once. Do not wait. The Hub then sets the zero by itself.'), 'para s warnp') +
+        txt(TX('Switching off and on (this is normal)'), 'head') +
+        txt(TX('When the battery is almost empty, the console switches itself off. You switch it on again, and it still works for a short time, because the voltage rises a little after the switch-off. Then it switches off again. This can repeat many times in a row. It is a needed part of the process: switch the console on each time and go through it to the end. It can take long.'), 'para s') +
+        txt(TX('When the console does not start any more'), 'head') +
+        txt(TX('Plug the charger in. The console may not start at once: the battery is empty, and it needs to lie on the charger for a while.'), 'para s') +
+        txt(TX('As soon as it has started'), 'head') +
+        txt(TX('Do not wait: open Kefir Hub at once. The Hub records the voltage at which the console switched off, sets the zero and goes on with the calibration.'), 'para s') +
         '<div class="btnrow">' + fi(esc(TX('Start calibration')), function () { G().started = true; go('steps'); }, 'btn') + '</div>' };
     },
     steps: function () {
@@ -228,6 +243,7 @@
     if (G().popup) { G().popup = null; }
     else if (s === 'battery') go('tools');
     else if (s === 'ledger') go('battery');
+    else if (s === 'intro2') go('intro');
     else if (s === 'intro' || s === 'steps') go('tools');
     else if (s === 'start') go('steps');
     else if (s === 'charge') go('start', G().cur);
@@ -554,6 +570,7 @@
       ['battery', function (s) { s.scr = 'battery'; }],
       ['ledger', function (s) { s.scr = 'ledger'; }],
       ['intro', function (s) { s.scr = 'intro'; }],
+      ['intro2', function (s) { s.scr = 'intro2'; }],
       ['steps', function (s) { s.started = true; s.scr = 'steps'; s.cur = 1; }],
       ['start step 1', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; }],
       ['start step 2', function (s) { s.scr = 'start'; s.sub = 2; s.cur = 2; }],
