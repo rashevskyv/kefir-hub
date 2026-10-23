@@ -146,13 +146,9 @@ var NEW = {
   "Take the charger out.": "Вийміть зарядку.",
   "Charger is plugged in.": "Зарядку вставлено.",
   "In this step keep the Hub open: it needs the log.": "У цьому кроці тримайте Hub увімкненим: йому потрібен журнал.",
-  "Drain in the Hub": "Розряджати в Hub",
-  "Drain by myself": "Розряджати самостійно",
-  "Two ways to drain. In the Hub: maximum load first, then the tail mode after each cut-off. By yourself: play or leave the console on; the Hub may stay closed.": "Два способи розряду. В Hub: спершу максимальне навантаження, потім режим хвоста після кожного відсіку. Самостійно: граєте або лишаєте консоль увімкненою; Hub може бути закритий.",
   "The console switched off from the drain?": "Консоль вимкнулась від розряду?",
   "Yes": "Так",
   "No": "Ні",
-  "The console is in use. The battery drains while you play. Open Kefir Hub when the console has switched off.": "Консоль у використанні. Батарея розряджається, поки ви граєте. Відкрийте Kefir Hub, коли консоль вимкнеться.",
   "Open the charge screen": "Відкрити екран заряду",
   "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.": "Можете залишити консоль так. Можете й користуватися нею, поки вона заряджається. Коли заряд дійде до 100 %, поверніться в Kefir Hub і відкрийте «Калібрування батареї».",
   "Full: 100 %. Now choose how to drain.": "Повний: 100 %. Тепер оберіть, як розряджати.",
@@ -170,6 +166,8 @@ var NEW = {
   "Cut-off %d · %s V · gauge: not measured": "Відсік %d · %s В · гейдж: не вимірювалось",
   "0 (no log)": "0 (журналу немає)",
   "Unplug the charger, switch the console on. The Hub sets the zero by itself.": "Вийміть зарядку, ввімкніть консоль. Hub сам постав нуль.",
+  "Start the drain": "Розпочати розряд",
+  "You can also drain it yourself: play, or simply leave the console on, and you may close the Hub. When the console switches off, switch it on with the charger in and open Kefir Hub: it will ask whether it was the drain.": "Розряджати можна й самостійно: грайте або просто залиште консоль увімкненою, а Hub можна закрити. Коли консоль вимкнеться, ввімкніть її із зарядкою і відкрийте Kefir Hub: він спитає, чи це був розряд.",
 };
 
 // Text for the language of the page (?lang=uk, default English). Counts %s / %d in order.

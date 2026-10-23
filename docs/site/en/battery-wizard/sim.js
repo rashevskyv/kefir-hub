@@ -37,11 +37,15 @@ var SIM = (function () {
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
   function ocv(q) { return 3.2 + q / 100; }
   function counter() { return clamp(Math.round(G.q + G.E + G.shift), 0, 100); }
-  function ph(k) { return G.ph[k] || (G.ph[k] = { aS: false, aD: false, aSec: 0, bD: false, bSelf: false, selfCut: false }); }
+  function ph(k) { return G.ph[k] || (G.ph[k] = { aS: false, aD: false, aSec: 0, bD: false, armed: false, selfCut: false }); }
   function drainActive() { return G.scr === 'drain' && !G.popup && G.power && !G.charger && G.drainRun; }
   // Maximum load before the first cut-off; minimum load after every restart (the tail mode).
   function loadNow() { return drainActive() && !G.loadOff ? (G.tail ? I_MIN : I_MAX) : 0; }
-  function selfDraining() { var p = G.ph[G.cur]; return !!p && p.bSelf && !p.bD && G.power && !G.charger && !G.drainRun; }
+  // the drain phase is armed (phase A done in a cycle; the step 1 page shown): the console runs down on its own
+  function selfDraining() {
+    var p = G.ph[G.cur];
+    return !!p && (p.aD || p.armed) && !p.bD && G.power && !G.charger && !G.drainRun;
+  }
   function systems() { return G.emus === 2 ? SYSTEMS : ['sysMMC', 'emuA']; }
   function clockText(extraSec) {
     var s = Math.floor(BASE_T + G.t + (extraSec || 0)) % 86400;
@@ -67,7 +71,7 @@ var SIM = (function () {
     var logged = G.hubOpen && G.drainRun;
     G.cuts.push({ n: G.cuts.length + 1, V: V, gauge: logged ? counter() : null, logged: logged, t: G.t });
     G.lastX = logged ? counter() : null;
-    if (!logged && ph(G.cur).bSelf) ph(G.cur).selfCut = true;
+    if (!logged) ph(G.cur).selfCut = true;
     G.power = false; G.drainRun = false; G.saver = false; G.popup = null;
     G.scr = 'black'; G.needRender = true;
   }
@@ -145,7 +149,7 @@ var SIM = (function () {
     G.power = true; G.noBoot = false;
     // a self drain ended: the console is on, the Hub may stay closed (the wizard asks when it is opened)
     var p = G.ph[G.cur];
-    if (p && p.bSelf && !p.bD) { G.scr = 'home'; G.needRender = true; return; }
+    if (p && p.selfCut && !p.bD) { G.scr = 'home'; G.needRender = true; return; }
     G.minRun = 60; // a boot runs at least a minute before the next cut-off
     G.lastTry = null;
     bootScreen();
@@ -157,7 +161,7 @@ var SIM = (function () {
     if (!G.power) return;
     var p = G.ph[G.cur];
     if (G.cur === 2 && G.chargeStarted && !G.done[2]) { setZero(); G.scr = 'zero'; G.focus = 0; G.needRender = true; return; }
-    if (p && p.bSelf && !p.bD && p.selfCut && G.charger) { G.askSelf = true; G.scr = 'start'; G.sub = G.cur; G.focus = 0; G.needRender = true; return; }
+    if (p && !p.bD && p.selfCut && G.charger) { G.askSelf = true; G.scr = 'start'; G.sub = G.cur; G.focus = 0; G.needRender = true; return; }
     bootScreen();
   }
   function closeHub() {
@@ -165,15 +169,12 @@ var SIM = (function () {
     if (G.power) G.scr = 'home'; G.needRender = true;
   }
   // Drain phase choice: the Hub's mechanism, or the person uses the console (the Hub may be closed).
-  function drainChoice(hub) {
-    if (hub) { drainStart(); return; }
-    ph(G.cur).bSelf = true; G.hubOpen = false; G.scr = 'home'; G.askSelf = false; G.needRender = true;
-  }
+  function drainChoice() { drainStart(); }
   // "Консоль вимкнулась від розряду?": Так completes the phase, Ні starts the choice again.
   function selfAnswer(yes) {
     G.askSelf = false;
     if (yes) { ph(G.cur).bD = true; complete(G.cur); return; }
-    ph(G.cur).bSelf = false; ph(G.cur).selfCut = false; G.scr = 'start'; G.sub = G.cur; G.needRender = true;
+    ph(G.cur).selfCut = false; G.scr = 'start'; G.sub = G.cur; G.needRender = true;
   }
   function setBright(v) { G.bright = v; }
   // The brightness rule: lowered only while the tail drain runs. With the charger in the Hub gives the person's
@@ -194,7 +195,7 @@ var SIM = (function () {
     var tr = transferCheck(G.sys);
     if (G.cur === 2) { G.scr = 'start'; G.sub = 2; }
     else if (G.cur === 1 || G.cur === 3 || G.cur === 4) {
-      if (G.drainSec > 0 && G.ctx === G.cur && G.drainRun === false && !(G.ph[G.cur] && G.ph[G.cur].bSelf)) {
+      if (G.drainSec > 0 && G.ctx === G.cur && G.drainRun === false && !(G.ph[G.cur] && G.ph[G.cur].selfCut)) {
         G.scr = 'drain'; G.drainRun = true; G.saver = false; G.hubOpen = true;
         G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100; G.autoB = false;
         if (G.tail) G.bMarker.lastSet = 1;

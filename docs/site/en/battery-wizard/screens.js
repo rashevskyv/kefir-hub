@@ -93,7 +93,7 @@
       else parts.push(TX('charge: next'));
     }
     if (pz.bD) parts.push(TX('drain ✓'));
-    else if (pz.bSelf) parts.push(TX('drain: by yourself'));
+    else if (pz.selfCut) parts.push(TX('drain: by yourself'));
     else if (k === 1 || pz.aD) parts.push(TX('drain: next'));
     else parts.push(TX('drain: after the charge'));
     return parts.join(' · ');
@@ -169,6 +169,7 @@
     start: function () {
       var i = G().sub || G().cur, g = G(), pz = SIM.ph(i), cyc = (i === 3 || i === 4), body = '', btns = [], first = '';
       function btn(label, act) { btns.push(fi(esc(label), act, 'btn')); if (!first) first = label; }
+      if (i === 1) SIM.ph(1).armed = true; // the drain of step 1 may also be run by itself (the zero then falls back)
       if (i === 2) {
         body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
         body += txt(TX('Plug in the charger. Charge it, and the console may not start at once.'), 'li');
@@ -182,18 +183,15 @@
         body += txt(TX('The console switched off from the drain?'), 'para s');
         btn(TX('Yes'), function () { SIM.selfAnswer(true); renderAll(); });
         btn(TX('No'), function () { SIM.selfAnswer(false); renderAll(); });
-      } else if (pz.bSelf && !pz.bD) {
-        body += txt(TX('The console is in use. The battery drains while you play. Open Kefir Hub when the console has switched off.'), 'para s');
       } else {
         body += chkLine(!g.charger, TX('Charger is out'), TX('Take the charger out.'));
         if (i === 1) {
           START1.forEach(function (t) { body += '<p class="para s">' + esc(TX(t)) + '</p>'; });
           body += txt(TX('In this step keep the Hub open: it needs the log.'), 'li warn');
         } else {
-          body += txt(TX('Two ways to drain. In the Hub: maximum load first, then the tail mode after each cut-off. By yourself: play or leave the console on; the Hub may stay closed.'), 'para s');
+          body += txt(TX('You can also drain it yourself: play, or simply leave the console on, and you may close the Hub. When the console switches off, switch it on with the charger in and open Kefir Hub: it will ask whether it was the drain.'), 'para s');
         }
-        btn(TX('Drain in the Hub'), function () { if (g.charger) { g.hint = TX('Take the charger out.'); renderAll(); return; } SIM.drainChoice(true); });
-        btn(TX('Drain by myself'), function () { if (g.charger) { g.hint = TX('Take the charger out.'); renderAll(); return; } SIM.drainChoice(false); });
+        btn(TX('Start the drain'), function () { if (g.charger) { g.hint = TX('Take the charger out.'); renderAll(); return; } SIM.drainChoice(true); });
       }
       if (g.hint) body = '<div class="hint">' + esc(g.hint) + '</div>' + body;
       body += '<div class="btnrow">' + btns.join('') + '</div>';
@@ -282,7 +280,7 @@
     home: function () {
       var pz = SIM.ph(G().cur);
       return { title: '', sub: '', bar: [], body: '<div class="idle"><p class="para s">' + esc(TX('Home screen. Kefir Hub is closed.')) + '</p>' +
-        (pz && pz.bSelf && !pz.bD ? txt(TX('The battery drains while you use the console.'), 'li') : '') + '</div>' };
+        (pz && !pz.bD && !G().hubOpen ? txt(TX('The battery drains while you use the console.'), 'li') : '') + '</div>' };
     }
   };
 
@@ -634,10 +632,10 @@
       ['start step 2', function (s) { s.scr = 'start'; s.sub = 2; s.cur = 2; }],
       ['charge step 2', function (s) { s.scr = 'charge'; s.cur = 2; s.chargeMode = 'zero'; s.chargeStarted = true; s.charge3 = 120; s.charger = true; s.power = true; }],
       ['home', function (s) { s.scr = 'home'; s.cur = 1; s.hubOpen = false; s.power = true; }],
-      ['cycle 3 phase A', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = true; s.ph = { 3: { aS: false, aD: false, aSec: 0, bD: false, bSelf: false, selfCut: false } }; }],
-      ['cycle 3 charge', function (s) { s.scr = 'charge'; s.cur = 3; s.charger = true; s.ph = { 3: { aS: true, aD: false, aSec: 120, bD: false, bSelf: false, selfCut: false } }; }],
-      ['cycle 3 drain choice', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = false; s.ph = { 3: { aS: true, aD: true, aSec: 200, bD: false, bSelf: false, selfCut: false } }; }],
-      ['question', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; s.charger = true; s.askSelf = true; s.ph = { 1: { aS: false, aD: false, aSec: 0, bD: false, bSelf: true, selfCut: true } }; }],
+      ['cycle 3 phase A', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = true; s.ph = { 3: { aS: false, aD: false, aSec: 0, bD: false, selfCut: false } }; }],
+      ['cycle 3 charge', function (s) { s.scr = 'charge'; s.cur = 3; s.charger = true; s.ph = { 3: { aS: true, aD: false, aSec: 120, bD: false, selfCut: false } }; }],
+      ['cycle 3 drain choice', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = false; s.ph = { 3: { aS: true, aD: true, aSec: 200, bD: false, selfCut: false } }; }],
+      ['question', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; s.charger = true; s.askSelf = true; s.ph = { 1: { aS: false, aD: false, aSec: 0, bD: false, selfCut: true } }; }],
       ['idle step 2', function (s) { s.scr = 'idle'; s.cur = 2; s.power = true; s.chargeStarted = true; s.charge3 = 60; s.charger = false; }],
       ['black step 2', function (s) { s.scr = 'black'; s.cur = 2; s.power = false; s.chargeStarted = true; s.charge3 = 10; s.charger = true; }],
       ['zero', function (s) { s.scr = 'zero'; s.cur = 2; s.zeroInfo = { N: 3, X: 18, result: 0, note: '', V: 3.2 }; }],
