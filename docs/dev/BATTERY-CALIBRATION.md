@@ -185,6 +185,10 @@ already done ticked, the current step and its phase. Nothing is lost if the user
   Battery calibration. On return the Hub reads the battery: 100 % with the charger in = phase done; below 100 % with the charger out =
   "the charge was interrupted, charge again"; still charging = the time and the percent so far. (A short unplug in the middle cannot
   be seen by a Hub that was closed: a known limit, the gauge's own learning copes.)
+- **The screensaver also runs during the charge** (owner, 2026-10-23): the guide says to keep the screen on while charging (in sleep the
+  console may not charge to the end), and the screensaver does exactly that with black pixels: Minus, or after 3 minutes, shows the
+  charge percent, the charge current, the voltage, the temperature and the time of the charge; the sticks work as in the drain
+  (right stick: brightness, left stick: move). The brightness is the user's own (not lowered by the Hub) during the charge.
 - **From charge to drain.** When the charge reaches 100 % the screen says what comes next: "Full. Now the drain: take the charger
   out." (with the charger in the line reads "Take the charger out", never "Plug the charger in"). The moment the charger comes out the
   Hub opens the drain window of the cycle and **starts the drain by itself** (taking the charger out is the user's signal); the
