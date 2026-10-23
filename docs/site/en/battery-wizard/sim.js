@@ -16,6 +16,7 @@ var SIM = (function () {
       t: 0, speed: 10, paused: false, power: true, sys: 'sysMMC', charger: false,
       q: 62, R: 100, E: 0, shift: 0, gaugeReset: false, logLost: false,
       bright: 100, brightBefore: 60, brightSaved: 60, autoB: true,
+      userOn: false, userBright: 40, userSkipped: false, bMarker: { before: 60, lastSet: 100 },
       saver: false, saverAuto: false, drainRun: false, loadOff: false,
       T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0, tail: false, pausedS: 0,
       hist: [], nextS: 0,
@@ -119,7 +120,7 @@ var SIM = (function () {
     // the zero step: a flat console starts only after a little charging; the Hub is not opened yet
     if (G.cur === 2 && G.chargeStarted && !G.done[2]) {
       if (G.charge3 < ZERO_MIN) { G.lastTry = 'nostart'; G.needRender = true; return; }
-      G.power = true; G.noBoot = false; G.scr = 'idle'; G.lastTry = 'started'; G.needRender = true;
+      G.power = true; G.noBoot = false; G.scr = 'idle'; G.lastTry = 'started'; restoreBright(); G.needRender = true;
       return;
     }
     if (ocv(G.q) + RECOVER < BOOT_V && !G.charger) { G.noBoot = true; G.needRender = true; return; }
@@ -127,6 +128,7 @@ var SIM = (function () {
     G.minRun = 60; // a boot runs at least a minute before the next cut-off
     G.lastTry = null;
     bootScreen();
+    restoreBright();
   }
   // "Відкрити Kefir Hub": the Hub opens; in the zero step it sets the zero now.
   function openHub() {
@@ -148,6 +150,7 @@ var SIM = (function () {
       if (G.drainSec > 0 && G.ctx === G.cur) {
         G.scr = 'drain'; G.drainRun = true; G.saver = false;
         G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100; G.autoB = false;
+        if (G.tail) G.bMarker.lastSet = 1;
       }
       else { G.scr = 'start'; G.sub = G.cur; }
     }
@@ -155,6 +158,13 @@ var SIM = (function () {
     G.focus = 0; G.popup = null;
     if (tr) G.toast = tr;
     G.needRender = true;
+  }
+  // The brightness rule: lowered only while the tail drain runs. With the charger in the Hub gives the person's
+  // brightness and auto-brightness back at once. A value the person changed himself (not the last one the Hub set) stays.
+  function restoreBright() {
+    if (!G.charger || G.autoB) return;
+    if (G.userOn && G.bright !== G.bMarker.lastSet) { G.userSkipped = true; G.needRender = true; return; }
+    G.bright = G.brightSaved; G.autoB = true; G.tail = false; G.userSkipped = false; G.needRender = true;
   }
   // "Консоль не вмикається": the drain step is done; the console stays off (black) until the person charges it.
   function consoleNoBoot() {
@@ -171,7 +181,8 @@ var SIM = (function () {
 
   function drainStart() {
     if (G.ctx !== G.cur) { // a new cycle: the drain counts from zero
-      if (G.cur === 1) G.brightSaved = G.brightBefore; // the person's brightness, kept for the end of the calibration
+      if (G.cur === 1) { G.brightSaved = G.brightBefore; G.bMarker = { before: G.brightBefore, lastSet: 100 }; }
+      else G.bMarker.lastSet = 100; // the Hub sets the maximum for the drain
       G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.loadOff = false; G.pausedS = 0;
       G.saverAuto = false; G.saver = false; G.sagMeas = null;
       G.tail = false; G.bright = 100; G.hist = []; G.nextS = G.t;
@@ -193,6 +204,7 @@ var SIM = (function () {
     G.charger = !G.charger;
     if (G.charger) {
       G.pausedS = 0; G.offChg = 0;
+      restoreBright(); // the charger is in: the brightness is the person's again, at once
       // the zero step starts counting the charge as soon as the charger goes in, even with the console off
       if (G.cur === 2 && !G.done[2] && !G.chargeStarted) { G.chargeStarted = true; G.charge3 = 0; }
       if (G.power && G.cur === 2 && G.chargeStarted && G.scr === 'start') G.scr = 'charge';
@@ -255,7 +267,7 @@ var SIM = (function () {
     G: G, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, CHG_MA: CHG_MA, ZERO_MIN: ZERO_MIN, SYS_NAME: SYS_NAME,
     ocv: ocv, counter: counter, loadNow: loadNow, loadLevels: loadLevels, drainActive: drainActive, clockText: clockText,
     systems: systems, step: step, advance: advance, jumpNext: jumpNext,
-    powerOff: powerOff, powerOn: powerOn, openHub: openHub, bootSystem: bootSystem, consoleNoBoot: consoleNoBoot,
+    powerOff: powerOff, powerOn: powerOn, openHub: openHub, restoreBright: restoreBright, bootSystem: bootSystem, consoleNoBoot: consoleNoBoot,
     complete: complete, drainStart: drainStart, stopDrain: stopDrain, chargeStart: chargeStart,
     toggleCharger: toggleCharger, reportNext: reportNext, setZero: setZero,
     saverTick: function (dt) {

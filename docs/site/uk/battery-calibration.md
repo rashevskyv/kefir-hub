@@ -19,7 +19,7 @@
 - Відкрито: регістр нуля (RemCap або RepSOC), межа температури (60 °C у гіді), справжня напруга відсіку (3,2 В у гіді), правило «добре калібрування», текст тостів.
 -->
 
-<iframe src="../battery-wizard/index.html?lang=uk&v=16" title="Екрани калібрування батареї" width="100%" height="860" style="border:0;max-width:100%"></iframe>
+<iframe src="../battery-wizard/index.html?lang=uk&v=19" title="Екрани калібрування батареї" width="100%" height="860" style="border:0;max-width:100%"></iframe>
 
 [Відкрити гід на весь екран](../battery-wizard/index.html?lang=uk)
 

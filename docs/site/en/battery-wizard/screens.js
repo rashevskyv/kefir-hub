@@ -7,7 +7,8 @@
     'Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.',
     'After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.',
     'When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.',
-    'When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait.'];
+    'When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait.',
+    'The brightness is lowered only while the console drains. As soon as you plug in the charger, the Hub gives back your brightness and auto-brightness.'];
   var STEPK = ['', 'Drain to the dead battery', 'Charge and zero', 'Cycle 1', 'Cycle 2', 'Report', 'Transfer to the other MMC'];
   function G() { return SIM.G; }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
@@ -181,7 +182,8 @@
         txt(TX('Factory model written'), 'li ok') + txt(TX('The backup was made.'), 'li ok') +
         (z.note === 'reset' ? txt(TX('The gauge looks reset. 0 is written.'), 'li warn')
           : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : txt(TX('The charge after the cut-off stays in the counter.'), 'li')) +
-        txt(TX('Auto-brightness is on again; brightness set back to what it was before the calibration (%d %%).', G().brightSaved), 'li ok') +
+        (G().userSkipped ? txt(TX('Brightness changed by the user: leaving it.'), 'li warn')
+          : txt(TX('Auto-brightness is on again; brightness set back to what it was before the calibration (%d %%).', G().brightSaved), 'li ok')) +
         '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.complete(2); go('start', 3); }, 'btn') + '</div>';
       return { title: TX('Gauge zero'), sub: TX('Step %d of 5', 2), bar: [['A', TX('Next')]], body: body };
     },
@@ -336,7 +338,7 @@
       clock: SIM.clockText(), psm: p + ' %', pctText: '≈ ' + p + ' %', V: V.toFixed(2) + ' V', I: Math.round(I * 1000) + ' mA',
       gauge: SIM.counter() + ' %', T: Math.round(g.T) + ' °C', load: load,
       bright: g.tail && Math.round(g.bright) <= 1 ? TX('1 % (minimum)') : Math.round(g.bright) + ' %',
-      autob: g.tail ? TX('Auto-brightness is off, brightness at the minimum: this is why the drain is slowest.') : '',
+      autob: g.userSkipped ? TX('Brightness changed by the user: leaving it.') : (g.charger && g.scr === 'drain') ? TX('Brightness is back to normal: %d %%.', Math.round(g.bright)) : (g.tail ? TX('Auto-brightness is off, brightness at the minimum: this is why the drain is slowest.') : ''),
       elapsed: hms(g.drainSec), pauseT: g.charger && g.drainRun ? hms(g.pausedS) : '—', status: statusText(g),
       charging: TX('Charging:') + ' ' + p + ' % / 100 %', curr: charging + (g.charger ? SIM.CHG_MA : 0) + ' mA',
       left: mmss(g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
@@ -351,7 +353,7 @@
     document.querySelectorAll('[data-k]').forEach(function (el) { var k = el.dataset.k; if (v[k] !== undefined) el.textContent = v[k]; });
     document.querySelectorAll('[data-bw]').forEach(function (el) { el.style.width = v.pctNum + '%'; });
     // the stage dims with the brightness (never fully black: the text stays readable at 1 %)
-    stage.style.filter = (SIM.G.scr === 'drain' && !SIM.G.saver) ? 'brightness(' + (0.12 + 0.88 * SIM.G.bright / 100).toFixed(2) + ')' : '';
+    stage.style.filter = (SIM.G.scr === 'drain' && !SIM.G.saver && !SIM.G.autoB) ? 'brightness(' + (0.12 + 0.88 * SIM.G.bright / 100).toFixed(2) + ')' : '';
     if (SIM.G.scr === 'drain') sparks(); // the charts keep moving under the screen saver too
     if (SIM.G.saver) saverFrame();
   }
@@ -405,6 +407,7 @@
       sideBtn(S2('Gauge shows 35 % at cut-off', 'Гейдж показує 35 % при відсіку') + (g.E === 35 ? ' ✓' : ''), g.E === 35 ? 'on' : '', 'toggle:E35'),
       sideBtn(S2('Gauge at 0 % early (reads 40 % low)', 'Гейдж 0 % раніше (занижує на 40 %)') + (g.E === -40 ? ' ✓' : ''), g.E === -40 ? 'on' : '', 'toggle:Em40'),
       sideBtn(S2('Larger battery (7810 mAh)', 'Велика батарея (7810 мАг)') + (g.fullMah > 3600 ? ' ✓' : ''), g.fullMah > 3600 ? 'on' : '', 'toggle:big'),
+      sideBtn(S2('User changed the brightness', 'Користувач сам змінив яскравість') + (g.userOn ? ' ✓' : ''), g.userOn ? 'on' : '', 'toggle:userB'),
       sideBtn(S2('Write fails', 'Запис не вдається') + (g.applyFail ? ' ✓' : ''), g.applyFail ? 'on' : '', 'toggle:applyFail'),
       sideBtn(S2('Newer calibration in sysMMC', 'Новіше калібрування в sysMMC') + (g.sysNewer ? ' ✓' : ''), g.sysNewer ? 'on' : '', 'toggle:sysNewer'),
       sideBtn(S2('Other battery model in sysMMC', 'Інша модель батареї в sysMMC') + (g.sysOther ? ' ✓' : ''), g.sysOther ? 'on' : '', 'toggle:sysOther'),
@@ -426,6 +429,7 @@
       sideBtn(S2('To the next event', 'До наступної події'), '', 'next') + '</div>' +
       '<h3>' + esc(S2('Events', 'Події')) + '</h3><div class="sbcol">' + ev.join('') + '</div>' +
       '<label class="sl">' + esc(S2('Brightness before the calibration', 'Яскравість до калібрування')) + ' <b>' + g.brightBefore + ' %</b><input type="range" min="10" max="100" step="5" value="' + g.brightBefore + '" data-sa="B0"></label>' +
+      '<label class="sl">' + esc(S2('User brightness', 'Яскравість користувача')) + ' <b>' + g.userBright + ' %</b><input type="range" min="1" max="100" step="1" value="' + g.userBright + '" data-sa="UB"></label>' +
       '<label class="sl">' + esc(S2('Internal resistance (mΩ)', 'Внутрішній опір (мОм)')) + ' <b>' + g.R + '</b><input type="range" min="5" max="300" value="' + g.R + '" data-sa="R"></label>' +
       '<h3>' + esc(S2('Screen tag', 'Позначка екрана')) + '</h3><p class="tag">' + esc(tag) + '</p>' +
       '<h3>' + esc(S2('New texts on this screen', 'Нові тексти на екрані')) + '</h3><ul class="keys">' + (keys || '<li>—</li>') + '</ul>';
@@ -445,6 +449,7 @@
     else if (a === 'toggle:Em40') g.E = g.E === -40 ? 0 : -40;
     else if (a === 'toggle:big') g.fullMah = g.fullMah > 3600 ? 3032 : 7810;
     else if (a === 'toggle:applyFail') g.applyFail = !g.applyFail;
+    else if (a === 'toggle:userB') { g.userOn = !g.userOn; g.userSkipped = false; if (g.userOn) g.bright = g.userBright; }
     else if (a === 'toggle:sysNewer') { g.sysNewer = !g.sysNewer; g.copies.sysMMC.seq = g.sysNewer ? 999 : 0; }
     else if (a === 'toggle:sysOther') { g.sysOther = !g.sysOther; g.copies.sysMMC.model = g.sysOther ? 'LiHV-4320' : 'LiPo-3600'; }
     else if (a === 'toggle:emus') g.emus = g.emus === 2 ? 1 : 2;
@@ -499,6 +504,7 @@
     });
     document.getElementById('side').addEventListener('input', function (e) {
       if (e.target.dataset.sa === 'R') { SIM.G.R = +e.target.value; e.target.parentNode.querySelector('b').textContent = e.target.value; }
+      if (e.target.dataset.sa === 'UB') { SIM.G.userBright = +e.target.value; e.target.parentNode.querySelector('b').textContent = e.target.value + ' %'; if (SIM.G.userOn) SIM.G.bright = SIM.G.userBright; }
       if (e.target.dataset.sa === 'B0') { SIM.G.brightBefore = +e.target.value; e.target.parentNode.querySelector('b').textContent = e.target.value + ' %'; }
     });
     document.querySelectorAll('.stick').forEach(function (el) {

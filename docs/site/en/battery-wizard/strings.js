@@ -143,6 +143,10 @@ var NEW = {
   "The console switched off at the cut-off, and you charged it.": "Консоль вимкнулась на відсіку, ви її зарядили.",
   "The console is on. Kefir Hub is not open yet.": "Консоль увімкнена. Kefir Hub ще не відкрито.",
   "Auto-brightness is on again; brightness set back to what it was before the calibration (%d %%).": "Автояскравість увімкнено, яскравість повернено до того, що була до калібрування (%d %%).",
+  "The brightness is lowered only while the console drains. As soon as you plug in the charger, the Hub gives back your brightness and auto-brightness.": "Яскравість знижується лише тоді, коли консоль розряджається. Щойно ви підключите зарядку, Hub поверне вашу яскравість і автояскравість.",
+  "Brightness is back to normal: %d %%.": "Яскравість повернено: %d %%.",
+  "Brightness changed by the user: leaving it.": "Яскравість змінено користувачем: лишаємо.",
+  "When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait.": "Коли вона перестане вмикатися: вставте зарядку і нехай полежить на ній. Одразу вона може не ввімкнутися. Щойно вона ввімкнеться, одразу відкрийте Kefir Hub. Не чекайте.",
 };
 
 // Text for the language of the page (?lang=uk, default English). Counts %s / %d in order.
