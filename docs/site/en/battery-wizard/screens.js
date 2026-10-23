@@ -29,14 +29,20 @@
     if (i <= 4) go('start', i); else if (i === 5) go('report'); else go('transfer');
   }
   function bar(list) {
-    return list.map(function (b) { return '<span class="bi ' + (b[2] || '') + '"><i class="gl">' + esc(b[0]) + '</i>' + esc(b[1]) + '</span>'; }).join('');
+    return list.map(function (b) {
+      return '<span class="bi ' + (b[2] || '') + '"><i class="gl">' + esc(b[0]) + '</i><span class="bl">' + esc(b[1]) + '</span></span>';
+    }).join('');
   }
-  // one live chart: a sparkline of the recent samples (drawn in live), its value and the reference lines
-  function chart(title, vk, ymin, ymax, refs, lines) {
+  // one live chart: sparklines of the recent samples (drawn in live), its value, reference lines and a marker
+  function chart(title, vk, ymin, ymax, refs, lines, mark) {
     return '<div class="chart"><div class="ct"><span>' + esc(title) + '</span><b data-k="' + vk + '"></b></div>' +
-      '<svg viewBox="0 0 600 110" preserveAspectRatio="none" data-spark="1" data-min="' + ymin + '" data-max="' + ymax + '">' +
+      '<div class="cbox"><svg viewBox="0 0 600 110" preserveAspectRatio="none" data-spark="1" data-min="' + ymin + '" data-max="' + ymax + '">' +
       refs.map(function (r) { return '<line class="ref" data-refv="' + r + '" x1="0" x2="600"/>'; }).join('') +
-      lines.map(function (k, i) { return '<polyline class="ln' + i + '" data-line="' + k + '"/>'; }).join('') + '</svg></div>';
+      lines.map(function (k, i) { return '<polyline class="ln' + i + '" data-line="' + k + '"/>'; }).join('') + '</svg>' +
+      (mark ? '<div class="mlab" data-mlab="1" hidden>' + esc(TX('Load lowered')) + '</div>' : '') + '</div></div>';
+  }
+  function legendOf(items) {
+    return items.map(function (it, i) { return '<span class="lg"><i class="dot ln' + i + '"></i>' + esc(it[0]) + ' <b data-k="' + it[1] + '"></b> %</span>'; }).join('');
   }
   function sparks() {
     var hist = SIM.G.hist, n = hist.length;
@@ -50,6 +56,14 @@
       });
       svg.querySelectorAll('[data-refv]').forEach(function (ln) { var y = yOf(+ln.dataset.refv); ln.setAttribute('y1', y); ln.setAttribute('y2', y); });
     });
+    // the marker: the first sample taken after the load was lowered (the tail mode)
+    var mk = document.querySelector('[data-mlab]');
+    if (mk) {
+      var at = -1;
+      for (var j = 0; j < n; j++) if (hist[j].low && (j === 0 || !hist[j - 1].low)) { at = j; break; }
+      mk.hidden = at < 0;
+      if (at >= 0) mk.style.left = (n > 1 ? at / (n - 1) * 100 : 100).toFixed(1) + '%';
+    }
   }
   function battery(noText) {
     return '<div class="bbox"><div class="bfill" data-bw="1"></div>' + (noText ? '' : '<div class="bpct" data-k="pctText"></div>') + '</div><div class="nub"></div>';
@@ -144,13 +158,17 @@
       return { title: TX('Battery charge'), sub: TX(STEPK[g.cur]), bar: [['B', TX('Back')]], body: body };
     },
     zero: function () {
-      var z = G().zeroInfo || { N: 0, X: 0, result: 0, note: '' };
+      var z = G().zeroInfo || { N: 0, X: null, result: 0, note: '', V: null };
       var box = function (l, v) { return '<div class="zbox"><small>' + esc(l) + '</small><b>' + v + '</b></div>'; };
-      var body = '<div class="zrow">' + box(TX('Gauge counter N'), z.N + ' %') + box(TX('Last logged value X'), (z.X === null ? '—' : z.X + ' %')) +
+      var body = txt(TX('The console switched off at the cut-off, and you charged it for about 3 minutes.'), 'li') +
+        txt(TX('Now the Hub sets this point as 0 %.'), 'li') +
+        '<div class="kv"><span>' + esc(TX('Last voltage in the log before the cut-off')) + '</span><b>' + (z.V === null ? '—' : z.V.toFixed(2) + ' V') + '</b></div>' +
+        '<div class="zrow">' + box(TX('Gauge counter N'), z.N + ' %') + box(TX('Last logged value X'), z.X === null ? '—' : z.X + ' %') +
         box(TX('Result N − X'), z.result + ' %') + '</div>' +
-        txt(TX('Factory model written'), 'li ok') +
-        txt(z.note === 'reset' ? TX('The gauge looks reset. 0 is written.') : z.note === 'log' ? TX('The log is lost. 0 is written.') : TX('The 3 min of charge stay in the counter.'), z.note ? 'li warn' : 'li') +
-        '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.complete(2); renderAll(); }, 'btn') + '</div>';
+        txt(TX('Factory model written'), 'li ok') + txt(TX('The backup was made.'), 'li ok') +
+        (z.note === 'reset' ? txt(TX('The gauge looks reset. 0 is written.'), 'li warn')
+          : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : txt(TX('The 3 min of charge stay in the counter.'), 'li')) +
+        '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.complete(2); go('start', 3); }, 'btn') + '</div>';
       return { title: TX('Gauge zero'), sub: TX('Step %d of 5', 2), bar: [['A', TX('Next')]], body: body };
     },
     report: function () {
@@ -176,19 +194,27 @@
       body += txt(TX('The hekate hop is a manual action only.'), 'li dim');
       return { title: TX('Transfer to the other MMC'), sub: TX('Step %d of 5', 6), bar: [['B', TX('Back')]], body: body };
     },
+    lowbat: function () {
+      return { title: '', sub: '', bar: [], body: '<div class="lowbat"><div class="bigbat bbig">' + battery(true) + '</div>' +
+        '<p class="para s">' + esc(TX('The console does not start: the battery is still low. It is charging: wait until 3 minutes have passed.')) + '</p></div>' };
+    },
     drain: function () {
-      var body = '<div class="dtop"><div class="bigbat bbig">' + battery(true) + '</div>' +
+      var body = '<div class="dtop"><div class="dleft"><div class="bigbat bbig">' + battery(false) + '</div>' +
+        '<div class="approx">' + esc(TX('The percent is approximate: the console may switch off earlier.')) + '</div></div>' +
         '<div class="dinfo"><div class="vbig" data-k="V"></div>' +
-        '<div class="gnote">' + esc(TX('Gauge, not trusted')) + ': <b data-k="gauge"></b></div>' +
         '<div class="status" data-k="status"></div>' +
         '<div class="chips"><span class="chip">' + esc(TX('Load')) + ': <b data-k="load"></b></span>' +
         '<span class="chip">' + esc(TX('Brightness')) + ': <b data-k="bright"></b></span></div>' +
-        '<div class="kvs">' + kv(TX('Current'), 'I') + kv(TX('Elapsed'), 'elapsed') + kv(TX('Lines in the log'), 'lines') + '</div></div></div>' +
+        '<div class="kvs">' + kv(TX('Battery consumption'), 'I') + kv(TX('Draining for'), 'elapsed') + kv(TX('On pause for'), 'pauseT') + '</div>' +
+        '<div class="logline">' + esc(TX('Everything is logged.')) + '</div></div></div>' +
         '<div class="charts">' +
-        chart(TX('Voltage'), 'V', 3.0, 4.2, [3.4, 3.2], ['V']) +
-        chart(TX('Power'), 'pw', 0, 6, [], ['P']) +
-        chart(TX('Temperature'), 'T', 20, 70, [60], ['T']) +
-        chart(TX('CPU / GPU load'), 'loadPct', 0, 100, [], ['C', 'G']) + '</div>';
+        chart(TX('Voltage'), 'V', 3.0, 4.2, [3.2], ['V'], true) +
+        chart(TX('Temperature'), 'T', 20, 70, [60], ['T'], false) +
+        '<div class="chart wide"><div class="ct"><span>' + esc(TX('CPU / GPU load')) + '</span><b data-k="pw"></b></div>' +
+        '<div class="cbox"><svg viewBox="0 0 600 110" preserveAspectRatio="none" data-spark="1" data-min="0" data-max="100">' +
+        ['C1', 'C2', 'C3', 'C4', 'G'].map(function (k, i) { return '<polyline class="ln' + i + '" data-line="' + k + '"/>'; }).join('') + '</svg></div>' +
+        '<div class="legend">' + legendOf([[TX('Core 1'), 'c1'], [TX('Core 2'), 'c2'], [TX('Core 3'), 'c3'], [TX('Core 4'), 'c4'], [TX('GPU'), 'gpu']]) + '</div></div>' +
+        '</div>';
       return { title: TX('Battery drain'), sub: ctxLabel(), bar: [['−', TX('Screensaver')], ['B', TX('Stop')]], body: body, drain: true };
     },
     black: function () { return { title: '', sub: '', bar: [], body: '' }; }
@@ -213,7 +239,7 @@
   function act() { if (F[G().focus]) F[G().focus](); }
   function move(d) { if (F.length) { G().focus = (G().focus + d + F.length) % F.length; highlight(); } }
   function highlight() {
-    var a = document.querySelector('#stage .bA');
+    var a = document.querySelector('#stage .bA .bl');
     if (a && G().scr === 'steps') a.textContent = G().focus === ACTIVE_F ? TX('Begin step') : TX('Open');
     var scope = G().popup ? '#stage .pop [data-f]' : '#stage .body [data-f]';
     document.querySelectorAll(scope).forEach(function (el) { el.classList.toggle('sel', +el.dataset.f === G().focus); });
@@ -270,30 +296,32 @@
   }
 
   function pct() { return Math.max(0, Math.min(100, Math.round(G().q))); }
-  function statusText(g, I) {
-    if (g.charger) return TX('Paused: the charger is in.');
+  function statusText(g) {
+    if (g.charger) return TX('Charger connected. The drain is on pause. Unplug the charger to continue the drain.');
     if (g.loadOff) return TX('Paused: the battery is hot, waiting until it cools to 55 °C');
-    if (g.tail) return TX('After power-off: low brightness, weak load.');
-    if (g.latched) return TX('Min load from 3.4 V, latched: the voltage rises when the load drops.');
-    return TX('Draining for') + ' ' + hms(g.drainSec);
+    if (g.tail) return TX('The console has already switched off: now it drains slowly to squeeze out the last charge.');
+    return TX('Full load: the console drains as fast as possible.');
+  }
+  function chgText(g) {
+    if (g.charge3 > 0) return S2('The console is off and charging: ', 'Консоль вимкнена й заряджається: ') + mmss(SIM.CHG3_S - g.charge3) + S2(' of 3:00', ' з 3:00');
+    return S2('Charging for 3 minutes is done. Switch the console on.', 'Заряд 3 хв пройшов. Вмикайте консоль.');
   }
   function hms(s) { s = Math.floor(s); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60); }
   function mmss(s) { s = Math.ceil(s); return (s < 600 ? '0' : '') + Math.floor(s / 60) + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60); }
   function vals() {
-    var g = G(), I = SIM.loadNow(), V = SIM.ocv(g.q) - (I * g.R / 1000), p = pct();
-    var charging = g.charger ? '+' : '';
+    var g = G(), I = SIM.loadNow(), V = SIM.ocv(g.q) - (I * g.R / 1000), p = pct(), L = SIM.loadLevels(I, g.t);
     var load = g.scr !== 'drain' ? '—' : g.charger ? '—' : g.loadOff ? TX('Off') : I === SIM.I_MAX ? TX('Max') : TX('Min');
-    var lvl = I === 0 ? 0 : (I === SIM.I_MAX ? 100 : 15); // CPU and GPU level the Hub sets (assumed, see open questions)
+    var charging = g.charger ? '+' : '';
     var sline = V.toFixed(2) + ' V · ' + Math.round(I * 1000) + ' mA · ' + Math.round(g.T) + ' °C';
     return {
-      clock: SIM.clockText(), psm: p + ' %', pctText: p + ' %', V: V.toFixed(2) + ' V', I: Math.round(I * 1000) + ' mA',
+      clock: SIM.clockText(), psm: p + ' %', pctText: '≈ ' + p + ' %', V: V.toFixed(2) + ' V', I: Math.round(I * 1000) + ' mA',
       gauge: SIM.counter() + ' %', T: Math.round(g.T) + ' °C', load: load, bright: g.bright + ' %',
-      elapsed: hms(g.drainSec), elapsed2: hms(g.drainSec), lines: String(Math.floor(g.lines)), status: statusText(g, I),
+      elapsed: hms(g.drainSec), pauseT: g.charger && g.drainRun ? hms(g.pausedS) : '—', status: statusText(g),
       charging: TX('Charging:') + ' ' + p + ' % / 100 %', curr: charging + (g.charger ? SIM.CHG_MA : 0) + ' mA',
-      left: mmss(g.charge3), sline: sline, pctNum: p,
+      left: mmss(g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
+      c1: L.c[0], c2: L.c[1], c3: L.c[2], c4: L.c[3], gpu: L.g, chgTimer: chgText(g),
       sys: name(g.sys), pwr: g.power ? S2('on', 'увімкнена') : S2('off', 'вимкнена'), chg: g.charger ? S2('in', 'є') : S2('out', 'немає'),
-      cuts: String(g.cuts.length), cur: String(g.cur), scrName: g.scr, mmc: String(g.emus),
-      pw: (V * I).toFixed(1) + ' W', loadPct: lvl + ' / ' + lvl + ' %'
+      cuts: String(g.cuts.length), cur: String(g.cur), scrName: g.scr, mmc: String(g.emus)
     };
   }
   function live() {
@@ -368,6 +396,7 @@
       '<h3>' + esc(S2('The world', 'Світ')) + '</h3>' +
       '<div class="kvs side">' + kv(S2('Console system', 'Система'), 'sys') + kv(S2('Power', 'Живлення'), 'pwr') + kv(S2('Charger', 'Зарядка'), 'chg') +
       kv(S2('Screen', 'Екран'), 'scrName') + kv(S2('Cut-offs so far', 'Відсіків'), 'cuts') + kv(S2('Step', 'Крок'), 'cur') + kv(S2('Gauge', 'Гейдж'), 'gauge') + kv(S2('Voltage', 'Напруга'), 'V') + '</div>' +
+      (!g.power ? '<p class="tag" data-k="chgTimer"></p>' : '') +
       '<h3>' + esc(S2('Time', 'Час')) + '</h3><div class="sbrow">' + speeds + sideBtn(g.paused ? S2('Resume', 'Йде') : S2('Pause', 'Пауза'), g.paused ? 'on' : '', 'pause') +
       sideBtn(S2('To the next event', 'До наступної події'), '', 'next') + '</div>' +
       '<h3>' + esc(S2('The person', 'Людина')) + '</h3><div class="sbcol">' + people.join('') + '</div>' +

@@ -162,3 +162,33 @@ h3 { font-size: 26px; font-weight: 400; color: var(--hacc); margin: 4px 0 10px; 
 .chart polyline { fill: none; stroke: var(--hacc); stroke-width: 2.2; vector-effect: non-scaling-stroke; }
 .chart polyline.ln1 { stroke: #8fa8ff; }
 .bi.bA { }
+
+/* drain page, round 2: soft thin lines, a legend, a marker, the approximate percent in the battery */
+.bbig .bpct { font-size: 56px; }
+.bbig .bpct b { font-weight: 400; }
+.approx { font-size: 18px; color: var(--hdim); margin: 10px 0 0; max-width: 430px; }
+.dleft { display: grid; gap: 4px; align-content: start; }
+.logline { font-size: 16px; color: #6d7f88; margin-top: 8px; }
+.chart { position: relative; }
+.chart.wide { grid-column: span 2; height: 190px; }
+.cbox { position: relative; min-height: 0; height: calc(100% - 26px); }
+.chart .cbox svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.chart .ref { stroke: #6b7280; stroke-width: 1; stroke-dasharray: 4 5; }
+.chart polyline { stroke-width: 1.2px; }
+.chart polyline.ln0 { stroke: #7fb8a6; }
+.chart polyline.ln1 { stroke: #8aa6d6; }
+.chart polyline.ln2 { stroke: #b39ddb; }
+.chart polyline.ln3 { stroke: #9aa0a6; }
+.chart polyline.ln4 { stroke: #d9b26f; }
+.mlab { position: absolute; top: 0; transform: translateX(-50%); font-size: 15px; color: var(--hdim); background: var(--hpanel);
+  border: 1px solid var(--hline); border-radius: 4px; padding: 0 6px; white-space: nowrap; }
+.mlab[hidden] { display: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 16px; color: var(--hdim); margin-top: 4px; }
+.legend b { color: var(--htxt); font-weight: 500; font-variant-numeric: tabular-nums; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.dot.ln0 { background: #7fb8a6; } .dot.ln1 { background: #8aa6d6; } .dot.ln2 { background: #b39ddb; }
+.dot.ln3 { background: #9aa0a6; } .dot.ln4 { background: #d9b26f; }
+.chart .ct b { font-size: 18px; }
+.lowbat { padding-top: 10px; }
+.lowbat .bigbat { margin-bottom: 18px; }
+.side .tag[data-k] { color: var(--ptext); font-size: 14px; }

@@ -1,9 +1,9 @@
 // The console and the Hub's calibration wizard, without any DOM. Physics per simulated second.
-// Rules: docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline" and "Transfer to the other MMC".
+// Rules: docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline" and "Load plan of a drain" (commit f5396c33).
 // The model is rough (the cell is a straight line from 3.2 V to 4.2 V). Numbers are not measurements.
 var SIM = (function () {
   'use strict';
-  var CUT_V = 3.2, BOOT_V = 3.25, RECOVER = 0.03, LATCH_V = 3.4, I_MAX = 1.8, I_MIN = 0.35;
+  var CUT_V = 3.2, BOOT_V = 3.25, RECOVER = 0.03, I_MAX = 1.8, I_MIN = 0.35;
   var LIMIT_T = 60, COOL_T = 55, SAVER_S = 180, CHG_RATE = 0.6 / 60, CHG_MA = 1296, CHG3_S = 180;
   var BASE_T = 13 * 3600 + 17 * 60; // the clock of the Switch at the start of the page
   var SYSTEMS = ['sysMMC', 'emuA', 'emuB'];
@@ -14,9 +14,10 @@ var SIM = (function () {
     return {
       t: 0, speed: 10, paused: false, power: true, sys: 'sysMMC', charger: false,
       q: 62, R: 100, E: 0, shift: 0, gaugeReset: false, logLost: false,
-      bright: 100, saver: false, saverAuto: false, drainRun: false, latched: false, loadOff: false,
-      T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0, tail: false, hist: [], nextS: 0,
-      charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false,
+      bright: 100, saver: false, saverAuto: false, drainRun: false, loadOff: false,
+      T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0, tail: false, pausedS: 0,
+      hist: [], nextS: 0,
+      charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false, offChg: 0,
       cuts: [], lastX: null, zeroInfo: null, noBoot: false,
       scr: 'tools', sub: 0, focus: 2, popup: null, toast: null, hint: '', started: false,
       cur: 1, done: [false, false, false, false, false, false, false],
@@ -30,29 +31,36 @@ var SIM = (function () {
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
   function ocv(q) { return 3.2 + q / 100; }
   function counter() { return clamp(Math.round(G.q + G.E + G.shift), 0, 100); }
-  function tailSkip() { return I_MAX * G.R / 1000 < 0.05; }
   function drainActive() { return G.scr === 'drain' && !G.popup && G.power && !G.charger && G.drainRun; }
-  function loadNow() { return drainActive() && !G.loadOff ? (G.tail || G.latched ? I_MIN : I_MAX) : 0; }
+  // Maximum load before the first cut-off; minimum load after every restart (the tail mode).
+  function loadNow() { return drainActive() && !G.loadOff ? (G.tail ? I_MIN : I_MAX) : 0; }
   function systems() { return G.emus === 2 ? SYSTEMS : ['sysMMC', 'emuA']; }
   function clockText(extraSec) {
     var s = Math.floor(BASE_T + G.t + (extraSec || 0)) % 86400;
     var p = function (n) { return (n < 10 ? '0' : '') + n; };
     return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s / 60) % 60);
   }
+  // CPU core and GPU load levels (percent) the Hub sets: about 90 at maximum, about 15 at minimum.
+  // The small wobble is for the picture only; the real levels need a reading on the console.
+  function loadLevels(I, t) {
+    var base = I === 0 ? 0 : (I === I_MAX ? 90 : 15), c = [];
+    for (var i = 0; i < 4; i++) c.push(clamp(Math.round(base + 4 * Math.sin(t / 7 + i * 1.7)), 0, 100));
+    return { c: c, g: clamp(Math.round(base + 2 * Math.sin(t / 9)), 0, 100) };
+  }
+  // Samples for the live charts: one point every 15 simulated seconds.
+  function pushHist(V, I2) {
+    var L = loadLevels(I2, G.t);
+    G.hist.push({ V: V, P: V * I2, T: G.T, C1: L.c[0], C2: L.c[1], C3: L.c[2], C4: L.c[3], G: L.g, low: !!G.tail });
+    if (G.hist.length > 200) G.hist.shift();
+  }
 
   function cutoff(V) {
-    G.cuts.push({ n: G.cuts.length + 1, V: V, gauge: counter(), ctx: G.ctx, t: G.t });
+    G.cuts.push({ n: G.cuts.length + 1, V: V, gauge: counter(), t: G.t });
     G.lastX = counter();
     G.power = false; G.drainRun = false; G.saver = false; G.popup = null;
     G.scr = 'black'; G.needRender = true;
   }
 
-  // Samples for the live charts of the drain page: one point every 15 simulated seconds.
-  function pushHist(V, I2) {
-    var lvl = G.loadOff ? 0 : (I2 === I_MAX ? 100 : 15);
-    G.hist.push({ V: V, P: V * I2, T: G.T, C: lvl, G: lvl });
-    if (G.hist.length > 200) G.hist.shift();
-  }
   // One simulated step of dt seconds. Returns the first notable event, or null.
   function step(dt) {
     var ev = null, I = loadNow();
@@ -68,13 +76,14 @@ var SIM = (function () {
       G.charge3 = Math.max(0, G.charge3 - dt);
       if (!G.charge3) ev = ev || 'chargeDone';
     }
+    if (G.charger && !G.power) G.offChg += dt;   // charging with the console off: counted for the side panel
+    if (G.drainRun && G.charger) G.pausedS += dt; // the drain is on pause while the charger is in
     if (drainActive()) {
       var I2 = loadNow(), V = ocv(G.q) - I2 * G.R / 1000;
-      if (G.t >= G.nextS) { pushHist(V, I2); G.nextS = G.t + 15; }
       if (G.sagMeas === null && I2 === I_MAX) G.sagMeas = I2 * G.R / 1000;
       if (G.minRun > 0) G.minRun = Math.max(0, G.minRun - dt);
       else if (V <= CUT_V) { cutoff(V); return 'cut'; }
-      if (!G.latched && I2 === I_MAX && V <= LATCH_V && !tailSkip()) { G.latched = true; ev = ev || 'latch'; }
+      if (G.t >= G.nextS) { pushHist(V, I2); G.nextS = G.t + 15; }
       G.q = Math.max(0, G.q - I2 * dt / 129.6);
       G.drainSec += dt; G.lines += dt;
       if (!G.saverAuto && G.drainSec >= SAVER_S) { G.saverAuto = true; G.saver = true; ev = ev || 'saver'; }
@@ -95,7 +104,7 @@ var SIM = (function () {
   function jumpNext() {
     var e = advance(4 * 3600);
     G.needRender = true;
-    if (!e) G.toast = { text: 'No event in the next 4 hours.', bad: false, until: Date.now() + 4000 };
+    if (!e) G.toast = { text: TX('No event in the next 4 hours.'), bad: false, until: Date.now() + 4000 };
     return e;
   }
 
@@ -106,6 +115,8 @@ var SIM = (function () {
   }
   function powerOn() {
     if (G.power) return;
+    // zero step: the battery is still charging for 3 minutes, the console shows an empty battery and does not start
+    if (G.cur === 2 && G.chargeStarted && G.charge3 > 0) { G.scr = 'lowbat'; G.needRender = true; return; }
     if (ocv(G.q) + RECOVER < BOOT_V && !G.charger) { G.noBoot = true; G.needRender = true; return; }
     G.power = true; G.noBoot = false;
     G.minRun = 60; // a boot runs at least a minute before the next cut-off
@@ -117,12 +128,18 @@ var SIM = (function () {
     powerOn();
     if (!G.power) G.needRender = true;
   }
-  // The Hub opens. A drain that was cut off goes on by itself in the tail mode: low brightness, weak load.
+  // The Hub opens. A drain that was cut off goes on by itself at once, in the tail mode (low brightness, minimal load).
   function bootScreen() {
     var tr = transferCheck(G.sys);
-    if (G.cur === 2 && G.chargeStarted && G.charge3 === 0) { setZero(); G.scr = 'zero'; }
+    if (G.cur === 2) {
+      if (G.chargeStarted && G.charge3 === 0) { setZero(); G.scr = 'zero'; }
+      else { G.scr = 'start'; G.sub = 2; }
+    }
     else if (G.cur === 1 || G.cur === 3 || G.cur === 4) {
-      if (G.drainSec > 0 && G.ctx === G.cur) { G.scr = 'drain'; G.drainRun = true; G.tail = true; G.bright = 20; G.saver = false; }
+      if (G.drainSec > 0 && G.ctx === G.cur) {
+        G.scr = 'drain'; G.drainRun = true; G.saver = false;
+        G.tail = G.cuts.length > 0; G.bright = G.tail ? 20 : 100;
+      }
       else { G.scr = 'start'; G.sub = G.cur; }
     }
     else { G.scr = G.started ? 'steps' : 'tools'; }
@@ -130,7 +147,11 @@ var SIM = (function () {
     if (tr) G.toast = tr;
     G.needRender = true;
   }
-  function consoleNoBoot() { complete(G.cur); G.noBoot = false; }
+  // "Консоль не вмикається": the step is done; the console stays off (black) until the person charges and switches it on.
+  function consoleNoBoot() {
+    G.done[G.cur] = true; G.cur = G.cur + 1; G.noBoot = false;
+    G.drainRun = false; G.popup = null; G.scr = 'black'; G.needRender = true;
+  }
 
   function complete(k) {
     G.done[k] = true; G.cur = k + 1; G.drainRun = false; G.noBoot = false;
@@ -140,14 +161,14 @@ var SIM = (function () {
 
   function drainStart() {
     if (G.ctx !== G.cur) { // a new cycle: the drain counts from zero
-      G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.latched = false; G.loadOff = false;
+      G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.loadOff = false; G.pausedS = 0;
       G.saverAuto = false; G.saver = false; G.sagMeas = null;
       G.tail = false; G.bright = 100; G.hist = []; G.nextS = G.t;
     }
     G.drainRun = true; G.scr = 'drain'; G.popup = null; G.focus = 0; G.needRender = true;
   }
   function stopDrain() {
-    G.drainRun = false; G.saver = false; G.popup = null; G.scr = 'start'; G.sub = G.cur; G.resumed = true;
+    G.drainRun = false; G.saver = false; G.popup = null; G.scr = 'start'; G.sub = G.cur;
     G.needRender = true;
   }
   function chargeStart(mode) {
@@ -158,17 +179,24 @@ var SIM = (function () {
   }
   function toggleCharger() {
     G.charger = !G.charger;
-    if (!G.charger && G.cycleWait && (G.cur === 3 || G.cur === 4)) { G.cycleWait = false; drainStart(); }
+    if (G.charger) {
+      G.pausedS = 0; G.offChg = 0;
+      // the zero step starts its 3 minutes as soon as the charger goes in (even with the console off)
+      if (G.cur === 2 && !G.done[2] && !G.chargeStarted) { G.chargeStarted = true; G.charge3 = CHG3_S; }
+      if (G.power && G.cur === 2 && G.chargeStarted && G.scr === 'start') G.scr = 'charge';
+    }
+    else if (G.cycleWait && (G.cur === 3 || G.cur === 4)) { G.cycleWait = false; drainStart(); }
     G.needRender = true;
   }
 
   function setZero() {
     var N = G.gaugeReset ? 100 : counter(), X = G.logLost ? null : G.lastX, result, note = '';
+    var last = G.cuts[G.cuts.length - 1];
     if (X === null) { result = 0; note = 'log'; }
     else if (N >= 99) { result = 0; note = 'reset'; }
     else result = clamp(N - X, 0, 100);
     G.shift = result - (G.q + G.E);
-    G.zeroInfo = { N: N, X: X, result: result, note: note };
+    G.zeroInfo = { N: N, X: X, result: result, note: note, V: last ? last.V : null };
   }
 
   function calGood() {
@@ -211,32 +239,26 @@ var SIM = (function () {
     return toast;
   }
 
-  // The screen saver, as screensaver.cpp: the left stick moves the block (450 / 260 px limits), the
-  // right stick up/down changes the brightness (40 %/s at full stick), left/right the drift speed (0.1..8).
-  function saverTick(dt) {
-    var s = G.stick;
-    if (!G.saver) return;
-    if (s.lx || s.ly) {
-      G.sx = clamp(G.sx + s.lx * 450 * dt, -450, 450);
-      G.sy = clamp(G.sy - s.ly * 450 * dt, -260, 260);
-    }
-    if (s.ry) { G.bright = clamp(G.bright + s.ry * 40 * dt, 1, 100); G.osdUntil = Date.now() + 1200; }
-    if (s.rx) G.dMult = clamp(G.dMult + s.rx * 1.5 * dt, 0.1, 8);
-    G.dAcc += dt * G.dMult;
-  }
-  // Block centre on the 1280x720 stage, whole pixels, as Draw() computes it.
-  function saverCentre() {
-    return { x: Math.round(640 + Math.sin(G.dAcc * 0.021) * 170 + G.sx), y: Math.round(360 + Math.cos(G.dAcc * 0.013) * 90 + G.sy) };
-  }
-
   return {
-    saverTick: saverTick, saverCentre: saverCentre,
-    G: G, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, CHG_MA: CHG_MA, SYS_NAME: SYS_NAME,
-    ocv: ocv, counter: counter, loadNow: loadNow, drainActive: drainActive, clockText: clockText,
+    G: G, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, CHG_MA: CHG_MA, CHG3_S: CHG3_S, SYS_NAME: SYS_NAME,
+    ocv: ocv, counter: counter, loadNow: loadNow, loadLevels: loadLevels, drainActive: drainActive, clockText: clockText,
     systems: systems, step: step, advance: advance, jumpNext: jumpNext,
     powerOff: powerOff, powerOn: powerOn, bootSystem: bootSystem, consoleNoBoot: consoleNoBoot,
     complete: complete, drainStart: drainStart, stopDrain: stopDrain, chargeStart: chargeStart,
     toggleCharger: toggleCharger, reportNext: reportNext, setZero: setZero,
+    saverTick: function (dt) {
+      // screensaver.cpp: the left stick moves the block (450 / 260 px limits), right stick up/down brightness
+      // (40 %/s at full stick), left/right the drift speed (0.1..8).
+      var s = G.stick;
+      if (!G.saver) return;
+      if (s.lx || s.ly) { G.sx = clamp(G.sx + s.lx * 450 * dt, -450, 450); G.sy = clamp(G.sy - s.ly * 450 * dt, -260, 260); }
+      if (s.ry) { G.bright = clamp(G.bright + s.ry * 40 * dt, 1, 100); G.osdUntil = Date.now() + 1200; }
+      if (s.rx) G.dMult = clamp(G.dMult + s.rx * 1.5 * dt, 0.1, 8);
+      G.dAcc += dt * G.dMult;
+    },
+    saverCentre: function () {
+      return { x: Math.round(640 + Math.sin(G.dAcc * 0.021) * 170 + G.sx), y: Math.round(360 + Math.cos(G.dAcc * 0.013) * 90 + G.sy) };
+    },
     reset: function () { G = fresh(); SIM.G = G; }
   };
 })();

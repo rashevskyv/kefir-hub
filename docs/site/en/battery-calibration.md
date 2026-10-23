@@ -10,7 +10,7 @@ Battery calibration finds the real empty point of the battery and sets the fuel 
 - Wizard steps: 1 drain to the dead battery; 2 charge about 3 minutes, then switch on, the Hub sets the zero; 3 cycle 1 (charge to 100 %, then drain); 4 cycle 2; 5 report; 6 transfer to the other system.
 - Only the next step is open. Progress is kept on the microSD, so a restart or a cut-off keeps the place.
 - Drain: the charger must be out. Max load (CPU and GPU) and max brightness. Screen saver after 3 minutes or on Minus; the stick lowers the brightness. Logged to the microSD every second.
-- Load: max load until the voltage first falls to 3.4 V, then minimum load, latched (the voltage rises when the load drops, so a threshold would flip back). Minimum load is skipped when the first run shows a sag below 0.05 V.
+- Load (owner decision, commit f5396c33): maximum load and maximum brightness until the first cut-off. After every cut-off, when the user switches the console on again, the drain goes on at once in the tail mode: low brightness (20 %) and minimal load. No switch at 3.4 V.
 - After each cut-off, switch the console on again and open the wizard; the same step goes on. When it does not start, the step is done.
 - Zero (step 2): the Hub reads counter N after switch-on and writes N minus X, X is the last logged gauge value before the cut-off. Fallback 0 when the gauge looks reset or the log is lost; the report says so. Unconfirmed on a console: the gauge keeps counting while the console is off.
 - Full cycle: 100 % by the percent. The rule with the current near 0 for 5 minutes is planned.
