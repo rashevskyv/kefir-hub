@@ -68,6 +68,8 @@ auto ReadBattery() -> Battery {
     PsmChargerType charger{};
     psmGetChargerType(&charger);
     b.charger_in = charger != PsmChargerType_Unconnected;
+    // when this boot began: now minus the time the console has been up
+    b.boot_time = static_cast<std::int64_t>(std::time(nullptr)) - static_cast<std::int64_t>(armTicksToNs(armGetSystemTick()) / 1'000'000'000ULL);
     return b;
 }
 
@@ -135,7 +137,8 @@ auto ScreenNow() -> std::pair<int, bool> {
 }
 
 void StartDrainRun(Marker& m) {
-    StartPhase(m, ReadBattery().percent, Now());
+    const auto b = ReadBattery();
+    StartPhase(m, b.percent, Now(), b.boot_time);
     SaveMarker(m);
     CalibRun run;
     run.tail = m.cutoffs > 0;
@@ -152,7 +155,8 @@ void OnChargeDone() {
 }
 
 void StartChargeRun(Marker& m) {
-    StartPhase(m, ReadBattery().percent, Now());
+    const auto b = ReadBattery();
+    StartPhase(m, b.percent, Now(), b.boot_time);
     SaveMarker(m);
     CalibRun run;
     run.charge = true;
@@ -230,6 +234,10 @@ auto Resume(Marker m) -> bool {
         case Found::CutoffSeen:
             App::Notify("The console switched off: the drain goes on slowly"_i18n);
             StartDrainRun(m);
+            return true;
+        case Found::HubRestarted:
+            App::Notify("The Hub started again: the drain goes on"_i18n);
+            StartDrainRun(m); // same boot, same mode: only the Hub was left or replaced
             return true;
         case Found::DeadWithCharger:
             AskZero();

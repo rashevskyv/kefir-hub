@@ -597,6 +597,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         const auto ma = g.Current(MAX17050_Current);
         if (mv && ma) {
             m_mv = static_cast<int>((*mv >> 3) * 0.625);
+            Push(m_volts, m_mv / 1000.f);
             m_ma = static_cast<int>(*ma);
             const float w = m_mv / 1000.f * std::abs(m_ma) / 1000.f;
             Push(m_watts, w);
@@ -691,6 +692,89 @@ struct DrainMenu final : ui::menu::MenuBase {
         return buf;
     }
 
+    // the calibration's page, as in the guide: the battery (the percent inside, approximate), the voltage beside it, what is
+    // going on, the load and brightness chips, the consumption and the time, and a row of three charts
+    void DrawCalib(NVGcontext* vg, Theme* theme) {
+        const auto text = theme->GetColour(ThemeEntryID_TEXT);
+        const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
+        const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
+        const float pct = std::clamp(m_pct, 0, 100) / 100.f;
+        const auto level = pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
+                                      : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
+
+        // the battery
+        const float bx = 70.f, by = 108.f, bw = 360.f, bh = 150.f;
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, bx, by, bw, bh, 18.f);
+        nvgStrokeColor(vg, text);
+        nvgStrokeWidth(vg, 6.f);
+        nvgStroke(vg);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, bx + bw, by + bh / 2.f - 30.f, 22.f, 60.f, 6.f);
+        nvgFillColor(vg, text);
+        nvgFill(vg);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, bx + 12.f, by + 12.f, (bw - 24.f) * pct, bh - 24.f, 10.f);
+        nvgFillColor(vg, level);
+        nvgFill(vg);
+        ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 72.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "\u2248 %d%%", m_pct);
+        ui::gfx::drawTextBox(vg, bx, by + bh + 10.f, 16.f, bw, info, "The percent is approximate: the console may switch off earlier."_i18n.c_str());
+
+        // the voltage and the state
+        const float fx = 520.f;
+        ui::gfx::drawTextArgs(vg, fx, 118.f, 64.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%.2f V", m_mv / 1000.0);
+        const bool attention = m_charger || m_docked || m_hot;
+        ui::gfx::drawTextBox(vg, fx, 158.f, 18.f, 690.f, attention ? warn : info, m_status.c_str());
+
+        // the chips
+        const auto Chip = [&](float x, float y, const std::string& label, const std::string& value) {
+            float b[4]{};
+            const auto s = label + " " + value;
+            nvgFontSize(vg, 18.f);
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            nvgTextBounds(vg, 0, 0, s.c_str(), nullptr, b);
+            const float w = (b[2] - b[0]) + 28.f;
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x, y, w, 36.f, 18.f);
+            nvgFillColor(vg, nvgTransRGBAf(info, 0.14f));
+            nvgFill(vg);
+            ui::gfx::drawTextArgs(vg, x + 14.f, y + 18.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", label.c_str());
+            nvgFontSize(vg, 18.f);
+            float lb[4]{};
+            nvgTextBounds(vg, 0, 0, (label + " ").c_str(), nullptr, lb);
+            ui::gfx::drawTextArgs(vg, x + 14.f + (lb[2] - lb[0]), y + 18.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", value.c_str());
+            return w;
+        };
+        const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
+        const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
+            : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
+        const float w1 = Chip(fx, 232.f, "Load:"_i18n, load_text);
+        Chip(fx + w1 + 12.f, 232.f, "Brightness:"_i18n, std::to_string(brightness) + " %");
+
+        // the figures
+        char v[64];
+        std::snprintf(v, sizeof(v), "%d mA", std::abs(m_ma));
+        ui::gfx::drawTextArgs(vg, fx, 292.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "Charging current"_i18n : "Consumption from the battery"_i18n).c_str());
+        ui::gfx::drawTextArgs(vg, fx + 690.f, 292.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", v);
+        ui::gfx::drawTextArgs(vg, fx, 322.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
+        ui::gfx::drawTextArgs(vg, fx + 690.f, 322.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
+
+        // one row of three charts
+        const float cy = 356.f, ch = 270.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
+        std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
+        Chart(vg, 60.f, cy, cw, ch, "Voltage"_i18n, v, {{&m_volts, nvgRGB(0x60, 0xA5, 0xFA)}}, 3.0f, 4.3f, text, info, 3.2f);
+        std::snprintf(v, sizeof(v), "%.1f W", Last(m_watts));
+        Chart(vg, 60.f + cw + gap, cy, cw, ch, "CPU / GPU load"_i18n, v,
+              {{&m_cpu[0], nvgRGB(0x2D, 0xD4, 0xBF)}, {&m_cpu[1], nvgRGB(0x60, 0xA5, 0xFA)}, {&m_cpu[2], nvgRGB(0xA7, 0x8B, 0xFA)}, {&m_gpu, nvgRGB(0x4A, 0xDE, 0x80)}},
+              0.f, 100.f, text, info);
+        char legend[96];
+        std::snprintf(legend, sizeof(legend), "%s 1 %.0f%%  %s 2 %.0f%%  %s 3 %.0f%%  %s %.0f%%", "Core"_i18n.c_str(), Last(m_cpu[0]), "Core"_i18n.c_str(), Last(m_cpu[1]),
+            "Core"_i18n.c_str(), Last(m_cpu[2]), "GPU"_i18n.c_str(), Last(m_gpu));
+        ui::gfx::drawTextArgs(vg, 60.f + cw + gap + 14.f, cy + ch - 14.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, info, "%s", legend);
+        std::snprintf(v, sizeof(v), "%.1f \u00B0C", Last(m_temps));
+        Chart(vg, 60.f + 2.f * (cw + gap), cy, cw, ch, "Temperature"_i18n, v, {{&m_temps, nvgRGB(0xF8, 0x71, 0x71)}}, 20.f, 70.f, text, info, static_cast<float>(HOT_C));
+    }
+
     void Draw(NVGcontext* vg, Theme* theme) override {
         m_t += 0.02f;
         if (g_load) {
@@ -710,6 +794,10 @@ struct DrainMenu final : ui::menu::MenuBase {
             return;
         }
         MenuBase::Draw(vg, theme); // after the load: the page background covers the circles, the GPU still draws them
+        if (m_calib) {
+            DrawCalib(vg, theme);
+            return;
+        }
 
         const auto text = theme->GetColour(ThemeEntryID_TEXT);
         const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
@@ -873,6 +961,7 @@ private:
     std::deque<float> m_cpu[LOAD_CORES];
     std::deque<float> m_gpu;
     std::deque<float> m_watts;
+    std::deque<float> m_volts;
     std::deque<float> m_temps;
     u64 m_busy[LOAD_CORES]{};
     u64 m_tick{};

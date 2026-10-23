@@ -3667,5 +3667,17 @@
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.",
   "Everything is written to a log.": "Everything is written to a log.",
   "Remembered": "Remembered",
-  "Drain the battery to the cut-off, set the zero and run two full cycles.": "Drain the battery to the cut-off, set the zero and run two full cycles."
+  "Drain the battery to the cut-off, set the zero and run two full cycles.": "Drain the battery to the cut-off, set the zero and run two full cycles.",
+  "The Hub started again: the drain goes on": "The Hub started again: the drain goes on",
+  "The percent is approximate: the console may switch off earlier.": "The percent is approximate: the console may switch off earlier.",
+  "Minimum": "Minimum",
+  "Maximum": "Maximum",
+  "Load:": "Load:",
+  "Brightness:": "Brightness:",
+  "Charging current": "Charging current",
+  "Consumption from the battery": "Consumption from the battery",
+  "The charge has lasted": "The charge has lasted",
+  "The drain has lasted": "The drain has lasted",
+  "CPU / GPU load": "CPU / GPU load",
+  "Core": "Core"
 }

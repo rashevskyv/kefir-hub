@@ -37,6 +37,8 @@ struct Marker {
     bool auto_before{};                // auto-brightness the user had
     int last_set_brightness{-1};       // the last brightness the Hub set itself, -1 none
     int last_logged_remaining_mah{-1}; // X: the gauge's last logged remaining charge before the cut-off, -1 none
+    std::int64_t boot_time{};          // unix time the console booted when this phase started (0 = unknown): a Hub start in the
+                                       // same boot is a restart of the Hub, in another boot the console itself switched off
 };
 
 inline auto Begin(int brightness_now, bool auto_now, std::int64_t now) -> Marker {
@@ -81,10 +83,23 @@ inline auto DecideBrightness(const Marker& m, bool charger_in, bool draining, in
 struct Battery {
     int percent{};
     bool charger_in{};
+    std::int64_t boot_time{}; // unix time this boot began (now minus the uptime), 0 = unknown
 };
+
+inline constexpr std::int64_t BOOT_SAME_S = 120; // two boot times this close are one boot (the clock and the uptime differ a little)
+
+// the console started again since the marker was written
+inline auto Rebooted(const Marker& m, const Battery& b) -> bool {
+    if (!m.boot_time || !b.boot_time) {
+        return false; // unknown: do not take a Hub restart for a cut-off
+    }
+    const auto d = b.boot_time - m.boot_time;
+    return d > BOOT_SAME_S || d < -BOOT_SAME_S;
+}
 
 enum class Found {
     Nothing,          // no calibration, or nothing to say
+    HubRestarted,     // a drain was running and only the Hub started again (the console did not restart): go on as before
     CutoffSeen,       // the Hub drained, the console switched off and was switched on without the charger: go on in the tail mode
     DeadWithCharger,  // step 1: the console would not start without the charger: the zero comes next
     ChargeDone,       // 100 % with the charger in
@@ -98,8 +113,12 @@ inline auto Check(Marker& m, const Battery& b) -> Found {
         return Found::Nothing;
     }
     if (m.step == Step::Drain) {
+        if (!Rebooted(m, b)) {
+            return b.charger_in ? Found::Nothing : Found::HubRestarted; // the same boot: the drain page was left, not cut off
+        }
+        m.boot_time = b.boot_time;
         if (b.charger_in) {
-            m.step = Step::Zero; // the user plugged the charger in and the console started: the zero comes now
+            m.step = Step::Zero; // the console was off and started with the charger in: the zero comes now
             m.phase_started = false;
             return Found::DeadWithCharger;
         }
@@ -119,6 +138,10 @@ inline auto Check(Marker& m, const Battery& b) -> Found {
         return Found::ChargeInProgress;
     }
     // a drain phase of a cycle
+    if (!Rebooted(m, b)) {
+        return b.charger_in ? Found::Nothing : Found::HubRestarted;
+    }
+    m.boot_time = b.boot_time;
     if (!b.charger_in) {
         m.cutoffs++; // the Hub was draining, the console cut off and was switched on without the charger
         return Found::CutoffSeen;
@@ -128,10 +151,11 @@ inline auto Check(Marker& m, const Battery& b) -> Found {
 
 // ---- moving on -------------------------------------------------------------------------------------------------------------
 
-inline void StartPhase(Marker& m, int percent, std::int64_t now) {
+inline void StartPhase(Marker& m, int percent, std::int64_t now, std::int64_t boot_time = 0) {
     m.phase_started = true;
     m.phase_time = now;
     m.phase_percent = percent;
+    m.boot_time = boot_time;
 }
 
 // the zero is written
@@ -174,6 +198,7 @@ inline auto Format(const Marker& m) -> std::string {
     kv("auto_before", m.auto_before ? 1 : 0);
     kv("last_set", m.last_set_brightness);
     kv("x_mah", m.last_logged_remaining_mah);
+    kv("boot", m.boot_time);
     return o;
 }
 
@@ -204,6 +229,7 @@ inline auto Parse(std::string_view text) -> Marker {
         else if (key == "auto_before") m.auto_before = v != 0;
         else if (key == "last_set") m.last_set_brightness = static_cast<int>(v);
         else if (key == "x_mah") m.last_logged_remaining_mah = static_cast<int>(v);
+        else if (key == "boot") m.boot_time = v;
     }
     return m;
 }

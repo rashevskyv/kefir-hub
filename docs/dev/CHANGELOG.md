@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.199 — Calibration: a Hub restart is not a cut-off; the drain page as in the guide
+Found by the owner on the console with 0.14.198: after the Hub was replaced during a drain it went into the tail mode at once (brightness at the minimum, no load) because it took the restart for a cut-off. The marker now keeps the time the console booted (`boot`, now minus the uptime): a Hub start in the same boot only goes on with the drain as before (`Found::HubRestarted`); a different boot is the cut-off. `battery_calib_state.hpp` + host test. The calibration's drain / charge page (`DrawCalib`) is laid out as in the guide: the battery with the approximate percent inside, the voltage beside it, the state, the load and brightness chips, the consumption and the time, one row of three charts (voltage with the 3.2 V line, CPU / GPU load, temperature).
+host tests: pass | nro: built | switch: pending
+
 ## v0.14.198 — Battery drain page: Minus starts the screensaver, no header or footer over it
 Found by the owner on the console with 0.14.197: Minus on the drain page ran the menus' "go to Homebrew" action and closed the page (the drain stopped), and the screensaver, once on, showed the header and footer over it. Now Minus on the drain / charge page starts the screensaver (`Button::SELECT` overridden), and the page gives up the chrome while the saver owns the screen (`WantsChrome`). The steps list of the calibration: the "remembered" note has a short label (the long one was cut), the Tools row has its Ukrainian description.
 host tests: pass | nro: built | switch: pending

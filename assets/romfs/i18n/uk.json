@@ -3667,5 +3667,17 @@
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Повне навантаження: консоль розряджається найшвидше. Коли вона вимкнеться, ввімкніть її знову і відкрийте Kefir Hub.",
   "Everything is written to a log.": "Усе записується в журнал.",
   "Remembered": "Запам'ятовується",
-  "Drain the battery to the cut-off, set the zero and run two full cycles.": "Розряд до відсікання, нуль і два повні цикли."
+  "Drain the battery to the cut-off, set the zero and run two full cycles.": "Розряд до відсікання, нуль і два повні цикли.",
+  "The Hub started again: the drain goes on": "Hub запустився знову: розряд іде далі",
+  "The percent is approximate: the console may switch off earlier.": "Відсоток орієнтовний: консоль може вимкнутися раніше.",
+  "Minimum": "Мінімум",
+  "Maximum": "Максимум",
+  "Load:": "Навантаження:",
+  "Brightness:": "Яскравість:",
+  "Charging current": "Зарядний струм",
+  "Consumption from the battery": "Споживання з батареї",
+  "The charge has lasted": "Заряд триває",
+  "The drain has lasted": "Розряд триває",
+  "CPU / GPU load": "Навантаження ЦП / ГП",
+  "Core": "Ядро"
 }
