@@ -216,3 +216,7 @@ h3 { font-size: 26px; font-weight: 400; color: var(--hacc); margin: 4px 0 10px; 
 .chart .ct b { font-size: 16px; }
 .legend { font-size: 14px; gap: 2px 12px; }
 .mlab { font-size: 13px; }
+.autob { font-size: 17px; color: var(--hwarn); margin: 2px 0 4px; min-height: 0; }
+.autob:empty { display: none; }
+.chart, .chart.wide { height: 200px; }
+.charts { margin-top: 8px; }

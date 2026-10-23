@@ -6,7 +6,7 @@
   var START1 = [         // the four paragraphs of the step 1 start page
     'Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.',
     'After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.',
-    'When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at low brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.',
+    'When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.',
     'Then plug the charger in for 3 minutes: the wizard moves to the next step.'];
   var STEPK = ['', 'Drain to the dead battery', 'Charge 3 min and zero', 'Cycle 1', 'Cycle 2', 'Report', 'Transfer to the other MMC'];
   function G() { return SIM.G; }
@@ -207,6 +207,7 @@
         '<div class="approx">' + esc(TX('The percent is approximate: the console may switch off earlier.')) + '</div></div>' +
         '<div class="dinfo"><div class="vbig" data-k="V"></div>' +
         '<div class="status" data-k="status"></div>' +
+        '<div class="autob" data-k="autob"></div>' +
         '<div class="chips"><span class="chip">' + esc(TX('Load')) + ': <b data-k="load"></b></span>' +
         '<span class="chip">' + esc(TX('Brightness')) + ': <b data-k="bright"></b></span></div>' +
         '<div class="kvs">' + kv(TX('Battery consumption'), 'I') + kv(TX('Draining for'), 'elapsed') + kv(TX('On pause for'), 'pauseT') + '</div>' +
@@ -319,7 +320,9 @@
     var sline = V.toFixed(2) + ' V · ' + Math.round(I * 1000) + ' mA · ' + Math.round(g.T) + ' °C';
     return {
       clock: SIM.clockText(), psm: p + ' %', pctText: '≈ ' + p + ' %', V: V.toFixed(2) + ' V', I: Math.round(I * 1000) + ' mA',
-      gauge: SIM.counter() + ' %', T: Math.round(g.T) + ' °C', load: load, bright: g.bright + ' %',
+      gauge: SIM.counter() + ' %', T: Math.round(g.T) + ' °C', load: load,
+      bright: g.tail && Math.round(g.bright) <= 1 ? TX('1 % (minimum)') : Math.round(g.bright) + ' %',
+      autob: g.tail ? TX('Auto-brightness is off, brightness at the minimum: this is why the drain is slowest.') : '',
       elapsed: hms(g.drainSec), pauseT: g.charger && g.drainRun ? hms(g.pausedS) : '—', status: statusText(g),
       charging: TX('Charging:') + ' ' + p + ' % / 100 %', curr: charging + (g.charger ? SIM.CHG_MA : 0) + ' mA',
       left: mmss(g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
@@ -333,6 +336,8 @@
     var v = vals();
     document.querySelectorAll('[data-k]').forEach(function (el) { var k = el.dataset.k; if (v[k] !== undefined) el.textContent = v[k]; });
     document.querySelectorAll('[data-bw]').forEach(function (el) { el.style.width = v.pctNum + '%'; });
+    // the stage dims with the brightness (never fully black: the text stays readable at 1 %)
+    stage.style.filter = (SIM.G.scr === 'drain' && !SIM.G.saver) ? 'brightness(' + (0.12 + 0.88 * SIM.G.bright / 100).toFixed(2) + ')' : '';
     if (SIM.G.scr === 'drain') sparks(); // the charts keep moving under the screen saver too
     if (SIM.G.saver) saverFrame();
   }
@@ -343,7 +348,7 @@
     var blk = stage.querySelector('[data-move]');
     if (blk) { blk.style.left = Math.round(left) + 'px'; blk.style.top = Math.round(top) + 'px'; }
     var dim = stage.querySelector('[data-dim]');
-    if (dim) dim.style.opacity = (1 - Math.round(g.bright) / 100).toFixed(2);
+    if (dim) dim.style.opacity = (1 - (0.12 + 0.88 * g.bright / 100)).toFixed(2);
     var osd = stage.querySelector('[data-osd]');
     if (osd) {
       var on = Date.now() < g.osdUntil;
@@ -541,7 +546,7 @@
     var CUTS = [];
     for (var c = 1; c <= 8; c++) CUTS.push({ n: c, V: 3.2, gauge: c, t: 0 });
     function drain(extra) {
-      return function (s) { s.scr = 'drain'; s.cur = 1; s.ctx = 1; s.drainRun = true; s.power = true; s.charger = false; s.drainSec = 1; s.minRun = 0; extra(s); SIM.advance(900); };
+      return function (s) { s.scr = 'drain'; s.cur = 1; s.ctx = 1; s.drainRun = true; s.power = true; s.charger = false; s.drainSec = 1; s.minRun = 0; s.tail = false; extra(s); SIM.advance(900); };
     }
     var SCREENS = [
       ['tools', function (s) { s.scr = 'tools'; s.focus = 2; }],

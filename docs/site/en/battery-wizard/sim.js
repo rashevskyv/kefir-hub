@@ -138,7 +138,7 @@ var SIM = (function () {
     else if (G.cur === 1 || G.cur === 3 || G.cur === 4) {
       if (G.drainSec > 0 && G.ctx === G.cur) {
         G.scr = 'drain'; G.drainRun = true; G.saver = false;
-        G.tail = G.cuts.length > 0; G.bright = G.tail ? 20 : 100;
+        G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100;
       }
       else { G.scr = 'start'; G.sub = G.cur; }
     }

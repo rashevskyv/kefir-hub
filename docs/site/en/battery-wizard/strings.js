@@ -75,7 +75,7 @@ var NEW = {
   "Begin step": "Розпочати",
   "Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.": "Зараз Hub розряджатиме батарею до самого кінця, доки консоль сама не вимкнеться. Щоб розряд ішов рівно, Hub навантажить процесор і відеочип на повну і виставить найвищу яскравість.",
   "After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.": "Через 3 хвилини (або одразу, якщо натиснути Minus) увімкнеться заставка: екран стане чорним, а цифри повільно рухатимуться по ньому. Так пікселі не вигоряють. Правим стіком можна міняти яскравість, лівим — пересувати цифри.",
-  "When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at low brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.": "Коли консоль вимкнеться — це нормально, так і має бути. Просто ввімкніть її знову. Hub сам продовжить розряд, уже з низькою яскравістю і слабким навантаженням, щоб вичавити останні відсотки. Вмикайте консоль знову, доки вона не перестане вмикатися зовсім.",
+  "When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.": "Коли консоль вимкнеться — це нормально, так і має бути. Просто ввімкніть її знову. Hub сам продовжить розряд, уже з мінімальною яскравістю і слабким навантаженням, щоб вичавити останні відсотки. Вмикайте консоль знову, доки вона не перестане вмикатися зовсім.",
   "Then plug the charger in for 3 minutes: the wizard moves to the next step.": "Тоді підключіть зарядку на 3 хвилини: майстер перейде до наступного кроку.",
   "CPU / GPU load": "Навантаження ЦП / GPU",
   "Brightness %d %%": "Яскравість %d %%",
@@ -135,6 +135,8 @@ var NEW = {
   "Core 3": "Ядро 3",
   "Core 4": "Ядро 4",
   "GPU": "ГП",
+  "1 % (minimum)": "1 % (мінімум)",
+  "Auto-brightness is off, brightness at the minimum: this is why the drain is slowest.": "Автояскравість вимкнено, яскравість на мінімумі: так розряд іде найповільніше.",
 };
 
 // Text for the language of the page (?lang=uk, default English). Counts %s / %d in order.
