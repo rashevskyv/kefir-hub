@@ -450,7 +450,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       0 % for an hour), so the real cut-off is the zero. A new entry Tools > "Battery calibration" opens a wizard (method, steps,
       only the next step active): drain to the dead battery (maximum load and brightness, screensaver on Minus or after 3 min, the
       stick lowers the brightness, every second logged to the SD, the user switches the console on again until it does not start),
-      charge ~3 min and the Hub sets that point as 0 % by itself (counter now minus the gauge's last logged value before the cut-off; no menu), two full cycles, a report with the gauge
+      charger in, switch on and open the Hub at once (no waiting time; the wizard warns that the off-and-on loop is part of the process and can be long, and that the console may need to lie on the charger before it starts), and the Hub sets that point as 0 % by itself (counter now minus the gauge's last logged value before the cut-off; no menu), two full cycles, a report with the gauge
       percent before each cut-off. Load: maximum until the first cut-off, then after every restart the tail mode (auto-brightness off, brightness at the
       minimum, minimal load); no 3.4 V switch (owner, 2026-10-23). The calibrated model reaches the other MMC by itself: at the next Hub start there it is applied (backup first) and a toast says so; no hop in the wizard. Full design in `docs/dev/BATTERY-CALIBRATION.md`, "Cutoff pipeline". Check the register for the zero first.
 
