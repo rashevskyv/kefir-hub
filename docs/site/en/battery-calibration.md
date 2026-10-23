@@ -19,7 +19,7 @@ Battery calibration finds the real empty point of the battery and sets the fuel 
 - Open: the register for the zero (RemCap or RepSOC), the temperature limit (60 °C in the guide), the real cut-off voltage under load (3.2 V in the guide), the rule for a good calibration, the toast wording.
 -->
 
-<iframe src="../battery-wizard/index.html?lang=en&v=19" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
+<iframe src="../battery-wizard/index.html?lang=en&v=20" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
 
 [Open the guide full screen](../battery-wizard/index.html?lang=en)
 
@@ -36,7 +36,7 @@ The percent on the screen is not a safe guide. The console may switch off at 35 
 !!! warning
     The console will switch off and on many times. This is normal and needed. Keep switching it on each time, until it does not start at all. This can take a long time.
 5. Step 2: plug in the charger. The console may not start at once: let it lie on the charger for a while. As soon as it starts, open Kefir Hub at once. Do not wait. The Hub sets the zero by itself.
-6. Steps 3 and 4: charge to 100 %, unplug the charger, drain again until the console does not start.
+6. Steps 3 and 4 have two phases each. Phase A: plug in the charger and press **A** on **Start charging** until it reaches 100 %. You may leave the console on the charger or use it meanwhile. Phase B: press **A** on **Drain in the Hub**, or **Drain by myself** and use the console. The wizard remembers the progress: you can close the Hub and come back later through [[Tools]] → [[Maintenance]] → [[Battery calibration]].
 7. Step 5: read the report, then press **A** on [[Next]].
 
 ## Move the calibration to the other system

@@ -79,6 +79,31 @@
   }
 
   // Each view returns body html, bar list and the screen title and subtitle.
+  // honest charger line: a tick when it is done, otherwise the request (never a request for what is done)
+  function chkLine(ok, yes, no) {
+    return '<div class="chk ' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓ ' + esc(yes) : esc(no)) + '</div>';
+  }
+  // what a step shows in its row: the phases of a cycle with ticks
+  function phaseText(k) {
+    var g = G(), pz = SIM.ph(k), parts = [];
+    if (k === 3 || k === 4) {
+      if (pz.aD) parts.push(TX('charge ✓'));
+      else if (pz.aS && !g.charger) parts.push(TX('Charge interrupted: charge again'));
+      else if (pz.aS) parts.push(TX('charge: %d %%, %s', Math.round(g.q), mmss(pz.aSec)));
+      else parts.push(TX('charge: next'));
+    }
+    if (pz.bD) parts.push(TX('drain ✓'));
+    else if (pz.bSelf) parts.push(TX('drain: by yourself'));
+    else if (k === 1 || pz.aD) parts.push(TX('drain: next'));
+    else parts.push(TX('drain: after the charge'));
+    return parts.join(' · ');
+  }
+  // one-time line on the step screens
+  function onceLine() {
+    if (G().saidOnce) return '';
+    G().saidOnce = true;
+    return txt(TX('Calibration is saved on the SD: you can close the Hub.'), 'li dim');
+  }
   var VIEWS = {
     tools: function () {
       return { title: TX('Tools'), sub: '', bar: [['B', TX('Back')], ['A', TX('Open')]], body:
@@ -133,42 +158,61 @@
       for (var i = 1; i <= 6; i++) {
         var state = g.done[i] ? 'done' : (g.cur === i ? 'active' : 'locked');
         var label = state === 'done' ? TX('Done') : state === 'active' ? TX('Active') : TX('Locked');
-        var inner = '<span class="num">' + i + '</span><span class="rt">' + esc(TX(STEPK[i])) + '</span><span class="stt ' + state + '">' + esc(label) + '</span>';
+        var inner = '<span class="num">' + i + '</span><span class="rt">' + esc(TX(STEPK[i])) + '</span><span class="rd">' + esc(phaseText(i)) + '</span><span class="stt ' + state + '">' + esc(label) + '</span>';
         if (state === 'active') ACTIVE_F = F.length;
         body += state === 'locked' ? '<div class="fi row dim">' + inner + '</div>'
           : fi(inner, state === 'active' ? function (k) { return function () { openStep(k); }; }(i) : noop, 'row');
       }
       return { title: TX('Battery calibration'), sub: g.cur > 5 ? TX('Calibration finished') : TX('Step %d of 5', g.cur),
-        bar: [['B', TX('Back')], ['A', TX('Open'), 'bA']], body: body };
+        bar: [['B', TX('Back')], ['A', TX('Open'), 'bA']], body: body + onceLine() };
     },
     start: function () {
-      var i = G().sub || G().cur, g = G(), checks = [], btn, h = '';
-      if (i === 1) {
-        checks.push([TX('Charger is out'), !g.charger]);
-        btn = [TX('Start the drain'), function () { if (!g.charger) SIM.drainStart(); else g.hint = TX('Charger is in: take it out first.'); }];
-        START1.forEach(function (p) { h += '<p class="para s">' + esc(TX(p)) + '</p>'; });
+      var i = G().sub || G().cur, g = G(), pz = SIM.ph(i), cyc = (i === 3 || i === 4), body = '', btns = [], first = '';
+      function btn(label, act) { btns.push(fi(esc(label), act, 'btn')); if (!first) first = label; }
+      if (i === 2) {
+        body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
+        body += txt(TX('Plug in the charger. Charge it, and the console may not start at once.'), 'li');
+        body += txt(TX('Then open Kefir Hub at once. The Hub sets the zero by itself.'), 'li');
+        btn(TX('Start charging'), function () { if (!g.charger) { g.hint = TX('Plug the charger in.'); renderAll(); return; } SIM.chargeStart('zero'); });
+      } else if (cyc && !pz.aD) {
+        body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
+        if (!pz.aS) btn(TX('Start charging'), function () { if (!g.charger) { g.hint = TX('Plug the charger in.'); renderAll(); return; } SIM.chargeStart('full'); });
+        else btn(TX('Open the charge screen'), function () { go('charge'); });
+      } else if (g.askSelf) {
+        body += txt(TX('The console switched off from the drain?'), 'para s');
+        btn(TX('Yes'), function () { SIM.selfAnswer(true); renderAll(); });
+        btn(TX('No'), function () { SIM.selfAnswer(false); renderAll(); });
+      } else if (pz.bSelf && !pz.bD) {
+        body += txt(TX('The console is in use. The battery drains while you play. Open Kefir Hub when the console has switched off.'), 'para s');
       } else {
-        checks.push([TX('Plug the charger in.'), g.charger]);
-        var what = i === 2 ? [TX('Plug in the charger. Charge it, and the console may not start at once.'), TX('Then open Kefir Hub at once. The Hub sets the zero by itself.')]
-          : [TX('Charge to 100 %. Then unplug the charger: the drain starts by itself.')];
-        what.forEach(function (t) { h += txt(t, 'li'); });
-        btn = [TX('Start charging'), function () {
-          if (!g.charger) { g.hint = TX('Plug the charger in.'); renderAll(); return; }
-          SIM.chargeStart(i === 2 ? 'zero' : 'full');
-        }];
+        body += chkLine(!g.charger, TX('Charger is out'), TX('Take the charger out.'));
+        if (i === 1) {
+          START1.forEach(function (t) { body += '<p class="para s">' + esc(TX(t)) + '</p>'; });
+          body += txt(TX('In this step keep the Hub open: it needs the log.'), 'li warn');
+        } else {
+          body += txt(TX('Two ways to drain. In the Hub: maximum load first, then the tail mode after each cut-off. By yourself: play or leave the console on; the Hub may stay closed.'), 'para s');
+        }
+        btn(TX('Drain in the Hub'), function () { if (g.charger) { g.hint = TX('Take the charger out.'); renderAll(); return; } SIM.drainChoice(true); });
+        btn(TX('Drain by myself'), function () { if (g.charger) { g.hint = TX('Take the charger out.'); renderAll(); return; } SIM.drainChoice(false); });
       }
-      var pre = '';
-      checks.forEach(function (c) { pre += '<div class="chk ' + (c[1] ? 'ok' : 'no') + '">' + (c[1] ? '✓' : '✗') + ' ' + esc(c[0]) + '</div>'; });
-      if (g.hint) pre += '<div class="hint">' + esc(g.hint) + '</div>';
-      h = pre + h + '<div class="btnrow">' + fi(esc(btn[0]), btn[1], 'btn') + '</div>';
-      return { title: TX(STEPK[i]), sub: TX('Step %d of 5', i), bar: [['B', TX('Back')], ['A', btn[0]]], body: h };
+      if (g.hint) body = '<div class="hint">' + esc(g.hint) + '</div>' + body;
+      body += '<div class="btnrow">' + btns.join('') + '</div>';
+      var bar = [['B', TX('Back')]];
+      if (first) bar.push(['A', first]);
+      return { title: TX(STEPK[i]), sub: TX('Step %d of 5', i), bar: bar, body: body };
     },
     charge: function () {
-      var g = G(), body = '<div class="bigbat">' + battery() + '</div>' +
-        '<div class="kvs">' + kv(TX('Charging:'), 'charging') + kv(TX('Current'), 'curr') + '</div>' +
-        txt(TX('Keep the screen on while charging.'));
-      if (g.chargeMode === 'zero') body += '<div class="kvs">' + kv(TX('Charging for'), 'left') + '</div>';
-      else if (g.fullFlag) body += txt(TX('Full: 100 %. Unplug the charger: the drain starts by itself.'), 'txt ok');
+      var g = G(), cyc = (g.cur === 3 || g.cur === 4), pz = SIM.ph(g.cur);
+      var body = '<div class="bigbat">' + battery() + '</div>' +
+        '<div class="kvs">' + kv(TX('Charging:'), 'charging') + kv(TX('Current'), 'curr') + kv(TX('Charging for'), 'left') + '</div>';
+      if (cyc) {
+        body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
+        if (!pz.aD) body += txt(TX('You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.'), 'li');
+        else body += txt(TX('Full: 100 %. Now choose how to drain.'), 'txt ok');
+      } else {
+        body += txt(TX('Keep the screen on while charging.'));
+        body += txt(TX('Unplug the charger, switch the console on. The Hub sets the zero by itself.'), 'txt warn');
+      }
       return { title: TX('Battery charge'), sub: TX(STEPK[g.cur]), bar: [['B', TX('Back')]], body: body };
     },
     zero: function () {
@@ -181,7 +225,8 @@
         box(TX('Result N − X'), z.result + ' %') + '</div>' +
         txt(TX('Factory model written'), 'li ok') + txt(TX('The backup was made.'), 'li ok') +
         (z.note === 'reset' ? txt(TX('The gauge looks reset. 0 is written.'), 'li warn')
-          : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : txt(TX('The charge after the cut-off stays in the counter.'), 'li')) +
+          : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : z.note === 'nolog' ? txt(TX('0 (no log)'), 'li warn')
+          : txt(TX('The charge after the cut-off stays in the counter.'), 'li')) +
         (G().userSkipped ? txt(TX('Brightness changed by the user: leaving it.'), 'li warn')
           : txt(TX('Auto-brightness is on again; brightness set back to what it was before the calibration (%d %%).', G().brightSaved), 'li ok')) +
         '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.complete(2); go('start', 3); }, 'btn') + '</div>';
@@ -191,7 +236,7 @@
       var g = G(), v = g.fullMah * 100 > 3600 * 130 ? TX('Larger battery is built in.')
         : g.fullMah * 100 < 3600 * 90 ? TX('Sign of desync: learned capacity below 90 % of design.') : TX('Normal: no sign of desync.');
       var cuts = '';
-      g.cuts.slice(-4).forEach(function (c) { cuts += txt(TX('Cut-off %d · %s V · gauge %s %%', c.n, c.V.toFixed(2), c.gauge), 'li'); });
+      g.cuts.slice(-4).forEach(function (c) { cuts += txt(c.logged ? TX('Cut-off %d · %s V · gauge %s %%', c.n, c.V.toFixed(2), c.gauge) : TX('Cut-off %d · %s V · gauge: not measured', c.n, c.V.toFixed(2)), 'li'); });
       if (g.zeroInfo) cuts += txt(TX('Zero: N − X = %s %%', g.zeroInfo.result), 'li');
       cuts += txt(TX('Written: calibration on the microSD, copy in this system.'), 'li');
       var body = '<div class="twocol"><div>' + kv(TX('Learned capacity'), '') .replace('<b data-k=""></b>', '<b>' + g.fullMah + ' / 3600 mAh</b>') +
@@ -233,7 +278,12 @@
         '</div>';
       return { title: TX('Battery drain'), sub: ctxLabel(), bar: [['−', TX('Screensaver')], ['B', TX('Stop')]], body: body, drain: true };
     },
-    black: function () { return { title: '', sub: '', bar: [], body: '' }; }
+    black: function () { return { title: '', sub: '', bar: [], body: '' }; },
+    home: function () {
+      var pz = SIM.ph(G().cur);
+      return { title: '', sub: '', bar: [], body: '<div class="idle"><p class="para s">' + esc(TX('Home screen. Kefir Hub is closed.')) + '</p>' +
+        (pz && pz.bSelf && !pz.bD ? txt(TX('The battery drains while you use the console.'), 'li') : '') + '</div>' };
+    }
   };
 
   function openStop() {
@@ -341,7 +391,7 @@
       autob: g.userSkipped ? TX('Brightness changed by the user: leaving it.') : (g.charger && g.scr === 'drain') ? TX('Brightness is back to normal: %d %%.', Math.round(g.bright)) : (g.tail ? TX('Auto-brightness is off, brightness at the minimum: this is why the drain is slowest.') : ''),
       elapsed: hms(g.drainSec), pauseT: g.charger && g.drainRun ? hms(g.pausedS) : '—', status: statusText(g),
       charging: TX('Charging:') + ' ' + p + ' % / 100 %', curr: charging + (g.charger ? SIM.CHG_MA : 0) + ' mA',
-      left: mmss(g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
+      left: mmss((g.cur === 3 || g.cur === 4) ? SIM.ph(g.cur).aSec : g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
       c1: L.c[0], c2: L.c[1], c3: L.c[2], c4: L.c[3], gpu: L.g, chgTimer: chgText(g),
       sys: name(g.sys), pwr: g.power ? S2('on', 'увімкнена') : S2('off', 'вимкнена'), chg: g.charger ? S2('in', 'є') : S2('out', 'немає'),
       cuts: String(g.cuts.length), cur: String(g.cur), scrName: g.scr, mmc: String(g.emus)
@@ -396,7 +446,8 @@
       sideBtn(g.charger ? S2('Take out the charger', 'Вийняти зарядку') : S2('Plug in the charger', 'Вставити зарядку'), '', 'charger'),
       sideBtn(!g.power ? S2('Turn on the console', 'Ввімкнути консоль') : S2('Turn off the console', 'Вимкнути консоль'), '', 'power')
     ];
-    if (g.power && g.scr === 'idle') people.push(sideBtn(S2('Open Kefir Hub', 'Відкрити Kefir Hub'), 'on', 'openhub'));
+    if (g.hubOpen) people.push(sideBtn(S2('Close the Hub (play a game)', 'Закрити Hub (грати в гру)'), '', 'closehub'));
+    else people.push(sideBtn(S2('Open Kefir Hub', 'Відкрити Kefir Hub'), 'on', 'openhub'));
     if (g.noBoot && !g.power) people.push(sideBtn(TX('Console does not start'), 'warn', 'noboot'));
     SIM.systems().forEach(function (s) { if (s !== g.sys) people.push(sideBtn(S2('Boot ', 'Запустити ') + name(s), '', 'boot:' + s)); });
     var ev = [
@@ -439,6 +490,7 @@
     if (a === 'charger') SIM.toggleCharger();
     else if (a === 'power') { if (g.power) SIM.powerOff(); else SIM.powerOn(); }
     else if (a === 'openhub') SIM.openHub();
+    else if (a === 'closehub') SIM.closeHub();
     else if (a === 'noboot') SIM.consoleNoBoot();
     else if (p[0] === 'boot') SIM.bootSystem(p[1]);
     else if (a === 'loss') SIM.powerOff();
@@ -581,6 +633,11 @@
       ['start step 1', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; }],
       ['start step 2', function (s) { s.scr = 'start'; s.sub = 2; s.cur = 2; }],
       ['charge step 2', function (s) { s.scr = 'charge'; s.cur = 2; s.chargeMode = 'zero'; s.chargeStarted = true; s.charge3 = 120; s.charger = true; s.power = true; }],
+      ['home', function (s) { s.scr = 'home'; s.cur = 1; s.hubOpen = false; s.power = true; }],
+      ['cycle 3 phase A', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = true; s.ph = { 3: { aS: false, aD: false, aSec: 0, bD: false, bSelf: false, selfCut: false } }; }],
+      ['cycle 3 charge', function (s) { s.scr = 'charge'; s.cur = 3; s.charger = true; s.ph = { 3: { aS: true, aD: false, aSec: 120, bD: false, bSelf: false, selfCut: false } }; }],
+      ['cycle 3 drain choice', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = false; s.ph = { 3: { aS: true, aD: true, aSec: 200, bD: false, bSelf: false, selfCut: false } }; }],
+      ['question', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; s.charger = true; s.askSelf = true; s.ph = { 1: { aS: false, aD: false, aSec: 0, bD: false, bSelf: true, selfCut: true } }; }],
       ['idle step 2', function (s) { s.scr = 'idle'; s.cur = 2; s.power = true; s.chargeStarted = true; s.charge3 = 60; s.charger = false; }],
       ['black step 2', function (s) { s.scr = 'black'; s.cur = 2; s.power = false; s.chargeStarted = true; s.charge3 = 10; s.charger = true; }],
       ['zero', function (s) { s.scr = 'zero'; s.cur = 2; s.zeroInfo = { N: 3, X: 18, result: 0, note: '', V: 3.2 }; }],
