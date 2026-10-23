@@ -223,3 +223,8 @@ h3 { font-size: 26px; font-weight: 400; color: var(--hacc); margin: 4px 0 10px; 
 .warnp { color: var(--hwarn); }
 .idle { padding-top: 220px; text-align: center; color: var(--hdim); }
 .zbox { padding: 8px 12px; } .zbox b { font-size: 38px; } .zrow { margin: 6px 0; } .li { font-size: 20px; margin: 4px 0; }
+
+/* round 24: the charge meter: the fill reaches the inner right edge at 100 %; the nub sits on the edge */
+.nub { left: 333px; top: 52px; width: 14px; height: 46px; }
+.bbig .nub { left: 343px; top: 36px; width: 14px; height: 46px; }
+.bfill { left: 0; }

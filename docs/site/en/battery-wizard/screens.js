@@ -89,7 +89,7 @@
     if (k === 3 || k === 4) {
       if (pz.aD) parts.push(TX('charge ✓'));
       else if (pz.aS && !g.charger) parts.push(TX('Charge interrupted: charge again'));
-      else if (pz.aS) parts.push(TX('charge: %d %%, %s', Math.round(g.q), mmss(pz.aSec)));
+      else if (pz.aS) parts.push(TX('charge: %d %%, %s', Math.round(g.q), hm(pz.aSec)));
       else parts.push(TX('charge: next'));
     }
     if (pz.bD) parts.push(TX('drain ✓'));
@@ -202,11 +202,13 @@
     charge: function () {
       var g = G(), cyc = (g.cur === 3 || g.cur === 4), pz = SIM.ph(g.cur);
       var body = '<div class="bigbat">' + battery() + '</div>' +
-        '<div class="kvs">' + kv(TX('Charging:'), 'charging') + kv(TX('Current'), 'curr') + kv(TX('Charging for'), 'left') + '</div>';
+        '<div class="kvs"><div class="kv"><b data-k="charging"></b></div>' + kv(TX('Charging current'), 'curr') + kv(TX('Charging for'), 'left') + '</div>';
       if (cyc) {
-        body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
-        if (!pz.aD) body += txt(TX('You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.'), 'li');
-        else body += txt(TX('Full: 100 %. Now choose how to drain.'), 'txt ok');
+        if (pz.aD) body += txt(TX('Full. Now the drain: take the charger out.'), 'txt warn');
+        else {
+          body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
+          body += txt(TX('You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.'), 'li');
+        }
       } else {
         body += txt(TX('Keep the screen on while charging.'));
         body += txt(TX('Unplug the charger, switch the console on. The Hub sets the zero by itself.'), 'txt warn');
@@ -216,19 +218,20 @@
     zero: function () {
       var z = G().zeroInfo || { N: 0, X: null, result: 0, note: '', V: null };
       var box = function (l, v) { return '<div class="zbox"><small>' + esc(l) + '</small><b>' + v + '</b></div>'; };
+      var mah = function (p) { return TX('%d mAh', Math.round(p * 36)); }; // 3600 mAh: the counter is charge, not percent
       var body = txt(TX('The console switched off at the cut-off, and you charged it.'), 'li') +
-        txt(TX('Now the Hub sets this point as 0 %.'), 'li') +
+        txt(TX('Now the Hub sets this point as zero.'), 'li') +
         '<div class="kv"><span>' + esc(TX('Last voltage in the log before the cut-off')) + '</span><b>' + (z.V === null ? '—' : z.V.toFixed(2) + ' V') + '</b></div>' +
-        '<div class="zrow">' + box(TX('Gauge counter N'), z.N + ' %') + box(TX('Last logged value X'), z.X === null ? '—' : z.X + ' %') +
-        box(TX('Result N − X'), z.result + ' %') + '</div>' +
+        '<div class="zrow">' + box(TX('Gauge counter N'), mah(z.N)) + box(TX('Last logged value X'), z.X === null ? '—' : mah(z.X)) +
+        box(TX('Result N − X'), mah(z.result)) + '</div>' +
         txt(TX('Factory model written'), 'li ok') + txt(TX('The backup was made.'), 'li ok') +
         (z.note === 'reset' ? txt(TX('The gauge looks reset. 0 is written.'), 'li warn')
           : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : z.note === 'nolog' ? txt(TX('0 (no log)'), 'li warn')
           : txt(TX('The charge after the cut-off stays in the counter.'), 'li')) +
         (G().userSkipped ? txt(TX('Brightness changed by the user: leaving it.'), 'li warn')
           : txt(TX('Auto-brightness is on again; brightness set back to what it was before the calibration (%d %%).', G().brightSaved), 'li ok')) +
-        '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.complete(2); go('start', 3); }, 'btn') + '</div>';
-      return { title: TX('Gauge zero'), sub: TX('Step %d of 5', 2), bar: [['A', TX('Next')]], body: body };
+        '<div class="btnrow">' + fi(esc(TX('Go on')), function () { SIM.complete(2); go('start', 3); }, 'btn') + '</div>';
+      return { title: TX('Gauge zero'), sub: TX('Step %d of 5', 2), bar: [['A', TX('Go on')]], body: body };
     },
     report: function () {
       var g = G(), v = g.fullMah * 100 > 3600 * 130 ? TX('Larger battery is built in.')
@@ -265,7 +268,9 @@
         '<div class="chips"><span class="chip">' + esc(TX('Load')) + ': <b data-k="load"></b></span>' +
         '<span class="chip">' + esc(TX('Brightness')) + ': <b data-k="bright"></b></span></div>' +
         '<div class="kvs">' + kv(TX('Battery consumption'), 'I') + kv(TX('Draining for'), 'elapsed') + kv(TX('On pause for'), 'pauseT') + '</div>' +
-        '<div class="logline">' + esc(TX('Everything is logged.')) + '</div></div></div>' +
+        '<div class="logline">' + esc(TX('Everything is logged.')) + '</div>' +
+        (G().ctx === 3 || G().ctx === 4 ? '<div class="logline">' + esc(TX('You can also drain it yourself: play, or simply leave the console on, and you may close the Hub. When the console switches off, switch it on with the charger in and open Kefir Hub: it will ask whether it was the drain.')) + '</div>' : '') +
+        '</div></div>' +
         '<div class="charts">' +
         chart(TX('Voltage'), 'V', 3.0, 4.2, [3.2], ['V'], true) +
         '<div class="chart wide"><div class="ct"><span>' + esc(TX('CPU / GPU load')) + '</span><b data-k="pw"></b></div>' +
@@ -339,7 +344,7 @@
     var toast = g.toast && Date.now() < g.toast.until ? '<div class="toast' + (g.toast.bad ? ' bad' : '') + '">' + esc(g.toast.text) + '</div>' : '';
     var saver = g.saver && g.scr === 'drain' ? '<div class="saver"><div class="sblock" data-move="1">' +
       '<div class="sclock" data-k="clock"></div><div class="sstat">' + esc(ctxLabel()) + '</div>' +
-      '<div class="sbat">' + battery() + '</div><div class="smet">' + kv(TX('Voltage'), 'V') + kv(TX('Current'), 'I') +
+      '<div class="sbat">' + battery() + '</div><div class="smet">' + kv(TX('Voltage'), 'V') + kv(TX('Battery consumption'), 'I') +
       kv(TX('Gauge'), 'gauge') + kv(TX('Load'), 'load') + kv(TX('Elapsed'), 'elapsed') + '</div></div>' +
       '<div class="sdim" data-dim="1"></div><div class="osd" data-osd="1"></div>' +
       '<div class="shint">' + esc(TX('Right stick: brightness; left stick: move.')) + ' ' + esc(TX('Any button exits.')) + '</div></div>' : '';
@@ -365,7 +370,7 @@
     if (g.charger) return TX('Charger connected. The drain is on pause. Unplug the charger to continue the drain.');
     if (g.loadOff) return TX('Paused: the battery is hot, waiting until it cools to 55 °C');
     if (g.tail) return TX('The console has already switched off: now it drains slowly to squeeze out the last charge.');
-    return TX('Full load: the console drains as fast as possible.');
+    return TX('The drain has started.');
   }
   function chgText(g) {
     if (g.cur === 2 && g.chargeStarted && !g.done[2]) {
@@ -375,6 +380,10 @@
     }
     return '';
   }
+  function hm(s) {
+    s = Math.floor(s); var h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+    return h > 0 ? TX('%d h %d min', h, m) : TX('%d min', m);
+  }
   function hms(s) { s = Math.floor(s); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60); }
   function mmss(s) { s = Math.ceil(s); return (s < 600 ? '0' : '') + Math.floor(s / 60) + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60); }
   function vals() {
@@ -383,13 +392,13 @@
     var charging = g.charger ? '+' : '';
     var sline = V.toFixed(2) + ' V · ' + Math.round(I * 1000) + ' mA · ' + Math.round(g.T) + ' °C';
     return {
-      clock: SIM.clockText(), psm: p + ' %', pctText: '≈ ' + p + ' %', V: V.toFixed(2) + ' V', I: Math.round(I * 1000) + ' mA',
+      clock: SIM.clockText(), psm: p + ' %', pctText: '≈ ' + p + ' %', V: V.toFixed(2) + ' V', I: TX('%d mA', Math.round(I * 1000)),
       gauge: SIM.counter() + ' %', T: Math.round(g.T) + ' °C', load: load,
       bright: g.tail && Math.round(g.bright) <= 1 ? TX('1 % (minimum)') : Math.round(g.bright) + ' %',
       autob: g.userSkipped ? TX('Brightness changed by the user: leaving it.') : (g.charger && g.scr === 'drain') ? TX('Brightness is back to normal: %d %%.', Math.round(g.bright)) : (g.tail ? TX('Auto-brightness is off, brightness at the minimum: this is why the drain is slowest.') : ''),
       elapsed: hms(g.drainSec), pauseT: g.charger && g.drainRun ? hms(g.pausedS) : '—', status: statusText(g),
-      charging: TX('Charging:') + ' ' + p + ' % / 100 %', curr: charging + (g.charger ? SIM.CHG_MA : 0) + ' mA',
-      left: mmss((g.cur === 3 || g.cur === 4) ? SIM.ph(g.cur).aSec : g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
+      charging: TX('Charge') + ': ' + p + ' %', curr: TX('%d mA', g.charger ? SIM.CHG_MA : 0),
+      left: hm((g.cur === 3 || g.cur === 4) ? SIM.ph(g.cur).aSec : g.charge3), sline: sline, pctNum: p, pw: (V * I).toFixed(1) + ' W',
       c1: L.c[0], c2: L.c[1], c3: L.c[2], c4: L.c[3], gpu: L.g, chgTimer: chgText(g),
       sys: name(g.sys), pwr: g.power ? S2('on', 'увімкнена') : S2('off', 'вимкнена'), chg: g.charger ? S2('in', 'є') : S2('out', 'немає'),
       cuts: String(g.cuts.length), cur: String(g.cur), scrName: g.scr, mmc: String(g.emus)
@@ -450,10 +459,10 @@
     var ev = [
       sideBtn(S2('Power loss', 'Вимкнення живлення'), '', 'loss'),
       sideBtn(S2('High temperature (+20 °C)', 'Висока температура (+20 °C)'), '', 'hot'),
-      sideBtn(S2('Gauge looks reset', 'Гейдж скинувся перед увімкненням') + (g.gaugeReset ? ' ✓' : ''), g.gaugeReset ? 'on' : '', 'toggle:gaugeReset'),
+      sideBtn(S2('Gauge looks reset', 'Датчик заряду скинувся перед увімкненням') + (g.gaugeReset ? ' ✓' : ''), g.gaugeReset ? 'on' : '', 'toggle:gaugeReset'),
       sideBtn(S2('Log lost', 'Журнал втрачено') + (g.logLost ? ' ✓' : ''), g.logLost ? 'on' : '', 'toggle:logLost'),
-      sideBtn(S2('Gauge shows 35 % at cut-off', 'Гейдж показує 35 % при відсіку') + (g.E === 35 ? ' ✓' : ''), g.E === 35 ? 'on' : '', 'toggle:E35'),
-      sideBtn(S2('Gauge at 0 % early (reads 40 % low)', 'Гейдж 0 % раніше (занижує на 40 %)') + (g.E === -40 ? ' ✓' : ''), g.E === -40 ? 'on' : '', 'toggle:Em40'),
+      sideBtn(S2('Gauge shows 35 % at cut-off', 'Датчик заряду показує 35 % при відсіку') + (g.E === 35 ? ' ✓' : ''), g.E === 35 ? 'on' : '', 'toggle:E35'),
+      sideBtn(S2('Gauge at 0 % early (reads 40 % low)', 'Датчик заряду 0 % раніше (занижує на 40 %)') + (g.E === -40 ? ' ✓' : ''), g.E === -40 ? 'on' : '', 'toggle:Em40'),
       sideBtn(S2('Larger battery (7810 mAh)', 'Велика батарея (7810 мАг)') + (g.fullMah > 3600 ? ' ✓' : ''), g.fullMah > 3600 ? 'on' : '', 'toggle:big'),
       sideBtn(S2('User changed the brightness', 'Користувач сам змінив яскравість') + (g.userOn ? ' ✓' : ''), g.userOn ? 'on' : '', 'toggle:userB'),
       sideBtn(S2('Write fails', 'Запис не вдається') + (g.applyFail ? ' ✓' : ''), g.applyFail ? 'on' : '', 'toggle:applyFail'),
@@ -470,8 +479,8 @@
     side.innerHTML =
       '<h3>' + esc(S2('The world', 'Світ')) + '</h3>' +
       '<div class="kvs side">' + kv(S2('Console system', 'Система'), 'sys') + kv(S2('Power', 'Живлення'), 'pwr') + kv(S2('Charger', 'Зарядка'), 'chg') +
-      kv(S2('Screen', 'Екран'), 'scrName') + kv(S2('Cut-offs so far', 'Відсіків'), 'cuts') + kv(S2('Step', 'Крок'), 'cur') + kv(S2('Gauge', 'Гейдж'), 'gauge') + kv(S2('Voltage', 'Напруга'), 'V') + '</div>' +
-      timer +
+      kv(S2('Screen', 'Екран'), 'scrName') + kv(S2('Cut-offs so far', 'Відсіків'), 'cuts') + kv(S2('Step', 'Крок'), 'cur') + kv(S2('Gauge', 'Датчик заряду'), 'gauge') + kv(S2('Voltage', 'Напруга'), 'V') + '</div>' +
+      timer + (Date.now() < g.nojumpUntil ? '<p class="tag">' + esc(S2('No event in the next 4 hours.', 'Протягом 4 годин подій немає.')) + '</p>' : '') +
       '<h3>' + esc(S2('The person', 'Людина')) + '</h3><div class="sbcol">' + people.join('') + '</div>' +
       '<h3>' + esc(S2('Time', 'Час')) + '</h3><div class="sbrow">' + speeds + sideBtn(g.paused ? S2('Resume', 'Йде') : S2('Pause', 'Пауза'), g.paused ? 'on' : '', 'pause') +
       sideBtn(S2('To the next event', 'До наступної події'), '', 'next') + '</div>' +
@@ -530,7 +539,7 @@
       S2('Real cut-off voltage under load: 3.2 V here. To measure on the first run.', 'Справжня напруга відсіку під навантаженням: 3,2 В тут. Виміряти на першому прогоні.'),
       S2('The rule for a good calibration (the marker): not decided.', 'Правило «добре калібрування» для маркера: не вирішено.'),
       S2('The wording of the toasts: not decided.', 'Текст тостів: не вирішено.'),
-      S2('Does the gauge keep counting while the console is off? Not confirmed on a console.', 'Чи рахує гейдж, поки консоль вимкнена? На консолі не підтверджено.'),
+      S2('Does the gauge keep counting while the console is off? Not confirmed on a console.', 'Чи рахує датчик заряду, поки консоль вимкнена? На консолі не підтверджено.'),
       S2('The CPU and GPU load in the charts is the level the Hub sets (100 % at max, 15 % at min). The measured load needs a reading on the console.', 'Навантаження ЦП і GPU на графіках — рівень, який виставляє Hub (100 % на максимумі, 15 % на мінімумі). Виміряне навантаження треба зняти на консолі.'),
       S2('An unfinished sentence of the owner that starts with «в черні…»: not received, not guessed.', 'Незакінчене речення власника, яке починається з «в черні…»: не отримано, не вгадуємо.')
     ];

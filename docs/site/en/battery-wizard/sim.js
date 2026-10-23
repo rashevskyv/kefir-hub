@@ -32,7 +32,7 @@ var SIM = (function () {
       cur: 1, done: [false, false, false, false, false, false, false],
       seqN: 0, copies: { sysMMC: copy(), emuA: copy(), emuB: copy() }, marker: null, ledger: [],
       applyFail: false, sysNewer: false, sysOther: false, emus: 1, fullMah: 3032, needRender: false,
-      stick: { lx: 0, ly: 0, rx: 0, ry: 0 }, sx: 0, sy: 0, dAcc: 0, dMult: 1, osdUntil: 0
+      nojumpUntil: 0, stick: { lx: 0, ly: 0, rx: 0, ry: 0 }, sx: 0, sy: 0, dAcc: 0, dMult: 1, osdUntil: 0
     };
   }
   var G = fresh();
@@ -130,7 +130,7 @@ var SIM = (function () {
   function jumpNext() {
     var e = advance(4 * 3600);
     G.needRender = true;
-    if (!e) G.toast = { text: TX('No event in the next 4 hours.'), bad: false, until: Date.now() + 4000 };
+    if (!e) G.nojumpUntil = Date.now() + 4000; // the side panel says so
     return e;
   }
 
@@ -251,6 +251,9 @@ var SIM = (function () {
     if (G.charger) {
       G.pausedS = 0; G.offChg = 0;
       restoreBright(); // the charger is in: the brightness is the person's again, at once
+    }
+    else if ((G.cur === 3 || G.cur === 4) && ph(G.cur).aD && !ph(G.cur).bD && !G.drainRun) {
+      drainStart(); // the charger came out after the full charge: the drain starts by itself
     }
     G.needRender = true;
   }
