@@ -6,6 +6,7 @@ var SIM = (function () {
   'use strict';
   var MAX_CUTS = 2;      // cut-offs in one drain: after the second one the console does not start without the charger
   var CUT_V = 3.2, BOOT_V = 3.25, RECOVER = 0.03, I_MAX = 1.8, I_MIN = 0.35, I_SELF = 1.2;
+  var SELF_DIE_PCT = 1.5; // a drain by the user himself kills the console at about 1-2 % of the real charge
   var LIMIT_T = 60, COOL_T = 55, SAVER_S = 180, CHG_RATE = 0.6 / 60, CHG_MA = 1296;
   var LOW_PERCENT = 15;  // C++ LOW_BATTERY_PERCENT: under this, with the charger just in, the Hub asks about the drain
   var BASE_T = 13 * 3600 + 17 * 60; // the clock of the Switch at the start of the page
@@ -16,7 +17,7 @@ var SIM = (function () {
   function fresh() {
     return {
       t: 0, speed: 10, paused: false, power: true, sys: 'sysMMC', charger: false,
-      q: 62, R: 100, E: 0, shift: 0, gaugeReset: false, logLost: false,
+      q: 62, R: 72, E: 0, shift: 0, gaugeReset: false, logLost: false,
       bright: 100, brightBefore: 60, brightSaved: 60, autoB: true,
       userOn: false, userBright: 40, userSkipped: false, bMarker: { before: 60, lastSet: 100 },
       saver: false, saverAuto: false, drainRun: false, loadOff: false,
@@ -72,7 +73,7 @@ var SIM = (function () {
   // A cut-off: the console switches off (black, no Hub). The gauge reading is kept only when the Hub drained (logged).
   function cutoff(V) {
     var logged = G.hubOpen && G.drainRun;
-    G.cuts.push({ n: G.cuts.length + 1, V: V, gauge: logged ? counter() : null, logged: logged, t: G.t });
+    G.cuts.push({ n: G.cuts.length + 1, dn: G.dcuts + 1, ctx: G.ctx, V: V, gauge: logged ? counter() : null, logged: logged, t: G.t });
     G.dcuts++;
     G.lastX = logged ? counter() : null;
     if (!logged) ph(G.cur).selfCut = true;
@@ -115,8 +116,7 @@ var SIM = (function () {
       if (!G.saverAuto && G.drainSec >= SAVER_S) { G.saverAuto = true; G.saver = true; ev = ev || 'saver'; }
     } else if (selfDraining()) {
       // the person uses the console; the battery runs down without the Hub (nothing logged)
-      var Vs = ocv(G.q) - I_SELF * G.R / 1000;
-      if (Vs <= CUT_V) { cutoff(Vs); return 'cut'; }
+      if (G.q <= SELF_DIE_PCT) { cutoff(ocv(G.q)); return 'cut'; }
       G.q = Math.max(0, G.q - I_SELF * dt / 129.6);
     }
     G.t += dt;

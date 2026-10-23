@@ -239,14 +239,18 @@
       var g = G(), v = g.fullMah * 100 > 3600 * 130 ? TX('Larger battery is built in.')
         : g.fullMah * 100 < 3600 * 90 ? TX('Sign of desync: learned capacity below 90 % of design.') : TX('Normal: no sign of desync.');
       var cuts = '';
-      g.cuts.slice(-4).forEach(function (c) { cuts += txt(c.logged ? TX('Cut-off %d · %s V · gauge %s %%', c.n, c.V.toFixed(2), c.gauge) : TX('Cut-off %d · %s V · gauge: not measured', c.n, c.V.toFixed(2)), 'li'); });
+      g.cuts.slice(-6).forEach(function (c) {
+        var sens = c.logged ? c.gauge + ' %' : TX('not measured');
+        cuts += txt(c.ctx === 1 ? TX('Drain to zero · cut-off %d: %s V · sensor: %s', c.dn, c.V.toFixed(2), sens)
+          : TX('Cycle %d · cut-off %d/%d: %s V · sensor: %s', c.ctx === 3 ? 1 : 2, c.dn, 2, c.V.toFixed(2), sens), 'li');
+      });
       if (g.zeroInfo) cuts += txt(TX('Zero: N − X = %s %%', g.zeroInfo.result), 'li');
       cuts += txt(TX('Written: calibration on the microSD, copy in this system.'), 'li');
-      var body = '<div class="twocol"><div>' + kv(TX('Learned capacity'), '') .replace('<b data-k=""></b>', '<b>' + g.fullMah + ' / 3600 mAh</b>') +
+      var body = '<div class="twocol"><div>' + kv(TX('Learned capacity'), '') .replace('<b data-k=""></b>', '<b>' + TX('%d of %d mAh', g.fullMah, 3600) + '</b>') +
         '<div class="kv"><span>' + esc(TX('Verdict')) + '</span><b>' + esc(v) + '</b></div></div>' +
         '<div><h3>' + esc(TX('Gauge before each cut-off')) + '</h3>' + cuts + '</div></div>' +
-        '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.reportNext(); renderAll(); }, 'btn') + '</div>';
-      return { title: TX('Calibration report'), sub: TX('Step %d of 5', 5), bar: [['B', TX('Back')], ['A', TX('Next')]], body: body };
+        '<div class="btnrow">' + fi(esc(TX('Go on')), function () { SIM.reportNext(); renderAll(); }, 'btn') + '</div>';
+      return { title: TX('Calibration report'), sub: TX('Step %d of 5', 5), bar: [['B', TX('Back')], ['A', TX('Go on')]], body: body };
     },
     transfer: function () {
       var m = G().marker, body = '';

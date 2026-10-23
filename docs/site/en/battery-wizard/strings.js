@@ -22,7 +22,6 @@ var HUB = {
   "Paused: the battery is hot, waiting until it cools to 55 °C": "Пауза: батарея гаряча, чекаємо охолодження до 55 °C",
   "Back": "Назад",
   "Open": "Відкрити",
-  "Next": "Наступний",
   "Stop": "Зупинити",
   "Cancel": "Скасувати",
   "Done": "Виконано",
@@ -93,7 +92,6 @@ var NEW = {
   "Larger battery is built in.": "Вбудовано більшу батарею.",
   "Sign of desync: learned capacity below 90 % of design.": "Ознака розсинхронізації: виучена ємність нижче 90 % від проєктної.",
   "Gauge before each cut-off": "Датчик заряду перед кожним відсіком",
-  "Cut-off %d · %s V · gauge %s %%": "Відсік %d · %s В · датчик заряду %s %%",
   "Zero: N − X = %s %%": "Нуль: N − X = %s %%",
   "Written: calibration on the microSD, copy in this system.": "Записано: калібрування на microSD, копія в цій системі.",
   "Calibration saved on the microSD. Marker: from %s, number %d, %s.": "Калібрування збережено на microSD. Маркер: з %s, номер %d, %s.",
@@ -157,7 +155,6 @@ var NEW = {
   "drain: by yourself": "розряд самостійно",
   "drain: next": "розряд — далі",
   "drain: after the charge": "розряд — після заряду",
-  "Cut-off %d · %s V · gauge: not measured": "Відсік %d · %s В · датчик заряду: не вимірювалось",
   "0 (no log)": "0 (журналу немає)",
   "Unplug the charger, switch the console on. The Hub sets the zero by itself.": "Вийміть зарядку, ввімкніть консоль. Hub сам постав нуль.",
   "Start the drain": "Розпочати розряд",
@@ -172,6 +169,10 @@ var NEW = {
   "%d min": "%d хв",
   "The drain has started.": "Розряд розпочато.",
   "The screen stays on: so the console charges to the end. The screensaver saves the screen.": "Екран лишається увімкненим: так консоль точно зарядиться до кінця. Заставка береже екран.",
+  "Drain to zero · cut-off %d: %s V · sensor: %s": "Розряд до нуля · відсік %d: %s В · датчик: %s",
+  "Cycle %d · cut-off %d/%d: %s V · sensor: %s": "Цикл %d · відсік %d/%d: %s В · датчик: %s",
+  "%d of %d mAh": "%d з %d мА·год",
+  "not measured": "не вимірювалось",
 };
 
 // Text for the language of the page (?lang=uk, default English). Counts %s / %d in order.
