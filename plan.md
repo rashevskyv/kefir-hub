@@ -582,6 +582,44 @@ Rules for this phase:
 
 ---
 
+## Phase N — Nextendo built into Kefir (decided 2026-10-23)
+
+Goal: a user who installs Kefir or Kefir Hub gets Nextendo online on emuMMC with no button press. The Hub menu
+in Kefir settings only shows the state and switches it. Source of truth for formats: `NextendoNetwork/Prelude-Nextendo`
+(tag of the shipped `nextendo.nro`): `source/nextendo_hosts.h/.c` (hosts template, `%s` = server IP, last matching
+line wins), `source/nextendo_config.h` (server IPs), `romfs/sd/atmosphere/**` (ExeFS/NRO patches, browser certs).
+License PolyForm Shield 1.0.0 (owner agreed): ship `LICENSE` text + `Required Notice: Copyright 2026 Nextendo Network`
+in the Hub package and docs. Design rules:
+- hosts go to `atmosphere/hosts/emummc.txt` only. `sysmmc.txt` stays empty (Semi-stock and sysNAND stay clean).
+- Server IP: embedded snapshot in the Hub; at Hub start try the latest Prelude release `nextendo_config.h`; on any
+  failure keep the embedded one. Never block the UI on the network.
+- Never overwrite a `default.txt` or `emummc.txt` that has no `NEXTENDO NETWORK - Atmosphere DNS-MITM` mark
+  (user-owned): back it up to `switch/prelude_hosts_backup/` first, like Prelude does.
+- Kefir ships the IP-independent files (patches, certs, `enable_device_cert_fallback`) and a baseline `emummc.txt`
+  made at build time from the same template, so it works before the Hub is ever opened.
+
+- [ ] N.1 **Pure rules** (`nextendo_hosts.hpp` + `tests/test_nextendo_hosts.cpp`): build hosts text from template + IP;
+      detect our own file by the mark; decide apply / up to date / user file (back up first); parse server IPs from
+      `nextendo_config.h` text; fallback to the embedded snapshot. Real template text from the tagged Prelude source.
+      **Done when:** host test covers own file, user file, empty file, bad IP, garbage config text.
+- [ ] N.2 **Apply at Hub start** (free function in a new `nextendo_apply.cpp`, called from app start next to the
+      battery transfer): on emuMMC and setting `nextendo_enabled` (default on) write `emummc.txt` if stale, keep
+      `sysmmc.txt` empty, set `enable_device_cert_fallback` via `SetIniValue`. Off: remove only files with our mark,
+      restore the backup. Network refresh of the IP runs on a worker thread and only touches the file when the IP changed.
+- [ ] N.3 **Kefir settings item** in `settings_kefir.cpp` (`MakeKefirToggle` pattern): state line (on / off / server IP /
+      last refresh), toggle, "Use alternative server". i18n keys in all languages; fall back to English.
+- [ ] N.4 **Semi-stock** (`switch/.packages/package.ini`, `config/sphaira/packages/package.ini` in `_kefir`,
+      `config/semistock/restore.te`): on = move `exefs_patches/{disable_ca_verification,nextendo_bcat_signature}` and the
+      browser certs to `/config/semistock/nextendo/`, set the cert fallback to 0; off and `restore.te` = move back.
+      **[USER]** hardware check on emuMMC and Semi-stock.
+- [ ] N.5 **Kefir build** (`Kefirosphere/utilities/fetch_tools.py`): fetch the source zip of the same Prelude tag, extract
+      `romfs/sd/atmosphere/**` into the Kefir template, generate the baseline `emummc.txt`, add `LICENSE` +
+      Required Notice. `update.te`: keep patches across updates, drop `bootloader/ini/atmostock.ini` (hekate Semi-stock).
+- [ ] N.6 **Account Link** (0x167B) menu item; per-game installers stay out of scope for now.
+- [ ] N.7 Build checkpoint, docs per `update-docs` skill (EN + UK wiki, license notice), `[USER]` leftovers.
+
+---
+
 ## Not to do (from audit)
 - No refactor of `App`; no new abstractions, registries, interfaces with one implementation.
 - No file splits for their own sake; the 600-line cap is already met.

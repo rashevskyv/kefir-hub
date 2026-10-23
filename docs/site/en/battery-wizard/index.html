@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Battery calibration: the Switch screens</title>
+<link rel="stylesheet" href="wizard.css">
+</head>
+<body>
+<div class="lang">
+  <span class="en">Language:</span><span class="uk">Мова:</span>
+  <a href="?lang=en" data-lang="en">English</a><a href="?lang=uk" data-lang="uk">Українська</a>
+</div>
+
+<div class="wrap">
+  <div class="left">
+    <div id="frame" class="frame"><div id="stage" class="stage"></div></div>
+    <div class="pad" id="pad">
+      <div class="dpad">
+        <span></span><button class="pb" data-b="UP" aria-label="D-pad up">▲</button><span></span>
+        <button class="pb" data-b="LEFT" aria-label="D-pad left">◀</button><span></span><button class="pb" data-b="RIGHT" aria-label="D-pad right">▶</button>
+        <span></span><button class="pb" data-b="DOWN" aria-label="D-pad down">▼</button><span></span>
+      </div>
+      <div class="dpad">
+        <button class="pb" data-b="L">L</button><button class="pb" data-b="R">R</button>
+        <button class="pb" data-b="MINUS">−</button><button class="pb" data-b="PLUS">+</button>
+      </div>
+      <div class="faces">
+        <span></span><button class="pb round" data-b="X">X</button><span></span>
+        <button class="pb round" data-b="Y">Y</button><span></span><button class="pb round" data-b="A">A</button>
+        <span></span><button class="pb round" data-b="B">B</button><span></span>
+      </div>
+    </div>
+    <div class="sticks">
+      <div class="stickbox"><div class="stick" data-stick="L" role="slider" aria-label="Left stick"><i></i></div>
+        <span class="en">Left stick: move the screen saver. Keys: arrows.</span><span class="uk">Лівий стік: перемістити заставку. Клавіші: стрілки.</span></div>
+      <div class="stickbox"><div class="stick" data-stick="R" role="slider" aria-label="Right stick"><i></i></div>
+        <span class="en">Right stick: brightness (up/down) and drift speed (left/right). Keys: W/S, A/D.</span><span class="uk">Правий стік: яскравість (вгору/вниз) і швидкість руху (ліворуч/праворуч). Клавіші: W/S, A/D.</span></div>
+    </div>
+    <p class="lang"><span class="en">Keys: arrows, Enter (A), Esc (B), x, y, + and − keys, q (L), e (R).</span>
+      <span class="uk">Клавіші: стрілки, Enter (A), Esc (B), x, y, + і − , q (L), e (R).</span></p>
+  </div>
+  <aside id="side" class="side" aria-label="The world"></aside>
+</div>
+
+<section class="bottom">
+  <h2><span class="en">New texts (copy and edit later)</span><span class="uk">Нові тексти (скопіювати й редагувати пізніше)</span></h2>
+  <button id="copy" type="button"><span class="en">Copy the list</span><span class="uk">Скопіювати список</span></button>
+  <pre id="newtexts"></pre>
+  <h2><span class="en">Open questions</span><span class="uk">Відкриті питання</span></h2>
+  <ul id="questions"></ul>
+</section>
+
+<script>document.body.dataset.lang = (new URLSearchParams(location.search).get('lang') === 'uk') ? 'uk' : 'en';
+document.documentElement.lang = document.body.dataset.lang;
+document.querySelectorAll('.lang a').forEach(function (a) { a.classList.toggle('on', a.dataset.lang === document.body.dataset.lang); });</script>
+<script src="strings.js"></script>
+<script src="sim.js"></script>
+<script src="screens.js"></script>
+</body>
+</html>
