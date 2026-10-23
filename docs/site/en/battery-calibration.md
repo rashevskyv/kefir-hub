@@ -7,7 +7,7 @@ Battery calibration finds the real empty point of the battery and sets the fuel 
 <!-- draft
 - Status: planned, plan F.29 f. Not in the Hub yet. Say so once, at the top.
 - Why: the gauge percent cannot be trusted. The console can switch off at 35 %, or show 0 % for an hour. The real end is the cut-off: the console switches itself off at about 3.2 V under load.
-- Wizard steps: 1 drain to the dead battery; 2 charge about 3 minutes, then switch on, the Hub sets the zero; 3 cycle 1 (charge to 100 %, then drain); 4 cycle 2; 5 report; 6 transfer to the other system.
+- Wizard steps: 1 drain to the dead battery; 2 charge, then open the Hub at once, the Hub sets the zero (no waiting time); 3 cycle 1 (charge to 100 %, then drain); 4 cycle 2; 5 report; 6 transfer to the other system.
 - Only the next step is open. Progress is kept on the microSD, so a restart or a cut-off keeps the place.
 - Drain: the charger must be out. Max load (CPU and GPU) and max brightness. Screen saver after 3 minutes or on Minus; the stick lowers the brightness. Logged to the microSD every second.
 - Load (owner decision, commit f5396c33): maximum load and maximum brightness until the first cut-off. After every cut-off, when the user switches the console on again, the drain goes on at once in the tail mode: minimum brightness (1 %, auto-brightness off) and minimal load. No switch at 3.4 V.
@@ -19,7 +19,7 @@ Battery calibration finds the real empty point of the battery and sets the fuel 
 - Open: the register for the zero (RemCap or RepSOC), the temperature limit (60 °C in the guide), the real cut-off voltage under load (3.2 V in the guide), the rule for a good calibration, the toast wording.
 -->
 
-<iframe src="../battery-wizard/index.html?lang=en&v=15" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
+<iframe src="../battery-wizard/index.html?lang=en&v=16" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
 
 [Open the guide full screen](../battery-wizard/index.html?lang=en)
 
@@ -32,7 +32,10 @@ The percent on the screen is not a safe guide. The console may switch off at 35 
 2. Press **A** on **Start calibration**.
 3. Step 1: take the charger out, then press **A** on **Start the drain**. Keep the console near you. In the screen saver, the right stick sets the brightness and the drift speed, the left stick moves the block (on this page: the sticks under the screen; keys W/S, A/D, arrows).
 4. When the console switches off, switch it on again and open the wizard. The same step goes on.
-5. Step 2: charge about 3 minutes, unplug the charger and switch the console on. The Hub sets the zero by itself.
+
+!!! warning
+    The console will switch off and on many times. This is normal and needed. Keep switching it on each time, until it does not start at all. This can take a long time.
+5. Step 2: plug in the charger. The console may not start at once: let it lie on the charger for a while. As soon as it starts, open Kefir Hub at once. Do not wait. The Hub sets the zero by itself.
 6. Steps 3 and 4: charge to 100 %, unplug the charger, drain again until the console does not start.
 7. Step 5: read the report, then press **A** on [[Next]].
 
@@ -42,6 +45,6 @@ After the report, the Hub keeps the calibration with a marker on the microSD. St
 <!-- TODO(verify): the toast wording and the rule for a good calibration are not decided. -->
 
 ## Problems
-**The console does not start after a cut-off.** The battery is too low to start. Charge it with the charger in, then switch the console on. The step is done when the console does not start even then.
+**The console does not start after a cut-off.** This is normal: the battery is empty. Plug in the charger and let the console lie on it for a while. As soon as it starts, open Kefir Hub at once.
 
 **The calibration was not moved.** The Hub keeps the marker when the write fails, or when the other system has a newer calibration or another battery model. Open the other system once more after the cause is fixed.

@@ -220,3 +220,6 @@ h3 { font-size: 26px; font-weight: 400; color: var(--hacc); margin: 4px 0 10px; 
 .autob:empty { display: none; }
 .chart, .chart.wide { height: 200px; }
 .charts { margin-top: 8px; }
+.warnp { color: var(--hwarn); }
+.idle { padding-top: 220px; text-align: center; color: var(--hdim); }
+.zbox { padding: 8px 12px; } .zbox b { font-size: 38px; } .zrow { margin: 6px 0; } .li { font-size: 20px; margin: 4px 0; }

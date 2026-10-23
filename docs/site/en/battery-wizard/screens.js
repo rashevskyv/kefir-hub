@@ -7,8 +7,8 @@
     'Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.',
     'After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.',
     'When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.',
-    'Then plug the charger in for 3 minutes: the wizard moves to the next step.'];
-  var STEPK = ['', 'Drain to the dead battery', 'Charge 3 min and zero', 'Cycle 1', 'Cycle 2', 'Report', 'Transfer to the other MMC'];
+    'When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait.'];
+  var STEPK = ['', 'Drain to the dead battery', 'Charge and zero', 'Cycle 1', 'Cycle 2', 'Report', 'Transfer to the other MMC'];
   function G() { return SIM.G; }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function S2(en, uk) { return LANG === 'uk' ? uk : en; }
@@ -106,14 +106,10 @@
     intro: function () {
       return { title: TX('Battery calibration'), sub: TX('Step by step: drain, charge, report. The cut-off is the real end.'),
         bar: [['B', TX('Back')], ['A', TX('Start calibration')]], body:
-        txt(TX('Why this is needed'), 'head') +
-        txt(TX('With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest.'), 'para s') +
-        txt(TX('How it works'), 'head') +
-        txt(TX('We drain the battery to the very end: until the console switches itself off (about 3.2 V under load). That is the real zero. Then we charge and drain it fully, two times.'), 'para s') +
-        txt(TX('What you do'), 'head') +
-        txt(TX('Take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, plug the charger in for 3 minutes and switch it on. Open the wizard: it goes on from the same place.'), 'para s') +
-        txt(TX('How long it takes'), 'head') +
-        txt(TX('Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup.'), 'para s') +
+        txt(TX('The percent of the gauge cannot be trusted. The real end is the cut-off: the console switches itself off under load.'), 'para s') +
+        txt(TX('Warning. The console will switch off and on many times. This is normal and needed. Switch it on each time, until it does not start at all.'), 'para s warnp') +
+        txt(TX('When it does not start any more: plug in the charger. It may not start at once. Let it lie on the charger for a while.'), 'para s warnp') +
+        txt(TX('As soon as the console starts, open Kefir Hub at once. Do not wait. The Hub then sets the zero by itself.'), 'para s warnp') +
         '<div class="btnrow">' + fi(esc(TX('Start calibration')), function () { G().started = true; go('steps'); }, 'btn') + '</div>' };
     },
     steps: function () {
@@ -137,7 +133,7 @@
         START1.forEach(function (p) { h += '<p class="para s">' + esc(TX(p)) + '</p>'; });
       } else {
         checks.push([TX('Plug the charger in.'), g.charger]);
-        var what = i === 2 ? [TX('Charge 3 min. Then unplug the charger and switch the console on.'), TX('The 3 min of charge stay in the counter.')]
+        var what = i === 2 ? [TX('Plug in the charger. Charge it, and the console may not start at once.'), TX('Then open Kefir Hub at once. The Hub sets the zero by itself.')]
           : [TX('Charge to 100 %. Then unplug the charger: the drain starts by itself.')];
         what.forEach(function (t) { h += txt(t, 'li'); });
         btn = [TX('Start charging'), function () {
@@ -155,23 +151,22 @@
       var g = G(), body = '<div class="bigbat">' + battery() + '</div>' +
         '<div class="kvs">' + kv(TX('Charging:'), 'charging') + kv(TX('Current'), 'curr') + '</div>' +
         txt(TX('Keep the screen on while charging.'));
-      if (g.chargeMode === 'zero') {
-        body += '<div class="kvs">' + kv(TX('Left to charge:'), 'left') + '</div>';
-        if (g.charge3 === 0) body += txt(TX('Unplug the charger, switch the console on. The Hub sets the zero by itself.'), 'txt warn');
-      } else if (g.fullFlag) body += txt(TX('Full: 100 %. Unplug the charger: the drain starts by itself.'), 'txt ok');
+      if (g.chargeMode === 'zero') body += '<div class="kvs">' + kv(TX('Charging for'), 'left') + '</div>';
+      else if (g.fullFlag) body += txt(TX('Full: 100 %. Unplug the charger: the drain starts by itself.'), 'txt ok');
       return { title: TX('Battery charge'), sub: TX(STEPK[g.cur]), bar: [['B', TX('Back')]], body: body };
     },
     zero: function () {
       var z = G().zeroInfo || { N: 0, X: null, result: 0, note: '', V: null };
       var box = function (l, v) { return '<div class="zbox"><small>' + esc(l) + '</small><b>' + v + '</b></div>'; };
-      var body = txt(TX('The console switched off at the cut-off, and you charged it for about 3 minutes.'), 'li') +
+      var body = txt(TX('The console switched off at the cut-off, and you charged it.'), 'li') +
         txt(TX('Now the Hub sets this point as 0 %.'), 'li') +
         '<div class="kv"><span>' + esc(TX('Last voltage in the log before the cut-off')) + '</span><b>' + (z.V === null ? '—' : z.V.toFixed(2) + ' V') + '</b></div>' +
         '<div class="zrow">' + box(TX('Gauge counter N'), z.N + ' %') + box(TX('Last logged value X'), z.X === null ? '—' : z.X + ' %') +
         box(TX('Result N − X'), z.result + ' %') + '</div>' +
         txt(TX('Factory model written'), 'li ok') + txt(TX('The backup was made.'), 'li ok') +
         (z.note === 'reset' ? txt(TX('The gauge looks reset. 0 is written.'), 'li warn')
-          : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : txt(TX('The 3 min of charge stay in the counter.'), 'li')) +
+          : z.note === 'log' ? txt(TX('The log is lost. 0 is written.'), 'li warn') : txt(TX('The charge after the cut-off stays in the counter.'), 'li')) +
+        txt(TX('Auto-brightness is on again; brightness set back to what it was before the calibration (%d %%).', G().brightSaved), 'li ok') +
         '<div class="btnrow">' + fi(esc(TX('Next')), function () { SIM.complete(2); go('start', 3); }, 'btn') + '</div>';
       return { title: TX('Gauge zero'), sub: TX('Step %d of 5', 2), bar: [['A', TX('Next')]], body: body };
     },
@@ -198,9 +193,8 @@
       body += txt(TX('The hekate hop is a manual action only.'), 'li dim');
       return { title: TX('Transfer to the other MMC'), sub: TX('Step %d of 5', 6), bar: [['B', TX('Back')]], body: body };
     },
-    lowbat: function () {
-      return { title: '', sub: '', bar: [], body: '<div class="lowbat"><div class="bigbat bbig">' + battery(true) + '</div>' +
-        '<p class="para s">' + esc(TX('The console does not start: the battery is still low. It is charging: wait until 3 minutes have passed.')) + '</p></div>' };
+    idle: function () {
+      return { title: '', sub: '', bar: [], body: '<div class="idle"><p class="para s">' + esc(TX('The console is on. Kefir Hub is not open yet.')) + '</p></div>' };
     },
     drain: function () {
       var body = '<div class="dtop"><div class="dleft"><div class="bigbat bbig">' + battery(false) + '</div>' +
@@ -308,8 +302,12 @@
     return TX('Full load: the console drains as fast as possible.');
   }
   function chgText(g) {
-    if (g.charge3 > 0) return S2('The console is off and charging: ', 'Консоль вимкнена й заряджається: ') + mmss(SIM.CHG3_S - g.charge3) + S2(' of 3:00', ' з 3:00');
-    return S2('Charging for 3 minutes is done. Switch the console on.', 'Заряд 3 хв пройшов. Вмикайте консоль.');
+    if (g.cur === 2 && g.chargeStarted && !g.done[2]) {
+      if (!g.power && g.lastTry === 'nostart') return S2('The console does not start yet: let it lie on the charger.', 'Консоль ще не стартує: нехай полежить на зарядці.');
+      if (g.power && g.scr === 'idle') return S2('The console started: open Kefir Hub at once.', 'Консоль стартувала: одразу відкрийте Kefir Hub.');
+      if (!g.power) return S2('The console is off and charging: ', 'Консоль вимкнена й заряджається: ') + mmss(g.charge3);
+    }
+    return '';
   }
   function hms(s) { s = Math.floor(s); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(Math.floor(s / 3600)) + ':' + p(Math.floor(s / 60) % 60) + ':' + p(s % 60); }
   function mmss(s) { s = Math.ceil(s); return (s < 600 ? '0' : '') + Math.floor(s / 60) + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60); }
@@ -378,9 +376,9 @@
     var g = G(), side = document.getElementById('side');
     var people = [
       sideBtn(g.charger ? S2('Take out the charger', 'Вийняти зарядку') : S2('Plug in the charger', 'Вставити зарядку'), '', 'charger'),
-      sideBtn(g.power ? S2('Press power (off)', 'Натиснути живлення (вимкнути)') : S2('Press power (on)', 'Натиснути живлення (увімкнути)'), '', 'power'),
-      sideBtn(S2('Wait 3 minutes', 'Чекати 3 хвилини'), '', 'wait3')
+      sideBtn(!g.power ? S2('Turn on the console', 'Ввімкнути консоль') : S2('Turn off the console', 'Вимкнути консоль'), '', 'power')
     ];
+    if (g.power && g.scr === 'idle') people.push(sideBtn(S2('Open Kefir Hub', 'Відкрити Kefir Hub'), 'on', 'openhub'));
     if (g.noBoot && !g.power) people.push(sideBtn(TX('Console does not start'), 'warn', 'noboot'));
     SIM.systems().forEach(function (s) { if (s !== g.sys) people.push(sideBtn(S2('Boot ', 'Запустити ') + name(s), '', 'boot:' + s)); });
     var ev = [
@@ -401,15 +399,17 @@
       'Частково побудовано: сторінка розряду й заставка (0.14.179, на консолі не підтверджено). Вихід по відсіку, лог щосекунди і майстер заплановані.')
       : S2('Planned (F.29 f): not in the Hub yet.', 'Заплановано (F.29 f): у Hub ще немає.');
     var keys = Object.keys(USED_NEW).map(function (k) { return '<li><code>' + esc(k) + '</code></li>'; }).join('');
+    var timer = (g.cur === 2 && g.chargeStarted && !g.done[2]) ? '<p class="tag" data-k="chgTimer"></p>' : '';
     side.innerHTML =
       '<h3>' + esc(S2('The world', 'Світ')) + '</h3>' +
       '<div class="kvs side">' + kv(S2('Console system', 'Система'), 'sys') + kv(S2('Power', 'Живлення'), 'pwr') + kv(S2('Charger', 'Зарядка'), 'chg') +
       kv(S2('Screen', 'Екран'), 'scrName') + kv(S2('Cut-offs so far', 'Відсіків'), 'cuts') + kv(S2('Step', 'Крок'), 'cur') + kv(S2('Gauge', 'Гейдж'), 'gauge') + kv(S2('Voltage', 'Напруга'), 'V') + '</div>' +
-      (!g.power ? '<p class="tag" data-k="chgTimer"></p>' : '') +
+      timer +
+      '<h3>' + esc(S2('The person', 'Людина')) + '</h3><div class="sbcol">' + people.join('') + '</div>' +
       '<h3>' + esc(S2('Time', 'Час')) + '</h3><div class="sbrow">' + speeds + sideBtn(g.paused ? S2('Resume', 'Йде') : S2('Pause', 'Пауза'), g.paused ? 'on' : '', 'pause') +
       sideBtn(S2('To the next event', 'До наступної події'), '', 'next') + '</div>' +
-      '<h3>' + esc(S2('The person', 'Людина')) + '</h3><div class="sbcol">' + people.join('') + '</div>' +
       '<h3>' + esc(S2('Events', 'Події')) + '</h3><div class="sbcol">' + ev.join('') + '</div>' +
+      '<label class="sl">' + esc(S2('Brightness before the calibration', 'Яскравість до калібрування')) + ' <b>' + g.brightBefore + ' %</b><input type="range" min="10" max="100" step="5" value="' + g.brightBefore + '" data-sa="B0"></label>' +
       '<label class="sl">' + esc(S2('Internal resistance (mΩ)', 'Внутрішній опір (мОм)')) + ' <b>' + g.R + '</b><input type="range" min="5" max="300" value="' + g.R + '" data-sa="R"></label>' +
       '<h3>' + esc(S2('Screen tag', 'Позначка екрана')) + '</h3><p class="tag">' + esc(tag) + '</p>' +
       '<h3>' + esc(S2('New texts on this screen', 'Нові тексти на екрані')) + '</h3><ul class="keys">' + (keys || '<li>—</li>') + '</ul>';
@@ -418,7 +418,7 @@
     var g = G(), p = a.split(':');
     if (a === 'charger') SIM.toggleCharger();
     else if (a === 'power') { if (g.power) SIM.powerOff(); else SIM.powerOn(); }
-    else if (a === 'wait3') { var e = SIM.advance(180); if (e) handleEv(e); }
+    else if (a === 'openhub') SIM.openHub();
     else if (a === 'noboot') SIM.consoleNoBoot();
     else if (p[0] === 'boot') SIM.bootSystem(p[1]);
     else if (a === 'loss') SIM.powerOff();
@@ -482,7 +482,8 @@
       var b = e.target.closest('[data-sa]'); if (b && b.tagName === 'BUTTON') sideAction(b.dataset.sa);
     });
     document.getElementById('side').addEventListener('input', function (e) {
-      if (e.target.dataset.sa === 'R') { SIM.G.R = +e.target.value; renderSide(); }
+      if (e.target.dataset.sa === 'R') { SIM.G.R = +e.target.value; e.target.parentNode.querySelector('b').textContent = e.target.value; }
+      if (e.target.dataset.sa === 'B0') { SIM.G.brightBefore = +e.target.value; e.target.parentNode.querySelector('b').textContent = e.target.value + ' %'; }
     });
     document.querySelectorAll('.stick').forEach(function (el) {
       el.addEventListener('pointerdown', function (e) { el.setPointerCapture(e.pointerId); stickPointer(el, e, false); });
@@ -557,7 +558,8 @@
       ['start step 1', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; }],
       ['start step 2', function (s) { s.scr = 'start'; s.sub = 2; s.cur = 2; }],
       ['charge step 2', function (s) { s.scr = 'charge'; s.cur = 2; s.chargeMode = 'zero'; s.chargeStarted = true; s.charge3 = 120; s.charger = true; s.power = true; }],
-      ['lowbat step 2', function (s) { s.scr = 'lowbat'; s.cur = 2; s.power = false; s.chargeStarted = true; s.charge3 = 60; s.charger = true; }],
+      ['idle step 2', function (s) { s.scr = 'idle'; s.cur = 2; s.power = true; s.chargeStarted = true; s.charge3 = 60; s.charger = false; }],
+      ['black step 2', function (s) { s.scr = 'black'; s.cur = 2; s.power = false; s.chargeStarted = true; s.charge3 = 10; s.charger = true; }],
       ['zero', function (s) { s.scr = 'zero'; s.cur = 2; s.zeroInfo = { N: 3, X: 18, result: 0, note: '', V: 3.2 }; }],
       ['report', function (s) { s.scr = 'report'; s.cur = 5; s.cuts = CUTS; s.zeroInfo = { N: 3, X: 18, result: 1, note: '', V: 3.2 }; }],
       ['transfer', function (s) { s.scr = 'transfer'; s.cur = 6; s.marker = { from: 'emuA', seq: 1, time: '13:00', good: true, pending: { sysMMC: true } }; }],

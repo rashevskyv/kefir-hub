@@ -1,10 +1,11 @@
 // The console and the Hub's calibration wizard, without any DOM. Physics per simulated second.
-// Rules: docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline" and "Load plan of a drain" (commit f5396c33).
+// Rules: docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline" (steps 1 and 2, commit 1923e035) and "Load plan".
 // The model is rough (the cell is a straight line from 3.2 V to 4.2 V). Numbers are not measurements.
 var SIM = (function () {
   'use strict';
   var CUT_V = 3.2, BOOT_V = 3.25, RECOVER = 0.03, I_MAX = 1.8, I_MIN = 0.35;
-  var LIMIT_T = 60, COOL_T = 55, SAVER_S = 180, CHG_RATE = 0.6 / 60, CHG_MA = 1296, CHG3_S = 180;
+  var LIMIT_T = 60, COOL_T = 55, SAVER_S = 180, CHG_RATE = 0.6 / 60, CHG_MA = 1296;
+  var ZERO_MIN = 40; // sim seconds on the charger before a flat console starts again (the zero step)
   var BASE_T = 13 * 3600 + 17 * 60; // the clock of the Switch at the start of the page
   var SYSTEMS = ['sysMMC', 'emuA', 'emuB'];
   var SYS_NAME = { sysMMC: 'sysMMC', emuA: 'emuMMC A', emuB: 'emuMMC B' };
@@ -14,11 +15,13 @@ var SIM = (function () {
     return {
       t: 0, speed: 10, paused: false, power: true, sys: 'sysMMC', charger: false,
       q: 62, R: 100, E: 0, shift: 0, gaugeReset: false, logLost: false,
-      bright: 100, saver: false, saverAuto: false, drainRun: false, loadOff: false,
+      bright: 100, brightBefore: 60, brightSaved: 60, autoB: true,
+      saver: false, saverAuto: false, drainRun: false, loadOff: false,
       T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0, tail: false, pausedS: 0,
       hist: [], nextS: 0,
-      charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false, offChg: 0,
-      cuts: [], lastX: null, zeroInfo: null, noBoot: false,
+      charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false,
+      lastTry: null,
+      cuts: [], lastX: null, zeroInfo: null, noBoot: false, offChg: 0,
       scr: 'tools', sub: 0, focus: 2, popup: null, toast: null, hint: '', started: false,
       cur: 1, done: [false, false, false, false, false, false, false],
       seqN: 0, copies: { sysMMC: copy(), emuA: copy(), emuB: copy() }, marker: null, ledger: [],
@@ -72,11 +75,9 @@ var SIM = (function () {
       G.q = Math.min(100, G.q + CHG_RATE * dt);
       if (G.q >= 100 && !G.fullFlag) { G.fullFlag = true; ev = ev || 'full'; }
     }
-    if (G.charger && G.charge3 > 0) {
-      G.charge3 = Math.max(0, G.charge3 - dt);
-      if (!G.charge3) ev = ev || 'chargeDone';
-    }
-    if (G.charger && !G.power) G.offChg += dt;   // charging with the console off: counted for the side panel
+    // the zero step counts the charging time (no target): the console starts again after ZERO_MIN seconds
+    if (G.charger && G.chargeStarted && G.cur === 2 && !G.done[2]) G.charge3 += dt;
+    if (G.charger && !G.power) G.offChg += dt;   // charging with the console off
     if (G.drainRun && G.charger) G.pausedS += dt; // the drain is on pause while the charger is in
     if (drainActive()) {
       var I2 = loadNow(), V = ocv(G.q) - I2 * G.R / 1000;
@@ -115,11 +116,22 @@ var SIM = (function () {
   }
   function powerOn() {
     if (G.power) return;
-    // zero step: the battery is still charging for 3 minutes, the console shows an empty battery and does not start
-    if (G.cur === 2 && G.chargeStarted && G.charge3 > 0) { G.scr = 'lowbat'; G.needRender = true; return; }
+    // the zero step: a flat console starts only after a little charging; the Hub is not opened yet
+    if (G.cur === 2 && G.chargeStarted && !G.done[2]) {
+      if (G.charge3 < ZERO_MIN) { G.lastTry = 'nostart'; G.needRender = true; return; }
+      G.power = true; G.noBoot = false; G.scr = 'idle'; G.lastTry = 'started'; G.needRender = true;
+      return;
+    }
     if (ocv(G.q) + RECOVER < BOOT_V && !G.charger) { G.noBoot = true; G.needRender = true; return; }
     G.power = true; G.noBoot = false;
     G.minRun = 60; // a boot runs at least a minute before the next cut-off
+    G.lastTry = null;
+    bootScreen();
+  }
+  // "Відкрити Kefir Hub": the Hub opens; in the zero step it sets the zero now.
+  function openHub() {
+    if (!G.power) return;
+    if (G.cur === 2 && G.chargeStarted && !G.done[2]) { setZero(); G.scr = 'zero'; G.focus = 0; G.needRender = true; return; }
     bootScreen();
   }
   function bootSystem(sys) {
@@ -128,17 +140,14 @@ var SIM = (function () {
     powerOn();
     if (!G.power) G.needRender = true;
   }
-  // The Hub opens. A drain that was cut off goes on by itself at once, in the tail mode (low brightness, minimal load).
+  // The Hub opens. A drain that was cut off goes on by itself at once, in the tail mode (minimum brightness, minimal load).
   function bootScreen() {
     var tr = transferCheck(G.sys);
-    if (G.cur === 2) {
-      if (G.chargeStarted && G.charge3 === 0) { setZero(); G.scr = 'zero'; }
-      else { G.scr = 'start'; G.sub = 2; }
-    }
+    if (G.cur === 2) { G.scr = 'start'; G.sub = 2; }
     else if (G.cur === 1 || G.cur === 3 || G.cur === 4) {
       if (G.drainSec > 0 && G.ctx === G.cur) {
         G.scr = 'drain'; G.drainRun = true; G.saver = false;
-        G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100;
+        G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100; G.autoB = false;
       }
       else { G.scr = 'start'; G.sub = G.cur; }
     }
@@ -147,7 +156,7 @@ var SIM = (function () {
     if (tr) G.toast = tr;
     G.needRender = true;
   }
-  // "Консоль не вмикається": the step is done; the console stays off (black) until the person charges and switches it on.
+  // "Консоль не вмикається": the drain step is done; the console stays off (black) until the person charges it.
   function consoleNoBoot() {
     G.done[G.cur] = true; G.cur = G.cur + 1; G.noBoot = false;
     G.drainRun = false; G.popup = null; G.scr = 'black'; G.needRender = true;
@@ -156,15 +165,18 @@ var SIM = (function () {
   function complete(k) {
     G.done[k] = true; G.cur = k + 1; G.drainRun = false; G.noBoot = false;
     G.chargeMode = ''; G.cycleWait = false; G.focus = 0; G.scr = 'steps'; G.popup = null;
+    if (k === 2) { G.bright = G.brightSaved; G.autoB = true; G.tail = false; } // the Hub puts the console back as it was
     G.needRender = true;
   }
 
   function drainStart() {
     if (G.ctx !== G.cur) { // a new cycle: the drain counts from zero
+      if (G.cur === 1) G.brightSaved = G.brightBefore; // the person's brightness, kept for the end of the calibration
       G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.loadOff = false; G.pausedS = 0;
       G.saverAuto = false; G.saver = false; G.sagMeas = null;
       G.tail = false; G.bright = 100; G.hist = []; G.nextS = G.t;
     }
+    G.autoB = false; // the Hub turns the auto-brightness sensor off for the drain
     G.drainRun = true; G.scr = 'drain'; G.popup = null; G.focus = 0; G.needRender = true;
   }
   function stopDrain() {
@@ -173,7 +185,7 @@ var SIM = (function () {
   }
   function chargeStart(mode) {
     G.chargeMode = mode; G.fullFlag = false; G.scr = 'charge'; G.popup = null; G.focus = 0;
-    if (mode === 'zero') { G.charge3 = CHG3_S; G.chargeStarted = true; }
+    if (mode === 'zero') G.chargeStarted = true;
     else G.charge3 = 0;
     G.needRender = true;
   }
@@ -181,8 +193,8 @@ var SIM = (function () {
     G.charger = !G.charger;
     if (G.charger) {
       G.pausedS = 0; G.offChg = 0;
-      // the zero step starts its 3 minutes as soon as the charger goes in (even with the console off)
-      if (G.cur === 2 && !G.done[2] && !G.chargeStarted) { G.chargeStarted = true; G.charge3 = CHG3_S; }
+      // the zero step starts counting the charge as soon as the charger goes in, even with the console off
+      if (G.cur === 2 && !G.done[2] && !G.chargeStarted) { G.chargeStarted = true; G.charge3 = 0; }
       if (G.power && G.cur === 2 && G.chargeStarted && G.scr === 'start') G.scr = 'charge';
     }
     else if (G.cycleWait && (G.cur === 3 || G.cur === 4)) { G.cycleWait = false; drainStart(); }
@@ -240,10 +252,10 @@ var SIM = (function () {
   }
 
   return {
-    G: G, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, CHG_MA: CHG_MA, CHG3_S: CHG3_S, SYS_NAME: SYS_NAME,
+    G: G, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, CHG_MA: CHG_MA, ZERO_MIN: ZERO_MIN, SYS_NAME: SYS_NAME,
     ocv: ocv, counter: counter, loadNow: loadNow, loadLevels: loadLevels, drainActive: drainActive, clockText: clockText,
     systems: systems, step: step, advance: advance, jumpNext: jumpNext,
-    powerOff: powerOff, powerOn: powerOn, bootSystem: bootSystem, consoleNoBoot: consoleNoBoot,
+    powerOff: powerOff, powerOn: powerOn, openHub: openHub, bootSystem: bootSystem, consoleNoBoot: consoleNoBoot,
     complete: complete, drainStart: drainStart, stopDrain: stopDrain, chargeStart: chargeStart,
     toggleCharger: toggleCharger, reportNext: reportNext, setZero: setZero,
     saverTick: function (dt) {
