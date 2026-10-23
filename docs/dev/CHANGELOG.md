@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.195 — Network sources: "host:port" is split, the port asks with the number pad
+FTP location: typing `192.168.1.5:2121` (also `ftp://host:21/`, `[fe80::1]:21`) in Server IP / Hostname puts the digits into the Port row and says so; a bare IPv6 address, a port of 0 or over 65535 stay as typed (`net_address.hpp` + `test_net_address`). The Port row uses the console number pad (1 to 5 digits) instead of the phone / PC input.
+host tests: pass | nro: built | switch: pending (add an FTP source with host:port)
+
 ## v0.14.194 — Battery calibration: the state machine of the wizard (F.29 f, step 2)
 `battery_calib_state.hpp` + `test_battery_calib_state`: the marker (step, phase, cut-off count, the user's brightness before, the Hub's last brightness, the last logged remaining charge) with its file format; `Check` (what the Hub finds at its start: cut-off seen, dead with the charger, charge done / interrupted / in progress, ask "did the console switch off from the drain?"); the steps and phases (cycle = charge, then drain); the load (max before the first cut-off, minimal after) and the brightness decision (max, min, restore, keep when the user changed it). No UI, no write to the gauge.
 host tests: pass | nro: not built | switch: not applicable

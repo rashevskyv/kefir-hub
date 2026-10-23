@@ -132,6 +132,7 @@ Network locations and USB drives you browse and install from. Details: [File bro
 | Option | What it does | Default |
 |---|---|---|
 | [[+ Add network location]] | Adds an SMB, NFS, WebDAV, FTP or HTTP location. | |
+<!-- draft: for an FTP location the [[Server IP / Hostname]] field accepts "host:port" (for example 192.168.1.5:2121): the digits after the colon are taken as the port and written to the [[Port]] row, with the notice [[Port taken from the address:]]; a bare IPv6 address, a port of 0 or above 65535 stay as typed. The [[Port]] row asks with the console's number pad only (1 to 5 digits), not with the phone / PC input of the other fields. WebDAV and HTTP keep the port inside the URL. -->
 | *each saved location* | **A** opens it in the file browser (or its edit page if it is not set up yet). **+** ([[Options]]) offers [[Enter/Connect]], [[Edit]], [[Test Connection]], [[Rename]], [[Properties]], [[Delete]]. | |
 | [[USB storage]] | Mounts USB drives connected to the console next to the microSD card. Turning it on turns [[MTP]] off. | On |
 

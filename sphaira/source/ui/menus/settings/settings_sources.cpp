@@ -7,6 +7,7 @@
 #include "app.hpp"
 #include "download.hpp"
 #include "i18n.hpp"
+#include "net_address.hpp"
 #include "location.hpp"
 #include "log.hpp"
 #include "swkbd.hpp"
@@ -442,7 +443,13 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             [this, loc, server]() {
                 AskText("Enter server IP or hostname"_i18n, server, [this, loc](const std::string& out) {
                     location::Entry new_loc = loc;
-                    new_loc.url = "ftp://" + out + "/";
+                    // "192.168.1.5:2121": the digits after the colon are the port, they go to the Port row
+                    const auto address = net::SplitHostPort(out);
+                    new_loc.url = "ftp://" + address.host + "/";
+                    if (address.port) {
+                        new_loc.port = *address.port;
+                        App::Notify("Port taken from the address:"_i18n + " " + std::to_string(*address.port));
+                    }
                     location::Add(new_loc);
                     m_items = BuildEditItems();
                 });
@@ -454,15 +461,14 @@ std::vector<SettingsItem> SourceEditMenu::BuildEditItems() {
             "FTP port."_i18n,
             [loc](){ return std::to_string(loc.port); },
             [this, loc]() {
-                AskText("Enter port"_i18n, std::to_string(loc.port), [this, loc](const std::string& out) {
+                // 1 to 5 digits: the console's number pad is enough, no phone / PC input here
+                s64 port = loc.port;
+                if (R_SUCCEEDED(swkbd::ShowNumPad(port, "Enter port"_i18n.c_str(), std::to_string(loc.port).c_str(), 1, 5)) && port >= 1 && port <= 65535) {
                     location::Entry new_loc = loc;
-                    const auto parsed = std::strtoul(out.c_str(), nullptr, 10);
-                    if (parsed >= 1 && parsed <= 65535) {
-                        new_loc.port = static_cast<u16>(parsed);
-                        location::Add(new_loc);
-                        m_items = BuildEditItems();
-                    }
-                });
+                    new_loc.port = static_cast<u16>(port);
+                    location::Add(new_loc);
+                    m_items = BuildEditItems();
+                }
             }
         });
     }

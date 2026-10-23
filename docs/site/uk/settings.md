@@ -132,6 +132,7 @@ Kefir Hub перевіряє наявність нової версії один
 | Параметр | Що робить | Типово |
 |---|---|---|
 | [[+ Add network location]] | Додає розташування SMB, NFS, WebDAV, FTP або HTTP. | |
+<!-- draft: for an FTP location the [[Server IP / Hostname]] field accepts "host:port" (for example 192.168.1.5:2121): the digits after the colon are taken as the port and written to the [[Port]] row, with the notice [[Port taken from the address:]]; a bare IPv6 address, a port of 0 or above 65535 stay as typed. The [[Port]] row asks with the console's number pad only (1 to 5 digits), not with the phone / PC input of the other fields. WebDAV and HTTP keep the port inside the URL. -->
 | *кожне збережене розташування* | **A** відкриває його у файловому менеджері (або сторінку редагування, якщо його ще не налаштовано). **+** ([[Options]]) пропонує [[Enter/Connect]], [[Edit]], [[Test Connection]], [[Rename]], [[Properties]], [[Delete]]. | |
 | [[USB storage]] | Підключає USB-диски, вставлені в консоль, поруч із картою пам'яті. Вмикання вимикає [[MTP]]. | Увімк. |
 

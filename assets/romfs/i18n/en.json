@@ -3604,5 +3604,6 @@
   "Type a web address, or send it from a phone or a computer, and keep it here.": "Type a web address, or send it from a phone or a computer, and keep it here.",
   "Open a web page in the console's own browser. Needs the full memory.": "Open a web page in the console's own browser. Needs the full memory.",
   "The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.": "The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.",
-  "Copied so far:": "Copied so far:"
+  "Copied so far:": "Copied so far:",
+  "Port taken from the address:": "Port taken from the address:"
 }
