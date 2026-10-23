@@ -177,6 +177,8 @@ void Screensaver::Update(const Controller* controller, const TouchInfo* touch) {
         ? (float)controller->m_stick_r.y / 32767.f : 0.f;
 
     if (ry != 0.f) {
+        m_osd.Update();
+        m_osd_on = true;
         const float new_brightness = std::clamp(m_current_brightness + ry * (float)dt * 0.4f, 0.01f, 1.0f);
         if (new_brightness != m_current_brightness) {
             m_current_brightness = new_brightness;
@@ -203,6 +205,68 @@ void Screensaver::FlushPendingBrightness() {
     }
 }
 
+// a note at the top: "Brightness 40 %" for two seconds after the right stick moved
+void Screensaver::DrawBrightnessNote(NVGcontext* vg) {
+    if (!m_osd_on || m_osd.GetSeconds() >= 2) {
+        return;
+    }
+    const auto note = "Brightness"_i18n + " " + std::to_string(static_cast<int>(std::round(m_current_brightness * 100.f))) + " %";
+    float b[4]{};
+    nvgFontSize(vg, 28.f);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    nvgTextBounds(vg, 0, 0, note.c_str(), nullptr, b);
+    const float w = (b[2] - b[0]) + 40.f;
+    gfx::drawRect(vg, Vec4{SCREEN_WIDTH / 2.f - w / 2.f, 24.f, w, 48.f}, nvgRGBA(40, 44, 52, 230), 8.f);
+    gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, 48.f, 28.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, nvgRGB(232, 232, 232), "%s", note.c_str());
+}
+
+// the calibration's readout: clock, status, a battery with an approximate percent, and up to five columns of figures
+void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float cx, float cy, const menu::PolledData& pdata) {
+    const auto text_col = nvgRGB(232, 232, 232);
+    const auto dim_col = nvgRGB(140, 144, 154);
+    const float y0 = cy - 190.f;
+
+    if (App::Get12HourTimeEnable()) {
+        gfx::drawTextArgs(vg, cx, y0, 100.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%02u:%02u %s",
+            (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12, pdata.tm.tm_min, pdata.tm.tm_hour < 12 ? "AM" : "PM");
+    } else {
+        gfx::drawTextArgs(vg, cx, y0, 100.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min);
+    }
+    gfx::drawTextArgs(vg, cx, y0 + 112.f, 26.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.status.c_str());
+
+    // the battery
+    const float bw = 220.f, bh = 96.f, bx = cx - bw / 2.f - 8.f, by = y0 + 156.f;
+    const float pct = std::clamp(info.battery_percent, 0, 100) / 100.f;
+    const auto level = pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
+                                  : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, bx, by, bw, bh, 12.f);
+    nvgStrokeColor(vg, text_col);
+    nvgStrokeWidth(vg, 4.f);
+    nvgStroke(vg);
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, bx + bw, by + bh / 2.f - 20.f, 14.f, 40.f, 4.f);
+    nvgFillColor(vg, text_col);
+    nvgFill(vg);
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, bx + 8.f, by + 8.f, (bw - 16.f) * pct, bh - 16.f, 7.f);
+    nvgFillColor(vg, level);
+    nvgFill(vg);
+    gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 44.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text_col, "\u2248 %d%%", info.battery_percent);
+
+    // the columns
+    const float cols_y = by + bh + 30.f, col_w = 120.f;
+    const size_t n = std::min<size_t>(info.columns.size(), 5);
+    for (size_t i = 0; i < n; i++) {
+        const float x = cx + (static_cast<float>(i) - (static_cast<float>(n) - 1.f) / 2.f) * col_w;
+        gfx::drawTextArgs(vg, x, cols_y, 15.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.columns[i].first.c_str());
+        gfx::drawTextArgs(vg, x, cols_y + 22.f, 21.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%s", info.columns[i].second.c_str());
+    }
+    if (!info.hint.empty()) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 40.f, 19.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nvgRGB(109, 127, 136), "%s", info.hint.c_str());
+    }
+}
+
 void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     // the readout is drawn on a black page, so it uses its own palette rather
     // than the theme: a light theme would paint black text onto it.
@@ -223,6 +287,12 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     const float cx = std::round(SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x);
     const float cy = std::round(SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y);
     const float left = cx - BLOCK_W / 2.f;
+
+    if (info.battery_view) {
+        DrawBatteryView(vg, info, cx, cy, pdata);
+        DrawBrightnessNote(vg);
+        return;
+    }
 
     // speed / eta / elapsed / battery share one line, so how many of them are
     // on decides whether that line takes any height at all.

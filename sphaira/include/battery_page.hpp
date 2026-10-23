@@ -40,6 +40,7 @@ void SetAutoDrainSuppressed(bool v);
 struct CalibRun {
     bool charge{};
     bool tail{};
+    int step{1};   // the calibration step (1 to 4) this run belongs to: it goes into every log line
     // charge only: the charger came out at 100 % (the cycle's charge phase is done)
     std::function<void()> on_charge_done;
 };

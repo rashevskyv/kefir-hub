@@ -438,6 +438,7 @@ struct DrainMenu final : ui::menu::MenuBase {
             calib::Sample sm;
             sm.time = now;
             sm.kind = m_calib->charge ? 'C' : 'D';
+            sm.step = m_calib->step;
             sm.psm_pct = m_pct;
             sm.gauge_pct = m_gauge_pct;
             sm.rem_mah = m_cap_rem_mah;
@@ -745,11 +746,14 @@ struct DrainMenu final : ui::menu::MenuBase {
             ui::gfx::drawTextArgs(vg, x + 14.f + (lb[2] - lb[0]), y + 18.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", value.c_str());
             return w;
         };
-        const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
-        const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
-            : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
-        const float w1 = Chip(fx, 232.f, "Load:"_i18n, load_text);
-        Chip(fx + w1 + 12.f, 232.f, "Brightness:"_i18n, std::to_string(brightness) + " %");
+        if (!m_calib->charge) {
+            const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
+            const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
+                : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
+            const float w1 = Chip(fx, 232.f, "Load:"_i18n, load_text);
+            Chip(fx + w1 + 12.f, 232.f, "Brightness:"_i18n, std::to_string(brightness) + " %");
+
+        }
 
         // the figures
         char v[64];
@@ -759,6 +763,24 @@ struct DrainMenu final : ui::menu::MenuBase {
         ui::gfx::drawTextArgs(vg, fx, 322.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
         ui::gfx::drawTextArgs(vg, fx + 690.f, 322.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
 
+        if (m_calib->charge) {
+            const auto good = nvgRGB(0x4C, 0xAF, 0x50);
+            float y = 372.f;
+            if (m_charger) {
+                ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good, "\u2713 %s", "Charger is plugged in."_i18n.c_str());
+            } else {
+                ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn, "%s", "Plug the charger in."_i18n.c_str());
+            }
+            y += 46.f;
+            if (m_charger && m_pct >= 100) {
+                ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. Now the drain: take the charger out."_i18n.c_str());
+                y += 44.f;
+            }
+            ui::gfx::drawTextBox(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n.c_str());
+            y += 76.f;
+            ui::gfx::drawTextBox(vg, 92.f, y, 21.f, 1110.f, text, "The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n.c_str());
+            return;
+        }
         // one row of three charts
         const float cy = 356.f, ch = 270.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
         std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
@@ -883,7 +905,27 @@ private:
     // what the screensaver paints: the cycle, the battery bar, power and temperature, the energy, the time on battery
     auto SaverReadout() const -> ui::SaverInfo {
         ui::SaverInfo info;
-        info.status = m_calib ? CalibTitle() : (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
+        if (m_calib) {
+            // as in the guide: the clock, the stage, the battery with an approximate percent, and five columns
+            info.battery_view = true;
+            info.battery_percent = m_pct;
+            info.status = CalibTitle();
+            info.hint = "Right stick: brightness; left stick: move. Any button exits."_i18n;
+            char v[32], i[32], t[32];
+            std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
+            std::snprintf(i, sizeof(i), "%d mA", std::abs(m_ma));
+            std::snprintf(t, sizeof(t), "%.1f \u00B0C", m_temp);
+            const auto load = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
+            if (m_calib->charge) {
+                info.columns = {{"Charge"_i18n, std::to_string(std::max(0, m_pct)) + " %"}, {"Charging current"_i18n, i}, {"Voltage"_i18n, v},
+                                {"Temperature"_i18n, t}, {"Charging for"_i18n, HoursMinutes(DrainSeconds())}};
+            } else {
+                info.columns = {{"Voltage"_i18n, v}, {"Consumption"_i18n, i}, {"Load"_i18n, load}, {"Temperature"_i18n, t},
+                                {"Elapsed"_i18n, HoursMinutes(DrainSeconds())}};
+            }
+            return info;
+        }
+        info.status = m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n;
         info.ratio = m_pct >= 0 ? m_pct / 100.0 : 0.0;
         char line[160];
         std::snprintf(line, sizeof(line), "%.1f W · %d mA · %.1f °C", Last(m_watts), std::abs(m_ma), m_temp);

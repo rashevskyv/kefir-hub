@@ -5,8 +5,12 @@
 #include <string>
 
 #include <array>
+#include <utility>
+#include <vector>
 
 namespace sphaira::ui {
+
+namespace menu { struct PolledData; }
 
 // what the Minus button does while the install queue is busy.
 enum class BlankMode : long {
@@ -51,6 +55,13 @@ struct SaverInfo {
     bool is_complete{false};
     bool is_failed{false};
 
+    // the battery calibration's readout (docs/dev/BATTERY-CALIBRATION.md, as in the guide): the clock, the status line, a big
+    // battery with an approximate percent and columns of figures; `hint` is a line at the bottom of the screen
+    bool battery_view{false};
+    int battery_percent{-1};
+    std::vector<std::pair<std::string, std::string>> columns{};
+    std::string hint{};
+
     // Live R/W speed graph history
     bool has_graph{false};
     bool has_read{true};       // false: only the write line (a progress box has one speed)
@@ -88,6 +99,8 @@ struct Screensaver {
     void FlushPendingBrightness();
 
 private:
+    void DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float cx, float cy, const menu::PolledData& pdata);
+    void DrawBrightnessNote(NVGcontext* vg);
     bool m_active{};
     BlankMode m_mode{};
     // console brightness state captured at Start() and put back by Stop().
@@ -103,6 +116,8 @@ private:
     float m_drift_accum{0.f};
     float m_current_brightness{1.0f};
     bool m_brightness_dirty{false};
+    TimeStamp m_osd{};  // the brightness note at the top of the screen, shown for a moment after the stick moved
+    bool m_osd_on{false};
 };
 
 // full screen preview of the current screensaver settings, so the readout can

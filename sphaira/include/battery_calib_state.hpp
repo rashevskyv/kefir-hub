@@ -37,6 +37,7 @@ struct Marker {
     bool auto_before{};                // auto-brightness the user had
     int last_set_brightness{-1};       // the last brightness the Hub set itself, -1 none
     int last_logged_remaining_mah{-1}; // X: the gauge's last logged remaining charge before the cut-off, -1 none
+    int zero_n_mah{-1};                // N: the gauge counter when the zero was set (for the report)
     std::int64_t boot_time{};          // unix time the console booted when this phase started (0 = unknown): a Hub start in the
                                        // same boot is a restart of the Hub, in another boot the console itself switched off
 };
@@ -199,6 +200,7 @@ inline auto Format(const Marker& m) -> std::string {
     kv("last_set", m.last_set_brightness);
     kv("x_mah", m.last_logged_remaining_mah);
     kv("boot", m.boot_time);
+    kv("zero_n", m.zero_n_mah);
     return o;
 }
 
@@ -230,6 +232,7 @@ inline auto Parse(std::string_view text) -> Marker {
         else if (key == "last_set") m.last_set_brightness = static_cast<int>(v);
         else if (key == "x_mah") m.last_logged_remaining_mah = static_cast<int>(v);
         else if (key == "boot") m.boot_time = v;
+        else if (key == "zero_n") m.zero_n_mah = static_cast<int>(v);
     }
     return m;
 }
