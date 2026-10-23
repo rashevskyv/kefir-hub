@@ -49,6 +49,7 @@ var NEW = {
   "Plug the charger in. The console may not start at once: the battery is empty, and it needs to lie on the charger for a while.": "Підключіть зарядку. Консоль може стартувати не одразу: батарея порожня, і їй треба трохи полежати на зарядці.",
   "As soon as it has started": "Щойно вона стартувала",
   "Do not wait: open Kefir Hub at once. The Hub records the voltage at which the console switched off, sets the zero and goes on with the calibration.": "Не чекайте: одразу відкрийте Kefir Hub. Hub зафіксує, при якій напрузі консоль вимкнулась, поставить нуль і продовжить калібрування.",
+  "Go on": "Далі",
   "Calibration history": "Історія калібрування",
   "Calibration ledger": "Журнал калібрування",
   "Start calibration": "Почати",

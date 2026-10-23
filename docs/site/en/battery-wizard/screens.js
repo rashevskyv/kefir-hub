@@ -131,7 +131,7 @@
     },
     intro: function () {
       return { title: TX('Battery calibration'), sub: TX('Step by step: drain, charge, report. The cut-off is the real end.'),
-        bar: [['B', TX('Back')], ['A', TX('Next')]], body:
+        bar: [['B', TX('Back')], ['A', TX('Go on')]], body:
         txt(TX('Why this is needed'), 'head') +
         txt(TX('With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest.'), 'para s') +
         txt(TX('How it works'), 'head') +
@@ -140,7 +140,7 @@
         txt(TX('Take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again. When it stops starting at all, plug the charger in and, as soon as the console starts, open Kefir Hub at once.'), 'para s') +
         txt(TX('How long it takes'), 'head') +
         txt(TX('Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup.'), 'para s') +
-        '<div class="btnrow">' + fi(esc(TX('Next')), function () { go('intro2'); }, 'btn') + '</div>' };
+        '<div class="btnrow">' + fi(esc(TX('Go on')), function () { go('intro2'); }, 'btn') + '</div>' };
     },
     intro2: function () {
       return { title: TX('What happens to the console'), sub: TX('Step by step: drain, charge, report. The cut-off is the real end.'),
