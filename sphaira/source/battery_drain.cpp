@@ -140,6 +140,14 @@ struct DrainMenu final : ui::menu::MenuBase {
                 });
         }});
 
+        // Minus starts the screensaver here (the menus use it to jump to the Homebrew tab, which would close this page)
+        SetAction(Button::SELECT, Action{"Screensaver"_i18n, [this]() {
+            if (!m_saver.IsActive()) {
+                m_saver.Start();
+                m_idle.Reset(m_idle_clock.GetSecondsD());
+            }
+        }});
+
         App::SetAutoSleepDisabled(true);
         appletSetMediaPlaybackState(true); // keeps the screen from dimming
         if ((m_lbl = R_SUCCEEDED(lblInitialize()))) {
@@ -232,6 +240,8 @@ struct DrainMenu final : ui::menu::MenuBase {
     }
 
     auto GetShortTitle() const -> const char* override { return "Battery drain"; }
+    // the screensaver is a black page of its own: no header or footer over it
+    auto WantsChrome() const -> bool override { return !m_saver.OwnsScreen(); }
 
     void Update(Controller* controller, TouchInfo* touch) override {
         // The panel shows the same still charts for hours at full brightness: after the idle time (the one set for the install

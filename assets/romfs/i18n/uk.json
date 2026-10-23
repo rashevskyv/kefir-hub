@@ -3665,5 +3665,7 @@
   "The charger is in. The drain is paused. Take the charger out to go on.": "Зарядку підключено. Розряд на паузі. Відключіть зарядку, щоб він продовжився.",
   "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Консоль уже вимикалась: тепер вона розряджається повільно, щоб вичавити останній заряд. Автояскравість вимкнено, яскравість на мінімумі.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Повне навантаження: консоль розряджається найшвидше. Коли вона вимкнеться, ввімкніть її знову і відкрийте Kefir Hub.",
-  "Everything is written to a log.": "Усе записується в журнал."
+  "Everything is written to a log.": "Усе записується в журнал.",
+  "Remembered": "Запам'ятовується",
+  "Drain the battery to the cut-off, set the zero and run two full cycles.": "Розряд до відсікання, нуль і два повні цикли."
 }

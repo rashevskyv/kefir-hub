@@ -3665,5 +3665,7 @@
   "The charger is in. The drain is paused. Take the charger out to go on.": "The charger is in. The drain is paused. Take the charger out to go on.",
   "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.",
-  "Everything is written to a log.": "Everything is written to a log."
+  "Everything is written to a log.": "Everything is written to a log.",
+  "Remembered": "Remembered",
+  "Drain the battery to the cut-off, set the zero and run two full cycles.": "Drain the battery to the cut-off, set the zero and run two full cycles."
 }

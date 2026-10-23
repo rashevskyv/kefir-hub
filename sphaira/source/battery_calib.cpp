@@ -338,8 +338,8 @@ void ShowSteps() {
         const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && row.label.starts_with("5."));
         items.push_back(SettingsItem{row.label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal});
     }
-    items.push_back(SettingsItem{"The calibration is remembered on the SD card: you can close the Hub and use the console between the steps."_i18n,
-        {}, {}, {}, SettingsItemKind::Normal});
+    items.push_back(SettingsItem{"Remembered"_i18n,
+        "The calibration is remembered on the SD card: you can close the Hub and use the console between the steps."_i18n, {}, {}, SettingsItemKind::Normal});
     App::Push<SystemToolsMenu>("Battery calibration"_i18n, std::move(items));
 }
 
