@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## unreleased — Docs: interactive guide of the battery calibration
+`docs/site/en/battery-wizard/` (an offline HTML app: the Switch screens of the planned Tools > Battery calibration wizard from A to Z, with the buttons, the sticks, a side panel for what the person does, events and a list of new texts) and the pages `battery-calibration.md` (EN, UK) with a draft block and an iframe; nav entry after system-tools. The feature itself is not built yet (F.29 f). Labels: 871 used, 0 unknown. Not run: the mkdocs build (mkdocs-material is not installed here).
+
 ## v0.14.193 — Battery cut-off calibration: the pure rules (F.29 f, step 1)
 `battery_cutoff.hpp` + `test_battery_cutoff`: the zero after a cut-off (counter now minus the last logged value, plain 0 on a reset gauge / lost log / negative result), the load plan (max, then minimal from 3400 mV, latched; skipped when the first run shows a sag under 50 mV), the system id (sysMMC / partition emuMMC by sector / file-based by folder) and the ledger of where a calibration was made and written (decisions: apply, up to date, not good, other battery model). No UI yet.
 host tests: pass | nro: not built | switch: not applicable (no UI, no console write)
