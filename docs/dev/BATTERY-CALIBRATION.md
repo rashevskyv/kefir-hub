@@ -114,8 +114,11 @@ is done. The state is on the SD, so a restart or a cut-off does not lose the pla
 1. **Drain to the dead battery.** The charger must be out (the wizard checks). Hub runs the maximum load (CPU and GPU) at the
    maximum brightness. The screensaver starts on Minus, or after 3 minutes, at the maximum brightness; the stick lowers it
    (the log keeps the brightness). Hub logs every second to the SD: voltage, current, gauge percent, temperature, load, brightness.
-   The wizard tells the user: when the console switches off, switch it on again and open the wizard; do it as many times as the
-   console starts, until it does not start at all. Each start continues the same step.
+   The wizard tells the user: when the console switches off, switch it on again; do it as many times as the console starts,
+   until it does not start at all. Each start continues the same step **by itself, without a button**, already in the tail mode:
+   low brightness and minimal load (the cell is nearly empty, there is no point in hammering the CPU and GPU again). The user can
+   still change the brightness with the stick. The drain page shows a big battery and, under it, live charts (voltage with the
+   3.4 V / 3.2 V lines, current and power, temperature, the load the Hub sets); CPU and GPU load as a reading is to be checked on the console.
 2. **Charge about 3 minutes, switch on; the Hub sets the zero by itself** (a step of the wizard, no menu). The gauge stays powered by the
    battery while the console is off, so it keeps counting the charge of these minutes (to confirm on a console). The last line
    of the log before the cut-off holds X, what the gauge believed was left (the real value was 0, so X is its error). At the start
