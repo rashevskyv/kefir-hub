@@ -131,8 +131,9 @@ is done. The state is on the SD, so a restart or a cut-off does not lose the pla
    agrees with the console).
 
 **Load plan of a drain (owner, 2026-10-23; replaces the 3.4 V latch).** Before the first cut-off: maximum load and maximum brightness,
-all the way (no switch at 3.4 V). After every cut-off, when the user switches the console on again: the **tail mode** at once, low
-brightness and minimal load, until the next cut-off or until the console does not start. Reason: under a high current the cell
+all the way (no switch at 3.4 V). After every cut-off, when the user switches the console on again: the **tail mode** at once: the Hub turns
+the auto-brightness sensor OFF and sets the brightness to the **minimum** (it brings both back when the calibration ends or is
+left), and the load is minimal, until the next cut-off or until the console does not start. Reason: under a high current the cell
 sags by current x internal resistance, the console cuts off early and leaves charge in the cell; after the first cut-off the
 voltage has recovered, and a gentle drain takes that charge out. It costs no extra rule in the code: the load follows the number
 of restarts (0 = maximum, 1 or more = minimal). The old "skip the tail when there is no sag" idea is dropped.
