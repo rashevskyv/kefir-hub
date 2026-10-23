@@ -485,6 +485,21 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       text only. Not yet: system memory as a ring, games per user, the action buttons (open in File Browser, delete). Web
       simulation of the page: artifact "Storage manager sim".
 
+- [ ] F.30 **From DBI 920 (read 2026-10-23, against DBI 912)** (user: take what is useful). Checked against the code; most of
+      it is already in the Hub: the 32/36/32-no-alias/39-bit address space, four cores, screenshot and video capture for
+      forwarders (`owo.hpp`, `app_settings.cpp`), the distribution-bit removal (`ignore_distribution_bit`, the same as
+      `PatchDistributionBit`), save growing (`ExtendSaveDataChecked`), a "Save information" label, and the tickets of a game in
+      its details. To do: (a) **research the "42 Bit" address space**: HOS NPDM knows four address-space values; find out from the
+      DBI 920 export which value DBI writes for "42 Bit" and from which firmware it is allowed, then add it to
+      `ForwarderAddressSpace` only if a real NPDM value exists (no guess; low priority, homebrew rarely needs it); (b) **NACP details
+      page** in the game details (one page, read-only): the fields the Hub does not show yet, among them the accessible program
+      index flags and the album export flag of DBI 920, rating ages, startup user account, screenshot/video capture, save sizes;
+      labels in every language, a host test for the field table; (c) **forwarder check**: DBI 920 now reads and validates the
+      forwarder's `main.npdm` (META, ACI0, ACID, "NPDM too small"): before the Hub installs a user-supplied forwarder, run the same
+      checks and say which one failed instead of a bare install error (look at what `yati` does with a short NPDM first).
+      Not taken: the L+left/right keys of the on-screen keyboard (the Hub uses swkbd), the rewritten FTP server (the Hub runs
+      its own ftpsrv with the anonymous-root patch), the tickets screen (decided 2026-10-03).
+
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
 
