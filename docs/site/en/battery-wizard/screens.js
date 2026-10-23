@@ -2,6 +2,12 @@
 (function () {
   'use strict';
   var F = [];            // actions of the focusable items on the current screen
+  var ACTIVE_F = -1;     // focus index of the active step row (its A label is Begin step)
+  var START1 = [         // the four paragraphs of the step 1 start page
+    'Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.',
+    'After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.',
+    'When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at low brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all.',
+    'Then plug the charger in for 3 minutes: the wizard moves to the next step.'];
   var STEPK = ['', 'Drain to the dead battery', 'Charge 3 min and zero', 'Cycle 1', 'Cycle 2', 'Report', 'Transfer to the other MMC'];
   function G() { return SIM.G; }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
@@ -23,10 +29,30 @@
     if (i <= 4) go('start', i); else if (i === 5) go('report'); else go('transfer');
   }
   function bar(list) {
-    return list.map(function (b) { return '<span class="bi"><i class="gl">' + esc(b[0]) + '</i>' + esc(b[1]) + '</span>'; }).join('');
+    return list.map(function (b) { return '<span class="bi ' + (b[2] || '') + '"><i class="gl">' + esc(b[0]) + '</i>' + esc(b[1]) + '</span>'; }).join('');
   }
-  function battery() {
-    return '<div class="bbox"><div class="bfill" data-bw="1"></div><div class="bpct" data-k="pctText"></div></div><div class="nub"></div>';
+  // one live chart: a sparkline of the recent samples (drawn in live), its value and the reference lines
+  function chart(title, vk, ymin, ymax, refs, lines) {
+    return '<div class="chart"><div class="ct"><span>' + esc(title) + '</span><b data-k="' + vk + '"></b></div>' +
+      '<svg viewBox="0 0 600 110" preserveAspectRatio="none" data-spark="1" data-min="' + ymin + '" data-max="' + ymax + '">' +
+      refs.map(function (r) { return '<line class="ref" data-refv="' + r + '" x1="0" x2="600"/>'; }).join('') +
+      lines.map(function (k, i) { return '<polyline class="ln' + i + '" data-line="' + k + '"/>'; }).join('') + '</svg></div>';
+  }
+  function sparks() {
+    var hist = SIM.G.hist, n = hist.length;
+    document.querySelectorAll('[data-spark]').forEach(function (svg) {
+      var min = +svg.dataset.min, max = +svg.dataset.max;
+      var yOf = function (v) { return (110 - (Math.min(max, Math.max(min, v)) - min) / (max - min) * 110).toFixed(1); };
+      svg.querySelectorAll('[data-line]').forEach(function (pl) {
+        var k = pl.dataset.line, pts = [];
+        for (var i = 0; i < n; i++) pts.push((n > 1 ? i / (n - 1) * 600 : 600).toFixed(1) + ',' + yOf(hist[i][k]));
+        pl.setAttribute('points', pts.join(' '));
+      });
+      svg.querySelectorAll('[data-refv]').forEach(function (ln) { var y = yOf(+ln.dataset.refv); ln.setAttribute('y1', y); ln.setAttribute('y2', y); });
+    });
+  }
+  function battery(noText) {
+    return '<div class="bbox"><div class="bfill" data-bw="1"></div>' + (noText ? '' : '<div class="bpct" data-k="pctText"></div>') + '</div><div class="nub"></div>';
   }
   function ctxLabel() {
     var c = G().ctx || G().cur;
@@ -78,36 +104,33 @@
         var state = g.done[i] ? 'done' : (g.cur === i ? 'active' : 'locked');
         var label = state === 'done' ? TX('Done') : state === 'active' ? TX('Active') : TX('Locked');
         var inner = '<span class="num">' + i + '</span><span class="rt">' + esc(TX(STEPK[i])) + '</span><span class="stt ' + state + '">' + esc(label) + '</span>';
+        if (state === 'active') ACTIVE_F = F.length;
         body += state === 'locked' ? '<div class="fi row dim">' + inner + '</div>'
           : fi(inner, state === 'active' ? function (k) { return function () { openStep(k); }; }(i) : noop, 'row');
       }
       return { title: TX('Battery calibration'), sub: g.cur > 5 ? TX('Calibration finished') : TX('Step %d of 5', g.cur),
-        bar: [['B', TX('Back')], ['A', TX('Open')]], body: body };
+        bar: [['B', TX('Back')], ['A', TX('Open'), 'bA']], body: body };
     },
     start: function () {
-      var i = G().sub || G().cur, g = G(), checks = [], what = [], btn;
+      var i = G().sub || G().cur, g = G(), checks = [], btn, h = '';
       if (i === 1) {
         checks.push([TX('Charger is out'), !g.charger]);
-        what = [TX('What happens:'), TX('Max load (CPU and GPU) and max brightness.'),
-          TX('The screen saver starts after 3 minutes, or on Minus.'), TX('Right stick: brightness; left stick: move.'),
-          TX('After each cut-off, switch the console on again. The step goes on.')];
-        btn = g.drainSec > 0 && g.ctx === 1 ? [TX('Continue the drain'), function () { if (!g.charger) SIM.drainStart(); else g.hint = TX('Charger is in: take it out first.'); }]
-          : [TX('Start the drain'), function () { if (!g.charger) SIM.drainStart(); else g.hint = TX('Charger is in: take it out first.'); }];
+        btn = [TX('Start the drain'), function () { if (!g.charger) SIM.drainStart(); else g.hint = TX('Charger is in: take it out first.'); }];
+        START1.forEach(function (p) { h += '<p class="para s">' + esc(TX(p)) + '</p>'; });
       } else {
         checks.push([TX('Plug the charger in.'), g.charger]);
-        what = i === 2 ? [TX('Charge 3 min. Then unplug the charger and switch the console on.'), TX('The 3 min of charge stay in the counter.')]
+        var what = i === 2 ? [TX('Charge 3 min. Then unplug the charger and switch the console on.'), TX('The 3 min of charge stay in the counter.')]
           : [TX('Charge to 100 %. Then unplug the charger: the drain starts by itself.')];
+        what.forEach(function (t) { h += txt(t, 'li'); });
         btn = [TX('Start charging'), function () {
           if (!g.charger) { g.hint = TX('Plug the charger in.'); renderAll(); return; }
           SIM.chargeStart(i === 2 ? 'zero' : 'full');
         }];
       }
-      var h = '<h3>' + esc(TX('Step %d of 5', i)) + '</h3>';
-      checks.forEach(function (c) { h += '<div class="chk ' + (c[1] ? 'ok' : 'no') + '">' + (c[1] ? '✓' : '✗') + ' ' + esc(c[0]) + '</div>'; });
-      h += '<div class="txt head">' + esc(what[0]) + '</div>';
-      what.slice(1).forEach(function (t) { h += txt(t, 'li'); });
-      if (g.hint) h += '<div class="hint">' + esc(g.hint) + '</div>';
-      h += '<div class="btnrow">' + fi(esc(btn[0]), btn[1], 'btn') + '</div>';
+      var pre = '';
+      checks.forEach(function (c) { pre += '<div class="chk ' + (c[1] ? 'ok' : 'no') + '">' + (c[1] ? '✓' : '✗') + ' ' + esc(c[0]) + '</div>'; });
+      if (g.hint) pre += '<div class="hint">' + esc(g.hint) + '</div>';
+      h = pre + h + '<div class="btnrow">' + fi(esc(btn[0]), btn[1], 'btn') + '</div>';
       return { title: TX(STEPK[i]), sub: TX('Step %d of 5', i), bar: [['B', TX('Back')], ['A', btn[0]]], body: h };
     },
     charge: function () {
@@ -154,13 +177,18 @@
       return { title: TX('Transfer to the other MMC'), sub: TX('Step %d of 5', 6), bar: [['B', TX('Back')]], body: body };
     },
     drain: function () {
-      var g = G();
-      var body = '<div class="drainrow"><div class="bigbat">' + battery() + '</div><div class="dr">' +
-        '<h3>' + esc(ctxLabel()) + '</h3>' +
+      var body = '<div class="dtop"><div class="bigbat bbig">' + battery(true) + '</div>' +
+        '<div class="dinfo"><div class="vbig" data-k="V"></div>' +
+        '<div class="gnote">' + esc(TX('Gauge, not trusted')) + ': <b data-k="gauge"></b></div>' +
         '<div class="status" data-k="status"></div>' +
-        kv(TX('Voltage'), 'V') + kv(TX('Current'), 'I') + kv(TX('Gauge'), 'gauge') + kv(TX('Temperature'), 'T') +
-        kv(TX('Load'), 'load') + kv(TX('Brightness'), 'bright') + kv(TX('Elapsed'), 'elapsed') + kv(TX('Lines in the log'), 'lines') +
-        txt(TX('Every second is logged to the microSD.'), 'li dim') + '</div></div>';
+        '<div class="chips"><span class="chip">' + esc(TX('Load')) + ': <b data-k="load"></b></span>' +
+        '<span class="chip">' + esc(TX('Brightness')) + ': <b data-k="bright"></b></span></div>' +
+        '<div class="kvs">' + kv(TX('Current'), 'I') + kv(TX('Elapsed'), 'elapsed') + kv(TX('Lines in the log'), 'lines') + '</div></div></div>' +
+        '<div class="charts">' +
+        chart(TX('Voltage'), 'V', 3.0, 4.2, [3.4, 3.2], ['V']) +
+        chart(TX('Power'), 'pw', 0, 6, [], ['P']) +
+        chart(TX('Temperature'), 'T', 20, 70, [60], ['T']) +
+        chart(TX('CPU / GPU load'), 'loadPct', 0, 100, [], ['C', 'G']) + '</div>';
       return { title: TX('Battery drain'), sub: ctxLabel(), bar: [['−', TX('Screensaver')], ['B', TX('Stop')]], body: body, drain: true };
     },
     black: function () { return { title: '', sub: '', bar: [], body: '' }; }
@@ -185,6 +213,8 @@
   function act() { if (F[G().focus]) F[G().focus](); }
   function move(d) { if (F.length) { G().focus = (G().focus + d + F.length) % F.length; highlight(); } }
   function highlight() {
+    var a = document.querySelector('#stage .bA');
+    if (a && G().scr === 'steps') a.textContent = G().focus === ACTIVE_F ? TX('Begin step') : TX('Open');
     var scope = G().popup ? '#stage .pop [data-f]' : '#stage .body [data-f]';
     document.querySelectorAll(scope).forEach(function (el) { el.classList.toggle('sel', +el.dataset.f === G().focus); });
   }
@@ -243,6 +273,7 @@
   function statusText(g, I) {
     if (g.charger) return TX('Paused: the charger is in.');
     if (g.loadOff) return TX('Paused: the battery is hot, waiting until it cools to 55 °C');
+    if (g.tail) return TX('After power-off: low brightness, weak load.');
     if (g.latched) return TX('Min load from 3.4 V, latched: the voltage rises when the load drops.');
     return TX('Draining for') + ' ' + hms(g.drainSec);
   }
@@ -251,7 +282,8 @@
   function vals() {
     var g = G(), I = SIM.loadNow(), V = SIM.ocv(g.q) - (I * g.R / 1000), p = pct();
     var charging = g.charger ? '+' : '';
-    var load = g.scr !== 'drain' ? '—' : g.charger ? '—' : g.loadOff ? TX('Off') : g.latched ? TX('Min') : TX('Max');
+    var load = g.scr !== 'drain' ? '—' : g.charger ? '—' : g.loadOff ? TX('Off') : I === SIM.I_MAX ? TX('Max') : TX('Min');
+    var lvl = I === 0 ? 0 : (I === SIM.I_MAX ? 100 : 15); // CPU and GPU level the Hub sets (assumed, see open questions)
     var sline = V.toFixed(2) + ' V · ' + Math.round(I * 1000) + ' mA · ' + Math.round(g.T) + ' °C';
     return {
       clock: SIM.clockText(), psm: p + ' %', pctText: p + ' %', V: V.toFixed(2) + ' V', I: Math.round(I * 1000) + ' mA',
@@ -260,7 +292,8 @@
       charging: TX('Charging:') + ' ' + p + ' % / 100 %', curr: charging + (g.charger ? SIM.CHG_MA : 0) + ' mA',
       left: mmss(g.charge3), sline: sline, pctNum: p,
       sys: name(g.sys), pwr: g.power ? S2('on', 'увімкнена') : S2('off', 'вимкнена'), chg: g.charger ? S2('in', 'є') : S2('out', 'немає'),
-      cuts: String(g.cuts.length), cur: String(g.cur), scrName: g.scr, mmc: String(g.emus)
+      cuts: String(g.cuts.length), cur: String(g.cur), scrName: g.scr, mmc: String(g.emus),
+      pw: (V * I).toFixed(1) + ' W', loadPct: lvl + ' / ' + lvl + ' %'
     };
   }
   function live() {
@@ -268,6 +301,7 @@
     var v = vals();
     document.querySelectorAll('[data-k]').forEach(function (el) { var k = el.dataset.k; if (v[k] !== undefined) el.textContent = v[k]; });
     document.querySelectorAll('[data-bw]').forEach(function (el) { el.style.width = v.pctNum + '%'; });
+    if (SIM.G.scr === 'drain') sparks(); // the charts keep moving under the screen saver too
     if (SIM.G.saver) saverFrame();
   }
   // Move the block (whole pixels), dim the stage by the brightness, show the short OSD.
@@ -389,6 +423,7 @@
       S2('The rule for a good calibration (the marker): not decided.', 'Правило «добре калібрування» для маркера: не вирішено.'),
       S2('The wording of the toasts: not decided.', 'Текст тостів: не вирішено.'),
       S2('Does the gauge keep counting while the console is off? Not confirmed on a console.', 'Чи рахує гейдж, поки консоль вимкнена? На консолі не підтверджено.'),
+      S2('The CPU and GPU load in the charts is the level the Hub sets (100 % at max, 15 % at min). The measured load needs a reading on the console.', 'Навантаження ЦП і GPU на графіках — рівень, який виставляє Hub (100 % на максимумі, 15 % на мінімумі). Виміряне навантаження треба зняти на консолі.'),
       S2('An unfinished sentence of the owner that starts with «в черні…»: not received, not guessed.', 'Незакінчене речення власника, яке починається з «в черні…»: не отримано, не вгадуємо.')
     ];
     document.getElementById('questions').innerHTML = q.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');

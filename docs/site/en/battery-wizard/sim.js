@@ -15,7 +15,7 @@ var SIM = (function () {
       t: 0, speed: 10, paused: false, power: true, sys: 'sysMMC', charger: false,
       q: 62, R: 100, E: 0, shift: 0, gaugeReset: false, logLost: false,
       bright: 100, saver: false, saverAuto: false, drainRun: false, latched: false, loadOff: false,
-      T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0,
+      T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0, tail: false, hist: [], nextS: 0,
       charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false,
       cuts: [], lastX: null, zeroInfo: null, noBoot: false,
       scr: 'tools', sub: 0, focus: 2, popup: null, toast: null, hint: '', started: false,
@@ -32,7 +32,7 @@ var SIM = (function () {
   function counter() { return clamp(Math.round(G.q + G.E + G.shift), 0, 100); }
   function tailSkip() { return I_MAX * G.R / 1000 < 0.05; }
   function drainActive() { return G.scr === 'drain' && !G.popup && G.power && !G.charger && G.drainRun; }
-  function loadNow() { return drainActive() && !G.loadOff ? (G.latched ? I_MIN : I_MAX) : 0; }
+  function loadNow() { return drainActive() && !G.loadOff ? (G.tail || G.latched ? I_MIN : I_MAX) : 0; }
   function systems() { return G.emus === 2 ? SYSTEMS : ['sysMMC', 'emuA']; }
   function clockText(extraSec) {
     var s = Math.floor(BASE_T + G.t + (extraSec || 0)) % 86400;
@@ -47,6 +47,12 @@ var SIM = (function () {
     G.scr = 'black'; G.needRender = true;
   }
 
+  // Samples for the live charts of the drain page: one point every 15 simulated seconds.
+  function pushHist(V, I2) {
+    var lvl = G.loadOff ? 0 : (I2 === I_MAX ? 100 : 15);
+    G.hist.push({ V: V, P: V * I2, T: G.T, C: lvl, G: lvl });
+    if (G.hist.length > 200) G.hist.shift();
+  }
   // One simulated step of dt seconds. Returns the first notable event, or null.
   function step(dt) {
     var ev = null, I = loadNow();
@@ -64,6 +70,7 @@ var SIM = (function () {
     }
     if (drainActive()) {
       var I2 = loadNow(), V = ocv(G.q) - I2 * G.R / 1000;
+      if (G.t >= G.nextS) { pushHist(V, I2); G.nextS = G.t + 15; }
       if (G.sagMeas === null && I2 === I_MAX) G.sagMeas = I2 * G.R / 1000;
       if (G.minRun > 0) G.minRun = Math.max(0, G.minRun - dt);
       else if (V <= CUT_V) { cutoff(V); return 'cut'; }
@@ -110,14 +117,17 @@ var SIM = (function () {
     powerOn();
     if (!G.power) G.needRender = true;
   }
+  // The Hub opens. A drain that was cut off goes on by itself in the tail mode: low brightness, weak load.
   function bootScreen() {
-    var tr = transferCheck(G.sys), resumed = false;
+    var tr = transferCheck(G.sys);
     if (G.cur === 2 && G.chargeStarted && G.charge3 === 0) { setZero(); G.scr = 'zero'; }
-    else if (G.cur === 1 || G.cur === 3 || G.cur === 4) { resumed = G.drainSec > 0; G.scr = 'start'; G.sub = G.cur; }
+    else if (G.cur === 1 || G.cur === 3 || G.cur === 4) {
+      if (G.drainSec > 0 && G.ctx === G.cur) { G.scr = 'drain'; G.drainRun = true; G.tail = true; G.bright = 20; G.saver = false; }
+      else { G.scr = 'start'; G.sub = G.cur; }
+    }
     else { G.scr = G.started ? 'steps' : 'tools'; }
     G.focus = 0; G.popup = null;
     if (tr) G.toast = tr;
-    else if (resumed) G.toast = { text: TX('Continuing the drain'), bad: false, until: Date.now() + 4000 };
     G.needRender = true;
   }
   function consoleNoBoot() { complete(G.cur); G.noBoot = false; }
@@ -132,6 +142,7 @@ var SIM = (function () {
     if (G.ctx !== G.cur) { // a new cycle: the drain counts from zero
       G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.latched = false; G.loadOff = false;
       G.saverAuto = false; G.saver = false; G.sagMeas = null;
+      G.tail = false; G.bright = 100; G.hist = []; G.nextS = G.t;
     }
     G.drainRun = true; G.scr = 'drain'; G.popup = null; G.focus = 0; G.needRender = true;
   }
