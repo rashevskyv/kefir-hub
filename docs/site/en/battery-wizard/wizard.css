@@ -192,3 +192,27 @@ h3 { font-size: 26px; font-weight: 400; color: var(--hacc); margin: 4px 0 10px; 
 .lowbat { padding-top: 10px; }
 .lowbat .bigbat { margin-bottom: 18px; }
 .side .tag[data-k] { color: var(--ptext); font-size: 14px; }
+.stamp { font-size: 13px; color: var(--pmuted); margin: 0 0 6px; }
+
+/* round 3: everything on the drain page fits between the header and the footer bar (checked by window.__fit) */
+.bbig { margin: 0; }
+.bbig .bbox { width: 350px; height: 118px; border-width: 5px; }
+.bbig .nub { left: 360px; top: 42px; width: 14px; height: 34px; }
+.bbig .bpct { font-size: 44px; }
+.bbig .bpct .approx { font-size: 30px; margin-right: 4px; }
+.dtop { grid-template-columns: 380px minmax(0, 1fr); gap: 22px; }
+.dleft { gap: 2px; }
+.approx { font-size: 16px; margin: 4px 0 0; max-width: 380px; }
+.vbig { font-size: 50px; margin-top: 0; }
+.dinfo .status { font-size: 19px; margin: 2px 0 4px; min-height: 0; }
+.chips { margin: 4px 0 2px; }
+.chip { font-size: 17px; padding: 3px 12px; }
+.dinfo .kvs { margin: 2px 0; }
+.dinfo .kv { font-size: 17px; padding: 2px 0; }
+.logline { font-size: 14px; margin-top: 2px; }
+.charts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.chart, .chart.wide { grid-column: auto; height: 232px; padding: 6px 10px; }
+.chart .ct { font-size: 17px; }
+.chart .ct b { font-size: 16px; }
+.legend { font-size: 14px; gap: 2px 12px; }
+.mlab { font-size: 13px; }

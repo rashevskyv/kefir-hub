@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>Battery calibration: the Switch screens</title>
-<link rel="stylesheet" href="wizard.css">
+<link rel="stylesheet" href="wizard.css?v=14">
 </head>
 <body>
+<p class="stamp"><span class="en">Guide v14 · 2026-10-23</span><span class="uk">Посібник v14 · 2026-10-23</span></p>
 <div class="lang">
   <span class="en">Language:</span><span class="uk">Мова:</span>
   <a href="?lang=en" data-lang="en">English</a><a href="?lang=uk" data-lang="uk">Українська</a>
@@ -55,8 +57,8 @@
 <script>document.body.dataset.lang = (new URLSearchParams(location.search).get('lang') === 'uk') ? 'uk' : 'en';
 document.documentElement.lang = document.body.dataset.lang;
 document.querySelectorAll('.lang a').forEach(function (a) { a.classList.toggle('on', a.dataset.lang === document.body.dataset.lang); });</script>
-<script src="strings.js"></script>
-<script src="sim.js"></script>
-<script src="screens.js"></script>
+<script src="strings.js?v=14"></script>
+<script src="sim.js?v=14"></script>
+<script src="screens.js?v=14"></script>
 </body>
 </html>

@@ -62,7 +62,11 @@
       var at = -1;
       for (var j = 0; j < n; j++) if (hist[j].low && (j === 0 || !hist[j - 1].low)) { at = j; break; }
       mk.hidden = at < 0;
-      if (at >= 0) mk.style.left = (n > 1 ? at / (n - 1) * 100 : 100).toFixed(1) + '%';
+      if (at >= 0) {
+        var pc = n > 1 ? at / (n - 1) * 100 : 100;
+        mk.style.left = pc.toFixed(1) + '%';
+        mk.style.transform = pc < 15 ? 'none' : pc > 85 ? 'translateX(-100%)' : 'translateX(-50%)';
+      }
     }
   }
   function battery(noText) {
@@ -175,7 +179,7 @@
       var g = G(), v = g.fullMah * 100 > 3600 * 130 ? TX('Larger battery is built in.')
         : g.fullMah * 100 < 3600 * 90 ? TX('Sign of desync: learned capacity below 90 % of design.') : TX('Normal: no sign of desync.');
       var cuts = '';
-      g.cuts.slice(-8).forEach(function (c) { cuts += txt(TX('Cut-off %d · %s V · gauge %s %%', c.n, c.V.toFixed(2), c.gauge), 'li'); });
+      g.cuts.slice(-4).forEach(function (c) { cuts += txt(TX('Cut-off %d · %s V · gauge %s %%', c.n, c.V.toFixed(2), c.gauge), 'li'); });
       if (g.zeroInfo) cuts += txt(TX('Zero: N − X = %s %%', g.zeroInfo.result), 'li');
       cuts += txt(TX('Written: calibration on the microSD, copy in this system.'), 'li');
       var body = '<div class="twocol"><div>' + kv(TX('Learned capacity'), '') .replace('<b data-k=""></b>', '<b>' + g.fullMah + ' / 3600 mAh</b>') +
@@ -209,11 +213,11 @@
         '<div class="logline">' + esc(TX('Everything is logged.')) + '</div></div></div>' +
         '<div class="charts">' +
         chart(TX('Voltage'), 'V', 3.0, 4.2, [3.2], ['V'], true) +
-        chart(TX('Temperature'), 'T', 20, 70, [60], ['T'], false) +
         '<div class="chart wide"><div class="ct"><span>' + esc(TX('CPU / GPU load')) + '</span><b data-k="pw"></b></div>' +
         '<div class="cbox"><svg viewBox="0 0 600 110" preserveAspectRatio="none" data-spark="1" data-min="0" data-max="100">' +
         ['C1', 'C2', 'C3', 'C4', 'G'].map(function (k, i) { return '<polyline class="ln' + i + '" data-line="' + k + '"/>'; }).join('') + '</svg></div>' +
         '<div class="legend">' + legendOf([[TX('Core 1'), 'c1'], [TX('Core 2'), 'c2'], [TX('Core 3'), 'c3'], [TX('Core 4'), 'c4'], [TX('GPU'), 'gpu']]) + '</div></div>' +
+        chart(TX('Temperature'), 'T', 20, 70, [60], ['T'], false) +
         '</div>';
       return { title: TX('Battery drain'), sub: ctxLabel(), bar: [['−', TX('Screensaver')], ['B', TX('Stop')]], body: body, drain: true };
     },
@@ -509,5 +513,80 @@
       if (g.needRender) renderAll(); else live();
     }, 100);
   }
+  // Layout check (call window.__fit() in the console): renders every screen of the guide and lists each element
+  // that leaves the body area of the 1280x720 stage (or the header / footer strip). The state is restored afterwards.
+  window.__fit = function () {
+    var g = SIM.G, base = JSON.parse(JSON.stringify(g));
+    var sEl = document.getElementById('stage'), sr = sEl.getBoundingClientRect(), k = sr.width / 1280;
+    function box(el) {
+      var r = el.getBoundingClientRect();
+      return [(r.left - sr.left) / k, (r.top - sr.top) / k, (r.right - sr.left) / k, (r.bottom - sr.top) / k];
+    }
+    var out = [];
+    function check(label, sel, lim) {
+      sEl.querySelectorAll(sel).forEach(function (el) {
+        if (el.closest('[hidden]')) return;
+        var b = box(el);
+        if (b[2] - b[0] < 0.5 || b[3] - b[1] < 0.5) return;
+        if (b[0] < lim[0] - 1 || b[1] < lim[1] - 1 || b[2] > lim[2] + 1 || b[3] > lim[3] + 1) {
+          out.push({ screen: label, element: el.tagName.toLowerCase() + '.' + (el.getAttribute('class') || '').split(' ').join('.'),
+            text: (el.textContent || '').trim().slice(0, 28), box: [b[0], b[1], b[2], b[3]].map(Math.round) });
+        }
+      });
+    }
+    function restore() {
+      Object.keys(g).forEach(function (key) { delete g[key]; });
+      Object.assign(g, JSON.parse(JSON.stringify(base)));
+    }
+    var CUTS = [];
+    for (var c = 1; c <= 8; c++) CUTS.push({ n: c, V: 3.2, gauge: c, t: 0 });
+    function drain(extra) {
+      return function (s) { s.scr = 'drain'; s.cur = 1; s.ctx = 1; s.drainRun = true; s.power = true; s.charger = false; s.drainSec = 1; s.minRun = 0; extra(s); SIM.advance(900); };
+    }
+    var SCREENS = [
+      ['tools', function (s) { s.scr = 'tools'; s.focus = 2; }],
+      ['battery', function (s) { s.scr = 'battery'; }],
+      ['ledger', function (s) { s.scr = 'ledger'; }],
+      ['intro', function (s) { s.scr = 'intro'; }],
+      ['steps', function (s) { s.started = true; s.scr = 'steps'; s.cur = 1; }],
+      ['start step 1', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; }],
+      ['start step 2', function (s) { s.scr = 'start'; s.sub = 2; s.cur = 2; }],
+      ['charge step 2', function (s) { s.scr = 'charge'; s.cur = 2; s.chargeMode = 'zero'; s.chargeStarted = true; s.charge3 = 120; s.charger = true; s.power = true; }],
+      ['lowbat step 2', function (s) { s.scr = 'lowbat'; s.cur = 2; s.power = false; s.chargeStarted = true; s.charge3 = 60; s.charger = true; }],
+      ['zero', function (s) { s.scr = 'zero'; s.cur = 2; s.zeroInfo = { N: 3, X: 18, result: 0, note: '', V: 3.2 }; }],
+      ['report', function (s) { s.scr = 'report'; s.cur = 5; s.cuts = CUTS; s.zeroInfo = { N: 3, X: 18, result: 1, note: '', V: 3.2 }; }],
+      ['transfer', function (s) { s.scr = 'transfer'; s.cur = 6; s.marker = { from: 'emuA', seq: 1, time: '13:00', good: true, pending: { sysMMC: true } }; }],
+      ['drain', drain(function (s) { s.bright = 100; })],
+      ['drain after cut-off', drain(function (s) { s.tail = true; s.bright = 20; s.cuts = CUTS; })],
+      ['drain, charger in', drain(function (s) { s.charger = true; s.pausedS = 4000; })],
+      ['drain, screensaver', drain(function (s) { s.saver = true; })],
+      ['drain, stop popup', drain(function (s) {})],
+      ['black', function (s) { s.scr = 'black'; s.power = false; }]
+    ];
+    SCREENS.forEach(function (item) {
+      restore();
+      var label = item[0];
+      item[1](g);
+      if (label === 'drain, stop popup') { g.popup = null; }
+      if (label === 'drain, stop popup') { renderAll(); }
+      renderAll();
+      if (label === 'drain, stop popup') {
+        // open the stop confirmation the way the B button does
+        openStop(); renderAll();
+      }
+      if (g.saver === false && label.indexOf('screensaver') < 0) g.saver = false;
+      renderAll();
+      var body = box(sEl.querySelector('.body') || sEl);
+      check(label, '.hdr *', [0, 0, 1280, 100]);
+      check(label, '.body *', body);
+      check(label, '.ftr .bar *', [0, 628, 1280, 720]);
+      check(label, '.saver *, .pop *, .toast', [0, 0, 1280, 720]);
+    });
+    restore();
+    renderAll();
+    console.table(out);
+    console.log('__fit: ' + out.length + ' element(s) outside the body area');
+    return { overflows: out.length, list: out };
+  };
   document.addEventListener('DOMContentLoaded', init);
 })();
