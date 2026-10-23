@@ -62,12 +62,14 @@
     intro: function () {
       return { title: TX('Battery calibration'), sub: TX('Step by step: drain, charge, report. The cut-off is the real end.'),
         bar: [['B', TX('Back')], ['A', TX('Start calibration')]], body:
-        txt(TX('The percent of the gauge cannot be trusted.'), 'para') +
-        txt(TX('The console can switch off at 35 %, or show 0 % for an hour.'), 'para') +
-        txt(TX('The real end is the cut-off: the console switches itself off at about 3.2 V under load.'), 'para') +
-        txt(TX('The wizard drains the battery to the cut-off, sets the zero and runs two full cycles.'), 'para') +
-        txt(TX('This takes several hours. Keep the console near you.'), 'para') +
-        txt(TX('After each cut-off, switch the console on again. The step goes on.'), 'para') +
+        txt(TX('Why this is needed'), 'head') +
+        txt(TX('With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest.'), 'para s') +
+        txt(TX('How it works'), 'head') +
+        txt(TX('We drain the battery to the very end: until the console switches itself off (about 3.2 V under load). That is the real zero. Then we charge and drain it fully, two times.'), 'para s') +
+        txt(TX('What you do'), 'head') +
+        txt(TX('Take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, plug the charger in for 3 minutes and switch it on. Open the wizard: it goes on from the same place.'), 'para s') +
+        txt(TX('How long it takes'), 'head') +
+        txt(TX('Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup.'), 'para s') +
         '<div class="btnrow">' + fi(esc(TX('Start calibration')), function () { G().started = true; go('steps'); }, 'btn') + '</div>' };
     },
     steps: function () {
