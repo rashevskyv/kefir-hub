@@ -446,7 +446,6 @@
     ];
     if (g.hubOpen) people.push(sideBtn(S2('Close the Hub (play a game)', 'Закрити Hub (грати в гру)'), '', 'closehub'));
     else people.push(sideBtn(S2('Open Kefir Hub', 'Відкрити Kefir Hub'), 'on', 'openhub'));
-    if (g.noBoot && !g.power) people.push(sideBtn(TX('Console does not start'), 'warn', 'noboot'));
     SIM.systems().forEach(function (s) { if (s !== g.sys) people.push(sideBtn(S2('Boot ', 'Запустити ') + name(s), '', 'boot:' + s)); });
     var ev = [
       sideBtn(S2('Power loss', 'Вимкнення живлення'), '', 'loss'),

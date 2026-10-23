@@ -19,7 +19,7 @@ Battery calibration finds the real empty point of the battery and sets the fuel 
 - Open: the register for the zero (RemCap or RepSOC), the temperature limit (60 °C in the guide), the real cut-off voltage under load (3.2 V in the guide), the rule for a good calibration, the toast wording.
 -->
 
-<iframe src="../battery-wizard/index.html?lang=en&v=21" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
+<iframe src="../battery-wizard/index.html?lang=en&v=23" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
 
 [Open the guide full screen](../battery-wizard/index.html?lang=en)
 

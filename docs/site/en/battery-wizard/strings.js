@@ -88,7 +88,6 @@ var NEW = {
   "Factory model written": "Заводську модель записано",
   "The gauge looks reset. 0 is written.": "Гейдж, схоже, скинувся. Записано 0.",
   "The log is lost. 0 is written.": "Журнал втрачено. Записано 0.",
-  "Console does not start": "Консоль не вмикається",
   "Calibration report": "Звіт калібрування",
   "Learned capacity": "Виучена ємність",
   "Verdict": "Висновок",

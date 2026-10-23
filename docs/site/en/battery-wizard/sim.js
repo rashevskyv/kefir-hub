@@ -1,11 +1,13 @@
 // The console and the Hub's calibration wizard, without any DOM. Physics per simulated second.
-// Rules: docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline", "Brightness rule" and
-// "The wizard remembers; the Hub need not stay open" (commit 4182c044). The model is rough; numbers are not measurements.
+// The rules at the Hub start follow sphaira/include/battery_calib_state.hpp (Check) and
+// tests/test_battery_calib_state.cpp; docs/dev/BATTERY-CALIBRATION.md "Cutoff pipeline" and "Brightness rule".
+// The model is rough (the cell is a straight line from 3.2 V to 4.2 V). Numbers are not measurements.
 var SIM = (function () {
   'use strict';
+  var MAX_CUTS = 2;      // cut-offs in one drain: after the second one the console does not start without the charger
   var CUT_V = 3.2, BOOT_V = 3.25, RECOVER = 0.03, I_MAX = 1.8, I_MIN = 0.35, I_SELF = 1.2;
   var LIMIT_T = 60, COOL_T = 55, SAVER_S = 180, CHG_RATE = 0.6 / 60, CHG_MA = 1296;
-  var ZERO_MIN = 40; // sim seconds on the charger before a flat console starts again (the zero step)
+  var LOW_PERCENT = 15;  // C++ LOW_BATTERY_PERCENT: under this, with the charger just in, the Hub asks about the drain
   var BASE_T = 13 * 3600 + 17 * 60; // the clock of the Switch at the start of the page
   var SYSTEMS = ['sysMMC', 'emuA', 'emuB'];
   var SYS_NAME = { sysMMC: 'sysMMC', emuA: 'emuMMC A', emuB: 'emuMMC B' };
@@ -19,10 +21,11 @@ var SIM = (function () {
       userOn: false, userBright: 40, userSkipped: false, bMarker: { before: 60, lastSet: 100 },
       saver: false, saverAuto: false, drainRun: false, loadOff: false,
       T: 34, sagMeas: null, lines: 0, drainSec: 0, ctx: 0, minRun: 0, tail: false, pausedS: 0,
+      dcuts: 0,              // cut-offs of the current drain (the console stops starting after MAX_CUTS)
       hist: [], nextS: 0,
       charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false,
       lastTry: null, offChg: 0,
-      ph: {},                // per wizard step: the phases of a cycle (charge A, drain B) and the drain choice
+      ph: {},                // per wizard step: phase A (charge) and phase B (drain) of a cycle
       hubOpen: true, askSelf: false, saidOnce: false,
       cuts: [], lastX: null, zeroInfo: null, noBoot: false,
       scr: 'tools', sub: 0, focus: 2, popup: null, toast: null, hint: '', started: false,
@@ -41,7 +44,7 @@ var SIM = (function () {
   function drainActive() { return G.scr === 'drain' && !G.popup && G.power && !G.charger && G.drainRun; }
   // Maximum load before the first cut-off; minimum load after every restart (the tail mode).
   function loadNow() { return drainActive() && !G.loadOff ? (G.tail ? I_MIN : I_MAX) : 0; }
-  // the drain phase is armed (phase A done in a cycle; the step 1 page shown): the console runs down on its own
+  // a drain phase that the person runs himself: the console is on, the Hub is not draining
   function selfDraining() {
     var p = G.ph[G.cur];
     return !!p && (p.aD || p.armed) && !p.bD && G.power && !G.charger && !G.drainRun;
@@ -66,10 +69,11 @@ var SIM = (function () {
     if (G.hist.length > 200) G.hist.shift();
   }
 
-  // A cut-off. The gauge reading is kept only when the Hub was open and drained (the Hub logged it).
+  // A cut-off: the console switches off (black, no Hub). The gauge reading is kept only when the Hub drained (logged).
   function cutoff(V) {
     var logged = G.hubOpen && G.drainRun;
     G.cuts.push({ n: G.cuts.length + 1, V: V, gauge: logged ? counter() : null, logged: logged, t: G.t });
+    G.dcuts++;
     G.lastX = logged ? counter() : null;
     if (!logged) ph(G.cur).selfCut = true;
     G.power = false; G.drainRun = false; G.saver = false; G.popup = null;
@@ -87,8 +91,6 @@ var SIM = (function () {
       G.q = Math.min(100, G.q + CHG_RATE * dt);
       if (G.q >= 100 && !G.fullFlag) { G.fullFlag = true; ev = ev || 'full'; }
     }
-    // the zero step counts the charging time (no target)
-    if (G.charger && G.chargeStarted && G.cur === 2 && !G.done[2]) G.charge3 += dt;
     // a cycle's phase A (charge to 100 %) counts while it runs, also with the Hub closed
     var pc = G.ph[G.cur];
     if (pc && G.charger && pc.aS && !pc.aD && (G.cur === 3 || G.cur === 4)) {
@@ -137,38 +139,27 @@ var SIM = (function () {
     G.power = false; G.drainRun = false; G.saver = false; G.popup = null;
     G.scr = 'black'; G.needRender = true;
   }
+  // The console is switched on. Without the charger, after MAX_CUTS cut-offs of the drain it does not start.
   function powerOn() {
     if (G.power) return;
-    // the zero step: a flat console starts only after a little charging; the Hub is not opened yet
-    if (G.cur === 2 && G.chargeStarted && !G.done[2]) {
-      if (G.charge3 < ZERO_MIN) { G.lastTry = 'nostart'; G.needRender = true; return; }
-      G.power = true; G.noBoot = false; G.scr = 'idle'; G.lastTry = 'started'; restoreBright(); G.needRender = true;
-      return;
-    }
-    if (ocv(G.q) + RECOVER < BOOT_V && !G.charger) { G.noBoot = true; G.needRender = true; return; }
+    if (!G.charger && G.dcuts >= MAX_CUTS) { G.noBoot = true; G.needRender = true; return; }
+    if (!G.charger && ocv(G.q) + RECOVER < BOOT_V) { G.noBoot = true; G.needRender = true; return; }
     G.power = true; G.noBoot = false;
-    // a self drain ended: the console is on, the Hub may stay closed (the wizard asks when it is opened)
-    var p = G.ph[G.cur];
-    if (p && p.selfCut && !p.bD) { G.scr = 'home'; G.needRender = true; return; }
     G.minRun = 60; // a boot runs at least a minute before the next cut-off
     G.lastTry = null;
-    bootScreen();
-    restoreBright();
+    openHub();
   }
   // The Hub is opened (Tools > Battery calibration; the wizard reads its marker).
   function openHub() {
     G.hubOpen = true;
     if (!G.power) return;
-    var p = G.ph[G.cur];
-    if (G.cur === 2 && G.chargeStarted && !G.done[2]) { setZero(); G.scr = 'zero'; G.focus = 0; G.needRender = true; return; }
-    if (p && !p.bD && p.selfCut && G.charger) { G.askSelf = true; G.scr = 'start'; G.sub = G.cur; G.focus = 0; G.needRender = true; return; }
     bootScreen();
   }
   function closeHub() {
     G.hubOpen = false; G.drainRun = false; G.saver = false; G.popup = null;
     if (G.power) G.scr = 'home'; G.needRender = true;
   }
-  // Drain phase choice: the Hub's mechanism, or the person uses the console (the Hub may be closed).
+  // Drain phase: one button, the Hub's mechanism (the cut-offs are counted from the start of the drain).
   function drainChoice() { drainStart(); }
   // "Консоль вимкнулась від розряду?": Так completes the phase, Ні starts the choice again.
   function selfAnswer(yes) {
@@ -190,29 +181,41 @@ var SIM = (function () {
     powerOn();
     if (!G.power) G.needRender = true;
   }
-  // The Hub opens. A drain that was cut off goes on by itself at once, in the tail mode (minimum brightness, minimal load).
+  // The Hub runs its check when it opens (battery_calib_state.hpp, Check):
+  //  - step 1 (the drain) and the charger in: the zero comes at once (step 2);
+  //  - step 1 without the charger: the cut-off is counted, the drain goes on in the tail mode;
+  //  - a cycle's charge: 100 % with the charger in is done; the charger out below 100 % = interrupted;
+  //  - a cycle's drain with the charger in and a low battery: the question "the console switched off from the drain?";
+  //  - a cycle's drain without the charger: the cut-off is counted, the drain goes on in the tail mode.
   function bootScreen() {
-    var tr = transferCheck(G.sys);
-    if (G.cur === 2) { G.scr = 'start'; G.sub = 2; }
-    else if (G.cur === 1 || G.cur === 3 || G.cur === 4) {
-      if (G.drainSec > 0 && G.ctx === G.cur && G.drainRun === false && !(G.ph[G.cur] && G.ph[G.cur].selfCut)) {
-        G.scr = 'drain'; G.drainRun = true; G.saver = false; G.hubOpen = true;
-        G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100; G.autoB = false;
-        if (G.tail) G.bMarker.lastSet = 1;
-      }
-      else { G.scr = 'start'; G.sub = G.cur; }
+    var tr = transferCheck(G.sys), p = ph(G.cur), started = G.dcuts > 0 || G.drainSec > 0;
+    if (G.cur === 2) { setZero(); G.scr = 'zero'; G.focus = 0; }
+    else if (G.cur === 1 && started && G.charger) { G.done[1] = true; G.cur = 2; setZero(); G.scr = 'zero'; G.focus = 0; restoreBright(); }
+    else if (G.cur === 1 && started) { resumeTail(); }
+    else if ((G.cur === 3 || G.cur === 4) && !p.aD && p.aS) {
+      if (G.charger && G.q >= 100) { p.aD = true; G.scr = 'steps'; }
+      else if (!G.charger) { p.aS = false; G.scr = 'start'; G.sub = G.cur; }
+      else { G.scr = 'charge'; }
     }
+    else if ((G.cur === 3 || G.cur === 4) && p.aD && !p.bD && started && G.charger && G.q <= LOW_PERCENT) {
+      G.askSelf = true; G.scr = 'start'; G.sub = G.cur; restoreBright();
+    }
+    else if ((G.cur === 3 || G.cur === 4) && p.aD && !p.bD && started && !G.charger) { resumeTail(); }
+    else if (G.cur === 1 || G.cur === 3 || G.cur === 4) { G.scr = 'start'; G.sub = G.cur; }
     else { G.scr = G.started ? 'steps' : 'tools'; }
-    G.focus = 0; G.popup = null;
+    G.focus = G.scr === 'start' ? 0 : G.focus; G.popup = null;
     if (tr) G.toast = tr;
     G.needRender = true;
   }
-  // "Консоль не вмикається": the Hub's drain step is done; the console stays off until the person charges it.
-  function consoleNoBoot() {
-    ph(G.cur).bD = true;
-    G.done[G.cur] = true; G.cur = G.cur + 1; G.noBoot = false;
-    G.drainRun = false; G.popup = null; G.scr = 'black'; G.needRender = true;
+  // the drain goes on by itself in the tail mode: minimum brightness, minimal load
+  function resumeTail() {
+    G.scr = 'drain'; G.drainRun = true; G.saver = false; G.hubOpen = true;
+    G.tail = G.cuts.length > 0; G.bright = G.tail ? 1 : 100; G.autoB = false;
+    if (G.tail) G.bMarker.lastSet = 1;
+    G.focus = 0; G.needRender = true;
   }
+  // The person's "Консоль не вмикається": the state is the same as after MAX_CUTS (the console does not start without the charger).
+  function consoleNoBoot() { G.noBoot = true; G.needRender = true; }
 
   function complete(k) {
     G.done[k] = true; G.cur = k + 1; G.drainRun = false; G.noBoot = false;
@@ -223,10 +226,10 @@ var SIM = (function () {
   }
 
   function drainStart() {
-    if (G.ctx !== G.cur) { // a new cycle: the drain counts from zero
+    if (G.ctx !== G.cur) { // a new drain: the cut-offs and the drain count from zero
       if (G.cur === 1) { G.brightSaved = G.brightBefore; G.bMarker = { before: G.brightBefore, lastSet: 100 }; }
       else G.bMarker.lastSet = 100; // the Hub sets the maximum for the drain
-      G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.loadOff = false; G.pausedS = 0;
+      G.ctx = G.cur; G.drainSec = 0; G.lines = 0; G.loadOff = false; G.pausedS = 0; G.dcuts = 0;
       G.saverAuto = false; G.saver = false; G.sagMeas = null;
       G.tail = false; G.bright = 100; G.hist = []; G.nextS = G.t;
     }
@@ -240,8 +243,7 @@ var SIM = (function () {
   // Phase A (charge to 100 %) starts: the Hub writes the start into the marker.
   function chargeStart(mode) {
     G.chargeMode = mode; G.fullFlag = false; G.scr = 'charge'; G.popup = null; G.focus = 0;
-    if (mode === 'zero') G.chargeStarted = true;
-    else { G.charge3 = 0; ph(G.cur).aS = true; }
+    if (mode !== 'zero') { G.charge3 = 0; ph(G.cur).aS = true; }
     G.needRender = true;
   }
   function toggleCharger() {
@@ -249,9 +251,6 @@ var SIM = (function () {
     if (G.charger) {
       G.pausedS = 0; G.offChg = 0;
       restoreBright(); // the charger is in: the brightness is the person's again, at once
-      // the zero step starts counting the charge as soon as the charger goes in, even with the console off
-      if (G.cur === 2 && !G.done[2] && !G.chargeStarted) { G.chargeStarted = true; G.charge3 = 0; }
-      if (G.power && G.cur === 2 && G.chargeStarted && G.scr === 'start') G.scr = 'charge';
     }
     G.needRender = true;
   }
@@ -261,7 +260,7 @@ var SIM = (function () {
     var last = G.cuts[G.cuts.length - 1];
     if (G.logLost) { result = 0; note = 'log'; X = null; }
     else if (X === null) { result = 0; note = 'nolog'; }
-    else if (N >= 99) { result = 0; note = 'reset'; X = X; }
+    else if (N >= 99) { result = 0; note = 'reset'; }
     else result = clamp(N - X, 0, 100);
     G.shift = result - (G.q + G.E);
     G.zeroInfo = { N: N, X: X, result: result, note: note, V: last ? last.V : null };
@@ -309,7 +308,7 @@ var SIM = (function () {
   }
 
   return {
-    G: G, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, I_SELF: I_SELF, CHG_MA: CHG_MA, ZERO_MIN: ZERO_MIN, SYS_NAME: SYS_NAME,
+    G: G, MAX_CUTS: MAX_CUTS, CUT_V: CUT_V, BOOT_V: BOOT_V, I_MAX: I_MAX, I_MIN: I_MIN, I_SELF: I_SELF, CHG_MA: CHG_MA, SYS_NAME: SYS_NAME,
     ocv: ocv, counter: counter, loadNow: loadNow, loadLevels: loadLevels, drainActive: drainActive, clockText: clockText,
     ph: ph, systems: systems, step: step, advance: advance, jumpNext: jumpNext,
     powerOff: powerOff, powerOn: powerOn, openHub: openHub, closeHub: closeHub, drainChoice: drainChoice,
