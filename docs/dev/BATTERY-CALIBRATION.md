@@ -166,3 +166,11 @@ calibration of emuMMC `X` was written to `Y`"), a line in the Battery page histo
 `Y` at time T, sequence N"). A system that never ran the Hub gets it at its first start. The ledger is the single place that
 answers "where was this written".
 
+**Brightness rule (owner, 2026-10-23).** The Hub lowers the brightness only while it drains a battery that is nearly empty (the tail
+mode: auto-brightness off, brightness at the minimum). The moment the charger is connected (the Hub sees it at its start, or while
+it runs) the Hub puts the brightness back to the value the user had before the calibration and turns auto-brightness on again.
+It does not wait for the zero screen. Because a power cut may end the Hub before it can restore anything, the marker on the SD
+holds, from the start of step 1: the brightness and auto-brightness the user had, and the last brightness the Hub set itself.
+At any Hub start with the charger in, the Hub restores from the marker. If the current brightness differs from the last one the Hub
+set, the user changed it himself (he may have gone to sleep): the Hub leaves the user's value alone.
+
