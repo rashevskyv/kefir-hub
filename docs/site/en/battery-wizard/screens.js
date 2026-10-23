@@ -200,20 +200,22 @@
       return { title: TX(STEPK[i]), sub: TX('Step %d of 5', i), bar: bar, body: body };
     },
     charge: function () {
-      var g = G(), cyc = (g.cur === 3 || g.cur === 4), pz = SIM.ph(g.cur);
+      var g = G(), cyc = (g.cur === 3 || g.cur === 4), pz = SIM.ph(g.cur), bar = [['B', TX('Back')]];
       var body = '<div class="bigbat">' + battery() + '</div>' +
         '<div class="kvs"><div class="kv"><b data-k="charging"></b></div>' + kv(TX('Charging current'), 'curr') + kv(TX('Charging for'), 'left') + '</div>';
       if (cyc) {
+        bar.push(['−', TX('Screensaver')]);
         if (pz.aD) body += txt(TX('Full. Now the drain: take the charger out.'), 'txt warn');
         else {
           body += chkLine(g.charger, TX('Charger is plugged in.'), TX('Plug the charger in.'));
           body += txt(TX('You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.'), 'li');
+          body += txt(TX('The screen stays on: so the console charges to the end. The screensaver saves the screen.'), 'li');
         }
       } else {
         body += txt(TX('Keep the screen on while charging.'));
         body += txt(TX('Unplug the charger, switch the console on. The Hub sets the zero by itself.'), 'txt warn');
       }
-      return { title: TX('Battery charge'), sub: TX(STEPK[g.cur]), bar: [['B', TX('Back')]], body: body };
+      return { title: TX('Battery charge'), sub: TX(STEPK[g.cur]), bar: bar, body: body };
     },
     zero: function () {
       var z = G().zeroInfo || { N: 0, X: null, result: 0, note: '', V: null };
@@ -316,6 +318,7 @@
   }
   function press(b) {
     var g = G();
+    SIM.G.idleS = 0; // any input keeps the screensaver away
     // In the saver the sticks move and dim the screen; the D-pad does nothing, any other button wakes it.
     if (g.saver) { if (!/^(UP|DOWN|LEFT|RIGHT)$/.test(b)) { g.saver = false; renderAll(); } return; }
     if (g.popup && (b === 'UP' || b === 'DOWN' || b === 'LEFT' || b === 'RIGHT')) { move(b === 'UP' || b === 'LEFT' ? -1 : 1); return; }
@@ -323,7 +326,7 @@
     else if (b === 'DOWN' || b === 'RIGHT') move(1);
     else if (b === 'A') { act(); renderAll(); }
     else if (b === 'B') back();
-    else if (b === 'MINUS' && g.scr === 'drain' && g.power) { g.saver = true; renderAll(); }
+    else if (b === 'MINUS' && ((g.scr === 'drain' && g.power) || g.scr === 'charge')) { g.saver = true; renderAll(); }
   }
 
   // The stage: build the screen, then live values each tick.
@@ -342,10 +345,13 @@
     }
     if (g.focus >= F.length) g.focus = 0;
     var toast = g.toast && Date.now() < g.toast.until ? '<div class="toast' + (g.toast.bad ? ' bad' : '') + '">' + esc(g.toast.text) + '</div>' : '';
-    var saver = g.saver && g.scr === 'drain' ? '<div class="saver"><div class="sblock" data-move="1">' +
-      '<div class="sclock" data-k="clock"></div><div class="sstat">' + esc(ctxLabel()) + '</div>' +
-      '<div class="sbat">' + battery() + '</div><div class="smet">' + kv(TX('Voltage'), 'V') + kv(TX('Battery consumption'), 'I') +
-      kv(TX('Gauge'), 'gauge') + kv(TX('Load'), 'load') + kv(TX('Elapsed'), 'elapsed') + '</div></div>' +
+    var sub = g.scr === 'charge' ? TX('Battery charge') : ctxLabel();
+    var metrics = g.scr === 'charge'
+      ? '<div class="kv"><b data-k="charging"></b></div>' + kv(TX('Charging current'), 'curr') + kv(TX('Voltage'), 'V') + kv(TX('Temperature'), 'T') + kv(TX('Charging for'), 'left')
+      : kv(TX('Voltage'), 'V') + kv(TX('Battery consumption'), 'I') + kv(TX('Gauge'), 'gauge') + kv(TX('Load'), 'load') + kv(TX('Elapsed'), 'elapsed');
+    var saver = g.saver && (g.scr === 'drain' || g.scr === 'charge') ? '<div class="saver"><div class="sblock" data-move="1">' +
+      '<div class="sclock" data-k="clock"></div><div class="sstat">' + esc(sub) + '</div>' +
+      '<div class="sbat">' + battery() + '</div><div class="smet">' + metrics + '</div></div>' +
       '<div class="sdim" data-dim="1"></div><div class="osd" data-osd="1"></div>' +
       '<div class="shint">' + esc(TX('Right stick: brightness; left stick: move.')) + ' ' + esc(TX('Any button exits.')) + '</div></div>' : '';
     var html = '<div class="hdr"><div class="hl"><div class="ver">v0.14.192' + (view.sub ? ' · ' + esc(view.sub) : '') + '</div><div class="ttl">' + esc(view.title) + '</div></div>' +
@@ -552,7 +558,7 @@
     stage.addEventListener('click', function (e) {
       var el = e.target.closest('[data-f]');
       if (!el) return;
-      G().focus = +el.dataset.f; act(); renderAll();
+      SIM.G.idleS = 0; G().focus = +el.dataset.f; act(); renderAll();
     });
     document.getElementById('pad').addEventListener('click', function (e) {
       var b = e.target.closest('[data-b]'); if (b) press(b.dataset.b);
@@ -644,6 +650,7 @@
       ['cycle 3 charge', function (s) { s.scr = 'charge'; s.cur = 3; s.charger = true; s.ph = { 3: { aS: true, aD: false, aSec: 120, bD: false, selfCut: false } }; }],
       ['cycle 3 drain choice', function (s) { s.scr = 'start'; s.sub = 3; s.cur = 3; s.charger = false; s.ph = { 3: { aS: true, aD: true, aSec: 200, bD: false, selfCut: false } }; }],
       ['question', function (s) { s.scr = 'start'; s.sub = 1; s.cur = 1; s.charger = true; s.askSelf = true; s.ph = { 1: { aS: false, aD: false, aSec: 0, bD: false, selfCut: true } }; }],
+      ['charge saver', function (s) { s.scr = 'charge'; s.cur = 3; s.charger = true; s.saver = true; s.ph = { 3: { aS: true, aD: false, aSec: 9000, bD: false, armed: false, selfCut: false } }; }],
       ['idle step 2', function (s) { s.scr = 'idle'; s.cur = 2; s.power = true; s.chargeStarted = true; s.charge3 = 60; s.charger = false; }],
       ['black step 2', function (s) { s.scr = 'black'; s.cur = 2; s.power = false; s.chargeStarted = true; s.charge3 = 10; s.charger = true; }],
       ['zero', function (s) { s.scr = 'zero'; s.cur = 2; s.zeroInfo = { N: 3, X: 18, result: 0, note: '', V: 3.2 }; }],

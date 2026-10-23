@@ -171,6 +171,7 @@ var NEW = {
   "%d h %d min": "%d год %d хв",
   "%d min": "%d хв",
   "The drain has started.": "Розряд розпочато.",
+  "The screen stays on: so the console charges to the end. The screensaver saves the screen.": "Екран лишається увімкненим: так консоль точно зарядиться до кінця. Заставка береже екран.",
 };
 
 // Text for the language of the page (?lang=uk, default English). Counts %s / %d in order.

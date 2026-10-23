@@ -24,7 +24,7 @@ var SIM = (function () {
       dcuts: 0,              // cut-offs of the current drain (the console stops starting after MAX_CUTS)
       hist: [], nextS: 0,
       charge3: 0, chargeStarted: false, chargeMode: '', fullFlag: false, cycleWait: false,
-      lastTry: null, offChg: 0,
+      lastTry: null, offChg: 0, idleS: 0, chSaverAuto: false,
       ph: {},                // per wizard step: phase A (charge) and phase B (drain) of a cycle
       hubOpen: true, askSelf: false, saidOnce: false,
       cuts: [], lastX: null, zeroInfo: null, noBoot: false,
@@ -98,6 +98,11 @@ var SIM = (function () {
       if (G.q >= 100) { pc.aD = true; ev = ev || 'full'; }
     }
     if (G.charger && !G.power) G.offChg += dt;
+    // the screensaver also runs during the charge: after 3 minutes without input (the same time as the drain's)
+    if (G.scr === 'charge' && (G.cur === 3 || G.cur === 4) && !G.saver && !G.chSaverAuto) {
+      G.idleS += dt;
+      if (G.idleS >= SAVER_S) { G.chSaverAuto = true; G.saver = true; ev = ev || 'saver'; }
+    }
     if (G.drainRun && G.charger) G.pausedS += dt; // the Hub's drain is on pause while the charger is in
     if (drainActive()) {
       var I2 = loadNow(), V = ocv(G.q) - I2 * G.R / 1000;
@@ -243,7 +248,7 @@ var SIM = (function () {
   // Phase A (charge to 100 %) starts: the Hub writes the start into the marker.
   function chargeStart(mode) {
     G.chargeMode = mode; G.fullFlag = false; G.scr = 'charge'; G.popup = null; G.focus = 0;
-    if (mode !== 'zero') { G.charge3 = 0; ph(G.cur).aS = true; }
+    if (mode !== 'zero') { G.charge3 = 0; ph(G.cur).aS = true; G.chSaverAuto = false; G.idleS = 0; }
     G.needRender = true;
   }
   function toggleCharger() {
