@@ -174,3 +174,22 @@ holds, from the start of step 1: the brightness and auto-brightness the user had
 At any Hub start with the charger in, the Hub restores from the marker. If the current brightness differs from the last one the Hub
 set, the user changed it himself (he may have gone to sleep): the Hub leaves the user's value alone.
 
+**The wizard remembers; the Hub need not stay open (owner, 2026-10-23).** The state of the calibration lives in the marker on the SD
+(which step, which phase, when it began, what the battery showed). The user may close the Hub, use or play on the console, and
+come back later: Tools > "Battery calibration" opens, the Hub sees that a calibration is going on and shows where it is: the steps
+already done ticked, the current step and its phase. Nothing is lost if the user played in between.
+- **Cycle 1 and cycle 2 each have two phases: charge to 100 %, then drain to the cut-off.**
+- **Charge phase.** The screen shows the real charger state: "Charger is in" (a tick) or "Plug the charger in", never a request to do
+  what is already done. With the charger in, the user presses "Start the charge" (the Hub writes the start into the marker). The
+  Hub tells the user: leave the console as it is, or use it while it charges; when it has reached 100 %, come back to the Hub and open
+  Battery calibration. On return the Hub reads the battery: 100 % with the charger in = phase done; below 100 % with the charger out =
+  "the charge was interrupted, charge again"; still charging = the time and the percent so far. (A short unplug in the middle cannot
+  be seen by a Hub that was closed: a known limit, the gauge's own learning copes.)
+- **Drain phase.** The user may drain the console himself (play, leave it running) or let the Hub do it with its mechanism
+  (maximum load first, the tail mode after each cut-off). If he drained it himself, he switches the console on with the charger in and
+  opens the Hub: it sees a low battery, a charger just plugged in and the marker "drain phase", and asks one question "The console
+  switched off from the drain?" (Yes / No); Yes completes the phase.
+- **Step 1 (the zero) is the exception:** it needs the Hub's own log (the value X), so the wizard says to keep the Hub running in
+  step 1. If the user drained it without the Hub, the zero falls back to 0 and the report says so.
+- The report shows the gauge percent before a cut-off only for the cut-offs the Hub itself logged; the others read "not measured".
+
