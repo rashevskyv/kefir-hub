@@ -272,6 +272,7 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
             App::Push<ui::menu::users::Menu>();
         }),
         settings::MakeHeader("Maintenance"_i18n),
+        Tool("Battery calibration"_i18n, "Drain the battery to the cut-off, set the zero and run two full cycles."_i18n, battery::OpenCalibration),
         Tool("Battery"_i18n, "Fuel gauge state, the system's saved copy and a backup."_i18n, battery::Open),
         Tool("Storage manager"_i18n, "What fills the microSD card: games, saves, emuMMC, homebrew and the rest."_i18n, ui::menu::storage::Open),
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),

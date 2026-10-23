@@ -8,6 +8,7 @@
 //   - Ledger          : where a calibration was made and where it was written
 
 #include <cstdint>
+#include <cstdlib>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -122,7 +123,9 @@ inline auto Fields(std::string_view line) -> std::vector<std::string> {
     return out;
 }
 inline auto Num(const std::string& s) -> std::int64_t {
-    try { return std::stoll(s); } catch (...) { return 0; }
+    char* end = nullptr;
+    const auto v = std::strtoll(s.c_str(), &end, 10);
+    return end == s.c_str() ? 0 : v; // no exceptions on the console build
 }
 } // namespace detail
 

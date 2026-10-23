@@ -244,6 +244,20 @@
 - [[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); [[Add to favourites]] sits above the list; on a favourite **A** opens it in the console's own browser (the same applet BrowseNX starts), **X** [[Select]]s it and **Y** [[Invert]]s the marks, as in the File Browser; **START** ([[Options]]) offers [[Open]], [[Add to favourites]] and [[Remove]] for the marked favourites, or for the one under the cursor when none is marked; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it); on firmware 20.0.0 to 22.5.0 the system browser asks for a system update and opens no page, so the row only says that firmware 23.0.1 or newer is needed ([[The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.]])
 -->
 
+## Battery calibration {#battery-calibration}
+
+**Where:** [[Tools]] → [[Tools]] → [[Battery calibration]]
+
+<!-- draft (0.14.197; the interactive guide with every screen is battery-calibration.md)
+- a wizard that teaches the fuel gauge again: [[Why this is needed]] (the gauge can switch the console off at 35 %, or show 0 % for an hour), [[How it works]] (drain to the real cut-off, set the zero there, two full cycles), [[What you do]], [[How long it takes]] (several hours); a second page [[What happens to the console]] explains the off-and-on loop after the cut-off, the charger and opening the Hub at once; [[Start calibration]]
+- the steps: [[1. Drain to the dead battery]], [[2. Charge and set the zero]], [[3. Cycle 1: charge, then drain]], [[4. Cycle 2: charge, then drain]], [[5. Report]]; only the next step is active ([[Active]], [[Locked]], [[Done]]); the state is kept on the SD card in `/config/kefir/battery/calib.txt`, so the Hub can be closed and the console used between the steps
+- step 1: the charger must be out; the Hub loads the CPU and GPU at full brightness (the drain page: battery, power, CPU / GPU / temperature charts, the screensaver on Minus or after the idle time) until the console switches itself off; after every switch-off the user switches the console on again and the Hub goes on by itself, now slowly: no load, auto-brightness off, brightness at the minimum ([[Drain after the cut-off]]); this repeats until the console does not start any more; every second a line goes to `/config/kefir/battery/calib-log.csv`
+- step 2: charger in, console on, Kefir Hub opened at once: [[Set the zero]] (a backup of the gauge, then the factory battery model is written; the last voltage in the log and the gauge's remaining charge before and after are shown); the Hub puts auto-brightness and the user's brightness back as soon as the charger is in
+- steps 3 and 4: each cycle has two phases: [[Charge to 100 %]] (the charger in, the screen stays on, the screensaver works, the Hub may be closed) and the drain; taking the charger out at 100 % starts the drain by itself; a drain done by the user alone is confirmed with [[Did the console switch off from the drain?]]; a charge cut short ([[The charge was interrupted: the charger came out before 100 %. Start the charge again.]]) must be started again
+- step 5 opens the [[Battery]] page: the learned capacity and the verdict
+- not in this version: the transfer of the calibrated model to the other MMC (use [[Match the other MMC]] on the Battery page in the other MMC); the zero is the factory model at the cut-off, the exact "counter minus the last logged charge" value is only logged
+-->
+
 ## Очищення системи { #clean-system-junk }
 
 Видаляє те, що лишається після встановлень і видалених ігор.

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 namespace sphaira::battery {
 
 // Tools → Battery: reads the fuel gauge chip and this MMC's saved copy in a ProgressBox,
@@ -31,5 +33,22 @@ void OpenBatteryType();
 // from the app loop: a PRODINFO change waits for the restart that opens Atmosphère's write lock, so it is done now
 void PollCal0Pending();
 void SetAutoDrainSuppressed(bool v);
+
+// ---- Tools > Battery calibration (battery_calib.cpp, docs/dev/BATTERY-CALIBRATION.md "Cutoff pipeline") ----
+// One run of the drain page for the calibration: a drain (max load and brightness; `tail` after a cut-off: minimal load and
+// brightness, auto-brightness off) or a charge (no load, the screen kept on, the screensaver). Both log a line a second.
+struct CalibRun {
+    bool charge{};
+    bool tail{};
+    // charge only: the charger came out at 100 % (the cycle's charge phase is done)
+    std::function<void()> on_charge_done;
+};
+void StartCalibRun(CalibRun run);
+// the entry of Tools: the intro, the steps, and everything the marker on the SD says is going on
+void OpenCalibration();
+// from the app loop, once the UI is up: a drain that was cut off goes on by itself, a dead console with the charger in asks for the zero
+void PollCalibration();
+// a calibration is under way (the old "align" offer stays quiet then)
+auto CalibrationActive() -> bool;
 
 } // namespace sphaira::battery

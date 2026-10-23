@@ -256,33 +256,39 @@ auto WaitForFull(ui::ProgressBox* pbox) -> Result {
     }
 }
 
+// back up, write the factory model, save this MMC's copy and the wizard's state: what the reset does once the battery
+// is where it should be (full for the old wizard, near empty at the cut-off for the calibration)
+auto ResetNow(ui::ProgressBox* pbox, std::string& failed) -> Result {
+    auto s = Read();
+    R_UNLESS(s.gauge, Result_ArchiveRead);
+    std::string name;
+    pbox->NewTransfer("Back up"_i18n);
+    R_TRY(Backup(s, name));
+    FuelGauge g;
+    R_UNLESS(g.open, Result_ArchiveRead);
+    pbox->NewTransfer("Writing the factory model"_i18n);
+    R_TRY(FactoryInit(g, ChooseTable(s.cal0_version, s.cal0_vendor), failed));
+    pbox->NewTransfer("Saving this MMC's copy"_i18n);
+    // a cycle count lost to a reset never comes back: keep the larger of the two MMCs
+    u32 cycles = s.hos.cycles_actual;
+    if (s.other) {
+        cycles = std::max(cycles, s.other->cal.cycles);
+    }
+    R_TRY(SaveCopy(g, cycles));
+    wizard::State st;
+    st.reset_at = static_cast<u64>(std::time(nullptr));
+    st.reset_mmc = s.emummc ? wizard::EMUMMC : wizard::SYSMMC;
+    st.total_at_reset = cycles; // the reset set the chip's Cycles register to 0x60: no delta
+    SaveState(st);
+    log_write("[Battery] factory init done (table v%d '%c'), cycles %u\n", s.cal0_version, s.cal0_vendor ? s.cal0_vendor : '?', cycles);
+    R_SUCCEED();
+}
+
 void RunReset() {
     auto failed = std::make_shared<std::string>();
     App::Push<ui::ProgressBox>(0, "Battery calibration reset"_i18n, "Then the factory values are written"_i18n, [failed](auto pbox) -> Result {
         R_TRY(WaitForFull(pbox));
-        auto s = Read();
-        R_UNLESS(s.gauge, Result_ArchiveRead);
-        std::string name;
-        pbox->NewTransfer("Back up"_i18n);
-        R_TRY(Backup(s, name));
-        FuelGauge g;
-        R_UNLESS(g.open, Result_ArchiveRead);
-        pbox->NewTransfer("Writing the factory model"_i18n);
-        R_TRY(FactoryInit(g, ChooseTable(s.cal0_version, s.cal0_vendor), *failed));
-        pbox->NewTransfer("Saving this MMC's copy"_i18n);
-        // a cycle count lost to a reset never comes back: keep the larger of the two MMCs
-        u32 cycles = s.hos.cycles_actual;
-        if (s.other) {
-            cycles = std::max(cycles, s.other->cal.cycles);
-        }
-        R_TRY(SaveCopy(g, cycles));
-        wizard::State st;
-        st.reset_at = static_cast<u64>(std::time(nullptr));
-        st.reset_mmc = s.emummc ? wizard::EMUMMC : wizard::SYSMMC;
-        st.total_at_reset = cycles; // the reset set the chip's Cycles register to 0x60: no delta
-        SaveState(st);
-        log_write("[Battery] factory init done (table v%d '%c'), cycles %u\n", s.cal0_version, s.cal0_vendor ? s.cal0_vendor : '?', cycles);
-        R_SUCCEED();
+        return ResetNow(pbox, *failed);
     }, [failed](Result rc) {
         Done(rc, "The battery calibration now starts from the factory values. Next: two full cycles, the steps below show them."_i18n, failed);
     });
@@ -606,6 +612,10 @@ void OpenWizard() {
 
 namespace detail {
 
+auto ResetAtCutoff(ui::ProgressBox* pbox, std::string& failed) -> Result {
+    return ResetNow(pbox, failed);
+}
+
 auto MatchNow(std::string& failed) -> Result {
     auto s = Read();
     if (!s.other) {
@@ -638,7 +648,7 @@ void PollInterruptedDrain() {
     if (finished) {
         return;
     }
-    if (!DrainWasInterrupted()) {
+    if (!DrainWasInterrupted() || CalibrationActive()) { // the calibration deals with its own cut-offs
         finished = true;
         return;
     }

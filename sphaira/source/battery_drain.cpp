@@ -3,6 +3,7 @@
 // circles a frame. The load pauses while the battery is above HOT_C (until COOL_C), while the charger is in
 // and while docked. An Ultrahand boot notice tells the user what to do after the switch-off.
 #include "battery_page.hpp"
+#include "battery_calib_log.hpp"
 #include "fuel_gauge.hpp"
 #include "battery_internal.hpp"
 #include "account/account_restore.hpp"
@@ -45,6 +46,9 @@ constexpr int CIRCLES = 80;
 // voltage under load collapses from about 30 % and the console cuts off before the chip sees a real empty
 constexpr int GENTLE_PCT = 35;
 constexpr float MIN_BRIGHTNESS = 0.02f; // the lowest the screen still shows something
+constexpr float TAIL_BRIGHTNESS = 0.01f; // the calibration after a cut-off: as low as the panel goes
+constexpr const char* CALIB_LOG = "/config/kefir/battery/calib-log.csv";
+constexpr size_t CALIB_LOG_MAX = 4u * 1024 * 1024; // a longer log is kept as .old and a new one is started
 constexpr float NOMINAL_V = 3.7f; // for Wh from mAh
 constexpr long SAVER_DEFAULT_S = 120; // idle seconds before the screensaver when the install screen's timeout is off
 constexpr double CHARGING_MA = 100.0; // an average current above this into the battery = on a charger
@@ -120,9 +124,13 @@ void DeleteSavedBrightness() {
 }
 
 struct DrainMenu final : ui::menu::MenuBase {
-    explicit DrainMenu(int cycle) : MenuBase{"Battery drain"_i18n, ui::menu::MenuFlag_None}, m_cycle{cycle} {
+    explicit DrainMenu(int cycle, std::optional<CalibRun> calib = std::nullopt)
+        : MenuBase{"Battery drain"_i18n, ui::menu::MenuFlag_None}, m_cycle{cycle}, m_calib{std::move(calib)} {
         SetAction(Button::B, Action{"Stop"_i18n, [this]() {
-            App::Push<ui::OptionBox>("Stop draining? The cycle then needs to be finished another way."_i18n,
+            App::Push<ui::OptionBox>(m_calib
+                ? (m_calib->charge ? "Leave the charge page? The calibration remembers where it is."_i18n
+                                   : "Stop the drain? The calibration remembers where it is."_i18n)
+                : "Stop draining? The cycle then needs to be finished another way."_i18n,
                 "Back"_i18n, "Stop"_i18n, 0, [this](auto op) {
                     if (op && *op == 1) {
                         account_restore::ClearReopenHubHint();
@@ -145,11 +153,16 @@ struct DrainMenu final : ui::menu::MenuBase {
             } else {
                 WriteSavedBrightness(m_saved_brightness, m_saved_auto);
             }
-            // automatic brightness off and the brightness at the maximum on every model: the drain goes faster
-            if (m_saved_auto) {
-                lblDisableAutoBrightnessControl();
+            // automatic brightness off and the brightness at the maximum on every model: the drain goes faster.
+            // The calibration's charge leaves the user's brightness alone (the screen only stays on); its drain after a
+            // cut-off goes to the minimum (the tail).
+            if (!(m_calib && m_calib->charge)) {
+                if (m_saved_auto) {
+                    lblDisableAutoBrightnessControl();
+                }
+                lblSetCurrentBrightnessSetting(m_calib && m_calib->tail ? TAIL_BRIGHTNESS : 1.0f);
             }
-            lblSetCurrentBrightnessSetting(1.0f);
+            m_dimmed = m_calib && m_calib->tail;
             lblIsDimmingEnabled(&m_saved_dimming);
             lblDisableDimming();
         }
@@ -159,8 +172,13 @@ struct DrainMenu final : ui::menu::MenuBase {
         PsmChargerType charger_now{};
         psmGetChargerType(&charger_now);
         m_charger = charger_now != PsmChargerType_Unconnected;
-        NoteState(true);
-        account_restore::ArmReopenHubHint("Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate."_i18n, false);
+        if (m_calib) {
+            OpenCalibLog();
+            account_restore::ArmReopenHubHint("Battery calibration: when the console switches off, switch it on again and open Kefir Hub → Tools → Battery calibration."_i18n, false);
+        } else {
+            NoteState(true);
+            account_restore::ArmReopenHubHint("Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate."_i18n, false);
+        }
 
         g_stop = false;
         g_load = false;
@@ -209,6 +227,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         appletSetIdleTimeDetectionExtension(m_saved_idle);
         appletSetMediaPlaybackState(false);
         App::SetAutoSleepDisabled(false);
+        CloseCalibLog();
         log_write("[Battery] drain stopped\n");
     }
 
@@ -266,7 +285,9 @@ struct DrainMenu final : ui::menu::MenuBase {
         // 0.5 mAh per step (10 mOhm sense resistor, as the Battery page reads it)
         if (const auto v = g.Read(MAX17050_RepCap)) m_cap_rem_mah = static_cast<int>(*v) / 2;
         if (const auto v = g.Read(MAX17050_FullCap)) m_cap_full_mah = static_cast<int>(*v) / 2;
-        NoteState(false);
+        if (!m_calib) {
+            NoteState(false);
+        }
         // one line a minute: if the console cuts off early (HOS shuts down on voltage while the % is still high),
         // the log shows what the gauge and the voltage were doing
         if (m_trace.GetSeconds() >= 60) {
@@ -280,28 +301,39 @@ struct DrainMenu final : ui::menu::MenuBase {
             // the system can switch dimming back on; the screen must stay at full brightness
             m_reapply.Update();
             lblDisableDimming();
-            lblSetCurrentBrightnessSetting(m_dimmed ? MIN_BRIGHTNESS : 1.0f);
+            if (m_calib) {
+                m_calib_mode = -1; // the calibration puts its own value back (ApplyCalibScreen)
+            } else {
+                lblSetCurrentBrightnessSetting(m_dimmed ? MIN_BRIGHTNESS : 1.0f);
+            }
         }
         PsmChargerType charger{};
         psmGetChargerType(&charger);
         // a charging current also means a charger (psm can lag behind a cable plugged in at 0 %)
         const auto avg = g.Current(MAX17050_AvgCurrent);
         m_charger = charger != PsmChargerType_Unconnected || (avg && *avg > CHARGING_MA);
-        UpdateStep();
+        if (!m_calib) {
+            UpdateStep();
+        }
         m_docked = appletGetOperationMode() == AppletOperationMode_Console;
         if (m_temp >= HOT_C) {
             m_hot = true;
         } else if (m_temp <= COOL_C) {
             m_hot = false;
         }
-        const bool load = !m_charger && !m_docked && !m_hot && !(m_pct >= 0 && m_pct <= GENTLE_PCT);
+        // the calibration: full load until the first cut-off (no 35 % gentle mode), none in a charge or in the tail after a cut-off
+        const bool load = m_calib ? (!m_charger && !m_docked && !m_hot && !m_calib->charge && !m_calib->tail)
+                                  : (!m_charger && !m_docked && !m_hot && !(m_pct >= 0 && m_pct <= GENTLE_PCT));
         if (load != g_load) {
             log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
         }
         g_load = load;
         // below GENTLE_PCT the screen goes to the minimum too: the lowest current that still drains the battery, so
         // the console reaches a real empty at rest-like load instead of cutting off on a voltage collapse
-        if (m_lbl) {
+        if (m_calib) {
+            ApplyCalibScreen();
+            CalibTick();
+        } else if (m_lbl) {
             const bool gentle = m_pct >= 0 && m_pct <= GENTLE_PCT && !m_charger;
             if (gentle != m_dimmed) {
                 m_dimmed = gentle;
@@ -311,7 +343,9 @@ struct DrainMenu final : ui::menu::MenuBase {
             }
         }
         using wizard::DrainStep;
-        if (m_step == DrainStep::CycleCounted) {
+        if (m_calib) {
+            m_status = CalibStatus();
+        } else if (m_step == DrainStep::CycleCounted) {
             m_status = "Both cycles are done. Press B and finish step 5 in the wizard: match in the other MMC."_i18n;
         } else if (m_step == DrainStep::Charging) {
             m_status = "The battery ran down: this cycle's discharge is done. Keep the charger in until 100%; the cycle then counts by itself."_i18n
@@ -354,6 +388,138 @@ struct DrainMenu final : ui::menu::MenuBase {
         if (m_step == DrainStep::CycleCounted && m_cycle == 1) {
             m_cycle = 2;
             m_step = wizard::DrainStepOf(m_state, live, m_cycle);
+        }
+    }
+
+    // ---- the calibration (docs/dev/BATTERY-CALIBRATION.md, "Brightness rule" and "Cutoff pipeline") ----
+
+    // the screen follows the state: the user's own brightness and auto-brightness while the charger is in (the drain is
+    // paused), the minimum after a cut-off, the maximum before it. A charge leaves the screen alone.
+    void ApplyCalibScreen() {
+        if (!m_lbl || !m_calib || m_calib->charge || m_saver.IsActive()) {
+            return;
+        }
+        const int mode = m_charger ? 1 : m_calib->tail ? 2 : 3;
+        if (mode == m_calib_mode) {
+            return;
+        }
+        m_calib_mode = mode;
+        if (mode == 1) {
+            lblSetCurrentBrightnessSetting(m_saved_brightness);
+            if (m_saved_auto) {
+                lblEnableAutoBrightnessControl();
+            }
+        } else {
+            if (m_saved_auto) {
+                lblDisableAutoBrightnessControl();
+            }
+            lblSetCurrentBrightnessSetting(mode == 2 ? TAIL_BRIGHTNESS : 1.0f);
+        }
+    }
+
+    // once a second: the time on battery (or on the charger), a line in the log, and the end of a charge phase
+    void CalibTick() {
+        const auto now = static_cast<s64>(std::time(nullptr));
+        if (m_calib_last && now > m_calib_last && now - m_calib_last <= 5) {
+            m_run_s += static_cast<u64>(now - m_calib_last);
+        }
+        m_calib_last = now;
+        if (m_log) {
+            calib::Sample sm;
+            sm.time = now;
+            sm.kind = m_calib->charge ? 'C' : 'D';
+            sm.psm_pct = m_pct;
+            sm.gauge_pct = m_gauge_pct;
+            sm.rem_mah = m_cap_rem_mah;
+            sm.full_mah = m_cap_full_mah;
+            sm.mv = m_mv;
+            sm.ma = m_ma;
+            sm.temp_c = m_temp;
+            sm.load = g_load;
+            sm.brightness = m_calib->charge ? -1 : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
+            sm.charger = m_charger;
+            const auto line = calib::FormatLine(sm);
+            std::fputs(line.c_str(), m_log);
+            std::fflush(m_log);
+            if (m_log_commit.GetSeconds() >= 10) {
+                m_log_commit.Update();
+                fsdevCommitDevice("sdmc"); // the last seconds before a cut-off must reach the card
+            }
+        }
+        if (m_calib->charge) {
+            if (m_charger && m_pct >= 100) {
+                m_full_seen = true;
+            }
+            // full, and the charger came out: this phase is done, the Hub goes on to the drain by itself
+            if (m_full_seen && !m_charger && m_calib->on_charge_done) {
+                const auto done = std::move(m_calib->on_charge_done);
+                m_calib->on_charge_done = nullptr;
+                SetPop();
+                done();
+            }
+        }
+    }
+
+    auto CalibTitle() const -> std::string {
+        return m_calib->charge ? "Charge to 100 %"_i18n : m_calib->tail ? "Drain after the cut-off"_i18n : "Drain to the cut-off"_i18n;
+    }
+
+    auto CalibStatus() const -> std::string {
+        if (m_calib->charge) {
+            if (!m_charger) {
+                return "The charger is out: the charge is paused. Plug it in to go on."_i18n;
+            }
+            if (m_pct >= 100) {
+                return "Charged to 100 %. Now we drain: take the charger out."_i18n;
+            }
+            return "Charging. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
+        }
+        if (m_charger) {
+            return "The charger is in. The drain is paused. Take the charger out to go on."_i18n;
+        }
+        if (m_docked) {
+            return "Paused: take the console out of the dock"_i18n;
+        }
+        if (m_hot) {
+            return "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n;
+        }
+        return (m_calib->tail
+            ? "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum."_i18n
+            : "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub."_i18n)
+            + " " + "Everything is written to a log."_i18n;
+    }
+
+    auto DrainSeconds() const -> u64 {
+        return m_calib ? m_run_s : m_state.drain_s[m_cycle - 1];
+    }
+
+    void OpenCalibLog() {
+        fs::FsNativeSd sd;
+        sd.CreateDirectoryRecursively("/config/kefir/battery");
+        const std::string path = std::string{"sdmc:"} + CALIB_LOG;
+        long size = -1;
+        if (auto* probe = std::fopen(path.c_str(), "rb")) {
+            std::fseek(probe, 0, SEEK_END);
+            size = std::ftell(probe);
+            std::fclose(probe);
+        }
+        if (size > static_cast<long>(CALIB_LOG_MAX)) {
+            const auto old = path + ".old";
+            std::remove(old.c_str());
+            std::rename(path.c_str(), old.c_str());
+            size = -1;
+        }
+        m_log = std::fopen(path.c_str(), "ab");
+        if (m_log && size <= 0) {
+            std::fputs(calib::LOG_HEADER, m_log);
+        }
+    }
+
+    void CloseCalibLog() {
+        if (m_log) {
+            std::fclose(m_log);
+            m_log = nullptr;
+            fsdevCommitDevice("sdmc");
         }
     }
 
@@ -563,7 +729,7 @@ struct DrainMenu final : ui::menu::MenuBase {
 
         // the figures and what is going on
         const float fx = 560.f;
-        const auto title = (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
+        const auto title = m_calib ? CalibTitle() : (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
         ui::gfx::drawTextArgs(vg, fx, 125.f, 30.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", title.c_str());
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);
         if (m_charger && m_step != wizard::DrainStep::CycleCounted) {
@@ -573,7 +739,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         } else if (m_step == wizard::DrainStep::CycleCounted) {
             ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Both cycles done"_i18n.c_str());
         } else {
-            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(m_state.drain_s[m_cycle - 1]).c_str());
+            ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s %s", "Draining for"_i18n.c_str(), HoursMinutesSeconds(DrainSeconds()).c_str());
         }
         const bool draining = !m_charger && (m_step == wizard::DrainStep::Draining || m_step == wizard::DrainStep::NotEmptyYet);
         if (const auto zero = m_state.zero_at[m_cycle - 1]; draining && zero) {
@@ -619,7 +785,7 @@ private:
     // what the screensaver paints: the cycle, the battery bar, power and temperature, the energy, the time on battery
     auto SaverReadout() const -> ui::SaverInfo {
         ui::SaverInfo info;
-        info.status = m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n;
+        info.status = m_calib ? CalibTitle() : (m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n);
         info.ratio = m_pct >= 0 ? m_pct / 100.0 : 0.0;
         char line[160];
         std::snprintf(line, sizeof(line), "%.1f W · %d mA · %.1f °C", Last(m_watts), std::abs(m_ma), m_temp);
@@ -633,7 +799,7 @@ private:
         if (m_charger) {
             stats += (stats.empty() ? "" : "   ·   ") + "Charging:"_i18n + " " + std::to_string(std::max(0, m_pct)) + "%";
         } else {
-            stats += (stats.empty() ? "" : "   ·   ") + HoursMinutesSeconds(m_state.drain_s[m_cycle - 1]);
+            stats += (stats.empty() ? "" : "   ·   ") + HoursMinutesSeconds(DrainSeconds());
             if (m_tte_s) {
                 stats += "   ·   " + "Switch-off in about"_i18n + " " + HoursMinutes(m_tte_s);
             }
@@ -643,6 +809,13 @@ private:
     }
 
     int m_cycle;
+    std::optional<CalibRun> m_calib;
+    int m_calib_mode{-1};   // 1 the user's screen (charger in), 2 the tail, 3 full; -1 = put it back at the next poll
+    u64 m_run_s{};          // seconds of this run
+    s64 m_calib_last{};
+    bool m_full_seen{};     // a charge phase saw 100 % on the charger
+    FILE* m_log{};
+    TimeStamp m_log_commit{};
     ui::Screensaver m_saver{};
     ui::InactivityTracker m_idle{};
     TimeStamp m_idle_clock{};
@@ -731,6 +904,10 @@ void RestoreDrainBrightness() {
 
 void StartDrain(int cycle) {
     App::Push<DrainMenu>(cycle);
+}
+
+void StartCalibRun(CalibRun run) {
+    App::Push<DrainMenu>(1, std::move(run));
 }
 
 void OpenDrain(int cycle) {

@@ -11,6 +11,8 @@
 #include <optional>
 #include <string>
 
+namespace sphaira::ui { struct ProgressBox; }
+
 namespace sphaira::battery::detail {
 
 inline constexpr const char* BACKUP_DIR = "/config/kefir/battery";
@@ -49,5 +51,8 @@ auto CycleTotalNow() -> std::optional<u32>;
 // step 5: this MMC's copy takes the chip's model and the larger cycle count; records the match when both cycles are done.
 // `failed` gets the reason on an error. No popups: the hop to the other MMC runs it by itself.
 auto MatchNow(std::string& failed) -> Result;
+// the calibration's zero step: back up, write the factory model, save this MMC's copy, with the battery near empty at the
+// cut-off (the old wizard waits for a full battery first). `failed` names the step that did not stick.
+auto ResetAtCutoff(ui::ProgressBox* pbox, std::string& failed) -> Result;
 
 } // namespace sphaira::battery::detail

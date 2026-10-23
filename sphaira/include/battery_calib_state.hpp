@@ -7,6 +7,7 @@
 #include "battery_cutoff.hpp"
 
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 #include <string_view>
 
@@ -187,7 +188,12 @@ inline auto Parse(std::string_view text) -> Marker {
         if (eq == std::string_view::npos) continue;
         const std::string key{line.substr(0, eq)};
         long long v = 0;
-        try { v = std::stoll(std::string{line.substr(eq + 1)}); } catch (...) { continue; }
+        const std::string number{line.substr(eq + 1)};
+        char* end = nullptr;
+        v = std::strtoll(number.c_str(), &end, 10);
+        if (end == number.c_str()) {
+            continue; // not a number: no exceptions on the console build
+        }
         if (key == "step" && v >= 1 && v <= 7) m.step = static_cast<Step>(v);
         else if (key == "phase" && (v == 0 || v == 1)) m.phase = static_cast<Phase>(v);
         else if (key == "started") m.phase_started = v != 0;
