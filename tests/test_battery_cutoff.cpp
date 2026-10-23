@@ -31,6 +31,9 @@ int main() {
     assert(SystemId(true, true, 0x2F5000, "") == "emu-p-2f5000" && SystemId(true, true, 0, "") == "emu-p-0");
     assert(SystemId(true, false, 0, "emuMMC/SD01") == "emu-f-emuMMC/SD01");
 
+    assert(SystemName("sys") == "sysMMC" && SystemName("emu-p-2f5000") == "emuMMC (sector 0x2f5000)");
+    assert(SystemName("emu-f-emuMMC/SD01") == "emuMMC emuMMC/SD01" && SystemName("other") == "other");
+
     // the ledger: calibrated in emuMMC A; sysMMC and emuMMC B get it by themselves, once
     Ledger l;
     assert(Decide(l, "sys", "m2") == Decision::NoCalibration);

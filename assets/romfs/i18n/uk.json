@@ -3728,5 +3728,17 @@
   "Auto-brightness is on again; brightness set back to what it was before the calibration": "Автояскравість увімкнено, яскравість повернено до того, що була до калібрування",
   "A backup of the gauge is made first, then the factory model is written. The values above are kept for the report.": "Спершу робиться резервна копія датчика, потім записується заводська модель. Значення вище лишаються для звіту.",
   "The gauge could not be read.": "Датчик заряду не вдалося прочитати.",
-  "Drain to zero": "Розряд до нуля"
+  "Drain to zero": "Розряд до нуля",
+  "Marker": "Позначка",
+  "from": "від",
+  "number": "номер",
+  "Open the Hub in the other system. The calibration moves by itself.": "Відкрийте Hub в іншій системі. Калібрування перенесеться саме.",
+  "Waiting": "Очікує",
+  "The hekate hop is a manual action only.": "Перехід hekate — лише ручна дія.",
+  "Transfer to the other MMC": "Перенос в іншу MMC",
+  "The battery calibration could not be written here:": "Калібрування батареї не вдалося записати тут:",
+  "Battery calibration was transferred from": "Калібрування батареї перенесено з",
+  "to": "до",
+  "6. Transfer to the other MMC": "6. Перенос в іншу MMC",
+  "Calibration saved on the microSD.": "Калібрування збережено на microSD."
 }

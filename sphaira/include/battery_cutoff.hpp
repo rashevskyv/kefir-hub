@@ -78,6 +78,20 @@ inline auto SystemId(bool emummc, bool partition, std::uint64_t sector, std::str
     return "emu-f-" + std::string{path};
 }
 
+// "sys" -> "sysMMC"; "emu-p-2f5000" -> "emuMMC (sector 0x2f5000)"; "emu-f-emuMMC/SD01" -> "emuMMC emuMMC/SD01"
+inline auto SystemName(std::string_view id) -> std::string {
+    if (id == "sys") {
+        return "sysMMC";
+    }
+    if (id.starts_with("emu-p-")) {
+        return "emuMMC (sector 0x" + std::string{id.substr(6)} + ")";
+    }
+    if (id.starts_with("emu-f-")) {
+        return "emuMMC " + std::string{id.substr(6)};
+    }
+    return std::string{id};
+}
+
 // ---- the ledger ------------------------------------------------------------------------------------------------------------
 
 // File format, one record a line, tab separated:

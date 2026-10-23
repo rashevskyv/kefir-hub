@@ -3728,5 +3728,17 @@
   "Auto-brightness is on again; brightness set back to what it was before the calibration": "Auto-brightness is on again; brightness set back to what it was before the calibration",
   "A backup of the gauge is made first, then the factory model is written. The values above are kept for the report.": "A backup of the gauge is made first, then the factory model is written. The values above are kept for the report.",
   "The gauge could not be read.": "The gauge could not be read.",
-  "Drain to zero": "Drain to zero"
+  "Drain to zero": "Drain to zero",
+  "Marker": "Marker",
+  "from": "from",
+  "number": "number",
+  "Open the Hub in the other system. The calibration moves by itself.": "Open the Hub in the other system. The calibration moves by itself.",
+  "Waiting": "Waiting",
+  "The hekate hop is a manual action only.": "The hekate hop is a manual action only.",
+  "Transfer to the other MMC": "Transfer to the other MMC",
+  "The battery calibration could not be written here:": "The battery calibration could not be written here:",
+  "Battery calibration was transferred from": "Battery calibration was transferred from",
+  "to": "to",
+  "6. Transfer to the other MMC": "6. Transfer to the other MMC",
+  "Calibration saved on the microSD.": "Calibration saved on the microSD."
 }
