@@ -130,12 +130,12 @@ is done. The state is on the SD, so a restart or a cut-off does not lose the pla
 5. **Report:** the learned capacity (verdict, enlarged battery) and the gauge percent just before each cut-off (near 0 % = the gauge
    agrees with the console).
 
-**Load plan of a drain.** Maximum load until the terminal voltage first falls to about 3.4 V (0.2 V above the expected cut-off
-of 3.2 V). From then on the load is minimal, and it stays minimal (latched: the voltage jumps up when the load drops, so a
-simple threshold would flip back and forth). Reason: under a high current the cell sags by current x internal resistance, the
-console cuts off early and leaves charge in the cell; at a low current the cut-off comes near the real empty, and the point is
-the same on every run. Cost: the last part takes longer; if the log of the first run shows a sag below 0.05 V the low-load tail is
-not needed and the wizard skips it (decide from the log, not from a guess).
+**Load plan of a drain (owner, 2026-10-23; replaces the 3.4 V latch).** Before the first cut-off: maximum load and maximum brightness,
+all the way (no switch at 3.4 V). After every cut-off, when the user switches the console on again: the **tail mode** at once, low
+brightness and minimal load, until the next cut-off or until the console does not start. Reason: under a high current the cell
+sags by current x internal resistance, the console cuts off early and leaves charge in the cell; after the first cut-off the
+voltage has recovered, and a gentle drain takes that charge out. It costs no extra rule in the code: the load follows the number
+of restarts (0 = maximum, 1 or more = minimal). The old "skip the tail when there is no sag" idea is dropped.
 
 **Cautions:** high load at the maximum brightness heats the console: Hub logs the temperature and stops the load above the limit
 (value to decide); the cut-off depends on the load and the temperature, so a game that pulls more current stops earlier than the drain.

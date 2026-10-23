@@ -451,8 +451,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       only the next step active): drain to the dead battery (maximum load and brightness, screensaver on Minus or after 3 min, the
       stick lowers the brightness, every second logged to the SD, the user switches the console on again until it does not start),
       charge ~3 min and the Hub sets that point as 0 % by itself (counter now minus the gauge's last logged value before the cut-off; no menu), two full cycles, a report with the gauge
-      percent before each cut-off. The last 0.2 V before the expected cut-off: minimal load, latched, skipped when the log shows
-      no sag. The calibrated model reaches the other MMC by itself: at the next Hub start there it is applied (backup first) and a toast says so; no hop in the wizard. Full design in `docs/dev/BATTERY-CALIBRATION.md`, "Cutoff pipeline". Check the register for the zero first.
+      percent before each cut-off. Load: maximum until the first cut-off, then after every restart the tail mode (low brightness,
+      minimal load); no 3.4 V switch (owner, 2026-10-23). The calibrated model reaches the other MMC by itself: at the next Hub start there it is applied (backup first) and a toast says so; no hop in the wizard. Full design in `docs/dev/BATTERY-CALIBRATION.md`, "Cutoff pipeline". Check the register for the zero first.
 
 - [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
       the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable
