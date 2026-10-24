@@ -129,7 +129,7 @@ is done. The state is on the SD, so a restart or a cut-off does not lose the pla
    writes N - X: the charge added since the cut-off stays (the gauge stays powered by the battery while the console is off, so it
    keeps counting; to confirm on a console), the error goes. If the gauge was reset (the counter is obviously fresh) or the log is
    missing, the Hub writes 0 and says so in the report; the next cut-off fixes it. The factory model is written at the same
-   time (the guide resets at ~3.3 V). Open: which register holds it (RemCap / RepSOC). **After that the Hub puts the console back
+   time (the guide resets at ~3.3 V). Register: RemCapMIX 0x0F, then 0x05, then 0x06 (research, not yet tried on a console: `BATTERY-ZERO-REGISTER.md`). **After that the Hub puts the console back
    as it found it**: auto-brightness on again and the brightness the user had when the Hub started the calibration.
 3. **Cycle 1:** charge to 100 % ("full" by psm 100 %, later by the current ~0 for 5 minutes, screen on while charging), drain as in step 1.
 4. **Cycle 2:** the same.

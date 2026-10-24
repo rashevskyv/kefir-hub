@@ -4,6 +4,7 @@ Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
 ## unreleased
+`docs/dev/BATTERY-ZERO-REGISTER.md`: research on the register of the calibration zero (RemCapMIX 0x0F, then 0x05, 0x06), the guard conflict with `PlanAlign` and a console test plan. No code.
 plan.md: Phase N (Nextendo) rewritten against the pinned Prelude tag v4.0.11: verified facts, design rules, new items N.2b (sysNAND option, Semi-stock only), N.2c (firmware guard), N.4 (games screen), N.5b (Semi-stock packaging) and the `[USER]` hardware checks. No code.
 
 ## v0.14.202 — Battery drain split into four files (no behaviour change)
