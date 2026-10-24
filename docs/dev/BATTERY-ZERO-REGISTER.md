@@ -53,3 +53,27 @@ Not reached: the official MAX17050 Software Implementation Guide and two ez.anal
 - MAX17047/MAX17050 datasheet text (mirror, pages 9-34): https://www.manualsdir.com/manuals/281093/rainbow-electronics-max17047.html
 - Linux `drivers/power/supply/max17042_battery.c`: https://github.com/torvalds/linux/blob/master/drivers/power/supply/max17042_battery.c
 - hekate `bdk/power/max17050.c`: https://github.com/CTCaer/hekate/blob/master/bdk/power/max17050.c
+
+## Zero by voltage (owner, 2026-10-24)
+
+Goal: the voltage at which this console really switches off is the zero. It covers both desyncs:
+(1) the gauge shows many percent, the console is already off; (2) the gauge shows 0 %, the console runs for another hour.
+
+Facts from the Hub backup of 2026-10-16 (this console, emuMMC, Hub 0.14.103; the file is deleted, the values are kept here):
+- V_empty 0x3A = 0xA05F: **VE = 3.20 V** (bits 15..7, 10 mV), VR = 3.80 V (bits 6..0, 40 mV). The owner measured the real cut-off at about 3.2 V under load. The two are the same voltage.
+- FullCAP 0x10 = 4503 mAh, DesignCap 0x18 = 4667 mAh, FullCapNom 0x23 = 4470 mAh, Cycles 0x17 = 0x0130, CONFIG 0x1D = 0x7214 (hekate's fix writes 0x7254), LearnCFG 0x28 = 0x2473, SHDNTIMER 0x3F = 0xE000, VALRT 0x01 = 0xFF00 (min alert off: HOS does not use the gauge alert to switch off).
+
+Method:
+1. **The anchor is measured, not assumed.** V_cut = the VCELL of the last log line before each real cut-off (`Cutoffs()` already finds the gap). The median over the cut-offs is the number for this console. The report shows it.
+2. **The zero is physical.** After a cut-off the true remaining charge is only what was charged since. `N - X` gives it for both desyncs: in (1) X is the gauge's belief at the last line, in (2) the counter was clamped at 0, so X = 0 and N is already the charge added. This holds only if the counter keeps counting while the console is off (test 2 below).
+3. **Capacity is measured by the Hub, not trusted.** Charge from the zero to 100 % and integrate the logged current (1 Hz) to get the real capacity. In (2) the gauge FullCAP is too small, in (1) too big. The two cycles compare the measured value with FullCAP.
+4. **Chip anchor (to test, do not ship blind).** Write VE = V_cut (keep VR) so the chip's own empty detection fires at the real cut-off in every later discharge, not only once.
+5. **Acceptance test is the next cut-off:** the gauge percent just before it must be near 0 %. The report already shows it.
+6. Caveat: V_cut under load depends on the current (internal resistance). The tail mode (minimum load) cuts at a different logged voltage than full load. Keep the load profile of the run beside the number.
+
+Console experiments (charger in unless noted; Hub Battery page "Backup" writes a full register dump to `/config/kefir/battery/*.txt`, read it over FTP):
+1. Dump now: Status 0x00, V_empty 0x3A, CONFIG 0x1D, SHDNTIMER 0x3F, Cycles 0x17, QH 0x4D, 0x0F, 0x05, 0x06, 0xFF, 0x10, 0x23.
+2. Counts while off: note QH and Status, switch the console off for 1 h on battery, switch on, dump again. Same Status (POR clear) and a changed QH means it counted.
+3. Does VE act: write VE = 3.60 V with the charger in, watch 0x0F, 0x06 and the shown percent for 10 minutes, write the old 0xA05F back. A snap to 0 % means the chip anchors the zero to VE.
+4. Write order: write 0x0F lower by 10 mAh, read 0x0F, 0x05, 0x06 at 0 s, 1 s, 30 s, 10 min.
+5. One full calibration run with the log (cut-off voltages, the integral of the current, FullCAP before and after).
