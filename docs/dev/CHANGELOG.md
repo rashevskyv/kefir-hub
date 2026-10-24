@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## unreleased
+plan.md: Phase N (Nextendo) rewritten against the pinned Prelude tag v4.0.11: verified facts, design rules, new items N.2b (sysNAND option, Semi-stock only), N.2c (firmware guard), N.4 (games screen), N.5b (Semi-stock packaging) and the `[USER]` hardware checks. No code.
+
 ## v0.14.202 — Battery drain split into four files (no behaviour change)
 `battery_drain.cpp` (1064 lines) is now `battery_drain.cpp` (the drain page: load, steps, brightness), `battery_drain_sample.cpp` (calibration log and live samples), `battery_drain_draw.cpp` (charts, drain and charge layouts, screensaver readout) and the class header `battery_drain_menu.hpp`. Every file is under 600 lines.
 host tests: pass | nro: built | switch: pending (the drain page must look and behave as in 0.14.201)
