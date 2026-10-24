@@ -59,7 +59,7 @@ Not reached: the official MAX17050 Software Implementation Guide and two ez.anal
 Goal: the voltage at which this console really switches off is the zero. It covers both desyncs:
 (1) the gauge shows many percent, the console is already off; (2) the gauge shows 0 %, the console runs for another hour.
 
-Facts from the Hub backup of 2026-10-16 (this console, emuMMC, Hub 0.14.103; the file is deleted, the values are kept here):
+Facts from the Hub backup of 2026-10-16 (this console, emuMMC, Hub 0.14.103; the file is deleted, the values are kept here). Read again live on 2026-10-24 (Hub 0.14.198, 61 %): V_empty 0x3A is still 0xA05F, Status 0x00 = 0 (no POR), CONFIG 0x7214, FullCAP 4488 mAh:
 - V_empty 0x3A = 0xA05F: **VE = 3.20 V** (bits 15..7, 10 mV), VR = 3.80 V (bits 6..0, 40 mV). The owner measured the real cut-off at about 3.2 V under load. The two are the same voltage.
 - FullCAP 0x10 = 4503 mAh, DesignCap 0x18 = 4667 mAh, FullCapNom 0x23 = 4470 mAh, Cycles 0x17 = 0x0130, CONFIG 0x1D = 0x7214 (hekate's fix writes 0x7254), LearnCFG 0x28 = 0x2473, SHDNTIMER 0x3F = 0xE000, VALRT 0x01 = 0xFF00 (min alert off: HOS does not use the gauge alert to switch off).
 
