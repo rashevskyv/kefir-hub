@@ -81,6 +81,9 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
                 if (op && *op == 1) {
                     account_restore::ClearReopenHubHint();
                     SetAutoDrainSuppressed(true); // the user stopped it: the wizard must not restart it now
+                    if (m_calib && m_calib->on_stop) {
+                        m_calib->on_stop();
+                    }
                     SetPop();
                 }
             });
@@ -126,11 +129,11 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     PsmChargerType charger_now{};
     psmGetChargerType(&charger_now);
     m_charger = charger_now != PsmChargerType_Unconnected;
+    NoteState(true);
     if (m_calib) {
         OpenCalibLog();
         account_restore::ArmReopenHubHint("Battery calibration: when the console switches off, switch it on again and open Kefir Hub → Tools → Battery calibration."_i18n, false);
     } else {
-        NoteState(true);
         account_restore::ArmReopenHubHint("Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate."_i18n, false);
     }
 
@@ -237,9 +240,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     // 0.5 mAh per step (10 mOhm sense resistor, as the Battery page reads it)
     if (const auto v = g.Read(MAX17050_RepCap)) m_cap_rem_mah = static_cast<int>(*v) / 2;
     if (const auto v = g.Read(MAX17050_FullCap)) m_cap_full_mah = static_cast<int>(*v) / 2;
-    if (!m_calib) {
-        NoteState(false);
-    }
+    NoteState(false);
     // one line a minute: if the console cuts off early (HOS shuts down on voltage while the % is still high),
     // the log shows what the gauge and the voltage were doing
     if (m_trace.GetSeconds() >= 60) {
@@ -264,9 +265,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     // a charging current also means a charger (psm can lag behind a cable plugged in at 0 %)
     const auto avg = g.Current(MAX17050_AvgCurrent);
     m_charger = charger != PsmChargerType_Unconnected || (avg && *avg > CHARGING_MA);
-    if (!m_calib) {
-        UpdateStep();
-    }
+    UpdateStep();
     m_docked = appletGetOperationMode() == AppletOperationMode_Console;
     if (m_temp >= HOT_C) {
         m_hot = true;
@@ -335,7 +334,7 @@ void DrainMenu::UpdateStep() {
     }
     m_cycle_got = wizard::Got(m_state, live, m_cycle);
     m_step = wizard::DrainStepOf(m_state, live, m_cycle);
-    if (m_step == DrainStep::CycleCounted && m_cycle == 1) {
+    if (m_step == DrainStep::CycleCounted && m_cycle == 1 && !m_calib) { // the calibration runs one cycle at a time
         m_cycle = 2;
         m_step = wizard::DrainStepOf(m_state, live, m_cycle);
     }
@@ -392,17 +391,16 @@ void DrainMenu::CalibTick() {
             fsdevCommitDevice("sdmc"); // the last seconds before a cut-off must reach the card
         }
     }
-    if (m_calib->charge) {
-        if (m_charger && m_pct >= 100) {
-            m_full_seen = true;
-        }
-        // full, and the charger came out: this phase is done, the Hub goes on to the drain by itself
-        if (m_full_seen && !m_charger && m_calib->on_charge_done) {
-            const auto done = std::move(m_calib->on_charge_done);
-            m_calib->on_charge_done = nullptr;
-            SetPop();
-            done();
-        }
+    if (m_calib->charge && m_charger && m_pct >= 100) {
+        m_full_seen = true;
+    }
+    // the cycle is counted (full after enough drained) and the charger came out: the Hub goes on to the next drain by itself
+    const bool counted = m_calib->charge ? m_full_seen : m_step == wizard::DrainStep::CycleCounted;
+    if (counted && !m_charger && m_calib->on_charge_done) {
+        const auto done = std::move(m_calib->on_charge_done);
+        m_calib->on_charge_done = nullptr;
+        SetPop();
+        done();
     }
 }
 
@@ -421,6 +419,12 @@ auto DrainMenu::CalibStatus() const -> std::string {
         return "Charging. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
     }
     if (m_charger) {
+        if (m_step == wizard::DrainStep::CycleCounted) {
+            return "This cycle is counted. Take the charger out: the next step starts by itself."_i18n;
+        }
+        if (m_step == wizard::DrainStep::Charging) {
+            return "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself."_i18n;
+        }
         return "The charger is in. The drain is paused. Take the charger out to go on."_i18n;
     }
     if (m_docked) {
@@ -478,7 +482,8 @@ void StartDrain(int cycle) {
 }
 
 void StartCalibRun(CalibRun run) {
-    App::Push<DrainMenu>(1, std::move(run));
+    const int cycle = run.step == 2 ? 2 : 1;
+    App::Push<DrainMenu>(cycle, std::move(run));
 }
 
 void OpenDrain(int cycle) {

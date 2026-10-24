@@ -79,26 +79,6 @@ inline auto LastSample(std::string_view text) -> std::optional<Sample> {
     return std::nullopt;
 }
 
-// X: the gauge's remaining charge in the last drain sample, -1 when there is none (no log, or only charge lines).
-// A broken last line (a cut-off in the middle of a write) is skipped.
-inline auto LastDrainRemainingMah(std::string_view text) -> int {
-    while (!text.empty()) {
-        while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) {
-            text.remove_suffix(1);
-        }
-        const auto nl = text.rfind('\n');
-        const auto line = nl == std::string_view::npos ? text : text.substr(nl + 1);
-        if (const auto s = ParseLine(line); s && s->kind == 'D' && s->rem_mah >= 0) {
-            return s->rem_mah;
-        }
-        if (nl == std::string_view::npos) {
-            break;
-        }
-        text = text.substr(0, nl);
-    }
-    return -1;
-}
-
 // a cut-off: the last drain line before the console went off (a gap in the log, or the charge lines that follow)
 struct Cutoff {
     int step{1};

@@ -1,13 +1,16 @@
-// Tools > Battery calibration (docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline"): the pages of the guide
-// (docs/site/en/battery-wizard) and the handling of whatever the marker on the SD says is going on. The marker
-// (battery_calib_state.hpp) lives in /config/kefir/battery/calib.txt; the drain and the charge run on the drain page
-// (battery_drain.cpp, StartCalibRun); the zero is the factory reset at the cut-off (battery_write.cpp, ResetAtCutoff).
+// Tools > Battery calibration (docs/dev/BATTERY-CALIBRATION.md): the pages of the guide (docs/site/en/battery-wizard) over the
+// logic of 0.14.111-163 (battery_wizard.hpp, calibration.txt): the reset to the factory model at 100 %, then two cycles, each
+// counted by HOS's cycle total (90 % drained, then 100 % on the charger). The marker on the SD (battery_calib_state.hpp,
+// calib.txt) keeps the report and the transfer, and what a drain needs to go on after a cut-off. The drain and the charge run
+// on the drain page (battery_drain.cpp, StartCalibRun); the reset is battery_write.cpp, detail::RunReset.
 #include "battery_page.hpp"
 #include "battery_calib_state.hpp"
+#include "battery_calib_internal.hpp"
 #include "battery_cutoff.hpp"
 #include "battery_calib_log.hpp"
 #include "battery_calib_ui.hpp"
 #include "battery_internal.hpp"
+#include "account/account_restore.hpp"
 #include "fuel_gauge.hpp"
 #include "ui/menus/tools_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
@@ -27,7 +30,6 @@
 #include <vector>
 
 namespace sphaira::battery {
-namespace {
 
 using namespace calib;
 namespace cu = calib_ui;
@@ -35,12 +37,10 @@ using ui::menu::tools::SystemToolsMenu;
 using ui::menu::settings::SettingsItem;
 using ui::menu::settings::SettingsItemKind;
 
-constexpr const char* MARKER_PATH = "/config/kefir/battery/calib.txt";
-constexpr const char* LOG_PATH = "/config/kefir/battery/calib-log.csv";
-constexpr const char* LEDGER_PATH = "/config/kefir/battery/ledger.txt";
+// shared with battery_calib_report.cpp (battery_calib_internal.hpp)
+namespace calib_flow {
 
-// the Hub looks at the marker once a run: a later look must not count the same cut-off twice
-bool g_checked = false;
+constexpr const char* MARKER_PATH = "/config/kefir/battery/calib.txt";
 
 auto LoadMarker() -> std::optional<Marker> {
     std::vector<u8> data;
@@ -58,88 +58,84 @@ void SaveMarker(const Marker& m) {
     sd.Commit();
 }
 
-auto ReadBattery() -> Battery {
-    Battery b;
-    u32 pct{};
-    if (R_SUCCEEDED(psmGetBatteryChargePercentage(&pct))) {
-        b.percent = static_cast<int>(pct);
-    }
-    PsmChargerType charger{};
-    psmGetChargerType(&charger);
-    b.charger_in = charger != PsmChargerType_Unconnected;
-    // when this boot began: now minus the time the console has been up
-    b.boot_time = static_cast<std::int64_t>(std::time(nullptr)) - static_cast<std::int64_t>(armTicksToNs(armGetSystemTick()) / 1'000'000'000ULL);
-    return b;
-}
-
 auto Now() -> std::int64_t {
     return static_cast<std::int64_t>(std::time(nullptr));
-}
-
-auto ChargerIn() -> bool {
-    return ReadBattery().charger_in;
-}
-
-// ---- the ledger: where a calibration was made and where it was written (several emuMMCs and sysMMC share the SD) ----------
-
-auto LoadLedger() -> cutoff::Ledger {
-    std::vector<u8> data;
-    if (R_FAILED(fs::FsNativeSd{}.read_entire_file(LEDGER_PATH, data)) || data.empty()) {
-        return {};
-    }
-    return cutoff::Parse({reinterpret_cast<const char*>(data.data()), data.size()});
-}
-
-void SaveLedger(const cutoff::Ledger& l) {
-    fs::FsNativeSd sd;
-    sd.CreateDirectoryRecursively(detail::BACKUP_DIR);
-    const auto text = cutoff::Format(l);
-    sd.write_entire_file(LEDGER_PATH, std::vector<u8>(text.begin(), text.end()));
-    sd.Commit();
-}
-
-// the system the Hub runs in: sysMMC, a file-based emuMMC by its folder, a partition emuMMC by its start sector
-auto CurrentSystemId() -> std::string {
-    if (!App::IsEmummc()) {
-        return cutoff::SystemId(false, false, 0, {});
-    }
-    auto nintendo = App::GetEmummcNintendoPath();
-    if (!nintendo.empty()) {
-        if (nintendo.ends_with("/Nintendo")) {
-            nintendo.resize(nintendo.size() - 9);
-        }
-        while (!nintendo.empty() && nintendo.front() == '/') {
-            nintendo.erase(nintendo.begin());
-        }
-        return cutoff::SystemId(true, false, 0, nintendo);
-    }
-    // a partition emuMMC: the sector is in /emuMMC/emummc.ini (hekate writes it)
-    std::uint64_t sector = 0;
-    std::vector<u8> ini;
-    if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file("/emuMMC/emummc.ini", ini))) {
-        const std::string text(reinterpret_cast<const char*>(ini.data()), ini.size());
-        if (const auto pos = text.find("sector="); pos != std::string::npos) {
-            sector = std::strtoull(text.c_str() + pos + 7, nullptr, 0);
-        }
-    }
-    return cutoff::SystemId(true, true, sector, {});
-}
-
-// the battery model of this console (the CAL0 version and vendor): another battery must not get this calibration
-auto ModelOf(const detail::Snapshot& s) -> std::string {
-    return std::to_string(s.cal0_version) + std::string(1, s.cal0_vendor ? s.cal0_vendor : '?');
 }
 
 auto StepLabel(int i) -> std::string {
     return "Step"_i18n + " " + std::to_string(i) + " / 5";
 }
 
-void Say(const std::string& text, std::function<void()> then = {}) {
-    App::Push<ui::OptionBox>(text, "OK"_i18n, [then](auto) {
-        if (then) {
-            then();
-        }
-    });
+} // namespace calib_flow
+
+using namespace calib_flow;
+
+namespace {
+
+// the Hub looks at the marker once a run: a later look must not count the same cut-off twice
+bool g_checked = false;
+
+auto ReadBattery() -> Battery {
+    Battery b;
+    PsmChargerType charger{};
+    psmGetChargerType(&charger);
+    b.charger_in = charger != PsmChargerType_Unconnected;
+    // when this boot began: now minus the time the console has been up
+    b.boot_time = Now() - static_cast<std::int64_t>(armTicksToNs(armGetSystemTick()) / 1'000'000'000ULL);
+    return b;
+}
+
+auto ChargerIn() -> bool {
+    return ReadBattery().charger_in;
+}
+
+auto PercentNow() -> std::uint32_t {
+    u32 pct{};
+    psmGetBatteryChargePercentage(&pct);
+    return pct;
+}
+
+// ---- the wizard's state: the reset and the two cycles ---------------------------------------------------------------------
+
+// a finished cycle (enough drained, now full) is counted; true = something was counted
+auto AdvanceNow() -> bool {
+    const auto total = detail::CycleTotalNow();
+    if (!total) {
+        return false;
+    }
+    auto st = detail::LoadState();
+    const wizard::Live live{*total, ChargerIn(), PercentNow(), 0, false, static_cast<u64>(Now())};
+    if (!wizard::Advance(st, live)) {
+        return false;
+    }
+    detail::SaveState(st);
+    account_restore::ClearReopenHubHint(); // the drain notice did its job
+    log_write("[Calib] a cycle was counted (total %u)\n", *total);
+    return true;
+}
+
+// x100 of the battery drained in this cycle so far (HOS's cycle total), -1 when it cannot be read
+auto CycleGot(int cycle) -> int {
+    const auto total = detail::CycleTotalNow();
+    if (!total) {
+        return -1;
+    }
+    const wizard::Live live{*total, false, 0, 0, false, static_cast<u64>(Now())};
+    return static_cast<int>(wizard::Got(detail::LoadState(), live, cycle));
+}
+
+// the marker with the step the wizard's state says; saved when the step moved
+auto LoadCurrent() -> std::optional<Marker> {
+    auto m = LoadMarker();
+    if (!m) {
+        return m;
+    }
+    AdvanceNow(); // a cycle that was filled while the Hub was closed
+    const auto st = detail::LoadState();
+    if (Sync(*m, st.reset_at != 0, st.full1_at != 0, st.full2_at != 0)) {
+        SaveMarker(*m);
+    }
+    return m;
 }
 
 // the brightness and auto-brightness the user has now, for the marker (what the Hub gives back later)
@@ -154,40 +150,41 @@ auto ScreenNow() -> std::pair<int, bool> {
     return {static_cast<int>(brightness * 100.f + 0.5f), auto_on};
 }
 
-void ShowSteps();
-void ShowStartPage();
-void ShowZeroReady();
-void ShowReport();
-void ShowTransfer();
+void OnChargeDone();
 
 // ---- the runs -----------------------------------------------------------------------------------------------------------
 
 void StartDrainRun(Marker& m) {
-    const auto b = ReadBattery();
-    StartPhase(m, b.percent, Now(), b.boot_time);
+    StartDrain(m, Now(), ReadBattery().boot_time);
     SaveMarker(m);
     CalibRun run;
     run.tail = m.cutoffs > 0;
-    run.step = static_cast<int>(m.step);
+    run.step = m.step == Step::Cycle1 ? 1 : 2;
+    run.on_charge_done = OnChargeDone; // the cycle is counted and the charger is out: the next drain starts by itself
+    run.on_stop = []() { // the user stopped it on purpose: the next start of the Hub must not take it up again
+        if (auto cur = LoadMarker()) {
+            cur->drain_started = false;
+            SaveMarker(*cur);
+        }
+    };
     StartCalibRun(std::move(run));
 }
 
+// the charge is full and the charger came out: the cycle is counted, and the next one starts by itself
 void OnChargeDone() {
-    auto m = LoadMarker();
-    if (!m) {
-        return;
+    AdvanceNow();
+    auto m = LoadCurrent();
+    if (m && IsCycle(m->step)) {
+        StartDrainRun(*m);
+    } else {
+        ShowSteps();
     }
-    m->phase = Phase::Drain; // 100 % and the charger came out: the drain of this cycle starts at once
-    StartDrainRun(*m);
 }
 
-void StartChargeRun(Marker& m) {
-    const auto b = ReadBattery();
-    StartPhase(m, b.percent, Now(), b.boot_time);
-    SaveMarker(m);
+void StartChargeRun(const Marker& m) {
     CalibRun run;
     run.charge = true;
-    run.step = static_cast<int>(m.step);
+    run.step = m.step == Step::Cycle1 ? 1 : 2;
     run.on_charge_done = OnChargeDone;
     StartCalibRun(std::move(run));
 }
@@ -195,35 +192,34 @@ void StartChargeRun(Marker& m) {
 // ---- the intro ----------------------------------------------------------------------------------------------------------
 
 void ShowIntro2() {
-    App::Push<cu::Page>("What happens to the console"_i18n, "Step by step: drain, charge, report. The cut-off is the real end."_i18n,
+    App::Push<cu::Page>("What happens to the console"_i18n, "Step by step: reset, two cycles, report."_i18n,
         std::vector<cu::Line>{
             cu::Head("Switching off and on (this is normal)"_i18n),
             cu::Para("When the battery is almost empty, the console switches itself off. You switch it on again, and it still works for a short time, because the voltage rises a little after the switch-off. Then it switches off again. This can repeat many times in a row. It is a needed part of the process: switch the console on each time and go through it to the end. It can take long."_i18n),
             cu::Head("When the console does not start any more"_i18n),
-            cu::Para("Plug the charger in. The console may not start at once: the battery is empty, and it needs to lie on the charger for a while."_i18n),
-            cu::Head("As soon as it has started"_i18n),
-            cu::Para("Do not wait: open Kefir Hub at once. The Hub records the voltage at which the console switched off, sets the zero and goes on with the calibration."_i18n),
+            cu::Para("Plug the charger in and charge it to 100 %. The console may not start at once: the battery is empty, and it needs to lie on the charger for a while."_i18n),
+            cu::Head("After the charge"_i18n),
+            cu::Para("Open Kefir Hub and Battery calibration. The Hub counts the cycle by itself and shows what comes next."_i18n),
         },
         "Start calibration"_i18n, [](cu::Page& p) {
-            if (!LoadMarker()) {
-                const auto screen = ScreenNow();
-                SaveMarker(Begin(screen.first, screen.second, Now()));
-            }
-            g_checked = true; // a fresh start: nothing to find yet
+            const auto screen = ScreenNow();
+            SaveMarker(Begin(screen.first, screen.second));
+            detail::SaveState({}); // a new calibration: what an earlier one counted does not count
+            g_checked = true;      // a fresh start: nothing to find yet
             p.SetPop();
             ShowSteps();
         });
 }
 
 void ShowIntro() {
-    App::Push<cu::Page>("Battery calibration"_i18n, "Step by step: drain, charge, report. The cut-off is the real end."_i18n,
+    App::Push<cu::Page>("Battery calibration"_i18n, "Step by step: reset, two cycles, report."_i18n,
         std::vector<cu::Line>{
             cu::Head("Why this is needed"_i18n),
             cu::Para("With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest."_i18n),
             cu::Head("How it works"_i18n),
-            cu::Para("We drain the battery to the very end: until the console switches itself off (about 3.2 V under load). That is the real zero. Then we charge and drain it fully, two times."_i18n),
+            cu::Para("First the Hub writes the factory battery model into the gauge, so what the gauge learned wrongly is dropped. Then the battery is run down and charged to 100 %, two times. On these cycles the gauge learns the real capacity."_i18n),
             cu::Head("What you do"_i18n),
-            cu::Para("Take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again. When it stops starting at all, plug the charger in and, as soon as the console starts, open Kefir Hub at once."_i18n),
+            cu::Para("Charge the console to 100 % for the reset. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again. When it stops starting at all, plug the charger in."_i18n),
             cu::Head("How long it takes"_i18n),
             cu::Para("Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup."_i18n),
         },
@@ -233,94 +229,99 @@ void ShowIntro() {
         });
 }
 
-// ---- the zero (step 2) ---------------------------------------------------------------------------------------------------
+// ---- step 1: the reset ----------------------------------------------------------------------------------------------------
 
-struct ZeroFacts {
-    int n_mah{-1};          // the gauge's remaining charge now
-    int x_mah{-1};          // its last logged value before the cut-off
-    std::string volts{"?"}; // the last voltage in the log
-};
-
-auto ReadZeroFacts() -> ZeroFacts {
-    ZeroFacts f;
-    FuelGauge g;
-    if (g.open) {
-        if (const auto v = g.Read(MAX17050_RepCap)) {
-            f.n_mah = static_cast<int>(*v) / 2; // 0.5 mAh a step (10 mOhm), as the drain page reads it
-        }
-    }
-    std::vector<u8> log;
-    if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(LOG_PATH, log)) && !log.empty()) {
-        const std::string_view view{reinterpret_cast<const char*>(log.data()), log.size()};
-        f.x_mah = LastDrainRemainingMah(view);
-        if (const auto sample = LastSample(view)) {
-            char buf[32];
-            std::snprintf(buf, sizeof(buf), "%.2f", sample->mv / 1000.0);
-            f.volts = buf;
-        }
-    }
-    return f;
+void ShowResetDone() {
+    App::Push<cu::Page>("Reset the gauge"_i18n, StepLabel(1),
+        std::vector<cu::Line>{
+            cu::Ok("Factory model written"_i18n),
+            cu::Ok("The backup was made."_i18n),
+            cu::Item("Now two cycles: the battery is run down and charged to 100 %, twice. The gauge learns the real capacity on them."_i18n),
+        },
+        "Go on"_i18n, [](cu::Page& p) {
+            p.SetPop();
+            ShowSteps();
+        });
 }
 
-auto Mah(int v) -> std::string {
-    return v < 0 ? std::string{"—"} : std::to_string(v) + " mAh";
+void ShowResetPage() {
+    const auto back = [](cu::Page& p) { p.SetPop(); ShowSteps(); };
+    App::Push<cu::Page>("Reset the gauge"_i18n, StepLabel(1),
+        std::vector<cu::Line>{
+            cu::Item("First the Hub writes the factory battery model into the gauge. What the gauge learned before is dropped: it may be wrong, for example after the console switched off at 35 %."_i18n),
+            cu::Item("The battery must be full for this, so the model starts from a known point. The Hub waits on the charger until it is full. A backup of the gauge is made first."_i18n),
+            cu::Check("Charger is plugged in."_i18n, "Plug the charger in."_i18n, []() { return ChargerIn(); }),
+        },
+        "Reset"_i18n, [](cu::Page& p) {
+            if (!ChargerIn()) {
+                App::Notify("Plug the charger in."_i18n);
+                return;
+            }
+            p.SetPop();
+            detail::RunReset([](bool ok) {
+                if (ok) {
+                    ShowResetDone();
+                }
+            });
+        }, back);
 }
 
-auto ZeroLines(const ZeroFacts& f, bool done, int brightness_before) -> std::vector<cu::Line> {
-    std::vector<cu::Line> lines{
-        cu::Item("The console switched off at the cut-off, and you charged it."_i18n),
-        cu::Item("Now the Hub sets this point as zero."_i18n),
-        cu::Row("Last voltage in the log before the cut-off"_i18n, f.volts + " V"),
-        cu::Boxes({{"Gauge counter N"_i18n, Mah(f.n_mah)}, {"Last logged value X"_i18n, Mah(f.x_mah)},
-                   {"Result N − X"_i18n, f.n_mah >= 0 && f.x_mah >= 0 ? Mah(std::max(0, f.n_mah - f.x_mah)) : Mah(-1)}}),
-    };
-    if (done) {
-        lines.push_back(cu::Ok("Factory model written"_i18n));
-        lines.push_back(cu::Ok("The backup was made."_i18n));
-        if (brightness_before >= 0) {
-            lines.push_back(cu::Ok("Auto-brightness is on again; brightness set back to what it was before the calibration"_i18n + " (" + std::to_string(brightness_before) + " %)."));
-        }
-    } else {
-        lines.push_back(cu::Dim("A backup of the gauge is made first, then the factory model is written. The values above are kept for the report."_i18n));
-    }
-    return lines;
-}
+// ---- steps 2 and 3: a cycle -----------------------------------------------------------------------------------------------
 
-void ShowZeroDone(const ZeroFacts& f, int brightness_before) {
-    App::Push<cu::Page>("Gauge zero"_i18n, StepLabel(2), ZeroLines(f, true, brightness_before), "Go on"_i18n, [](cu::Page& p) {
-        p.SetPop();
+void ShowCyclePage() {
+    const auto m = LoadCurrent();
+    if (!m || !IsCycle(m->step)) {
         ShowSteps();
-    });
-}
-
-void RunZero(ZeroFacts f, cu::Page& page) {
-    auto failed = std::make_shared<std::string>();
-    auto* ready = &page;
-    App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, "Battery calibration"_i18n, [failed, f](auto pbox) -> Result {
-        log_write("[Calib] zero: N %d mAh, X %d mAh, last logged voltage %s V\n", f.n_mah, f.x_mah, f.volts.c_str());
-        return detail::ResetAtCutoff(pbox, *failed);
-    }, [failed, f, ready](Result rc) {
-        if (R_FAILED(rc)) {
-            Say("The zero was not set. A backup was made first; open the Battery page to restore it."_i18n + (failed->empty() ? std::string{} : "\n\n" + *failed));
-            return;
-        }
-        int brightness_before = -1;
-        if (auto m = LoadMarker()) {
-            brightness_before = m->brightness_before;
-            m->last_logged_remaining_mah = f.x_mah;
-            m->zero_n_mah = f.n_mah;
-            ZeroDone(*m);
-            SaveMarker(*m);
-        }
-        ready->SetPop();
-        ShowZeroDone(f, brightness_before);
-    });
-}
-
-void ShowZeroReady() {
-    const auto f = ReadZeroFacts();
-    App::Push<cu::Page>("Gauge zero"_i18n, StepLabel(2), ZeroLines(f, false, -1), "Set the zero"_i18n, [f](cu::Page& p) { RunZero(f, p); },
-        [](cu::Page& p) { p.SetPop(); ShowSteps(); });
+        return;
+    }
+    const int cycle = m->step == Step::Cycle1 ? 1 : 2;
+    const int got = CycleGot(cycle);
+    const bool drained = got >= static_cast<int>(wizard::CYCLE_DONE);
+    const auto back = [](cu::Page& p) { p.SetPop(); ShowSteps(); };
+    std::vector<cu::Line> lines;
+    std::string label;
+    cu::Page::Act act;
+    if (!drained) {
+        lines.push_back(cu::Check("Charger is out"_i18n, "Take the charger out."_i18n, []() { return !ChargerIn(); }));
+        lines.push_back(cu::Row("Discharged in this cycle"_i18n, (got < 0 ? std::string{"?"} : std::to_string(got)) + " % / " + std::to_string(wizard::CYCLE_DONE) + " %"));
+        lines.push_back(cu::Para("Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness."_i18n));
+        lines.push_back(cu::Para("After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers."_i18n));
+        lines.push_back(cu::Para("When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all."_i18n));
+        lines.push_back(cu::Para("When it does not start any more: plug the charger in and charge it to 100 %. Then open Kefir Hub: the cycle counts by itself."_i18n));
+        lines.push_back(cu::Para("The brightness is lowered only while the console drains. As soon as you plug in the charger, the Hub gives back your brightness and auto-brightness."_i18n));
+        label = m->drain_started ? "Open the drain screen"_i18n : "Start the drain"_i18n;
+        act = [](cu::Page& p) {
+            if (ChargerIn()) {
+                App::Notify("Take the charger out."_i18n);
+                return;
+            }
+            auto cur = LoadCurrent();
+            if (!cur || !IsCycle(cur->step)) {
+                return;
+            }
+            p.SetPop();
+            StartDrainRun(*cur);
+        };
+    } else {
+        lines.push_back(cu::Ok("The battery ran down enough. Now charge it to 100 %. The cycle then counts by itself."_i18n));
+        lines.push_back(cu::Check("Charger is plugged in."_i18n, "Plug the charger in."_i18n, []() { return ChargerIn(); }));
+        lines.push_back(cu::Item("You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n));
+        lines.push_back(cu::Item("The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n));
+        label = "Start charging"_i18n;
+        act = [](cu::Page& p) {
+            if (!ChargerIn()) {
+                App::Notify("Plug the charger in."_i18n);
+                return;
+            }
+            const auto cur = LoadCurrent();
+            if (!cur || !IsCycle(cur->step)) {
+                return;
+            }
+            p.SetPop();
+            StartChargeRun(*cur);
+        };
+    }
+    App::Push<cu::Page>(cycle == 1 ? "Cycle 1"_i18n : "Cycle 2"_i18n, StepLabel(cycle + 1), std::move(lines), label, std::move(act), back);
 }
 
 // ---- what the Hub finds when it starts ---------------------------------------------------------------------------------
@@ -331,10 +332,13 @@ auto Resume(Marker m) -> bool {
         return false;
     }
     g_checked = true;
-    const auto found = Check(m, ReadBattery());
-    if (found != Found::Nothing) {
-        SaveMarker(m);
+    if (AdvanceNow()) {
+        App::Notify("Cycle counted"_i18n);
     }
+    const auto st = detail::LoadState();
+    Sync(m, st.reset_at != 0, st.full1_at != 0, st.full2_at != 0);
+    const auto found = Check(m, ReadBattery());
+    SaveMarker(m);
     switch (found) {
         case Found::CutoffSeen:
             App::Notify("The console switched off: the drain goes on slowly"_i18n);
@@ -344,249 +348,9 @@ auto Resume(Marker m) -> bool {
             App::Notify("The Hub started again: the drain goes on"_i18n);
             StartDrainRun(m); // same boot, same mode: only the Hub was left or replaced
             return true;
-        case Found::DeadWithCharger:
-            ShowZeroReady();
-            return true;
-        case Found::ChargeDone:
-            Say("The charge is done: 100 %. Now take the charger out: the drain starts by itself."_i18n, []() { ShowSteps(); });
-            return true;
-        case Found::ChargeInterrupted:
-            Say("The charge was interrupted: the charger came out before 100 %. Start the charge again."_i18n, []() { ShowSteps(); });
-            return true;
-        case Found::AskDrainFinished:
-            App::Push<ui::OptionBox>("Did the console switch off from the drain?"_i18n, "No"_i18n, "Yes"_i18n, 1, [m](auto op) mutable {
-                if (op && *op == 1) {
-                    DrainConfirmed(m);
-                    SaveMarker(m);
-                }
-                ShowSteps();
-            });
-            return true;
         default:
             return false;
     }
-}
-
-// ---- the start pages of the steps (the guide's "start" screen) ------------------------------------------------------------
-
-void ShowStartPage() {
-    auto m = LoadMarker();
-    if (!m) {
-        return;
-    }
-    const bool cycle = m->step == Step::Cycle1 || m->step == Step::Cycle2;
-    const int number = static_cast<int>(m->step);
-    std::vector<cu::Line> lines;
-    std::string label;
-    std::string title;
-    cu::Page::Act act;
-    const auto back = [](cu::Page& p) { p.SetPop(); ShowSteps(); };
-
-    if (m->step == Step::Drain) {
-        title = "Drain to the dead battery"_i18n;
-        lines.push_back(cu::Check("Charger is out"_i18n, "Take the charger out."_i18n, []() { return !ChargerIn(); }));
-        lines.push_back(cu::Para("Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness."_i18n));
-        lines.push_back(cu::Para("After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers."_i18n));
-        lines.push_back(cu::Para("When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all."_i18n));
-        lines.push_back(cu::Para("When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait."_i18n));
-        lines.push_back(cu::Para("The brightness is lowered only while the console drains. As soon as you plug in the charger, the Hub gives back your brightness and auto-brightness."_i18n));
-        lines.push_back(cu::Warn("In this step keep the Hub open: it needs the log."_i18n));
-        label = "Start the drain"_i18n;
-        act = [](cu::Page& p) {
-            if (ChargerIn()) {
-                App::Notify("Take the charger out."_i18n);
-                return;
-            }
-            auto cur = LoadMarker();
-            if (!cur) {
-                return;
-            }
-            p.SetPop();
-            StartDrainRun(*cur);
-        };
-    } else if (cycle && m->phase == Phase::Charge) {
-        title = m->step == Step::Cycle1 ? "Cycle 1"_i18n : "Cycle 2"_i18n;
-        lines.push_back(cu::Check("Charger is plugged in."_i18n, "Plug the charger in."_i18n, []() { return ChargerIn(); }));
-        lines.push_back(cu::Item("You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n));
-        lines.push_back(cu::Item("The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n));
-        label = m->phase_started ? "Open the charge screen"_i18n : "Start charging"_i18n;
-        act = [](cu::Page& p) {
-            if (!ChargerIn()) {
-                App::Notify("Plug the charger in."_i18n);
-                return;
-            }
-            auto cur = LoadMarker();
-            if (!cur) {
-                return;
-            }
-            p.SetPop();
-            StartChargeRun(*cur);
-        };
-    } else if (cycle) {
-        title = m->step == Step::Cycle1 ? "Cycle 1"_i18n : "Cycle 2"_i18n;
-        lines.push_back(cu::Warn("Full. Now the drain: take the charger out."_i18n));
-        lines.push_back(cu::Check("Charger is out"_i18n, "Take the charger out."_i18n, []() { return !ChargerIn(); }));
-        lines.push_back(cu::Para("You can also drain it yourself: play, or simply leave the console on, and you may close the Hub. When the console switches off, switch it on with the charger in and open Kefir Hub: it will ask whether it was the drain."_i18n));
-        label = "Start the drain"_i18n;
-        act = [](cu::Page& p) {
-            if (ChargerIn()) {
-                App::Notify("Take the charger out."_i18n);
-                return;
-            }
-            auto cur = LoadMarker();
-            if (!cur) {
-                return;
-            }
-            p.SetPop();
-            StartDrainRun(*cur);
-        };
-    } else {
-        return;
-    }
-    App::Push<cu::Page>(title, StepLabel(number), std::move(lines), label, std::move(act), back);
-}
-
-// ---- the report (step 5) -------------------------------------------------------------------------------------------------
-
-void ShowReport() {
-    struct Facts {
-        int full_mah{-1};
-        int design_mah{-1};
-        std::vector<Cutoff> cuts;
-        int zero_n{-1};
-        int zero_x{-1};
-        bool large{};
-        bool low{};
-        std::string model;
-    };
-    auto facts = std::make_shared<Facts>();
-    App::Push<ui::ProgressBox>(0, "Reading"_i18n, "Calibration report"_i18n, [facts](auto) -> Result {
-        auto s = detail::Read();
-        R_UNLESS(s.gauge, Result_ArchiveRead);
-        const auto full = s.regs[MAX17050_FullCap];
-        const auto design = s.regs[MAX17050_DesignCap];
-        facts->full_mah = full / 2;
-        facts->design_mah = design / 2;
-        facts->large = CapacityHigh(full, design);
-        facts->low = CapacityLow(full, design);
-        facts->model = ModelOf(s);
-        std::vector<u8> log;
-        if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(LOG_PATH, log)) && !log.empty()) {
-            facts->cuts = Cutoffs({reinterpret_cast<const char*>(log.data()), log.size()});
-        }
-        if (const auto m = LoadMarker()) {
-            facts->zero_n = m->zero_n_mah;
-            facts->zero_x = m->last_logged_remaining_mah;
-        }
-        R_SUCCEED();
-    }, [facts](Result rc) {
-        if (R_FAILED(rc)) {
-            Say("The gauge could not be read."_i18n);
-            return;
-        }
-        std::vector<cu::Line> lines;
-        lines.push_back(cu::Row("Learned capacity"_i18n, std::to_string(facts->full_mah) + " / " + std::to_string(facts->design_mah) + " mAh"));
-        lines.push_back(cu::Row("Verdict"_i18n, facts->large ? "Larger battery is built in."_i18n
-            : facts->low ? "Sign of desync: learned capacity below 90 % of design."_i18n : "Normal: no sign of desync."_i18n));
-        lines.push_back(cu::Head("Gauge before each cut-off"_i18n));
-        // per drain: how many cut-offs it had, so "cut-off 2/2" reads right
-        const auto& cuts = facts->cuts;
-        const size_t first = cuts.size() > 6 ? cuts.size() - 6 : 0;
-        for (size_t i = first; i < cuts.size(); i++) {
-            const auto& c = cuts[i];
-            int index = 0, total = 0;
-            for (size_t k = 0; k < cuts.size(); k++) {
-                if (cuts[k].step == c.step) {
-                    total++;
-                    if (k <= i) {
-                        index++;
-                    }
-                }
-            }
-            char v[16];
-            std::snprintf(v, sizeof(v), "%.2f", c.mv / 1000.0);
-            const auto where = c.step == 1 ? "Drain to zero"_i18n : "Cycle"_i18n + " " + (c.step == 3 ? "1" : "2");
-            const auto sensor = c.gauge_pct >= 0 ? std::to_string(c.gauge_pct) + " %" : "not measured"_i18n;
-            lines.push_back(cu::Item(where + " · " + "cut-off"_i18n + " " + std::to_string(index) + "/" + std::to_string(total) + ": " + v + " V · " +
-                                     "sensor"_i18n + ": " + sensor));
-        }
-        if (facts->zero_n >= 0) {
-            lines.push_back(cu::Item("Zero"_i18n + ": N " + Mah(facts->zero_n) + ", X " + Mah(facts->zero_x)));
-        }
-        lines.push_back(cu::Item("Written: calibration on the microSD, copy in this system."_i18n));
-        App::Push<cu::Page>("Calibration report"_i18n, StepLabel(5), std::move(lines), "Go on"_i18n, [facts](cu::Page& p) {
-            if (auto m = LoadMarker()) {
-                if (m->step == Step::Report) {
-                    // the calibration is made here: a new number in the ledger; the other systems take it at their next start
-                    auto l = LoadLedger();
-                    cutoff::RecordCalibration(l, CurrentSystemId(), facts->model, !facts->low, Now());
-                    SaveLedger(l);
-                }
-                ReportSeen(*m);
-                SaveMarker(*m);
-            }
-            p.SetPop();
-            ShowTransfer();
-        });
-    });
-}
-
-// ---- the transfer to the other MMC (step 6) ---------------------------------------------------------------------------------
-
-void ShowTransfer() {
-    const auto l = LoadLedger();
-    const auto id = CurrentSystemId();
-    std::vector<cu::Line> lines;
-    if (l.seq) {
-        lines.push_back(cu::Item("Calibration saved on the microSD."_i18n + " " + "Marker"_i18n + ": " + "from"_i18n + " " + cutoff::SystemName(l.origin) + ", " +
-                                 "number"_i18n + " " + std::to_string(l.seq) + "."));
-        lines.push_back(cu::Item("Open the Hub in the other system. The calibration moves by itself."_i18n));
-        // this system and every system the ledger has seen
-        std::vector<std::string> systems{id};
-        for (const auto& w : l.written) {
-            if (std::find(systems.begin(), systems.end(), w.system) == systems.end()) {
-                systems.push_back(w.system);
-            }
-        }
-        for (const auto& sys : systems) {
-            lines.push_back(cu::Row(cutoff::SystemName(sys), cutoff::WrittenSeq(l, sys) >= l.seq ? "Done"_i18n : "Waiting"_i18n));
-        }
-    } else {
-        lines.push_back(cu::Ok("Calibration finished"_i18n));
-    }
-    lines.push_back(cu::Dim("The hekate hop is a manual action only."_i18n));
-    const bool finish = [] { const auto m = LoadMarker(); return m && m->step == Step::Transfer; }();
-    App::Push<cu::Page>("Transfer to the other MMC"_i18n, "Step"_i18n + " 6", std::move(lines), finish ? "Go on"_i18n : std::string{}, [](cu::Page& p) {
-        if (auto m = LoadMarker()) {
-            TransferDone(*m);
-            SaveMarker(*m);
-        }
-        p.SetPop();
-        ShowSteps();
-    });
-}
-
-// at the Hub's start in a system that does not hold the newest calibration yet: write it there, say so, and note it down
-void ApplyLedger() {
-    auto l = LoadLedger();
-    if (!l.seq) {
-        return;
-    }
-    const auto id = CurrentSystemId();
-    const auto snap = detail::Read();
-    if (!snap.gauge || cutoff::Decide(l, id, ModelOf(snap)) != cutoff::Decision::Apply) {
-        return;
-    }
-    std::string failed;
-    if (R_FAILED(detail::MatchNow(failed))) {
-        log_write("[Calib] the transfer to %s failed: %s\n", id.c_str(), failed.c_str());
-        App::Notify("The battery calibration could not be written here:"_i18n + " " + failed);
-        return;
-    }
-    cutoff::RecordWritten(l, id, Now());
-    SaveLedger(l);
-    log_write("[Calib] the calibration of %s (number %llu) written to %s\n", l.origin.c_str(), static_cast<unsigned long long>(l.seq), id.c_str());
-    App::Notify("Battery calibration was transferred from"_i18n + " " + cutoff::SystemName(l.origin) + " " + "to"_i18n + " " + cutoff::SystemName(id));
 }
 
 // ---- the list of steps ----------------------------------------------------------------------------------------------------
@@ -597,15 +361,23 @@ auto StateText(Mark m) -> std::string {
     return m == Mark::Done ? "Done"_i18n : m == Mark::Active ? "Active"_i18n : "Locked"_i18n;
 }
 
-auto PhaseText(const Marker& m) -> std::string {
-    if (m.phase == Phase::Charge) {
-        return m.phase_started ? "the charge is going on"_i18n : "next: charge to 100 %"_i18n;
+// what a cycle row says: where the cycle is
+auto CycleText(const Marker& m, int cycle) -> std::string {
+    const int got = CycleGot(cycle);
+    const bool drained = got >= static_cast<int>(wizard::CYCLE_DONE);
+    const auto progress = got < 0 ? std::string{} : " (" + std::to_string(got) + " % / " + std::to_string(wizard::CYCLE_DONE) + " %)";
+    if (drained) {
+        return "next: charge to 100 %"_i18n;
     }
-    return m.phase_started ? "the drain is going on"_i18n : "next: drain to the cut-off"_i18n;
+    return (m.drain_started ? "the drain is going on"_i18n : "next: drain to the cut-off"_i18n) + progress;
 }
 
+} // namespace
+
+namespace calib_flow {
+
 void ShowSteps() {
-    auto m = LoadMarker();
+    const auto m = LoadCurrent();
     if (!m) {
         return;
     }
@@ -625,23 +397,23 @@ void ShowSteps() {
         std::function<void()> action;
     };
     std::vector<Row> rows;
-    rows.push_back({"1. Drain to the dead battery"_i18n, m->step == Step::Drain ? (m->phase_started ? "the drain is going on"_i18n : "next: drain to the cut-off"_i18n) : std::string{},
-        at(Step::Drain), open(ShowStartPage)});
-    rows.push_back({"2. Charge and set the zero"_i18n, m->step == Step::Zero ? "next: set the zero"_i18n : std::string{}, at(Step::Zero), open(ShowZeroReady)});
-    rows.push_back({"3. Cycle 1: charge, then drain"_i18n, m->step == Step::Cycle1 ? PhaseText(*m) : std::string{}, at(Step::Cycle1), open(ShowStartPage)});
-    rows.push_back({"4. Cycle 2: charge, then drain"_i18n, m->step == Step::Cycle2 ? PhaseText(*m) : std::string{}, at(Step::Cycle2), open(ShowStartPage)});
-    rows.push_back({"5. Report"_i18n, {}, static_cast<int>(m->step) >= static_cast<int>(Step::Transfer) ? Mark::Done : m->step == Step::Report ? Mark::Active : Mark::Locked,
+    rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: charge to 100 %, then reset"_i18n : std::string{}, at(Step::Reset), open(ShowResetPage)});
+    rows.push_back({"2. Cycle 1: drain, then charge"_i18n, m->step == Step::Cycle1 ? CycleText(*m, 1) : std::string{}, at(Step::Cycle1), open(ShowCyclePage)});
+    rows.push_back({"3. Cycle 2: drain, then charge"_i18n, m->step == Step::Cycle2 ? CycleText(*m, 2) : std::string{}, at(Step::Cycle2), open(ShowCyclePage)});
+    rows.push_back({"4. Report"_i18n, {}, static_cast<int>(m->step) >= static_cast<int>(Step::Transfer) ? Mark::Done : m->step == Step::Report ? Mark::Active : Mark::Locked,
         open(ShowReport)});
-    rows.push_back({"6. Transfer to the other MMC"_i18n, {}, m->step == Step::Finished ? Mark::Done : m->step == Step::Transfer ? Mark::Active : Mark::Locked,
+    rows.push_back({"5. Transfer to the other MMC"_i18n, {}, m->step == Step::Finished ? Mark::Done : m->step == Step::Transfer ? Mark::Active : Mark::Locked,
         open(ShowTransfer)});
 
     std::vector<SettingsItem> items;
     for (auto& row : rows) {
         const auto text = StateText(row.mark) + (row.detail.empty() ? std::string{} : ": " + row.detail);
-        // an active row acts; the report also opens once it is done; locked rows and finished steps do nothing
-        const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("5.") || row.label.starts_with("6.")));
+        // an active row acts; the report and the transfer also open once they are done; locked rows and finished steps do nothing
+        const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("4.") || row.label.starts_with("5.")));
         items.push_back(SettingsItem{row.label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal});
     }
+    items.push_back(SettingsItem{"Actions"_i18n,
+        "Back up the chip, align the charge to the voltage, restore from a backup, match the other MMC, battery type."_i18n, {}, OpenActions, SettingsItemKind::Normal});
     items.push_back(SettingsItem{"Remembered"_i18n,
         "The calibration is remembered on the SD card: you can close the Hub and use the console between the steps."_i18n, {}, {}, SettingsItemKind::Normal});
     auto menu = std::make_unique<SystemToolsMenu>("Battery calibration"_i18n, std::move(items));
@@ -649,12 +421,7 @@ void ShowSteps() {
     App::Push(std::move(menu));
 }
 
-} // namespace
-
-auto CalibrationActive() -> bool {
-    const auto m = LoadMarker();
-    return m && m->step != Step::Finished;
-}
+} // namespace calib_flow
 
 void OpenCalibration() {
     const auto m = LoadMarker();
@@ -679,7 +446,7 @@ void PollCalibration() {
     }
     done = true;
     const auto m = LoadMarker();
-    if (m && m->step != Step::Finished && m->phase_started) {
+    if (m && m->step != Step::Finished) {
         Resume(*m);
     }
     ApplyLedger(); // in another system than the one that was calibrated: take the new calibration

@@ -8,8 +8,10 @@ namespace sphaira::battery {
 // then shows the verdict and the values; X backs them up to /config/kefir/battery.
 void Open();
 
-// + on the Battery page: reset from factory data, restore from the last backup, match the other MMC.
+// + on the Battery page: the calibration (the same as Tools > Battery calibration).
 void OpenCalibrate();
+// the actions of the calibration: back up, align the charge to the voltage, restore, match the other MMC, battery type
+void OpenActions();
 
 // steps 3 and 4: drain under load until the console switches off (battery_drain.cpp).
 void OpenDrain(int cycle);
@@ -40,16 +42,16 @@ void SetAutoDrainSuppressed(bool v);
 struct CalibRun {
     bool charge{};
     bool tail{};
-    int step{1};   // the calibration step (1 to 4) this run belongs to: it goes into every log line
+    int step{1};   // the cycle (1 or 2) this run belongs to: it goes into every log line
     // charge only: the charger came out at 100 % (the cycle's charge phase is done)
     std::function<void()> on_charge_done;
+    // drain only: the user stopped it on purpose (B, Stop)
+    std::function<void()> on_stop;
 };
 void StartCalibRun(CalibRun run);
 // the entry of Tools: the intro, the steps, and everything the marker on the SD says is going on
 void OpenCalibration();
-// from the app loop, once the UI is up: a drain that was cut off goes on by itself, a dead console with the charger in asks for the zero
+// from the app loop, once the UI is up: a drain that was cut off goes on by itself, and a calibration made in another system is taken over
 void PollCalibration();
-// a calibration is under way (the old "align" offer stays quiet then)
-auto CalibrationActive() -> bool;
 
 } // namespace sphaira::battery

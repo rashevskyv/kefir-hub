@@ -110,31 +110,31 @@ show 0 % for an hour. What counts is the real cut-off (the console switches itse
 The wizard first says the method, then shows the steps. Only the first step is active; each next one opens when the one before
 is done. The state is on the SD, so a restart or a cut-off does not lose the place.
 
+**Correction (owner, 2026-10-24): the logic of 0.14.111-163 is the base again.** The cut-off pipeline of 0.14.193-202 drained first
+and set a "zero" (N - X) at the cut-off with the charger in. That drained the console on calibration data that was already wrong
+(the reason for a switch-off at 35 %) and it was never tried end to end on a console. The old wizard had worked on a console:
+reset first, then two cycles counted by HOS's cycle total. The pages, the screensaver, the charge page, the report and the
+transfer of the new wizard stay; the steps and their counting are the old ones.
+
 **Steps**
-1. **Drain to the dead battery.** The charger must be out (the wizard checks). Hub runs the maximum load (CPU and GPU) at the
-   maximum brightness. The screensaver starts on Minus, or after 3 minutes, at the maximum brightness; the stick lowers it
-   (the log keeps the brightness). Hub logs every second to the SD: voltage, current, gauge percent, temperature, load, brightness.
-   The wizard WARNS the user before the start: the off-and-on loop (the console switches off, the user switches it on, it runs a
-   short time, switches off again) is a **needed part of the process**; it has to be gone through to the end and it can be long;
-   the console may start many times in a row, and that is normal. The user switches it on again each time, until it does not
-   start at all. Each start continues the same step **by itself, without a button**, already in the tail mode:
-   low brightness and minimal load (the cell is nearly empty, there is no point in hammering the CPU and GPU again). The user can
-   still change the brightness with the stick. The drain page shows a big battery and, under it, live charts (voltage with the
-   3.4 V / 3.2 V lines, current and power, temperature, the load the Hub sets); CPU and GPU load as a reading is to be checked on the console.
-2. **Charger in, switch on, open the Hub at once; the Hub sets the zero by itself** (a step of the wizard, no menu, no waiting time).
-   The wizard WARNS before step 1: when the console does not start any more, plug the charger in; the console may not start at
-   once (the cell is empty), it may need to lie on the charger for a while; when it does start, the user must **not wait**: open
-   the Kefir Hub straight away. The Hub finds the marker and applies the cut-off point it logged: the last line of the log before
-   the cut-off holds X, what the gauge believed was left (the real value was 0, so X is its error). The Hub reads the counter N and
-   writes N - X: the charge added since the cut-off stays (the gauge stays powered by the battery while the console is off, so it
-   keeps counting; to confirm on a console), the error goes. If the gauge was reset (the counter is obviously fresh) or the log is
-   missing, the Hub writes 0 and says so in the report; the next cut-off fixes it. The factory model is written at the same
-   time (the guide resets at ~3.3 V). Register: RemCapMIX 0x0F, then 0x05, then 0x06 (research, not yet tried on a console: `BATTERY-ZERO-REGISTER.md`). **After that the Hub puts the console back
-   as it found it**: auto-brightness on again and the brightness the user had when the Hub started the calibration.
-3. **Cycle 1:** charge to 100 % ("full" by psm 100 %, later by the current ~0 for 5 minutes, screen on while charging), drain as in step 1.
-4. **Cycle 2:** the same.
-5. **Report:** the learned capacity (verdict, enlarged battery) and the gauge percent just before each cut-off (near 0 % = the gauge
-   agrees with the console).
+1. **Reset the gauge.** The charger in; the Hub waits for 100 % (and 4.1 V), makes a backup, writes the factory model (BDF's X),
+   saves this MMC's copy and starts the wizard's state (`calibration.txt`: `reset_at`, the cycle total at the reset). What the
+   gauge learned before is dropped. This is `detail::RunReset` (the old step 2, proven on a console in 0.14.112).
+2. **Cycle 1.** Drain, then 100 % on the charger. The cycle counts when **90 % of the battery was discharged since the reset** (HOS's
+   cycle total: this MMC's copy plus the chip's Cycles delta) and the console shows 100 %. The Hub need not run while the console
+   drains; whoever drains it (the Hub's drain page or the user's own use) is counted. The drain page: maximum load and brightness
+   until the first cut-off, the tail mode after each restart (see the load plan below), the screensaver on Minus or after 3 minutes,
+   a log line a second. The charge page: screen on, the screensaver, no load. The cycle is counted by the wizard's `Advance` (on the
+   drain page every 5 s, when the steps page opens, at the Hub's start).
+3. **Cycle 2.** The same, measured from the moment cycle 1 counted.
+4. **Report:** the learned capacity (verdict, enlarged battery) and the gauge percent just before each cut-off (near 0 % = the gauge
+   agrees with the console). A cycle shows "never counts mid-drain": two cycles are done only after the second full charge.
+5. **Transfer** to the other MMC (below).
+
+**After a drain the console cut short** (the chip still shows 30 % while its voltage says 3 %): the Hub offers "Align the charge to
+the voltage" at its start (0.14.153/154: RemCapMIX 0x0F, then 0x05, then 0x06 from VFSOC; the charger out, VFSOC at most 10 %, at least
+15 points below RepSOC; research and the open questions: `BATTERY-ZERO-REGISTER.md`). It is offered also while a calibration is under way.
+Actions on the steps page: back up, align, restore, match, battery type.
 
 **Load plan of a drain (owner, 2026-10-23; replaces the 3.4 V latch).** Before the first cut-off: maximum load and maximum brightness,
 all the way (no switch at 3.4 V). After every cut-off, when the user switches the console on again: the **tail mode** at once: the Hub turns
@@ -178,27 +178,17 @@ set, the user changed it himself (he may have gone to sleep): the Hub leaves the
 (which step, which phase, when it began, what the battery showed). The user may close the Hub, use or play on the console, and
 come back later: Tools > "Battery calibration" opens, the Hub sees that a calibration is going on and shows where it is: the steps
 already done ticked, the current step and its phase. Nothing is lost if the user played in between.
-- **Cycle 1 and cycle 2 each have two phases: charge to 100 %, then drain to the cut-off.**
-- **Charge phase.** The screen shows the real charger state: "Charger is in" (a tick) or "Plug the charger in", never a request to do
-  what is already done. With the charger in, the user presses "Start the charge" (the Hub writes the start into the marker). The
-  Hub tells the user: leave the console as it is, or use it while it charges; when it has reached 100 %, come back to the Hub and open
-  Battery calibration. On return the Hub reads the battery: 100 % with the charger in = phase done; below 100 % with the charger out =
-  "the charge was interrupted, charge again"; still charging = the time and the percent so far. (A short unplug in the middle cannot
-  be seen by a Hub that was closed: a known limit, the gauge's own learning copes.)
+- **A cycle is a drain and then a charge** (after the reset the battery is full, so cycle 1 starts with the drain).
+- **Drain phase.** One button: "Start the drain" (the Hub's mechanism: maximum load first, the tail mode after each cut-off). The page
+  says in plain words that the user may also drain the console himself (play, leave it running) and come back; the cycle total counts it.
+  The marker keeps "a Hub drain was running" and the boot time: at the Hub's start in the same boot only the Hub was restarted (the drain
+  goes on in the same mode); in another boot without the charger the console cut off (the tail mode); with the charger in the drain is over.
+  Stop on the drain page clears it, so the next start does not take the drain up again.
+- **Charge phase.** When 90 % was discharged the page says "charge to 100 %": "Start charging" opens the charge page (screen on, the
+  screensaver). The cycle counts by itself at 100 %; the moment the charger then comes out, the Hub starts the next drain by itself.
 - **The screensaver also runs during the charge** (owner, 2026-10-23): the guide says to keep the screen on while charging (in sleep the
   console may not charge to the end), and the screensaver does exactly that with black pixels: Minus, or after 3 minutes, shows the
   charge percent, the charge current, the voltage, the temperature and the time of the charge; the sticks work as in the drain
   (right stick: brightness, left stick: move). The brightness is the user's own (not lowered by the Hub) during the charge.
-- **From charge to drain.** When the charge reaches 100 % the screen says what comes next: "Full. Now the drain: take the charger
-  out." (with the charger in the line reads "Take the charger out", never "Plug the charger in"). The moment the charger comes out the
-  Hub opens the drain window of the cycle and **starts the drain by itself** (taking the charger out is the user's signal); the
-  window says "The drain has started" and the Stop button is there. No extra press.
-- **Drain phase.** One button only: "Start the drain" (the Hub's mechanism: maximum load first, the tail mode after each cut-off).
-  There is NO second button for a self-drain; the page only says in plain words that the user may also drain the console himself
-  (play, leave it running) and come back. If he drained it himself, he switches the console on with the charger in and
-  opens the Hub: it sees a low battery, a charger just plugged in and the marker "drain phase", and asks one question "The console
-  switched off from the drain?" (Yes / No); Yes completes the phase.
-- **Step 1 (the zero) is the exception:** it needs the Hub's own log (the value X), so the wizard says to keep the Hub running in
-  step 1. If the user drained it without the Hub, the zero falls back to 0 and the report says so.
 - The report shows the gauge percent before a cut-off only for the cut-offs the Hub itself logged; the others read "not measured".
 

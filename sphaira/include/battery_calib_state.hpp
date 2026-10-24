@@ -1,7 +1,9 @@
 #pragma once
 
-// The state of the battery calibration wizard (docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline" and "The wizard remembers").
-// It lives in a marker file on the SD, so the Hub can be closed, the console used, and the wizard still knows where it is.
+// What the battery calibration wizard remembers besides the old wizard's state (battery_wizard.hpp, calibration.txt): the
+// reset and the two cycles are counted there, by HOS's cycle total, as in 0.14.111-163. This marker file on the SD keeps
+// the rest: the report and the transfer step, the user's brightness, and what the Hub needs to go on with a drain after
+// a cut-off (docs/dev/BATTERY-CALIBRATION.md, "The wizard remembers").
 // No libnx: host-tested by tests/test_battery_calib_state.cpp.
 
 #include "battery_cutoff.hpp"
@@ -14,41 +16,65 @@
 namespace sphaira::battery::calib {
 
 enum class Step : std::uint8_t {
-    Drain = 1,    // drain to the dead battery (the Hub runs it: it needs the log)
-    Zero = 2,     // the charger is in and the console started: the Hub sets the zero
-    Cycle1 = 3,
-    Cycle2 = 4,
-    Report = 5,
-    Transfer = 6,
-    Finished = 7,
+    Reset = 1,    // the factory model at 100 % (the old step 2)
+    Cycle1 = 2,   // drain, then 100 % on the charger; counted by the cycle total
+    Cycle2 = 3,
+    Report = 4,
+    Transfer = 5,
+    Finished = 6,
 };
 
-// the two phases of a cycle; step Drain is only ever in Phase::Drain
-enum class Phase : std::uint8_t { Charge = 0, Drain = 1 };
-
 struct Marker {
-    Step step{Step::Drain};
-    Phase phase{Phase::Drain};
-    bool phase_started{};              // "Start the drain" / "Start the charge" was pressed
-    std::int64_t phase_time{};         // when it was pressed
-    int phase_percent{-1};             // the battery percent then
-    int cutoffs{};                     // cut-offs seen by this calibration: 0 = maximum load, 1 or more = the tail mode
+    Step step{Step::Reset};
+    bool drain_started{};              // the Hub's drain page was started in a cycle step and not left on purpose
+    std::int64_t drain_time{};         // when it was started
+    int cutoffs{};                     // cut-offs seen in this cycle: 0 = maximum load, 1 or more = the tail mode
     int brightness_before{-1};         // what the user had (percent), -1 unknown
     bool auto_before{};                // auto-brightness the user had
     int last_set_brightness{-1};       // the last brightness the Hub set itself, -1 none
-    int last_logged_remaining_mah{-1}; // X: the gauge's last logged remaining charge before the cut-off, -1 none
-    int zero_n_mah{-1};                // N: the gauge counter when the zero was set (for the report)
-    std::int64_t boot_time{};          // unix time the console booted when this phase started (0 = unknown): a Hub start in the
+    std::int64_t boot_time{};          // unix time the console booted when the drain started (0 = unknown): a Hub start in the
                                        // same boot is a restart of the Hub, in another boot the console itself switched off
 };
 
-inline auto Begin(int brightness_now, bool auto_now, std::int64_t now) -> Marker {
+inline auto Begin(int brightness_now, bool auto_now) -> Marker {
     Marker m;
     m.brightness_before = brightness_now;
     m.auto_before = auto_now;
-    m.phase_time = now;
     return m;
 }
+
+inline auto IsCycle(Step s) -> bool { return s == Step::Cycle1 || s == Step::Cycle2; }
+
+// ---- where the wizard is ---------------------------------------------------------------------------------------------------
+
+// The reset and the cycles come from the wizard's state (the marker only mirrors them); the report and the transfer are the marker's own.
+inline auto StepFor(const Marker& m, bool reset_done, bool cycle1_done, bool cycle2_done) -> Step {
+    if (m.step == Step::Report || m.step == Step::Transfer || m.step == Step::Finished) {
+        return m.step;
+    }
+    if (!reset_done) {
+        return Step::Reset;
+    }
+    if (!cycle1_done) {
+        return Step::Cycle1;
+    }
+    return cycle2_done ? Step::Report : Step::Cycle2;
+}
+
+// true = the step moved; a new step starts without a running drain and in the maximum load again
+inline auto Sync(Marker& m, bool reset_done, bool cycle1_done, bool cycle2_done) -> bool {
+    const auto next = StepFor(m, reset_done, cycle1_done, cycle2_done);
+    if (next == m.step) {
+        return false;
+    }
+    m.step = next;
+    m.drain_started = false;
+    m.cutoffs = 0;
+    return true;
+}
+
+inline void ReportSeen(Marker& m) { if (m.step == Step::Report) m.step = Step::Transfer; }
+inline void TransferDone(Marker& m) { if (m.step == Step::Transfer) m.step = Step::Finished; }
 
 // ---- the load and the brightness -------------------------------------------------------------------------------------------
 
@@ -63,8 +89,6 @@ enum class Brightness {
     Restore, // the user's own brightness and auto-brightness back
     Keep,    // the user changed it himself: leave it alone
 };
-
-inline constexpr int LOW_BATTERY_PERCENT = 15; // under this, with the charger just in, a self-drain is likely
 
 // current: the brightness now (percent). draining: the Hub is draining right now.
 inline auto DecideBrightness(const Marker& m, bool charger_in, bool draining, int current) -> Brightness {
@@ -82,14 +106,13 @@ inline auto DecideBrightness(const Marker& m, bool charger_in, bool draining, in
 // ---- what the Hub finds when it starts -------------------------------------------------------------------------------------
 
 struct Battery {
-    int percent{};
     bool charger_in{};
     std::int64_t boot_time{}; // unix time this boot began (now minus the uptime), 0 = unknown
 };
 
 inline constexpr std::int64_t BOOT_SAME_S = 120; // two boot times this close are one boot (the clock and the uptime differ a little)
 
-// the console started again since the marker was written
+// the console started again since the drain was started
 inline auto Rebooted(const Marker& m, const Battery& b) -> bool {
     if (!m.boot_time || !b.boot_time) {
         return false; // unknown: do not take a Hub restart for a cut-off
@@ -99,89 +122,32 @@ inline auto Rebooted(const Marker& m, const Battery& b) -> bool {
 }
 
 enum class Found {
-    Nothing,          // no calibration, or nothing to say
-    HubRestarted,     // a drain was running and only the Hub started again (the console did not restart): go on as before
-    CutoffSeen,       // the Hub drained, the console switched off and was switched on without the charger: go on in the tail mode
-    DeadWithCharger,  // step 1: the console would not start without the charger: the zero comes next
-    ChargeDone,       // 100 % with the charger in
-    ChargeInterrupted,// the charger went out before 100 %
-    ChargeInProgress, // still charging
-    AskDrainFinished, // low battery and the charger just in during a drain phase: ask "did the console switch off from the drain?"
+    Nothing,      // no drain was running, or the console is charging: the cycle counts by the cycle total
+    HubRestarted, // a drain was running and only the Hub started again (the console did not restart): go on as before
+    CutoffSeen,   // the Hub drained, the console switched off and was switched on without the charger: go on in the tail mode
 };
 
 inline auto Check(Marker& m, const Battery& b) -> Found {
-    if (m.step == Step::Finished || m.step == Step::Zero || m.step == Step::Report || m.step == Step::Transfer || !m.phase_started) {
+    if (!IsCycle(m.step) || !m.drain_started) {
         return Found::Nothing;
     }
-    if (m.step == Step::Drain) {
-        if (!Rebooted(m, b)) {
-            return b.charger_in ? Found::Nothing : Found::HubRestarted; // the same boot: the drain page was left, not cut off
-        }
-        m.boot_time = b.boot_time;
-        if (b.charger_in) {
-            m.step = Step::Zero; // the console was off and started with the charger in: the zero comes now
-            m.phase_started = false;
-            return Found::DeadWithCharger;
-        }
-        m.cutoffs++;
-        return Found::CutoffSeen;
-    }
-    if (m.phase == Phase::Charge) {
-        if (b.charger_in && b.percent >= 100) {
-            m.phase = Phase::Drain;
-            m.phase_started = false;
-            return Found::ChargeDone;
-        }
-        if (!b.charger_in) {
-            m.phase_started = false; // the charge must be started again
-            return Found::ChargeInterrupted;
-        }
-        return Found::ChargeInProgress;
-    }
-    // a drain phase of a cycle
     if (!Rebooted(m, b)) {
-        return b.charger_in ? Found::Nothing : Found::HubRestarted;
+        return b.charger_in ? Found::Nothing : Found::HubRestarted; // the same boot: the drain page was left, not cut off
     }
     m.boot_time = b.boot_time;
-    if (!b.charger_in) {
-        m.cutoffs++; // the Hub was draining, the console cut off and was switched on without the charger
-        return Found::CutoffSeen;
+    if (b.charger_in) {
+        m.drain_started = false; // the console was off and is charging: the drain is over
+        return Found::Nothing;
     }
-    return b.percent <= LOW_BATTERY_PERCENT ? Found::AskDrainFinished : Found::Nothing;
+    m.cutoffs++; // the Hub was draining, the console cut off and was switched on without the charger
+    return Found::CutoffSeen;
 }
 
-// ---- moving on -------------------------------------------------------------------------------------------------------------
-
-inline void StartPhase(Marker& m, int percent, std::int64_t now, std::int64_t boot_time = 0) {
-    m.phase_started = true;
-    m.phase_time = now;
-    m.phase_percent = percent;
+inline void StartDrain(Marker& m, std::int64_t now, std::int64_t boot_time = 0) {
+    m.drain_started = true;
+    m.drain_time = now;
     m.boot_time = boot_time;
 }
-
-// the zero is written
-inline void ZeroDone(Marker& m) {
-    m.step = Step::Cycle1;
-    m.phase = Phase::Charge;
-    m.phase_started = false;
-    m.cutoffs = 0;
-    m.last_logged_remaining_mah = -1;
-}
-
-// the drain phase of a cycle is over (the Hub saw the cut-off and the console is dead with the charger in, or the user said yes)
-inline void DrainConfirmed(Marker& m) {
-    m.phase_started = false;
-    m.cutoffs = 0;
-    if (m.step == Step::Cycle1) {
-        m.step = Step::Cycle2;
-        m.phase = Phase::Charge;
-    } else if (m.step == Step::Cycle2) {
-        m.step = Step::Report;
-    }
-}
-
-inline void ReportSeen(Marker& m) { if (m.step == Step::Report) m.step = Step::Transfer; }
-inline void TransferDone(Marker& m) { if (m.step == Step::Transfer) m.step = Step::Finished; }
 
 // ---- the file --------------------------------------------------------------------------------------------------------------
 
@@ -190,17 +156,13 @@ inline auto Format(const Marker& m) -> std::string {
     std::string o;
     const auto kv = [&](const char* k, long long v) { o += std::string{k} + "=" + std::to_string(v) + '\n'; };
     kv("step", static_cast<int>(m.step));
-    kv("phase", static_cast<int>(m.phase));
-    kv("started", m.phase_started ? 1 : 0);
-    kv("time", m.phase_time);
-    kv("percent", m.phase_percent);
+    kv("started", m.drain_started ? 1 : 0);
+    kv("time", m.drain_time);
     kv("cutoffs", m.cutoffs);
     kv("brightness_before", m.brightness_before);
     kv("auto_before", m.auto_before ? 1 : 0);
     kv("last_set", m.last_set_brightness);
-    kv("x_mah", m.last_logged_remaining_mah);
     kv("boot", m.boot_time);
-    kv("zero_n", m.zero_n_mah);
     return o;
 }
 
@@ -214,25 +176,20 @@ inline auto Parse(std::string_view text) -> Marker {
         const auto eq = line.find('=');
         if (eq == std::string_view::npos) continue;
         const std::string key{line.substr(0, eq)};
-        long long v = 0;
         const std::string number{line.substr(eq + 1)};
         char* end = nullptr;
-        v = std::strtoll(number.c_str(), &end, 10);
+        const long long v = std::strtoll(number.c_str(), &end, 10);
         if (end == number.c_str()) {
             continue; // not a number: no exceptions on the console build
         }
-        if (key == "step" && v >= 1 && v <= 7) m.step = static_cast<Step>(v);
-        else if (key == "phase" && (v == 0 || v == 1)) m.phase = static_cast<Phase>(v);
-        else if (key == "started") m.phase_started = v != 0;
-        else if (key == "time") m.phase_time = v;
-        else if (key == "percent") m.phase_percent = static_cast<int>(v);
+        if (key == "step" && v >= 1 && v <= 6) m.step = static_cast<Step>(v);
+        else if (key == "started") m.drain_started = v != 0;
+        else if (key == "time") m.drain_time = v;
         else if (key == "cutoffs") m.cutoffs = static_cast<int>(v < 0 ? 0 : v);
         else if (key == "brightness_before") m.brightness_before = static_cast<int>(v);
         else if (key == "auto_before") m.auto_before = v != 0;
         else if (key == "last_set") m.last_set_brightness = static_cast<int>(v);
-        else if (key == "x_mah") m.last_logged_remaining_mah = static_cast<int>(v);
         else if (key == "boot") m.boot_time = v;
-        else if (key == "zero_n") m.zero_n_mah = static_cast<int>(v);
     }
     return m;
 }

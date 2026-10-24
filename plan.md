@@ -446,13 +446,16 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       the owner's Python script shows the block layout; (e) a "LiHV / LiPo" row from the CAL0 battery version (2 = LiHV,
       4.32 V) on the Battery page; expected full capacity of an enlarged cell 7500-8000 mAh; the reset must not ask for
       cycles (the SD copy keeps the count); see the doc.
-      (f) **Cutoff pipeline** (user, 2026-10-22): the gauge percent cannot be trusted (the console may cut off at 35 %, or show
-      0 % for an hour), so the real cut-off is the zero. A new entry Tools > "Battery calibration" opens a wizard (method, steps,
-      only the next step active): drain to the dead battery (maximum load and brightness, screensaver on Minus or after 3 min, the
-      stick lowers the brightness, every second logged to the SD, the user switches the console on again until it does not start),
-      charger in, switch on and open the Hub at once (no waiting time; the wizard warns that the off-and-on loop is part of the process and can be long, and that the console may need to lie on the charger before it starts), and the Hub sets that point as 0 % by itself (counter now minus the gauge's last logged value before the cut-off; no menu), two full cycles, a report with the gauge
-      percent before each cut-off. Load: maximum until the first cut-off, then after every restart the tail mode (auto-brightness off, brightness at the
-      minimum, minimal load); no 3.4 V switch (owner, 2026-10-23). The calibrated model reaches the other MMC by itself: at the next Hub start there it is applied (backup first) and a toast says so; no hop in the wizard. Full design in `docs/dev/BATTERY-CALIBRATION.md`, "Cutoff pipeline". Check the register for the zero first.
+      (f) **Calibration wizard** (user, 2026-10-22; logic corrected 2026-10-24): the gauge percent cannot be trusted (the console may
+      cut off at 35 %, or show 0 % for an hour). Tools > "Battery calibration" (and + on the Battery page) opens one wizard with the
+      pages of the guide and the logic of 0.14.111-163 (proven on a console): 1 reset to the factory model at 100 % (backup first),
+      2 and 3 two cycles (drain, then 100 % on the charger; a cycle counts when 90 % was drained by HOS's cycle total and the console
+      shows 100 %), 4 report, 5 transfer to the other MMC by a ledger. The drain: maximum load until the first cut-off, then after every
+      restart the tail mode (auto-brightness off, minimum brightness and load); the screensaver on Minus or after 3 min; a log line a
+      second. After a drain the console cut short the Hub offers "Align the charge to the voltage" (0.14.153/154). The first
+      version (0.14.193-202) drained first and set a "zero" (N - X) at the cut-off; that was dropped. Design: `docs/dev/BATTERY-CALIBRATION.md`;
+      the zero register research: `docs/dev/BATTERY-ZERO-REGISTER.md`. **[USER]** run it on a console; the guide (docs/site/en/battery-wizard)
+      still shows the 0.14.197 order and must be redrawn.
 
 - [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
       the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable

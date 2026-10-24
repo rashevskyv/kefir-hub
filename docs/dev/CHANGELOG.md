@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.203 — Calibration: reset first, the zero step removed, align after an interrupted drain back; cycles counted by the HOS cycle total as in 0.14.111-163
+The wizard (Tools > Battery calibration, and + on the Battery page: one wizard now) went back to the logic that worked on a console: step 1 resets the gauge to the factory model at 100 % (the old `RunReset`, backup first), steps 2 and 3 are two cycles (drain, then 100 % on the charger; a cycle counts when 90 % was discharged by HOS's cycle total, `wizard::Advance`, on the drain page, when the steps page opens and at the Hub's start), step 4 the report, step 5 the transfer. The cut-off pipeline of 0.14.193-202 drained first on calibration data that was already wrong and set a "zero" (N - X); that step, `ZeroAfterCutoff` and `LastDrainRemainingMah` are gone. `PollInterruptedDrain` no longer stays quiet during a calibration, so "Align the charge to the voltage" is offered again after a drain the console cut short. The marker (`calib.txt`) keeps only the report, the transfer, the user's brightness and the drain in progress (`on_stop` clears it when the user stops the drain). The old wizard page and its helpers are removed; Actions (back up, align, restore, match, battery type) are a row of the steps page. `battery_calib.cpp` is split (`battery_calib_report.cpp`: report, transfer, ledger).
+host tests: quick pass, doc labels 0 unknown, i18n deployment contract fails as before (262 keys untranslated in 24 languages) | nro: built | switch: pending (a full run: reset, two cycles, report; the guide still shows the 0.14.197 order)
+
 ## unreleased
 `BATTERY-ZERO-REGISTER.md`: "Zero by voltage" (the real cut-off voltage is the zero; V_empty of this console is 3.20 V) and the console experiment list. No code.
 `docs/dev/BATTERY-ZERO-REGISTER.md`: research on the register of the calibration zero (RemCapMIX 0x0F, then 0x05, 0x06), the guard conflict with `PlanAlign` and a console test plan. No code.

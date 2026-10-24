@@ -8,10 +8,9 @@
 
 #include <switch.h>
 #include <array>
+#include <functional>
 #include <optional>
 #include <string>
-
-namespace sphaira::ui { struct ProgressBox; }
 
 namespace sphaira::battery::detail {
 
@@ -51,8 +50,8 @@ auto CycleTotalNow() -> std::optional<u32>;
 // step 5: this MMC's copy takes the chip's model and the larger cycle count; records the match when both cycles are done.
 // `failed` gets the reason on an error. No popups: the hop to the other MMC runs it by itself.
 auto MatchNow(std::string& failed) -> Result;
-// the calibration's zero step: back up, write the factory model, save this MMC's copy, with the battery near empty at the
-// cut-off (the old wizard waits for a full battery first). `failed` names the step that did not stick.
-auto ResetAtCutoff(ui::ProgressBox* pbox, std::string& failed) -> Result;
+// the calibration's step 1: waits on the charger for 100 %, backs up, writes the factory model, saves this MMC's copy and
+// starts the wizard's state. `done(true)` when it was written; `done(false)` after a failure (a box said why) or a cancel.
+void RunReset(std::function<void(bool)> done);
 
 } // namespace sphaira::battery::detail

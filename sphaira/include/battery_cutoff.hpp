@@ -2,7 +2,6 @@
 
 // The pure rules of the battery cut-off calibration (docs/dev/BATTERY-CALIBRATION.md, "Cutoff pipeline"). No libnx: host-tested
 // by tests/test_battery_cutoff.cpp.
-//   - ZeroAfterCutoff : what to write as the gauge's remaining charge after a drain to the cut-off
 //   - LoadPlan        : max load first, minimal load for the last 0.2 V, latched
 //   - SystemId        : which system (sysMMC or one of several emuMMCs) the Hub runs in
 //   - Ledger          : where a calibration was made and where it was written
@@ -15,24 +14,6 @@
 #include <vector>
 
 namespace sphaira::battery::cutoff {
-
-// ---- the zero --------------------------------------------------------------------------------------------------------------
-
-struct Zero {
-    std::int32_t value_mah{}; // what to write as the remaining charge
-    bool fallback{};          // true: plain 0 (the gauge was reset, the log is lost, or the result would be negative)
-};
-
-// counter_now: the gauge's remaining charge read after the switch-on (it kept counting the minutes of charge).
-// last_logged: the last remaining charge in the log before the cut-off (the gauge's error: the real value was 0).
-inline auto ZeroAfterCutoff(std::optional<std::int32_t> counter_now, std::optional<std::int32_t> last_logged, bool gauge_reset) -> Zero {
-    if (gauge_reset || !counter_now || !last_logged) {
-        return {0, true};
-    }
-    const auto value = *counter_now - *last_logged;
-    // a gauge that reported too LITTLE before the cut-off (X below 0 does not happen, but N < X does after a reset it missed)
-    return value < 0 ? Zero{0, true} : Zero{value, false};
-}
 
 // ---- the load plan ---------------------------------------------------------------------------------------------------------
 

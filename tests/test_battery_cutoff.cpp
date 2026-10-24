@@ -8,14 +8,6 @@
 using namespace sphaira::battery::cutoff;
 
 int main() {
-    // the zero: the counter after the switch-on minus the gauge's last logged value
-    assert(ZeroAfterCutoff(900, 400, false).value_mah == 500 && !ZeroAfterCutoff(900, 400, false).fallback);
-    // fallbacks: a reset gauge, a lost log, a negative result all write plain 0
-    assert(ZeroAfterCutoff(900, 400, true).fallback && ZeroAfterCutoff(900, 400, true).value_mah == 0);
-    assert(ZeroAfterCutoff(900, std::nullopt, false).fallback);
-    assert(ZeroAfterCutoff(std::nullopt, 400, false).fallback);
-    assert(ZeroAfterCutoff(100, 400, false).fallback && ZeroAfterCutoff(100, 400, false).value_mah == 0);
-
     // the load plan: max first, min from 3400 mV, and it stays min when the voltage jumps back up
     LoadPlan plan;
     assert(NextLoad(plan, 3900, true) == Load::Max);
