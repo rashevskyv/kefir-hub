@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.202 — Battery drain split into four files (no behaviour change)
+`battery_drain.cpp` (1064 lines) is now `battery_drain.cpp` (the drain page: load, steps, brightness), `battery_drain_sample.cpp` (calibration log and live samples), `battery_drain_draw.cpp` (charts, drain and charge layouts, screensaver readout) and the class header `battery_drain_menu.hpp`. Every file is under 600 lines.
+host tests: pass | nro: built | switch: pending (the drain page must look and behave as in 0.14.201)
+
 ## v0.14.201 — Calibration: the transfer to the other MMC and its ledger (step 2 of the port)
 Step 6 of the guide: after the report the calibration is written into a ledger on the SD (`/config/kefir/battery/ledger.txt`: the system it was made in, a number, the battery model, whether it was good) and the transfer page shows who has it. At the Hub's start in another system (sysMMC, or another emuMMC: the id is the folder of a file-based one or the start sector of a partition one) that has an older number and the same battery model, the Hub writes the calibration there by itself (the old Match: this MMC's copy takes the chip's model, a backup first), notes it in the ledger and shows the toast "Battery calibration was transferred from ... to ...". A failure shows its reason and the marker stays. `battery_cutoff.hpp`: `SystemName`.
 host tests: pass | nro: built | switch: pending (needs a calibrated battery and a second system)
