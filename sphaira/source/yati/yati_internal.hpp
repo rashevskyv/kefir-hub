@@ -361,6 +361,7 @@ struct Yati {
     Result ImportTickets(std::span<TikCollection> tickets);
     Result RemoveInstalledNcas(const CnmtCollection& cnmt);
     Result RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_version_num);
+    Result ResetPatchLaunchRequiredVersion(u64 app_id);
 
 
 // private:

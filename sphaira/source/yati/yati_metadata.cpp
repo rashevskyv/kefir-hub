@@ -463,4 +463,24 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
     R_SUCCEED();
 }
 
+Result Yati::ResetPatchLaunchRequiredVersion(u64 app_id) {
+    if (hosversionBefore(6,0,0)) {
+        R_SUCCEED();
+    }
+
+    R_TRY(avmInitialize());
+    ON_SCOPE_EXIT(avmExit());
+
+    // Reset after the full metadata batch; later DLC/base records can raise this requirement again.
+    R_TRY(avmPushLaunchVersion(app_id, 0));
+    u32 launch_required_version{};
+    const auto rc = avmGetLaunchRequiredVersion(app_id, &launch_required_version);
+    if (R_SUCCEEDED(rc)) {
+        log_write("reset launch-required version for patch %016lX: %u\n", app_id, launch_required_version);
+    } else {
+        log_write("could not read back launch-required version for patch %016lX: 0x%X\n", app_id, R_VALUE(rc));
+    }
+    R_SUCCEED();
+}
+
 } // namespace sphaira::yati::detail

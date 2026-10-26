@@ -8,6 +8,7 @@
 #include "yati/nx/ncz.hpp"
 #include "yati/nx/nca.hpp"
 #include "yati/nx/ncm.hpp"
+#include "yati/deferred_patch_launch_resets.hpp"
 #include "yati/nx/ns.hpp"
 #include "yati/nx/es.hpp"
 #include "yati/nx/keys.hpp"
@@ -317,6 +318,19 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
         }
     }
 
+    DeferredPatchLaunchResets patch_launch_resets{};
+    const auto reset_patch_versions = [&] {
+        return patch_launch_resets.Apply([&](u64 app_id) { return yati->ResetPatchLaunchRequiredVersion(app_id); });
+    };
+    bool patch_resets_finalized = false;
+    ON_SCOPE_EXIT(
+        if (!patch_resets_finalized) {
+            const auto rc = reset_patch_versions();
+            if (R_FAILED(rc)) {
+                log_write("[YATI] deferred patch launch-version reset failed during install exit: 0x%X\n", R_VALUE(rc));
+            }
+        }
+    );
     for (auto& cnmt : cnmts) {
         ON_SCOPE_EXIT(
             ncmContentStorageDeletePlaceHolder(std::addressof(yati->cs), std::addressof(cnmt.placeholder_id));
@@ -346,7 +360,13 @@ Result InstallInternal(ui::InstallProgress* pbox, source::Base* source, const co
         R_TRY(yati->ImportTickets(tickets));
         R_TRY(yati->RemoveInstalledNcas(cnmt));
         R_TRY(yati->RegisterNcasAndPushRecord(cnmt, latest_version_num));
+        if (cnmt.key.type == NcmContentMetaType_Patch) {
+            patch_launch_resets.Add(ncm::GetAppId(cnmt.key));
+        }
     }
+
+    patch_resets_finalized = true;
+    R_TRY(reset_patch_versions());
 
     ApplyLanguagePack(language_pack, cnmts);
     ApplyInstallPatches(cnmts);
@@ -421,6 +441,19 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
         }
     }
 
+    DeferredPatchLaunchResets patch_launch_resets{};
+    const auto reset_patch_versions = [&] {
+        return patch_launch_resets.Apply([&](u64 app_id) { return yati->ResetPatchLaunchRequiredVersion(app_id); });
+    };
+    bool patch_resets_finalized = false;
+    ON_SCOPE_EXIT(
+        if (!patch_resets_finalized) {
+            const auto rc = reset_patch_versions();
+            if (R_FAILED(rc)) {
+                log_write("[YATI] deferred patch launch-version reset failed during stream exit: 0x%X\n", R_VALUE(rc));
+            }
+        }
+    );
     for (auto& cnmt : cnmts) {
         // copy nca structs into cnmt.
         for (auto& cnmt_nca : cnmt.ncas) {
@@ -448,7 +481,13 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
         R_TRY(yati->ImportTickets(tickets));
         R_TRY(yati->RemoveInstalledNcas(cnmt));
         R_TRY(yati->RegisterNcasAndPushRecord(cnmt, latest_version_num));
+        if (cnmt.key.type == NcmContentMetaType_Patch) {
+            patch_launch_resets.Add(ncm::GetAppId(cnmt.key));
+        }
     }
+
+    patch_resets_finalized = true;
+    R_TRY(reset_patch_versions());
 
     ApplyLanguagePack(language_pack, cnmts);
     ApplyInstallPatches(cnmts);

@@ -118,6 +118,13 @@ MTP, FTP and web-browser installs always import the tickets.
 
 ## Problems {#problems}
 
+<!-- draft
+- After all content records in a package are registered successfully, Kefir Hub automatically resets the base game's local launch-required version to zero for each installed game update on HOS 6.0.0 or later. No option or manual action is needed.
+- This applies to normal and streamed installs. Skipped updates are not queued. If a later content record fails or is cancelled, already registered updates receive a best-effort reset; the original installation error remains visible.
+- Package versions stay unchanged. This does not block Nintendo's later online version checks or remove requirements imposed by DLC, saves or system firmware.
+- A failure of the reset is reported as an installation error; the already registered content remains installed. Readback values and readback errors are logged for console verification.
+-->
+
 After an install from any source that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows a box listing those titles as "Installed without the base game". Select [[Keep]] to leave them or [[Delete]] to remove them, noting that saves are kept. Keep them if the base game is on a game card or if you plan to install the base game afterwards. This box also appears for the DBI and PC queue.
 
 **"The title was installed successfully, but cannot run on this console yet".** The game needs newer system firmware than the console has. Update the firmware and Kefir (see [Updater](../updater.md)). You do not need to install the game again.

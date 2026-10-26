@@ -48,7 +48,11 @@
 | 34 | talking head | — | Якщо гра встановилася, але консоль каже, що запустити її поки не можна, грі потрібна новіша прошивка. Оновіть прошивку й Kefir. Перевстановлювати гру не потрібно. | If a game installed but the console says it cannot be started yet, the game needs newer firmware. Update the firmware and Kefir. You do not need to reinstall the game. |
 | 35 | index-tools-tab | — | Детальніше читайте на сторінці «Встановлення ігор» у документації. Там є окремі сторінки для карти пам'яті, USB і MTP. | For more, read the Installing games page in the documentation. It has separate pages for the microSD card, USB and MTP. |
 
+| 36 | talking head | After a game update install; no new Hub screen | Після встановлення оновлення Kefir Hub автоматично скидає збережену вимогу версії для запуску гри. Пропущені пакети її не змінюють. Це не блокує майбутні перевірки Nintendo через інтернет. | After installing a game update, Kefir Hub automatically resets the stored launch-version requirement. Skipped packages leave it unchanged. This does not block later online version checks by Nintendo. |
+
 ## Re-record
+
+- Add scene 36 voiceover about the automatic launch-version reset after a game update. No Hub screen changes; verify the game's HOME launch on a console.
 
 - USB scene 25: keep the session summary open while DBI Backend Qt stops its server and enables mode switching. **B** closes the finished USB session. Open PC Install (USB) and start the PC server for another installation.
 - UK voiceover addition: «Після завершення черги сервер на ПК вимикається. Підсумок на консолі залишається відкритим. B закриває завершений сеанс».

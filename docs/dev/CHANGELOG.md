@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.206 — Automatically reset the launch-required version after game updates
+Normal and streamed installs reset each successfully registered update's base application through AVM after all package records, so later DLC/base records cannot undo the reset. Early failure/cancellation attempts the reset for already registered updates and preserves the original error. Package versions stay unchanged; later online checks remain possible.
+host tests: quick pass; full suite blocked by existing 262 missing translation keys in 24 languages | docs: en/uk built, 0 unknown labels, guide links 59/59 | nro: not built | switch: pending (HOME launch, downgrade, update+DLC package, skip/cancel/partial failure; AVM readback in log)
+
 ## v0.14.205 — End the PC USB session before waiting on the installation summary
 After final package/storage results, DBI/Tinfoil sends its finish command once; Summary Back closes that session. DBI Backend Qt 2.9.15 keeps the worker until USB is released and prevents immediate auto-restart. Existing Goldleaf and local-file behavior stays unchanged.
 host tests: quick pass; full suite blocked by the existing 262 missing translation keys in 24 languages | backend: 134 pytest pass, Sol review approved | docs: en/uk built, 0 unknown labels | nro: not built | switch: pending (summary open, server off, change mode, cancel, start a new session)
