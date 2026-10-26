@@ -48,6 +48,12 @@
 | 34 | talking head | — | Якщо гра встановилася, але консоль каже, що запустити її поки не можна, грі потрібна новіша прошивка. Оновіть прошивку й Kefir. Перевстановлювати гру не потрібно. | If a game installed but the console says it cannot be started yet, the game needs newer firmware. Update the firmware and Kefir. You do not need to reinstall the game. |
 | 35 | index-tools-tab | — | Детальніше читайте на сторінці «Встановлення ігор» у документації. Там є окремі сторінки для карти пам'яті, USB і MTP. | For more, read the Installing games page in the documentation. It has separate pages for the microSD card, USB and MTP. |
 
+## Re-record
+
+- USB scene 25: keep the session summary open while DBI Backend Qt stops its server and enables mode switching. **B** closes the finished USB session. Open PC Install (USB) and start the PC server for another installation.
+- UK voiceover addition: «Після завершення черги сервер на ПК вимикається. Підсумок на консолі залишається відкритим. B закриває завершений сеанс».
+- EN voiceover addition: “After the queue finishes, the PC server stops. The console keeps the summary open. B closes the finished session.”
+
 ## Open questions
 - install/index.md: the ban warning dialog (scene 6) and the option screen (scene 5) are not recorded yet. Record them on sysMMC; the old enable footage is obsolete. (TODO(verify))
 - install/usb.md: does Windows need a USB driver (for example libusbK via Zadig) for DBI Backend / ns-usbloader? Not mentioned in the voiceover. (TODO(verify))

@@ -56,6 +56,11 @@ void Menu::UpdateActions() {
         SetAction(Button::START, Action{"Options"_i18n, [this]() { DisplayQueueOptions(); }});
     } else if (state == State::Summary && !m_session_failed) {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
+            if (m_usb_session_finished) {
+                m_should_exit = true;
+                SetPop();
+                return;
+            }
             // the queue list is there to send more from the PC: with the cable out (or the PC not
             // talking to the console) nothing can come, so Back closes the session instead.
             UsbState usb_state{UsbState_Detached};

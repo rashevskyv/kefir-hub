@@ -44,6 +44,14 @@ void Menu::ThreadFunction() {
         m_state = State::Cancelled;
         m_actions_dirty = true;
     };
+    const auto finish_usb_session = [this](u64 timeout) {
+        if (!m_usb_source || m_usb_source->GetProtocol() == yati::source::UsbProtocol::Goldleaf) return;
+        if (m_usb_session_finished.exchange(true)) return;
+        const auto rc = m_usb_source->Finished(timeout);
+        if (R_FAILED(rc)) {
+            log_write("[DBI] Failed to finish USB session: 0x%08X\n", rc);
+        }
+    };
     ON_SCOPE_EXIT({
         if (m_usb_source) {
             m_usb_source->SetPostReadHook(nullptr);
@@ -83,6 +91,7 @@ void Menu::ThreadFunction() {
             if (R_FAILED(list_rc)) continue;
         }
 
+        m_usb_session_finished = false;
                 AddLog(std::string{"Connected: "_i18n} + yati::source::GetUsbProtocolName(m_usb_source->GetProtocol()), LogKind::Event);
         m_last_acked_revision = 0;
         if (m_usb_source && m_usb_source->HasSelectionSync()) {
@@ -133,7 +142,7 @@ void Menu::ThreadFunction() {
         }
 
         if (m_cancel_requested || GetToken().stop_requested()) {
-            m_usb_source->Finished(FINISHED_TIMEOUT);
+            finish_usb_session(FINISHED_TIMEOUT_CANCELLED);
             m_state = State::Cancelled;
             m_actions_dirty = true;
             return;
@@ -390,6 +399,11 @@ void Menu::ThreadFunction() {
             for (const auto& name : rejected_names) {
                 AddLog("Not installed: "_i18n + name + " — " + "not enough free space"_i18n, LogKind::Error);
             }
+
+            if (!m_session_failed) {
+                finish_usb_session(m_cancel_requested ? FINISHED_TIMEOUT_CANCELLED : FINISHED_TIMEOUT);
+            }
+
             if (m_cancel_requested) {
                 AddLog("Session cancelled; completed installs were kept."_i18n, LogKind::Warning);
                 m_state = State::Cancelled;
@@ -412,7 +426,7 @@ void Menu::ThreadFunction() {
         }
 
         if (!m_session_failed) {
-            m_usb_source->Finished(m_cancel_requested ? FINISHED_TIMEOUT_CANCELLED : FINISHED_TIMEOUT);
+            finish_usb_session(m_cancel_requested ? FINISHED_TIMEOUT_CANCELLED : FINISHED_TIMEOUT);
         }
         if (m_cancel_requested) {
             m_state = State::Cancelled;

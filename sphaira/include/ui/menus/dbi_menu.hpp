@@ -308,6 +308,7 @@ private:
     std::string m_sent_plan_digest{};
 
     std::unique_ptr<yati::source::Usb> m_usb_source{};
+    std::atomic_bool m_usb_session_finished{false};
     // file list the probe received; the first loop uses it instead of waiting.
     std::vector<std::string> m_handover_names{};
     fs::Fs* m_local_fs{};

@@ -33,7 +33,8 @@ The same item is in the **+** menu of the Homebrew tab.
 7. Wait for the [[Session summary]].
 
 <!-- draft
-- after the [[Session summary]], **B** ([[Back]]) goes back to the queue list only while the PC is connected (cable in and the PC app talking to the console); with no PC it closes the session at once
+- when the USB queue finishes, Kefir Hub ends the PC session before waiting on [[Session summary]]; DBI Backend Qt can stop its server and switch modes while this summary remains open
+- after the USB session ends, **B** ([[Back]]) closes the screen; another USB installation requires opening [[PC Install (USB)]] again and starting the PC server
 - leaving the session no longer freezes the screen for seconds
 -->
 
