@@ -81,6 +81,9 @@ struct DrainMenu final : ui::menu::MenuBase {
     // once a second: the time on battery (or on the charger), a line in the log, and the end of a charge phase
     void CalibTick();
 
+    // the reset charge: the battery is full, ask once whether to reset the gauge (A asks again)
+    void AskReset();
+
     auto CalibTitle() const -> std::string;
 
     auto CalibStatus() const -> std::string;
@@ -136,6 +139,7 @@ private:
     u64 m_run_s{};          // seconds of this run
     s64 m_calib_last{};
     bool m_full_seen{};     // a charge phase saw 100 % on the charger
+    bool m_reset_asked{};   // the reset charge already asked "reset now?"
     FILE* m_log{};
     TimeStamp m_log_commit{};
     ui::Screensaver m_saver{};

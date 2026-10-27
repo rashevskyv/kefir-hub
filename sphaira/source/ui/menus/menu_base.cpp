@@ -19,9 +19,45 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstring>
 #include <sys/statvfs.h>
 
 namespace {
+// newlib's localtime_r reads the zone once at process start. The clock in the header must follow
+// a zone changed in System Settings while the Hub is open, so ask the time service every refresh.
+// The rule (16 KiB) is reloaded only when the location name changes.
+void LocalTime(time_t t, tm& out) {
+    static TimeZoneRule rule;
+    static TimeLocationName loaded_name;
+    static bool loaded = false;
+
+    TimeLocationName name{};
+    if (R_SUCCEEDED(timeGetDeviceLocationName(&name)) &&
+        (!loaded || std::memcmp(&name, &loaded_name, sizeof(name)))) {
+        if (R_SUCCEEDED(timeLoadTimeZoneRule(&name, &rule))) {
+            loaded_name = name;
+            loaded = true;
+        }
+    }
+
+    TimeCalendarTime cal{};
+    TimeCalendarAdditionalInfo info{};
+    if (!loaded || R_FAILED(timeToCalendarTime(&rule, static_cast<u64>(t), &cal, &info))) {
+        localtime_r(&t, &out);
+        return;
+    }
+    out = {};
+    out.tm_year = cal.year - 1900;
+    out.tm_mon = cal.month - 1;
+    out.tm_mday = cal.day;
+    out.tm_hour = cal.hour;
+    out.tm_min = cal.minute;
+    out.tm_sec = cal.second;
+    out.tm_wday = static_cast<int>(info.wday);
+    out.tm_yday = static_cast<int>(info.yday);
+    out.tm_isdst = static_cast<int>(info.DST);
+}
+
 NVGcolor ParseColor(const std::string& str, NVGcolor fallback) {
     if (str.empty()) return fallback;
     std::string_view val = str;
@@ -91,7 +127,7 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
 #endif
 
         const auto t = std::time(NULL) + ntp::GetDisplayOffset();
-        localtime_r(&t, &data.tm);
+        LocalTime(t, data.tm);
         psmGetBatteryChargePercentage(&data.battery_percetange);
         psmGetChargerType(&data.charger_type);
         nifmGetInternetConnectionStatus(&data.type, &data.strength, &data.status);

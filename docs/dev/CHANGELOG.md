@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.207 — Battery reset charges by itself; locked steps greyed; clock follows time zone; hbmenu icon re-pointed
+Reset step opens the charge page at once (counts when the charger is in, asks "Reset now?" at 100 %); locked steps are dimmed captions, "Remembered" row removed; header clock re-reads the time zone; turning on "Replace hbmenu" reinstalls the HOME icon with /hbmenu.nro as target.
+host tests: pass (quick) | nro: not built | switch: pending (reset flow, time zone change with the Hub open, hbmenu replace) | docs/guide drafts: pending
+
 ## v0.14.206 — Automatically reset the launch-required version after game updates
 Normal and streamed installs reset each successfully registered update's base application through AVM after all package records, so later DLC/base records cannot undo the reset. Early failure/cancellation attempts the reset for already registered updates and preserves the original error. Package versions stay unchanged; later online checks remain possible.
 host tests: quick pass; full suite blocked by existing 262 missing translation keys in 24 languages | docs: en/uk built, 0 unknown labels, guide links 59/59 | nro: not built | switch: pending (HOME launch, downgrade, update+DLC package, skip/cancel/partial failure; AVM readback in log)

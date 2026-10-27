@@ -244,26 +244,22 @@ void ShowResetDone() {
         });
 }
 
-void ShowResetPage() {
-    const auto back = [](cu::Page& p) { p.SetPop(); ShowSteps(); };
-    App::Push<cu::Page>("Reset the gauge"_i18n, StepLabel(1),
-        std::vector<cu::Line>{
-            cu::Item("First the Hub writes the factory battery model into the gauge. What the gauge learned before is dropped: it may be wrong, for example after the console switched off at 35 %."_i18n),
-            cu::Item("The battery must be full for this, so the model starts from a known point. The Hub waits on the charger until it is full. A backup of the gauge is made first."_i18n),
-            cu::Check("Charger is plugged in."_i18n, "Plug the charger in."_i18n, []() { return ChargerIn(); }),
-        },
-        "Reset"_i18n, [](cu::Page& p) {
-            if (!ChargerIn()) {
-                App::Notify("Plug the charger in."_i18n);
-                return;
+// the charge page counts from the moment the charger is in; when the battery is full it asks once, then resets
+void StartResetRun() {
+    CalibRun run;
+    run.charge = true;
+    run.reset = true;
+    run.step = 0;
+    run.on_reset = []() {
+        detail::RunReset([](bool ok) {
+            if (ok) {
+                ShowResetDone();
+            } else {
+                ShowSteps();
             }
-            p.SetPop();
-            detail::RunReset([](bool ok) {
-                if (ok) {
-                    ShowResetDone();
-                }
-            });
-        }, back);
+        });
+    };
+    StartCalibRun(std::move(run));
 }
 
 // ---- steps 2 and 3: a cycle -----------------------------------------------------------------------------------------------
@@ -397,7 +393,7 @@ void ShowSteps() {
         std::function<void()> action;
     };
     std::vector<Row> rows;
-    rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: charge to 100 %, then reset"_i18n : std::string{}, at(Step::Reset), open(ShowResetPage)});
+    rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: charge to 100 %, then reset"_i18n : std::string{}, at(Step::Reset), open(StartResetRun)});
     rows.push_back({"2. Cycle 1: drain, then charge"_i18n, m->step == Step::Cycle1 ? CycleText(*m, 1) : std::string{}, at(Step::Cycle1), open(ShowCyclePage)});
     rows.push_back({"3. Cycle 2: drain, then charge"_i18n, m->step == Step::Cycle2 ? CycleText(*m, 2) : std::string{}, at(Step::Cycle2), open(ShowCyclePage)});
     rows.push_back({"4. Report"_i18n, {}, static_cast<int>(m->step) >= static_cast<int>(Step::Transfer) ? Mark::Done : m->step == Step::Report ? Mark::Active : Mark::Locked,
@@ -407,15 +403,18 @@ void ShowSteps() {
 
     std::vector<SettingsItem> items;
     for (auto& row : rows) {
+        // a locked row is a dimmed caption: the cursor steps over it
+        if (row.mark == Mark::Locked) {
+            items.push_back(SettingsItem{row.label, {}, {}, {}, SettingsItemKind::Header});
+            continue;
+        }
         const auto text = StateText(row.mark) + (row.detail.empty() ? std::string{} : ": " + row.detail);
-        // an active row acts; the report and the transfer also open once they are done; locked rows and finished steps do nothing
+        // an active row acts; the report and the transfer also open once they are done; finished steps do nothing
         const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("4.") || row.label.starts_with("5.")));
         items.push_back(SettingsItem{row.label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal});
     }
     items.push_back(SettingsItem{"Actions"_i18n,
         "Back up the chip, align the charge to the voltage, restore from a backup, match the other MMC, battery type."_i18n, {}, OpenActions, SettingsItemKind::Normal});
-    items.push_back(SettingsItem{"Remembered"_i18n,
-        "The calibration is remembered on the SD card: you can close the Hub and use the console between the steps."_i18n, {}, {}, SettingsItemKind::Normal});
     auto menu = std::make_unique<SystemToolsMenu>("Battery calibration"_i18n, std::move(items));
     *self = menu.get();
     App::Push(std::move(menu));

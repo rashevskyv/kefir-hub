@@ -14,6 +14,7 @@
 #include "nacp_util.hpp"
 #include "image.hpp"
 #include "owo.hpp"
+#include "forwarder_auto_install.hpp"
 #include <minIni.h>
 #include <switch.h>
 #include <cstring>
@@ -376,7 +377,20 @@ void App::SetAutoUpdateEnable(bool enable) {
 void App::SetReplaceHbmenuEnable(bool enable) {
     if (App::GetReplaceHbmenuEnable() != enable) {
         g_app->m_replace_hbmenu.Set(enable);
-        if (!enable) {
+        if (enable) {
+            // the HOME icon of Kefir Hub keeps the path it was installed with (this executable or
+            // an old copy). Point it at /hbmenu.nro now; the file itself is replaced on exit.
+            App::Push<ui::ProgressBox>(0, "Replace hbmenu on exit"_i18n, "", [](auto pbox) -> Result {
+                if (!forwarder_auto::PointHubForwarderAtHbmenu()) {
+                    R_THROW(Result_FsInvalidType);
+                }
+                R_SUCCEED();
+            }, [](Result rc){
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Failed to update the Kefir Hub icon"_i18n);
+                }
+            });
+        } else {
             // check we have already replaced hbmenu with sphaira
             NacpStruct hbmenu_nacp{};
             if (R_SUCCEEDED(nro_get_nacp("/hbmenu.nro", hbmenu_nacp))) {

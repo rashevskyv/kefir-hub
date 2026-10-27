@@ -45,6 +45,9 @@ struct CalibRun {
     int step{1};   // the cycle (1 or 2) this run belongs to: it goes into every log line
     // charge only: the charger came out at 100 % (the cycle's charge phase is done)
     std::function<void()> on_charge_done;
+    // charge only, the reset (step 1): at 100 % on the charger the page asks once, and on yes it closes and calls on_reset
+    bool reset{};
+    std::function<void()> on_reset;
     // drain only: the user stopped it on purpose (B, Stop)
     std::function<void()> on_stop;
 };

@@ -394,6 +394,10 @@ void DrainMenu::CalibTick() {
     if (m_calib->charge && m_charger && m_pct >= 100) {
         m_full_seen = true;
     }
+    if (m_calib->reset && m_charger && m_pct >= 100 && !m_reset_asked) {
+        AskReset();
+        return;
+    }
     // the cycle is counted (full after enough drained) and the charger came out: the Hub goes on to the next drain by itself
     const bool counted = m_calib->charge ? m_full_seen : m_step == wizard::DrainStep::CycleCounted;
     if (counted && !m_charger && m_calib->on_charge_done) {
@@ -404,11 +408,41 @@ void DrainMenu::CalibTick() {
     }
 }
 
+void DrainMenu::AskReset() {
+    m_reset_asked = true;
+    const auto ask = [this]() {
+        App::Push<ui::OptionBox>("The battery is full. Reset the gauge now? A backup of the gauge is made first."_i18n,
+            "Not now"_i18n, "Reset"_i18n, 1, [this](auto op) {
+                if (op && *op == 1) {
+                    const auto go = std::move(m_calib->on_reset);
+                    SetPop();
+                    if (go) {
+                        go();
+                    }
+                }
+            });
+    };
+    SetAction(Button::A, Action{"Reset"_i18n, ask});
+    ask();
+}
+
 auto DrainMenu::CalibTitle() const -> std::string {
+    if (m_calib->reset) {
+        return "Reset the gauge"_i18n;
+    }
     return m_calib->charge ? "Charge to 100 %"_i18n : m_calib->tail ? "Drain after the cut-off"_i18n : "Drain to the cut-off"_i18n;
 }
 
 auto DrainMenu::CalibStatus() const -> std::string {
+    if (m_calib->reset) {
+        if (!m_charger) {
+            return "Plug the charger in. The Hub then charges the battery to 100 % and asks whether to reset the gauge."_i18n;
+        }
+        if (m_pct >= 100) {
+            return "The battery is full. Press A to reset the gauge."_i18n;
+        }
+        return "Charging to 100 %. Then the Hub asks whether to reset the gauge: it writes the factory battery model into it. Your games and saves are not touched."_i18n;
+    }
     if (m_calib->charge) {
         if (!m_charger) {
             return "The charger is out: the charge is paused. Plug it in to go on."_i18n;
