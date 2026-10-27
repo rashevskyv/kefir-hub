@@ -336,6 +336,21 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
         return;
     }
 
+    if (item.disabled) {
+        // same layout as a live row, in the dimmed colour
+        const auto dim = nvgTransRGBAf(theme->GetColour(ThemeEntryID_TEXT_INFO), 0.55f);
+        const float split = v.x + v.w * 0.36f;
+        nvgSave(vg);
+        nvgIntersectScissor(vg, v.x, v.y, split - v.x - 10.f, v.h);
+        gfx::drawText(vg, v.x + 24.f, mid_y, 19.f, dim, item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgRestore(vg);
+        nvgSave(vg);
+        nvgIntersectScissor(vg, split, v.y, v.x + v.w - 20.f - split, v.h);
+        gfx::drawText(vg, split, mid_y, 15.f, dim, item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgRestore(vg);
+        return;
+    }
+
     if (item.marked || selected) {
         gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
     }
@@ -380,7 +395,7 @@ void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
         SetIndex(target + 1); // first item under the caption (ResolveItemIndex skips captions anyway)
     }
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
-        if (touch && i < static_cast<s64>(m_items.size()) && m_items[i].kind == settings::SettingsItemKind::Header) {
+        if (touch && i < static_cast<s64>(m_items.size()) && (m_items[i].kind == settings::SettingsItemKind::Header || m_items[i].disabled)) {
             return;
         }
         if (touch && m_index == i) {

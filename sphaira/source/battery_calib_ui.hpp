@@ -17,6 +17,81 @@
 
 namespace sphaira::battery::calib_ui {
 
+// A check mark drawn as a path: the Switch font has no glyph for U+2713 (it shows an empty box).
+inline void DrawTick(NVGcontext* vg, float x, float y, float size, NVGcolor colour) {
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, x + size * 0.08f, y + size * 0.55f);
+    nvgLineTo(vg, x + size * 0.38f, y + size * 0.85f);
+    nvgLineTo(vg, x + size * 0.92f, y + size * 0.18f);
+    nvgStrokeColor(vg, colour);
+    nvgStrokeWidth(vg, size * 0.13f);
+    nvgLineCap(vg, NVG_ROUND);
+    nvgLineJoin(vg, NVG_ROUND);
+    nvgStroke(vg);
+}
+
+// Line breaks for a text box: a word of one or two letters ("у", "в", "до") stays with the word after it, so no line ends
+// with a lone preposition. The result holds the breaks as '\n'; draw it with a box a little wider than `width`.
+inline auto WrapText(NVGcontext* vg, float size, float width, const std::string& text) -> std::string {
+    nvgFontSize(vg, size);
+    const auto measure = [vg](const std::string& s) {
+        float b[4]{};
+        nvgTextBounds(vg, 0, 0, s.c_str(), nullptr, b);
+        return b[2] - b[0];
+    };
+    const auto letters = [](const std::string& w) {
+        size_t n = 0;
+        for (const unsigned char c : w) {
+            n += (c & 0xC0) != 0x80;
+        }
+        return n;
+    };
+    std::string out;
+    size_t pos = 0;
+    while (pos <= text.size()) {
+        auto end = text.find('\n', pos);
+        if (end == std::string::npos) {
+            end = text.size();
+        }
+        std::vector<std::string> words;
+        for (size_t i = pos; i < end;) {
+            auto sp = text.find(' ', i);
+            if (sp == std::string::npos || sp > end) {
+                sp = end;
+            }
+            if (sp > i) {
+                words.push_back(text.substr(i, sp - i));
+            }
+            i = sp + 1;
+        }
+        std::string line;
+        for (size_t i = 0; i < words.size(); i++) {
+            auto unit = words[i];
+            while (letters(words[i]) <= 2 && i + 1 < words.size()) {
+                unit += " " + words[++i];
+            }
+            const auto cand = line.empty() ? unit : line + " " + unit;
+            if (!line.empty() && measure(cand) > width) {
+                out += line + "\n";
+                line = unit;
+            } else {
+                line = cand;
+            }
+        }
+        out += line;
+        if (end < text.size()) {
+            out += "\n";
+        }
+        pos = end + 1;
+    }
+    return out;
+}
+
+// text box with the breaks of WrapText
+inline void DrawWrapped(NVGcontext* vg, float x, float y, float size, float width, NVGcolor colour, const std::string& text) {
+    ui::gfx::drawTextBox(vg, x, y, size, width + 40.f, colour, WrapText(vg, size, width, text).c_str());
+}
+
 struct Line {
     enum class Kind { Head, Para, Item, Warn, Ok, Dim, Check, Row, Boxes };
     Kind kind{Kind::Para};
@@ -43,8 +118,12 @@ struct Page final : ui::menu::MenuBase {
     using Act = std::function<void(Page&)>;
 
     // a_label empty: no action on A. on_b empty: B just goes back. The actions get the page, so they can replace it.
-    Page(const std::string& title, const std::string& sub, std::vector<Line> lines, const std::string& a_label, Act on_a, Act on_b = {})
-        : MenuBase{title, ui::menu::MenuFlag_None}, m_lines{std::move(lines)}, m_on_a{std::move(on_a)}, m_on_b{std::move(on_b)} {
+    // waiting: true while the page waits for the user (the charger still in, or still out); when it turns false the page
+    // does what A does, so the next step starts by itself.
+    Page(const std::string& title, const std::string& sub, std::vector<Line> lines, const std::string& a_label, Act on_a, Act on_b = {},
+         std::function<bool()> waiting = {})
+        : MenuBase{title, ui::menu::MenuFlag_None}, m_lines{std::move(lines)}, m_on_a{std::move(on_a)}, m_on_b{std::move(on_b)},
+          m_waiting{std::move(waiting)} {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
             if (m_on_b) {
                 m_on_b(*this);
@@ -76,6 +155,15 @@ struct Page final : ui::menu::MenuBase {
                     m_state[i] = m_lines[i].done();
                 }
             }
+            if (m_waiting) {
+                const bool waiting = m_waiting();
+                const bool fire = m_was_waiting && !waiting;
+                m_was_waiting = waiting;
+                if (fire && m_on_a) {
+                    m_on_a(*this);
+                    return;
+                }
+            }
         }
     }
 
@@ -89,9 +177,10 @@ struct Page final : ui::menu::MenuBase {
         float y = 118.f;
         const auto box_height = [&](const std::string& s, float size, float width) {
             float b[4]{};
+            const auto wrapped = WrapText(vg, size, width, s);
             nvgFontSize(vg, size);
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-            nvgTextBoxBounds(vg, 0, 0, width, s.c_str(), nullptr, b);
+            nvgTextBoxBounds(vg, 0, 0, width + 40.f, wrapped.c_str(), nullptr, b);
             return b[3] - b[1];
         };
         for (size_t i = 0; i < m_lines.size(); i++) {
@@ -112,13 +201,16 @@ struct Page final : ui::menu::MenuBase {
                     if (bullet) {
                         ui::gfx::drawTextArgs(vg, X, y, 21.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour, "%s", "•");
                     }
-                    ui::gfx::drawTextBox(vg, x, y, 21.f, W - (x - X), colour, l.text.c_str());
+                    DrawWrapped(vg, x, y, 21.f, W - (x - X), colour, l.text);
                     y += box_height(l.text, 21.f, W - (x - X)) + 10.f;
                     break;
                 }
                 case Line::Kind::Check: {
                     const bool ok = i < m_state.size() && m_state[i];
-                    ui::gfx::drawTextArgs(vg, X, y, 23.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, ok ? good : warn, "%s%s", ok ? "✓ " : "", (ok ? l.text : l.no).c_str());
+                    if (ok) {
+                        DrawTick(vg, X, y + 2.f, 22.f, good);
+                    }
+                    ui::gfx::drawTextArgs(vg, ok ? X + 32.f : X, y, 23.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, ok ? good : warn, "%s", (ok ? l.text : l.no).c_str());
                     y += 38.f;
                     break;
                 }
@@ -153,6 +245,8 @@ private:
     std::vector<bool> m_state;
     TimeStamp m_poll{};
     bool m_polled{};
+    std::function<bool()> m_waiting;
+    bool m_was_waiting{};
 };
 
 } // namespace sphaira::battery::calib_ui

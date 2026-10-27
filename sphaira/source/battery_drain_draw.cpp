@@ -1,9 +1,11 @@
 #include "battery_drain_menu.hpp"
+#include "battery_calib_ui.hpp"
 
 namespace sphaira::battery {
 
 void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const std::string& title, const std::string& value,
-           std::initializer_list<Line> lines, float lo, float hi, NVGcolor text, NVGcolor info, float mark) const {
+           std::initializer_list<Line> lines, float lo, float hi, NVGcolor text, NVGcolor info, float mark,
+           const std::vector<std::pair<NVGcolor, std::string>>& legend) const {
     nvgBeginPath(vg);
     nvgRoundedRect(vg, x, y, w, h, 12.f);
     nvgFillColor(vg, nvgTransRGBAf(info, 0.08f));
@@ -11,7 +13,18 @@ void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const 
     ui::gfx::drawTextArgs(vg, x + 16.f, y + 22.f, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", title.c_str());
     ui::gfx::drawTextArgs(vg, x + w - 16.f, y + 22.f, 24.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", value.c_str());
 
-    const float px = x + 12.f, py = y + 44.f, pw = w - 24.f, ph = h - 56.f;
+    // the legend sits between the title and the plot: two columns, a dot and a text each
+    const float legend_h = legend.empty() ? 0.f : 24.f * static_cast<float>((legend.size() + 1) / 2) + 4.f;
+    for (size_t k = 0; k < legend.size(); k++) {
+        const float lx = x + 16.f + static_cast<float>(k % 2) * (w - 32.f) / 2.f;
+        const float ly = y + 56.f + static_cast<float>(k / 2) * 24.f;
+        nvgBeginPath(vg);
+        nvgCircle(vg, lx + 5.f, ly, 5.f);
+        nvgFillColor(vg, legend[k].first);
+        nvgFill(vg);
+        ui::gfx::drawTextArgs(vg, lx + 18.f, ly, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", legend[k].second.c_str());
+    }
+    const float px = x + 12.f, py = y + 44.f + legend_h, pw = w - 24.f, ph = h - 56.f - legend_h;
     const auto Y = [&](float v) { return py + ph * (1.f - std::clamp((v - lo) / (hi - lo), 0.f, 1.f)); };
     nvgStrokeWidth(vg, 1.f);
     nvgStrokeColor(vg, nvgTransRGBAf(info, 0.15f));
@@ -104,13 +117,13 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     nvgFillColor(vg, level);
     nvgFill(vg);
     ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 72.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "\u2248 %d%%", m_pct);
-    ui::gfx::drawTextBox(vg, bx, by + bh + 10.f, 16.f, bw, info, "The percent is approximate: the console may switch off earlier."_i18n.c_str());
+    calib_ui::DrawWrapped(vg, bx, by + bh + 10.f, 16.f, bw, info, "The percent is approximate: the console may switch off earlier."_i18n);
 
     // the voltage and the state
     const float fx = 520.f;
     ui::gfx::drawTextArgs(vg, fx, 118.f, 64.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%.2f V", m_mv / 1000.0);
     const bool attention = m_charger || m_docked || m_hot;
-    ui::gfx::drawTextBox(vg, fx, 158.f, 18.f, 690.f, attention ? warn : info, m_status.c_str());
+    calib_ui::DrawWrapped(vg, fx, 158.f, 18.f, 690.f, attention ? warn : info, m_status);
 
     // the chips
     const auto Chip = [&](float x, float y, const std::string& label, const std::string& value) {
@@ -128,7 +141,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         nvgFontSize(vg, 18.f);
         float lb[4]{};
         nvgTextBounds(vg, 0, 0, (label + " ").c_str(), nullptr, lb);
-        ui::gfx::drawTextArgs(vg, x + 14.f + (lb[2] - lb[0]), y + 18.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", value.c_str());
+        ui::gfx::drawTextArgs(vg, x + 14.f + (lb[2] - lb[0]) + 8.f, y + 18.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%s", value.c_str());
         return w;
     };
     if (!m_calib->charge) {
@@ -152,32 +165,36 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);
         float y = 372.f;
         if (m_charger) {
-            ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good, "\u2713 %s", "Charger is plugged in."_i18n.c_str());
+            calib_ui::DrawTick(vg, 70.f, y + 3.f, 24.f, good);
+            ui::gfx::drawTextArgs(vg, 104.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good, "%s", "Charger is plugged in."_i18n.c_str());
         } else {
             ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn, "%s", "Plug the charger in."_i18n.c_str());
         }
         y += 46.f;
+        if (m_calib->reset) {
+            return; // the status above says what comes next; the cycle texts below do not apply to the reset
+        }
         if (m_charger && m_pct >= 100) {
             ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. Now the drain: take the charger out."_i18n.c_str());
             y += 44.f;
         }
-        ui::gfx::drawTextBox(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n.c_str());
+        calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n);
         y += 76.f;
-        ui::gfx::drawTextBox(vg, 92.f, y, 21.f, 1110.f, text, "The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n.c_str());
+        calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n);
         return;
     }
     // one row of three charts
     const float cy = 356.f, ch = 270.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
     std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
     Chart(vg, 60.f, cy, cw, ch, "Voltage"_i18n, v, {{&m_volts, nvgRGB(0x60, 0xA5, 0xFA)}}, 3.0f, 4.3f, text, info, 3.2f);
-    std::snprintf(v, sizeof(v), "%.1f W", Last(m_watts));
-    Chart(vg, 60.f + cw + gap, cy, cw, ch, "CPU / GPU load"_i18n, v,
-          {{&m_cpu[0], nvgRGB(0x2D, 0xD4, 0xBF)}, {&m_cpu[1], nvgRGB(0x60, 0xA5, 0xFA)}, {&m_cpu[2], nvgRGB(0xA7, 0x8B, 0xFA)}, {&m_gpu, nvgRGB(0x4A, 0xDE, 0x80)}},
-          0.f, 100.f, text, info);
-    char legend[96];
-    std::snprintf(legend, sizeof(legend), "%s 1 %.0f%%  %s 2 %.0f%%  %s 3 %.0f%%  %s %.0f%%", "Core"_i18n.c_str(), Last(m_cpu[0]), "Core"_i18n.c_str(), Last(m_cpu[1]),
-        "Core"_i18n.c_str(), Last(m_cpu[2]), "GPU"_i18n.c_str(), Last(m_gpu));
-    ui::gfx::drawTextArgs(vg, 60.f + cw + gap + 14.f, cy + ch - 14.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, info, "%s", legend);
+    // the load: three cores and the GPU in one chart; the legend names each line with its value
+    const auto core = "Core"_i18n;
+    const auto pct_text = [](float f) { char b[16]; std::snprintf(b, sizeof(b), " %.0f%%", f); return std::string{b}; };
+    const NVGcolor c0 = nvgRGB(0x2D, 0xD4, 0xBF), c1 = nvgRGB(0x60, 0xA5, 0xFA), c2 = nvgRGB(0xA7, 0x8B, 0xFA), c3 = nvgRGB(0x4A, 0xDE, 0x80);
+    Chart(vg, 60.f + cw + gap, cy, cw, ch, "CPU / GPU load"_i18n, "", {{&m_cpu[0], c0}, {&m_cpu[1], c1}, {&m_cpu[2], c2}, {&m_gpu, c3}},
+          0.f, 105.f, text, info, -1.f,
+          {{c0, core + " 1" + pct_text(Last(m_cpu[0]))}, {c1, core + " 2" + pct_text(Last(m_cpu[1]))},
+           {c2, core + " 3" + pct_text(Last(m_cpu[2]))}, {c3, "GPU"_i18n + pct_text(Last(m_gpu))}});
     std::snprintf(v, sizeof(v), "%.1f \u00B0C", Last(m_temps));
     Chart(vg, 60.f + 2.f * (cw + gap), cy, cw, ch, "Temperature"_i18n, v, {{&m_temps, nvgRGB(0xF8, 0x71, 0x71)}}, 20.f, 70.f, text, info, static_cast<float>(HOT_C));
 }
@@ -262,7 +279,7 @@ void DrainMenu::Draw(NVGcontext* vg, Theme* theme) {
         ui::gfx::drawTextArgs(vg, fx, 237.f, 20.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s %s", "Energy:"_i18n.c_str(), e);
     }
     const bool attention = m_hot || m_docked || m_step == wizard::DrainStep::NotEmptyYet;
-    ui::gfx::drawTextBox(vg, fx, 254.f, 17.f, 560.f, attention ? warn : info, m_status.c_str());
+    calib_ui::DrawWrapped(vg, fx, 254.f, 17.f, 560.f, attention ? warn : info, m_status);
 
     // the live charts, 2 x 2
     const float cx = 120.f, cy = 332.f, cw = 510.f, ch = 138.f, gap = 20.f;

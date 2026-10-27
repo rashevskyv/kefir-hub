@@ -14,6 +14,8 @@
 #include "fuel_gauge.hpp"
 #include "account/account_restore.hpp"
 #include "ui/option_box.hpp"
+#include "ui/menus/tools_menu.hpp"
+#include "ui/menus/settings_menu.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 #include "app.hpp"
@@ -347,27 +349,24 @@ void RunMatch() {
     });
 }
 
-// X on the calibration page: what can be done to the chip and the copies
+// "Actions" on the calibration page: what can be done to the chip and the copies, one row each with what it does
 void ActionsMenu() {
-    ui::PopupList::Items items{"Back up the chip's values"_i18n, "Align the charge to the voltage"_i18n,
-                               "Restore from the last backup"_i18n, "Match the other MMC"_i18n, "Battery type (PRODINFO)"_i18n};
-    App::Push<ui::PopupList>("Actions"_i18n, items, [](std::optional<s64> index) {
-        if (!index) {
-            return;
-        }
-        switch (*index) {
-            case 0: {
-                std::string name;
-                const auto rc = Backup(Read(), name);
-                App::Notify(R_SUCCEEDED(rc) ? "Saved: "_i18n + name + ".cal" : std::string{"Backup failed"_i18n});
-                break;
-            }
-            case 1: RunAlign(); break;
-            case 2: RunRestore(); break;
-            case 3: RunMatch(); break;
-            case 4: OpenBatteryType(); break;
-        }
-    });
+    using ui::menu::settings::SettingsItem;
+    using ui::menu::settings::SettingsItemKind;
+    const auto row = [](std::string label, std::string what, std::function<void()> act) {
+        return SettingsItem{std::move(label), std::move(what), {}, std::move(act), SettingsItemKind::Normal};
+    };
+    std::vector<SettingsItem> items;
+    items.push_back(row("Back up the chip's values"_i18n, "Saves a copy of the gauge's values on the SD card. Nothing is changed."_i18n, []() {
+        std::string name;
+        const auto rc = Backup(Read(), name);
+        App::Notify(R_SUCCEEDED(rc) ? "Saved: "_i18n + name + ".cal" : std::string{"Backup failed"_i18n});
+    }));
+    items.push_back(row("Align the charge to the voltage"_i18n, "Sets the gauge's charge to what the voltage says. For a console that switched off at a high percent."_i18n, RunAlign));
+    items.push_back(row("Restore from the last backup"_i18n, "Writes the values of the last backup back into the gauge."_i18n, RunRestore));
+    items.push_back(row("Match the other MMC"_i18n, "Copies the calibration to the other system (emuMMC or sysMMC)."_i18n, RunMatch));
+    items.push_back(row("Battery type (PRODINFO)"_i18n, "Shows the battery type in the console's calibration data and changes it."_i18n, OpenBatteryType));
+    App::Push<ui::menu::tools::SystemToolsMenu>("Actions"_i18n, std::move(items));
 }
 
 } // namespace

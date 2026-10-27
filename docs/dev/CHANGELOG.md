@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.208 — Battery calibration: reset goes to cycle 1, drain starts when the charger is out, Actions as a menu, clean load chart
+Locked steps keep the row layout (dimmed, cursor skips them); Actions is a normal menu with a description per row; the check mark is drawn (the font has no U+2713); text boxes keep one- and two-letter words with the next word; cycle pages start the drain / charge when the charger comes out / in; the load chart has a legend with the values.
+host tests: pass (quick) | nro: built | switch: pending (uploaded to /switch/kefir-hub.nro, not run) | docs/guide drafts: pending
+
 ## v0.14.207 — Battery reset charges by itself; locked steps greyed; clock follows time zone; hbmenu icon re-pointed
 Reset step opens the charge page at once (counts when the charger is in, asks "Reset now?" at 100 %); locked steps are dimmed captions, "Remembered" row removed; header clock re-reads the time zone; turning on "Replace hbmenu" reinstalls the HOME icon with /hbmenu.nro as target.
 host tests: pass (quick) | nro: not built | switch: pending (reset flow, time zone change with the Hub open, hbmenu replace) | docs/guide drafts: pending

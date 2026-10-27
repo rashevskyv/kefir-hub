@@ -69,12 +69,13 @@ auto ResolveItemIndex(const std::vector<SettingsItem>& items, s64 index, s64 fro
         step = target >= from ? 1 : -1;
     }
 
-    for (s64 i = 0; i < count && items[target].kind == SettingsItemKind::Header; i++) {
+    const auto skipped = [&items](s64 i) { return items[i].kind == SettingsItemKind::Header || items[i].disabled; };
+    for (s64 i = 0; i < count && skipped(target); i++) {
         target = (target + step + count) % count;
     }
 
     // all headers: nothing to land on, stay put.
-    return items[target].kind == SettingsItemKind::Header ? from : target;
+    return skipped(target) ? from : target;
 }
 
 // a row that opens its own page in the right pane of the settings menu, with

@@ -114,8 +114,10 @@ struct DrainMenu final : ui::menu::MenuBase {
     };
 
     // A live chart that scrolls smoothly: the newest point enters on the right, LIVE_MS apart.
+    // legend: a coloured dot and a text each, in two columns under the title (the plot starts below it)
     void Chart(NVGcontext* vg, float x, float y, float w, float h, const std::string& title, const std::string& value,
-               std::initializer_list<Line> lines, float lo, float hi, NVGcolor text, NVGcolor info, float mark = -1.f) const;
+               std::initializer_list<Line> lines, float lo, float hi, NVGcolor text, NVGcolor info, float mark = -1.f,
+               const std::vector<std::pair<NVGcolor, std::string>>& legend = {}) const;
 
     static auto Last(const std::deque<float>& d) -> float;
 

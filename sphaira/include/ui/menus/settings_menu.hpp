@@ -42,6 +42,8 @@ struct SettingsItem {
     // the Web browser page: a favourite row can be marked (X, Y) like files in the File Browser
     bool selectable{false};
     bool marked{false};
+    // a row that cannot be used yet: drawn dimmed in the same layout, and the cursor steps over it
+    bool disabled{false};
 };
 
 struct SettingsCategory {

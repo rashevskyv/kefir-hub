@@ -231,6 +231,8 @@ void ShowIntro() {
 
 // ---- step 1: the reset ----------------------------------------------------------------------------------------------------
 
+void ShowCyclePage();
+
 void ShowResetDone() {
     App::Push<cu::Page>("Reset the gauge"_i18n, StepLabel(1),
         std::vector<cu::Line>{
@@ -240,7 +242,7 @@ void ShowResetDone() {
         },
         "Go on"_i18n, [](cu::Page& p) {
             p.SetPop();
-            ShowSteps();
+            ShowCyclePage(); // straight to cycle 1
         });
 }
 
@@ -317,7 +319,9 @@ void ShowCyclePage() {
             StartChargeRun(*cur);
         };
     }
-    App::Push<cu::Page>(cycle == 1 ? "Cycle 1"_i18n : "Cycle 2"_i18n, StepLabel(cycle + 1), std::move(lines), label, std::move(act), back);
+    // the page waits for the charger: the drain starts when it comes out, the charge when it goes in
+    App::Push<cu::Page>(cycle == 1 ? "Cycle 1"_i18n : "Cycle 2"_i18n, StepLabel(cycle + 1), std::move(lines), label, std::move(act), back,
+        drained ? std::function<bool()>([]() { return !ChargerIn(); }) : std::function<bool()>([]() { return ChargerIn(); }));
 }
 
 // ---- what the Hub finds when it starts ---------------------------------------------------------------------------------
@@ -403,18 +407,15 @@ void ShowSteps() {
 
     std::vector<SettingsItem> items;
     for (auto& row : rows) {
-        // a locked row is a dimmed caption: the cursor steps over it
-        if (row.mark == Mark::Locked) {
-            items.push_back(SettingsItem{row.label, {}, {}, {}, SettingsItemKind::Header});
-            continue;
-        }
         const auto text = StateText(row.mark) + (row.detail.empty() ? std::string{} : ": " + row.detail);
         // an active row acts; the report and the transfer also open once they are done; finished steps do nothing
         const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("4.") || row.label.starts_with("5.")));
-        items.push_back(SettingsItem{row.label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal});
+        SettingsItem item{row.label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal};
+        item.disabled = row.mark == Mark::Locked; // dimmed, and the cursor steps over it
+        items.push_back(std::move(item));
     }
     items.push_back(SettingsItem{"Actions"_i18n,
-        "Back up the chip, align the charge to the voltage, restore from a backup, match the other MMC, battery type."_i18n, {}, OpenActions, SettingsItemKind::Normal});
+        "Back up the chip, align the charge, restore, match the other MMC, battery type."_i18n, {}, OpenActions, SettingsItemKind::Normal});
     auto menu = std::make_unique<SystemToolsMenu>("Battery calibration"_i18n, std::move(items));
     *self = menu.get();
     App::Push(std::move(menu));
