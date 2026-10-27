@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.209 — Game card: Languages row forces the game language
+The Languages row opens the same list as Options > Force language (Off + the game's languages) instead of a read-only list; its hint is now "Choose the language this game starts in" (old key removed from all i18n files, en + uk added).
+host tests: pass (quick) | nro: not built | switch: pending (pick a language in Languages, start the game)
+
 ## v0.14.208 — Battery calibration: reset goes to cycle 1, drain starts when the charger is out, Actions as a menu, clean load chart
 Locked steps keep the row layout (dimmed, cursor skips them); Actions is a normal menu with a description per row; the check mark is drawn (the font has no U+2713); text boxes keep one- and two-letter words with the next word; cycle pages start the drain / charge when the charger comes out / in; the load chart has a legend with the values.
 host tests: pass (quick) | nro: built | switch: pending (uploaded to /switch/kefir-hub.nro, not run) | docs/guide drafts: pending

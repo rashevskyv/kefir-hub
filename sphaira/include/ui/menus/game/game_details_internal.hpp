@@ -77,6 +77,7 @@ struct DbiDetailsMenu final : MenuBase {
     std::string m_forced_language{};
     // "Forced: English" when an override is set, else empty.
     auto ForcedLanguageText() const -> std::string;
+    void ShowForceLanguage();
     // linked account / screenshot / video switches, written into the installed control nca.
     void ShowRestrictions();
 };

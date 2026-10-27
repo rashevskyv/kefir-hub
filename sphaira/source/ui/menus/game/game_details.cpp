@@ -538,7 +538,7 @@ void DbiDetailsMenu::SyncActionHint() {
 
 auto DbiDetailsMenu::HeaderItemHint(u8 item) -> std::string {
         switch (item) {
-            case HeaderItem_Languages: return "Show every language this game ships with"_i18n;
+            case HeaderItem_Languages: return "Choose the language this game starts in"_i18n;
             case HeaderItem_Mods: return "Open /atmosphere/contents/<Title ID>, where LayeredFS loads mods from"_i18n;
             case HeaderItem_Components: return "Show the installed base, updates and DLC"_i18n;
             case HeaderItem_Tickets: return "Show the rights IDs and tickets of this game"_i18n;

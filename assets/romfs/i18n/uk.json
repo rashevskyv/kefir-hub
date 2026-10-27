@@ -1582,7 +1582,7 @@
   "Found": "Є",
   "Not found": "Немає",
   "Press Up on the first row to use the details above": "Натисніть Вгору на першому рядку, щоб перейти до відомостей вище",
-  "Show every language this game ships with": "Показати всі мови, які підтримує ця гра",
+  "Choose the language this game starts in": "Обрати мову, якою запускається ця гра",
   "Open /atmosphere/contents/<Title ID>, where LayeredFS loads mods from": "Відкрити /atmosphere/contents/<Title ID>, звідки LayeredFS завантажує моди",
   "Show the installed base, updates and DLC": "Показати встановлену базу, оновлення та DLC",
   "Show the rights IDs and tickets of this game": "Показати rights ID і тікети цієї гри",
