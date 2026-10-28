@@ -398,6 +398,15 @@ void DrainMenu::CalibTick() {
         AskReset();
         return;
     }
+    // enough is drained and the charger is in (the console was cut off and now charges): the drain is over, go to the charge
+    if (!m_calib->charge && m_charger && m_step == wizard::DrainStep::Charging && m_calib->on_drained) {
+        const auto go = std::move(m_calib->on_drained);
+        m_calib->on_drained = nullptr;
+        log_write("[Calib] drain over, %llu s on battery; the charge follows\n", static_cast<unsigned long long>(m_state.drain_s[m_cycle - 1]));
+        SetPop();
+        go();
+        return;
+    }
     // the cycle is counted (full after enough drained) and the charger came out: the Hub goes on to the next drain by itself
     const bool counted = m_calib->charge ? m_full_seen : m_step == wizard::DrainStep::CycleCounted;
     if (counted && !m_charger && m_calib->on_charge_done) {

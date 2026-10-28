@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.210 — calibration: after a cut-off the charger ends the drain
+The Hub started without the charger after a cut-off, then the charger came in: the drain page kept counting. Now a drain with enough drained ends when the charger comes in and the charge page starts (the drain time stays in the state file).
+host tests: not run; nro: built; switch: pending
+
 ## v0.14.209 — Game card: Languages row forces the game language
 The Languages row opens the same list as Options > Force language (Off + the game's languages) instead of a read-only list; its hint is now "Choose the language this game starts in" (old key removed from all i18n files, en + uk added).
 host tests: pass (quick) | nro: not built | switch: pending (pick a language in Languages, start the game)

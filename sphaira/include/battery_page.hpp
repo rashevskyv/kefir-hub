@@ -48,6 +48,8 @@ struct CalibRun {
     // charge only, the reset (step 1): at 100 % on the charger the page asks once, and on yes it closes and calls on_reset
     bool reset{};
     std::function<void()> on_reset;
+    // drain only: the charger came in after enough was drained (a cut-off): the drain is over, the charge phase follows
+    std::function<void()> on_drained;
     // drain only: the user stopped it on purpose (B, Stop)
     std::function<void()> on_stop;
 };

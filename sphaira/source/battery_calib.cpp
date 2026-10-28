@@ -154,6 +154,8 @@ void OnChargeDone();
 
 // ---- the runs -----------------------------------------------------------------------------------------------------------
 
+void StartChargeRun(const Marker& m);
+
 void StartDrainRun(Marker& m) {
     StartDrain(m, Now(), ReadBattery().boot_time);
     SaveMarker(m);
@@ -161,6 +163,16 @@ void StartDrainRun(Marker& m) {
     run.tail = m.cutoffs > 0;
     run.step = m.step == Step::Cycle1 ? 1 : 2;
     run.on_charge_done = OnChargeDone; // the cycle is counted and the charger is out: the next drain starts by itself
+    run.on_drained = []() { // the console was cut off and the charger is in: the drain is over, the charge starts
+        auto cur = LoadCurrent();
+        if (cur && IsCycle(cur->step)) {
+            cur->drain_started = false;
+            SaveMarker(*cur);
+            StartChargeRun(*cur);
+        } else {
+            ShowSteps();
+        }
+    };
     run.on_stop = []() { // the user stopped it on purpose: the next start of the Hub must not take it up again
         if (auto cur = LoadMarker()) {
             cur->drain_started = false;
