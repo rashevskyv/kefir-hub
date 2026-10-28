@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.211 — drain page: Stop answers at once
+The full CPU/GPU load starved the UI, so the Stop question came late. B now pauses the load while the question is open.
+host tests: not run; nro: built; switch: pending
+
 ## v0.14.210 — calibration: after a cut-off the charger ends the drain
 The Hub started without the charger after a cut-off, then the charger came in: the drain page kept counting. Now a drain with enough drained ends when the charger comes in and the charge page starts (the drain time stays in the state file).
 host tests: not run; nro: built; switch: pending

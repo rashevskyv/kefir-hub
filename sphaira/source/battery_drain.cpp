@@ -73,11 +73,15 @@ void DeleteSavedBrightness() {
 DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     : MenuBase{"Battery drain"_i18n, ui::menu::MenuFlag_None}, m_cycle{cycle}, m_calib{std::move(calib)} {
     SetAction(Button::B, Action{"Stop"_i18n, [this]() {
+        // the full load starves the UI, so the question would appear late: pause the load while it is open
+        m_stop_ask = true;
+        g_load = false;
         App::Push<ui::OptionBox>(m_calib
             ? (m_calib->charge ? "Leave the charge page? The calibration remembers where it is."_i18n
                                : "Stop the drain? The calibration remembers where it is."_i18n)
             : "Stop draining? The cycle then needs to be finished another way."_i18n,
             "Back"_i18n, "Stop"_i18n, 0, [this](auto op) {
+                m_stop_ask = false;
                 if (op && *op == 1) {
                     account_restore::ClearReopenHubHint();
                     SetAutoDrainSuppressed(true); // the user stopped it: the wizard must not restart it now
@@ -273,7 +277,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
         m_hot = false;
     }
     // the calibration: full load until the first cut-off (no 35 % gentle mode), none in a charge or in the tail after a cut-off
-    const bool load = m_calib ? (!m_charger && !m_docked && !m_hot && !m_calib->charge && !m_calib->tail)
+    const bool load = m_stop_ask ? false : m_calib ? (!m_charger && !m_docked && !m_hot && !m_calib->charge && !m_calib->tail)
                               : (!m_charger && !m_docked && !m_hot && !(m_pct >= 0 && m_pct <= GENTLE_PCT));
     if (load != g_load) {
         log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);

@@ -142,6 +142,7 @@ private:
     s64 m_calib_last{};
     bool m_full_seen{};     // a charge phase saw 100 % on the charger
     bool m_reset_asked{};   // the reset charge already asked "reset now?"
+    bool m_stop_ask{};      // the "stop?" question is open: the load is paused
     FILE* m_log{};
     TimeStamp m_log_commit{};
     ui::Screensaver m_saver{};
