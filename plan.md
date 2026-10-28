@@ -676,12 +676,12 @@ Design rules:
 - [~] N.3 **Nextendo directory** in the Kefir settings (`settings_kefir.cpp`, folder item). Items mirror the
       standalone Nextendo app: mode status, emuMMC toggle (N.2), sysNAND toggle (N.2b, Semi-stock only),
       server IP and last refresh (no server choice: the alternative IP in Prelude is a hidden developer switch labelled
-      "Local", do not expose it), Account Link (N.6), news, games (N.4),
+      "Local", do not expose it), news, games (N.4),
       firmware and version info, license notice, link to the wiki page.
       Warning on the directory screen: Nextendo needs the latest system software the pinned tag supports.
       Show that version (23.0.1 at v4.0.11) and the installed firmware; warn when they differ.
       Done 2026-10-28 (`settings_nextendo.cpp`): status, emuMMC toggle, sysNAND toggle (Semi-stock only), firmware,
-      server, release and license notice. Left: Account Link (N.6), games (N.4), news, wiki link.
+      server, release and license notice. Left: games (N.4), news, wiki link.
 - [ ] N.4 **Games screen** (inside the Nextendo directory). Data: game list and per-game patch build IDs from the pinned
       tag (`romfs/sd/atmosphere/exefs_patches/*`, README "Online games" section). Embedded snapshot + remote refresh,
       same rule as N.1. Per game show: supported, patch files present for the installed build, "game updated, wait
@@ -711,7 +711,9 @@ Design rules:
       (`nyx/nyx_gui/frontend/gui.c`) show an `lv_mbox` with that text and one OK button, and do not boot. The text
       says where Semi-stock is now (Ultrahand / Sphaira, Semi-Stock Status) and how to switch it on. Set the key in
       `bootloader/ini/atmostock.ini`; keep the entry name. Text in English, short. **[USER]** check in Nyx on a console.
-- [ ] N.6 **Account Link** (0x167B) item. Hidden on HOS >= 23.0.0 (N.2c guard). Per-game installers stay out of scope.
+- [-] N.6 ~~Account Link~~ dropped 2026-10-29: the Prelude fallback (`network_mitm` 4200000000000666) only fixes 0x167B
+      with a blank PRODINFO; Kefir uses the real PRODINFO in Nextendo mode, the binary aborts the boot on HOS >= 23.0.0
+      (Prelude issue #42), and it is not built from source. Per-game installers stay out of scope.
 - [ ] N.7 Build checkpoint, docs per `update-docs` skill (EN + UK wiki, license notice, firmware table), `[USER]` leftovers.
 
 [USER] checks (hardware):
