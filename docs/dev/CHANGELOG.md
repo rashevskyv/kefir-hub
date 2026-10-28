@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 A long legend name (the Ukrainian GPU word) ran over the card's right edge; the text now shrinks to its column.
 host tests: not run (draw only) | nro: not built | switch: pending
 
+## v0.14.216 — i18n: all languages filled; translator keeps good languages when one fails
+Filled the missing keys in 24 languages (i18n parity test passes). `translate.py` now saves the languages that passed validation when one language (Turkish: "%100'e" read as a printf specifier) fails, and its prompt forbids an apostrophe suffix after "%N".
+host tests: pass (quick, i18n contract, translator tests) | nro: not built | switch: pending
+
 ## v0.14.215 — Header storage rows show free / total
 NAND / EmuNAND and microSD in the tab header now read "free / total" (for example 12.3 GB / 59.5 GB); the game-size and install-projection modes are unchanged.
 host tests: not run (draw only) | nro: not built | switch: pending (check the value column does not overlap the network text) | docs/guide drafts: pending

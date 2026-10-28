@@ -236,6 +236,13 @@ def test_server_error_does_consume_retries():
     assert s.calls == 3
 
 
+def test_one_bad_language_keeps_the_good_ones():
+    reply = '{"uk": "Сторінка %zu / %zu", "tr": "Sayfa 1"}'   # tr dropped both %zu
+    s = FakeSession(FakeResponse(200, reply), FakeResponse(200, reply))
+    out = t.translate(s, offline_args(retries=1), "Page %zu / %zu", ["uk", "tr"])
+    assert out == {"uk": "Сторінка %zu / %zu"}
+
+
 def test_bad_translation_is_retried_then_accepted():
     bad = FakeResponse(200, '{"uk": "Сторінка 1"}')   # dropped both %zu
     good = FakeResponse(200, '{"uk": "Сторінка %zu / %zu"}')

@@ -57,7 +57,10 @@ RULES:
 10. Glossary: "ticket" is a Switch content-rights file (eShop ticket, title key), not a travel or
    event ticket. Use the word the Switch homebrew scene uses, usually a transliteration: uk тікет /
    тікети, ru тикет; never uk "квиток", ru "билет".
-    "cheat" (game cheat codes) is uk чіт / чіти, never "чит" / "чити"."""
+    "cheat" (game cheat codes) is uk чіт / чіти, never "чит" / "чити".
+11. After a number with a percent sign never add an apostrophe suffix ("%100'e", "%35'te"): the
+   format check reads it as a printf specifier. Word it around the number instead, for example
+   tr "%100 seviyesine kadar", "%35 seviyesinde"."""
 
 
 def build_prompt(codes):
@@ -112,7 +115,7 @@ def translate(session, args, text, codes, context=None):
     }
     # ensure_ascii on the wire: the proxy has mangled raw non-ASCII bodies before.
     body = json.dumps(payload, ensure_ascii=True).encode("utf-8")
-    last, waited, attempt = None, 0, 0
+    last, waited, attempt, partial = None, 0, 0, None
     while attempt <= args.retries:
         try:
             r = session.post(args.url, data=body, headers={"Content-Type": "application/json"}, timeout=args.timeout)
@@ -123,6 +126,8 @@ def translate(session, args, text, codes, context=None):
                 raise ValueError(f"reply is missing {','.join(missing)}")
             bad = [f"{c}: {problems(text, out[c])}" for c in codes if problems(text, out[c])]
             if bad:
+                # one language failing must not throw away the others
+                partial = {c: out[c] for c in codes if not problems(text, out[c])} or None
                 raise ValueError("; ".join(bad))
             return {c: out[c] for c in codes}
         except Exception as e:  # noqa: BLE001 - retry anything the proxy throws at us
@@ -141,6 +146,8 @@ def translate(session, args, text, codes, context=None):
             attempt += 1
             if attempt <= args.retries:
                 time.sleep(args.retry_delay * attempt)
+    if partial:
+        return partial
     raise RuntimeError(last)
 
 
@@ -310,9 +317,15 @@ def main():
                     with FAIL_LOG.open("a", encoding="utf-8") as fh:
                         fh.write(f"{key!r}\t{','.join(todo)}\t{err}\n")
                     continue
-                for c in todo:
+                for c in out:
                     data[c][key] = out[c]
-                state["dirty"].update(todo)
+                state["dirty"].update(out)
+                skipped = [c for c in todo if c not in out]
+                if skipped:
+                    state["failed"] += 1
+                    print(f"         FAIL {' '.join(skipped)} | {preview} (other languages saved)")
+                    with FAIL_LOG.open("a", encoding="utf-8") as fh:
+                        fh.write(f"{key!r}\t{','.join(skipped)}\tfailed validation, re-run\n")
                 print(f"[{n:>5}/{len(jobs)}] ok   {' '.join(todo)} | {preview}")
                 if n % args.flush_every == 0:
                     for c in state["dirty"]:

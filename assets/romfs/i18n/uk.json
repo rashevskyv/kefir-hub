@@ -3775,5 +3775,6 @@
   "5. Transfer to the other MMC": "5. Перенос в іншу MMC",
   "Back up the chip, align the charge to the voltage, restore from a backup, match the other MMC, battery type.": "Резервна копія чипа, вирівнювання заряду за напругою, відновлення з копії, збіг з іншою MMC, тип батареї.",
   "This cycle is counted. Take the charger out: the next step starts by itself.": "Цей цикл пораховано. Вийміть зарядку: наступний крок почнеться сам.",
-  "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself.": "Батарея розрядилась достатньо. Тримайте зарядку до 100 %: тоді цикл порахується сам."
+  "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself.": "Батарея розрядилась достатньо. Тримайте зарядку до 100 %: тоді цикл порахується сам.",
+  "Back up the chip, align the charge, restore, match the other MMC, battery type.": "Зробіть резервну копію чипа, вирівняйте заряд, відновіть, зіставте інший MMC, тип батареї."
 }

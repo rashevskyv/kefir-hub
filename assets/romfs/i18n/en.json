@@ -3775,5 +3775,6 @@
   "5. Transfer to the other MMC": "5. Transfer to the other MMC",
   "Back up the chip, align the charge to the voltage, restore from a backup, match the other MMC, battery type.": "Back up the chip, align the charge to the voltage, restore from a backup, match the other MMC, battery type.",
   "This cycle is counted. Take the charger out: the next step starts by itself.": "This cycle is counted. Take the charger out: the next step starts by itself.",
-  "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself.": "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself."
+  "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself.": "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself.",
+  "Back up the chip, align the charge, restore, match the other MMC, battery type.": "Back up the chip, align the charge, restore, match the other MMC, battery type."
 }
