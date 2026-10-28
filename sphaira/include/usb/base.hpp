@@ -59,6 +59,10 @@ struct Base {
         ueventSignal(GetCancelEvent());
     }
 
+    void ClearCancel() {
+        ueventClear(GetCancelEvent());
+    }
+
     auto GetTransferTimeout() const {
         return m_transfer_timeout;
     }

@@ -161,15 +161,29 @@ void Menu::LocalThreadFunction() {
             if (src_idx >= m_local_paths.size()) {
                 result = FsError_PathNotFound;
             } else if (analysis_deferred) {
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    m_skip_gate.Open(i);
+                }
                 result = yati::InstallFromFile(this, m_local_fs, m_local_paths[src_idx], override);
             } else {
                 yati::source::File source{m_local_fs, m_local_paths[src_idx]};
                 const auto open_rc = source.GetOpenResult();
-                result = R_SUCCEEDED(open_rc)
-                    ? yati::InstallFromCollections(this, &source, analysis.collections, override)
-                    : open_rc;
+                if (R_SUCCEEDED(open_rc)) {
+                    {
+                        SCOPED_MUTEX(&m_mutex);
+                        m_skip_gate.Open(i);
+                    }
+                    result = yati::InstallFromCollections(this, &source, analysis.collections, override);
+                } else {
+                    result = open_rc;
+                }
             }
-            const bool user_skipped = m_skip_requested.load();
+            bool user_skipped;
+            {
+                SCOPED_MUTEX(&m_mutex);
+                user_skipped = m_skip_gate.Close();
+            }
             const bool cancelled = m_cancel_requested || (!user_skipped && (result == Result_TransferCancelled || result == Result_UsbCancelled));
             RecordPackageResult(i, result, cancelled, user_skipped, plan_sd,
                 m_total_read.load() - read_before, m_total_write.load() - write_before);

@@ -3,6 +3,7 @@
 #include "ui/install_progress.hpp"
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
+#include "ui/menus/dbi/package_skip_gate.hpp"
 #include "ui/screensaver.hpp"
 #include "ui/screensaver_timeout.hpp"
 #include "ui/menus/dbi/install_queue_state.hpp"
@@ -164,7 +165,8 @@ struct InstallSession : MenuBase, InstallProgress {
     auto GetStream() const { return m_stream; }
 
     virtual void CancelSession();
-    virtual void SkipCurrentPackage(size_t expected_package);
+    // true when the skip was accepted for the package that is installing now (Menu decides, see PackageSkipGate)
+    virtual bool SkipCurrentPackage(size_t expected_package) { (void)expected_package; return false; }
     virtual void UpdateActions();
 
     void AddLog(const std::string& text, LogKind kind = LogKind::Normal);
@@ -225,6 +227,7 @@ protected:
     size_t m_progress_speed_sample_index{0};
     TimeStamp m_progress_timestamp{};
     size_t m_current_package{0};
+    PackageSkipGate m_skip_gate{};
 
     static constexpr size_t SPEED_HISTORY = 96;
     std::atomic<s64> m_total_read{0};
@@ -278,7 +281,7 @@ struct Menu final : InstallSession {
     Result ReestablishUsbLink();
 
     void CancelSession() override;
-    void SkipCurrentPackage(size_t expected_package) override;
+    bool SkipCurrentPackage(size_t expected_package) override;
     void UpdateActions() override;
 
 private:

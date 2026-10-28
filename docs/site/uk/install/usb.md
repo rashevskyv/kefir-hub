@@ -62,6 +62,11 @@
 - Це працює й під час встановлення — для пакетів, які ще не почалися.
 - Консоль повідомляє програмі на ПК, скільки в неї вільного місця.
 
+<!-- draft
+- With DBI Backend Qt, confirming [[Skip package]] for the active USB package sends its explicit skipped status to the PC; the PC row becomes Skipped and its checkbox clears while the queue continues.
+- A skip confirmation for a package that has already finished must not interrupt the next package.
+-->
+
 <!-- TODO(verify): which DBI Backend Qt version supports the live queue, and where can users download it? -->
 
 ## Роздачі з портами, перекладами і модами {#releases}

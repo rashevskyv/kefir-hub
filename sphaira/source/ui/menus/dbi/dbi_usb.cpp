@@ -281,6 +281,11 @@ void Menu::ThreadFunction() {
                 // Pick Auto after deferred analysis supplies the actual install size.
                 plan_sd = RefreshAutoInstallTarget(i);
 
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    m_skip_gate.Open(i);
+                }
+
                 AddLog("Starting: "_i18n + name, LogKind::Event);
                 yati::ConfigOverride override{};
                 override.skip_if_already_installed = SkipMode();
@@ -335,7 +340,12 @@ void Menu::ThreadFunction() {
                     }
                     AddLog("USB connection restored; retrying: "_i18n + name, LogKind::Warning);
                 }
-                const bool user_skipped = m_skip_requested.load();
+                bool user_skipped;
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    user_skipped = m_skip_gate.Close();
+                    if (user_skipped && m_usb_source) m_usb_source->ClearCancel();
+                }
                 const bool cancelled = m_cancel_requested || (!user_skipped && (install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled));
                 const bool fatal_session_error = !user_skipped && R_FAILED(install_rc) && IsDbiSessionError(install_rc);
                 RecordPackageResult(i, install_rc, cancelled, user_skipped, plan_sd,
@@ -367,9 +377,13 @@ void Menu::ThreadFunction() {
                             pkg_status = 0; // Installed
                         }
                     }
-                    m_usb_source->SendPackageStatus(name, pkg_status, install_rc);
-                    const auto spaces = GetPolledData();
-                    m_usb_source->SendStorageInfo(spaces.nand_free, spaces.nand_total, spaces.sd_free, spaces.sd_total);
+                    const auto status_rc = m_usb_source->SendPackageStatus(name, pkg_status, install_rc);
+                    if (R_FAILED(status_rc)) {
+                        log_write("[DBI] Failed to send package status for %s: 0x%08X\n", name.c_str(), status_rc);
+                    } else {
+                        const auto spaces = GetPolledData();
+                        m_usb_source->SendStorageInfo(spaces.nand_free, spaces.nand_total, spaces.sd_free, spaces.sd_total);
+                    }
                 }
                 if (cancelled) {
                     m_cancel_requested = true;

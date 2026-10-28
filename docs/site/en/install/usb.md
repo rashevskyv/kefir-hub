@@ -57,6 +57,11 @@ With DBI Backend Qt the queue stays in sync with the PC app:
 - This also works while the queue is installing, for packages that have not started yet.
 - The console sends its free space to the PC app.
 
+<!-- draft
+- With DBI Backend Qt, confirming [[Skip package]] for the active USB package sends its explicit skipped status to the PC; the PC row becomes Skipped and its checkbox clears while the queue continues.
+- A skip confirmation for a package that has already finished must not interrupt the next package.
+-->
+
 <!-- TODO(verify): which DBI Backend Qt version supports the live queue, and where can users download it? -->
 
 ## Releases with ports, translations and mods {#releases}

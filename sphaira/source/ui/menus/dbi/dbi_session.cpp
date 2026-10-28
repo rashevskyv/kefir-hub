@@ -57,29 +57,21 @@ void Menu::CancelSession() {
     }
 }
 
-void InstallSession::SkipCurrentPackage(size_t expected_package) {
+bool Menu::SkipCurrentPackage(size_t expected_package) {
     {
         SCOPED_MUTEX(&m_mutex);
-        if (m_state.load() != State::Installing || m_current_package != expected_package) {
-            return;
+        if (m_state.load() != State::Installing || !m_skip_gate.Accept(expected_package)) {
+            return false;
         }
         m_skip_requested = true;
-    }
-    ueventSignal(&m_cancel_event);
-    if (m_stream) {
-        m_stream->Disable();
-    }
-}
-
-void Menu::SkipCurrentPackage(size_t expected_package) {
-    InstallSession::SkipCurrentPackage(expected_package);
-    if (m_local_fs && !m_local_fs->IsNative()) {
-        devoptab::common::CancelActiveCurlTransfers();
-    }
-    const auto state = m_state.load();
-    if (state == State::Installing) {
         if (m_usb_source) m_usb_source->SignalCancel();
+        ueventSignal(&m_cancel_event);
+        if (m_stream) m_stream->Disable();
+        if (m_local_fs && !m_local_fs->IsNative()) {
+            devoptab::common::CancelActiveCurlTransfers();
+        }
     }
+    return true;
 }
 
 void InstallSession::ToggleMinimized() {

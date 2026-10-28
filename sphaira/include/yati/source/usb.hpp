@@ -108,6 +108,10 @@ struct Usb final : Base {
         m_usb->Cancel();
     }
 
+    void ClearCancel() {
+        m_usb->ClearCancel();
+    }
+
 private:
     Result DbiWaitForConnection(const usb::dbi::CmdHeader& header, u64 timeout, std::vector<std::string>& out_names);
     Result DbiRead(void* buf, s64 off, s64 size, u64* bytes_read);
