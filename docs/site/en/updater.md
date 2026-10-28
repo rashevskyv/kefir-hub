@@ -57,17 +57,18 @@ If it is not connected yet, the list loads by itself once it connects. Press **X
 
 After the reboot the update finishes by itself. You do not need to do anything.
 
-<!-- draft
-- in the changelog window: **Up** / **Down** scroll a line (held: repeats); **Left** / **Right** and **L** / **R** scroll a page, at most about four a second, with one line of the old page kept in sight; the sticks glide: the harder you push, the faster it scrolls (a light touch is slow, full push about 20 lines a second at most), so the notes cannot be skipped in a blink; [[Install]] is chosen with **Down** at the bottom
--->
+In the changelog window:
+
+- **Up** and **Down** scroll one line. Hold the button to repeat.
+- **Left**, **Right**, **L** and **R** scroll one page, at most about four times a second. One line of the old page stays in sight.
+- The sticks glide: the harder you push, the faster the text scrolls. A light touch is slow; a full push is about 20 lines a second at most. This way you cannot skip the notes in a blink.
+- Choose [[Install]] with **Down** at the bottom.
 
 <!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
 
 Press **B** in the changelog window to cancel. Nothing is downloaded until you press [[Install]].
 
-<!-- draft
-- the new Kefir is unpacked next to the old one first; the old /kefir is replaced only when the archive unpacked completely, so a broken download or **B** during unpacking leaves the previous Kefir to install at the next reboot
--->
+The new Kefir is unpacked next to the old one first. The old `/kefir` is replaced only when the archive unpacked completely. A broken download, or **B** during unpacking, leaves the previous Kefir to install at the next reboot.
 
 ## Update the firmware
 
@@ -84,10 +85,7 @@ Press **B** in the changelog window to cancel. Nothing is downloaded until you p
 
 The downloaded firmware files (`/firmware` and the archive) are deleted after a successful install.
 
-<!-- draft
-- **B** (Stop) works while the update is being prepared ("Preparing system update..."); nothing on the console changes then
-- once "Applying system update..." starts, Stop waits for the end: a firmware cut off half-way would not boot
--->
+**B** (Stop) works while the update is being prepared ("Preparing system update..."). Nothing on the console changes then. Once "Applying system update..." starts, Stop waits for the end, because a firmware cut off half-way would not boot.
 
 ## Install a firmware from the memory card
 
@@ -175,9 +173,7 @@ With [[Ask]], this prompt appears once per launch when a new version exists:
 
 The update replaces the Kefir Hub file you started. If [[Replace hbmenu on exit]] is on, `/hbmenu.nro` is replaced too.
 
-<!-- draft
-- the downloaded Kefir Hub file is checked before it replaces the running one (it must be a complete NRO); an interrupted download or a full memory card leaves the current Kefir Hub working
--->
+The downloaded Kefir Hub file is checked before it replaces the running one: it must be a complete NRO. An interrupted download or a full memory card leaves the current Kefir Hub working.
 
 ## Options
 

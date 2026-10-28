@@ -273,4 +273,4 @@ IP-адресу з верхньої частини екрана консолі, 
 **FTP-програму від'єднало.** Зміна [[FTP settings]] або монтування папки через FTP перезапускає сервер. Підключіться
 знову.
 
-<!-- draft (0.14.196): every web window of the Hub (Web Sharing Server, Console Transfer, typing from a phone or PC, the SteamGridDB API key) shows the IP address the QR code opens, and under it a small line [[Or open:]] with the name kefir.local (for example `kefir.local/input`). The IP always works; the name works on a PC or an iPhone, and on many Android phones it does not resolve. -->
+Кожне веб-вікно Hub (Web Sharing Server, Console Transfer, введення з телефона чи ПК, ключ API SteamGridDB) показує IP-адресу, яку відкриває QR-код. Під нею малий рядок [[Or open:]] показує імʼя `kefir.local`, наприклад `kefir.local/input`. IP-адреса працює завжди. Імʼя працює на ПК або iPhone, а на багатьох телефонах Android не розпізнається.

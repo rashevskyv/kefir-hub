@@ -6,9 +6,7 @@
 
 Той самий пункт є в меню **+** на вкладці домашніх програм.
 
-<!-- draft
-- On sysMMC Kefir Hub shows the ban warning when you choose PC Install (USB). See [Ban warning on sysMMC](index.md#ban-warning).
--->
+На sysMMC Kefir Hub показує попередження про бан, коли ви вибираєте [[PC Install (USB)]]. Див. [Попередження про бан на sysMMC](index.md#ban-warning).
 
 <!-- shot: install-usb-sidebar | Install & Share menu with PC Install (USB) highlighted -->
 
@@ -32,11 +30,7 @@
 6. Відкриється черга. Перевірте сховища й розміри, виберіть потрібне й натисніть **A** ([[Install selected]]).
 7. Дочекайтеся [[Session summary]].
 
-<!-- draft
-- when the USB queue finishes, Kefir Hub ends the PC session before waiting on [[Session summary]]; DBI Backend Qt can stop its server and switch modes while this summary remains open
-- after the USB session ends, **B** ([[Back]]) closes the screen; another USB installation requires opening [[PC Install (USB)]] again and starting the PC server
-- leaving the session no longer freezes the screen for seconds
--->
+Коли USB-черга завершується, Kefir Hub спершу завершує сеанс із ПК, а потім чекає на [[Session summary]]. DBI Backend Qt може зупинити свій сервер і змінити режим, поки підсумок лишається відкритим. Натисніть **B** ([[Back]]), щоб закрити екран. Щоб установити ще раз через USB, знову відкрийте [[PC Install (USB)]] і запустіть сервер на ПК. Вихід із сеансу більше не заморожує екран на кілька секунд.
 
 Черга, екран ходу встановлення, згортання, вимкнення екрана та підсумок працюють так само, як для файлів на карті пам'яті. Див. [Перегляньте чергу](sd-card.md#queue) і наступні розділи.
 
@@ -62,22 +56,20 @@
 - Це працює й під час встановлення — для пакетів, які ще не почалися.
 - Консоль повідомляє програмі на ПК, скільки в неї вільного місця.
 
-<!-- draft
-- With DBI Backend Qt, confirming [[Skip package]] for the active USB package sends its explicit skipped status to the PC; the PC row becomes Skipped and its checkbox clears while the queue continues.
-- A skip confirmation for a package that has already finished must not interrupt the next package.
--->
+З DBI Backend Qt, коли ви підтверджуєте [[Skip package]] для активного USB-пакета, Hub надсилає на ПК статус «пропущено». Рядок на ПК стає Skipped, а його прапорець знімається, поки черга триває. Підтвердження пропуску для пакета, який уже завершився, не перериває наступний пакет.
 
 <!-- TODO(verify): which DBI Backend Qt version supports the live queue, and where can users download it? -->
 
 ## Роздачі з портами, перекладами і модами {#releases}
 
-<!-- draft
-- DBI Backend Qt 2.9.10+: папка з портами, файлами порту, перекладами або модами відкриває вікно «Choose what to install»: блок на кожну гру, позначка на кожен варіант; за замовчуванням мова ПК (далі англійська); мод позначено, лише коли він у гри один; усі порти зі спільної теки switch/ (Donkey Kong Country 1-3) позначено. Пункт «Choose What to Install...» у меню рядка черги змінює вибір, доки гра не почала встановлюватися. Вибір зберігається в пресетах.
-- мод зі своїм оновленням: встановлюється це оновлення замість новішого з роздачі
-- кожен позначений варіант стає рядком черги «<гра> - <варіант>.kefir-sd.tar» після пакетів гри, ціль SD-карта; Kefir Hub 0.14.100+ пише його файли на microSD; архіви (zip, 7z, rar) передаються як є і розпаковуються на консолі
-- ніколи не пишуться: Nintendo/, emuMMC/, bootloader/; збереження порту, що вже є на консолі, лишаються
-- поки що лише USB; старіший Kefir Hub позначає такий рядок як помилку і продовжує чергу
--->
+DBI Backend Qt 2.9.10 і новіші: папка з портами, файлами порту, перекладами або модами відкриває вікно «Choose what to install».
+
+- У вікні один блок на кожну гру і позначка на кожен варіант. За замовчуванням позначено мову ПК, далі англійську. Мод позначено, лише коли він у гри один. Усі порти зі спільної теки `switch/` (наприклад Donkey Kong Country 1-3) позначено.
+- Пункт «Choose What to Install...» у меню рядка черги змінює вибір, доки гра не почала встановлюватися. Вибір зберігається в пресетах.
+- Мод зі своїм оновленням: встановлюється це оновлення замість новішого з роздачі.
+- Кожен позначений варіант стає рядком черги `<гра> - <варіант>.kefir-sd.tar` після пакетів гри, ціль SD-карта. Kefir Hub 0.14.100 і новіший пише його файли на microSD. Архіви (zip, 7z, rar) передаються як є і розпаковуються на консолі.
+- Hub ніколи не пише в `Nintendo/`, `emuMMC/`, `bootloader/`. Збереження порту, що вже є на консолі, лишаються.
+- Поки що лише USB. Старіший Kefir Hub позначає такий рядок як помилку і продовжує чергу.
 <!-- shot: install-usb-release-dialog | DBI Backend Qt: Choose what to install, Donkey Kong Country Trilogy -->
 
 ## Значок швидкості USB {#usb-speed}

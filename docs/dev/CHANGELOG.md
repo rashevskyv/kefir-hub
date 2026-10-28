@@ -60,6 +60,7 @@ The wizard (Tools > Battery calibration, and + on the Battery page: one wizard n
 host tests: quick pass, doc labels 0 unknown, i18n deployment contract fails as before (262 keys untranslated in 24 languages) | nro: not built | switch: pending (a full run: reset, two cycles, report; the guide still shows the 0.14.197 order)
 
 ## unreleased
+docs: all draft blocks in `docs/site` (EN, UK) written out as prose by hand after `finish.py` was rejected by its reviewer on 12 UK pages; the stale "planned" status of the battery calibration page fixed. Labels: 0 unknown; mkdocs build: built en, built uk.
 `docs/site/{en,uk}/roadmap.md`: public roadmap page (recently added; planned and in progress) from plan.md Phase F and N, nav entry before troubleshooting. Labels: 0 unknown; mkdocs build: built en, built uk.
 `docs/dev/BATTERY-HANDOFF.md`: everything about the battery calibration for a fresh session (the decision, gauge facts, code state, the console test of 2026-10-27, traps). No code.
 `BATTERY-ZERO-REGISTER.md`: "Zero by voltage" (the real cut-off voltage is the zero; V_empty of this console is 3.20 V) and the console experiment list. No code.

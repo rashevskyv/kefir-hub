@@ -14,10 +14,8 @@
 Файли й папки, назва яких починається з крапки, пропускаються. Список оновлюється сам, коли ви додаєте чи
 видаляєте застосунок у [Файловому браузері](file-browser.md).
 
-<!-- draft
-- a subfolder of `/switch/` with several `.nro` files shows all of them, also when one of them is named after the folder (before, only `<folder>/<folder>.nro` was listed and the rest were hidden)
-- each card shows the app's file name (for example `vktest.nro`) on the second line, in place of the author, so builds of one app with the same title can be told apart; the hbmenu-style layout already shows file names
--->
+- Підтека `/switch/` з кількома файлами `.nro` показує їх усі, навіть якщо один із них названо як тека. Раніше показувався лише `<тека>/<тека>.nro`, решта була прихована.
+- Картка показує в другому рядку імʼя файлу застосунку (наприклад `vktest.nro`) замість автора. Так можна відрізнити збірки одного застосунку з однаковою назвою. Розкладка в стилі hbmenu і раніше показує імена файлів.
 
 ## Запуск застосунку
 1. Виберіть застосунок. У заголовку видно його шлях і позицію в списку.
@@ -25,9 +23,7 @@
 
 Коли ви вийдете із застосунку, знову відкриється Homebrew Menu (`/hbmenu.nro`).
 
-<!-- draft
-- a second Kefir Hub file among the apps (when Kefir Hub is your Homebrew Menu): A asks [[Keep]] / [[Launch]] / [[Delete]]; [[Launch]] is the default, so a debug copy still starts
--->
+Якщо серед застосунків є другий файл Kefir Hub (коли Kefir Hub — ваше Homebrew Menu), **A** питає [[Keep]] / [[Launch]] / [[Delete]]. Типово вибрано [[Launch]], тож налагоджувальна копія все одно запускається.
 
 ## Сортування й вигляд
 1. Натисніть **+** ([[Options]]).
@@ -56,17 +52,13 @@
 
 Щоб зняти вибір із застосунку, натисніть на ньому **X** ще раз. Натискання **B**, коли вибрано застосунки, знімає вибір з усіх них, а малюнки позначок зникають; водночас Kefir Hub залишається відкритим (на відміну від натискання **B** без вибраних застосунків, яке одразу закриває застосунок).
 
-<!-- draft
-- when some apps are selected, **+** opens the options with [[SELECTED HOMEBREW]] at the top, above the sort and view options; with nothing selected the view options stay first and [[THIS HOMEBREW]] comes after them
--->
+Коли вибрано кілька застосунків, **+** відкриває параметри з [[SELECTED HOMEBREW]] угорі, над параметрами сортування й вигляду. Коли нічого не вибрано, параметри вигляду йдуть першими, а [[THIS HOMEBREW]] після них.
 
 ## Видалення застосунку
 
-<!-- draft
-- [[Delete]] on one app also looks at its own folder: when the app lives in `/switch/<folder>/` and no other `.nro` is inside, the question shows the folder and its size, with [[Only the app]] and [[App and folder]]; the folder of the running Kefir Hub is never offered
-- a HOME icon (forwarder) made by Kefir Hub that starts this app is deleted together with it, and the question says so ([[The HOME icon that starts it is deleted too.]])
-- with several apps selected the old question stays: only the `.nro` files go
--->
+- [[Delete]] для одного застосунку дивиться й на його теку. Якщо застосунок лежить у `/switch/<тека>/` і більше `.nro` там немає, питання показує теку та її розмір з варіантами [[Only the app]] і [[App and folder]]. Тека запущеного Kefir Hub не пропонується ніколи.
+- Іконка HOME (форвардер), створена Kefir Hub для цього застосунку, видаляється разом із ним. Питання про це говорить: [[The HOME icon that starts it is deleted too.]]
+- Коли вибрано кілька застосунків, питання лишається старим: видаляються лише файли `.nro`.
 1. Виберіть застосунок або кілька.
 2. Натисніть **+** і виберіть [[Delete]].
 3. Підтвердьте кнопкою [[Delete]].
@@ -86,14 +78,12 @@ Kefir Hub видаляє файл `.nro`. Папка застосунку та �
    [[Local File]] (зображення з карти пам'яті) або [[SteamGridDB]] (пошук в інтернеті).
 4. Виберіть [[Save Changes]].
 
-<!-- draft
-- [[SteamGridDB]] offers every static PNG/JPEG picture of the game: icons first, then covers of any size, heroes and logos; a non-square picture is cropped to its centre square (not stretched)
-- in the list of found games **Y** ([[Search]]) opens the keyboard with the current text ([[Search SteamGridDB]]) and searches again
-- when no game matches, Kefir Hub says [[No game by this name on SteamGridDB]] and opens the keyboard at once; a game without pictures says [[No pictures for this game on SteamGridDB]]
-- a picked picture opens in the crop editor (zoom, move; **A** [[Apply]]), so only a part of it can become the icon
-- up to 10 pictures load at once; with more, 5 load first and [[Load more]] adds 5 each time (when 1-3 would be left they load with the batch before)
-- found games and downloaded pictures stay until Kefir Hub restarts: going back in does not download again
--->
+- [[SteamGridDB]] пропонує кожну статичну картинку PNG/JPEG для гри: спершу іконки, потім обкладинки будь-якого розміру, hero-зображення й логотипи. Неквадратна картинка обрізається до центрального квадрата, без розтягування.
+- У списку знайдених ігор **Y** ([[Search]]) відкриває клавіатуру з поточним текстом ([[Search SteamGridDB]]) і шукає знову.
+- Якщо гра не знайдена, Kefir Hub каже [[No game by this name on SteamGridDB]] і одразу відкриває клавіатуру. Гра без картинок дає [[No pictures for this game on SteamGridDB]].
+- Вибрана картинка відкривається в редакторі обрізання (масштаб, переміщення; **A** [[Apply]]), тож іконкою може стати лише її частина.
+- Одночасно завантажується до 10 картинок. Якщо їх більше, спершу завантажується 5, а [[Load more]] додає ще по 5 (якщо лишилося б 1–3, вони завантажуються разом з попередньою партією).
+- Знайдені ігри й завантажені картинки зберігаються до перезапуску Kefir Hub: повторний вхід не завантажує їх знову.
 
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 

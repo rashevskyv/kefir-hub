@@ -39,12 +39,11 @@
 
 ### Оновлення Kefir Hub {#update-kefir-hub}
 
-<!-- draft
-- the check runs at start and again whenever the network comes up after the console was offline (not while an update is found, downloading or installed); the old sentence "It does not check again when the network connects later" no longer holds
-- the [[Updating]] window title shows the old and the new version ("0.14.160 -> 0.14.161"); the lines under it say only [[Downloading]] and [[Installing]]
-- an update you accepted on screen ([[Ask]] → [[Update]], or [[Update Kefir Hub]] in [[About]]) restarts Kefir Hub by itself when it is installed
-- a [[Silent]] update asks when it is ready: [[Kefir Hub was updated to]] <version>, [[The new version runs after a restart. Restart now?]] with [[Later]] / [[Restart Kefir Hub]]
--->
+Kefir Hub перевіряє наявність нової версії під час запуску і знову щоразу, коли мережа зʼявляється після того, як консоль була офлайн. Перевірка не виконується, поки оновлення знайдено, завантажується або встановлюється.
+
+- Заголовок вікна [[Updating]] показує стару й нову версії («0.14.160 -> 0.14.161»). Рядки під ним кажуть лише [[Downloading]] і [[Installing]].
+- Оновлення, яке ви прийняли на екрані ([[Ask]] → [[Update]] або [[Update Kefir Hub]] в [[About]]), після встановлення саме перезапускає Kefir Hub.
+- Тихе оновлення ([[Silent]]) питає, коли воно готове: [[Kefir Hub was updated to]] <версія>, [[The new version runs after a restart. Restart now?]] з варіантами [[Later]] / [[Restart Kefir Hub]].
 
 **Де:** [[Settings]] → [[General]] → [[Auto-update]]
 
@@ -131,8 +130,7 @@ Kefir Hub перевіряє наявність нової версії один
 
 | Параметр | Що робить | Типово |
 |---|---|---|
-| [[+ Add network location]] | Додає розташування SMB, NFS, WebDAV, FTP або HTTP. | |
-<!-- draft: for an FTP location the [[Server IP / Hostname]] field accepts "host:port" (for example 192.168.1.5:2121): the digits after the colon are taken as the port and written to the [[Port]] row, with the notice [[Port taken from the address:]]; a bare IPv6 address, a port of 0 or above 65535 stay as typed. The [[Port]] row asks with the console's number pad only (1 to 5 digits), not with the phone / PC input of the other fields. WebDAV and HTTP keep the port inside the URL. -->
+| [[+ Add network location]] | Додає розташування SMB, NFS, WebDAV, FTP або HTTP. Для FTP поле [[Server IP / Hostname]] приймає «хост:порт» (наприклад 192.168.1.5:2121): цифри після двокрапки стають портом і записуються в рядок [[Port]] з повідомленням [[Port taken from the address:]]. Голу адресу IPv6, порт 0 або понад 65535 лишає як введено. Рядок [[Port]] питає лише цифровою панеллю консолі (1–5 цифр). WebDAV і HTTP тримають порт усередині URL. | |
 | *кожне збережене розташування* | **A** відкриває його у файловому менеджері (або сторінку редагування, якщо його ще не налаштовано). **+** ([[Options]]) пропонує [[Enter/Connect]], [[Edit]], [[Test Connection]], [[Rename]], [[Properties]], [[Delete]]. | |
 | [[USB storage]] | Підключає USB-диски, вставлені в консоль, поруч із картою пам'яті. Вмикання вимикає [[MTP]]. | Увімк. |
 

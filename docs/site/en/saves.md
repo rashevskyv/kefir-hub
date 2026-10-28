@@ -117,12 +117,13 @@ To make Kefir Hub look in another folder too:
 
 Before overwriting, Kefir Hub saves the current save as a safety copy in `/dumps/recovery/`. After the restore a dialog shows where it is. When it finishes you see [[Restore successful!]].
 
-<!-- draft
-- [[Restore]] no longer asks for the user when the backup's user is clear: the same user (made on this console), or else the one console user with the same name as in the backup (the same people on another console, or users made again); it asks only when no user, or two users with that name, fit
-- new item [[Restore for a specific user]] in the backup actions (**A**): always asks for the user
-- on the [[Backups]] tab, the START options start with [[Backup actions]]: the same menu as **A** ([[Restore]], [[Restore for a specific user]], [[Verify integrity]] and the rest); the old [[Restore]] item there is gone
-- the owner caption under a backup tile (for example "[[All saves (bundle)]]") gets a smaller font when it is long and scrolls on the selected tile; before, it was cut on both sides
--->
+[[Restore]] no longer asks for the user when the backup's user is clear. It picks the same user (made on this console), or else the one console user with the same name as in the backup (the same people on another console, or users made again). It asks only when no user, or two users with that name, fit.
+
+To always choose the user yourself, use [[Restore for a specific user]] in the backup actions (**A**).
+
+On the [[Backups]] tab, the **+** options start with [[Backup actions]]. It opens the same menu as **A** ([[Restore]], [[Restore for a specific user]], [[Verify integrity]] and the rest). The separate [[Restore]] item there is gone.
+
+The owner caption under a backup tile (for example [[All saves (bundle)]]) gets a smaller font when it is long, and it scrolls on the selected tile. Before, it was cut on both sides.
 
 ## Restore from the Backups tab
 1. Open the [[Backups]] tab. Each game has a tile for each backup source. A tile contains the complete save bundle for that source: user accounts, Device, BCAT, and Cache saves.
@@ -160,19 +161,15 @@ To restore a save for a game you have uninstalled, either keep the console's sav
 ## Restore several saves at once
 Select several saves (or several backup groups), then choose [[Restore]]. [[Restore for user]] asks once which user gets all of them; pick [[Choose for each save]] there to answer for every save separately. If two of the selected backups are the same game from different users, it asks for each save; the question names the game, whose backup it is and its date. Give each backup a different user, or restore just one of them. Then one dialog lists every save and where it goes; confirm it with [[Yes]]. The saves are restored one by one: if one fails, the ones before it stay restored.
 
-<!-- draft
-- the confirmation lists each game by name with the user it goes to (no title ids, no "slot" words)
-- a save that cannot be restored no longer stops the rest: it is skipped, the others are restored, and the end shows "[[Restored: ]] N / M" and, under "[[Not restored:]]", each failed game with the reason (save in use, backup does not match, raw save file, error code)
-- a third button, [[Without a copy]], restores without first keeping a copy of the save that is replaced; [[Restore]] keeps the copy in /dumps/recovery as before
-- the note to close the running game shows only when a game is really suspended in the background (Kefir Hub started from the Homebrew Menu or the Album); started as a title, Kefir Hub is that game itself. The note about MTP is gone: Kefir Hub checks by itself whether a PC holds a save open
--->
+- The confirmation lists each game by name with the user it goes to. It shows no title ids.
+- A save that cannot be restored no longer stops the rest. The Hub skips it and restores the others. The end shows [[Restored: ]] N / M and, under [[Not restored:]], each failed game with the reason (save in use, backup does not match, raw save file, or an error code).
+- A third button, [[Without a copy]], restores without first keeping a copy of the save that is replaced. [[Restore]] keeps the copy in `/dumps/recovery` as before.
+- The note to close the running game shows only when a game is really suspended in the background (Kefir Hub started from the Homebrew Menu or the Album). When Kefir Hub is started as a title, it is that game itself. The note about MTP is gone: Kefir Hub checks by itself whether a PC holds a save open.
 
-<!-- draft
-- several saves: the confirmation no longer lists them (they were just selected); it says how many ("[[Saves to restore: ]] N")
-- the restore box has a second bar for the whole restore: "[[Done:]] 3 / 40" with a percentage, above the bar of the current save
-- the biggest saves are restored last: when the console memory runs out, the smaller ones are already in
-- in a bulk restore the backup check box says "[[Checking backups...]]" with which one of how many
--->
+- With several saves, the confirmation no longer lists them, because you just selected them. It says how many: [[Saves to restore: ]] N.
+- The restore box has a second bar for the whole restore, for example [[Done:]] 3 / 40 with a percentage, above the bar of the current save.
+- The biggest saves are restored last. When the console memory runs out, the smaller ones are already in.
+- In a bulk restore, the backup check box says [[Checking backups...]] and shows which backup of how many it is checking.
 
 ## Undo a restore
 The safety copy from `/dumps/recovery/` is an ordinary save ZIP of the save as it was before the restore.
@@ -195,11 +192,9 @@ It shows up on the [[Backups]] tab as one more archive in the [[Kefir Hub]] grou
 2. In [[Delete Options]] pick the users and save types, then [[Delete Saves]].
 3. Confirm with [[Delete]].
 
-<!-- draft
-- a save whose data is gone (the user partition was formatted, for example when a compressed emuMMC was made: the record stays, the data is not there) can now be deleted; before, deleting it failed with 2002-1002
-- the first time the saves open after Kefir Hub starts, it looks for such saves; when it finds some, it says how many and why, and offers [[Keep]] or [[Remove]]; [[Remove]] deletes all of them at once ("[[Removing saves without data]]") and shows how many were removed
-- these saves cannot be backed up or restored: there is nothing left to save
--->
+A save whose data is gone can now be deleted. This happens when the user partition was formatted, for example when a compressed emuMMC was made: the record stays, but the data is not there. Before, deleting such a save failed with error 2002-1002.
+
+The first time the saves open after Kefir Hub starts, it looks for such saves. When it finds some, it says how many and why, and offers [[Keep]] or [[Remove]]. [[Remove]] deletes all of them at once ([[Removing saves without data]]) and shows how many were removed. These saves cannot be backed up or restored, because nothing is left to save.
 
 ## Delete backups
 - One game: on the [[Backups]] tab, **A** on the game → choose a line → [[Delete]].

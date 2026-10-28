@@ -4,9 +4,7 @@
 
 **Де:** на ПК — диск `Install (NSP, XCI, NSZ, XCZ)`
 
-<!-- draft
-- MTP installs show no ban warning, also on sysMMC. See [Ban warning on sysMMC](index.md#ban-warning).
--->
+Встановлення через MTP не показує попередження про бан, також на sysMMC. Див. [Попередження про бан на sysMMC](index.md#ban-warning).
 
 ## Запустіть MTP {#start}
 
@@ -84,4 +82,4 @@ MTP і USB-накопичувачі використовують той сами
 
 **Копіювання відхилено з повідомленням «Please launch MTP install menu before trying to install».** Таке буває лише на мить одразу після запуску MTP. Зачекайте кілька секунд або вимкніть і знову ввімкніть MTP, а тоді скопіюйте ще раз.
 
-<!-- draft: copying many files over MTP shows [[Copying via MTP]] with one bar for the current file and, under it, the line [[Copied so far:]] with the number of finished [[files]], their size and the average speed of the whole copy; the count starts again when the copy ends (the PC does not tell the total, so there is no bar for the whole batch) -->
+Під час копіювання багатьох файлів через MTP показується [[Copying via MTP]] з однією смугою для поточного файла, а під нею рядок [[Copied so far:]] з кількістю завершених [[files]], їхнім розміром і середньою швидкістю всього копіювання. Лічильник починається знову після завершення копіювання. ПК не повідомляє загальний обсяг, тому смуги для всієї партії немає.

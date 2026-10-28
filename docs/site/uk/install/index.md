@@ -7,22 +7,21 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 ## Попередження про бан на sysMMC {#ban-warning}
 
-<!-- draft
-- Installing is always allowed. There is no switch to turn installing on.
-- On emuMMC Kefir Hub shows no warning before an install.
-- On sysMMC Kefir Hub shows a ban warning (what Nintendo can see, which online services it can ban, that emuMMC is safer) before the install starts, with the buttons [[Back]], [[Install]] and [[Don't show again]].
-- [[Back]] cancels the install. [[Install]] starts it, and the warning appears again next time. [[Don't show again]] turns the warning off and starts the install.
-- The warning appears before every install from: the File Browser (Install, Install recursively, **A** on an NSP or XCI file), Install Forwarder in the File Browser and in Homebrew, Ownfoil, Console Transfer (receive games), and PC Install (USB).
-- MTP and network stream installs (FTP, the web server) show no warning.
-- To turn the warning back on: [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]]. The same option is in the sidebar, Menu (**Y**) → Advanced → Install options.
-- Ini key `install_ban_warning`. Default: on.
--->
+Встановлення завжди дозволене. Перемикача, що його вмикає, немає.
+
+На emuMMC Kefir Hub не показує попередження перед встановленням. На sysMMC він показує попередження про бан перед початком встановлення: що бачить Nintendo, які онлайн-сервіси можуть заблокувати, і що emuMMC безпечніший. У ньому три кнопки:
+
+- [[Back]] скасовує встановлення.
+- [[Install]] починає встановлення; наступного разу попередження зʼявиться знову.
+- [[Don't show again]] вимикає попередження і починає встановлення.
+
+Попередження зʼявляється перед кожним встановленням з таких джерел: файловий менеджер (Install, Install recursively, **A** на файлі NSP або XCI), Install Forwarder у файловому менеджері та в Homebrew, Ownfoil, Console Transfer (отримання ігор) і PC Install (USB). Встановлення через MTP і мережеві потоки (FTP, веб-сервер) попередження не показують.
+
+Щоб увімкнути попередження знову: [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]]. Цей самий параметр є в бічному меню: Menu (**Y**) → Advanced → Install options. Ключ в ini: `install_ban_warning`. Типово: увімкнено.
 
 <!-- shot: install-index-ban-warning | Ban warning dialog on sysMMC with Back, Install and Don't show again buttons -->
 
-<!-- draft
-- after a game is installed, Kefir Hub keeps its own HOME Menu icon first when it was started from that icon; before, every install pushed it to the end of the list
--->
+Після встановлення гри Kefir Hub лишає власну іконку HOME Menu першою, якщо його запущено з цієї іконки. Раніше кожне встановлення переносило її в кінець списку.
 
 ## Виберіть спосіб {#methods}
 
@@ -118,12 +117,11 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 
 ## Проблеми {#problems}
 
-<!-- draft
-- After all content records in a package are registered successfully, Kefir Hub automatically resets the base game's local launch-required version to zero for each installed game update on HOS 6.0.0 or later. No option or manual action is needed.
-- This applies to normal and streamed installs. Skipped updates are not queued. If a later content record fails or is cancelled, already registered updates receive a best-effort reset; the original installation error remains visible.
-- Package versions stay unchanged. This does not block Nintendo's later online version checks or remove requirements imposed by DLC, saves or system firmware.
-- A failure of the reset is reported as an installation error; the already registered content remains installed. Readback values and readback errors are logged for console verification.
--->
+Коли всі записи вмісту пакета успішно зареєстровано, Kefir Hub на HOS 6.0.0 і новіших сам скидає в нуль локальну потрібну версію запуску базової гри для кожного встановленого оновлення. Параметр чи ручні дії не потрібні.
+
+- Це працює для звичайних і потокових встановлень. Пропущені оновлення в чергу не потрапляють. Якщо пізніший запис вмісту завершився помилкою або його скасовано, уже зареєстровані оновлення отримують скидання за можливості, а початкова помилка встановлення лишається видимою.
+- Версії пакетів не змінюються. Це не блокує пізніші онлайн-перевірки версії Nintendo і не знімає вимог від DLC, збережень чи прошивки.
+- Збій скидання показується як помилка встановлення. Уже зареєстрований вміст лишається встановленим. Прочитані значення й помилки читання записуються в журнал для перевірки на консолі.
 
 Після встановлення будь-яким способом (через файловий менеджер, ПК, MTP, FTP або браузер), якщо залишається оновлення або DLC без основної гри, Kefir Hub приблизно через п'ять секунд після останнього файлу показує одне вікно зі списком таких назв із написом «Installed without the base game». Параметр [[Keep]] (типово) залишає їх, а [[Delete]] видаляє їх (збереження залишаються). Залишайте їх, якщо основна гра на картриджі, або встановіть основну гру згодом. Це вікно також з'являється для черги DBI/PC.
 

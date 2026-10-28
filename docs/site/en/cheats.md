@@ -22,13 +22,13 @@ Kefir Hub installs, shows and deletes cheat files. It does not turn single cheat
 
 The pack comes from the switch-cheats-db project and is unpacked into `/atmosphere`. Existing cheat files with the same name are overwritten. You need an internet connection.
 
-<!-- draft
-- [[Download 60FPS/GFX Cheats]] no longer installs the whole pack: after the download a list from the bottom shows only the installed games that have cheats in it, with a tick box each; [[Install for ticked games]] adds the cheats to the ticked games only
-- under each game: [[For the installed version.]], [[Only for other versions of the game; may not work.]] or [[The installed version could not be checked.]]
-- the pack's cheats are added to the game's cheat file by name: cheats you already have (same name) stay as they are, other games are not touched; the file still goes through the dmnt limits
-- nothing installed has cheats in the pack: [[No installed game has cheats in this pack]]
-- [[Download Kefir Cheats]] still unpacks the whole pack and overwrites files with the same name
--->
+When you use [[Download 60FPS/GFX Cheats]], it does not install the whole pack directly. After the download, a list from the bottom shows only the installed games that have cheats in it, with a tick box each. Choose [[Install for ticked games]] to add the cheats to the ticked games only. Under each game, the list shows one of the following notes:
+- [[For the installed version.]]
+- [[Only for other versions of the game; may not work.]]
+- [[The installed version could not be checked.]]
+
+The pack's cheats are added to the game's cheat file by name: cheats you already have (same name) stay as they are, and other games are not touched. The file still goes through the same limits. If nothing installed has cheats in the pack, the screen shows [[No installed game has cheats in this pack]]. Choosing [[Download Kefir Cheats]] still unpacks the whole pack and overwrites files with the same name.
+
 <!-- shot: cheats-gfx-picker | 60FPS/GFX Cheats list with one installed game and the install row -->
 
 ## Download cheats for one game

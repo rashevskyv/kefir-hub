@@ -84,10 +84,7 @@ Kefir Hub може створити таку прив'язку без інтер
 
 1. Натисніть **A** і виберіть [[Link Nintendo Account]].
 
-<!-- draft
-- the launch offer to link unlinked profiles never comes on sysMMC
-- [[Link Nintendo Account]] on sysMMC first warns: a donor account on the original system gets the console banned as soon as sysMMC goes online; [[Back]] is the default, [[Link anyway]] goes on
--->
+На sysMMC пропозиція привʼязати непривʼязані профілі під час запуску не зʼявляється ніколи. [[Link Nintendo Account]] на sysMMC спершу попереджає: акаунт-донор на оригінальній системі призводить до бану консолі, щойно sysMMC вийде в мережу. Типово вибрано [[Back]], а [[Link anyway]] продовжує.
 
 2. Підтвердьте кнопкою [[Link and reboot]].
 3. Після перезавантаження профілі матимуть стан [[Linked]].

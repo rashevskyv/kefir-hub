@@ -33,18 +33,15 @@
 Деякі папки мають опис поруч із назвою:
 
 - у `/atmosphere/contents/` кожна папка з ID тайтла показує назву гри або системного модуля;
-<!-- draft
-- in `/atmosphere/contents/`, select title folders (or stand on one, or open one) → **+** → [[Pack into romfs.bin]] packs the `romfs` folder of each of them into `romfs.bin`, one after another; same dialog and free-space check as in [Games](games.md#mods-folder)
--->
+У `/atmosphere/contents/` виберіть теки ігор (або станьте на одній, або відкрийте її) і натисніть **+** → [[Pack into romfs.bin]]. Hub пакує теку `romfs` кожної гри в `romfs.bin`, по черзі. Діалог і перевірка вільного місця такі самі, як у розділі [Ігри](games.md#mods-folder).
 - файли й папки пакета Kefir (корінь карти, `atmosphere/`, `bootloader/`, `config/`, `switch/` та інші) показують,
   для чого вони. Повний список: [Що лежить на карті памʼяті](card-contents.md).
 
 ## Відкриття файлу
 
-<!-- draft
-- in the list view a `.nro` row shows the app's own icon (the grid view already did); files without an icon keep the generic one
-- **A** on a `.nro` asks to launch it; **+** → [[Install Forwarder]] makes a HOME Menu icon for it (see [Make a forwarder](#make-a-forwarder))
--->
+У режимі списку рядок `.nro` показує власну іконку застосунку, як і режим сітки. Файли без іконки мають стандартну.
+
+**A** на `.nro` пропонує запустити його. **+** → [[Install Forwarder]] створює для нього іконку в HOME Menu (див. [Створення форвардера](#make-a-forwarder)).
 **A** на файлі робить те, що пасує до типу файлу:
 
 | Файл | Що відбувається |

@@ -9,6 +9,7 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | Group | Item | What it is |
 |---|---|---|
 | [[Diagnostics]] | [[System information]] | Console, Atmosphère, storage, power, battery, hardware and play activity. See [System information](#system-information). |
+| [[Diagnostics]] | [[Check game updates]] | Find installed games that have a newer update. |
 | [[Settings]] | [[Module Manager]] | Start, stop and set autostart for installed sysmodules. |
 | [[Settings]] | [[Fan curve]] | Fan speed curves for handheld and docked mode. |
 | [[Settings]] | [[Wi-Fi]] | Saved Wi-Fi networks. |
@@ -18,14 +19,19 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | [[Maintenance]] | [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free SD space with zeros](#fill-free-sd-space-with-zeros). |
 | [[Maintenance]] | [[Remove parental controls]] | Planned; opens a "Coming soon" message. |
 
-<!-- draft
-- new row under [[Diagnostics]]: [[Check game updates]] ("[[Find installed games that have a newer update.]]"); add it to the table above and give it a short section
-- it downloads the list of the latest game updates that Kefir Updater used (switch-cheats-db, about 21 000 games, 3.6 MB) and compares it with the installed version of every game
-- the page [[Game updates]] lists only the games with a newer update: name on the left, installed update and newest update on the right, for example v1 → v6 (the update number, as elsewhere in Kefir Hub); the caption on top says how many ([[Updates available: ]])
-- games the list does not know (homebrew forwarders, very new or rare games) are not checked; the caption at the bottom counts them ([[Not in the list, not checked: ]])
-- with nothing to update: the notice "[[All checked games are up to date]]"
-- **B** stops the download; it needs the internet
--->
+## [[Check game updates]]
+
+**Where:** [[Tools]] → [[Tools]] → [[Check game updates]]
+
+It downloads the list of the latest game updates that Kefir Updater used (switch-cheats-db, about 21 000 games, 3.6 MB) and compares it with the installed version of every game.
+
+The page [[Game updates]] lists only the games with a newer update: name on the left, installed update and newest update on the right, for example v1 → v6 (the update number, as elsewhere in Kefir Hub); the caption on top says how many ([[Updates available: ]]).
+
+Games the list does not know (homebrew forwarders, very new or rare games) are not checked; the caption at the bottom counts them ([[Not in the list, not checked: ]]).
+
+With nothing to update: the notice "[[All checked games are up to date]]".
+
+Press **B** to stop the download; it needs the internet.
 
 ## [[System information]]
 
@@ -186,66 +192,91 @@ Create, rename, back up and link console user profiles. See [Users](users.md).
 
 **Where:** [[Tools]] → [[Tools]] → [[Battery]]
 
-<!-- draft
-- read only: nothing is written to the fuel gauge chip or to the system settings in this version
-- [[Verdict]]: [[No sign of desync on this MMC]], or the signs found: [[Restore flag (MiscCFG bit 15)]] (the chip lost power; HOS writes this MMC's saved copy at the next start), [[Restart flag (Status POR)]], [[Chip vs this MMC's copy]] with the parameters that differ; also [[Battery version]] (CAL0 and set:cal disagree), [[Cycle count]] (Lite: not trusted, charge limit 4.192 V), [[Learned capacity]] below 70 % of design
-- "Model: chip / sysMMC|emuMMC": the nine learned parameters (RCOMP0, TempCo, FullCap, FullCapNom, IAvgEmpty, QRTable00..30) as chip / saved copy, hex, capacities also in mAh; a row that differs is marked ≠
-- [[Fuel gauge (chip)]]: charge, remaining, full and design capacity, cell and open-circuit voltage, cycles register, MiscCFG / Status
-- [[Saved by the system]]: charge cycles and cycle count reliability of the MMC you are in; sysMMC and emuMMC each keep their own copy, so open the page in both
-- **X** ([[Back up]]): `/config/kefir/battery/<date>-<sysmmc|emummc>.cal` (24 bytes, the `batt.cal` format of Battery Desync Fix; copy it to `/switch/batt.cal` to use it there) and a `.txt` beside it with all 256 chip registers, the saved copy, battery versions and lot
-- every open saves this MMC's copy (`/config/kefir/battery/<mmc>-copy.cal`); opened once in the other MMC, the page also shows [[Chip vs other MMC's copy]]; until then [[Other MMC]]: [[Not checked: boot it and open this page once]]
-- [[Charge: shown / by voltage]]: the % the console shows and the % from the cell voltage; 10+ points apart on battery (the console in normal use is fine) = the % is wrong; while charging only a hint; [[Charge on the console screen]] is the % HOS shows
-- [[No sign of desync found]] only when the other MMC was checked and the % was read on battery
-- first row of [[Verdict]]: [[Full capacity / design]] in mAh and %; more than 10 % under design is drawn orange and counts as desync (" — desync, the saved copy too")
-- [[Charge cycles: this / other MMC]] in orange when the two MMCs count a cycle or more apart (Lite: the charge voltage limit follows the count)
-- A on a row shows what it means; A on a section caption opens or closes it
-- **+** ([[Calibrate]]) opens the same wizard as [[Tools]] → [[Tools]] → [[Battery calibration]] (see that section): the reset to the factory model is its first step; [[Actions]] on its steps page opens [[Back up the chip's values]], [[Align the charge to the voltage]], [[Restore from the last backup]], [[Match the other MMC]] (no chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs) and [[Battery type (PRODINFO)]]
-- after a reset: do not let the battery run flat in the other MMC before the two cycles are done; open the page there once and choose [[Match the other MMC]]
-- why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions
--->
-<!-- draft
-- the drain page starts the screensaver after the idle time set for the install screen (two minutes when that is off), to keep the panel from burning in: a black page with a drifting readout: the cycle, the battery bar and percent, power (W, mA) and temperature, the energy (Wh), the time on battery and the time to switch-off (on the charger: the charge %)
-- any button or a touch wakes it (that press does nothing else); the load and the measuring go on behind it; the stick moves the readout and sets its brightness and drift speed as on the install screen
--->
+Read only: nothing is written to the fuel gauge chip or to the system settings in this version.
 
-<!-- draft
-- the hekate hop to the other MMC (0.14.163) is no longer a step of the wizard: [[5. Transfer to the other MMC]] writes the calibration there by itself at the next start of the Hub in that system (see [[Battery calibration]])
-- [[Battery size]]: when the learned capacity is more than 130 % of the design capacity the Verdict says a larger battery is built in ([[of the design capacity: a larger battery is built in]]); with the battery type LiPo it adds [[The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery]]; this is not a desync sign
-- on the drain page, after the battery ran down: [[Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on.]]
-- advice from the community guide: a full cycle once a month keeps the capacity; a drop of about 300 mAh in use comes back with a normal discharge-charge cycle
-- **X** ([[Actions]]) → [[Battery type (PRODINFO)]]: sets the battery version byte of PRODINFO: [[LiHV (4.32 V): for a larger battery]] (version 2) or [[Back to the original]]; a backup of PRODINFO (`/config/kefir/battery/prodinfo-<time>.bin`) is read back and compared before anything is written; only the battery block and the body hash change; the result is checked and the old values are put back when the check fails; PRODINFO that fails its own hashes or CRC is never touched
-- Atmosphère blocks writing PRODINFO: when it is off, Kefir Hub turns on `allow_writing_to_cal_sysmmc=1` (exosphere.ini) and `enable_hbl_bis_write` (system_settings.ini), restarts the console, finishes the change by itself at the next start and turns both off again; in emuMMC the write may be refused (then restart into sysMMC); the change applies to the PRODINFO of the system it ran in
-- after the change: run the calibration wizard (reset, two full cycles); the Battery page then shows the type [[Type]] LiHV (4.32 V) and the full capacity of a larger battery
--->
+[[Verdict]]: [[No sign of desync on this MMC]], or the signs found: [[Restore flag (MiscCFG bit 15)]] (the chip lost power; HOS writes this MMC's saved copy at the next start), [[Restart flag (Status POR)]], [[Chip vs this MMC's copy]] with the parameters that differ; also [[Battery version]] (CAL0 and set:cal disagree), [[Cycle count]] (Lite: not trusted, charge limit 4.192 V), [[Learned capacity]] below 70 % of design.
+
+Model: chip / sysMMC|emuMMC: the nine learned parameters (RCOMP0, TempCo, FullCap, FullCapNom, IAvgEmpty, QRTable00..30) as chip / saved copy, hex, capacities also in mAh; a row that differs is marked ≠.
+
+[[Fuel gauge (chip)]]: charge, remaining, full and design capacity, cell and open-circuit voltage, cycles register, MiscCFG / Status.
+
+[[Saved by the system]]: charge cycles and cycle count reliability of the MMC you are in; sysMMC and emuMMC each keep their own copy, so open the page in both.
+
+**X** ([[Back up]]): `/config/kefir/battery/<date>-<sysmmc|emummc>.cal` (24 bytes, the `batt.cal` format of Battery Desync Fix; copy it to `/switch/batt.cal` to use it there) and a `.txt` beside it with all 256 chip registers, the saved copy, battery versions and lot.
+
+Every open saves this MMC's copy (`/config/kefir/battery/<mmc>-copy.cal`); opened once in the other MMC, the page also shows [[Chip vs other MMC's copy]]; until then [[Other MMC]]: [[Not checked: boot it and open this page once]].
+
+[[Charge: shown / by voltage]]: the % the console shows and the % from the cell voltage; 10+ points apart on battery (the console in normal use is fine) = the % is wrong; while charging only a hint; [[Charge on the console screen]] is the % HOS shows.
+
+[[No sign of desync found]] only when the other MMC was checked and the % was read on battery.
+
+First row of [[Verdict]]: [[Full capacity / design]] in mAh and %; more than 10 % under design is drawn orange and counts as desync (" — desync, the saved copy too").
+
+[[Charge cycles: this / other MMC]] in orange when the two MMCs count a cycle or more apart (Lite: the charge voltage limit follows the count).
+
+**A** on a row shows what it means; **A** on a section caption opens or closes it.
+
+**+** ([[Calibrate]]) opens the same wizard as [[Tools]] → [[Tools]] → [[Battery calibration]] (see that section): the reset to the factory model is its first step; [[Actions]] on its steps page opens [[Back up the chip's values]], [[Align the charge to the voltage]], [[Restore from the last backup]], [[Match the other MMC]] (no chip write: this MMC's copy takes the chip's model and the larger cycle count of the two MMCs) and [[Battery type (PRODINFO)]].
+
+After a reset: do not let the battery run flat in the other MMC before the two cycles are done; open the page there once and choose [[Match the other MMC]].
+
+Why: HOS writes its saved copy into the chip only after the chip lost power, and each MMC has its own copy, so switching MMCs can leave the chip and the copy apart (wrong %, sudden shutdowns); the calibration wizard and the reset come in later versions.
+
+The drain page starts the screensaver after the idle time set for the install screen (two minutes when that is off), to keep the panel from burning in: a black page with a drifting readout: the cycle, the battery bar and percent, power (W, mA) and temperature, the energy (Wh), the time on battery and the time to switch-off (on the charger: the charge %).
+
+Any button or a touch wakes it (that press does nothing else); the load and the measuring go on behind it; the stick moves the readout and sets its brightness and drift speed as on the install screen.
+
+The hekate hop to the other MMC (0.14.163) is no longer a step of the wizard: [[5. Transfer to the other MMC]] writes the calibration there by itself at the next start of the Hub in that system (see [[Battery calibration]]).
+
+[[Battery size]]: when the learned capacity is more than 130 % of the design capacity the Verdict says a larger battery is built in ([[of the design capacity: a larger battery is built in]]); with the battery type LiPo it adds [[The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery]]; this is not a desync sign.
+
+On the drain page, after the battery ran down: [[Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on.]].
+
+Advice from the community guide: a full cycle once a month keeps the capacity; a drop of about 300 mAh in use comes back with a normal discharge-charge cycle.
+
+**X** ([[Actions]]) → [[Battery type (PRODINFO)]]: sets the battery version byte of PRODINFO: [[LiHV (4.32 V): for a larger battery]] (version 2) or [[Back to the original]]; a backup of PRODINFO (`/config/kefir/battery/prodinfo-<time>.bin`) is read back and compared before anything is written; only the battery block and the body hash change; the result is checked and the old values are put back when the check fails; PRODINFO that fails its own hashes or CRC is never touched.
+
+Atmosphère blocks writing PRODINFO: when it is off, Kefir Hub turns on `allow_writing_to_cal_sysmmc=1` (exosphere.ini) and `enable_hbl_bis_write` (system_settings.ini), restarts the console, finishes the change by itself at the next start and turns both off again; in emuMMC the write may be refused (then restart into sysMMC); the change applies to the PRODINFO of the system it ran in.
+
+After the change: run the calibration wizard (reset, two full cycles); the Battery page then shows the type [[Type]] LiHV (4.32 V) and the full capacity of a larger battery.
 
 <!-- shot: system-tools-battery | Battery page with the verdict and the model rows -->
 
-<!-- draft
-- [[Storage manager]] (Tools): a ring of what fills the microSD card: [[Saves and album]], [[Atmosphère and Kefir]], [[Homebrew]], [[Dumps and backups]], [[Game files (NSP, XCI)]], [[Emulators and their games]], [[Other files]] and [[Free space]], with the size and the percent of each; the centre shows the used and the total space; the system memory (used / total) is written under the list
-- **Up** / **Down** pick a slice; **A** opens its card: what it is, whether it can be deleted, where it is, why it is there
-- the folders are counted when the page opens (a progress bar shows the step); a partition emuMMC is outside the card's file system and is not in the ring
-- the card is shown whole: the line under the list reads "microSD: total = N in the file system + M outside it"; a partition emuMMC is the part outside the file system, so no folder shows it
-- the emuMMC is one container: the list has a line [[emuMMC]] with the sum, and its parts indented under it: [[emuMMC partition]] or [[emuMMC files]] (the emuMMC itself) and [[Games in the emuMMC]]; choosing the line lights all its parts in the ring; **A** on it explains what an emuMMC is
-- **Y** ([[What is an emuMMC?]]) opens the explanation of an emuMMC from anywhere on the page
-- [[Game files (NSP, XCI)]] counts /games only; [[Emulators and their games]] counts the emulators (RetroArch, Tico) and the ROM folders: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico
--->
+### [[Storage manager]] { #storage-manager }
 
-<!-- draft
-- [[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); [[Add to favourites]] sits above the list; on a favourite **A** opens it in the console's own browser (the same applet BrowseNX starts), **X** [[Select]]s it and **Y** [[Invert]]s the marks, as in the File Browser; **START** ([[Options]]) offers [[Open]], [[Add to favourites]] and [[Remove]] for the marked favourites, or for the one under the cursor when none is marked; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it); on firmware 20.0.0 to 22.5.0 the system browser asks for a system update and opens no page, so the row only says that firmware 23.0.1 or newer is needed ([[The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.]])
--->
+[[Storage manager]] (Tools): a ring of what fills the microSD card: [[Saves and album]], [[Atmosphère and Kefir]], [[Homebrew]], [[Dumps and backups]], [[Game files (NSP, XCI)]], [[Emulators and their games]], [[Other files]] and [[Free space]], with the size and the percent of each; the centre shows the used and the total space; the system memory (used / total) is written under the list.
+
+**Up** / **Down** pick a slice; **A** opens its card: what it is, whether it can be deleted, where it is, why it is there.
+
+The folders are counted when the page opens (a progress bar shows the step); a partition emuMMC is outside the card's file system and is not in the ring.
+
+The card is shown whole: the line under the list reads "microSD: total = N in the file system + M outside it"; a partition emuMMC is the part outside the file system, so no folder shows it.
+
+The emuMMC is one container: the list has a line [[emuMMC]] with the sum, and its parts indented under it: [[emuMMC partition]] or [[emuMMC files]] (the emuMMC itself) and [[Games in the emuMMC]]; choosing the line lights all its parts in the ring; **A** on it explains what an emuMMC is.
+
+**Y** ([[What is an emuMMC?]]) opens the explanation of an emuMMC from anywhere on the page.
+
+[[Game files (NSP, XCI)]] counts /games only; [[Emulators and their games]] counts the emulators (RetroArch, Tico) and the ROM folders: /roms, /ROMs, /retroarch, /RetroArch, /tico, /Tico.
+
+### [[Web browser]] { #web-browser }
+
+[[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); [[Add to favourites]] sits above the list; on a favourite **A** opens it in the console's own browser (the same applet BrowseNX starts), **X** [[Select]]s it and **Y** [[Invert]]s the marks, as in the File Browser; **START** ([[Options]]) offers [[Open]], [[Add to favourites]] and [[Remove]] for the marked favourites, or for the one under the cursor when none is marked; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it); on firmware 20.0.0 to 22.5.0 the system browser asks for a system update and opens no page, so the row only says that firmware 23.0.1 or newer is needed ([[The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.]]).
 
 ## Battery calibration {#battery-calibration}
 
 **Where:** [[Tools]] → [[Tools]] → [[Battery calibration]]
 
-<!-- draft (0.14.203; the interactive guide with every screen is battery-calibration.md; the guide still shows the 0.14.197 order and is to be redrawn)
-- a wizard that teaches the fuel gauge again: [[Why this is needed]] (the gauge can switch the console off at 35 %, or show 0 % for an hour), [[How it works]] (the factory battery model is written first, then two full cycles), [[What you do]], [[How long it takes]] (several hours); a second page [[What happens to the console]] explains the off-and-on loop after the cut-off and the charge; [[Start calibration]]
-- the steps: [[1. Reset the gauge]], [[2. Cycle 1: drain, then charge]], [[3. Cycle 2: drain, then charge]], [[4. Report]], [[5. Transfer to the other MMC]]; only the next step is active ([[Active]], [[Locked]], [[Done]]); the state is kept on the SD card (`/config/kefir/battery/calibration.txt`: the reset and the cycles; `calib.txt`: the report, the transfer, the drain in progress), so the Hub can be closed and the console used between the steps; [[Actions]] opens the backup, the align to the voltage, the restore, the match and the battery type
-- step 1: [[Reset the gauge]]: the charger in, the Hub waits on the charger until the battery is full, makes a backup of the gauge and writes the factory battery model; what the gauge learned before is dropped
-- steps 2 and 3: a cycle is a drain and then a charge; it counts by itself when 90 % of the battery was drained since the reset (the console's own cycle total, so a drain by the user's own use counts too) and the console shows 100 % again; [[Discharged in this cycle]] shows the progress; [[Start the drain]]: the charger out, the Hub loads the CPU and GPU at full brightness (the drain page: battery, power, CPU / GPU / temperature charts, the screensaver on Minus or after the idle time) until the console switches itself off; after every switch-off the user switches the console on again and the Hub goes on by itself, now slowly: no load, auto-brightness off, brightness at the minimum ([[Drain after the cut-off]]); every second a line goes to `/config/kefir/battery/calib-log.csv`; when enough is drained the page says [[The battery ran down enough. Now charge it to 100 %. The cycle then counts by itself.]] ([[Start charging]]: the screen stays on, the screensaver works, the Hub may be closed); taking the charger out after the count starts the next drain by itself
-- step 4: [[Calibration report]]: [[Learned capacity]] against design, the [[Verdict]], the gauge before each cut-off (per cycle, from the log); step 5 ([[Transfer to the other MMC]]): the calibration is noted in a ledger on the SD (`/config/kefir/battery/ledger.txt`: where it was made, a number, the battery model); at the next start of the Hub in another system (sysMMC, another emuMMC; a file-based one is told by its folder, a partition one by its start sector) that has an older number and the same battery model, the Hub writes it there by itself and shows [[Battery calibration was transferred from]] ... [[to]] ...
-- after a drain the console cut short (the chip shows 30 %, its voltage says 3 %) the Hub offers [[Align the charge to the voltage]] at its start, also while a calibration is under way
--->
+A wizard that teaches the fuel gauge again: [[Why this is needed]] (the gauge can switch the console off at 35 %, or show 0 % for an hour), [[How it works]] (the factory battery model is written first, then two full cycles), [[What you do]], [[How long it takes]] (several hours); a second page [[What happens to the console]] explains the off-and-on loop after the cut-off and the charge; [[Start calibration]].
+
+The steps: [[1. Reset the gauge]], [[2. Cycle 1: drain, then charge]], [[3. Cycle 2: drain, then charge]], [[4. Report]], [[5. Transfer to the other MMC]]; only the next step is active ([[Active]], [[Locked]], [[Done]]); the state is kept on the SD card (`/config/kefir/battery/calibration.txt`: the reset and the cycles; `calib.txt`: the report, the transfer, the drain in progress), so the Hub can be closed and the console used between the steps; [[Actions]] opens the backup, the align to the voltage, the restore, the match and the battery type.
+
+Step 1: [[Reset the gauge]]: the charger in, the Hub waits on the charger until the battery is full, makes a backup of the gauge and writes the factory battery model; what the gauge learned before is dropped.
+
+Steps 2 and 3: a cycle is a drain and then a charge; it counts by itself when 90 % of the battery was drained since the reset (the console's own cycle total, so a drain by the user's own use counts too) and the console shows 100 % again; [[Discharged in this cycle]] shows the progress; [[Start the drain]]: the charger out, the Hub loads the CPU and GPU at full brightness (the drain page: battery, power, CPU / GPU / temperature charts, the screensaver on Minus or after the idle time) until the console switches itself off; after every switch-off the user switches the console on again and the Hub goes on by itself, now slowly: no load, auto-brightness off, brightness at the minimum ([[Drain after the cut-off]]); every second a line goes to `/config/kefir/battery/calib-log.csv`; when enough is drained the page says [[The battery ran down enough. Now charge it to 100 %. The cycle then counts by itself.]] ([[Start charging]]: the screen stays on, the screensaver works, the Hub may be closed); taking the charger out after the count starts the next drain by itself.
+
+Step 4: [[Calibration report]]: [[Learned capacity]] against design, the [[Verdict]], the gauge before each cut-off (per cycle, from the log); step 5 ([[Transfer to the other MMC]]): the calibration is noted in a ledger on the SD (`/config/kefir/battery/ledger.txt`: where it was made, a number, the battery model); at the next start of the Hub in another system (sysMMC, another emuMMC; a file-based one is told by its folder, a partition one by its start sector) that has an older number and the same battery model, the Hub writes it there by itself and shows [[Battery calibration was transferred from]] ... [[to]] ...
+
+After a drain the console cut short (the chip shows 30 %, its voltage says 3 %) the Hub offers [[Align the charge to the voltage]] at its start, also while a calibration is under way.
 
 ## Clean system junk
 
@@ -278,16 +309,21 @@ before you sell or hand over a card, so deleted data cannot be recovered.
 
 Kefir Hub keeps 64 MB free while it writes, so the system can still save its own data.
 
-<!-- draft
-- the fill writes one temporary file, /kefir-hub-zero-fill.tmp, that grows until the card is full; nothing is reserved up front
-- two steps on screen: "Step 1 of 2: writing zeros" with written / total, speed, time left and a write speed graph with the current ("Now") and the average speed of the whole fill, the time elapsed and the time left at the average speed; "Step 2 of 2: removing the temporary file, do not turn the console off"
-- **B** stops within a second; the temporary file is then removed
-- **Minus** ([[Screen off]]) shows the screensaver with the step, written / total, current and average speed, time left, time elapsed and the graph; with [[Inactivity timeout]] set it starts by itself; any button brings the progress back
-- the figures change once a second
-- the console does not sleep and the screen does not dim while the fill runs
-- after a crash or a power-off during a fill, Kefir Hub removes the temporary file at its next start
-- the card gets real zeros (the file is not encrypted)
--->
+The fill writes one temporary file, `/kefir-hub-zero-fill.tmp`, that grows until the card is full; nothing is reserved up front.
+
+Two steps on screen: "Step 1 of 2: writing zeros" with written / total, speed, time left and a write speed graph with the current ("Now") and the average speed of the whole fill, the time elapsed and the time left at the average speed; "Step 2 of 2: removing the temporary file, do not turn the console off".
+
+**B** stops within a second; the temporary file is then removed.
+
+**Minus** ([[Screen off]]) shows the screensaver with the step, written / total, current and average speed, time left, time elapsed and the graph; with [[Inactivity timeout]] set it starts by itself; any button brings the progress back.
+
+The figures change once a second.
+
+The console does not sleep and the screen does not dim while the fill runs.
+
+After a crash or a power-off during a fill, Kefir Hub removes the temporary file at its next start.
+
+The card gets real zeros (the file is not encrypted).
 
 ## Problems
 

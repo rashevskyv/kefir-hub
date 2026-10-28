@@ -125,13 +125,11 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 - **+** → [[Open mods folder]] відкриває її у файловому менеджері. Якщо папки немає, пункт називається [[Create mods folder]]; підтвердіть кнопкою [[Create]].
 - Зі списку **+** → [[Create mods folders]] створює папку для кожної позначеної гри.
 - **+** → [[Delete mods]] видаляє все в папці, крім `cheats/`; чіти керуються в розділі [Чіти](cheats.md).
-<!-- draft
-- **+** → [[Pack into romfs.bin]] is shown when the game has a `romfs` folder in its mods folder. It packs `<Title ID>/romfs/` into one file `<Title ID>/romfs.bin`, without compression; Atmosphère reads it the same way, but opens one file instead of thousands
-- first a dialog: [[Back]], [[Keep folders]] or [[Delete folders]]. Files left in `romfs/` take priority over `romfs.bin`, so keeping the folder gives no gain
-- free space is checked before anything is written. With [[Delete folders]] only the largest `romfs.bin` must fit: titles are packed largest first and each `romfs/` folder is deleted right after its file is written. With [[Keep folders]] all files together must fit. 64 MB always stay free. If it does not fit, nothing is packed and the dialog shows the space needed and free
-- a title that already has `romfs.bin` is skipped (the old file is not overwritten); a half-written file is named `romfs.bin.part` and is removed on cancel or error
-- the end report lists each title: packed (size), skipped (reason) or failed (error code)
--->
+- **+** → [[Pack into romfs.bin]] з'являється, коли в папці модів гри є папка `romfs`. Ця функція запаковує `<Title ID>/romfs/` в один файл `<Title ID>/romfs.bin` без стиснення; Atmosphère читає його так само, але відкриває один файл замість тисяч.
+- Спочатку з'являється діалогове вікно: [[Back]], [[Keep folders]] або [[Delete folders]]. Файли, залишені в `romfs/`, мають пріоритет над `romfs.bin`, тому збереження папки не дає жодної вигоди.
+- Вільне місце перевіряється перед записом будь-яких даних. У разі вибору [[Delete folders]] має поміститися лише найбільший файл `romfs.bin`: ігри запаковуються від найбільшої до найменшої, і кожна папка `romfs/` видаляється одразу після запису її файлу. У разі вибору [[Keep folders]] усі файли мають поміститися разом. Завжди залишається вільними 64 МБ. Якщо місця недостатньо, нічого не запаковується, а в діалоговому вікні відображаються необхідний та вільний об'єм пам'яті.
+- Назва, яка вже має файл `romfs.bin`, пропускається (старий файл не перезаписується); файл у процесі запису отримує назву `romfs.bin.part` і видаляється у разі скасування чи помилки.
+- Підсумковий звіт містить перелік кожної назви: запаковано (розмір), пропущено (причина) або не вдалося запакувати (код помилки).
 
 Порожня папка нічого не робить — скопіюйте в неї файли мода.
 

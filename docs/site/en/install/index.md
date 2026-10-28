@@ -7,22 +7,15 @@ Kefir Hub installs games, game updates and DLC from package files. This page hel
 
 ## Ban warning on sysMMC {#ban-warning}
 
-<!-- draft
-- Installing is always allowed. There is no switch to turn installing on.
-- On emuMMC Kefir Hub shows no warning before an install.
-- On sysMMC Kefir Hub shows a ban warning (what Nintendo can see, which online services it can ban, that emuMMC is safer) before the install starts, with the buttons [[Back]], [[Install]] and [[Don't show again]].
-- [[Back]] cancels the install. [[Install]] starts it, and the warning appears again next time. [[Don't show again]] turns the warning off and starts the install.
-- The warning appears before every install from: the File Browser (Install, Install recursively, **A** on an NSP or XCI file), Install Forwarder in the File Browser and in Homebrew, Ownfoil, Console Transfer (receive games), and PC Install (USB).
-- MTP and network stream installs (FTP, the web server) show no warning.
-- To turn the warning back on: [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]]. The same option is in the sidebar, Menu (**Y**) → Advanced → Install options.
-- Ini key `install_ban_warning`. Default: on.
--->
+Consoles running sysMMC display a warning before any installation begins to highlight what Nintendo can detect, which online services face potential bans, and why emuMMC offers a safer environment. The dialog provides three options: selecting [[Back]] cancels the installation; choosing [[Install]] proceeds with the process while causing the warning to appear again during future attempts; and clicking [[Don't show again]] disables the reminder entirely and starts the installation.
+
+This warning precedes installations initiated via the File Browser (such as using Install, Install recursively, or pressing **A** on an NSP or XCI file), the Install Forwarder within both the File Browser and Homebrew, Ownfoil, Console Transfer when receiving games, and PC Install via USB. By contrast, MTP and network stream methods—including FTP and the web server—bypass this prompt.
+
+To re-enable the warning later, navigate to [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]], or access the same option through the sidebar menu via Menu (**Y**) → Advanced → Install options. This corresponds to the `install_ban_warning` configuration key, which defaults to on.
 
 <!-- shot: install-index-ban-warning | Ban warning dialog on sysMMC with Back, Install and Don't show again buttons -->
 
-<!-- draft
-- after a game is installed, Kefir Hub keeps its own HOME Menu icon first when it was started from that icon; before, every install pushed it to the end of the list
--->
+Following a successful installation, Kefir Hub preserves its own HOME Menu icon in its initial position when launched from that shortcut, preventing the previous behavior where every installation pushed it to the end of the list.
 
 ## Choose a method {#methods}
 
@@ -118,12 +111,7 @@ MTP, FTP and web-browser installs always import the tickets.
 
 ## Problems {#problems}
 
-<!-- draft
-- After all content records in a package are registered successfully, Kefir Hub automatically resets the base game's local launch-required version to zero for each installed game update on HOS 6.0.0 or later. No option or manual action is needed.
-- This applies to normal and streamed installs. Skipped updates are not queued. If a later content record fails or is cancelled, already registered updates receive a best-effort reset; the original installation error remains visible.
-- Package versions stay unchanged. This does not block Nintendo's later online version checks or remove requirements imposed by DLC, saves or system firmware.
-- A failure of the reset is reported as an installation error; the already registered content remains installed. Readback values and readback errors are logged for console verification.
--->
+Upon successfully registering all content records within a package on HOS 6.0.0 or later, Kefir Hub automatically resets the local launch-required version of the base game to zero for each installed update without requiring manual intervention or configuration. This behavior functions during normal and streamed installations, though skipped updates remain unqueued. Should a subsequent content record fail or get canceled, any updates registered prior will undergo a best-effort reset while preserving the original installation error message. Package versions remain unchanged, meaning this process neither bypasses online version checks enforced by Nintendo nor eliminates requirements dictated by DLC, save files, or system firmware. Any failures encountered during the reset are logged as installation errors while keeping the already registered content intact, and readback values along with any associated errors are recorded in the log for console verification.
 
 After an install from any source that leaves an update or DLC without its base game, Kefir Hub waits about five seconds after the last file and shows a box listing those titles as "Installed without the base game". Select [[Keep]] to leave them or [[Delete]] to remove them, noting that saves are kept. Keep them if the base game is on a game card or if you plan to install the base game afterwards. This box also appears for the DBI and PC queue.
 

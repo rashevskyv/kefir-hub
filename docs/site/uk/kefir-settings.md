@@ -24,16 +24,11 @@
 | Параметр | Що робить | Показано «увімкнено», коли | Типово |
 |---|---|---|---|
 | [[Overclock status]] | Вмикає чи вимикає файли розгону Kefir. Вимкнення видаляє модуль sys-clk, його оверлей і kip-файли розгону, а конфіг sys-clk зберігає в `/config/oc_bkp`. Увімкнення копіює їх назад із `/config/oc`. Перезавантажує консоль. | існує `/atmosphere/kips/kefir.kip` | Вимк. |
-| [[40MB Memory]] | Новіші версії Atmosphère лишають менше пам'яті для аплетів (homebrew, запущені з Альбому) і для модів LayeredFS. Цей патч повертає цю пам'ять (`force_40mb_applet` у файлі Atmosphère `system_settings.ini`). Деякі ігри з ним працюють неправильно: якщо гра поводиться дивно, вимкніть його. Перезавантажує консоль. | патч установлено | Вимк. |
+| [[40MB Memory]] | Новіші версії Atmosphère лишають менше пам'яті для аплетів (homebrew, запущені з Альбому) і для модів LayeredFS. Цей патч повертає цю пам'ять (`force_40mb_applet` у файлі Atmosphère `system_settings.ini`). Цей параметр показується лише на прошивках нижче 23.0.0 або коли Kefir нижче 926 (чи якщо файл версії неможливо прочитати), оскільки в новіших версіях патч не потрібен. Деякі ігри з ним працюють неправильно: якщо гра поводиться дивно, вимкніть його. Перезавантажує консоль. | патч установлено | Вимк. |
 | [[USB 3.0]] | Примусово вмикає USB 3.0 в Atmosphère. Під час увімкнення з'являється попередження, що це може спричинити збої, нестабільність або проблеми з деякими USB-пристроями (утримуйте **A**, щоб підтвердити). Зміна діє лише після перезавантаження; Kefir Hub запитає [[Later]] чи [[Reboot]]. | параметр явно ввімкнено | Вимк. |
 | [[Redirect Emunand saves to SD]] | Експериментальне. Зберігає збереження emuMMC на карті пам'яті. Видно, лише коли emuMMC увімкнено. Під час вимкнення також видаляє `/config/redirect.bin`. Перезавантажує консоль. | параметр увімкнено | Вимк. |
 | [[8GB DRAM status]] | Лише для консолей із фізично впаяними 8 ГБ оперативної пам'яті. Перезавантажує консоль у TegraExplorer, щоб застосувати або прибрати конфігурацію 8 ГБ. Якщо консоль завантажилася з увімкненим параметром, 8 ГБ на місці й працюють. | існує `/tegraexplorer/scripts/Remove_8GB-RAM_config.te`. Консоль без 8 ГБ з увімкненим параметром не завантажується, тож «увімкнено» буває лише на справжній консолі з 8 ГБ. | Вимк. |
 | [[Translate Interface]] | Відкриває інструменти перекладу системи. Див. нижче. | — | — |
-
-<!-- draft
-- [[40MB Memory]] is shown only when the firmware is below 23.0.0 or Kefir is below 926 (or its version file cannot be read)
-- reason: from Kefir 926 (Atmosphère 1.12.1) firmware 23.0.0+ already gives 40 MB, so the switch is not needed there
--->
 
 !!! warning
     [[Redirect Emunand saves to SD]] змінює місце, звідки читаються збереження emuMMC. Доки ви не вимкнете параметр, збереження можуть здаватися зниклими.
@@ -45,13 +40,7 @@
 ## Перекладіть системний інтерфейс
 
 [[Translate Interface]] замінює одну з власних мов консолі (головне меню, системні налаштування та інші
-системні екрани) перекладом від спільноти. Якщо в Kefir Hub є така сама мова, він без запитання перемикає на неї
-й власний інтерфейс, а тоді перезавантажує консоль.
-
-<!-- draft
-- after the install Kefir Hub no longer switches its own language silently: when it has the same language it asks [[Switch Kefir Hub to this language too?]] (the language name under it, [[The console restarts after this.]]) with [[Keep]] / [[Switch language]]; either answer restarts the console
-- when Kefir Hub already uses that language, or has none like it, the console restarts at once
--->
+системні екрани) перекладом від спільноти. Якщо в Kefir Hub є така сама мова, він запитує [[Switch Kefir Hub to this language too?]] (назва мови розміщена під цим питанням, а нижче — [[The console restarts after this.]]) із варіантами [[Keep]] або [[Switch language]]; після будь-якого вибору консоль перезавантажується. Якщо Kefir Hub уже використовує цю мову або не має відповідної, консоль перезавантажується одразу.
 
 1. Відкрийте [[Kefir Settings]] → [[Translate Interface]].
 2. Виберіть [[Load translations]] і утримуйте **A**, щоб завантажити список для вашої прошивки. Згодом цей пункт називатиметься [[Refresh translations]].

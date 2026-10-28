@@ -39,13 +39,6 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 
 ### Update Kefir Hub {#update-kefir-hub}
 
-<!-- draft
-- the check runs at start and again whenever the network comes up after the console was offline (not while an update is found, downloading or installed); the old sentence "It does not check again when the network connects later" no longer holds
-- the [[Updating]] window title shows the old and the new version ("0.14.160 -> 0.14.161"); the lines under it say only [[Downloading]] and [[Installing]]
-- an update you accepted on screen ([[Ask]] → [[Update]], or [[Update Kefir Hub]] in [[About]]) restarts Kefir Hub by itself when it is installed
-- a [[Silent]] update asks when it is ready: [[Kefir Hub was updated to]] <version>, [[The new version runs after a restart. Restart now?]] with [[Later]] / [[Restart Kefir Hub]]
--->
-
 **Where:** [[Settings]] → [[General]] → [[Auto-update]]
 
 | Option | What it does | Default |
@@ -54,10 +47,7 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 | [[Update now]] | The value shows the state: [[Up to date]], [[Checking...]], a version number when one is waiting, [[Updating]], [[Failed]], or [[Ready — restart]]. Press **A** to download a waiting version, retry a failed one, or restart into a downloaded one. | |
 | [[Skipped version]] | Appears only after you skipped a version. Press **A** to be asked about it again. | |
 
-Kefir Hub checks for a new version once per launch, at start. It does not check again when the network connects
-later. With [[Silent]], a new version found at start (with internet) downloads in the background right away. The
-header shows an [[Updating]] bar; no window opens. The new version is used on the next launch, and [[Update now]]
-then shows [[Ready — restart]].
+Kefir Hub checks for a new version at start and again whenever the network comes up after the console was offline (not while an update is found, downloading or installed). With [[Silent]], a new version found at start (with internet) downloads in the background right away. The [[Updating]] window title shows the old and the new version ("0.14.160 -> 0.14.161"); the lines under it say only [[Downloading]] and [[Installing]]. An update you accepted on screen ([[Ask]] → [[Update]], or [[Update Kefir Hub]] in [[About]]) restarts Kefir Hub by itself when it is installed. A [[Silent]] update asks when it is ready: [[Kefir Hub was updated to]] <version>, [[The new version runs after a restart. Restart now?]] with [[Later]] / [[Restart Kefir Hub]]. The new version is used on the next launch, and [[Update now]] then shows [[Ready — restart]].
 
 The [[About]] window shows the version, the release notes, and a button to [[Update Kefir Hub]] or [[Restart Kefir Hub]] when a newer version is available or already downloaded. Press **X** ([[Refresh notes]]) if the notes did not load.
 
@@ -131,8 +121,7 @@ Network locations and USB drives you browse and install from. Details: [File bro
 
 | Option | What it does | Default |
 |---|---|---|
-| [[+ Add network location]] | Adds an SMB, NFS, WebDAV, FTP or HTTP location. | |
-<!-- draft: for an FTP location the [[Server IP / Hostname]] field accepts "host:port" (for example 192.168.1.5:2121): the digits after the colon are taken as the port and written to the [[Port]] row, with the notice [[Port taken from the address:]]; a bare IPv6 address, a port of 0 or above 65535 stay as typed. The [[Port]] row asks with the console's number pad only (1 to 5 digits), not with the phone / PC input of the other fields. WebDAV and HTTP keep the port inside the URL. -->
+| [[+ Add network location]] | Adds an SMB, NFS, WebDAV, FTP or HTTP location. For FTP, the [[Server IP / Hostname]] field accepts "host:port" (for example 192.168.1.5:2121): the digits after the colon become the port and are written to the [[Port]] row, with the notice [[Port taken from the address:]]. A bare IPv6 address, a port of 0 or above 65535 stay as typed. The [[Port]] row asks with the console's number pad only (1 to 5 digits). WebDAV and HTTP keep the port inside the URL. | |
 | *each saved location* | **A** opens it in the file browser (or its edit page if it is not set up yet). **+** ([[Options]]) offers [[Enter/Connect]], [[Edit]], [[Test Connection]], [[Rename]], [[Properties]], [[Delete]]. | |
 | [[USB storage]] | Mounts USB drives connected to the console next to the microSD card. Turning it on turns [[MTP]] off. | On |
 

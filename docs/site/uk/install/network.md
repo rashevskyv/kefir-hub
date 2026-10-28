@@ -12,10 +12,9 @@
 
 ## Перед початком {#before}
 
-<!-- draft
-- Ownfoil installs show the ban warning on sysMMC before the install starts. Browser and FTP installs show no warning. See [Ban warning on sysMMC](index.md#ban-warning).
-- TODO(verify): whether installs from a network share show the ban warning on sysMMC.
--->
+Встановлення через Ownfoil показує попередження про бан на sysMMC перед початком. Встановлення через браузер і FTP попередження не показують. Див. [Попередження про бан на sysMMC](index.md#ban-warning).
+
+<!-- TODO(verify): whether installs from a network share show the ban warning on sysMMC. -->
 - Підключіть консоль до Wi-Fi або LAN-адаптера. Угорі екрана видно назву мережі та IP-адресу консолі, наприклад
   `MyWiFi · 192.168.1.5`. Без підключення там написано [[No Internet]].
 - Обидва пристрої мають бути в одній мережі. Гостьова Wi-Fi зазвичай ізолює пристрої, і ПК не бачить консолі.

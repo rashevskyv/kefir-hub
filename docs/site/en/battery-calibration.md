@@ -1,23 +1,8 @@
 # Battery calibration
 
-Battery calibration finds the real empty point of the battery and sets the fuel gauge zero. The wizard is **planned**: it is not in Kefir Hub yet. The guide below walks through the screens the wizard will show. It is a simulator, not the real console.
+Battery calibration finds the real empty point of the battery and sets the fuel gauge zero. The wizard is in Kefir Hub: see [System tools](system-tools.md#battery-calibration). The guide below is an interactive simulator, not the real console. It still shows an earlier order of the steps, so follow the screens on the console where they differ.
 
 **Where:** [[Tools]] → [[Maintenance]] → [[Battery calibration]]
-
-<!-- draft
-- Status: planned, plan F.29 f. Not in the Hub yet. Say so once, at the top.
-- Why: the gauge percent cannot be trusted. The console can switch off at 35 %, or show 0 % for an hour. The real end is the cut-off: the console switches itself off at about 3.2 V under load.
-- Wizard steps: 1 drain to the dead battery; 2 charge, then open the Hub at once, the Hub sets the zero (no waiting time); 3 cycle 1 (charge to 100 %, then drain); 4 cycle 2; 5 report; 6 transfer to the other system.
-- Only the next step is open. Progress is kept on the microSD, so a restart or a cut-off keeps the place.
-- Drain: the charger must be out. Max load (CPU and GPU) and max brightness. Screen saver after 3 minutes or on Minus; the stick lowers the brightness. Logged to the microSD every second.
-- Load (owner decision, commit f5396c33): maximum load and maximum brightness until the first cut-off. After every cut-off, when the user switches the console on again, the drain goes on at once in the tail mode: minimum brightness (1 %, auto-brightness off) and minimal load. No switch at 3.4 V.
-- After each cut-off, switch the console on again and open the wizard; the same step goes on. When it does not start, the step is done.
-- Zero (step 2): the Hub reads counter N after switch-on and writes N minus X, X is the last logged gauge value before the cut-off. Fallback 0 when the gauge looks reset or the log is lost; the report says so. Unconfirmed on a console: the gauge keeps counting while the console is off.
-- Full cycle: 100 % by the percent. The rule with the current near 0 for 5 minutes is planned.
-- Report: learned capacity and verdict, the gauge percent before each cut-off, the zero line, what is written where.
-- Transfer: after the report the calibration is saved with a marker (sequence number and time). Each other system takes it at its own first start: a toast and a line in the battery history. Failure cases: write fails (error toast, marker kept), a newer calibration exists (not overwritten), another battery model (not applied). The hekate hop is a manual action only.
-- Open: the register for the zero (RemCap or RepSOC), the temperature limit (60 °C in the guide), the real cut-off voltage under load (3.2 V in the guide), the rule for a good calibration, the toast wording.
--->
 
 <iframe src="../battery-wizard/index.html?lang=en&v=26" title="Battery calibration screens" width="100%" height="860" style="border:0;max-width:100%"></iframe>
 

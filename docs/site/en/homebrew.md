@@ -14,10 +14,8 @@ mark favorites, delete them, or add one to the HOME Menu as its own icon.
 Files and folders whose name starts with a dot are skipped. The list updates by itself when you add or remove
 an app in the [File Browser](file-browser.md).
 
-<!-- draft
-- a subfolder of `/switch/` with several `.nro` files shows all of them, also when one of them is named after the folder (before, only `<folder>/<folder>.nro` was listed and the rest were hidden)
-- each card shows the app's file name (for example `vktest.nro`) on the second line, in place of the author, so builds of one app with the same title can be told apart; the hbmenu-style layout already shows file names
--->
+- A subfolder of `/switch/` with several `.nro` files shows all of them, also when one of them is named after the folder (before, only `<folder>/<folder>.nro` was listed and the rest were hidden).
+- Each card shows the app's file name (for example `vktest.nro`) on the second line, in place of the author, so builds of one app with the same title can be told apart; the hbmenu-style layout already shows file names.
 
 ## Launch an app
 1. Select the app. The header shows its path and its position in the list.
@@ -25,9 +23,7 @@ an app in the [File Browser](file-browser.md).
 
 When you exit the app, the Homebrew Menu (`/hbmenu.nro`) opens again.
 
-<!-- draft
-- a second Kefir Hub file among the apps (when Kefir Hub is your Homebrew Menu): A asks [[Keep]] / [[Launch]] / [[Delete]]; [[Launch]] is the default, so a debug copy still starts
--->
+- A second Kefir Hub file among the apps (when Kefir Hub is your Homebrew Menu): A asks [[Keep]] / [[Launch]] / [[Delete]]; [[Launch]] is the default, so a debug copy still starts.
 
 ## Sort and change the layout
 1. Press **+** ([[Options]]).
@@ -58,17 +54,13 @@ Press **X** again on an app to unselect it.
 
 Pressing **B** with apps selected clears the selection; the marks go and Kefir Hub stays open. Pressing **B** with nothing selected exits as before.
 
-<!-- draft
-- when some apps are selected, **+** opens the options with [[SELECTED HOMEBREW]] at the top, above the sort and view options; with nothing selected the view options stay first and [[THIS HOMEBREW]] comes after them
--->
+- When some apps are selected, **+** opens the options with [[SELECTED HOMEBREW]] at the top, above the sort and view options; with nothing selected the view options stay first and [[THIS HOMEBREW]] comes after them.
 
 ## Delete an app
 
-<!-- draft
-- [[Delete]] on one app also looks at its own folder: when the app lives in `/switch/<folder>/` and no other `.nro` is inside, the question shows the folder and its size, with [[Only the app]] and [[App and folder]]; the folder of the running Kefir Hub is never offered
-- a HOME icon (forwarder) made by Kefir Hub that starts this app is deleted together with it, and the question says so ([[The HOME icon that starts it is deleted too.]])
-- with several apps selected the old question stays: only the `.nro` files go
--->
+- [[Delete]] on one app also looks at its own folder: when the app lives in `/switch/<folder>/` and no other `.nro` is inside, the question shows the folder and its size, with [[Only the app]] and [[App and folder]]; the folder of the running Kefir Hub is never offered.
+- A HOME icon (forwarder) made by Kefir Hub that starts this app is deleted together with it, and the question says so ([[The HOME icon that starts it is deleted too.]])
+- With several apps selected the old question stays: only the `.nro` files go.
 1. Select the app, or several apps.
 2. Press **+** and choose [[Delete]].
 3. Confirm with [[Delete]].
@@ -88,14 +80,12 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
    [[Local File]] (an image on the memory card) or [[SteamGridDB]] (search online).
 4. Choose [[Save Changes]].
 
-<!-- draft
-- [[SteamGridDB]] offers every static PNG/JPEG picture of the game: icons first, then covers of any size, heroes and logos; a non-square picture is cropped to its centre square (not stretched)
-- in the list of found games **Y** ([[Search]]) opens the keyboard with the current text ([[Search SteamGridDB]]) and searches again
-- when no game matches, Kefir Hub says [[No game by this name on SteamGridDB]] and opens the keyboard at once; a game without pictures says [[No pictures for this game on SteamGridDB]]
-- a picked picture opens in the crop editor (zoom, move; **A** [[Apply]]), so only a part of it can become the icon
-- up to 10 pictures load at once; with more, 5 load first and [[Load more]] adds 5 each time (when 1-3 would be left they load with the batch before)
-- found games and downloaded pictures stay until Kefir Hub restarts: going back in does not download again
--->
+- [[SteamGridDB]] offers every static PNG/JPEG picture of the game: icons first, then covers of any size, heroes and logos; a non-square picture is cropped to its centre square (not stretched).
+- In the list of found games **Y** ([[Search]]) opens the keyboard with the current text ([[Search SteamGridDB]]) and searches again.
+- When no game matches, Kefir Hub says [[No game by this name on SteamGridDB]] and opens the keyboard at once; a game without pictures says [[No pictures for this game on SteamGridDB]].
+- A picked picture opens in the crop editor (zoom, move; **A** [[Apply]]), so only a part of it can become the icon.
+- Up to 10 pictures load at once; with more, 5 load first and [[Load more]] adds 5 each time (when 1-3 would be left they load with the batch before).
+- Found games and downloaded pictures stay until Kefir Hub restarts: going back in does not download again.
 
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 

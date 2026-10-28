@@ -117,12 +117,13 @@ Kefir Hub копіює лише змінені збереження. Він по
 
 Перед перезаписом Kefir Hub зберігає поточне збереження як страхувальну копію в `/dumps/recovery/`. Після відновлення вікно покаже, де вона лежить. Наприкінці з'явиться [[Restore successful!]].
 
-<!-- draft
-- [[Restore]] no longer asks for the user when the backup's user is clear: the same user (made on this console), or else the one console user with the same name as in the backup (the same people on another console, or users made again); it asks only when no user, or two users with that name, fit
-- new item [[Restore for a specific user]] in the backup actions (**A**): always asks for the user
-- on the [[Backups]] tab, the START options start with [[Backup actions]]: the same menu as **A** ([[Restore]], [[Restore for a specific user]], [[Verify integrity]] and the rest); the old [[Restore]] item there is gone
-- the owner caption under a backup tile (for example "[[All saves (bundle)]]") gets a smaller font when it is long and scrolls on the selected tile; before, it was cut on both sides
--->
+[[Restore]] більше не питає користувача, коли користувач бекапу зрозумілий. Він вибирає того самого користувача (створеного на цій консолі), а інакше єдиного користувача консолі з тим самим імʼям, що й у бекапі (ті самі люди на іншій консолі або заново створені користувачі). Питає лише тоді, коли не підходить жоден користувач або підходять двоє з таким імʼям.
+
+Щоб завжди вибирати користувача самому, використайте [[Restore for a specific user]] у діях бекапу (**A**).
+
+На вкладці [[Backups]] параметри **+** починаються з [[Backup actions]]. Це те саме меню, що й за **A** ([[Restore]], [[Restore for a specific user]], [[Verify integrity]] та інші). Окремого пункту [[Restore]] там більше немає.
+
+Підпис власника під плиткою бекапу (наприклад [[All saves (bundle)]]) має менший шрифт, коли він довгий, і прокручується на вибраній плитці. Раніше його обрізало з обох боків.
 
 ## Відновити з вкладки [[Backups]]
 1. Відкрийте вкладку [[Backups]]. Кожна гра має плитку для кожного джерела копій. Плитка містить повний пакет цього джерела: збереження акаунтів, Device, BCAT і Cache.
@@ -161,19 +162,15 @@ Kefir Hub бере:
 ## Відновити кілька збережень разом
 Позначте кілька збережень (або кілька груп копій) і виберіть [[Restore]]. [[Restore for user]] один раз питає, якому користувачу віддати всі збереження; виберіть там [[Choose for each save]], щоб відповісти для кожного окремо. Якщо серед позначених є копії однієї гри від різних користувачів, питання ставиться для кожного збереження; у ньому видно гру, чия це копія і її дату. Віддайте кожну копію іншому користувачу або відновіть лише одну з них. Далі одне вікно показує всі збереження й куди вони підуть; підтвердіть його кнопкою [[Yes]]. Збереження відновлюються по одному: якщо одне не вдасться, попередні лишаться відновленими.
 
-<!-- draft
-- the confirmation lists each game by name with the user it goes to (no title ids, no "slot" words)
-- a save that cannot be restored no longer stops the rest: it is skipped, the others are restored, and the end shows "[[Restored: ]] N / M" and, under "[[Not restored:]]", each failed game with the reason (save in use, backup does not match, raw save file, error code)
-- a third button, [[Without a copy]], restores without first keeping a copy of the save that is replaced; [[Restore]] keeps the copy in /dumps/recovery as before
-- the note to close the running game shows only when a game is really suspended in the background (Kefir Hub started from the Homebrew Menu or the Album); started as a title, Kefir Hub is that game itself. The note about MTP is gone: Kefir Hub checks by itself whether a PC holds a save open
--->
+- Підтвердження перелічує кожну гру за назвою з користувачем, якому вона призначена. Ідентифікаторів ігор немає.
+- Збереження, яке не вдається відновити, більше не зупиняє решту. Hub пропускає його і відновлює інші. У кінці показано [[Restored: ]] N / M, а під [[Not restored:]] кожну гру з помилкою та причиною (збереження використовується, бекап не збігається, сирий файл збереження або код помилки).
+- Третя кнопка, [[Without a copy]], відновлює без попереднього збереження копії збереження, яке замінюється. [[Restore]] зберігає копію в `/dumps/recovery`, як і раніше.
+- Нагадування закрити запущену гру показується лише тоді, коли гра справді призупинена у фоні (Kefir Hub запущено з Homebrew Menu або з Альбому). Коли Kefir Hub запущено як гру, він і є цією грою. Нагадування про MTP прибрано: Kefir Hub сам перевіряє, чи тримає ПК збереження відкритим.
 
-<!-- draft
-- several saves: the confirmation no longer lists them (they were just selected); it says how many ("[[Saves to restore: ]] N")
-- the restore box has a second bar for the whole restore: "[[Done:]] 3 / 40" with a percentage, above the bar of the current save
-- the biggest saves are restored last: when the console memory runs out, the smaller ones are already in
-- in a bulk restore the backup check box says "[[Checking backups...]]" with which one of how many
--->
+- Для кількох збережень підтвердження більше не перелічує їх, бо ви їх щойно вибрали. Воно показує кількість: [[Saves to restore: ]] N.
+- У вікні відновлення є друга смуга для всього відновлення, наприклад [[Done:]] 3 / 40 з відсотками, над смугою поточного збереження.
+- Найбільші збереження відновлюються останніми. Коли памʼять консолі закінчується, менші вже відновлено.
+- Під час масового відновлення вікно перевірки бекапів пише [[Checking backups...]] і показує, який бекап із скількох перевіряється.
 
 ## Скасувати відновлення
 Страхувальна копія з `/dumps/recovery/` — це звичайний ZIP збереження в тому стані, який був до відновлення.
@@ -196,11 +193,9 @@ Kefir Hub бере:
 2. У [[Delete Options]] виберіть користувачів і типи збережень, потім [[Delete Saves]].
 3. Підтвердіть кнопкою [[Delete]].
 
-<!-- draft
-- a save whose data is gone (the user partition was formatted, for example when a compressed emuMMC was made: the record stays, the data is not there) can now be deleted; before, deleting it failed with 2002-1002
-- the first time the saves open after Kefir Hub starts, it looks for such saves; when it finds some, it says how many and why, and offers [[Keep]] or [[Remove]]; [[Remove]] deletes all of them at once ("[[Removing saves without data]]") and shows how many were removed
-- these saves cannot be backed up or restored: there is nothing left to save
--->
+Збереження, дані якого зникли, тепер можна видалити. Так буває, коли розділ користувача відформатовано, наприклад під час створення стиснутого emuMMC: запис лишається, а даних немає. Раніше видалення такого збереження завершувалося помилкою 2002-1002.
+
+Коли збереження відкриваються вперше після запуску Kefir Hub, він шукає такі збереження. Якщо знаходить, повідомляє, скільки їх і чому, та пропонує [[Keep]] або [[Remove]]. [[Remove]] видаляє їх усі одразу ([[Removing saves without data]]) і показує, скільки видалено. Такі збереження не можна ні резервувати, ні відновлювати, бо зберігати нічого.
 
 ## Видалити резервні копії
 - Однієї гри: вкладка [[Backups]], **A** на грі → виберіть рядок → [[Delete]].

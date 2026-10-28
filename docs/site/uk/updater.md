@@ -57,17 +57,18 @@
 
 Після перезавантаження оновлення завершується саме. Нічого робити не потрібно.
 
-<!-- draft
-- in the changelog window: **Up** / **Down** scroll a line (held: repeats); **Left** / **Right** and **L** / **R** scroll a page, at most about four a second, with one line of the old page kept in sight; the sticks glide: the harder you push, the faster it scrolls (a light touch is slow, full push about 20 lines a second at most), so the notes cannot be skipped in a blink; [[Install]] is chosen with **Down** at the bottom
--->
+У вікні списку змін:
+
+- **Up** і **Down** прокручують на один рядок. Утримуйте кнопку, щоб повторювати.
+- **Left**, **Right**, **L** і **R** прокручують на сторінку, не частіше ніж близько чотирьох разів на секунду. Один рядок старої сторінки лишається в полі зору.
+- Стіки прокручують плавно: чим сильніше натискаєте, тим швидше рухається текст. Легкий дотик повільний, повне відхилення дає не більше ніж близько 20 рядків на секунду. Тож примітки не можна проскочити за мить.
+- [[Install]] вибирається кнопкою **Down** унизу.
 
 <!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
 
 Щоб скасувати, натисніть **B** у вікні змін. Нічого не завантажується, доки ви не натиснете [[Install]].
 
-<!-- draft
-- the new Kefir is unpacked next to the old one first; the old /kefir is replaced only when the archive unpacked completely, so a broken download or **B** during unpacking leaves the previous Kefir to install at the next reboot
--->
+Новий Kefir спершу розпаковується поруч зі старим. Старий `/kefir` замінюється, лише коли архів розпаковано повністю. Пошкоджене завантаження або **B** під час розпаковування лишає попередній Kefir, який встановиться при наступному перезавантаженні.
 
 ## Оновіть прошивку
 
@@ -84,10 +85,7 @@
 
 Після успішного встановлення завантажені файли прошивки (`/firmware` і архів) видаляються.
 
-<!-- draft
-- **B** (Stop) works while the update is being prepared ("Preparing system update..."); nothing on the console changes then
-- once "Applying system update..." starts, Stop waits for the end: a firmware cut off half-way would not boot
--->
+**B** (Stop) працює, поки оновлення готується («Preparing system update...»). Консоль тоді не змінюється. Коли починається «Applying system update...», Stop чекає завершення, бо прошивка, обірвана посередині, не завантажиться.
 
 ## Установіть прошивку з карти пам'яті
 
@@ -176,9 +174,7 @@ Kefir Hub перевіряє наявність власної нової вер
 
 Оновлення замінює той файл Kefir Hub, з якого ви його запустили. Якщо ввімкнено [[Replace hbmenu on exit]], замінюється також `/hbmenu.nro`.
 
-<!-- draft
-- the downloaded Kefir Hub file is checked before it replaces the running one (it must be a complete NRO); an interrupted download or a full memory card leaves the current Kefir Hub working
--->
+Завантажений файл Kefir Hub перевіряється, перш ніж замінить запущений: це має бути повний NRO. Перерване завантаження або повна карта памʼяті лишають поточний Kefir Hub робочим.
 
 ## Параметри
 

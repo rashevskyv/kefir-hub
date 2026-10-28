@@ -4,9 +4,7 @@ Connect the console to a PC with a USB cable and it shows up in the PC's file ma
 
 **Where:** on the PC, the drive named `Install (NSP, XCI, NSZ, XCZ)`
 
-<!-- draft
-- MTP installs show no ban warning, also on sysMMC. See [Ban warning on sysMMC](index.md#ban-warning).
--->
+
 
 ## Start MTP {#start}
 
@@ -39,6 +37,8 @@ If you copy a game file to the microSD card drive instead, it is only stored on 
 ## What the progress shows {#progress}
 
 The PC does not tell the console how big the file is, so the console cannot show a percentage for the whole copy. The top row shows [[Mode]] MTP, how many files are [[Installed]], how much was [[Written]] and the [[Average speed]]. [[Remaining]] appears only when the size is known. Use the copy window on the PC to see how far the copy is.
+
+Copying many files over MTP shows [[Copying via MTP]] with one bar for the current file and, under it, the line [[Copied so far:]] with the number of finished [[files]], their size and the average speed of the whole copy; the count starts again when the copy ends (the PC does not tell the total, so there is no bar for the whole batch).
 
 You can press **R3** ([[Minimize]]) to hide the screen while it installs, and **−** ([[Screen off]]) to turn the screen off, as in the [install queue](sd-card.md#minimize).
 
@@ -84,4 +84,5 @@ The other drives on this page (saves, games) are described in [Sharing](../shari
 
 **The copy is refused with "Please launch MTP install menu before trying to install".** This can only appear for a moment right after MTP starts. Wait a few seconds, or turn MTP off and on, then copy again.
 
-<!-- draft: copying many files over MTP shows [[Copying via MTP]] with one bar for the current file and, under it, the line [[Copied so far:]] with the number of finished [[files]], their size and the average speed of the whole copy; the count starts again when the copy ends (the PC does not tell the total, so there is no bar for the whole batch) -->
+!!! note
+    MTP installs show no ban warning, also on sysMMC. See [Ban warning on sysMMC](index.md#ban-warning).

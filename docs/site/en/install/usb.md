@@ -6,9 +6,7 @@ Send games from a PC to the console over a USB cable. Kefir Hub works with the P
 
 The same item is in the **+** menu of the Homebrew tab.
 
-<!-- draft
-- On sysMMC Kefir Hub shows the ban warning when you choose PC Install (USB). See [Ban warning on sysMMC](index.md#ban-warning).
--->
+On sysMMC, Kefir Hub shows the ban warning when you choose [[PC Install (USB)]]. See [Ban warning on sysMMC](index.md#ban-warning).
 
 <!-- shot: install-usb-sidebar | Install & Share menu with PC Install (USB) highlighted -->
 
@@ -32,11 +30,7 @@ The same item is in the **+** menu of the Homebrew tab.
 6. The queue opens. Check the targets and sizes, select what you want, and press **A** ([[Install selected]]).
 7. Wait for the [[Session summary]].
 
-<!-- draft
-- when the USB queue finishes, Kefir Hub ends the PC session before waiting on [[Session summary]]; DBI Backend Qt can stop its server and switch modes while this summary remains open
-- after the USB session ends, **B** ([[Back]]) closes the screen; another USB installation requires opening [[PC Install (USB)]] again and starting the PC server
-- leaving the session no longer freezes the screen for seconds
--->
+When the USB queue finishes, Kefir Hub ends the PC session first and then waits on [[Session summary]]. DBI Backend Qt can stop its server and switch modes while the summary stays open. Press **B** ([[Back]]) to close the screen. To install again over USB, open [[PC Install (USB)]] again and start the PC server. Leaving the session no longer freezes the screen for seconds.
 
 The queue, the progress screen, minimizing, screen off and the summary work the same as for files on the microSD card. See [Review the queue](sd-card.md#queue) and the sections after it.
 
@@ -57,22 +51,20 @@ With DBI Backend Qt the queue stays in sync with the PC app:
 - This also works while the queue is installing, for packages that have not started yet.
 - The console sends its free space to the PC app.
 
-<!-- draft
-- With DBI Backend Qt, confirming [[Skip package]] for the active USB package sends its explicit skipped status to the PC; the PC row becomes Skipped and its checkbox clears while the queue continues.
-- A skip confirmation for a package that has already finished must not interrupt the next package.
--->
+With DBI Backend Qt, when you confirm [[Skip package]] for the active USB package, the Hub sends the skipped status to the PC. The PC row becomes Skipped and its checkbox clears while the queue continues. A skip confirmation for a package that has already finished does not interrupt the next package.
 
 <!-- TODO(verify): which DBI Backend Qt version supports the live queue, and where can users download it? -->
 
 ## Releases with ports, translations and mods {#releases}
 
-<!-- draft
-- DBI Backend Qt 2.9.10+: a dropped folder with ports, port files, translations or mods opens "Choose what to install": one block per game, a tick box per option, pre-ticked in the PC's language (then English); one mod is ticked only when the game has exactly one; all ports of a shared switch/ folder (Donkey Kong Country 1-3) are ticked. "Choose What to Install..." in the queue row's menu changes it until the game starts. The choice is kept in presets.
-- a mod with its own update: that update is installed instead of the newer one in the release
-- each ticked option becomes one queue row "<game> - <option>.kefir-sd.tar" after the game's packages, target SD card; Kefir Hub 0.14.100+ writes its files to the microSD; archives (zip, 7z, rar) are sent as they are and extracted on the console
-- never written: Nintendo/, emuMMC/, bootloader/; a port's save files that are already on the console stay
-- USB only for now; an older Kefir Hub marks such a row as failed and goes on with the queue
--->
+DBI Backend Qt 2.9.10 and later: drop a folder with ports, port files, translations or mods to open "Choose what to install".
+
+- The window has one block per game and a tick box per option. The boxes are pre-ticked in the PC's language, then English. One mod is ticked only when the game has exactly one. All ports of a shared `switch/` folder (for example Donkey Kong Country 1-3) are ticked.
+- "Choose What to Install..." in the queue row's menu changes the choice until the game starts. The choice is kept in presets.
+- A mod with its own update installs that update instead of the newer one in the release.
+- Each ticked option becomes one queue row, `<game> - <option>.kefir-sd.tar`, after the game's packages. The target is the SD card. Kefir Hub 0.14.100 and later writes the files to the microSD. Archives (zip, 7z, rar) are sent as they are and extracted on the console.
+- The Hub never writes `Nintendo/`, `emuMMC/` or `bootloader/`. Save files of a port that are already on the console stay.
+- This works over USB only for now. An older Kefir Hub marks such a row as failed and goes on with the queue.
 <!-- shot: install-usb-release-dialog | DBI Backend Qt: Choose what to install, Donkey Kong Country Trilogy -->
 
 ## The USB speed badge {#usb-speed}
