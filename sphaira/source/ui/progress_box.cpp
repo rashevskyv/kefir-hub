@@ -24,6 +24,8 @@ void threadFunc(void* arg) {
 
 ProgressBox::ProgressBox(int image, const std::string& action, const std::string& title, ProgressBoxCallback callback, ProgressBoxDoneCallback done, int cpuid, int prio, int stack_size, bool cpu_boost) {
     App::SetProgressActive(true);
+    // the console must not lock or sleep while any job runs (MTP, copies, downloads), whatever the system setting says.
+    App::SetAutoSleepDisabled(true);
     // FastLoad clocks the GPU down; ncm moves are storage-bound and the UI
     // (including Cancel) has to keep painting. Installs still want the boost.
     if (cpu_boost && App::GetApp()->m_progress_boost_mode.Get()) {
@@ -110,6 +112,7 @@ ProgressBox::~ProgressBox() {
 
     App::SetBoostMode(false);
     App::SetProgressActive(false);
+    App::SetAutoSleepDisabled(false);
 }
 
 auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
@@ -118,9 +121,9 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
         m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
     }
 
-    // a long job (the speed graph is on) can run for hours: Minus, or the blank timeout of the
+    // any job can run for hours: Minus, or the blank timeout of the
     // settings, hands the screen to the screensaver; any input brings the box back.
-    if (m_show_graph && !m_detached) {
+    if (!m_detached) {
         if (!m_saver_action) {
             m_saver_action = true;
             m_last_input.Update();

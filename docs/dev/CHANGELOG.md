@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.213 — screensaver in every transfer window, no console sleep during a job
+Every progress window (MTP copy, download, install, delete) takes Minus / the blank timeout for the screensaver, not only the ones with a speed graph; each window also holds the auto-sleep lock until it closes.
+host tests: not run (UI/power only), nro: not built, switch: pending (MTP copy with the system sleep timer on; Minus in a download window)
+
 ## v0.14.212 — log: no spam from slow frames and the USB list
 A run of slow frames logs one hitch line (the per-second fps line stays); the USBHSFS count lines of every locations refresh are gone. A night drain wrote 223k lines, 200k of them these.
 host tests: not run; nro: built; switch: pending
