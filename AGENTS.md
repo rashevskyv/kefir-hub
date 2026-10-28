@@ -3,6 +3,19 @@
 Single source of truth for any AI agent working here (Claude Code reads it via `CLAUDE.md`, Gemini via `GEMINI.md`, Codex natively). Keep this file under 100 lines.
 Reports to the user are in Ukrainian; code, commits and this file are in English.
 
+## Agent loop (one agent, one context)
+- The agent that writes the plan executes it: put the plan in context on the first turn, revise it as results
+  arrive. No "reviewer", "tester" or domain subagents — they hand back lossy summaries and add latency.
+- Subagents only for a broad read-only search whose file dumps would bloat this context, or for independent
+  pieces that run in parallel in a throw-away context. Each returns a compact result; the conversation never
+  moves to it. Split by context, never by task type.
+- State a budget at the start of each task (edits, test runs); when it is spent, stop at a checkpoint and
+  report instead of drifting.
+- This file is the only always-loaded context. Procedures live in `.agents/skills/*` (loaded when triggered),
+  reference in `docs/` (read the section the task names). Hard limits live in tools, not sentences:
+  `tests/run.sh --quick`, the `test-build` checkpoint, the Graphify session hook.
+  When a rule can become a check, add the check to the tooling instead of a sentence here.
+
 ## Workspace
 - Primary checkout: `D:\git\dev\kefir-hub` (WSL: `/mnt/d/git/dev/kefir-hub`). No git worktrees, ever.
 - Never `git push` unless the user asks. Commit on Windows (Git Bash / PowerShell), not from a Linux VM mount
@@ -15,7 +28,8 @@ Reports to the user are in Ukrainian; code, commits and this file are in English
 1. `git log --oneline -5` and `git status --short`.
 2. `plan.md` — read the **current phase only**; it is the work queue.
 3. `head -20 docs/dev/CHANGELOG.md` — what shipped recently.
-4. Graph: `graphify update .` if source is newer than `graphify-out/GRAPH_REPORT.md`, else skip.
+4. Graph: in Claude Code the SessionStart hook prints `Graphify: current|updated` — trust it. Other agents run
+   `graphify update .` only if source is newer than `graphify-out/GRAPH_REPORT.md`.
 Do **not** read `README.md`, `docs/wiki/`, `docs/dev/AUDIT-*.md` or the whole `GRAPH_REPORT.md` unless the task needs them.
 
 ## Context discipline
