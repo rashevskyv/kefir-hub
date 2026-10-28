@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.216 — drain page: load chart legend stays inside the card
+A long legend name (the Ukrainian GPU word) ran over the card's right edge; the text now shrinks to its column.
+host tests: not run (draw only) | nro: not built | switch: pending
+
 ## v0.14.215 — Header storage rows show free / total
 NAND / EmuNAND and microSD in the tab header now read "free / total" (for example 12.3 GB / 59.5 GB); the game-size and install-projection modes are unchanged.
 host tests: not run (draw only) | nro: not built | switch: pending (check the value column does not overlap the network text) | docs/guide drafts: pending
@@ -33,7 +37,7 @@ host tests: pass (quick) | nro: not built | switch: pending (pick a language in 
 
 ## v0.14.208 — Battery calibration: reset goes to cycle 1, drain starts when the charger is out, Actions as a menu, clean load chart
 Locked steps keep the row layout (dimmed, cursor skips them); Actions is a normal menu with a description per row; the check mark is drawn (the font has no U+2713); text boxes keep one- and two-letter words with the next word; cycle pages start the drain / charge when the charger comes out / in; the load chart has a legend with the values.
-host tests: pass (quick) | nro: built | switch: pending (uploaded to /switch/kefir-hub.nro, not run) | docs/guide drafts: pending
+host tests: pass (quick) | nro: not built | switch: pending (uploaded to /switch/kefir-hub.nro, not run) | docs/guide drafts: pending
 
 ## v0.14.207 — Battery reset charges by itself; locked steps greyed; clock follows time zone; hbmenu icon re-pointed
 Reset step opens the charge page at once (counts when the charger is in, asks "Reset now?" at 100 %); locked steps are dimmed captions, "Remembered" row removed; header clock re-reads the time zone; turning on "Replace hbmenu" reinstalls the HOME icon with /hbmenu.nro as target.
@@ -49,7 +53,7 @@ host tests: quick pass; full suite blocked by the existing 262 missing translati
 
 ## v0.14.203 — Calibration: reset first, the zero step removed, align after an interrupted drain back; cycles counted by the HOS cycle total as in 0.14.111-163
 The wizard (Tools > Battery calibration, and + on the Battery page: one wizard now) went back to the logic that worked on a console: step 1 resets the gauge to the factory model at 100 % (the old `RunReset`, backup first), steps 2 and 3 are two cycles (drain, then 100 % on the charger; a cycle counts when 90 % was discharged by HOS's cycle total, `wizard::Advance`, on the drain page, when the steps page opens and at the Hub's start), step 4 the report, step 5 the transfer. The cut-off pipeline of 0.14.193-202 drained first on calibration data that was already wrong and set a "zero" (N - X); that step, `ZeroAfterCutoff` and `LastDrainRemainingMah` are gone. `PollInterruptedDrain` no longer stays quiet during a calibration, so "Align the charge to the voltage" is offered again after a drain the console cut short. The marker (`calib.txt`) keeps only the report, the transfer, the user's brightness and the drain in progress (`on_stop` clears it when the user stops the drain). The old wizard page and its helpers are removed; Actions (back up, align, restore, match, battery type) are a row of the steps page. `battery_calib.cpp` is split (`battery_calib_report.cpp`: report, transfer, ledger).
-host tests: quick pass, doc labels 0 unknown, i18n deployment contract fails as before (262 keys untranslated in 24 languages) | nro: built | switch: pending (a full run: reset, two cycles, report; the guide still shows the 0.14.197 order)
+host tests: quick pass, doc labels 0 unknown, i18n deployment contract fails as before (262 keys untranslated in 24 languages) | nro: not built | switch: pending (a full run: reset, two cycles, report; the guide still shows the 0.14.197 order)
 
 ## unreleased
 `docs/dev/BATTERY-HANDOFF.md`: everything about the battery calibration for a fresh session (the decision, gauge facts, code state, the console test of 2026-10-27, traps). No code.
@@ -59,35 +63,35 @@ plan.md: Phase N (Nextendo) rewritten against the pinned Prelude tag v4.0.11: ve
 
 ## v0.14.202 — Battery drain split into four files (no behaviour change)
 `battery_drain.cpp` (1064 lines) is now `battery_drain.cpp` (the drain page: load, steps, brightness), `battery_drain_sample.cpp` (calibration log and live samples), `battery_drain_draw.cpp` (charts, drain and charge layouts, screensaver readout) and the class header `battery_drain_menu.hpp`. Every file is under 600 lines.
-host tests: pass | nro: built | switch: pending (the drain page must look and behave as in 0.14.201)
+host tests: pass | nro: not built | switch: pending (the drain page must look and behave as in 0.14.201)
 
 ## v0.14.201 — Calibration: the transfer to the other MMC and its ledger (step 2 of the port)
 Step 6 of the guide: after the report the calibration is written into a ledger on the SD (`/config/kefir/battery/ledger.txt`: the system it was made in, a number, the battery model, whether it was good) and the transfer page shows who has it. At the Hub's start in another system (sysMMC, or another emuMMC: the id is the folder of a file-based one or the start sector of a partition one) that has an older number and the same battery model, the Hub writes the calibration there by itself (the old Match: this MMC's copy takes the chip's model, a backup first), notes it in the ledger and shows the toast "Battery calibration was transferred from ... to ...". A failure shows its reason and the marker stays. `battery_cutoff.hpp`: `SystemName`.
-host tests: pass | nro: built | switch: pending (needs a calibrated battery and a second system)
+host tests: pass | nro: not built | switch: pending (needs a calibrated battery and a second system)
 
 ## v0.14.200 — Calibration: the guide's pages and screensaver ported to the Hub (step 1 of the port)
 The owner: the guide is the agreed design, the Hub must show the same. Done in this step: the pages of the wizard are real pages now (`battery_calib_ui.hpp`: headings, paragraphs, bullets, a charger check that follows the charger, rows, boxes): the intro (2 pages), the start page of the drain (the five paragraphs, the check "Charger is out", the warning about keeping the Hub open), the start pages of the cycles (charge: the check, the advice, "Start charging" / "Open the charge screen"; drain: "Full. Now the drain: take the charger out.", the self-drain paragraph), the zero page (the last voltage in the log, boxes N / X / N − X, then the done state with the brightness line) and the report (learned capacity against design, the verdict, the gauge before each cut-off per drain from the log, `Cutoffs()`), the steps list as before. The screensaver of a calibration run shows the guide's readout: clock, stage, a battery with the approximate percent, five columns, a hint line, and a brightness note when the right stick moves (`SaverInfo::battery_view`). The charge page: the charger check and the advice instead of charts. The log gets a `step` column. The zero is still the factory model at the cut-off (N − X is shown and logged only). Not yet: the transfer step and the history page.
-host tests: pass | nro: built | switch: pending
+host tests: pass | nro: not built | switch: pending
 
 ## v0.14.199 — Calibration: a Hub restart is not a cut-off; the drain page as in the guide
 Found by the owner on the console with 0.14.198: after the Hub was replaced during a drain it went into the tail mode at once (brightness at the minimum, no load) because it took the restart for a cut-off. The marker now keeps the time the console booted (`boot`, now minus the uptime): a Hub start in the same boot only goes on with the drain as before (`Found::HubRestarted`); a different boot is the cut-off. `battery_calib_state.hpp` + host test. The calibration's drain / charge page (`DrawCalib`) is laid out as in the guide: the battery with the approximate percent inside, the voltage beside it, the state, the load and brightness chips, the consumption and the time, one row of three charts (voltage with the 3.2 V line, CPU / GPU load, temperature).
-host tests: pass | nro: built | switch: pending
+host tests: pass | nro: not built | switch: pending
 
 ## v0.14.198 — Battery drain page: Minus starts the screensaver, no header or footer over it
 Found by the owner on the console with 0.14.197: Minus on the drain page ran the menus' "go to Homebrew" action and closed the page (the drain stopped), and the screensaver, once on, showed the header and footer over it. Now Minus on the drain / charge page starts the screensaver (`Button::SELECT` overridden), and the page gives up the chrome while the saver owns the screen (`WantsChrome`). The steps list of the calibration: the "remembered" note has a short label (the long one was cut), the Tools row has its Ukrainian description.
-host tests: pass | nro: built | switch: pending
+host tests: pass | nro: not built | switch: pending
 
 ## v0.14.197 — Tools > Battery calibration: the cut-off wizard (F.29 f, step 3)
 New entry Tools > Battery calibration (`battery_calib.cpp`): intro (2 pages), the list of steps (drain to the dead battery, charge and set the zero, cycle 1, cycle 2, report; only the next one is active), all kept in a marker on the SD (`/config/kefir/battery/calib.txt`, `battery_calib_state.hpp`). On the drain page (`battery_drain.cpp`, `StartCalibRun`): a calibration drain with full load and brightness until the first cut-off and the tail after it (no load, auto-brightness off, brightness at the minimum), a charge phase (no load, the screen kept on, the screensaver), the user's brightness back as soon as the charger is in, a line a second to `/config/kefir/battery/calib-log.csv` (`battery_calib_log.hpp`). At the Hub's start the marker is read once: a cut-off continues the drain by itself, a dead console with the charger in asks to set the zero. The zero = the factory model written at the cut-off (`detail::ResetAtCutoff`, the body of the old reset without waiting for a full battery); the counter now and the last logged remaining charge are only logged (the gauge may keep counting while off: to confirm). Not in this build: the transfer to the other MMC. The old "align" offer stays quiet while a calibration runs. `battery_cutoff.hpp`/`battery_calib_state.hpp` parse numbers without exceptions (the console build has them off).
-host tests: pass (battery_cutoff, battery_calib_state, battery_calib_log) | nro: built | switch: pending (the whole pipeline is for the owner to try on a live console; the factory-model write at the cut-off and the log are new)
+host tests: pass (battery_cutoff, battery_calib_state, battery_calib_log) | nro: not built | switch: pending (the whole pipeline is for the owner to try on a live console; the factory-model write at the cut-off and the log are new)
 
 ## v0.14.196 — Web windows: the IP address and, under it, the kefir.local name
 The address line and the QR stay the IP (it opens everywhere); a small second line "Or open: kefir.local/..." shows the name (`ProgressBox::SetAltLine`, `WebAltLine`) in the Web Sharing Server, Console Transfer, Send installed games, the HTTP mount, the typing-from-a-phone window and the SteamGridDB API key window. Two names on one line did not fit (0.14.051); two lines do.
-host tests: not run (drawing) | nro: built | switch: pending
+host tests: not run (drawing) | nro: not built | switch: pending
 
 ## v0.14.195 — Network sources: "host:port" is split, the port asks with the number pad
 FTP location: typing `192.168.1.5:2121` (also `ftp://host:21/`, `[fe80::1]:21`) in Server IP / Hostname puts the digits into the Port row and says so; a bare IPv6 address, a port of 0 or over 65535 stay as typed (`net_address.hpp` + `test_net_address`). The Port row uses the console number pad (1 to 5 digits) instead of the phone / PC input.
-host tests: pass | nro: built | switch: pending (add an FTP source with host:port)
+host tests: pass | nro: not built | switch: pending (add an FTP source with host:port)
 
 ## v0.14.194 — Battery calibration: the state machine of the wizard (F.29 f, step 2)
 `battery_calib_state.hpp` + `test_battery_calib_state`: the marker (step, phase, cut-off count, the user's brightness before, the Hub's last brightness, the last logged remaining charge) with its file format; `Check` (what the Hub finds at its start: cut-off seen, dead with the charger, charge done / interrupted / in progress, ask "did the console switch off from the drain?"); the steps and phases (cycle = charge, then drain); the load (max before the first cut-off, minimal after) and the brightness decision (max, min, restore, keep when the user changed it). No UI, no write to the gauge.
@@ -102,11 +106,11 @@ host tests: pass | nro: not built | switch: not applicable (no UI, no console wr
 
 ## v0.14.192 — Install window: two bars of one size, a percentage beside each
 The install view (the one with the R/W graph) always draws the current-transfer bar and the whole-queue bar under it, same size, each with its percentage. The whole queue goes by bytes when the plan is known, else by packages (finished + part of the current one); a stream (MTP/FTP) has no known total, so its second bar is empty with "--". Before, the second bar was thin, in another colour and only drawn with a known byte plan.
-host tests: not run (drawing) | nro: built | switch: pending (install something)
+host tests: not run (drawing) | nro: not built | switch: pending (install something)
 
 ## v0.14.191 — Long notifications wrap
 A toast wider than 760 px (the "low memory ... use Title Mode" one ran off both screen edges) is broken into up to 8 lines inside a box 760 px wide.
-host tests: not run (drawing) | nro: built | switch: pending (show a long toast)
+host tests: not run (drawing) | nro: not built | switch: pending (show a long toast)
 
 ## v0.14.190 — MTP copy: no second bar, a line with the count and the average speed
 The user did not want the moving second bar (0.14.188-189). The MTP box keeps one bar for the current file and a line under it: "Copied so far: N files, X MiB · Y MiB/s" (average of the whole copy).
@@ -118,11 +122,11 @@ host tests: not run (drawing) | nro: built | switch: verified on .69 (2026-10-22
 
 ## v0.14.188 — MTP copy shows a whole-batch line
 The "Copying via MTP" box keeps the bar of the current file and adds a second one for the batch: the PC sends no total, so a moving segment and "Copied so far: N files, X MiB" (state: `files_done`/`bytes_done` in mtp_transfer_state.hpp, host-tested; `ProgressBox::SetOverallOpen`).
-host tests: pass (test_mtp_transfer_state) | nro: built | switch: pending (copy a folder from the PC)
+host tests: pass (test_mtp_transfer_state) | nro: not built | switch: pending (copy a folder from the PC)
 
 ## v0.14.187 — Web browser: icons in the favourites options
 Add (star), Open (launch) and Remove (delete) in the START menu of the Web browser page have action icons, like other option menus.
-host tests: not run (UI only) | nro: built | switch: pending
+host tests: not run (UI only) | nro: not built | switch: pending
 
 ## v0.14.186 — Web browser stays in the list; old firmware gets a message
 On firmware 20.0.0 to 22.5.0 the row opens a message (23.0.1 or newer is needed) instead of the system applet. 0.14.185 hid the row; verified there on .69 (22.5.0).
@@ -130,15 +134,15 @@ host tests: pass | nro: built | switch: verified on .69 after the update 22.5.0 
 
 ## v0.14.185 — Web browser is hidden on firmware 20.0.0 to 22.5.0
 The system web applet asks for a system update there (seen on .69, 22.5.0) and opens no page, so the Tools list does not show it. `web::BrowserWorks` in web_favorites.hpp, host-tested.
-host tests: pass | nro: built | switch: pending (.69 22.5.0: the row must be gone; after the 23.0.1 update it must be back)
+host tests: pass | nro: not built | switch: pending (.69 22.5.0: the row must be gone; after the 23.0.1 update it must be back)
 
 ## v0.14.184 — Web browser: the marked favourite shows its mark under the cursor
 The mark bar is drawn after the cursor frame. Checked on .69 with 0.14.183: page, Add row, Options (Add, Open, Remove) work; opening a site starts the system web applet, which asks for a system update on this console (Cancel returns to the Hub).
-host tests: pass | nro: built | switch: pending
+host tests: pass | nro: not built | switch: pending
 
 ## v0.14.183 — Web browser: favourites marked like files
 "Add to favourites" is a row above the list; on a favourite X marks, Y inverts, START opens the context menu (Open, Add, Remove for the marked ones). The Web browser row description no longer runs off the line.
-host tests: pass | nro: built | switch: pending
+host tests: pass | nro: not built | switch: pending
 
 ## v0.14.182 — Web browser: favourites and an address from a phone
 Tools → Web browser is now a page: "Enter an address" (console keyboard or the QR page, so a phone or a PC can send it) and a list of favourites (Y adds, X removes, A opens), kept in /config/kefir/web_favorites.txt. Pure list logic in web_favorites.hpp.

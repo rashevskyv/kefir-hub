@@ -22,7 +22,13 @@ void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const 
         nvgCircle(vg, lx + 5.f, ly, 5.f);
         nvgFillColor(vg, legend[k].first);
         nvgFill(vg);
-        ui::gfx::drawTextArgs(vg, lx + 18.f, ly, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", legend[k].second.c_str());
+        // a long name ("Відеопроцесор 100%") shrinks to its column instead of running over the card's edge
+        const float col_w = (w - 32.f) / 2.f - 24.f;
+        float b[4]{};
+        nvgFontSize(vg, 16.f);
+        nvgTextBounds(vg, 0, 0, legend[k].second.c_str(), nullptr, b);
+        const float size = std::min(16.f, 16.f * col_w / std::max(1.f, b[2] - b[0]));
+        ui::gfx::drawTextArgs(vg, lx + 18.f, ly, size, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", legend[k].second.c_str());
     }
     const float px = x + 12.f, py = y + 44.f + legend_h, pw = w - 24.f, ph = h - 56.f - legend_h;
     const auto Y = [&](float v) { return py + ph * (1.f - std::clamp((v - lo) / (hi - lo), 0.f, 1.f)); };
