@@ -123,8 +123,6 @@ auto GetStdio(bool write) -> StdioEntries {
 
     static UsbHsFsDevice devices[0x20];
     const auto count = usbHsFsListMountedDevices(devices, std::size(devices));
-    log_write("[USBHSFS] got connected: %u\n", usbHsFsGetPhysicalDeviceCount());
-    log_write("[USBHSFS] got count: %u\n", count);
 
     StdioEntries out{};
 

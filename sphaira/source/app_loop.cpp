@@ -221,9 +221,13 @@ void App::LogFrame(double delta_ms) {
     m_frame_accum_ms += delta_ms;
     m_frame_worst_ms = std::max(m_frame_worst_ms, delta_ms);
 
-    if (delta_ms >= HITCH_MS) {
+    // a run of slow frames is one line: the once-a-second summary below tells how long it lasts
+    static bool s_prev_hitch = false;
+    const bool hitch = delta_ms >= HITCH_MS;
+    if (hitch && !s_prev_hitch) {
         log_write("[frame] hitch %.0f ms\n", delta_ms);
     }
+    s_prev_hitch = hitch;
 
     if (m_frame_accum_ms < REPORT_INTERVAL_MS) {
         return;

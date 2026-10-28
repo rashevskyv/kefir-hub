@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.212 — log: no spam from slow frames and the USB list
+A run of slow frames logs one hitch line (the per-second fps line stays); the USBHSFS count lines of every locations refresh are gone. A night drain wrote 223k lines, 200k of them these.
+host tests: not run; nro: built; switch: pending
+
 ## v0.14.211 — drain page: Stop answers at once
 The full CPU/GPU load starved the UI, so the Stop question came late. B now pauses the load while the question is open.
 host tests: not run; nro: built; switch: pending
