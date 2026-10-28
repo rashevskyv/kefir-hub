@@ -641,48 +641,71 @@ Design rules:
       **Done when:** the changed file compiles with the Atmosphere flags and `-Werror` in WSL (checked; a full
       `ams_mitm` link was not run). **[USER]** boot check on an old and on a current firmware;
       with `enable_dns_mitm_debug_log` look for Nintendo names that get blocked but should not.
-- [ ] N.1 **Pure rules** (`nextendo_hosts.hpp` + `tests/test_nextendo_hosts.cpp`): build hosts text from template + IP;
+- [x] N.1 **Pure rules** (`nextendo_hosts.hpp` + `tests/test_nextendo_hosts.cpp`): build hosts text from template + IP;
       detect our file by the mark; decide apply / up to date / user file (back up first); parse server IPs from
       `nextendo_config.h` text; fall back to the embedded snapshot. Use the real template from tag v4.0.11.
       **Done when:** host test covers own file, user file, empty file, bad IP, garbage config text.
-- [ ] N.2 **Apply at Hub start** (new `nextendo_apply.cpp`, called next to the battery transfer): on emuMMC and
-      setting `nextendo_enabled` (default on) write `emummc.txt` if stale, set `enable_device_cert_fallback` via
-      `SetIniValue`, set `blank_prodinfo_emummc=0` and `add_defaults_to_dns_hosts=0`. Off: remove only our files,
-      restore backups, set `blank_prodinfo_emummc=1`. IP refresh runs on a worker thread; it touches the file only
-      when the IP changed.
+      Done 2026-10-28: the template is extracted from `nextendo_hosts_build()` in `source/nextendo_apply.c` of the tag by
+      `Kefirosphere/utilities/nextendo_extract.py` (placeholders `{IP}`, `{IP_NNCS2}`; byte-identical to the C output,
+      checked by compiling the real function) into `sphaira/include/nextendo_snapshot.hpp`. Telemetry lines in the
+      template go to the Nextendo sink, not to 127.0.0.1 (NSO applet waits for an answer). The Hub also keeps the mark
+      Prelude uses, so both tools recognise each other's file.
+- [x] N.2 **Apply at Hub start** (`nextendo_plan.hpp` pure steps + `nextendo_apply.cpp`, called in `app_startup.cpp`
+      right after the emuMMC check): in the emuMMC write `emummc.txt` if stale, `blank_prodinfo_emummc=0`,
+      `enable_dns_mitm=1`, `add_defaults_to_dns_hosts=0`. Off, or firmware outside the table: remove only our
+      files, restore backups, `blank_prodinfo_emummc=1`, `add_defaults_to_dns_hosts=1`. A user file is backed up to
+      `switch/prelude_hosts_backup/` first (same folder Prelude uses). `enable_device_cert_fallback` belongs to Account
+      Link (N.6), NOT to the baseline: corrected 2026-10-28 after reading `nextendo_apply.c`.
+      **Open (N.2d):** IP refresh from the latest release on a worker thread (touches the file only when the IP changed).
 - [ ] N.2b **sysNAND option** (Semi-stock only). Visible in the Nextendo directory only when Semi-stock is active
       (emuMMC disabled and `/config/semistock/emummc.ini.bkp` exists). Default off. Enable: write `sysmmc.txt`
-      from the template (its mark switches the dns_mitm fallback on, see N.0), set `blank_prodinfo_sysmmc=0` and
-      `add_defaults_to_dns_hosts=0`, ask for reboot. Disable: remove our hosts, restore `blank_prodinfo_sysmmc=1`.
-      Leaving Semi-stock forces the option off. Shows a risk warning before enabling (no PRODINFO
-      protection; eShop may stop).
-- [ ] N.2c **Firmware guard.** Hub reads HOS version (libnx `hosversionGet`). Option is refused, and reset to off,
+      from the template (its mark switches the dns_mitm fallback on, see N.0), ensure `blank_prodinfo_sysmmc=0` and
+      `add_defaults_to_dns_hosts=0`, restart. Disable: remove our hosts, restore the user's backup. The Hub NEVER
+      writes `blank_prodinfo_sysmmc=1`: Semi-stock owns that key (its package sets 0 when on, restores the backup when
+      off), and writing 1 would break the official online. Leaving Semi-stock (back in the emuMMC) removes our
+      `sysmmc.txt` and clears the setting. Shows a risk warning before enabling (no PRODINFO protection; eShop may
+      stop). Done in code 2026-10-28 (plan steps + Nextendo page).
+- [x] N.2c **Firmware guard.** Hub reads HOS version (libnx `hosversionGet`). Option is refused, and reset to off,
       when the firmware is not in the table shipped with the pinned tag (22.5.0, 23.0.1 at v4.0.11). Unknown
       firmware: refuse, do not guess. The guard applies to the emuMMC default too: on any other firmware Nextendo is
       switched off (`blank_prodinfo_emummc=1`, our hosts removed) and the directory shows: "Nextendo needs system
       firmware 22.5.0 or 23.0.1 until Kefir Hub is updated". Release rule: a new Prelude tag is checked by hand,
       its patches are added to the Kefir build, the firmware table is updated, then the pinned tag is raised.
-- [ ] N.3 **Nextendo directory** in the Kefir settings (`settings_kefir.cpp`, folder item). Items mirror the
+      Done in code 2026-10-28: `kSupportedFirmware` in `nextendo_hosts.hpp`, used by `MakePlan` (inactive firmware =
+      hosts removed, PRODINFO blanked again, patches stashed).
+- [~] N.3 **Nextendo directory** in the Kefir settings (`settings_kefir.cpp`, folder item). Items mirror the
       standalone Nextendo app: mode status, emuMMC toggle (N.2), sysNAND toggle (N.2b, Semi-stock only),
       server IP and last refresh (no server choice: the alternative IP in Prelude is a hidden developer switch labelled
       "Local", do not expose it), Account Link (N.6), news, games (N.4),
       firmware and version info, license notice, link to the wiki page.
       Warning on the directory screen: Nextendo needs the latest system software the pinned tag supports.
       Show that version (23.0.1 at v4.0.11) and the installed firmware; warn when they differ.
+      Done 2026-10-28 (`settings_nextendo.cpp`): status, emuMMC toggle, sysNAND toggle (Semi-stock only), firmware,
+      server, release and license notice. Left: Account Link (N.6), games (N.4), news, wiki link.
 - [ ] N.4 **Games screen** (inside the Nextendo directory). Data: game list and per-game patch build IDs from the pinned
       tag (`romfs/sd/atmosphere/exefs_patches/*`, README "Online games" section). Embedded snapshot + remote refresh,
       same rule as N.1. Per game show: supported, patch files present for the installed build, "game updated, wait
       for new Prelude". Do NOT show "online works": the console cannot prove it without a network test. Label the
       list "patches shipped in this build". Limit: per-game installers (MK8 flags, BCAT, SSBU mod) are not in this step.
-- [ ] N.5 **Kefir build** (`Kefirosphere/utilities/fetch_tools.py`, tag pinned in `tools_config.json`): fetch the
+- [x] N.5 **Kefir build** (`Kefirosphere/utilities/fetch_tools.py`, tag pinned in `tools_config.json`): fetch the
       source zip of the pinned tag, extract `romfs/sd/atmosphere/**` into the Kefir template, generate the baseline
       `emummc.txt`, add `LICENSE` + Required Notice. `update.te`: keep patches across updates, drop
       `bootloader/ini/atmostock.ini`. `blank_prodinfo_emummc` ships as `1`.
-- [ ] N.5b **Semi-stock** (`switch/.packages/package.ini`, `config/sphaira/packages/package.ini` in `_kefir`,
+      Done 2026-10-28 in `Kefirosphere/utilities` (`fetch_tools.py` + `tools_config.json` + `nextendo_extract.py`): the baseline
+      `emummc.txt` is generated from the pinned tag; the game patch folders get the prefix `nextendo_` (rule
+      `prefix_dirs`) so Semi-stock can move them with one wildcard. `update.te` needs no change: it deletes `exefs_patches` and
+      recopies the new release (which carries the patches); the Hub re-stashes them on start when Nextendo is off; `atmostock.ini`
+      stays (hekate entry with the popup, N.5c).
+- [x] N.5b **Semi-stock** (`switch/.packages/package.ini`, `config/sphaira/packages/package.ini` in `_kefir`,
       `config/semistock/restore.te`): on = move what Nextendo adds to `/config/semistock/nextendo/` (the game patch
       folders in `exefs_patches/`, `nextendo_bcat_signature`, `contents/0100000000000803`). Do NOT move
       `exefs_patches/disable_ca_verification` and `nro_patches/disable_browser_ca_verification`: Kefir already ships them
       for everyone (checked 2026-10-27: 29 of 30 files identical). Set the cert fallback to 0, leave the sysNAND option to the user. off or `restore.te` = move back and force N.2b off.
+      Done 2026-10-28: both `package.ini` files in `_kefir` move `exefs_patches/nextendo_*` and
+      `contents/0100000000000803` to `/config/semistock/nextendo/` (on) and back (off), using Ultrahand wildcard `move`.
+      The Hub does the same on start (`StashPatches` / `UnstashPatches` steps): patches are live only while Nextendo
+      is active, so the sysNAND option brings them back and a missed `restore.te` is repaired. `restore.te` itself
+      is unchanged. **[USER]** check the wildcard move on a console.
 - [x] N.5c **Hekate popup for the legacy Semi-stock entry** (`Kefirosphere/patches/hekate/0007-*`, Nyx GUI).
       New optional ini key (for example `popup=bootloader/res/semistock_moved.txt`). In `_launch_more_cfg_action`
       (`nyx/nyx_gui/frontend/gui.c`) show an `lv_mbox` with that text and one OK button, and do not boot. The text

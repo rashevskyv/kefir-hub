@@ -231,6 +231,18 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
     }));
 
     items.emplace_back(SettingsItem{
+        "Nextendo"_i18n,
+        "Online play for supported games on the emuMMC, through the Nextendo Network."_i18n,
+        [](){
+            return std::string{};
+        },
+        [](){
+            App::Push<ui::menu::settings::NextendoMenu>();
+        },
+        SettingsItemKind::Folder,
+    });
+
+    items.emplace_back(SettingsItem{
         "Translate Interface"_i18n,
         "Interface translation package tools."_i18n,
         [](){

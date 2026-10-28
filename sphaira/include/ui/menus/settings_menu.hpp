@@ -176,6 +176,25 @@ private:
 };
 
 
+struct NextendoMenu final : MenuBase {
+    NextendoMenu();
+    ~NextendoMenu();
+
+    auto GetShortTitle() const -> const char* override { return "Nextendo"; }
+    void OnFocusGained() override;
+    void Update(Controller* controller, TouchInfo* touch) override;
+    void Draw(NVGcontext* vg, Theme* theme) override;
+
+private:
+    void SetIndex(s64 index);
+    void OnSelect();
+
+private:
+    std::vector<SettingsItem> m_items;
+    s64 m_index{};
+    std::unique_ptr<List> m_list;
+};
+
 struct ThemesMenu final : MenuBase {
     ThemesMenu();
     ~ThemesMenu();

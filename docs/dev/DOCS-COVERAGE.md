@@ -107,6 +107,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Kefir Hub self-update | Settings → General → Auto-update | auto_update.cpp | updater#update-kefir-hub | doc |
 | Overclock, 40MB, USB 3.0, redirect saves, 8GB DRAM | Tools → Kefir Settings | settings_kefir.cpp, settings_tweaks.cpp | kefir-settings#settings | partial: defaults, 40MB meaning |
 | Translate system interface | Kefir Settings | settings_translate*.cpp | kefir-settings#translate-the-system-interface | doc |
+| Nextendo (emuMMC default, sysNAND option in Semi-stock) | Kefir Settings > Nextendo | settings_nextendo.cpp, nextendo_apply.cpp | kefir-settings#nextendo | draft |
 | Module Manager | Tools → Tools | uninstaller_menu.cpp | system-tools#module-manager | doc |
 | Fan curve | Tools → Tools | settings_fancurve*.cpp | system-tools#fan-curve | doc |
 | Wi-Fi manager | Tools → Tools | wifi_menu.cpp, wifi_manager.cpp | system-tools#wi-fi | doc |

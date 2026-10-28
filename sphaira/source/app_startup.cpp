@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include "fancontrol_cleanup.hpp"
 #include "battery_page.hpp"
+#include "nextendo_apply.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
 #include "log.hpp"
@@ -460,6 +461,15 @@ App::App(const char* argv0) {
 
 
 
+    // Nextendo: bring hosts, the PRODINFO key and the dns_mitm keys in line with the settings (no network here)
+    {
+        bool changed{};
+        const auto rc = nextendo::Reconcile(changed);
+        if (R_FAILED(rc)) {
+            log_write("[nextendo] reconcile failed: 0x%X\n", rc);
+        }
+    }
+
     mark("config + emummc");
 
     // a fill with zeros that a crash or a power-off stopped leaves a card-sized file: free the card.
@@ -494,6 +504,7 @@ App::App(const char* argv0) {
     mark("usb mass storage");
 
     curl::Init();
+    nextendo::RefreshServerIpsAsync(); // only while Nextendo is active, once a day
 
 #ifdef USE_NVJPG
     // this has to be init before deko3d.

@@ -61,6 +61,19 @@
 !!! tip
     Кожне встановлення прошивки через [Оновлення](updater.md) видаляє встановлені переклади. Після нього встановіть переклад знову.
 
+## Nextendo
+
+<!-- draft
+- [[Nextendo]] is a folder in [[Kefir Settings]]; it opens a page with the status, the switches and the version rows
+- Nextendo is the Nextendo Network: online play for supported games on the emuMMC, set up by Kefir Hub at start with no button press (hosts file, real PRODINFO inside the emuMMC)
+- [[Nextendo on emuMMC]] is on by default; changing it asks for a hold of **A** and restarts the console only if a file really changed
+- [[Nextendo on sysNAND (Semi-stock)]] is shown only while Semi-stock is on; it is off by default; the warning says the Nintendo services then go to Nextendo and the eShop may stop working
+- leaving Semi-stock (back in the emuMMC) removes the sysNAND hosts file and switches that option off
+- [[System firmware]] shows the installed version; Nextendo works only on the firmware versions listed in the description (22.5.0 and 23.0.1 for the pinned release); on any other version Nextendo is switched off until Kefir Hub is updated
+- [[Server]] shows the server address used in the hosts file; [[Release]] shows the Prelude-Nextendo release the build is based on
+- the text of the license notice: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0
+-->
+
 ## Проблеми
 
 **«Failed to apply Kefir setting».** Не вдалося записати файл. Перевірте, чи карта пам'яті не заповнена й не захищена від запису, і спробуйте знову.

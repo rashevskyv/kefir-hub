@@ -6,5 +6,6 @@
 namespace sphaira::ui::menu::settings {
 
 auto MakePackageAction(PackageAction action) -> SettingsItem;
+auto MakeKefirToggle(KefirSetting setting) -> SettingsItem;
 
 } // namespace sphaira::ui::menu::settings
