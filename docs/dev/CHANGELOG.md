@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.214 — DBI: skip package sends the skipped status to the PC and cannot hit the next package
+A skip is accepted once, only for the package that is installing now (PackageSkipGate); a late click on a finished package no longer cancels the next one, and a pending USB cancel is cleared after a skip. The package status is sent to the PC first, storage info only if that worked.
+host tests: pass (quick, test_dbi_package_skip_gate) | nro: not built | switch: pending (skip a package in a DBI Backend Qt queue; skip right as a package ends)
+
 ## v0.14.213 — screensaver in every transfer window, no console sleep during a job
 Every progress window (MTP copy, download, install, delete) takes Minus / the blank timeout for the screensaver, not only the ones with a speed graph; each window also holds the auto-sleep lock until it closes.
 host tests: not run (UI/power only), nro: not built, switch: pending (MTP copy with the system sleep timer on; Minus in a download window)
@@ -18,10 +22,6 @@ host tests: not run; nro: built; switch: pending
 ## v0.14.210 — calibration: after a cut-off the charger ends the drain
 The Hub started without the charger after a cut-off, then the charger came in: the drain page kept counting. Now a drain with enough drained ends when the charger comes in and the charge page starts (the drain time stays in the state file).
 host tests: not run; nro: built; switch: pending
-
-## v0.14.210 — DBI: skip package sends the skipped status to the PC and cannot hit the next package
-A skip is accepted once, only for the package that is installing now (PackageSkipGate); a late click on a finished package no longer cancels the next one, and a pending USB cancel is cleared after a skip. The package status is sent to the PC first, storage info only if that worked.
-host tests: pass (quick, test_dbi_package_skip_gate) | nro: not built | switch: pending (skip a package in a DBI Backend Qt queue; skip right as a package ends)
 
 ## v0.14.209 — Game card: Languages row forces the game language
 The Languages row opens the same list as Options > Force language (Off + the game's languages) instead of a read-only list; its hint is now "Choose the language this game starts in" (old key removed from all i18n files, en + uk added).
