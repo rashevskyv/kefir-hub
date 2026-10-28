@@ -503,6 +503,15 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       Not taken: the L+left/right keys of the on-screen keyboard (the Hub uses swkbd), the rewritten FTP server (the Hub runs
       its own ftpsrv with the anonymous-root patch), the tickets screen (decided 2026-10-03).
 
+- [ ] F.31 **Big mods over USB: layering, not merging** (user, 2026-10-29). A mod sent by DBI Backend Qt stays a tar of
+      loose files in `romfs/`; Atmosphère reads `romfs/` before `romfs.bin`, so a new mod lays over an old packed one with
+      no rewrite (a 2 GB, 40 000-file `romfs.bin` is never touched). **[USER]** console check: big `romfs.bin` plus a mod
+      as loose files of the same game, the game must take the loose files. Later, low priority: "Pack into romfs.bin"
+      stops skipping a title that has `romfs.bin` and merges the old image with the loose files (`ListImage` in
+      `repack/romfs_image.cpp` reads the old one); free-space check must count old + new. Not planned: PC-side
+      `romfs.bin`, a manifest next to it (revisit if a first install of a big mod is too slow). DBI Backend Qt v2.9.16
+      fixed "Too many open files" on mods of 8000+ files.
+
 Not taken from DBI (decided 2026-10-03): tickets screen (users delete tickets by mistake), activity log, current
 firmware dump, fake app records, DLC unlocker, "Convert to fake", clear error flag.
 
