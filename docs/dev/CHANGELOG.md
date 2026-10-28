@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.215 — Header storage rows show free / total
+NAND / EmuNAND and microSD in the tab header now read "free / total" (for example 12.3 GB / 59.5 GB); the game-size and install-projection modes are unchanged.
+host tests: not run (draw only) | nro: not built | switch: pending (check the value column does not overlap the network text) | docs/guide drafts: pending
+
 ## v0.14.214 — DBI: skip package sends the skipped status to the PC and cannot hit the next package
 A skip is accepted once, only for the package that is installing now (PackageSkipGate); a late click on a finished package no longer cancels the next one, and a pending USB cancel is cleared after a skip. The package status is sent to the PC first, storage info only if that worked.
 host tests: pass (quick, test_dbi_package_skip_gate) | nro: not built | switch: pending (skip a package in a DBI Backend Qt queue; skip right as a package ends)
