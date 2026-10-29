@@ -1,0 +1,2 @@
+# Nextendo patch files: byte-exact (their sizes are listed in sphaira/include/nextendo_snapshot.hpp)
+assets/romfs/nextendo/sd/** -text
