@@ -34,6 +34,7 @@ struct NroEntry {
     int x,y,w,h{}; // image
     bool is_nacp_valid{};
     bool selected{};
+    bool is_dir{}; // a row of the Homebrew menu that is a folder: path is the folder, size is how many apps it holds
     std::optional<bool> has_star{std::nullopt};
 
     auto GetName() const -> const char* {
@@ -65,6 +66,8 @@ auto nro_parse(const fs::FsPath& path, NroEntry& entry) -> Result;
  */
 auto nro_scan(const fs::FsPath& path, std::vector<NroEntry>& nros, bool nested = true, bool scan_all_dir = true) -> Result;
 auto nro_scan_depth(const fs::FsPath& path, std::vector<NroEntry>& nros, u32 max_depth) -> Result;
+// every nro below `path`: a folder with an nro of its own is not entered, a folder without one is, down to max_depth.
+auto nro_scan_tree(const fs::FsPath& path, std::vector<NroEntry>& nros, u32 max_depth) -> Result;
 
 auto nro_get_icon(const fs::FsPath& path, u64 size, u64 offset) -> std::vector<u8>;
 auto nro_get_icon(const fs::FsPath& path) -> std::vector<u8>;

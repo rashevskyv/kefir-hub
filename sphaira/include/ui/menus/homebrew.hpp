@@ -8,6 +8,11 @@
 #include "fs.hpp"
 #include "option.hpp"
 #include "owo.hpp"
+#include "homebrew_tree.hpp"
+
+namespace sphaira::ui {
+class Sidebar;
+}
 
 namespace sphaira::ui::menu::homebrew {
 
@@ -64,8 +69,13 @@ struct Menu final : grid::Menu {
     static Result InstallHomebrew(const fs::FsPath& path, const std::vector<u8>& icon);
     static Result InstallHomebrewFromPath(const fs::FsPath& path);
 
+    // a row is an app (index into m_entries) or a folder (index m_entries.size() + n into m_folders)
+    auto Entry(u32 index) -> NroEntry& {
+        return index < m_entries.size() ? m_entries[index] : m_folders[index - m_entries.size()];
+    }
+
     auto GetEntry(s64 i) -> NroEntry& {
-        return m_entries[m_entries_current[i]];
+        return Entry(m_entries_current[i]);
     }
 
     auto GetEntry() -> NroEntry& {
@@ -77,6 +87,19 @@ private:
     void InstallHomebrew();
     void CustomizeHomebrew();
     void ScanHomebrew();
+    // the rows of m_cwd: its folders and its apps
+    void BuildView();
+    // focus: the row to select after going in (the folder we just left, when going up)
+    void Enter(const std::string& folder, const std::string& focus = {});
+    void UpdateActions();
+    auto IsFolderFocused() -> bool {
+        return !m_entries_current.empty() && GetEntry().is_dir;
+    }
+    // folder actions (homebrew_folders.cpp): the same changes on the card as in the file browser
+    void AddFolderOptions(Sidebar* options);
+    void RenameFolder(const NroEntry& folder);
+    void SetFolderIcon(const NroEntry& folder);
+    void DeleteFolder(const NroEntry& folder);
     void Sort();
     void SortAndFindLastFile(bool scan = false);
     void FreeEntries();
@@ -100,7 +123,9 @@ private:
     std::shared_ptr<bool> m_alive{std::make_shared<bool>(true)};
     static constexpr inline const char* INI_SECTION = "homebrew";
 
-    std::vector<NroEntry> m_entries{};
+    std::vector<NroEntry> m_entries{}; // every app found, whatever the folder
+    std::vector<NroEntry> m_folders{}; // the folders of m_cwd
+    std::string m_cwd{homebrew_tree::ROOT};
     std::vector<u32> m_entries_index[Filter_MAX]{};
     std::span<u32> m_entries_current{};
 

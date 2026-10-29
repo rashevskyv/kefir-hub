@@ -52,4 +52,14 @@ inline auto IsKefirUpdaterEntry(const NroEntry& e) -> bool {
 
 void ShowKefirUpdaterRemovedDialog();
 
+// the picture of a folder row: a hidden file in the folder (the scan skips names that start with a dot)
+inline auto FolderIconPath(const fs::FsPath& folder) -> fs::FsPath {
+    fs::FsPath out{};
+    std::snprintf(out, sizeof(out), "%s/.hubicon.jpg", folder.s);
+    return out;
+}
+
+// reads the icon file into e.image; tries once (icon_size is cleared)
+void LoadFolderIcon(NVGcontext* vg, NroEntry& e);
+
 } // namespace sphaira::ui::menu::homebrew

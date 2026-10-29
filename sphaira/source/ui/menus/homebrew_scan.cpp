@@ -30,6 +30,7 @@ namespace {
 
 constexpr const char* SEARCH_PATHS_INI_SECTION = "homebrew_paths";
 constexpr const char* DEFAULT_SEARCH_PATH = "/switch";
+constexpr u32 MAX_FOLDER_DEPTH = 6; // group folders below /switch
 
 auto NormalizeSearchPath(std::string_view path) -> std::optional<std::string> {
     const auto normalized = path::NormalizeAbsoluteSdPath(path);
@@ -333,7 +334,7 @@ auto RemoveSearchPath(const fs::FsPath& path) -> bool {
 void Menu::ScanHomebrew() {
     TimeStamp ts;
     FreeEntries();
-    nro_scan(DEFAULT_SEARCH_PATH, m_entries);
+    nro_scan_tree(DEFAULT_SEARCH_PATH, m_entries, MAX_FOLDER_DEPTH);
 
     const auto search_paths = LoadSearchPaths();
     for (const auto& path_str : search_paths) {
@@ -394,21 +395,7 @@ void Menu::ScanHomebrew() {
         return 1;
     }, &ini_user, App::PLAYLOG_PATH);
 
-    // pre-allocate the max size.
-    for (auto& index : m_entries_index) {
-        index.reserve(m_entries.size());
-    }
-
-    for (u32 i = 0; i < m_entries.size(); i++) {
-        auto& e = m_entries[i];
-
-        m_entries_index[Filter_All].emplace_back(i);
-
-        if (!e.hbini.hidden) {
-            m_entries_index[Filter_HideHidden].emplace_back(i);
-        }
-    }
-
+    this->BuildView();
     this->Sort();
     SetIndex(0);
     m_dirty = false;
@@ -429,8 +416,16 @@ void Menu::Sort() {
     const auto order = m_order.Get();
 
     const auto sorter = [this, sort, order](u32 _lhs, u32 _rhs) -> bool {
-        const auto& lhs = m_entries[_lhs];
-        const auto& rhs = m_entries[_rhs];
+        const auto& lhs = Entry(_lhs);
+        const auto& rhs = Entry(_rhs);
+
+        // folders first, by name, whatever the sort
+        if (lhs.is_dir || rhs.is_dir) {
+            if (lhs.is_dir != rhs.is_dir) {
+                return lhs.is_dir;
+            }
+            return strcasecmp(lhs.GetName(), rhs.GetName()) < 0;
+        }
 
         const auto name_cmp = [order](const NroEntry& lhs, const NroEntry& rhs) -> bool {
             auto r = strcasecmp(lhs.GetName(), rhs.GetName());
@@ -563,7 +558,12 @@ void Menu::FreeEntries() {
         FreeEntry(vg, p);
     }
 
+    for (auto& p : m_folders) {
+        FreeEntry(vg, p);
+    }
+
     m_entries.clear();
+    m_folders.clear();
     for (auto& e : m_entries_index) {
         e.clear();
     }

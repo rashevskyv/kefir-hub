@@ -10,6 +10,7 @@
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/nvg_util.hpp"
+#include "ui/file_icon.hpp"
 #include "ui/forwarder_editor.hpp"
 #include "nacp_util.hpp"
 #include "owo.hpp"
@@ -44,23 +45,8 @@ auto GetNroEntries() -> std::span<const NroEntry> {
 Menu::Menu() : grid::Menu{"Homebrew"_i18n, MenuFlag_Tab} {
     g_menu = this;
 
+    this->UpdateActions(); // A and B: they change with the folder
     this->SetActions(
-        std::make_pair(Button::A, Action{"Launch"_i18n, [this](){
-            if (!g_kefir_updater_notice_ack.Get() && IsKefirUpdaterEntry(GetEntry())) {
-                ShowKefirUpdaterRemovedDialog();
-            } else if (OfferDeleteHubCopy(GetEntry())) {
-                // asked instead of starting a second Kefir Hub
-            } else {
-                nro_launch(GetEntry().path);
-            }
-        }}),
-        std::make_pair(Button::B, Action{"Exit"_i18n, [this](){
-            if (m_selected_count) {
-                ClearSelection();
-            } else {
-                App::Exit();
-            }
-        }}),
         std::make_pair(Button::X, Action{"Select"_i18n, [this](){
             ToggleCurrentSelection();
         }}),
@@ -92,7 +78,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     MenuBase::Update(controller, touch);
-    m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
+    m_list->OnUpdate(controller, touch, m_index, m_entries_current.size(), [this](bool touch, auto i) {
         if (touch && m_index == i) {
             FireAction(Button::A);
         } else {
@@ -106,8 +92,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
     if (m_layout.Get() == grid::LayoutType_HbMenu && !m_entries_current.empty()) {
-        const auto index = m_entries_current[m_index];
-        auto& e = m_entries[index];
+        auto& e = GetEntry();
         bool has_star = false;
         if (IsStarEnabled()) {
             if (!e.has_star.has_value()) {
@@ -127,12 +112,16 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     int image_load_count = 0;
 
     m_list->Draw(vg, theme, m_entries_current.size(), m_index, [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
-        const auto index = m_entries_current[pos];
-        auto& e = m_entries[index];
+        auto& e = GetEntry(pos);
 
         // lazy load image
         if (image_load_count < image_load_max) {
-            if (!e.image && e.icon_size && e.icon_offset) {
+            if (e.is_dir) {
+                if (!e.image && e.icon_size) {
+                    LoadFolderIcon(vg, e);
+                    image_load_count++;
+                }
+            } else if (!e.image && e.icon_size && e.icon_offset) {
                 // NOTE: it seems that images can be any size. SuperTux uses a 1024x1024
                 // ~300Kb image, which takes a few frames to completely load.
                 // really, switch-tools should handle this by resizing the image before
@@ -191,8 +180,24 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         const auto layout = m_layout.Get();
         const auto selected = pos == m_index;
         // the file name takes the author's line: builds of one app share the title and the author, only the file differs
-        const auto subtitle = layout != grid::LayoutType_HbMenu ? GetNroFilename(e) : std::string{e.GetAuthor()};
-        DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
+        auto subtitle = layout != grid::LayoutType_HbMenu ? GetNroFilename(e) : std::string{e.GetAuthor()};
+        if (e.is_dir) {
+            card_name = e.GetName();
+            card_version = std::to_string(e.size) + " " + "apps"_i18n;
+            subtitle = layout != grid::LayoutType_HbMenu ? "Folder"_i18n : std::string{};
+            if (layout == grid::LayoutType_List) {
+                card_version = "[" + card_version + "]";
+            }
+        }
+
+        if (e.is_dir && !e.image) {
+            // no picture chosen: the standard folder shape in the image's place
+            const auto r = DrawEntryNoImage(vg, theme, layout, v, selected, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
+            const auto shape = layout == grid::LayoutType_HbMenu ? Vec4{r.x, r.y + 28.f, r.w, r.h - 28.f} : r;
+            file_icon::DrawFolderShape(vg, theme, shape);
+        } else {
+            DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
+        }
         DrawSelectionMark(vg, theme, layout, v, v, e.selected, m_selected_count > 0);
     });
 }
@@ -207,6 +212,7 @@ void Menu::OnFocusGained() {
 
 void Menu::SetIndex(s64 index) {
     if (m_entries_current.empty()) {
+        UpdateActions();
         m_index = 0;
         m_list->SetYoff(0);
         RemoveAction(Button::L3);
@@ -220,7 +226,9 @@ void Menu::SetIndex(s64 index) {
         m_list->SetYoff(0);
     }
 
-    if (IsStarEnabled() && !IsKefirUpdaterStub(GetEntry())) {
+    UpdateActions();
+
+    if (IsStarEnabled() && !GetEntry().is_dir && !IsKefirUpdaterStub(GetEntry())) {
         const auto star_path = GenerateStarPath(GetEntry().path);
         if (fs::FsNativeSd().FileExists(star_path)) {
             SetAction(Button::L3, Action{"Unstar"_i18n, [this](){
@@ -261,7 +269,7 @@ void Menu::ToggleCurrentSelection() {
     }
 
     auto& entry = GetEntry();
-    if (!IsKefirUpdaterStub(entry)) {
+    if (!entry.is_dir && !IsKefirUpdaterStub(entry)) {
         entry.selected ^= 1;
         m_selected_count += entry.selected ? 1 : -1;
     }
@@ -274,8 +282,10 @@ void Menu::ToggleCurrentSelection() {
 
 void Menu::InvertSelection() {
     m_selected_count = 0;
-    for (auto& entry : m_entries) {
-        if (IsKefirUpdaterStub(entry)) {
+    // only the apps of the folder on screen
+    for (const auto index : m_entries_index[Filter_All]) {
+        auto& entry = Entry(index);
+        if (entry.is_dir || IsKefirUpdaterStub(entry)) {
             entry.selected = false;
             continue;
         }
@@ -308,8 +318,9 @@ auto Menu::GetSelectedEntries() const -> std::vector<NroEntry> {
     }
 
     if (out.empty() && !m_entries_current.empty()) {
-        const auto& focused = m_entries[m_entries_current[m_index]];
-        if (!IsKefirUpdaterStub(focused)) {
+        const auto& focused = m_entries_current[m_index] < m_entries.size()
+            ? m_entries[m_entries_current[m_index]] : m_folders[m_entries_current[m_index] - m_entries.size()];
+        if (!focused.is_dir && !IsKefirUpdaterStub(focused)) {
             out.emplace_back(focused);
         }
     }

@@ -283,6 +283,10 @@ void Menu::DisplayOptions() {
 
     // the actions on the homebrew: first in the list when some are selected, else after the view options
     const auto add_targets = [&]() {
+        if (IsFolderFocused() && m_selected_count == 0) {
+            AddFolderOptions(options.get());
+            return;
+        }
         const auto targets = GetSelectedEntries();
         if (!targets.empty()) {
             fs::FsNativeSd fs;

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.228 — Homebrew shows the real folders of /switch
+The scan goes into folders without an .nro of their own (down to 6 levels) and never into an app folder, so the cost stays near the old one-level scan. Those folders are rows: A opens, B goes back; on a folder + gives Rename, Set icon (hidden `.hubicon.jpg` in the folder), Remove icon and Delete. Pure view logic: `homebrew_tree.hpp` + `tests/test_homebrew_tree.cpp`. Not done: create folder, move apps between folders, select several folders.
+host tests: pass (--quick) | nro: not built | switch: pending (open/back, rename, icon, delete a folder; scan time with many folders)
+
 ## v0.14.227 — Receive files: the Homebrew list updates by itself
 Each received file or folder tells the Homebrew scan about its path (as FTP and MTP already do), so a received app shows up without restarting Kefir Hub.
 host tests: not run | nro: not built | switch: pending (receive a homebrew folder, see it in Homebrew at once)

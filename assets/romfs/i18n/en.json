@@ -3844,5 +3844,19 @@
   "Delete selected components": "Delete selected components",
   "Delete the ticked components. The save data stays.": "Delete the ticked components. The save data stays.",
   "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed.": "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed.",
-  "Sending completed": "Sending completed"
+  "Sending completed": "Sending completed",
+  "THIS FOLDER": "THIS FOLDER",
+  "Show the apps in this folder.": "Show the apps in this folder.",
+  "Rename the folder on the SD card.": "Rename the folder on the SD card.",
+  "Set icon": "Set icon",
+  "Pick a picture for this folder. It is saved in the folder as a hidden file.": "Pick a picture for this folder. It is saved in the folder as a hidden file.",
+  "Remove icon": "Remove icon",
+  "Show the standard folder picture again.": "Show the standard folder picture again.",
+  "Permanently delete the folder and everything in it.": "Permanently delete the folder and everything in it.",
+  "This name cannot be used.": "This name cannot be used.",
+  "Failed to rename the folder": "Failed to rename the folder",
+  "Set folder icon": "Set folder icon",
+  "Failed to save the icon": "Failed to save the icon",
+  "Delete this folder and everything in it?": "Delete this folder and everything in it?",
+  "apps": "apps"
 }

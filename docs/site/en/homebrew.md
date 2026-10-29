@@ -89,6 +89,11 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
 
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 
+## Folders
+The Homebrew list follows the folders of `/switch`. A folder that holds no `.nro` itself is shown as a folder with the number of apps inside. Press **A** ([[Open]]) to go in and **B** to go back. A folder that holds an `.nro` is an app: it is listed as one app and its data folders are not read.
+
+Press **+** on a folder to change the real folder on the SD card: [[Rename]], [[Set icon]] (a picture saved in the folder as the hidden file `.hubicon.jpg`), [[Remove icon]] and [[Delete]] (the folder with everything in it).
+
 ## Send an app to another console
 Press **+** and choose [[Send to another console]]. The Hub packs the app's whole folder (for example `/switch/<app>`) into one `.zip` and offers it on Wi-Fi. A `.nro` that lies directly in `/switch` is sent alone. On the other console, open [[Console Transfer]] → [[Receive files]]. See [Move files and folders](console-transfer.md#move-files-and-folders). The sending console shows a bar for each file while it goes.
 
