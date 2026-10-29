@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.225 — screensaver: old-television switch-on
+When the black screensaver page appears, a line of light grows across the middle, opens to the full screen and the readout fades in (0.65 s). The way out stays instant.
+host tests: not run | nro: not built | switch: pending
+
 ## v0.14.224 — Game Details: tick components with X / Y and delete them
 Content tab: X ticks a row, Y ticks all; START → Game actions → Delete selected components; A on a row → Delete. Removes the component, its files and its ns record; the save stays. Ships together with v0.14.223 (Console Transfer files).
 host tests: pass (quick) | nro: not built | switch: pending (delete an update + DLC; X / Y on the tab)

@@ -24,6 +24,8 @@ constexpr u64 BACKLIGHT_FADE_NS = 300000000;
 // long enough that the Minus press which started the blank, and a finger still
 // resting on the panel, do not immediately wake it again.
 constexpr u64 WAKE_GRACE_MS = 700;
+// the old-television switch-on when the black page appears: a line of light, then it opens to the full screen.
+constexpr u64 CRT_ON_MS = 650;
 
 auto FormatElapsed(u64 ns) -> std::string {
     const auto secs = ns / 1000000000ULL;
@@ -268,6 +270,37 @@ void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float c
 }
 
 void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
+    const auto ms = m_started.GetMs();
+    if (ms >= CRT_ON_MS) {
+        DrawContent(vg, theme, info);
+        return;
+    }
+
+    const auto ease_out = [](float x) { x = std::clamp(x, 0.f, 1.f); return 1.f - (1.f - x) * (1.f - x) * (1.f - x); };
+    const float p = static_cast<float>(ms) / static_cast<float>(CRT_ON_MS);
+    // first fifth: the line of light grows from the middle to the full width; then it opens up and the readout fades in.
+    const float line = ease_out(p / 0.2f);
+    const float open = ease_out((p - 0.2f) / 0.8f);
+    const float mid = SCREEN_HEIGHT / 2.f;
+    const float band = std::max(3.f, open * SCREEN_HEIGHT);
+
+    gfx::drawRect(vg, Vec4{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}, nvgRGB(0, 0, 0));
+
+    nvgSave(vg);
+    nvgIntersectScissor(vg, 0.f, mid - band / 2.f, SCREEN_WIDTH, band);
+    nvgGlobalAlpha(vg, open);
+    DrawContent(vg, theme, info);
+    nvgRestore(vg);
+
+    // the glowing edge of the opening band: bright at first, gone when the screen is open.
+    const float glow = 1.f - open;
+    const float w = SCREEN_WIDTH * line;
+    const auto edge = nvgRGBA(235, 245, 255, static_cast<u8>(255.f * glow));
+    gfx::drawRect(vg, Vec4{(SCREEN_WIDTH - w) / 2.f, mid - band / 2.f - 1.5f, w, 3.f}, edge);
+    gfx::drawRect(vg, Vec4{(SCREEN_WIDTH - w) / 2.f, mid + band / 2.f - 1.5f, w, 3.f}, edge);
+}
+
+void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     // the readout is drawn on a black page, so it uses its own palette rather
     // than the theme: a light theme would paint black text onto it.
     const auto text_col = nvgRGB(232, 232, 232);
