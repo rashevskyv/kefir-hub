@@ -1,10 +1,11 @@
-"""Generate the demo homebrew folders for the Homebrew folder shots (fictional apps, no third-party files).
+"""Generate the demo homebrew and its virtual folders for the Homebrew folder shots (fictional apps).
 
     python tools/docs/make_demo_homebrew.py
 
-Writes docs/site/fixtures/sdmc/switch/<group>/...: each app is a tiny .nro (header + asset section with an
-icon and a NACP, no code: it only has to be listed, never started). "Demo Tools" also gets a folder icon
-(.hubicon.jpg, see FolderIconPath in sphaira/include/ui/menus/homebrew_internal.hpp).
+Writes docs/site/fixtures/sdmc/switch/<app>/<app>.nro: a tiny .nro (header + asset section with an icon and a
+NACP, no code: it only has to be listed, never started), and config/kefir/homebrew_folders.txt with the folders
+(format: sphaira/include/homebrew_vfolders.hpp) plus a folder icon in config/kefir/homebrew_folders/<id>.jpg.
+The .nro files are force-added to git (*.nro is ignored).
 """
 import io
 import pathlib
@@ -14,15 +15,21 @@ from make_demo_images import FONT, centred, colour
 from PIL import Image, ImageDraw
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-SWITCH = REPO / "docs/site/fixtures/sdmc/switch"
+SDMC = REPO / "docs/site/fixtures/sdmc"
+SWITCH = SDMC / "switch"
+KEFIR = SDMC / "config/kefir"
 
 APPS = [
-    ("Demo Tools/Pixel Painter", "Pixel Painter", "Demo Studio", "1.2.0"),
-    ("Demo Tools/Save Juggler", "Save Juggler", "Demo Studio", "0.9.1"),
-    ("Demo Tools/Emulators/Retro Toaster", "Retro Toaster", "Crumb Labs", "3.0"),
-    ("Demo Games/Goose Run", "Goose Run", "Honk Games", "1.0.4"),
+    ("Pixel Painter", "Demo Studio", "1.2.0"),
+    ("Save Juggler", "Demo Studio", "0.9.1"),
+    ("Retro Toaster", "Crumb Labs", "3.0"),
+    ("Goose Run", "Honk Games", "1.0.4"),
 ]
-FOLDER_ICONS = {"Demo Tools": "TOOLS"}
+# id, name, icon text (None: the Hub draws the icons of the folder's apps)
+FOLDERS = [(1, "Demo Tools", None), (2, "Emulators", "EMU")]
+# app, folder ids (0 = the top level). Pixel Painter and Save Juggler moved to Demo Tools; Retro Toaster
+# copied to Emulators (still on the top level); Goose Run has no record: top level only.
+MEMBERS = [("Pixel Painter", [1]), ("Save Juggler", [1]), ("Retro Toaster", [0, 2])]
 
 NACP_SIZE = 0x4000
 NACP_VERSION_OFFSET = 0x3060
@@ -60,13 +67,18 @@ def nro(name, author, version):
 
 
 def main():
-    for folder, name, author, version in APPS:
-        d = SWITCH / folder
+    for name, author, version in APPS:
+        d = SWITCH / name
         d.mkdir(parents=True, exist_ok=True)
-        (d / (pathlib.Path(folder).name + ".nro")).write_bytes(nro(name, author, version))
-    for folder, text in FOLDER_ICONS.items():
-        (SWITCH / folder / ".hubicon.jpg").write_bytes(jpeg(text, folder))
-    print("demo homebrew written to", SWITCH)
+        (d / (name + ".nro")).write_bytes(nro(name, author, version))
+    lines = [f"F\t{i}\t{n}" for i, n, _ in FOLDERS]
+    lines += [f"A\t{i}\t/switch/{app}/{app}.nro" for app, ids in MEMBERS for i in ids]
+    (KEFIR / "homebrew_folders").mkdir(parents=True, exist_ok=True)
+    (KEFIR / "homebrew_folders.txt").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    for i, n, text in FOLDERS:
+        if text:
+            (KEFIR / "homebrew_folders" / f"{i}.jpg").write_bytes(jpeg(text, n))
+    print("demo homebrew written to", SDMC)
 
 
 if __name__ == "__main__":

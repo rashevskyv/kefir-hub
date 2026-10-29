@@ -1173,7 +1173,7 @@
         },
         "homebrew-folders": {
             "steps": [
-                "wait 1.5"
+                "wait 2.5"
             ]
         },
         "homebrew-folder-options": {
@@ -1184,6 +1184,20 @@
                 "wait 1.5",
                 "Down 6",
                 "wait 1"
+            ]
+        },
+        "homebrew-copy-to-folder": {
+            "steps": [
+                "Right",
+                "wait 0.5",
+                "A",
+                "wait 1.5",
+                "Plus",
+                "wait 1.5",
+                "Down 7",
+                "wait 0.5",
+                "A",
+                "wait 1.5"
             ]
         }
     }

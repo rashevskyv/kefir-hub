@@ -30,7 +30,6 @@ namespace {
 
 constexpr const char* SEARCH_PATHS_INI_SECTION = "homebrew_paths";
 constexpr const char* DEFAULT_SEARCH_PATH = "/switch";
-constexpr u32 MAX_FOLDER_DEPTH = 6; // group folders below /switch
 
 auto NormalizeSearchPath(std::string_view path) -> std::optional<std::string> {
     const auto normalized = path::NormalizeAbsoluteSdPath(path);
@@ -334,7 +333,7 @@ auto RemoveSearchPath(const fs::FsPath& path) -> bool {
 void Menu::ScanHomebrew() {
     TimeStamp ts;
     FreeEntries();
-    nro_scan_tree(DEFAULT_SEARCH_PATH, m_entries, MAX_FOLDER_DEPTH);
+    nro_scan(DEFAULT_SEARCH_PATH, m_entries);
 
     const auto search_paths = LoadSearchPaths();
     for (const auto& path_str : search_paths) {
@@ -395,6 +394,7 @@ void Menu::ScanHomebrew() {
         return 1;
     }, &ini_user, App::PLAYLOG_PATH);
 
+    this->LoadFolders();
     this->BuildView();
     this->Sort();
     SetIndex(0);

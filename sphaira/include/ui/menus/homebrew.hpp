@@ -8,7 +8,9 @@
 #include "fs.hpp"
 #include "option.hpp"
 #include "owo.hpp"
-#include "homebrew_tree.hpp"
+#include "homebrew_vfolders.hpp"
+
+#include <functional>
 
 namespace sphaira::ui {
 class Sidebar;
@@ -87,20 +89,27 @@ private:
     void InstallHomebrew();
     void CustomizeHomebrew();
     void ScanHomebrew();
-    // the rows of m_cwd: its folders and its apps
+    // virtual folders (homebrew_folders.cpp): tags kept in homebrew_folders.txt, no file on the card moves
+    void LoadFolders();
+    void SaveFolders();
+    // the rows of m_folder: its folders (top level only) and its apps
     void BuildView();
-    // focus: the row to select after going in (the folder we just left, when going up)
-    // both by value: callers pass m_cwd, which Enter overwrites
-    void Enter(std::string folder, std::string focus = {});
+    // focus: the folder row to select after going up
+    void Enter(u32 folder, u32 focus = hb_folders::ROOT);
     void UpdateActions();
     auto IsFolderFocused() -> bool {
         return !m_entries_current.empty() && GetEntry().is_dir;
     }
-    // folder actions (homebrew_folders.cpp): the same changes on the card as in the file browser
     void AddFolderOptions(Sidebar* options);
-    void RenameFolder(const NroEntry& folder);
-    void SetFolderIcon(const NroEntry& folder);
-    void DeleteFolder(const NroEntry& folder);
+    void AddAppFolderOptions(Sidebar* options);
+    // asks for a folder: the top level, every folder but `skip`, or a new one
+    void PickFolder(const std::string& title, u32 skip, std::function<void(u32)> on_pick);
+    void NewFolder(std::function<void(u32)> on_created = {});
+    void RenameFolder(u32 id);
+    void EditFolder(u32 id);
+    void DeleteFolder(u32 id);
+    // copy: the apps stay where they are; move: they leave the folder on screen
+    void PutInFolder(u32 to, bool move);
     void Sort();
     void SortAndFindLastFile(bool scan = false);
     void FreeEntries();
@@ -125,8 +134,10 @@ private:
     static constexpr inline const char* INI_SECTION = "homebrew";
 
     std::vector<NroEntry> m_entries{}; // every app found, whatever the folder
-    std::vector<NroEntry> m_folders{}; // the folders of m_cwd
-    std::string m_cwd{homebrew_tree::ROOT};
+    std::vector<NroEntry> m_folders{}; // the folder rows of m_folder
+    std::vector<std::vector<u32>> m_folder_previews{}; // per folder row: the m_entries drawn as its picture
+    hb_folders::Store m_store{};
+    u32 m_folder{hb_folders::ROOT};
     std::vector<u32> m_entries_index[Filter_MAX]{};
     std::span<u32> m_entries_current{};
 

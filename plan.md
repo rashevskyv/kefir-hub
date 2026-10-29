@@ -744,6 +744,21 @@ Design rules:
 
 ---
 
+## Phase E — emulator tools and console-to-console games (decided 2026-10-29)
+- [ ] E.1 **Download BIOS** from https://github.com/Abdess/retrobios/tree/main/bios. Scraping (box art) is not
+      needed: Tico and RetroArch have it. The Hub finds which emulators are installed (RetroArch and its cores,
+      Tico, standalone emulators from the Homebrew App Store that need a BIOS: list them first). Buttons:
+      on the Tico page, the RetroArch page and each standalone emulator page: "Download BIOS"; in Tools: one
+      line per installed emulator, "Download BIOS for RetroArch", "Download BIOS for Tico", ... On press ask:
+      all BIOS files this emulator can use, or only those for the installed cores. Files go where that
+      emulator looks for them. Check the repo licence/terms before shipping; list the BIOS paths per emulator.
+- [ ] E.2 **Games console to console by cable, with no setup.** Connect two consoles with a USB cable; on one
+      choose a game and "Send"; on the other a popup asks "Receive this game?" (name, size, components) with
+      Accept / Decline, without opening any menu first. First check what works today (Console Transfer, USB
+      Switch-to-Switch) and list the steps the user has to make now; then remove them. **[USER]** test with two consoles.
+
+---
+
 ## Not to do (from audit)
 - No refactor of `App`; no new abstractions, registries, interfaces with one implementation.
 - No file splits for their own sake; the 600-line cap is already met.

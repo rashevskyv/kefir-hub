@@ -35,6 +35,54 @@ void SignalChange() {
     ueventSignal(&g_change_uevent);
 }
 
+namespace {
+
+// loads the icon of an app row; true when an image was made (counts against the per-frame budget)
+auto LoadAppIcon(NVGcontext* vg, NroEntry& e) -> bool {
+    if (e.image || !e.icon_size || !e.icon_offset) {
+        return false;
+    }
+    // NOTE: it seems that images can be any size. SuperTux uses a 1024x1024
+    // ~300Kb image, which takes a few frames to completely load.
+    // really, switch-tools should handle this by resizing the image before
+    // adding it to the nro, as well as validate its a valid jpeg.
+    const auto icon = nro_get_icon(e.path, e.icon_size, e.icon_offset);
+    TimeStamp ts;
+    if (!icon.empty()) {
+        const auto image = ImageLoadIcon(icon);
+        if (!image.data.empty() && image.w == 256 && image.h == 256) {
+            e.image = nvgCreateImageRGBA(vg, image.w, image.h, 0, image.data.data());
+            log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
+            return true;
+        }
+    }
+    // prevent loading of this icon again as it's already failed.
+    e.icon_offset = e.icon_size = 0;
+    return false;
+}
+
+// a folder without its own picture: its app icons, 1 nearly full size, up to 4 in 2x2, up to 9 in 3x3
+void DrawAppGrid(NVGcontext* vg, Theme* theme, const Vec4& dest, const std::vector<int>& images) {
+    auto tint = theme->GetColour(ThemeEntryID_TEXT);
+    tint.a *= 0.12f;
+    gfx::drawRect(vg, dest, tint, 6.f);
+
+    const int n = static_cast<int>(images.size());
+    const int cols = n == 1 ? 1 : n <= 4 ? 2 : 3;
+    const float side = std::min(dest.w, dest.h);
+    const float pad = side * 0.06f;
+    const float gap = side * 0.05f;
+    const float cell = (side - pad * 2.f - gap * static_cast<float>(cols - 1)) / static_cast<float>(cols);
+    const float x0 = dest.x + (dest.w - side) / 2.f + pad;
+    const float y0 = dest.y + (dest.h - side) / 2.f + pad;
+    for (int i = 0; i < n && i < cols * cols; i++) {
+        const Vec4 r{x0 + static_cast<float>(i % cols) * (cell + gap), y0 + static_cast<float>(i / cols) * (cell + gap), cell, cell};
+        gfx::drawImage(vg, r, images[i] ?: App::GetDefaultImage(), cols == 1 ? 5.f : 3.f);
+    }
+}
+
+} // namespace
+
 auto GetNroEntries() -> std::span<const NroEntry> {
     if (!g_menu) {
         return {};
@@ -113,35 +161,22 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
     m_list->Draw(vg, theme, m_entries_current.size(), m_index, [this, &image_load_count](auto* vg, auto* theme, auto v, auto pos) {
         auto& e = GetEntry(pos);
+        // a folder without its own icon shows the icons of its apps
+        const auto* preview = e.is_dir ? &m_folder_previews[m_entries_current[pos] - m_entries.size()] : nullptr;
 
         // lazy load image
         if (image_load_count < image_load_max) {
-            if (e.is_dir) {
-                if (!e.image && e.icon_size) {
-                    LoadFolderIcon(vg, e);
-                    image_load_count++;
-                }
-            } else if (!e.image && e.icon_size && e.icon_offset) {
-                // NOTE: it seems that images can be any size. SuperTux uses a 1024x1024
-                // ~300Kb image, which takes a few frames to completely load.
-                // really, switch-tools should handle this by resizing the image before
-                // adding it to the nro, as well as validate its a valid jpeg.
-                const auto icon = nro_get_icon(e.path, e.icon_size, e.icon_offset);
-                TimeStamp ts;
-                if (!icon.empty()) {
-                    const auto image = ImageLoadIcon(icon);
-                    if (!image.data.empty() && image.w == 256 && image.h == 256) {
-                        e.image = nvgCreateImageRGBA(vg, image.w, image.h, 0, image.data.data());
-                        log_write("\t[image load] time taken: %.2fs %zums\n", ts.GetSecondsD(), ts.GetMs());
+            if (e.is_dir && !e.image && e.icon_size) {
+                LoadFolderIcon(vg, e);
+                image_load_count++;
+            } else if (e.is_dir && !e.image) {
+                for (const auto i : *preview) {
+                    if (image_load_count < image_load_max && LoadAppIcon(vg, m_entries[i])) {
                         image_load_count++;
-                    } else {
-                        // prevent loading of this icon again as it's already failed.
-                        e.icon_offset = e.icon_size = 0;
                     }
-                } else {
-                    // prevent loading of this icon again as it's already failed.
-                    e.icon_offset = e.icon_size = 0;
                 }
+            } else if (!e.is_dir && LoadAppIcon(vg, e)) {
+                image_load_count++;
             }
         }
 
@@ -191,10 +226,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         if (e.is_dir && !e.image) {
-            // no picture chosen: the standard folder shape in the image's place
+            // no picture chosen: the icons of its apps, or the folder shape when it is empty
             const auto r = DrawEntryNoImage(vg, theme, layout, v, selected, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
             const auto shape = layout == grid::LayoutType_HbMenu ? Vec4{r.x, r.y + 28.f, r.w, r.h - 28.f} : r;
-            file_icon::DrawFolderShape(vg, theme, shape);
+            if (preview->empty()) {
+                file_icon::DrawFolderShape(vg, theme, shape);
+            } else {
+                std::vector<int> images;
+                for (const auto i : *preview) {
+                    images.push_back(m_entries[i].image);
+                }
+                DrawAppGrid(vg, theme, shape, images);
+            }
         } else {
             DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
         }

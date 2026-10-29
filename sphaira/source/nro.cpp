@@ -185,47 +185,6 @@ auto nro_scan_depth_internal(fs::Fs* fs, const fs::FsPath& path, std::vector<Nro
     R_SUCCEED();
 }
 
-// a folder with an .nro of its own is an app folder and is not entered (its data stays unread);
-// a folder without one is a group and is entered. `root` is always entered.
-auto nro_scan_tree_internal(fs::Fs* fs, const fs::FsPath& path, std::vector<NroEntry>& nros, u32 depth, u32 max_depth, bool root) -> Result {
-    fs::Dir d;
-    R_TRY(fs->OpenDirectory(path, FsDirOpenMode_ReadFiles | FsDirOpenMode_ReadDirs | FsDirOpenMode_NoFileSize, &d));
-
-    std::vector<FsDirectoryEntry> entries;
-    R_TRY(d.ReadAll(entries));
-
-    bool found{};
-    for (const auto& e : entries) {
-        if ('.' == e.name[0] || e.type != FsDirEntryType_File || !path::EndsWithIC(e.name, ".nro")) {
-            continue;
-        }
-
-        fs::FsPath fullpath;
-        std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);
-        NroEntry entry;
-        if (R_SUCCEEDED(nro_parse_internal(fs, fullpath, entry))) {
-            nros.emplace_back(entry);
-            found = true;
-        } else {
-            log_write("error when trying to parse %s\n", fullpath.s);
-        }
-    }
-
-    if ((root || !found) && depth < max_depth) {
-        for (const auto& e : entries) {
-            if ('.' == e.name[0] || e.type != FsDirEntryType_Dir) {
-                continue;
-            }
-
-            fs::FsPath fullpath;
-            std::snprintf(fullpath, sizeof(fullpath), "%s/%s", path.s, e.name);
-            nro_scan_tree_internal(fs, fullpath, nros, depth + 1, max_depth, false);
-        }
-    }
-
-    R_SUCCEED();
-}
-
 auto nro_get_icon_internal(fs::File* f, u64 size, u64 offset) -> std::vector<u8> {
     // protect again really messed up sizes.
     if (size > 1024 * 1024) {
@@ -288,11 +247,6 @@ auto nro_scan(const fs::FsPath& path, std::vector<NroEntry>& nros, bool nested, 
 auto nro_scan_depth(const fs::FsPath& path, std::vector<NroEntry>& nros, u32 max_depth) -> Result {
     fs::FsNativeSd fs;
     return nro_scan_depth_internal(&fs, path, nros, 0, max_depth);
-}
-
-auto nro_scan_tree(const fs::FsPath& path, std::vector<NroEntry>& nros, u32 max_depth) -> Result {
-    fs::FsNativeSd fs;
-    return nro_scan_tree_internal(&fs, path, nros, 0, max_depth, true);
 }
 
 auto nro_get_icon(const fs::FsPath& path, u64 size, u64 offset) -> std::vector<u8> {

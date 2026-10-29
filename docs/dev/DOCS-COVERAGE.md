@@ -136,7 +136,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Language change | Settings → General | app_settings.cpp:481, i18n.cpp | getting-started#change-the-language | doc |
 | Progress, minimize, screen off | transfers | progress_box*.cpp, app_frame.cpp | getting-started#long-tasks-and-background-tasks | doc |
 | Homebrew list, launch, sort, star, select, delete, edit, forwarder, search paths | Homebrew tab | homebrew*.cpp, forwarder_editor.cpp | homebrew | doc |
-| Homebrew folders: open/back, rename, folder icon, delete (v0.14.228) | Homebrew tab | homebrew_folders.cpp, homebrew_tree.hpp | homebrew#folders | draft |
+| Homebrew virtual folders: new, copy/move/remove app, rename, icon, delete (v0.14.230) | Homebrew tab | homebrew_folders.cpp, homebrew_vfolders.hpp | homebrew#folders | draft |
 | File Browser navigation, open by type, select, copy/move/delete/rename/create | File Browser | filebrowser/*.cpp | file-browser | doc |
 | View options, split screen, sources, USB, MTP host, network locations | File Browser | filebrowser_sources.cpp, settings_sources.cpp | file-browser#switch-sources, #add-a-network-share | doc |
 | ZIP browse/extract/compress, image viewer, text editor | File Browser | fs_zip.cpp, file_viewer*.cpp | file-browser | doc |

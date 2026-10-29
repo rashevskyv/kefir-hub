@@ -89,17 +89,21 @@ Kefir Hub видаляє файл `.nro`. Папка застосунку та �
 
 ## Теки
 <!-- draft
-- the Homebrew list shows the folders of /switch as folder rows (folders first, then apps); a row shows the folder name and how many apps are inside
-- a folder that has no .nro of its own is a folder row; a folder that has an .nro is one app, as before, and its data folders are not read
-- the Hub looks up to 6 folders deep
-- **A** ([[Open]]) goes into a folder; **B** goes back up; at the top **B** leaves the Hub
+- folders in Homebrew are virtual: they only group apps in this list; no file on the SD card moves (many apps look for their files at a fixed place under /switch)
+- folders show first on the top level, with the number of apps in them; there are no folders inside folders
+- one app can be in several folders; the top level ([[Homebrew]]) counts as a folder too, so an app can stay on the top level and be in a folder at the same time
+- **A** ([[Open]]) goes into a folder; **B** goes back to the top level
+- make a folder: **+** on the top level → [[New folder]], type the name
+- on an app (or the apps selected with **X**/**Y**), **+** gives [[Copy to folder]] (the app stays where it is and shows in the chosen folder too) and [[Move to folder]] (the app leaves the folder on screen); the list of folders also has [[Homebrew]] (the top level) and [[New folder]]
+- inside a folder, **+** on an app also gives [[Remove from this folder]]; an app that is left in no folder goes back to the top level
 - **+** on a folder row gives the THIS FOLDER section: [[Open]], [[Rename]], [[Edit name and icon]], [[Remove icon]] (only when the folder has an icon), [[Delete]]
-- these change the real folder on the SD card; [[Delete]] removes the folder with everything in it, after a question
-- [[Edit name and icon]] on a folder opens the same editor as for an app, without the forwarder options: the Name row renames the folder, the picture is saved in the folder as the hidden file `.hubicon.jpg`; without a picture the row shows a folder shape
-- not possible yet: create a folder, move an app to another folder
+- [[Edit name and icon]] opens the same editor as for an app, without the forwarder options; without a picture the row shows small icons of the apps in the folder: one app nearly fills the picture, 2 to 4 apps in 2x2, 5 or more in 3x3 (the first 9); an empty folder shows a folder shape
+- [[Delete]] on a folder asks first and removes only the folder: its apps stay in Homebrew
+- the folders are kept in /config/kefir/homebrew_folders.txt, folder pictures in /config/kefir/homebrew_folders/
 -->
-<!-- shot: homebrew-folders | Homebrew tab, top level: folder rows "Demo Games" and "Demo Tools" (with its icon) before the apps -->
+<!-- shot: homebrew-folders | Homebrew tab, top level: folder rows "Demo Tools" (icons of its two apps) and "Emulators" (its own icon) before the apps -->
 <!-- shot: homebrew-folder-options | Homebrew options panel on a folder row: THIS FOLDER section with Open, Rename, Edit name and icon, Remove icon, Delete -->
+<!-- shot: homebrew-copy-to-folder | Copy to folder list for an app: Demo Tools, Emulators, New folder -->
 
 ## Передати програму на іншу консоль
 Натисніть **+** і виберіть [[Send to another console]]. Hub запакує всю теку програми (наприклад, `/switch/<програма>`) в один `.zip` і запропонує її по Wi-Fi. `.nro`, що лежить просто в `/switch`, надсилається окремо. На іншій консолі відкрийте [[Console Transfer]] → [[Receive files]]. Див. [Перенести файли й папки](console-transfer.md#move-files-and-folders). Консоль-відправник показує смугу для кожного файлу під час передачі.

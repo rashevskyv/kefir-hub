@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.230 — Homebrew folders are virtual (tags), physical folders reverted
+Physical folders are gone again (apps look for their files at fixed places under /switch): the scan is the one-level /switch scan of v0.14.227. A folder is now a tag in /config/kefir/homebrew_folders.txt (`homebrew_vfolders.hpp` + `tests/test_homebrew_vfolders.cpp`); one app can be in several folders and the top level ("Homebrew") is a folder too. New: New folder, Copy to folder / Move to folder (several apps with X/Y), Remove from this folder; folder Rename, Edit name and icon (icon in /config/kefir/homebrew_folders/<id>.jpg), Remove icon, Delete (the apps stay). Folders are one level deep. Docs draft, fixtures and shots redone. plan.md: Phase E (BIOS downloads, cable game transfer with no setup).
+host tests: pass (--quick) | nro: built (DocsDemo) | eden: open/back, copy to folder, delete folder checked | switch: pending (New folder / Rename with the keyboard, Move to folder)
+
 ## v0.14.229 — Homebrew folders: checked in Eden, fixes and docs shots
 B from a folder now keeps the focus on that folder (Enter took m_cwd by reference). Folder rows say "Apps: N" (no broken plural). "Set icon" became "Edit name and icon": the editor hides the forwarder options and its Name row renames the folder. Docs: draft + shots homebrew-folders, homebrew-folder-options (en, uk), demo apps from tools/docs/make_demo_homebrew.py; eden.ps1/shoot.ps1 now stop only E:\Switch\Eden\eden.exe, never other Eden copies.
 host tests: pass (--quick) | nro: built (DocsDemo) | eden: open/back/focus, edit name and icon, remove icon, delete checked | switch: pending (Rename with the keyboard, scan time)

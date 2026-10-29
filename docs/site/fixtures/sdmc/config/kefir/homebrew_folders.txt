@@ -1,0 +1,6 @@
+F	1	Demo Tools
+F	2	Emulators
+A	1	/switch/Pixel Painter/Pixel Painter.nro
+A	1	/switch/Save Juggler/Save Juggler.nro
+A	0	/switch/Retro Toaster/Retro Toaster.nro
+A	2	/switch/Retro Toaster/Retro Toaster.nro
