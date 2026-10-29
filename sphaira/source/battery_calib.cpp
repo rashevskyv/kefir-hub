@@ -286,7 +286,8 @@ void ShowCyclePage() {
     }
     const int cycle = m->step == Step::Cycle1 ? 1 : 2;
     const int got = CycleGot(cycle);
-    const bool drained = got >= static_cast<int>(wizard::CYCLE_DONE);
+    // a cut-off seen in this cycle means the drain is done (the cycle total may lag behind)
+    const bool drained = got >= static_cast<int>(wizard::CYCLE_DONE) || m->cutoffs > 0;
     const auto back = [](cu::Page& p) { p.SetPop(); ShowSteps(); };
     std::vector<cu::Line> lines;
     std::string label;
@@ -356,6 +357,11 @@ auto Resume(Marker m) -> bool {
             App::Notify("The console switched off: the drain goes on slowly"_i18n);
             StartDrainRun(m);
             return true;
+        case Found::CutoffCharging:
+            App::Notify("The console switched off: the drain is done. Now charge it to 100 %."_i18n);
+            log_write("[Calib] cut-off found, the console charges; cycle %d got %d\n", m.step == Step::Cycle1 ? 1 : 2, CycleGot(m.step == Step::Cycle1 ? 1 : 2));
+            ShowCyclePage();
+            return true;
         case Found::HubRestarted:
             App::Notify("The Hub started again: the drain goes on"_i18n);
             StartDrainRun(m); // same boot, same mode: only the Hub was left or replaced
@@ -376,7 +382,7 @@ auto StateText(Mark m) -> std::string {
 // what a cycle row says: where the cycle is
 auto CycleText(const Marker& m, int cycle) -> std::string {
     const int got = CycleGot(cycle);
-    const bool drained = got >= static_cast<int>(wizard::CYCLE_DONE);
+    const bool drained = got >= static_cast<int>(wizard::CYCLE_DONE) || m.cutoffs > 0;
     const auto progress = got < 0 ? std::string{} : " (" + std::to_string(got) + " % / " + std::to_string(wizard::CYCLE_DONE) + " %)";
     if (drained) {
         return "next: charge to 100 %"_i18n;

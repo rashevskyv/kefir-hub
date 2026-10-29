@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.218 — calibration: a cut-off found at start opens the charge page by itself
+When the console was switched on with the charger after a cut-off, the Hub now opens the calibration at the charge page (the drain counts as done); the 'open Kefir Hub' hint no longer tells to switch the console on.
+host tests: pass (quick) | nro: not built | switch: pending
+
 ## v0.14.217 — Nextendo built into Kefir (Phase N: N.1, N.2, N.2b, N.2c, N.2d, N.3, N.5b)
 Kefir Settings > Nextendo: on the emuMMC the hosts file, real PRODINFO and dns_mitm keys are set at start (pinned Prelude-Nextendo v4.0.11, firmware 22.5.0 / 23.0.1 only). sysNAND option in Semi-stock only, default off; game patches are stashed in /config/semistock/nextendo while Nextendo is off; server IP refresh from the newest release once a day. 22 new en.json keys, other languages not yet translated.
 host tests: pass (quick) | nro: built | switch: pending (Semi-stock wildcard move, Nextendo page, online check)

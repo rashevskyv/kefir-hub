@@ -124,6 +124,7 @@ inline auto Rebooted(const Marker& m, const Battery& b) -> bool {
 enum class Found {
     Nothing,      // no drain was running, or the console is charging: the cycle counts by the cycle total
     HubRestarted, // a drain was running and only the Hub started again (the console did not restart): go on as before
+    CutoffCharging, // the Hub drained, the console switched off and was switched on WITH the charger: the charge phase
     CutoffSeen,   // the Hub drained, the console switched off and was switched on without the charger: go on in the tail mode
 };
 
@@ -137,7 +138,8 @@ inline auto Check(Marker& m, const Battery& b) -> Found {
     m.boot_time = b.boot_time;
     if (b.charger_in) {
         m.drain_started = false; // the console was off and is charging: the drain is over
-        return Found::Nothing;
+        m.cutoffs++;             // and it did cut off: the charge phase follows, whatever the cycle total says
+        return Found::CutoffCharging;
     }
     m.cutoffs++; // the Hub was draining, the console cut off and was switched on without the charger
     return Found::CutoffSeen;

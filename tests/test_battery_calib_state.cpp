@@ -49,7 +49,7 @@ int main() {
     m.last_set_brightness = 1;
     assert(DecideBrightness(m, true, false, 1) == Brightness::Restore);  // still what the Hub set: give the user's back
     assert(DecideBrightness(m, true, false, 55) == Brightness::Keep);    // he set his own meanwhile
-    assert(Check(m, {true, 15000}) == Found::Nothing && !m.drain_started && m.boot_time == 15000);
+    assert(Check(m, {true, 15000}) == Found::CutoffCharging && !m.drain_started && m.boot_time == 15000 && m.cutoffs == 3);
     assert(Check(m, {false, 20000}) == Found::Nothing);                  // no drain running: nothing to go on with
 
     // the report and the transfer are the marker's own; the cycles cannot take them back

@@ -136,7 +136,7 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     NoteState(true);
     if (m_calib) {
         OpenCalibLog();
-        account_restore::ArmReopenHubHint("Battery calibration: when the console switches off, switch it on again and open Kefir Hub → Tools → Battery calibration."_i18n, false);
+        account_restore::ArmReopenHubHint("Battery calibration is not finished. Open Kefir Hub: it goes on by itself."_i18n, false);
     } else {
         account_restore::ArmReopenHubHint("Battery calibration: put the console on the charger until 100%, then open Kefir Hub → Tools → Battery → Calibrate."_i18n, false);
     }
@@ -403,7 +403,7 @@ void DrainMenu::CalibTick() {
         return;
     }
     // enough is drained and the charger is in (the console was cut off and now charges): the drain is over, go to the charge
-    if (!m_calib->charge && m_charger && m_step == wizard::DrainStep::Charging && m_calib->on_drained) {
+    if (!m_calib->charge && m_charger && (m_step == wizard::DrainStep::Charging || m_calib->tail) && m_calib->on_drained) {
         const auto go = std::move(m_calib->on_drained);
         m_calib->on_drained = nullptr;
         log_write("[Calib] drain over, %llu s on battery; the charge follows\n", static_cast<unsigned long long>(m_state.drain_s[m_cycle - 1]));
