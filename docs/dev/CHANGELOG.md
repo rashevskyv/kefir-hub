@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.222 — MTP copy box: the "Copied so far" line no longer overlaps the time left
+The line moved above the bar. Before, it sat under the bar on the same spot as "0 seconds remaining (MiB/s)" and the two texts overlapped.
+host tests: not run | nro: not built | switch: pending
+
 ## v0.14.221 — Nextendo: Prelude releases reach users by Hub self-update (N.8)
 Hub carries Prelude-Nextendo v4.0.16 patches in romfs (nextendo_* folders) and writes/removes them itself; firmware list replaced by an ssl build-ID check; daily robot (prelude-sync.yml) syncs, tests, builds and releases; i18n filled for all languages.
 host tests: pass (quick + nextendo + i18n contract) | nro: built | switch: pending (ssl ID via ldr:dmnt, patch install, update.te keeps nextendo_*)

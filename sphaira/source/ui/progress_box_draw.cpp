@@ -361,7 +361,8 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         if (secs >= 1.0 && mib > 0.0) {
             std::snprintf(speed, sizeof(speed), " · %.1f MiB/s", mib / secs);
         }
-        gfx::drawTextArgs(vg, prog_bar.x, prog_bar.y + 36.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO),
+        // above the bar, like "Done:" in the pair of bars: the time left sits under the bar and would overlap this line.
+        gfx::drawTextArgs(vg, prog_bar.x, prog_bar.y - 8.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO),
             "%s %lld %s, %s%s", "Copied so far:"_i18n.c_str(), static_cast<long long>(m_overall_files.load()), "files"_i18n.c_str(), size, speed);
     }
 
