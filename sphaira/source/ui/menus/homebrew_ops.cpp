@@ -5,6 +5,8 @@
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/homebrew_internal.hpp"
 #include "ui/menus/install_share.hpp"
+#include "ui/menus/console_files_transfer.hpp"
+#include "files_transfer_plan.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -368,6 +370,14 @@ void Menu::DisplayOptions() {
                     );
                 }
             }, true, "Permanently delete all selected homebrew."_i18n)->SetIcon(ActionIcon::Delete);
+
+            options->Add<SidebarEntryCallback>("Send to another console"_i18n, [this](){
+                std::vector<std::string> paths;
+                for (const auto& t : GetSelectedEntries()) {
+                    paths.push_back(files_transfer::HomebrewSendPath(t.path.toString()));
+                }
+                console_files::Send(std::move(paths));
+            }, true, "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed."_i18n);
 
             if (targets.size() == 1 && m_selected_count == 0) {
                 options->Add<SidebarEntryHeader>("FORWARDER"_i18n);

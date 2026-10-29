@@ -477,10 +477,11 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     draw_text(m_scroll_action, action, m_pos.y + 40, 24, 160, ThemeEntryID_TEXT);
     draw_text(m_scroll_title, title, m_pos.y + 100, 22, 160, ThemeEntryID_TEXT);
     if (!alt.empty()) {
-        draw_text(m_scroll_alt, alt, m_pos.y + 130, 18, 160, ThemeEntryID_TEXT_INFO);
+        // the whole width of the box, below the QR code (it ends at 145): a sentence fits there.
+        draw_text(m_scroll_alt, alt, m_pos.y + 150, 18, 12, ThemeEntryID_TEXT_INFO);
     }
     if (!transfer.empty()) {
-        draw_text(m_scroll_transfer, transfer, m_pos.y + 160, 18, 12, ThemeEntryID_TEXT_INFO);
+        draw_text(m_scroll_transfer, transfer, m_pos.y + (alt.empty() ? 160 : 180), 18, 12, ThemeEntryID_TEXT_INFO);
     }
 
     // every transfer gets a stop button, including one with a known total: a

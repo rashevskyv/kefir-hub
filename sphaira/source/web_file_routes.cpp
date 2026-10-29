@@ -2,6 +2,8 @@
 #include "web_fs.hpp"
 #include "web_http.hpp"
 #include "web_pages.hpp"
+#include "web_upload.hpp"
+#include "defines.hpp"
 #include "fs.hpp"
 #include "log.hpp"
 #include "ui/menus/homebrew.hpp"
@@ -328,6 +330,19 @@ void SendDownload(Socket sock, const std::string& rel) {
         return;
     }
 
+    // a big file shows on the server window as "Sending: <name>" with a bar, like a game being sent.
+    const bool show = size >= 1024 * 1024;
+    if (show) {
+        {
+            std::scoped_lock lock{g_upload_state.name_mutex};
+            g_upload_state.name = "Sending: " + name;
+        }
+        g_upload_state.total.store(size);
+        g_upload_state.bytes.store(0);
+        g_upload_state.active.store(true);
+    }
+    ON_SCOPE_EXIT(if (show) { g_upload_state.active.store(false); });
+
     std::vector<u8> buf(HTTP_FILE_CHUNK);
     s64 offset{};
     while (offset < size) {
@@ -342,6 +357,9 @@ void SendDownload(Socket sock, const std::string& rel) {
         }
 
         offset += bytes_read;
+        if (show) {
+            g_upload_state.bytes.store(offset);
+        }
     }
 }
 

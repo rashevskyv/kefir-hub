@@ -89,6 +89,9 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
 
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 
+## Send an app to another console
+Press **+** and choose [[Send to another console]]. The Hub packs the app's whole folder (for example `/switch/<app>`) into one `.zip` and offers it on Wi-Fi. A `.nro` that lies directly in `/switch` is sent alone. On the other console, open [[Console Transfer]] → [[Receive files]]. See [Move files and folders](console-transfer.md#move-files-and-folders). The sending console shows a bar for each file while it goes.
+
 ## Add an app to the HOME Menu (forwarder)
 A forwarder is a HOME Menu icon that starts the homebrew directly, without the Homebrew Menu.
 It starts the app in title mode, with full memory.

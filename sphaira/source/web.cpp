@@ -533,6 +533,8 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
                     pbox->SetTitle(url);
                     if (completed_name.starts_with("Installing:")) {
                         pbox->NewTransferForce("Installation completed"_i18n);
+                    } else if (completed_name.starts_with("Sending:")) {
+                        pbox->NewTransferForce("Sending completed"_i18n);
                     } else {
                         pbox->NewTransferForce("Upload completed"_i18n);
                     }

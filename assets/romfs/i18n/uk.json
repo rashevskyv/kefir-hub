@@ -3842,5 +3842,7 @@
   "The save data stays.": "Збереження залишаться.",
   "Delete this installed component. The save data stays.": "Видалити цей встановлений компонент. Збереження залишаться.",
   "Delete selected components": "Видалити вибрані компоненти",
-  "Delete the ticked components. The save data stays.": "Видалити позначені компоненти. Збереження залишаться."
+  "Delete the ticked components. The save data stays.": "Видалити позначені компоненти. Збереження залишаться.",
+  "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed.": "Передати вибраний homebrew на іншу консоль у тій самій мережі Wi-Fi. Його теку буде запаковано повністю.",
+  "Sending completed": "Передачу завершено"
 }

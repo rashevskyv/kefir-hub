@@ -23,6 +23,11 @@ int main() {
     assert(back[0].dir && back[0].payload == "0.zip" && back[0].parent == "/switch" && back[0].name == "My App" && back[0].size == 1234);
     assert(!back[1].dir && back[1].payload == "1.bin" && back[1].parent == "/" && back[1].name == "boot.ini");
 
+    // a homebrew in its own folder goes with the folder; a loose one goes alone.
+    assert(HomebrewSendPath("/switch/NX-MCP/NX-MCP.nro") == "/switch/NX-MCP");
+    assert(HomebrewSendPath("/switch/tool.nro") == "/switch/tool.nro");
+    assert(HomebrewSendPath("/hbmenu.nro") == "/hbmenu.nro");
+
     // a manifest from another console is not trusted: nothing leaves the chosen folder or the package folder.
     assert(ParseManifest("d\t0.zip\t/switch\t..\t1\n").empty());
     assert(ParseManifest("d\t0.zip\t/switch\ta/b\t1\n").empty());

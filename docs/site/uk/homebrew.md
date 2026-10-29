@@ -87,6 +87,9 @@ Kefir Hub видаляє файл `.nro`. Папка застосунку та �
 
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 
+## Передати програму на іншу консоль
+Натисніть **+** і виберіть [[Send to another console]]. Hub запакує всю теку програми (наприклад, `/switch/<програма>`) в один `.zip` і запропонує її по Wi-Fi. `.nro`, що лежить просто в `/switch`, надсилається окремо. На іншій консолі відкрийте [[Console Transfer]] → [[Receive files]]. Див. [Перенести файли й папки](console-transfer.md#move-files-and-folders). Консоль-відправник показує смугу для кожного файлу під час передачі.
+
 ## Додати застосунок до HOME Menu (форвардер)
 Форвардер — це іконка в HOME Menu, яка запускає homebrew напряму, без Homebrew Menu.
 Застосунок стартує в режимі тайтла, з усією пам'яттю.

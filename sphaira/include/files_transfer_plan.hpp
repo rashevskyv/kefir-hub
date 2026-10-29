@@ -38,6 +38,16 @@ inline auto SplitPath(std::string_view path) -> std::pair<std::string, std::stri
     return {slash == 0 ? "/" : std::string{path.substr(0, slash)}, std::string{path.substr(slash + 1)}};
 }
 
+// what "send this homebrew" packs: the app's own folder (/switch/app for /switch/app/app.nro), so its data comes
+// along; an .nro that lies directly in /switch (or in the card root) is sent alone.
+inline auto HomebrewSendPath(std::string_view nro_path) -> std::string {
+    const auto [dir, file] = SplitPath(nro_path);
+    if (dir == "/switch" || dir == "/") {
+        return std::string{nro_path};
+    }
+    return dir;
+}
+
 // one path component of an item name: no separator, no control character, not "." or "..".
 inline auto IsSafeName(std::string_view name) -> bool {
     return path::IsSafeArchiveEntry(name) && name.find('/') == std::string_view::npos;

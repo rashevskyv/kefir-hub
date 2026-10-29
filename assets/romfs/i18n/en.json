@@ -3842,5 +3842,7 @@
   "The save data stays.": "The save data stays.",
   "Delete this installed component. The save data stays.": "Delete this installed component. The save data stays.",
   "Delete selected components": "Delete selected components",
-  "Delete the ticked components. The save data stays.": "Delete the ticked components. The save data stays."
+  "Delete the ticked components. The save data stays.": "Delete the ticked components. The save data stays.",
+  "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed.": "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed.",
+  "Sending completed": "Sending completed"
 }

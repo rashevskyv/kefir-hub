@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.226 — Console Transfer: send a homebrew, a bar on the sending console, a readable server window
+Homebrew + → Send to another console packs the app's whole folder. The sender's server window now shows a bar for each file it serves (Sending: <name>). The second line of a server window (the instruction under the address) runs the full width of the box, under the QR code.
+host tests: files_transfer_plan pass | nro: not built | switch: pending
+
 ## v0.14.225 — screensaver: old-television switch-on
 When the black screensaver page appears, a line of light grows across the middle, opens to the full screen and the readout fades in (0.65 s). The way out stays instant.
 host tests: not run | nro: not built | switch: pending
