@@ -88,9 +88,18 @@ Kefir Hub видаляє файл `.nro`. Папка застосунку та �
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 
 ## Теки
-Список Homebrew повторює теки `/switch`. Тека без власного `.nro` показується як тека з кількістю програм усередині. Натисніть **A** ([[Open]]), щоб зайти, і **B**, щоб повернутися. Тека з `.nro` — це програма: вона показується як одна програма, а її теки з даними не читаються.
-
-Натисніть **+** на теці, щоб змінити справжню теку на SD-карті: [[Rename]], [[Set icon]] (картинка зберігається в теці як прихований файл `.hubicon.jpg`), [[Remove icon]] і [[Delete]] (тека з усім вмістом).
+<!-- draft
+- the Homebrew list shows the folders of /switch as folder rows (folders first, then apps); a row shows the folder name and how many apps are inside
+- a folder that has no .nro of its own is a folder row; a folder that has an .nro is one app, as before, and its data folders are not read
+- the Hub looks up to 6 folders deep
+- **A** ([[Open]]) goes into a folder; **B** goes back up; at the top **B** leaves the Hub
+- **+** on a folder row gives the THIS FOLDER section: [[Open]], [[Rename]], [[Edit name and icon]], [[Remove icon]] (only when the folder has an icon), [[Delete]]
+- these change the real folder on the SD card; [[Delete]] removes the folder with everything in it, after a question
+- [[Edit name and icon]] on a folder opens the same editor as for an app, without the forwarder options: the Name row renames the folder, the picture is saved in the folder as the hidden file `.hubicon.jpg`; without a picture the row shows a folder shape
+- not possible yet: create a folder, move an app to another folder
+-->
+<!-- shot: homebrew-folders | Homebrew tab, top level: folder rows "Demo Games" and "Demo Tools" (with its icon) before the apps -->
+<!-- shot: homebrew-folder-options | Homebrew options panel on a folder row: THIS FOLDER section with Open, Rename, Edit name and icon, Remove icon, Delete -->
 
 ## Передати програму на іншу консоль
 Натисніть **+** і виберіть [[Send to another console]]. Hub запакує всю теку програми (наприклад, `/switch/<програма>`) в один `.zip` і запропонує її по Wi-Fi. `.nro`, що лежить просто в `/switch`, надсилається окремо. На іншій консолі відкрийте [[Console Transfer]] → [[Receive files]]. Див. [Перенести файли й папки](console-transfer.md#move-files-and-folders). Консоль-відправник показує смугу для кожного файлу під час передачі.

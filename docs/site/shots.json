@@ -1170,6 +1170,21 @@
         },
         "file-browser-network-list": {
             "user": true
+        },
+        "homebrew-folders": {
+            "steps": [
+                "wait 1.5"
+            ]
+        },
+        "homebrew-folder-options": {
+            "steps": [
+                "Right",
+                "wait 0.5",
+                "Plus",
+                "wait 1.5",
+                "Down 6",
+                "wait 1"
+            ]
         }
     }
 }

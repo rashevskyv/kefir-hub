@@ -3848,15 +3848,12 @@
   "THIS FOLDER": "ЦЯ ТЕКА",
   "Show the apps in this folder.": "Показати програми в цій теці.",
   "Rename the folder on the SD card.": "Перейменувати теку на SD-карті.",
-  "Set icon": "Задати іконку",
-  "Pick a picture for this folder. It is saved in the folder as a hidden file.": "Вибрати картинку для цієї теки. Вона зберігається в теці як прихований файл.",
   "Remove icon": "Прибрати іконку",
   "Show the standard folder picture again.": "Знову показувати стандартну картинку теки.",
   "Permanently delete the folder and everything in it.": "Назавжди видалити теку з усім вмістом.",
   "This name cannot be used.": "Цю назву використати не можна.",
   "Failed to rename the folder": "Не вдалося перейменувати теку",
-  "Set folder icon": "Іконка теки",
   "Failed to save the icon": "Не вдалося зберегти іконку",
   "Delete this folder and everything in it?": "Видалити цю теку з усім вмістом?",
-  "apps": "програм"
+  "Change the folder name and its picture. The picture is saved in the folder as a hidden file.": "Змінити назву теки та її картинку. Картинка зберігається в теці як прихований файл."
 }

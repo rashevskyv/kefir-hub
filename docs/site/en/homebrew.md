@@ -90,9 +90,18 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
 <!-- shot: homebrew-edit-name-icon | Edit name and icon screen with title field and icon preview -->
 
 ## Folders
-The Homebrew list follows the folders of `/switch`. A folder that holds no `.nro` itself is shown as a folder with the number of apps inside. Press **A** ([[Open]]) to go in and **B** to go back. A folder that holds an `.nro` is an app: it is listed as one app and its data folders are not read.
-
-Press **+** on a folder to change the real folder on the SD card: [[Rename]], [[Set icon]] (a picture saved in the folder as the hidden file `.hubicon.jpg`), [[Remove icon]] and [[Delete]] (the folder with everything in it).
+<!-- draft
+- the Homebrew list shows the folders of /switch as folder rows (folders first, then apps); a row shows the folder name and how many apps are inside
+- a folder that has no .nro of its own is a folder row; a folder that has an .nro is one app, as before, and its data folders are not read
+- the Hub looks up to 6 folders deep
+- **A** ([[Open]]) goes into a folder; **B** goes back up; at the top **B** leaves the Hub
+- **+** on a folder row gives the THIS FOLDER section: [[Open]], [[Rename]], [[Edit name and icon]], [[Remove icon]] (only when the folder has an icon), [[Delete]]
+- these change the real folder on the SD card; [[Delete]] removes the folder with everything in it, after a question
+- [[Edit name and icon]] on a folder opens the same editor as for an app, without the forwarder options: the Name row renames the folder, the picture is saved in the folder as the hidden file `.hubicon.jpg`; without a picture the row shows a folder shape
+- not possible yet: create a folder, move an app to another folder
+-->
+<!-- shot: homebrew-folders | Homebrew tab, top level: folder rows "Demo Games" and "Demo Tools" (with its icon) before the apps -->
+<!-- shot: homebrew-folder-options | Homebrew options panel on a folder row: THIS FOLDER section with Open, Rename, Edit name and icon, Remove icon, Delete -->
 
 ## Send an app to another console
 Press **+** and choose [[Send to another console]]. The Hub packs the app's whole folder (for example `/switch/<app>`) into one `.zip` and offers it on Wi-Fi. A `.nro` that lies directly in `/switch` is sent alone. On the other console, open [[Console Transfer]] → [[Receive files]]. See [Move files and folders](console-transfer.md#move-files-and-folders). The sending console shows a bar for each file while it goes.

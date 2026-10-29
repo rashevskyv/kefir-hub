@@ -82,8 +82,8 @@ void Menu::BuildView() {
     }
 }
 
-void Menu::Enter(const std::string& folder, const std::string& focus) {
-    m_cwd = folder;
+void Menu::Enter(std::string folder, std::string focus) {
+    m_cwd = std::move(folder);
     ClearSelection();
     BuildView();
     Sort();
@@ -143,9 +143,9 @@ void Menu::AddFolderOptions(Sidebar* options) {
         RenameFolder(folder);
     }, true, "Rename the folder on the SD card."_i18n)->SetIcon(ActionIcon::Edit);
 
-    options->Add<SidebarEntryCallback>("Set icon"_i18n, [this, folder](){
+    options->Add<SidebarEntryCallback>("Edit name and icon"_i18n, [this, folder](){
         SetFolderIcon(folder);
-    }, true, "Pick a picture for this folder. It is saved in the folder as a hidden file."_i18n);
+    }, true, "Change the folder name and its picture. The picture is saved in the folder as a hidden file."_i18n)->SetIcon(ActionIcon::Edit);
 
     if (folder.icon_size || folder.image) {
         options->Add<SidebarEntryCallback>("Remove icon"_i18n, [this, folder](){
@@ -159,25 +159,36 @@ void Menu::AddFolderOptions(Sidebar* options) {
     }, true, "Permanently delete the folder and everything in it."_i18n)->SetIcon(ActionIcon::Delete);
 }
 
+namespace {
+
+// renames the folder on the card; says why when it cannot. Returns false on failure.
+auto RenameOnCard(const fs::FsPath& path, const std::string& new_name) -> bool {
+    const auto parent = files_transfer::SplitPath(path.s).first;
+    if (!files_transfer::IsSafeName(new_name)) {
+        App::Notify("This name cannot be used."_i18n);
+        return false;
+    }
+    const fs::FsPath dst{(parent == "/" ? std::string{} : parent) + "/" + new_name};
+    const auto rc = fs::FsNativeSd().RenameDirectory(path, dst);
+    if (R_FAILED(rc)) {
+        App::PushErrorBox(rc, "Failed to rename the folder"_i18n);
+        return false;
+    }
+    return true;
+}
+
+} // namespace
+
 void Menu::RenameFolder(const NroEntry& folder) {
-    const auto [parent, name] = files_transfer::SplitPath(folder.path.s);
+    const auto name = files_transfer::SplitPath(folder.path.s).second;
 
     std::string out;
     if (R_FAILED(swkbd::ShowText(out, "Set Folder Name"_i18n.c_str(), name.c_str())) || out.empty() || out == name) {
         return;
     }
-    if (!files_transfer::IsSafeName(out)) {
-        App::Notify("This name cannot be used."_i18n);
-        return;
+    if (RenameOnCard(folder.path, out)) {
+        SortAndFindLastFile(true);
     }
-
-    const fs::FsPath dst{(parent == "/" ? std::string{} : parent) + "/" + out};
-    const auto rc = fs::FsNativeSd().RenameDirectory(folder.path, dst);
-    if (R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Failed to rename the folder"_i18n);
-        return;
-    }
-    SortAndFindLastFile(true);
 }
 
 void Menu::SetFolderIcon(const NroEntry& folder) {
@@ -188,9 +199,11 @@ void Menu::SetFolderIcon(const NroEntry& folder) {
     editor.values.title = name;
     fs::FsNativeSd().read_entire_file(FolderIconPath(path), editor.values.icon);
     editor.steam_query = name;
-    editor.screen_title = "Set folder icon"_i18n;
+    editor.screen_title = "Edit name and icon"_i18n;
+    editor.title_label = "Name"_i18n;
     editor.submit_label = "Save Changes"_i18n;
-    editor.on_create = [weak_alive = std::weak_ptr<bool>(m_alive), this, path](const forwarder::Values& values) {
+    editor.show_forwarder_options = false;
+    editor.on_create = [weak_alive = std::weak_ptr<bool>(m_alive), this, path, name](const forwarder::Values& values) {
         const auto alive = weak_alive.lock();
         if (!alive || !*alive) {
             return false;
@@ -202,6 +215,10 @@ void Menu::SetFolderIcon(const NroEntry& folder) {
                 return false;
             }
         }
+        // the name row renames the folder (the icon file moves with it)
+        if (!values.title.empty() && values.title != name && !RenameOnCard(path, values.title)) {
+            return false;
+        }
         SortAndFindLastFile(true);
         return true;
     };
@@ -212,7 +229,7 @@ void Menu::SetFolderIcon(const NroEntry& folder) {
 void Menu::DeleteFolder(const NroEntry& folder) {
     const auto path = folder.path;
     const auto text = "Delete this folder and everything in it?"_i18n + "\n\n"
-        + files_transfer::SplitPath(path.s).second + ": " + std::to_string(folder.size) + " " + "apps"_i18n;
+        + files_transfer::SplitPath(path.s).second + "\n" + "Apps"_i18n + ": " + std::to_string(folder.size);
 
     App::Push<OptionBox>(text, "Back"_i18n, "Delete"_i18n, 0, [this, path](auto op_index){
         if (!op_index || !*op_index) {

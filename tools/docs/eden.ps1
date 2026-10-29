@@ -160,11 +160,13 @@ function Restore-OwnData {
   Write-Host "own backups restored"
 }
 
-function Win { (Get-Process eden -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1).MainWindowHandle }
+# Only the docs Eden: other copies (E:\Switch\Eden-<project>) run other sessions' work at the same time.
+function DocsEden { Get-Process eden -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "$EdenDir\eden.exe" } }
+function Win { (DocsEden | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1).MainWindowHandle }
 
 # Launch Eden and wait until the Hub reads input (startup dialogs are the recipe's "startup" steps).
 function Start-Hub([int]$waitSec = 90) {
-  Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
+  DocsEden | Stop-Process -Force
   Start-Sleep -Milliseconds 500
   Remove-Item $InputTxt, "$InputTxt.tmp", $ReadyFile -ErrorAction SilentlyContinue
   Hide-OwnData

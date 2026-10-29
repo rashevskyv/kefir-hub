@@ -90,7 +90,8 @@ private:
     // the rows of m_cwd: its folders and its apps
     void BuildView();
     // focus: the row to select after going in (the folder we just left, when going up)
-    void Enter(const std::string& folder, const std::string& focus = {});
+    // both by value: callers pass m_cwd, which Enter overwrites
+    void Enter(std::string folder, std::string focus = {});
     void UpdateActions();
     auto IsFolderFocused() -> bool {
         return !m_entries_current.empty() && GetEntry().is_dir;

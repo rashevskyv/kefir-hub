@@ -42,7 +42,7 @@ function Step([string]$s) {
   if ($p.Count -gt 1) { B $p[0] ([int]$p[1]) } else { B $p[0] }
 }
 
-Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Milliseconds 500  # it locks the .nro
+DocsEden | Stop-Process -Force; Start-Sleep -Milliseconds 500  # it locks the .nro
 if (-not $Nro) { $Nro = "$Repo\build\DocsDemo\kefir-hub.nro" }
 if (Test-Path $Nro) { Copy-Item $Nro $HubNro -Force; Write-Host "hub: $Nro" } else { Write-Warning "no $Nro; using the .nro already in Eden" }
 
@@ -56,7 +56,7 @@ $taken = 0; $skipped = @(); $scene = $null; $iniSet = @()
 # (a recipe's own "startup" replaces the shared one).
 function Launch($id, $lang) {
   # the running Hub writes config.ini too (last_path when a menu closes): stop it before setting keys.
-  Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Milliseconds 500
+  DocsEden | Stop-Process -Force; Start-Sleep -Milliseconds 500
   foreach ($k in $script:iniSet) { $sk = $k -split '\.', 2; Set-HubIni $sk[0] $sk[1] '' }
   $script:iniSet = @()
   $ini = $data.shots.$id.ini
@@ -93,7 +93,7 @@ foreach ($id in $ids) {
   foreach ($l in $todo) { Lang $l; Take $id $l }
 }
 } finally {
-  Get-Process eden -ErrorAction SilentlyContinue | Stop-Process -Force
+  DocsEden | Stop-Process -Force
   Start-Sleep -Milliseconds 500
   Restore-OwnData
   foreach ($k in $iniSet) { $sk = $k -split '\.', 2; Set-HubIni $sk[0] $sk[1] '' }

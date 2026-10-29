@@ -183,7 +183,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         auto subtitle = layout != grid::LayoutType_HbMenu ? GetNroFilename(e) : std::string{e.GetAuthor()};
         if (e.is_dir) {
             card_name = e.GetName();
-            card_version = std::to_string(e.size) + " " + "apps"_i18n;
+            card_version = "Apps"_i18n + ": " + std::to_string(e.size);
             subtitle = layout != grid::LayoutType_HbMenu ? "Folder"_i18n : std::string{};
             if (layout == grid::LayoutType_List) {
                 card_version = "[" + card_version + "]";

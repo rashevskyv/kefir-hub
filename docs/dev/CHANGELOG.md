@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.229 — Homebrew folders: checked in Eden, fixes and docs shots
+B from a folder now keeps the focus on that folder (Enter took m_cwd by reference). Folder rows say "Apps: N" (no broken plural). "Set icon" became "Edit name and icon": the editor hides the forwarder options and its Name row renames the folder. Docs: draft + shots homebrew-folders, homebrew-folder-options (en, uk), demo apps from tools/docs/make_demo_homebrew.py; eden.ps1/shoot.ps1 now stop only E:\Switch\Eden\eden.exe, never other Eden copies.
+host tests: pass (--quick) | nro: built (DocsDemo) | eden: open/back/focus, edit name and icon, remove icon, delete checked | switch: pending (Rename with the keyboard, scan time)
+
 ## v0.14.228 — Homebrew shows the real folders of /switch
 The scan goes into folders without an .nro of their own (down to 6 levels) and never into an app folder, so the cost stays near the old one-level scan. Those folders are rows: A opens, B goes back; on a folder + gives Rename, Set icon (hidden `.hubicon.jpg` in the folder), Remove icon and Delete. Pure view logic: `homebrew_tree.hpp` + `tests/test_homebrew_tree.cpp`. Not done: create folder, move apps between folders, select several folders.
 host tests: pass (--quick) | nro: not built | switch: pending (open/back, rename, icon, delete a folder; scan time with many folders)
