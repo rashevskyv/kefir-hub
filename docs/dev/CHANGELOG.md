@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.220 — calibration: a cut-off counts as a whole discharge
+The wizard state keeps the percent at the drain start (from1/from2). A cut-off after a drain that began at 95 % or more sets the cycle's discharge to 90 %, so a lagging cycle total (the gauge chip loses its count in a hard cut-off) cannot block the cycle; the numbers go to the log.
+host tests: pass (quick) | nro: not built | switch: pending
+
 ## v0.14.219 — no "update without base" question while an MTP/FTP file is installing
 The orphan-content check now waits while an MTP or FTP file is installing, then counts the quiet time again. A big base game that arrives after its update no longer triggers the question in the middle of its install.
 host tests: not run | nro: not built | switch: pending (MTP: base + update + DLC together)

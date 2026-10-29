@@ -339,6 +339,24 @@ void ShowCyclePage() {
 
 // ---- what the Hub finds when it starts ---------------------------------------------------------------------------------
 
+// the console cut off in this cycle's drain: it counts as a whole discharge (wizard::CutoffReached); the numbers go to the log
+void CountCutoff(const Marker& m) {
+    const int cycle = m.step == Step::Cycle1 ? 1 : 2;
+    const auto total = detail::CycleTotalNow();
+    auto st = detail::LoadState();
+    if (!total) {
+        log_write("[Calib] cut-off: the cycle total cannot be read\n");
+        return;
+    }
+    const auto got = wizard::Got(st, wizard::Live{*total, false, 0, 0, false, static_cast<u64>(Now())}, cycle);
+    const bool fixed = wizard::CutoffReached(st, cycle, *total);
+    log_write("[Calib] cut-off in cycle %d: total %u, got %u, drain began at %u %%, %s\n", cycle, *total, got, st.drain_from[cycle - 1],
+              fixed ? "the cycle total lagged: counted as a whole discharge" : "the cycle total is enough or the drain did not begin on a full battery");
+    if (fixed) {
+        detail::SaveState(st);
+    }
+}
+
 // returns true when it took over the screen (a page or a dialog)
 auto Resume(Marker m) -> bool {
     if (g_checked) {
@@ -354,12 +372,13 @@ auto Resume(Marker m) -> bool {
     SaveMarker(m);
     switch (found) {
         case Found::CutoffSeen:
+            CountCutoff(m);
             App::Notify("The console switched off: the drain goes on slowly"_i18n);
             StartDrainRun(m);
             return true;
         case Found::CutoffCharging:
+            CountCutoff(m);
             App::Notify("The console switched off: the drain is done. Now charge it to 100 %."_i18n);
-            log_write("[Calib] cut-off found, the console charges; cycle %d got %d\n", m.step == Step::Cycle1 ? 1 : 2, CycleGot(m.step == Step::Cycle1 ? 1 : 2));
             ShowCyclePage();
             return true;
         case Found::HubRestarted:

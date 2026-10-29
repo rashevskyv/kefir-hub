@@ -32,6 +32,7 @@ struct State {
     std::uint64_t zero_at[2]{};
     std::uint64_t alive_at[2]{};
     std::uint64_t drain_s[2]{}; // seconds spent on battery in this cycle's drain (the charger hours do not count)
+    std::uint32_t drain_from[2]{}; // the percent the console showed when this cycle's drain began (0 = unknown)
     // HOS cycle total x100 where each cycle is measured from (0 = not set: cycle 1 from the reset, cycle 2 from the
     // moment cycle 1 counted). "Redo this cycle" sets it to the total now, so a cycle that did not really happen can
     // be done again.
@@ -48,12 +49,12 @@ inline auto Format(const State& s) -> std::string {
     std::snprintf(buf, sizeof(buf),
         "reset_at=%llu\nreset_mmc=%d\ntotal_at_reset=%u\nfull1_at=%llu\nfull2_at=%llu\nmatch_sysmmc_at=%llu\nmatch_emummc_at=%llu\n"
         "drain1_at=%llu\nzero1_at=%llu\nalive1_at=%llu\ndrain2_at=%llu\nzero2_at=%llu\nalive2_at=%llu\n"
-        "drain1_s=%llu\ndrain2_s=%llu\nstart1=%u\nstart2=%u\nhop_to=%u\nhop_from=%u\n",
+        "drain1_s=%llu\ndrain2_s=%llu\nstart1=%u\nstart2=%u\nhop_to=%u\nhop_from=%u\nfrom1=%u\nfrom2=%u\n",
         (unsigned long long)s.reset_at, s.reset_mmc, s.total_at_reset, (unsigned long long)s.full1_at,
         (unsigned long long)s.full2_at, (unsigned long long)s.match_at[SYSMMC], (unsigned long long)s.match_at[EMUMMC],
         (unsigned long long)s.drain_at[0], (unsigned long long)s.zero_at[0], (unsigned long long)s.alive_at[0],
         (unsigned long long)s.drain_at[1], (unsigned long long)s.zero_at[1], (unsigned long long)s.alive_at[1],
-        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1], s.start[0], s.start[1], s.hop_to, s.hop_from);
+        (unsigned long long)s.drain_s[0], (unsigned long long)s.drain_s[1], s.start[0], s.start[1], s.hop_to, s.hop_from, s.drain_from[0], s.drain_from[1]);
     return buf;
 }
 
@@ -88,6 +89,8 @@ inline auto Parse(std::string_view text) -> State {
         else if (key == "start2") s.start[1] = static_cast<std::uint32_t>(v);
         else if (key == "hop_to") s.hop_to = static_cast<std::uint32_t>(v);
         else if (key == "hop_from") s.hop_from = static_cast<std::uint32_t>(v);
+        else if (key == "from1") s.drain_from[0] = static_cast<std::uint32_t>(v);
+        else if (key == "from2") s.drain_from[1] = static_cast<std::uint32_t>(v);
     }
     return s;
 }
@@ -127,7 +130,7 @@ inline void Redo(State& s, int cycle, std::uint32_t total_now) {
         return;
     }
     for (int i = c; i < 2; i++) {
-        s.drain_at[i] = s.zero_at[i] = s.alive_at[i] = s.drain_s[i] = 0;
+        s.drain_at[i] = s.zero_at[i] = s.alive_at[i] = s.drain_s[i] = s.drain_from[i] = 0;
         s.start[i] = 0;
     }
     s.start[c] = total_now;
@@ -172,12 +175,33 @@ inline auto NoteDrain(State& s, int cycle, std::uint64_t now, int shown_pct) -> 
         s.drain_at[c] = now;
         changed = true;
     }
+    // the percent at the start: the first reading in the first seconds (the very first call may come before the page read it)
+    if (!s.drain_from[c] && shown_pct > 0 && now - s.drain_at[c] <= 15) {
+        s.drain_from[c] = static_cast<std::uint32_t>(shown_pct);
+        changed = true;
+    }
     if (shown_pct == 0 && !s.zero_at[c]) {
         s.zero_at[c] = now;
         changed = true;
     }
     s.alive_at[c] = now;
     return changed;
+}
+
+// The console cut off in this cycle's drain. A cut-off is an empty battery by definition, so a drain that began on a (nearly)
+// full battery is a whole discharge, even when the cycle total did not show it (the gauge chip can lose its count in a hard
+// cut-off, and HOS saves its own part rarely): the cycle is measured from CYCLE_DONE below the total now. true = changed.
+inline auto CutoffReached(State& s, int cycle, std::uint32_t total_now) -> bool {
+    const int c = cycle - 1;
+    if (c < 0 || c > 1 || s.drain_from[c] < 95) {
+        return false;
+    }
+    const auto from = CycleStart(s, cycle);
+    if (total_now > from && total_now - from >= CYCLE_DONE) {
+        return false;
+    }
+    s.start[c] = total_now > CYCLE_DONE ? total_now - CYCLE_DONE : 0;
+    return true;
 }
 
 // seconds the console ran after it first showed 0 % in this cycle (up to the last time the page saw it); 0 = unknown

@@ -91,6 +91,19 @@ int main() {
     d.drain_s[1] = 23400;
     assert(Parse(Format(d)).drain_s[1] == 23400 && Parse(Format(d)) == d);
 
+    // a cut-off counts as a whole discharge when the drain began on a full battery, even if the cycle total lagged
+    State k;
+    k.reset_at = 1; k.total_at_reset = 1000;
+    NoteDrain(k, 1, 100, -1);                                // the page had not read the battery yet
+    NoteDrain(k, 1, 101, 100);
+    assert(k.drain_from[0] == 100 && Parse(Format(k)).drain_from[0] == 100);
+    assert(CutoffReached(k, 1, 1040) && Got(k, Live{1040}, 1) == CYCLE_DONE);   // the total showed only 40
+    assert(!CutoffReached(k, 1, 1200));                      // the total already showed enough: nothing to fix
+    State low;
+    low.reset_at = 1; low.total_at_reset = 1000;
+    NoteDrain(low, 1, 100, 60);                              // began at 60 %: a cut-off is not a whole discharge
+    assert(!CutoffReached(low, 1, 1030) && !low.start[0]);
+
     // the drain page's phases: the night on .141 (drained, put on the charger, full in the morning)
     State c{1000, EMUMMC, 37196, 0, 0, {0, 0}};
     Live on{37196 + 40, false, 30, EMUMMC, false, 2000};
