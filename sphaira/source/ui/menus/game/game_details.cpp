@@ -49,6 +49,7 @@ DbiDetailsMenu::DbiDetailsMenu(std::vector<Entry>* entries, s64 index,
         const Vec4 row{45, 382, 1190, 54};
         const Vec2 pad{0, 5};
         m_list = std::make_unique<List>(1, 4, Vec4{40, 97, 1200, 539}, row, pad);
+        SyncSelectActions();
         LoadGame();
     }
 
@@ -310,6 +311,10 @@ void DbiDetailsMenu::Draw(NVGcontext* vg, Theme* theme) {
 
             if (m_tab == Tab::Content) {
                 const auto& row = m_components[index];
+                if (MarkedCount()) {
+                    gfx::drawCheckbox(vg, theme, v.x + v.w - gfx::CHECKBOX_SIZE - 12.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE,
+                        index < m_marked.size() && m_marked[index]);
+                }
                 // DBI-style row: [SD]/[NAND] location, type, readable version on
                 // the top line; per-component Title ID, size and content/rights
                 // counts underneath.
@@ -434,6 +439,12 @@ void DbiDetailsMenu::ShowCurrentActions() {
                 }, label + ".");
             }
 
+            if (component.status.storageID == NcmStorageId_BuiltInUser || component.status.storageID == NcmStorageId_SdCard) {
+                options->Add<SidebarEntryCallback>("Delete"_i18n, [this, component](){
+                    ConfirmDeleteComponents({component});
+                }, true, "Delete this installed component. The save data stays."_i18n)->SetIcon(ActionIcon::Delete);
+            }
+
             options->Add<SidebarEntryCallback>("Content information"_i18n, [component](){
                 char message[512];
                 std::snprintf(message, sizeof(message),
@@ -492,13 +503,7 @@ void DbiDetailsMenu::SetTab(Tab tab) {
         m_row_index = 0;
         m_list->SetYoff(0);
         SetHeaderFocus(false);
-        if (m_tab == Tab::Saves) {
-            SetAction(Button::X, Action{"Create save slot"_i18n, [this](){
-                PromptCreateSaveSlot(CurrentEntry().app_id, CurrentEntry().GetName(), m_saves, [this](){ LoadGame(); });
-            }});
-        } else {
-            RemoveAction(Button::X);
-        }
+        SyncSelectActions();
     }
 
 auto DbiDetailsMenu::TabHeaderItem() const -> u8 {

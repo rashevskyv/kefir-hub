@@ -9,6 +9,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "ui/menus/file_viewer.hpp"
+#include "ui/menus/console_files_transfer.hpp"
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
@@ -570,6 +571,16 @@ void FsView::DisplayOptions() {
         options->Add<SidebarEntryCallback>("Mount"_i18n, [this](){
             ShareCurrentFolder();
         }, "Expose the selected folder to a PC over MTP, FTP or HTTP."_i18n);
+    }
+    // files and folders to another console over Wi-Fi: folders are packed first.
+    if (!is_root && IsSd()) {
+        options->Add<SidebarEntryCallback>("Send to another console"_i18n, [this](){
+            std::vector<std::string> targets;
+            for (const auto& e : GetSendTargets()) {
+                targets.push_back(e.toString());
+            }
+            console_files::Send(std::move(targets));
+        }, "Send the selected files and folders to another console on the same Wi-Fi. Folders are packed first."_i18n);
     }
     // one entry for the one mount: it is what FTP exposes as a root device, what
     // the web root page lists next to the card, and what MTP pinned. leaving

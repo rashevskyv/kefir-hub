@@ -1,6 +1,7 @@
 #include "ui/menus/install_share.hpp"
 
 #include "ui/menus/console_games_transfer.hpp"
+#include "ui/menus/console_files_transfer.hpp"
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -189,6 +190,13 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             }
         },
         {
+            "Receive files"_i18n,
+            "Take files and folders sent by another console. Enter its address."_i18n,
+            [](){
+                console_files::Receive();
+            }
+        },
+        {
             "Share Entire microSD"_i18n,
             "Share all files and folders on the microSD card."_i18n,
             [](){
@@ -231,14 +239,10 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             }
         },
         {
-            "Choose Folder..."_i18n,
-            "Select a custom folder on the microSD card to share."_i18n,
+            "Send a folder"_i18n,
+            "Pick a folder on the microSD. It is packed and offered to another console."_i18n,
             [](){
-                auto browser = std::make_unique<filebrowser::Menu>(MenuFlag_None);
-                browser->SetFolderPicker([](const fs::FsPath& folder){
-                    StartConsoleTransferShare(std::vector<fs::FsPath>{ folder });
-                });
-                App::Push(std::move(browser));
+                console_files::PickFolderAndSend();
             }
         },
     };

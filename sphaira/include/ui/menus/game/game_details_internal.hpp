@@ -41,6 +41,11 @@ struct DbiDetailsMenu final : MenuBase {
     void ShowCurrentActions();
     void ShowGameActions();
     void ShowCreateRepackSidebar();
+    // Content tab: X / Y tick components, they can then be deleted (game_details_delete.cpp).
+    void SyncSelectActions();
+    auto MarkedCount() const -> size_t;
+    auto DeleteTargets() const -> std::vector<GameComponentRow>;
+    void ConfirmDeleteComponents(std::vector<GameComponentRow> rows);
     auto CurrentCount() const -> size_t;
     auto TabHeaderItem() const -> u8;
     static auto HeaderItemHint(u8 item) -> std::string;
@@ -54,6 +59,7 @@ struct DbiDetailsMenu final : MenuBase {
     Tab m_tab{};
     std::unique_ptr<List> m_list{};
     std::vector<GameComponentRow> m_components{};
+    std::vector<u8> m_marked{}; // ticked rows of m_components
     std::vector<GameTicketRow> m_tickets{};
     std::vector<GameSaveRow> m_saves{};
     std::function<void(Entry, u32)> m_dump_callback{};

@@ -153,6 +153,21 @@ private:
         return m_has_parent_entry && index == 0;
     }
 
+    // what "Send to another console" acts on: every selected file and folder, else the one under the cursor
+    // (never the ".." row).
+    auto GetSendTargets() const -> std::vector<fs::FsPath> {
+        std::vector<fs::FsPath> out;
+        for (const auto& e : m_entries) {
+            if (e.IsSelected()) {
+                out.emplace_back(GetNewPath(e));
+            }
+        }
+        if (out.empty() && m_index >= 0 && m_index < (s64)m_entries_current.size() && !IsParentEntry(m_index)) {
+            out.emplace_back(GetNewPath(m_index));
+        }
+        return out;
+    }
+
     // what "Mount" acts on:
     //   selected folders     -- every one of them, an explicit pick beats the cursor
     //   ".." under the cursor -- the folder being viewed

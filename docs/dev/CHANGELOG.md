@@ -3,6 +3,14 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.224 — Game Details: tick components with X / Y and delete them
+Content tab: X ticks a row, Y ticks all; START → Game actions → Delete selected components; A on a row → Delete. Removes the component, its files and its ns record; the save stays. Ships together with v0.14.223 (Console Transfer files).
+host tests: pass (quick) | nro: not built | switch: pending (delete an update + DLC; X / Y on the tab)
+
+## v0.14.223 — Console Transfer: send and receive files and folders
+File browser + → Send to another console (or Console Transfer → Send a folder): files are copied, folders packed to .zip (fastest deflate), the other console takes them with Console Transfer → Receive files (back to the same place, or another folder; unpack or keep .zip). The folder picker no longer asks about firmware.
+host tests: files_transfer_plan pass | nro: not built | switch: pending (send folder + file, receive to same place / other folder, unpack on/off)
+
 ## v0.14.222 — MTP copy box: the "Copied so far" line no longer overlaps the time left
 The line moved above the bar. Before, it sat under the bar on the same spot as "0 seconds remaining (MiB/s)" and the two texts overlapped.
 host tests: not run | nro: not built | switch: pending

@@ -15,12 +15,12 @@ Before launching TegraExplorer, Kefir Hub compares the memory-card payload with 
 | What | Sending console | Receiving console |
 |---|---|---|
 | Installed games (base, updates, DLC) | [[Send installed games]] | [[Receive games]], see [Move installed games](#move-installed-games) |
+| Files and folders | [[Files]] → **+** → [[Send to another console]], or [[Send a folder]] | [[Receive files]], see [Move files and folders](#move-files-and-folders) |
 | All profiles and their play hours | [[Share Profiles & Play Hours]] | [[Users]] → [[Restore from another console]] or [[Receive from another console]] |
 | Save backups | [[Share Save Backups]] | Download the files, then restore them in [[Saves]] |
 | Screenshots and videos | [[Share Screenshots & Videos]] | Download in a browser |
 | Homebrew apps (`/switch`) | [[Share switch Folder]] | Download in a browser |
 | The whole memory card | [[Share Entire microSD]] | Download in a browser |
-| One folder you choose | [[Choose Folder...]] | Download in a browser |
 
 What is **not** moved:
 
@@ -131,10 +131,25 @@ You can also send games over a USB-C to USB-C cable between the two consoles:
       <!-- TODO(verify): confirm that an HTTP network location pointing at another Kefir Hub opens and copies correctly. -->
 4. On the receiving console, restore the saves in [[Saves]]. See [Saves](saves.md#restore-a-save).
 
+## Move files and folders
+Use this to move a homebrew folder, a mod, a save backup or any file from one console to another over Wi-Fi.
+A folder is packed into one `.zip` first, with the fastest compression, and the other console unpacks it where you say.
+
+1. On the sending console, open [[Files]] and go to the files or folders. Select them, or stand on one.
+   Press **+** → [[Send to another console]]. The Hub packs the folders and copies the files. A window shows the console's address.
+   To send one folder from [[Console Transfer]] instead, choose [[Send a folder]], go into the folder and select [[Select current folder]].
+2. On the receiving console, open [[Tools]] → [[Console Transfer]] → [[Receive files]] and enter the address. The consoles must be on the same Wi-Fi network.
+3. Tick what to take in [[Choose files]]. All items are ticked at first.
+4. In [[Save to]], choose [[Same place as on the other console]] to put each item back where it was, for example a homebrew app into `/switch`.
+   Or choose [[Choose folder...]] to put everything into one folder.
+5. In [[Folders]], choose [[Unpack]] to get the folder as it was, or [[Keep packed]] to get one `.zip` file per folder.
+6. Choose [[Receive]]. The Hub asks once, then downloads. Items with the same name on the card are replaced.
+
+The sending console keeps the packed copies in `/config/kefir/console_send` until the next send.
+
 ## Move screenshots, homebrew and other files
 1. On the sending console, open [[Tools]] → [[Console Transfer]] and choose [[Share Screenshots & Videos]],
-   [[Share switch Folder]], [[Share Entire microSD]] or [[Choose Folder...]].
-   With [[Choose Folder...]], go into the folder and select [[Select current folder]].
+   [[Share switch Folder]] or [[Share Entire microSD]].
 2. Open the shown address in a browser on a PC or phone and download what you need. See [Sharing](sharing.md).
 
 On emuMMC, [[Share Screenshots & Videos]] shares the album of the emuMMC you booted.

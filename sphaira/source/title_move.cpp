@@ -110,17 +110,9 @@ struct MoveRollback {
     }
 };
 
-// rewrites the application record so the moved key resolves to its new storage.
-// ns keeps its own copy of "which storage holds which meta key" and it is that
-// copy - not the ncm databases - which decides whether the title launches, so
-// this is the single commit point of a move.
-Result RepointApplicationRecord(u64 app_id, const NcmContentMetaKey& key, NcmStorageId target_storage) {
-    ns::AppManager am;
-    R_UNLESS(am, Result_GameMoveNoAppManager);
-
-    // the whole list is re-pushed below, so a truncated read would silently drop
+Result ReadApplicationRecords(ns::AppManager& am, u64 app_id, std::vector<ncm::ContentStorageRecord>& records) {
+    // the whole list is re-pushed by the caller, so a truncated read would silently drop
     // records (and with them, installed dlc): page until ns runs out.
-    std::vector<ncm::ContentStorageRecord> records;
     constexpr s32 PAGE = 32;
     for (;;) {
         const auto offset = records.size();
@@ -134,6 +126,19 @@ Result RepointApplicationRecord(u64 app_id, const NcmContentMetaKey& key, NcmSto
             break;
         }
     }
+    R_SUCCEED();
+}
+
+// rewrites the application record so the moved key resolves to its new storage.
+// ns keeps its own copy of "which storage holds which meta key" and it is that
+// copy - not the ncm databases - which decides whether the title launches, so
+// this is the single commit point of a move.
+Result RepointApplicationRecord(u64 app_id, const NcmContentMetaKey& key, NcmStorageId target_storage) {
+    ns::AppManager am;
+    R_UNLESS(am, Result_GameMoveNoAppManager);
+
+    std::vector<ncm::ContentStorageRecord> records;
+    R_TRY(ReadApplicationRecords(am, app_id, records));
 
     bool found{};
     for (auto& record : records) {
@@ -331,6 +336,31 @@ Result GetMovePlan(u64 app_id, NcmStorageId target_storage, MovePlan& out) {
         }
     }
 
+    R_SUCCEED();
+}
+
+Result DeleteComponent(const NsApplicationContentMetaStatus& status) {
+    NcmSession session{};
+    R_TRY(session.Open(status.storageID));
+
+    NcmContentMetaKey key{};
+    std::vector<NcmContentInfo> infos;
+    R_TRY(GetComponentContents(session.db, status, key, infos));
+
+    // the record goes first: ns would otherwise list a component whose files are gone.
+    const auto app_id = ncm::GetAppId(key);
+    ns::AppManager am;
+    R_UNLESS(am, Result_GameMoveNoAppManager);
+    std::vector<ncm::ContentStorageRecord> records;
+    R_TRY(ReadApplicationRecords(am, app_id, records));
+    std::erase_if(records, [&](const auto& r) { return r.key.id == key.id && r.key.type == key.type; });
+    R_TRY(ns::DeleteApplicationRecord(am.get(), app_id));
+    if (!records.empty()) {
+        R_TRY(ns::PushApplicationRecord(am.get(), app_id, records.data(), records.size()));
+    }
+
+    R_TRY(ncm::DeleteKey(std::addressof(session.cs), std::addressof(session.db), std::addressof(key)));
+    ns::InvalidateApplicationControlCache(am.get(), status.application_id);
     R_SUCCEED();
 }
 

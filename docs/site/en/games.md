@@ -39,7 +39,8 @@ To let the console pick for you, press **+** and choose [[Launch random game]], 
 
 What **A** does on a tab row:
 
-- [[Content]] row: opens [[Component Actions]] — [[Open in file browser]] (browse the component's files, read-only), [[Dump NSP]] (export only this component), [[Move component to SD]] or [[Move component to NAND]], [[Content information]].
+- [[Content]] row: opens [[Component Actions]] — [[Open in file browser]] (browse the component's files, read-only), [[Dump NSP]] (export only this component), [[Move component to SD]] or [[Move component to NAND]], [[Delete]], [[Content information]].
+- [[Content]] tab, to delete several components at once: press **X** to tick the row, or **Y** to tick all rows (**Y** again clears them). Then press **START** → [[Game actions]] → [[Delete selected components]]. A question lists what will go. The save data stays.
 - [[Tickets]] row: shows the rights ID, key generation and ticket type.
 - [[Saves]] row: opens [[Save Actions]] — see [Manage save slots](#manage-save-slots).
 

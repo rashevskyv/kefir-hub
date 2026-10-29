@@ -13,12 +13,12 @@
 | Що | Консоль-відправник | Консоль-отримувач |
 |---|---|---|
 | Встановлені ігри (основна гра, оновлення, DLC) | [[Send installed games]] | [[Receive games]], див. [Перенести встановлені ігри](#move-installed-games) |
+| Файли й папки | [[Files]] → **+** → [[Send to another console]] або [[Send a folder]] | [[Receive files]], див. [Перенести файли й папки](#move-files-and-folders) |
 | Усі профілі та їхні години | [[Share Profiles & Play Hours]] | [[Users]] → [[Restore from another console]] або [[Receive from another console]] |
 | Резервні копії збережень | [[Share Save Backups]] | Завантажте файли, потім відновіть їх у [[Saves]] |
 | Знімки екрана й відео | [[Share Screenshots & Videos]] | Завантажте в браузері |
 | Homebrew-програми (`/switch`) | [[Share switch Folder]] | Завантажте в браузері |
 | Уся карта пам'яті | [[Share Entire microSD]] | Завантажте в браузері |
-| Одна вибрана папка | [[Choose Folder...]] | Завантажте в браузері |
 
 Що **не** переноситься:
 
@@ -124,10 +124,25 @@
       <!-- TODO(verify): confirm that an HTTP network location pointing at another Kefir Hub opens and copies correctly. -->
 4. На консолі-отримувачі відновіть збереження в [[Saves]]. Див. [Збереження](saves.md#restore-a-save).
 
+## Перенести файли й папки {#move-files-and-folders}
+Так можна перенести на іншу консоль папку з homebrew, мод, резервну копію збережень чи будь-який файл по Wi-Fi.
+Папку спершу пакують в один `.zip` найшвидшим стисканням, а інша консоль розпаковує її туди, куди ви скажете.
+
+1. На консолі-відправнику відкрийте [[Files]] і знайдіть файли чи папки. Виберіть їх або станьте на одну.
+   Натисніть **+** → [[Send to another console]]. Hub запакує папки й скопіює файли. У вікні буде адреса консолі.
+   Щоб надіслати одну папку з [[Console Transfer]], оберіть [[Send a folder]], зайдіть у папку й виберіть [[Select current folder]].
+2. На консолі-отримувачі відкрийте [[Tools]] → [[Console Transfer]] → [[Receive files]] і введіть адресу. Консолі мають бути в одній мережі Wi-Fi.
+3. У [[Choose files]] позначте, що брати. Спершу позначено все.
+4. У [[Save to]] оберіть [[Same place as on the other console]], щоб кожен елемент повернувся туди, де був, наприклад homebrew у `/switch`.
+   Або оберіть [[Choose folder...]], щоб покласти все в одну папку.
+5. У [[Folders]] оберіть [[Unpack]], щоб отримати папку як була, або [[Keep packed]], щоб отримати один файл `.zip` на папку.
+6. Оберіть [[Receive]]. Hub запитає один раз і почне завантаження. Елементи з такою самою назвою на карті буде замінено.
+
+Консоль-відправник зберігає запаковані копії в `/config/kefir/console_send` до наступної передачі.
+
 ## Перенести знімки екрана, homebrew та інші файли {#move-screenshots-homebrew-and-other-files}
 1. На консолі-відправнику відкрийте [[Tools]] → [[Console Transfer]] і виберіть [[Share Screenshots & Videos]],
-   [[Share switch Folder]], [[Share Entire microSD]] або [[Choose Folder...]].
-   Для [[Choose Folder...]] зайдіть у потрібну папку й виберіть [[Select current folder]].
+   [[Share switch Folder]] або [[Share Entire microSD]].
 2. Відкрийте показану адресу в браузері на ПК чи телефоні й завантажте потрібне. Див. [Спільний доступ](sharing.md).
 
 На emuMMC пункт [[Share Screenshots & Videos]] передає альбом того emuMMC, з якого завантажено консоль.

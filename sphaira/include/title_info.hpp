@@ -112,6 +112,8 @@ Result GetMovePlan(u64 app_id, NcmStorageId target_storage, MovePlan& out);
 
 // moves a single component or entire application between storages (NAND <-> SD)
 Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox = nullptr);
+// removes one installed component (an update, a DLC) with its files. The save data stays.
+Result DeleteComponent(const NsApplicationContentMetaStatus& status);
 Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox = nullptr);
 
 inline bool IsPlaceholderName(const char* name) {

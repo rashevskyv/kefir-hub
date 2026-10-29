@@ -39,7 +39,8 @@
 
 Що робить **A** на рядку вкладки:
 
-- рядок [[Content]]: відкриває [[Component Actions]] — [[Open in file browser]] (перегляд файлів компонента, лише читання), [[Dump NSP]] (вивантажити тільки цей компонент), [[Move component to SD]] або [[Move component to NAND]], [[Content information]];
+- рядок [[Content]]: відкриває [[Component Actions]] — [[Open in file browser]] (перегляд файлів компонента, лише читання), [[Dump NSP]] (вивантажити тільки цей компонент), [[Move component to SD]] або [[Move component to NAND]], [[Delete]], [[Content information]];
+- вкладка [[Content]], щоб видалити кілька компонентів одразу: натисніть **X**, щоб позначити рядок, або **Y**, щоб позначити всі (ще раз **Y** знімає позначки). Потім натисніть **START** → [[Game actions]] → [[Delete selected components]]. Запитання покаже, що буде видалено. Збереження залишаються;
 - рядок [[Tickets]]: показує rights ID, покоління ключів і тип квитка;
 - рядок [[Saves]]: відкриває [[Save Actions]] — див. [Слоти збережень](#manage-save-slots).
 

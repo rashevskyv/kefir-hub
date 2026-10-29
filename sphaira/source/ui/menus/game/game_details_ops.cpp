@@ -127,6 +127,7 @@ void DbiDetailsMenu::LoadGame() {
         m_mods_size = entry.layeredfs ? ModsFolderSize(entry.app_id) : 0;
 
         m_components.clear();
+        m_marked.clear();
         m_tickets.clear();
         m_saves.clear();
         m_save_allocated_size = 0;
@@ -361,6 +362,13 @@ void DbiDetailsMenu::ShowGameActions() {
                 });
             }, true, hint)->SetIcon(ActionIcon::Move);
         };
+
+        // ticked with X / Y on the Content tab.
+        if (m_tab == Tab::Content && MarkedCount()) {
+            options->Add<SidebarEntryCallback>("Delete selected components"_i18n + " (" + std::to_string(MarkedCount()) + ")", [this](){
+                ConfirmDeleteComponents(DeleteTargets());
+            }, true, "Delete the ticked components. The save data stays."_i18n)->SetIcon(ActionIcon::Delete);
+        }
 
         add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move game components from NAND to SD card."_i18n);
         add_move(NcmStorageId_BuiltInUser, "Move to NAND"_i18n, "Move game components from SD card to NAND system memory."_i18n);
