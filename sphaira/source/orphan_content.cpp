@@ -9,6 +9,9 @@
 #include "ui/progress_box.hpp"
 #include "ui/error_box.hpp"
 #include "ui/menus/game/game_internal.hpp"
+#if ENABLE_NETWORK_INSTALL
+#include "ui/menus/install_stream_menu_base.hpp"
+#endif
 
 #include <algorithm>
 #include <atomic>
@@ -94,7 +97,17 @@ void SetInstallRunning(bool running) {
 
 void Poll() {
     const auto last = g_last_tick.load();
-    if (!last || g_running || App::GetProgressActive() || armTicksToNs(armGetSystemTick() - last) < QUIET_NS) {
+    if (!last) {
+        return;
+    }
+    // An MTP or FTP file is installing now (a big base game can take minutes): wait, then count the quiet time again.
+#if ENABLE_NETWORK_INSTALL
+    if (ui::menu::stream::BackgroundInstaller::IsInstalling()) {
+        g_last_tick = armGetSystemTick();
+        return;
+    }
+#endif
+    if (g_running || App::GetProgressActive() || armTicksToNs(armGetSystemTick() - last) < QUIET_NS) {
         return;
     }
 

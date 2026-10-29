@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.219 — no "update without base" question while an MTP/FTP file is installing
+The orphan-content check now waits while an MTP or FTP file is installing, then counts the quiet time again. A big base game that arrives after its update no longer triggers the question in the middle of its install.
+host tests: not run | nro: not built | switch: pending (MTP: base + update + DLC together)
+
 ## v0.14.218 — calibration: a cut-off found at start opens the charge page by itself
 When the console was switched on with the charger after a cut-off, the Hub now opens the calibration at the charge page (the drain counts as done); the 'open Kefir Hub' hint no longer tells to switch the console on.
 host tests: pass (quick) | nro: not built | switch: pending
