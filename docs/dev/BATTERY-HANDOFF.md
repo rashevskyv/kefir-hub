@@ -4,7 +4,7 @@ Read this first, then `docs/dev/BATTERY-CALIBRATION.md` (design) and `docs/dev/B
 Reports to the owner are in Ukrainian; code, commits, CHANGELOG, plan.md are in English. Short sentences, one term for one thing.
 Owner's glossary (Ukrainian UI): "датчик заряду" (never "гейдж"), "Далі" (never "Наступний"), "відсік" for the cut-off.
 
-## 1. Goal
+## 1. Goal (the step order below is the one BEFORE 1a: read 1a first)
 
 Tools > "Battery calibration" (and + on the Battery page) teaches the Switch fuel gauge (MAX17050) again. Two desync types:
 1. The console shows many percent but switches off by voltage (35 %, "3193 mV, chip 32 %, HOS 24 %").
@@ -12,6 +12,23 @@ Tools > "Battery calibration" (and + on the Battery page) teaches the Switch fue
 Owner's idea (2026-10-24): the voltage where the console really switches off is the zero (about 3.2 V under load). The chip's own
 `V_empty` (0x3A) of this console is already 0xA05F = 3.20 V (VE) / 3.80 V (VR). The threshold is not the problem; the learned values
 (FullCAP, counters, QResidual) drift, and only a reset plus two full cycles relearn them.
+
+## 1a. The zero (owner, 2026-10-29, v0.14.231)
+
+"We drain the console to zero, see at which voltage it switches off, and that voltage is the zero: write it down." Final order
+(after three tries in one session; do not reorder again without the owner): **1 reset** at 100 % (backup first; one more backup
+at Start calibration), **2 cycle 1** = drain to the cut-off, the zero, charge to 100 %, **3 cycle 2** = drain, charge, **4 report**,
+**5 transfer**. A cycle = drain -> cut-off -> charge to 100 %, and it counts by the drain log alone (`calib::CycleDoneByLog`:
+the last cut-off of the step, then a `C` line of the step with psm 100), noted in `Marker::full_at[]` and mirrored into the
+old wizard state; `log.txt` says why. The zero: at the Hub start after cycle 1's cut-off (`Resume`, `Found::CutoffSeen|
+CutoffCharging`, `zero_at == 0`) `WriteZeroThenCharge` takes `calib::ZeroCutoff` (the last cut-off of step 1 after `reset_at`)
+and writes it, charger in or out, without a question: backup, V_empty's VE (0x3A, VR kept, `zero::VEmptyWith`), then the
+counters 0x0F -> 0x05 -> 0x06 at "what came in since the switch-on" (`zero::PlanCounters` from QH 0x4D, read once at the Hub
+start by `ReadQhAtStart`). Range 3.00-3.50 V. A later factory reset (`FactoryInit`, slot `SLOT_VEMPTY`) keeps that VE. After a
+cut-off the Hub opens the charge page ("Cycle N: ..."), not the list of steps. `calib_ui::DrawRoadmap` on every wizard page.
+Files: `battery_zero.hpp` (pure), `battery_zero_write.cpp`, `battery_calib_state.hpp` (Step 1..6, `Phase`, `zero_mv`,
+`zero_at`, `full_at`, `started_at`), `battery_calib.cpp`. "Align the charge to the voltage" stays a manual action only.
+Not yet known on hardware: does the shown percent snap to 0 % after the counters (log `[Zero]`).
 
 ## 2. The decision that matters (owner, 2026-10-24)
 

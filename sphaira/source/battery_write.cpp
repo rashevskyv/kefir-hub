@@ -8,6 +8,8 @@
 #include "battery_page.hpp"
 #include "battery_internal.hpp"
 #include "battery_init.hpp"
+#include "battery_zero.hpp"
+#include "battery_calib_internal.hpp"
 #include "battery_wizard.hpp"
 #include "system_info.hpp"
 #include "ui/menus/system_info_menu.hpp"
@@ -105,8 +107,10 @@ auto SaveCopy(FuelGauge& g, std::optional<u32> cycles) -> Result {
 }
 
 // BDF X with the step list from battery_init.hpp. `failed` names the step that did not stick.
-auto FactoryInit(FuelGauge& g, const Table& t, std::string& failed) -> Result {
-    std::array<u16, 3> slots{};
+// `v_empty`: what 0x3A gets (the console's own 0xA05F, or the calibration's zero in VE)
+auto FactoryInit(FuelGauge& g, const Table& t, u16 v_empty, std::string& failed) -> Result {
+    std::array<u16, 4> slots{};
+    slots[SLOT_VEMPTY] = v_empty;
     const auto steps = FactoryInitSteps();
     for (size_t i = 0; i < steps.size(); i++) {
         const auto& st = steps[i];
@@ -261,7 +265,12 @@ auto ResetNow(ui::ProgressBox* pbox, std::string& failed) -> Result {
     FuelGauge g;
     R_UNLESS(g.open, Result_ArchiveRead);
     pbox->NewTransfer("Writing the factory model"_i18n);
-    R_TRY(FactoryInit(g, ChooseTable(s.cal0_version, s.cal0_vendor), failed));
+    // the calibration's zero (the cut-off voltage) survives the reset: the threshold is not a learned value
+    u16 v_empty = zero::VE_DEFAULT;
+    if (const auto m = calib_flow::LoadMarker(); m && m->zero_at && zero::InRange(m->zero_mv)) {
+        v_empty = zero::VEmptyWith(v_empty, m->zero_mv);
+    }
+    R_TRY(FactoryInit(g, ChooseTable(s.cal0_version, s.cal0_vendor), v_empty, failed));
     pbox->NewTransfer("Saving this MMC's copy"_i18n);
     // a cycle count lost to a reset never comes back: keep the larger of the two MMCs
     u32 cycles = s.hos.cycles_actual;
@@ -274,7 +283,7 @@ auto ResetNow(ui::ProgressBox* pbox, std::string& failed) -> Result {
     st.reset_mmc = s.emummc ? wizard::EMUMMC : wizard::SYSMMC;
     st.total_at_reset = cycles; // the reset set the chip's Cycles register to 0x60: no delta
     SaveState(st);
-    log_write("[Battery] factory init done (table v%d '%c'), cycles %u\n", s.cal0_version, s.cal0_vendor ? s.cal0_vendor : '?', cycles);
+    log_write("[Battery] factory init done (table v%d '%c'), cycles %u, V_empty %04X\n", s.cal0_version, s.cal0_vendor ? s.cal0_vendor : '?', cycles, v_empty);
     R_SUCCEED();
 }
 

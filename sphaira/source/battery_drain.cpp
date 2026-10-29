@@ -443,7 +443,8 @@ auto DrainMenu::CalibTitle() const -> std::string {
     if (m_calib->reset) {
         return "Reset the gauge"_i18n;
     }
-    return m_calib->charge ? "Charge to 100 %"_i18n : m_calib->tail ? "Drain after the cut-off"_i18n : "Drain to the cut-off"_i18n;
+    const auto which = m_calib->step == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
+    return which + ": " + (m_calib->charge ? "charge to 100 %"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
 }
 
 auto DrainMenu::CalibStatus() const -> std::string {
@@ -457,13 +458,15 @@ auto DrainMenu::CalibStatus() const -> std::string {
         return "Charging to 100 %. Then the Hub asks whether to reset the gauge: it writes the factory battery model into it. Your games and saves are not touched."_i18n;
     }
     if (m_calib->charge) {
+        const auto which = m_calib->step == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
         if (!m_charger) {
-            return "The charger is out: the charge is paused. Plug it in to go on."_i18n;
+            return which + ": " + "the charger is out: the charge is paused. Plug it in to go on."_i18n;
         }
         if (m_pct >= 100) {
-            return "Charged to 100 %. Now we drain: take the charger out."_i18n;
+            return which + ": " + (m_calib->step == 2 ? "charged to 100 %. This was the last cycle: take the charger out, the report follows."_i18n
+                                                      : "charged to 100 %. Now cycle 2: take the charger out, the drain starts by itself."_i18n);
         }
-        return "Charging. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
+        return which + ": " + "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
     }
     if (m_charger) {
         if (m_step == wizard::DrainStep::CycleCounted) {

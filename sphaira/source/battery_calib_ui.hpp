@@ -114,16 +114,54 @@ inline auto Check(std::string yes, std::string no, std::function<bool()> done) -
 inline auto Row(std::string label, std::string value) -> Line { Line l; l.kind = Line::Kind::Row; l.text = std::move(label); l.value = std::move(value); return l; }
 inline auto Boxes(std::vector<std::pair<std::string, std::string>> b) -> Line { Line l; l.kind = Line::Kind::Boxes; l.boxes = std::move(b); return l; }
 
+// The road map at the foot of every calibration page: the six steps as dots with their names, the ones done filled, the
+// current one ringed, so the user always sees where he is. `current` is 1-based (StepIndex); `done_upto` steps are filled.
+inline void DrawRoadmap(NVGcontext* vg, Theme* theme, int current, int done_upto, int count) {
+    const auto text = theme->GetColour(ThemeEntryID_TEXT);
+    const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    const auto good = nvgRGB(0x4C, 0xAF, 0x50);
+    const std::string names[] = {"Reset"_i18n, "Cycle 1"_i18n, "Cycle 2"_i18n, "Report"_i18n, "Transfer"_i18n};
+    const float y = 603.f, x0 = 150.f, x1 = 1130.f;
+    const float step = (x1 - x0) / static_cast<float>(std::max(1, count - 1));
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, x0, y);
+    nvgLineTo(vg, x1, y);
+    nvgStrokeColor(vg, nvgTransRGBAf(info, 0.5f));
+    nvgStrokeWidth(vg, 3.f);
+    nvgStroke(vg);
+    for (int i = 1; i <= count; i++) {
+        const float x = x0 + static_cast<float>(i - 1) * step;
+        const bool done = i <= done_upto;
+        const bool now = i == current;
+        nvgBeginPath(vg);
+        nvgCircle(vg, x, y, now ? 11.f : 8.f);
+        nvgFillColor(vg, done ? good : now ? text : nvgTransRGBAf(info, 0.35f));
+        nvgFill(vg);
+        if (now) {
+            nvgBeginPath(vg);
+            nvgCircle(vg, x, y, 16.f);
+            nvgStrokeColor(vg, text);
+            nvgStrokeWidth(vg, 2.f);
+            nvgStroke(vg);
+        }
+        if (done) {
+            DrawTick(vg, x - 6.f, y - 6.f, 12.f, nvgRGB(0x10, 0x20, 0x10));
+        }
+        ui::gfx::drawTextArgs(vg, x, y + 22.f, 15.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, now ? text : info, "%s", i <= 5 ? names[i - 1].c_str() : "");
+    }
+}
+
 struct Page final : ui::menu::MenuBase {
     using Act = std::function<void(Page&)>;
 
     // a_label empty: no action on A. on_b empty: B just goes back. The actions get the page, so they can replace it.
     // waiting: true while the page waits for the user (the charger still in, or still out); when it turns false the page
     // does what A does, so the next step starts by itself.
+    // road_step: the 1-based step on the road map at the foot (0 = none, the intro pages)
     Page(const std::string& title, const std::string& sub, std::vector<Line> lines, const std::string& a_label, Act on_a, Act on_b = {},
-         std::function<bool()> waiting = {})
+         std::function<bool()> waiting = {}, int road_step = 0)
         : MenuBase{title, ui::menu::MenuFlag_None}, m_lines{std::move(lines)}, m_on_a{std::move(on_a)}, m_on_b{std::move(on_b)},
-          m_waiting{std::move(waiting)} {
+          m_waiting{std::move(waiting)}, m_road_step{road_step} {
         SetAction(Button::B, Action{"Back"_i18n, [this]() {
             if (m_on_b) {
                 m_on_b(*this);
@@ -236,6 +274,9 @@ struct Page final : ui::menu::MenuBase {
                 }
             }
         }
+        if (m_road_step > 0) {
+            DrawRoadmap(vg, theme, m_road_step, m_road_step - 1, 5);
+        }
     }
 
 private:
@@ -247,6 +288,7 @@ private:
     bool m_polled{};
     std::function<bool()> m_waiting;
     bool m_was_waiting{};
+    int m_road_step{};
 };
 
 } // namespace sphaira::battery::calib_ui

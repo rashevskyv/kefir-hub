@@ -4,6 +4,7 @@
 
 #include "battery_calib_state.hpp"
 
+#include <switch.h>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -23,3 +24,10 @@ void ShowTransfer();
 void ApplyLedger();
 
 } // namespace sphaira::battery::calib_flow
+
+// the zero (battery_zero_write.cpp): the cut-off voltage of the zero drain into the gauge
+namespace sphaira::battery::zero_write {
+// once at the Hub's start: the coulomb counter then, for "what came in since the switch-on"
+void ReadQhAtStart();
+auto WriteZero(int mv, std::string& failed) -> Result;
+} // namespace sphaira::battery::zero_write

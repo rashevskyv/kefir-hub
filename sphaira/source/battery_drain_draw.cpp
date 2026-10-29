@@ -100,6 +100,9 @@ auto DrainMenu::HoursMinutesSeconds(u64 sec) -> std::string {
 }
 
 void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
+    // where this run is on the road: the reset (1), cycle 1 (2) or cycle 2 (3)
+    const int road = m_calib->reset ? 1 : m_calib->step + 1;
+    calib_ui::DrawRoadmap(vg, theme, road, road - 1, 5);
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
@@ -190,7 +193,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         return;
     }
     // one row of three charts
-    const float cy = 356.f, ch = 270.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
+    const float cy = 356.f, ch = 228.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
     std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
     Chart(vg, 60.f, cy, cw, ch, "Voltage"_i18n, v, {{&m_volts, nvgRGB(0x60, 0xA5, 0xFA)}}, 3.0f, 4.3f, text, info, 3.2f);
     // the load: three cores and the GPU in one chart; the legend names each line with its value

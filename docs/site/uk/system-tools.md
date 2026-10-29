@@ -215,7 +215,7 @@ Hub завантажує список останніх оновлень ігор
 
 Будь-яка кнопка або дотик будить екран (це натискання більше нічого не робить). Навантаження й вимірювання тривають позаду. Стік зміщує показники та задає яскравість і швидкість зміщення, як на екрані встановлення.
 
-- Перехід через hekate в інший MMC (0.14.163) більше не крок майстра: [[5. Transfer to the other MMC]] сам записує калібрування туди при наступному запуску Hub у тій системі (див. [[Battery calibration]]).
+- Перехід через hekate в інший MMC (0.14.163) більше не крок майстра: [[5. Transfer to the other systems]] сам записує калібрування туди при наступному запуску Hub у тій системі (див. [[Battery calibration]]).
 - [[Battery size]]: коли навчена ємність перевищує проєктну більш ніж на 30 %, [[Verdict]] каже, що вбудовано більшу батарею ([[of the design capacity: a larger battery is built in]]). Для типу батареї LiPo додається [[The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery]]. Це не ознака десинхронізації.
 - На сторінці розряджання, коли батарея розрядилась: [[Keep the screen on while it charges. After a red battery, leave it on the charger for about 3 minutes before you switch it on.]]
 - Порада зі спільнотного посібника: повний цикл раз на місяць зберігає ємність. Падіння приблизно на 300 мА·год у використанні повертається звичайним циклом розряджання й заряджання.
@@ -248,18 +248,22 @@ Hub завантажує список останніх оновлень ігор
 
 ## Battery calibration {#battery-calibration}
 
+<!-- draft
+- five steps: [[1. Reset the gauge]], [[2. Cycle 1: drain, the zero, charge]], [[3. Cycle 2: drain, charge]], [[4. Report]], [[5. Transfer to the other systems]]; only the next step is active ([[Active]], [[Locked]], [[Done]]); a road map at the foot of every page of the wizard shows the five steps, the ones done filled, the current one ringed
+- [[Start calibration]] first makes a backup of the gauge (the toast says the file name under /config/kefir/battery/), then opens the steps
+- step 1, [[Reset the gauge]]: plug the charger in; the charge page counts from the moment the charger is in; at 100 % the Hub asks once and writes the factory battery model (backup first); what the gauge learned before is dropped
+- step 2, cycle 1: take the charger out, [[Start the drain]]; the Hub drains at full load until the console switches itself off; the drain log (`/config/kefir/battery/calib-log.csv`, a line a second) keeps the voltage; after a switch-off, switch the console on again: without the charger the drain goes on in the tail mode (minimum load and brightness) until it does not start at all
+- the zero: when the console was switched on again (with or without the charger) and the Hub opened, the Hub takes the last voltage before the gap in the log and writes it into the gauge as the zero, by itself, no question (a backup first): the chip's empty-voltage threshold, and the charge counters set to what came in since the switch-on, so the shown percent is 0 % or near it; the page says [[The console switched off at]] X V, [[This is the empty battery.]], [[Written into the gauge: this voltage is now 0 %.]]; a cut-off outside 3.00 - 3.50 V is refused ([[The cut-off voltage is outside 3.00 - 3.50 V: not a zero.]]) and the drain is run again
+- then the charge: the Hub opens the charge page (not the list of steps) and says which cycle it is and what to do: plug the charger in, wait for 100 %; the cycle counts by itself from the log (the console cut off, then the charge saw 100 %), even if the Hub is opened later with the charger already out
+- step 3, cycle 2: the same drain and charge, no zero
+- the cycle rows say where the cycle is: [[next: take the charger out and start the drain]], [[the drain is going on]], [[the drain is done. Plug the charger in and wait for 100 %: the cycle then counts by itself]]; cycle 1 shows [[the zero]] with its voltage once it is written
+- step 4, [[Calibration report]]: [[The zero (empty battery)]], [[Learned capacity]] against design, the [[Verdict]], the gauge before each cut-off (per cycle, from the log)
+- step 5, [[Transfer to the other systems]]: the calibration is noted in a ledger on the SD (`/config/kefir/battery/ledger.txt`: where it was made, a number, the battery model); at the next start of the Hub in another system (sysMMC, another emuMMC; a file-based one is told by its folder, a partition one by its start sector) that has an older number and the same battery model, the Hub writes it there by itself and shows [[Battery calibration was transferred from]] ... [[to]] ...
+- the state is kept on the SD card (`/config/kefir/battery/calib.txt`: the step, the zero, the drain in progress; `calibration.txt`: the reset), so the Hub can be closed and the console used between the steps
+- [[Actions]] opens the backup, [[Align the charge to the voltage]] (a manual action now), the restore, the match and the battery type
+-->
+
 **Where:** [[Tools]] → [[Tools]] → [[Battery calibration]]
-
-Майстер, що навчає лічильник заряду заново: [[Why this is needed]] (лічильник може вимкнути консоль на 35 % або годину показувати 0 %), [[How it works]] (спершу записується заводська модель батареї, потім два повні цикли), [[What you do]], [[How long it takes]] (кілька годин). Друга сторінка [[What happens to the console]] пояснює цикл вимкнення й увімкнення після відключення та заряджання. Далі [[Start calibration]]. Інтерактивний посібник з усіма екранами — [Калібрування батареї](battery-calibration.md).
-
-Кроки: [[1. Reset the gauge]], [[2. Cycle 1: drain, then charge]], [[3. Cycle 2: drain, then charge]], [[4. Report]], [[5. Transfer to the other MMC]]. Активний лише наступний крок ([[Active]], [[Locked]], [[Done]]). Стан зберігається на SD-карті (`/config/kefir/battery/calibration.txt`: скидання й цикли; `calib.txt`: звіт, перенесення, розряджання в процесі), тож Hub можна закрити, а консоллю користуватися між кроками. [[Actions]] відкриває резервну копію, вирівнювання за напругою, відновлення, зіставлення й тип батареї.
-
-- Крок 1, [[Reset the gauge]]: підключіть зарядку. Hub чекає на зарядці, доки батарея не заповниться, робить резервну копію лічильника й записує заводську модель батареї. Те, чого лічильник навчився раніше, відкидається.
-- Кроки 2 і 3: цикл — це розряджання, а потім заряджання. Він зараховується сам, коли після скидання розряджено 90 % батареї (за власним лічильником циклів консолі, тож розряджання під час звичайного користування теж рахується) і консоль знову показує 100 %. [[Discharged in this cycle]] показує прогрес. [[Start the drain]]: від'єднайте зарядку, Hub навантажує CPU і GPU на повній яскравості (сторінка розряджання: батарея, потужність, графіки CPU / GPU / температури, заставка на Minus або після часу простою), доки консоль не вимкнеться сама. Після кожного вимкнення користувач вмикає консоль, і Hub продовжує сам, тепер повільно: без навантаження, автояскравість вимкнено, яскравість мінімальна ([[Drain after the cut-off]]). Щосекунди рядок іде в `/config/kefir/battery/calib-log.csv`. Коли розряджено достатньо, сторінка каже [[The battery ran down enough. Now charge it to 100 %. The cycle then counts by itself.]] ([[Start charging]]: екран лишається ввімкненим, заставка працює, Hub можна закрити). Якщо після зарахування вийняти зарядку, наступне розряджання починається саме.
-- Крок 4, [[Calibration report]]: [[Learned capacity]] порівняно з проєктною, [[Verdict]], значення лічильника перед кожним відключенням (за циклами, з журналу).
-- Крок 5, [[Transfer to the other MMC]]: калібрування записується в журнал на SD (`/config/kefir/battery/ledger.txt`: де його зроблено, номер, модель батареї). При наступному запуску Hub в іншій системі (sysMMC, інший emuMMC; файловий emuMMC визначається за текою, розділовий за початковим сектором), яка має старіший номер і ту саму модель батареї, Hub сам записує його туди й показує [[Battery calibration was transferred from]] ... [[to]] ...
-
-Якщо після розряджання консоль вимкнулась раніше (мікросхема показує 30 %, а напруга відповідає 3 %), Hub пропонує [[Align the charge to the voltage]] при запуску, також під час калібрування.
 
 ## Очищення системи { #clean-system-junk }
 

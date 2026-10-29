@@ -129,6 +129,11 @@ void ShowReport() {
             return;
         }
         std::vector<cu::Line> lines;
+        if (const auto m = LoadMarker(); m && m->zero_at) {
+            char v[16];
+            std::snprintf(v, sizeof(v), "%.2f V", m->zero_mv / 1000.0);
+            lines.push_back(cu::Row("The zero (empty battery)"_i18n, v));
+        }
         lines.push_back(cu::Row("Learned capacity"_i18n, std::to_string(facts->full_mah) + " / " + std::to_string(facts->design_mah) + " mAh"));
         lines.push_back(cu::Row("Verdict"_i18n, facts->large ? "Larger battery is built in."_i18n
             : facts->low ? "Sign of desync: learned capacity below 90 % of design."_i18n : "Normal: no sign of desync."_i18n));
@@ -168,7 +173,7 @@ void ShowReport() {
             }
             p.SetPop();
             ShowTransfer();
-        });
+        }, cu::Page::Act{}, std::function<bool()>{}, 4);
     });
 }
 
@@ -197,14 +202,14 @@ void ShowTransfer() {
     }
     lines.push_back(cu::Dim("The hekate hop is a manual action only."_i18n));
     const bool finish = [] { const auto m = LoadMarker(); return m && m->step == Step::Transfer; }();
-    App::Push<cu::Page>("Transfer to the other MMC"_i18n, StepLabel(5), std::move(lines), finish ? "Go on"_i18n : std::string{}, [](cu::Page& p) {
+    App::Push<cu::Page>("Transfer to the other systems"_i18n, StepLabel(5), std::move(lines), finish ? "Go on"_i18n : std::string{}, [](cu::Page& p) {
         if (auto m = LoadMarker()) {
             TransferDone(*m);
             SaveMarker(*m);
         }
         p.SetPop();
         ShowSteps();
-    });
+    }, cu::Page::Act{}, std::function<bool()>{}, 5);
 }
 
 // at the Hub's start in a system that does not hold the newest calibration yet: write it there, say so, and note it down

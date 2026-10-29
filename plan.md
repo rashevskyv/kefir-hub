@@ -456,6 +456,13 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       version (0.14.193-202) drained first and set a "zero" (N - X) at the cut-off; that was dropped. Design: `docs/dev/BATTERY-CALIBRATION.md`;
       the zero register research: `docs/dev/BATTERY-ZERO-REGISTER.md`. **[USER]** run it on a console; the guide (docs/site/en/battery-wizard)
       still shows the 0.14.197 order and must be redrawn.
+      (g) **The zero and the log-counted cycles** (owner, 2026-10-29, v0.14.231). Five steps: 1 reset at 100 %, 2 cycle 1 = drain to
+      the cut-off, the zero, charge to 100 %, 3 cycle 2 = drain, charge, 4 report, 5 transfer. The zero: at the Hub start after
+      cycle 1's cut-off the last voltage of the drain log goes into the gauge (VE of 0x3A; counters 0x0F/0x05/0x06 at "what came in
+      since the switch-on" from QH), charger in or out, no question; a later reset keeps that VE. A cycle counts by the log alone
+      (cut-off, then 100 %), the reason in log.txt. After a cut-off the charge page opens, not the list. A road map on every page.
+      `battery_zero.hpp`, `battery_zero_write.cpp`, `battery_calib_state.hpp`, `battery_calib.cpp`.
+      **[USER]** a full run on the console; does the shown percent snap to 0 % after the zero (log `[Zero]`).
 
 - [ ] F.26 **Repair the SD card after a copy** (user, 2026-10-17; research running). A user moved to a bigger card by copying
       the files through macOS: HOME shows the icons, DBI shows 0 bytes for every game, games and hbmenu fail with "unable

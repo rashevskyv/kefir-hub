@@ -10,20 +10,13 @@ using sphaira::battery::cutoff::Load;
 
 int main() {
     // a calibration begins with the reset; the user's brightness is kept for later
-    auto m = Begin(60, true);
-    assert(m.step == Step::Reset && !m.drain_started && m.brightness_before == 60 && m.auto_before);
-
-    // the steps follow the wizard's state: reset, cycle 1, cycle 2, report
-    assert(StepFor(m, false, false, false) == Step::Reset);
-    assert(StepFor(m, true, false, false) == Step::Cycle1);
-    assert(StepFor(m, true, true, false) == Step::Cycle2);
-    assert(StepFor(m, true, true, true) == Step::Report);
-    assert(StepFor(m, false, true, true) == Step::Reset);          // a reset done again takes the cycles back
-    assert(Sync(m, true, false, false) && m.step == Step::Cycle1);
-    assert(!Sync(m, true, false, false));                          // nothing moved
-    m.cutoffs = 2;
-    m.drain_started = true;
-    assert(Sync(m, true, true, false) && m.step == Step::Cycle2 && m.cutoffs == 0 && !m.drain_started); // a new cycle starts at full load
+    auto m = Begin(60, true, 500);
+    assert(m.step == Step::Reset && !m.drain_started && m.brightness_before == 60 && m.auto_before && m.started_at == 500);
+    assert(StepIndex(Step::Reset) == 1 && StepIndex(Step::Cycle1) == 2 && StepIndex(Step::Transfer) == 5 && StepIndex(Step::Finished) == 5);
+    assert(CycleOf(Step::Cycle1) == 1 && CycleOf(Step::Cycle2) == 2 && CycleOf(Step::Report) == 0);
+    assert(StepFor(m, false) == Step::Reset && StepFor(m, true) == Step::Cycle1);
+    assert(!Sync(m, false) && Sync(m, true) && m.step == Step::Cycle1);
+    assert(PhaseOf(m) == Phase::Drain);
 
     // before the first cut-off: maximum load and brightness; the Hub sets the brightness itself
     StartDrain(m, 1010, 5000);
@@ -41,9 +34,10 @@ int main() {
     assert(Check(m, {false, 9000}) == Found::CutoffSeen && m.cutoffs == 1 && m.boot_time == 9000);
     assert(LoadFor(m) == Load::Min);
     assert(DecideBrightness(m, false, true, 100) == Brightness::Min);
-    assert(DecideBrightness(m, false, true, 3) == Brightness::Min);      // the tail lowers it even if he had lowered it
     assert(Check(m, {false, 9005}) == Found::HubRestarted && m.cutoffs == 1);   // a Hub restart in the new boot
     assert(Check(m, {false, 12000}) == Found::CutoffSeen && m.cutoffs == 2);
+    // cycle 1 stays in the drain phase until the zero is written, whatever the cut-offs
+    assert(PhaseOf(m) == Phase::Drain);
 
     // the console would not start without the charger: it started WITH it: the drain is over, the brightness comes back
     m.last_set_brightness = 1;
@@ -52,27 +46,46 @@ int main() {
     assert(Check(m, {true, 15000}) == Found::CutoffCharging && !m.drain_started && m.boot_time == 15000 && m.cutoffs == 3);
     assert(Check(m, {false, 20000}) == Found::Nothing);                  // no drain running: nothing to go on with
 
-    // the report and the transfer are the marker's own; the cycles cannot take them back
-    m.step = Step::Report;
-    assert(StepFor(m, false, false, false) == Step::Report);
+    // the zero is written: cycle 1 is in its charge phase; the step stays until the charge saw 100 %
+    m.zero_mv = 3193;
+    m.zero_at = 15100;
+    assert(PhaseOf(m) == Phase::Charge);
+    assert(!Sync(m, true) && m.step == Step::Cycle1);
+    MarkCycleDone(m, 20000);
+    assert(m.full_at[0] == 20000 && Sync(m, true) && m.step == Step::Cycle2 && m.cutoffs == 0 && !m.drain_started);
+    assert(PhaseOf(m) == Phase::Drain);
+
+    // cycle 2: a cut-off puts it in the charge phase; 100 % ends it, then the report
+    StartDrain(m, 21000, 21000);
+    assert(Check(m, {true, 30000}) == Found::CutoffCharging && PhaseOf(m) == Phase::Charge);
+    MarkCycleDone(m, 40000);
+    assert(Sync(m, true) && m.step == Step::Report);
+
+    // the report and the transfer are the marker's own; a reset done again cannot take them back
+    assert(StepFor(m, false) == Step::Report);
     ReportSeen(m);
     assert(m.step == Step::Transfer);
     TransferDone(m);
     assert(m.step == Step::Finished && Check(m, {true, 1}) == Found::Nothing);
-    assert(StepFor(m, false, false, false) == Step::Finished);
+    assert(StepFor(m, false) == Step::Finished);
 
     // the file: round trip and a broken one
-    Marker a = Begin(45, false);
+    Marker a = Begin(45, false, 42);
     StartDrain(a, 888, 4242);
     a.cutoffs = 3;
     a.last_set_brightness = 1;
     a.step = Step::Cycle2;
+    a.zero_mv = 3193;
+    a.zero_at = 777;
+    a.full_at[0] = 999;
     const auto back = Parse(Format(a));
-    assert(back.step == Step::Cycle2 && back.drain_started && back.drain_time == 888);
+    assert(back.step == Step::Cycle2 && back.drain_started && back.drain_time == 888 && back.started_at == 42);
     assert(back.cutoffs == 3 && back.brightness_before == 45 && !back.auto_before);
     assert(back.last_set_brightness == 1 && back.boot_time == 4242);
+    assert(back.zero_mv == 3193 && back.zero_at == 777 && back.full_at[0] == 999 && back.full_at[1] == 0);
     const auto bad = Parse("step=99\r\ncutoffs=-4\r\nnonsense\r\nphase=x\r\nstarted=1\r\n");
     assert(bad.step == Step::Reset && bad.cutoffs == 0 && bad.drain_started);
+    assert(Parse("step=7\n").step == Step::Reset);  // a file from the short-lived six-step layout: start over
 
     std::puts("test_battery_calib_state: ok");
     return 0;

@@ -26,9 +26,9 @@ int main() {
     assert(steps[11].reg == 0x80 && steps[11].op == Op::Verify && steps[58].reg == 0xAF);
     assert(steps[59].reg == 0x62 && steps[59].value == 0 && steps[60].reg == 0x63);
 
-    std::array<std::uint16_t, 3> slots{0x0870, 0x504D, 0x5050};
+    std::array<std::uint16_t, 4> slots{0x0870, 0x504D, 0x5050, 0x9F5F}; // V_empty: the calibration's zero at 3.18 V
     int model = 0;
-    std::uint16_t remcap = 0, status = 0xFFFF, cycles = 0;
+    std::uint16_t remcap = 0, status = 0xFFFF, cycles = 0, v_empty = 0;
     for (const auto& st : steps) {
         if (st.op != Op::Write && st.op != Op::Verify) {
             continue;
@@ -56,8 +56,12 @@ int main() {
         if (st.reg == 0x4C) {
             assert(v == 0x5050);
         }
+        if (st.reg == 0x3A) {
+            v_empty = v;
+        }
     }
     assert(model == 48 && remcap == 5781 && status == 0 && cycles == 0x0060);
+    assert(v_empty == 0x9F5F); // the reset writes the zero it was given, not the factory 0xA05F
 
     std::puts("test_battery_init: ok");
 }

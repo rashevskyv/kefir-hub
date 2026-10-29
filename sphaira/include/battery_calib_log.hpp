@@ -116,4 +116,47 @@ inline auto Cutoffs(std::string_view text) -> std::vector<Cutoff> {
     return out;
 }
 
+// A cycle is a drain to the cut-off and then a charge to 100 % (owner, 2026-10-29). The log alone says when it is done: a
+// drain of the step cut the console off (the last cut-off of the step, at or after `after`), and a charge line of the same
+// step after it saw 100 %. The cycle total of HOS can lag after a hard cut-off, and the console shows 100 % only while the
+// charger is in, so the Hub often looks too late: the log saw both moments. Returns why, or nullopt.
+struct CycleDone {
+    int cutoff_mv{};            // the console switched off at this voltage
+    std::int64_t cutoff_time{};
+    std::int64_t full_time{};   // and then the charge saw 100 %
+};
+
+inline auto CycleDoneByLog(std::string_view text, int step, std::int64_t after = 0) -> std::optional<CycleDone> {
+    std::optional<Cutoff> last_cut;
+    for (const auto& c : Cutoffs(text)) {
+        if (c.step == step && c.time >= after) {
+            last_cut = c;
+        }
+    }
+    if (!last_cut) {
+        return std::nullopt;
+    }
+    while (!text.empty()) {
+        const auto nl = text.find('\n');
+        const auto line = text.substr(0, nl);
+        text = nl == std::string_view::npos ? std::string_view{} : text.substr(nl + 1);
+        const auto s = ParseLine(line);
+        if (s && s->kind == 'C' && s->step == step && s->time > last_cut->time && s->psm_pct >= 100) {
+            return CycleDone{last_cut->mv, last_cut->time, s->time};
+        }
+    }
+    return std::nullopt;
+}
+
+// the zero: the last cut-off of the step's drain, before any charge line of the step that follows it
+inline auto ZeroCutoff(std::string_view text, int step, std::int64_t after = 0) -> std::optional<Cutoff> {
+    std::optional<Cutoff> last_cut;
+    for (const auto& c : Cutoffs(text)) {
+        if (c.step == step && c.time >= after) {
+            last_cut = c;
+        }
+    }
+    return last_cut;
+}
+
 } // namespace sphaira::battery::calib

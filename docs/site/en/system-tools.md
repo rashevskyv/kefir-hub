@@ -226,7 +226,7 @@ The drain page starts the screensaver after the idle time set for the install sc
 
 Any button or a touch wakes it (that press does nothing else); the load and the measuring go on behind it; the stick moves the readout and sets its brightness and drift speed as on the install screen.
 
-The hekate hop to the other MMC (0.14.163) is no longer a step of the wizard: [[5. Transfer to the other MMC]] writes the calibration there by itself at the next start of the Hub in that system (see [[Battery calibration]]).
+The hekate hop to the other MMC (0.14.163) is no longer a step of the wizard: [[5. Transfer to the other systems]] writes the calibration there by itself at the next start of the Hub in that system (see [[Battery calibration]]).
 
 [[Battery size]]: when the learned capacity is more than 130 % of the design capacity the Verdict says a larger battery is built in ([[of the design capacity: a larger battery is built in]]); with the battery type LiPo it adds [[The battery type is LiPo (4.2 V): set it to LiHV (4.32 V) to use the whole battery]]; this is not a desync sign.
 
@@ -264,19 +264,22 @@ The emuMMC is one container: the list has a line [[emuMMC]] with the sum, and it
 
 ## Battery calibration {#battery-calibration}
 
+<!-- draft
+- five steps: [[1. Reset the gauge]], [[2. Cycle 1: drain, the zero, charge]], [[3. Cycle 2: drain, charge]], [[4. Report]], [[5. Transfer to the other systems]]; only the next step is active ([[Active]], [[Locked]], [[Done]]); a road map at the foot of every page of the wizard shows the five steps, the ones done filled, the current one ringed
+- [[Start calibration]] first makes a backup of the gauge (the toast says the file name under /config/kefir/battery/), then opens the steps
+- step 1, [[Reset the gauge]]: plug the charger in; the charge page counts from the moment the charger is in; at 100 % the Hub asks once and writes the factory battery model (backup first); what the gauge learned before is dropped
+- step 2, cycle 1: take the charger out, [[Start the drain]]; the Hub drains at full load until the console switches itself off; the drain log (`/config/kefir/battery/calib-log.csv`, a line a second) keeps the voltage; after a switch-off, switch the console on again: without the charger the drain goes on in the tail mode (minimum load and brightness) until it does not start at all
+- the zero: when the console was switched on again (with or without the charger) and the Hub opened, the Hub takes the last voltage before the gap in the log and writes it into the gauge as the zero, by itself, no question (a backup first): the chip's empty-voltage threshold, and the charge counters set to what came in since the switch-on, so the shown percent is 0 % or near it; the page says [[The console switched off at]] X V, [[This is the empty battery.]], [[Written into the gauge: this voltage is now 0 %.]]; a cut-off outside 3.00 - 3.50 V is refused ([[The cut-off voltage is outside 3.00 - 3.50 V: not a zero.]]) and the drain is run again
+- then the charge: the Hub opens the charge page (not the list of steps) and says which cycle it is and what to do: plug the charger in, wait for 100 %; the cycle counts by itself from the log (the console cut off, then the charge saw 100 %), even if the Hub is opened later with the charger already out
+- step 3, cycle 2: the same drain and charge, no zero
+- the cycle rows say where the cycle is: [[next: take the charger out and start the drain]], [[the drain is going on]], [[the drain is done. Plug the charger in and wait for 100 %: the cycle then counts by itself]]; cycle 1 shows [[the zero]] with its voltage once it is written
+- step 4, [[Calibration report]]: [[The zero (empty battery)]], [[Learned capacity]] against design, the [[Verdict]], the gauge before each cut-off (per cycle, from the log)
+- step 5, [[Transfer to the other systems]]: the calibration is noted in a ledger on the SD (`/config/kefir/battery/ledger.txt`: where it was made, a number, the battery model); at the next start of the Hub in another system (sysMMC, another emuMMC; a file-based one is told by its folder, a partition one by its start sector) that has an older number and the same battery model, the Hub writes it there by itself and shows [[Battery calibration was transferred from]] ... [[to]] ...
+- the state is kept on the SD card (`/config/kefir/battery/calib.txt`: the step, the zero, the drain in progress; `calibration.txt`: the reset), so the Hub can be closed and the console used between the steps
+- [[Actions]] opens the backup, [[Align the charge to the voltage]] (a manual action now), the restore, the match and the battery type
+-->
+
 **Where:** [[Tools]] → [[Tools]] → [[Battery calibration]]
-
-A wizard that teaches the fuel gauge again: [[Why this is needed]] (the gauge can switch the console off at 35 %, or show 0 % for an hour), [[How it works]] (the factory battery model is written first, then two full cycles), [[What you do]], [[How long it takes]] (several hours); a second page [[What happens to the console]] explains the off-and-on loop after the cut-off and the charge; [[Start calibration]].
-
-The steps: [[1. Reset the gauge]], [[2. Cycle 1: drain, then charge]], [[3. Cycle 2: drain, then charge]], [[4. Report]], [[5. Transfer to the other MMC]]; only the next step is active ([[Active]], [[Locked]], [[Done]]); the state is kept on the SD card (`/config/kefir/battery/calibration.txt`: the reset and the cycles; `calib.txt`: the report, the transfer, the drain in progress), so the Hub can be closed and the console used between the steps; [[Actions]] opens the backup, the align to the voltage, the restore, the match and the battery type.
-
-Step 1: [[Reset the gauge]]: the charger in, the Hub waits on the charger until the battery is full, makes a backup of the gauge and writes the factory battery model; what the gauge learned before is dropped.
-
-Steps 2 and 3: a cycle is a drain and then a charge; it counts by itself when 90 % of the battery was drained since the reset (the console's own cycle total, so a drain by the user's own use counts too) and the console shows 100 % again; [[Discharged in this cycle]] shows the progress; [[Start the drain]]: the charger out, the Hub loads the CPU and GPU at full brightness (the drain page: battery, power, CPU / GPU / temperature charts, the screensaver on Minus or after the idle time) until the console switches itself off; after every switch-off the user switches the console on again and the Hub goes on by itself, now slowly: no load, auto-brightness off, brightness at the minimum ([[Drain after the cut-off]]); every second a line goes to `/config/kefir/battery/calib-log.csv`; when enough is drained the page says [[The battery ran down enough. Now charge it to 100 %. The cycle then counts by itself.]] ([[Start charging]]: the screen stays on, the screensaver works, the Hub may be closed); taking the charger out after the count starts the next drain by itself.
-
-Step 4: [[Calibration report]]: [[Learned capacity]] against design, the [[Verdict]], the gauge before each cut-off (per cycle, from the log); step 5 ([[Transfer to the other MMC]]): the calibration is noted in a ledger on the SD (`/config/kefir/battery/ledger.txt`: where it was made, a number, the battery model); at the next start of the Hub in another system (sysMMC, another emuMMC; a file-based one is told by its folder, a partition one by its start sector) that has an older number and the same battery model, the Hub writes it there by itself and shows [[Battery calibration was transferred from]] ... [[to]] ...
-
-After a drain the console cut short (the chip shows 30 %, its voltage says 3 %) the Hub offers [[Align the charge to the voltage]] at its start, also while a calibration is under way.
 
 ## Clean system junk
 

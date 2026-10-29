@@ -48,6 +48,25 @@ int main() {
     assert(cuts[1].mv == 3205 && cuts[1].gauge_pct == 1 && cuts[1].time == 2101);
     assert(Cutoffs(LOG_HEADER).empty());
 
+    // a cycle is a drain to the cut-off and then a charge to 100 %; the log alone tells when it is done
+    // the zero of the cycle: its last cut-off (the tail mode's one, the lowest)
+    assert(ZeroCutoff(run, 1) && ZeroCutoff(run, 1)->mv == 3205 && ZeroCutoff(run, 1)->time == 2101);
+    assert(!ZeroCutoff(run, 1, 3000));                     // a cycle that began later has no cut-off yet
+    assert(!CycleDoneByLog(run, 1));                       // charged to 3.7 V only, never 100 %
+    ch.time = 9500; ch.psm_pct = 99; run += FormatLine(ch);
+    assert(!CycleDoneByLog(run, 1));
+    ch.time = 9600; ch.psm_pct = 100; run += FormatLine(ch);
+    const auto done1 = CycleDoneByLog(run, 1);
+    assert(done1 && done1->cutoff_mv == 3205 && done1->cutoff_time == 2101 && done1->full_time == 9600);
+    assert(!CycleDoneByLog(run, 1, 3000));                 // the cycle began after that cut-off: not done
+    assert(!CycleDoneByLog(run, 2));                       // cycle 2 has no cut-off yet
+    // a 100 % line of cycle 2 BEFORE its cut-off (the charge of cycle 1 logged under step 2) does not count
+    Sample c2 = ch; c2.step = 2; c2.time = 9700; run += FormatLine(c2);
+    assert(!CycleDoneByLog(run, 2));
+    d.step = 2; d.time = 12000; d.mv = 3210; run += FormatLine(d);
+    c2.time = 20000; run += FormatLine(c2);
+    assert(CycleDoneByLog(run, 2) && CycleDoneByLog(run, 2)->full_time == 20000);
+
     std::puts("test_battery_calib_log: ok");
     return 0;
 }

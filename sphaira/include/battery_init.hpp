@@ -52,8 +52,9 @@ enum class Src {
     VfSoc2,      // second VFSOC read (BDF writes it to QH0)
     RemCap,      // RemCap(table[2], VFSOC)
     FullCapQ,    // table[2] >> 4
+    VEmpty,      // SLOT_VEMPTY: 0xA05F, or the calibration's zero voltage in VE
 };
-enum Slot { SLOT_MISC = 0, SLOT_VFSOC = 1, SLOT_VFSOC2 = 2 };
+enum Slot { SLOT_MISC = 0, SLOT_VFSOC = 1, SLOT_VFSOC2 = 2, SLOT_VEMPTY = 3 };
 
 struct Step {
     Op op;
@@ -88,7 +89,7 @@ inline auto FactoryInitSteps() -> std::vector<Step> {
         {Op::Write, 0x1E, Src::Const, 0x0333},
         {Op::Write, 0x2C, Src::Const, 0xE1F6},
         {Op::Write, 0x2D, Src::Const, 0x2BF2},
-        {Op::Verify, 0x3A, Src::Const, 0xA05F},
+        {Op::Verify, 0x3A, Src::VEmpty, 0},
         {Op::Verify, 0x12, Src::Table, 5},
         {Op::Verify, 0x22, Src::Table, 6},
         {Op::Verify, 0x32, Src::Table, 7},
@@ -122,12 +123,13 @@ inline auto FactoryInitSteps() -> std::vector<Step> {
 }
 
 // the value a write step puts in the chip
-inline auto StepValue(const Step& st, const Table& t, const std::array<std::uint16_t, 3>& slots) -> std::uint16_t {
+inline auto StepValue(const Step& st, const Table& t, const std::array<std::uint16_t, 4>& slots) -> std::uint16_t {
     switch (st.src) {
         case Src::Const: return st.value;
         case Src::Table: return t[st.value];
         case Src::MiscOr15: return static_cast<std::uint16_t>(slots[SLOT_MISC] | 0x8000);
         case Src::VfSoc: return slots[SLOT_VFSOC];
+        case Src::VEmpty: return slots[SLOT_VEMPTY];
         case Src::VfSoc2: return slots[SLOT_VFSOC2];
         case Src::RemCap: return RemCap(t[2], slots[SLOT_VFSOC]);
         case Src::FullCapQ: return static_cast<std::uint16_t>(t[2] >> 4);

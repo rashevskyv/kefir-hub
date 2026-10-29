@@ -1,9 +1,12 @@
 #pragma once
 
-// What the battery calibration wizard remembers besides the old wizard's state (battery_wizard.hpp, calibration.txt): the
-// reset and the two cycles are counted there, by HOS's cycle total, as in 0.14.111-163. This marker file on the SD keeps
-// the rest: the report and the transfer step, the user's brightness, and what the Hub needs to go on with a drain after
-// a cut-off (docs/dev/BATTERY-CALIBRATION.md, "The wizard remembers").
+// What the battery calibration wizard remembers (owner, 2026-10-29): five steps. 1 the factory reset at 100 % (the proven
+// logic of 0.14.111-163, battery_write.cpp RunReset). Then a cycle is a drain to the cut-off and then a charge to 100 %;
+// in cycle 1 the cut-off voltage is written into the gauge as the zero (battery_zero.hpp) before the charge, so the
+// factory model does not wipe it. A cycle counts by the drain log (battery_calib_log.hpp, CycleDoneByLog). The old wizard
+// state (battery_wizard.hpp, calibration.txt) holds reset_at and mirrors full1_at/full2_at for the pages that read it.
+// This marker file on the SD keeps the step, the zero, the user's brightness, and what the Hub needs to go on with a
+// drain after a cut-off.
 // No libnx: host-tested by tests/test_battery_calib_state.cpp.
 
 #include "battery_cutoff.hpp"
@@ -16,16 +19,33 @@
 namespace sphaira::battery::calib {
 
 enum class Step : std::uint8_t {
-    Reset = 1,    // the factory model at 100 % (the old step 2)
-    Cycle1 = 2,   // drain, then 100 % on the charger; counted by the cycle total
-    Cycle2 = 3,
+    Reset = 1,    // the factory model at 100 %
+    Cycle1 = 2,   // drain to the cut-off, the zero written, charge to 100 %
+    Cycle2 = 3,   // drain to the cut-off, charge to 100 %
     Report = 4,
     Transfer = 5,
     Finished = 6,
 };
 
+inline constexpr int STEP_COUNT = 5; // what the user sees: reset, cycle 1, cycle 2, report, transfer
+
+// 1-based position of a step in the list the user sees
+inline auto StepIndex(Step s) -> int {
+    return s == Step::Finished ? STEP_COUNT : static_cast<int>(s);
+}
+
+// where cycle 1 is, in words the pages use
+enum class Phase {
+    Drain,     // take the charger out, drain to the cut-off (cycle 1: then the zero is written)
+    Charge,    // the console cut off (and the zero is written): plug the charger in, charge to 100 %
+};
+
 struct Marker {
     Step step{Step::Reset};
+    std::int64_t started_at{};         // when this calibration began: log lines before it belong to an older run
+    int zero_mv{};                     // the cut-off voltage of cycle 1's drain (the last log line before the gap), 0 = none yet
+    std::int64_t zero_at{};            // when it was written into the gauge, 0 = not written
+    std::int64_t full_at[2]{};         // cycle 1 and 2: when the charge after the cut-off saw 100 % (the cycle is done)
     bool drain_started{};              // the Hub's drain page was started in a cycle step and not left on purpose
     std::int64_t drain_time{};         // when it was started
     int cutoffs{};                     // cut-offs seen in this cycle: 0 = maximum load, 1 or more = the tail mode
@@ -36,34 +56,52 @@ struct Marker {
                                        // same boot is a restart of the Hub, in another boot the console itself switched off
 };
 
-inline auto Begin(int brightness_now, bool auto_now) -> Marker {
+inline auto Begin(int brightness_now, bool auto_now, std::int64_t now = 0) -> Marker {
     Marker m;
     m.brightness_before = brightness_now;
     m.auto_before = auto_now;
+    m.started_at = now;
     return m;
 }
 
 inline auto IsCycle(Step s) -> bool { return s == Step::Cycle1 || s == Step::Cycle2; }
+inline auto CycleOf(Step s) -> int { return s == Step::Cycle1 ? 1 : s == Step::Cycle2 ? 2 : 0; }
+
+// the phase of the cycle on screen: the drain until the console cut off (cycle 1: and the zero is written), then the charge
+inline auto PhaseOf(const Marker& m) -> Phase {
+    if (m.step == Step::Cycle1) {
+        return m.zero_at ? Phase::Charge : Phase::Drain;
+    }
+    return m.cutoffs > 0 ? Phase::Charge : Phase::Drain;
+}
+
+// when the charge after the cut-off saw 100 %: the cycle is done. The log's time of it, or now.
+inline void MarkCycleDone(Marker& m, std::int64_t full_time) {
+    const int c = CycleOf(m.step);
+    if (c) {
+        m.full_at[c - 1] = full_time;
+    }
+}
 
 // ---- where the wizard is ---------------------------------------------------------------------------------------------------
 
-// The reset and the cycles come from the wizard's state (the marker only mirrors them); the report and the transfer are the marker's own.
-inline auto StepFor(const Marker& m, bool reset_done, bool cycle1_done, bool cycle2_done) -> Step {
+// reset_done: the wizard's state has reset_at (the reset is battery_write.cpp's)
+inline auto StepFor(const Marker& m, bool reset_done) -> Step {
     if (m.step == Step::Report || m.step == Step::Transfer || m.step == Step::Finished) {
         return m.step;
     }
     if (!reset_done) {
         return Step::Reset;
     }
-    if (!cycle1_done) {
+    if (!m.full_at[0]) {
         return Step::Cycle1;
     }
-    return cycle2_done ? Step::Report : Step::Cycle2;
+    return m.full_at[1] ? Step::Report : Step::Cycle2;
 }
 
 // true = the step moved; a new step starts without a running drain and in the maximum load again
-inline auto Sync(Marker& m, bool reset_done, bool cycle1_done, bool cycle2_done) -> bool {
-    const auto next = StepFor(m, reset_done, cycle1_done, cycle2_done);
+inline auto Sync(Marker& m, bool reset_done) -> bool {
+    const auto next = StepFor(m, reset_done);
     if (next == m.step) {
         return false;
     }
@@ -158,6 +196,11 @@ inline auto Format(const Marker& m) -> std::string {
     std::string o;
     const auto kv = [&](const char* k, long long v) { o += std::string{k} + "=" + std::to_string(v) + '\n'; };
     kv("step", static_cast<int>(m.step));
+    kv("started_at", m.started_at);
+    kv("zero_mv", m.zero_mv);
+    kv("zero_at", m.zero_at);
+    kv("full1_at", m.full_at[0]);
+    kv("full2_at", m.full_at[1]);
     kv("started", m.drain_started ? 1 : 0);
     kv("time", m.drain_time);
     kv("cutoffs", m.cutoffs);
@@ -185,6 +228,11 @@ inline auto Parse(std::string_view text) -> Marker {
             continue; // not a number: no exceptions on the console build
         }
         if (key == "step" && v >= 1 && v <= 6) m.step = static_cast<Step>(v);
+        else if (key == "started_at") m.started_at = v;
+        else if (key == "zero_mv") m.zero_mv = static_cast<int>(v);
+        else if (key == "zero_at") m.zero_at = v;
+        else if (key == "full1_at") m.full_at[0] = v;
+        else if (key == "full2_at") m.full_at[1] = v;
         else if (key == "started") m.drain_started = v != 0;
         else if (key == "time") m.drain_time = v;
         else if (key == "cutoffs") m.cutoffs = static_cast<int>(v < 0 ? 0 : v);
