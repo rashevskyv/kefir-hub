@@ -65,6 +65,11 @@ The [[About]] window shows the version, the release notes, and a button to [[Upd
 
 **Where:** [[Settings]] → [[Homebrew]] → [[Forwarders]]
 
+<!-- draft
+- [[Address space]] / [[Address Space]] has a new value [[42-bit]] (the widest; DBI calls it "42 Bit"); it needs firmware 23.0.0 or newer: on an older firmware a 42-bit forwarder does not start
+- [[Automatic]] now means 42-bit on firmware 23.0.0 and newer and 39-bit before; the default stays [[Automatic]]
+- in the forwarder editor the value cycles 42-bit → 39-bit → 36-bit → 32-bit → 32-bit (no alias) → back to 42-bit (or 39-bit on an older firmware)
+-->
 | Option | What it does | Default |
 |---|---|---|
 | [[Ask every time]] | Opens the forwarder editor each time you create a forwarder, instead of using the defaults below. | Off |

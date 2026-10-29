@@ -17,7 +17,13 @@ enum class ForwarderAddressSpace : u8 {
     Bit36 = 1,        // AddressSpace64BitOld, what the hbl npdm ships with.
     Bit32NoAlias = 2, // AddressSpace32BitNoReserved
     Bit39 = 3,        // AddressSpace64Bit, needed by homebrew that wants more va space.
+    Bit42 = 4,        // AddressSpace64Bit42, [23.0.0+] (libnx CreateProcessFlagAddressSpace_64Bit42): the widest, DBI's "42 Bit".
 };
+
+// the widest space this firmware runs: 42-bit from 23.0.0, 39-bit before (a 42-bit npdm does not start on an older one)
+inline auto ForwarderAddressSpaceDefault() -> ForwarderAddressSpace {
+    return hosversionAtLeast(23, 0, 0) ? ForwarderAddressSpace::Bit42 : ForwarderAddressSpace::Bit39;
+}
 
 // the kac ForceDebug bit. automatic follows the ams version, see patch_npdm().
 enum class ForwarderSvcDebugMode : u8 {
@@ -28,7 +34,7 @@ enum class ForwarderSvcDebugMode : u8 {
 
 struct ForwarderOptions {
     bool profile_selection{};
-    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit39};
+    ForwarderAddressSpace address_space{ForwarderAddressSpace::Bit39}; // the callers set ForwarderAddressSpaceDefault()
     CpuCoreMode core_mode{CpuCoreMode::Three};
     bool screenshot{true};
     bool video_capture{true};

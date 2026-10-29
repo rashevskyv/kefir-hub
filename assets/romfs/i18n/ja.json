@@ -3910,5 +3910,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "コンソールがシャットダウンした瞬間の電圧が本当のバッテリー切れの数値です。コンソールを再び起動して Kefir Hub を開くと、Hub が自動的にその数値をゼロとしてゲージに書き込みます。",
   "5. Transfer to the other systems": "5. 他のシステムへ転送",
   "3. Cycle 2: drain, charge": "3. サイクル2: 放電、充電",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "起動しなくなった場合：充電器を接続して電源を入れてください。Hubが充電状態を表示し、100%でサイクルを自動的にカウントします。"
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "起動しなくなった場合：充電器を接続して電源を入れてください。Hubが充電状態を表示し、100%でサイクルを自動的にカウントします。",
+  "42-bit": "42ビット",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "アプリに割り当てられる仮想メモリの量。自動に設定: ファームウェア23.0.0以降は42ビット、それ以前は39ビット。42ビットにはファームウェア23.0.0が必要です。古いファームウェアではアプリが起動しません。36ビット: 古いアプリが起動しない場合のみ。32ビットおよび32ビット（エイリアスなし）: アプリ自身が要求する場合のみ（Wine-NX、Box64）。"
 }

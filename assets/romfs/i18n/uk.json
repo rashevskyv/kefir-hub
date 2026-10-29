@@ -3879,5 +3879,7 @@
   "the zero": "нуль",
   "3. Cycle 2: drain, charge": "3. Цикл 2: розряд, заряд",
   "4. Report": "4. Звіт",
-  "5. Transfer to the other systems": "5. Перенос в інші системи"
+  "5. Transfer to the other systems": "5. Перенос в інші системи",
+  "42-bit": "42-bit",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Скільки віртуальної пам'яті отримує застосунок. Залиште «Автоматично»: 42-bit на прошивці 23.0.0 і новіших, 39-bit на старіших. 42-bit потребує прошивки 23.0.0: на старішій застосунок не запуститься. 36-bit: лише якщо старий застосунок не запускається. 32-bit і 32-bit (no alias): лише коли цього вимагає сам застосунок (Wine-NX, Box64)."
 }

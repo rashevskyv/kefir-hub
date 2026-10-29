@@ -3905,5 +3905,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "Pinge hetkel, mil konsool välja lülitub, ongi tegelik tühja aku tase. Kui lülitate konsooli uuesti sisse ja avate Kefir Hubi, kirjutab Hub selle ise nullina näidikule.",
   "5. Transfer to the other systems": "5. Edasta teistele süsteemidele",
   "3. Cycle 2: drain, charge": "3. Tsükkel 2: tühjendamine, laadimine",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Kui see enam ei käivitu: ühenda laadija ja lülita sisse. Hub näitab laadimist ja loeb tsüklit ise 100 % juures."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Kui see enam ei käivitu: ühenda laadija ja lülita sisse. Hub näitab laadimist ja loeb tsüklit ise 100 % juures.",
+  "42-bit": "42-bit",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kui palju virtuaalmälu rakendus saab. Jäta Automaatne: 42-bitine püsivara 23.0.0 ja uuemate puhul, 39-bitine varem. 42-bitine nõuab püsivara 23.0.0: vanemal see rakendus ei käivitu. 36-bitine: ainult juhul, kui vana rakendus ei käivitu. 32-bitine ja 32-bitine (aliaseta): ainult siis, kui rakendus seda ise nõuab (Wine-NX, Box64)."
 }

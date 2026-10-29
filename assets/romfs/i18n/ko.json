@@ -3910,5 +3910,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "콘솔이 꺼지는 순간의 전압이 실제 방전된 배터리입니다. 콘솔을 다시 켜고 Kefir Hub를 열면, Hub가 스스로 게이지에 이를 0으로 기록합니다.",
   "5. Transfer to the other systems": "5. 다른 시스템으로 전송",
   "3. Cycle 2: drain, charge": "3. 사이클 2: 방전, 충전",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "더 이상 켜지지 않는 경우: 충전기를 꽂고 전원을 켭니다. Hub가 충전 상태를 표시하고 100%에서 주기를 자동으로 셉니다."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "더 이상 켜지지 않는 경우: 충전기를 꽂고 전원을 켭니다. Hub가 충전 상태를 표시하고 100%에서 주기를 자동으로 셉니다.",
+  "42-bit": "42비트",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "앱이 할당받는 가상 메모리 양. 자동 유지: 펌웨어 23.0.0 이상은 42비트, 이전 버전은 39비트. 42비트는 펌웨어 23.0.0이 필요합니다. 이전 버전에서는 앱이 실행되지 않습니다. 36비트: 오래된 앱이 실행되지 않는 경우에만. 32비트 및 32비트(별칭 없음): 앱 자체가 요구하는 경우에만 (Wine-NX, Box64)."
 }

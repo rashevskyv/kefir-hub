@@ -3879,5 +3879,7 @@
   "the zero": "the zero",
   "3. Cycle 2: drain, charge": "3. Cycle 2: drain, charge",
   "4. Report": "4. Report",
-  "5. Transfer to the other systems": "5. Transfer to the other systems"
+  "5. Transfer to the other systems": "5. Transfer to the other systems",
+  "42-bit": "42-bit",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."
 }

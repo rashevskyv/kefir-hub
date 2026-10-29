@@ -125,6 +125,11 @@ It starts the app in title mode, with full memory.
    If it is on, the forwarder editor opens: change the title, author, version or icon, then choose [[Create Forwarder]].
 5. Go back to the HOME Menu. The new icon is there.
 
+<!-- draft
+- [[Address space]] / [[Address Space]] has a new value [[42-bit]] (the widest; DBI calls it "42 Bit"); it needs firmware 23.0.0 or newer: on an older firmware a 42-bit forwarder does not start
+- [[Automatic]] now means 42-bit on firmware 23.0.0 and newer and 39-bit before; the default stays [[Automatic]]
+- in the forwarder editor the value cycles 42-bit → 39-bit → 36-bit → 32-bit → 32-bit (no alias) → back to 42-bit (or 39-bit on an older firmware)
+-->
 | Option | What it does | Default |
 |---|---|---|
 | [[Ask every time]] | Open the forwarder editor for each forwarder instead of using the defaults | Off |

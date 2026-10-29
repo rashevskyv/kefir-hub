@@ -3910,5 +3910,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "Spänningen i det ögonblick då konsolen stängs av är det riktigt tomma batteriet. När du sätter på konsolen igen och öppnar Kefir Hub, skriver Hub själv in det som noll i mätaren.",
   "5. Transfer to the other systems": "5. Överför till de andra systemen",
   "3. Cycle 2: drain, charge": "3. Cykel 2: urladdning, laddning",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "När den inte startar längre: anslut laddaren och slå på den. Hubben visar laddningen och räknar cykeln själv vid 100 %."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "När den inte startar längre: anslut laddaren och slå på den. Hubben visar laddningen och räknar cykeln själv vid 100 %.",
+  "42-bit": "42-bit",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hur mycket virtuellt minne appen får. Lämna på Automatiskt: 42-bitars på firmware 23.0.0 och nyare, 39-bitars innan. 42-bitars kräver firmware 23.0.0: på en äldre startar inte appen. 36-bitars: endast om en gammal app inte startar. 32-bitars och 32-bitars (inget alias): endast när appen själv frågar efter det (Wine-NX, Box64)."
 }

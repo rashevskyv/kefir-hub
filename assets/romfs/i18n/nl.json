@@ -3910,5 +3910,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "De spanning op het moment dat de console uitschakelt is de echte lege batterij. Wanneer je de console weer inschakelt en Kefir Hub opent, schrijft de Hub dit zelf als de nul naar de meter.",
   "5. Transfer to the other systems": "5. Overdragen naar de andere systemen",
   "3. Cycle 2: drain, charge": "3. Cyclus 2: ontladen, opladen",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Als het niet meer start: sluit de oplader aan en schakel het in. De Hub toont de lading en telt de cyclus zelf bij 100 %."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Als het niet meer start: sluit de oplader aan en schakel het in. De Hub toont de lading en telt de cyclus zelf bij 100 %.",
+  "42-bit": "42-bit",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hoeveel virtueel geheugen de app krijgt. Laat op Automatisch staan: 42-bits op firmware 23.0.0 en hoger, 39-bits daarvoor. 42-bits vereist firmware 23.0.0: op een oudere start de app niet. 36-bits: alleen als een oude app niet start. 32-bits en 32-bits (geen alias): alleen wanneer de app er zelf om vraagt (Wine-NX, Box64)."
 }

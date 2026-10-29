@@ -499,9 +499,8 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       it is already in the Hub: the 32/36/32-no-alias/39-bit address space, four cores, screenshot and video capture for
       forwarders (`owo.hpp`, `app_settings.cpp`), the distribution-bit removal (`ignore_distribution_bit`, the same as
       `PatchDistributionBit`), save growing (`ExtendSaveDataChecked`), a "Save information" label, and the tickets of a game in
-      its details. To do: (a) **research the "42 Bit" address space**: HOS NPDM knows four address-space values; find out from the
-      DBI 920 export which value DBI writes for "42 Bit" and from which firmware it is allowed, then add it to
-      `ForwarderAddressSpace` only if a real NPDM value exists (no guess; low priority, homebrew rarely needs it); (b) **NACP details
+      its details. To do: (a) ~~research the "42 Bit" address space~~ done v0.14.232: libnx `CreateProcessFlagAddressSpace_64Bit42 = 4`,
+      23.0.0+; `Bit42` added, "Automatic" = 42-bit on 23.0.0+ else 39-bit (`ForwarderAddressSpaceDefault`); (b) **NACP details
       page** in the game details (one page, read-only): the fields the Hub does not show yet, among them the accessible program
       index flags and the album export flag of DBI 920, rating ages, startup user account, screenshot/video capture, save sizes;
       labels in every language, a host test for the field table; (c) **forwarder check**: DBI 920 now reads and validates the

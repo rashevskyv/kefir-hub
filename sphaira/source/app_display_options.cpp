@@ -170,10 +170,11 @@ void App::DisplayForwarderOptions(bool left_side) {
     address_space_items.push_back("39-bit"_i18n);
     address_space_items.push_back("32-bit"_i18n);
     address_space_items.push_back("32-bit (no alias)"_i18n);
+    address_space_items.push_back("42-bit"_i18n);
     options->Add<ui::SidebarEntryArray>("Address space"_i18n, address_space_items, [](s64& index_out){
         g_app->m_forwarder_address_space.Set(index_out);
-    }, std::clamp<s64>(g_app->m_forwarder_address_space.Get(), 0, 4),
-        "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n);
+    }, std::clamp<s64>(g_app->m_forwarder_address_space.Get(), 0, 5),
+        "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n);
 
     struct CpuEntryCtx {
         ui::SidebarEntryArray* entry{};

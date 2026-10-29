@@ -122,6 +122,11 @@ Kefir Hub видаляє файл `.nro`. Папка застосунку та �
 4. Якщо ввімкнено [[Ask every time]], відкриється редактор форвардера: змініть назву, автора, версію чи іконку й виберіть [[Create Forwarder]]. Якщо вимкнено, форвардер створиться одразу з типовими опціями.
 5. Поверніться в HOME Menu. Там з'явиться нова іконка.
 
+<!-- draft
+- [[Address space]] / [[Address Space]] has a new value [[42-bit]] (the widest; DBI calls it "42 Bit"); it needs firmware 23.0.0 or newer: on an older firmware a 42-bit forwarder does not start
+- [[Automatic]] now means 42-bit on firmware 23.0.0 and newer and 39-bit before; the default stays [[Automatic]]
+- in the forwarder editor the value cycles 42-bit → 39-bit → 36-bit → 32-bit → 32-bit (no alias) → back to 42-bit (or 39-bit on an older firmware)
+-->
 | Опція | Що робить | Типово |
 |---|---|---|
 | [[Ask every time]] | Відкривати редактор для кожного форвардера замість типових значень | Вимкнено |

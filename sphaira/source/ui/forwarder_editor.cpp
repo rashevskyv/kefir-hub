@@ -293,10 +293,12 @@ private:
                 break;
             case Row::AddressSpace:
                 switch (m_values.options.address_space) {
+                    case ForwarderAddressSpace::Bit42: m_values.options.address_space = ForwarderAddressSpace::Bit39; break;
                     case ForwarderAddressSpace::Bit39: m_values.options.address_space = ForwarderAddressSpace::Bit36; break;
                     case ForwarderAddressSpace::Bit36: m_values.options.address_space = ForwarderAddressSpace::Bit32; break;
                     case ForwarderAddressSpace::Bit32: m_values.options.address_space = ForwarderAddressSpace::Bit32NoAlias; break;
-                    case ForwarderAddressSpace::Bit32NoAlias: m_values.options.address_space = ForwarderAddressSpace::Bit39; break;
+                    // 42-bit only where the firmware runs it (23.0.0+); older: back to 39-bit
+                    case ForwarderAddressSpace::Bit32NoAlias: m_values.options.address_space = ForwarderAddressSpaceDefault(); break;
                 }
                 break;
             case Row::CpuCores:
@@ -485,7 +487,7 @@ private:
 
     auto GetRowHint(Row row) const -> std::string {
         if (row == Row::AddressSpace) {
-            return "How much virtual memory the app gets. Leave Automatic (39-bit). 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n;
+            return "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n;
         }
         return {};
     }
@@ -502,6 +504,7 @@ private:
                     case ForwarderAddressSpace::Bit36: return "36-bit"_i18n;
                     case ForwarderAddressSpace::Bit32: return "32-bit"_i18n;
                     case ForwarderAddressSpace::Bit32NoAlias: return "32-bit (no alias)"_i18n;
+                    case ForwarderAddressSpace::Bit42: return "42-bit"_i18n;
                     case ForwarderAddressSpace::Bit39: break;
                 }
                 return "39-bit"_i18n;

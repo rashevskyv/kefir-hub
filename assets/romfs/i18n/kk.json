@@ -3905,5 +3905,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "Консоль өшіп калған сәттегі кернеу - нағыз бос батарея. Консольді қайта қосып, Kefir Hub ашқанда, Hub оны датчикке нөл ретінде өзі жазады.",
   "5. Transfer to the other systems": "5. Басқа жүйелерге тасымалдау",
   "3. Cycle 2: drain, charge": "3. 2-ші цикл: разрядтау, зарядтау",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Іске қосылмай қалған жағдайда: зарядтағышты қосып, оны қосыңыз. Hub зарядты көрсетіп, циклді 100 %-да өзі санап шығады."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Іске қосылмай қалған жағдайда: зарядтағышты қосып, оны қосыңыз. Hub зарядты көрсетіп, циклді 100 %-да өзі санап шығады.",
+  "42-bit": "42-біт",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Қолданба алатын виртуалды жад көлемі. Автоматты түрде қалдыру: 23.0.0 және одан кейінгі прошивкалар үшін 42 бит, бұрынғылары үшін 39 бит. 42 бит 23.0.0 прошивкасын қажет етеді: ескісінде қолданба іске қосылмайды. 36 бит: тек ескі қолданба іске қосылмаған жағдайда. 32 бит және 32 бит (бүркен атсыз): тек қолданба өзі сұраған кезде (Wine-NX, Box64)."
 }

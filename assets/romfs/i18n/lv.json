@@ -3905,5 +3905,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "Spriegums brīdī, kad konsole izslēdzas, ir īstais tukšais akumulators. Kad jūs ieslēdzat konsoli no jauna un atverat Kefir Hub, Hub pats to ieraksta mērinstrumentā kā nulli.",
   "5. Transfer to the other systems": "5. Pārsūtīt uz citām sistēmām",
   "3. Cycle 2: drain, charge": "3. 2. cikls: izlāde, uzlāde",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Ja tas vairs neieslēdzas: pievienojiet lādētāju un ieslēdziet to. Hub parāda uzlādi un pats noskaita ciklu pie 100 %."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Ja tas vairs neieslēdzas: pievienojiet lādētāju un ieslēdziet to. Hub parāda uzlādi un pats noskaita ciklu pie 100 %.",
+  "42-bit": "42-bitu",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cik daudz virtuālās atmiņas saņem lietotne. Atstāt Automātiski: 42-bitu programmaparatūrā 23.0.0 un jaunākās, 39-bitu iepriekšējās. 42-bitiem nepieciešama programmaparatūra 23.0.0: vecākā versijā lietotne nepalaižas. 36-biti: tikai tad, ja vecā lietotne nepalaižas. 32-biti un 32-biti (bez aizstājvārda): tikai tad, kad pati lietotne to pieprasa (Wine-NX, Box64)."
 }

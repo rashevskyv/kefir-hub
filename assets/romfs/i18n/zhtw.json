@@ -3963,5 +3963,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "主機關機瞬間的電壓即為真正的電量耗盡狀態。當你重新開機並開啟 Kefir Hub 時，Hub 會自動將其寫入儀錶板作為零點。",
   "5. Transfer to the other systems": "5. 傳輸至其他系統",
   "3. Cycle 2: drain, charge": "3. 循環 2：放電、充電",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "當無法開機時：連接充電器並開機。Hub 會顯示充電狀態，並在 100% 時自動計算循環次數。"
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "當無法開機時：連接充電器並開機。Hub 會顯示充電狀態，並在 100% 時自動計算循環次數。",
+  "42-bit": "42位",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "應用程式取得的虛擬記憶體大小。保持自動：韌體 23.0.0 及更新版本使用 42 位元，先前版本使用 39 位元。42 位元需要韌體 23.0.0：在較舊的版本上應用程式無法啟動。36 位元：僅當舊應用程式無法啟動時。32 位元和 32 位元（無別名）：僅當應用程式本身要求時（Wine-NX、Box64）。"
 }

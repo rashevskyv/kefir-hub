@@ -153,12 +153,14 @@ auto App::GetInstallReserveSdMb() -> long {
 auto App::GetForwarderOptions() -> ForwarderOptions {
     ForwarderOptions out{};
     out.profile_selection = g_app->m_forwarder_profile_select.Get();
-    // 0 = auto (39-bit), 1 = 36-bit, 2 = 39-bit, 3 = 32-bit, 4 = 32-bit (no alias).
+    // 0 = auto (42-bit on 23.0.0+, else 39-bit), 1 = 36-bit, 2 = 39-bit, 3 = 32-bit, 4 = 32-bit (no alias), 5 = 42-bit.
     switch (GetForwarderAddressSpace()) {
         case 1: out.address_space = ForwarderAddressSpace::Bit36; break;
+        case 2: out.address_space = ForwarderAddressSpace::Bit39; break;
         case 3: out.address_space = ForwarderAddressSpace::Bit32; break;
         case 4: out.address_space = ForwarderAddressSpace::Bit32NoAlias; break;
-        default: out.address_space = ForwarderAddressSpace::Bit39; break;
+        case 5: out.address_space = ForwarderAddressSpace::Bit42; break;
+        default: out.address_space = ForwarderAddressSpaceDefault(); break;
     }
     out.core_mode = GetForwarderCpuCores() == 4
         ? CpuCoreMode::Four : CpuCoreMode::Three;
@@ -177,11 +179,11 @@ auto App::GetForwarderAsk() -> bool {
 }
 
 auto App::GetForwarderAddressSpace() -> long {
-    return std::clamp<long>(g_app->m_forwarder_address_space.Get(), 0, 4);
+    return std::clamp<long>(g_app->m_forwarder_address_space.Get(), 0, 5);
 }
 
 void App::SetForwarderAddressSpace(long mode) {
-    g_app->m_forwarder_address_space.Set(std::clamp<long>(mode, 0, 4));
+    g_app->m_forwarder_address_space.Set(std::clamp<long>(mode, 0, 5));
 }
 
 auto App::GetForwarderCpuCores() -> long {

@@ -3911,5 +3911,7 @@
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "El voltaje en el momento en que la consola se apaga es la batería realmente vacía. Cuando vuelves a encender la consola y abres Kefir Hub, este escribe el valor como el cero en el medidor automáticamente.",
   "5. Transfer to the other systems": "5. Transferir a otros sistemas",
   "3. Cycle 2: drain, charge": "3. Ciclo 2: descargar, cargar",
-  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Cuando ya no encienda: enchufa el cargador y enciéndelo. El Hub muestra la carga y cuenta el ciclo por sí solo al 100 %."
+  "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Cuando ya no encienda: enchufa el cargador y enciéndelo. El Hub muestra la carga y cuenta el ciclo por sí solo al 100 %.",
+  "42-bit": "42-bit",
+  "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cuánta memoria virtual recibe la app. Déjalo en Automático: 42 bits en el firmware 23.0.0 y posterior, 39 bits en el anterior. 42 bits requiere el firmware 23.0.0: en uno anterior la app no se inicia. 36 bits: solo si una app antigua no arranca. 32 bits y 32 bits (sin alias): solo cuando la propia app lo solicite (Wine-NX, Box64)."
 }
