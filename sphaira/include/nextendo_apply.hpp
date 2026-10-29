@@ -8,6 +8,8 @@
 
 #include <switch.h>
 
+#include <string>
+
 namespace sphaira::nextendo {
 
 // Settings kept in the Hub config (section "nextendo"). Emu default on, sysNAND default off.
@@ -19,8 +21,11 @@ void SetSysEnabled(bool enabled);
 auto CurrentMode() -> Mode;
 // A file or key changed since the console started: dns_mitm and exosphere read them only at boot.
 auto RestartNeeded() -> bool;
-// Installed system firmware is one of the versions the pinned tag ships patches for.
+// This Hub carries an ssl patch for the build ID of the running ssl module (no firmware list to keep).
+// True also when the ID cannot be read: then the games only fail to connect, Nintendo is never reached.
 auto FirmwareOk() -> bool;
+// Build ID of the running ssl module (40 hex digits), empty when it cannot be read. For the Nextendo page.
+auto SslBuildIdText() -> std::string;
 
 // The server IPs in use: the ones refreshed from the newest release, else the pinned snapshot.
 auto ServerIpsInUse() -> ServerIps;

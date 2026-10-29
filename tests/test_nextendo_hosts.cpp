@@ -66,11 +66,6 @@ int main() {
     assert(!ParseConfigIps("#define NEXTENDO_SERVER_IP_DEFAULT \"1.1.1.1\"\n")); // second IP missing
     assert(!ParseConfigIps("#define NEXTENDO_SERVER_IP_DEFAULT\n\"1.1.1.1\"\n#define NEXTENDO_SERVER_IP_NNCSD2 \"2.2.2.2\"\n"));
 
-    // firmware guard: exact versions of the pinned tag only
-    assert(FirmwareSupported(22, 5, 0) && FirmwareSupported(23, 0, 1));
-    assert(!FirmwareSupported(23, 0, 0) && !FirmwareSupported(22, 4, 0) && !FirmwareSupported(23, 1, 0) && !FirmwareSupported(0, 0, 0));
-    assert(AccountLinkAvailable(22) && !AccountLinkAvailable(23) && !AccountLinkAvailable(24));
-
     std::puts("test_nextendo_hosts: ok");
     return 0;
 }

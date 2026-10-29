@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.221 — Nextendo: Prelude releases reach users by Hub self-update (N.8)
+Hub carries Prelude-Nextendo v4.0.16 patches in romfs (nextendo_* folders) and writes/removes them itself; firmware list replaced by an ssl build-ID check; daily robot (prelude-sync.yml) syncs, tests, builds and releases; i18n filled for all languages.
+host tests: pass (nextendo + i18n contract) | nro: not built | switch: pending (ssl ID via ldr:dmnt, patch install, update.te keeps nextendo_*)
+
 ## v0.14.220 — calibration: a cut-off counts as a whole discharge
 The wizard state keeps the percent at the drain start (from1/from2). A cut-off after a drain that began at 95 % or more sets the cycle's discharge to 90 %, so a lagging cycle total (the gauge chip loses its count in a hard cut-off) cannot block the cycle; the numbers go to the log.
 host tests: pass (quick) | nro: not built | switch: pending

@@ -1,0 +1,183 @@
+# Prelude-Nextendo -> Kefir Hub, with no human in the loop (decided 2026-10-29).
+# Once a day: if NextendoNetwork/Prelude-Nextendo has a new release, tools/nextendo/sync.py brings its hosts lines and
+# patch files into the Hub (strict checks stand in for a review), the host tests run, the NRO is built, the commit goes
+# to master and a release is published; the console's self-update picks it up.
+# The release is skipped when master already holds unreleased work (sphaira_VERSION != latest release tag): then only
+# the commit is pushed and the notice says so.
+# Notices: Telegram (repo secrets TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) and e-mail (an issue that mentions the owner).
+# Schedules run from the default branch only. Manual run: Actions > prelude-sync > Run workflow (dry_run on by default).
+name: prelude-sync
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Sync, test and build, but do not commit, release or open an issue"
+        type: boolean
+        default: true
+      tag:
+        description: "Prelude tag to sync (empty = latest release)"
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: prelude-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:20250728
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+      OWNER: rashevskyv
+    steps:
+    - name: Host tools
+      run: apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 g++ git curl ca-certificates
+
+    - uses: actions/checkout@v4
+      with:
+        ref: master
+        fetch-depth: 1
+
+    - name: Release gate
+      id: gate
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        cur=$(sed -n 's/^set(sphaira_VERSION \([0-9.]*\))$/\1/p' sphaira/CMakeLists.txt)
+        rel=$(curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+          "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest" \
+          | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')
+        echo "master=$cur released=$rel"
+        echo "can_release=$([ "$cur" = "$rel" ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
+        echo "unreleased=$cur" >> "$GITHUB_OUTPUT"
+
+    - name: Sync Prelude-Nextendo
+      id: sync
+      run: python3 tools/nextendo/sync.py --bump ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} | tee -a "$GITHUB_OUTPUT"
+
+    - name: Host tests
+      if: steps.sync.outputs.changed == '1'
+      run: |
+        tests/run.sh --quick
+        python3 tests/test_nextendo_sync_contract.py
+        python3 tests/test_i18n_deployment_contract.py
+
+    # the same toolchain as build_presets.yml (a push made with GITHUB_TOKEN does not start that workflow)
+    - uses: lukka/get-cmake@v3.31.6
+      if: steps.sync.outputs.changed == '1'
+
+    - name: Build NRO
+      if: steps.sync.outputs.changed == '1'
+      env:
+        LIBNX_SHA: feebd026ca0f5dcc2119f46ad8e0d16ad3dd4973
+      run: |
+        wget -qO- https://github.com/switchbrew/libnx/archive/$LIBNX_SHA.tar.gz | tar zxf - -C /tmp
+        make -C /tmp/libnx-$LIBNX_SHA -j$(nproc)
+        make -C /tmp/libnx-$LIBNX_SHA install
+        dkp-pacman -S --noconfirm --needed switch-libarchive
+        cmake --preset ReleaseWithInstall
+        cmake --build --preset ReleaseWithInstall --parallel $(nproc)
+        cp build/ReleaseWithInstall/kefir-hub.nro build/prelude_sync/kefir-hub.nro
+
+    - uses: actions/upload-artifact@v4
+      if: steps.sync.outputs.changed == '1'
+      with:
+        name: prelude-sync-${{ steps.sync.outputs.tag }}
+        path: build/prelude_sync/
+
+    - name: Commit to master
+      if: steps.sync.outputs.changed == '1' && env.DRY_RUN != 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add sphaira/include/nextendo_snapshot.hpp assets/romfs/nextendo sphaira/CMakeLists.txt docs/dev/CHANGELOG.md
+        git commit -m "v${{ steps.sync.outputs.version }}: Prelude-Nextendo ${{ steps.sync.outputs.tag }} (robot)"
+        git push origin HEAD:master
+
+    - name: Release
+      id: release
+      if: steps.sync.outputs.changed == '1' && env.DRY_RUN != 'true' && steps.gate.outputs.can_release == '1'
+      run: |
+        v=${{ steps.sync.outputs.version }}
+        python3 - "$v" > /tmp/release.json <<'EOF'
+        import json, sys
+        v = sys.argv[1]
+        body = open("build/prelude_sync/release.md", encoding="utf-8").read()
+        print(json.dumps({"tag_name": v, "target_commitish": "master", "name": "Kefir Hub " + v, "body": body}))
+        EOF
+        id=$(curl -fsSL -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
+          --data @/tmp/release.json "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" \
+          | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+        curl -fsSL -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/octet-stream" \
+          --data-binary @build/prelude_sync/kefir-hub.nro \
+          "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=kefir-hub.nro" > /dev/null
+        echo "url=https://github.com/$GITHUB_REPOSITORY/releases/tag/$v" >> "$GITHUB_OUTPUT"
+
+    - name: Notify
+      if: always() && (failure() || steps.sync.outputs.changed == '1')
+      env:
+        TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        FAILED: ${{ failure() }}
+        CHANGED: ${{ steps.sync.outputs.changed }}
+        RELEASE_URL: ${{ steps.release.outputs.url }}
+        CAN_RELEASE: ${{ steps.gate.outputs.can_release }}
+        UNRELEASED: ${{ steps.gate.outputs.unreleased }}
+        TAG: ${{ steps.sync.outputs.tag }}
+        VERSION: ${{ steps.sync.outputs.version }}
+      run: |
+        mkdir -p build/prelude_sync
+        {
+          if [ "$FAILED" = "true" ]; then
+            echo "❌ Kefir Hub: синхронізація Prelude-Nextendo зупинилась."
+            if [ -f build/prelude_sync/refused.txt ]; then echo "Причина: $(cat build/prelude_sync/refused.txt)"; fi
+            echo "Нічого не опубліковано. Потрібна людина."
+          elif [ "$DRY_RUN" = "true" ]; then
+            echo "🧪 Пробний запуск: Prelude-Nextendo $TAG синхронізовано, тести й збірка пройшли. Нічого не опубліковано."
+          elif [ -n "$RELEASE_URL" ]; then
+            echo "✅ Kefir Hub $VERSION опубліковано з Prelude-Nextendo $TAG: $RELEASE_URL"
+            echo "Консолі отримають його через самооновлення Hub."
+          else
+            echo "⏸ Prelude-Nextendo $TAG закомічено в master як $VERSION, але реліз пропущено:"
+            echo "у master уже є невипущена робота ($UNRELEASED). Зробіть /deploy, коли вона готова."
+          fi
+          if [ "$CHANGED" = "1" ] && [ -f build/prelude_sync/summary.md ]; then echo; cat build/prelude_sync/summary.md; fi
+          if [ "$CHANGED" = "1" ] && [ "$DRY_RUN" != "true" ] && [ "$FAILED" != "true" ]; then
+            echo; echo "Перед наступним своїм комітом зробіть git pull: робот змінив master."
+          fi
+          echo; echo "Запуск: $RUN_URL"
+        } > build/prelude_sync/notice.txt
+        cat build/prelude_sync/notice.txt
+        if [ -n "$TG_TOKEN" ] && [ -n "$TG_CHAT" ]; then
+          head -c 4000 build/prelude_sync/notice.txt > /tmp/tg.txt
+          curl -fsS -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TG_CHAT" --data-urlencode "text@/tmp/tg.txt" \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null || echo "telegram notice failed"
+        else
+          echo "telegram secrets not set; skipped"
+        fi
+        if [ "$DRY_RUN" != "true" ]; then
+          python3 - > /tmp/issue.json <<'EOF'
+        import json, os
+        text = open("build/prelude_sync/notice.txt", encoding="utf-8").read()
+        title = "Prelude-Nextendo %s: %s" % (os.environ.get("TAG") or "?", "failed" if os.environ["FAILED"] == "true" else "synced")
+        print(json.dumps({"title": title, "body": "@%s\n\n%s" % (os.environ["OWNER"], text)}))
+        EOF
+          num=$(curl -fsSL -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
+            --data @/tmp/issue.json "https://api.github.com/repos/$GITHUB_REPOSITORY/issues" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["number"])') || { echo "issue notice failed"; exit 0; }
+          # the mention has sent the e-mail; a success needs no open issue, a failure stays open as a to-do
+          if [ "$FAILED" != "true" ]; then
+            curl -fsS -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
+              --data '{"state":"closed"}' "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$num" > /dev/null || true
+          fi
+        fi

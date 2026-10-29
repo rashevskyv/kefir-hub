@@ -24,14 +24,6 @@ namespace {
 using namespace detail;
 namespace nx = ::sphaira::nextendo;
 
-auto SupportedFirmwareText() -> std::string {
-    std::string out;
-    for (const auto& v : nx::kSupportedFirmware) {
-        out += (out.empty() ? "" : ", ") + std::to_string(v[0]) + "." + std::to_string(v[1]) + "." + std::to_string(v[2]);
-    }
-    return out;
-}
-
 auto InstalledFirmwareText() -> std::string {
     const auto v = hosversionGet();
     return std::to_string(HOSVER_MAJOR(v)) + "." + std::to_string(HOSVER_MINOR(v)) + "." + std::to_string(HOSVER_MICRO(v));
@@ -60,7 +52,7 @@ auto StatusText() -> std::string {
 
 auto StatusHelp() -> std::string {
     if (!nx::FirmwareOk()) {
-        return Fill("Nextendo needs system firmware %s until Kefir Hub is updated. It is switched off on this firmware."_i18n, SupportedFirmwareText());
+        return "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one."_i18n;
     }
     if (nx::CurrentMode() == nx::Mode::Other) {
         return "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on."_i18n;
@@ -112,7 +104,8 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(SettingsItem{
         "System firmware"_i18n,
-        Fill("Nextendo needs the latest system software that this Kefir Hub supports. Supported: %s"_i18n, SupportedFirmwareText()),
+        Fill("Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s"_i18n,
+             [](){ auto id = nx::SslBuildIdText(); return id.empty() ? std::string{"-"} : id; }()),
         [](){ return InstalledFirmwareText(); },
         {},
     });

@@ -13,12 +13,12 @@ static bool Has(const std::vector<Step>& p, Step s) {
 }
 
 int main() {
-    // emuMMC, Nextendo on, supported firmware, nothing on the card: write hosts, real PRODINFO, dns keys
+    // emuMMC, Nextendo on, supported firmware, nothing on the card: write hosts, real PRODINFO, dns keys, patches
     Inputs in;
     in.mode = Mode::EmuMMC;
     in.firmware_ok = true;
     auto p = MakePlan(in);
-    assert((p == std::vector<Step>{Step::WriteEmuHosts, Step::BlankProdinfoEmu0, Step::DnsMitmForNextendo}));
+    assert((p == std::vector<Step>{Step::WriteEmuHosts, Step::BlankProdinfoEmu0, Step::DnsMitmForNextendo, Step::InstallPatches}));
 
     // up to date: only the idempotent key steps remain (the executor writes a key only if it differs)
     in.emu_file = FileState::Current;
@@ -64,7 +64,7 @@ int main() {
     // Semi-stock, option on: sysmmc.txt, real PRODINFO for sysNAND, never emuMMC steps
     ss.sys_enabled = true;
     p = MakePlan(ss);
-    assert((p == std::vector<Step>{Step::WriteSysHosts, Step::BlankProdinfoSys0, Step::DnsMitmForNextendo}));
+    assert((p == std::vector<Step>{Step::WriteSysHosts, Step::BlankProdinfoSys0, Step::DnsMitmForNextendo, Step::InstallPatches}));
     assert(!Has(p, Step::BlankProdinfoEmu0) && !Has(p, Step::WriteEmuHosts));
 
     // Semi-stock, option off again with our file on the card: remove it, restore the user's backup,
@@ -90,37 +90,46 @@ int main() {
     back.sys_file = FileState::UserOwned; // a user sysmmc.txt is not touched
     assert(!Has(MakePlan(back), Step::RemoveSysHosts));
 
-    // patches follow "active": emuMMC on + stash from an earlier Semi-stock -> unstash
+    // patches follow "active": emuMMC on, files of this Hub already there -> nothing to write
     Inputs pa;
     pa.mode = Mode::EmuMMC;
     pa.firmware_ok = true;
     pa.emu_file = FileState::Current;
+    pa.patches_present = true;
+    pa.patches_current = true;
+    assert(!Has(MakePlan(pa), Step::InstallPatches) && !Has(MakePlan(pa), Step::RemovePatches));
+    // older files (new Hub version) or none (wiped): install from the Hub
+    pa.patches_current = false;
+    assert(Has(MakePlan(pa), Step::InstallPatches));
+    pa.patches_present = false;
+    assert(Has(MakePlan(pa), Step::InstallPatches));
+    // a Semi-stock copy is left over: drop it before the install, the Hub has its own files
     pa.stash_present = true;
-    assert(Has(MakePlan(pa), Step::UnstashPatches) && !Has(MakePlan(pa), Step::StashPatches));
-    // emuMMC with Nextendo off (or unsupported firmware): live patches go to the stash, hosts file untouched if not ours
-    pa.stash_present = false;
+    p = MakePlan(pa);
+    assert(std::find(p.begin(), p.end(), Step::DropStash) < std::find(p.begin(), p.end(), Step::InstallPatches));
+    // emuMMC with Nextendo off (or no ssl patch): live patches go, hosts file untouched if not ours, the stash stays
     pa.patches_present = true;
     pa.emu_enabled = false;
     pa.emu_file = FileState::UserOwned;
     p = MakePlan(pa);
-    assert((p == std::vector<Step>{Step::StashPatches}));
+    assert((p == std::vector<Step>{Step::RemovePatches}));
     pa.emu_enabled = true;
     pa.firmware_ok = false;
-    assert(Has(MakePlan(pa), Step::StashPatches));
-    // Semi-stock with the option off: stash; with the option on: unstash
+    assert(Has(MakePlan(pa), Step::RemovePatches) && !Has(MakePlan(pa), Step::InstallPatches));
+    // Semi-stock with the option off: remove; with the option on: install, never from the stash
     Inputs sp;
     sp.mode = Mode::SemiStock;
     sp.firmware_ok = true;
     sp.patches_present = true;
-    assert((MakePlan(sp) == std::vector<Step>{Step::StashPatches}));
+    assert((MakePlan(sp) == std::vector<Step>{Step::RemovePatches}));
     sp.patches_present = false;
     sp.stash_present = true;
     sp.sys_enabled = true;
     p = MakePlan(sp);
-    assert(Has(p, Step::UnstashPatches) && Has(p, Step::WriteSysHosts));
-    // nothing live, nothing stashed: no stash steps
-    sp.stash_present = false;
-    assert(!Has(MakePlan(sp), Step::UnstashPatches) && !Has(MakePlan(sp), Step::StashPatches));
+    assert(Has(p, Step::InstallPatches) && Has(p, Step::DropStash) && Has(p, Step::WriteSysHosts));
+    // option off, nothing live, Semi-stock's copy present: leave it for Semi-stock to move back
+    sp.sys_enabled = false;
+    assert(MakePlan(sp).empty());
 
     // plain sysNAND: nothing, even with stale files lying around
     Inputs other;

@@ -74,7 +74,10 @@ If no translation exists for your firmware, the first row shows your firmware an
 - [[Nextendo on emuMMC]] is on by default; changing it asks for a hold of **A** and restarts the console only if a file really changed
 - [[Nextendo on sysNAND (Semi-stock)]] is shown only while Semi-stock is on; it is off by default; the warning says the Nintendo services then go to Nextendo and the eShop may stop working
 - leaving Semi-stock (back in the emuMMC) removes the sysNAND hosts file and switches that option off
-- [[System firmware]] shows the installed version; Nextendo works only on the firmware versions listed in the description (22.5.0 and 23.0.1 for the pinned release); on any other version Nextendo is switched off until Kefir Hub is updated
+- [[System firmware]] shows the installed version; the description shows the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch
+- Kefir Hub carries the Nextendo patches itself (game patches, certificate patches, browser certificates) and writes them to the card at start: folders `nextendo_*` in `atmosphere/exefs_patches` and `atmosphere/nro_patches`, and `atmosphere/contents/0100000000000803`; when Nextendo is off they are deleted
+- a Kefir update keeps the `nextendo_*` folders; Semi-stock moves them out of the way while it is on
+- new Prelude-Nextendo releases reach the console as an ordinary Kefir Hub update (the Hub updates itself); no Kefir update is needed
 - [[Server]] shows the server address used in the hosts file; [[Release]] shows the Prelude-Nextendo release the build is based on
 - the text of the license notice: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0
 -->

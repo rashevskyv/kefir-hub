@@ -705,6 +705,7 @@ Design rules:
       `prefix_dirs`) so Semi-stock can move them with one wildcard. `update.te` needs no change: it deletes `exefs_patches` and
       recopies the new release (which carries the patches); the Hub re-stashes them on start when Nextendo is off; `atmostock.ini`
       stays (hekate entry with the popup, N.5c).
+      **Superseded 2026-10-29 by N.8:** the Kefir build no longer carries anything of Prelude; the Hub does.
 - [x] N.5b **Semi-stock** (`switch/.packages/package.ini`, `config/sphaira/packages/package.ini` in `_kefir`,
       `config/semistock/restore.te`): on = move what Nextendo adds to `/config/semistock/nextendo/` (the game patch
       folders in `exefs_patches/`, `nextendo_bcat_signature`, `contents/0100000000000803`). Do NOT move
@@ -723,6 +724,15 @@ Design rules:
 - [-] N.6 ~~Account Link~~ dropped 2026-10-29: the Prelude fallback (`network_mitm` 4200000000000666) only fixes 0x167B
       with a blank PRODINFO; Kefir uses the real PRODINFO in Nextendo mode, the binary aborts the boot on HOS >= 23.0.0
       (Prelude issue #42), and it is not built from source. Per-game installers stay out of scope.
+- [x] N.8 **Prelude releases reach users with no human step** (decided 2026-10-29). The Hub carries the patch files
+      in its romfs (`assets/romfs/nextendo/sd/`, list `kPatchFiles`) with every folder named `nextendo_*`, and writes
+      or deletes them in `Reconcile` (`InstallPatches` / `RemovePatches` / `DropStash`). The firmware list is gone:
+      the Hub reads the ssl build ID (pm:dmnt + ldr:dmnt) and looks for its IPS in `nextendo_disable_ca_verification`.
+      `tools/nextendo/sync.py` (strict checks instead of a review) + `.github/workflows/prelude-sync.yml` (daily: sync,
+      tests, NRO, commit, release, Telegram + issue mention). `update.te` keeps `nextendo_*`; Semi-stock also moves
+      `nro_patches/nextendo_*`. Kefirosphere: the Prelude rule in `fetch_tools.py` is removed.
+      **[USER]** repo secrets `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; merge to master + push; one dry run.
+      **[USER]** console: ssl build ID shown on the Nextendo page (ldr:dmnt allowed), patches written, `update.te` keeps them.
 - [ ] N.7 Build checkpoint, docs per `update-docs` skill (EN + UK wiki, license notice, firmware table), `[USER]` leftovers.
 
 [USER] checks (hardware):
