@@ -1,6 +1,7 @@
 #include "ui/menus/console_files_transfer.hpp"
 
 #include "ui/menus/filebrowser.hpp"
+#include "ui/menus/homebrew.hpp"
 #include "ui/menus/install_share.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
@@ -309,6 +310,9 @@ Result ReceiveItems(ProgressBox* pbox, const ReceiveChoice& choice, const std::v
             sd.DeleteFile(target);
             R_TRY(sd.RenameFile(tmp, target));
         }
+
+        // the Homebrew list (and any other view of the card) learns of the new item without a restart.
+        homebrew::NotifyPathChanged(target.toString(), item.dir && choice.unpack);
     }
     R_SUCCEED();
 }

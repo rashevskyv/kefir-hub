@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.227 — Receive files: the Homebrew list updates by itself
+Each received file or folder tells the Homebrew scan about its path (as FTP and MTP already do), so a received app shows up without restarting Kefir Hub.
+host tests: not run | nro: not built | switch: pending (receive a homebrew folder, see it in Homebrew at once)
+
 ## v0.14.226 — Console Transfer: send a homebrew, a bar on the sending console, a readable server window
 Homebrew + → Send to another console packs the app's whole folder. The sender's server window now shows a bar for each file it serves (Sending: <name>). The second line of a server window (the instruction under the address) runs the full width of the box, under the QR code.
 host tests: files_transfer_plan pass | nro: not built | switch: pending
