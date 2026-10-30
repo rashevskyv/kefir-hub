@@ -130,6 +130,10 @@ private:
     s64 m_selected_count{};
     std::unique_ptr<List> m_list{};
     bool m_dirty{};
+    // the application records as one number at the last scan: a game installed, updated or deleted while another
+    // screen was on top (the USB install over this list) changes it, and the list rescans when it gets the focus back
+    u64 m_records_fp{};
+    static auto RecordsFingerprint() -> u64;
     bool m_pdm_initialized{};
     // applied while scanning, so there is no second copy of the list to keep
     // in sync with selection, sizes and deletes.

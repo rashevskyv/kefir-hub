@@ -20,6 +20,10 @@ Each game shows small badges:
 
 Games with no installed content or unreadable data also appear, unless you turn off [[Show unavailable games]] (see [Options](#options)).
 
+<!-- draft
+- the list rescans by itself when a game was installed, updated or deleted while another screen was on top of it (a USB install that opened over the list, the installer, the file browser): on the way back the toast [[Updating application record list]] shows and the new game is in the list; [[Refresh]] is only needed when nothing changed in the console's records (a file copied by hand)
+-->
+
 ## Launch a game
 1. Focus the game.
 2. Press **L3** (press the left stick in).

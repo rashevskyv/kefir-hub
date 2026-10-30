@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.239 — Games list rescans when the records changed under another screen (owner, 2026-10-30)
+A USB install that opened over the Games list left the list as it was: `OnFocusGained` only re-sorted. Now `Menu::RecordsFingerprint()` (a hash of every application record's id and last_updated, one `nsListApplicationRecord` pass) is kept at the scan and compared when the list gets the focus back; a difference sets `m_dirty`, so the next Update rescans with the "Updating application record list" toast. Docs draft (EN, UK).
+host tests: pass (--quick) | nro: built | switch: pending (open Games, install over USB, come back: the new game is in the list)
+
 ## v0.14.238 — Battery calibration: a cut-off is found by the log too, not only by the boot time (owner, 2026-10-30)
 After a cut-off (red battery) and a start on the charger the Hub went on with "Cycle 1: drain to the cut-off": `Check` took the boot for the same one (`Rebooted` by now minus uptime) and returned Nothing/HubRestarted. Now `Battery::cut_in_log` (a `Cutoffs()` entry of this cycle at or after `drain_time`) with the charger in counts as the cut-off whatever the boot time says: `Found::CutoffCharging` -> the zero (cycle 1) and the charge page. `Resume` logs its decision (`[Calib] resume: ...`: marker, boot times, charger, log). Host test extended.
 host tests: pass (--quick) | nro: built | switch: pending (drain to the red battery, charger in, switch on, open the Hub: the zero page, then the charge page; log.txt has the resume line)

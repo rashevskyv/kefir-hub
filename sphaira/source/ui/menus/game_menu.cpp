@@ -499,6 +499,10 @@ void Menu::OnFocusGained() {
         ScanHomebrew();
         return;
     }
+    if (RecordsFingerprint() != m_records_fp) {
+        m_dirty = true; // something was installed or deleted meanwhile: Update rescans
+        return;
+    }
     AppendGameCardEntries();
     SortAndFindLastFile(false);
 }

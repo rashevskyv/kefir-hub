@@ -20,6 +20,10 @@
 
 Ігри без встановленого вмісту або з даними, які не вдалося прочитати, теж показуються, доки ви не вимкнете [[Show unavailable games]] (див. [Параметри](#options)).
 
+<!-- draft
+- the list rescans by itself when a game was installed, updated or deleted while another screen was on top of it (a USB install that opened over the list, the installer, the file browser): on the way back the toast [[Updating application record list]] shows and the new game is in the list; [[Refresh]] is only needed when nothing changed in the console's records (a file copied by hand)
+-->
+
 ## Запустити гру
 1. Наведіть на гру.
 2. Натисніть **L3** (натисніть лівий стік).

@@ -77,8 +77,19 @@ void Menu::AppendGameCardEntries() {
     }
 }
 
+auto Menu::RecordsFingerprint() -> u64 {
+    u64 fp = 0;
+    title::ForEachApplicationRecord([&](std::span<const NsApplicationRecord> records) {
+        for (const auto& e : records) {
+            fp = fp * 1000003u + (e.application_id ^ (static_cast<u64>(e.last_updated) << 1)) + 1;
+        }
+    });
+    return fp;
+}
+
 void Menu::ScanHomebrew() {
     constexpr auto ENTRY_CHUNK_COUNT = 1000;
+    m_records_fp = RecordsFingerprint();
     const auto show_unavailable = m_show_unavailable.Get();
     const auto hide_forwarders = m_hide_forwarders.Get();
     TimeStamp ts;
