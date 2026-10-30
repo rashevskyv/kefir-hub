@@ -103,7 +103,9 @@ Intro (2 pages) -> "Start calibration" writes a fresh marker and an empty wizard
 1 Reset the gauge (`RunReset` at once: a ProgressBox backs up and resets, at any charge level); 2 and 3 Cycle (page: Start the drain
 or, when 90 % is drained, Start charging; `StartDrainRun` / `StartChargeRun`); 4 Report; 5 Transfer (ledger, applied at the next Hub
 start in another system by `ApplyLedger`). `Resume` at the Hub start (10 s after launch, `PollCalibration`): a drain that was running
-goes on (Hub restart = same boot; cut-off = new boot without the charger -> tail mode).
+goes on (Hub restart = same boot; cut-off = new boot without the charger -> tail mode). A sleep at a low battery while the drain
+page runs (a gap > `CUTOFF_GAP_S` in the tick, charger out, mv <= `CUTOFF_MAX_MV`) is a cut-off too (0.14.234,
+`DrainMenu::OnSleptAwake`): an `S` flag line in the CSV, `Marker::cutoffs++`, the run goes to the tail at once.
 
 ### 4.3 Known gaps (not done)
 - Auto start of the drain when the charger comes out (the old page had `AutoDrainTick`).

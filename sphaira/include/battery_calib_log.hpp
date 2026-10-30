@@ -17,7 +17,9 @@ inline constexpr const char* LOG_HEADER = "time,kind,step,psm_pct,gauge_pct,rem_
 
 struct Sample {
     std::int64_t time{};   // unix time
-    char kind{'D'};        // 'D' drain, 'C' charge
+    char kind{'D'};        // 'D' drain, 'C' charge. A line of kind 'S' is a flag, not a sample: the console slept at a low
+                           // battery and was woken (the drain page writes it; ParseLine skips it, so the gap around it counts
+                           // as a cut-off in Cutoffs)
     int step{1};           // the calibration step (1 to 4) the line belongs to
     int psm_pct{-1};       // what the console shows
     int gauge_pct{-1};     // the gauge's own RepSOC

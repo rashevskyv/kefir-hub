@@ -21,6 +21,7 @@ int main() {
     assert(!ParseLine(LOG_HEADER));                 // the header is not a sample
     assert(!ParseLine("1000,D,3,12,15,480"));          // a half-written line
     assert(!ParseLine("1000,X,3,12,15,480,3200,3410,-950,31.5,1,100,0")); // an unknown kind
+    assert(!ParseLine("1000,S,1,3,2,-1,-1,3380,0,0.0,0,0,0"));            // the sleep flag is not a sample
 
     std::string log = LOG_HEADER;
     a.rem_mah = 480; a.time = 1000; log += FormatLine(a);

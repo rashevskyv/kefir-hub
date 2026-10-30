@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.234 — Battery calibration: a sleep at a low battery counts as the cut-off (owner, 2026-10-30)
+On the drain page a gap > 30 s in the once-a-second tick with the charger out and the cell at <= 3.50 V means the console slept (the lock screen at a low battery) and was woken: `DrainMenu::OnSleptAwake` writes an `S` flag line into calib-log.csv (parsers skip it, so the gap counts as a cut-off), bumps `Marker::cutoffs`, and switches the run to the tail at once (load off, brightness at the minimum), so the last percent drains at rest. Toast "The console slept: the drain goes on slowly"; the reason goes to log.txt. Docs draft (EN, UK), HANDOFF.
+host tests: pass (--quick) | nro: built | switch: pending (sleep the console near empty during the drain, wake it: the toast, the tail title, the `S` line)
+
 ## v0.14.233 — Battery calibration: the reset at any charge level (owner, 2026-10-30)
 Step 1 no longer charges to 100 % first: `RunReset` runs `ResetNow` at once (backup, factory model). `FactoryInit` seeds RemCap/RepSOC from VFSOC, so the gauge does not need a full battery; the 100 % gate (`WaitForFull`, `MIN_FULL_MV`) and the reset charge run on the drain page (`CalibRun::reset`, `AskReset`) are gone. Flow: reset -> cycle 1 drain -> the zero -> charge -> cycle 2. Texts, docs draft (EN, UK), BATTERY-HANDOFF updated.
 host tests: pass (--quick) | nro: built | switch: pending (Reset the gauge at a partial charge; cycle 1 opens after it)

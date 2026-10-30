@@ -1,4 +1,5 @@
 #include "battery_drain_menu.hpp"
+#include "battery_calib_internal.hpp"
 
 namespace sphaira::battery {
 
@@ -371,6 +372,12 @@ void DrainMenu::CalibTick() {
     if (m_calib_last && now > m_calib_last && now - m_calib_last <= 5) {
         m_run_s += static_cast<u64>(now - m_calib_last);
     }
+    // a gap in the once-a-second tick with the charger out and the voltage low: the console slept and was woken (the same
+    // gap and voltage that Cutoffs() in the log calls a cut-off)
+    if (!m_calib->charge && !m_calib->tail && !m_charger && m_calib_last && now - m_calib_last > calib::CUTOFF_GAP_S
+        && m_mv > 0 && m_mv <= calib::CUTOFF_MAX_MV) {
+        OnSleptAwake(now);
+    }
     m_calib_last = now;
     if (m_log) {
         calib::Sample sm;
@@ -415,6 +422,24 @@ void DrainMenu::CalibTick() {
         SetPop();
         done();
     }
+}
+
+void DrainMenu::OnSleptAwake(s64 now) {
+    const auto slept = now - m_calib_last;
+    m_calib->tail = true;  // the next poll: load off (g_load), the tail brightness (ApplyCalibScreen), the tail title
+    m_calib_mode = -1;
+    if (auto m = calib_flow::LoadMarker()) {
+        m->cutoffs++; // a Hub started again after this goes on in the tail too
+        calib_flow::SaveMarker(*m);
+    }
+    if (m_log) {
+        std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,0\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_mv);
+        std::fflush(m_log);
+        fsdevCommitDevice("sdmc");
+    }
+    log_write("[Calib] the console slept %lld s at %d mV (%d %%): counted as a cut-off, the tail mode from here\n",
+              static_cast<long long>(slept), m_mv, m_pct);
+    App::Notify("The console slept: the drain goes on slowly"_i18n);
 }
 
 auto DrainMenu::CalibTitle() const -> std::string {
