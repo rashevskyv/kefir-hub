@@ -3970,5 +3970,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "重置不需要充電：一次完成。然後拔掉充電器，將主機放在桌子上：Hub 會自動將其充滿電。當主機關機時，重新開機並打開 Kefir Hub。當它完全無法開機時，插入充電器並充至 100 %。",
   "The console slept: the drain goes on slowly": "主機處於睡眠狀態：電量正在緩慢消耗",
   "FOLDERS": "資料夾",
-  "The console slept: the drain is over": "主機已進入睡眠：耗電已結束"
+  "The console slept: the drain is over": "主機已進入睡眠：耗電已結束",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "應用程式獲得的虛擬記憶體大小。保留自動（39-bit）。42-bit 是最寬的，但此類引導程式（forwarder）可能無法啟動（在 23.0.1 上無法啟動）；請僅在有需要時嘗試。36-bit：僅當舊應用程式無法啟動時。32-bit 與 32-bit（無別名）：僅當應用程式本身請求時（Wine-NX、Box64）。"
 }

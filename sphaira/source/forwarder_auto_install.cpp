@@ -262,7 +262,7 @@ auto InstallKefirHubForwarder(u64 kefirhub_tid) -> bool {
     }
 
     ForwarderOptions options{};
-    options.address_space = ForwarderAddressSpaceDefault(); // 42-bit on 23.0.0+, 39-bit before
+    options.address_space = ForwarderAddressSpaceDefault(); // 39-bit (42-bit did not start on 23.0.1)
     options.core_mode = CpuCoreMode::Three;
     options.screenshot = true;
     options.video_capture = true;

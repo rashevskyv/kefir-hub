@@ -3912,5 +3912,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Nullimine ei vaja laadimist: see tehakse korraga. Seejärel võtke laadija välja ja jätke konsool lauale: Hub annab sellele ise täislaadimise. Kui konsool lülitub välja, lülitage see uuesti sisse ja avage Kefir Hub. Kui see üldse enam ei käivitu, ühendage laadija sisse ja laadige 100 %-ni.",
   "The console slept: the drain goes on slowly": "Konsool oli puhkerežiimil: tühjenemine jätkub aeglaselt",
   "FOLDERS": "Kaustad",
-  "The console slept: the drain is over": "Konsool oli unerežiimis: voolutarve on läbi"
+  "The console slept: the drain is over": "Konsool oli unerežiimis: voolutarve on läbi",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kui palju virtuaalset mälu rakendus saab. Jäta Automaatne (39-bitine). 42-bitine on suurim, kuid selline käiviti ei pruugi käivituda (ei käivitunud 23.0.1-l); proovi seda ainult sihipäraselt. 36-bitine: ainult siis, kui vana rakendus ei käivitu. 32-bitine ja 32-bitine (ilma aliasteta): ainult siis, kui rakendus ise seda küsib (Wine-NX, Box64)."
 }

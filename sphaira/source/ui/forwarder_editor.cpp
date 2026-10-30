@@ -297,8 +297,8 @@ private:
                     case ForwarderAddressSpace::Bit39: m_values.options.address_space = ForwarderAddressSpace::Bit36; break;
                     case ForwarderAddressSpace::Bit36: m_values.options.address_space = ForwarderAddressSpace::Bit32; break;
                     case ForwarderAddressSpace::Bit32: m_values.options.address_space = ForwarderAddressSpace::Bit32NoAlias; break;
-                    // 42-bit only where the firmware runs it (23.0.0+); older: back to 39-bit
-                    case ForwarderAddressSpace::Bit32NoAlias: m_values.options.address_space = ForwarderAddressSpaceDefault(); break;
+                    // 42-bit is offered as the last step: a choice on purpose, not the default
+                    case ForwarderAddressSpace::Bit32NoAlias: m_values.options.address_space = ForwarderAddressSpace::Bit42; break;
                 }
                 break;
             case Row::CpuCores:
@@ -487,7 +487,7 @@ private:
 
     auto GetRowHint(Row row) const -> std::string {
         if (row == Row::AddressSpace) {
-            return "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n;
+            return "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n;
         }
         return {};
     }

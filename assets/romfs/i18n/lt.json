@@ -3912,5 +3912,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Atstatymui nereikia įkrovimo: tai atliekama iš karto. Tada ištraukite įkroviklį ir palikite konsolę ant stalo: „Hub“ pats ją pilnai įkraus. Kai konsolė išsijungia, vėl ją įjunkite ir atidarykite „Kefir Hub“. Kai ji visiškai nustoja įsijungti, prijunkite įkroviklį ir įkraukite iki 100 %.",
   "The console slept: the drain goes on slowly": "Konsolė miegojo: išsikrovimas vyksta lėtai",
   "FOLDERS": "Aplankai",
-  "The console slept: the drain is over": "Konsole užmigo: išsikrovimas baigėsi"
+  "The console slept: the drain is over": "Konsole užmigo: išsikrovimas baigėsi",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kiek virtualios atminties gauna programėlė. Palikite Automatinį (39-bitų). 42 bitai yra didžiausias, bet toks paleidiklis gali nepasileisti (nepasileido 23.0.1); bandykite tikslingai. 36 bitai: tik jei sena programėlė nepasileidžia. 32 bitai ir 32 bitai (be pseudonimo): tik tada, kai pati programėlė to prašo („Wine-NX“, „Box64“)."
 }

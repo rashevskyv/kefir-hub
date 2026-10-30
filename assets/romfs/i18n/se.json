@@ -3917,5 +3917,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Återställningen kräver ingen laddning: den utförs på en gång. Ta sedan ur laddaren och lämna konsolen på ett bord: Hubben ger den en full laddning på egen hand. När konsolen stängs av, slå på den igen och öppna Kefir Hub. När den inte startar alls längre, anslut laddaren och ladda till 100 %.",
   "The console slept: the drain goes on slowly": "Konsolen sov: batteriet ladas ur långsamt",
   "FOLDERS": "Mappar",
-  "The console slept: the drain is over": "Konsolen sov: urladdningen är över"
+  "The console slept: the drain is over": "Konsolen sov: urladdningen är över",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hur mycket virtuellt minne appen får. Lämna på Automatiskt (39-bitars). 42-bitars är störst, men en sådan forwarder kanske inte startar (den gjorde inte det på 23.0.1); prova endast medvetet. 36-bitars: endast om en gammal app inte startar. 32-bitars och 32-bitars (utan alias): endast när appen själv begär det (Wine-NX, Box64)."
 }

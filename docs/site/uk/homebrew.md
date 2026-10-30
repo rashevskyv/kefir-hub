@@ -125,8 +125,8 @@ Kefir Hub видаляє файл `.nro`. Папка застосунку та �
 
 <!-- draft
 - [[Address space]] / [[Address Space]] has a new value [[42-bit]] (the widest; DBI calls it "42 Bit"); it needs firmware 23.0.0 or newer: on an older firmware a 42-bit forwarder does not start
-- [[Automatic]] now means 42-bit on firmware 23.0.0 and newer and 39-bit before; the default stays [[Automatic]]
-- in the forwarder editor the value cycles 42-bit → 39-bit → 36-bit → 32-bit → 32-bit (no alias) → back to 42-bit (or 39-bit on an older firmware)
+- [[Automatic]] means 39-bit (0.14.241; in 0.14.232-240 it was 42-bit on firmware 23.0.0+, and such a HOME tile did not start on 23.0.1 / Atmosphère 1.12.1); the default stays [[Automatic]]; a tile made with 42-bit that does not open: delete it and make it again
+- in the forwarder editor the value cycles 42-bit → 39-bit → 36-bit → 32-bit → 32-bit (no alias) → back to 42-bit; 42-bit is a choice on purpose, the hint says it may not start
 -->
 | Опція | Що робить | Типово |
 |---|---|---|

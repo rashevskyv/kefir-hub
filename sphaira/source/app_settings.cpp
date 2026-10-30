@@ -153,7 +153,7 @@ auto App::GetInstallReserveSdMb() -> long {
 auto App::GetForwarderOptions() -> ForwarderOptions {
     ForwarderOptions out{};
     out.profile_selection = g_app->m_forwarder_profile_select.Get();
-    // 0 = auto (42-bit on 23.0.0+, else 39-bit), 1 = 36-bit, 2 = 39-bit, 3 = 32-bit, 4 = 32-bit (no alias), 5 = 42-bit.
+    // 0 = auto (39-bit), 1 = 36-bit, 2 = 39-bit, 3 = 32-bit, 4 = 32-bit (no alias), 5 = 42-bit.
     switch (GetForwarderAddressSpace()) {
         case 1: out.address_space = ForwarderAddressSpace::Bit36; break;
         case 2: out.address_space = ForwarderAddressSpace::Bit39; break;

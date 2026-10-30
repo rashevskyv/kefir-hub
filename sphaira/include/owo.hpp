@@ -20,9 +20,10 @@ enum class ForwarderAddressSpace : u8 {
     Bit42 = 4,        // AddressSpace64Bit42, [23.0.0+] (libnx CreateProcessFlagAddressSpace_64Bit42): the widest, DBI's "42 Bit".
 };
 
-// the widest space this firmware runs: 42-bit from 23.0.0, 39-bit before (a 42-bit npdm does not start on an older one)
+// what "Automatic" means: 39-bit. 42-bit was the default on 23.0.0+ in 0.14.232-240, and such a forwarder did not start on
+// the owner's 23.0.1 / Atmosphère 1.12.1 (the HOME tile did nothing). 42-bit stays a choice for who wants to try it.
 inline auto ForwarderAddressSpaceDefault() -> ForwarderAddressSpace {
-    return hosversionAtLeast(23, 0, 0) ? ForwarderAddressSpace::Bit42 : ForwarderAddressSpace::Bit39;
+    return ForwarderAddressSpace::Bit39;
 }
 
 // the kac ForceDebug bit. automatic follows the ams version, see patch_npdm().

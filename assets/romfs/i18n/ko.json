@@ -3917,5 +3917,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "재설정에는 충전이 필요하지 않으며 한 번에 완료됩니다. 그 후 충전기를 빼고 콘솔을 테이블 위에 두세요. Hub가 스스로 완전히 충전합니다. 콘솔이 꺼지면 다시 켜고 Kefir Hub를 여세요. 아예 켜지지 않게 되면 충전기를 꼽고 100 %까지 충전하세요.",
   "The console slept: the drain goes on slowly": "본체가 절전 상태였습니다: 배터리가 서서히 소모되는 중입니다",
   "FOLDERS": "폴더",
-  "The console slept: the drain is over": "본체가 절전 모드였습니다: 소모가 종료되었습니다"
+  "The console slept: the drain is over": "본체가 절전 모드였습니다: 소모가 종료되었습니다",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "앱이 받는 가상 메모리 양입니다. 자동(39비트)으로 두세요. 42비트는 가장 넓지만, 그러한 포워더는 시작되지 않을 수 있습니다(23.0.1에서는 시작되지 않았음); 의도적으로 필요한 경우에만 시도하세요. 36비트: 오래된 앱이 시작되지 않는 경우에만. 32비트 및 32비트(별칭 없음): 앱 자체가 요청할 때만(Wine-NX, Box64)."
 }

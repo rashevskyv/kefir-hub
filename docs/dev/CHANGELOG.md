@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.241 — Forwarders: Automatic is 39-bit again; 42-bit stays an explicit choice (owner, 2026-10-30)
+A HOME tile for the Hub made on 23.0.1 / Atmosphère 1.12.1 with the 0.14.232 default (42-bit) did nothing when opened. `ForwarderAddressSpaceDefault()` returns `Bit39`; the editor cycles ... → 32-bit (no alias) → 42-bit; the hint says 42-bit may not start. Docs drafts (homebrew, settings; EN, UK) corrected. A tile made with 42-bit: delete it and make it again.
+host tests: pass (--quick) | nro: built | switch: pending (a new Hub tile from hbmenu with Automatic opens)
+
 ## v0.14.240 — Battery calibration: a sleep at a low battery counts also when the console wakes on the charger (owner, 2026-10-30)
 The owner's log (0.14.238): the drain ran to 3205 mV at 1 %, the console slept 5 minutes, woke with the charger in, and the page said "the drain is paused" (the Hub never restarted, so no resume; `OnSleptAwake` asked for the charger to be out *after* the gap). Now the values before the gap decide (`m_tick_mv`, `m_tick_charger`: on battery and <= 3.50 V), the wake may be on the charger; then the next tick ends the drain (`on_drained`: the zero, the charge page). The `S` line carries the pre-gap voltage and the charger now; toast "The console slept: the drain is over" on the charger.
 host tests: pass (--quick) | nro: built | switch: pending (drain to the sleep, plug the charger in, wake: the zero page, then the charge page)

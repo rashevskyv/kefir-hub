@@ -3944,5 +3944,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "O reinício não precisa de carga: é feito de imediato. Depois, retire o carregador e deixe a consola numa mesa: o Hub dá-lhe uma carga completa por si só. Quando a consola se desligar, ligue-a novamente e abra o Kefir Hub. Quando deixar de ligar de todo, ligue o carregador e carregue a 100 %.",
   "The console slept: the drain goes on slowly": "A consola entrou em suspensão: o descarregamento continua lentamente",
   "FOLDERS": "Pastas",
-  "The console slept: the drain is over": "A consola entrou em suspensão: o consumo terminou"
+  "The console slept: the drain is over": "A consola entrou em suspensão: o consumo terminou",
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Quanta memória virtual a aplicação obtém. Deixe em Automático (39-bit). 42-bit é o mais amplo, mas esse forwarder pode não iniciar (não iniciou na 23.0.1); tente apenas de propósito. 36-bit: apenas se uma aplicação antiga não iniciar. 32-bit e 32-bit (sem alias): apenas quando a própria aplicação o solicitar (Wine-NX, Box64)."
 }
