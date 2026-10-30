@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "Yüklü emülatörler için BIOS ve ROM dosyaları.",
   "Download the marked files": "İşaretli dosyaları indir",
   "on the card": "kartta",
-  "Remove the collection": "Koleksiyonu kaldır"
+  "Remove the collection": "Koleksiyonu kaldır",
+  "Popular for ": "Popüler olanlar: ",
+  "Searching archive.org": "archive.org aranıyor",
+  "Nothing found": "Hiçbir şey bulunamadı",
+  "downloads": "İndirmeler",
+  "Could not search archive.org": "archive.org içinde arama yapılamadı",
+  "Popular on archive.org": "archive.org üzerinde popüler",
+  "Words from the title, for example a game or a set name": "Başlıktaki kelimeler, örneğin bir oyun veya set adı",
+  "Search archive.org": "archive.org'da ara",
+  "Enter an item id": "Bir öğe kimliği girin"
 }

@@ -51,6 +51,13 @@ inline std::string HttpFixtureName(std::string_view url, std::string_view post) 
         std::snprintf(hash, sizeof(hash), ".%08x", static_cast<unsigned>(Fnv1a32(post)));
         out += hash;
     }
+    // a long query (an archive.org search) would not fit a file name: the tail is folded into a hash
+    constexpr size_t MAX_NAME = 160;
+    if (const auto slash = out.rfind('/'); out.size() - slash - 1 > MAX_NAME) {
+        char hash[16];
+        std::snprintf(hash, sizeof(hash), ".%08x", static_cast<unsigned>(Fnv1a32(out.substr(slash + 1))));
+        out = out.substr(0, slash + 1 + MAX_NAME) + hash;
+    }
     return out;
 }
 

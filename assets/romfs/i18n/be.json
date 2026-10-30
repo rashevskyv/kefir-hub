@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "Файлы BIOS і ROM для ўсталяваных эмулятараў.",
   "Download the marked files": "Спампаваць пазначаныя файлы",
   "on the card": "на карце",
-  "Remove the collection": "Выдаліць калекцыю"
+  "Remove the collection": "Выдаліць калекцыю",
+  "Popular for ": "Папулярнае для ",
+  "Searching archive.org": "Пошук на archive.org",
+  "Nothing found": "Нічога не знойдзена",
+  "downloads": "Загрузкі",
+  "Could not search archive.org": "Не ўдалося пашукаць на archive.org",
+  "Popular on archive.org": "Папулярнае на archive.org",
+  "Words from the title, for example a game or a set name": "Словы з назвы, напрыклад, гульні ці назвы набору",
+  "Search archive.org": "Шукаць на archive.org",
+  "Enter an item id": "Увядзіце ідэнтыфікатар элемента"
 }

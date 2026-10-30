@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.248 — ROMS: a live catalogue, searched on archive.org (owner, 2026-10-31)
+`Add a collection` → console → `Popular on archive.org` (the software items whose title or subject names the system, most downloaded first, 50 rows), `Search archive.org` (the same with the typed words, typed on the console or sent from a phone) or `Enter an item id`. A result row shows the title, the size, the download count and the id; **A** reads the item and offers `Keep the collection` as before. The query per console is a term list in `rom_library.hpp` (`Console::terms`, e.g. snes = `snes OR "super nintendo" OR "super famicom"`); `SearchQuery`/`SearchUrl` tested. The Hub still ships no item ids: the catalogue is archive.org's own search, sorted by its download counts.
+host tests: pass (--quick) | nro: not built | switch: pending (search over Wi-Fi: the list, a row opens, Keep)
+
 ## v0.14.247 — Emulators → ROMS: archive.org collections into /roms/<console>/ (owner, 2026-10-30, plan E.3)
 Below BIOS the page has ROMS: one row per collection the user added and `Add a collection` (console from the HaulNX folder table → the item id or its archive.org/details address, typed or sent from a phone → the item is read (`archive.org/metadata/<id>`: title, the uploader's own files) → `Keep the collection`). A collection row opens the item's files with sizes ("on the card" when present); **A** downloads one, **X**/**Y** mark several, **START**: the marked ones, all, or remove the collection. Files go to `/roms/<console>/<name>`, md5-checked, skipped when present with the right size; no extraction (RetroArch and Tico read zips). Collections are kept in `/config/kefir/roms.txt` (`console<TAB>item<TAB>label`). The Hub ships no item ids. The BIOS and ROM fetch loop is shared (`download_jobs.cpp`); pure parts in `rom_library.hpp` (test_rom_library).
 host tests: pass (--quick) | nro: built (0.14.247) | switch: pending (add a real item over Wi-Fi, download one file, check md5 and the folder)

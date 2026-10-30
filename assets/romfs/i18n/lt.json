@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "BIOS ir ROM failai įdiegtiems emuliatoriams.",
   "Download the marked files": "Atsisiųsti pažymėtus failus",
   "on the card": "kortelėje",
-  "Remove the collection": "Šalinti rinkinį"
+  "Remove the collection": "Šalinti rinkinį",
+  "Popular for ": "Populiaru ",
+  "Searching archive.org": "Ieškoma archive.org",
+  "Nothing found": "Nieko nerasta",
+  "downloads": "Atsisiuntimai",
+  "Could not search archive.org": "Nepavyko ieškoti archive.org",
+  "Popular on archive.org": "Populiaru archive.org",
+  "Words from the title, for example a game or a set name": "Žodžiai iš pavadinimo, pavyzdžiui, žaidimo arba rinkinio pavadinimas",
+  "Search archive.org": "Ieškoti archive.org",
+  "Enter an item id": "Įveskite elemento ID"
 }

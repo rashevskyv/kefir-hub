@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "Pliki BIOS i ROM dla zainstalowanych emulatorów.",
   "Download the marked files": "Pobierz zaznaczone pliki",
   "on the card": "na karcie",
-  "Remove the collection": "Usuń kolekcję"
+  "Remove the collection": "Usuń kolekcję",
+  "Popular for ": "Popularne dla ",
+  "Searching archive.org": "Wyszukiwanie w archive.org",
+  "Nothing found": "Nic nie znaleziono",
+  "downloads": "Pobierania",
+  "Could not search archive.org": "Nie udało się przeszukać archive.org",
+  "Popular on archive.org": "Popularne w archive.org",
+  "Words from the title, for example a game or a set name": "Słowa z tytułu, na przykład gry lub nazwy zestawu",
+  "Search archive.org": "Szukaj w archive.org",
+  "Enter an item id": "Wprowadź identyfikator elementu"
 }

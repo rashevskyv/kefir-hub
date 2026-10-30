@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "BIOS-i ja ROM-failid installitud emulaatorite jaoks.",
   "Download the marked files": "Laadi märgitud failid alla",
   "on the card": "kaardil",
-  "Remove the collection": "Eemalda kollektsioon"
+  "Remove the collection": "Eemalda kollektsioon",
+  "Popular for ": "Populaarne jaoks ",
+  "Searching archive.org": "Otsimine archive.org-ist",
+  "Nothing found": "Midagi ei leitud",
+  "downloads": "Allalaadimised",
+  "Could not search archive.org": "archive.org otsimine ebaõnnestus",
+  "Popular on archive.org": "Populaarne archive.org-is",
+  "Words from the title, for example a game or a set name": "Pealkirja sõnad, näiteks mängu või komplekti nimi",
+  "Search archive.org": "Otsi archive.org-st",
+  "Enter an item id": "Sisestage üksuse ID"
 }

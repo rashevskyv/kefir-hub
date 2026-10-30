@@ -3955,5 +3955,14 @@
   "BIOS and ROM files for the installed emulators.": "インストールされたエミュレーター用のBIOSおよびROMファイル。",
   "Download the marked files": "マークしたファイルをダウンロード",
   "on the card": "カード上",
-  "Remove the collection": "コレクションを削除"
+  "Remove the collection": "コレクションを削除",
+  "Popular for ": "人気の項目: ",
+  "Searching archive.org": "archive.orgを検索中",
+  "Nothing found": "見つかりませんでした",
+  "downloads": "ダウンロード",
+  "Could not search archive.org": "archive.orgを検索できませんでした",
+  "Popular on archive.org": "archive.orgで人気",
+  "Words from the title, for example a game or a set name": "タイトルからの単語（ゲームやセット名など）",
+  "Search archive.org": "archive.orgを検索",
+  "Enter an item id": "アイテムIDを入力"
 }

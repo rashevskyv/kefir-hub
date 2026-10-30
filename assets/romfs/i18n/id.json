@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "File BIOS dan ROM untuk emulator yang terinstal.",
   "Download the marked files": "Unduh file yang ditandai",
   "on the card": "di kartu",
-  "Remove the collection": "Hapus koleksi"
+  "Remove the collection": "Hapus koleksi",
+  "Popular for ": "Populer untuk ",
+  "Searching archive.org": "Mencari di archive.org",
+  "Nothing found": "Tidak ditemukan",
+  "downloads": "Unduhan",
+  "Could not search archive.org": "Tidak dapat mencari di archive.org",
+  "Popular on archive.org": "Populer di archive.org",
+  "Words from the title, for example a game or a set name": "Kata dari judul, misalnya game atau nama set",
+  "Search archive.org": "Cari di archive.org",
+  "Enter an item id": "Masukkan ID item"
 }

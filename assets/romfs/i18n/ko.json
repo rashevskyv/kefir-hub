@@ -3955,5 +3955,14 @@
   "BIOS and ROM files for the installed emulators.": "설치된 에뮬레이터용 BIOS 및 ROM 파일.",
   "Download the marked files": "표시된 파일 다운로드",
   "on the card": "카드에",
-  "Remove the collection": "컬렉션 제거"
+  "Remove the collection": "컬렉션 제거",
+  "Popular for ": "인기 항목: ",
+  "Searching archive.org": "archive.org 검색 중",
+  "Nothing found": "검색 결과가 없습니다",
+  "downloads": "다운로드",
+  "Could not search archive.org": "archive.org을(를) 검색할 수 없습니다",
+  "Popular on archive.org": "archive.org 인기 항목",
+  "Words from the title, for example a game or a set name": "제목에서 가져온 단어 (예: 게임 또는 세트 이름)",
+  "Search archive.org": "archive.org 검색",
+  "Enter an item id": "항목 ID 입력"
 }

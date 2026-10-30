@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "BIOS un ROM faili instalētajiem emulatoriem.",
   "Download the marked files": "Lejupielādēt atzīmētos failus",
   "on the card": "kartē",
-  "Remove the collection": "Noņemt kolekciju"
+  "Remove the collection": "Noņemt kolekciju",
+  "Popular for ": "Populāri priekš ",
+  "Searching archive.org": "Meklē archive.org",
+  "Nothing found": "Nekas nav atrasts",
+  "downloads": "Lejupielādes",
+  "Could not search archive.org": "Nevarēja veikt meklēšanu archive.org",
+  "Popular on archive.org": "Populāri archive.org",
+  "Words from the title, for example a game or a set name": "Vārdi no nosaukuma, piemēram, spēles vai komplekta nosaukuma",
+  "Search archive.org": "Meklēt archive.org",
+  "Enter an item id": "Ievadiet vienuma ID"
 }

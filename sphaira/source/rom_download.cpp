@@ -154,7 +154,86 @@ void OpenCollection(const Collection& c, std::function<void()> reopen) {
     });
 }
 
-// console folder -> item id (typed, or sent from a phone) -> the item is read and kept
+// the item is read; its title, file count and size are shown; Keep saves it as a collection
+void ConfirmItem(const std::string& console, const std::string& id, std::function<void()> reopen) {
+    auto item = std::make_shared<Item>();
+    App::Push<ui::ProgressBox>(0, id, "", [item, id](auto pbox) -> Result {
+        return FetchItem(pbox, id, *item);
+    }, [item, id, console, reopen](Result rc) {
+        if (rc == Result_TransferCancelled) return;
+        App::PushErrorBox(rc, "Could not read the item on archive.org"_i18n);
+        if (R_FAILED(rc)) return;
+        if (item->files.empty()) {
+            App::Push<ui::OptionBox>("The item "_i18n + id + " has no files to download."_i18n, "OK"_i18n);
+            return;
+        }
+        Collection c{console, id, item->title.empty() ? id : item->title};
+        const auto plan = ToJobs(c, item->files);
+        App::Push<ui::OptionBox>(c.label + "\n" + jobs::Describe(plan) + " → " + ROMS_ROOT + console + "/",
+            "Back"_i18n, "Keep the collection"_i18n, 1, [c, reopen](auto op) {
+                if (!op || *op != 1) return;
+                auto list = Load();
+                std::erase_if(list, [&](const Collection& e) { return e.console == c.console && e.item == c.item; });
+                list.push_back(c);
+                Save(list);
+                reopen();
+            });
+    });
+}
+
+// GET archive.org/advancedsearch.php: the items, most downloaded first
+auto FetchSearch(ui::ProgressBox* pbox, const std::string& query, std::vector<SearchHit>& out) -> Result {
+    pbox->NewTransfer("Searching archive.org"_i18n);
+    const auto result = curl::Api().ToMemory(
+        curl::Url{SearchUrl(query)},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+    );
+    R_TRY(pbox->ShouldExitResult());
+    R_UNLESS(result.success && !result.data.empty(), Result_GhdlFailedToDownloadAssetJson);
+    auto doc = yyjson_read(reinterpret_cast<const char*>(result.data.data()), result.data.size(), 0);
+    R_UNLESS(doc, Result_GhdlFailedToDownloadAssetJson);
+    ON_SCOPE_EXIT(yyjson_doc_free(doc));
+    const auto docs = yyjson_obj_get(yyjson_obj_get(yyjson_doc_get_root(doc), "response"), "docs");
+    size_t idx, max;
+    yyjson_val* d;
+    yyjson_arr_foreach(docs, idx, max, d) {
+        const auto id = yyjson_get_str(yyjson_obj_get(d, "identifier"));
+        if (!id) continue;
+        const auto title = yyjson_get_str(yyjson_obj_get(d, "title"));
+        out.push_back({id, title ? title : id, yyjson_get_uint(yyjson_obj_get(d, "downloads")), yyjson_get_uint(yyjson_obj_get(d, "item_size"))});
+    }
+    log_write("[roms] search \"%s\": %zu hits\n", query.c_str(), out.size());
+    R_SUCCEED();
+}
+
+// the search results as a page; A on a row reads that item
+void OpenSearch(const std::string& console, const std::string& words, std::function<void()> reopen) {
+    auto hits = std::make_shared<std::vector<SearchHit>>();
+    const auto query = SearchQuery(console, words);
+    const std::string title = words.empty() ? "Popular for "_i18n + ConsoleName(console) : words;
+    App::Push<ui::ProgressBox>(0, title, "", [hits, query](auto pbox) -> Result {
+        return FetchSearch(pbox, query, *hits);
+    }, [hits, title, console, reopen](Result rc) {
+        if (rc == Result_TransferCancelled) return;
+        App::PushErrorBox(rc, "Could not search archive.org"_i18n);
+        if (R_FAILED(rc)) return;
+        std::vector<SettingsItem> rows;
+        rows.push_back(ui::menu::settings::MakeHeader(title + " → " + ROMS_ROOT + console + "/"));
+        if (hits->empty()) {
+            SettingsItem row{"Nothing found"_i18n, ""};
+            row.disabled = true;
+            rows.push_back(std::move(row));
+        }
+        for (const auto& h : *hits) {
+            SettingsItem row{h.title, ui::menu::grid::FormatBytes(h.size) + " · " + std::to_string(h.downloads) + " " + "downloads"_i18n + " · " + h.identifier};
+            row.action = [console, id = h.identifier, reopen]() { ConfirmItem(console, id, reopen); };
+            rows.push_back(std::move(row));
+        }
+        App::Push<SystemToolsMenu>(title, std::move(rows));
+    });
+}
+
+// console folder -> popular items, a search, or an item id -> the item is read and kept
 void Add(std::function<void()> reopen) {
     ui::PopupList::Items names;
     for (const auto& c : Consoles()) {
@@ -163,35 +242,24 @@ void Add(std::function<void()> reopen) {
     App::Push<ui::PopupList>("Which console is the collection for?"_i18n, names, [reopen](auto op) {
         if (!op || *op < 0 || static_cast<size_t>(*op) >= Consoles().size()) return;
         const std::string console = Consoles()[*op].folder;
-        ui::remote_input::Options opts;
-        opts.title = "archive.org item"_i18n;
-        opts.guide = "The item id, or its archive.org/details/... address"_i18n;
-        opts.placeholder = "archive.org/details/...";
-        ui::remote_input::PromptTextInput(opts, [console, reopen](const std::string& text) {
-            const auto id = ItemFromInput(text);
-            if (id.empty()) return;
-            auto item = std::make_shared<Item>();
-            App::Push<ui::ProgressBox>(0, id, "", [item, id](auto pbox) -> Result {
-                return FetchItem(pbox, id, *item);
-            }, [item, id, console, reopen](Result rc) {
-                if (rc == Result_TransferCancelled) return;
-                App::PushErrorBox(rc, "Could not read the item on archive.org"_i18n);
-                if (R_FAILED(rc)) return;
-                if (item->files.empty()) {
-                    App::Push<ui::OptionBox>("The item "_i18n + id + " has no files to download."_i18n, "OK"_i18n);
+        ui::PopupList::Items ways{"Popular on archive.org"_i18n, "Search archive.org"_i18n, "Enter an item id"_i18n};
+        App::Push<ui::PopupList>(std::string{ConsoleName(console)} + " → " + ROMS_ROOT + console + "/", ways, [console, reopen](auto way) {
+            if (!way) return;
+            if (*way == 0) {
+                OpenSearch(console, "", reopen);
+                return;
+            }
+            ui::remote_input::Options opts;
+            opts.title = *way == 1 ? "Search archive.org"_i18n : "archive.org item"_i18n;
+            opts.guide = *way == 1 ? "Words from the title, for example a game or a set name"_i18n : "The item id, or its archive.org/details/... address"_i18n;
+            opts.placeholder = *way == 1 ? "" : "archive.org/details/...";
+            ui::remote_input::PromptTextInput(opts, [console, reopen, search = *way == 1](const std::string& text) {
+                if (search) {
+                    if (!text.empty()) OpenSearch(console, text, reopen);
                     return;
                 }
-                Collection c{console, id, item->title.empty() ? id : item->title};
-                const auto plan = ToJobs(c, item->files);
-                App::Push<ui::OptionBox>(c.label + "\n" + jobs::Describe(plan) + " → " + ROMS_ROOT + console + "/",
-                    "Back"_i18n, "Keep the collection"_i18n, 1, [c, reopen](auto op) {
-                        if (!op || *op != 1) return;
-                        auto list = Load();
-                        std::erase_if(list, [&](const Collection& e) { return e.console == c.console && e.item == c.item; });
-                        list.push_back(c);
-                        Save(list);
-                        reopen();
-                    });
+                const auto id = ItemFromInput(text);
+                if (!id.empty()) ConfirmItem(console, id, reopen);
             });
         });
     });

@@ -4008,5 +4008,14 @@
   "BIOS and ROM files for the installed emulators.": "已安装模拟器的 BIOS 和 ROM 文件。",
   "Download the marked files": "下载已标记的文件",
   "on the card": "卡上",
-  "Remove the collection": "删除收藏"
+  "Remove the collection": "删除收藏",
+  "Popular for ": "热门：",
+  "Searching archive.org": "正在搜索 archive.org",
+  "Nothing found": "未找到",
+  "downloads": "下载",
+  "Could not search archive.org": "无法搜索 archive.org",
+  "Popular on archive.org": "archive.org 热门",
+  "Words from the title, for example a game or a set name": "标题中的词，例如游戏或合集名称",
+  "Search archive.org": "在 archive.org 中搜索",
+  "Enter an item id": "输入项目 ID"
 }

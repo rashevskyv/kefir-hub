@@ -43,7 +43,16 @@ int main() {
         for (const char* p = c.folder; *p; p++) {
             assert((*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9') || *p == '-');
         }
+        assert(*c.terms);
     }
+
+    // the archive.org search
+    assert(SearchQuery("gc", "") == "mediatype:software AND (title:(gamecube) OR subject:(gamecube))");
+    assert(SearchQuery("gc", "mario") == "mediatype:software AND (title:(gamecube) OR subject:(gamecube)) AND (mario)");
+    assert(SearchQuery("nope", "zelda") == "mediatype:software AND (zelda)");
+    const auto url = SearchUrl(SearchQuery("gc", ""));
+    assert(url.starts_with("https://archive.org/advancedsearch.php?q=mediatype%3Asoftware%20AND%20%28title%3A%28gamecube%29"));
+    assert(url.find("&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=downloads&fl%5B%5D=item_size&rows=50&sort%5B%5D=downloads+desc&output=json") != std::string::npos);
 
     std::puts("test_rom_library: ok");
     return 0;

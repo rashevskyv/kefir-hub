@@ -3950,5 +3950,14 @@
   "BIOS and ROM files for the installed emulators.": "Орнатылған эмуляторларға арналған BIOS және ROM файлдары.",
   "Download the marked files": "Белгіленген файлдарды жүктеу",
   "on the card": "картада",
-  "Remove the collection": "Жинақты жою"
+  "Remove the collection": "Жинақты жою",
+  "Popular for ": "Үшін танымал ",
+  "Searching archive.org": "archive.org ізделуде",
+  "Nothing found": "Ештеңе табылмады",
+  "downloads": "Жүктеулер",
+  "Could not search archive.org": "archive.org ішінде іздеу мүмкін болмады",
+  "Popular on archive.org": "archive.org сайтында танымал",
+  "Words from the title, for example a game or a set name": "Тақырыптан сөздер, мысалы ойын немесе жиын атауы",
+  "Search archive.org": "archive.org ішінен іздеу",
+  "Enter an item id": "Элемент идентификаторын енгізіңіз"
 }

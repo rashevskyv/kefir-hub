@@ -3955,5 +3955,14 @@
   "BIOS and ROM files for the installed emulators.": "BIOS- en ROM-bestanden voor de geïnstalleerde emulators.",
   "Download the marked files": "Gemarkeerde bestanden downloaden",
   "on the card": "op de kaart",
-  "Remove the collection": "Verwijder collectie"
+  "Remove the collection": "Verwijder collectie",
+  "Popular for ": "Populair voor ",
+  "Searching archive.org": "Zoeken op archive.org",
+  "Nothing found": "Niets gevonden",
+  "downloads": "Downloads",
+  "Could not search archive.org": "Kan archive.org niet doorzoeken",
+  "Popular on archive.org": "Populair op archive.org",
+  "Words from the title, for example a game or a set name": "Woorden uit de titel, bijvoorbeeld een spel of setnaam",
+  "Search archive.org": "Zoeken op archive.org",
+  "Enter an item id": "Voer een item-id in"
 }

@@ -35,6 +35,16 @@ int main() {
     CHECK(HttpFixtureName("https://host/graphql", "a") == "host/graphql.e40c292c");
     CHECK(HttpFixtureName("no-scheme/path", "") == "no-scheme/path");
     CHECK(HttpFixtureName("https://host?x=1", "") == "host/_x=1");
+    // a long query (an archive.org search): the name is cut at 160 and the whole name's hash is appended
+    {
+        const std::string q(300, 'a');
+        const auto name = HttpFixtureName("https://host/search?q=" + q, "");
+        CHECK(name.size() == std::string{"host/"}.size() + 160 + 9);
+        CHECK(name.substr(0, 5 + 160) == "host/" + std::string{"search_q="} + std::string(151, 'a'));
+        char tail[16];
+        std::snprintf(tail, sizeof(tail), ".%08x", static_cast<unsigned>(Fnv1a32("search_q=" + q)));
+        CHECK(name.substr(name.size() - 9) == tail);
+    }
 
     std::printf("test_demo_http_path: %d checks passed\n", g_checks);
     return 0;

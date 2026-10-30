@@ -3912,5 +3912,14 @@
   "Download the marked files": "Завантажити позначені файли",
   "Download all": "Завантажити все",
   "Remove the collection": "Прибрати колекцію",
-  "BIOS and ROM files for the installed emulators.": "BIOS для встановлених емуляторів і роми з archive.org."
+  "BIOS and ROM files for the installed emulators.": "BIOS для встановлених емуляторів і роми з archive.org.",
+  "Searching archive.org": "Пошук на archive.org",
+  "Could not search archive.org": "Не вдалося виконати пошук на archive.org",
+  "Popular for ": "Популярне для ",
+  "Nothing found": "Нічого не знайдено",
+  "downloads": "завантажень",
+  "Popular on archive.org": "Популярне на archive.org",
+  "Search archive.org": "Пошук на archive.org",
+  "Enter an item id": "Ввести ідентифікатор елемента",
+  "Words from the title, for example a game or a set name": "Слова з назви, наприклад гра або назва збірки"
 }

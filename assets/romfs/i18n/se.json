@@ -3955,5 +3955,14 @@
   "BIOS and ROM files for the installed emulators.": "BIOS- och ROM-filer för de installerade emulatorerna.",
   "Download the marked files": "Ladda ner markerade filer",
   "on the card": "på kortet",
-  "Remove the collection": "Ta bort samling"
+  "Remove the collection": "Ta bort samling",
+  "Popular for ": "Populärt för ",
+  "Searching archive.org": "Söker på archive.org",
+  "Nothing found": "Inget hittades",
+  "downloads": "Nedladdningar",
+  "Could not search archive.org": "Kunde inte söka på archive.org",
+  "Popular on archive.org": "Populärt på archive.org",
+  "Words from the title, for example a game or a set name": "Ord från titeln, till exempel ett spel eller ett setnamn",
+  "Search archive.org": "Sök på archive.org",
+  "Enter an item id": "Ange ett objekt-ID"
 }
