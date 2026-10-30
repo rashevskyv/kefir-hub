@@ -3918,5 +3918,22 @@
   "The console slept: the drain goes on slowly": "De console sliep: de batterij loopt langzaam leeg",
   "FOLDERS": "Mappen",
   "The console slept: the drain is over": "De console was in slaapstand: het leeglopen is voorbij",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hoeveel virtueel geheugen de app krijgt. Laat op Automatisch (39-bit) staan. 42-bit is de breedste, maar zo'n forwarder start mogelijk niet (deed het niet op 23.0.1); probeer dit alleen bewust. 36-bit: alleen als een oude app niet start. 32-bit en 32-bit (geen alias): alleen wanneer de app er zelf om vraagt (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hoeveel virtueel geheugen de app krijgt. Laat op Automatisch (39-bit) staan. 42-bit is de breedste, maar zo'n forwarder start mogelijk niet (deed het niet op 23.0.1); probeer dit alleen bewust. 36-bit: alleen als een oude app niet start. 32-bit en 32-bit (geen alias): alleen wanneer de app er zelf om vraagt (Wine-NX, Box64).",
+  "Only for the installed cores": "Alleen voor de geïnstalleerde cores",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "BIOS-bestanden voor de geïnstalleerde emulators.",
+  "Download BIOS for ": "BIOS downloaden voor ",
+  "Download all BIOS files for ": "Alle BIOS-bestanden downloaden voor ",
+  "Download BIOS files for ": "Download BIOS-bestanden voor ",
+  "Only for the systems it has": "Alleen voor compatibele systemen",
+  "downloaded": "gedownload",
+  "already there": "al aanwezig",
+  "Last failed file: ": "Laatst mislukte bestand: ",
+  "BIOS download failed": "BIOS downloaden mislukt",
+  "Folder: ": "Map: ",
+  "The BIOS list is missing from this build": "De BIOS-lijst ontbreekt in deze build",
+  "No emulator found on the SD card": "Geen emulator gevonden op de SD-kaart",
+  "Source": "Bron",
+  "Known: ": "Bekend: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Bestanden worden op jouw verzoek één voor één gedownload; de Hub levert er geen één mee."
 }

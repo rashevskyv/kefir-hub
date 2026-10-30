@@ -3971,5 +3971,22 @@
   "The console slept: the drain goes on slowly": "主机处于睡眠状态：电量正在缓慢消耗",
   "FOLDERS": "文件夹",
   "The console slept: the drain is over": "主机已进入睡眠：耗电已结束",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "应用获得的虚拟内存大小。保留自动（39-bit）。42-bit 是最宽的，但这种引导程序（forwarder）可能无法启动（在 23.0.1 上无法启动）；请仅在需要时尝试。36-bit：仅当旧应用无法启动时。32-bit 和 32-bit（无别名）：仅当应用本身请求时（Wine-NX、Box64）。"
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "应用获得的虚拟内存大小。保留自动（39-bit）。42-bit 是最宽的，但这种引导程序（forwarder）可能无法启动（在 23.0.1 上无法启动）；请仅在需要时尝试。36-bit：仅当旧应用无法启动时。32-bit 和 32-bit（无别名）：仅当应用本身请求时（Wine-NX、Box64）。",
+  "Only for the installed cores": "仅针对已安装的核心",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "已安装模拟器的 BIOS 文件。",
+  "Download BIOS for ": "下载 BIOS：",
+  "Download all BIOS files for ": "下载所有 BIOS 文件：",
+  "Download BIOS files for ": "下载 BIOS 文件：",
+  "Only for the systems it has": "仅适用于支持的系统",
+  "downloaded": "已下载",
+  "already there": "已存在",
+  "Last failed file: ": "最后失败的文件：",
+  "BIOS download failed": "BIOS 下载失败",
+  "Folder: ": "文件夹：",
+  "The BIOS list is missing from this build": "此版本缺少 BIOS 列表",
+  "No emulator found on the SD card": "在 SD 卡上未找到模拟器",
+  "Source": "来源",
+  "Known: ": "已知：",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "文件按您的请求逐个下载；Hub 不包含其中任何文件。"
 }

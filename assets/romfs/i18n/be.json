@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Кансоль перайшла ў сон: разрадка ідзе павольна",
   "FOLDERS": "Тэчкі",
   "The console slept: the drain is over": "Кансоль спала: разрад скончаны",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Колькі віртуальнай памяці атрымлівае праграма. Пакіньце Аўтаматычна (39-біт). 42-біт — найбольшая, але такі форвардэр можа не запусціцца (не запускаўся на 23.0.1); выкарыстоўвайце толькі наўмысна. 36-біт: толькі калі старая праграма не запускаецца. 32-біт і 32-біт (без псеўданіма): толькі калі сама праграма гэтага патрабуе (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Колькі віртуальнай памяці атрымлівае праграма. Пакіньце Аўтаматычна (39-біт). 42-біт — найбольшая, але такі форвардэр можа не запусціцца (не запускаўся на 23.0.1); выкарыстоўвайце толькі наўмысна. 36-біт: толькі калі старая праграма не запускаецца. 32-біт і 32-біт (без псеўданіма): толькі калі сама праграма гэтага патрабуе (Wine-NX, Box64).",
+  "Only for the installed cores": "Толькі для ўсталяваных ядраў",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Файлы BIOS для ўсталяваных эмулятараў.",
+  "Download BIOS for ": "Спампаваць BIOS для ",
+  "Download all BIOS files for ": "Спампаваць усе файлы BIOS для ",
+  "Download BIOS files for ": "Скачаць файлы BIOS для ",
+  "Only for the systems it has": "Толькі для падтрымоўваемых сістэм",
+  "downloaded": "спампавана",
+  "already there": "ужо там",
+  "Last failed file: ": "Апошні няўдалы файл: ",
+  "BIOS download failed": "Памылка спампоўвання BIOS",
+  "Folder: ": "Папка: ",
+  "The BIOS list is missing from this build": "Спіс BIOS адсутнічае ў гэтай зборцы",
+  "No emulator found on the SD card": "На карце памяці не знойдзена эмулятараў",
+  "Source": "Крыніца",
+  "Known: ": "Вядома: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Файлы спампоўваюцца па адным па вашым запыце; Hub не пастаўляе ніводнага з іх."
 }

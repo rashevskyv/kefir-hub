@@ -3919,5 +3919,22 @@
   "The console slept: the drain goes on slowly": "La consola entró en suspensión: la batería se descarga lentamente",
   "FOLDERS": "Carpetas",
   "The console slept: the drain is over": "La consola entró en suspensión: la descarga ha finalizado",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cuánta memoria virtual recibe la aplicación. Dejar en Automático (39-bit). 42-bit es el mayor, pero un acceso directo así podría no iniciar (no lo hacía en 23.0.1); pruébalo solo a propósito. 36-bit: solo si una app antigua no inicia. 32-bit y 32-bit (sin alias): solo cuando la propia app lo solicite (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cuánta memoria virtual recibe la aplicación. Dejar en Automático (39-bit). 42-bit es el mayor, pero un acceso directo así podría no iniciar (no lo hacía en 23.0.1); pruébalo solo a propósito. 36-bit: solo si una app antigua no inicia. 32-bit y 32-bit (sin alias): solo cuando la propia app lo solicite (Wine-NX, Box64).",
+  "Only for the installed cores": "Solo para los núcleos instalados",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Archivos BIOS para los emuladores instalados.",
+  "Download BIOS for ": "Descargar BIOS para ",
+  "Download all BIOS files for ": "Descargar todos los archivos BIOS para ",
+  "Download BIOS files for ": "Descargar archivos BIOS para ",
+  "Only for the systems it has": "Solo para los sistemas compatibles",
+  "downloaded": "descargado",
+  "already there": "ya está ahí",
+  "Last failed file: ": "Último archivo fallido: ",
+  "BIOS download failed": "Error al descargar la BIOS",
+  "Folder: ": "Carpeta: ",
+  "The BIOS list is missing from this build": "La lista de BIOS no está en esta versión",
+  "No emulator found on the SD card": "No se encontró ningún emulador en la tarjeta SD",
+  "Source": "Origen",
+  "Known: ": "Conocido: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Los archivos se descargan uno por uno a petición tuya; el Hub no incluye ninguno de ellos."
 }

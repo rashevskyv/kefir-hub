@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "The console slept: the drain goes on slowly",
   "FOLDERS": "Folders",
   "The console slept: the drain is over": "The console slept: the drain is over",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).",
+  "Only for the installed cores": "Only for the installed cores",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "BIOS files for the installed emulators.",
+  "Download BIOS for ": "Download BIOS for ",
+  "Download all BIOS files for ": "Download all BIOS files for ",
+  "Download BIOS files for ": "Download BIOS files for ",
+  "Only for the systems it has": "Only for the systems it has",
+  "downloaded": "downloaded",
+  "already there": "already there",
+  "Last failed file: ": "Last failed file: ",
+  "BIOS download failed": "BIOS download failed",
+  "Folder: ": "Folder: ",
+  "The BIOS list is missing from this build": "The BIOS list is missing from this build",
+  "No emulator found on the SD card": "No emulator found on the SD card",
+  "Source": "Source",
+  "Known: ": "Known: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "The files are downloaded one by one on your request; the Hub ships none of them."
 }

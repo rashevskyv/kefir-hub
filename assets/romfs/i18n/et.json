@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Konsool oli puhkerežiimil: tühjenemine jätkub aeglaselt",
   "FOLDERS": "Kaustad",
   "The console slept: the drain is over": "Konsool oli unerežiimis: voolutarve on läbi",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kui palju virtuaalset mälu rakendus saab. Jäta Automaatne (39-bitine). 42-bitine on suurim, kuid selline käiviti ei pruugi käivituda (ei käivitunud 23.0.1-l); proovi seda ainult sihipäraselt. 36-bitine: ainult siis, kui vana rakendus ei käivitu. 32-bitine ja 32-bitine (ilma aliasteta): ainult siis, kui rakendus ise seda küsib (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kui palju virtuaalset mälu rakendus saab. Jäta Automaatne (39-bitine). 42-bitine on suurim, kuid selline käiviti ei pruugi käivituda (ei käivitunud 23.0.1-l); proovi seda ainult sihipäraselt. 36-bitine: ainult siis, kui vana rakendus ei käivitu. 32-bitine ja 32-bitine (ilma aliasteta): ainult siis, kui rakendus ise seda küsib (Wine-NX, Box64).",
+  "Only for the installed cores": "Ainult installitud tuumadele",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Installitud emulaatorite BIOS-failid.",
+  "Download BIOS for ": "Laadi alla BIOS jaoks ",
+  "Download all BIOS files for ": "Laadi alla kõik BIOS-failid jaoks ",
+  "Download BIOS files for ": "Laadi alla BIOS-failid jaoks ",
+  "Only for the systems it has": "Ainult toetatud süsteemidele",
+  "downloaded": "allalaaditud",
+  "already there": "juba seal",
+  "Last failed file: ": "Viimane ebaõnnestunud fail: ",
+  "BIOS download failed": "BIOS-i allalaadimine ebaõnnestus",
+  "Folder: ": "Kaust: ",
+  "The BIOS list is missing from this build": "BIOS-i loend puudub sellest järgust",
+  "No emulator found on the SD card": "SD-kaardilt ei leitud emulaatorit",
+  "Source": "Allikas",
+  "Known: ": "Teadmata: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Faile laaditakse alla ükshaaval teie soovil; Hub ei sisalda ühtegi neist."
 }

@@ -3918,5 +3918,22 @@
   "The console slept: the drain goes on slowly": "本体スリープ中: バッテリーがゆっくり消耗しています",
   "FOLDERS": "フォルダー",
   "The console slept: the drain is over": "本体がスリープ状態でした: 消費電力は終了しました",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "アプリに割り当てる仮想メモリの量。自動（39-bit）のままにしてください。42-bitは最大ですが、そのようなフォワーダーは起動しない場合があります（23.0.1では起動しませんでした）。意図的に必要な場合のみお試しください。36-bit：古いアプリが起動しない場合のみ。32-bitおよび32-bit（エイリアスなし）：アプリ自体が要求した場合のみ（Wine-NX、Box64）。"
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "アプリに割り当てる仮想メモリの量。自動（39-bit）のままにしてください。42-bitは最大ですが、そのようなフォワーダーは起動しない場合があります（23.0.1では起動しませんでした）。意図的に必要な場合のみお試しください。36-bit：古いアプリが起動しない場合のみ。32-bitおよび32-bit（エイリアスなし）：アプリ自体が要求した場合のみ（Wine-NX、Box64）。",
+  "Only for the installed cores": "インストール済みのコアのみ",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "インストール済みエミュレーター用BIOSファイル。",
+  "Download BIOS for ": "BIOSをダウンロード: ",
+  "Download all BIOS files for ": "すべてのBIOSファイルをダウンロード: ",
+  "Download BIOS files for ": "のBIOSファイルをダウンロード ",
+  "Only for the systems it has": "対応システムのみ",
+  "downloaded": "ダウンロード済み",
+  "already there": "すでにそこにあります",
+  "Last failed file: ": "最後に失敗したファイル: ",
+  "BIOS download failed": "BIOSのダウンロードに失敗しました",
+  "Folder: ": "フォルダー: ",
+  "The BIOS list is missing from this build": "このビルドにはBIOSリストがありません",
+  "No emulator found on the SD card": "SDカードにエミュレーターが見つかりません",
+  "Source": "ソース",
+  "Known: ": "既知: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "ファイルはリクエストに応じて1つずつダウンロードされます。Hubにはファイルは含まれていません。"
 }

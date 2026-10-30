@@ -3875,5 +3875,22 @@
   "The console slept: the drain goes on slowly": "Консоль спала: розряд триває повільно",
   "FOLDERS": "ТЕКИ",
   "The console slept: the drain is over": "Консоль спала: розряд завершено",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Скільки віртуальної пам'яті отримує програма. Лишіть «Автоматично» (39-біт). 42-біт — найширший, але такий форвардер може не запуститися (на 23.0.1 не запустився); пробуйте лише свідомо. 36-біт: лише якщо стара програма не запускається. 32-біт і 32-біт (без аліасу): лише коли сама програма цього вимагає (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Скільки віртуальної пам'яті отримує програма. Лишіть «Автоматично» (39-біт). 42-біт — найширший, але такий форвардер може не запуститися (на 23.0.1 не запустився); пробуйте лише свідомо. 36-біт: лише якщо стара програма не запускається. 32-біт і 32-біт (без аліасу): лише коли сама програма цього вимагає (Wine-NX, Box64).",
+  "BIOS files for the installed emulators.": "Файли BIOS для встановлених емуляторів.",
+  "BIOS": "BIOS",
+  "Download BIOS for ": "Завантажити BIOS для ",
+  "Download all BIOS files for ": "Завантажити всі файли BIOS для ",
+  "Download BIOS files for ": "Завантажити файли BIOS для ",
+  "Only for the installed cores": "Лише для встановлених ядер",
+  "Only for the systems it has": "Лише для систем, які в ньому є",
+  "Folder: ": "Тека: ",
+  "downloaded": "завантажено",
+  "already there": "вже було",
+  "Last failed file: ": "Останній файл з помилкою: ",
+  "BIOS download failed": "Не вдалося завантажити BIOS",
+  "The BIOS list is missing from this build": "У цій збірці немає списку BIOS",
+  "No emulator found on the SD card": "На SD-карті не знайдено емулятора",
+  "Known: ": "Відомі: ",
+  "Source": "Джерело",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Файли завантажуються по одному на ваш запит; Hub не містить жодного з них."
 }

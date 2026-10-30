@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Konsole bija miega režīmā: izlāde turpinās lēnām",
   "FOLDERS": "Mapes",
   "The console slept: the drain is over": "Konsole bija miega režīmā: izlāde ir beigusies",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cik daudz virtuālās atmiņas saņem lietotne. Atstāt Automātiski (39 bitu). 42 biti ir lielākais, bet šāds palaidējs var neieslēgties (tas neieslēdzās uz 23.0.1); mēģiniet tikai apzināti. 36 biti: tikai tad, ja veca lietotne neieslēdzas. 32 biti un 32 biti (bez aizstājvārda): tikai tad, ja pati lietotne to pieprasa (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Cik daudz virtuālās atmiņas saņem lietotne. Atstāt Automātiski (39 bitu). 42 biti ir lielākais, bet šāds palaidējs var neieslēgties (tas neieslēdzās uz 23.0.1); mēģiniet tikai apzināti. 36 biti: tikai tad, ja veca lietotne neieslēdzas. 32 biti un 32 biti (bez aizstājvārda): tikai tad, ja pati lietotne to pieprasa (Wine-NX, Box64).",
+  "Only for the installed cores": "Tikai instalētajiem kodoliem",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Instalēto emulatoru BIOS faili.",
+  "Download BIOS for ": "Lejupielādēt BIOS: ",
+  "Download all BIOS files for ": "Lejupielādēt visus BIOS failus: ",
+  "Download BIOS files for ": "Lejupielādēt BIOS failus priekš ",
+  "Only for the systems it has": "Tikai saderīgām sistēmām",
+  "downloaded": "lejupielādēts",
+  "already there": "jau tur",
+  "Last failed file: ": "Pēdējais neizdevušais fails: ",
+  "BIOS download failed": "BIOS lejupielāde neizdevās",
+  "Folder: ": "Mapė: ",
+  "The BIOS list is missing from this build": "Šajā versijā trūkst BIOS saraksta",
+  "No emulator found on the SD card": "SD kartē nav atrasts neviensulators",
+  "Source": "Avots",
+  "Known: ": "Pazīstams: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Faili tiek lejupielādēti pa vienam pēc jūsu pieprasījuma; Hub neiekļauj nevienu no tiem."
 }

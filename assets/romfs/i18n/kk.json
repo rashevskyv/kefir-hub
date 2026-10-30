@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Консоль ұйқы режиміне өтті: заряды баяу азаюда",
   "FOLDERS": "Папкалар",
   "The console slept: the drain is over": "Консоль ұйқы режимінде болды: қуат таусылуы аяқталды",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Қолданбаға қанша виртуалды жад беріледі. Автоматты (39 бит) күйінде қалдырыңыз. 42 бит — ең кеңі, бірақ мұндай тасымалдаушы іске қосылмауы мүмкін (23.0.1 нұсқасында іске қосылмады); тек саналы түрде көріңіз. 36 бит: тек ескі қолданба іске қосылмаса. 32 бит және 32 бит (бүркеншік атсыз): тек қолданба өзі сұраған кезде (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Қолданбаға қанша виртуалды жад беріледі. Автоматты (39 бит) күйінде қалдырыңыз. 42 бит — ең кеңі, бірақ мұндай тасымалдаушы іске қосылмауы мүмкін (23.0.1 нұсқасында іске қосылмады); тек саналы түрде көріңіз. 36 бит: тек ескі қолданба іске қосылмаса. 32 бит және 32 бит (бүркеншік атсыз): тек қолданба өзі сұраған кезде (Wine-NX, Box64).",
+  "Only for the installed cores": "Тек орнатылған ядролар үшін",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Орнатылған эмуляторларға арналған BIOS файлдары.",
+  "Download BIOS for ": "BIOS жүктеп алу: ",
+  "Download all BIOS files for ": "Барлық BIOS файлдарын жүктеп алу: ",
+  "Download BIOS files for ": "BIOS файлдарын жүктеу: ",
+  "Only for the systems it has": "Тек қолдау көрсетілетін жүйелер үшін",
+  "downloaded": "жүктелді",
+  "already there": "сонда бар",
+  "Last failed file: ": "Соңғы сәтсіз файл: ",
+  "BIOS download failed": "BIOS жүктеу сәтсіз аяқталды",
+  "Folder: ": "Қалта: ",
+  "The BIOS list is missing from this build": "Бұл жинақта BIOS тізімі жоқ",
+  "No emulator found on the SD card": "SD картадан ешқандай эмулятор табылмады",
+  "Source": "Қайнар көз",
+  "Known: ": "Белгілі: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Файлдар сұрауыңыз бойынша бір-бірден жүктеліп алынады; Hub олардың ешқайсысын қамтымайды."
 }

@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Konsol tertidur: pengurasan berlanjut perlahan",
   "FOLDERS": "Folder",
   "The console slept: the drain is over": "Konsol tidur: pengurasan selesai",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Berapa banyak memori virtual yang didapatkan aplikasi. Biarkan Otomatis (39-bit). 42-bit adalah yang terluas, tetapi pemaju (forwarder) tersebut mungkin tidak dapat dimulai (tidak berfungsi pada 23.0.1); coba hanya jika memang disengaja. 36-bit: hanya jika aplikasi lama tidak dapat dimulai. 32-bit dan 32-bit (tanpa alias): hanya ketika aplikasi itu sendiri yang memintanya (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Berapa banyak memori virtual yang didapatkan aplikasi. Biarkan Otomatis (39-bit). 42-bit adalah yang terluas, tetapi pemaju (forwarder) tersebut mungkin tidak dapat dimulai (tidak berfungsi pada 23.0.1); coba hanya jika memang disengaja. 36-bit: hanya jika aplikasi lama tidak dapat dimulai. 32-bit dan 32-bit (tanpa alias): hanya ketika aplikasi itu sendiri yang memintanya (Wine-NX, Box64).",
+  "Only for the installed cores": "Hanya untuk inti yang dipasang",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Berkas BIOS untuk emulator yang terpasang.",
+  "Download BIOS for ": "Unduh BIOS untuk ",
+  "Download all BIOS files for ": "Unduh semua file BIOS untuk ",
+  "Download BIOS files for ": "Unduh file BIOS untuk ",
+  "Only for the systems it has": "Hanya untuk sistem yang didukung",
+  "downloaded": "diunduh",
+  "already there": "sudah ada di sana",
+  "Last failed file: ": "File gagal terakhir: ",
+  "BIOS download failed": "Unduh BIOS gagal",
+  "Folder: ": "Folder: ",
+  "The BIOS list is missing from this build": "Daftar BIOS tidak ada di build ini",
+  "No emulator found on the SD card": "Tidak ada emulator yang ditemukan di kartu SD",
+  "Source": "Sumber",
+  "Known: ": "Diketahui: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "File diunduh satu per satu atas permintaan Anda; Hub tidak menyertakan file apa pun."
 }

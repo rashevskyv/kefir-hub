@@ -3919,5 +3919,22 @@
   "The console slept: the drain goes on slowly": "La console était en veille : la décharge se poursuit lentement",
   "FOLDERS": "Dossiers",
   "The console slept: the drain is over": "La console s'est mise en veille : la décharge est terminée",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Quantité de mémoire virtuelle allouée à l'application. Laisser sur Automatique (39 bits). 42 bits est le plus large, mais un tel redirecteur peut ne pas démarrer (il ne démarrait pas sur 23.0.1) ; à essayer uniquement intentionnellement. 36 bits : uniquement si une ancienne application ne démarre pas. 32 bits et 32 bits (sans alias) : uniquement lorsque l'application elle-même le demande (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Quantité de mémoire virtuelle allouée à l'application. Laisser sur Automatique (39 bits). 42 bits est le plus large, mais un tel redirecteur peut ne pas démarrer (il ne démarrait pas sur 23.0.1) ; à essayer uniquement intentionnellement. 36 bits : uniquement si une ancienne application ne démarre pas. 32 bits et 32 bits (sans alias) : uniquement lorsque l'application elle-même le demande (Wine-NX, Box64).",
+  "Only for the installed cores": "Seulement pour les cœurs installés",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Fichiers BIOS pour les émulateurs installés.",
+  "Download BIOS for ": "Télécharger le BIOS pour ",
+  "Download all BIOS files for ": "Télécharger tous les fichiers BIOS pour ",
+  "Download BIOS files for ": "Télécharger les fichiers BIOS pour ",
+  "Only for the systems it has": "Seulement pour les systèmes compatibles",
+  "downloaded": "téléchargé",
+  "already there": "déjà là",
+  "Last failed file: ": "Dernier fichier échoué : ",
+  "BIOS download failed": "Échec du téléchargement du BIOS",
+  "Folder: ": "Dossier : ",
+  "The BIOS list is missing from this build": "La liste du BIOS est absente de cette version",
+  "No emulator found on the SD card": "Aucun émulateur trouvé sur la carte SD",
+  "Source": "Source",
+  "Known: ": "Connu : ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Les fichiers sont téléchargés un par un à votre demande ; le Hub n'en inclut aucun."
 }

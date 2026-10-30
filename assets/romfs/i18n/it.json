@@ -3918,5 +3918,22 @@
   "The console slept: the drain goes on slowly": "La console è andata in sospensione: la batteria si scarica lentamente",
   "FOLDERS": "Cartelle",
   "The console slept: the drain is over": "La console è andata in sospensione: il consumo è terminato",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Quantità di memoria virtuale assegnata all'app. Lascia su Automatico (39-bit). Il 42-bit è il più ampio, ma un tale forwarder potrebbe non avviarsi (non lo faceva su 23.0.1); provarlo solo intenzionalmente. 36-bit: solo se una vecchia app non si avvia. 32-bit e 32-bit (senza alias): solo quando l'app stessa lo richiede (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Quantità di memoria virtuale assegnata all'app. Lascia su Automatico (39-bit). Il 42-bit è il più ampio, ma un tale forwarder potrebbe non avviarsi (non lo faceva su 23.0.1); provarlo solo intenzionalmente. 36-bit: solo se una vecchia app non si avvia. 32-bit e 32-bit (senza alias): solo quando l'app stessa lo richiede (Wine-NX, Box64).",
+  "Only for the installed cores": "Solo per i core installati",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "File BIOS per gli emulatori installati.",
+  "Download BIOS for ": "Scarica BIOS per ",
+  "Download all BIOS files for ": "Scarica tutti i file BIOS per ",
+  "Download BIOS files for ": "Scarica i file BIOS per ",
+  "Only for the systems it has": "Solo per i sistemi compatibili",
+  "downloaded": "scaricato",
+  "already there": "già presente",
+  "Last failed file: ": "Ultimo file non riuscito: ",
+  "BIOS download failed": "Download del BIOS fallito",
+  "Folder: ": "Cartella: ",
+  "The BIOS list is missing from this build": "L'elenco del BIOS è mancante in questa build",
+  "No emulator found on the SD card": "Nessun emulatore trovato sulla scheda SD",
+  "Source": "Sorgente",
+  "Known: ": "Nifoto: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "I file vengono scaricati uno alla volta su tua richiesta; l'Hub non ne include nessuno."
 }

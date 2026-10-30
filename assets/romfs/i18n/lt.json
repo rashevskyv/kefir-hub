@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Konsolė miegojo: išsikrovimas vyksta lėtai",
   "FOLDERS": "Aplankai",
   "The console slept: the drain is over": "Konsole užmigo: išsikrovimas baigėsi",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kiek virtualios atminties gauna programėlė. Palikite Automatinį (39-bitų). 42 bitai yra didžiausias, bet toks paleidiklis gali nepasileisti (nepasileido 23.0.1); bandykite tikslingai. 36 bitai: tik jei sena programėlė nepasileidžia. 32 bitai ir 32 bitai (be pseudonimo): tik tada, kai pati programėlė to prašo („Wine-NX“, „Box64“)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Kiek virtualios atminties gauna programėlė. Palikite Automatinį (39-bitų). 42 bitai yra didžiausias, bet toks paleidiklis gali nepasileisti (nepasileido 23.0.1); bandykite tikslingai. 36 bitai: tik jei sena programėlė nepasileidžia. 32 bitai ir 32 bitai (be pseudonimo): tik tada, kai pati programėlė to prašo („Wine-NX“, „Box64“).",
+  "Only for the installed cores": "Tik įdiegtiems branduoliams",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Įdiegtų emuliatorių BIOS failai.",
+  "Download BIOS for ": "Atsisiųsti BIOS skirtą ",
+  "Download all BIOS files for ": "Atsisiųsti visus BIOS failus, skirtus ",
+  "Download BIOS files for ": "Atsisiųsti BIOS failus, skirtus ",
+  "Only for the systems it has": "Tik palaikomoms sistemoms",
+  "downloaded": "atsisiųsta",
+  "already there": "jau ten",
+  "Last failed file: ": "Paskutinis nesėkmingas failas: ",
+  "BIOS download failed": "BIOS atsisiųsti nepavyko",
+  "Folder: ": "Aplankas: ",
+  "The BIOS list is missing from this build": "Šioje versijoje nėra BIOS sąrašo",
+  "No emulator found on the SD card": "SD kortelėje emuliatoriaus nerasta",
+  "Source": "Šaltinis",
+  "Known: ": "Žinoma: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Failai atsisiunčiami po vieną jūsų prašymu; „Hub“ netiekia nė vieno iš jų."
 }

@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Konsola zasnęła: rozładowywanie trwa powoli",
   "FOLDERS": "Foldery",
   "The console slept: the drain is over": "Konsola spała: pobór mocy zakończony",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Ile pamięci wirtualnej otrzymuje aplikacja. Pozostaw na Automatycznym (39-bit). 42-bit jest największe, ale taki forwarder może się nie uruchomić (nie uruchamiał się na 23.0.1); próbuj tylko celowo. 36-bit: tylko jeśli stara aplikacja się nie uruchamia. 32-bit i 32-bit (bez aliasu): tylko wtedy, gdy aplikacja sama o to poprosi (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Ile pamięci wirtualnej otrzymuje aplikacja. Pozostaw na Automatycznym (39-bit). 42-bit jest największe, ale taki forwarder może się nie uruchomić (nie uruchamiał się na 23.0.1); próbuj tylko celowo. 36-bit: tylko jeśli stara aplikacja się nie uruchamia. 32-bit i 32-bit (bez aliasu): tylko wtedy, gdy aplikacja sama o to poprosi (Wine-NX, Box64).",
+  "Only for the installed cores": "Tylko dla zainstalowanych rdzeni",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Pliki BIOS dla zainstalowanych emulatorów.",
+  "Download BIOS for ": "Pobierz BIOS dla ",
+  "Download all BIOS files for ": "Pobierz wszystkie pliki BIOS dla ",
+  "Download BIOS files for ": "Pobierz pliki BIOS dla ",
+  "Only for the systems it has": "Tylko dla obsługiwanych systemów",
+  "downloaded": "pobrane",
+  "already there": "już tam",
+  "Last failed file: ": "Ostatni nieudany plik: ",
+  "BIOS download failed": "Pobieranie BIOS-u nie powiodło się",
+  "Folder: ": "Folder: ",
+  "The BIOS list is missing from this build": "Lista BIOS jest niedostępna w tej wersji",
+  "No emulator found on the SD card": "Nie znaleziono emulatora na karcie SD",
+  "Source": "Źródło",
+  "Known: ": "Znane: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Pliki są pobierane pojedynczo na Twoje żadenie; Hub nie zawiera żadnego z nich."
 }

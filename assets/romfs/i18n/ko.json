@@ -3918,5 +3918,22 @@
   "The console slept: the drain goes on slowly": "본체가 절전 상태였습니다: 배터리가 서서히 소모되는 중입니다",
   "FOLDERS": "폴더",
   "The console slept: the drain is over": "본체가 절전 모드였습니다: 소모가 종료되었습니다",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "앱이 받는 가상 메모리 양입니다. 자동(39비트)으로 두세요. 42비트는 가장 넓지만, 그러한 포워더는 시작되지 않을 수 있습니다(23.0.1에서는 시작되지 않았음); 의도적으로 필요한 경우에만 시도하세요. 36비트: 오래된 앱이 시작되지 않는 경우에만. 32비트 및 32비트(별칭 없음): 앱 자체가 요청할 때만(Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "앱이 받는 가상 메모리 양입니다. 자동(39비트)으로 두세요. 42비트는 가장 넓지만, 그러한 포워더는 시작되지 않을 수 있습니다(23.0.1에서는 시작되지 않았음); 의도적으로 필요한 경우에만 시도하세요. 36비트: 오래된 앱이 시작되지 않는 경우에만. 32비트 및 32비트(별칭 없음): 앱 자체가 요청할 때만(Wine-NX, Box64).",
+  "Only for the installed cores": "설치된 코어 전용",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "설치된 에뮬레이터용 BIOS 파일.",
+  "Download BIOS for ": "BIOS 다운로드: ",
+  "Download all BIOS files for ": "모든 BIOS 파일 다운로드: ",
+  "Download BIOS files for ": "BIOS 파일 다운로드: ",
+  "Only for the systems it has": "지원되는 시스템 전용",
+  "downloaded": "다운로드됨",
+  "already there": "이미 있음",
+  "Last failed file: ": "마지막 실패한 파일: ",
+  "BIOS download failed": "BIOS 다운로드 실패",
+  "Folder: ": "폴더: ",
+  "The BIOS list is missing from this build": "이 빌드에는 BIOS 목록이 없습니다",
+  "No emulator found on the SD card": "SD 카드에서 에뮬레이터를 찾을 수 없습니다",
+  "Source": "소스",
+  "Known: ": "알려짐: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "파일은 요청에 따라 하나씩 다운로드되며, Hub에는 파일이 포함되어 있지 않습니다."
 }

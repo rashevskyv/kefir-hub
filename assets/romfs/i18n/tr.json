@@ -3913,5 +3913,22 @@
   "The console slept: the drain goes on slowly": "Konsol uyku modundaydı: şarj yavaşça tükeniyor",
   "FOLDERS": "Klasörler",
   "The console slept: the drain is over": "Konsol uyku modundaydı: pil tüketimi sona erdi",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Uygulamanın ne kadar sanal bellek alacağı. Otomatik (39-bit) olarak bırakın. 42-bit en genişidir ancak böyle bir yönlendirici (forwarder) başlatılamayabilir (23.0.1'de başlatılamadı); yalnızca bilerek deneyin. 36-bit: yalnızca eski bir uygulama başlamıyorsa. 32-bit ve 32-bit (takma ad yok): yalnızca uygulama bunu kendisi istediğinde (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Uygulamanın ne kadar sanal bellek alacağı. Otomatik (39-bit) olarak bırakın. 42-bit en genişidir ancak böyle bir yönlendirici (forwarder) başlatılamayabilir (23.0.1'de başlatılamadı); yalnızca bilerek deneyin. 36-bit: yalnızca eski bir uygulama başlamıyorsa. 32-bit ve 32-bit (takma ad yok): yalnızca uygulama bunu kendisi istediğinde (Wine-NX, Box64).",
+  "Only for the installed cores": "Yalnızca yüklenen çekirdekler için",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "Yüklü emülatörler için BIOS dosyaları.",
+  "Download BIOS for ": "BIOS indir: ",
+  "Download all BIOS files for ": "Tüm BIOS dosyalarını indir: ",
+  "Download BIOS files for ": "BIOS dosyalarını indir: ",
+  "Only for the systems it has": "Yalnızca uyumlu sistemler için",
+  "downloaded": "indirildi",
+  "already there": "zaten orada",
+  "Last failed file: ": "Son başarısız dosya: ",
+  "BIOS download failed": "BIOS indirilemedi",
+  "Folder: ": "Klasör: ",
+  "The BIOS list is missing from this build": "Bu derlemede BIOS listesi eksik",
+  "No emulator found on the SD card": "SD kartta hiç emülatör bulunamadı",
+  "Source": "Kaynak",
+  "Known: ": "Bilinen: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Dosyalar isteğiniz üzerine tek tek indirilir; Hub bunların hiçbirini içermez."
 }

@@ -3918,5 +3918,22 @@
   "The console slept: the drain goes on slowly": "Konsolen sov: batteriet ladas ur långsamt",
   "FOLDERS": "Mappar",
   "The console slept: the drain is over": "Konsolen sov: urladdningen är över",
-  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hur mycket virtuellt minne appen får. Lämna på Automatiskt (39-bitars). 42-bitars är störst, men en sådan forwarder kanske inte startar (den gjorde inte det på 23.0.1); prova endast medvetet. 36-bitars: endast om en gammal app inte startar. 32-bitars och 32-bitars (utan alias): endast när appen själv begär det (Wine-NX, Box64)."
+  "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "Hur mycket virtuellt minne appen får. Lämna på Automatiskt (39-bitars). 42-bitars är störst, men en sådan forwarder kanske inte startar (den gjorde inte det på 23.0.1); prova endast medvetet. 36-bitars: endast om en gammal app inte startar. 32-bitars och 32-bitars (utan alias): endast när appen själv begär det (Wine-NX, Box64).",
+  "Only for the installed cores": "Endast för installerade kärnor",
+  "BIOS": "BIOS",
+  "BIOS files for the installed emulators.": "BIOS-filer för de installerade emulatorerna.",
+  "Download BIOS for ": "Ladda ner BIOS för ",
+  "Download all BIOS files for ": "Ladda ner alla BIOS-filer för ",
+  "Download BIOS files for ": "Ladda ner BIOS-filer för ",
+  "Only for the systems it has": "Endast för kompatibla system",
+  "downloaded": "nedladdad",
+  "already there": "redan där",
+  "Last failed file: ": "Senaste misslyckade filen: ",
+  "BIOS download failed": "BIOS-nedladdning misslyckades",
+  "Folder: ": "Mapp: ",
+  "The BIOS list is missing from this build": "BIOS-listan saknas i den här versionen",
+  "No emulator found on the SD card": "Ingen emulator hittades på SD-kortet",
+  "Source": "Källa",
+  "Known: ": "Känd: ",
+  "The files are downloaded one by one on your request; the Hub ships none of them.": "Filerna laddas ner en och en på din begäran; Hub levererar ingen av dem."
 }

@@ -1,4 +1,5 @@
 #include "ui/menus/tools_menu.hpp"
+#include "bios_download.hpp"
 
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/cheats_menu.hpp"
@@ -53,6 +54,10 @@ constexpr const u8 ICON_KEFIR_SETTINGS[]{
 
 constexpr const u8 ICON_CHEATS[]{
     #embed <icons/cheats.png>
+};
+
+constexpr const u8 ICON_EMULATORS[]{
+    #embed <icons/emulators.png>
 };
 
 constexpr const u8 ICON_FILE_BROWSER[]{
@@ -314,6 +319,9 @@ GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
         { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
             App::Push<ui::menu::hats::CheatsMenu>();
         }},
+        { "Emulators"_i18n, "BIOS files for the installed emulators."_i18n, 0, [](){
+            bios::OpenEmulatorsPage();
+        }},
     };
 
     this->SetActions(
@@ -372,6 +380,7 @@ void GameToolsMenu::LoadIcons() {
         { ICON_GAMES, sizeof(ICON_GAMES) },
         { ICON_SAVES, sizeof(ICON_SAVES) },
         { ICON_CHEATS, sizeof(ICON_CHEATS) },
+        { ICON_EMULATORS, sizeof(ICON_EMULATORS) },
     };
     const auto count = std::min(m_items.size(), std::size(icons));
     for (std::size_t i = 0; i < count; ++i) {

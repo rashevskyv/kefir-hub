@@ -94,6 +94,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | SaveHubMenu | **unreachable** | save_hub_menu.cpp | — | none: dead code |
 | Cheat packs, exact cheats, import, view, Fix BID, delete, cache | Game Tools → Cheats | cheats/*.cpp | cheats | doc |
 | In-game cheat toggling | overlay | — | cheats#how-cheats-work | partial: which overlay |
+| Download BIOS for the installed emulators (RetroArch, Tico, Flycast, melonDS, DraStic, NetherSX2, DuckStation) | Game Tools → Emulators | bios_download.cpp, bios_plan.hpp | emulators | draft (v0.14.245) |
 | CheatSlips | **unreachable** | cheat_download_menu.cpp:84 | — | none: dead code |
 
 ## Updater, Kefir settings, system tools, themes, software
