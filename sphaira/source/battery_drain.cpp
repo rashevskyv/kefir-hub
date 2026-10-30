@@ -403,6 +403,11 @@ void DrainMenu::CalibTick() {
         if (m_log_commit.GetSeconds() >= 10) {
             m_log_commit.Update();
             fsdevCommitDevice("sdmc"); // the last seconds before a cut-off must reach the card
+            if (!fs::FsNativeSd().FileExists(CALIB_LOG)) { // deleted under the page (a cleanup over FTP): the lines went nowhere
+                log_write("[Calib] the drain log vanished: a new one is started\n");
+                CloseCalibLog();
+                OpenCalibLog();
+            }
         }
     }
     if (m_calib->charge && m_charger && m_pct >= 100) {
@@ -413,6 +418,9 @@ void DrainMenu::CalibTick() {
         const auto go = std::move(m_calib->on_drained);
         m_calib->on_drained = nullptr;
         log_write("[Calib] drain over, %llu s on battery; the charge follows\n", static_cast<unsigned long long>(m_state.drain_s[m_cycle - 1]));
+        // the callbacks read the drain log (the zero, the cycle count). A file open for writing cannot be opened again on
+        // Horizon's FS: close it first, or they see no log at all ("the drain log has no last voltage")
+        CloseCalibLog();
         SetPop();
         go();
         return;
@@ -422,6 +430,7 @@ void DrainMenu::CalibTick() {
     if (counted && !m_charger && m_calib->on_charge_done) {
         const auto done = std::move(m_calib->on_charge_done);
         m_calib->on_charge_done = nullptr;
+        CloseCalibLog(); // same: the cycle count reads the log
         SetPop();
         done();
     }
@@ -432,7 +441,8 @@ void DrainMenu::OnSleptAwake(s64 now) {
     m_calib->tail = true;  // the next poll: load off (g_load), the tail brightness (ApplyCalibScreen), the tail title
     m_calib_mode = -1;
     if (auto m = calib_flow::LoadMarker()) {
-        m->cutoffs++; // a Hub started again after this goes on in the tail too
+        m->cutoffs++;          // a Hub started again after this goes on in the tail too
+        m->cut_mv = m_tick_mv; // the zero's fallback when the drain log is lost
         calib_flow::SaveMarker(*m);
     }
     if (m_log) {

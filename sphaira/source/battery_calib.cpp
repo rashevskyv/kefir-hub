@@ -218,13 +218,18 @@ void StartChargeRun(const Marker& m) {
 void WriteZeroThenCharge(Marker m) {
     const auto after = static_cast<std::int64_t>(detail::LoadState().reset_at);
     const auto cut = ZeroCutoff(ReadLog(), 1, after);
-    if (!cut) {
+    int mv = cut ? cut->mv : 0;
+    if (!cut && m.cut_mv) {
+        // the log is gone (deleted under the page), but the page noted the voltage before the sleep itself
+        log_write("[Zero] the log has no cut-off of cycle 1's drain; the marker's own note says %d mV\n", m.cut_mv);
+        mv = m.cut_mv;
+    }
+    if (!mv) {
         log_write("[Zero] the log has no cut-off of cycle 1's drain\n");
         App::Push<ui::OptionBox>("The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again."_i18n,
             "OK"_i18n, [](auto) { ShowSteps(); });
         return;
     }
-    const int mv = cut->mv;
     auto failed = std::make_shared<std::string>();
     auto marker = std::make_shared<Marker>(std::move(m));
     App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, std::to_string(mv) + " mV", [failed, mv](auto) -> Result {

@@ -88,6 +88,11 @@ int main() {
     assert(back.step == Step::Cycle2 && back.drain_started && back.drain_time == 888 && back.started_at == 42);
     assert(back.cutoffs == 3 && back.brightness_before == 45 && !back.auto_before);
     assert(back.last_set_brightness == 1 && back.boot_time == 4242);
+    {
+        Marker c;
+        c.cut_mv = 3195; // what the page saw before a sleep: survives a lost drain log
+        assert(Parse(Format(c)).cut_mv == 3195 && Parse("cut_mv=-5\n").cut_mv == 0);
+    }
     assert(back.zero_mv == 3193 && back.zero_at == 777 && back.full_at[0] == 999 && back.full_at[1] == 0);
     const auto bad = Parse("step=99\r\ncutoffs=-4\r\nnonsense\r\nphase=x\r\nstarted=1\r\n");
     assert(bad.step == Step::Reset && bad.cutoffs == 0 && bad.drain_started);

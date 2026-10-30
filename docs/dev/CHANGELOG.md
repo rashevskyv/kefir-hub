@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.242 — Battery calibration: the drain log is closed before the zero and the cycle count read it (owner, 2026-10-30)
+The owner's run: the sleep was detected (3195 mV, 1417 s), then "the drain log has no last voltage". The drain page still held calib-log.csv open for writing when `on_drained` ran `WriteZeroThenCharge` -> `ReadLog`; on Horizon's FS a second open of a file open for writing fails, so the log read as empty (FTP could not read it either). `CalibTick` now calls `CloseCalibLog()` before `on_drained` and before `on_charge_done` (the cycle count reads the log the same way). Two more guards: `OnSleptAwake` notes the pre-gap voltage in the marker (`Marker::cut_mv`), and `WriteZeroThenCharge` takes it when the log has no cut-off; the page checks every 10 s that the log file still exists and starts a new one if not. Host test extended.
+host tests: pass (--quick) | nro: built | switch: pending (drain to the sleep again: the zero page with the voltage, then the charge page)
+
 ## v0.14.241 — Forwarders: Automatic is 39-bit again; 42-bit stays an explicit choice (owner, 2026-10-30)
 A HOME tile for the Hub made on 23.0.1 / Atmosphère 1.12.1 with the 0.14.232 default (42-bit) did nothing when opened. `ForwarderAddressSpaceDefault()` returns `Bit39`; the editor cycles ... → 32-bit (no alias) → 42-bit; the hint says 42-bit may not start. Docs drafts (homebrew, settings; EN, UK) corrected. A tile made with 42-bit: delete it and make it again.
 host tests: pass (--quick) | nro: built | switch: pending (a new Hub tile from hbmenu with Automatic opens)
