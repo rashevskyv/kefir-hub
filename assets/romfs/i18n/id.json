@@ -3911,5 +3911,6 @@
   "next: backup, then the factory model; no charging needed": "berikutnya: cadangan, lalu model pabrik; tidak perlu mengisi daya",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Reset tidak memerlukan pengisian daya: itu dilakukan sekaligus. Kemudian lepaskan pengisi daya dan biarkan konsol di atas meja: Hub akan mengisinya penuh dengan sendirinya. Saat konsol mati, nyalakan kembali dan buka Kefir Hub. Ketika sama sekali tidak mau menyala, colokkan pengisi daya dan isi daya hingga 100 %.",
   "The console slept: the drain goes on slowly": "Konsol tertidur: pengurasan berlanjut perlahan",
-  "FOLDERS": "Folder"
+  "FOLDERS": "Folder",
+  "The console slept: the drain is over": "Konsol tidur: pengurasan selesai"
 }

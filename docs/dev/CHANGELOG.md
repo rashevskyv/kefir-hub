@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.240 — Battery calibration: a sleep at a low battery counts also when the console wakes on the charger (owner, 2026-10-30)
+The owner's log (0.14.238): the drain ran to 3205 mV at 1 %, the console slept 5 minutes, woke with the charger in, and the page said "the drain is paused" (the Hub never restarted, so no resume; `OnSleptAwake` asked for the charger to be out *after* the gap). Now the values before the gap decide (`m_tick_mv`, `m_tick_charger`: on battery and <= 3.50 V), the wake may be on the charger; then the next tick ends the drain (`on_drained`: the zero, the charge page). The `S` line carries the pre-gap voltage and the charger now; toast "The console slept: the drain is over" on the charger.
+host tests: pass (--quick) | nro: built | switch: pending (drain to the sleep, plug the charger in, wake: the zero page, then the charge page)
+
 ## v0.14.239 — Games list rescans when the records changed under another screen (owner, 2026-10-30)
 A USB install that opened over the Games list left the list as it was: `OnFocusGained` only re-sorted. Now `Menu::RecordsFingerprint()` (a hash of every application record's id and last_updated, one `nsListApplicationRecord` pass) is kept at the scan and compared when the list gets the focus back; a difference sets `m_dirty`, so the next Update rescans with the "Updating application record list" toast. Docs draft (EN, UK).
 host tests: pass (--quick) | nro: built | switch: pending (open Games, install over USB, come back: the new game is in the list)

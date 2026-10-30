@@ -3911,5 +3911,6 @@
   "next: backup, then the factory model; no charging needed": "келесі: сақтық көшірме, содан кейін зауыттық модель; зарядтау қажет емес",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Қалпына келтіру зарядтауды қажет етпейді: ол бірден орындалады. Содан кейін зарядтағышты шығарып, консольді үстел үстіне қалдырыңыз: Hub оны өзі толық зарядтайды. Консоль өшкен кезде, оны қайта қосып, Kefir Hub ашыңыз. Ол мүлде қосылмай қалғанда, зарядтағышты жалғап, 100 % дейін зарядтаңыз.",
   "The console slept: the drain goes on slowly": "Консоль ұйқы режиміне өтті: заряды баяу азаюда",
-  "FOLDERS": "Папкалар"
+  "FOLDERS": "Папкалар",
+  "The console slept: the drain is over": "Консоль ұйқы режимінде болды: қуат таусылуы аяқталды"
 }

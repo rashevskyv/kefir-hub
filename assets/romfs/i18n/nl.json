@@ -3916,5 +3916,6 @@
   "next: backup, then the factory model; no charging needed": "volgende: reservekopie, dan het fabrieksmodel; opladen niet nodig",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Het resetten vereist geen opladen: dit gebeurt direct. Haal daarna de oplader eruit en laat de console op tafel liggen: de Hub zorgt zelf voor een volle lading. Wanneer de console uitschakelt, schakel hem dan weer in en open Kefir Hub. Als hij helemaal niet meer start, sluit dan de oplader aan en laad op tot 100 %.",
   "The console slept: the drain goes on slowly": "De console sliep: de batterij loopt langzaam leeg",
-  "FOLDERS": "Mappen"
+  "FOLDERS": "Mappen",
+  "The console slept: the drain is over": "De console was in slaapstand: het leeglopen is voorbij"
 }

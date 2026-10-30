@@ -3911,5 +3911,6 @@
   "next: backup, then the factory model; no charging needed": "наступны: рэзервовая копія, затым заводская мадэль; зарадка не патрэбна",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Скід не патрабуе зарадкі: гэта робіцца адразу. Затым выміце зараднай прылады... (Затым выміце зарадніку і пакіньце кансоль на стале: Hub самастойна дае поўны зарад. Калі кансоль выключыцца, уключыце яе зноў і адкрыйце Kefir Hub. Калі яна наогул перастане запускацца, падключыце зарадную прыладу і зарадайце да 100 %.)",
   "The console slept: the drain goes on slowly": "Кансоль перайшла ў сон: разрадка ідзе павольна",
-  "FOLDERS": "Тэчкі"
+  "FOLDERS": "Тэчкі",
+  "The console slept: the drain is over": "Кансоль спала: разрад скончаны"
 }

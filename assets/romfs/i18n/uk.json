@@ -3874,5 +3874,6 @@
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Скидання не потребує заряджання: воно виконується одразу. Потім витягніть зарядку і залиште консоль на столі: Hub сам дасть їй повне навантаження. Коли консоль вимкнеться, увімкніть її знову і відкрийте Kefir Hub. Коли вона зовсім перестане вмикатися, вставте зарядку і зарядіть до 100 %.",
   "next: backup, then the factory model; no charging needed": "далі: бекап, потім заводська модель; заряджати не треба",
   "The console slept: the drain goes on slowly": "Консоль спала: розряд триває повільно",
-  "FOLDERS": "ТЕКИ"
+  "FOLDERS": "ТЕКИ",
+  "The console slept: the drain is over": "Консоль спала: розряд завершено"
 }

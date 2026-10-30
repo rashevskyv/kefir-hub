@@ -3969,5 +3969,6 @@
   "next: backup, then the factory model; no charging needed": "下一步：备份，然后是出厂模型；无需充电",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "重置不需要充电：一次性完成。然后拔掉充电器，将主机放在桌子上：Hub 会自动将其充满电。当主机关闭时，重新开机并打开 Kefir Hub。当它完全无法开机时，插入充电器并充至 100 %。",
   "The console slept: the drain goes on slowly": "主机处于睡眠状态：电量正在缓慢消耗",
-  "FOLDERS": "文件夹"
+  "FOLDERS": "文件夹",
+  "The console slept: the drain is over": "主机已进入睡眠：耗电已结束"
 }

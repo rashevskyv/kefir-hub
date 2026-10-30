@@ -3917,5 +3917,6 @@
   "next: backup, then the factory model; no charging needed": "siguiente: respaldo, luego el modelo de fábrica; no necesita carga",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "El reinicio no requiere carga: se realiza al instante. Luego, retire el cargador y deje la consola sobre una mesa: el Hub le dará una carga completa por sí mismo. Cuando la consola se apague, vuelva a encenderla y abra Kefir Hub. Cuando ya no encienda de ninguna manera, conecte el cargador y cárguela al 100 %.",
   "The console slept: the drain goes on slowly": "La consola entró en suspensión: la batería se descarga lentamente",
-  "FOLDERS": "Carpetas"
+  "FOLDERS": "Carpetas",
+  "The console slept: the drain is over": "La consola entró en suspensión: la descarga ha finalizado"
 }

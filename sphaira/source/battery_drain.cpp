@@ -372,13 +372,16 @@ void DrainMenu::CalibTick() {
     if (m_calib_last && now > m_calib_last && now - m_calib_last <= 5) {
         m_run_s += static_cast<u64>(now - m_calib_last);
     }
-    // a gap in the once-a-second tick with the charger out and the voltage low: the console slept and was woken (the same
-    // gap and voltage that Cutoffs() in the log calls a cut-off)
-    if (!m_calib->charge && !m_calib->tail && !m_charger && m_calib_last && now - m_calib_last > calib::CUTOFF_GAP_S
-        && m_mv > 0 && m_mv <= calib::CUTOFF_MAX_MV) {
+    // a gap in the once-a-second tick after a low voltage on battery: the console slept (a low battery puts it to sleep) and
+    // was woken, with or without the charger (the user plugs it in before he wakes it). The same gap and voltage that
+    // Cutoffs() in the log calls a cut-off. The values before the gap decide: after it the charger may already be in.
+    if (!m_calib->charge && !m_calib->tail && m_calib_last && now - m_calib_last > calib::CUTOFF_GAP_S
+        && !m_tick_charger && m_tick_mv > 0 && m_tick_mv <= calib::CUTOFF_MAX_MV) {
         OnSleptAwake(now);
     }
     m_calib_last = now;
+    m_tick_mv = m_mv;
+    m_tick_charger = m_charger;
     if (m_log) {
         calib::Sample sm;
         sm.time = now;
@@ -433,13 +436,14 @@ void DrainMenu::OnSleptAwake(s64 now) {
         calib_flow::SaveMarker(*m);
     }
     if (m_log) {
-        std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,0\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_mv);
+        std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,%d\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_tick_mv, m_charger ? 1 : 0);
         std::fflush(m_log);
         fsdevCommitDevice("sdmc");
     }
-    log_write("[Calib] the console slept %lld s at %d mV (%d %%): counted as a cut-off, the tail mode from here\n",
-              static_cast<long long>(slept), m_mv, m_pct);
-    App::Notify("The console slept: the drain goes on slowly"_i18n);
+    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d): counted as a cut-off, the tail mode from here\n",
+              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0);
+    // with the charger in the next tick ends the drain (on_drained): the zero in cycle 1, then the charge page
+    App::Notify(m_charger ? "The console slept: the drain is over"_i18n : "The console slept: the drain goes on slowly"_i18n);
 }
 
 auto DrainMenu::CalibTitle() const -> std::string {

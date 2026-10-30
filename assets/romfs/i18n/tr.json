@@ -3911,5 +3911,6 @@
   "next: backup, then the factory model; no charging needed": "sonraki: yedekleme, ardından fabrika modeli; şarj gerekmez",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Sıfırlama şarj gerektirmez: bir kerede tamamlanır. Ardından şarj cihazını çıkarın ve konsolu bir masanın üzerine bırakın: Hub kendi başına tam şarj sağlar. Konsol kapandığında tekrar açın ve Kefir Hub uygulamasını açın. Hiç açılmaz hale geldiğinde, şarj cihazını takın ve %100 seviyesine kadar şarj edin.",
   "The console slept: the drain goes on slowly": "Konsol uyku modundaydı: şarj yavaşça tükeniyor",
-  "FOLDERS": "Klasörler"
+  "FOLDERS": "Klasörler",
+  "The console slept: the drain is over": "Konsol uyku modundaydı: pil tüketimi sona erdi"
 }

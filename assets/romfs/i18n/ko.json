@@ -3916,5 +3916,6 @@
   "next: backup, then the factory model; no charging needed": "다음: 백업, 그 다음 팩토리 모델; 충전 필요 없음",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "재설정에는 충전이 필요하지 않으며 한 번에 완료됩니다. 그 후 충전기를 빼고 콘솔을 테이블 위에 두세요. Hub가 스스로 완전히 충전합니다. 콘솔이 꺼지면 다시 켜고 Kefir Hub를 여세요. 아예 켜지지 않게 되면 충전기를 꼽고 100 %까지 충전하세요.",
   "The console slept: the drain goes on slowly": "본체가 절전 상태였습니다: 배터리가 서서히 소모되는 중입니다",
-  "FOLDERS": "폴더"
+  "FOLDERS": "폴더",
+  "The console slept: the drain is over": "본체가 절전 모드였습니다: 소모가 종료되었습니다"
 }

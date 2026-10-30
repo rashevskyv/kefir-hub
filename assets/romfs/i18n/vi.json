@@ -3916,5 +3916,6 @@
   "next: backup, then the factory model; no charging needed": "tiếp theo: sao lưu, sau đó mẫu xuất xưởng; không cần sạc",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Việc đặt lại không cần sạc: nó được thực hiện ngay lập tức. Sau đó tháo bộ sạc ra và để máy chơi game trên bàn: Hub sẽ tự sạc đầy. Khi máy chơi game tắt, hãy bật lại và mở Kefir Hub. Khi máy hoàn toàn không khởi động được nữa, hãy cắm sạc vào và sạc đến 100 %.",
   "The console slept: the drain goes on slowly": "Máy ở chế độ ngủ: pin tiếp tục cạn chậm",
-  "FOLDERS": "Thư mục"
+  "FOLDERS": "Thư mục",
+  "The console slept: the drain is over": "Máy đã ngủ: quá trình tiêu thụ đã kết thúc"
 }

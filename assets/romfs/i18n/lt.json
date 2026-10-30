@@ -3911,5 +3911,6 @@
   "next: backup, then the factory model; no charging needed": "jau kitas: atsarginė kopija, tada gamyklinis modelis; įkrauti nereikia",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Atstatymui nereikia įkrovimo: tai atliekama iš karto. Tada ištraukite įkroviklį ir palikite konsolę ant stalo: „Hub“ pats ją pilnai įkraus. Kai konsolė išsijungia, vėl ją įjunkite ir atidarykite „Kefir Hub“. Kai ji visiškai nustoja įsijungti, prijunkite įkroviklį ir įkraukite iki 100 %.",
   "The console slept: the drain goes on slowly": "Konsolė miegojo: išsikrovimas vyksta lėtai",
-  "FOLDERS": "Aplankai"
+  "FOLDERS": "Aplankai",
+  "The console slept: the drain is over": "Konsole užmigo: išsikrovimas baigėsi"
 }

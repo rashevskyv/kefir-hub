@@ -3916,5 +3916,6 @@
   "next: backup, then the factory model; no charging needed": "次へ：バックアップ、次にファクトリーモデル、充電不要",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "リセットに充電は必要ありません：一度に完了します。その後、充電器を外し、コンソールをテーブルの上に置いてください：Hubが自動的に満充電にします。コンソールの電源が切れたら、再び電源を入れてKefir Hubを開きます。全く起動しなくなったら、充電器を接続して100 %まで充電してください。",
   "The console slept: the drain goes on slowly": "本体スリープ中: バッテリーがゆっくり消耗しています",
-  "FOLDERS": "フォルダー"
+  "FOLDERS": "フォルダー",
+  "The console slept: the drain is over": "本体がスリープ状態でした: 消費電力は終了しました"
 }

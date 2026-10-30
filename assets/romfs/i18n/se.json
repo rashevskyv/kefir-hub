@@ -3916,5 +3916,6 @@
   "next: backup, then the factory model; no charging needed": "nästa: säkerhetskopia, sedan fabriksmodell; ingen laddning behövs",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "Återställningen kräver ingen laddning: den utförs på en gång. Ta sedan ur laddaren och lämna konsolen på ett bord: Hubben ger den en full laddning på egen hand. När konsolen stängs av, slå på den igen och öppna Kefir Hub. När den inte startar alls längre, anslut laddaren och ladda till 100 %.",
   "The console slept: the drain goes on slowly": "Konsolen sov: batteriet ladas ur långsamt",
-  "FOLDERS": "Mappar"
+  "FOLDERS": "Mappar",
+  "The console slept: the drain is over": "Konsolen sov: urladdningen är över"
 }

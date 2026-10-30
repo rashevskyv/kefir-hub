@@ -141,6 +141,8 @@ private:
     int m_calib_mode{-1};   // 1 the user's screen (charger in), 2 the tail, 3 full; -1 = put it back at the next poll
     u64 m_run_s{};          // seconds of this run
     s64 m_calib_last{};
+    int m_tick_mv{};        // the voltage and the charger at the last tick: what was true before a sleep gap
+    bool m_tick_charger{};
     bool m_full_seen{};     // a charge phase saw 100 % on the charger
     bool m_stop_ask{};      // the "stop?" question is open: the load is paused
     FILE* m_log{};
