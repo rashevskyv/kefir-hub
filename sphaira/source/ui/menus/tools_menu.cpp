@@ -319,7 +319,7 @@ GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
         { "Cheats"_i18n, "Download and manage cheat databases."_i18n, 0, [](){
             App::Push<ui::menu::hats::CheatsMenu>();
         }},
-        { "Emulators"_i18n, "BIOS files for the installed emulators."_i18n, 0, [](){
+        { "Emulators"_i18n, "BIOS and ROM files for the installed emulators."_i18n, 0, [](){
             bios::OpenEmulatorsPage();
         }},
     };

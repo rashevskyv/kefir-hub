@@ -1,23 +1,20 @@
 #include "bios_download.hpp"
 #include "bios_plan.hpp"
+#include "download_jobs.hpp"
+#include "rom_download.hpp"
 #include "app.hpp"
 #include "defines.hpp"
-#include "download.hpp"
 #include "fs.hpp"
-#include "hasher.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 #include "ui/option_box.hpp"
-#include "ui/progress_box.hpp"
 #include "ui/menus/tools_menu.hpp"
-#include "ui/menus/grid_menu_base.hpp"
 #include "ui/menus/settings/settings_internal.hpp"
 
 #include <yyjson.h>
 #include <algorithm>
-#include <cstring>
+#include <functional>
 #include <memory>
-#include <strings.h>
 
 namespace sphaira::bios {
 namespace {
@@ -128,171 +125,96 @@ auto InstalledSystems(fs::Fs& fs, const Manifest& m, Target target) -> std::vect
     return out;
 }
 
-struct Outcome {
-    int downloaded{};
-    int skipped{};
-    int failed{};
-    std::string last_error;
-};
-
-auto FileSizeOnSd(fs::Fs& fs, const fs::FsPath& path) -> s64 {
-    fs::File f;
-    if (R_FAILED(fs.OpenFile(path, FsOpenMode_Read, &f))) {
-        return -1;
+auto ToJobs(const std::vector<Job>& plan) -> std::vector<jobs::Job> {
+    std::vector<jobs::Job> out;
+    out.reserve(plan.size());
+    for (const auto& j : plan) {
+        out.push_back({j.url, j.dest, j.sha1, hash::Type::Sha1, j.size});
     }
-    s64 size{};
-    if (R_FAILED(f.GetSize(&size))) {
-        return -1;
-    }
-    return size;
-}
-
-// one file: skip when it is already there with the right size, else download beside it,
-// check the sha1 and move it into place.
-auto Fetch(ui::ProgressBox* pbox, fs::Fs& fs, const Job& job, Outcome& out) -> Result {
-    const fs::FsPath dest{job.dest};
-    if (FileSizeOnSd(fs, dest) == static_cast<s64>(job.size)) {
-        out.skipped++;
-        R_SUCCEED();
-    }
-
-    const fs::FsPath part{job.dest + ".part"};
-    fs.CreateDirectoryRecursivelyWithPath(dest);
-    fs.DeleteFile(part);
-    pbox->NewTransfer(FileName(job.dest));
-    const auto result = curl::Api().ToFile(
-        curl::Url{job.url},
-        curl::Path{part},
-        curl::OnProgress{pbox->OnDownloadProgressCallback()}
-    );
-    R_TRY(pbox->ShouldExitResult());
-    if (!result.success || FileSizeOnSd(fs, part) != static_cast<s64>(job.size)) {
-        log_write("[bios] %s: http %ld, size %lld (want %llu)\n", job.dest.c_str(), result.code,
-            static_cast<long long>(FileSizeOnSd(fs, part)), static_cast<unsigned long long>(job.size));
-        fs.DeleteFile(part);
-        out.failed++;
-        out.last_error = FileName(job.dest);
-        R_SUCCEED();
-    }
-
-    std::string sha1;
-    R_TRY(hash::Hash(pbox, hash::Type::Sha1, &fs, part, sha1));
-    if (strncasecmp(sha1.c_str(), job.sha1.c_str(), 40) != 0) {
-        log_write("[bios] %s: sha1 %s, want %s\n", job.dest.c_str(), sha1.c_str(), job.sha1.c_str());
-        fs.DeleteFile(part);
-        out.failed++;
-        out.last_error = FileName(job.dest);
-        R_SUCCEED();
-    }
-
-    fs.DeleteFile(dest);
-    R_TRY(fs.RenameFile(part, dest));
-    out.downloaded++;
-    R_SUCCEED();
-}
-
-void Run(Target target, std::vector<Job> jobs) {
-    auto out = std::make_shared<Outcome>();
-    const std::string name = Info(target).name;
-    App::Push<ui::ProgressBox>(0, "Download BIOS for "_i18n + name, "", [jobs = std::move(jobs), out](auto pbox) -> Result {
-        fs::FsNativeSd fs;
-        R_TRY(fs.GetFsOpenResult());
-        for (size_t i = 0; i < jobs.size(); i++) {
-            R_TRY(pbox->ShouldExitResult());
-            pbox->SetTitle(std::to_string(i + 1) + " / " + std::to_string(jobs.size()));
-            R_TRY(Fetch(pbox, fs, jobs[i], *out));
-        }
-        R_SUCCEED();
-    }, [out, name](Result rc) {
-        log_write("[bios] %s: %d downloaded, %d skipped, %d failed, rc 0x%X\n", name.c_str(),
-            out->downloaded, out->skipped, out->failed, rc);
-        if (rc == Result_TransferCancelled) {
-            return;
-        }
-        App::PushErrorBox(rc, "BIOS download failed"_i18n);
-        if (R_FAILED(rc)) {
-            return;
-        }
-        char buf[256];
-        std::snprintf(buf, sizeof(buf), "%s: %d %s, %d %s, %d %s",
-            name.c_str(), out->downloaded, "downloaded"_i18n.c_str(), out->skipped, "already there"_i18n.c_str(),
-            out->failed, "failed"_i18n.c_str());
-        if (out->failed) {
-            App::Push<ui::OptionBox>(std::string{buf} + "\n" + "Last failed file: "_i18n + out->last_error, "OK"_i18n);
-        } else {
-            App::Notify(buf);
-        }
-    });
-}
-
-auto Describe(const std::vector<Job>& jobs) -> std::string {
-    return std::to_string(jobs.size()) + " " + "files"_i18n + ", " + ui::menu::grid::FormatBytes(TotalSize(jobs));
+    return out;
 }
 
 // the question for one emulator: all its BIOS files, or only the systems it has content for
 void Ask(std::shared_ptr<Manifest> m, Target target) {
     fs::FsNativeSd fs;
-    auto all = Plan(*m, target, {});
+    auto all = ToJobs(Plan(*m, target, {}));
     const auto installed = InstalledSystems(fs, *m, target);
     const std::string name = Info(target).name;
+    const std::string title = "Download BIOS for "_i18n + name;
     const std::string where = "\n" + "Folder: "_i18n + Info(target).bios_root;
 
     if (installed.empty()) {
         App::Push<ui::OptionBox>(
-            "Download all BIOS files for "_i18n + name + " (" + Describe(all) + ")?" + where,
-            "Back"_i18n, "Download"_i18n, 1, [all = std::move(all), target](auto op) {
-                if (op && *op == 1) Run(target, all);
+            "Download all BIOS files for "_i18n + name + " (" + jobs::Describe(all) + ")?" + where,
+            "Back"_i18n, "Download"_i18n, 1, [all = std::move(all), title](auto op) {
+                if (op && *op == 1) jobs::Run(title, all);
             });
         return;
     }
 
-    auto some = Plan(*m, target, installed);
+    auto some = ToJobs(Plan(*m, target, installed));
     const std::string what = target == Target::RetroArch ? "Only for the installed cores"_i18n : "Only for the systems it has"_i18n;
     App::Push<ui::OptionBox>(
         "Download BIOS files for "_i18n + name + "?" + where,
-        "Back"_i18n, what + " (" + Describe(some) + ")", "All"_i18n + " (" + Describe(all) + ")", 1,
-        [all = std::move(all), some = std::move(some), target](auto op) {
-            if (op && *op == 1) Run(target, some);
-            if (op && *op == 2) Run(target, all);
+        "Back"_i18n, what + " (" + jobs::Describe(some) + ")", "All"_i18n + " (" + jobs::Describe(all) + ")", 1,
+        [all = std::move(all), some = std::move(some), title](auto op) {
+            if (op && *op == 1) jobs::Run(title, some);
+            if (op && *op == 2) jobs::Run(title, all);
         });
 }
 
-} // namespace
-
-void OpenEmulatorsPage() {
+void AddBiosRows(std::vector<ui::menu::settings::SettingsItem>& rows) {
     using ui::menu::settings::SettingsItem;
     auto m = std::make_shared<Manifest>();
-    std::vector<SettingsItem> rows;
     rows.push_back(ui::menu::settings::MakeHeader("BIOS"_i18n));
 
     if (!LoadManifest(*m)) {
         SettingsItem row{"The BIOS list is missing from this build"_i18n, ""};
         row.disabled = true;
         rows.push_back(std::move(row));
-    } else {
-        fs::FsNativeSd fs;
-        std::string known;
-        for (const auto& info : Targets()) {
-            known += known.empty() ? "" : ", ";
-            known += info.name;
-            if (!fs.DirExists(info.detect)) {
-                continue;
-            }
-            const auto jobs = Plan(*m, info.target, {});
-            SettingsItem row{"Download BIOS for "_i18n + info.name, Describe(jobs) + " → " + info.bios_root};
-            row.action = [m, target = info.target]() { Ask(m, target); };
-            rows.push_back(std::move(row));
-        }
-        if (rows.size() == 1) {
-            SettingsItem row{"No emulator found on the SD card"_i18n, "Known: "_i18n + known};
-            row.disabled = true;
-            rows.push_back(std::move(row));
-        }
+        return;
     }
 
-    rows.push_back(ui::menu::settings::MakeHeader("Source"_i18n));
+    fs::FsNativeSd fs;
+    std::string known;
+    bool any = false;
+    for (const auto& info : Targets()) {
+        known += known.empty() ? "" : ", ";
+        known += info.name;
+        if (!fs.DirExists(info.detect)) {
+            continue;
+        }
+        any = true;
+        const auto plan = ToJobs(Plan(*m, info.target, {}));
+        SettingsItem row{"Download BIOS for "_i18n + info.name, jobs::Describe(plan) + " → " + info.bios_root};
+        row.action = [m, target = info.target]() { Ask(m, target); };
+        rows.push_back(std::move(row));
+    }
+    if (!any) {
+        SettingsItem row{"No emulator found on the SD card"_i18n, "Known: "_i18n + known};
+        row.disabled = true;
+        rows.push_back(std::move(row));
+    }
     rows.push_back({"github.com/Abdess/retrobios", "The files are downloaded one by one on your request; the Hub ships none of them."_i18n});
-    App::Push<ui::menu::tools::SystemToolsMenu>("Emulators"_i18n, std::move(rows));
+}
+
+} // namespace
+
+void OpenEmulatorsPage() {
+    // the page is rebuilt after a collection is added or removed: the old one leaves, a new one is pushed
+    auto self = std::make_shared<ui::menu::tools::SystemToolsMenu*>(nullptr);
+    const std::function<void()> reopen = [self]() {
+        if (*self) {
+            (*self)->SetPop();
+        }
+        OpenEmulatorsPage();
+    };
+    std::vector<ui::menu::settings::SettingsItem> rows;
+    AddBiosRows(rows);
+    rom::AddRows(rows, reopen);
+    auto menu = std::make_unique<ui::menu::tools::SystemToolsMenu>("Emulators"_i18n, std::move(rows));
+    *self = menu.get();
+    App::Push(std::move(menu));
 }
 
 } // namespace sphaira::bios

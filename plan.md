@@ -762,7 +762,7 @@ Design rules:
       choose a game and "Send"; on the other a popup asks "Receive this game?" (name, size, components) with
       Accept / Decline, without opening any menu first. First check what works today (Console Transfer, USB
       Switch-to-Switch) and list the steps the user has to make now; then remove them. **[USER]** test with two consoles.
-- [ ] E.3 **ROM library downloader** (as HaulNX, https://github.com/digdat0/HaulNX, added 2026-10-30): the user
+- [x] E.3 **ROM library downloader** (as HaulNX, https://github.com/digdat0/HaulNX, added 2026-10-30): the user
       gives archive.org item IDs (and optional archive.org keys); the Hub downloads the files per console into
       `sd:/roms/<console>/`, extracts archives, verifies MD5, resumes after Wi-Fi drops, skips files already on SD,
       shows size + free space before the download. No ROM sources shipped in the Hub. Reuse the existing download

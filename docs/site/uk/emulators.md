@@ -22,6 +22,20 @@
 - the list is built into the Hub and updates with a Hub release
 -->
 
+## ROMs from archive.org
+<!-- shot: emulators-rom-item | A collection's file list: names, sizes, "on the card" on a downloaded one -->
+<!-- draft
+- below BIOS the page has the section [[ROMS]]: one row per collection you added (its title, the console, the archive.org item, the folder) and [[Add a collection]]
+- a collection is an archive.org item you choose yourself; the Hub lists no sources; the files land in `/roms/<console>/`, the folder names Tico, HaulNX and RetroArch's scanner share (for example `/roms/snes`, `/roms/psx`)
+- [[Add a collection]]: pick the console from the list (name and folder), then type the item id or paste its `archive.org/details/...` address (on the console, or sent from a phone or a computer); the Hub reads the item and shows its title, the number of files and the size; [[Keep the collection]] saves it, [[Back]] drops it
+- an item whose files are all archive.org metadata (no content) is refused with [[The item has no files to download]]
+- press **A** on a collection: the list of its files with sizes; a file already in the folder is marked [[on the card]]; **A** on a file downloads it; **X** marks a file, **Y** inverts the marks; **START**: [[Download the marked files]], [[Download all]], [[Remove the collection]] (the downloaded files stay)
+- every download goes through the same window as BIOS: file number and name, md5 check, a file already there with the right size is skipped, the counts at the end
+- archives are not extracted: RetroArch and Tico read zips; CD games in zips (psx, sega-cd, saturn, dc) must be extracted by hand for now
+- the collections are kept in `/config/kefir/roms.txt`, one a line: console, item id, title, separated by tabs
+- restricted items (an archive.org account needed) are not supported yet
+-->
+
 ## Див. також
 - [Ігри](games.md)
 - [Homebrew](homebrew.md): встановлення RetroArch, Tico та інших емуляторів
