@@ -64,17 +64,11 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
     const s64 avg_write_bps = AvgWriteBps();
     const double speed_mib = static_cast<double>(avg_write_bps) / (1024.0 * 1024.0);
 
-    bool has_deferred_plan = (m_plan_total_bytes <= 0);
-    for (const auto& e : m_queue) {
-        if (e.selected && (e.analysis_deferred || e.source_size <= 0)) {
-            has_deferred_plan = true;
-            break;
-        }
-    }
-
+    // the same number as the screensaver and the mini badge (OverallRatio): by bytes, estimates included
     const s64 overall_done = OverallDone();
-    const double overall_ratio = (!has_deferred_plan && m_plan_total_bytes > 0)
-        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0) : 0.0;
+    const auto overall = OverallRatio();
+    const bool has_deferred_plan = !overall;
+    const double overall_ratio = overall.value_or(0.0);
 
     const auto format_eta = [&](s64 bytes_left) -> std::string {
         // under four samples the rate is still settling and the figure jumps
@@ -163,20 +157,9 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
         const bool current_known = m_progress_size > 0;
         const double current_ratio = current_known
             ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0;
-        // the whole queue: by bytes when the plan is known, else by packages (the finished ones plus the part of this one);
-        // a stream (MTP/FTP) does not say how many packages come, so its overall is unknown
-        bool overall_known = false;
-        double whole_ratio = 0.0;
-        if (!has_deferred_plan && m_plan_total_bytes > 0) {
-            overall_known = true;
-            whole_ratio = overall_ratio;
-        } else if (known_batch && !m_queue.empty()) {
-            overall_known = true;
-            const auto finished = static_cast<double>(std::min(m_current_package, m_queue.size()));
-            whole_ratio = std::clamp<double>((finished + current_ratio) / static_cast<double>(m_queue.size()), 0.0, 1.0);
-        }
+        // the whole queue by bytes; a stream (MTP/FTP) does not say how many packages come, so its overall is unknown
         draw_bar(GetY() + 65.f, current_ratio, current_known);
-        draw_bar(GetY() + 80.f, whole_ratio, overall_known);
+        draw_bar(GetY() + 80.f, overall_ratio, overall.has_value());
     }
 
     // R/W speed graph: red = source read, blue = storage write.

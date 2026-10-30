@@ -295,20 +295,12 @@ void InstallSession::DrawMiniBadge(NVGcontext* vg, Theme* theme) {
     }
     gfx::drawText(vg, bx + 10.f, by + 10.f, 13.f, text_col, pkg_str.c_str());
 
-    bool has_deferred_plan = (m_plan_total_bytes <= 0);
-    for (const auto& e : m_queue) {
-        if (e.selected && (e.analysis_deferred || e.source_size <= 0)) {
-            has_deferred_plan = true;
-            break;
-        }
-    }
-
-    const s64 overall_done = OverallDone();
-    const bool has_known_overall = !has_deferred_plan && m_plan_total_bytes > 0;
+    const auto overall = OverallRatio(); // the same number as the transfer page and the screensaver
+    const bool has_known_overall = overall.has_value();
     const bool has_known_package = (m_progress_size > 0);
 
     const double ratio = has_known_overall
-        ? std::clamp<double>((double)overall_done / (double)m_plan_total_bytes, 0.0, 1.0)
+        ? *overall
         : (has_known_package ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0);
 
     char right_buf[64]{};

@@ -178,6 +178,9 @@ struct InstallSession : MenuBase, InstallProgress {
 
     auto AvgWriteBps() const -> s64;
     auto OverallDone() const -> s64;
+    // the whole queue by bytes (caller holds m_mutex): the one number the transfer page, the mini badge and the
+    // screensaver all show. nullopt when the batch has no known total (a stream, or nothing planned yet)
+    auto OverallRatio() const -> std::optional<double>;
     auto ComputeSaverInfo() -> SaverInfo;
 
     void DrawSummaryPanel(NVGcontext* vg, Theme* theme, const Vec4& area);

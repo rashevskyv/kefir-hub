@@ -512,6 +512,16 @@ auto InstallSession::OverallDone() const -> s64 {
     return m_plan_done_bytes + std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, current_plan);
 }
 
+auto InstallSession::OverallRatio() const -> std::optional<double> {
+    // a package not analysed yet still has a planned size (its file size times 1.6), so the total is known enough
+    // for a bar; the three views used to disagree here (the transfer page fell back to "packages done / all 34 files
+    // of the PC's list", selected or not, and showed 24 % while the PC and the screensaver said 80 %)
+    if (!HasKnownBatchTotals(m_origin) || m_plan_total_bytes <= 0) {
+        return std::nullopt;
+    }
+    return std::clamp<double>(static_cast<double>(OverallDone()) / static_cast<double>(m_plan_total_bytes), 0.0, 1.0);
+}
+
 auto InstallSession::ComputeSaverInfo() -> SaverInfo {
     if (mutexTryLock(&m_mutex)) {
         ON_SCOPE_EXIT(mutexUnlock(&m_mutex));
@@ -558,8 +568,8 @@ auto InstallSession::ComputeSaverInfo() -> SaverInfo {
 
         const auto bps = AvgWriteBps();
         const auto done = OverallDone();
-        info.ratio = known_batch && m_plan_total_bytes > 0
-            ? std::clamp<double>((double)done / (double)m_plan_total_bytes, 0.0, 1.0)
+        const auto overall = OverallRatio();
+        info.ratio = overall ? *overall
             : m_progress_size > 0
                 ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0)
                 : 0.0;
