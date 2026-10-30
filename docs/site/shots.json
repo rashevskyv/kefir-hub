@@ -672,6 +672,32 @@
                 "wait 2"
             ]
         },
+        "emulators-page": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 2"
+            ]
+        },
+        "emulators-ask-retroarch": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 2",
+                "A",
+                "wait 2"
+            ]
+        },
         "kefir-settings-list": {
             "steps": [
                 "R",

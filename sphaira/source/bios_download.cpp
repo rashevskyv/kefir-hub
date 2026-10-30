@@ -31,8 +31,14 @@ auto Str(yyjson_val* obj, const char* key) -> std::string {
 }
 
 auto LoadManifest(Manifest& out) -> bool {
+    // romfs is mounted only for the read (as the theme loader does): the Hub keeps it unmounted
+    // so the running nro can be replaced by an update
     std::vector<u8> data;
-    if (R_FAILED(fs::FsStdio().read_entire_file(MANIFEST_PATH, data)) || data.empty()) {
+    if (R_SUCCEEDED(romfsInit())) {
+        ON_SCOPE_EXIT(romfsExit());
+        fs::FsStdio().read_entire_file(MANIFEST_PATH, data);
+    }
+    if (data.empty()) {
         log_write("[bios] no manifest at %s\n", MANIFEST_PATH);
         return false;
     }

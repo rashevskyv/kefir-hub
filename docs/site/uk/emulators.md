@@ -7,6 +7,7 @@
 <!-- shot: emulators-page | Emulators page with a Download BIOS for RetroArch row, its file count and folder -->
 
 ## Download BIOS
+<!-- shot: emulators-ask-retroarch | The question for RetroArch: only for the installed cores, or all, each with the file count and size -->
 <!-- draft
 - the page shows one row [[Download BIOS for ]]<emulator> per emulator found on the card; the row's description is the number of files, their size and the folder the files go to
 - emulators and their folders: RetroArch `/retroarch/cores/system/`; Tico `/tico/system/<system>/`; Flycast `/flycast/data/`; melonDS `/switch/melonds/`; DraStic `/switch/drastic/system/` (DS files renamed to `nds_bios_arm7.bin`, `nds_bios_arm9.bin`, `nds_firmware.bin`); NetherSX2 `/switch/nethersx2/bios/`; DuckStation `/switch/duckstation/bios/`
