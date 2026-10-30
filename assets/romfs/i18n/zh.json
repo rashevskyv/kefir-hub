@@ -3968,5 +3968,6 @@
   "How much virtual memory the app gets. Leave Automatic: 42-bit on firmware 23.0.0 and newer, 39-bit before. 42-bit needs firmware 23.0.0: on an older one the app does not start. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "应用获取的虚拟内存大小。保持自动：固件 23.0.0 及更新版本使用 42 位，之前版本使用 39 位。42 位需要固件 23.0.0：在较旧的版本上应用无法启动。36 位：仅当旧应用无法启动时。32 位和 32 位（无别名）：仅当应用本身请求时（Wine-NX、Box64）。",
   "next: backup, then the factory model; no charging needed": "下一步：备份，然后是出厂模型；无需充电",
   "The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %.": "重置不需要充电：一次性完成。然后拔掉充电器，将主机放在桌子上：Hub 会自动将其充满电。当主机关闭时，重新开机并打开 Kefir Hub。当它完全无法开机时，插入充电器并充至 100 %。",
-  "The console slept: the drain goes on slowly": "主机处于睡眠状态：电量正在缓慢消耗"
+  "The console slept: the drain goes on slowly": "主机处于睡眠状态：电量正在缓慢消耗",
+  "FOLDERS": "文件夹"
 }

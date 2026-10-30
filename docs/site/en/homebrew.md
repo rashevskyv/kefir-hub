@@ -95,7 +95,8 @@ This rewrites the name and icon stored inside the `.nro` file, so every launcher
 - folders show first on the top level, with the number of apps in them; there are no folders inside folders
 - one app can be in several folders; the top level ([[Homebrew]]) counts as a folder too, so an app can stay on the top level and be in a folder at the same time
 - **A** ([[Open]]) goes into a folder; **B** goes back to the top level
-- make a folder: **+** on the top level → [[New folder]], type the name
+- make a folder: **+** on the top level → [[New folder]] (in the [[FOLDERS]] section, or under THIS FOLDER on a folder row), type the name
+- the folder actions sit in their own [[FOLDERS]] section of the options, after the app actions and before FORWARDER; each has its own icon: a folder with two sheets for [[Copy to folder]], with an arrow for [[Move to folder]], with a minus for [[Remove from this folder]], with a plus for [[New folder]]
 - on an app (or the apps selected with **X**/**Y**), **+** gives [[Copy to folder]] (the app stays where it is and shows in the chosen folder too) and [[Move to folder]] (the app leaves the folder on screen); the list of folders also has [[Homebrew]] (the top level) and [[New folder]]
 - inside a folder, **+** on an app also gives [[Remove from this folder]]; an app that is left in no folder goes back to the top level
 - **+** on a folder row gives the THIS FOLDER section: [[Open]], [[Rename]], [[Edit name and icon]], [[Remove icon]] (only when the folder has an icon), [[Delete]]

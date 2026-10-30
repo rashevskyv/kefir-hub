@@ -198,6 +198,10 @@ enum class ActionIcon : u8 {
     Range,
     Toggle,
     Compress,
+    FolderNew,   // a folder with a plus
+    FolderCopy,  // a folder with two sheets: copy into a folder
+    FolderMove,  // a folder with an arrow: move into a folder
+    FolderOut,   // a folder with a minus: remove from a folder
 };
 
 struct ThemeMeta {

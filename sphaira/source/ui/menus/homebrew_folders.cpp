@@ -218,16 +218,28 @@ void Menu::AddFolderOptions(Sidebar* options) {
     options->Add<SidebarEntryCallback>("Delete"_i18n, [this, id](){
         DeleteFolder(id);
     }, true, "Delete this folder. The apps in it stay in Homebrew."_i18n)->SetIcon(ActionIcon::Delete);
+
+    AddNewFolderOption(options);
+}
+
+void Menu::AddNewFolderOption(Sidebar* options) {
+    if (m_folder == hb_folders::ROOT) {
+        options->Add<SidebarEntryCallback>("New folder"_i18n, [this](){
+            NewFolder();
+        }, true, "Make a folder in Homebrew. It only groups apps here; files on the SD card do not move."_i18n)->SetIcon(ActionIcon::FolderNew);
+    }
 }
 
 void Menu::AddAppFolderOptions(Sidebar* options) {
+    options->Add<SidebarEntryHeader>("FOLDERS"_i18n);
+
     options->Add<SidebarEntryCallback>("Copy to folder"_i18n, [this](){
         PickFolder("Copy to folder"_i18n, m_folder, [this](u32 to){ PutInFolder(to, false); });
-    }, true, "Also show the selected apps in another folder. They stay here too."_i18n)->SetIcon(ActionIcon::Folder);
+    }, true, "Also show the selected apps in another folder. They stay here too."_i18n)->SetIcon(ActionIcon::FolderCopy);
 
     options->Add<SidebarEntryCallback>("Move to folder"_i18n, [this](){
         PickFolder("Move to folder"_i18n, m_folder, [this](u32 to){ PutInFolder(to, true); });
-    }, true, "Show the selected apps in another folder instead of this one."_i18n)->SetIcon(ActionIcon::Folder);
+    }, true, "Show the selected apps in another folder instead of this one."_i18n)->SetIcon(ActionIcon::FolderMove);
 
     if (m_folder != hb_folders::ROOT) {
         options->Add<SidebarEntryCallback>("Remove from this folder"_i18n, [this](){
@@ -237,8 +249,9 @@ void Menu::AddAppFolderOptions(Sidebar* options) {
             SaveFolders();
             ClearSelection();
             Enter(m_folder);
-        }, true, "The app stays in its other folders. An app in no folder goes back to Homebrew."_i18n);
+        }, true, "The app stays in its other folders. An app in no folder goes back to Homebrew."_i18n)->SetIcon(ActionIcon::FolderOut);
     }
+    AddNewFolderOption(options);
 }
 
 void Menu::PickFolder(const std::string& title, u32 skip, std::function<void(u32)> on_pick) {

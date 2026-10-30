@@ -102,6 +102,7 @@ private:
     }
     void AddFolderOptions(Sidebar* options);
     void AddAppFolderOptions(Sidebar* options);
+    void AddNewFolderOption(Sidebar* options); // "New folder", on the top level only
     // asks for a folder: the top level, every folder but `skip`, or a new one
     void PickFolder(const std::string& title, u32 skip, std::function<void(u32)> on_pick);
     void NewFolder(std::function<void(u32)> on_created = {});

@@ -125,6 +125,25 @@ void drawActionIcon(NVGcontext* vg, const Theme* theme, float x, float y, float 
             nvgBeginPath(vg); nvgMoveTo(vg, x + 7.f * s, y + 6.f * s); nvgLineTo(vg, x + 12.f * s, y + 3.f * s); nvgLineTo(vg, x + 17.f * s, y + 6.f * s); nvgLineTo(vg, x + 17.f * s, y + 20.f * s); nvgLineTo(vg, x + 7.f * s, y + 20.f * s); nvgClosePath(vg); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgStroke(vg);
             line(10.f, 11.f, 14.f, 11.f); line(10.f, 15.f, 14.f, 15.f);
             break;
+        // a folder with a badge in its lower right corner: the folder is open there (the badge sits in the gap)
+        case ActionIcon::FolderNew:
+        case ActionIcon::FolderCopy:
+        case ActionIcon::FolderMove:
+        case ActionIcon::FolderOut:
+            nvgBeginPath(vg); nvgMoveTo(vg, x + 3.f * s, y + 6.f * s); nvgLineTo(vg, x + 9.f * s, y + 6.f * s); nvgLineTo(vg, x + 11.f * s, y + 9.f * s); nvgLineTo(vg, x + 19.f * s, y + 9.f * s); nvgLineTo(vg, x + 19.f * s, y + 12.f * s);
+            nvgMoveTo(vg, x + 3.f * s, y + 6.f * s); nvgLineTo(vg, x + 3.f * s, y + 18.f * s); nvgLineTo(vg, x + 11.f * s, y + 18.f * s);
+            nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 2.f * s); nvgLineCap(vg, NVG_ROUND); nvgStroke(vg);
+            if (icon == ActionIcon::FolderNew) {
+                line(17.f, 14.f, 17.f, 22.f); line(13.f, 18.f, 21.f, 18.f);
+            } else if (icon == ActionIcon::FolderOut) {
+                line(13.f, 18.f, 21.f, 18.f);
+            } else if (icon == ActionIcon::FolderMove) {
+                line(13.f, 18.f, 21.f, 18.f); line(21.f, 18.f, 18.f, 15.f); line(21.f, 18.f, 18.f, 21.f);
+            } else {
+                nvgBeginPath(vg); nvgRect(vg, x + 15.f * s, y + 13.f * s, 6.f * s, 7.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 1.5f * s); nvgStroke(vg);
+                nvgBeginPath(vg); nvgRect(vg, x + 12.5f * s, y + 15.5f * s, 6.f * s, 7.f * s); nvgStrokeColor(vg, colour); nvgStrokeWidth(vg, 1.5f * s); nvgStroke(vg);
+            }
+            break;
         default:
             break;
     }

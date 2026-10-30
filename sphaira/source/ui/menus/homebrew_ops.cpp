@@ -375,8 +375,6 @@ void Menu::DisplayOptions() {
                 }
             }, true, "Permanently delete all selected homebrew."_i18n)->SetIcon(ActionIcon::Delete);
 
-            AddAppFolderOptions(options.get());
-
             options->Add<SidebarEntryCallback>("Send to another console"_i18n, [this](){
                 std::vector<std::string> paths;
                 for (const auto& t : GetSelectedEntries()) {
@@ -384,6 +382,8 @@ void Menu::DisplayOptions() {
                 }
                 console_files::Send(std::move(paths));
             }, true, "Send the selected homebrew to another console on the same Wi-Fi. Its whole folder is packed."_i18n);
+
+            AddAppFolderOptions(options.get()); // its own section: the folders are tags, not part of the app
 
             if (targets.size() == 1 && m_selected_count == 0) {
                 options->Add<SidebarEntryHeader>("FORWARDER"_i18n);
@@ -449,12 +449,6 @@ void Menu::DisplayOptions() {
 
     if (m_selected_count == 0) {
         add_targets();
-    }
-
-    if (m_folder == hb_folders::ROOT) {
-        options->Add<SidebarEntryCallback>("New folder"_i18n, [this](){
-            NewFolder();
-        }, true, "Make a folder in Homebrew. It only groups apps here; files on the SD card do not move."_i18n)->SetIcon(ActionIcon::Folder);
     }
 
     AddInstallShareOptions(options.get());
