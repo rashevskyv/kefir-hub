@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.236 — The Hub starts again after an update and on "Restart Kefir Hub" (owner, 2026-10-30)
+`App::ExitRestart` and `auto_update::RestartIntoNew` queued the launch of the nro (`nro_launch` -> `LaunchNroEventData`) and then set `m_quit` at once; the main loop ended before it handled the event, so `envSetNextLoad` never ran and the Hub closed. Now only the event handler quits (after `envSetNextLoad`); the two functions no longer call `Exit()`.
+host tests: pass (--quick) | nro: built | switch: pending (Settings -> Restart Kefir Hub comes back; an update from About starts the new version)
+
 ## v0.14.235 — Homebrew folders: their own FOLDERS section and icons (owner, 2026-10-30)
 The folder actions leave the FORWARDER block: a FOLDERS header after "Send to another console" holds Copy to folder, Move to folder, Remove from this folder and New folder (top level only; also under THIS FOLDER on a folder row). New `ActionIcon::FolderCopy/FolderMove/FolderOut/FolderNew`: a folder with a badge (two sheets, arrow, minus, plus) drawn in `action_icon.cpp`. Docs draft on homebrew (EN, UK); shots homebrew-folder-options and homebrew-copy-to-folder re-taken in Eden (the recipe steps one row further: Copy to folder sits after Send to another console now).
 host tests: pass (--quick) | nro: built | switch: pending (the + options on an app and on a folder row: the FOLDERS section and the four icons)

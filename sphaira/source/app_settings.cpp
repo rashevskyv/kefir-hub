@@ -671,9 +671,10 @@ void App::Exit() {
     g_app->m_quit = true;
 }
 
+// the launch is an event: the main loop calls envSetNextLoad and quits when it handles it. An Exit() here would end
+// the loop first, and the Hub closed instead of starting again (what users saw after an update).
 void App::ExitRestart() {
     nro_launch(GetExePath());
-    Exit();
 }
 
 } // namespace sphaira

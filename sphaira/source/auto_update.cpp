@@ -172,9 +172,9 @@ void StartTransferDownload(const std::string& url, const std::string& version, c
 
 } // namespace
 
+// the main loop quits by itself when it handles the launch event (see App::ExitRestart); an Exit() here raced it
 void RestartIntoNew() {
     nro_launch(ResolveInstallDestination(App::GetExePath()));
-    App::Exit();
 }
 
 void Poll() {
