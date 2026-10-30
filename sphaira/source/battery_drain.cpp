@@ -398,10 +398,6 @@ void DrainMenu::CalibTick() {
     if (m_calib->charge && m_charger && m_pct >= 100) {
         m_full_seen = true;
     }
-    if (m_calib->reset && m_charger && m_pct >= 100 && !m_reset_asked) {
-        AskReset();
-        return;
-    }
     // enough is drained and the charger is in (the console was cut off and now charges): the drain is over, go to the charge
     if (!m_calib->charge && m_charger && (m_step == wizard::DrainStep::Charging || m_calib->tail) && m_calib->on_drained) {
         const auto go = std::move(m_calib->on_drained);
@@ -421,42 +417,12 @@ void DrainMenu::CalibTick() {
     }
 }
 
-void DrainMenu::AskReset() {
-    m_reset_asked = true;
-    const auto ask = [this]() {
-        App::Push<ui::OptionBox>("The battery is full. Reset the gauge now? A backup of the gauge is made first."_i18n,
-            "Not now"_i18n, "Reset"_i18n, 1, [this](auto op) {
-                if (op && *op == 1) {
-                    const auto go = std::move(m_calib->on_reset);
-                    SetPop();
-                    if (go) {
-                        go();
-                    }
-                }
-            });
-    };
-    SetAction(Button::A, Action{"Reset"_i18n, ask});
-    ask();
-}
-
 auto DrainMenu::CalibTitle() const -> std::string {
-    if (m_calib->reset) {
-        return "Reset the gauge"_i18n;
-    }
     const auto which = m_calib->step == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
     return which + ": " + (m_calib->charge ? "charge to 100 %"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
 }
 
 auto DrainMenu::CalibStatus() const -> std::string {
-    if (m_calib->reset) {
-        if (!m_charger) {
-            return "Plug the charger in. The Hub then charges the battery to 100 % and asks whether to reset the gauge."_i18n;
-        }
-        if (m_pct >= 100) {
-            return "The battery is full. Press A to reset the gauge."_i18n;
-        }
-        return "Charging to 100 %. Then the Hub asks whether to reset the gauge: it writes the factory battery model into it. Your games and saves are not touched."_i18n;
-    }
     if (m_calib->charge) {
         const auto which = m_calib->step == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
         if (!m_charger) {

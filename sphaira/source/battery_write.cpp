@@ -41,7 +41,6 @@ namespace {
 
 using namespace detail;
 
-constexpr u16 MIN_FULL_MV = 4100;
 constexpr const char* STATE_PATH = "/config/kefir/battery/calibration.txt";
 
 } // namespace
@@ -206,56 +205,8 @@ void Done(Result rc, const std::string& ok_text, const std::shared_ptr<std::stri
     }
 }
 
-struct ChargeState {
-    bool charger{};
-    u32 pct{};
-    u32 mv{};
-};
-
-auto ReadCharge() -> ChargeState {
-    ChargeState c;
-    PsmChargerType charger{};
-    psmGetChargerType(&charger);
-    c.charger = charger != PsmChargerType_Unconnected;
-    psmGetBatteryChargePercentage(&c.pct);
-    FuelGauge g;
-    if (const auto v = g.Read(MAX17050_VCell)) {
-        c.mv = static_cast<u32>((*v >> 3) * 0.625);
-    }
-    return c;
-}
-
-// the reset needs a full battery: the model starts from "full" and the chip learns from there. The box
-// waits on the charger (no auto sleep) until then; B cancels.
-auto WaitForFull(ui::ProgressBox* pbox) -> Result {
-    App::SetAutoSleepDisabled(true);
-    ON_SCOPE_EXIT(App::SetAutoSleepDisabled(false));
-    pbox->SetHideSpeed(true); // a charge has no transfer speed or ETA
-    std::string last;
-    while (true) {
-        R_TRY(pbox->ShouldExitResult());
-        const auto c = ReadCharge();
-        if (c.charger && c.pct >= 100 && c.mv >= MIN_FULL_MV) {
-            R_SUCCEED();
-        }
-        // the text changes only with the state: a new text restarts the box's clock, and the time left
-        // it shows is then the real time to a full battery. The % is beside the bar.
-        std::string text = !c.charger ? "Connect the charger"_i18n
-            : c.pct < 100 ? "Charging the battery to 100%"_i18n
-            : "Topping up the cell to 4.1 V"_i18n;
-        if (text != last) {
-            pbox->NewTransfer(text);
-            last = text;
-        }
-        pbox->UpdateTransfer(c.pct, 100);
-        for (int i = 0; i < 20 && !pbox->ShouldExit(); i++) {
-            svcSleepThread(100'000'000ULL);
-        }
-    }
-}
-
-// back up, write the factory model, save this MMC's copy and the wizard's state: what the reset does once the battery
-// is where it should be (full for the old wizard, near empty at the cut-off for the calibration)
+// back up, write the factory model, save this MMC's copy and the wizard's state. Any charge level: the init seeds the
+// counters from VFSOC (the voltage), so the gauge does not need a full battery (the old wizard's 100 % rule is gone)
 auto ResetNow(ui::ProgressBox* pbox, std::string& failed) -> Result {
     auto s = Read();
     R_UNLESS(s.gauge, Result_ArchiveRead);
@@ -384,8 +335,7 @@ namespace detail {
 
 void RunReset(std::function<void(bool)> done) {
     auto failed = std::make_shared<std::string>();
-    App::Push<ui::ProgressBox>(0, "Battery calibration reset"_i18n, "Then the factory values are written"_i18n, [failed](auto pbox) -> Result {
-        R_TRY(WaitForFull(pbox));
+    App::Push<ui::ProgressBox>(0, "Reset the gauge"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {
         return ResetNow(pbox, *failed);
     }, [failed, done](Result rc) {
         if (rc == Result_TransferCancelled) {

@@ -100,8 +100,8 @@ auto DrainMenu::HoursMinutesSeconds(u64 sec) -> std::string {
 }
 
 void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
-    // where this run is on the road: the reset (1), cycle 1 (2) or cycle 2 (3)
-    const int road = m_calib->reset ? 1 : m_calib->step + 1;
+    // where this run is on the road: cycle 1 (2) or cycle 2 (3); the reset (1) has no run on this page
+    const int road = m_calib->step + 1;
     calib_ui::DrawRoadmap(vg, theme, road, road - 1, 5);
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
@@ -180,9 +180,6 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
             ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn, "%s", "Plug the charger in."_i18n.c_str());
         }
         y += 46.f;
-        if (m_calib->reset) {
-            return; // the status above says what comes next; the cycle texts below do not apply to the reset
-        }
         if (m_charger && m_pct >= 100) {
             ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. Now the drain: take the charger out."_i18n.c_str());
             y += 44.f;

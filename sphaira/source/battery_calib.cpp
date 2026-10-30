@@ -1,5 +1,6 @@
 // Tools > Battery calibration (docs/dev/BATTERY-CALIBRATION.md, docs/dev/BATTERY-HANDOFF.md 1a): five steps.
-// 1 the factory reset at 100 % (battery_write.cpp, detail::RunReset: the proven logic of 0.14.111-163).
+// 1 the factory reset, at any charge level (battery_write.cpp, detail::RunReset: the init of 0.14.111-163; the init seeds the
+//   counters from the voltage, so the old "charge to 100 % first" is not needed).
 // 2 cycle 1: drain to the cut-off; at the next Hub start the last voltage of the drain log is written into the gauge as the
 //   zero (battery_zero_write.cpp); then charge to 100 %.
 // 3 cycle 2: drain to the cut-off, charge to 100 %.
@@ -293,7 +294,7 @@ void ShowIntro() {
             cu::Head("How it works"_i18n),
             cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity."_i18n),
             cu::Head("What you do"_i18n),
-            cu::Para("Charge the console to 100 % for the reset. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %."_i18n),
+            cu::Para("The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %."_i18n),
             cu::Head("How long it takes"_i18n),
             cu::Para("Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup."_i18n),
         },
@@ -320,22 +321,15 @@ void ShowResetDone() {
         }, cu::Page::Act{}, std::function<bool()>{}, 1);
 }
 
-// the charge page counts from the moment the charger is in; when the battery is full it asks once, then resets
+// at once, at any charge level: backup, then the factory model (the init seeds the counters from the voltage)
 void StartResetRun() {
-    CalibRun run;
-    run.charge = true;
-    run.reset = true;
-    run.step = 0;
-    run.on_reset = []() {
-        detail::RunReset([](bool ok) {
-            if (ok) {
-                ShowResetDone();
-            } else {
-                ShowSteps();
-            }
-        });
-    };
-    StartCalibRun(std::move(run));
+    detail::RunReset([](bool ok) {
+        if (ok) {
+            ShowResetDone();
+        } else {
+            ShowSteps();
+        }
+    });
 }
 
 // ---- steps 2 and 3: a cycle -----------------------------------------------------------------------------------------------
@@ -492,7 +486,7 @@ void ShowSteps() {
         std::snprintf(zero_v, sizeof(zero_v), "%.2f V", m->zero_mv / 1000.0);
     }
     std::vector<Row> rows;
-    rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: charge to 100 %, then reset"_i18n : std::string{}, at(Step::Reset), open(StartResetRun)});
+    rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: backup, then the factory model; no charging needed"_i18n : std::string{}, at(Step::Reset), open(StartResetRun)});
     rows.push_back({"2. Cycle 1: drain, the zero, charge"_i18n, m->step == Step::Cycle1 ? CycleText(*m) : m->zero_at ? "the zero"_i18n + ": " + zero_v : std::string{},
         at(Step::Cycle1), open(ShowCyclePage)});
     rows.push_back({"3. Cycle 2: drain, charge"_i18n, m->step == Step::Cycle2 ? CycleText(*m) : std::string{}, at(Step::Cycle2), open(ShowCyclePage)});

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.233 — Battery calibration: the reset at any charge level (owner, 2026-10-30)
+Step 1 no longer charges to 100 % first: `RunReset` runs `ResetNow` at once (backup, factory model). `FactoryInit` seeds RemCap/RepSOC from VFSOC, so the gauge does not need a full battery; the 100 % gate (`WaitForFull`, `MIN_FULL_MV`) and the reset charge run on the drain page (`CalibRun::reset`, `AskReset`) are gone. Flow: reset -> cycle 1 drain -> the zero -> charge -> cycle 2. Texts, docs draft (EN, UK), BATTERY-HANDOFF updated.
+host tests: pass (--quick) | nro: built | switch: pending (Reset the gauge at a partial charge; cycle 1 opens after it)
+
 ## v0.14.232 — Forwarders: 42-bit address space (F.30a)
 `ForwarderAddressSpace::Bit42` = npdm value 4 (libnx `CreateProcessFlagAddressSpace_64Bit42`, firmware 23.0.0+; what DBI calls "42 Bit"). "Automatic" = `ForwarderAddressSpaceDefault()`: 42-bit on 23.0.0 and newer, 39-bit before (a 42-bit npdm does not start on an older firmware). Forwarder options list and the editor get "42-bit"; the Hub's own HOME forwarder uses the same default. Docs drafts on homebrew and settings (EN, UK).
 host tests: pass (--quick) | nro: built | switch: pending (a new forwarder on 23.0.1 starts; check the npdm flags in the installed nca if in doubt)

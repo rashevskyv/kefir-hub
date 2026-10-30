@@ -16,8 +16,9 @@ Owner's idea (2026-10-24): the voltage where the console really switches off is 
 ## 1a. The zero (owner, 2026-10-29, v0.14.231)
 
 "We drain the console to zero, see at which voltage it switches off, and that voltage is the zero: write it down." Final order
-(after three tries in one session; do not reorder again without the owner): **1 reset** at 100 % (backup first; one more backup
-at Start calibration), **2 cycle 1** = drain to the cut-off, the zero, charge to 100 %, **3 cycle 2** = drain, charge, **4 report**,
+(after three tries in one session; do not reorder again without the owner): **1 reset** at any charge level, no charging first
+(0.14.233: `FactoryInit` seeds the counters from VFSOC, so the 100 % gate of the old wizard was dropped; backup first; one more
+backup at Start calibration), **2 cycle 1** = drain to the cut-off, the zero, charge to 100 %, **3 cycle 2** = drain, charge, **4 report**,
 **5 transfer**. A cycle = drain -> cut-off -> charge to 100 %, and it counts by the drain log alone (`calib::CycleDoneByLog`:
 the last cut-off of the step, then a `C` line of the step with psm 100), noted in `Marker::full_at[]` and mirrored into the
 old wizard state; `log.txt` says why. The zero: at the Hub start after cycle 1's cut-off (`Resume`, `Found::CutoffSeen|
@@ -37,7 +38,7 @@ The working logic is **0.14.111-163** (commits a147ba6b, 51a6b3d2, c0c6102d, ad6
 It cured a user's console. It is restored in **0.14.203** (commit 3d23440e). Do not redesign it again without the owner.
 
 Old and restored logic, in order:
-1. **Reset first**, at 100 % on the charger, backup first (`detail::RunReset`: `WaitForFull` then `ResetNow`: backup, `FactoryInit`
+1. **Reset first**, at 100 % on the charger (the gate `WaitForFull` was removed in 0.14.233), backup first (`detail::RunReset` -> `ResetNow`: backup, `FactoryInit`
    = BDF's X sequence, `SaveCopy`, writes `wizard::State{reset_at, reset_mmc, total_at_reset}`). Proven on .141 (v0.14.112 log:
    RepSOC 94 % = VFSOC 94 % right after).
 2. **Cycle 1 and 2** (`wizard::Advance`, `battery_wizard.hpp`): a cycle counts when `Got >= CYCLE_DONE (90)` (x100 of the battery
@@ -99,7 +100,7 @@ Research (cloud agent, Fable, 2026-10-24; full text in `BATTERY-ZERO-REGISTER.md
 
 ### 4.2 Flow
 Intro (2 pages) -> "Start calibration" writes a fresh marker and an empty wizard state -> steps list (5 rows + Actions + Remembered):
-1 Reset the gauge (page, then `RunReset`: a ProgressBox waits for 100 % / 4.1 V, then resets); 2 and 3 Cycle (page: Start the drain
+1 Reset the gauge (`RunReset` at once: a ProgressBox backs up and resets, at any charge level); 2 and 3 Cycle (page: Start the drain
 or, when 90 % is drained, Start charging; `StartDrainRun` / `StartChargeRun`); 4 Report; 5 Transfer (ledger, applied at the next Hub
 start in another system by `ApplyLedger`). `Resume` at the Hub start (10 s after launch, `PollCalibration`): a drain that was running
 goes on (Hub restart = same boot; cut-off = new boot without the charger -> tail mode).
