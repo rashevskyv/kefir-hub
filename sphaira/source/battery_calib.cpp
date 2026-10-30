@@ -409,7 +409,21 @@ auto Resume(Marker m) -> bool {
         App::Notify("Cycle counted"_i18n);
     }
     Sync(m, detail::LoadState().reset_at != 0);
-    const auto found = Check(m, ReadBattery());
+    auto b = ReadBattery();
+    // the log's own word: a drain line this low and then nothing (or the charge) = the console switched off in this drain
+    if (IsCycle(m.step) && m.drain_started) {
+        for (const auto& c : Cutoffs(ReadLog())) {
+            if (c.step == CycleOf(m.step) && c.time >= m.drain_time) {
+                b.cut_in_log = true;
+            }
+        }
+    }
+    const auto found = Check(m, b);
+    log_write("[Calib] resume: step %d, drain started %d (t=%lld, boot %lld), now boot %lld, charger %d, cut-off in log %d -> %s\n",
+              static_cast<int>(m.step), m.drain_started ? 1 : 0, static_cast<long long>(m.drain_time), static_cast<long long>(m.boot_time),
+              static_cast<long long>(b.boot_time), b.charger_in ? 1 : 0, b.cut_in_log ? 1 : 0,
+              found == Found::CutoffCharging ? "cut off, charging" : found == Found::CutoffSeen ? "cut off, on battery"
+              : found == Found::HubRestarted ? "the Hub started again, same boot" : "nothing to go on with");
     SaveMarker(m);
     const bool zero_due = m.step == Step::Cycle1 && !m.zero_at;
     switch (found) {

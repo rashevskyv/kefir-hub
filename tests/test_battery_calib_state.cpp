@@ -29,6 +29,12 @@ int main() {
     assert(Check(m, {false, 5003}) == Found::HubRestarted && m.cutoffs == 0 && LoadFor(m) == Load::Max);
     assert(Check(m, {true, 5003}) == Found::Nothing && m.drain_started);   // the charger was plugged into a running drain
     assert(Check(m, {false, 0}) == Found::HubRestarted);                   // a boot time that is not known never counts as a cut-off
+    // the boot looks the same, but the log holds a cut-off of this drain and the charger is in: the console did switch off
+    {
+        auto c = m;
+        assert(Check(c, {true, 5003, true}) == Found::CutoffCharging && !c.drain_started && c.cutoffs == 1);
+        assert(Check(m, {false, 5003, true}) == Found::HubRestarted && m.cutoffs == 0); // charger out: the boot time decides
+    }
 
     // the console cut off and was switched on WITHOUT the charger: the Hub goes on in the tail mode, by itself
     assert(Check(m, {false, 9000}) == Found::CutoffSeen && m.cutoffs == 1 && m.boot_time == 9000);

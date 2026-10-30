@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.238 — Battery calibration: a cut-off is found by the log too, not only by the boot time (owner, 2026-10-30)
+After a cut-off (red battery) and a start on the charger the Hub went on with "Cycle 1: drain to the cut-off": `Check` took the boot for the same one (`Rebooted` by now minus uptime) and returned Nothing/HubRestarted. Now `Battery::cut_in_log` (a `Cutoffs()` entry of this cycle at or after `drain_time`) with the charger in counts as the cut-off whatever the boot time says: `Found::CutoffCharging` -> the zero (cycle 1) and the charge page. `Resume` logs its decision (`[Calib] resume: ...`: marker, boot times, charger, log). Host test extended.
+host tests: pass (--quick) | nro: built | switch: pending (drain to the red battery, charger in, switch on, open the Hub: the zero page, then the charge page; log.txt has the resume line)
+
 ## v0.14.237 — Battery calibration: finished steps in green with a tick (owner, 2026-10-30)
 `SettingsItem::done` (drawn by `SystemToolsMenu::DrawRow`): the name in green, a tick where the number was ("1. " stripped), the detail dimmed. Finished steps without an action (reset, the cycles) are also `disabled`, so the cursor steps over them; the report and the transfer stay open once done. Docs draft (EN, UK); the stand-alone page `battery-calibration.md` (EN, UK) loses its old "zero first" prose for a draft of the current five steps (the interactive simulator in its iframe still shows the old order: a separate task).
 host tests: pass (--quick) | nro: built | switch: pending (the steps list after the reset: a green tick on "Reset the gauge", the cursor lands on Cycle 1)

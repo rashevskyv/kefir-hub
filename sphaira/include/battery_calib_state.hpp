@@ -146,6 +146,7 @@ inline auto DecideBrightness(const Marker& m, bool charger_in, bool draining, in
 struct Battery {
     bool charger_in{};
     std::int64_t boot_time{}; // unix time this boot began (now minus the uptime), 0 = unknown
+    bool cut_in_log{};        // the drain log has a cut-off of this drain (a low last line, then a gap): the console did switch off
 };
 
 inline constexpr std::int64_t BOOT_SAME_S = 120; // two boot times this close are one boot (the clock and the uptime differ a little)
@@ -170,8 +171,10 @@ inline auto Check(Marker& m, const Battery& b) -> Found {
     if (!IsCycle(m.step) || !m.drain_started) {
         return Found::Nothing;
     }
-    if (!Rebooted(m, b)) {
-        return b.charger_in ? Found::Nothing : Found::HubRestarted; // the same boot: the drain page was left, not cut off
+    // the same boot: the drain page was left, not cut off. Unless the log says the console did switch off and it is on the
+    // charger now: then the boot-time guess was wrong (the user saw the red battery), and the drain is over
+    if (!Rebooted(m, b) && !(b.charger_in && b.cut_in_log)) {
+        return b.charger_in ? Found::Nothing : Found::HubRestarted;
     }
     m.boot_time = b.boot_time;
     if (b.charger_in) {
