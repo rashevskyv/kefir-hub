@@ -1194,7 +1194,7 @@
                 "wait 1.5",
                 "Plus",
                 "wait 1.5",
-                "Down 7",
+                "Down 8",
                 "wait 0.5",
                 "A",
                 "wait 1.5"

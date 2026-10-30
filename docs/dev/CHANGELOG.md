@@ -4,7 +4,7 @@ Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
 ## v0.14.235 — Homebrew folders: their own FOLDERS section and icons (owner, 2026-10-30)
-The folder actions leave the FORWARDER block: a FOLDERS header after "Send to another console" holds Copy to folder, Move to folder, Remove from this folder and New folder (top level only; also under THIS FOLDER on a folder row). New `ActionIcon::FolderCopy/FolderMove/FolderOut/FolderNew`: a folder with a badge (two sheets, arrow, minus, plus) drawn in `action_icon.cpp`. Docs draft on homebrew (EN, UK).
+The folder actions leave the FORWARDER block: a FOLDERS header after "Send to another console" holds Copy to folder, Move to folder, Remove from this folder and New folder (top level only; also under THIS FOLDER on a folder row). New `ActionIcon::FolderCopy/FolderMove/FolderOut/FolderNew`: a folder with a badge (two sheets, arrow, minus, plus) drawn in `action_icon.cpp`. Docs draft on homebrew (EN, UK); shots homebrew-folder-options and homebrew-copy-to-folder re-taken in Eden (the recipe steps one row further: Copy to folder sits after Send to another console now).
 host tests: pass (--quick) | nro: built | switch: pending (the + options on an app and on a folder row: the FOLDERS section and the four icons)
 
 ## v0.14.234 — Battery calibration: a sleep at a low battery counts as the cut-off (owner, 2026-10-30)
