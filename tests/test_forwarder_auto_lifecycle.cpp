@@ -270,6 +270,12 @@ int RunTests() {
 } // namespace
 
 int main() {
+    // an icon made by 0.14.232-0.14.240 (the 42-bit default) is made again; others are left alone
+    using sphaira::forwarder_auto::InstalledIconNeedsReinstall;
+    CHECK(InstalledIconNeedsReinstall("0.14.232") && InstalledIconNeedsReinstall("0.14.240") && InstalledIconNeedsReinstall("0.14.236 [abc]"));
+    CHECK(!InstalledIconNeedsReinstall("0.14.231") && !InstalledIconNeedsReinstall("0.14.241") && !InstalledIconNeedsReinstall("0.13.999"));
+    CHECK(!InstalledIconNeedsReinstall("") && !InstalledIconNeedsReinstall("1.0.0") && !InstalledIconNeedsReinstall("0.14."));
+
     if (RunTests() != 0) {
         return 1;
     }

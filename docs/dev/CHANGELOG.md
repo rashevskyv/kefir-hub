@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.244 — The Hub's HOME icon made by 0.14.232-240 (42-bit) is made again (owner, 2026-10-30)
+On .147 the log said `[ForwarderAuto] launch=3 new=1 install=0`: the fixed-TID icon exists, so nothing was installed; but it was made today with the 42-bit default and does not start. `InstalledIconNeedsReinstall(display_version)` (forwarder_auto_plan.hpp, tested) reads the icon's nacp version (the Hub that made it); for 0.14.232-0.14.240 the plan installs again under the same title id when the Hub was not started from that icon. Log line `the HOME icon was made by X (42-bit): making it again`.
+host tests: pass (--quick) | nro: built | switch: pending (start from hbmenu on 23.0.1 with the broken icon: the notice, then the icon opens)
+
 ## v0.14.243 — USB install: one overall percent on the transfer page, the mini badge and the screensaver (owner, 2026-10-30)
 The transfer page's overall bar said 24 % while DBI Backend and the screensaver said 80 %: with a package not analysed yet it fell back to "packages done / every file of the PC's list" (34, selected or not). `InstallSession::OverallRatio()` is now the one source: done bytes over the planned total (an unanalysed package counts with its estimate), used by `DrawInstalling`, `DrawMiniBadge` and `ComputeSaverInfo`; the per-package fallback is gone.
 host tests: pass (--quick) | nro: built | switch: pending (a USB batch with a long PC list: the lower bar matches DBI Backend's Overall)

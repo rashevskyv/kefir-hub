@@ -46,6 +46,16 @@ auto TitleName(u64 tid) -> std::string {
     return nacp_util::GetName(control_data->nacp);
 }
 
+// the display version of an installed title's nacp (the Hub's own icon carries the Hub version that made it)
+auto TitleVersion(u64 tid) -> std::string {
+    auto control_data = std::make_unique<NsApplicationControlData>();
+    u64 actual_size = 0;
+    if (R_FAILED(nsGetApplicationControlData(NsApplicationControlSource_Storage, tid, control_data.get(), sizeof(NsApplicationControlData), &actual_size))) {
+        return {};
+    }
+    return nacp_util::GetDisplayVersion(control_data->nacp);
+}
+
 auto IsInstalled(u64 tid) -> bool {
     if (!tid || !hosversionAtLeast(2, 0, 0)) {
         return false;
@@ -308,6 +318,15 @@ void ThreadFunc(void*) {
         plan.install_new = false;
         if (!plan.delete_old) {
             plan.notice = Notice::None;
+        }
+    }
+
+    // the icon is there, but a Hub of 0.14.232-0.14.240 made it with the 42-bit address space and it does not
+    // start: make it again under the same title id (not while we run from it: then the next launch does it)
+    if (!plan.install_new && new_installed && src != LaunchSource::NewForwarder) {
+        if (const auto ver = TitleVersion(kefirhub_tid); InstalledIconNeedsReinstall(ver)) {
+            log_write("[ForwarderAuto] the HOME icon was made by %s (42-bit): making it again\n", ver.c_str());
+            plan.install_new = true;
         }
     }
 

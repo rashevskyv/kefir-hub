@@ -9,6 +9,24 @@ namespace sphaira::forwarder_auto {
 
 inline constexpr std::uint64_t KEFIR_HUB_FORWARDER_TID = 0x05C838DF22834000ULL;
 
+// The HOME icon the Hub installs carries the Hub's own nacp, so its display version says which Hub made it.
+// 0.14.232-0.14.240 made it with the 42-bit address space, and such an icon does not start on 23.0.1: an icon
+// from one of those versions is made again (the same title id: the broken one is replaced).
+inline auto InstalledIconNeedsReinstall(std::string_view display_version) -> bool {
+    constexpr std::string_view prefix = "0.14.";
+    if (display_version.substr(0, prefix.size()) != prefix) {
+        return false;
+    }
+    int patch = 0;
+    for (const char c : display_version.substr(prefix.size())) {
+        if (c < '0' || c > '9') {
+            break;
+        }
+        patch = patch * 10 + (c - '0');
+    }
+    return patch >= 232 && patch <= 240;
+}
+
 inline auto IsKefirHubName(std::string_view raw_name) -> bool {
     std::string name{raw_name};
     for (char& c : name) {
