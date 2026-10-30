@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.237 — Battery calibration: finished steps in green with a tick (owner, 2026-10-30)
+`SettingsItem::done` (drawn by `SystemToolsMenu::DrawRow`): the name in green, a tick where the number was ("1. " stripped), the detail dimmed. Finished steps without an action (reset, the cycles) are also `disabled`, so the cursor steps over them; the report and the transfer stay open once done. Docs draft (EN, UK); the stand-alone page `battery-calibration.md` (EN, UK) loses its old "zero first" prose for a draft of the current five steps (the interactive simulator in its iframe still shows the old order: a separate task).
+host tests: pass (--quick) | nro: built | switch: pending (the steps list after the reset: a green tick on "Reset the gauge", the cursor lands on Cycle 1)
+
 ## v0.14.236 — The Hub starts again after an update and on "Restart Kefir Hub" (owner, 2026-10-30)
 `App::ExitRestart` and `auto_update::RestartIntoNew` queued the launch of the nro (`nro_launch` -> `LaunchNroEventData`) and then set `m_quit` at once; the main loop ended before it handled the event, so `envSetNextLoad` never ran and the Hub closed. Now only the event handler quits (after `envSetNextLoad`); the two functions no longer call `Exit()`.
 host tests: pass (--quick) | nro: built | switch: pending (Settings -> Restart Kefir Hub comes back; an update from About starts the new version)

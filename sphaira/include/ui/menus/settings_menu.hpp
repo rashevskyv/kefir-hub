@@ -44,6 +44,9 @@ struct SettingsItem {
     bool marked{false};
     // a row that cannot be used yet: drawn dimmed in the same layout, and the cursor steps over it
     bool disabled{false};
+    // a step that is finished (a wizard's list): the name in green with a tick in front of it. With `disabled` the
+    // cursor steps over it too
+    bool done{false};
 };
 
 struct SettingsCategory {

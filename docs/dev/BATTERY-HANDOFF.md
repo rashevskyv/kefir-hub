@@ -112,7 +112,8 @@ page runs (a gap > `CUTOFF_GAP_S` in the tick, charger out, mv <= `CUTOFF_MAX_MV
 - The old non-calibration drain page (`StartDrain`, `OpenDrain`, old layout) is unreachable code.
 - `battery_hop.cpp` (hekate hop) is no longer reachable from the wizard; `PollHop` still runs.
 - Dead pure logic: `LoadPlan`, `NextLoad`, `TailWorthIt` in `battery_cutoff.hpp`.
-- The interactive guide `docs/site/en/battery-wizard` shows the 0.14.197 order and must be redrawn (v26 stamp).
+- The interactive guide `docs/site/en/battery-wizard` shows the 0.14.197 order and must be redrawn (v26 stamp). The page around it,
+  `battery-calibration.md` (EN, UK), was redrafted to the five steps in 0.14.237; the prose is written by `tools/docs/finish.py`.
 - 24 languages lack 262 i18n keys (`tests/test_i18n_deployment_contract.py` fails; pre-existing). Only en/uk are written.
 
 ### 4.4 Transfer ledger

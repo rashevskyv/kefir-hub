@@ -336,6 +336,35 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
         return;
     }
 
+    if (item.done) {
+        // a finished step: a green tick where the number was, the name in green, the detail dimmed
+        const auto good = nvgRGB(0x4C, 0xAF, 0x50);
+        const float split = v.x + v.w * 0.36f;
+        if (selected) {
+            gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+            gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 2.f, v.w, v.h - 4.f);
+        }
+        const float tx = v.x + 24.f, ty = mid_y - 10.f, ts = 20.f;
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, tx + ts * 0.08f, ty + ts * 0.55f);
+        nvgLineTo(vg, tx + ts * 0.38f, ty + ts * 0.85f);
+        nvgLineTo(vg, tx + ts * 0.92f, ty + ts * 0.18f);
+        nvgStrokeColor(vg, good);
+        nvgStrokeWidth(vg, ts * 0.13f);
+        nvgLineCap(vg, NVG_ROUND);
+        nvgLineJoin(vg, NVG_ROUND);
+        nvgStroke(vg);
+        nvgSave(vg);
+        nvgIntersectScissor(vg, v.x, v.y, split - v.x - 10.f, v.h);
+        gfx::drawText(vg, tx + ts + 10.f, mid_y, 19.f, good, item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgRestore(vg);
+        nvgSave(vg);
+        nvgIntersectScissor(vg, split, v.y, v.x + v.w - 20.f - split, v.h);
+        gfx::drawText(vg, split, mid_y, 15.f, theme->GetColour(ThemeEntryID_TEXT_INFO), item.description.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgRestore(vg);
+        return;
+    }
+
     if (item.disabled) {
         // same layout as a live row, in the dimmed colour
         const auto dim = nvgTransRGBAf(theme->GetColour(ThemeEntryID_TEXT_INFO), 0.55f);

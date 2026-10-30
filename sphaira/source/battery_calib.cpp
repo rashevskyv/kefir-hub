@@ -500,8 +500,15 @@ void ShowSteps() {
         const auto text = StateText(row.mark) + (row.detail.empty() ? std::string{} : ": " + row.detail);
         // an active row acts; the report and the transfer also open once they are done; finished steps do nothing
         const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("4.") || row.label.starts_with("5.")));
-        SettingsItem item{row.label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal};
-        item.disabled = row.mark == Mark::Locked; // dimmed, and the cursor steps over it
+        auto label = row.label;
+        if (row.mark == Mark::Done) { // a green tick takes the place of the number
+            if (const auto p = label.find(". "); p != std::string::npos && p <= 2) {
+                label = label.substr(p + 2);
+            }
+        }
+        SettingsItem item{label, text, {}, acts ? row.action : std::function<void()>{}, SettingsItemKind::Normal};
+        item.done = row.mark == Mark::Done;
+        item.disabled = row.mark == Mark::Locked || (row.mark == Mark::Done && !acts); // the cursor steps over it
         items.push_back(std::move(item));
     }
     items.push_back(SettingsItem{"Actions"_i18n,

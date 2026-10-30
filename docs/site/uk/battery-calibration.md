@@ -10,20 +10,25 @@
 
 ## Чому межа — відсік, а не відсоток
 
-Відсотку датчика заряду не можна довіряти. Консоль може вимкнутися при 35 %, або показувати 0 % годину. Справжня межа — відсік: консоль сама вимикається під навантаженням близько 3,2 В.
+Відсотку датчика заряду не можна довіряти. Консоль може вимкнутися при 35 %, або показувати 0 % годину. Справжня межа — відсік: консоль сама вимикається під навантаженням. Майстер бере напругу в цю мить (від 3,00 до 3,50 В) і записує її в датчик як нуль.
 
 ## Пройти калібрування
-1. Відкрийте [[Tools]] → [[Maintenance]] → [[Battery calibration]] і перегляньте метод.
-2. Крок 1 полягає у розряді до мертвої батареї. Вийміть зарядку. Максимальне навантаження (ЦП і GPU) і максимальна яскравість. Заставка спрацьовує через 3 хвилини або на **−**; стік знижує яскравість. Щосекунди виконується запис у журнал на microSD. До першого відсіку діє максимум навантаження і яскравості. Після кожного відсіку, коли користувач знову вмикає консоль, розряд іде одразу в режимі хвоста: мінімальна яскравість (1 %, автояскравість вимкнено) і мінімальне навантаження.
-3. Після кожного відсіку консоль знову вмикається, і майстер продовжує той самий крок. Якщо консоль більше не вмикається, крок завершено. Прогрес зберігається на microSD, тому перезапуск чи відсік не губять місце, і відкритим лишається лише наступний крок.
-4. Крок 2 виконує нуль: Hub читає лічильник N після увімкнення і пише N мінус X, де X — останнє значення датчика заряду в журналі перед відсіком. Якщо датчик заряду скинувся або журнал втрачено, використовується запасний варіант 0, про що каже звіт. Заряд треба здійснити одразу, а після увімкнення одразу відкрити Kefir Hub без очікування, щоб Hub сам поставив нуль.
-5. Кроки 3 і 4 виконують повний цикл: цикл 1 (заряд до 100 %, потім розряд) та цикл 2. 100 % визначається за відсотком (правило струму близько 0 протягом 5 хвилин заплановане).
-6. Крок 5 показує звіт, який містить вивчену ємність і висновок, датчик заряду перед кожним відсіком, рядок про нуль та інформацію про те, що і куди записано.
+
+<!-- draft
+- the order since 0.14.233: [[1. Reset the gauge]] → [[2. Cycle 1: drain, the zero, charge]] → [[3. Cycle 2: drain, charge]] → [[4. Report]] → [[5. Transfer to the other systems]]; a road map of the five steps at the foot of every page; a finished step is green with a tick and the cursor steps over it
+- open [[Tools]] → [[Maintenance]] → [[Battery calibration]], read the two intro pages, press **A** on [[Start calibration]]: the Hub backs the gauge up first (the toast names the file under /config/kefir/battery/)
+- step 1, [[Reset the gauge]]: at once, at any charge level, no charging first; a backup, then the factory battery model; what the gauge learned before is dropped
+- step 2, cycle 1: take the charger out, press **A** on [[Start the drain]]; full load and brightness; the screen saver after 3 minutes or on Minus (right stick: brightness, left stick: moves the numbers); when the console switches off, switch it on again: the drain goes on in the tail mode (minimum load and brightness) until it does not start at all; if a low battery only puts the console to sleep and you wake it, that counts as the cut-off too ([[The console slept: the drain goes on slowly]])
+- the zero: plug the charger in, switch the console on (it may need a few minutes on the charger first), open Kefir Hub; the Hub takes the last voltage before the gap in the drain log and writes it into the gauge as the zero by itself ([[The console switched off at]] X V, [[Written into the gauge: this voltage is now 0 %.]]); then the charge page opens: wait for 100 %, the cycle counts by itself from the log
+- step 3, cycle 2: the same drain and charge, no zero
+- step 4, [[Calibration report]]: the zero, the learned capacity against design, the verdict
+- step 5, [[Transfer to the other systems]]: the calibration is noted in a ledger on the microSD; the other system (sysMMC, another emuMMC) takes it at its own next start of Kefir Hub and shows a message
+- the progress is kept on the microSD: the Hub can be closed and the console used between the steps; come back through [[Tools]] → [[Maintenance]] → [[Battery calibration]]
+- the console switches off and on many times during a drain: this is normal and needed; keep switching it on until it does not start at all
+-->
 
 ## Перенести калібрування в іншу систему
-Після звіту калібрування зберігається з маркером (номер і час). Кожна інша система бере його при першому старті: з'являється тост і рядок в історії батареї. Можливі невдачі: запис не вдався (повідомлення про помилку, маркер лишається), є новіше калібрування (не перезаписується) або інша модель батареї (не застосовується). Перехід в hekate є лише ручною дією.
-
-<!-- TODO(verify): регістр нуля (RemCap або RepSOC), межа температури (60 °C у гіді), справжня напруга відсіку (3,2 В у гіді), правило «добре калібрування», текст тостів. -->
+Після звіту калібрування зберігається з маркером (номер і час). Кожна інша система бере його при першому старті: з'являється тост і рядок в історії батареї. Можливі невдачі: запис не вдався (повідомлення про помилку, маркер лишається), є новіше калібрування (не перезаписується) або інша модель батареї (не застосовується).
 
 ## Проблеми
 **Консоль не вмикається після відсіку.** Це означає, що крок завершено. Зарядіть консоль, а потім одразу відкрийте Kefir Hub.
