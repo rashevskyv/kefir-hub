@@ -34,6 +34,9 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:20250728
+    defaults:
+      run:
+        shell: bash   # bash adds pipefail: a refused sync (exit 2) must stop the job even through "| tee"
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
@@ -127,7 +130,7 @@ jobs:
         TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        FAILED: ${{ failure() }}
+        FAILED: ${{ job.status == 'failure' }}
         CHANGED: ${{ steps.sync.outputs.changed }}
         RELEASE_URL: ${{ steps.release.outputs.url }}
         CAN_RELEASE: ${{ steps.gate.outputs.can_release }}
