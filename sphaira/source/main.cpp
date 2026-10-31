@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "app.hpp"
+#include "battery_charge.hpp"
 #include "log.hpp"
 #include "net.hpp"
 #include "nxlink.h"
@@ -209,6 +210,7 @@ void userAppExit(void) {
     hidsysExit();
     setExit();
     accountExit();
+    battery::charge::RestoreIfLeftOff(); // charging must never stay off after the Hub
     psmExit();
     plExit();
 

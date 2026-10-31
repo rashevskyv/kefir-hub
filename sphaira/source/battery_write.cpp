@@ -10,6 +10,7 @@
 #include "battery_init.hpp"
 #include "battery_zero.hpp"
 #include "battery_calib_internal.hpp"
+#include "battery_charge.hpp"
 #include "battery_wizard.hpp"
 #include "system_info.hpp"
 #include "ui/menus/system_info_menu.hpp"
@@ -317,6 +318,16 @@ void ActionsMenu() {
         return SettingsItem{std::move(label), std::move(what), {}, std::move(act), SettingsItemKind::Normal};
     };
     std::vector<SettingsItem> items;
+    {
+        // charging off: the charger may stay in while the console drains. The Hub switches charging on again at its start and its end.
+        const bool on = charge::IsOn().value_or(true);
+        items.push_back(row(on ? "Stop charging"_i18n : "Resume charging"_i18n,
+            on ? "Switches the battery charging off, the charger stays in. The Hub switches it on again when it is closed."_i18n
+               : "Charging is off now. Switches it on again."_i18n, [on]() {
+            const auto rc = charge::Set(!on);
+            App::Notify(R_FAILED(rc) ? "The console did not accept this."_i18n : on ? "Charging is off"_i18n : "Charging is on"_i18n);
+        }));
+    }
     items.push_back(row("Start the calibration over"_i18n, "Drops the steps counted so far. The first step is the reset of the gauge again."_i18n, calib_flow::StartOver));
     items.push_back(row("Back up the chip's values"_i18n, "Saves a copy of the gauge's values on the SD card. Nothing is changed."_i18n, []() {
         std::string name;

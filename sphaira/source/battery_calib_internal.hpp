@@ -18,6 +18,11 @@ auto Now() -> std::int64_t;
 auto StepLabel(int i) -> std::string;
 
 void ShowSteps();
+// The capacity of the cycle (battery_zero.hpp, MeasureCapacity): once the cut-off is behind and the battery is full by voltage and
+// current, charger in or out, the charge counted since the cut-off is written as FullCap. Not tied to the Hub's pages: the Hub also
+// calls it at its start. NotYet = not full / no cycle in the charge phase; Done = written (now or before); Refused = tried, failed.
+enum class Measure { NotYet, Done, Refused };
+auto MeasureCapacityIfFull() -> Measure;
 void StartOver();
 void ShowReport();
 void ShowTransfer();

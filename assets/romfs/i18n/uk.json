@@ -3944,5 +3944,12 @@
   "The charge measured since the cut-off does not fit this battery: the gauge keeps its own capacity.": "Виміряний від відсіку заряд не підходить цій батареї: датчик лишає свою ємність.",
   "The gauge did not take the measured capacity.": "Датчик не прийняв виміряну ємність.",
   "The gauge restarted since the cut-off: the capacity could not be measured.": "Датчик перезапустився після відсіку: ємність виміряти не вдалося.",
-  "Battery capacity measured and written:": "Ємність батареї виміряно й записано:"
+  "Battery capacity measured and written:": "Ємність батареї виміряно й записано:",
+  "Stop charging": "Вимкнути заряджання",
+  "Resume charging": "Увімкнути заряджання",
+  "Switches the battery charging off, the charger stays in. The Hub switches it on again when it is closed.": "Вимикає заряджання батареї, зарядка лишається вставленою. Хаб вмикає заряджання знову, коли його закрито.",
+  "Charging is off now. Switches it on again.": "Заряджання зараз вимкнене. Вмикає його знову.",
+  "The console did not accept this.": "Консоль цього не прийняла.",
+  "Charging is off": "Заряджання вимкнено",
+  "Charging is on": "Заряджання увімкнено"
 }

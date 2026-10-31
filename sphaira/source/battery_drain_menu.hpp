@@ -156,7 +156,8 @@ private:
     TimeStamp m_qh_saved{}; // when it was last written to the marker
     bool m_healed{};        // the charge page already set a full battery's counters to 100 %
     void HealFullCharge();
-    bool m_measured{};      // the charge page already measured this cycle's capacity
+    bool m_measured{};      // the capacity of this cycle is measured, or refused
+    TimeStamp m_measure_ts{};
     void MeasureOnFull();
     bool m_full_seen{};     // a charge phase saw 100 % on the charger
     bool m_stop_ask{};      // the "stop?" question is open: the load is paused

@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.260 — Battery: the capacity is measured whenever the Hub sees a full battery, not only on the charge page; Actions > Stop charging / Resume charging (psm)
+The capacity measure runs at the Hub's start and on the charge page, with the charger in (CV tail) or out (cell still at 4.15 V or more). Charging off: a flag file, switched on again at the Hub's start and end. A diagnostic: /config/kefir/battery/charge_test.run makes the next Hub start run a test (charger in, charging off, load) and write charge_test.txt. host tests: pass (--quick; test_nand_archive_contract fails only on the CRLF script in the worktree) | nro: not built | switch: pending
+
 ## v0.14.259 — Battery calibration: the Hub measures the battery capacity itself (the charge from the cut-off to the full battery) and writes it as FullCap and FullCapNom
 On the charge page, at the constant-voltage tail (4.19 V, 350 mA or less), QH minus the QH note of the cut-off becomes the capacity (50-125 % of the design, no gauge restart); backup first, counters to 100 %, this system's copy saved. The chip's own learned FullCapNom (137 % of the design on the owner's console) is no longer trusted. host tests: pass (--quick; test_nand_archive_contract fails only on the CRLF script in the worktree) | nro: not built | switch: pending (the log line [Cap]; FullCap and FullCapNom after a charge; does HOS keep the value after a reboot)
 

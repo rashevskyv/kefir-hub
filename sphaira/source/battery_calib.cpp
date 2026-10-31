@@ -12,6 +12,8 @@
 #include "battery_calib_state.hpp"
 #include "battery_calib_internal.hpp"
 #include "battery_cutoff.hpp"
+#include "battery_charge.hpp"
+#include "battery_zero.hpp"
 #include "battery_calib_log.hpp"
 #include "battery_calib_ui.hpp"
 #include "battery_internal.hpp"
@@ -501,6 +503,51 @@ auto CycleText(const Marker& m) -> std::string {
 
 namespace calib_flow {
 
+auto MeasureCapacityIfFull() -> Measure {
+    auto m = LoadMarker();
+    if (!m || !IsCycle(m->step) || PhaseOf(*m) != Phase::Charge) {
+        return Measure::NotYet;
+    }
+    const int cycle = CycleOf(m->step);
+    if (m->cap_raw[cycle - 1]) {
+        return Measure::Done;
+    }
+    FuelGauge g;
+    if (!g.open) {
+        return Measure::NotYet;
+    }
+    const auto vcell = g.Read(MAX17050_VCell);
+    const auto avg = g.Current(MAX17050_AvgCurrent);
+    if (!vcell || !avg) {
+        return Measure::NotYet;
+    }
+    const int mv = static_cast<int>((*vcell >> 3) * 0.625);
+    const int ma = static_cast<int>(*avg);
+    PsmChargerType charger{};
+    psmGetChargerType(&charger);
+    const bool in = charger != PsmChargerType_Unconnected;
+    // on the charger only the constant-voltage tail counts; off it a cell still at the top is full (nothing left it since)
+    if (!(in ? zero::FullForHeal(mv, ma) : zero::FullNow(mv, ma))) {
+        return Measure::NotYet;
+    }
+    if (m->qh_last <= 0) {
+        log_write("[Cap] cycle %d: full (%d mV, %d mA) but there is no QH note of the cut-off: nothing measured\n", cycle, mv, ma);
+        return Measure::Refused;
+    }
+    std::string failed;
+    std::uint16_t cap{};
+    const auto rc = zero_write::WriteCapacity(m->qh_last, failed, cap);
+    log_write("[Cap] cycle %d: full by voltage (%d mV, %d mA, charger %s), capacity %d mAh, rc 0x%X\n", cycle, mv, ma, in ? "in" : "out", cap / 2, rc);
+    if (R_FAILED(rc)) {
+        App::Notify(failed.empty() ? std::string{"The gauge did not take the measured capacity."_i18n} : failed);
+        return Measure::Refused;
+    }
+    m->cap_raw[cycle - 1] = cap;
+    SaveMarker(*m);
+    App::Notify("Battery capacity measured and written:"_i18n + " " + std::to_string(cap / 2) + " mAh");
+    return Measure::Done;
+}
+
 void ShowSteps() {
     const auto m = LoadCurrent();
     if (!m) {
@@ -592,9 +639,15 @@ void PollCalibration() {
         return;
     }
     done = true;
+    charge::RestoreIfLeftOff();
+    if (fs::FsNativeSd().FileExists("/config/kefir/battery/charge_test.run")) {
+        charge::RunTestIfAsked(); // a diagnostic the owner asked for: it takes the screen, the calibration goes on at the next start
+        return;
+    }
     zero_write::ReadQhAtStart(); // before anything charges or drains for long: "what came in since the switch-on"
     const auto m = LoadMarker();
     if (m && m->step != Step::Finished) {
+        calib_flow::MeasureCapacityIfFull(); // the charge may have ended while the Hub was closed
         Resume(*m);
     }
     ApplyLedger(); // in another system than the one that was calibrated: take the new calibration

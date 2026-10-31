@@ -59,46 +59,16 @@ void DrainMenu::NoteState(bool force) {
     }
 }
 
-// The charge page sees a full battery (the constant-voltage tail): the charge counted since the cut-off is this battery's capacity.
-// It is measured and written once per cycle (zero::MeasureCapacity, zero_write::WriteCapacity). When the Hub was not open at the
-// end of the charge, this happens at its next look at a battery still on the charger; with the charger already out nothing is
-// measured and the gauge keeps its own value.
+// The capacity is measured by calib_flow::MeasureCapacityIfFull(), whatever page is open (the Hub also tries it at its start). The
+// charge page asks every 5 s while the voltage is at the top, so the result shows at once.
 void DrainMenu::MeasureOnFull() {
-    if (m_measured || !m_calib->charge || !m_charger || !m_read || m_mv < zero::HEAL_MV || m_calib->step < 1 || m_calib->step > 2) {
+    if (m_measured || !m_calib->charge || !m_read || m_mv < zero::FULL_MV || m_measure_ts.GetSeconds() < 5) {
         return;
     }
-    FuelGauge g;
-    const auto avg = g.Current(MAX17050_AvgCurrent);
-    const auto status = g.Read(MAX17050_Status);
-    if (!avg || !status || !zero::FullForHeal(m_mv, static_cast<int>(*avg))) {
-        return;
-    }
-    m_measured = true; // one try per page: a refusal is not repeated every sample
-    auto m = calib_flow::LoadMarker();
-    if (!m || m->cap_raw[m_calib->step - 1]) {
-        return;
-    }
-    if (*status & zero::STATUS_POR) {
-        log_write("[Cap] the gauge restarted (Status %04X): the counter has no baseline, nothing measured\n", *status);
-        App::Notify("The gauge restarted since the cut-off: the capacity could not be measured."_i18n);
-        return;
-    }
-    if (m->qh_last <= 0) {
-        log_write("[Cap] no QH note of the cut-off: nothing measured\n");
-        return;
-    }
-    std::string failed;
-    u16 cap{};
-    const auto rc = zero_write::WriteCapacity(m->qh_last, failed, cap);
-    log_write("[Cap] cycle %d: full by voltage (%d mV, avg %d mA), capacity %d mAh, rc 0x%X\n", m_calib->step, m_mv, static_cast<int>(*avg), cap / 2, rc);
-    if (R_FAILED(rc)) {
-        App::Notify(failed.empty() ? std::string{"The gauge did not take the measured capacity."_i18n} : failed);
-        return;
-    }
-    m->cap_raw[m_calib->step - 1] = cap;
-    calib_flow::SaveMarker(*m);
-    m_healed = true; // the counters are at 100 % already
-    App::Notify("Battery capacity measured and written:"_i18n + " " + std::to_string(cap / 2) + " mAh");
+    m_measure_ts.Update();
+    const auto r = calib_flow::MeasureCapacityIfFull();
+    m_measured = r != calib_flow::Measure::NotYet;
+    m_healed = m_healed || r == calib_flow::Measure::Done; // the counters are at 100 % already
 }
 
 // On cycle 1's charge page (the only place a zero was just written, maybe from a wrong charge baseline) the cell is at the top
