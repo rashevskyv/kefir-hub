@@ -152,10 +152,6 @@ auto FormatEta(s64 bytes_left, s64 bps) -> std::string {
     return buf;
 }
 
-void DrawCheckbox(NVGcontext* vg, Theme* theme, const Vec4& row, bool selected) {
-    gfx::drawCheckbox(vg, theme, row.x + 12.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, selected);
-}
-
 } // namespace sphaira::ui::menu::dbi
 
 #endif

@@ -225,15 +225,10 @@ struct NandPackLibraryMenu final : MenuBase {
                 DrawElement(v, ThemeEntryID_GRID);
             }
             if (e.selected) {
-                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
-                tint.a *= 0.35f;
-                gfx::drawRect(vg, v, tint, 5.f);
+                gfx::drawMarkedRow(vg, theme, v);
             }
 
-            gfx::drawCheckbox(vg, theme, v.x + 16.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f,
-                gfx::CHECKBOX_SIZE, e.selected);
-
-            const float text_x = v.x + 50.f;
+            const float text_x = v.x + 16.f;
             const auto title = GetPackDisplayName(e.pack);
             gfx::drawTextArgs(vg, text_x, v.y + v.h / 2.f - 11.f, 20.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,

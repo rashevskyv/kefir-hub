@@ -275,9 +275,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
             }
             if (item.selected) {
-                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
-                tint.a *= 0.35f;
-                gfx::drawRect(vg, v, tint, 5.f);
+                gfx::drawMarkedRow(vg, theme, v);
             }
             const float icon_size = 46.f;
             const float icon_x = v.x + 10.f;

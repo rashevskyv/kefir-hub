@@ -380,15 +380,13 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
         return;
     }
 
-    if (item.marked || selected) {
-        gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
-    }
     if (selected) {
+        gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
         gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 2.f, v.w, v.h - 4.f);
     }
-    // a marked row (X, Y): a bar on the left, drawn last so the cursor does not cover it
+    // a marked row (X, Y): drawn after the cursor so its fill does not cover the bar
     if (item.marked) {
-        gfx::drawRect(vg, v.x + 8.f, v.y + 8.f, 6.f, v.h - 16.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
+        gfx::drawMarkedRow(vg, theme, v);
     }
     // name on the left, description on the right, each clipped to its half.
     const float split = v.x + v.w * 0.36f;

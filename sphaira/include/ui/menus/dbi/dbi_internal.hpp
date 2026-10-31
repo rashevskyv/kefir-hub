@@ -53,6 +53,4 @@ void DrawStatRow(NVGcontext* vg, NVGcolor info_col, float x0, float y, float siz
 // number cannot answer the question.
 auto FormatEta(s64 bytes_left, s64 bps) -> std::string;
 
-void DrawCheckbox(NVGcontext* vg, Theme* theme, const Vec4& row, bool selected);
-
 } // namespace sphaira::ui::menu::dbi

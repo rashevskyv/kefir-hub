@@ -180,16 +180,11 @@ void ManageBackupsMenu::Draw(NVGcontext* vg, Theme* theme) {
             DrawElement(v, ThemeEntryID_GRID);
         }
         if (e.selected) {
-            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
-            tint.a *= 0.35f;
-            gfx::drawRect(vg, v, tint, 5.f);
+            gfx::drawMarkedRow(vg, theme, v);
         }
 
-        gfx::drawCheckbox(vg, theme, v.x + 16.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f,
-            gfx::CHECKBOX_SIZE, e.selected);
-
         const float icon_size = 46.f;
-        const float icon_x = v.x + 50.f;
+        const float icon_x = v.x + 16.f;
         const float icon_y = v.y + (v.h - icon_size) / 2.f;
         gfx::drawImage(vg, Vec4{icon_x, icon_y, icon_size, icon_size},
             e.image > 0 ? e.image : App::GetDefaultImage(), 4);

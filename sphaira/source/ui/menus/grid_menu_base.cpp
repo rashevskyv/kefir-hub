@@ -40,15 +40,8 @@ auto FormatBytes(u64 bytes) -> std::string {
 }
 
 void Menu::DrawSelectionMark(NVGcontext* vg, Theme* theme, int layout, const Vec4& row, const Vec4& overlay, bool marked, bool any_marked) {
-    if (!any_marked) {
-        return;
-    }
-
-    // a list row reads like a file browser row, so it marks like one: a
-    // checkbox in the left gutter, drawn on every row while a selection is
-    // under way so the ticked ones can be seen against the empty ones.
-    if (layout == LayoutType_List) {
-        gfx::drawCheckbox(vg, theme, row.x - 30.f, row.y + (row.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, marked);
+    // a list row is marked by DrawEntry (gfx::drawMarkedRow), under its content
+    if (!any_marked || layout == LayoutType_List) {
         return;
     }
 
@@ -154,12 +147,8 @@ Vec4 Menu::DrawEntry(NVGcontext* vg, Theme* theme, bool draw_image, int layout, 
             gfx::drawRectOutline(vg, theme, 4.f, v, 5.f);
         }
 
-        // over the row fill, under the content: which rows are in the selection
-        // reads at a glance rather than one checkbox at a time.
         if (marked) {
-            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
-            tint.a *= 0.35f;
-            gfx::drawRect(vg, v, tint, 5.f);
+            gfx::drawMarkedRow(vg, theme, v);
         }
 
         const float icon_size = 46.f;

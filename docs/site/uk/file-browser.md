@@ -61,6 +61,12 @@
 2. Натисніть **Y**, щоб інвертувати вибір.
 3. Утримуйте **ZR** і натисніть **X**, щоб вибрати всі елементи в папці. Повторіть, щоб зняти вибір.
 
+<!-- draft
+- a selected row is filled and has a bright bar at its left edge; there is no checkbox any more
+- the same look in every list with X/Y select: games, homebrew, saves, users and their backups, Wi-Fi, the DBI install queue, game components, System Tools lists, ROM file lists
+- icon grids keep the checkbox in the tile corner; the archive extract tree keeps its checkboxes
+-->
+
 Дії в [[File Options]] застосовуються до вибраних елементів. Якщо нічого не вибрано — до елемента під курсором.
 
 ## Копіювання та переміщення файлів

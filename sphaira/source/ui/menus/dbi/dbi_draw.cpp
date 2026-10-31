@@ -210,11 +210,11 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             const auto& entry = m_queue[index];
             if (index == m_index) gfx::drawRectOutline(vg, theme, 4.f, v);
             const auto colour = R_FAILED(entry.analysis_result) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT);
-            if (R_SUCCEEDED(entry.analysis_result)) DrawCheckbox(vg, theme, v, entry.selected);
-            gfx::drawTextArgs(vg, v.x + (R_SUCCEEDED(entry.analysis_result) ? 42.f : 12.f), v.y + 8.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
+            if (R_SUCCEEDED(entry.analysis_result) && entry.selected) gfx::drawMarkedRow(vg, theme, v);
+            gfx::drawTextArgs(vg, v.x + (R_SUCCEEDED(entry.analysis_result) ? 18.f : 12.f), v.y + 8.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
                 R_FAILED(entry.analysis_result) ? "! %s" : "%s", entry.file_name.c_str());
             if (R_FAILED(entry.analysis_result)) {
-                gfx::drawTextArgs(vg, v.x + 42.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
+                gfx::drawTextArgs(vg, v.x + 18.f, v.y + 40.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, colour,
                     "%s: %s", "Analysis failed"_i18n.c_str(), ResultText(entry.analysis_result).c_str());
             } else {
                 const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
@@ -232,10 +232,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                              " (" + kind + ")    " +
                              "Target"_i18n + ": ";
                 }
-                gfx::drawText(vg, v.x + 42.f, v.y + 40.f, 14.f, info_col, prefix.c_str());
+                gfx::drawText(vg, v.x + 18.f, v.y + 40.f, 14.f, info_col, prefix.c_str());
                 nvgFontSize(vg, 14.f);
                 nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-                float x = v.x + 42.f + nvgTextBounds(vg, 0.f, 0.f, prefix.c_str(), nullptr, nullptr);
+                float x = v.x + 18.f + nvgTextBounds(vg, 0.f, 0.f, prefix.c_str(), nullptr, nullptr);
 
                 const bool is_sd = (entry.target == InstallTarget::Auto) ? entry.planned_sd : (entry.target == InstallTarget::Sd);
                 const auto dest_col = theme->GetColour(is_sd ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_HIGHLIGHT_2);

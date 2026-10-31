@@ -96,15 +96,6 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
         auto text_id = ThemeEntryID_TEXT;
         const auto selected = m_index == i;
 
-        // ticked rows get a tinted band behind them, so which entries are in
-        // the selection reads at a glance rather than one checkbox at a time.
-        // Drawn under everything else, including the cursor outline.
-        if (e.IsSelected()) {
-            auto tint = theme->GetColour(ThemeEntryID_FOCUS);
-            tint.a *= 0.35f;
-            gfx::drawRect(vg, v, tint, 5.f);
-        }
-
         if (selected) {
             text_id = ThemeEntryID_TEXT_SELECTED;
             gfx::drawRectOutline(vg, theme, 4.f, v);
@@ -114,6 +105,16 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             }
         } else {
             DrawElement(v, ThemeEntryID_GRID);
+        }
+
+        if (e.IsSelected()) {
+            if (icon_grid) {
+                auto tint = theme->GetColour(ThemeEntryID_FOCUS);
+                tint.a *= 0.35f;
+                gfx::drawRect(vg, v, tint, 5.f);
+            } else {
+                gfx::drawMarkedRow(vg, theme, v);
+            }
         }
 
         if (icon_grid) {
@@ -234,10 +235,6 @@ void FsView::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawRect(vg, bx - 1.f, by - 1.f, bw + 2.f, bh + 2.f, nvgRGBA(0, 0, 0, 255), 4.f);
             gfx::drawRect(vg, bx, by, bw, bh, theme->GetColour(ThemeEntryID_ERROR), 3.f);
             gfx::drawText(vg, bx + bw * 0.5f, by + bh * 0.5f, 13.f, nvgRGBA(255, 255, 255, 255), "RO", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        }
-
-        if (m_selected_count > 0) {
-            gfx::drawCheckbox(vg, theme, x - 30.f, y + (h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE, e.IsSelected());
         }
 
         const auto name_x = x + x_offset + 65;

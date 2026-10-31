@@ -107,13 +107,14 @@ struct SavePickMenu final : MenuBase {
             if (selected) {
                 gfx::drawRectOutline(vg, theme, 4.f, v);
             }
-            gfx::drawCheckbox(vg, theme, v.x + 16.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f,
-                gfx::CHECKBOX_SIZE, e.selected);
+            if (e.selected) {
+                gfx::drawMarkedRow(vg, theme, v);
+            }
             const char* name = e.GetName();
             if (!name || !name[0]) {
                 name = "Unknown";
             }
-            gfx::drawTextArgs(vg, v.x + 56.f, v.y + v.h / 2.f, 18.f,
+            gfx::drawTextArgs(vg, v.x + 24.f, v.y + v.h / 2.f, 18.f,
                 NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
                 theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT),
                 "%s", name);

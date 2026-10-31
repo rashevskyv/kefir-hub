@@ -38,6 +38,10 @@ constexpr int LOAD_PRIO = 59;
 // few draws, each filling most of the screen: the GPU fill rate is the load. 700 small circles a frame
 // overflowed deko3d's per-frame command buffer (crash in dkCmdBufBindTextures on .141).
 constexpr int CIRCLES = 80;
+// all 80 took 125 ms a frame (8 fps: the page and the screensaver moved in steps), so the count follows the frame time:
+// as many as still fit in a 60 fps frame load the GPU just as much. It starts here and grows while frames stay fast.
+constexpr int CIRCLES_START = 8;
+constexpr int CIRCLES_MIN = 2;
 // below this shown charge the load goes off and only the bright screen drains the battery: on a worn battery the
 // voltage under load collapses from about 30 % and the console cuts off before the chip sees a real empty
 constexpr int GENTLE_PCT = 35;
@@ -172,6 +176,9 @@ private:
     bool m_docked{};
     bool m_hot{};
     float m_t{};
+    TimeStamp m_frame_ts{};
+    int m_circles{CIRCLES_START};
+    int m_good_frames{};
     std::string m_status;
     bool m_saved_dimming{};
     AppletIdleTimeDetectionExtension m_saved_idle{};

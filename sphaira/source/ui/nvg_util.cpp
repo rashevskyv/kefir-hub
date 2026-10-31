@@ -291,6 +291,11 @@ void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, const Vec4&
     drawRectOutlineInternal(vg, theme, size, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), rounding);
 }
 
+void drawMarkedRow(NVGcontext* vg, const Theme* theme, const Vec4& row) {
+    drawRect(vg, row.x, row.y + 2.f, row.w, row.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
+    drawRect(vg, row.x + 4.f, row.y + 8.f, 5.f, row.h - 16.f, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 2.5f);
+}
+
 void drawCheckbox(NVGcontext* vg, const Theme* theme, float x, float y, float size, bool checked) {
     nvgBeginPath(vg);
     nvgRect(vg, x, y, size, size);

@@ -60,6 +60,12 @@ To install firmware, use the [Updater](updater.md) instead.
 2. Press **Y** to invert the selection.
 3. Hold **ZR** and press **X** to select every item in the folder. Do it again to clear the selection.
 
+<!-- draft
+- a selected row is filled and has a bright bar at its left edge; there is no checkbox any more
+- the same look in every list with X/Y select: games, homebrew, saves, users and their backups, Wi-Fi, the DBI install queue, game components, System Tools lists, ROM file lists
+- icon grids keep the checkbox in the tile corner; the archive extract tree keeps its checkboxes
+-->
+
 Actions in [[File Options]] apply to the selected items. With nothing selected, they apply to the item under the cursor.
 
 ## Copy or move files

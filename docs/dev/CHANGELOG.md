@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.254 — X/Y selection: a filled row with a bar at the left, no checkbox; the drain page and its screensaver run at 60 fps (owner, 2026-10-31)
+Battery drain page: the GPU load was 80 big gradient circles a frame, 125 ms a frame (log: `[frame] 7.8 fps` from the drain start), so the screensaver moved in steps with the left stick. The circle count now follows the frame time (starts at 8, drops on a slow frame, grows after 10 s of fast ones), so frames stay at 60 fps with the GPU as busy as before; the page animation runs by time, not by frame.
+`gfx::drawMarkedRow` (the ROM file list look) replaces the left checkbox and the translucent tint in every list with X/Y select: File Browser, games/homebrew/saves/users list layout, Wi-Fi, users backups and restore lists, the DBI queue, game components, System Tools. Icon grids keep the tile checkbox; the extract tree keeps its checkboxes.
+host tests: pass (--quick) | nro: built (0.14.254) | switch: pending (mark rows in the File Browser and the games list)
+
 ## v0.14.253 — 40MB Memory hides by the Atmosphère version; the Nextendo page reads in one line a row (owner, 2026-10-31)
 Kefir Settings → `40MB Memory` shows only on firmware 20.0.0–22.x, or on 23.0.0+ with Atmosphère below 1.12.1 (read via spl 65000; it was the Kefir version file, which a 23.0.1 + AMS 1.12.1 console still failed). Nextendo: shorter descriptions (the ssl ID shows its first 16 digits), and `Required Notice: Copyright 2026 Nextendo Network` sits at the bottom of the page above the buttons instead of in the Release row.
 host tests: pass (--quick) | nro: built (0.14.253) | switch: pending (23.0.1 + AMS 1.12.1: no 40MB row; Nextendo page)

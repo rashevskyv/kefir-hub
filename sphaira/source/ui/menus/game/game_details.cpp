@@ -311,9 +311,8 @@ void DbiDetailsMenu::Draw(NVGcontext* vg, Theme* theme) {
 
             if (m_tab == Tab::Content) {
                 const auto& row = m_components[index];
-                if (MarkedCount()) {
-                    gfx::drawCheckbox(vg, theme, v.x + v.w - gfx::CHECKBOX_SIZE - 12.f, v.y + (v.h - gfx::CHECKBOX_SIZE) / 2.f, gfx::CHECKBOX_SIZE,
-                        index < m_marked.size() && m_marked[index]);
+                if (index < m_marked.size() && m_marked[index]) {
+                    gfx::drawMarkedRow(vg, theme, v);
                 }
                 // DBI-style row: [SD]/[NAND] location, type, readable version on
                 // the top line; per-component Title ID, size and content/rights
