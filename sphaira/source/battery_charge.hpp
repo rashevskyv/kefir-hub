@@ -22,4 +22,14 @@ void RunTestIfAsked();
 // console live on the battery while the charger stays in? Reads the chip's registers; writes REG00 for 30 s and puts it back.
 void RunHizTestIfAsked();
 
+// The cut-off test (owner, 2026-10-31): the drain page with the charger's input cut, until the console switches itself off.
+// /config/kefir/battery/hiz_cutoff.run at the Hub's start begins it (true: the caller opens the drain page). Every second the drain
+// page calls HizTick: it keeps the input cut and writes /config/kefir/battery/hiz_cutoff.txt (flushed to the card every 5 s). At the
+// next Hub start, HizStartCheck logs what REG00 and REG08 hold (did the cut survive the switch-off?) and puts the input back.
+auto HizActive() -> bool;
+auto StartCutoffTestIfAsked() -> bool;
+void HizTick(int mv, int avg_ma, int pct);
+void HizStartCheck();
+void HizRelease(); // the input back, the flag removed, the log closed
+
 } // namespace sphaira::battery::charge

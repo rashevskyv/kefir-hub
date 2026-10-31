@@ -639,7 +639,12 @@ void PollCalibration() {
         return;
     }
     done = true;
+    charge::HizStartCheck(); // the first start after a cut-off test: what the chip held, then the input back
     charge::RestoreIfLeftOff();
+    if (charge::StartCutoffTestIfAsked()) {
+        StartDrain(1); // the drain page with the charger input cut
+        return;
+    }
     if (fs::FsNativeSd().FileExists("/config/kefir/battery/hiz_test.run")) {
         charge::RunHizTestIfAsked(); // a diagnostic the owner asked for, like the one below
         return;

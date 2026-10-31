@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.262 — Battery: the cut-off test with the charger's input cut (bq24193 EN_HIZ), hiz_cutoff.run -> hiz_cutoff.txt
+At the next Hub start the drain page opens with the charger in but its input cut (REG00 bit 7), full load, until the console switches off. The page writes hiz_cutoff.txt every 5 s; the start after the switch-off logs REG00/REG05/REG08 (did the cut survive?) and puts the input back. The input is also put back when the page is left or the Hub closes. Tested before (0.14.261): the cut works, the battery gives about 1 A with the charger in. host tests: pass (--quick) | nro: built | switch: running its first night
+
 ## v0.14.261 — Battery: a diagnostic for the charger chip's input cut (bq24193 EN_HIZ), hiz_test.run -> hiz_test.txt
 The test reads REG00..0A, cuts the input for 30 s under load, watches the battery current, puts REG00 back. Charging off through psm was tested on the console (v0.14.260): the battery does not give current with the charger in. host tests: not run (a diagnostic only) | nro: not built | switch: pending
 

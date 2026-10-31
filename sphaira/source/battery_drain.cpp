@@ -1,5 +1,6 @@
 #include "battery_drain_menu.hpp"
 #include "battery_calib_internal.hpp"
+#include "battery_charge.hpp"
 
 namespace sphaira::battery {
 
@@ -162,6 +163,9 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
 }
 
 DrainMenu::~DrainMenu() {
+    if (charge::HizActive()) {
+        charge::HizRelease(); // leaving the page: the charger input is back
+    }
     g_stop = true;
     for (int i = 0; i < LOAD_CORES; i++) {
         if (m_started[i]) {
@@ -270,6 +274,11 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     // a charging current also means a charger (psm can lag behind a cable plugged in at 0 %)
     const auto avg = g.Current(MAX17050_AvgCurrent);
     m_charger = charger != PsmChargerType_Unconnected || (avg && *avg > CHARGING_MA);
+    if (charge::HizActive()) {
+        // the cut-off test: the charger is in but its input is cut, the console lives on the battery
+        charge::HizTick(m_mv, avg ? static_cast<int>(*avg) : 0, m_pct);
+        m_charger = false;
+    }
     UpdateStep();
     m_docked = appletGetOperationMode() == AppletOperationMode_Console;
     if (m_temp >= HOT_C) {
@@ -279,7 +288,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     }
     // the calibration: full load until the first cut-off (no 35 % gentle mode), none in a charge or in the tail after a cut-off
     const bool load = m_stop_ask ? false : m_calib ? (!m_charger && !m_docked && !m_hot && !m_calib->charge && !m_calib->tail)
-                              : (!m_charger && !m_docked && !m_hot && !(m_pct >= 0 && m_pct <= GENTLE_PCT));
+                              : (!m_charger && !m_docked && !m_hot && (charge::HizActive() || !(m_pct >= 0 && m_pct <= GENTLE_PCT)));
     if (load != g_load) {
         log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
     }
@@ -290,7 +299,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
         ApplyCalibScreen();
         CalibTick();
     } else if (m_lbl) {
-        const bool gentle = m_pct >= 0 && m_pct <= GENTLE_PCT && !m_charger;
+        const bool gentle = m_pct >= 0 && m_pct <= GENTLE_PCT && !m_charger && !charge::HizActive();
         if (gentle != m_dimmed) {
             m_dimmed = gentle;
             if (!m_saver.IsActive()) { // the saver owns the brightness while it is on; the reapply puts this back after it

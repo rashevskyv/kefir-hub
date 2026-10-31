@@ -211,6 +211,9 @@ void userAppExit(void) {
     setExit();
     accountExit();
     sphaira::battery::charge::RestoreIfLeftOff(); // charging must never stay off after the Hub
+    if (sphaira::battery::charge::HizActive()) {
+        sphaira::battery::charge::HizRelease();
+    }
     psmExit();
     plExit();
 

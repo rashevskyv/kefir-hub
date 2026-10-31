@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <cstdio>
+#include <ctime>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -262,6 +263,110 @@ void RunHizTestIfAsked() {
         log_write("[Charge] the input test is written to %s\n", HIZ_OUT);
         R_SUCCEED();
     });
+}
+
+// ---- the cut-off test -----------------------------------------------------------------------------------------------------
+
+namespace {
+
+constexpr const char* HIZ_FLAG = "/config/kefir/battery/hiz_on.flag";
+constexpr const char* HIZ_CUTOFF_RUN = "/config/kefir/battery/hiz_cutoff.run";
+constexpr const char* HIZ_CUTOFF_LOG = "sdmc:/config/kefir/battery/hiz_cutoff.txt";
+
+std::atomic<bool> g_hiz{false};
+std::FILE* g_hiz_log = nullptr;
+int g_hiz_rewrites = 0;
+u64 g_hiz_last_line = 0;
+
+void HizLine(const char* what) {
+    if (!g_hiz_log) {
+        g_hiz_log = std::fopen(HIZ_CUTOFF_LOG, "ab");
+    }
+    if (g_hiz_log) {
+        std::fputs(what, g_hiz_log);
+        std::fflush(g_hiz_log);
+        fsdevCommitDevice("sdmc"); // the last seconds before the switch-off must reach the card
+    }
+}
+
+} // namespace
+
+auto HizActive() -> bool {
+    return g_hiz;
+}
+
+auto StartCutoffTestIfAsked() -> bool {
+    fs::FsNativeSd sd;
+    if (!sd.FileExists(HIZ_CUTOFF_RUN)) {
+        return false;
+    }
+    sd.DeleteFile(HIZ_CUTOFF_RUN);
+    const char note[] = "the charger input is cut for the cut-off test: the Hub puts it back at its start\n";
+    sd.write_entire_file(HIZ_FLAG, std::vector<u8>(note, note + sizeof(note) - 1));
+    g_hiz = true;
+    g_hiz_rewrites = 0;
+    g_hiz_last_line = 0;
+    char b[160];
+    std::snprintf(b, sizeof(b), "cut-off test started, unix %lld: the charger input is cut (REG00 bit 7), full load until the console switches off\n",
+                  static_cast<long long>(std::time(nullptr)));
+    HizLine(b);
+    log_write("[Charge] the cut-off test starts\n");
+    return true;
+}
+
+void HizTick(int mv, int avg_ma, int pct) {
+    if (!g_hiz) {
+        return;
+    }
+    Bq bq;
+    const auto r00 = bq.Read(0x00);
+    const auto r08 = bq.Read(0x08);
+    bool took = false;
+    if (r00 && !(*r00 & 0x80)) { // something took the cut back: it is set again, and counted
+        bq.Write(0x00, static_cast<u8>(*r00 | 0x80));
+        g_hiz_rewrites++;
+        took = true;
+    }
+    const u64 now = static_cast<u64>(std::time(nullptr));
+    if (took || now >= g_hiz_last_line + 5) {
+        g_hiz_last_line = now;
+        char b[200];
+        std::snprintf(b, sizeof(b), "%llu vcell=%d mV avg=%d mA psm=%d%% reg00=%02X reg08=%02X rewrites=%d%s\n", static_cast<unsigned long long>(now), mv,
+                      avg_ma, pct, r00 ? *r00 : 0xFF, r08 ? *r08 : 0xFF, g_hiz_rewrites, took ? " (set again)" : "");
+        HizLine(b);
+    }
+}
+
+void HizRelease() {
+    if (g_hiz_log) {
+        std::fclose(g_hiz_log);
+        g_hiz_log = nullptr;
+    }
+    g_hiz = false;
+    Bq bq;
+    if (const auto r00 = bq.Read(0x00); r00 && (*r00 & 0x80)) {
+        const bool ok = bq.Write(0x00, static_cast<u8>(*r00 & 0x7F));
+        log_write("[Charge] the charger input is back: REG00 %02X -> %02X, %s\n", *r00, *r00 & 0x7F, ok ? "written" : "NOT written");
+    }
+    fs::FsNativeSd().DeleteFile(HIZ_FLAG);
+}
+
+void HizStartCheck() {
+    fs::FsNativeSd sd;
+    if (!sd.FileExists(HIZ_FLAG)) {
+        return;
+    }
+    // the cut-off test ran before: this is the first start after it. What the chip holds now says whether the cut survived.
+    Bq bq;
+    const auto r00 = bq.Read(0x00);
+    const auto r08 = bq.Read(0x08);
+    const auto r05 = bq.Read(0x05);
+    char b[200];
+    std::snprintf(b, sizeof(b), "%lld the Hub started again: REG00=%02X REG05=%02X REG08=%02X (REG00 bit 7 set = the cut survived the switch-off)\n",
+                  static_cast<long long>(std::time(nullptr)), r00 ? *r00 : 0xFF, r05 ? *r05 : 0xFF, r08 ? *r08 : 0xFF);
+    HizLine(b);
+    log_write("[Charge] %s", b);
+    HizRelease();
 }
 
 } // namespace sphaira::battery::charge
