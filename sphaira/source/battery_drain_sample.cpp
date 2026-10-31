@@ -59,6 +59,48 @@ void DrainMenu::NoteState(bool force) {
     }
 }
 
+// The charge page sees a full battery (the constant-voltage tail): the charge counted since the cut-off is this battery's capacity.
+// It is measured and written once per cycle (zero::MeasureCapacity, zero_write::WriteCapacity). When the Hub was not open at the
+// end of the charge, this happens at its next look at a battery still on the charger; with the charger already out nothing is
+// measured and the gauge keeps its own value.
+void DrainMenu::MeasureOnFull() {
+    if (m_measured || !m_calib->charge || !m_charger || !m_read || m_mv < zero::HEAL_MV || m_calib->step < 1 || m_calib->step > 2) {
+        return;
+    }
+    FuelGauge g;
+    const auto avg = g.Current(MAX17050_AvgCurrent);
+    const auto status = g.Read(MAX17050_Status);
+    if (!avg || !status || !zero::FullForHeal(m_mv, static_cast<int>(*avg))) {
+        return;
+    }
+    m_measured = true; // one try per page: a refusal is not repeated every sample
+    auto m = calib_flow::LoadMarker();
+    if (!m || m->cap_raw[m_calib->step - 1]) {
+        return;
+    }
+    if (*status & zero::STATUS_POR) {
+        log_write("[Cap] the gauge restarted (Status %04X): the counter has no baseline, nothing measured\n", *status);
+        App::Notify("The gauge restarted since the cut-off: the capacity could not be measured."_i18n);
+        return;
+    }
+    if (m->qh_last <= 0) {
+        log_write("[Cap] no QH note of the cut-off: nothing measured\n");
+        return;
+    }
+    std::string failed;
+    u16 cap{};
+    const auto rc = zero_write::WriteCapacity(m->qh_last, failed, cap);
+    log_write("[Cap] cycle %d: full by voltage (%d mV, avg %d mA), capacity %d mAh, rc 0x%X\n", m_calib->step, m_mv, static_cast<int>(*avg), cap / 2, rc);
+    if (R_FAILED(rc)) {
+        App::Notify(failed.empty() ? std::string{"The gauge did not take the measured capacity."_i18n} : failed);
+        return;
+    }
+    m->cap_raw[m_calib->step - 1] = cap;
+    calib_flow::SaveMarker(*m);
+    m_healed = true; // the counters are at 100 % already
+    App::Notify("Battery capacity measured and written:"_i18n + " " + std::to_string(cap / 2) + " mAh");
+}
+
 // On cycle 1's charge page (the only place a zero was just written, maybe from a wrong charge baseline) the cell is at the top
 // voltage with a tapered, averaged current, yet the chip shows far less: the counters go to 100 %, once. Cycle 2 has no zero and
 // its gauge is left alone: the capacity it learns there is what the wizard is for.

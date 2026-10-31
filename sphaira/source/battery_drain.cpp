@@ -422,6 +422,7 @@ void DrainMenu::CalibTick() {
             }
         }
     }
+    MeasureOnFull();
     HealFullCharge();
     if (m_calib->charge && m_charger && m_pct >= 100) {
         m_full_seen = true;

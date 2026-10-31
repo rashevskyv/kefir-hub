@@ -33,4 +33,6 @@ void ReadQhAtStart();
 auto WriteZero(int mv, std::string& failed, int qh_last) -> Result;
 // the battery is full by voltage and current but the chip shows far less: the counters to 100 % (V_empty stays)
 auto WriteFull(std::string& failed) -> Result;
+// the full battery: the charge counted since the cut-off becomes FullCap and FullCapNom (cap = the new FullCap, 0.5 mAh units)
+auto WriteCapacity(int qh_cut, std::string& failed, std::uint16_t& cap) -> Result;
 } // namespace sphaira::battery::zero_write

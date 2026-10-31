@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.259 — Battery calibration: the Hub measures the battery capacity itself (the charge from the cut-off to the full battery) and writes it as FullCap and FullCapNom
+On the charge page, at the constant-voltage tail (4.19 V, 350 mA or less), QH minus the QH note of the cut-off becomes the capacity (50-125 % of the design, no gauge restart); backup first, counters to 100 %, this system's copy saved. The chip's own learned FullCapNom (137 % of the design on the owner's console) is no longer trusted. host tests: pass (--quick; test_nand_archive_contract fails only on the CRLF script in the worktree) | nro: not built | switch: pending (the log line [Cap]; FullCap and FullCapNom after a charge; does HOS keep the value after a reboot)
+
 ## v0.14.258 — Battery calibration: after the cut-off the Hub opens the charge page (it asks for the charger when it is out); Actions > Start the calibration over
 No more slow drain after a switch-off on battery (the old tail mode stays only for an old marker). The intro and the drain page texts follow. Start over: backup, a fresh marker, step 1 (the reset) again. host tests: pass except test_nand_archive_contract (CRLF script in the worktree, not this change) | nro: not built | switch: pending
 

@@ -109,4 +109,45 @@ auto WriteFull(std::string& failed) -> Result {
     return WriteCounters(g, c, failed);
 }
 
+// The charge page found a full battery (the constant-voltage tail). The charge that came in since the cut-off is the capacity: it
+// goes into FullCap and FullCapNom, the counters to 100 %, and into this system's copy. `qh_cut`: Marker::qh_last (QH + 1 at the
+// cut-off). A backup is made first. `cap` gets the new FullCap (0.5 mAh units).
+auto WriteCapacity(int qh_cut, std::string& failed, std::uint16_t& cap) -> Result {
+    R_UNLESS(qh_cut > 0, Result_ArchiveRead);
+    auto s = detail::Read();
+    R_UNLESS(s.gauge, Result_ArchiveRead);
+    std::string name;
+    R_TRY(detail::Backup(s, name));
+    FuelGauge g;
+    R_UNLESS(g.open, Result_ArchiveRead);
+    const auto qh = g.Read(MAX17050_QH);
+    const auto design = g.Read(MAX17050_DesignCap);
+    const auto old_full = g.Read(MAX17050_FullCap);
+    const auto old_nom = g.Read(MAX17050_FullCapNom);
+    R_UNLESS(qh && design && old_full && old_nom, Result_ArchiveRead);
+    const auto status = g.Read(MAX17050_Status);
+    if (!status || (*status & zero::STATUS_POR)) {
+        failed = "The gauge restarted since the cut-off: the capacity could not be measured."_i18n;
+        R_THROW(Result_ArchiveRead);
+    }
+    const auto base = static_cast<u16>(qh_cut - 1);
+    const auto m = zero::MeasureCapacity(base, *qh, *design);
+    log_write("[Cap] QH from %04X to %04X = %d (0.5 mAh), design %u, chip's FullCap %u FullCapNom %u: %s\n", base, *qh,
+              static_cast<u16>(*qh - base), *design, *old_full, *old_nom, m.ok ? "taken" : "outside 50-125 % of the design, not taken");
+    if (!m.ok) {
+        failed = "The charge measured since the cut-off does not fit this battery: the gauge keeps its own capacity."_i18n;
+        R_THROW(Result_ArchiveRead);
+    }
+    if (!g.WriteVerify(MAX17050_FullCap, m.raw) || !g.WriteVerify(MAX17050_FullCapNom, m.raw)) {
+        failed = "The gauge did not take the measured capacity."_i18n;
+        R_THROW(Result_ArchiveRead);
+    }
+    const auto c = zero::PlanCounters({m.raw, m.raw, 0, 0, true});
+    R_UNLESS(c.ok, Result_ArchiveRead);
+    R_TRY(WriteCounters(g, c, failed));
+    R_TRY(detail::SaveCopyOf(g)); // HOS keeps its own copy of the learned values: it must not bring the old ones back
+    cap = m.raw;
+    R_SUCCEED();
+}
+
 } // namespace sphaira::battery::zero_write

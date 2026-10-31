@@ -3702,7 +3702,7 @@
   "Cycle 2": "Cycle 2",
   "Charger is plugged in.": "Charger is plugged in.",
   "Plug the charger in.": "Plug the charger in.",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.": "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.",
+  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.",
   "The screen stays on: so the console charges to the end. The screensaver saves the screen.": "The screen stays on: so the console charges to the end. The screensaver saves the screen.",
   "Open the charge screen": "Open the charge screen",
   "Start charging": "Start charging",
@@ -3855,7 +3855,7 @@
   "Cycle 1: the zero": "Cycle 1: the zero",
   "Now plug the charger in and charge to 100 %. Cycle 1 is then done, and cycle 2 begins.": "Now plug the charger in and charge to 100 %. Cycle 1 is then done, and cycle 2 begins.",
   "Step by step: the reset, two cycles, report.": "Step by step: the reset, two cycles, report.",
-  "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.",
+  "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the Hub measures the real capacity: the charge that comes in from the switch-off to the full battery is written into the gauge as its capacity.": "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the Hub measures the real capacity: the charge that comes in from the switch-off to the full battery is written into the gauge as its capacity.",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.",
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.",
   "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.",
@@ -3940,5 +3940,9 @@
   "Start the calibration over? The steps and the cycles counted so far are dropped, and the first step is the reset of the gauge. A backup of the gauge is made first.": "Start the calibration over? The steps and the cycles counted so far are dropped, and the first step is the reset of the gauge. A backup of the gauge is made first.",
   "Start over": "Start over",
   "Start the calibration over": "Start the calibration over",
-  "Drops the steps counted so far. The first step is the reset of the gauge again.": "Drops the steps counted so far. The first step is the reset of the gauge again."
+  "Drops the steps counted so far. The first step is the reset of the gauge again.": "Drops the steps counted so far. The first step is the reset of the gauge again.",
+  "The charge measured since the cut-off does not fit this battery: the gauge keeps its own capacity.": "The charge measured since the cut-off does not fit this battery: the gauge keeps its own capacity.",
+  "The gauge did not take the measured capacity.": "The gauge did not take the measured capacity.",
+  "The gauge restarted since the cut-off: the capacity could not be measured.": "The gauge restarted since the cut-off: the capacity could not be measured.",
+  "Battery capacity measured and written:": "Battery capacity measured and written:"
 }

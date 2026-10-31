@@ -182,7 +182,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
             ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. Now the drain: take the charger out."_i18n.c_str());
             y += 44.f;
         }
-        calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n);
+        calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full."_i18n);
         y += 76.f;
         calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n);
         return;

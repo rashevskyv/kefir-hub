@@ -303,7 +303,7 @@ void ShowIntro() {
             cu::Head("Why this is needed"_i18n),
             cu::Para("With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest."_i18n),
             cu::Head("How it works"_i18n),
-            cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity."_i18n),
+            cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the Hub measures the real capacity: the charge that comes in from the switch-off to the full battery is written into the gauge as its capacity."_i18n),
             cu::Head("What you do"_i18n),
             cu::Para("The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, plug the charger in, switch it on and open Kefir Hub: it shows the charge."_i18n),
             cu::Head("How long it takes"_i18n),
@@ -401,7 +401,7 @@ void ShowCyclePage() {
             lines.push_back(cu::Row("The zero (empty battery)"_i18n, v));
         }
         lines.push_back(cu::Check("Charger is plugged in."_i18n, "Plug the charger in."_i18n, []() { return ChargerIn(); }));
-        lines.push_back(cu::Item("You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n));
+        lines.push_back(cu::Item("You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full."_i18n));
         lines.push_back(cu::Item("The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n));
         label = "Start charging"_i18n;
         act = [](cu::Page& p) {

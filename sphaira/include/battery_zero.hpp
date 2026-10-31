@@ -51,6 +51,33 @@ inline auto FullForHeal(int mv, int avg_ma) -> bool {
     return mv >= HEAL_MV && avg_ma <= HEAL_TAPER_MA;
 }
 
+// The capacity, measured (owner, 2026-10-31): the two facts are the cut-off (empty) and the full charge (the cell takes no more
+// current). The net charge that came in between them, counted by QH (0x4D, the unit of FullCap: 0.5 mAh at 10 mOhm), is the real
+// capacity of this battery. The chip's own learning took 137 % of the design from a zero that was not the console's cut-off.
+// The charge is read at the constant-voltage tail (FullForHeal), a little before the termination current: about 1-2 % low.
+inline constexpr int CAP_MIN_PCT = 50;  // of DesignCap; outside is a wrong baseline (a gauge reset, a lost note), not a battery
+inline constexpr int CAP_MAX_PCT = 125;
+
+inline constexpr std::uint16_t STATUS_POR = 0x0002; // Status (0x00) bit 1: the gauge restarted, QH began again from 0
+
+struct Capacity {
+    bool ok{};
+    std::uint16_t raw{}; // FullCap units
+};
+
+// qh_cut: QH at the cut-off, qh_full: QH at the full battery; a 16-bit difference, so the counter may wrap
+inline auto MeasureCapacity(std::uint16_t qh_cut, std::uint16_t qh_full, std::uint16_t design) -> Capacity {
+    const auto d = static_cast<std::uint16_t>(qh_full - qh_cut);
+    if (!design || d >= 0x8000) {
+        return {}; // no design value, or the counter went down
+    }
+    const std::uint32_t x100 = static_cast<std::uint32_t>(d) * 100u;
+    if (x100 < static_cast<std::uint32_t>(design) * CAP_MIN_PCT || x100 > static_cast<std::uint32_t>(design) * CAP_MAX_PCT) {
+        return {};
+    }
+    return {true, d};
+}
+
 struct CountersIn {
     std::uint16_t full_cap{};     // 0x10
     std::uint16_t full_cap_nom{}; // 0x23

@@ -334,6 +334,10 @@ void ActionsMenu() {
 
 namespace detail {
 
+auto SaveCopyOf(FuelGauge& g) -> Result {
+    return SaveCopy(g, std::nullopt);
+}
+
 void RunReset(std::function<void(bool)> done) {
     auto failed = std::make_shared<std::string>();
     App::Push<ui::ProgressBox>(0, "Reset the gauge"_i18n, "Battery"_i18n, [failed](auto pbox) -> Result {

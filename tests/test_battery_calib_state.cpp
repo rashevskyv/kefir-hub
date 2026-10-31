@@ -95,6 +95,12 @@ int main() {
         // the gauge's QH counter + 1 at the last tick on battery: the baseline of the charge after the cut-off
         c.qh_last = 0xFD89;
         assert(Parse(Format(c)).qh_last == 0xFD89 && Parse("qh_last=-5\n").qh_last == 0 && Parse("qh_last=70000\n").qh_last == 0);
+        // the capacity measured per cycle; out of range counts as none
+        c.cap_raw[0] = 0x2300;
+        c.cap_raw[1] = 0x2200;
+        const auto cb = Parse(Format(c));
+        assert(cb.cap_raw[0] == 0x2300 && cb.cap_raw[1] == 0x2200);
+        assert(Parse("cap1=-3\ncap2=99999\n").cap_raw[0] == 0 && Parse("cap1=-3\ncap2=99999\n").cap_raw[1] == 0);
         StartDrain(c, 100); // a new drain does not keep the QH of an older one
         assert(c.qh_last == 0);
     }

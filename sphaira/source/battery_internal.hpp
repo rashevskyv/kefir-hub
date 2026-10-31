@@ -13,6 +13,8 @@
 #include <optional>
 #include <string>
 
+namespace sphaira { struct FuelGauge; }
+
 namespace sphaira::battery::detail {
 
 // Idle seconds before the drain page's screensaver: the install screen's timeout, two minutes when that is off.
@@ -43,6 +45,8 @@ struct Snapshot {
 auto Read() -> Snapshot;
 // <stamp>-<mmc>.cal (batt.cal format) + .txt register dump in BACKUP_DIR; `name` without extension.
 auto Backup(const Snapshot& s, std::string& name) -> Result;
+// this MMC's copy of the learned values := what the chip has now (HOS must not bring the old ones back)
+auto SaveCopyOf(FuelGauge& g) -> Result;
 auto ChipParams(const Snapshot& s) -> Params;
 auto HosParams(const Snapshot& s) -> Params;
 auto MmcName(const Snapshot& s) -> std::string;

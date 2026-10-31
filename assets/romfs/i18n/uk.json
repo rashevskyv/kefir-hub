@@ -3702,7 +3702,7 @@
   "Cycle 2": "Цикл 2",
   "Charger is plugged in.": "Зарядку вставлено.",
   "Plug the charger in.": "Вставте зарядку.",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration.": "Можете залишити консоль так. Можете й користуватися нею, поки вона заряджається. Коли заряд дійде до 100 %, поверніться в Kefir Hub і відкрийте «Калібрування батареї».",
+  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "Можете залишити консоль так. Можете й користуватися нею, поки вона заряджається. Коли заряд дійде до 100 %, поверніться в Kefir Hub і відкрийте «Калібрування батареї». До того не виймайте зарядку: Hub вимірює ємність батареї, поки вона повна.",
   "The screen stays on: so the console charges to the end. The screensaver saves the screen.": "Екран лишається увімкненим: так консоль точно зарядиться до кінця. Заставка береже екран.",
   "Open the charge screen": "Відкрити екран заряду",
   "Start charging": "Почати заряд",
@@ -3854,7 +3854,7 @@
   "Cycle 1: the zero": "Цикл 1: нуль",
   "Now plug the charger in and charge to 100 %. Cycle 1 is then done, and cycle 2 begins.": "Тепер підключіть зарядку і зарядіть до 100 %. Цикл 1 тоді завершено, і починається цикл 2.",
   "Step by step: the reset, two cycles, report.": "Крок за кроком: скидання, два цикли, звіт.",
-  "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Спершу Hub робить резервну копію датчика заряду і записує в нього заводську модель батареї, тож усе, що датчик вивчив неправильно, відкидається. Потім два цикли: батарея розряджається, доки консоль сама не вимкнеться, і заряджається до 100 %. У першому циклі напруга в момент вимкнення записується в датчик як нуль: справжня порожня батарея. На циклах датчик вивчає справжню ємність.",
+  "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the Hub measures the real capacity: the charge that comes in from the switch-off to the full battery is written into the gauge as its capacity.": "Спершу Hub робить резервну копію датчика заряду і записує в нього заводську модель батареї, тож усе, що датчик вивчив неправильно, відкидається. Потім два цикли: батарея розряджається, доки консоль сама не вимкнеться, і заряджається до 100 %. У першому циклі напруга в момент вимкнення записується в датчик як нуль: справжня порожня батарея. На циклах Hub вимірює справжню ємність: заряд, що надходить від вимкнення до повної батареї, записується в датчик як його ємність.",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Тепер цикл 1: відключіть зарядку, Hub розряджає батарею, доки консоль сама не вимкнеться. Ця напруга стає нулем. Потім зарядіть до 100 %.",
   "The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself.": "Напруга в момент вимкнення консолі — це справжня порожня батарея. Коли ви знову увімкнете консоль і відкриєте Kefir Hub, Hub сам запише її в датчик заряду як нуль.",
   "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %.": "Коли вона більше не вмикається: підключіть зарядку і увімкніть її. Hub показує заряд і сам зараховує цикл при 100 %.",
@@ -3940,5 +3940,9 @@
   "Start the calibration over? The steps and the cycles counted so far are dropped, and the first step is the reset of the gauge. A backup of the gauge is made first.": "Почати калібрування наново? Пройдені кроки й пораховані цикли скасуються, першим кроком буде скидання датчика заряду. Спершу робиться резервна копія датчика.",
   "Start over": "Почати наново",
   "Start the calibration over": "Почати калібрування наново",
-  "Drops the steps counted so far. The first step is the reset of the gauge again.": "Скасовує пройдені кроки. Знову першим кроком буде скидання датчика заряду."
+  "Drops the steps counted so far. The first step is the reset of the gauge again.": "Скасовує пройдені кроки. Знову першим кроком буде скидання датчика заряду.",
+  "The charge measured since the cut-off does not fit this battery: the gauge keeps its own capacity.": "Виміряний від відсіку заряд не підходить цій батареї: датчик лишає свою ємність.",
+  "The gauge did not take the measured capacity.": "Датчик не прийняв виміряну ємність.",
+  "The gauge restarted since the cut-off: the capacity could not be measured.": "Датчик перезапустився після відсіку: ємність виміряти не вдалося.",
+  "Battery capacity measured and written:": "Ємність батареї виміряно й записано:"
 }

@@ -63,6 +63,26 @@ int main() {
     assert(PlanCounters(top).soc < 0x6400);
     assert(!PlanCounters({0, 0x2304, 0, 0, true}).ok); // no capacity read: nothing to write, full or not
 
+    // the capacity: the charge counted from the cut-off to the full battery (QH, 0.5 mAh), against the design value
+    {
+        const std::uint16_t design = 0x2476; // 4667 mAh
+        auto m = MeasureCapacity(0xE000, static_cast<std::uint16_t>(0xE000 + 0x2300), design);
+        assert(m.ok && m.raw == 0x2300);
+        // the counter wraps past 0xFFFF: the 16-bit difference still holds
+        m = MeasureCapacity(0xF800, 0x1B00, design);
+        assert(m.ok && m.raw == 0x2300);
+        // outside 50..125 % of the design (a lost baseline, a gauge restart) or going down: not a battery
+        assert(!MeasureCapacity(0x1000, 0x1800, design).ok);          // 0x800 = 22 %
+        assert(!MeasureCapacity(0x1000, 0x5000, design).ok);          // 0x4000 = 175 %
+        assert(!MeasureCapacity(0x5000, 0x4000, design).ok);          // the counter went down
+        assert(!MeasureCapacity(0x1000, 0x3476, 0).ok);               // no design value
+        assert(MeasureCapacity(0, static_cast<std::uint16_t>(design / 2), design).ok);
+        assert(!MeasureCapacity(0, static_cast<std::uint16_t>(design / 2 - 2), design).ok);
+        // the measured capacity feeds the counters: both nominal and rep are the capacity, 100 %
+        const auto c = PlanCounters({m.raw, m.raw, 0, 0, true});
+        assert(c.ok && c.mix == 0x2300 && c.rep == 0x2300 && c.soc == 0x6400);
+    }
+
     std::puts("test_battery_zero: ok");
     return 0;
 }
