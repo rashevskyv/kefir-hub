@@ -3782,12 +3782,10 @@
   "Nextendo": "Nextendo",
   "The console switched off: the drain is done. Now charge it to 100 %.": "Кансоль выключана: разрад завершаны. Цяпер зарадзіце яе да 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Адрас сервера Nextendo, запісаны ў файл hosts.",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network": "Заснавана на Prelude-Nextendo ад Nextendo Network, ліцэнзія PolyForm Shield License 1.0.0. Патрабаванае паведамленне: Copyright 2026 Nextendo Network",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Каліброўка батарэі не завершана. Адкрыйце Kefir Hub: яна працягнецца сама.",
   "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo наладжваецца пры запуску Kefir Hub і не патрабуе націскання кнопак.",
   "Nextendo on emuMMC": "Nextendo на emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo працуе на emuMMC або на sysNAND, пакуль уключаны Semi-stock.",
-  "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s": "Nextendo працуе, калі гэты Kefir Hub мае патч для модуля ssl усталяванай прашыўкі. ssl build ID: %s",
   "Not in use": "Не выкарыстоўваецца",
   "Nextendo on sysNAND (Semi-stock)": "Nextendo на sysNAND (Semi-stock)",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "У гэтага Kefir Hub яшчэ няма патча Nextendo для гэтай прашыўкі, таму Nextendo адключаны. Kefir Hub абнаўляецца сам, калі Prelude-Nextendo дадае яго.",
@@ -3795,7 +3793,6 @@
   "Release": "Выпуск",
   "Online play for supported games on the emuMMC, through the Nextendo Network.": "Анлайн-гульня для падтрымоўваемых гульняў у emuMMC праз сетку Nextendo Network.",
   "On (sysNAND)": "Укл. (sysNAND)",
-  "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.": "Перанакіроўвае онлайн-сервісы падтрымоўваных гульняў у сетку Nextendo Network падчас працы emuMMC. Уключана па змаўчанні.",
   "Restart needed": "Патрабуецца перазапуск",
   "Restart the console so that the changes take effect.": "Перазапусціце кансоль, каб змены ўступілі ў сілу.",
   "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.": "Semi-stock прызначаны для афіцыйнага Nintendo online. Калі гэта ўключана, сэрвісы Nintendo накіроўваюцца ў Nextendo Network, таму eShop і іншыя афіцыйныя онлайн-функцыі могуць перастаць працаваць.\n\nУ Semi-stock няма абароны PRODINFO. Кансоль перазагружаецца для прымянення гэтага.",
@@ -3973,5 +3970,8 @@
   "The battery is full: the gauge is set to 100 %": "Акумулятар поўны: індыкатар усталяваны на 100 %",
   "Keep and open the collection": "Захаваць і адкрыць калекцыю",
   "shown. Narrow the list with the filter above.": "паказана. Сузіце спіс з дапамогай фільтра вышэй.",
-  "Type words from the name to narrow the list": "Увядзіце словы з назвы для фільтрацыі спісу"
+  "Type words from the name to narrow the list": "Увядзіце словы з назвы для фільтрацыі спісу",
+  "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Адпраўляе анлайн-сэрвісы падтрымоўваных гульняў у сетку Nextendo Network на emuMMC.",
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "На аснове Prelude-Nextendo ад Nextendo Network, ліцэнзія PolyForm Shield License 1.0.0.",
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo патрабуе патч для модуля ssl гэтага мікрапраграмнага забеспячэння. ssl ID: %s"
 }

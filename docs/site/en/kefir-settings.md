@@ -30,7 +30,7 @@ so it shows the real state, not what you last chose.
 | [[8GB DRAM status]] | Only for consoles with physically soldered 8GB RAM. Reboots into TegraExplorer to apply or remove the 8GB configuration. If the console boots with it On, the 8GB RAM is there and works. | `/tegraexplorer/scripts/Remove_8GB-RAM_config.te` exists. A console without 8GB RAM does not boot with it on, so On shows only on a real 8GB console. | Off |
 | [[Translate Interface]] | Opens the system translation tools. See below. | — | — |
 
-[[40MB Memory]] is shown only when the firmware is below 23.0.0, when Kefir is below 926, or when the Kefir version file cannot be read. From Kefir 926 (Atmosphère 1.12.1), firmware 23.0.0 and later already gives 40 MB, so the switch is not needed there.
+[[40MB Memory]] is shown only on firmware 20.0.0 to 22.x, and on firmware 23.0.0 and later with Atmosphère below 1.12.1 (or when the Atmosphère version cannot be read). Firmware up to 19.0.1 has 40 MB itself, and Atmosphère 1.12.1 gives 40 MB on firmware 23.0.0 and later, so the switch is not needed there.
 
 !!! warning
     [[Redirect Emunand saves to SD]] changes where emuMMC saves are read from. Saves can look missing until you turn it off again.
@@ -74,12 +74,12 @@ If no translation exists for your firmware, the first row shows your firmware an
 - [[Nextendo on emuMMC]] is on by default; changing it asks for a hold of **A** and restarts the console only if a file really changed
 - [[Nextendo on sysNAND (Semi-stock)]] is shown only while Semi-stock is on; it is off by default; the warning says the Nintendo services then go to Nextendo and the eShop may stop working
 - leaving Semi-stock (back in the emuMMC) removes the sysNAND hosts file and switches that option off
-- [[System firmware]] shows the installed version; the description shows the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch
+- [[System firmware]] shows the installed version; the description shows the first 16 digits of the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch
 - Kefir Hub carries the Nextendo patches itself (game patches, certificate patches, browser certificates) and writes them to the card at start: folders `nextendo_*` in `atmosphere/exefs_patches` and `atmosphere/nro_patches`, and `atmosphere/contents/0100000000000803`; when Nextendo is off they are deleted
 - a Kefir update keeps the `nextendo_*` folders; Semi-stock moves them out of the way while it is on
 - new Prelude-Nextendo releases reach the console as an ordinary Kefir Hub update (the Hub updates itself); no Kefir update is needed
 - [[Server]] shows the server address used in the hosts file; [[Release]] shows the Prelude-Nextendo release the build is based on
-- the text of the license notice: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0
+- the [[Release]] row says: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0; the line "Required Notice: Copyright 2026 Nextendo Network" stands at the bottom of the page, above the buttons, in English
 -->
 
 ## Problems

@@ -24,7 +24,7 @@
 | Параметр | Що робить | Показано «увімкнено», коли | Типово |
 |---|---|---|---|
 | [[Overclock status]] | Вмикає чи вимикає файли розгону Kefir. Вимкнення видаляє модуль sys-clk, його оверлей і kip-файли розгону, а конфіг sys-clk зберігає в `/config/oc_bkp`. Увімкнення копіює їх назад із `/config/oc`. Перезавантажує консоль. | існує `/atmosphere/kips/kefir.kip` | Вимк. |
-| [[40MB Memory]] | Новіші версії Atmosphère лишають менше пам'яті для аплетів (homebrew, запущені з Альбому) і для модів LayeredFS. Цей патч повертає цю пам'ять (`force_40mb_applet` у файлі Atmosphère `system_settings.ini`). Цей параметр показується лише на прошивках нижче 23.0.0 або коли Kefir нижче 926 (чи якщо файл версії неможливо прочитати), оскільки в новіших версіях патч не потрібен. Деякі ігри з ним працюють неправильно: якщо гра поводиться дивно, вимкніть його. Перезавантажує консоль. | патч установлено | Вимк. |
+| [[40MB Memory]] | Новіші версії Atmosphère лишають менше пам'яті для аплетів (homebrew, запущені з Альбому) і для модів LayeredFS. Цей патч повертає цю пам'ять (`force_40mb_applet` у файлі Atmosphère `system_settings.ini`). Цей параметр показується лише на прошивках від 20.0.0 до 22.x, а на 23.0.0 і новіших — лише з Atmosphère нижче 1.12.1 (чи якщо версію Atmosphère неможливо прочитати). Прошивки до 19.0.1 мають 40 МБ самі, а Atmosphère 1.12.1 дає 40 МБ на 23.0.0 і новіших. Деякі ігри з ним працюють неправильно: якщо гра поводиться дивно, вимкніть його. Перезавантажує консоль. | патч установлено | Вимк. |
 | [[USB 3.0]] | Примусово вмикає USB 3.0 в Atmosphère. Під час увімкнення з'являється попередження, що це може спричинити збої, нестабільність або проблеми з деякими USB-пристроями (утримуйте **A**, щоб підтвердити). Зміна діє лише після перезавантаження; Kefir Hub запитає [[Later]] чи [[Reboot]]. | параметр явно ввімкнено | Вимк. |
 | [[Redirect Emunand saves to SD]] | Експериментальне. Зберігає збереження emuMMC на карті пам'яті. Видно, лише коли emuMMC увімкнено. Під час вимкнення також видаляє `/config/redirect.bin`. Перезавантажує консоль. | параметр увімкнено | Вимк. |
 | [[8GB DRAM status]] | Лише для консолей із фізично впаяними 8 ГБ оперативної пам'яті. Перезавантажує консоль у TegraExplorer, щоб застосувати або прибрати конфігурацію 8 ГБ. Якщо консоль завантажилася з увімкненим параметром, 8 ГБ на місці й працюють. | існує `/tegraexplorer/scripts/Remove_8GB-RAM_config.te`. Консоль без 8 ГБ з увімкненим параметром не завантажується, тож «увімкнено» буває лише на справжній консолі з 8 ГБ. | Вимк. |
@@ -69,12 +69,12 @@
 - [[Nextendo on emuMMC]] is on by default; changing it asks for a hold of **A** and restarts the console only if a file really changed
 - [[Nextendo on sysNAND (Semi-stock)]] is shown only while Semi-stock is on; it is off by default; the warning says the Nintendo services then go to Nextendo and the eShop may stop working
 - leaving Semi-stock (back in the emuMMC) removes the sysNAND hosts file and switches that option off
-- [[System firmware]] shows the installed version; the description shows the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch
+- [[System firmware]] shows the installed version; the description shows the first 16 digits of the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch
 - Kefir Hub carries the Nextendo patches itself (game patches, certificate patches, browser certificates) and writes them to the card at start: folders `nextendo_*` in `atmosphere/exefs_patches` and `atmosphere/nro_patches`, and `atmosphere/contents/0100000000000803`; when Nextendo is off they are deleted
 - a Kefir update keeps the `nextendo_*` folders; Semi-stock moves them out of the way while it is on
 - new Prelude-Nextendo releases reach the console as an ordinary Kefir Hub update (the Hub updates itself); no Kefir update is needed
 - [[Server]] shows the server address used in the hosts file; [[Release]] shows the Prelude-Nextendo release the build is based on
-- the text of the license notice: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0
+- the [[Release]] row says: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0; the line "Required Notice: Copyright 2026 Nextendo Network" stands at the bottom of the page, above the buttons, in English
 -->
 
 ## Проблеми

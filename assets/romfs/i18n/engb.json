@@ -3782,12 +3782,10 @@
   "Nextendo": "Nextendo",
   "The console switched off: the drain is done. Now charge it to 100 %.": "The console switched off: the drain is done. Now charge it to 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Address of the Nextendo server written into the hosts file.",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network": "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.",
   "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo is set up when Kefir Hub starts and needs no button press.",
   "Nextendo on emuMMC": "Nextendo on emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.",
-  "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s": "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s",
   "Not in use": "Not in use",
   "Nextendo on sysNAND (Semi-stock)": "Nextendo on sysNAND (Semi-stock)",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.",
@@ -3795,7 +3793,6 @@
   "Release": "Release",
   "Online play for supported games on the emuMMC, through the Nextendo Network.": "Online play for supported games on the emuMMC, through the Nextendo Network.",
   "On (sysNAND)": "On (sysNAND)",
-  "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.": "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.",
   "Restart needed": "Restart needed",
   "Restart the console so that the changes take effect.": "Restart the console so that the changes take effect.",
   "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.": "Semi-stock is meant for official Nintendo online. With this on, Nintendo services go to Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.",
@@ -3973,5 +3970,8 @@
   "The battery is full: the gauge is set to 100 %": "The battery is full: the gauge is set to 100 %",
   "Keep and open the collection": "Keep and open the collection",
   "shown. Narrow the list with the filter above.": "shown. Narrow the list with the filter above.",
-  "Type words from the name to narrow the list": "Type words from the name to narrow the list"
+  "Type words from the name to narrow the list": "Type words from the name to narrow the list",
+  "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Sends the online services of supported games to the Nextendo Network on the emuMMC.",
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.",
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s"
 }

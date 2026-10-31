@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.253 — 40MB Memory hides by the Atmosphère version; the Nextendo page reads in one line a row (owner, 2026-10-31)
+Kefir Settings → `40MB Memory` shows only on firmware 20.0.0–22.x, or on 23.0.0+ with Atmosphère below 1.12.1 (read via spl 65000; it was the Kefir version file, which a 23.0.1 + AMS 1.12.1 console still failed). Nextendo: shorter descriptions (the ssl ID shows its first 16 digits), and `Required Notice: Copyright 2026 Nextendo Network` sits at the bottom of the page above the buttons instead of in the Release row.
+host tests: pass (--quick) | nro: built (0.14.253) | switch: pending (23.0.1 + AMS 1.12.1: no 40MB row; Nextendo page)
+
 ## v0.14.252 — ROMS: a Filter by words row opens every file list, small sets open too (owner, 2026-10-31)
 The first row of a collection's file list and of a set's inside is `Filter by words`: A types words, the list shows only the names that hold them (1000 rows at most; the filter reaches the rest), so a game is found among thousands, then picked with A, or X/Y for several, or START for all. A zip, 7z or rar opens into its games from 32 MB, or from 1 MB in an item of 20 archives or fewer; a catalogue of many small archives still downloads one game per A. The filter redraws the page from the list already read (no second request).
 host tests: pass (--quick) | nro: built (0.14.252) | switch: pending (a real set: the filter, one game out of a zip, 7z and rar)

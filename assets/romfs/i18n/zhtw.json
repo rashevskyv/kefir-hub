@@ -3840,12 +3840,10 @@
   "Nextendo": "Nextendo",
   "The console switched off: the drain is done. Now charge it to 100 %.": "主機已關機：放電完成。請將其充電至 100 %。",
   "Address of the Nextendo server written into the hosts file.": "寫入 hosts 檔案的 Nextendo 伺服器地址。",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network": "基於 Nextendo Network 的 Prelude-Nextendo，PolyForm Shield License 1.0.0。必要聲明：Copyright 2026 Nextendo Network",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "電池校准尚未完成。請開啟 Kefir Hub：它將自行繼續。",
   "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo 在 Kefir Hub 啟動時自動設定，無需按鍵。",
   "Nextendo on emuMMC": "emuMMC 上的 Nextendo",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo 運行在 emuMMC 上，或在開啟 Semi-stock 時運行在 sysNAND 上。",
-  "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s": "當此 Kefir Hub 擁有已安裝韌體的 ssl 模組修補程式時，Nextendo 才能正常運作。ssl 建置 ID: %s",
   "Not in use": "未使用",
   "Nextendo on sysNAND (Semi-stock)": "sysNAND 上的 Nextendo（Semi-stock）",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "此 Kefir Hub 尚無適用於此系統韌體的 Nextendo 修補程式，因此 Nextendo 已關閉。當 Prelude-Nextendo 新增修補程式時，Kefir Hub 會自動更新。",
@@ -3853,7 +3851,6 @@
   "Release": "版本",
   "Online play for supported games on the emuMMC, through the Nextendo Network.": "透過 Nextendo Network 在 emuMMC 上連線遊玩支援的遊戲。",
   "On (sysNAND)": "已開啟 (sysNAND)",
-  "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.": "在 emuMMC 執行期間，將支援遊戲的線上服務重新導向至 Nextendo Network。預設為開啟。",
   "Restart needed": "需要重新啟動",
   "Restart the console so that the changes take effect.": "重新啟動主機以使變更生效。",
   "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.": "Semi-stock 專為官方任天堂線上服務設計。開啟此功能後，任天堂服務將改走 Nextendo Network，因此 eShop 和其他官方線上功能可能會停止運作。\n\nSemi-stock 中沒有 PRODINFO 保護。主機將重新啟動以套用此變更。",
@@ -4031,5 +4028,8 @@
   "The battery is full: the gauge is set to 100 %": "電池已充滿：電量計已設為 100 %",
   "Keep and open the collection": "保留並開啟合集",
   "shown. Narrow the list with the filter above.": "已顯示。使用上方的篩選器縮小列表範圍。",
-  "Type words from the name to narrow the list": "輸入名稱中的字詞以縮小清單範圍"
+  "Type words from the name to narrow the list": "輸入名稱中的字詞以縮小清單範圍",
+  "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "將支援遊戲的線上服務傳送到 emuMMC 上的 Nextendo Network。",
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "基於 Nextendo Network 的 Prelude-Nextendo，遵循 PolyForm Shield License 1.0.0。",
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo 需要為此韌體的 ssl 模組打補丁。ssl ID：%s"
 }

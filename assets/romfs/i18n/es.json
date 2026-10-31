@@ -3788,12 +3788,10 @@
   "Nextendo": "Nextendo",
   "The console switched off: the drain is done. Now charge it to 100 %.": "La consola se ha apagado: descarga completa. Cárgala ahora al 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Dirección del servidor Nextendo escrita en el archivo hosts.",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network": "Basado en Prelude-Nextendo por Nextendo Network, Licencia PolyForm Shield 1.0.0. Aviso obligatorio: Copyright 2026 Nextendo Network",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "La calibración de la batería no ha finalizado. Abre Kefir Hub: continúa automáticamente.",
   "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo se configura al iniciar Kefir Hub y no requiere pulsar ningún botón.",
   "Nextendo on emuMMC": "Nextendo en emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo funciona en emuMMC o en sysNAND mientras Semi-stock esté activado.",
-  "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s": "Nextendo funciona cuando este Kefir Hub tiene un parche para el módulo ssl del firmware instalado. ssl build ID: %s",
   "Not in use": "No en uso",
   "Nextendo on sysNAND (Semi-stock)": "Nextendo en sysNAND (Semi-stock)",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "Este Kefir Hub aún no tiene un parche de Nextendo para este firmware del sistema, por lo que Nextendo está desactivado. Kefir Hub se actualiza solo cuando Prelude-Nextendo añade uno.",
@@ -3801,7 +3799,6 @@
   "Release": "Versión",
   "Online play for supported games on the emuMMC, through the Nextendo Network.": "Juego en línea para juegos compatibles en la emuMMC, a través de la red Nextendo Network.",
   "On (sysNAND)": "Activado (sysNAND)",
-  "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.": "Redirige los servicios en línea de los juegos compatibles a Nextendo Network mientras se ejecuta emuMMC. Activado por defecto.",
   "Restart needed": "Reinicio necesario",
   "Restart the console so that the changes take effect.": "Reinicia la consola para que los cambios surtan efecto.",
   "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.": "Semi-stock está pensado para el servicio en línea oficial de Nintendo. Con esto activado, los servicios de Nintendo van a Nextendo Network en su lugar, por lo que eShop y otras funciones en línea oficiales pueden dejar de funcionar.\n\nNo hay protección PRODINFO en Semi-stock. La consola se reinicia para aplicar esto.",
@@ -3979,5 +3976,8 @@
   "The battery is full: the gauge is set to 100 %": "La batería está llena: el indicador está al 100 %",
   "Keep and open the collection": "Conservar y abrir la colección",
   "shown. Narrow the list with the filter above.": "se muestran. Acota la lista con el filtro de arriba.",
-  "Type words from the name to narrow the list": "Escribe palabras del nombre para acotar la lista"
+  "Type words from the name to narrow the list": "Escribe palabras del nombre para acotar la lista",
+  "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Envia los servicios en línea de los juegos compatibles a Nextendo Network en emuMMC.",
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Basado en Prelude-Nextendo por Nextendo Network, PolyForm Shield License 1.0.0.",
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo necesita un parche para el módulo ssl de este firmware. ID de ssl: %s"
 }

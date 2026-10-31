@@ -4,7 +4,7 @@
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
-#include "ui/menus/kefir/kefir_firmware.hpp"
+#include "hats_version.hpp"
 #include "version_compare.hpp"
 
 #include "app.hpp"
@@ -25,7 +25,6 @@ namespace sphaira::ui::menu::settings {
 using namespace detail;
 
 constexpr const char* ATMOSPHERE_CONFIG = "/atmosphere/config/system_settings.ini";
-constexpr const char* KEFIR_VERSION_PATH = "/switch/kefir-updater/version";
 
 void ToggleKefirSetting(const KefirSetting& setting) {
     const auto enabled = !setting.get();
@@ -145,9 +144,9 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         "",
         0.5f,
     }));
-    // Atmosphère 1.12.1 (Kefir 926) gives 40MB by default on 23.0.0+, so the toggle is only for
-    // older Kefir or older firmware. An unreadable version file parses as lower, so the toggle stays visible.
-    if (hosversionBefore(23, 0, 0) || version::IsLower(kefir::detail::ReadFirstLine(KEFIR_VERSION_PATH), "926")) {
+    // Firmware up to 19.0.1 has 40MB itself; Atmosphère 1.12.1+ gives it on 23.0.0+. An unknown
+    // Atmosphère version parses as lower, so the toggle stays visible there.
+    if (hosversionAtLeast(20, 0, 0) && (hosversionBefore(23, 0, 0) || version::IsLower(hats::getAtmosphereVersion(), "1.12.1"))) {
         items.emplace_back(MakeKefirToggle({
             "40MB Memory"_i18n,
             "Toggle the 40MB applet memory patch."_i18n,

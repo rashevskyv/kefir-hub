@@ -3787,12 +3787,10 @@
   "Nextendo": "Nextendo",
   "The console switched off: the drain is done. Now charge it to 100 %.": "De console is uitgeschakeld: ontlading voltooid. Laad hem nu op tot 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Adres van de Nextendo-server dat naar het hosts-bestand is geschreven.",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network": "Gebaseerd op Prelude-Nextendo door Nextendo Network, PolyForm Shield License 1.0.0. Vereiste mededeling: Copyright 2026 Nextendo Network",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Batterijcalibratie is niet voltooid. Open Kefir Hub: het gaat vanzelf verder.",
   "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo wordt ingesteld wanneer Kefir Hub start en vereist geen druk op de knop.",
   "Nextendo on emuMMC": "Nextendo op emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo werkt op de emuMMC, of op de sysNAND terwijl Semi-stock is ingeschakeld.",
-  "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s": "Nextendo werkt wanneer deze Kefir Hub een patch heeft voor de ssl-module van de geïnstalleerde firmware. ssl build ID: %s",
   "Not in use": "Niet in gebruik",
   "Nextendo on sysNAND (Semi-stock)": "Nextendo op sysNAND (Semi-stock)",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "Deze Kefir Hub heeft nog geen Nextendo-patch voor deze systeemfirmware, dus Nextendo is uitgeschakeld. Kefir Hub werkt zichzelf bij wanneer Prelude-Nextendo er één toevoegt.",
@@ -3800,7 +3798,6 @@
   "Release": "Release",
   "Online play for supported games on the emuMMC, through the Nextendo Network.": "Online spelen voor ondersteunde games op de emuMMC, via het Nextendo Network.",
   "On (sysNAND)": "Aan (sysNAND)",
-  "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.": "Leidt de onlinediensten van ondersteunde games om naar het Nextendo Network terwijl emuMMC actief is. Standaard ingeschakeld.",
   "Restart needed": "Herstart vereist",
   "Restart the console so that the changes take effect.": "Start de console opnieuw op zodat de wijzigingen van kracht worden.",
   "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.": "Semi-stock is bedoeld voor de officiële Nintendo online. Als dit aan staat, gaan Nintendo-diensten in plaats daarvan naar Nextendo Network, waardoor de eShop en andere officiële online functies mogelijk niet meer werken.\n\nEr is geen PRODINFO-beveiliging in Semi-stock. De console wordt opnieuw opgestart om dit toe te passen.",
@@ -3978,5 +3975,8 @@
   "The battery is full: the gauge is set to 100 %": "De batterij is vol: de meter is ingesteld op 100 %",
   "Keep and open the collection": "Verzameling behouden en openen",
   "shown. Narrow the list with the filter above.": "getoond. Verfijn de lijst met het filter hierboven.",
-  "Type words from the name to narrow the list": "Typ woorden uit de naam om de lijst te verfijnen"
+  "Type words from the name to narrow the list": "Typ woorden uit de naam om de lijst te verfijnen",
+  "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Verstuurt de online diensten van ondersteunde games naar het Nextendo Network op de emuMMC.",
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Gebaseerd op Prelude-Nextendo door Nextendo Network, PolyForm Shield License 1.0.0.",
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo heeft een patch nodig voor de ssl-module van deze firmware. ssl-ID: %s"
 }

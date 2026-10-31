@@ -83,7 +83,7 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(MakeKefirToggle({
         "Nextendo on emuMMC"_i18n,
-        "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default."_i18n,
+        "Sends the online services of supported games to the Nextendo Network on the emuMMC."_i18n,
         [](){ return nx::EmuEnabled(); },
         [](bool enabled){ return ApplyChoice(nx::SetEmuEnabled, enabled); },
         "The console restarts to apply this. Nextendo uses the real PRODINFO of the console inside the emuMMC; Nintendo servers are not reached."_i18n,
@@ -104,8 +104,9 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(SettingsItem{
         "System firmware"_i18n,
-        Fill("Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s"_i18n,
-             [](){ auto id = nx::SslBuildIdText(); return id.empty() ? std::string{"-"} : id; }()),
+        // the first 16 digits of the build ID name the firmware well enough and keep the row on one line
+        Fill("Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s"_i18n,
+             [](){ auto id = nx::SslBuildIdText(); return id.empty() ? std::string{"-"} : id.substr(0, 16); }()),
         [](){ return InstalledFirmwareText(); },
         {},
     });
@@ -119,7 +120,7 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
 
     items.emplace_back(SettingsItem{
         "Release"_i18n,
-        "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network"_i18n,
+        "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0."_i18n,
         [](){ return std::string{nx::kPinnedTag}; },
         {},
     });
@@ -187,6 +188,9 @@ void NextendoMenu::Draw(NVGcontext* vg, Theme* theme) {
     m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
     });
+    // the license notice stays in English, above the footer line
+    gfx::drawText(vg, 80.f, 625.f, 18.f, "Required Notice: Copyright 2026 Nextendo Network", nullptr,
+                  NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO));
 }
 
 void NextendoMenu::SetIndex(s64 index) {

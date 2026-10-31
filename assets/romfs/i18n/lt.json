@@ -3782,12 +3782,10 @@
   "Nextendo": "Nextendo",
   "The console switched off: the drain is done. Now charge it to 100 %.": "Konsolė išsijungė: iškrovimas baigtas. Dabar įkraukite ją iki 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Nextendo serverio adresas, įrašytas į „hosts“ failą.",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0. Required Notice: Copyright 2026 Nextendo Network": "Sukurta „Nextendo Network“ „Prelude-Nextendo“ pagrindu, „PolyForm Shield License 1.0.0“. Privalomas pranešimas: Copyright 2026 Nextendo Network",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Baterijos kalibravimas nebaigtas. Atidarykite Kefir Hub: procesas tęsis savaime.",
   "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo nustatomas paleidžiant Kefir Hub ir nereikalauja mygtuko paspaudimo.",
   "Nextendo on emuMMC": "Nextendo emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo veikia emuMMC arba sysNAND, kai įjungtas Semi-stock.",
-  "Nextendo works when this Kefir Hub has a patch for the ssl module of the installed firmware. ssl build ID: %s": "„Nextendo“ veikia, kai ši „Kefir Hub“ turi pataisą įdiegtos aparatinės įrangos ssl moduliui. ssl build ID: %s",
   "Not in use": "Nenaudojama",
   "Nextendo on sysNAND (Semi-stock)": "Nextendo sysNAND (Semi-stock)",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "Šis Kefir Hub dar neturi Nextendo pataisos šiai sisteminei programinei įrangai, todėl Nextendo išjungtas. Kefir Hub atsinaujina pats, kai Prelude-Nextendo ją prideda.",
@@ -3795,7 +3793,6 @@
   "Release": "Laidas",
   "Online play for supported games on the emuMMC, through the Nextendo Network.": "Palaikomų žaidimų internetinis žaidimas emuMMC, naudojant „Nextendo Network“.",
   "On (sysNAND)": "Įjungta (sysNAND)",
-  "Redirects the online services of supported games to the Nextendo Network while the emuMMC runs. On by default.": "Nukreipia palaikomų žaidimų internetines paslaugas į „Nextendo Network“, kol veikia emuMMC. Įjungta pagal nutylėjimą.",
   "Restart needed": "Reikalingas paleidimas iš naujo",
   "Restart the console so that the changes take effect.": "Paleiskite konsolę iš naujo, kad pakeitimai įsigaliotų.",
   "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this.": "Semi-stock yra skirtas oficialiam „Nintendo“ internetiniam ryšiui. Tai įjungus, „Nintendo“ paslaugos nukreipiamos į „Nextendo Network“, todėl „eShop“ ir kitos oficialios internetinės funkcijos gali nustoti veikti.\n\n„Semi-stock“ neturi PRODINFO apsaugos. Konsolė pasileidžia iš naujo, kad tai pritaikytų.",
@@ -3973,5 +3970,8 @@
   "The battery is full: the gauge is set to 100 %": "Baterija pilna: indikatorius nustatytas ties 100 %",
   "Keep and open the collection": "Išsaugoti ir atidaryti kolekciją",
   "shown. Narrow the list with the filter above.": "rodoma. Susiaurinkite sąrašą naudodami filtrą aukščiau.",
-  "Type words from the name to narrow the list": "Įveskite žodžius iš pavadinimo sąrašui susiaurinti"
+  "Type words from the name to narrow the list": "Įveskite žodžius iš pavadinimo sąrašui susiaurinti",
+  "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Siunčia palaikomų žaidimų internetines paslaugas į „Nextendo Network“ emuMMC.",
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Sukurta „Nextendo Network“ „Prelude-Nextendo“ pagrindu, „PolyForm Shield License 1.0.0“.",
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo reikia šios programinės aparatinės įrangos ssl modulio pataisos. ssl ID: %s"
 }
