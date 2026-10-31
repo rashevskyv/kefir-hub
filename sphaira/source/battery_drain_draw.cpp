@@ -208,13 +208,9 @@ void DrainMenu::Draw(NVGcontext* vg, Theme* theme) {
     m_frame_ts.Update();
     m_t += 1.2f * static_cast<float>(std::clamp(frame_ms, 1.0, 100.0) / 1000.0);
     if (g_load) {
-        // a slow frame means too many circles; 10 s of fast ones, room for one more (a single missed frame at the edge)
-        if (frame_ms > 20.0) {
-            m_circles = std::max(CIRCLES_MIN, m_circles - (frame_ms > 40.0 ? 3 : 1));
-            m_good_frames = 0;
-        } else if (frame_ms < 18.0 && ++m_good_frames >= 600) {
-            m_circles = std::min(CIRCLES, m_circles + 1);
-            m_good_frames = 0;
+        // the circles grow in SampleLive until the GPU reads busy; here only a crawl (under about 14 fps) takes some back
+        if (frame_ms > SLOW_FRAME_MS) {
+            m_circles = std::max(CIRCLES_MIN, m_circles - 2);
         }
         for (int i = 0; i < m_circles; i++) {
             const float a = m_t + i * 0.37f;

@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.257 — Battery drain page: the GPU load grows to 100 %, the frame rate may fall (not below about 14 fps)
+The circle count rises 2 per sample while nvgpu reads under 95 %, up to 80; a frame over 70 ms takes 2 back. host tests: not run, nro: not built, switch: pending (does the GPU chart reach 100 %, does the page stay usable)
+
 ## v0.14.256 — Battery drain page: voltage level with the battery, chips apart from the status text, the charts show the whole drain squashed into the width, the screensaver time in the text is the one from the settings
 The chart history halves (neighbours merge) when a chart is full. Other languages show the English screensaver text until i18n-translate runs. host tests: not run, nro: not built, switch: pending
 

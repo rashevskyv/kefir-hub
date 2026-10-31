@@ -120,6 +120,9 @@ void DrainMenu::SampleLive() {
     u32 gpu{};
     if (m_gpu_fd_ok && R_SUCCEEDED(nvIoctl(m_gpu_fd, NVGPU_GET_GPU_LOAD, &gpu)) && gpu <= 1000) {
         Push(m_gpu, gpu / 10.f);
+        if (g_load && gpu < GPU_BUSY) {
+            m_circles = std::min(CIRCLES, m_circles + 2);
+        }
     }
     FuelGauge g;
     const auto mv = g.Read(MAX17050_VCell);
