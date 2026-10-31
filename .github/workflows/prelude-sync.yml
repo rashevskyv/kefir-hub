@@ -160,6 +160,8 @@ jobs:
           echo; echo "Запуск: $RUN_URL"
         } > build/prelude_sync/notice.txt
         cat build/prelude_sync/notice.txt
+        TG_TOKEN=$(printf %s "$TG_TOKEN" | tr -d '[:space:]')   # a secret set from PowerShell may end with CR LF
+        TG_CHAT=$(printf %s "$TG_CHAT" | tr -d '[:space:]')
         if [ -n "$TG_TOKEN" ] && [ -n "$TG_CHAT" ]; then
           head -c 4000 build/prelude_sync/notice.txt > /tmp/tg.txt
           curl -fsS -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
