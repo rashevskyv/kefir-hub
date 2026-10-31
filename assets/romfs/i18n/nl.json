@@ -3964,5 +3964,13 @@
   "Popular on archive.org": "Populair op archive.org",
   "Words from the title, for example a game or a set name": "Woorden uit de titel, bijvoorbeeld een spel of setnaam",
   "Search archive.org": "Zoeken op archive.org",
-  "Enter an item id": "Voer een item-id in"
+  "Enter an item id": "Voer een item-id in",
+  "a set: A picks files inside": "een set: A selecteert bestanden binnenin",
+  "shown. Narrow the list with a filter (START).": "getoond. Filter de lijst (START).",
+  "Filter by words": "Filteren op woorden",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Dit item is beperkt: archive.org staat alleen ingelogde gebruikers toe om het te downloaden, en de Hub kan niet inloggen. De bestanden worden niet aangeboden.",
+  "Reading the archive on archive.org": "Archief lezen van archive.org",
+  "Could not read the archive on archive.org": "Kan het archief op archive.org niet lezen",
+  "Download the whole archive": "Hele archief downloaden",
+  "Words from the file name, for example a game; empty shows every file": "Woorden uit de bestandsnaam, bijvoorbeeld een game; leeg toont elk bestand"
 }

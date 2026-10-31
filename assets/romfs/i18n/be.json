@@ -3959,5 +3959,13 @@
   "Popular on archive.org": "Папулярнае на archive.org",
   "Words from the title, for example a game or a set name": "Словы з назвы, напрыклад, гульні ці назвы набору",
   "Search archive.org": "Шукаць на archive.org",
-  "Enter an item id": "Увядзіце ідэнтыфікатар элемента"
+  "Enter an item id": "Увядзіце ідэнтыфікатар элемента",
+  "a set: A picks files inside": "набор: A выбірае файлы ўнутры",
+  "shown. Narrow the list with a filter (START).": "паказана. Свіжынку спіс фільтрам (START).",
+  "Filter by words": "Фільтраваць па словах",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Гэты прадмет абмежаваны: archive.org дазваляе спампоўваць яго толькі зарэгістраваным карыстальнікам, а Hub не можа ўвайсці ў сістэму. Яго файлы не прапаноўваюцца.",
+  "Reading the archive on archive.org": "Чытанне архіву з archive.org",
+  "Could not read the archive on archive.org": "Не ўдалося прачытаць архіў на archive.org",
+  "Download the whole archive": "Спампаваць увесь архіў",
+  "Words from the file name, for example a game; empty shows every file": "Словы з назвы файла, напрыклад, гульні; пустое паказвае ўсе файлы"
 }

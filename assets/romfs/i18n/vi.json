@@ -3964,5 +3964,13 @@
   "Popular on archive.org": "Phổ biến trên archive.org",
   "Words from the title, for example a game or a set name": "Từ trong tiêu đề, ví dụ như tên trò chơi hoặc bộ sưu tập",
   "Search archive.org": "Tìm kiếm trên archive.org",
-  "Enter an item id": "Nhập ID mục"
+  "Enter an item id": "Nhập ID mục",
+  "a set: A picks files inside": "một tập hợp: A chọn các tệp bên trong",
+  "shown. Narrow the list with a filter (START).": "hiển thị. Lọc danh sách (START).",
+  "Filter by words": "Lọc theo từ",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Mục này bị hạn chế: archive.org chỉ cho phép người dùng đã đăng nhập tải xuống và Hub không thể đăng nhập. Các tệp của nó không được cung cấp.",
+  "Reading the archive on archive.org": "Đang đọc lưu trữ trên archive.org",
+  "Could not read the archive on archive.org": "Không thể đọc kho lưu trữ trên archive.org",
+  "Download the whole archive": "Tải xuống toàn bộ lưu trữ",
+  "Words from the file name, for example a game; empty shows every file": "Từ trong tên tệp, ví dụ như trò chơi; để trống hiển thị tất cả tệp"
 }

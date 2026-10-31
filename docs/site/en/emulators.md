@@ -32,9 +32,20 @@ BIOS files for the emulators on your microSD card: Kefir Hub finds the installed
 - an item whose files are all archive.org metadata (no content) is refused with [[The item has no files to download]]
 - press **A** on a collection: the list of its files with sizes; a file already in the folder is marked [[on the card]]; **A** on a file downloads it; **X** marks a file, **Y** inverts the marks; **START**: [[Download the marked files]], [[Download all]], [[Remove the collection]] (the downloaded files stay)
 - every download goes through the same window as BIOS: file number and name, md5 check, a file already there with the right size is skipped, the counts at the end
-- archives are not extracted: RetroArch and Tico read zips; CD games in zips (psx, sega-cd, saturn, dc) must be extracted by hand for now
+- a downloaded archive is not extracted: RetroArch and Tico read zips; to avoid extracting, open a big set and take single files (below)
 - the collections are kept in `/config/kefir/roms.txt`, one a line: console, item id, title, separated by tabs
-- restricted items (an archive.org account needed) are not supported yet
+- restricted items: archive.org lets only signed-in users download some items (a "login required" item, its metadata says `access-restricted-item`); the Hub cannot sign in; such an item is not offered: [[Add a collection]] shows [[This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.]] with the item id and does not keep it; a collection added before it became restricted shows the same message and an empty file list; single files that archive.org marks private are left out of the list
+-->
+
+## One ROM out of a whole set
+<!-- shot: emulators-rom-set | Inside a big zip set: the files of the archive with sizes, without downloading the set -->
+<!-- draft
+- many items are one big archive of a whole set (a zip, 7z or rar of hundreds of ROMs); archive.org lists the files inside such an archive and serves each of them on its own, so a single ROM is downloaded without the rest of the set
+- in a collection's file list a zip, 7z or rar of 32 MB or more is marked [[a set: A picks files inside]]; **A** on it reads the list of its files from archive.org (a progress window, the list is a page of some 100 KB to 1 MB) and opens it as a page; a smaller archive is one game and is downloaded as it is
+- inside: the row is the file name (the folder inside the archive is left out of the row; the filter still matches the whole path), with the size; [[on the card]] marks a file already in `/roms/<console>/`; **A** downloads that one file into `/roms/<console>/` (the folder inside the archive is dropped, so `Best NES Games/Contra (USA).nes` becomes `/roms/nes/Contra (USA).nes`); **X** marks a file, **Y** inverts the marks
+- **START**: [[Download the marked files]], [[Download all]] (every file of the current list), [[Filter by words]] (the words must all be in the file name, any case; empty shows every file; the page shows the first 1000 matches, then a row with "shown" and a hint to filter), [[Download the whole archive]] (the archive itself, not extracted)
+- the files are not unpacked on the console: archive.org serves each file as it is, so CD games with a cue and bin are two files you mark both; archive.org gives no checksum for a file inside an archive, so only the size is checked; two files of one set with the same name in different folders: only the first one is taken
+- zip, 7z and rar work the same; a restricted item shows the restricted message before it opens; if archive.org answers 401 or 403 for the list the same message is shown, any other failure is [[Could not read the archive on archive.org]]
 -->
 
 ## See also

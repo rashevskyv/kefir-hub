@@ -3964,5 +3964,13 @@
   "Popular on archive.org": "archive.org 인기 항목",
   "Words from the title, for example a game or a set name": "제목에서 가져온 단어 (예: 게임 또는 세트 이름)",
   "Search archive.org": "archive.org 검색",
-  "Enter an item id": "항목 ID 입력"
+  "Enter an item id": "항목 ID 입력",
+  "a set: A picks files inside": "세트: A로 내부 파일 선택",
+  "shown. Narrow the list with a filter (START).": "표시됨. 필터로 목록 축소 (START).",
+  "Filter by words": "단어별 필터",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "이 항목은 제한되어 있습니다. archive.org는 로그인한 사용자만 다운로드할 수 있도록 허용하며, Hub은 로그인할 수 없습니다. 파일이 제공되지 않습니다.",
+  "Reading the archive on archive.org": "archive.org에서 아카이브 읽는 중",
+  "Could not read the archive on archive.org": "archive.org의 아카이브를 읽을 수 없습니다.",
+  "Download the whole archive": "전체 아카이브 다운로드",
+  "Words from the file name, for example a game; empty shows every file": "파일 이름의 단어 (예: 게임); 비워두면 모든 파일 표시"
 }

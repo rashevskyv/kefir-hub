@@ -3964,5 +3964,13 @@
   "Popular on archive.org": "archive.orgで人気",
   "Words from the title, for example a game or a set name": "タイトルからの単語（ゲームやセット名など）",
   "Search archive.org": "archive.orgを検索",
-  "Enter an item id": "アイテムIDを入力"
+  "Enter an item id": "アイテムIDを入力",
+  "a set: A picks files inside": "セット: Aで内部のファイルを選択",
+  "shown. Narrow the list with a filter (START).": "表示中。フィルターでリストを絞り込み (START)。",
+  "Filter by words": "ワードで絞り込み",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "このアイテムは制限されています：archive.orgはサインインしたユーザーのみダウンロードを許可しており、Hubはサインインできません。ファイルは提供されません。",
+  "Reading the archive on archive.org": "archive.org からアーカイブを読み込んでいます",
+  "Could not read the archive on archive.org": "archive.org のアーカイブを読み込めませんでした。",
+  "Download the whole archive": "アーカイブ全体をダウンロード",
+  "Words from the file name, for example a game; empty shows every file": "ファイル名に含まれる単語（例：ゲーム名）。空欄の場合はすべてのファイルを表示します"
 }

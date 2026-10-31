@@ -202,4 +202,109 @@ inline std::string DestPath(std::string_view console, std::string_view name) {
     return std::string{ROMS_ROOT} + std::string{console} + "/" + std::string{base};
 }
 
+// ---- inside a whole-set archive (zip, 7z, rar) ----
+// archive.org lists the files of an archive at <download url>/ and serves each one on its own, so one ROM
+// of a 300 MB set is fetched without the rest.
+
+inline std::string Lower(std::string_view s) {
+    std::string out{s};
+    for (auto& c : out) c = (c >= 'A' && c <= 'Z') ? static_cast<char>(c + 32) : c;
+    return out;
+}
+
+inline bool IsArchiveName(std::string_view name) {
+    const auto n = Lower(name);
+    for (std::string_view ext : {".zip", ".7z", ".rar"}) {
+        if (n.size() > ext.size() && n.compare(n.size() - ext.size(), ext.size(), ext) == 0) return true;
+    }
+    return false;
+}
+
+// small archives (one game each) are downloaded as they are; a set is opened and its files are picked
+inline constexpr std::uint64_t LOOK_INSIDE_MIN = 32ull * 1024 * 1024;
+
+inline bool LookInside(std::string_view name, std::uint64_t size) {
+    return size >= LOOK_INSIDE_MIN && IsArchiveName(name);
+}
+
+inline std::string ArchiveListUrl(std::string_view item, std::string_view name) {
+    return DownloadUrl(item, name) + "/";
+}
+
+struct ArchiveEntry {
+    std::string name; // the path inside the archive
+    std::string url;  // serves this one file
+    std::uint64_t size{};
+};
+
+inline std::string HtmlUnescape(std::string_view s) {
+    struct Entity { std::string_view text; char ch; };
+    static constexpr Entity ENTITIES[] = {{"&amp;", '&'}, {"&lt;", '<'}, {"&gt;", '>'}, {"&quot;", '"'}, {"&#39;", '\''}, {"&#039;", '\''}};
+    std::string out;
+    for (size_t i = 0; i < s.size(); i++) {
+        char c = s[i];
+        if (c == '&') {
+            for (const auto& e : ENTITIES) {
+                if (s.substr(i, e.text.size()) == e.text) {
+                    c = e.ch;
+                    i += e.text.size() - 1;
+                    break;
+                }
+            }
+        }
+        out += c;
+    }
+    return out;
+}
+
+// the "View Archive" page: rows "<tr><td><a href="//archive.org/download/..">name</a><td><td>date<td id="size">bytes</tr>";
+// a row without a size (a folder) is skipped
+inline std::vector<ArchiveEntry> ParseArchiveListing(std::string_view html) {
+    constexpr std::string_view ROW = "<tr><td><a href=\"";
+    std::vector<ArchiveEntry> out;
+    size_t pos = 0;
+    while ((pos = html.find(ROW, pos)) != std::string_view::npos) {
+        pos += ROW.size();
+        const auto href_end = html.find('"', pos);
+        const auto row_end = html.find("</tr>", pos);
+        if (href_end == std::string_view::npos || row_end == std::string_view::npos) break;
+        auto href = html.substr(pos, href_end - pos);
+        const auto text_begin = html.find('>', href_end);
+        const auto text_end = html.find("</a>", href_end);
+        const auto size_at = html.find("id=\"size\">", href_end);
+        pos = row_end;
+        if (href.empty() || text_begin == std::string_view::npos || text_end == std::string_view::npos || text_begin >= text_end ||
+            size_at == std::string_view::npos || size_at > row_end) {
+            continue;
+        }
+        std::uint64_t size = 0;
+        bool digits = false;
+        for (auto i = size_at + 10; i < row_end && html[i] >= '0' && html[i] <= '9'; i++) {
+            size = size * 10 + static_cast<std::uint64_t>(html[i] - '0');
+            digits = true;
+        }
+        if (!digits || size == 0) continue;
+        ArchiveEntry e;
+        e.name = HtmlUnescape(html.substr(text_begin + 1, text_end - text_begin - 1));
+        e.url = href.starts_with("//") ? "https:" + std::string{href} : href.starts_with("/") ? "https://archive.org" + std::string{href} : std::string{href};
+        e.size = size;
+        out.push_back(std::move(e));
+    }
+    return out;
+}
+
+// every word of `words` (split on spaces) is part of `name`, any case; no words matches everything
+inline bool MatchesWords(std::string_view name, std::string_view words) {
+    const auto n = Lower(name);
+    const auto w = Lower(words);
+    size_t pos = 0;
+    while (pos < w.size()) {
+        const auto end = w.find(' ', pos);
+        const auto word = w.substr(pos, end == std::string::npos ? std::string::npos : end - pos);
+        pos = end == std::string::npos ? w.size() : end + 1;
+        if (!word.empty() && n.find(word) == std::string::npos) return false;
+    }
+    return true;
+}
+
 } // namespace sphaira::rom

@@ -3959,5 +3959,13 @@
   "Popular on archive.org": "Populaarne archive.org-is",
   "Words from the title, for example a game or a set name": "Pealkirja sõnad, näiteks mängu või komplekti nimi",
   "Search archive.org": "Otsi archive.org-st",
-  "Enter an item id": "Sisestage üksuse ID"
+  "Enter an item id": "Sisestage üksuse ID",
+  "a set: A picks files inside": "komplekt: A valib failid sees",
+  "shown. Narrow the list with a filter (START).": "kuvatud. Kitsenda loendit filtriga (START).",
+  "Filter by words": "Filtreeri sõnade järgi",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "See üksus on piiratud: archive.org lubab seda alla laadida ainult sisselogitud kasutajatel ja Hub ei saa sisse logida. Selle faile ei pakuta.",
+  "Reading the archive on archive.org": "Arhiivi lugemine saidilt archive.org",
+  "Could not read the archive on archive.org": "Arhiivi lugemine saidilt archive.org ebaõnnestus",
+  "Download the whole archive": "Laadi alla kogu arhiiv",
+  "Words from the file name, for example a game; empty shows every file": "Sõnad failnimest, näiteks mäng; tühjana kuvatakse kõik failid"
 }

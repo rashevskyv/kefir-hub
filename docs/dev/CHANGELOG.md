@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.249 — ROMS: single files out of a whole-set zip, 7z or rar; restricted items are refused with a warning (owner, 2026-10-31)
+In a collection a zip, 7z or rar of 32 MB or more opens on **A** into the list of its files (archive.org's "View Archive" page, `<download url>/`); each file is served on its own, so one ROM is taken without the set. Rows: size, "on the card"; **X**/**Y** mark; START: download marked, all, `Filter by words`, `Download the whole archive`. Files go to `/roms/<console>/` by base name, a repeated name in a batch is skipped, only the size is checked. A restricted item (`access-restricted-item`) is refused with a warning in `Add a collection` and on opening a saved collection; files marked `private` are not listed; a 401/403 on the list shows the same warning.
+host tests: pass (--quick) | nro: built (0.14.249) | switch: pending (a real 7z and rar item over Wi-Fi; a big list on the console)
+
 ## v0.14.248 — ROMS: a live catalogue, searched on archive.org (owner, 2026-10-31)
 `Add a collection` → console → `Popular on archive.org` (the software items whose title or subject names the system, most downloaded first, 50 rows), `Search archive.org` (the same with the typed words, typed on the console or sent from a phone) or `Enter an item id`. A result row shows the title, the size, the download count and the id; **A** reads the item and offers `Keep the collection` as before. The query per console is a term list in `rom_library.hpp` (`Console::terms`, e.g. snes = `snes OR "super nintendo" OR "super famicom"`); `SearchQuery`/`SearchUrl` tested. The Hub still ships no item ids: the catalogue is archive.org's own search, sorted by its download counts.
 host tests: pass (--quick) | nro: built (0.14.248) | switch: pending (search over Wi-Fi: the list, a row opens, Keep)

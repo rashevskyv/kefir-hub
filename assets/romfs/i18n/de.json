@@ -3965,5 +3965,13 @@
   "Popular on archive.org": "Beliebt auf archive.org",
   "Words from the title, for example a game or a set name": "Wörter aus dem Titel, zum Beispiel ein Spiel oder ein Set-Name",
   "Search archive.org": "archive.org durchsuchen",
-  "Enter an item id": "Element-ID eingeben"
+  "Enter an item id": "Element-ID eingeben",
+  "a set: A picks files inside": "ein Set: A wählt Dateien im Inneren aus",
+  "shown. Narrow the list with a filter (START).": "angezeigt. Liste mit Filter einschränken (START).",
+  "Filter by words": "Nach Wörtern filtern",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Dieser Artikel ist eingeschränkt: archive.org erlaubt nur angemeldeten Benutzern den Download, und der Hub kann sich nicht anmelden. Seine Dateien werden nicht angeboten.",
+  "Reading the archive on archive.org": "Archiv von archive.org lesen",
+  "Could not read the archive on archive.org": "Das Archiv auf archive.org konnte nicht gelesen werden",
+  "Download the whole archive": "Gesamtes Archiv herunterladen",
+  "Words from the file name, for example a game; empty shows every file": "Wörter aus dem Dateinamen, z. B. ein Spiel; leer zeigt jede Datei"
 }

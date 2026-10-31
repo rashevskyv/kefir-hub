@@ -3959,5 +3959,13 @@
   "Popular on archive.org": "Populāri archive.org",
   "Words from the title, for example a game or a set name": "Vārdi no nosaukuma, piemēram, spēles vai komplekta nosaukuma",
   "Search archive.org": "Meklēt archive.org",
-  "Enter an item id": "Ievadiet vienuma ID"
+  "Enter an item id": "Ievadiet vienuma ID",
+  "a set: A picks files inside": "kopa: A atlasa failus iekšpusē",
+  "shown. Narrow the list with a filter (START).": "parādīts. Sašauriniet sarakstu ar filtru (START).",
+  "Filter by words": "Filtrēt pēc vārdiem",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Šis vienums ir ierobežots: archive.org ļauj to lejupielādēt tikai pieteikušamies lietotājiem, un Hub nevar pieteikties. Tā faili netiek piedāvāti.",
+  "Reading the archive on archive.org": "Lasa arhīvu no archive.org",
+  "Could not read the archive on archive.org": "Neizdevās nolasīt arhīvu no archive.org",
+  "Download the whole archive": "Lejupielādēt visu arhīvu",
+  "Words from the file name, for example a game; empty shows every file": "Vārdi no faila nosaukuma, piemēram, spēles; tukšs rāda visus failus"
 }

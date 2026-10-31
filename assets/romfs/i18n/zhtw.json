@@ -4017,5 +4017,13 @@
   "Popular on archive.org": "archive.org 熱門",
   "Words from the title, for example a game or a set name": "標題中的詞，例如遊戲或合集名稱",
   "Search archive.org": "在 archive.org 中搜尋",
-  "Enter an item id": "輸入項目 ID"
+  "Enter an item id": "輸入項目 ID",
+  "a set: A picks files inside": "一個集合：A 選擇內部檔案",
+  "shown. Narrow the list with a filter (START).": "已顯示。使用篩選器縮小列表範圍 (START)。",
+  "Filter by words": "依字詞篩選",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "此項目受限：archive.org 僅允許登入使用者下載，且 Hub 無法登入。其檔案不提供下載。",
+  "Reading the archive on archive.org": "正在從 archive.org 讀取封存檔",
+  "Could not read the archive on archive.org": "無法讀取 archive.org 上的歸檔。",
+  "Download the whole archive": "下載整個封存檔",
+  "Words from the file name, for example a game; empty shows every file": "檔名中的字詞，例如遊戲；留空則顯示所有檔案"
 }

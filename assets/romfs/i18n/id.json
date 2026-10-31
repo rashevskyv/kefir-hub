@@ -3959,5 +3959,13 @@
   "Popular on archive.org": "Populer di archive.org",
   "Words from the title, for example a game or a set name": "Kata dari judul, misalnya game atau nama set",
   "Search archive.org": "Cari di archive.org",
-  "Enter an item id": "Masukkan ID item"
+  "Enter an item id": "Masukkan ID item",
+  "a set: A picks files inside": "seperangkat: A memilih file di dalam",
+  "shown. Narrow the list with a filter (START).": "ditampilkan. Persempit daftar dengan filter (START).",
+  "Filter by words": "Filter menurut kata",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Item ini dibatasi: archive.org hanya mengizinkan pengguna yang masuk untuk mengunduhnya, dan Hub tidak dapat masuk. File-filenya tidak ditawarkan.",
+  "Reading the archive on archive.org": "Membaca arsip di archive.org",
+  "Could not read the archive on archive.org": "Tidak dapat membaca arsip di archive.org",
+  "Download the whole archive": "Unduh seluruh arsip",
+  "Words from the file name, for example a game; empty shows every file": "Kata dari nama file, misalnya game; kosong menampilkan semua file"
 }

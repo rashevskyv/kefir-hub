@@ -3959,5 +3959,13 @@
   "Popular on archive.org": "archive.org üzerinde popüler",
   "Words from the title, for example a game or a set name": "Başlıktaki kelimeler, örneğin bir oyun veya set adı",
   "Search archive.org": "archive.org'da ara",
-  "Enter an item id": "Bir öğe kimliği girin"
+  "Enter an item id": "Bir öğe kimliği girin",
+  "a set: A picks files inside": "bir set: A içindeki dosyaları seçer",
+  "shown. Narrow the list with a filter (START).": "gösteriliyor. Listeyi filtre ile daraltın (START).",
+  "Filter by words": "Kelimelere göre filtrele",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Bu öğe kısıtlanmıştır: archive.org yalnızca oturum açmış kullanıcıların indirmesine izin verir ve Hub oturum açamaz. Dosyaları sunulmamaktadır.",
+  "Reading the archive on archive.org": "archive.org arşivinden okunuyor",
+  "Could not read the archive on archive.org": "archive.org üzerindeki arşiv okunamadı",
+  "Download the whole archive": "Arşivin tamamını indir",
+  "Words from the file name, for example a game; empty shows every file": "Dosya adından kelimeler, örneğin bir oyun; boş bırakılırsa tüm dosyalar gösterilir"
 }

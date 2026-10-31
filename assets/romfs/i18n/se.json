@@ -3964,5 +3964,13 @@
   "Popular on archive.org": "Populärt på archive.org",
   "Words from the title, for example a game or a set name": "Ord från titeln, till exempel ett spel eller ett setnamn",
   "Search archive.org": "Sök på archive.org",
-  "Enter an item id": "Ange ett objekt-ID"
+  "Enter an item id": "Ange ett objekt-ID",
+  "a set: A picks files inside": "en uppsättning: A väljer filer inuti",
+  "shown. Narrow the list with a filter (START).": "visas. Filtrera listan (START).",
+  "Filter by words": "Filtrera efter ord",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Det här objektet är begränsat: archive.org tillåter endast inloggade användare att ladda ner det, och Hub kan inte logga in. Dess filer erbjuds inte.",
+  "Reading the archive on archive.org": "Läser arkivet på archive.org",
+  "Could not read the archive on archive.org": "Kunde inte läsa arkivet på archive.org",
+  "Download the whole archive": "Ladda ner hela arkivet",
+  "Words from the file name, for example a game; empty shows every file": "Ord från filnamnet, till exempel ett spel; tomt visar alla filer"
 }

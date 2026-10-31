@@ -3959,5 +3959,13 @@
   "Popular on archive.org": "archive.org сайтында танымал",
   "Words from the title, for example a game or a set name": "Тақырыптан сөздер, мысалы ойын немесе жиын атауы",
   "Search archive.org": "archive.org ішінен іздеу",
-  "Enter an item id": "Элемент идентификаторын енгізіңіз"
+  "Enter an item id": "Элемент идентификаторын енгізіңіз",
+  "a set: A picks files inside": "жиынтық: A ішіндегі файлдарды таңдайды",
+  "shown. Narrow the list with a filter (START).": "көрсетілді. Тізімді сүзгімен тарылту (START).",
+  "Filter by words": "Сөздер бойынша сүзгілеу",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Бұл элемент шектелген: archive.org тек жүйеге кірген пайдаланушыларға ғана жүктеп алуға рұқсат береді, ал Hub жүйеге кіре алмайды. Оның файлдары ұсынылмайды.",
+  "Reading the archive on archive.org": "archive.org ішінен мұрағатты оқу",
+  "Could not read the archive on archive.org": "archive.org сайтынан мұрағатты оқу мүмкін болмады",
+  "Download the whole archive": "Барлық архивті жүктеп алу",
+  "Words from the file name, for example a game; empty shows every file": "Файл атауынан сөздер, мысалы ойын; бос болса барлық файлдар көрсетіледі"
 }

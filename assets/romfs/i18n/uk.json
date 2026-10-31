@@ -3921,5 +3921,13 @@
   "Popular on archive.org": "Популярне на archive.org",
   "Search archive.org": "Пошук на archive.org",
   "Enter an item id": "Ввести ідентифікатор елемента",
-  "Words from the title, for example a game or a set name": "Слова з назви, наприклад гра або назва збірки"
+  "Words from the title, for example a game or a set name": "Слова з назви, наприклад гра або назва збірки",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Цей елемент закритий: archive.org дозволяє завантажувати його лише після входу в обліковий запис, а Hub увійти не може. Тому його файли не пропонуються.",
+  "Could not read the archive on archive.org": "Не вдалося прочитати архів на archive.org",
+  "Reading the archive on archive.org": "Читання архіву на archive.org",
+  "a set: A picks files inside": "збірка: A відкриває її вміст",
+  "shown. Narrow the list with a filter (START).": "показано. Звузьте список фільтром (START).",
+  "Filter by words": "Фільтр за словами",
+  "Words from the file name, for example a game; empty shows every file": "Слова з назви файлу, наприклад гра; порожнє поле показує всі файли",
+  "Download the whole archive": "Завантажити весь архів"
 }

@@ -17,8 +17,10 @@
 #include "ui/menus/settings/settings_internal.hpp"
 
 #include <yyjson.h>
+#include <algorithm>
 #include <cstdlib>
 #include <memory>
+#include <set>
 
 namespace sphaira::rom {
 namespace {
@@ -42,7 +44,18 @@ void Save(const std::vector<Collection>& list) {
 struct Item {
     std::string title;
     std::vector<RemoteFile> files;
+    bool restricted{}; // archive.org lets only signed-in users download it
 };
+
+auto IsTrue(yyjson_val* v) -> bool {
+    const auto s = yyjson_get_str(v);
+    return yyjson_is_true(v) || (s && std::string_view{s} == "true");
+}
+
+// the Hub cannot sign in to archive.org: such an item (or one file) is not offered, and the user is told why
+void WarnRestricted(const std::string& id) {
+    App::Push<ui::OptionBox>(id + "\n" + "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered."_i18n, "OK"_i18n);
+}
 
 // GET archive.org/metadata/<id>: the item's title and its content files
 auto FetchItem(ui::ProgressBox* pbox, const std::string& id, Item& out) -> Result {
@@ -62,6 +75,7 @@ auto FetchItem(ui::ProgressBox* pbox, const std::string& id, Item& out) -> Resul
         if (const auto t = yyjson_get_str(yyjson_obj_get(meta, "title"))) {
             out.title = t;
         }
+        out.restricted = IsTrue(yyjson_obj_get(meta, "access-restricted-item"));
     }
     size_t idx, max;
     yyjson_val* f;
@@ -72,12 +86,15 @@ auto FetchItem(ui::ProgressBox* pbox, const std::string& id, Item& out) -> Resul
         const auto md5 = yyjson_get_str(yyjson_obj_get(f, "md5"));
         const auto size_v = yyjson_obj_get(f, "size"); // a string in this api
         const u64 size = yyjson_is_str(size_v) ? std::strtoull(yyjson_get_str(size_v), nullptr, 10) : yyjson_get_uint(size_v);
-        if (!name || !IsContent(source ? source : "", format ? format : "", size)) {
+        if (!name || !IsContent(source ? source : "", format ? format : "", size) || IsTrue(yyjson_obj_get(f, "private"))) {
             continue;
         }
         out.files.push_back({name, md5 ? md5 : "", size});
     }
-    log_write("[roms] %s: \"%s\", %zu content files\n", id.c_str(), out.title.c_str(), out.files.size());
+    if (out.restricted) {
+        out.files.clear();
+    }
+    log_write("[roms] %s: \"%s\", %zu content files%s\n", id.c_str(), out.title.c_str(), out.files.size(), out.restricted ? ", restricted" : "");
     R_SUCCEED();
 }
 
@@ -100,7 +117,130 @@ void Remove(const Collection& c, std::function<void()> reopen) {
         });
 }
 
-// the item's files as a page: A downloads one, X/Y mark several, START downloads the marked ones or all
+// ---- inside a whole-set archive: archive.org lists and serves its files one by one ----
+
+constexpr size_t ARCHIVE_PAGE_ROWS = 1000;
+
+auto InnerJobs(const Collection& c, const std::vector<ArchiveEntry>& entries) -> std::vector<jobs::Job> {
+    std::vector<jobs::Job> out;
+    std::set<std::string> seen;
+    for (const auto& e : entries) {
+        auto dest = DestPath(c.console, e.name);
+        if (!seen.insert(dest).second) continue; // the same file name in two folders of the set: the first one only
+        out.push_back({e.url, std::move(dest), "", hash::Type::Md5, e.size}); // archive.org gives no checksum here: the size is checked
+    }
+    return out;
+}
+
+// the files of the archive that match `words`: A downloads one, X/Y mark several, START downloads the marked ones or all
+void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr<const std::vector<ArchiveEntry>> all, const std::string& words) {
+    std::vector<ArchiveEntry> hits;
+    for (const auto& e : *all) {
+        if (MatchesWords(e.name, words)) hits.push_back(e);
+    }
+    const size_t shown = std::min(hits.size(), ARCHIVE_PAGE_ROWS);
+
+    auto self = std::make_shared<SystemToolsMenu*>(nullptr);
+    const std::function<void(std::string)> redraw = [self, c, archive, all](std::string w) {
+        if (*self) (*self)->SetPop();
+        ShowArchive(c, archive, all, w);
+    };
+    const std::function<void()> refresh = [redraw, words]() { redraw(words); };
+
+    const std::string folder = std::string{ROMS_ROOT} + c.console + "/";
+    std::vector<SettingsItem> rows;
+    rows.push_back(ui::menu::settings::MakeHeader(archive.name + (words.empty() ? "" : " · " + words) + " → " + folder + " (" + jobs::Describe(InnerJobs(c, hits)) + ")"));
+    if (hits.empty()) {
+        SettingsItem row{"Nothing found"_i18n, ""};
+        row.disabled = true;
+        rows.push_back(std::move(row));
+    }
+    fs::FsNativeSd fs;
+    for (size_t i = 0; i < shown; i++) {
+        const auto& e = hits[i];
+        // the folder inside the set only crowds the name out; the filter still matches the whole path
+        const auto slash = e.name.rfind('/');
+        SettingsItem row{slash == std::string::npos ? e.name : e.name.substr(slash + 1),
+            ui::menu::grid::FormatBytes(e.size) + (fs.FileExists(DestPath(c.console, e.name)) ? " · " + "on the card"_i18n : "")};
+        row.selectable = true;
+        row.action = [c, archive, e, refresh]() { jobs::Run(archive.name, InnerJobs(c, {e}), refresh); };
+        rows.push_back(std::move(row));
+    }
+    if (shown < hits.size()) {
+        SettingsItem row{std::to_string(shown) + " " + "shown. Narrow the list with a filter (START)."_i18n, ""};
+        row.disabled = true;
+        rows.push_back(std::move(row));
+    }
+
+    auto menu = std::make_unique<SystemToolsMenu>(archive.name, std::move(rows));
+    *self = menu.get();
+    menu->SetOptions([c, archive, hits, shown, redraw, refresh](const std::vector<size_t>& marked) {
+        auto options = std::make_unique<ui::Sidebar>("Options"_i18n, ui::Sidebar::Side::RIGHT);
+        ON_SCOPE_EXIT(App::Push(std::move(options)));
+        std::vector<ArchiveEntry> picked_entries;
+        for (auto i : marked) {
+            if (i >= 1 && i - 1 < shown) picked_entries.push_back(hits[i - 1]); // row 0 is the header
+        }
+        if (!picked_entries.empty()) {
+            const auto picked = InnerJobs(c, picked_entries);
+            options->Add<ui::SidebarEntryCallback>("Download the marked files"_i18n,
+                [c, archive, picked, refresh]() { jobs::Run(archive.name, picked, refresh); }, true, jobs::Describe(picked))->SetIcon(ActionIcon::Dump);
+        }
+        const auto all_hits = InnerJobs(c, hits);
+        options->Add<ui::SidebarEntryCallback>("Download all"_i18n,
+            [c, archive, all_hits, refresh]() { jobs::Run(archive.name, all_hits, refresh); }, true, jobs::Describe(all_hits))->SetIcon(ActionIcon::Dump);
+        options->Add<ui::SidebarEntryCallback>("Filter by words"_i18n, [redraw]() {
+            ui::remote_input::Options opts;
+            opts.title = "Filter by words"_i18n;
+            opts.guide = "Words from the file name, for example a game; empty shows every file"_i18n;
+            ui::remote_input::PromptTextInput(opts, [redraw](const std::string& text) { redraw(text); });
+        }, true)->SetIcon(ActionIcon::Search);
+        const std::vector<jobs::Job> whole{{DownloadUrl(c.item, archive.name), DestPath(c.console, archive.name), "", hash::Type::Md5, archive.size}};
+        options->Add<ui::SidebarEntryCallback>("Download the whole archive"_i18n,
+            [archive, whole, refresh]() { jobs::Run(archive.name, whole, refresh); }, true, jobs::Describe(whole))->SetIcon(ActionIcon::Dump);
+    });
+    App::Push(std::move(menu));
+}
+
+struct Listing {
+    std::vector<ArchiveEntry> entries;
+    long code{};
+};
+
+// GET <archive url>/: archive.org's "View Archive" page, one row per file inside
+auto FetchListing(ui::ProgressBox* pbox, const std::string& url, Listing& out) -> Result {
+    pbox->NewTransfer("Reading the archive on archive.org"_i18n);
+    const auto result = curl::Api().ToMemory(
+        curl::Url{url},
+        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+    );
+    R_TRY(pbox->ShouldExitResult());
+    out.code = result.code;
+    R_UNLESS(result.success && !result.data.empty(), Result_GhdlFailedToDownloadAssetJson);
+    out.entries = ParseArchiveListing({reinterpret_cast<const char*>(result.data.data()), result.data.size()});
+    log_write("[roms] %s: %zu files inside\n", url.c_str(), out.entries.size());
+    R_SUCCEED();
+}
+
+void OpenArchive(const Collection& c, const RemoteFile& archive) {
+    auto listing = std::make_shared<Listing>();
+    App::Push<ui::ProgressBox>(0, archive.name, "", [listing, c, archive](auto pbox) -> Result {
+        return FetchListing(pbox, ArchiveListUrl(c.item, archive.name), *listing);
+    }, [listing, c, archive](Result rc) {
+        if (rc == Result_TransferCancelled) return;
+        if (R_FAILED(rc)) {
+            if (listing->code == 401 || listing->code == 403) {
+                WarnRestricted(c.item);
+            } else {
+                App::PushErrorBox(rc, "Could not read the archive on archive.org"_i18n);
+            }
+            return;
+        }
+        ShowArchive(c, archive, std::make_shared<const std::vector<ArchiveEntry>>(std::move(listing->entries)), "");
+    });
+}
+
+// the item's files as a page: A downloads one (a big zip, 7z or rar opens instead), X/Y mark several, START downloads the marked ones or all
 void OpenCollection(const Collection& c, std::function<void()> reopen) {
     auto item = std::make_shared<Item>();
     App::Push<ui::ProgressBox>(0, c.label, "", [item, c](auto pbox) -> Result {
@@ -109,6 +249,7 @@ void OpenCollection(const Collection& c, std::function<void()> reopen) {
         if (rc == Result_TransferCancelled) return;
         App::PushErrorBox(rc, "Could not read the item on archive.org"_i18n);
         if (R_FAILED(rc)) return;
+        if (item->restricted) WarnRestricted(c.item);
 
         // after a download the page is rebuilt, so "on the card" is current
         auto self = std::make_shared<SystemToolsMenu*>(nullptr);
@@ -126,9 +267,14 @@ void OpenCollection(const Collection& c, std::function<void()> reopen) {
         }
         fs::FsNativeSd fs;
         for (const auto& f : item->files) {
-            SettingsItem row{f.name, ui::menu::grid::FormatBytes(f.size) + (fs.FileExists(DestPath(c.console, f.name)) ? " · " + "on the card"_i18n : "")};
+            const bool inside = LookInside(f.name, f.size);
+            SettingsItem row{f.name, ui::menu::grid::FormatBytes(f.size) + (inside ? " · " + "a set: A picks files inside"_i18n : fs.FileExists(DestPath(c.console, f.name)) ? " · " + "on the card"_i18n : "")};
             row.selectable = true;
-            row.action = [c, f, refresh]() { jobs::Run(c.label, ToJobs(c, {f}), refresh); };
+            if (inside) {
+                row.action = [c, f]() { OpenArchive(c, f); };
+            } else {
+                row.action = [c, f, refresh]() { jobs::Run(c.label, ToJobs(c, {f}), refresh); };
+            }
             rows.push_back(std::move(row));
         }
         auto menu = std::make_unique<SystemToolsMenu>(c.label, std::move(rows));
@@ -163,6 +309,10 @@ void ConfirmItem(const std::string& console, const std::string& id, std::functio
         if (rc == Result_TransferCancelled) return;
         App::PushErrorBox(rc, "Could not read the item on archive.org"_i18n);
         if (R_FAILED(rc)) return;
+        if (item->restricted) {
+            WarnRestricted(id);
+            return;
+        }
         if (item->files.empty()) {
             App::Push<ui::OptionBox>("The item "_i18n + id + " has no files to download."_i18n, "OK"_i18n);
             return;

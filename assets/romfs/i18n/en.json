@@ -3921,5 +3921,13 @@
   "Popular on archive.org": "Popular on archive.org",
   "Search archive.org": "Search archive.org",
   "Enter an item id": "Enter an item id",
-  "Words from the title, for example a game or a set name": "Words from the title, for example a game or a set name"
+  "Words from the title, for example a game or a set name": "Words from the title, for example a game or a set name",
+  "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.",
+  "Could not read the archive on archive.org": "Could not read the archive on archive.org",
+  "Reading the archive on archive.org": "Reading the archive on archive.org",
+  "a set: A picks files inside": "a set: A picks files inside",
+  "shown. Narrow the list with a filter (START).": "shown. Narrow the list with a filter (START).",
+  "Filter by words": "Filter by words",
+  "Words from the file name, for example a game; empty shows every file": "Words from the file name, for example a game; empty shows every file",
+  "Download the whole archive": "Download the whole archive"
 }

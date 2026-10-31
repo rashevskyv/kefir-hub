@@ -699,6 +699,23 @@
                 "wait 3"
             ]
         },
+        "emulators-rom-set": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Right",
+                "A",
+                "wait 1",
+                "Down",
+                "A",
+                "wait 2",
+                "Down 4",
+                "A",
+                "wait 3",
+                "A",
+                "wait 3"
+            ]
+        },
         "emulators-ask-retroarch": {
             "steps": [
                 "R",
