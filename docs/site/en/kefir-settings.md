@@ -71,7 +71,7 @@ If no translation exists for your firmware, the first row shows your firmware an
 <!-- draft
 - [[Nextendo]] is a folder in [[Kefir Settings]]; it opens a page with the status, the switches and the version rows
 - Nextendo is the Nextendo Network: online play for supported games on the emuMMC, off by default; after the user switches it on, Kefir Hub sets it up (hosts file, real PRODINFO inside the emuMMC)
-- [[Nextendo on emuMMC]] is off by default and is never switched on without the user; a choice the user made is kept; changing it asks for a hold of **A** and restarts the console only if a file really changed
+- [[Nextendo on emuMMC]] is off by default and is never switched on without the user; a choice the user made is kept, and a console that already runs Nextendo stays on after the update; changing it asks for a hold of **A** and restarts the console only if a file really changed
 - [[Nextendo on sysNAND (Semi-stock)]] is shown only while Semi-stock is on; it is off by default; the warning says the Nintendo services then go to Nextendo and the eShop may stop working
 - leaving Semi-stock (back in the emuMMC) removes the sysNAND hosts file and switches that option off
 - [[System firmware]] shows the installed version; the description shows the first 16 digits of the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch

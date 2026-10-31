@@ -42,6 +42,7 @@ constexpr std::size_t MAX_HOSTS_SIZE = 64 * 1024; // a hosts file bigger than th
 
 option::OptionBool g_emu{"nextendo", "emu_enabled", false};
 option::OptionBool g_sys{"nextendo", "sysnand_enabled", false};
+option::OptionBool g_default_off_done{"nextendo", "default_off_done", false}; // the one-time check of KeepOnAfterDefaultOff
 option::OptionString g_ip_main{"nextendo", "server_ip", ""};   // refreshed from the newest release
 option::OptionString g_ip_nncs2{"nextendo", "server_ip_nncs2", ""};
 option::OptionString g_patches_tag{"nextendo", "patches_tag", ""}; // tag of the patch files on the card
@@ -305,9 +306,15 @@ auto Reconcile(bool& changed) -> Result {
     Inputs in;
     in.mode = CurrentMode();
     in.firmware_ok = FirmwareOk();
+    in.emu_file = Classify(ReadHosts(HOSTS_EMU), expected);
+    if (!g_default_off_done.Get()) {
+        if (KeepOnAfterDefaultOff(in.emu_file)) {
+            SetEmuEnabled(true);
+        }
+        g_default_off_done.Set(true);
+    }
     in.emu_enabled = EmuEnabled();
     in.sys_enabled = SysEnabled();
-    in.emu_file = Classify(ReadHosts(HOSTS_EMU), expected);
     in.sys_file = Classify(ReadHosts(HOSTS_SYS), expected);
     in.patches_present = PatchesPresent();
     in.patches_current = in.patches_present && PatchesCurrent();

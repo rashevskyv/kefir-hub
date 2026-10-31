@@ -54,6 +54,12 @@ struct Inputs {
     bool stash_present = false;   // Semi-stock moved them to /config/semistock/nextendo
 };
 
+// Before the default went to off, Nextendo ran with no stored choice. A card that already carries our hosts file
+// is running it, so the first Reconcile stores "on" for it; any other card keeps the default (off).
+inline auto KeepOnAfterDefaultOff(FileState emu_file) -> bool {
+    return emu_file == FileState::Current || emu_file == FileState::Stale;
+}
+
 inline auto MakePlan(const Inputs& in) -> std::vector<Step> {
     std::vector<Step> out;
     if (in.mode == Mode::EmuMMC) {

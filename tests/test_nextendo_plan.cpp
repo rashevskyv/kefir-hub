@@ -138,6 +138,10 @@ int main() {
     other.sys_enabled = true;
     assert(MakePlan(other).empty());
 
+    // the default went to off: a card that already runs our hosts file stays on, every other card stays off
+    assert(KeepOnAfterDefaultOff(FileState::Current) && KeepOnAfterDefaultOff(FileState::Stale));
+    assert(!KeepOnAfterDefaultOff(FileState::Missing) && !KeepOnAfterDefaultOff(FileState::UserOwned));
+
     std::puts("test_nextendo_plan: ok");
     return 0;
 }
