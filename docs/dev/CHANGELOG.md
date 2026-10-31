@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.251 — Prelude-Nextendo v4.0.18 (robot)
+Hosts +3/-0 lines, patch folders +1/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
 ## v0.14.250 — battery calibration: a full battery is written as 100 %, a charge during the sleep is counted from the cut-off; the charge page is titled Battery charge (owner, 2026-10-31)
 Console log of the night: the drain cut the console off at 3193 mV, it slept on the charger, and at 4200 mV / 276 mA (chip 99 %) the zero wrote 54 % from the QH difference since the Hub's start the evening before. Now a battery full by voltage and current (4.15 V or more, 600 mA or less) is written as 100 % (this is the part that gives 100 %: the counter formula divides by FullCapNom, which on this console is larger than FullCap, so even a perfect baseline stops near 76 %). The QH baseline is the drain page's last tick on battery, kept in the marker every 30 s and at a sleep gap, so a charge during a sleep or a switch-off is counted from the cut-off. On cycle 1's charge page only, a chip below 90 % with 4.19 V or more and an averaged current of 350 mA or less gets its counters set to 100 % once (repairs a console already at 54 %; cycle 2 is never touched). The header says `Battery charge` during the charge; the intro and the drain page say the console may not start for about 20 minutes on the charger.
 host tests: pass (--quick) | nro: built (0.14.250) | switch: pending (cut-off, then the charger overnight: the log line `[Zero] ... (full)` and 100 % on waking; the 54 % console: the heal line `[Calib] full by voltage`; WriteFull itself is unverified on hardware)
