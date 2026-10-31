@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.261 — Battery: a diagnostic for the charger chip's input cut (bq24193 EN_HIZ), hiz_test.run -> hiz_test.txt
+The test reads REG00..0A, cuts the input for 30 s under load, watches the battery current, puts REG00 back. Charging off through psm was tested on the console (v0.14.260): the battery does not give current with the charger in. host tests: not run (a diagnostic only) | nro: not built | switch: pending
+
 ## v0.14.260 — Battery: the capacity is measured whenever the Hub sees a full battery, not only on the charge page; Actions > Stop charging / Resume charging (psm)
 The capacity measure runs at the Hub's start and on the charge page, with the charger in (CV tail) or out (cell still at 4.15 V or more). Charging off: a flag file, switched on again at the Hub's start and end. A diagnostic: /config/kefir/battery/charge_test.run makes the next Hub start run a test (charger in, charging off, load) and write charge_test.txt. host tests: pass (--quick; test_nand_archive_contract fails only on the CRLF script in the worktree) | nro: not built | switch: pending
 

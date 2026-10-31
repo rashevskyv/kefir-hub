@@ -640,6 +640,10 @@ void PollCalibration() {
     }
     done = true;
     charge::RestoreIfLeftOff();
+    if (fs::FsNativeSd().FileExists("/config/kefir/battery/hiz_test.run")) {
+        charge::RunHizTestIfAsked(); // a diagnostic the owner asked for, like the one below
+        return;
+    }
     if (fs::FsNativeSd().FileExists("/config/kefir/battery/charge_test.run")) {
         charge::RunTestIfAsked(); // a diagnostic the owner asked for: it takes the screen, the calibration goes on at the next start
         return;

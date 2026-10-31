@@ -141,4 +141,127 @@ void RunTestIfAsked() {
     });
 }
 
+// ---- the charger chip bq24193 (I2C 0x6B): can its input be cut while the charger stays in? --------------------------------------
+// REG00 bit 7 EN_HIZ: the input is disconnected and the system lives on the battery. The chip's watchdog (REG05 bits 5-4) takes the
+// settings back to the default when nobody writes for a while: a console that switched off charges again by itself.
+
+namespace {
+
+constexpr const char* HIZ_RUN = "/config/kefir/battery/hiz_test.run";
+constexpr const char* HIZ_OUT = "/config/kefir/battery/hiz_test.txt";
+
+struct Bq {
+    I2cSession s{};
+    bool open{};
+    Bq() { open = R_SUCCEEDED(i2cInitialize()) && R_SUCCEEDED(i2cOpenSession(&s, I2cDevice_Bq24193)); }
+    ~Bq() {
+        if (open) {
+            i2csessionClose(&s);
+        }
+        i2cExit();
+    }
+    Bq(const Bq&) = delete;
+    Bq& operator=(const Bq&) = delete;
+    auto Read(u8 reg) -> std::optional<u8> {
+        if (!open) {
+            return std::nullopt;
+        }
+        const u8 cmd[] = {0x40, 0x01, reg, 0xC1, 0x01}; // the same command list the gauge uses, one byte back
+        u8 v{};
+        for (int i = 0; i < 5; i++) {
+            if (R_SUCCEEDED(i2csessionExecuteCommandList(&s, &v, sizeof(v), cmd, sizeof(cmd)))) {
+                return v;
+            }
+            svcSleepThread(1'000'000);
+        }
+        return std::nullopt;
+    }
+    auto Write(u8 reg, u8 v) -> bool {
+        const u8 buf[2] = {reg, v};
+        return open && R_SUCCEEDED(i2csessionSendAuto(&s, buf, sizeof(buf), I2cTransactionOption_All));
+    }
+};
+
+} // namespace
+
+void RunHizTestIfAsked() {
+    fs::FsNativeSd sd;
+    if (!sd.FileExists(HIZ_RUN)) {
+        return;
+    }
+    sd.DeleteFile(HIZ_RUN);
+    App::Push<ui::ProgressBox>(0, "Charger input test", "Battery", [](auto pbox) -> Result {
+        std::string out = "bq24193 input test: the battery current with the charger in. minus = the battery gives current.\n";
+        Bq bq;
+        Thread threads[TEST_CORES]{};
+        bool started[TEST_CORES]{};
+        std::optional<u8> reg00_before;
+        // whatever happens: the input back as it was, the load stopped
+        ON_SCOPE_EXIT(
+            if (bq.open && reg00_before) {
+                bq.Write(0x00, *reg00_before);
+            }
+            g_burn = false;
+            g_burn_stop = true;
+            for (int i = 0; i < TEST_CORES; i++) {
+                if (started[i]) {
+                    threadWaitForExit(&threads[i]);
+                    threadClose(&threads[i]);
+                }
+            }
+        );
+        if (!bq.open) {
+            out += "the bq24193 session did not open\n";
+            fs::FsNativeSd().write_entire_file(HIZ_OUT, std::vector<u8>(out.begin(), out.end()));
+            R_SUCCEED();
+        }
+        char b[160];
+        out += "registers 00..0A:";
+        for (u8 r = 0; r <= 0x0A; r++) {
+            const auto v = bq.Read(r);
+            std::snprintf(b, sizeof(b), v ? " %02X=%02X" : " %02X=??", r, v ? *v : 0);
+            out += b;
+        }
+        out += "\n";
+        reg00_before = bq.Read(0x00);
+        const auto line = [&](const char* phase, int t) {
+            const auto r00 = bq.Read(0x00);
+            const auto r08 = bq.Read(0x08);
+            std::snprintf(b, sizeof(b), " reg00=%02X reg08=%02X\n", r00 ? *r00 : 0xFF, r08 ? *r08 : 0xFF);
+            auto s = Sample(phase, t);
+            s.pop_back();
+            out += s + b;
+        };
+        const auto samples = [&](const char* phase, int secs, bool keep_hiz) {
+            pbox->NewTransfer(phase);
+            for (int t = 0; t < secs; t++) {
+                if (keep_hiz && reg00_before) {
+                    bq.Write(0x00, static_cast<u8>(*reg00_before | 0x80)); // written again every second: nothing takes it back unseen
+                }
+                line(phase, t);
+                svcSleepThread(1'000'000'000ULL);
+            }
+        };
+        if (!reg00_before) {
+            out += "REG00 was not readable: nothing is written\n";
+        } else {
+            samples("baseline", 8, false);
+            g_burn_stop = false;
+            for (int i = 0; i < TEST_CORES; i++) {
+                started[i] = R_SUCCEEDED(threadCreate(&threads[i], Burn, nullptr, nullptr, 0x4000, TEST_PRIO, i)) && R_SUCCEEDED(threadStart(&threads[i]));
+            }
+            g_burn = true;
+            samples("input cut + load", 30, true);
+            g_burn = false;
+            const bool back = bq.Write(0x00, *reg00_before);
+            std::snprintf(b, sizeof(b), "REG00 back to %02X: %s\n", *reg00_before, back ? "written" : "NOT written");
+            out += b;
+            samples("input back", 12, false);
+        }
+        fs::FsNativeSd().write_entire_file(HIZ_OUT, std::vector<u8>(out.begin(), out.end()));
+        log_write("[Charge] the input test is written to %s\n", HIZ_OUT);
+        R_SUCCEED();
+    });
+}
+
 } // namespace sphaira::battery::charge
