@@ -46,12 +46,23 @@ int main() {
         assert(*c.terms);
     }
 
-    // the archive.org search
-    assert(SearchQuery("gc", "") == "mediatype:software AND (title:(gamecube) OR subject:(gamecube))");
-    assert(SearchQuery("gc", "mario") == "mediatype:software AND (title:(gamecube) OR subject:(gamecube)) AND (mario)");
-    assert(SearchQuery("nope", "zelda") == "mediatype:software AND (zelda)");
-    const auto url = SearchUrl(SearchQuery("gc", ""));
-    assert(url.starts_with("https://archive.org/advancedsearch.php?q=mediatype%3Asoftware%20AND%20%28title%3A%28gamecube%29"));
+    // the archive.org search: login-only items are left out; the popular list names the system, wants a set and drops other systems
+    {
+        const auto popular = SearchQuery("nes", "");
+        assert(popular.starts_with("mediatype:software AND NOT access-restricted-item:true AND title:(nes OR famicom OR \"nintendo entertainment system\")"));
+        assert(popular.find("title:(roms OR romset OR \"rom set\" OR games OR collection") != std::string::npos);
+        assert(popular.find(" OR \"snes\"") != std::string::npos && popular.find(" OR \"gba\"") != std::string::npos);
+        assert(popular.find(" OR \"nes\"") == std::string::npos); // not itself
+        // a system named inside this one's own name is not excluded
+        const auto pocket = SearchQuery("neo-geo-pocket", "");
+        assert(pocket.find(" OR \"neo-geo\"") == std::string::npos && pocket.find(" OR \"neo-geo-cd\"") != std::string::npos);
+        // typed words: the looser match on title or subject, the words narrow it
+        assert(SearchQuery("gc", "mario") == "mediatype:software AND NOT access-restricted-item:true AND (title:(gamecube) OR subject:(gamecube)) AND (mario)");
+        assert(SearchQuery("nope", "zelda") == "mediatype:software AND NOT access-restricted-item:true AND (zelda)");
+        assert(SearchQuery("nope", "") == "mediatype:software AND NOT access-restricted-item:true");
+    }
+    const auto url = SearchUrl(SearchQuery("gc", "mario"));
+    assert(url.starts_with("https://archive.org/advancedsearch.php?q=mediatype%3Asoftware%20AND%20NOT%20access-restricted-item%3Atrue%20AND%20%28title%3A%28gamecube%29"));
     assert(url.find("&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=downloads&fl%5B%5D=item_size&rows=50&sort%5B%5D=downloads+desc&output=json") != std::string::npos);
 
     // whole-set archives: which ones are opened, and the page archive.org gives for them

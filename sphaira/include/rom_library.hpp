@@ -93,13 +93,25 @@ inline const Console* FindConsole(std::string_view folder) {
     return nullptr;
 }
 
-// the archive.org search for a console: software items whose title or subject names the system;
-// `words` (what the user typed) narrows it further. Sorted by downloads, so the first rows are the
-// sets most people took.
+// the archive.org search for a console. Items that need an archive.org login are left out: the Hub cannot download them.
+//   no words ("Popular"): the sets of this system only, most downloaded first: the system is named in the title, the title calls it
+//     a set or a collection, and the title names no other system of the table nor an emulator, a BIOS pack or a console port;
+//   words (what the user typed): the items whose title or subject names the system and that match the words.
 inline std::string SearchQuery(std::string_view folder, std::string_view words) {
-    std::string q = "mediatype:software";
+    std::string q = "mediatype:software AND NOT access-restricted-item:true";
     if (const auto c = FindConsole(folder)) {
-        q += std::string{" AND (title:("} + c->terms + ") OR subject:(" + c->terms + "))";
+        if (words.empty()) {
+            q += std::string{" AND title:("} + c->terms + ")"
+                 " AND (title:(roms OR romset OR \"rom set\" OR games OR collection OR pack OR set OR library OR archive OR compilation) OR subject:(roms OR romset))"
+                 " AND NOT title:(android OR cia OR bios OR emulator OR emulators OR \"virtual console\"";
+            for (const auto& other : Consoles()) {
+                // a system named inside this one's own name (neo-geo in neo-geo-pocket) is not another system
+                if (!folder.starts_with(other.folder)) q += std::string{" OR \""} + other.folder + "\"";
+            }
+            q += ")";
+        } else {
+            q += std::string{" AND (title:("} + c->terms + ") OR subject:(" + c->terms + "))";
+        }
     }
     if (!words.empty()) {
         q += " AND (" + std::string{words} + ")";

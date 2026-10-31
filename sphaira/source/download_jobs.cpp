@@ -40,7 +40,8 @@ auto FileSizeOnSd(fs::Fs& fs, const fs::FsPath& path) -> s64 {
     return size;
 }
 
-auto Fetch(ui::ProgressBox* pbox, fs::Fs& fs, const Job& job, Outcome& out) -> Result {
+// `done` of `total` bytes of the whole list were fetched before this job: the second bar of the box follows the whole list
+auto Fetch(ui::ProgressBox* pbox, fs::Fs& fs, const Job& job, Outcome& out, std::uint64_t done, std::uint64_t total) -> Result {
     const fs::FsPath dest{job.dest};
     if (job.size && FileSizeOnSd(fs, dest) == static_cast<s64>(job.size)) {
         out.skipped++;
@@ -54,7 +55,16 @@ auto Fetch(ui::ProgressBox* pbox, fs::Fs& fs, const Job& job, Outcome& out) -> R
     const auto result = curl::Api().ToFile(
         curl::Url{job.url},
         curl::Path{part},
-        curl::OnProgress{pbox->OnDownloadProgressCallback()}
+        curl::OnProgress{[pbox, done, total](s64 dltotal, s64 dlnow, s64, s64) {
+            if (pbox->ShouldExit()) {
+                return false;
+            }
+            pbox->UpdateTransfer(dlnow, dltotal);
+            if (total) {
+                pbox->SetOverall(static_cast<s64>(done) + dlnow, static_cast<s64>(total));
+            }
+            return true;
+        }}
     );
     R_TRY(pbox->ShouldExitResult());
     const auto got = FileSizeOnSd(fs, part);
@@ -96,10 +106,17 @@ void Run(const std::string& title, std::vector<Job> jobs, std::function<void()> 
     App::Push<ui::ProgressBox>(0, title, "", [jobs = std::move(jobs), out](auto pbox) -> Result {
         fs::FsNativeSd fs;
         R_TRY(fs.GetFsOpenResult());
+        // the second bar is for a list of several files: by bytes when the sizes are known, else by the file count
+        const auto total = TotalSize(jobs);
+        std::uint64_t done = 0;
         for (size_t i = 0; i < jobs.size(); i++) {
             R_TRY(pbox->ShouldExitResult());
             pbox->SetTitle(std::to_string(i + 1) + " / " + std::to_string(jobs.size()));
-            R_TRY(Fetch(pbox, fs, jobs[i], *out));
+            if (jobs.size() > 1) {
+                pbox->SetOverall(total ? static_cast<s64>(done) : static_cast<s64>(i), total ? static_cast<s64>(total) : static_cast<s64>(jobs.size()));
+            }
+            R_TRY(Fetch(pbox, fs, jobs[i], *out, done, jobs.size() > 1 ? total : 0));
+            done += jobs[i].size;
         }
         R_SUCCEED();
     }, [out, title, on_done](Result rc) {

@@ -3932,5 +3932,6 @@
   "Download the whole archive": "Download the whole archive",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.",
-  "The battery is full: the gauge is set to 100 %": "The battery is full: the gauge is set to 100 %"
+  "The battery is full: the gauge is set to 100 %": "The battery is full: the gauge is set to 100 %",
+  "Keep and open the collection": "Keep and open the collection"
 }

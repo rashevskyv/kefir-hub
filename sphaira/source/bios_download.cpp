@@ -195,7 +195,6 @@ void AddBiosRows(std::vector<ui::menu::settings::SettingsItem>& rows) {
         row.disabled = true;
         rows.push_back(std::move(row));
     }
-    rows.push_back({"github.com/Abdess/retrobios", "The files are downloaded one by one on your request; the Hub ships none of them."_i18n});
 }
 
 } // namespace

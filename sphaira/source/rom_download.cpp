@@ -300,7 +300,7 @@ void OpenCollection(const Collection& c, std::function<void()> reopen) {
     });
 }
 
-// the item is read; its title, file count and size are shown; Keep saves it as a collection
+// the item is read; its title, file count and size are shown; "Keep and open" saves it as a collection and opens its files
 void ConfirmItem(const std::string& console, const std::string& id, std::function<void()> reopen) {
     auto item = std::make_shared<Item>();
     App::Push<ui::ProgressBox>(0, id, "", [item, id](auto pbox) -> Result {
@@ -320,13 +320,14 @@ void ConfirmItem(const std::string& console, const std::string& id, std::functio
         Collection c{console, id, item->title.empty() ? id : item->title};
         const auto plan = ToJobs(c, item->files);
         App::Push<ui::OptionBox>(c.label + "\n" + jobs::Describe(plan) + " → " + ROMS_ROOT + console + "/",
-            "Back"_i18n, "Keep the collection"_i18n, 1, [c, reopen](auto op) {
+            "Back"_i18n, "Keep and open the collection"_i18n, 1, [c, reopen](auto op) {
                 if (!op || *op != 1) return;
                 auto list = Load();
                 std::erase_if(list, [&](const Collection& e) { return e.console == c.console && e.item == c.item; });
                 list.push_back(c);
                 Save(list);
                 reopen();
+                OpenCollection(c, reopen); // straight to its files: the game is picked there (a set opens into its games)
             });
     });
 }
