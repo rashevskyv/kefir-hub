@@ -260,31 +260,37 @@ void WriteZeroThenCharge(Marker m) {
 
 // ---- the intro ----------------------------------------------------------------------------------------------------------
 
+// a backup of the gauge first (the way back if it goes wrong), then a fresh marker at step 1; `then` runs when it is done
+void BeginNew(std::function<void()> then) {
+    auto name = std::make_shared<std::string>();
+    App::Push<ui::ProgressBox>(0, "Back up the chip's values"_i18n, "Battery"_i18n, [name](auto) -> Result {
+        return detail::Backup(detail::Read(), *name);
+    }, [name, then = std::move(then)](Result rc) {
+        if (R_FAILED(rc)) {
+            App::PushErrorBox(rc, "Backup failed"_i18n);
+            return;
+        }
+        const auto screen = ScreenNow();
+        SaveMarker(Begin(screen.first, screen.second, Now()));
+        detail::SaveState({}); // a new calibration: what an earlier one counted does not count
+        g_checked = true;      // a fresh start: nothing to find yet
+        App::Notify("Saved: "_i18n + *name + ".cal");
+        then();
+    });
+}
+
 void ShowIntro2() {
     App::Push<cu::Page>("What happens to the console"_i18n, "Step by step: the reset, two cycles, report."_i18n,
         std::vector<cu::Line>{
-            cu::Head("Switching off and on (this is normal)"_i18n),
-            cu::Para("When the battery is almost empty, the console switches itself off. You switch it on again, and it still works for a short time, because the voltage rises a little after the switch-off. Then it switches off again. This can repeat many times in a row. It is a needed part of the process: switch the console on each time and go through it to the end. It can take long."_i18n),
+            cu::Head("When the console switches off (this is normal)"_i18n),
+            cu::Para("When the battery is empty, the console switches itself off. This is what the Hub waits for. Plug the charger in and switch the console on: the Hub opens the charge page by itself. If the charger is not plugged in, the page says so."_i18n),
             cu::Head("When the console does not start any more"_i18n),
             cu::Para("Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile."_i18n),
             cu::Head("After the charge"_i18n),
             cu::Para("Open Kefir Hub and Battery calibration. The Hub counts the cycle by itself and shows what comes next."_i18n),
         },
         "Start calibration"_i18n, [](cu::Page& p) {
-            // a backup of the gauge before anything else: the way back if the calibration goes wrong
-            auto name = std::make_shared<std::string>();
-            App::Push<ui::ProgressBox>(0, "Back up the chip's values"_i18n, "Battery"_i18n, [name](auto) -> Result {
-                return detail::Backup(detail::Read(), *name);
-            }, [name, &p](Result rc) {
-                if (R_FAILED(rc)) {
-                    App::PushErrorBox(rc, "Backup failed"_i18n);
-                    return;
-                }
-                const auto screen = ScreenNow();
-                SaveMarker(Begin(screen.first, screen.second, Now()));
-                detail::SaveState({}); // a new calibration: what an earlier one counted does not count
-                g_checked = true;      // a fresh start: nothing to find yet
-                App::Notify("Saved: "_i18n + *name + ".cal");
+            BeginNew([&p]() {
                 p.SetPop();
                 ShowSteps();
             });
@@ -299,7 +305,7 @@ void ShowIntro() {
             cu::Head("How it works"_i18n),
             cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity."_i18n),
             cu::Head("What you do"_i18n),
-            cu::Para("The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, switch it on again and open Kefir Hub. When it stops starting at all, plug the charger in and charge to 100 %."_i18n),
+            cu::Para("The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, plug the charger in, switch it on and open Kefir Hub: it shows the charge."_i18n),
             cu::Head("How long it takes"_i18n),
             cu::Para("Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup."_i18n),
         },
@@ -372,7 +378,7 @@ void ShowCyclePage() {
             }
             lines.push_back(cu::Para(std::move(text)));
         }
-        lines.push_back(cu::Para("When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all."_i18n));
+        lines.push_back(cu::Para("When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself."_i18n));
         lines.push_back(cu::Para("When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %."_i18n));
         label = m->drain_started ? "Open the drain screen"_i18n : "Start the drain"_i18n;
         act = [](cu::Page& p) {
@@ -453,8 +459,9 @@ auto Resume(Marker m) -> bool {
                 WriteZeroThenCharge(m);
                 return true;
             }
-            App::Notify("The console switched off: the drain goes on slowly"_i18n);
-            StartDrainRun(m);
+            // the console switched off and was switched on without the charger: the charge page, which asks for it
+            App::Notify(CycleName(CycleOf(m.step)) + ": " + "the drain is done. Plug the charger in."_i18n);
+            StartChargeRun(m);
             return true;
         case Found::CutoffCharging:
             if (zero_due) {
@@ -549,6 +556,16 @@ void ShowSteps() {
     auto menu = std::make_unique<SystemToolsMenu>("Battery calibration"_i18n, std::move(items));
     *self = menu.get();
     App::Push(std::move(menu));
+}
+
+// Actions > Start the calibration over: the steps and the cycles counted so far are dropped, step 1 is the reset again
+void StartOver() {
+    App::Push<ui::OptionBox>("Start the calibration over? The steps and the cycles counted so far are dropped, and the first step is the reset of the gauge. A backup of the gauge is made first."_i18n,
+        "Cancel"_i18n, "Start over"_i18n, 0, [](auto op) {
+            if (op && *op == 1) {
+                BeginNew([]() { ShowSteps(); });
+            }
+        });
 }
 
 } // namespace calib_flow

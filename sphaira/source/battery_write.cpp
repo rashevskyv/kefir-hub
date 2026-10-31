@@ -317,6 +317,7 @@ void ActionsMenu() {
         return SettingsItem{std::move(label), std::move(what), {}, std::move(act), SettingsItemKind::Normal};
     };
     std::vector<SettingsItem> items;
+    items.push_back(row("Start the calibration over"_i18n, "Drops the steps counted so far. The first step is the reset of the gauge again."_i18n, calib_flow::StartOver));
     items.push_back(row("Back up the chip's values"_i18n, "Saves a copy of the gauge's values on the SD card. Nothing is changed."_i18n, []() {
         std::string name;
         const auto rc = Backup(Read(), name);

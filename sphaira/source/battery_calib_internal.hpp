@@ -18,6 +18,7 @@ auto Now() -> std::int64_t;
 auto StepLabel(int i) -> std::string;
 
 void ShowSteps();
+void StartOver();
 void ShowReport();
 void ShowTransfer();
 // at the Hub's start in a system that does not hold the newest calibration yet: write it there

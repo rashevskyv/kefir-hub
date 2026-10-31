@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.258 — Battery calibration: after the cut-off the Hub opens the charge page (it asks for the charger when it is out); Actions > Start the calibration over
+No more slow drain after a switch-off on battery (the old tail mode stays only for an old marker). The intro and the drain page texts follow. Start over: backup, a fresh marker, step 1 (the reset) again. host tests: pass except test_nand_archive_contract (CRLF script in the worktree, not this change) | nro: not built | switch: pending
+
 ## v0.14.257 — Battery drain page: the GPU load grows to 100 %, the frame rate may fall (not below about 14 fps)
 The circle count rises 2 per sample while nvgpu reads under 95 %, up to 80; a frame over 70 ms takes 2 back. host tests: not run, nro: not built, switch: pending (does the GPU chart reach 100 %, does the page stay usable)
 
