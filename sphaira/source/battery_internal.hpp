@@ -5,6 +5,7 @@
 #include "battery_gauge.hpp"
 #include "battery_wizard.hpp"
 #include "fs.hpp"
+#include "app.hpp"
 
 #include <switch.h>
 #include <array>
@@ -13,6 +14,9 @@
 #include <string>
 
 namespace sphaira::battery::detail {
+
+// Idle seconds before the drain page's screensaver: the install screen's timeout, two minutes when that is off.
+inline long SaverSeconds() { return App::GetBlankTimeout() > 0 ? App::GetBlankTimeout() : 120; }
 
 inline constexpr const char* BACKUP_DIR = "/config/kefir/battery";
 // CAL0 (PRODINFO) offsets the Battery Desync Fix reads: BatteryLot and the raw BatteryVersion.

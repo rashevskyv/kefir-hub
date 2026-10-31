@@ -50,9 +50,8 @@ constexpr float TAIL_BRIGHTNESS = 0.01f; // the calibration after a cut-off: as 
 constexpr const char* CALIB_LOG = "/config/kefir/battery/calib-log.csv";
 constexpr size_t CALIB_LOG_MAX = 4u * 1024 * 1024; // a longer log is kept as .old and a new one is started
 constexpr float NOMINAL_V = 3.7f; // for Wh from mAh
-constexpr long SAVER_DEFAULT_S = 120; // idle seconds before the screensaver when the install screen's timeout is off
 constexpr u64 LIVE_MS = 250;   // one point of the live charts
-constexpr size_t LIVE_N = 120; // 30 s on a chart
+constexpr size_t LIVE_N = 240; // points on a chart; the history squashes to stay inside
 
 // nvgpu NVGPU_GPU_IOCTL_PMU_GET_GPU_LOAD on /dev/nvhost-ctrl-gpu: the GPU load in 1/1000 (as Status Monitor reads it)
 constexpr u32 NVGPU_GET_GPU_LOAD = 0x80044715;
@@ -108,7 +107,10 @@ struct DrainMenu final : ui::menu::MenuBase {
 
     auto Since(const std::uint64_t at) const -> u64;
 
-    static void Push(std::deque<float>& d, float v);
+    // The charts keep the whole drain: a point is taken every m_stride samples; when a chart is full, every two
+    // neighbours merge into their mean and the stride doubles, so the left end stays on screen as the right end grows.
+    void Push(std::deque<float>& d, float v);
+    void Squash();
 
     // CPU load from each load core's idle ticks, GPU load from nvgpu, power and temperature from the gauge
     void SampleLive();
@@ -118,7 +120,7 @@ struct DrainMenu final : ui::menu::MenuBase {
         NVGcolor c;
     };
 
-    // A live chart that scrolls smoothly: the newest point enters on the right, LIVE_MS apart.
+    // A chart of the whole drain: the first point at the left edge, the newest at the right edge.
     // legend: a coloured dot and a text each, in two columns under the title (the plot starts below it)
     void Chart(NVGcontext* vg, float x, float y, float w, float h, const std::string& title, const std::string& value,
                std::initializer_list<Line> lines, float lo, float hi, NVGcolor text, NVGcolor info, float mark = -1.f,
@@ -210,6 +212,8 @@ private:
     std::deque<float> m_temps;
     u64 m_busy[LOAD_CORES]{};
     u64 m_tick{};
+    u64 m_sample_n{};
+    u64 m_stride{1};
 };
 
 } // namespace sphaira::battery

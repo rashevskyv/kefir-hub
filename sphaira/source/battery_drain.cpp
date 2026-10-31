@@ -223,7 +223,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
             in.is_touching = touch->is_touching;
             in.is_clicked = touch->is_clicked;
         }
-        const long timeout = App::GetBlankTimeout() > 0 ? App::GetBlankTimeout() : SAVER_DEFAULT_S;
+        const long timeout = detail::SaverSeconds();
         if (m_idle.Update(ui::BlankPhase_Installing, false, timeout, in, now_sec)) {
             m_saver.Start();
             m_idle.Reset(now_sec);

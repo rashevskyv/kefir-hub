@@ -357,7 +357,21 @@ void ShowCyclePage() {
         if (cycle == 1) {
             lines.push_back(cu::Para("The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself."_i18n));
         }
-        lines.push_back(cu::Para("After 3 minutes (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers."_i18n));
+        {
+            // the time is the one set for the screensaver in the settings
+            const long s = detail::SaverSeconds();
+            char t[32];
+            if (s % 60) {
+                std::snprintf(t, sizeof(t), "%ld:%02ld %s", s / 60, s % 60, "min"_i18n.c_str());
+            } else {
+                std::snprintf(t, sizeof(t), "%ld %s", s / 60, "min"_i18n.c_str());
+            }
+            auto text = "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers."_i18n;
+            if (const auto p = text.find("%s"); p != std::string::npos) {
+                text.replace(p, 2, t);
+            }
+            lines.push_back(cu::Para(std::move(text)));
+        }
         lines.push_back(cu::Para("When the console switches off, that is normal. Just switch it on again. The Hub goes on with the drain by itself, now at minimum brightness and weak load, to squeeze out the last percent. Keep switching it on until it does not start at all."_i18n));
         lines.push_back(cu::Para("When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %."_i18n));
         label = m->drain_started ? "Open the drain screen"_i18n : "Start the drain"_i18n;

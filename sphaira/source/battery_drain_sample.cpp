@@ -90,13 +90,24 @@ auto DrainMenu::Since(const std::uint64_t at) const -> u64 {
 }
 
 void DrainMenu::Push(std::deque<float>& d, float v) {
-    d.push_back(v);
-    if (d.size() > LIVE_N) {
-        d.pop_front();
+    if (m_sample_n % m_stride == 0) {
+        d.push_back(v);
     }
 }
 
+void DrainMenu::Squash() {
+    for (auto* d : {&m_cpu[0], &m_cpu[1], &m_cpu[2], &m_gpu, &m_watts, &m_volts, &m_temps}) {
+        std::deque<float> half;
+        for (size_t k = 0; k + 1 < d->size(); k += 2) {
+            half.push_back(((*d)[k] + (*d)[k + 1]) / 2.f);
+        }
+        *d = std::move(half);
+    }
+    m_stride *= 2;
+}
+
 void DrainMenu::SampleLive() {
+    m_sample_n++;
     const u64 tick = armGetSystemTick();
     for (int i = 0; i < LOAD_CORES; i++) {
         const u64 busy = g_busy[i];
@@ -126,6 +137,9 @@ void DrainMenu::SampleLive() {
     }
     if (const auto v = g.Read(MAX17050_Temp)) {
         Push(m_temps, static_cast<s16>(*v) / 256.f);
+    }
+    if (m_volts.size() > LIVE_N) {
+        Squash();
     }
 }
 

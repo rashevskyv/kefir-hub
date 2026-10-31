@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.256 — Battery drain page: voltage level with the battery, chips apart from the status text, the charts show the whole drain squashed into the width, the screensaver time in the text is the one from the settings
+The chart history halves (neighbours merge) when a chart is full. Other languages show the English screensaver text until i18n-translate runs. host tests: not run, nro: not built, switch: pending
+
 ## v0.14.255 — Nextendo is off by default; it is used only after the user switches it on (owner, 2026-10-31)
 `nextendo/emu_enabled` now defaults to off. A fresh Kefir Hub changes nothing on the card: no hosts file, no `nextendo_*` patches. A choice the user already stored in the config is never overwritten, and a card that already runs Nextendo (our hosts file is there) stays on: the first start stores "on" once (`nextendo/default_off_done`), so the update does not switch it off. The status help text and the docs say so; the new string is translated in 24 languages.
 host tests: pass (--quick, i18n contract) | nro: not built | switch: pending (a fresh config shows Nextendo off; switch it on, restart, check hosts and patches; switch it off, check they go)

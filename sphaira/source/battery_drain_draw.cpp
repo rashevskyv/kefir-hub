@@ -49,8 +49,6 @@ void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const 
         nvgStroke(vg);
     }
 
-    const float frac = std::min(1.f, m_live.GetMs() / static_cast<float>(LIVE_MS));
-    const float step = pw / (LIVE_N - 1);
     nvgScissor(vg, px, py - 2.f, pw, ph + 4.f);
     for (const auto& line : lines) {
         const auto& d = *line.d;
@@ -58,7 +56,7 @@ void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const 
         if (n < 2) {
             continue;
         }
-        const auto X = [&](size_t k) { return px + pw - (n - 1 - k + frac) * step; };
+        const auto X = [&](size_t k) { return px + pw * static_cast<float>(k) / static_cast<float>(n - 1); };
         nvgBeginPath(vg);
         nvgMoveTo(vg, X(0), py + ph);
         for (size_t k = 0; k < n; k++) {
@@ -130,9 +128,9 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
 
     // the voltage and the state
     const float fx = 520.f;
-    ui::gfx::drawTextArgs(vg, fx, 118.f, 64.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%.2f V", m_mv / 1000.0);
+    ui::gfx::drawTextArgs(vg, fx, 160.f, 64.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%.2f V", m_mv / 1000.0);
     const bool attention = m_charger || m_docked || m_hot;
-    calib_ui::DrawWrapped(vg, fx, 158.f, 18.f, 690.f, attention ? warn : info, m_status);
+    calib_ui::DrawWrapped(vg, fx, 204.f, 18.f, 690.f, attention ? warn : info, m_status);
 
     // the chips
     const auto Chip = [&](float x, float y, const std::string& label, const std::string& value) {
@@ -157,22 +155,22 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
             : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
-        const float w1 = Chip(fx, 232.f, "Load:"_i18n, load_text);
-        Chip(fx + w1 + 12.f, 232.f, "Brightness:"_i18n, std::to_string(brightness) + " %");
+        const float w1 = Chip(fx, 282.f, "Load:"_i18n, load_text);
+        Chip(fx + w1 + 12.f, 282.f, "Brightness:"_i18n, std::to_string(brightness) + " %");
 
     }
 
     // the figures
     char v[64];
     std::snprintf(v, sizeof(v), "%d mA", std::abs(m_ma));
-    ui::gfx::drawTextArgs(vg, fx, 292.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "Charging current"_i18n : "Consumption from the battery"_i18n).c_str());
-    ui::gfx::drawTextArgs(vg, fx + 690.f, 292.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", v);
-    ui::gfx::drawTextArgs(vg, fx, 322.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
-    ui::gfx::drawTextArgs(vg, fx + 690.f, 322.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
+    ui::gfx::drawTextArgs(vg, fx, 340.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "Charging current"_i18n : "Consumption from the battery"_i18n).c_str());
+    ui::gfx::drawTextArgs(vg, fx + 690.f, 340.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", v);
+    ui::gfx::drawTextArgs(vg, fx, 370.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
+    ui::gfx::drawTextArgs(vg, fx + 690.f, 370.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
 
     if (m_calib->charge) {
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);
-        float y = 372.f;
+        float y = 410.f;
         if (m_charger) {
             calib_ui::DrawTick(vg, 70.f, y + 3.f, 24.f, good);
             ui::gfx::drawTextArgs(vg, 104.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, good, "%s", "Charger is plugged in."_i18n.c_str());
@@ -190,7 +188,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         return;
     }
     // one row of three charts
-    const float cy = 356.f, ch = 228.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
+    const float cy = 408.f, ch = 214.f, gap = 18.f, cw = (1280.f - 2.f * 60.f - 2.f * gap) / 3.f;
     std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
     Chart(vg, 60.f, cy, cw, ch, "Voltage"_i18n, v, {{&m_volts, nvgRGB(0x60, 0xA5, 0xFA)}}, 3.0f, 4.3f, text, info, 3.2f);
     // the load: three cores and the GPU in one chart; the legend names each line with its value
