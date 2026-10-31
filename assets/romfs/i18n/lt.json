@@ -3783,7 +3783,6 @@
   "The console switched off: the drain is done. Now charge it to 100 %.": "Konsolė išsijungė: iškrovimas baigtas. Dabar įkraukite ją iki 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Nextendo serverio adresas, įrašytas į „hosts“ failą.",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Baterijos kalibravimas nebaigtas. Atidarykite Kefir Hub: procesas tęsis savaime.",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo nustatomas paleidžiant Kefir Hub ir nereikalauja mygtuko paspaudimo.",
   "Nextendo on emuMMC": "Nextendo emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo veikia emuMMC arba sysNAND, kai įjungtas Semi-stock.",
   "Not in use": "Nenaudojama",
@@ -3973,5 +3972,6 @@
   "Type words from the name to narrow the list": "Įveskite žodžius iš pavadinimo sąrašui susiaurinti",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Siunčia palaikomų žaidimų internetines paslaugas į „Nextendo Network“ emuMMC.",
   "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Sukurta „Nextendo Network“ „Prelude-Nextendo“ pagrindu, „PolyForm Shield License 1.0.0“.",
-  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo reikia šios programinės aparatinės įrangos ssl modulio pataisos. ssl ID: %s"
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo reikia šios programinės aparatinės įrangos ssl modulio pataisos. ssl ID: %s",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo yra išjungtas, kol jį įjungsite. Kefir Hub jį sukonfigūruoja ir iš naujo paleidžia konsolę tik tuo atveju, jei pasikeitė failas."
 }

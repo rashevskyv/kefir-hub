@@ -739,6 +739,7 @@ Design rules:
       `nro_patches/nextendo_*`. Kefirosphere: the Prelude rule in `fetch_tools.py` is removed.
       **[USER]** repo secrets `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; merge to master + push; one dry run.
       **[USER]** console: ssl build ID shown on the Nextendo page (ldr:dmnt allowed), patches written, `update.te` keeps them.
+- [x] N.9 **Nextendo is off by default** (owner, 2026-10-31). `nextendo/emu_enabled` defaults to false: a fresh Hub writes nothing to the card; a choice the user stored is never overwritten. The tri-state switch and the status lamp are built in a separate Hub session.
 - [ ] N.7 Build checkpoint, docs per `update-docs` skill (EN + UK wiki, license notice, firmware table), `[USER]` leftovers.
 
 [USER] checks (hardware):

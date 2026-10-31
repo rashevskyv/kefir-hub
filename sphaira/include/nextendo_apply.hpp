@@ -12,7 +12,7 @@
 
 namespace sphaira::nextendo {
 
-// Settings kept in the Hub config (section "nextendo"). Emu default on, sysNAND default off.
+// Settings kept in the Hub config (section "nextendo"). Both default off: Nextendo is used only after the user switches it on, and a stored choice is never overwritten.
 auto EmuEnabled() -> bool;
 void SetEmuEnabled(bool enabled);
 auto SysEnabled() -> bool;

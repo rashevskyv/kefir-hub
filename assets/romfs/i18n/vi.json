@@ -3788,7 +3788,6 @@
   "The console switched off: the drain is done. Now charge it to 100 %.": "Máy đã tắt: quá trình xả pin hoàn tất. Bây giờ hãy sạc đầy 100 %.",
   "Address of the Nextendo server written into the hosts file.": "Địa chỉ của máy chủ Nextendo được ghi vào tệp hosts.",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Hiệu chỉnh pin chưa hoàn tất. Mở Kefir Hub: quá trình sẽ tự động tiếp tục.",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo được thiết lập khi Kefir Hub khởi động và không cần bấm nút.",
   "Nextendo on emuMMC": "Nextendo trên emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo hoạt động trên emuMMC, hoặc trên sysNAND khi Semi-stock được bật.",
   "Not in use": "Không sử dụng",
@@ -3978,5 +3977,6 @@
   "Type words from the name to narrow the list": "Nhập từ trong tên để lọc bớt danh sách",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Gửi các dịch vụ trực tuyến của các trò chơi được hỗ trợ tới Nextendo Network trên emuMMC.",
   "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Dựa trên Prelude-Nextendo bởi Nextendo Network, PolyForm Shield License 1.0.0.",
-  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo cần một bản vá cho mô-đun ssl của firmware này. ID ssl: %s"
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo cần một bản vá cho mô-đun ssl của firmware này. ID ssl: %s",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo tắt cho đến khi bạn bật lên. Kefir Hub sau đó thiết lập và khởi động lại máy chỉ khi có tệp thay đổi."
 }

@@ -3745,7 +3745,6 @@
   "Back up the chip, align the charge, restore, match the other MMC, battery type.": "Зробіть резервну копію чипа, вирівняйте заряд, відновіть, зіставте інший MMC, тип батареї.",
   "Nextendo": "Nextendo",
   "Address of the Nextendo server written into the hosts file.": "Адреса сервера Nextendo, записана у файл hosts.",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo налаштовується під час запуску Kefir Hub і не потребує натискання кнопок.",
   "Nextendo on emuMMC": "Nextendo на emuMMC",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo працює на emuMMC або на sysNAND, поки ввімкнено Semi-stock.",
   "Not in use": "Не використовується",
@@ -3935,5 +3934,6 @@
   "shown. Narrow the list with the filter above.": "показано. Звузьте список фільтром угорі.",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Спрямовує онлайн-сервіси підтримуваних ігор до Nextendo Network на emuMMC.",
   "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo потребує патча для ssl-модуля цієї прошивки. ssl ID: %s",
-  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Створено на основі Prelude-Nextendo від Nextendo Network, ліцензія PolyForm Shield License 1.0.0."
+  "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Створено на основі Prelude-Nextendo від Nextendo Network, ліцензія PolyForm Shield License 1.0.0.",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo вимкнено, доки ти його не ввімкнеш. Kefir Hub налаштовує його та перезапускає консоль лише якщо файл змінився."
 }

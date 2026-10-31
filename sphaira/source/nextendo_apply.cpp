@@ -40,7 +40,7 @@ constexpr const char* STASH = "/config/semistock/nextendo"; // where the Semi-st
 constexpr u64 SSL_PROGRAM_ID = 0x0100000000000024;
 constexpr std::size_t MAX_HOSTS_SIZE = 64 * 1024; // a hosts file bigger than this is surely not ours
 
-option::OptionBool g_emu{"nextendo", "emu_enabled", true};
+option::OptionBool g_emu{"nextendo", "emu_enabled", false};
 option::OptionBool g_sys{"nextendo", "sysnand_enabled", false};
 option::OptionString g_ip_main{"nextendo", "server_ip", ""};   // refreshed from the newest release
 option::OptionString g_ip_nncs2{"nextendo", "server_ip_nncs2", ""};

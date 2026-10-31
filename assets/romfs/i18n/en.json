@@ -3745,7 +3745,7 @@
   "Back up the chip, align the charge, restore, match the other MMC, battery type.": "Back up the chip, align the charge, restore, match the other MMC, battery type.",
   "Address of the Nextendo server written into the hosts file.": "Address of the Nextendo server written into the hosts file.",
   "Nextendo": "Nextendo",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo is set up when Kefir Hub starts and needs no button press.",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.",
   "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.": "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one.",
   "Nextendo on emuMMC": "Nextendo on emuMMC",
   "Nextendo on sysNAND (Semi-stock)": "Nextendo on sysNAND (Semi-stock)",

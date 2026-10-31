@@ -3841,7 +3841,6 @@
   "The console switched off: the drain is done. Now charge it to 100 %.": "主机已关机：放电完成。请将其充电至 100 %。",
   "Address of the Nextendo server written into the hosts file.": "写入 hosts 文件的 Nextendo 服务器地址。",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "电池校准尚未完成。请打开 Kefir Hub：它将自行继续。",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo 在 Kefir Hub 启动时自动设置，无需按键。",
   "Nextendo on emuMMC": "emuMMC 上的 Nextendo",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo 运行在 emuMMC 上，或在开启 Semi-stock 时运行在 sysNAND 上。",
   "Not in use": "未使用",
@@ -4031,5 +4030,6 @@
   "Type words from the name to narrow the list": "输入名称中的字词以缩小列表范围",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "将受支持游戏的在线服务发送到 emuMMC 上的 Nextendo Network。",
   "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "基于 Nextendo Network 的 Prelude-Nextendo，遵循 PolyForm Shield License 1.0.0。",
-  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo 需要为此固件的 ssl 模块打补丁。ssl ID：%s"
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo 需要为此固件的 ssl 模块打补丁。ssl ID：%s",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo 在你将其打开之前处于关闭状态。随后 Kefir Hub 会进行设置，并且仅在文件更改时重启主机。"
 }

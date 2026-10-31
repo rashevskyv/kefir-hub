@@ -57,7 +57,7 @@ auto StatusHelp() -> std::string {
     if (nx::CurrentMode() == nx::Mode::Other) {
         return "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on."_i18n;
     }
-    return "Nextendo is set up when Kefir Hub starts and needs no button press."_i18n;
+    return "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed."_i18n;
 }
 
 // A toggle: store the choice, make the card match, restart only if something was really written.

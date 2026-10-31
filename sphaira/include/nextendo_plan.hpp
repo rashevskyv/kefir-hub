@@ -45,7 +45,7 @@ enum class Step {
 struct Inputs {
     Mode mode = Mode::Other;
     bool firmware_ok = false;
-    bool emu_enabled = true;    // user setting, default on
+    bool emu_enabled = true;    // user setting (off in the Hub until the user switches it on; the tests start from on)
     bool sys_enabled = false;   // user setting, default off, only meaningful in Semi-stock
     FileState emu_file = FileState::Missing;
     FileState sys_file = FileState::Missing;

@@ -3788,7 +3788,6 @@
   "The console switched off: the drain is done. Now charge it to 100 %.": "본체 전원이 꺼졌습니다: 방전이 완료되었습니다. 이제 100 %까지 충전하세요.",
   "Address of the Nextendo server written into the hosts file.": "hosts 파일에 기록된 Nextendo 서버 주소.",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "배터리 보정이 완료되지 않았습니다. Kefir Hub를 여세요: 자동으로 계속됩니다.",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "Nextendo는 Kefir Hub가 시작될 때 설정되며 버튼을 누를 필요가 없습니다.",
   "Nextendo on emuMMC": "emuMMC의 Nextendo",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "Nextendo는 emuMMC 또는 Semi-stock이 켜진 상태의 sysNAND에서 작동합니다.",
   "Not in use": "사용 중 아님",
@@ -3978,5 +3977,6 @@
   "Type words from the name to narrow the list": "목록을 좁히려면 이름의 단어를 입력하세요",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "지원되는 게임의 온라인 서비스를 emuMMC의 Nextendo Network로 보냅니다.",
   "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Nextendo Network의 Prelude-Nextendo 기반, PolyForm Shield License 1.0.0.",
-  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo에는 이 펌웨어의 ssl 모듈에 대한 패치가 필요합니다. ssl ID: %s"
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo에는 이 펌웨어의 ssl 모듈에 대한 패치가 필요합니다. ssl ID: %s",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo를 켤 때까지 꺼져 있습니다. 파일이 변경된 경우에만 Kefir Hub이 이를 설정하고 콘솔을 재시작합니다."
 }

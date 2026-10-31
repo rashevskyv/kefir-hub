@@ -3788,7 +3788,6 @@
   "The console switched off: the drain is done. Now charge it to 100 %.": "本体の電源が切れました: 放電が完了しました。100 %まで充電してください。",
   "Address of the Nextendo server written into the hosts file.": "hostsファイルに書き込まれるNextendoサーバーのアドレス。",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "バッテリーの校正が完了していません。Kefir Hubを開いてください。自動的に続行されます。",
-  "Nextendo is set up when Kefir Hub starts and needs no button press.": "NextendoはKefir Hubの起動時にセットアップされるため、ボタンを押す必要はありません。",
   "Nextendo on emuMMC": "emuMMC上のNextendo",
   "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on.": "NextendoはemuMMC、またはSemi-stockが有効なsysNAND上で動作します。",
   "Not in use": "未使用",
@@ -3978,5 +3977,6 @@
   "Type words from the name to narrow the list": "名前に含まれる言葉を入力してリストを絞り込みます",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "サポートされているゲームのオンラインサービスを、emuMMC上のNextendo Networkに送信します。",
   "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Nextendo NetworkのPrelude-Nextendoをベースにしています。PolyForm Shield License 1.0.0.",
-  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendoはこのファームウェアのsslモジュールのパッチが必要です。ssl ID：%s"
+  "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendoはこのファームウェアのsslモジュールのパッチが必要です。ssl ID：%s",
+  "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendoは有効にするまでオフになっています。Kefir Hubがセットアップを行い、ファイルが変更された場合のみ本体を再起動します。"
 }

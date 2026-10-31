@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.255 — Nextendo is off by default; it is used only after the user switches it on (owner, 2026-10-31)
+`nextendo/emu_enabled` now defaults to off. A fresh Kefir Hub changes nothing on the card: no hosts file, no `nextendo_*` patches. A choice the user already stored in the config is never overwritten. The status help text and the docs say so; the new string is translated in 24 languages.
+host tests: pass (--quick, i18n contract) | nro: not built | switch: pending (a fresh config shows Nextendo off; switch it on, restart, check hosts and patches; switch it off, check they go)
+
 ## v0.14.254 — X/Y selection: a filled row with a bar at the left, no checkbox; the drain page and its screensaver run at 60 fps (owner, 2026-10-31)
 Battery drain page: the GPU load was 80 big gradient circles a frame, 125 ms a frame (log: `[frame] 7.8 fps` from the drain start), so the screensaver moved in steps with the left stick. The circle count now follows the frame time (starts at 8, drops on a slow frame, grows after 10 s of fast ones), so frames stay at 60 fps with the GPU as busy as before; the page animation runs by time, not by frame.
 `gfx::drawMarkedRow` (the ROM file list look) replaces the left checkbox and the translucent tint in every list with X/Y select: File Browser, games/homebrew/saves/users list layout, Wi-Fi, users backups and restore lists, the DBI queue, game components, System Tools. Icon grids keep the tile checkbox; the extract tree keeps its checkboxes.

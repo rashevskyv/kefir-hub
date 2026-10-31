@@ -27,7 +27,7 @@ What Kefir Hub has gained recently and what is planned next. The list can change
 
 | Feature | Status | What it does |
 |---|---|---|
-| Nextendo built in | Planned | Nextendo online play on emuMMC with no button press. A Nextendo section in the Kefir settings shows the mode, the supported firmware and the supported games. An option for sysNAND is planned for Semi-stock only. |
+| Nextendo built in | Planned | Nextendo online play on emuMMC, off by default and switched on by the user with one switch. A Nextendo section in the Kefir settings shows the mode, the supported firmware and the supported games. An option for sysNAND is planned for Semi-stock only. |
 
 ### Games and installs {#games}
 
