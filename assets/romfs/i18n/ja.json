@@ -3976,5 +3976,7 @@
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "すぐに充電器を接続し、100%まで充電してください。バッテリーが空のため、コンソールが起動するまでに約20分かかる場合があります。しばらく充電器につないでおく必要がありますが、これは正常です。バッテリーが空のコンソールを充電器なしで長時間放置しないでください。コンソールがオフのままでも、ハブはその間に供給された充電量をカウントします。",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "高負荷：本体のバッテリーを可能な限り急速に消費します。電源が切れたら充電器を接続してください。約20分間起動しない場合がありますが、これは正常です。その後、電源を入れてKefir Hubを開いてください。",
   "The battery is full: the gauge is set to 100 %": "バッテリー満タン: ゲージは 100 % に設定されています",
-  "Keep and open the collection": "コレクションを保存して開く"
+  "Keep and open the collection": "コレクションを保存して開く",
+  "shown. Narrow the list with the filter above.": "表示中。上のフィルターでリストを絞り込んでください。",
+  "Type words from the name to narrow the list": "名前に含まれる言葉を入力してリストを絞り込みます"
 }

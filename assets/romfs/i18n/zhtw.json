@@ -4029,5 +4029,7 @@
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "請立即插入充電器並將其充電至 100 %。主機可能需要大約 20 分鐘才能啟動：電池電量已耗盡，需要在充電器上放置一小段時間。這是正常現象。請勿讓電量耗盡的主機長時間脫離充電器。如果主機保持關閉狀態，Hub 仍會計算在此期間充入的電量。",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "滿載：主機會以最快速度耗盡電量。關機後，請連接充電器。它可能需要大約 20 分鐘才能開機：這是正常的。然後開機並開啟 Kefir Hub。",
   "The battery is full: the gauge is set to 100 %": "電池已充滿：電量計已設為 100 %",
-  "Keep and open the collection": "保留並開啟合集"
+  "Keep and open the collection": "保留並開啟合集",
+  "shown. Narrow the list with the filter above.": "已顯示。使用上方的篩選器縮小列表範圍。",
+  "Type words from the name to narrow the list": "輸入名稱中的字詞以縮小清單範圍"
 }

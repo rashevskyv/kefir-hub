@@ -3977,5 +3977,7 @@
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Schließen Sie das Ladegerät sofort an und laden Sie das Gerät auf 100 % auf. Die Konsole startet möglicherweise erst nach etwa 20 Minuten: Der Akku ist leer und muss eine Weile am Ladegerät liegen. Das ist normal. Lassen Sie die leere Konsole nicht lange ohne Ladegerät. Wenn die Konsole ausgeschaltet bleibt, zählt der Hub trotzdem die Ladung, die in der Zwischenzeit hinzugekommen ist.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Volllast: Die Konsole entlädt sich so schnell wie möglich. Wenn sie ausgeht, schließen Sie das Ladegerät an. Sie schaltet sich möglicherweise erst nach ca. 20 Minuten wieder ein: Das ist normal. Schalten Sie sie dann ein und öffnen Sie Kefir Hub.",
   "The battery is full: the gauge is set to 100 %": "Der Akku ist voll: Die Anzeige steht auf 100 %",
-  "Keep and open the collection": "Sammlung behalten und öffnen"
+  "Keep and open the collection": "Sammlung behalten und öffnen",
+  "shown. Narrow the list with the filter above.": "wird angezeigt. Liste mit dem obigen Filter eingrenzen.",
+  "Type words from the name to narrow the list": "Begriffe aus dem Namen eingeben, um die Liste zu filtern"
 }

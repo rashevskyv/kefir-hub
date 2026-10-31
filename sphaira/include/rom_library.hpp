@@ -232,11 +232,15 @@ inline bool IsArchiveName(std::string_view name) {
     return false;
 }
 
-// small archives (one game each) are downloaded as they are; a set is opened and its files are picked
+// An archive is opened (its files listed, one picked) when it is a set: 32 MB or more, or 1 MB or more in an item that holds only a few
+// archives (a set of a console as one or two zips). A catalogue of many small archives (one game each) downloads them as they are.
 inline constexpr std::uint64_t LOOK_INSIDE_MIN = 32ull * 1024 * 1024;
+inline constexpr std::uint64_t LOOK_INSIDE_SMALL_MIN = 1024ull * 1024;
+inline constexpr size_t LOOK_INSIDE_FEW_ARCHIVES = 20;
 
-inline bool LookInside(std::string_view name, std::uint64_t size) {
-    return size >= LOOK_INSIDE_MIN && IsArchiveName(name);
+inline bool LookInside(std::string_view name, std::uint64_t size, size_t archives_in_item) {
+    if (!IsArchiveName(name)) return false;
+    return size >= LOOK_INSIDE_MIN || (size >= LOOK_INSIDE_SMALL_MIN && archives_in_item <= LOOK_INSIDE_FEW_ARCHIVES);
 }
 
 inline std::string ArchiveListUrl(std::string_view item, std::string_view name) {

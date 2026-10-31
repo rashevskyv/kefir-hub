@@ -68,9 +68,12 @@ int main() {
     // whole-set archives: which ones are opened, and the page archive.org gives for them
     assert(IsArchiveName("Set.ZIP") && IsArchiveName("a.7z") && IsArchiveName("# - C.rar"));
     assert(!IsArchiveName("game.nes") && !IsArchiveName(".zip") && !IsArchiveName("disc.chd"));
-    assert(LookInside("set.zip", 316ull * 1024 * 1024));
-    assert(!LookInside("one game.7z", 903704)); // a small archive is one game: downloaded as it is
-    assert(!LookInside("big.chd", 900ull * 1024 * 1024));
+    assert(LookInside("set.zip", 316ull * 1024 * 1024, 500));  // a big archive is a set, whatever the item holds
+    assert(LookInside("fds.7z", 6ull * 1024 * 1024, 1));       // a small set in an item of a few archives
+    assert(!LookInside("one game.7z", 903704, 1));             // under 1 MB: one game, downloaded as it is
+    assert(!LookInside("game.zip", 6ull * 1024 * 1024, 3000)); // a catalogue of many archives: one game each
+    assert(LookInside("game.zip", 6ull * 1024 * 1024, 20) && !LookInside("game.zip", 6ull * 1024 * 1024, 21));
+    assert(!LookInside("big.chd", 900ull * 1024 * 1024, 1));
     assert(ArchiveListUrl("abc", "Nintendo - DS.zip") == "https://archive.org/download/abc/Nintendo%20-%20DS.zip/");
 
     const std::string page =

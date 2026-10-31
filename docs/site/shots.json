@@ -694,7 +694,7 @@
                 "Down",
                 "A",
                 "wait 2",
-                "Down 3",
+                "Down 2",
                 "A",
                 "wait 3"
             ]
@@ -709,9 +709,10 @@
                 "Down",
                 "A",
                 "wait 2",
-                "Down 4",
+                "Down 3",
                 "A",
                 "wait 3",
+                "Down",
                 "A",
                 "wait 3"
             ]

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.252 — ROMS: a Filter by words row opens every file list, small sets open too (owner, 2026-10-31)
+The first row of a collection's file list and of a set's inside is `Filter by words`: A types words, the list shows only the names that hold them (1000 rows at most; the filter reaches the rest), so a game is found among thousands, then picked with A, or X/Y for several, or START for all. A zip, 7z or rar opens into its games from 32 MB, or from 1 MB in an item of 20 archives or fewer; a catalogue of many small archives still downloads one game per A. The filter redraws the page from the list already read (no second request).
+host tests: pass (--quick) | nro: built (0.14.252) | switch: pending (a real set: the filter, one game out of a zip, 7z and rar)
+
 ## v0.14.251 — Prelude-Nextendo v4.0.18 (robot)
 Hosts +3/-0 lines, patch folders +1/-0.
 host tests: pass (quick) | nro: built (CI) | switch: pending

@@ -3976,5 +3976,7 @@
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Sluit de oplader direct aan en laad hem op tot 100 %. De console start mogelijk pas na ongeveer 20 minuten: de batterij is leeg en moet even aan de oplader liggen. Dit is normaal. Laat de lege console niet lang zonder oplader staan. Als de console uit blijft, telt de Hub nog steeds de lading die in de tussentijd is binnengekomen.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Volle belasting: de console ontlaadt zo snel mogelijk. Sluit de oplader aan wanneer deze uitschakelt. Het kan ongeveer 20 minuten duren voordat hij weer start: dit is normaal. Schakel hem daarna in en open Kefir Hub.",
   "The battery is full: the gauge is set to 100 %": "De batterij is vol: de meter is ingesteld op 100 %",
-  "Keep and open the collection": "Verzameling behouden en openen"
+  "Keep and open the collection": "Verzameling behouden en openen",
+  "shown. Narrow the list with the filter above.": "getoond. Verfijn de lijst met het filter hierboven.",
+  "Type words from the name to narrow the list": "Typ woorden uit de naam om de lijst te verfijnen"
 }
