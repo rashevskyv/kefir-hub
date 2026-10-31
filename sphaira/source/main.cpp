@@ -210,7 +210,7 @@ void userAppExit(void) {
     hidsysExit();
     setExit();
     accountExit();
-    battery::charge::RestoreIfLeftOff(); // charging must never stay off after the Hub
+    sphaira::battery::charge::RestoreIfLeftOff(); // charging must never stay off after the Hub
     psmExit();
     plExit();
 
