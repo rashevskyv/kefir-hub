@@ -29,5 +29,7 @@ void ApplyLedger();
 namespace sphaira::battery::zero_write {
 // once at the Hub's start: the coulomb counter then, for "what came in since the switch-on"
 void ReadQhAtStart();
-auto WriteZero(int mv, std::string& failed) -> Result;
+auto WriteZero(int mv, std::string& failed, int qh_last) -> Result;
+// the battery is full by voltage and current but the chip shows far less: the counters to 100 % (V_empty stays)
+auto WriteFull(std::string& failed) -> Result;
 } // namespace sphaira::battery::zero_write

@@ -62,7 +62,7 @@ struct DrainMenu final : ui::menu::MenuBase {
 
     ~DrainMenu() override;
 
-    auto GetShortTitle() const -> const char* override { return "Battery drain"; }
+    auto GetShortTitle() const -> const char* override { return m_calib && m_calib->charge ? "Battery charge" : "Battery drain"; }
     // the screensaver is a black page of its own: no header or footer over it
     auto WantsChrome() const -> bool override { return !m_saver.OwnsScreen(); }
 
@@ -143,6 +143,11 @@ private:
     s64 m_calib_last{};
     int m_tick_mv{};        // the voltage and the charger at the last tick: what was true before a sleep gap
     bool m_tick_charger{};
+    int m_qh{};             // the gauge's QH counter + 1 at the last live sample, 0 = not read
+    int m_tick_qh{};        // the same at the last tick on battery: the baseline of the charge that comes in after the cut-off
+    TimeStamp m_qh_saved{}; // when it was last written to the marker
+    bool m_healed{};        // the charge page already set a full battery's counters to 100 %
+    void HealFullCharge();
     bool m_full_seen{};     // a charge phase saw 100 % on the charger
     bool m_stop_ask{};      // the "stop?" question is open: the load is paused
     FILE* m_log{};

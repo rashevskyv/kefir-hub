@@ -50,7 +50,9 @@ struct Marker {
     std::int64_t drain_time{};         // when it was started
     int cutoffs{};                     // cut-offs seen in this cycle: 0 = maximum load, 1 or more = the tail mode
     int cut_mv{};                      // the voltage the drain page saw before the last sleep gap: the zero when the log is lost
-    int brightness_before{-1};         // what the user had (percent), -1 unknown
+    int qh_last{};                     // the gauge's QH counter (0x4D) + 1 at the last tick on battery, 0 = none: the charge that comes in
+                                       // after the cut-off is counted from it, also when the console was off or the Hub restarted
+    int brightness_before{-1};       // what the user had (percent), -1 unknown
     bool auto_before{};                // auto-brightness the user had
     int last_set_brightness{-1};       // the last brightness the Hub set itself, -1 none
     std::int64_t boot_time{};          // unix time the console booted when the drain started (0 = unknown): a Hub start in the
@@ -191,6 +193,7 @@ inline void StartDrain(Marker& m, std::int64_t now, std::int64_t boot_time = 0) 
     m.drain_started = true;
     m.drain_time = now;
     m.boot_time = boot_time;
+    m.qh_last = 0; // a new drain: the QH of an older one is not its baseline
 }
 
 // ---- the file --------------------------------------------------------------------------------------------------------------
@@ -209,6 +212,7 @@ inline auto Format(const Marker& m) -> std::string {
     kv("time", m.drain_time);
     kv("cutoffs", m.cutoffs);
     kv("cut_mv", m.cut_mv);
+    kv("qh_last", m.qh_last);
     kv("brightness_before", m.brightness_before);
     kv("auto_before", m.auto_before ? 1 : 0);
     kv("last_set", m.last_set_brightness);
@@ -242,6 +246,7 @@ inline auto Parse(std::string_view text) -> Marker {
         else if (key == "time") m.drain_time = v;
         else if (key == "cutoffs") m.cutoffs = static_cast<int>(v < 0 ? 0 : v);
         else if (key == "cut_mv") m.cut_mv = static_cast<int>(v < 0 ? 0 : v);
+        else if (key == "qh_last") m.qh_last = static_cast<int>(v < 0 || v > 0x10000 ? 0 : v);
         else if (key == "brightness_before") m.brightness_before = static_cast<int>(v);
         else if (key == "auto_before") m.auto_before = v != 0;
         else if (key == "last_set") m.last_set_brightness = static_cast<int>(v);

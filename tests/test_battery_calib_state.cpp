@@ -92,6 +92,11 @@ int main() {
         Marker c;
         c.cut_mv = 3195; // what the page saw before a sleep: survives a lost drain log
         assert(Parse(Format(c)).cut_mv == 3195 && Parse("cut_mv=-5\n").cut_mv == 0);
+        // the gauge's QH counter + 1 at the last tick on battery: the baseline of the charge after the cut-off
+        c.qh_last = 0xFD89;
+        assert(Parse(Format(c)).qh_last == 0xFD89 && Parse("qh_last=-5\n").qh_last == 0 && Parse("qh_last=70000\n").qh_last == 0);
+        StartDrain(c, 100); // a new drain does not keep the QH of an older one
+        assert(c.qh_last == 0);
     }
     assert(back.zero_mv == 3193 && back.zero_at == 777 && back.full_at[0] == 999 && back.full_at[1] == 0);
     const auto bad = Parse("step=99\r\ncutoffs=-4\r\nnonsense\r\nphase=x\r\nstarted=1\r\n");

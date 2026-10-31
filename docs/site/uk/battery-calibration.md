@@ -25,6 +25,9 @@
 - step 5, [[Transfer to the other systems]]: the calibration is noted in a ledger on the microSD; the other system (sysMMC, another emuMMC) takes it at its own next start of Kefir Hub and shows a message
 - the progress is kept on the microSD: the Hub can be closed and the console used between the steps; come back through [[Tools]] → [[Maintenance]] → [[Battery calibration]]
 - the console switches off and on many times during a drain: this is normal and needed; keep switching it on until it does not start at all
+- after the cut-off: plug the charger in at once and do not leave the empty console without it for long; it may not start for about 20 minutes on the charger, this is normal and no sign of a fault; the Hub does not need the console switched on in time
+- the charge that came in while the console slept or was off counts: the Hub notes the gauge's charge counter on every drain tick (and every 30 s in the marker) and counts what came in from the last note; a battery that is full when the Hub looks (4.15 V or more and a charging current of 600 mA or less) is written as 100 %, so the console and the Hub show 100 % at once, not a value counted from the start of the Hub
+- the page header says [[Battery charge]] while the charge runs and [[Battery drain]] while the drain runs
 -->
 
 ## Перенести калібрування в іншу систему

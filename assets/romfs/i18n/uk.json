@@ -3929,5 +3929,8 @@
   "shown. Narrow the list with a filter (START).": "показано. Звузьте список фільтром (START).",
   "Filter by words": "Фільтр за словами",
   "Words from the file name, for example a game; empty shows every file": "Слова з назви файлу, наприклад гра; порожнє поле показує всі файли",
-  "Download the whole archive": "Завантажити весь архів"
+  "Download the whole archive": "Завантажити весь архів",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Одразу вставте зарядку й зарядіть до 100 %. Консоль може не вмикатися близько 20 хвилин: батарея порожня, їй треба трохи полежати на зарядці. Це нормально. Не залишайте порожню консоль надовго без зарядки. Якщо консоль лишається вимкненою, Hub усе одно враховує заряд, який надійшов за цей час.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Повне навантаження: консоль розряджається якнайшвидше. Коли вона вимкнеться, вставте зарядку. Вона може не вмикатися близько 20 хвилин: це нормально. Потім увімкніть її й відкрийте Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Батарея повна: датчик встановлено на 100 %"
 }

@@ -232,8 +232,8 @@ void WriteZeroThenCharge(Marker m) {
     }
     auto failed = std::make_shared<std::string>();
     auto marker = std::make_shared<Marker>(std::move(m));
-    App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, std::to_string(mv) + " mV", [failed, mv](auto) -> Result {
-        return zero_write::WriteZero(mv, *failed);
+    App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, std::to_string(mv) + " mV", [failed, mv, qh = marker->qh_last](auto) -> Result {
+        return zero_write::WriteZero(mv, *failed, qh);
     }, [failed, marker, mv](Result rc) {
         if (R_FAILED(rc)) {
             App::Push<ui::OptionBox>("The zero was not written. A backup was saved first."_i18n + (failed->empty() ? std::string{} : "\n\n" + *failed),
@@ -266,7 +266,7 @@ void ShowIntro2() {
             cu::Head("Switching off and on (this is normal)"_i18n),
             cu::Para("When the battery is almost empty, the console switches itself off. You switch it on again, and it still works for a short time, because the voltage rises a little after the switch-off. Then it switches off again. This can repeat many times in a row. It is a needed part of the process: switch the console on each time and go through it to the end. It can take long."_i18n),
             cu::Head("When the console does not start any more"_i18n),
-            cu::Para("Plug the charger in and charge it to 100 %. The console may not start at once: the battery is empty, and it needs to lie on the charger for a while."_i18n),
+            cu::Para("Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile."_i18n),
             cu::Head("After the charge"_i18n),
             cu::Para("Open Kefir Hub and Battery calibration. The Hub counts the cycle by itself and shows what comes next."_i18n),
         },

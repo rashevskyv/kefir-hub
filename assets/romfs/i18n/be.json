@@ -3967,5 +3967,8 @@
   "Reading the archive on archive.org": "Чытанне архіву з archive.org",
   "Could not read the archive on archive.org": "Не ўдалося прачытаць архіў на archive.org",
   "Download the whole archive": "Спампаваць увесь архіў",
-  "Words from the file name, for example a game; empty shows every file": "Словы з назвы файла, напрыклад, гульні; пустое паказвае ўсе файлы"
+  "Words from the file name, for example a game; empty shows every file": "Словы з назвы файла, напрыклад, гульні; пустое паказвае ўсе файлы",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Падключыце зарадная прылада неадкладна і зарадзіце яго да 100 %. Кансоль можа не ўключацца прыкладна 20 хвілін: батарэя разраджана, і ёй трэба паляжаць на зарадцы некаторы час. Гэта нармальна. Не пакідайце разраджаную кансоль без зарадніка на доўга. Калі кансоль застаецца выключанай, Хаб усё роўна лічыць зарад, які паступіў тым часам.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Поўная нагрузка: кансоль разраджаецца максімальна хутка. Калі яна выключыцца, падключыце зарадную прыладу. Яна можа не запускацца каля 20 хвілін: гэта нармальна. Затым уключыце яе і адкрыйце Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Акумулятар поўны: індыкатар усталяваны на 100 %"
 }

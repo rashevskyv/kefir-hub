@@ -3967,5 +3967,8 @@
   "Reading the archive on archive.org": "Skaitomas archyvas iš archive.org",
   "Could not read the archive on archive.org": "Nepavyko perskaityti archyvo iš archive.org",
   "Download the whole archive": "Atsisiųsti visą archyvą",
-  "Words from the file name, for example a game; empty shows every file": "Žodžiai iš failo pavadinimo, pavyzdžiui, žaidimo; tuščias rodo visus failus"
+  "Words from the file name, for example a game; empty shows every file": "Žodžiai iš failo pavadinimo, pavyzdžiui, žaidimo; tuščias rodo visus failus",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Nedelsiant prijunkite įkroviklį ir įkraukite iki 100 %. Konsolė gali neįsijungti apie 20 minučių: baterija tuščia ir jai reikia kurį laiką pabūti ant įkroviklio. Tai normalu. Nepalikite tuščios konsolės ilgam laikui be įkroviklio. Jei konsolė lieka išjungta, šakotuvas vis tiek skaičiuoja tuo metu gautą įkrovą.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Pilna apkrova: konsolė išsikrauna kuo greičiau. Jai išsijungus, prijunkite įkroviklį. Ji gali neįsijungti apie 20 minučių: tai normalu. Tada įjunkite ją ir atidarykite Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Baterija pilna: indikatorius nustatytas ties 100 %"
 }

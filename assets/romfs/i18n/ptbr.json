@@ -3999,5 +3999,8 @@
   "Reading the archive on archive.org": "Lendo o arquivo em archive.org",
   "Could not read the archive on archive.org": "Não foi possível ler o arquivo em archive.org",
   "Download the whole archive": "Baixar todo o arquivo",
-  "Words from the file name, for example a game; empty shows every file": "Palavras do nome do arquivo, por exemplo um jogo; vazio mostra todos os arquivos"
+  "Words from the file name, for example a game; empty shows every file": "Palavras do nome do arquivo, por exemplo um jogo; vazio mostra todos os arquivos",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Conecte o carregador imediatamente e carregue-o até 100 %. O console pode não ligar por cerca de 20 minutos: a bateria está vazia e precisa ficar um pouco no carregador. Isso é normal. Não deixe o console vazio sem o carregador por muito tempo. Se o console permanecer desligado, o Hub ainda conta a carga recebida nesse meio tempo.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Carga máxima: o console descarrega o mais rápido possível. Quando ele desligar, conecte o carregador. Ele pode não ligar por cerca de 20 minutos: isso é normal. Em seguida, ligue-o e abra o Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "A bateria está cheia: o medidor está definido para 100 %"
 }

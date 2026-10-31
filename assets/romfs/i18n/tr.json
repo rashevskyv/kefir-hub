@@ -3967,5 +3967,8 @@
   "Reading the archive on archive.org": "archive.org arşivinden okunuyor",
   "Could not read the archive on archive.org": "archive.org üzerindeki arşiv okunamadı",
   "Download the whole archive": "Arşivin tamamını indir",
-  "Words from the file name, for example a game; empty shows every file": "Dosya adından kelimeler, örneğin bir oyun; boş bırakılırsa tüm dosyalar gösterilir"
+  "Words from the file name, for example a game; empty shows every file": "Dosya adından kelimeler, örneğin bir oyun; boş bırakılırsa tüm dosyalar gösterilir",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Şarj cihazını derhal takın ve %100 seviyesine kadar şarj edin. Pil boş olduğundan ve bir süre şarj cihazında kalması gerektiğinden konsol yaklaşık 20 dakika boyunca açılmayabilir. Bu normaldir. Boş konsolu şarj cihazı olmadan uzun süre bırakmayın. Konsol kapalı kalsa bile Hub o sırada gelen şarjı saymaya devam eder.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Tam yük: Konsol mümkün olduğunca hızlı boşalır. Kapandığında şarj cihazını takın. Yaklaşık 20 dakika boyunca açılmayabilir: Bu normaldir. Ardından açın ve Kefir Hub uygulamasını açın.",
+  "The battery is full: the gauge is set to 100 %": "Pil dolu: gösterge %100 seviyesine ayarlandı"
 }

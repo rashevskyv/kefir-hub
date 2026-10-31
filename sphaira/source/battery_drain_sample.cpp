@@ -1,4 +1,6 @@
 #include "battery_drain_menu.hpp"
+#include "battery_calib_internal.hpp"
+#include "battery_zero.hpp"
 
 namespace sphaira::battery {
 
@@ -57,6 +59,27 @@ void DrainMenu::NoteState(bool force) {
     }
 }
 
+// On cycle 1's charge page (the only place a zero was just written, maybe from a wrong charge baseline) the cell is at the top
+// voltage with a tapered, averaged current, yet the chip shows far less: the counters go to 100 %, once. Cycle 2 has no zero and
+// its gauge is left alone: the capacity it learns there is what the wizard is for.
+void DrainMenu::HealFullCharge() {
+    constexpr int CHIP_TOO_LOW_PCT = 90;
+    if (m_healed || !m_calib->charge || m_calib->step != 1 || !m_charger || !m_read || m_gauge_pct < 0 || m_gauge_pct >= CHIP_TOO_LOW_PCT ||
+        m_mv < zero::HEAL_MV) {
+        return;
+    }
+    FuelGauge g;
+    const auto avg = g.Current(MAX17050_AvgCurrent);
+    if (!avg || !zero::FullForHeal(m_mv, static_cast<int>(*avg))) {
+        return;
+    }
+    m_healed = true;
+    std::string failed;
+    const auto rc = zero_write::WriteFull(failed);
+    log_write("[Calib] full by voltage (%d mV, avg %d mA) but the chip said %d %%: counters to 100 %%, rc 0x%X\n", m_mv, static_cast<int>(*avg), m_gauge_pct, rc);
+    App::Notify(R_SUCCEEDED(rc) ? "The battery is full: the gauge is set to 100 %"_i18n : "The gauge did not take the charge counters."_i18n);
+}
+
 auto DrainMenu::ZeroSeen() const -> bool {
     return m_read && (m_pct == 0 || m_gauge_pct == 0);
 }
@@ -97,6 +120,9 @@ void DrainMenu::SampleLive() {
         const float w = m_mv / 1000.f * std::abs(m_ma) / 1000.f;
         Push(m_watts, w);
         (m_ma < 0 ? m_wh_out : m_wh_in) += w * (LIVE_MS / 1000.f) / 3600.f; // Wh over one sample
+    }
+    if (const auto qh = g.Read(MAX17050_QH)) {
+        m_qh = *qh + 1;
     }
     if (const auto v = g.Read(MAX17050_Temp)) {
         Push(m_temps, static_cast<s16>(*v) / 256.f);

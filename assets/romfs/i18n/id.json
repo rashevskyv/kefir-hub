@@ -3967,5 +3967,8 @@
   "Reading the archive on archive.org": "Membaca arsip di archive.org",
   "Could not read the archive on archive.org": "Tidak dapat membaca arsip di archive.org",
   "Download the whole archive": "Unduh seluruh arsip",
-  "Words from the file name, for example a game; empty shows every file": "Kata dari nama file, misalnya game; kosong menampilkan semua file"
+  "Words from the file name, for example a game; empty shows every file": "Kata dari nama file, misalnya game; kosong menampilkan semua file",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Colokkan pengisi daya segera dan isi daya hingga 100 %. Konsol mungkin tidak menyala selama sekitar 20 menit: baterai kosong, dan perlu mengisi daya selama beberapa waktu. Ini normal. Jangan biarkan konsol yang kosong tanpa pengisi daya terlalu lama. Jika konsol tetap mati, Hub tetap menghitung daya yang masuk selama waktu tersebut.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Beban penuh: konsol menguras daya secepat mungkin. Saat mati, sambungkan pengisi daya. Konsol mungkin tidak menyala selama sekitar 20 menit: ini normal. Kemudian nyalakan dan buka Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Baterai penuh: indikator diatur ke 100 %"
 }

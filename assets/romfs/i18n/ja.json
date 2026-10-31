@@ -3972,5 +3972,8 @@
   "Reading the archive on archive.org": "archive.org からアーカイブを読み込んでいます",
   "Could not read the archive on archive.org": "archive.org のアーカイブを読み込めませんでした。",
   "Download the whole archive": "アーカイブ全体をダウンロード",
-  "Words from the file name, for example a game; empty shows every file": "ファイル名に含まれる単語（例：ゲーム名）。空欄の場合はすべてのファイルを表示します"
+  "Words from the file name, for example a game; empty shows every file": "ファイル名に含まれる単語（例：ゲーム名）。空欄の場合はすべてのファイルを表示します",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "すぐに充電器を接続し、100%まで充電してください。バッテリーが空のため、コンソールが起動するまでに約20分かかる場合があります。しばらく充電器につないでおく必要がありますが、これは正常です。バッテリーが空のコンソールを充電器なしで長時間放置しないでください。コンソールがオフのままでも、ハブはその間に供給された充電量をカウントします。",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "高負荷：本体のバッテリーを可能な限り急速に消費します。電源が切れたら充電器を接続してください。約20分間起動しない場合がありますが、これは正常です。その後、電源を入れてKefir Hubを開いてください。",
+  "The battery is full: the gauge is set to 100 %": "バッテリー満タン: ゲージは 100 % に設定されています"
 }

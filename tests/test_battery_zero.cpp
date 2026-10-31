@@ -49,6 +49,20 @@ int main() {
 
     assert(!PlanCounters({0, 0x2304, 0, 0}).ok);
 
+    // the owner's console, 2026-10-31: the console slept at the cut-off, the charger filled it overnight; the Hub looked at
+    // 4200 mV and 276 mA. It is full: 100 %, not the 54 % a QH difference from the Hub's start gave.
+    assert(FullNow(4200, 276) && FullNow(4150, 600) && FullNow(4190, 0) && FullNow(4180, -300));
+    assert(!FullNow(4149, 100) && !FullNow(4200, 601) && !FullNow(3900, 300) && !FullNow(3200, 800));
+    // the repair on the charge page is stricter: a healthy constant-current charge (4.15 V, 500 mA) must not trip it
+    assert(FullForHeal(4200, 276) && FullForHeal(4190, 350) && FullForHeal(4201, 0));
+    assert(!FullForHeal(4150, 500) && !FullForHeal(4189, 100) && !FullForHeal(4200, 351));
+    CountersIn top{0x25DC, 0x3219, 0xE26A, 0xFD88, true};
+    c = PlanCounters(top);
+    assert(c.ok && c.mix == 0x3219 && c.rep == 0x25DC && c.soc == 0x6400);
+    top.full = false; // the same numbers without the full verdict give the partial value
+    assert(PlanCounters(top).soc < 0x6400);
+    assert(!PlanCounters({0, 0x2304, 0, 0, true}).ok); // no capacity read: nothing to write, full or not
+
     std::puts("test_battery_zero: ok");
     return 0;
 }

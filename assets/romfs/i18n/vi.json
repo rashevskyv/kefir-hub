@@ -3972,5 +3972,8 @@
   "Reading the archive on archive.org": "Đang đọc lưu trữ trên archive.org",
   "Could not read the archive on archive.org": "Không thể đọc kho lưu trữ trên archive.org",
   "Download the whole archive": "Tải xuống toàn bộ lưu trữ",
-  "Words from the file name, for example a game; empty shows every file": "Từ trong tên tệp, ví dụ như trò chơi; để trống hiển thị tất cả tệp"
+  "Words from the file name, for example a game; empty shows every file": "Từ trong tên tệp, ví dụ như trò chơi; để trống hiển thị tất cả tệp",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Cắm bộ sạc ngay lập tức và sạc đến 100 %. Bảng điều khiển có thể không khởi động trong khoảng 20 phút: pin đã cạn và cần phải sạc trong một thời gian. Điều này là bình thường. Không để bảng điều khiển cạn pin mà không có bộ sạc trong thời gian dài. Nếu bảng điều khiển vẫn tắt, Hub vẫn tính lượng điện đã nạp vào trong thời gian đó.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Full load: máy xả pin nhanh nhất có thể. Khi tắt nguồn, hãy cắm sạc. Máy có thể không bật trong khoảng 20 phút: đây là điều bình thường. Sau đó bật máy lên và mở Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Pin đã đầy: thanh đo được đặt ở mức 100 %"
 }

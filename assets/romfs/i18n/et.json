@@ -3967,5 +3967,8 @@
   "Reading the archive on archive.org": "Arhiivi lugemine saidilt archive.org",
   "Could not read the archive on archive.org": "Arhiivi lugemine saidilt archive.org ebaõnnestus",
   "Download the whole archive": "Laadi alla kogu arhiiv",
-  "Words from the file name, for example a game; empty shows every file": "Sõnad failnimest, näiteks mäng; tühjana kuvatakse kõik failid"
+  "Words from the file name, for example a game; empty shows every file": "Sõnad failnimest, näiteks mäng; tühjana kuvatakse kõik failid",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Ühendage laadija kohe vooluvõrku ja laadige see 100 %-ni. Konsool ei pruugi umbes 20 minutit käivituda: aku on tühjenenud ja peab veidi laadijal olema. See on normaalne. Ärge jätke tühja konsooli pikaks ajaks ilma laadijata. Kui konsool jääb väljalülitatuks, loeb keskus siiski vahepeal saabunud laengut.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Täiskoormus: konsool tühjeneb nii kiiresti kui võimalik. Kui see lülitub välja, ühendage laadija külge. See ei pruugi umbes 20 minutit käivituda: see on normaalne. Seejärel lülitage see sisse ja avage Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Aku on täis: näidik on seatud 100 % peale"
 }

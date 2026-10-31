@@ -3972,5 +3972,8 @@
   "Reading the archive on archive.org": "Läser arkivet på archive.org",
   "Could not read the archive on archive.org": "Kunde inte läsa arkivet på archive.org",
   "Download the whole archive": "Ladda ner hela arkivet",
-  "Words from the file name, for example a game; empty shows every file": "Ord från filnamnet, till exempel ett spel; tomt visar alla filer"
+  "Words from the file name, for example a game; empty shows every file": "Ord från filnamnet, till exempel ett spel; tomt visar alla filer",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Anslut laddaren omedelbart och ladda den till 100 %. Konsolen kanske inte startar på ungefär 20 minutes: batteriet är tomt och måste ligga på laddaren en stund. Detta är normalt. Lämna inte den tomma konsolen utan laddare länge. Om konsolen förblir avstängd räknar Hubben ändå den laddning som kom in under tiden.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Full belastning: konsolen laddas ur så snabbt som möjligt. När den stängs av, anslut laddaren. Den kanske inte startar på ungefär 20 minuter: detta är normalt. Slå sedan på den och öppna Kefir Hub.",
+  "The battery is full: the gauge is set to 100 %": "Batteriet är fullt: mätaren är inställd på 100 %"
 }

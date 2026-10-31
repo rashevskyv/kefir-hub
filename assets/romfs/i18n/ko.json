@@ -3972,5 +3972,8 @@
   "Reading the archive on archive.org": "archive.org에서 아카이브 읽는 중",
   "Could not read the archive on archive.org": "archive.org의 아카이브를 읽을 수 없습니다.",
   "Download the whole archive": "전체 아카이브 다운로드",
-  "Words from the file name, for example a game; empty shows every file": "파일 이름의 단어 (예: 게임); 비워두면 모든 파일 표시"
+  "Words from the file name, for example a game; empty shows every file": "파일 이름의 단어 (예: 게임); 비워두면 모든 파일 표시",
+  "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "즉시 충전기를 연결하고 100%까지 충전하세요. 배터리가 방전되어 콘솔이 켜지는 데 약 20분이 걸릴 수 있습니다. 충전기에 잠시 꽂아두어야 하며 이는 정상입니다. 방전된 콘솔을 충전기 없이 오랜 시간 방치하지 마세요. 콘솔이 꺼져 있어도 허브는 그동안 들어온 충전량을 계속 집계합니다.",
+  "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "최대 부하: 본체가 최대한 빠르게 방전됩니다. 전원이 꺼지면 충전기를 연결하세요. 약 20분 동안 켜지지 않을 수 있으며 이는 정상입니다. 그 후 전원을 켜고 Kefir Hub를 여세요.",
+  "The battery is full: the gauge is set to 100 %": "배터리가 가득 찼습니다: 게이지가 100 %로 설정됨"
 }

@@ -72,7 +72,7 @@ void DeleteSavedBrightness() {
 }  // namespace
 
 DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
-    : MenuBase{"Battery drain"_i18n, ui::menu::MenuFlag_None}, m_cycle{cycle}, m_calib{std::move(calib)} {
+    : MenuBase{calib && calib->charge ? "Battery charge"_i18n : "Battery drain"_i18n, ui::menu::MenuFlag_None}, m_cycle{cycle}, m_calib{std::move(calib)} {
     SetAction(Button::B, Action{"Stop"_i18n, [this]() {
         // the full load starves the UI, so the question would appear late: pause the load while it is open
         m_stop_ask = true;
@@ -382,6 +382,18 @@ void DrainMenu::CalibTick() {
     m_calib_last = now;
     m_tick_mv = m_mv;
     m_tick_charger = m_charger;
+    // the QH counter on battery: the cut-off is the baseline for the charge that comes in after it, also when the console was off
+    // meanwhile (the Hub restarted) and the charger filled the battery. Kept in the marker every 30 s, the sleep gap writes it too.
+    if (!m_charger && !m_calib->charge && m_qh) {
+        m_tick_qh = m_qh;
+        if (m_qh_saved.GetSeconds() >= 30) {
+            m_qh_saved.Update();
+            if (auto m = calib_flow::LoadMarker()) {
+                m->qh_last = m_tick_qh;
+                calib_flow::SaveMarker(*m);
+            }
+        }
+    }
     if (m_log) {
         calib::Sample sm;
         sm.time = now;
@@ -410,6 +422,7 @@ void DrainMenu::CalibTick() {
             }
         }
     }
+    HealFullCharge();
     if (m_calib->charge && m_charger && m_pct >= 100) {
         m_full_seen = true;
     }
@@ -443,6 +456,7 @@ void DrainMenu::OnSleptAwake(s64 now) {
     if (auto m = calib_flow::LoadMarker()) {
         m->cutoffs++;          // a Hub started again after this goes on in the tail too
         m->cut_mv = m_tick_mv; // the zero's fallback when the drain log is lost
+        if (m_tick_qh) m->qh_last = m_tick_qh;
         calib_flow::SaveMarker(*m);
     }
     if (m_log) {
@@ -490,7 +504,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
     }
     return (m_calib->tail
         ? "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum."_i18n
-        : "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub."_i18n)
+        : "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n)
         + " " + "Everything is written to a log."_i18n;
 }
 
