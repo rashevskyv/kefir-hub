@@ -1,6 +1,7 @@
 #include "utils/devoptab_curl_device.hpp"
 #include "log.hpp"
 #include "defines.hpp"
+#include "webdav_path.hpp"
 #include <yyjson.h>
 #include <cstring>
 #include <cctype>
@@ -377,6 +378,9 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
         }
         m_ftp_listed.insert(dir_key);
     } else if (webdav) {
+        // the hrefs hold the base path of the mount url (/base/ and /base/file for the mount https://host/base),
+        // so the folder itself is found by the path the server sees, not by the one the Hub asked for
+        const auto requested_path = webdav::NormalizeUrlPath(build_path(path, true));
         size_t pos = 0;
         while ((pos = find_xml_tag(lc, pos, "response")) != std::string::npos) {
             auto resp_end = find_xml_tag(lc, pos + 1, "response", true);
@@ -399,6 +403,10 @@ int MountCurlDevice::devoptab_diropen(void* fd, const char *path) {
 
             const std::string href = data_str.substr(href_start, href_end - href_start);
             std::string decoded_href = url_decode(href);
+            if (webdav::NormalizeUrlPath(decoded_href) == requested_path) {
+                pos = next_pos;
+                continue;
+            }
 
             if (decoded_href.ends_with('/')) {
                 decoded_href.pop_back();

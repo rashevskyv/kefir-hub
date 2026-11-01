@@ -3951,5 +3951,10 @@
   "Charging is off now. Switches it on again.": "Заряджання зараз вимкнене. Вмикає його знову.",
   "The console did not accept this.": "Консоль цього не прийняла.",
   "Charging is off": "Заряджання вимкнено",
-  "Charging is on": "Заряджання увімкнено"
+  "Charging is on": "Заряджання увімкнено",
+  "Export failed!": "Експорт не вдався!",
+  "Not enough free space on the install location. Free up space or change the install location.": "Недостатньо вільного місця у місці встановлення. Звільніть місце або змініть місце встановлення.",
+  "Your keys are missing or outdated. Dump prod.keys again with the latest Lockpick_RCM.": "Ключі відсутні або застарілі. Знову зробіть дамп prod.keys найновішим Lockpick_RCM.",
+  "Failed to decompress the NCZ. Try installing from the SD card or use the USB install script.": "Не вдалося розпакувати NCZ. Спробуйте встановити з SD-карти або скористайтеся скриптом USB-встановлення.",
+  "No game card was found. Make sure it is inserted correctly.": "Картридж не знайдено. Переконайтеся, що його вставлено правильно."
 }

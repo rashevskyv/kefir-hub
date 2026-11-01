@@ -86,6 +86,7 @@ struct Pagination {
 struct PackList {
     std::vector<PackListEntry> packList{};
     Pagination pagination{};
+    bool parsed{}; // the reply had data.switch; an empty search is valid and has a page count of 0
 };
 
 struct Config {

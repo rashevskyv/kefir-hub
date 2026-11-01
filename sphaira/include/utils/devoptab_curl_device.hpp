@@ -87,6 +87,8 @@ struct MountCurlDevice : MountDevice {
     static size_t write_memory_callback(char *ptr, size_t size, size_t nmemb, void *userdata);
     static std::string html_decode(const std::string_view& str);
     static std::string url_decode(const std::string& str);
+    // the path as the server sees it, with the base path of the mount url; build_url() makes a full url of it.
+    std::string build_path(const std::string& path, bool is_dir) const;
     std::string build_url(const std::string& path, bool is_dir);
 
     int devoptab_open(void *fileStruct, const char *path, int flags, int mode) override;

@@ -242,6 +242,33 @@ std::string MountCurlDevice::url_decode(const std::string& str) {
     return html_decode(unescaped);
 }
 
+// the path as it appears on the server: the base path of the mount url (eg /base/dir) in front of the browse path.
+std::string MountCurlDevice::build_path(const std::string& _path, bool is_dir) const {
+    auto path = _path;
+    if (is_dir && !path.ends_with('/')) {
+        path += '/'; // append trailing slash for folder.
+    }
+
+    if (!m_url_path.empty()) {
+        // join base and path with exactly one slash. A host-only source url
+        // (eg "http://host:8080") parses to a base path of "/", so a browse
+        // path that already starts with "/" would otherwise produce a double
+        // slash ("//games/..."). Some http servers list and HEAD such urls
+        // fine but stall the streaming GET, hanging installs.
+        auto base = m_url_path;
+        if (base.ends_with('/')) {
+            base.pop_back();
+        }
+        if (path.starts_with('/')) {
+            path = base + path;
+        } else {
+            path = base + '/' + path;
+        }
+    }
+
+    return path;
+}
+
 std::string MountCurlDevice::build_url(const std::string& _path, bool is_dir) {
     log_write("[CURL] building url for path: %s\n", _path.c_str());
 
@@ -288,27 +315,7 @@ std::string MountCurlDevice::build_url(const std::string& _path, bool is_dir) {
     }
 
     curl_url_set(curlu, CURLUPART_QUERY, nullptr, 0);
-    auto path = _path;
-    if (is_dir && !path.ends_with('/')) {
-        path += '/'; // append trailing slash for folder.
-    }
-
-    if (!m_url_path.empty()) {
-        // join base and path with exactly one slash. A host-only source url
-        // (eg "http://host:8080") parses to a base path of "/", so a browse
-        // path that already starts with "/" would otherwise produce a double
-        // slash ("//games/..."). Some http servers list and HEAD such urls
-        // fine but stall the streaming GET, hanging installs.
-        auto base = m_url_path;
-        if (base.ends_with('/')) {
-            base.pop_back();
-        }
-        if (path.starts_with('/')) {
-            path = base + path;
-        } else {
-            path = base + '/' + path;
-        }
-    }
+    const auto path = build_path(_path, is_dir);
 
     if (!path.empty()) {
         const auto rc = curl_url_set(curlu, CURLUPART_PATH, path.c_str(), CURLU_URLENCODE);

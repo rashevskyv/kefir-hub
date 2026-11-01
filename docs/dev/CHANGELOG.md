@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.263 — From upstream sphaira 1.0.9: Themezer empty search, WebDAV base path, GameCard export errors, error hints (owner, 2026-11-01)
+Taken by hand (no merge): Themezer shows `Empty!` for a search with no result (page count 0 was an error); a WebDAV mount with a base path (`https://host/base`) no longer lists the folder as a child of itself, and an escaped base path is not encoded twice (`webdav_path.hpp`, test `test_webdav_path`); GameCard export reports errors, and the `Continue` callback of the trimmed-card question no longer captures the dead local `do_dump` by reference; the error box explains full storage, missing keys, an NCZ that fails to unpack and an empty card. Already ours: the MTP SendObject trailing-packet fix (libhaze cleanup patch), game export errors, USB error codes. Not taken: Ownfoil queue, game archiving, per-game language, save restore of a zip wrapped in a folder (our restore verifies and stages; needs its own change).
+host tests: pass (--quick) | nro: built (0.14.263) | switch: pending (WebDAV mount with a base path; GameCard dump)
+
 ## v0.14.262 — Battery: the cut-off test with the charger's input cut (bq24193 EN_HIZ), hiz_cutoff.run -> hiz_cutoff.txt
 At the next Hub start the drain page opens with the charger in but its input cut (REG00 bit 7), full load, until the console switches off. The page writes hiz_cutoff.txt every 5 s; the start after the switch-off logs REG00/REG05/REG08 (did the cut survive?) and puts the input back. The input is also put back when the page is left or the Hub closes. Tested before (0.14.261): the cut works, the battery gives about 1 A with the charger in. host tests: pass (--quick) | nro: built | switch: running its first night
 

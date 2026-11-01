@@ -296,6 +296,7 @@ void from_json(const fs::FsPath& path, PackList& e) {
     JSON_INIT_VEC_FILE(path, nullptr, nullptr);
     JSON_GET_OBJ("data");
     JSON_GET_OBJ("switch");
+    e.parsed = true;
 
     yyjson_val* packs_val = yyjson_obj_get(json, "packs");
     if (packs_val) {

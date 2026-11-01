@@ -228,6 +228,19 @@ auto GetErrorDescription(Result rc) -> std::string {
             return "Failed to download background music. Please check your internet connection."_i18n;
         case Result_GameMoveNotEnoughSpace:
             return "There is not enough free space on the selected storage."_i18n;
+        case FsError_UsableSpaceNotEnoughSdCard:
+        case FsError_UsableSpaceNotEnoughMmcUser:
+        case FsError_UsableSpaceNotEnoughMmcSystem:
+            return "Not enough free space on the install location. Free up space or change the install location."_i18n;
+        case Result_KeyMissingNcaKeyArea:
+        case Result_KeyMissingTitleKek:
+        case Result_KeyMissingMasterKey:
+        case Result_KeyFailedDecyptETicketDeviceKey:
+            return "Your keys are missing or outdated. Dump prod.keys again with the latest Lockpick_RCM."_i18n;
+        case Result_YatiInvalidNczZstdError:
+            return "Failed to decompress the NCZ. Try installing from the SD card or use the USB install script."_i18n;
+        case Result_GcEmptyGamecard:
+            return "No game card was found. Make sure it is inserted correctly."_i18n;
         default:
             return "";
     }
@@ -272,6 +285,14 @@ auto ShouldShowIssue(std::optional<Result> rc) -> bool {
         case FsError_InvalidCharacter:
         case Result_FsReadOnly:
         case Result_GameMoveNotEnoughSpace:
+        case FsError_UsableSpaceNotEnoughSdCard:
+        case FsError_UsableSpaceNotEnoughMmcUser:
+        case FsError_UsableSpaceNotEnoughMmcSystem:
+        case Result_KeyMissingNcaKeyArea:
+        case Result_KeyMissingTitleKek:
+        case Result_KeyMissingMasterKey:
+        case Result_KeyFailedDecyptETicketDeviceKey:
+        case Result_GcEmptyGamecard:
         case UsbError_UrbFailed:
         case UsbError_UrbCancelled:
         case UsbError_UrbBadStatus:

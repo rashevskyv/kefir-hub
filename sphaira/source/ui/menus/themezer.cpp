@@ -216,6 +216,10 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Loading"_i18n.c_str());
             return;
         case PageLoadState::Done:
+            if (page.m_packList.empty()) {
+                gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Empty!"_i18n.c_str());
+                return;
+            }
             break;
         case PageLoadState::Error:
             gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 36.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "Error loading page!"_i18n.c_str());
@@ -471,20 +475,22 @@ void Menu::PackListDownload() {
             PackList a;
             from_json(result.path, a);
 
-            if (!a.pagination.page_count || page_index > a.pagination.page_count) {
+            // a search with no results has a page count of 0, but there is still one (empty) page.
+            const auto page_count = std::max<u64>(a.pagination.page_count, 1);
+            if (!a.parsed || page_index > page_count) {
                 auto& page = m_pages[page_index-1];
                 page.m_ready = PageLoadState::Error;
                 log_write("failed to parse themezer data...\n");
                 return;
             }
 
-            m_pages.resize(a.pagination.page_count);
+            m_pages.resize(page_count);
             auto& page = m_pages[page_index-1];
 
             page.m_packList = a.packList;
             page.m_pagination = a.pagination;
             page.m_ready = PageLoadState::Done;
-            m_page_index_max = a.pagination.page_count;
+            m_page_index_max = page_count;
             UpdateFavoriteAction();
 
             char subheading[128];

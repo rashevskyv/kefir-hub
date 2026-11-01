@@ -104,7 +104,8 @@ bool MountCurlDevice::Mount() {
         // try and parse the path from the url, if any.
         // eg, https://example.com/some/path/here
         char* path{};
-        rc = curl_url_get(curlu, CURLUPART_PATH, &path, 0);
+        // decoded, as build_url() encodes it again: a path with escaped characters (a space) would be encoded twice.
+        rc = curl_url_get(curlu, CURLUPART_PATH, &path, CURLU_URLDECODE);
         if (rc == CURLUE_OK && path) {
             log_write("[CURL] base path: %s\n", path);
             m_url_path = path;

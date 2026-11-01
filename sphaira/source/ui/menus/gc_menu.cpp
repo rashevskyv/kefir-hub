@@ -68,7 +68,7 @@ Menu::Menu(u32 flags) : MenuBase{"GameCard"_i18n, flags} {
 
                     const auto add = [&](const std::string& name, u32 flags, const std::string& info){
                         options->Add<SidebarEntryCallback>(name, [this, flags](){
-                            DumpGames(flags);
+                            App::PushErrorBox(DumpGames(flags), "Export failed!"_i18n);
                             m_dirty = true;
                         }, true, info);
                     };
