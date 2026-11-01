@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.265 — Battery calibration: the report in plain words (capacity against the factory value, what it means, what to do), it opens by itself; bigger road map ticks
+The report says how many percent the battery is below or above the factory capacity, Like new / Normal wear / Noticeably worn / Very low / Larger, with the reasons and the choices (start over, a new battery). The switch-offs are told in a sentence each. The report opens at the Hub start when both cycles are done, and right after the last charge. The road map's dots and ticks are twice as big. host tests: pass (--quick) | nro: not built | switch: pending
+
 ## v0.14.264 — Battery calibration: the drain runs with the charger left in (its input is cut), the cycle goes on by itself after the capacity is measured
 The calibration's drain cuts the charger's input (bq24193 EN_HIZ) while the charger is plugged in; unplugged: the input is given back; plugged in again: cut again (set again when the plug reset the chip, or when the battery is charged all the same; log lines [Charge]). A full charge with a measured capacity goes on to the next step by itself, the charger may stay in. Not in a dock. host tests: pass (--quick) | nro: not built | switch: pending (the cut-off with the charger in; unplug and plug during the drain; the start after the switch-off)
 

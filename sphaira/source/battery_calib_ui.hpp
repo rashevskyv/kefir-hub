@@ -121,7 +121,7 @@ inline void DrawRoadmap(NVGcontext* vg, Theme* theme, int current, int done_upto
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto good = nvgRGB(0x4C, 0xAF, 0x50);
     const std::string names[] = {"Reset"_i18n, "Cycle 1"_i18n, "Cycle 2"_i18n, "Report"_i18n, "Transfer"_i18n};
-    const float y = 603.f, x0 = 150.f, x1 = 1130.f;
+    const float y = 594.f, x0 = 150.f, x1 = 1130.f;
     const float step = (x1 - x0) / static_cast<float>(std::max(1, count - 1));
     nvgBeginPath(vg);
     nvgMoveTo(vg, x0, y);
@@ -134,20 +134,20 @@ inline void DrawRoadmap(NVGcontext* vg, Theme* theme, int current, int done_upto
         const bool done = i <= done_upto;
         const bool now = i == current;
         nvgBeginPath(vg);
-        nvgCircle(vg, x, y, now ? 11.f : 8.f);
+        nvgCircle(vg, x, y, now ? 21.f : 16.f);
         nvgFillColor(vg, done ? good : now ? text : nvgTransRGBAf(info, 0.35f));
         nvgFill(vg);
         if (now) {
             nvgBeginPath(vg);
-            nvgCircle(vg, x, y, 16.f);
+            nvgCircle(vg, x, y, 28.f);
             nvgStrokeColor(vg, text);
-            nvgStrokeWidth(vg, 2.f);
+            nvgStrokeWidth(vg, 3.f);
             nvgStroke(vg);
         }
         if (done) {
-            DrawTick(vg, x - 6.f, y - 6.f, 12.f, nvgRGB(0x10, 0x20, 0x10));
+            DrawTick(vg, x - 11.f, y - 11.f, 22.f, nvgRGB(0x10, 0x20, 0x10));
         }
-        ui::gfx::drawTextArgs(vg, x, y + 22.f, 15.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, now ? text : info, "%s", i <= 5 ? names[i - 1].c_str() : "");
+        ui::gfx::drawTextArgs(vg, x, y + 34.f, 17.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, now ? text : info, "%s", i <= 5 ? names[i - 1].c_str() : "");
     }
 }
 

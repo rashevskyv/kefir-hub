@@ -4,6 +4,7 @@
 #include "battery_calib_state.hpp"
 #include "battery_calib_internal.hpp"
 #include "battery_cutoff.hpp"
+#include "battery_report.hpp"
 #include "battery_calib_log.hpp"
 #include "battery_calib_ui.hpp"
 #include "battery_internal.hpp"
@@ -102,6 +103,7 @@ void ShowReport() {
     struct Facts {
         int full_mah{-1};
         int design_mah{-1};
+        report::Verdict verdict;
         std::vector<Cutoff> cuts;
         bool large{};
         bool low{};
@@ -117,6 +119,7 @@ void ShowReport() {
         facts->design_mah = design / 2;
         facts->large = CapacityHigh(full, design);
         facts->low = CapacityLow(full, design);
+        facts->verdict = report::Judge(full, s.regs[MAX17050_FullCapNom], design);
         facts->model = ModelOf(s);
         std::vector<u8> log;
         if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(LOG_PATH, log)) && !log.empty()) {
@@ -134,11 +137,49 @@ void ShowReport() {
             std::snprintf(v, sizeof(v), "%.2f V", m->zero_mv / 1000.0);
             lines.push_back(cu::Row("The zero (empty battery)"_i18n, v));
         }
-        lines.push_back(cu::Row("Learned capacity"_i18n, std::to_string(facts->full_mah) + " / " + std::to_string(facts->design_mah) + " mAh"));
-        lines.push_back(cu::Row("Verdict"_i18n, facts->large ? "Larger battery is built in."_i18n
-            : facts->low ? "Sign of desync: learned capacity below 90 % of design."_i18n : "Normal: no sign of desync."_i18n));
-        lines.push_back(cu::Head("Gauge before each cut-off"_i18n));
-        // per cycle: how many cut-offs it had, so "cut-off 2/2" reads right
+        // 1. the battery, in plain words: how much it holds against the factory value, what that means, what to do
+        const auto& vd = facts->verdict;
+        lines.push_back(cu::Head("Your battery"_i18n));
+        lines.push_back(cu::Row("Capacity now"_i18n, std::to_string(facts->full_mah) + " mAh"));
+        lines.push_back(cu::Row("Factory capacity"_i18n, std::to_string(facts->design_mah) + " mAh"));
+        if (vd.wear != report::Wear::Unknown) {
+            const auto diff = std::to_string(vd.loss_pct < 0 ? -vd.loss_pct : vd.loss_pct) + " % " +
+                              (vd.loss_pct < 0 ? "above the factory value"_i18n : "below the factory value"_i18n);
+            lines.push_back(cu::Row("Difference"_i18n, vd.loss_pct == 0 ? "none"_i18n : diff));
+        }
+        switch (vd.wear) {
+            case report::Wear::New:
+                lines.push_back(cu::Ok("Like new: the battery holds almost all of its factory capacity."_i18n));
+                lines.push_back(cu::Item("The percent on the screen is honest now. Nothing to do."_i18n));
+                break;
+            case report::Wear::Normal:
+                lines.push_back(cu::Ok("Normal wear: every battery loses a little capacity over the years."_i18n));
+                lines.push_back(cu::Item("The percent on the screen is honest now. Nothing to do."_i18n));
+                break;
+            case report::Wear::Worn:
+                lines.push_back(cu::Warn("Noticeably worn: the battery holds less than it should."_i18n));
+                lines.push_back(cu::Item("The console works, but it runs shorter than a new one. Either the battery is really tired, or a cycle was cut short (the charger came out before 100 %, the console was used hard while it charged)."_i18n));
+                lines.push_back(cu::Item("To tell which: run the calibration again (Actions, Start the calibration over). The same number again means the battery is like that."_i18n));
+                break;
+            case report::Wear::VeryWorn:
+                lines.push_back(cu::Warn("Very low: more than ordinary wear explains."_i18n));
+                lines.push_back(cu::Item("Most likely the calibration went wrong, for example a cycle was cut short. Start it over (Actions, Start the calibration over)."_i18n));
+                lines.push_back(cu::Item("If the result stays this low, the battery is worn out. A new battery is worth considering."_i18n));
+                break;
+            case report::Wear::Larger:
+                lines.push_back(cu::Warn("More than the factory value: this is a bigger battery built in, or a measurement error."_i18n));
+                lines.push_back(cu::Item("If you did not change the battery, start the calibration over (Actions, Start the calibration over)."_i18n));
+                break;
+            case report::Wear::Unknown:
+                lines.push_back(cu::Item("The factory capacity is not known, so there is nothing to compare with."_i18n));
+                break;
+        }
+        if (vd.inconsistent) {
+            lines.push_back(cu::Warn("The gauge holds two different capacities: it did not learn cleanly. Start the calibration over."_i18n));
+        }
+        // 2. the switch-offs
+        lines.push_back(cu::Head("The switch-offs"_i18n));
+        lines.push_back(cu::Item("At a switch-off the gauge should show about 0 %. A higher number means it was off; the calibration corrects that."_i18n));
         const auto& cuts = facts->cuts;
         const size_t first = cuts.size() > 6 ? cuts.size() - 6 : 0;
         for (size_t i = first; i < cuts.size(); i++) {
@@ -154,10 +195,9 @@ void ShowReport() {
             }
             char v[16];
             std::snprintf(v, sizeof(v), "%.2f", c.mv / 1000.0);
-            const auto where = "Cycle"_i18n + " " + std::to_string(c.step);
-            const auto sensor = c.gauge_pct >= 0 ? std::to_string(c.gauge_pct) + " %" : "not measured"_i18n;
-            lines.push_back(cu::Item(where + " · " + "cut-off"_i18n + " " + std::to_string(index) + "/" + std::to_string(total) + ": " + v + " V · " +
-                                     "sensor"_i18n + ": " + sensor));
+            const auto where = "Cycle"_i18n + " " + std::to_string(c.step) + (total > 1 ? " (" + std::to_string(index) + "/" + std::to_string(total) + ")" : std::string{});
+            const auto shown = c.gauge_pct >= 0 ? std::to_string(c.gauge_pct) + " %" : "not measured"_i18n;
+            lines.push_back(cu::Item(where + ": " + "the console switched off at"_i18n + " " + v + " V. " + "The gauge showed"_i18n + " " + shown + "."));
         }
         lines.push_back(cu::Item("Written: calibration on the microSD, copy in this system."_i18n));
         App::Push<cu::Page>("Calibration report"_i18n, StepLabel(4), std::move(lines), "Go on"_i18n, [facts](cu::Page& p) {

@@ -201,6 +201,8 @@ void OnChargeDone() {
     auto m = LoadCurrent();
     if (m && IsCycle(m->step)) {
         StartDrainRun(*m);
+    } else if (m && m->step == Step::Report) {
+        ShowReport(); // both cycles are done: straight to the result
     } else {
         ShowSteps();
     }
@@ -653,7 +655,12 @@ void PollCalibration() {
     const auto m = LoadMarker();
     if (m && m->step != Step::Finished) {
         calib_flow::MeasureCapacityIfFull(); // the charge may have ended while the Hub was closed
-        Resume(*m);
+        if (!Resume(*m)) {
+            const auto now = LoadMarker();
+            if (now && now->step == Step::Report) {
+                ShowReport(); // the calibration is made: the user sees the result without looking for it
+            }
+        }
     }
     ApplyLedger(); // in another system than the one that was calibrated: take the new calibration
 }
