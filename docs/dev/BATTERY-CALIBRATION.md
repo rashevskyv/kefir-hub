@@ -174,6 +174,10 @@ holds, from the start of step 1: the brightness and auto-brightness the user had
 At any Hub start with the charger in, the Hub restores from the marker. If the current brightness differs from the last one the Hub
 set, the user changed it himself (he may have gone to sleep): the Hub leaves the user's value alone.
 
+**Light load before the cut-off (owner, 2026-11-01).** The drain keeps the full load only down to 3.3 V under load (`SOFT_MV`).
+Below it the load goes off for good and the user's brightness and auto-brightness come back, so the console cuts off at a light
+load: under 1 A it cut off at 3.09 V, a voltage sagged by the load, and that is what the zero wrote into V_empty.
+
 **The wizard remembers; the Hub need not stay open (owner, 2026-10-23).** The state of the calibration lives in the marker on the SD
 (which step, which phase, when it began, what the battery showed). The user may close the Hub, use or play on the console, and
 come back later: Tools > "Battery calibration" opens, the Hub sees that a calibration is going on and shows where it is: the steps

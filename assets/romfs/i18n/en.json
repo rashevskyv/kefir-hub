@@ -4017,5 +4017,8 @@
   "Delete the marked files": "Delete the marked files",
   "Delete all shown": "Delete all shown",
   "This cannot be undone.": "This cannot be undone.",
-  "Deleted": "Deleted"
+  "Deleted": "Deleted",
+  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.",
+  "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.",
+  "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."
 }

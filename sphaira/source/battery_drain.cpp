@@ -291,8 +291,15 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     } else if (m_temp <= COOL_C) {
         m_hot = false;
     }
-    // the calibration: full load until the first cut-off (no 35 % gentle mode), none in a charge or in the tail after a cut-off
-    const bool load = m_stop_ask ? false : m_calib ? (!m_charger && !m_docked && !m_hot && !m_calib->charge && !m_calib->tail)
+    if (m_calib && !m_calib->charge && !m_calib->tail && !m_soft && !m_charger && m_mv > 0) {
+        m_soft_n = m_mv <= SOFT_MV ? m_soft_n + 1 : 0;
+        if (m_soft_n >= SOFT_TICKS) {
+            m_soft = true;
+            log_write("[Calib] %d mV under load: the load is off and the user's screen is back until the cut-off\n", m_mv);
+        }
+    }
+    // the calibration: full load down to SOFT_MV (no 35 % gentle mode), none below it, in a charge or in the tail after a cut-off
+    const bool load = m_stop_ask ? false : m_calib ? (!m_charger && !m_docked && !m_hot && !m_calib->charge && !m_calib->tail && !m_soft)
                               : (!m_charger && !m_docked && !m_hot && (charge::HizActive() || !(m_pct >= 0 && m_pct <= GENTLE_PCT)));
     if (load != g_load) {
         log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
@@ -363,12 +370,12 @@ void DrainMenu::ApplyCalibScreen() {
     if (!m_lbl || !m_calib || m_calib->charge || m_saver.IsActive()) {
         return;
     }
-    const int mode = m_charger ? 1 : m_calib->tail ? 2 : 3;
+    const int mode = m_charger ? 1 : m_calib->tail ? 2 : m_soft ? 4 : 3;
     if (mode == m_calib_mode) {
         return;
     }
     m_calib_mode = mode;
-    if (mode == 1) {
+    if (mode == 1 || mode == 4) {
         lblSetCurrentBrightnessSetting(m_saved_brightness);
         if (m_saved_auto) {
             lblEnableAutoBrightnessControl();
@@ -518,6 +525,13 @@ auto DrainMenu::CalibStatus() const -> std::string {
     if (m_hot) {
         return "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n;
     }
+    if (m_soft && !m_calib->tail) {
+        return "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load."_i18n
+            + " " + (charge::HizActive()
+                ? "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub."_i18n
+                : "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n)
+            + " " + "Everything is written to a log."_i18n;
+    }
     if (charge::HizActive()) {
         return "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub. Take the charger out and plug it in again, and the Hub cuts the input once more."_i18n
             + " " + "Everything is written to a log."_i18n;
@@ -531,8 +545,6 @@ auto DrainMenu::CalibStatus() const -> std::string {
 auto DrainMenu::DrainSeconds() const -> u64 {
     return m_calib ? m_run_s : m_state.drain_s[m_cycle - 1];
 }
-
-
 
 namespace {
 std::atomic<bool> g_auto_suppressed{false};

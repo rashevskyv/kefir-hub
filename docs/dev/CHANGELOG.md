@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.272 — Calibration drain: below 3.3 V the load goes off and the user's screen comes back (owner, 2026-11-01)
+The calibration's drain keeps the full load only down to 3.3 V under load (`SOFT_MV`, 5 polls in a row); then the CPU/GPU load is off for good and the brightness and auto-brightness go back to the user's own, so the console cuts off at a light load and the zero is a voltage near the battery's own (the last run cut off at 3.09 V under about 1 A). Log: `[Calib] <mV> under load: the load is off`. Not kept over a Hub restart: the load comes back until 3.3 V again.
+host tests: pass (--quick) | nro: built (0.14.272) | switch: pending (a calibration drain: the load goes off at 3.3 V; the cut-off voltage in the zero)
+
 ## v0.14.271 — ROMS: downloaded files can be selected and deleted, the section is grouped by system; a new Network Tools icon (owner, 2026-11-01)
 Emulators → ROMS is grouped by system (the console table's order): its collections, then `On the card` (`rom_files.*`) which opens the files in `/roms/<console>/` with a filter, X/Y marks, A on a file and START asking to delete (one file, the marked ones or all shown; a folder goes with its content; the question comes first). The Network Tools tile has a flat cyan icon in the style of the others (a globe and a download badge) instead of the dark one with text. Picking single ROMs out of a set was added in 0.14.252 (A on a set in a collection, X/Y, START).
 host tests: pass (--quick) | nro: built (0.14.271) | switch: pending (delete a downloaded set; the system groups)
