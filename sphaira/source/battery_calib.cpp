@@ -360,7 +360,7 @@ void ShowCyclePage() {
     std::string label;
     cu::Page::Act act;
     if (phase == Phase::Drain) {
-        lines.push_back(cu::Check("Charger is out"_i18n, "Take the charger out."_i18n, []() { return !ChargerIn(); }));
+        lines.push_back(cu::Para("The charger can stay in: the Hub cuts its input, so the console drains on the battery. You can also take the charger out."_i18n));
         lines.push_back(cu::Para("Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness."_i18n));
         if (cycle == 1) {
             lines.push_back(cu::Para("The voltage at the moment the console switches off is the real empty battery. When you switch the console on again and open Kefir Hub, the Hub writes it into the gauge as the zero, by itself."_i18n));
@@ -380,14 +380,10 @@ void ShowCyclePage() {
             }
             lines.push_back(cu::Para(std::move(text)));
         }
-        lines.push_back(cu::Para("When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself."_i18n));
+        lines.push_back(cu::Para("When the console switches off, that is normal. Switch it on again, with the charger in, and open Kefir Hub: it opens the charge page by itself. If the charger was out, plug it in first."_i18n));
         lines.push_back(cu::Para("When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %."_i18n));
         label = m->drain_started ? "Open the drain screen"_i18n : "Start the drain"_i18n;
         act = [](cu::Page& p) {
-            if (ChargerIn()) {
-                App::Notify("Take the charger out."_i18n);
-                return;
-            }
             auto cur = LoadCurrent();
             if (!cur || !IsCycle(cur->step)) {
                 return;

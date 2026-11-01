@@ -3656,7 +3656,7 @@
   "Leave the charge page? The calibration remembers where it is.": "Leave the charge page? The calibration remembers where it is.",
   "Stop the drain? The calibration remembers where it is.": "Stop the drain? The calibration remembers where it is.",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.",
-  "The charger is in. The drain is paused. Take the charger out to go on.": "The charger is in. The drain is paused. Take the charger out to go on.",
+  "The charger is in. The Hub cuts its input in a moment: the console then drains on the battery.": "The charger is in. The Hub cuts its input in a moment: the console then drains on the battery.",
   "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.",
   "Everything is written to a log.": "Everything is written to a log.",
@@ -3695,7 +3695,7 @@
   "Take the charger out.": "Take the charger out.",
   "Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.": "Now the Hub drains the battery to the very end, until the console switches itself off. To keep the drain steady, the Hub loads the CPU and the GPU fully and sets the highest brightness.",
   "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.": "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.",
-  "When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself.": "When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself.",
+  "When the console switches off, that is normal. Switch it on again, with the charger in, and open Kefir Hub: it opens the charge page by itself. If the charger was out, plug it in first.": "When the console switches off, that is normal. Switch it on again, with the charger in, and open Kefir Hub: it opens the charge page by itself. If the charger was out, plug it in first.",
   "When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait.": "When it does not start any more: plug in the charger and let it lie on it for a while. It may not start at once. As soon as it starts, open Kefir Hub at once. Do not wait.",
   "In this step keep the Hub open: it needs the log.": "In this step keep the Hub open: it needs the log.",
   "Cycle 1": "Cycle 1",
@@ -3844,8 +3844,8 @@
   "drain after the cut-off": "drain after the cut-off",
   "drain to the cut-off": "drain to the cut-off",
   "the charger is out: the charge is paused. Plug it in to go on.": "the charger is out: the charge is paused. Plug it in to go on.",
-  "charged to 100 %. This was the last cycle: take the charger out, the report follows.": "charged to 100 %. This was the last cycle: take the charger out, the report follows.",
-  "charged to 100 %. Now cycle 2: take the charger out, the drain starts by itself.": "charged to 100 %. Now cycle 2: take the charger out, the drain starts by itself.",
+  "charged to 100 %. The Hub measures the capacity of the battery. This was the last cycle: the report follows.": "charged to 100 %. The Hub measures the capacity of the battery. This was the last cycle: the report follows.",
+  "charged to 100 %. The Hub measures the capacity of the battery. Then cycle 2 starts by itself: the drain, the charger can stay in.": "charged to 100 %. The Hub measures the capacity of the battery. Then cycle 2 starts by itself: the drain, the charger can stay in.",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.",
   "Report": "Report",
   "Transfer": "Transfer",
@@ -3956,5 +3956,7 @@
   "Not enough free space on the install location. Free up space or change the install location.": "Not enough free space on the install location. Free up space or change the install location.",
   "Your keys are missing or outdated. Dump prod.keys again with the latest Lockpick_RCM.": "Your keys are missing or outdated. Dump prod.keys again with the latest Lockpick_RCM.",
   "Failed to decompress the NCZ. Try installing from the SD card or use the USB install script.": "Failed to decompress the NCZ. Try installing from the SD card or use the USB install script.",
-  "No game card was found. Make sure it is inserted correctly.": "No game card was found. Make sure it is inserted correctly."
+  "No game card was found. Make sure it is inserted correctly.": "No game card was found. Make sure it is inserted correctly.",
+  "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub. Take the charger out and plug it in again, and the Hub cuts the input once more.": "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub. Take the charger out and plug it in again, and the Hub cuts the input once more.",
+  "The charger can stay in: the Hub cuts its input, so the console drains on the battery. You can also take the charger out.": "The charger can stay in: the Hub cuts its input, so the console drains on the battery. You can also take the charger out."
 }

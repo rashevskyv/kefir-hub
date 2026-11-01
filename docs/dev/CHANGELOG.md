@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.264 — Battery calibration: the drain runs with the charger left in (its input is cut), the cycle goes on by itself after the capacity is measured
+The calibration's drain cuts the charger's input (bq24193 EN_HIZ) while the charger is plugged in; unplugged: the input is given back; plugged in again: cut again (set again when the plug reset the chip, or when the battery is charged all the same; log lines [Charge]). A full charge with a measured capacity goes on to the next step by itself, the charger may stay in. Not in a dock. host tests: pass (--quick) | nro: not built | switch: pending (the cut-off with the charger in; unplug and plug during the drain; the start after the switch-off)
+
 ## v0.14.263 — From upstream sphaira 1.0.9: Themezer empty search, WebDAV base path, GameCard export errors, error hints (owner, 2026-11-01)
 Taken by hand (no merge): Themezer shows `Empty!` for a search with no result (page count 0 was an error); a WebDAV mount with a base path (`https://host/base`) no longer lists the folder as a child of itself, and an escaped base path is not encoded twice (`webdav_path.hpp`, test `test_webdav_path`); GameCard export reports errors, and the `Continue` callback of the trimmed-card question no longer captures the dead local `do_dump` by reference; the error box explains full storage, missing keys, an NCZ that fails to unpack and an empty card. Already ours: the MTP SendObject trailing-packet fix (libhaze cleanup patch), game export errors, USB error codes. Not taken: Ownfoil queue, game archiving, per-game language, save restore of a zip wrapped in a folder (our restore verifies and stages; needs its own change).
 host tests: pass (--quick) | nro: built (0.14.263) | switch: pending (WebDAV mount with a base path; GameCard dump)

@@ -274,6 +274,7 @@ constexpr const char* HIZ_CUTOFF_RUN = "/config/kefir/battery/hiz_cutoff.run";
 constexpr const char* HIZ_CUTOFF_LOG = "sdmc:/config/kefir/battery/hiz_cutoff.txt";
 
 std::atomic<bool> g_hiz{false};
+bool g_hiz_test = false; // the cut-off test writes hiz_cutoff.txt; the calibration's cut only logs what it must
 std::FILE* g_hiz_log = nullptr;
 int g_hiz_rewrites = 0;
 u64 g_hiz_last_line = 0;
@@ -304,6 +305,7 @@ auto StartCutoffTestIfAsked() -> bool {
     const char note[] = "the charger input is cut for the cut-off test: the Hub puts it back at its start\n";
     sd.write_entire_file(HIZ_FLAG, std::vector<u8>(note, note + sizeof(note) - 1));
     g_hiz = true;
+    g_hiz_test = true;
     g_hiz_rewrites = 0;
     g_hiz_last_line = 0;
     char b[160];
@@ -314,6 +316,24 @@ auto StartCutoffTestIfAsked() -> bool {
     return true;
 }
 
+void HizSet(bool on) {
+    if (on == g_hiz) {
+        return;
+    }
+    if (!on) {
+        log_write("[Charge] the charger input is given back (the charger was unplugged or the drain ended)\n");
+        HizRelease();
+        return;
+    }
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/config/kefir/battery");
+    const char note[] = "the charger input is cut for a drain: the Hub puts it back at its start\n";
+    sd.write_entire_file(HIZ_FLAG, std::vector<u8>(note, note + sizeof(note) - 1));
+    g_hiz = true;
+    g_hiz_rewrites = 0;
+    log_write("[Charge] the charger is in: its input is cut, the console drains on the battery\n");
+}
+
 void HizTick(int mv, int avg_ma, int pct) {
     if (!g_hiz) {
         return;
@@ -322,13 +342,17 @@ void HizTick(int mv, int avg_ma, int pct) {
     const auto r00 = bq.Read(0x00);
     const auto r08 = bq.Read(0x08);
     bool took = false;
-    if (r00 && !(*r00 & 0x80)) { // something took the cut back: it is set again, and counted
+    // something took the cut back (a charger plugged in again resets the chip), or the battery is charged although the bit
+    // looks set: the cut is written again, and counted
+    const bool charging = avg_ma > 100;
+    if (r00 && (!(*r00 & 0x80) || charging)) {
         bq.Write(0x00, static_cast<u8>(*r00 | 0x80));
         g_hiz_rewrites++;
         took = true;
+        log_write("[Charge] the cut was taken back (REG00 %02X, battery %d mA): set again, %d times\n", *r00, avg_ma, g_hiz_rewrites);
     }
     const u64 now = static_cast<u64>(std::time(nullptr));
-    if (took || now >= g_hiz_last_line + 5) {
+    if (g_hiz_test && (took || now >= g_hiz_last_line + 5)) {
         g_hiz_last_line = now;
         char b[200];
         std::snprintf(b, sizeof(b), "%llu vcell=%d mV avg=%d mA psm=%d%% reg00=%02X reg08=%02X rewrites=%d%s\n", static_cast<unsigned long long>(now), mv,
@@ -343,6 +367,7 @@ void HizRelease() {
         g_hiz_log = nullptr;
     }
     g_hiz = false;
+    g_hiz_test = false;
     Bq bq;
     if (const auto r00 = bq.Read(0x00); r00 && (*r00 & 0x80)) {
         const bool ok = bq.Write(0x00, static_cast<u8>(*r00 & 0x7F));

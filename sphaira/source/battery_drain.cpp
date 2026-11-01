@@ -274,10 +274,15 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     // a charging current also means a charger (psm can lag behind a cable plugged in at 0 %)
     const auto avg = g.Current(MAX17050_AvgCurrent);
     m_charger = charger != PsmChargerType_Unconnected || (avg && *avg > CHARGING_MA);
+    // The calibration's drain with the charger left in (owner, 2026-11-01): the charger's input is cut, so the console drains on
+    // the battery. Unplugged: the input is given back and the drain is the old one. Plugged in again: cut again (HizTick also
+    // sets it again when the plug reset the chip). Not in a dock: the dock's power is not ours to cut.
+    if (m_calib && !m_calib->charge) {
+        charge::HizSet(charger != PsmChargerType_Unconnected && appletGetOperationMode() != AppletOperationMode_Console);
+    }
     if (charge::HizActive()) {
-        // the cut-off test: the charger is in but its input is cut, the console lives on the battery
         charge::HizTick(m_mv, avg ? static_cast<int>(*avg) : 0, m_pct);
-        m_charger = false;
+        m_charger = false; // on the battery, whatever the plug says
     }
     UpdateStep();
     m_docked = appletGetOperationMode() == AppletOperationMode_Console;
@@ -450,7 +455,8 @@ void DrainMenu::CalibTick() {
     }
     // the cycle is counted (full after enough drained) and the charger came out: the Hub goes on to the next drain by itself
     const bool counted = m_calib->charge ? m_full_seen : m_step == wizard::DrainStep::CycleCounted;
-    if (counted && !m_charger && m_calib->on_charge_done) {
+    // the charger came out, or (it may stay in now) the capacity of this cycle is measured: on to the next step
+    if (counted && (!m_charger || (m_calib->charge && m_measured)) && m_calib->on_charge_done) {
         const auto done = std::move(m_calib->on_charge_done);
         m_calib->on_charge_done = nullptr;
         CloseCalibLog(); // same: the cycle count reads the log
@@ -492,8 +498,8 @@ auto DrainMenu::CalibStatus() const -> std::string {
             return which + ": " + "the charger is out: the charge is paused. Plug it in to go on."_i18n;
         }
         if (m_pct >= 100) {
-            return which + ": " + (m_calib->step == 2 ? "charged to 100 %. This was the last cycle: take the charger out, the report follows."_i18n
-                                                      : "charged to 100 %. Now cycle 2: take the charger out, the drain starts by itself."_i18n);
+            return which + ": " + (m_calib->step == 2 ? "charged to 100 %. The Hub measures the capacity of the battery. This was the last cycle: the report follows."_i18n
+                                                      : "charged to 100 %. The Hub measures the capacity of the battery. Then cycle 2 starts by itself: the drain, the charger can stay in."_i18n);
         }
         return which + ": " + "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
     }
@@ -504,13 +510,17 @@ auto DrainMenu::CalibStatus() const -> std::string {
         if (m_step == wizard::DrainStep::Charging) {
             return "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself."_i18n;
         }
-        return "The charger is in. The drain is paused. Take the charger out to go on."_i18n;
+        return "The charger is in. The Hub cuts its input in a moment: the console then drains on the battery."_i18n;
     }
     if (m_docked) {
         return "Paused: take the console out of the dock"_i18n;
     }
     if (m_hot) {
         return "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n;
+    }
+    if (charge::HizActive()) {
+        return "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub. Take the charger out and plug it in again, and the Hub cuts the input once more."_i18n
+            + " " + "Everything is written to a log."_i18n;
     }
     return (m_calib->tail
         ? "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum."_i18n

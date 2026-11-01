@@ -28,6 +28,10 @@ void RunHizTestIfAsked();
 // next Hub start, HizStartCheck logs what REG00 and REG08 hold (did the cut survive the switch-off?) and puts the input back.
 auto HizActive() -> bool;
 auto StartCutoffTestIfAsked() -> bool;
+// on/off by the drain page of the calibration: the charger stays in while the console drains; off again when it is unplugged
+void HizSet(bool on);
+// every second while it is active: keeps the cut (set again when something took it back, or when the battery is charged
+// all the same, the log says so) and, in the cut-off test, writes hiz_cutoff.txt
 void HizTick(int mv, int avg_ma, int pct);
 void HizStartCheck();
 void HizRelease(); // the input back, the flag removed, the log closed
