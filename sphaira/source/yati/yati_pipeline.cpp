@@ -87,10 +87,13 @@ void ThreadData::WakeAllThreads() {
 Result ThreadData::Read(void* buf, s64 size, u64* bytes_read) {
     size = std::min<s64>(size, nca->size - read_offset);
     const auto rc = yati->source->Read(buf, nca->offset + read_offset, size, bytes_read);
-    if (R_FAILED(rc) || *bytes_read == 0) {
+    if (R_FAILED(rc) || static_cast<s64>(*bytes_read) != size) {
         log_write("[YATI] ThreadData::Read: off=%ld, size=%ld, read=%lu, rc=0x%X\n", nca->offset + read_offset, size, *bytes_read, rc);
     }
     R_TRY(rc);
+    // every request lies inside the nca, so a short read means the source ended
+    // early (e.g. the pc cancelled an mtp copy), not the end of the nca.
+    R_UNLESS(static_cast<s64>(*bytes_read) == size, Result_StreamUnexpectedEof);
 
     read_offset += *bytes_read;
     return rc;
@@ -131,9 +134,6 @@ Result Yati::readFuncInternal(ThreadData* t) {
         buf.resize(buf_offset + read_size);
         R_TRY(t->Read(buf.data() + buf_offset, read_size, std::addressof(bytes_read)));
         auto buf_size = buf_offset + bytes_read;
-        if (!bytes_read) {
-            break;
-        }
 
         // read enough bytes for ncz, check magic
         if (t->read_offset == NCZ_SECTION_OFFSET) {

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.267 — A cancelled MTP install fails instead of registering a broken game (2026-11-01)
+When the PC cancelled an MTP copy mid-file, the install read thread took the empty read as the end of the NCA, so Hub registered the half-written NCAs, said `success!`, and the game failed to start from HOME. Now every NCA read must return the full size it asked for (`ThreadData::Read`, `Result_StreamUnexpectedEof`): the install fails, the placeholders are deleted, nothing is registered, and the notification says the source stopped sending data. The same check covers every install source (file, USB, HTTP, FTP, game card). No host test: the read path needs libnx.
+host tests: pass (--quick) | nro: not built | switch: pending (cancel an MTP copy of an NSP halfway: no game on HOME, failure toast; then a full copy installs)
+
 ## v0.14.266 — From upstream sphaira 1.0.9: a save zip wrapped in one folder restores; Archive for games (owner, 2026-11-01)
 A save backup zip that holds everything inside one folder (re-zipped by hand) is read and restored as if the folder was not there: only when the meta file is inside that folder and nothing lies outside it (macOS leftovers apart), so a save that really holds one folder is never changed (`save_zip_wrapper.hpp`, test `test_save_zip_wrapper`; the zip filter and the metadata reader share it, our own recovery zip stays on the plain filter). Games → Options → `Archive` removes the content of the selected games and keeps the record, icon and saves (`nsDeleteApplicationEntity`); an archived game shows a cloud on its icon and says so when launched; titles on a game card are left alone. Game Tools gets a `Shops` tile that opens the Ownfoil servers page (it was only in Install & Share and Software). Not taken: the per-game launch language (the game details page already has it).
 host tests: pass (--quick) | nro: built (0.14.266) | switch: pending (restore a zip with a wrapper folder; Archive a small game, launch it, reinstall)
