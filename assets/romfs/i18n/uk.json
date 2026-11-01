@@ -4004,5 +4004,6 @@
   "Cancel the current install?": "Скасувати поточне встановлення?",
   "Remove all waiting": "Прибрати всі, що очікують",
   "Clear finished": "Очистити завершені",
-  "Installs running in the background and waiting their turn.": "Встановлення, що йдуть у фоні й чекають своєї черги."
+  "Installs running in the background and waiting their turn.": "Встановлення, що йдуть у фоні й чекають своєї черги.",
+  "Installs are still running. Exit anyway?": "Встановлення ще тривають. Вийти все одно?"
 }

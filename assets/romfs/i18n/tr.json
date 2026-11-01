@@ -4053,5 +4053,6 @@
   "Clear finished": "Tamamlananları temizle",
   "Cancel the current install?": "Mevcut kurulum iptal edilsin mi?",
   "Remove all waiting": "Tüm beklemeleri kaldır",
-  "Installs running in the background and waiting their turn.": "Arka planda çalışan yüklemeler sırasını bekliyor."
+  "Installs running in the background and waiting their turn.": "Arka planda çalışan yüklemeler sırasını bekliyor.",
+  "Installs are still running. Exit anyway?": "Yüklemeler hâlâ devam ediyor. Yine de çıkılsın mı?"
 }

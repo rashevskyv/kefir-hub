@@ -4058,5 +4058,6 @@
   "Clear finished": "Voltooide wissen",
   "Cancel the current install?": "Huidige installatie annuleren?",
   "Remove all waiting": "Alle wachten verwijderen",
-  "Installs running in the background and waiting their turn.": "Installaties worden op de achtergrond uitgevoerd en wachten op hun beurt."
+  "Installs running in the background and waiting their turn.": "Installaties worden op de achtergrond uitgevoerd en wachten op hun beurt.",
+  "Installs are still running. Exit anyway?": "Installaties zijn nog bezig. Toch afsluiten?"
 }

@@ -4053,5 +4053,6 @@
   "Clear finished": "Kustuta lõpetatud",
   "Cancel the current install?": "Kas tühistada praegune installimine?",
   "Remove all waiting": "Eemalda kõik ootel olevad",
-  "Installs running in the background and waiting their turn.": "Taustal töötavad installid, mis ootavad oma korda."
+  "Installs running in the background and waiting their turn.": "Taustal töötavad installid, mis ootavad oma korda.",
+  "Installs are still running. Exit anyway?": "Installimised on alles pooleli. Kas siiski väljuda?"
 }

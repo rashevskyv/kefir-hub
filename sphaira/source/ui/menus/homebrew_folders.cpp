@@ -185,7 +185,7 @@ void Menu::UpdateActions() {
         } else if (m_folder != hb_folders::ROOT) {
             Enter(hb_folders::ROOT, m_folder);
         } else {
-            App::Exit();
+            App::ConfirmExit();
         }
     }});
 }

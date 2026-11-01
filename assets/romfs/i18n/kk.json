@@ -4053,5 +4053,6 @@
   "Clear finished": "Аяқталғандарды тазарту",
   "Cancel the current install?": "Ағымдағы орнатуды болдырмау?",
   "Remove all waiting": "Барлық күтулерді жою",
-  "Installs running in the background and waiting their turn.": "Фондық режимде орнатулар орындалуда және кезек күтуде."
+  "Installs running in the background and waiting their turn.": "Фондық режимде орнатулар орындалуда және кезек күтуде.",
+  "Installs are still running. Exit anyway?": "Орнату әлі де жүріп жатыр. Сонда да шығу керек пе?"
 }

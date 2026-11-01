@@ -4004,5 +4004,6 @@
   "Cancel the current install?": "Cancel the current install?",
   "Remove all waiting": "Remove all waiting",
   "Clear finished": "Clear finished",
-  "Installs running in the background and waiting their turn.": "Installs running in the background and waiting their turn."
+  "Installs running in the background and waiting their turn.": "Installs running in the background and waiting their turn.",
+  "Installs are still running. Exit anyway?": "Installs are still running. Exit anyway?"
 }

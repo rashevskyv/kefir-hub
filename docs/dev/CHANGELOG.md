@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.269 — Leaving the Hub asks while an install runs or waits (owner, 2026-11-01)
+`App::ConfirmExit` asks `Installs are still running. Exit anyway?` before the exits the user starts (Minus on the main screen, B on the main menu, B at the root of Homebrew) when the install queue is busy or a transfer runs; restarts and launches are not asked.
+host tests: not run (UI only) | nro: built (0.14.269) | switch: pending (start an Ownfoil install, press B on the main menu)
+
 ## v0.14.268 — From upstream sphaira 1.0.9: an install queue for Ownfoil (owner, 2026-11-01)
 Titles installed from Ownfoil go through `InstallQueue` (`ui/install_queue.*`): one install runs at a time as the app's transfer box (R3 puts it in the corner badge), the next ones wait and start by themselves; Options → `Install queue` lists them (remove a waiting one, cancel the running one, clear the finished). Built on our `App::PushTransfer`, not on upstream's `Detach` of the box. A finished or failed install reports from the queue (a failure in the badge is a notice with the code), and the Ownfoil catalog asks the console again.
 host tests: pass (--quick) | nro: built (0.14.268) | switch: pending (install two titles in a row from Ownfoil; R3 during the first; cancel the running one)

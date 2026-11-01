@@ -4059,5 +4059,6 @@
   "Clear finished": "Effacer les terminés",
   "Cancel the current install?": "Annuler l'installation en cours ?",
   "Remove all waiting": "Supprimer toutes les attentes",
-  "Installs running in the background and waiting their turn.": "Installations en cours en arrière-plan et en attente."
+  "Installs running in the background and waiting their turn.": "Installations en cours en arrière-plan et en attente.",
+  "Installs are still running. Exit anyway?": "Des installations sont en cours. Quitter quand même ?"
 }

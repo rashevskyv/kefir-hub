@@ -4053,5 +4053,6 @@
   "Clear finished": "Bersihkan yang selesai",
   "Cancel the current install?": "Batalkan instalasi saat ini?",
   "Remove all waiting": "Hapus semua antrean",
-  "Installs running in the background and waiting their turn.": "Pemasangan berjalan di latar belakang dan menunggu giliran."
+  "Installs running in the background and waiting their turn.": "Pemasangan berjalan di latar belakang dan menunggu giliran.",
+  "Installs are still running. Exit anyway?": "Pemasangan masih berjalan. Tetap keluar?"
 }

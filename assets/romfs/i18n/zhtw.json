@@ -4111,5 +4111,6 @@
   "Clear finished": "清除已完成",
   "Cancel the current install?": "要取消目前的安裝嗎？",
   "Remove all waiting": "移除所有等待",
-  "Installs running in the background and waiting their turn.": "正在背景執行安裝並等待排隊。"
+  "Installs running in the background and waiting their turn.": "正在背景執行安裝並等待排隊。",
+  "Installs are still running. Exit anyway?": "安裝仍在進行中。確定要退出嗎？"
 }

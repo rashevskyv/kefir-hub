@@ -55,6 +55,8 @@ public:
     static App* GetApp();
 
     static void Exit();
+    // Exit() after a question when an install runs or waits: leaving mid install can leave half installed content behind.
+    static void ConfirmExit();
     static void ExitRestart();
     static auto IsExiting() -> bool;
     static auto GetVg() -> NVGcontext*;

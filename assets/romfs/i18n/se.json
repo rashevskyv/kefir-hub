@@ -4058,5 +4058,6 @@
   "Clear finished": "Rensa slutförda",
   "Cancel the current install?": "Avbryt aktuell installation?",
   "Remove all waiting": "Ta bort alla väntande",
-  "Installs running in the background and waiting their turn.": "Installationer körs i bakgrunden och väntar på sin tur."
+  "Installs running in the background and waiting their turn.": "Installationer körs i bakgrunden och väntar på sin tur.",
+  "Installs are still running. Exit anyway?": "Installationer körs fortfarande. Avsluta ändå?"
 }

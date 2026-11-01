@@ -4053,5 +4053,6 @@
   "Clear finished": "Notīrīt pabeigtos",
   "Cancel the current install?": "Atcelt pašreizējo instalēšanu?",
   "Remove all waiting": "Noņemt visas gaidīšanas",
-  "Installs running in the background and waiting their turn.": "Instalēšana notiek fonā un gaida savu kārtu."
+  "Installs running in the background and waiting their turn.": "Instalēšana notiek fonā un gaida savu kārtu.",
+  "Installs are still running. Exit anyway?": "Instalēšana joprojām notiek. Vai tomēr iziet?"
 }

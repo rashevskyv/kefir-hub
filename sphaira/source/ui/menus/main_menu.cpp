@@ -325,7 +325,7 @@ void MainMenu::UpdateBackAction() {
             SwitchTo(m_centre_menu.get());
         }});
     } else {
-        SetAction(Button::B, Action{"Exit"_i18n, App::Exit});
+        SetAction(Button::B, Action{"Exit"_i18n, App::ConfirmExit});
     }
 }
 

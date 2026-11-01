@@ -4053,5 +4053,6 @@
   "Clear finished": "Ачысціць завершаныя",
   "Cancel the current install?": "Скасаваць бягучую ўстаноўку?",
   "Remove all waiting": "Выдаліць усё чаканне",
-  "Installs running in the background and waiting their turn.": "Устаноўкі выконваюцца ў фонавым рэжыме і чакаюць сваёй чаргі."
+  "Installs running in the background and waiting their turn.": "Устаноўкі выконваюцца ў фонавым рэжыме і чакаюць сваёй чаргі.",
+  "Installs are still running. Exit anyway?": "Усталёўка яшчэ ідзе. Выйсці ўсё роўна?"
 }

@@ -4058,5 +4058,6 @@
   "Clear finished": "完了済みをクリア",
   "Cancel the current install?": "現在のインストールをキャンセルしますか？",
   "Remove all waiting": "待機中をすべて削除",
-  "Installs running in the background and waiting their turn.": "バックグラウンドでインストールを実行中、順番待ちしています。"
+  "Installs running in the background and waiting their turn.": "バックグラウンドでインストールを実行中、順番待ちしています。",
+  "Installs are still running. Exit anyway?": "インストールを実行中です。終了しますか？"
 }

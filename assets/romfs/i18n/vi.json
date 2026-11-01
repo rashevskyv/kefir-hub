@@ -4058,5 +4058,6 @@
   "Clear finished": "Xóa đã hoàn thành",
   "Cancel the current install?": "Hủy cài đặt hiện tại?",
   "Remove all waiting": "Xóa tất cả đang chờ",
-  "Installs running in the background and waiting their turn.": "Quá trình cài đặt đang chạy ngầm và đang chờ đến lượt."
+  "Installs running in the background and waiting their turn.": "Quá trình cài đặt đang chạy ngầm và đang chờ đến lượt.",
+  "Installs are still running. Exit anyway?": "Quá trình cài đặt vẫn đang chạy. Vẫn thoát chứ?"
 }

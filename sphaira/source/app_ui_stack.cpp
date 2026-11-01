@@ -4,6 +4,9 @@
 #include "net.hpp"
 #include "ui/error_box.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/option_box.hpp"
+#include "ui/install_queue.hpp"
+#include "i18n.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/menus/main_menu.hpp"
 #include "title_info.hpp"
@@ -94,9 +97,22 @@ auto App::OpenMainScreen() -> void {
     g_app->m_widgets.front()->OpenMainScreen();
 }
 
+auto App::ConfirmExit() -> void {
+    if (!ui::InstallQueue::Get().IsBusy() && !App::HasActiveTransfer()) {
+        App::Exit();
+        return;
+    }
+
+    App::Push<ui::OptionBox>("Installs are still running. Exit anyway?"_i18n, "No"_i18n, "Yes"_i18n, 0, [](auto op_index){
+        if (op_index && *op_index) {
+            App::Exit();
+        }
+    });
+}
+
 auto App::HandleMinus() -> void {
     if (IsMainScreen()) {
-        App::Exit();
+        App::ConfirmExit();
     } else {
         OpenMainScreen();
     }
