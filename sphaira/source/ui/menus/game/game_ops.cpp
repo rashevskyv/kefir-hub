@@ -43,6 +43,39 @@ void Menu::CreateContentsFolders() {
     App::Notify(std::to_string(created) + " " + "mods folder(s) ready"_i18n);
 }
 
+// removes the content of each selected game but keeps its record, icon and saves, same as the system's "Archive Software".
+void Menu::ArchiveGames() {
+    App::Push<ProgressBox>(0, "Archiving"_i18n, "", [this](auto pbox) -> Result {
+        auto targets = GetSelectedEntries();
+
+        for (s64 i = 0; i < std::size(targets); i++) {
+            auto& e = targets[i];
+
+            // the selection may not have been drawn yet. nothing installed covers archived titles and game card only ones.
+            LoadContentState(e);
+            if (!e.installed) {
+                continue;
+            }
+
+            LoadControlEntry(e);
+            pbox->SetTitle(e.GetName());
+            pbox->UpdateTransfer(i + 1, std::size(targets));
+            R_TRY(nsDeleteApplicationEntity(e.app_id));
+        }
+
+        R_SUCCEED();
+    }, [this](Result rc){
+        App::PushErrorBox(rc, "Archive failed!"_i18n);
+
+        ClearSelection();
+        m_dirty = true;
+
+        if (R_SUCCEEDED(rc)) {
+            App::Notify("Archive successful!"_i18n);
+        }
+    });
+}
+
 void Menu::DeleteGames(bool with_mods) {
     App::Push<ProgressBox>(0, "Deleting"_i18n, "", [this, with_mods](auto pbox) -> Result {
         auto targets = GetSelectedEntries();

@@ -6,6 +6,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "ui/menus/kefir_menu.hpp"
+#include "ui/menus/ownfoil.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_hub_menu.hpp"
 #include "ui/menus/settings_menu.hpp"
@@ -58,6 +59,10 @@ constexpr const u8 ICON_CHEATS[]{
 
 constexpr const u8 ICON_EMULATORS[]{
     #embed <icons/emulators.png>
+};
+
+constexpr const u8 ICON_SHOPS[]{
+    #embed <icons/shops.png>
 };
 
 constexpr const u8 ICON_FILE_BROWSER[]{
@@ -322,6 +327,9 @@ GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
         { "Emulators"_i18n, "BIOS and ROM files for the installed emulators."_i18n, 0, [](){
             bios::OpenEmulatorsPage();
         }},
+        { "Shops"_i18n, "Browse and install titles from Ownfoil-compatible shop servers."_i18n, 0, [](){
+            App::Push<ui::menu::ownfoil::Menu>(MenuFlag_None);
+        }},
     };
 
     this->SetActions(
@@ -381,6 +389,7 @@ void GameToolsMenu::LoadIcons() {
         { ICON_SAVES, sizeof(ICON_SAVES) },
         { ICON_CHEATS, sizeof(ICON_CHEATS) },
         { ICON_EMULATORS, sizeof(ICON_EMULATORS) },
+        { ICON_SHOPS, sizeof(ICON_SHOPS) },
     };
     const auto count = std::min(m_items.size(), std::size(icons));
     for (std::size_t i = 0; i < count; ++i) {

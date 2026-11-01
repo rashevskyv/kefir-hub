@@ -307,6 +307,25 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     );
                 }, "Manually create save data entries for all selected games."_i18n)->SetIcon(ActionIcon::Save);
 
+                // removes the content but keeps the record, icon and saves.
+                auto archive = options->Add<SidebarEntryCallback>("Archive"_i18n, [this](){
+                    const auto targets = GetSelectedEntries();
+                    const auto buf = targets.size() == 1
+                        ? "Are you sure you want to archive "_i18n + targets.front().GetName() + "?"
+                        : "Are you sure you want to archive the selected games?"_i18n;
+                    App::Push<OptionBox>(buf, "Back"_i18n, "Archive"_i18n, 0, [this](auto op_index){
+                        if (op_index && *op_index) {
+                            ArchiveGames();
+                        }
+                    }, targets.front().image);
+                }, true, "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again."_i18n);
+                archive->SetIcon(ActionIcon::Delete);
+
+                // with a selection, the titles with nothing installed are skipped.
+                if (targets.size() == 1 && targets.front().IsArchived()) {
+                    archive->Depends([]{ return false; }, "This game is already archived."_i18n);
+                }
+
                 // completely deletes the application record and all data.
                 options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
                     const auto targets = GetSelectedEntries();
@@ -425,6 +444,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     const int image_load_max = 2;
     int image_load_count = 0;
     int summary_load_count = 0;
+    int content_load_count = 0;
 
     // LoadGameSummary() is ns/ncm i/o and it runs here, on the render thread,
     // one entry per frame until every row has been sized. While a transfer has
@@ -433,8 +453,14 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     // not urgent - they resume once the transfer ends.
     const bool storage_busy = App::GetProgressActive();
 
-    m_list->Draw(vg, theme, m_entries.size(), m_index, [this, storage_busy, &image_load_count, &summary_load_count](auto* vg, auto* theme, auto v, auto pos) {
+    m_list->Draw(vg, theme, m_entries.size(), m_index, [this, storage_busy, &image_load_count, &summary_load_count, &content_load_count](auto* vg, auto* theme, auto v, auto pos) {
         auto& e = m_entries[pos];
+
+        // the archived state, a few entries a frame
+        if (!e.content_loaded && content_load_count < 4) {
+            LoadContentState(e);
+            content_load_count++;
+        }
 
         if (e.status == title::NacpLoadStatus::None) {
             title::PushAsync(e.app_id);
@@ -482,6 +508,17 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
         }
         if (e.on_gamecard) {
             DrawGameCardOutline(vg, cover_v);
+        }
+        // an archived title: the home menu's own cloud, in the same corner
+        if (e.IsArchived()) {
+            const auto r = image_v.w * 0.13f;
+            const auto cx = image_v.x + image_v.w - r - 6;
+            const auto cy = image_v.y + image_v.h - r - 6;
+            nvgBeginPath(vg);
+            nvgCircle(vg, cx, cy, r);
+            nvgFillColor(vg, nvgRGBA(0, 0, 0, 170));
+            nvgFill(vg);
+            gfx::drawCloud(vg, cx, cy, r * 1.25f, nvgRGB(255, 255, 255));
         }
         if (layout == grid::LayoutType_List) {
             DrawListBadges(vg, v, e, !list_info.empty());

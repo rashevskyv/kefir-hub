@@ -80,10 +80,13 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         return true;
     };
 
+    // a zip with everything in one folder is restored as if the folder was not there
+    const auto source_filter = MakeSaveZipFilter(DetectSaveZipWrapper(zfile));
+
     thread::UnzipPayloadSummary summary{};
     thread::UnzipPayloadInventory source_inventory{};
     pbox->NewTransfer("Validating save..."_i18n);
-    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", save_filter, true, &summary, &source_inventory, allow_empty));
+    R_TRY(thread::TransferUnzipPreflight(pbox, zfile, "/", source_filter, true, &summary, &source_inventory, allow_empty));
     log_write("save preflight payload: %lld bytes, %lld files, %lld dirs\n",
         static_cast<long long>(summary.file_bytes),
         static_cast<long long>(summary.file_count),
@@ -452,7 +455,7 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         pbox->NewTransfer("Restoring save..."_i18n);
         const s64 target_journal_size = live.journal_size;
         if (!allow_empty || !source_inventory.files.empty() || !source_inventory.directories.empty()) {
-            R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", save_filter, thread::Mode::SingleThreadedIfSmaller, true, true, target_journal_size));
+            R_TRY(thread::TransferUnzipAll(pbox, zfile, &save_fs, "/", source_filter, thread::Mode::SingleThreadedIfSmaller, true, true, target_journal_size));
         }
 
         R_TRY(save_fs.Commit());
@@ -483,9 +486,9 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
         fs::FsNativeSave ro_save_fs{(FsSaveDataType)attr.save_data_type, save_data_space_id, &attr, true};
         R_TRY(ro_save_fs.GetFsOpenResult());
         if (allow_empty) {
-            R_TRY(thread::VerifyArchiveAgainstNative(pbox, zfile, &ro_save_fs, "/", source_inventory, save_filter, true, allow_empty));
+            R_TRY(thread::VerifyArchiveAgainstNative(pbox, zfile, &ro_save_fs, "/", source_inventory, source_filter, true, allow_empty));
         } else {
-            R_TRY(thread::VerifyArchiveAgainstNative(pbox, zfile, &ro_save_fs, "/", source_inventory, save_filter, true));
+            R_TRY(thread::VerifyArchiveAgainstNative(pbox, zfile, &ro_save_fs, "/", source_inventory, source_filter, true));
         }
     }
 

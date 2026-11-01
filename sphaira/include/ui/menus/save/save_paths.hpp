@@ -4,6 +4,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/save/save_bundle_util.hpp"
 #include "fs.hpp"
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -104,6 +105,10 @@ struct DecodedSaveMetadata {
     std::string account_name{}; // "Account=" of .dbi_save_info.ini, see path::IniAccountName()
 };
 
+// the wrapper folder of a zip whose whole content is inside one folder ("MyBackup/"), or empty (save_zip_wrapper.hpp)
+auto DetectSaveZipWrapper(void* zfile) -> std::string;
+// the name filter of a save zip: skips the reserved meta files and, in a wrapped zip, the entries outside the folder; names lose the folder
+auto MakeSaveZipFilter(std::string wrapper) -> std::function<bool(const fs::FsPath&, fs::FsPath&)>;
 auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMetadata& out, Result* out_rc = nullptr) -> ArchiveMetaStatus;
 
 

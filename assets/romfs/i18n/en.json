@@ -3982,5 +3982,16 @@
   "The switch-offs": "The switch-offs",
   "At a switch-off the gauge should show about 0 %. A higher number means it was off; the calibration corrects that.": "At a switch-off the gauge should show about 0 %. A higher number means it was off; the calibration corrects that.",
   "the console switched off at": "the console switched off at",
-  "The gauge showed": "The gauge showed"
+  "The gauge showed": "The gauge showed",
+  "Archive": "Archive",
+  "Archiving": "Archiving",
+  "Archive failed!": "Archive failed!",
+  "Archive successful!": "Archive successful!",
+  "Are you sure you want to archive ": "Are you sure you want to archive ",
+  "Are you sure you want to archive the selected games?": "Are you sure you want to archive the selected games?",
+  "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.",
+  "This game is already archived.": "This game is already archived.",
+  "This game is archived, it must be reinstalled before it can be played.": "This game is archived, it must be reinstalled before it can be played.",
+  "Shops": "Shops",
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Browse and install titles from Ownfoil-compatible shop servers."
 }

@@ -7,6 +7,7 @@
 #include "i18n.hpp"
 #include "image.hpp"
 #include "ui/error_box.hpp"
+#include "ui/option_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/menus/game_list_info.hpp"
 #include "ui/menus/grid_menu_base.hpp"
@@ -147,7 +148,25 @@ void FreeEntry(NVGcontext* vg, Entry& e) {
     e.image = 0;
 }
 
+void LoadContentState(Entry& e) {
+    if (R_FAILED(nsIsAnyApplicationEntityInstalled(e.app_id, &e.installed))) {
+        e.installed = true;
+    }
+    e.content_loaded = true;
+}
+
 void LaunchEntry(const Entry& e) {
+    // asked again rather than trusting the list: the game may have been reinstalled since.
+    auto state = e;
+    LoadContentState(state);
+    if (state.IsArchived()) {
+        App::Push<ui::OptionBox>(
+            std::string(e.GetName()) + "\n\n" + "This game is archived, it must be reinstalled before it can be played."_i18n,
+            "OK"_i18n, [](auto){}, e.image
+        );
+        return;
+    }
+
     const auto rc = appletRequestLaunchApplication(e.app_id, nullptr);
     Notify(rc, "Failed to launch application");
 }

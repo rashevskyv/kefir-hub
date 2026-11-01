@@ -3982,5 +3982,16 @@
   "The switch-offs": "Вимкнення",
   "At a switch-off the gauge should show about 0 %. A higher number means it was off; the calibration corrects that.": "Під час вимкнення датчик заряду має показувати близько 0 %. Більше число означає, що він помилявся; калібрування це виправляє.",
   "the console switched off at": "консоль вимкнулась при",
-  "The gauge showed": "Датчик заряду показував"
+  "The gauge showed": "Датчик заряду показував",
+  "Archive": "Архівувати",
+  "Archiving": "Архівування",
+  "Archive failed!": "Помилка архівування!",
+  "Archive successful!": "Архівування успішне!",
+  "Are you sure you want to archive ": "Ви впевнені, що хочете архівувати ",
+  "Are you sure you want to archive the selected games?": "Ви впевнені, що хочете архівувати вибрані ігри?",
+  "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Звільняє місце, яке займають гра, її оновлення та DLC. Гра залишається у списку разом зі збереженнями, перевстановіть її, щоб знову грати.",
+  "This game is already archived.": "Цю гру вже архівовано.",
+  "This game is archived, it must be reinstalled before it can be played.": "Цю гру архівовано, її потрібно перевстановити, перш ніж у неї можна буде грати.",
+  "Shops": "Магазини",
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Перегляд і встановлення ігор із серверів-магазинів, сумісних з Ownfoil."
 }

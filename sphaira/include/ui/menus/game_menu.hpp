@@ -26,6 +26,10 @@ struct Entry {
     // this title.
     bool layeredfs{};
     bool on_gamecard{};
+    // set once the entry is first drawn: asking ns costs an ipc call per entry.
+    bool content_loaded{};
+    // some content is installed. false for an archived title (see ArchiveGames).
+    bool installed{true};
     u32 content_flags{};
     u64 nand_size{};
     u64 sd_size{};
@@ -39,6 +43,12 @@ struct Entry {
 
     auto GetName() const -> const char* {
         return lang.name;
+    }
+
+    // the record is kept but no content is installed, like the system's "Archive Software".
+    // a game card title with nothing installed is not archived, it plays from its card.
+    auto IsArchived() const -> bool {
+        return content_loaded && !installed && !on_gamecard;
     }
 
     auto GetAuthor() const -> const char* {
@@ -112,6 +122,7 @@ private:
     }
 
     void DeleteGames(bool with_mods);
+    void ArchiveGames();
     void DumpGames(u32 flags);
     void DumpEntries(std::vector<Entry> targets, u32 flags, bool clear_selection);
     void CreateRepack(Entry entry, u32 flags);

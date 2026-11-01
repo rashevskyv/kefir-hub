@@ -35,6 +35,7 @@ Result GetMetaEntries(const Entry& e, title::MetaEntries& out, u32 flags = title
 bool LoadControlImage(Entry& e, title::ThreadResultData* result);
 void LoadResultIntoEntry(Entry& e, title::ThreadResultData* result);
 void LoadControlEntry(Entry& e, bool force_image_load = false);
+void LoadContentState(Entry& e);
 Result BuildNspEntries(Entry& e, u32 flags, std::vector<NspEntry>& out);
 void FreeEntry(NVGcontext* vg, Entry& e);
 void LaunchEntry(const Entry& e);

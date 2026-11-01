@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.266 — From upstream sphaira 1.0.9: a save zip wrapped in one folder restores; Archive for games (owner, 2026-11-01)
+A save backup zip that holds everything inside one folder (re-zipped by hand) is read and restored as if the folder was not there: only when the meta file is inside that folder and nothing lies outside it (macOS leftovers apart), so a save that really holds one folder is never changed (`save_zip_wrapper.hpp`, test `test_save_zip_wrapper`; the zip filter and the metadata reader share it, our own recovery zip stays on the plain filter). Games → Options → `Archive` removes the content of the selected games and keeps the record, icon and saves (`nsDeleteApplicationEntity`); an archived game shows a cloud on its icon and says so when launched; titles on a game card are left alone. Game Tools gets a `Shops` tile that opens the Ownfoil servers page (it was only in Install & Share and Software). Not taken: the per-game launch language (the game details page already has it).
+host tests: pass (--quick) | nro: built (0.14.266) | switch: pending (restore a zip with a wrapper folder; Archive a small game, launch it, reinstall)
+
 ## v0.14.265 — Battery calibration: the report in plain words (capacity against the factory value, what it means, what to do), it opens by itself; bigger road map ticks
 The report says how many percent the battery is below or above the factory capacity, Like new / Normal wear / Noticeably worn / Very low / Larger, with the reasons and the choices (start over, a new battery). The switch-offs are told in a sentence each. The report opens at the Hub start when both cycles are done, and right after the last charge. The road map's dots and ticks are twice as big. host tests: pass (--quick) | nro: not built | switch: pending
 

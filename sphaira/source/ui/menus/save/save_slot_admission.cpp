@@ -96,9 +96,7 @@ auto InspectSaveArchiveAdmission(
         return true;
     };
 
-    const auto save_filter = [](const fs::FsPath& name, fs::FsPath& /*path*/) -> bool {
-        return !IsSaveReservedMetadataRoot(name.s);
-    };
+    const auto save_filter = MakeSaveZipFilter(DetectSaveZipWrapper(zfile));
 
     thread::UnzipPayloadSummary summary{};
     thread::UnzipPayloadInventory inventory{};

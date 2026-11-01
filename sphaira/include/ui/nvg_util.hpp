@@ -41,6 +41,9 @@ void drawUsbIcon(NVGcontext*, float x, float y, float size, const NVGcolor& colo
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGcolor& c);
 void drawTriangle(NVGcontext*, float aX, float aY, float bX, float bY, float cX, float cY, const NVGpaint& p);
 
+// a cloud centred on cx,cy, w wide. the font has no cloud glyph.
+void drawCloud(NVGcontext* vg, float cx, float cy, float w, const NVGcolor& c);
+
 void drawText(NVGcontext*, float x, float y, float size, const char* str, const char* end, int align, const NVGcolor& c);
 void drawText(NVGcontext*, float x, float y, float size, const NVGcolor& c, const char* str, int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP, const char* end = nullptr);
 void drawText(NVGcontext*, const Vec2& v, float size, const char* str, const char* end, int align, const NVGcolor& c);

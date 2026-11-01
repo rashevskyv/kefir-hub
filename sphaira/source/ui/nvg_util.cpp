@@ -327,6 +327,20 @@ void drawCheckbox(NVGcontext* vg, const Theme* theme, float x, float y, float si
     drawText(vg, cx, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
 }
 
+void drawCloud(NVGcontext* vg, float cx, float cy, float w, const NVGcolor& c) {
+    const auto h = w * 0.62f;
+    const auto base_h = h * 0.5f;
+    const auto base_y = cy + h / 2 - base_h;
+
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, cx - w / 2, base_y, w, base_h, base_h / 2);
+    nvgCircle(vg, cx - w * 0.2f, base_y + base_h * 0.15f, w * 0.2f);
+    nvgCircle(vg, cx + w * 0.06f, cy - h / 2 + w * 0.27f, w * 0.27f);
+    nvgCircle(vg, cx + w * 0.3f, base_y + base_h * 0.3f, w * 0.17f);
+    nvgFillColor(vg, c);
+    nvgFill(vg);
+}
+
 void drawText(NVGcontext* vg, float x, float y, float size, const char* str, const char* end, int align, const NVGcolor& c) {
     drawTextIntenal(vg, {x,y}, size, str, end, align, c);
 }

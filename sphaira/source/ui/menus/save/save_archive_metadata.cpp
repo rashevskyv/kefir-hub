@@ -3,11 +3,62 @@
 #include "path_util.hpp"
 #include "defines.hpp"
 #include "ui/progress_box.hpp"
+#include "save_zip_wrapper.hpp"
+#include "log.hpp"
 #include <minizip/unzip.h>
 #include <cstring>
 #include <limits>
 
 namespace sphaira::ui::menu::save {
+
+auto DetectSaveZipWrapper(void* zfile) -> std::string {
+    unz_global_info64 ginfo{};
+    if (!zfile || UNZ_OK != unzGetGlobalInfo64(zfile, &ginfo) || ginfo.number_entry == 0 || ginfo.number_entry > 100000 ||
+        UNZ_OK != unzGoToFirstFile(zfile)) {
+        return {};
+    }
+
+    std::vector<std::string> names;
+    names.reserve(static_cast<size_t>(ginfo.number_entry));
+    for (u64 i = 0; i < ginfo.number_entry; i++) {
+        if (i > 0 && UNZ_OK != unzGoToNextFile(zfile)) {
+            names.clear();
+            break;
+        }
+        unz_file_info64 info{};
+        char name_buf[sizeof(fs::FsPath)]{};
+        if (UNZ_OK != unzGetCurrentFileInfo64(zfile, &info, name_buf, sizeof(name_buf), nullptr, 0, nullptr, 0)) {
+            names.clear();
+            break;
+        }
+        names.emplace_back(name_buf);
+    }
+    unzGoToFirstFile(zfile);
+
+    const std::vector<std::string_view> root_meta{NX_SAVE_META_NAME, DBI_SAVE_EXTRA_NAME, DBI_SAVE_INFO_NAME};
+    return savezip::DetectWrapperPrefix(names, NX_SAVE_META_NAME, root_meta);
+}
+
+auto MakeSaveZipFilter(std::string wrapper) -> std::function<bool(const fs::FsPath&, fs::FsPath&)> {
+    return [wrapper = std::move(wrapper)](const fs::FsPath& name, fs::FsPath& path) -> bool {
+        std::string_view rel{name.s};
+        if (!wrapper.empty()) {
+            const auto inner = savezip::StripWrapper(rel, wrapper);
+            if (!inner) {
+                return false; // the folder itself, or outside it
+            }
+            rel = *inner;
+            path = fs::AppendPath("/", std::string{rel}.c_str());
+        }
+
+        // skip restoring the reserved meta files (sphaira and dbi).
+        if (IsSaveReservedMetadataRoot(rel)) {
+            log_write("skipping meta\n");
+            return false;
+        }
+        return true;
+    };
+}
 
 auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMetadata& out, Result* out_rc) -> ArchiveMetaStatus {
     out = DecodedSaveMetadata{};
@@ -42,6 +93,9 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
         return ArchiveMetaStatus::Invalid;
     }
     const auto entry_count = static_cast<s64>(ginfo.number_entry);
+
+    // a zip with everything in one folder is read as if the folder was not there (DetectSaveZipWrapper)
+    const auto wrapper = DetectSaveZipWrapper(zfile);
 
     if (UNZ_OK != unzGoToFirstFile(zfile)) {
         if (out_rc) *out_rc = Result_UnzGoToFirstFile;
@@ -147,6 +201,15 @@ auto ReadArchiveSaveMetadata(void* zfile, ui::ProgressBox* pbox, DecodedSaveMeta
             while (clean_view.size() > 1 && clean_view.back() == '/') {
                 clean_view.remove_suffix(1);
             }
+        }
+
+        if (!wrapper.empty()) {
+            // the folder itself and the entries outside it (macOS leftovers) are not part of the save
+            const auto inner = savezip::StripWrapper(clean_view, wrapper);
+            if (!inner) {
+                continue;
+            }
+            clean_view = *inner;
         }
 
         // Check if reserved metadata root is used as a parent directory for payload
