@@ -3993,5 +3993,16 @@
   "This game is already archived.": "Цю гру вже архівовано.",
   "This game is archived, it must be reinstalled before it can be played.": "Цю гру архівовано, її потрібно перевстановити, перш ніж у неї можна буде грати.",
   "Shops": "Магазини",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Перегляд і встановлення ігор із серверів-магазинів, сумісних з Ownfoil."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Перегляд і встановлення ігор із серверів-магазинів, сумісних з Ownfoil.",
+  "Queued ": "У черзі: ",
+  "Nothing queued": "Черга порожня",
+  "Titles you install from Ownfoil appear here.": "Тут з'являються ігри, які ви встановлюєте з Ownfoil.",
+  "Show its progress. R3 puts it back in the corner.": "Показати прогрес. R3 повертає його в куток.",
+  "Remove it from the queue.": "Прибрати з черги.",
+  "Error": "Помилка",
+  "Cancel current install": "Скасувати поточне встановлення",
+  "Cancel the current install?": "Скасувати поточне встановлення?",
+  "Remove all waiting": "Прибрати всі, що очікують",
+  "Clear finished": "Очистити завершені",
+  "Installs running in the background and waiting their turn.": "Встановлення, що йдуть у фоні й чекають своєї черги."
 }

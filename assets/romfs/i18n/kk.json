@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Таңдалған ойындарды архивтеуге сенімдісіз бе?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Ойын, оның жаңартулары мен DLC алатын орынды босатады. Ойын сақталған деректерімен тізімде қалады, қайта ойнау үшін оны қайта орнатыңыз.",
   "Shops": "Дүкендер",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil үйлесімді дүкен серверлерінен атауларды шолу және орнатуу."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil үйлесімді дүкен серверлерінен атауларды шолу және орнатуу.",
+  "Error": "Қате",
+  "Nothing queued": "Кезекте ештеңе жоқ",
+  "Remove it from the queue.": "Кезекten шығару.",
+  "Queued ": "Кезекте ",
+  "Show its progress. R3 puts it back in the corner.": "Прогресін көрсету. R3 оны бұрышқа қайтарады.",
+  "Titles you install from Ownfoil appear here.": "Ownfoil арқылы орнатқан атаулар осында пайда болады.",
+  "Cancel current install": "Ағымдағы орнатуды болдырмау",
+  "Clear finished": "Аяқталғандарды тазарту",
+  "Cancel the current install?": "Ағымдағы орнатуды болдырмау?",
+  "Remove all waiting": "Барлық күтулерді жою",
+  "Installs running in the background and waiting their turn.": "Фондық режимде орнатулар орындалуда және кезек күтуде."
 }

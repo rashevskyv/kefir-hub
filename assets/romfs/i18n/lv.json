@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Vai tiešām vēlaties arhivēt atlasītās spēles?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Atbrīvo vietu, ko aizņem spēle, tās atjauninājumi un DLC. Spēle paliek sarakstā kopā ar saglabāšanas datiem, pārinstalējiet to, lai spēlētu vēlreiz.",
   "Shops": "Veikali",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Pārlūkojiet un instalējiet nosaukumus no Ownfoil saderīgiem veikala serveriem."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Pārlūkojiet un instalējiet nosaukumus no Ownfoil saderīgiem veikala serveriem.",
+  "Error": "Kļūda",
+  "Nothing queued": "Rindā nekā nav",
+  "Remove it from the queue.": "Noņemt no rindas.",
+  "Queued ": "Rindā ",
+  "Show its progress. R3 puts it back in the corner.": "Rādīt tā gaitu. R3 to atgriež stūrī.",
+  "Titles you install from Ownfoil appear here.": "Virsraksti, ko instalējat no Ownfoil, parādīsies šeit.",
+  "Cancel current install": "Atcelt pašreizējo instalēšanu",
+  "Clear finished": "Notīrīt pabeigtos",
+  "Cancel the current install?": "Atcelt pašreizējo instalēšanu?",
+  "Remove all waiting": "Noņemt visas gaidīšanas",
+  "Installs running in the background and waiting their turn.": "Instalēšana notiek fonā un gaida savu kārtu."
 }

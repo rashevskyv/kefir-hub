@@ -4047,5 +4047,16 @@
   "Are you sure you want to archive the selected games?": "選択したゲームをアーカイブしますか？",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "ゲーム、そのアップデート、DLCが使用している容量を空けます。ゲームはセーブデータとともにリストに残ります。もう一度プレイするには再インストールしてください。",
   "Shops": "ショップ",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil互換ショップサーバーからタイトルを閲覧・インストールします。"
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil互換ショップサーバーからタイトルを閲覧・インストールします。",
+  "Error": "エラー",
+  "Nothing queued": "キューに追加されたアイテムはありません",
+  "Remove it from the queue.": "キューから削除",
+  "Queued ": "キューに追加済み ",
+  "Show its progress. R3 puts it back in the corner.": "進捗を表示します。R3で角に戻します。",
+  "Titles you install from Ownfoil appear here.": "Ownfoilからインストールしたタイトルがここに表示されます。",
+  "Cancel current install": "現在のインストールをキャンセル",
+  "Clear finished": "完了済みをクリア",
+  "Cancel the current install?": "現在のインストールをキャンセルしますか？",
+  "Remove all waiting": "待機中をすべて削除",
+  "Installs running in the background and waiting their turn.": "バックグラウンドでインストールを実行中、順番待ちしています。"
 }

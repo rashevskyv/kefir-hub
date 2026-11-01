@@ -1,4 +1,5 @@
 #include "ui/menus/ownfoil_internal.hpp"
+#include "ui/install_queue.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -258,6 +259,18 @@ void Menu::ShowSearch(s64 index) {
 void Menu::ShowOptions() {
     auto options = std::make_unique<Sidebar>("Options"_i18n, Sidebar::Side::RIGHT);
     ON_SCOPE_EXIT(App::Push(std::move(options)));
+
+    // the queue is reachable from either list, it outlives both.
+    {
+        const auto& queue = InstallQueue::Get();
+        auto title = "Install queue"_i18n;
+        if (queue.IsBusy()) {
+            title += " (" + std::to_string(queue.GetPendingCount() + 1) + ")";
+        }
+        options->Add<SidebarEntryCallback>(title, [](){
+            InstallQueue::Get().ShowMenu();
+        }, false, "Installs running in the background and waiting their turn."_i18n);
+    }
 
     if (m_mode == Mode::ServerList) {
         options->Add<SidebarEntryCallback>("Add server"_i18n, [this](){

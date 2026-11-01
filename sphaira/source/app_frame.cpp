@@ -3,6 +3,7 @@
 #include "log.hpp"
 #include "ui/menus/dbi_menu.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/install_queue.hpp"
 #include "demo/demo_input.hpp"
 
 #include <switch.h>
@@ -258,6 +259,8 @@ void App::Update() {
     if (!App::GetProgressActive()) {
         PollUsbStorage();
     }
+
+    ui::InstallQueue::Get().Update();
 }
 
 void App::Draw() {

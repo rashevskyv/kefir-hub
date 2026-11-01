@@ -4047,5 +4047,16 @@
   "Are you sure you want to archive the selected games?": "Är du säker på att du vill arkivera de valda spelen?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Frigör utrymmet som används av spelet, dess uppdateringar och DLC. Spelet ligger kvar i listan med dess spildata, installera om det för att spela igen.",
   "Shops": "Butiker",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Bläddra bland och installera titlar från Ownfoil-kompatibla butiksservrar."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Bläddra bland och installera titlar från Ownfoil-kompatibla butiksservrar.",
+  "Error": "Fel",
+  "Nothing queued": "Inget i kö",
+  "Remove it from the queue.": "Ta bort från kön.",
+  "Queued ": "I kö ",
+  "Show its progress. R3 puts it back in the corner.": "Visa dess förlopp. R3 sätter tillbaka den i hörnet.",
+  "Titles you install from Ownfoil appear here.": "Titlar du installerar från Ownfoil visas här.",
+  "Cancel current install": "Avbryt aktuell installation",
+  "Clear finished": "Rensa slutförda",
+  "Cancel the current install?": "Avbryt aktuell installation?",
+  "Remove all waiting": "Ta bort alla väntande",
+  "Installs running in the background and waiting their turn.": "Installationer körs i bakgrunden och väntar på sin tur."
 }

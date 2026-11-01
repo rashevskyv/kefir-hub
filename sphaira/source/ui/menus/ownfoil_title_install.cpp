@@ -1,4 +1,5 @@
 #include "ui/menus/ownfoil_title_internal.hpp"
+#include "ui/install_queue.hpp"
 
 namespace sphaira::ui::menu::ownfoil {
 
@@ -201,8 +202,9 @@ void TitleMenu::Install() {
         return;
     }
 
+    // the queue runs the install and reports it: it can outlive this page, so nothing here may be captured by it.
     App::PopToMenu();
-    App::Push<ProgressBox>(0, "Installing "_i18n, GetName(), [config = m_config, targets](ProgressBox* pbox) -> Result {
+    InstallQueue::Get().Add(GetName(), 0, [config = m_config, targets](ProgressBox* pbox) -> Result {
         for (const auto& target : targets) {
             yati::source::Http source{target.download.url, config.user, config.pass};
 
@@ -215,19 +217,9 @@ void TitleMenu::Install() {
         }
 
         R_SUCCEED();
-    }, [this](Result rc) {
-        App::PushErrorBox(rc, "Install failed!"_i18n);
-        if (R_SUCCEEDED(rc)) {
-            App::Notify("Installed "_i18n + GetName());
-        }
-
-        // even a failed install can have put some of it on the console, so the
-        // page and the catalog behind it ask the console again either way.
+    }, []() {
+        // even a failed install can have put some of it on the console, so the catalog asks it again either way.
         SignalInstalled();
-        const auto token = m_stop.get_token();
-        m_console = std::make_unique<utils::Async>([this, token](){
-            LoadInstalled(token);
-        });
     });
 }
 

@@ -4048,5 +4048,16 @@
   "Are you sure you want to archive the selected games?": "Möchtest du die ausgewählten Spiele archivieren?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Gibt den Speicherplatz frei, der vom Spiel, seinen Updates und DLCs belegt wird. Das Spiel bleibt mit seinen Speicherdaten in der Liste, installiere es neu, um wieder zu spielen.",
   "Shops": "Shops",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Titel von Ownfoil-kompatiblen Shop-Servern durchsuchen und installieren."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Titel von Ownfoil-kompatiblen Shop-Servern durchsuchen und installieren.",
+  "Error": "Fehler",
+  "Nothing queued": "Nichts in der Warteschlange",
+  "Remove it from the queue.": "Aus der Warteschlange entfernen.",
+  "Queued ": "In der Warteschlange ",
+  "Show its progress. R3 puts it back in the corner.": "Fortschritt anzeigen. R3 setzt es in die Ecke zurück.",
+  "Titles you install from Ownfoil appear here.": "Hier erscheinen Titel, die du über Ownfoil installierst.",
+  "Cancel current install": "Aktuelle Installation abbrechen",
+  "Clear finished": "Abgeschlossene löschen",
+  "Cancel the current install?": "Aktuelle Installation abbrechen?",
+  "Remove all waiting": "Alle Warteenden entfernen",
+  "Installs running in the background and waiting their turn.": "Installationen laufen im Hintergrund und warten auf ihren Einsatz."
 }

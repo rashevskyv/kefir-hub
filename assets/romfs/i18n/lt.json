@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Ar tikrai norite archyvuoti pasirinktus žaidimus?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Atlaisvina žaidimo, jo atnaujinimų ir papildymų užimamą vietą. Žaidimas lieka sąraše su išsaugojimo duomenimis, įdiekite jį iš naujo, kad vėl žaistumėte.",
   "Shops": "Parduotuvės",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Naršykite ir diekite žaidimus iš su „Ownfoil“ suderinamų parduotuvių serverių."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Naršykite ir diekite žaidimus iš su „Ownfoil“ suderinamų parduotuvių serverių.",
+  "Error": "Klaida",
+  "Nothing queued": "Eilėje nieko nėra",
+  "Remove it from the queue.": "Pašalinti iš eilės.",
+  "Queued ": "Eilėje ",
+  "Show its progress. R3 puts it back in the corner.": "Rodyti jo eigą. R3 grąžina jį į kampą.",
+  "Titles you install from Ownfoil appear here.": "Pavadinimai, kuriuos įdiegiate iš Ownfoil, pasirodys čia.",
+  "Cancel current install": "Atšaukti esamą diegimą",
+  "Clear finished": "Išvalyti baigtus",
+  "Cancel the current install?": "Atšaukti dabartinį diegimą?",
+  "Remove all waiting": "Pašalinti visus laukiančius",
+  "Installs running in the background and waiting their turn.": "Diegimai vyksta fone ir laukia savo eilės."
 }

@@ -3993,5 +3993,16 @@
   "This game is already archived.": "This game is already archived.",
   "This game is archived, it must be reinstalled before it can be played.": "This game is archived, it must be reinstalled before it can be played.",
   "Shops": "Shops",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Browse and install titles from Ownfoil-compatible shop servers."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Browse and install titles from Ownfoil-compatible shop servers.",
+  "Queued ": "Queued ",
+  "Nothing queued": "Nothing queued",
+  "Titles you install from Ownfoil appear here.": "Titles you install from Ownfoil appear here.",
+  "Show its progress. R3 puts it back in the corner.": "Show its progress. R3 puts it back in the corner.",
+  "Remove it from the queue.": "Remove it from the queue.",
+  "Error": "Error",
+  "Cancel current install": "Cancel current install",
+  "Cancel the current install?": "Cancel the current install?",
+  "Remove all waiting": "Remove all waiting",
+  "Clear finished": "Clear finished",
+  "Installs running in the background and waiting their turn.": "Installs running in the background and waiting their turn."
 }

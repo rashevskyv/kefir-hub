@@ -3,6 +3,7 @@
 #include "ui/popup_list.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/install_queue.hpp"
 #include "ui/error_box.hpp"
 
 #include "ui/menus/main_menu.hpp"
@@ -278,6 +279,8 @@ App::~App() {
     if (auto pbox = WebGetProgressBox()) {
         pbox->RequestExit();
     }
+    // what waits is dropped, the running install is stopped below
+    ui::InstallQueue::Get().Shutdown();
     if (m_active_transfer_pbox) {
         m_active_transfer_pbox->RequestExit();
     }

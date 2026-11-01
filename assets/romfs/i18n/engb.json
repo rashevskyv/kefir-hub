@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Are you sure you want to archive the selected games?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.",
   "Shops": "Shops",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Browse and install titles from Ownfoil-compatible shop servers."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Browse and install titles from Ownfoil-compatible shop servers.",
+  "Error": "Error",
+  "Nothing queued": "Nothing queued",
+  "Remove it from the queue.": "Remove it from the queue.",
+  "Queued ": "Queued ",
+  "Show its progress. R3 puts it back in the corner.": "Show its progress. R3 puts it back in the corner.",
+  "Titles you install from Ownfoil appear here.": "Titles you install from Ownfoil appear here.",
+  "Cancel current install": "Cancel current install",
+  "Clear finished": "Clear finished",
+  "Cancel the current install?": "Cancel the current install?",
+  "Remove all waiting": "Remove all waiting",
+  "Installs running in the background and waiting their turn.": "Installs running in the background and waiting their turn."
 }

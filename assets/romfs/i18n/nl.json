@@ -4047,5 +4047,16 @@
   "Are you sure you want to archive the selected games?": "Weet je zeker dat je de geselecteerde games wilt archiveren?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Maakt de ruimte vrij die wordt gebruikt door de game, updates en DLC. De game blijft in de lijst staan met de opgeslagen gegevens; installeer opnieuw om te spelen.",
   "Shops": "Winkels",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Blader door en installeer titels van Ownfoil-compatibele winkelservers."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Blader door en installeer titels van Ownfoil-compatibele winkelservers.",
+  "Error": "Fout",
+  "Nothing queued": "Niets in wachtrij",
+  "Remove it from the queue.": "Verwijderen uit wachtrij.",
+  "Queued ": "In wachtrij ",
+  "Show its progress. R3 puts it back in the corner.": "Voortgang weergeven. R3 zet hem terug in de hoek.",
+  "Titles you install from Ownfoil appear here.": "Titels die je installeert via Ownfoil verschijnen hier.",
+  "Cancel current install": "Huidige installatie annuleren",
+  "Clear finished": "Voltooide wissen",
+  "Cancel the current install?": "Huidige installatie annuleren?",
+  "Remove all waiting": "Alle wachten verwijderen",
+  "Installs running in the background and waiting their turn.": "Installaties worden op de achtergrond uitgevoerd en wachten op hun beurt."
 }

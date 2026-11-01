@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Kas oled kindel, et soovid valitud mängud arhiveerida?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Vabastab mängu, selle uuenduste ja DLC poolt kasutatava ruumi. Mäng jääb loendisse koos salvestusandmetega, mängimiseks installige see uuesti.",
   "Shops": "Poed",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Sirvi ja installi pealkirju Ownfoil-ühilduvatest poe serveritest."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Sirvi ja installi pealkirju Ownfoil-ühilduvatest poe serveritest.",
+  "Error": "Viga",
+  "Nothing queued": "Midagi pole järjekorras",
+  "Remove it from the queue.": "Eemalda järjekorrast.",
+  "Queued ": "Järjekorras ",
+  "Show its progress. R3 puts it back in the corner.": "Näita selle edenemist. R3 paneb selle tagasi nurka.",
+  "Titles you install from Ownfoil appear here.": "Ownfoilist installitud pealkirjad kuvatakse siin.",
+  "Cancel current install": "Tühista praegune installimine",
+  "Clear finished": "Kustuta lõpetatud",
+  "Cancel the current install?": "Kas tühistada praegune installimine?",
+  "Remove all waiting": "Eemalda kõik ootel olevad",
+  "Installs running in the background and waiting their turn.": "Taustal töötavad installid, mis ootavad oma korda."
 }

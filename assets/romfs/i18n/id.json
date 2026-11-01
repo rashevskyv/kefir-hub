@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Apakah Anda yakin ingin mengarsipkan game yang dipilih?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Mengosongkan ruang yang digunakan oleh game, pembaruan, dan DLC. Game tetap berada di daftar beserta data penyimpanannya, instal ulang untuk memainkannya lagi.",
   "Shops": "Toko",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Jelajahi dan instal judul dari server toko yang kompatibel dengan Ownfoil."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Jelajahi dan instal judul dari server toko yang kompatibel dengan Ownfoil.",
+  "Error": "Kesalahan",
+  "Nothing queued": "Tidak ada dalam antrean",
+  "Remove it from the queue.": "Hapus dari antrean.",
+  "Queued ": "Dalam antrean ",
+  "Show its progress. R3 puts it back in the corner.": "Tampilkan kemajuannya. R3 mengembalikannya ke pojok.",
+  "Titles you install from Ownfoil appear here.": "Judul yang Anda instal dari Ownfoil akan muncul di sini.",
+  "Cancel current install": "Batalkan instalasi saat ini",
+  "Clear finished": "Bersihkan yang selesai",
+  "Cancel the current install?": "Batalkan instalasi saat ini?",
+  "Remove all waiting": "Hapus semua antrean",
+  "Installs running in the background and waiting their turn.": "Pemasangan berjalan di latar belakang dan menunggu giliran."
 }

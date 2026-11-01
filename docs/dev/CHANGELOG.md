@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.268 — From upstream sphaira 1.0.9: an install queue for Ownfoil (owner, 2026-11-01)
+Titles installed from Ownfoil go through `InstallQueue` (`ui/install_queue.*`): one install runs at a time as the app's transfer box (R3 puts it in the corner badge), the next ones wait and start by themselves; Options → `Install queue` lists them (remove a waiting one, cancel the running one, clear the finished). Built on our `App::PushTransfer`, not on upstream's `Detach` of the box. A finished or failed install reports from the queue (a failure in the badge is a notice with the code), and the Ownfoil catalog asks the console again.
+host tests: pass (--quick) | nro: built (0.14.268) | switch: pending (install two titles in a row from Ownfoil; R3 during the first; cancel the running one)
+
 ## v0.14.267 — A cancelled MTP install fails instead of registering a broken game (2026-11-01)
 When the PC cancelled an MTP copy mid-file, the install read thread took the empty read as the end of the NCA, so Hub registered the half-written NCAs, said `success!`, and the game failed to start from HOME. Now every NCA read must return the full size it asked for (`ThreadData::Read`, `Result_StreamUnexpectedEof`): the install fails, the placeholders are deleted, nothing is registered, and the notification says the source stopped sending data. The same check covers every install source (file, USB, HTTP, FTP, game card). No host test: the read path needs libnx.
 host tests: pass (--quick) | nro: not built | switch: pending (cancel an MTP copy of an NSP halfway: no game on HOME, failure toast; then a full copy installs)

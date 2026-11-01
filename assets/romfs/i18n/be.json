@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Вы ўпэўнены, што хочаце архіваваць абраныя гульні?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Вызваляе месца, якое займаюць гульня, яе абнаўленні і DLC. Гульня застаецца ў спісе разам з захаваннямі, пераўсталюйце яе, каб згуляць зноў.",
   "Shops": "Крамы",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Прагляд і ўстаноўка тытулаў з сервераў крам, сумяшчальных з Ownfoil."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Прагляд і ўстаноўка тытулаў з сервераў крам, сумяшчальных з Ownfoil.",
+  "Error": "Памылка",
+  "Nothing queued": "Няма ў чарзе",
+  "Remove it from the queue.": "Выдаліць з чаргі.",
+  "Queued ": "У чарзе ",
+  "Show its progress. R3 puts it back in the corner.": "Паказваць яго прагрэс. R3 вяртае яго ў кут.",
+  "Titles you install from Ownfoil appear here.": "Цітулы, якія вы ўсталёўваеце з Ownfoil, з'яўляюцца тут.",
+  "Cancel current install": "Скасаваць бягучую ўстаноўку",
+  "Clear finished": "Ачысціць завершаныя",
+  "Cancel the current install?": "Скасаваць бягучую ўстаноўку?",
+  "Remove all waiting": "Выдаліць усё чаканне",
+  "Installs running in the background and waiting their turn.": "Устаноўкі выконваюцца ў фонавым рэжыме і чакаюць сваёй чаргі."
 }

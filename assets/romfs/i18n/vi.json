@@ -4047,5 +4047,16 @@
   "Are you sure you want to archive the selected games?": "Bạn có chắc chắn muốn lưu trữ các trò chơi đã chọn không?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Giải phóng dung lượng do trò chơi, các bản cập nhật và DLC sử dụng. Trò chơi vẫn nằm trong danh sách cùng với dữ liệu lưu, cài đặt lại để chơi tiếp.",
   "Shops": "Cửa hàng",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Duyệt và cài đặt các tựa game từ máy chủ cửa hàng tương thích với Ownfoil."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Duyệt và cài đặt các tựa game từ máy chủ cửa hàng tương thích với Ownfoil.",
+  "Error": "Lỗi",
+  "Nothing queued": "Không có gì trong hàng đợi",
+  "Remove it from the queue.": "Xóa khỏi hàng đợi.",
+  "Queued ": "Đang chờ ",
+  "Show its progress. R3 puts it back in the corner.": "Hiển thị tiến trình. R3 đưa nó về lại góc.",
+  "Titles you install from Ownfoil appear here.": "Các tựa game bạn cài đặt từ Ownfoil sẽ xuất hiện ở đây.",
+  "Cancel current install": "Hủy cài đặt hiện tại",
+  "Clear finished": "Xóa đã hoàn thành",
+  "Cancel the current install?": "Hủy cài đặt hiện tại?",
+  "Remove all waiting": "Xóa tất cả đang chờ",
+  "Installs running in the background and waiting their turn.": "Quá trình cài đặt đang chạy ngầm và đang chờ đến lượt."
 }

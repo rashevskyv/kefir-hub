@@ -4047,5 +4047,16 @@
   "Are you sure you want to archive the selected games?": "선택한 게임을 아카이브하시겠습니까?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "게임, 업데이트, DLC가 사용하던 공간을 확보합니다. 게임은 세이브 데이터와 함께 목록에 유지되며, 다시 플레이하려면 재설치하세요.",
   "Shops": "상점",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil 호환 숍 서버에서 타이틀을 찾아보고 설치합니다."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil 호환 숍 서버에서 타이틀을 찾아보고 설치합니다.",
+  "Error": "오류",
+  "Nothing queued": "대기 중인 항목 없음",
+  "Remove it from the queue.": "대기열에서 제거",
+  "Queued ": "대기 중 ",
+  "Show its progress. R3 puts it back in the corner.": "진행 상황을 표시합니다. R3을 누르면 구석으로 돌아갑니다.",
+  "Titles you install from Ownfoil appear here.": "Ownfoil에서 설치한 타이틀이 여기에 표시됩니다.",
+  "Cancel current install": "현재 설치 취소",
+  "Clear finished": "완료된 항목 지우기",
+  "Cancel the current install?": "현재 설치를 취소하시겠습니까?",
+  "Remove all waiting": "대기 중인 항목 모두 제거",
+  "Installs running in the background and waiting their turn.": "백그라운드에서 설치가 진행 중이며 대기 중입니다."
 }

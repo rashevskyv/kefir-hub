@@ -4100,5 +4100,16 @@
   "Are you sure you want to archive the selected games?": "确定要存档所选游戏吗？",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "释放游戏及其更新和DLC所占用的空间。游戏及其存档仍会保留在列表中，重新安装即可再次游玩。",
   "Shops": "商店",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "浏览并从兼容 Ownfoil 的商店服务器安装游戏。"
+  "Browse and install titles from Ownfoil-compatible shop servers.": "浏览并从兼容 Ownfoil 的商店服务器安装游戏。",
+  "Error": "错误",
+  "Nothing queued": "没有排队的项目",
+  "Remove it from the queue.": "从队列中移除。",
+  "Queued ": "已加入队列 ",
+  "Show its progress. R3 puts it back in the corner.": "显示进度。R3 将其放回角落。",
+  "Titles you install from Ownfoil appear here.": "从 Ownfoil 安装的游戏将显示在这里。",
+  "Cancel current install": "取消当前安装",
+  "Clear finished": "清除已完成",
+  "Cancel the current install?": "取消当前安装？",
+  "Remove all waiting": "移除所有等待",
+  "Installs running in the background and waiting their turn.": "正在后台运行安装并等待排队。"
 }

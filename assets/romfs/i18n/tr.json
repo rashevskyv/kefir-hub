@@ -4042,5 +4042,16 @@
   "Are you sure you want to archive the selected games?": "Seçilen oyunları arşivlemek istediğinizden emin misiniz?",
   "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again.": "Oyun, güncellemeleri ve DLC tarafından kullanılan alanı boşaltır. Oyun kayıt verileriyle birlikte listede kalır, tekrar oynamak için yeniden yükleyin.",
   "Shops": "Mağazalar",
-  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil uyumlu mağaza sunucularından oyunları inceleyin ve yükleyin."
+  "Browse and install titles from Ownfoil-compatible shop servers.": "Ownfoil uyumlu mağaza sunucularından oyunları inceleyin ve yükleyin.",
+  "Error": "Hata",
+  "Nothing queued": "Kuyrukta öğe yok",
+  "Remove it from the queue.": "Kuyruktan çıkar.",
+  "Queued ": "Kuyrukta ",
+  "Show its progress. R3 puts it back in the corner.": "İlerlemesini göster. R3 tekrar köşeye yerleştirir.",
+  "Titles you install from Ownfoil appear here.": "Ownfoil'den yüklediğiniz başlıklar burada görünür.",
+  "Cancel current install": "Mevcut kurulumu iptal et",
+  "Clear finished": "Tamamlananları temizle",
+  "Cancel the current install?": "Mevcut kurulum iptal edilsin mi?",
+  "Remove all waiting": "Tüm beklemeleri kaldır",
+  "Installs running in the background and waiting their turn.": "Arka planda çalışan yüklemeler sırasını bekliyor."
 }
