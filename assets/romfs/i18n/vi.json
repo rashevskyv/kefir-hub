@@ -4065,5 +4065,11 @@
   "This is not a shop index": "Đây không phải là chỉ mục cửa hàng",
   "Game": "Trò chơi",
   "Install all shown": "Cài đặt tất cả hiển thị",
-  "AeroFoil shop": "Cửa hàng AeroFoil"
+  "AeroFoil shop": "Cửa hàng AeroFoil",
+  "On the card": "Trên thẻ",
+  "This cannot be undone.": "Thao tác này không thể hoàn tác.",
+  "Delete all shown": "Xóa tất cả mục hiển thị",
+  "Deleted": "Đã xóa",
+  "Delete the marked files": "Xóa các tệp đã đánh dấu",
+  "A or START: delete": "A hoặc START: xóa"
 }

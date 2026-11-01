@@ -4060,5 +4060,11 @@
   "This is not a shop index": "See ei ole poe indeks",
   "Game": "Mäng",
   "Install all shown": "Installi kõik kuvatud",
-  "AeroFoil shop": "AeroFoil pood"
+  "AeroFoil shop": "AeroFoil pood",
+  "On the card": "Kaardil",
+  "This cannot be undone.": "Seda ei saa tagasi võtta.",
+  "Delete all shown": "Kustuta kõik näidatud",
+  "Deleted": "Kustutatud",
+  "Delete the marked files": "Kustuta märgitud failid",
+  "A or START: delete": "A või START: kustuta"
 }

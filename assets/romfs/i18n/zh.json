@@ -4118,5 +4118,11 @@
   "This is not a shop index": "这不是商店索引",
   "Game": "游戏",
   "Install all shown": "安装所有显示项",
-  "AeroFoil shop": "AeroFoil商店"
+  "AeroFoil shop": "AeroFoil商店",
+  "On the card": "在卡上",
+  "This cannot be undone.": "此操作无法撤销。",
+  "Delete all shown": "删除所有显示项",
+  "Deleted": "已删除",
+  "Delete the marked files": "删除已标记的文件",
+  "A or START: delete": "A 或 START：删除"
 }

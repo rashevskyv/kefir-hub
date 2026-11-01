@@ -4065,5 +4065,11 @@
   "This is not a shop index": "Detta är inte ett butiksindex",
   "Game": "Spel",
   "Install all shown": "Installera alla visade",
-  "AeroFoil shop": "AeroFoil-butik"
+  "AeroFoil shop": "AeroFoil-butik",
+  "On the card": "På kortet",
+  "This cannot be undone.": "Detta kan inte ångras.",
+  "Delete all shown": "Radera alla visade",
+  "Deleted": "Raderad",
+  "Delete the marked files": "Radera markerade filer",
+  "A or START: delete": "A eller START: radera"
 }

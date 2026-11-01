@@ -4060,5 +4060,11 @@
   "This is not a shop index": "Bu bir mağaza dizini değil",
   "Game": "Oyun",
   "Install all shown": "Tüm gösterilenleri yükle",
-  "AeroFoil shop": "AeroFoil mağazası"
+  "AeroFoil shop": "AeroFoil mağazası",
+  "On the card": "Kartta",
+  "This cannot be undone.": "Bu işlem geri alınamaz.",
+  "Delete all shown": "Gösterilenlerin tümünü sil",
+  "Deleted": "Silindi",
+  "Delete the marked files": "İşaretli dosyaları sil",
+  "A or START: delete": "A veya START: sil"
 }

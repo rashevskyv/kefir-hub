@@ -4065,5 +4065,11 @@
   "This is not a shop index": "이것은 상점 색인이 아닙니다",
   "Game": "게임",
   "Install all shown": "표시된 모든 항목 설치",
-  "AeroFoil shop": "AeroFoil 샵"
+  "AeroFoil shop": "AeroFoil 샵",
+  "On the card": "카드에",
+  "This cannot be undone.": "이 작업은 되돌릴 수 없습니다.",
+  "Delete all shown": "표시된 항목 모두 삭제",
+  "Deleted": "삭제됨",
+  "Delete the marked files": "선택한 파일 삭제",
+  "A or START: delete": "A 또는 START: 삭제"
 }

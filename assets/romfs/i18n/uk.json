@@ -4011,5 +4011,11 @@
   "This is not a shop index": "Це не індекс магазину",
   "Game": "Гра",
   "Install the marked files": "Встановити позначені файли",
-  "Install all shown": "Встановити всі показані"
+  "Install all shown": "Встановити всі показані",
+  "On the card": "На карті",
+  "A or START: delete": "A або START: видалити",
+  "Delete the marked files": "Видалити позначені файли",
+  "Delete all shown": "Видалити всі показані",
+  "This cannot be undone.": "Це не можна скасувати.",
+  "Deleted": "Видалено"
 }

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.271 — ROMS: downloaded files can be selected and deleted, the section is grouped by system; a new Network Tools icon (owner, 2026-11-01)
+Emulators → ROMS is grouped by system (the console table's order): its collections, then `On the card` (`rom_files.*`) which opens the files in `/roms/<console>/` with a filter, X/Y marks, A on a file and START asking to delete (one file, the marked ones or all shown; a folder goes with its content; the question comes first). The Network Tools tile has a flat cyan icon in the style of the others (a globe and a download badge) instead of the dark one with text. Picking single ROMs out of a set was added in 0.14.252 (A on a set in a collection, X/Y, START).
+host tests: pass (--quick) | nro: built (0.14.271) | switch: pending (delete a downloaded set; the system groups)
+
 ## v0.14.270 — Shops: an AeroFoil shop and an ordinary Tinfoil shop open from the Ownfoil page (owner, 2026-11-01)
 When the server that answers is not an Ownfoil one, the Hub reads it as a shop (CyberFoil's way): `/api/remote/sections`, then `/api/shop/sections` (AeroFoil), else a legacy Tinfoil index at the address itself with the indexes of its `directories` (`utils/remote_shop_fetch.*`, pure helpers `remote_shop.hpp`, test `test_remote_shop`). The shop page lists nsp/nsz/xci/xcz files with a filter row, A installs one, X/Y mark several, START installs the marked or every file shown; every install goes through the install queue. Not yet: AeroFoil title details and screenshots, cheats, save sync, offline database.
 host tests: pass (--quick) | nro: built (0.14.270) | switch: pending (add a Tinfoil shop and an AeroFoil server in Ownfoil; install a file)

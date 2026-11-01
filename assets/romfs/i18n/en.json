@@ -4011,5 +4011,11 @@
   "This is not a shop index": "This is not a shop index",
   "Game": "Game",
   "Install the marked files": "Install the marked files",
-  "Install all shown": "Install all shown"
+  "Install all shown": "Install all shown",
+  "On the card": "On the card",
+  "A or START: delete": "A or START: delete",
+  "Delete the marked files": "Delete the marked files",
+  "Delete all shown": "Delete all shown",
+  "This cannot be undone.": "This cannot be undone.",
+  "Deleted": "Deleted"
 }

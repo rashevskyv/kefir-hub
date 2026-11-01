@@ -4060,5 +4060,11 @@
   "This is not a shop index": "Tai nėra parduotuvės indeksas",
   "Game": "Žaidimas",
   "Install all shown": "Įdiegti visus rodomus",
-  "AeroFoil shop": "AeroFoil parduotuvė"
+  "AeroFoil shop": "AeroFoil parduotuvė",
+  "On the card": "Kortelėje",
+  "This cannot be undone.": "To negalima atšaukti.",
+  "Delete all shown": "Ištrinti visus rodomus",
+  "Deleted": "Ištrinta",
+  "Delete the marked files": "Ištrinti pažymėtus failus",
+  "A or START: delete": "A arba START: ištrinti"
 }

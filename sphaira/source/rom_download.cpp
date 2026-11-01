@@ -1,5 +1,6 @@
 #include "rom_download.hpp"
 #include "rom_library.hpp"
+#include "rom_files.hpp"
 #include "download_jobs.hpp"
 #include "app.hpp"
 #include "defines.hpp"
@@ -452,8 +453,37 @@ void Add(std::function<void()> reopen) {
 
 void AddRows(std::vector<SettingsItem>& rows, std::function<void()> reopen) {
     rows.push_back(ui::menu::settings::MakeHeader("ROMS"_i18n));
-    for (const auto& c : Load()) {
-        SettingsItem row{c.label, std::string{ConsoleName(c.console)} + " · archive.org/details/" + c.item + " → " + ROMS_ROOT + c.console + "/"};
+
+    // by system, in the order of the console table: its collections, then what lies on the card
+    const auto list = Load();
+    const auto add_system = [&](const std::string& folder, const std::string& title) {
+        std::vector<Collection> mine;
+        for (const auto& c : list) {
+            if (c.console == folder) mine.push_back(c);
+        }
+        const auto stat = Stat(folder);
+        if (mine.empty() && !stat.entries) return;
+
+        rows.push_back(ui::menu::settings::MakeHeader(title));
+        for (const auto& c : mine) {
+            SettingsItem row{c.label, "archive.org/details/" + c.item + " → " + ROMS_ROOT + c.console + "/"};
+            row.action = [c, reopen]() { OpenCollection(c, reopen); };
+            rows.push_back(std::move(row));
+        }
+        if (stat.entries) {
+            SettingsItem row{"On the card"_i18n, std::to_string(stat.entries) + " " + "files"_i18n + (stat.bytes ? ", " + ui::menu::grid::FormatBytes(stat.bytes) : std::string{})
+                + " · " + ROMS_ROOT + folder + "/ · " + "A or START: delete"_i18n};
+            row.action = [folder, reopen]() { OpenFiles(folder, reopen); };
+            rows.push_back(std::move(row));
+        }
+    };
+    for (const auto& console : Consoles()) {
+        add_system(console.folder, console.name);
+    }
+    // a collection of a system the table does not know
+    for (const auto& c : list) {
+        if (FindConsole(c.console)) continue;
+        SettingsItem row{c.label, c.console + " · archive.org/details/" + c.item + " → " + ROMS_ROOT + c.console + "/"};
         row.action = [c, reopen]() { OpenCollection(c, reopen); };
         rows.push_back(std::move(row));
     }

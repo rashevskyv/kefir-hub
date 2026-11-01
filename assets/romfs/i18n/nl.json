@@ -4065,5 +4065,11 @@
   "This is not a shop index": "Dit is geen winkelindex",
   "Game": "Spel",
   "Install all shown": "Alle weergegeven installeren",
-  "AeroFoil shop": "AeroFoil-winkel"
+  "AeroFoil shop": "AeroFoil-winkel",
+  "On the card": "Op de kaart",
+  "This cannot be undone.": "Dit kan niet ongedaan worden gemaakt.",
+  "Delete all shown": "Alle weergegeven verwijderen",
+  "Deleted": "Verwijderd",
+  "Delete the marked files": "Gemarkeerde bestanden verwijderen",
+  "A or START: delete": "A of START: verwijderen"
 }

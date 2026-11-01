@@ -4060,5 +4060,11 @@
   "This is not a shop index": "Бұл дүкен индексі емес",
   "Game": "Ойын",
   "Install all shown": "Барлық көрсетілгенді орнату",
-  "AeroFoil shop": "AeroFoil дүкені"
+  "AeroFoil shop": "AeroFoil дүкені",
+  "On the card": "Картада",
+  "This cannot be undone.": "Бұл әрекетті кері қайтару мүмкін емес.",
+  "Delete all shown": "Көрсетілгендерді түгел жою",
+  "Deleted": "Өшірілді",
+  "Delete the marked files": "Белгіленген файлдарды жою",
+  "A or START: delete": "A немесе START: жою"
 }

@@ -48,6 +48,12 @@ BIOS files for the emulators on your microSD card: Kefir Hub finds the installed
 - zip, 7z and rar work the same; a restricted item shows the restricted message before it opens; if archive.org answers 401 or 403 for the list the same message is shown, any other failure is [[Could not read the archive on archive.org]]
 -->
 
+<!-- draft
+- the ROMS section is grouped by system, in the order of the console table: a header with the system name (for example [[Nintendo - NES]]), its collections, then a row [[On the card]] with the number of files and their size in `/roms/<console>/`; a system with neither is not shown
+- [[On the card]] opens the files the Hub downloaded: a filter row, the files with their sizes; **A** on a file asks to delete it; **X** marks a file, **Y** inverts the marks, **START** opens [[Delete the marked files]] (the marks, or the file under the cursor when none is marked) and [[Delete all shown]]; a question with [[Delete]] always comes first and says it cannot be undone
+- a folder in `/roms/<console>/` is listed with a slash and is deleted with everything in it
+-->
+
 ## See also
 - [Games](games.md)
 - [Homebrew](homebrew.md): installing RetroArch, Tico and the other emulators

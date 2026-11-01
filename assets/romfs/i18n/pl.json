@@ -4060,5 +4060,11 @@
   "This is not a shop index": "To nie jest indeks sklepu",
   "Game": "Gra",
   "Install all shown": "Zainstaluj wszystkie wyświetlane",
-  "AeroFoil shop": "Sklep AeroFoil"
+  "AeroFoil shop": "Sklep AeroFoil",
+  "On the card": "Na karcie",
+  "This cannot be undone.": "Tej operacji nie można cofnąć.",
+  "Delete all shown": "Usuń wszystkie wyświetlane",
+  "Deleted": "Usunięto",
+  "Delete the marked files": "Usuń zaznaczone pliki",
+  "A or START: delete": "A lub START: usuń"
 }

@@ -4065,5 +4065,11 @@
   "This is not a shop index": "これはショップインデックスではありません",
   "Game": "ゲーム",
   "Install all shown": "表示されたものをすべてインストール",
-  "AeroFoil shop": "AeroFoilショップ"
+  "AeroFoil shop": "AeroFoilショップ",
+  "On the card": "カード上",
+  "This cannot be undone.": "この操作は元に戻せません。",
+  "Delete all shown": "表示中項目をすべて削除",
+  "Deleted": "削除済み",
+  "Delete the marked files": "マークされたファイルを削除",
+  "A or START: delete": "A または START: 削除"
 }

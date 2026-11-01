@@ -4060,5 +4060,11 @@
   "This is not a shop index": "Šis nav veikikala indekss",
   "Game": "Spēle",
   "Install all shown": "Instalēt visus parādītos",
-  "AeroFoil shop": "AeroFoil veikals"
+  "AeroFoil shop": "AeroFoil veikals",
+  "On the card": "Kartē",
+  "This cannot be undone.": "To nevar atsaukt.",
+  "Delete all shown": "Dzēst visus redzamos",
+  "Deleted": "Dzēsts",
+  "Delete the marked files": "Dzēst atzīmētos failus",
+  "A or START: delete": "A vai START: dzēst"
 }
