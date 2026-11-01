@@ -281,7 +281,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
         charge::HizSet(charger != PsmChargerType_Unconnected && appletGetOperationMode() != AppletOperationMode_Console);
     }
     if (charge::HizActive()) {
-        charge::HizTick(m_mv, avg ? static_cast<int>(*avg) : 0, m_pct);
+        charge::HizTick(m_mv, m_ma, m_pct); // the live current: the average still holds the charge of the seconds before the cut
         m_charger = false; // on the battery, whatever the plug says
     }
     UpdateStep();
@@ -512,7 +512,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
     }
     if (m_charger) {
         if (m_step == wizard::DrainStep::CycleCounted) {
-            return "This cycle is counted. Take the charger out: the next step starts by itself."_i18n;
+            return "This cycle is counted: the next step starts by itself."_i18n;
         }
         if (m_step == wizard::DrainStep::Charging) {
             return "The battery ran down enough. Keep the charger in until 100 %: the cycle then counts by itself."_i18n;
@@ -533,7 +533,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
             + " " + "Everything is written to a log."_i18n;
     }
     if (charge::HizActive()) {
-        return "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub. Take the charger out and plug it in again, and the Hub cuts the input once more."_i18n
+        return "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge. The console may need 10 to 15 minutes to start. Take the charger out and plug it in again, and the Hub cuts the input once more."_i18n
             + " " + "Everything is written to a log."_i18n;
     }
     return (m_calib->tail

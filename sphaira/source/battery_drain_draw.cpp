@@ -98,9 +98,7 @@ auto DrainMenu::HoursMinutesSeconds(u64 sec) -> std::string {
 }
 
 void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
-    // where this run is on the road: cycle 1 (2) or cycle 2 (3); the reset (1) has no run on this page
-    const int road = m_calib->step + 1;
-    calib_ui::DrawRoadmap(vg, theme, road, road - 1, 5);
+    // No road map here (owner, 2026-11-01): it is for the step pages; on the drain it only lay over the charts.
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
@@ -179,7 +177,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         }
         y += 46.f;
         if (m_charger && m_pct >= 100) {
-            ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. Now the drain: take the charger out."_i18n.c_str());
+            ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in."_i18n.c_str());
             y += 44.f;
         }
         calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full."_i18n);

@@ -309,7 +309,7 @@ void ShowIntro() {
             cu::Head("How it works"_i18n),
             cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the Hub measures the real capacity: the charge that comes in from the switch-off to the full battery is written into the gauge as its capacity."_i18n),
             cu::Head("What you do"_i18n),
-            cu::Para("The reset needs no charging: it is done at once. Then take the charger out and leave the console on a table: the Hub gives it a full load by itself. When the console switches off, plug the charger in, switch it on and open Kefir Hub: it shows the charge."_i18n),
+            cu::Para("The reset needs no charging: it is done at once. Then leave the console on a table, the charger can stay in: the Hub gives it a full load by itself. When the console switches off, switch it on again (with the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge and shows the charge. This step is yours: without it nothing is written."_i18n),
             cu::Head("How long it takes"_i18n),
             cu::Para("Several hours, with breaks for charging. Your games and saves are not touched. Before it writes to the gauge, the Hub makes a backup."_i18n),
         },
@@ -328,7 +328,7 @@ void ShowResetDone() {
         std::vector<cu::Line>{
             cu::Ok("Factory model written"_i18n),
             cu::Ok("The backup was made."_i18n),
-            cu::Item("Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %."_i18n),
+            cu::Item("Now cycle 1: the Hub drains the battery until the console switches itself off. The charger can stay in. After the switch-off, switch the console on (it may need 10 to 15 minutes to start) and open Kefir Hub yourself: it writes that voltage into the gauge as the zero. Then charge to 100 %."_i18n),
         },
         "Go on"_i18n, [](cu::Page& p) {
             p.SetPop();
@@ -371,10 +371,12 @@ void ShowCyclePage() {
             // the time is the one set for the screensaver in the settings
             const long s = detail::SaverSeconds();
             char t[32];
-            if (s % 60) {
-                std::snprintf(t, sizeof(t), "%ld:%02ld %s", s / 60, s % 60, "min"_i18n.c_str());
-            } else {
+            if (s < 60) {
+                std::snprintf(t, sizeof(t), "%ld %s", s, "sec"_i18n.c_str());
+            } else if (s % 60 == 0) {
                 std::snprintf(t, sizeof(t), "%ld %s", s / 60, "min"_i18n.c_str());
+            } else {
+                std::snprintf(t, sizeof(t), "%ld %s %ld %s", s / 60, "min"_i18n.c_str(), s % 60, "sec"_i18n.c_str());
             }
             auto text = "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers."_i18n;
             if (const auto p = text.find("%s"); p != std::string::npos) {
@@ -382,7 +384,7 @@ void ShowCyclePage() {
             }
             lines.push_back(cu::Para(std::move(text)));
         }
-        lines.push_back(cu::Para("When the console switches off, that is normal. Switch it on again, with the charger in, and open Kefir Hub: it opens the charge page by itself. If the charger was out, plug it in first."_i18n));
+        lines.push_back(cu::Para("When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up."_i18n));
         lines.push_back(cu::Para("When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %."_i18n));
         label = m->drain_started ? "Open the drain screen"_i18n : "Start the drain"_i18n;
         act = [](cu::Page& p) {
@@ -494,7 +496,7 @@ auto CycleText(const Marker& m) -> std::string {
     if (PhaseOf(m) == Phase::Charge) {
         return "the drain is done. Plug the charger in and wait for 100 %: the cycle then counts by itself"_i18n;
     }
-    return m.drain_started ? "the drain is going on"_i18n : "next: take the charger out and start the drain"_i18n;
+    return m.drain_started ? "the drain is going on"_i18n : "next: start the drain (the charger can stay in)"_i18n;
 }
 
 } // namespace

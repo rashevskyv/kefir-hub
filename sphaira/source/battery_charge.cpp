@@ -9,6 +9,7 @@
 #include <atomic>
 #include <cstdio>
 #include <ctime>
+#include <mutex>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -274,6 +275,10 @@ constexpr const char* HIZ_CUTOFF_RUN = "/config/kefir/battery/hiz_cutoff.run";
 constexpr const char* HIZ_CUTOFF_LOG = "sdmc:/config/kefir/battery/hiz_cutoff.txt";
 
 std::atomic<bool> g_hiz{false};
+std::mutex g_hiz_mu;                // the page's tick, the watchdog and the release come from different threads
+std::atomic<u64> g_hiz_tick{0};     // the system tick of the last HizTick: the cut is a lease, it runs out when nobody renews it
+bool g_hiz_dog_started = false;
+constexpr u64 HIZ_LEASE_NS = 3'000'000'000ULL;
 bool g_hiz_test = false; // the cut-off test writes hiz_cutoff.txt; the calibration's cut only logs what it must
 std::FILE* g_hiz_log = nullptr;
 int g_hiz_rewrites = 0;
@@ -287,6 +292,46 @@ void HizLine(const char* what) {
         std::fputs(what, g_hiz_log);
         std::fflush(g_hiz_log);
         fsdevCommitDevice("sdmc"); // the last seconds before the switch-off must reach the card
+    }
+}
+
+void HizReleaseLocked() {
+    if (g_hiz_log) {
+        std::fclose(g_hiz_log);
+        g_hiz_log = nullptr;
+    }
+    g_hiz = false;
+    g_hiz_test = false;
+    Bq bq;
+    if (const auto r00 = bq.Read(0x00); r00 && (*r00 & 0x80)) {
+        const bool ok = bq.Write(0x00, static_cast<u8>(*r00 & 0x7F));
+        log_write("[Charge] the charger input is back: REG00 %02X -> %02X, %s\n", *r00, *r00 & 0x7F, ok ? "written" : "NOT written");
+    }
+    fs::FsNativeSd().DeleteFile(HIZ_FLAG);
+}
+
+// The cut is only for the open drain page (owner, 2026-11-01): the page renews it every second. When the page is closed, covered by
+// another one, or the Hub goes to the background, nobody renews it and this thread gives the input back within seconds.
+void HizWatchdog(void*) {
+    for (;;) {
+        svcSleepThread(500'000'000ULL);
+        std::scoped_lock lock{g_hiz_mu};
+        if (g_hiz && armTicksToNs(armGetSystemTick() - g_hiz_tick) > HIZ_LEASE_NS) {
+            log_write("[Charge] nobody keeps the cut (the drain page is closed or covered): the charger input is given back\n");
+            HizReleaseLocked();
+        }
+    }
+}
+
+void EnsureWatchdog() {
+    static Thread dog{};
+    if (g_hiz_dog_started) {
+        return;
+    }
+    if (R_SUCCEEDED(threadCreate(&dog, HizWatchdog, nullptr, nullptr, 0x8000, 0x2C, -2)) && R_SUCCEEDED(threadStart(&dog))) {
+        g_hiz_dog_started = true;
+    } else {
+        log_write("[Charge] the watchdog thread did not start: the cut ends with the page only\n");
     }
 }
 
@@ -304,7 +349,10 @@ auto StartCutoffTestIfAsked() -> bool {
     sd.DeleteFile(HIZ_CUTOFF_RUN);
     const char note[] = "the charger input is cut for the cut-off test: the Hub puts it back at its start\n";
     sd.write_entire_file(HIZ_FLAG, std::vector<u8>(note, note + sizeof(note) - 1));
+    std::scoped_lock lock{g_hiz_mu};
     g_hiz = true;
+    g_hiz_tick = armGetSystemTick();
+    EnsureWatchdog();
     g_hiz_test = true;
     g_hiz_rewrites = 0;
     g_hiz_last_line = 0;
@@ -317,12 +365,13 @@ auto StartCutoffTestIfAsked() -> bool {
 }
 
 void HizSet(bool on) {
+    std::scoped_lock lock{g_hiz_mu};
     if (on == g_hiz) {
         return;
     }
     if (!on) {
         log_write("[Charge] the charger input is given back (the charger was unplugged or the drain ended)\n");
-        HizRelease();
+        HizReleaseLocked();
         return;
     }
     fs::FsNativeSd sd;
@@ -330,14 +379,18 @@ void HizSet(bool on) {
     const char note[] = "the charger input is cut for a drain: the Hub puts it back at its start\n";
     sd.write_entire_file(HIZ_FLAG, std::vector<u8>(note, note + sizeof(note) - 1));
     g_hiz = true;
+    g_hiz_tick = armGetSystemTick();
+    EnsureWatchdog();
     g_hiz_rewrites = 0;
     log_write("[Charge] the charger is in: its input is cut, the console drains on the battery\n");
 }
 
 void HizTick(int mv, int avg_ma, int pct) {
+    std::scoped_lock lock{g_hiz_mu};
     if (!g_hiz) {
         return;
     }
+    g_hiz_tick = armGetSystemTick(); // the lease is renewed
     Bq bq;
     const auto r00 = bq.Read(0x00);
     const auto r08 = bq.Read(0x08);
@@ -362,18 +415,8 @@ void HizTick(int mv, int avg_ma, int pct) {
 }
 
 void HizRelease() {
-    if (g_hiz_log) {
-        std::fclose(g_hiz_log);
-        g_hiz_log = nullptr;
-    }
-    g_hiz = false;
-    g_hiz_test = false;
-    Bq bq;
-    if (const auto r00 = bq.Read(0x00); r00 && (*r00 & 0x80)) {
-        const bool ok = bq.Write(0x00, static_cast<u8>(*r00 & 0x7F));
-        log_write("[Charge] the charger input is back: REG00 %02X -> %02X, %s\n", *r00, *r00 & 0x7F, ok ? "written" : "NOT written");
-    }
-    fs::FsNativeSd().DeleteFile(HIZ_FLAG);
+    std::scoped_lock lock{g_hiz_mu};
+    HizReleaseLocked();
 }
 
 void HizStartCheck() {

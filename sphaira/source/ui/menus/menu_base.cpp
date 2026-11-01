@@ -1,3 +1,4 @@
+#include "battery_charge.hpp"
 #include "app.hpp"
 #include "auto_update.hpp"
 #include "log.hpp"
@@ -130,6 +131,9 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         LocalTime(t, data.tm);
         psmGetBatteryChargePercentage(&data.battery_percetange);
         psmGetChargerType(&data.charger_type);
+        if (battery::charge::HizActive()) {
+            data.charger_type = PsmChargerType_Unconnected; // the calibration's drain cut the charger's input: the indicator says so
+        }
         nifmGetInternetConnectionStatus(&data.type, &data.strength, &data.status);
         nifmGetCurrentIpAddress(&data.ip);
 
