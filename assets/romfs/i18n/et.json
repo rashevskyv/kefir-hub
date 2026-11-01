@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Kas tühistada praegune installimine?",
   "Remove all waiting": "Eemalda kõik ootel olevad",
   "Installs running in the background and waiting their turn.": "Taustal töötavad installid, mis ootavad oma korda.",
-  "Installs are still running. Exit anyway?": "Installimised on alles pooleli. Kas siiski väljuda?"
+  "Installs are still running. Exit anyway?": "Installimised on alles pooleli. Kas siiski väljuda?",
+  "Install the marked files": "Installi märgitud failid",
+  "Tinfoil shop": "Tinfoil pood",
+  "This is not a shop index": "See ei ole poe indeks",
+  "Game": "Mäng",
+  "Install all shown": "Installi kõik kuvatud",
+  "AeroFoil shop": "AeroFoil pood"
 }

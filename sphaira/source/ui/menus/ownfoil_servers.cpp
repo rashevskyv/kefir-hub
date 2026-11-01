@@ -1,4 +1,5 @@
 #include "ui/menus/ownfoil_internal.hpp"
+#include "ui/menus/remote_shop.hpp"
 
 #include <algorithm>
 
@@ -179,6 +180,18 @@ void Menu::ConnectTo(const sphaira::ownfoil::Config& config) {
     m_connect_async = std::make_unique<utils::Async>([this, config, query, token](){
         auto connect_result = sphaira::ownfoil::api::Connect(config, token);
         auto connected_config = config;
+
+        // something answered that is not an Ownfoil server: an AeroFoil shop or an ordinary Tinfoil one is read instead
+        std::shared_ptr<const sphaira::shop::Listing> shop_listing;
+        if (!connect_result.success && connect_result.reached && !connect_result.refused && !connect_result.reached_url.empty()) {
+            auto listing = std::make_shared<sphaira::shop::Listing>();
+            std::string shop_error;
+            if (sphaira::shop::Fetch(connect_result.reached_url, config.user, config.pass, token, *listing, shop_error)) {
+                shop_listing = std::move(listing);
+            } else {
+                log_write("[SHOP] %s: %s\n", connect_result.reached_url.c_str(), shop_error.c_str());
+            }
+        }
         bool saved_changed{};
         std::vector<sphaira::ownfoil::api::ShopApp> fetched;
         std::string fetch_error;
@@ -230,8 +243,16 @@ void Menu::ConnectTo(const sphaira::ownfoil::Config& config) {
 
         evman::push(evman::CallbackEventData{
             [this, config, connect_result = std::move(connect_result), connected_config = std::move(connected_config),
-                saved_changed, fetched = std::move(fetched), fetch_error = std::move(fetch_error), total, base_url = std::move(base_url)]() mutable {
+                saved_changed, fetched = std::move(fetched), fetch_error = std::move(fetch_error), total, base_url = std::move(base_url),
+                shop_listing = std::move(shop_listing)]() mutable {
                 m_connecting = false;
+
+                if (shop_listing) {
+                    const auto name = config.name.empty() ? connect_result.reached_url : config.name;
+                    App::Notify(name + ": " + (shop_listing->aerofoil ? "AeroFoil shop"_i18n : "Tinfoil shop"_i18n));
+                    ui::menu::shop::OpenShop(name, shop_listing, config.user, config.pass);
+                    return;
+                }
 
                 if (!connect_result.success) {
                     App::Notify(config.name + ": " + connect_result.error);

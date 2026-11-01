@@ -180,6 +180,7 @@ auto TryConnect(const std::string& url, const Config& config, std::stop_token to
         return false;
     }
     out.reached = true;
+    out.reached_url = url;
 
     if (result.code != 200) {
         out.error = ParseError(result.data);

@@ -4059,5 +4059,11 @@
   "Cancel the current install?": "Huidige installatie annuleren?",
   "Remove all waiting": "Alle wachten verwijderen",
   "Installs running in the background and waiting their turn.": "Installaties worden op de achtergrond uitgevoerd en wachten op hun beurt.",
-  "Installs are still running. Exit anyway?": "Installaties zijn nog bezig. Toch afsluiten?"
+  "Installs are still running. Exit anyway?": "Installaties zijn nog bezig. Toch afsluiten?",
+  "Install the marked files": "Installeer de gemarkeerde bestanden",
+  "Tinfoil shop": "Tinfoil-winkel",
+  "This is not a shop index": "Dit is geen winkelindex",
+  "Game": "Spel",
+  "Install all shown": "Alle weergegeven installeren",
+  "AeroFoil shop": "AeroFoil-winkel"
 }

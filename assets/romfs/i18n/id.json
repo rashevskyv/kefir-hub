@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Batalkan instalasi saat ini?",
   "Remove all waiting": "Hapus semua antrean",
   "Installs running in the background and waiting their turn.": "Pemasangan berjalan di latar belakang dan menunggu giliran.",
-  "Installs are still running. Exit anyway?": "Pemasangan masih berjalan. Tetap keluar?"
+  "Installs are still running. Exit anyway?": "Pemasangan masih berjalan. Tetap keluar?",
+  "Install the marked files": "Pasang file yang ditandai",
+  "Tinfoil shop": "Toko Tinfoil",
+  "This is not a shop index": "Ini bukan indeks toko",
+  "Game": "Game",
+  "Install all shown": "Instal semua yang ditampilkan",
+  "AeroFoil shop": "Toko AeroFoil"
 }

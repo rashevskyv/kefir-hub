@@ -4005,5 +4005,11 @@
   "Remove all waiting": "Прибрати всі, що очікують",
   "Clear finished": "Очистити завершені",
   "Installs running in the background and waiting their turn.": "Встановлення, що йдуть у фоні й чекають своєї черги.",
-  "Installs are still running. Exit anyway?": "Встановлення ще тривають. Вийти все одно?"
+  "Installs are still running. Exit anyway?": "Встановлення ще тривають. Вийти все одно?",
+  "Tinfoil shop": "магазин Tinfoil",
+  "AeroFoil shop": "магазин AeroFoil",
+  "This is not a shop index": "Це не індекс магазину",
+  "Game": "Гра",
+  "Install the marked files": "Встановити позначені файли",
+  "Install all shown": "Встановити всі показані"
 }

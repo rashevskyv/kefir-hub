@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Mevcut kurulum iptal edilsin mi?",
   "Remove all waiting": "Tüm beklemeleri kaldır",
   "Installs running in the background and waiting their turn.": "Arka planda çalışan yüklemeler sırasını bekliyor.",
-  "Installs are still running. Exit anyway?": "Yüklemeler hâlâ devam ediyor. Yine de çıkılsın mı?"
+  "Installs are still running. Exit anyway?": "Yüklemeler hâlâ devam ediyor. Yine de çıkılsın mı?",
+  "Install the marked files": "İşaretli dosyaları yükle",
+  "Tinfoil shop": "Tinfoil Mağazası",
+  "This is not a shop index": "Bu bir mağaza dizini değil",
+  "Game": "Oyun",
+  "Install all shown": "Tüm gösterilenleri yükle",
+  "AeroFoil shop": "AeroFoil mağazası"
 }

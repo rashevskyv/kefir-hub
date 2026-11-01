@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Cancel the current install?",
   "Remove all waiting": "Remove all waiting",
   "Installs running in the background and waiting their turn.": "Installs running in the background and waiting their turn.",
-  "Installs are still running. Exit anyway?": "Installs are still running. Exit anyway?"
+  "Installs are still running. Exit anyway?": "Installs are still running. Exit anyway?",
+  "Install the marked files": "Install the marked files",
+  "Tinfoil shop": "Tinfoil shop",
+  "This is not a shop index": "This is not a shop index",
+  "Game": "Game",
+  "Install all shown": "Install all shown",
+  "AeroFoil shop": "AeroFoil shop"
 }

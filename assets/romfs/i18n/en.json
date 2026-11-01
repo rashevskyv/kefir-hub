@@ -4005,5 +4005,11 @@
   "Remove all waiting": "Remove all waiting",
   "Clear finished": "Clear finished",
   "Installs running in the background and waiting their turn.": "Installs running in the background and waiting their turn.",
-  "Installs are still running. Exit anyway?": "Installs are still running. Exit anyway?"
+  "Installs are still running. Exit anyway?": "Installs are still running. Exit anyway?",
+  "Tinfoil shop": "Tinfoil shop",
+  "AeroFoil shop": "AeroFoil shop",
+  "This is not a shop index": "This is not a shop index",
+  "Game": "Game",
+  "Install the marked files": "Install the marked files",
+  "Install all shown": "Install all shown"
 }

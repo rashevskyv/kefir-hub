@@ -40,6 +40,7 @@ struct ConnectResult {
     bool refused{}; // the server itself turned the request down: bad credentials, no access.
     std::string error{};
     std::string base_url{}; // the root url that answered, with a trailing '/'.
+    std::string reached_url{}; // the url that answered even when it was not an Ownfoil server: a Tinfoil shop is read from it.
     ServerInfo info{};
 };
 

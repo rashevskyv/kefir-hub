@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Atcelt pašreizējo instalēšanu?",
   "Remove all waiting": "Noņemt visas gaidīšanas",
   "Installs running in the background and waiting their turn.": "Instalēšana notiek fonā un gaida savu kārtu.",
-  "Installs are still running. Exit anyway?": "Instalēšana joprojām notiek. Vai tomēr iziet?"
+  "Installs are still running. Exit anyway?": "Instalēšana joprojām notiek. Vai tomēr iziet?",
+  "Install the marked files": "Instalēt atzīmētos failus",
+  "Tinfoil shop": "Tinfoil veikals",
+  "This is not a shop index": "Šis nav veikikala indekss",
+  "Game": "Spēle",
+  "Install all shown": "Instalēt visus parādītos",
+  "AeroFoil shop": "AeroFoil veikals"
 }

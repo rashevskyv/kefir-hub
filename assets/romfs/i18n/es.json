@@ -4060,5 +4060,11 @@
   "Cancel the current install?": "¿Cancelar la instalación actual?",
   "Remove all waiting": "Eliminar todas las esperas",
   "Installs running in the background and waiting their turn.": "Instalaciones ejecutándose en segundo plano y esperando su turno.",
-  "Installs are still running. Exit anyway?": "Las instalaciones aún están en curso. ¿Salir de todos modos?"
+  "Installs are still running. Exit anyway?": "Las instalaciones aún están en curso. ¿Salir de todos modos?",
+  "Install the marked files": "Instalar los archivos marcados",
+  "Tinfoil shop": "Tienda de Tinfoil",
+  "This is not a shop index": "Este no es un índice de la tienda",
+  "Game": "Juego",
+  "Install all shown": "Instalar todo lo mostrado",
+  "AeroFoil shop": "Tienda AeroFoil"
 }

@@ -4059,5 +4059,11 @@
   "Cancel the current install?": "現在のインストールをキャンセルしますか？",
   "Remove all waiting": "待機中をすべて削除",
   "Installs running in the background and waiting their turn.": "バックグラウンドでインストールを実行中、順番待ちしています。",
-  "Installs are still running. Exit anyway?": "インストールを実行中です。終了しますか？"
+  "Installs are still running. Exit anyway?": "インストールを実行中です。終了しますか？",
+  "Install the marked files": "マークされたファイルをインストール",
+  "Tinfoil shop": "Tinfoil ショップ",
+  "This is not a shop index": "これはショップインデックスではありません",
+  "Game": "ゲーム",
+  "Install all shown": "表示されたものをすべてインストール",
+  "AeroFoil shop": "AeroFoilショップ"
 }

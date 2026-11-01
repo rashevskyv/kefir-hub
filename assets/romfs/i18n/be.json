@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Скасаваць бягучую ўстаноўку?",
   "Remove all waiting": "Выдаліць усё чаканне",
   "Installs running in the background and waiting their turn.": "Устаноўкі выконваюцца ў фонавым рэжыме і чакаюць сваёй чаргі.",
-  "Installs are still running. Exit anyway?": "Усталёўка яшчэ ідзе. Выйсці ўсё роўна?"
+  "Installs are still running. Exit anyway?": "Усталёўка яшчэ ідзе. Выйсці ўсё роўна?",
+  "Install the marked files": "Усталяваць адзначаныя файлы",
+  "Tinfoil shop": "Магазін Tinfoil",
+  "This is not a shop index": "Гэта не індэкс крамы",
+  "Game": "Гульня",
+  "Install all shown": "Усталяваць усе паказаныя",
+  "AeroFoil shop": "Магазін AeroFoil"
 }

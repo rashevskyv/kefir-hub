@@ -4059,5 +4059,11 @@
   "Cancel the current install?": "Hủy cài đặt hiện tại?",
   "Remove all waiting": "Xóa tất cả đang chờ",
   "Installs running in the background and waiting their turn.": "Quá trình cài đặt đang chạy ngầm và đang chờ đến lượt.",
-  "Installs are still running. Exit anyway?": "Quá trình cài đặt vẫn đang chạy. Vẫn thoát chứ?"
+  "Installs are still running. Exit anyway?": "Quá trình cài đặt vẫn đang chạy. Vẫn thoát chứ?",
+  "Install the marked files": "Cài đặt các tệp đã đánh dấu",
+  "Tinfoil shop": "Cửa hàng Tinfoil",
+  "This is not a shop index": "Đây không phải là chỉ mục cửa hàng",
+  "Game": "Trò chơi",
+  "Install all shown": "Cài đặt tất cả hiển thị",
+  "AeroFoil shop": "Cửa hàng AeroFoil"
 }

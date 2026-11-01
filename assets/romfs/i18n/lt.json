@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Atšaukti dabartinį diegimą?",
   "Remove all waiting": "Pašalinti visus laukiančius",
   "Installs running in the background and waiting their turn.": "Diegimai vyksta fone ir laukia savo eilės.",
-  "Installs are still running. Exit anyway?": "Diegimas vis dar vyksta. Vis tiek išeiti?"
+  "Installs are still running. Exit anyway?": "Diegimas vis dar vyksta. Vis tiek išeiti?",
+  "Install the marked files": "Įdiegti pažymėtus failus",
+  "Tinfoil shop": "Tinfoil parduotuvė",
+  "This is not a shop index": "Tai nėra parduotuvės indeksas",
+  "Game": "Žaidimas",
+  "Install all shown": "Įdiegti visus rodomus",
+  "AeroFoil shop": "AeroFoil parduotuvė"
 }

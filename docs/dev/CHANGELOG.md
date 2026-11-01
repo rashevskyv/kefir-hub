@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.270 — Shops: an AeroFoil shop and an ordinary Tinfoil shop open from the Ownfoil page (owner, 2026-11-01)
+When the server that answers is not an Ownfoil one, the Hub reads it as a shop (CyberFoil's way): `/api/remote/sections`, then `/api/shop/sections` (AeroFoil), else a legacy Tinfoil index at the address itself with the indexes of its `directories` (`utils/remote_shop_fetch.*`, pure helpers `remote_shop.hpp`, test `test_remote_shop`). The shop page lists nsp/nsz/xci/xcz files with a filter row, A installs one, X/Y mark several, START installs the marked or every file shown; every install goes through the install queue. Not yet: AeroFoil title details and screenshots, cheats, save sync, offline database.
+host tests: pass (--quick) | nro: built (0.14.270) | switch: pending (add a Tinfoil shop and an AeroFoil server in Ownfoil; install a file)
+
 ## v0.14.269 — Leaving the Hub asks while an install runs or waits (owner, 2026-11-01)
 `App::ConfirmExit` asks `Installs are still running. Exit anyway?` before the exits the user starts (Minus on the main screen, B on the main menu, B at the root of Homebrew) when the install queue is busy or a transfer runs; restarts and launches are not asked.
 host tests: not run (UI only) | nro: built (0.14.269) | switch: pending (start an Ownfoil install, press B on the main menu)

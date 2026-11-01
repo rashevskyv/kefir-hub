@@ -4059,5 +4059,11 @@
   "Cancel the current install?": "Avbryt aktuell installation?",
   "Remove all waiting": "Ta bort alla väntande",
   "Installs running in the background and waiting their turn.": "Installationer körs i bakgrunden och väntar på sin tur.",
-  "Installs are still running. Exit anyway?": "Installationer körs fortfarande. Avsluta ändå?"
+  "Installs are still running. Exit anyway?": "Installationer körs fortfarande. Avsluta ändå?",
+  "Install the marked files": "Installera markerade filer",
+  "Tinfoil shop": "Tinfoil-butik",
+  "This is not a shop index": "Detta är inte ett butiksindex",
+  "Game": "Spel",
+  "Install all shown": "Installera alla visade",
+  "AeroFoil shop": "AeroFoil-butik"
 }

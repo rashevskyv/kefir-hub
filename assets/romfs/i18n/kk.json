@@ -4054,5 +4054,11 @@
   "Cancel the current install?": "Ағымдағы орнатуды болдырмау?",
   "Remove all waiting": "Барлық күтулерді жою",
   "Installs running in the background and waiting their turn.": "Фондық режимде орнатулар орындалуда және кезек күтуде.",
-  "Installs are still running. Exit anyway?": "Орнату әлі де жүріп жатыр. Сонда да шығу керек пе?"
+  "Installs are still running. Exit anyway?": "Орнату әлі де жүріп жатыр. Сонда да шығу керек пе?",
+  "Install the marked files": "Белгіленген файлдарды орнату",
+  "Tinfoil shop": "Tinfoil дүкені",
+  "This is not a shop index": "Бұл дүкен индексі емес",
+  "Game": "Ойын",
+  "Install all shown": "Барлық көрсетілгенді орнату",
+  "AeroFoil shop": "AeroFoil дүкені"
 }

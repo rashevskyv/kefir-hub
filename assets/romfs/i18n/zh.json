@@ -4112,5 +4112,11 @@
   "Cancel the current install?": "取消当前安装？",
   "Remove all waiting": "移除所有等待",
   "Installs running in the background and waiting their turn.": "正在后台运行安装并等待排队。",
-  "Installs are still running. Exit anyway?": "安装仍在进行中。确定要退出吗？"
+  "Installs are still running. Exit anyway?": "安装仍在进行中。确定要退出吗？",
+  "Install the marked files": "安装已标记的文件",
+  "Tinfoil shop": "Tinfoil 商店",
+  "This is not a shop index": "这不是商店索引",
+  "Game": "游戏",
+  "Install all shown": "安装所有显示项",
+  "AeroFoil shop": "AeroFoil商店"
 }
