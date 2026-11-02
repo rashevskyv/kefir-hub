@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.274 — Nextendo: switching it on writes the patch files (owner, 2026-11-02)
+`InstallPatches` read `romfs:/nextendo/sd/` without mounting the romfs, so switching Nextendo on failed with "path not found" (0x202) and the start-up install failed silently: hosts and PRODINFO were set, the patches were not. It now mounts the romfs around the copy.
+host tests: not run (libnx code) | nro: not built | switch: pending (switch Nextendo off and on: no error, `nextendo_*` folders appear)
+
 ## v0.14.273 — Battery calibration: the texts agree with the drain that leaves the charger in (the reset page, the intro, the step list, the charge page no longer say to take the charger out)
 The reset-done page, the intro, the cycle row and the full-charge notice now say the charger can stay in; the Hub cuts its input. The pages also say that the user opens Kefir Hub himself after the switch-off (only then the zero is written), that the console may need 10 to 15 minutes to start, and the screensaver time reads in seconds or minutes (30 sec, not 0:30 min). The road map is gone from the drain and charge page (it lay over the charts); the step pages keep it. The cut check reads the live battery current (the average still showed the old charge and set the cut again 11 times at the start). The cut is a lease of 3 s that the drain page renews every second; a watchdog thread gives the input back when the page is closed, covered or the Hub is in the background. While it is on, the header battery indicator and the screensaver show a charger that is not charging. host tests: pass (--quick) | nro: not built | switch: pending
 

@@ -186,6 +186,9 @@ auto RemovePatches() -> Result {
 }
 
 auto InstallPatches() -> Result {
+    // the Hub mounts its romfs only around a read; without this every copy failed (a stale fsdev error: PathNotFound)
+    const bool romfs = R_SUCCEEDED(romfsInit());
+    ON_SCOPE_EXIT(if (romfs) { romfsExit(); });
     R_TRY(RemovePatches()); // also drops nextendo_* folders that a newer Prelude no longer has
     for (const auto& f : kPatchFiles) {
         R_TRY(CopyFileSimple(ROMFS_SD + std::string{f.path}, "/" + std::string{f.path}));
