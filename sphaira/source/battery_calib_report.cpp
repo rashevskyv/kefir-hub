@@ -205,7 +205,7 @@ void ShowReport() {
                 if (m->step == Step::Report) {
                     // the calibration is made here: a new number in the ledger; the other systems take it at their next start
                     auto l = LoadLedger();
-                    cutoff::RecordCalibration(l, CurrentSystemId(), facts->model, !facts->low, Now());
+                    cutoff::RecordCalibration(l, CurrentSystemId(), facts->model, !facts->low && !facts->verdict.inconsistent, Now());
                     SaveLedger(l);
                 }
                 ReportSeen(*m);

@@ -91,7 +91,7 @@ struct Cutoff {
 };
 
 inline constexpr std::int64_t CUTOFF_GAP_S = 30;  // a drain line this much before the next line (or the end of the log)
-inline constexpr int CUTOFF_MAX_MV = 3500;        // and the voltage then this low: not a page that was left at 80 %
+inline constexpr int CUTOFF_MAX_MV = 3400;        // and the voltage then this low: not a page that was left at 80 % (or by HOME at 3.45 V)
 
 inline auto Cutoffs(std::string_view text) -> std::vector<Cutoff> {
     std::vector<Cutoff> out;

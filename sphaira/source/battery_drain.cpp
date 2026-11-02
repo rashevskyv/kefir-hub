@@ -505,8 +505,12 @@ auto DrainMenu::CalibStatus() const -> std::string {
             return which + ": " + "the charger is out: the charge is paused. Plug it in to go on."_i18n;
         }
         if (m_pct >= 100) {
-            return which + ": " + (m_calib->step == 2 ? "charged to 100 %. The Hub measures the capacity of the battery. This was the last cycle: the report follows."_i18n
-                                                      : "charged to 100 %. The Hub measures the capacity of the battery. Then cycle 2 starts by itself: the drain, the charger can stay in."_i18n);
+            if (!m_measured) {
+                return which + ": " + "100 % is shown, but the battery is full only when the charging current falls near zero. The Hub waits for that, measures the capacity and goes on by itself."_i18n
+                    + " " + (m_calib->step == 2 ? "Then the report follows."_i18n : "Then cycle 2 starts: the drain, the charger can stay in."_i18n);
+            }
+            return which + ": " + (m_calib->step == 2 ? "the battery is full and its capacity is measured. The report follows."_i18n
+                                                      : "the battery is full and its capacity is measured. Cycle 2 starts: the drain."_i18n);
         }
         return which + ": " + "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
     }

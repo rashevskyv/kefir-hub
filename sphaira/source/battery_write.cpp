@@ -409,6 +409,10 @@ void PollInterruptedDrain() {
         finished = true;
         return;
     }
+    if (const auto m = calib_flow::LoadMarker(); m && calib::IsCycle(m->step)) {
+        finished = true; // a calibration runs: its zero writes the counters, not this offer
+        return;
+    }
     // wait until the UI has settled and nothing else runs
     if (since_start.GetSeconds() < 8 || App::GetProgressActive()) {
         return;

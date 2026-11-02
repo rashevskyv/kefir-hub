@@ -18,8 +18,8 @@ int main() {
     assert(VEmptyWith(0x0000, 3500) == (350u << 7));
 
     // a log value outside the battery's real range is not a zero
-    assert(InRange(3193) && InRange(3000) && InRange(3500));
-    assert(!InRange(2999) && !InRange(3501) && !InRange(0));
+    assert(InRange(3193) && InRange(3000) && InRange(3400));
+    assert(!InRange(2999) && !InRange(3401) && !InRange(3450) && !InRange(0));
 
     // switched on without the charger: the counters say 0
     CountersIn in{0x2310, 0x2304, 0x1000, 0x1000};

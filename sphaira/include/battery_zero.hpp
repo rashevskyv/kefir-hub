@@ -15,7 +15,7 @@
 namespace sphaira::battery::zero {
 
 inline constexpr int MIN_MV = 3000; // a cut-off voltage outside this range is a log error, not a zero
-inline constexpr int MAX_MV = 3500;
+inline constexpr int MAX_MV = 3400; // the real cut-offs: 3.19-3.21 V; a page left by HOME at 3.45 V must not become the zero
 inline constexpr std::uint16_t VE_DEFAULT = 0xA05F; // 3.20 V / 3.80 V, the console's own value (BDF's X sequence verifies it)
 
 inline auto InRange(int mv) -> bool {

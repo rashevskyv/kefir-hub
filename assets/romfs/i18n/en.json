@@ -3832,7 +3832,7 @@
   "The console switched off: setting the zero": "The console switched off: setting the zero",
   "The zero (empty battery)": "The zero (empty battery)",
   "Transfer to the other systems": "Transfer to the other systems",
-  "The cut-off voltage is outside 3.00 - 3.50 V: not a zero.": "The cut-off voltage is outside 3.00 - 3.50 V: not a zero.",
+  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.",
   "The gauge did not take the empty voltage.": "The gauge did not take the empty voltage.",
   "The gauge did not take the charge counters.": "The gauge did not take the charge counters.",
   "Now plug the charger in and wait for 100 %. The Hub counts the cycle by itself, from the log.": "Now plug the charger in and wait for 100 %. The Hub counts the cycle by itself, from the log.",
@@ -3840,8 +3840,8 @@
   "drain after the cut-off": "drain after the cut-off",
   "drain to the cut-off": "drain to the cut-off",
   "the charger is out: the charge is paused. Plug it in to go on.": "the charger is out: the charge is paused. Plug it in to go on.",
-  "charged to 100 %. The Hub measures the capacity of the battery. This was the last cycle: the report follows.": "charged to 100 %. The Hub measures the capacity of the battery. This was the last cycle: the report follows.",
-  "charged to 100 %. The Hub measures the capacity of the battery. Then cycle 2 starts by itself: the drain, the charger can stay in.": "charged to 100 %. The Hub measures the capacity of the battery. Then cycle 2 starts by itself: the drain, the charger can stay in.",
+  "the battery is full and its capacity is measured. The report follows.": "the battery is full and its capacity is measured. The report follows.",
+  "the battery is full and its capacity is measured. Cycle 2 starts: the drain.": "the battery is full and its capacity is measured. Cycle 2 starts: the drain.",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.",
   "Report": "Report",
   "Transfer": "Transfer",
@@ -4021,5 +4021,9 @@
   "Now cycle 1: the Hub drains the battery until the console switches itself off. The charger can stay in. After the switch-off, switch the console on (it may need 10 to 15 minutes to start) and open Kefir Hub yourself: it writes that voltage into the gauge as the zero. Then charge to 100 %.": "Now cycle 1: the Hub drains the battery until the console switches itself off. The charger can stay in. After the switch-off, switch the console on (it may need 10 to 15 minutes to start) and open Kefir Hub yourself: it writes that voltage into the gauge as the zero. Then charge to 100 %.",
   "The reset needs no charging: it is done at once. Then leave the console on a table, the charger can stay in: the Hub gives it a full load by itself. When the console switches off, switch it on again (with the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge and shows the charge. This step is yours: without it nothing is written.": "The reset needs no charging: it is done at once. Then leave the console on a table, the charger can stay in: the Hub gives it a full load by itself. When the console switches off, switch it on again (with the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge and shows the charge. This step is yours: without it nothing is written.",
   "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge. The console may need 10 to 15 minutes to start. Take the charger out and plug it in again, and the Hub cuts the input once more.": "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge. The console may need 10 to 15 minutes to start. Take the charger out and plug it in again, and the Hub cuts the input once more.",
-  "sec": "sec"
+  "sec": "sec",
+  "100 % is shown, but the battery is full only when the charging current falls near zero. The Hub waits for that, measures the capacity and goes on by itself.": "100 % is shown, but the battery is full only when the charging current falls near zero. The Hub waits for that, measures the capacity and goes on by itself.",
+  "Then the report follows.": "Then the report follows.",
+  "Then cycle 2 starts: the drain, the charger can stay in.": "Then cycle 2 starts: the drain, the charger can stay in.",
+  "This cycle was not counted: its switch-off is not in the log.": "This cycle was not counted: its switch-off is not in the log."
 }

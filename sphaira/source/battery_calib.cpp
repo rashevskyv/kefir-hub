@@ -162,7 +162,7 @@ auto ScreenNow() -> std::pair<int, bool> {
 
 // ---- the runs -----------------------------------------------------------------------------------------------------------
 
-void OnChargeDone();
+void OnChargeDone(int was);
 void StartChargeRun(const Marker& m);
 void WriteZeroThenCharge(Marker m);
 
@@ -172,7 +172,7 @@ void StartDrainRun(Marker& m) {
     CalibRun run;
     run.tail = m.cutoffs > 0;
     run.step = CycleOf(m.step);
-    run.on_charge_done = OnChargeDone;
+    run.on_charge_done = [was = CycleOf(m.step)]() { OnChargeDone(was); };
     run.on_drained = []() { // the console was cut off and the charger is in: the drain is over, the charge follows
         auto cur = LoadCurrent();
         if (!cur || !IsCycle(cur->step)) {
@@ -197,9 +197,14 @@ void StartDrainRun(Marker& m) {
 }
 
 // the charge saw 100 % and the charger came out: the cycle is counted, and the next step starts by itself
-void OnChargeDone() {
+void OnChargeDone(int was) {
     auto m = LoadCurrent();
-    if (m && IsCycle(m->step)) {
+    if (m && IsCycle(m->step) && CycleOf(m->step) == was) {
+        // the log did not count this cycle (its cut-off is missing): the same drain again would loop, the list says where it is
+        log_write("[Calib] the charge ended but cycle %d was not counted: the steps, not a new drain\n", was);
+        App::Notify("This cycle was not counted: its switch-off is not in the log."_i18n);
+        ShowSteps();
+    } else if (m && IsCycle(m->step)) {
         StartDrainRun(*m);
     } else if (m && m->step == Step::Report) {
         ShowReport(); // both cycles are done: straight to the result
@@ -212,7 +217,7 @@ void StartChargeRun(const Marker& m) {
     CalibRun run;
     run.charge = true;
     run.step = CycleOf(m.step);
-    run.on_charge_done = OnChargeDone;
+    run.on_charge_done = [was = CycleOf(m.step)]() { OnChargeDone(was); };
     StartCalibRun(std::move(run));
 }
 
@@ -455,6 +460,8 @@ auto Resume(Marker m) -> bool {
     const bool zero_due = m.step == Step::Cycle1 && !m.zero_at;
     switch (found) {
         case Found::CutoffSeen:
+            m.drain_started = false; // the drain is over: a Hub restart in this boot must not start it again in the tail mode
+            SaveMarker(m);
             if (zero_due) {
                 // switched on without the charger: the zero is written now, the drain goes on in the tail mode
                 App::Notify("The console switched off: setting the zero"_i18n);

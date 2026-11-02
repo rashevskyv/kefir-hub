@@ -103,8 +103,11 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
     const float pct = std::clamp(m_pct, 0, 100) / 100.f;
-    const auto level = pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
-                                  : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
+    // green only for a battery that is really full: on the charge page the current must have fallen and the capacity be measured
+    const bool waiting_full = m_calib->charge && m_charger && !m_measured;
+    const auto level = waiting_full ? nvgRGB(0x60, 0xA5, 0xFA)
+        : pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
+                     : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
 
     // the battery
     const float bx = 70.f, by = 108.f, bw = 360.f, bh = 150.f;
@@ -176,10 +179,6 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
             ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn, "%s", "Plug the charger in."_i18n.c_str());
         }
         y += 46.f;
-        if (m_charger && m_pct >= 100) {
-            ui::gfx::drawTextBox(vg, 70.f, y, 22.f, 1140.f, warn, "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in."_i18n.c_str());
-            y += 44.f;
-        }
         calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full."_i18n);
         y += 76.f;
         calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n);

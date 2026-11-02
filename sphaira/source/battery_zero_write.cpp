@@ -53,7 +53,7 @@ void ReadQhAtStart() {
 // its voltage and current (zero::FullNow) is written as 100 %, whatever the difference says.
 auto WriteZero(int mv, std::string& failed, int qh_last) -> Result {
     if (!zero::InRange(mv)) {
-        failed = "The cut-off voltage is outside 3.00 - 3.50 V: not a zero."_i18n;
+        failed = "The cut-off voltage is outside 3.00 - 3.40 V: not a zero."_i18n;
         R_THROW(Result_ArchiveRead);
     }
     auto s = detail::Read();
@@ -76,6 +76,8 @@ auto WriteZero(int mv, std::string& failed, int qh_last) -> Result {
     const bool top = vcell && avg && zero::FullNow(now_mv, now_ma);
     const u16 base = qh_last > 0 ? static_cast<u16>(qh_last - 1) : g_qh_at_start.value_or(*qh);
 
+    const auto status = g.Read(MAX17050_Status);
+    const bool por = status && (*status & zero::STATUS_POR);
     const auto ve = zero::VEmptyWith(*old_ve, mv);
     const auto c = zero::PlanCounters({*full, *nom, base, *qh, top});
     R_UNLESS(c.ok, Result_ArchiveRead);
@@ -86,6 +88,10 @@ auto WriteZero(int mv, std::string& failed, int qh_last) -> Result {
     if (!g.WriteVerify(MAX17050_VEmpty, ve)) {
         failed = "The gauge did not take the empty voltage."_i18n;
         R_THROW(Result_ArchiveRead);
+    }
+    if (por && !top) {
+        log_write("[Zero] the gauge restarted since the cut-off (Status %04X): QH has no baseline, the counters are not written\n", *status);
+        R_SUCCEED();
     }
     R_TRY(WriteCounters(g, c, failed));
     R_SUCCEED();
