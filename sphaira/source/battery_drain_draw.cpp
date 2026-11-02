@@ -132,6 +132,16 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     ui::gfx::drawTextArgs(vg, fx, 160.f, 64.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, text, "%.2f V", m_mv / 1000.0);
     const bool attention = m_charger || m_docked || m_hot;
     calib_ui::DrawWrapped(vg, fx, 204.f, 18.f, 690.f, attention ? warn : info, m_status);
+    // how far the status text reaches: the chips and the figures under it make room (24 px at most, the charts stay)
+    float below = 0.f;
+    {
+        const auto wrapped = calib_ui::WrapText(vg, 18.f, 690.f, m_status);
+        float tb[4]{};
+        nvgFontSize(vg, 18.f);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        nvgTextBoxBounds(vg, 0.f, 0.f, 730.f, wrapped.c_str(), nullptr, tb);
+        below = std::clamp(204.f + (tb[3] - tb[1]) + 10.f - 282.f, 0.f, 24.f);
+    }
 
     // the chips
     const auto Chip = [&](float x, float y, const std::string& label, const std::string& value) {
@@ -156,18 +166,18 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
             : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
-        const float w1 = Chip(fx, 282.f, "Load:"_i18n, load_text);
-        Chip(fx + w1 + 12.f, 282.f, "Brightness:"_i18n, std::to_string(brightness) + " %");
+        const float w1 = Chip(fx, 282.f + below, "Load:"_i18n, load_text);
+        Chip(fx + w1 + 12.f, 282.f + below, "Brightness:"_i18n, std::to_string(brightness) + " %");
 
     }
 
     // the figures
     char v[64];
     std::snprintf(v, sizeof(v), "%d mA", std::abs(m_ma));
-    ui::gfx::drawTextArgs(vg, fx, 340.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "Charging current"_i18n : "Consumption from the battery"_i18n).c_str());
-    ui::gfx::drawTextArgs(vg, fx + 690.f, 340.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", v);
-    ui::gfx::drawTextArgs(vg, fx, 370.f, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
-    ui::gfx::drawTextArgs(vg, fx + 690.f, 370.f, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
+    ui::gfx::drawTextArgs(vg, fx, 340.f + below, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "Charging current"_i18n : "Consumption from the battery"_i18n).c_str());
+    ui::gfx::drawTextArgs(vg, fx + 690.f, 340.f + below, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", v);
+    ui::gfx::drawTextArgs(vg, fx, 370.f + below, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
+    ui::gfx::drawTextArgs(vg, fx + 690.f, 370.f + below, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
 
     if (m_calib->charge) {
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);

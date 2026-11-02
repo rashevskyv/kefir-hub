@@ -532,13 +532,11 @@ auto DrainMenu::CalibStatus() const -> std::string {
     if (m_soft && !m_calib->tail) {
         return "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load."_i18n
             + " " + (charge::HizActive()
-                ? "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub."_i18n
-                : "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n)
-            + " " + "Everything is written to a log."_i18n;
+                ? "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n
+                : "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);
     }
     if (charge::HizActive()) {
-        return "The charger is in, but its input is cut: the console drains on the battery. Full load. When the console switches off, switch it on again (keep the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge. The console may need 10 to 15 minutes to start. Take the charger out and plug it in again, and the Hub cuts the input once more."_i18n
-            + " " + "Everything is written to a log."_i18n;
+        return "The charger is in, its input is cut: the console drains on the battery. When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n;
     }
     return (m_calib->tail
         ? "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum."_i18n

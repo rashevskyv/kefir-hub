@@ -333,6 +333,7 @@ void ShowResetDone() {
         std::vector<cu::Line>{
             cu::Ok("Factory model written"_i18n),
             cu::Ok("The backup was made."_i18n),
+            cu::Dim("The percent right after the reset is taken from the voltage: while the charger charges it can be too high. It is put right at the switch-off, when the zero is written."_i18n),
             cu::Item("Now cycle 1: the Hub drains the battery until the console switches itself off. The charger can stay in. After the switch-off, switch the console on (it may need 10 to 15 minutes to start) and open Kefir Hub yourself: it writes that voltage into the gauge as the zero. Then charge to 100 %."_i18n),
         },
         "Go on"_i18n, [](cu::Page& p) {

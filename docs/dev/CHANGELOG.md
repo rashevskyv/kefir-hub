@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.276 — Battery drain page: the status text no longer runs over the Load and Brightness chips
+The status of the drain with the cut input is two lines instead of five; the chips and the figures under the status move down by its height (24 px at most). The reset page says the percent right after the reset comes from the voltage and can be too high while the charger charges. host tests: not run (layout and texts) | nro: not built | switch: pending
+
 ## v0.14.275 — Battery calibration: the charge page waits for the current to fall before it calls the battery full; audit fixes
 At 100 % shown with the current still flowing, the battery stays blue and the page says the Hub waits for the current to fall, measures the capacity and goes on by itself. Audit: a cut-off is 3.40 V at most (was 3.50); a gauge with two different capacities is not a good calibration for the other systems; a charge that did not count its cycle opens the steps instead of the same drain again; a start without the charger after the cut-off clears drain_started; the old align offer stays quiet during a calibration; after a gauge restart the zero writes V_empty only. host tests: pass (--quick) | nro: not built | switch: pending
 
