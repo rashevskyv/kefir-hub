@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.277 — Battery drawing: waves and an arrow
+The big battery of the drain page and of the screensaver has a wavy level edge that ripples up while charging and down while draining, and an arrow (up: charging, down: draining) set from the live current. The approximate sign before the percent is gone. host tests: not run (drawing) | nro: not built | switch: pending
+
 ## v0.14.276 — Battery drain page: the status text no longer runs over the Load and Brightness chips
 The status of the drain with the cut input is two lines instead of five; the chips and the figures under the status move down by its height (24 px at most). The reset page says the percent right after the reset comes from the voltage and can be too high while the charger charges. host tests: not run (layout and texts) | nro: not built | switch: pending
 

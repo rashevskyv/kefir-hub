@@ -59,6 +59,7 @@ struct SaverInfo {
     // battery with an approximate percent and columns of figures; `hint` is a line at the bottom of the screen
     bool battery_view{false};
     int battery_percent{-1};
+    int battery_dir{0}; // +1 charging, -1 draining, 0 idle
     std::vector<std::pair<std::string, std::string>> columns{};
     std::string hint{};
 

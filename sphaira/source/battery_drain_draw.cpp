@@ -1,5 +1,6 @@
 #include "battery_drain_menu.hpp"
 #include "battery_calib_ui.hpp"
+#include "ui/battery_gauge.hpp"
 
 namespace sphaira::battery {
 
@@ -120,11 +121,9 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     nvgRoundedRect(vg, bx + bw, by + bh / 2.f - 30.f, 22.f, 60.f, 6.f);
     nvgFillColor(vg, text);
     nvgFill(vg);
-    nvgBeginPath(vg);
-    nvgRoundedRect(vg, bx + 12.f, by + 12.f, (bw - 24.f) * pct, bh - 24.f, 10.f);
-    nvgFillColor(vg, level);
-    nvgFill(vg);
-    ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 72.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "\u2248 %d%%", m_pct);
+    ui::gfx::drawBatteryLevel(vg, bx + 12.f, by + 12.f, bw - 24.f, bh - 24.f, 10.f, pct, level, BatteryDir());
+    ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 72.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "%d%%", m_pct);
+    ui::gfx::drawBatteryArrow(vg, bx + bw - 44.f, by + bh / 2.f, 50.f, BatteryDir(), text);
     calib_ui::DrawWrapped(vg, bx, by + bh + 10.f, 16.f, bw, info, "The percent is approximate: the console may switch off earlier."_i18n);
 
     // the voltage and the state
@@ -326,6 +325,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         // as in the guide: the clock, the stage, the battery with an approximate percent, and five columns
         info.battery_view = true;
         info.battery_percent = m_pct;
+        info.battery_dir = BatteryDir();
         info.status = CalibTitle();
         info.hint = "Right stick: brightness; left stick: move. Any button exits."_i18n;
         char v[32], i[32], t[32];

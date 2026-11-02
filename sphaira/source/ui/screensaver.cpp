@@ -1,5 +1,6 @@
 #include "ui/screensaver.hpp"
 #include "ui/nvg_util.hpp"
+#include "ui/battery_gauge.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
@@ -250,11 +251,9 @@ void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float c
     nvgRoundedRect(vg, bx + bw, by + bh / 2.f - 20.f, 14.f, 40.f, 4.f);
     nvgFillColor(vg, text_col);
     nvgFill(vg);
-    nvgBeginPath(vg);
-    nvgRoundedRect(vg, bx + 8.f, by + 8.f, (bw - 16.f) * pct, bh - 16.f, 7.f);
-    nvgFillColor(vg, level);
-    nvgFill(vg);
-    gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 44.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text_col, "\u2248 %d%%", info.battery_percent);
+    gfx::drawBatteryLevel(vg, bx + 8.f, by + 8.f, bw - 16.f, bh - 16.f, 7.f, pct, level, info.battery_dir);
+    gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 44.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text_col, "%d%%", info.battery_percent);
+    gfx::drawBatteryArrow(vg, bx + bw - 34.f, by + bh / 2.f, 34.f, info.battery_dir, text_col);
 
     // the columns
     const float cols_y = by + bh + 30.f, col_w = 120.f;

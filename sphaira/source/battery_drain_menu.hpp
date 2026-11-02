@@ -147,6 +147,8 @@ struct DrainMenu final : ui::menu::MenuBase {
 private:
     // what the screensaver paints: the cycle, the battery bar, power and temperature, the energy, the time on battery
     auto SaverReadout() const -> ui::SaverInfo;
+    // +1 while the battery charges, -1 while it drains (the live current), 0 when it hardly moves
+    int BatteryDir() const { return m_ma > 30 ? 1 : m_ma < -30 ? -1 : 0; }
 
     int m_cycle;
     std::optional<CalibRun> m_calib;
