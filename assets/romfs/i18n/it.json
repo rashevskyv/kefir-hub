@@ -4071,5 +4071,7 @@
   "Delete all shown": "Elimina tutti i visualizzati",
   "Deleted": "Eliminato",
   "Delete the marked files": "Elimina file contrassegnati",
-  "A or START: delete": "A o START: elimina"
+  "A or START: delete": "A o START: elimina",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Nessuna patch per questo firmware"
 }

@@ -32,6 +32,8 @@ auto MakeBoolItem(std::string label, std::string description, std::function<bool
 auto MakeOptionItem(std::string label, std::string description, option::OptionBool& option) -> SettingsItem;
 auto ResolveItemIndex(const std::vector<SettingsItem>& items, s64 index, s64 from) -> s64;
 
+// switch or lamp of the row (if any) at the right edge; true when drawn. `value_text` is drawn left of a lamp.
+auto DrawSettingsIndicator(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected, const std::string& value_text) -> bool;
 auto SettingsItemTextX(const SettingsItem& item, float x) -> float;
 void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& item, Vec4 v, bool selected);
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected);

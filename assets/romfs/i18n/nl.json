@@ -4071,5 +4071,7 @@
   "Delete all shown": "Alle weergegeven verwijderen",
   "Deleted": "Verwijderd",
   "Delete the marked files": "Gemarkeerde bestanden verwijderen",
-  "A or START: delete": "A of START: verwijderen"
+  "A or START: delete": "A of START: verwijderen",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Geen patch voor deze firmware"
 }

@@ -20,6 +20,8 @@ struct KefirSetting {
     std::function<Result(bool)> set;
     std::string warning_on;
     float hold_seconds{0.5f};
+    // true while the setting waits for the user's choice (switch drawn grey); unset = never
+    std::function<bool()> pending{};
 };
 
 struct PackageAction {

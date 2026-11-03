@@ -4071,5 +4071,7 @@
   "Delete all shown": "Radera alla visade",
   "Deleted": "Raderad",
   "Delete the marked files": "Radera markerade filer",
-  "A or START: delete": "A eller START: radera"
+  "A or START: delete": "A eller START: radera",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Ingen patch för denna firmware"
 }

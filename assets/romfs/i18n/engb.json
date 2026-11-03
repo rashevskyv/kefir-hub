@@ -4066,5 +4066,7 @@
   "Delete all shown": "Delete all shown",
   "Deleted": "Deleted",
   "Delete the marked files": "Delete the marked files",
-  "A or START: delete": "A or START: delete"
+  "A or START: delete": "A or START: delete",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "No patch for this firmware"
 }

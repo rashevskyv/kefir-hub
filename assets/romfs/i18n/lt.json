@@ -4066,5 +4066,7 @@
   "Delete all shown": "Ištrinti visus rodomus",
   "Deleted": "Ištrinta",
   "Delete the marked files": "Ištrinti pažymėtus failus",
-  "A or START: delete": "A arba START: ištrinti"
+  "A or START: delete": "A arba START: ištrinti",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Šiai programinei įrangai pataisos nėra"
 }

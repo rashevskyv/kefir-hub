@@ -127,8 +127,8 @@ void Menu::DrawItemRow(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem&
             );
         }
 
-        if (item.value) {
-            const auto value = item.value();
+        const auto value = item.value ? item.value() : std::string{};
+        if (!DrawSettingsIndicator(vg, theme, v, item, selected, value) && item.value) {
             gfx::drawText(
                 vg, v.x + v.w - 20.f, v.y + 21.f, 18.f,
                 SettingsValueColour(theme, value, selected),

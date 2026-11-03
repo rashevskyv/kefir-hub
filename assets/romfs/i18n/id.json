@@ -4066,5 +4066,7 @@
   "Delete all shown": "Hapus semua yang ditampilkan",
   "Deleted": "Dihapus",
   "Delete the marked files": "Hapus file yang ditandai",
-  "A or START: delete": "A atau START: hapus"
+  "A or START: delete": "A atau START: hapus",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Tidak ada patch untuk firmware ini"
 }

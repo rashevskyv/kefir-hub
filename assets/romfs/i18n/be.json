@@ -4066,5 +4066,7 @@
   "Delete all shown": "Выдаліць усе паказаныя",
   "Deleted": "Выдалена",
   "Delete the marked files": "Выдаліць пазначаныя файлы",
-  "A or START: delete": "A ці START: выдаліць"
+  "A or START: delete": "A ці START: выдаліць",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Няма патча для гэтай прашыўкі"
 }

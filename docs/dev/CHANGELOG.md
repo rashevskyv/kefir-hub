@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.281 — Kefir Settings: toggle rows show a tri-state switch, the Nextendo Status row shows a lamp (owner, 2026-10-31)
+Every `MakeKefirToggle` row draws a rounded switch (knob right + green = on, left + red = off, middle + grey = waits for a choice, only when a row sets `KefirSetting::pending`), with a short slide; Status uses a green/red/grey lamp (`SettingsItem::tri`/`lamp`, drawn by `DrawSettingsIndicator` in both draw sites). Docs drafts on EN/UK kefir-settings. Verification: host tests: pass (new test_settings_switch; the one CRLF-checkout failure test_nand_archive_contract is a worktree artefact), i18n contract: pass, nro: built, switch: pending (look at the switch, the slide and the lamp on the console).
+
 ## v0.14.280 — Nextendo off in the Hub no longer undoes the Prelude app (owner, 2026-11-03)
 The Hub hosts file now ends with `# managed by Kefir Hub`. A Nextendo file without it (the Prelude app, or a Hub before this version) is `Foreign`: with Nextendo off the Hub leaves it, the PRODINFO key and the DNS keys alone (before, every Hub start deleted it, set `blank_prodinfo_emummc=1` and the DNS defaults, so Prelude seemed not to switch); with Nextendo on the Hub writes over it with no backup. The one-time "keep on" check runs only when no choice is stored (`OptionBase::IsStored`), so a stored "off" stays off.
 host tests: pass (--quick) | nro: not built | switch: pending (Hub off + Prelude in Nextendo mode: restart, start the Hub, emummc.txt and blank_prodinfo_emummc=0 stay)

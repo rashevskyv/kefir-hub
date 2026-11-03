@@ -4071,5 +4071,7 @@
   "Delete all shown": "표시된 항목 모두 삭제",
   "Deleted": "삭제됨",
   "Delete the marked files": "선택한 파일 삭제",
-  "A or START: delete": "A 또는 START: 삭제"
+  "A or START: delete": "A 또는 START: 삭제",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "이 펌웨어에 대한 패치가 없습니다"
 }

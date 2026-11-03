@@ -4066,5 +4066,7 @@
   "Delete all shown": "Gösterilenlerin tümünü sil",
   "Deleted": "Silindi",
   "Delete the marked files": "İşaretli dosyaları sil",
-  "A or START: delete": "A veya START: sil"
+  "A or START: delete": "A veya START: sil",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Bu yazılım için yama yok"
 }

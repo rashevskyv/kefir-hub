@@ -4066,5 +4066,7 @@
   "Delete all shown": "Usuń wszystkie wyświetlane",
   "Deleted": "Usunięto",
   "Delete the marked files": "Usuń zaznaczone pliki",
-  "A or START: delete": "A lub START: usuń"
+  "A or START: delete": "A lub START: usuń",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Brak łatki dla tego oprogramowania układowego"
 }

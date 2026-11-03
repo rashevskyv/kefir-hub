@@ -4047,5 +4047,7 @@
   "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current.": "Тепер вставте зарядку. Hub сам виміряє ємність, коли батарея перестане брати струм.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "Консоль можна лишити так або користуватися нею під час зарядки. Консоль показує 100 % зарано: не виймайте зарядку, доки Hub не скаже, що ємність виміряно.",
   "the drain is done. Now the charge, until the battery is full.": "розряд завершено. Тепер зарядка, доки батарея не стане повною.",
-  "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "розряд завершено. Вставте зарядку: ємність виміряється сама, коли батарея стане повною"
+  "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "розряд завершено. Вставте зарядку: ємність виміряється сама, коли батарея стане повною",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Немає патча для цієї прошивки"
 }

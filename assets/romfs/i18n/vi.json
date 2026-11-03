@@ -4071,5 +4071,7 @@
   "Delete all shown": "Xóa tất cả mục hiển thị",
   "Deleted": "Đã xóa",
   "Delete the marked files": "Xóa các tệp đã đánh dấu",
-  "A or START: delete": "A hoặc START: xóa"
+  "A or START: delete": "A hoặc START: xóa",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Không có bản vá cho firmware này"
 }

@@ -1,4 +1,5 @@
 #include "ui/menus/settings/settings_internal.hpp"
+#include "ui/menus/settings/settings_switch.hpp"
 
 #include "app.hpp"
 #include "i18n.hpp"
@@ -6,6 +7,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <unordered_map>
 
 namespace sphaira::ui::menu::settings {
 
@@ -190,6 +193,62 @@ void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& 
 }
 
 
+namespace {
+
+// fixed colours: the themes have no green/red entries; these read on light and dark backgrounds
+auto IndicatorColour(int state) -> NVGcolor {
+    return state > 0 ? nvgRGBA(46, 170, 82, 255) : state == 0 ? nvgRGBA(214, 64, 64, 255) : nvgRGBA(135, 138, 148, 255);
+}
+
+// slide state per row label; drawn on the UI thread only.
+// ponytail: two rows with one label share a knob, harmless; key by row id if that ever shows
+auto KnobPos(const std::string& key, Tri state) -> float {
+    static std::unordered_map<std::string, float> pos;
+    const auto target = KnobTarget(state);
+    auto it = pos.find(key);
+    if (it == pos.end()) {
+        it = pos.emplace(key, target).first; // first sight: no slide
+    }
+    return it->second = KnobStep(it->second, target);
+}
+
+} // namespace
+
+auto DrawSettingsIndicator(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected, const std::string& value_text) -> bool {
+    const float right = v.x + v.w - 20.f;
+    const float cy = v.y + v.h / 2.f;
+    if (item.tri) {
+        const auto state = static_cast<Tri>(item.tri());
+        const float w = 56.f, h = 30.f, r = h / 2.f;
+        const float x = right - w, y = cy - r;
+        const float knob_x = x + r + KnobPos(item.label, state) * (w - h);
+        gfx::drawRect(vg, x, y, w, h, IndicatorColour(static_cast<int>(state)), r);
+        nvgBeginPath(vg);
+        nvgCircle(vg, knob_x, cy, r - 4.f);
+        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+        nvgFill(vg);
+        return true;
+    }
+    if (item.lamp) {
+        const float d = 9.f; // radius
+        const float cx = right - d;
+        nvgBeginPath(vg);
+        nvgCircle(vg, cx, cy, d);
+        nvgFillColor(vg, IndicatorColour(item.lamp()));
+        nvgFill(vg);
+        if (!value_text.empty()) {
+            gfx::drawText(
+                vg, cx - d - 10.f, v.y + 21.f, 18.f,
+                theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO),
+                value_text.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_TOP
+            );
+        }
+        return true;
+    }
+    return false;
+}
+
+
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected) {
     if (item.kind == SettingsItemKind::Header) {
         const float text_x = v.x + 18.f;
@@ -209,7 +268,7 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
 
     const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
     const auto value = item.value ? item.value() : std::string{};
-    const auto value_width = value.empty() ? 0.f : 224.f;
+    const auto value_width = (value.empty() && !item.tri && !item.lamp) ? 0.f : 224.f;
 
     if (selected) {
         gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
@@ -233,7 +292,7 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
         );
     }
 
-    if (!value.empty()) {
+    if (!DrawSettingsIndicator(vg, theme, v, item, selected, value) && !value.empty()) {
         gfx::drawText(
             vg, v.x + v.w - 20.f, v.y + 21.f, 18.f,
             SettingsValueColour(theme, value, selected),

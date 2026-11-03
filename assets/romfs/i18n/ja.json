@@ -4071,5 +4071,7 @@
   "Delete all shown": "表示中項目をすべて削除",
   "Deleted": "削除済み",
   "Delete the marked files": "マークされたファイルを削除",
-  "A or START: delete": "A または START: 削除"
+  "A or START: delete": "A または START: 削除",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "このファームウェア用のパッチはありません"
 }

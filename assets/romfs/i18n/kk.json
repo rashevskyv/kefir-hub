@@ -4066,5 +4066,7 @@
   "Delete all shown": "Көрсетілгендерді түгел жою",
   "Deleted": "Өшірілді",
   "Delete the marked files": "Белгіленген файлдарды жою",
-  "A or START: delete": "A немесе START: жою"
+  "A or START: delete": "A немесе START: жою",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Бұл прошивка үшін патч жоқ"
 }

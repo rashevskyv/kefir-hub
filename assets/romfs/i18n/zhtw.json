@@ -4124,5 +4124,7 @@
   "Delete all shown": "刪除所有顯示項目",
   "Deleted": "已刪除",
   "Delete the marked files": "刪除已標記的檔案",
-  "A or START: delete": "A 或 START：刪除"
+  "A or START: delete": "A 或 START：刪除",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "此韌體沒有修補程式"
 }

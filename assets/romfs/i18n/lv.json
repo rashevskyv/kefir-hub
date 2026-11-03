@@ -4066,5 +4066,7 @@
   "Delete all shown": "Dzēst visus redzamos",
   "Deleted": "Dzēsts",
   "Delete the marked files": "Dzēst atzīmētos failus",
-  "A or START: delete": "A vai START: dzēst"
+  "A or START: delete": "A vai START: dzēst",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Šai programmaparatūrai nav labojuma"
 }

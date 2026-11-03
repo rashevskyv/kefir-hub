@@ -1,6 +1,7 @@
 #include "ui/menus/settings_menu.hpp"
 #include "ui/menus/settings/settings_internal.hpp"
 #include "ui/menus/settings/settings_kefir.hpp"
+#include "ui/menus/settings/settings_switch.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
@@ -63,16 +64,18 @@ void ToggleKefirSetting(const KefirSetting& setting) {
 }
 
 auto MakeKefirToggle(KefirSetting setting) -> SettingsItem {
-    return {
+    SettingsItem item{
         setting.label,
         setting.description,
-        [setting](){
-            return OnOff(setting.get());
-        },
+        {},
         [setting](){
             ToggleKefirSetting(setting);
         }
     };
+    item.tri = [setting](){
+        return static_cast<int>(TriFromBool(setting.get(), setting.pending && setting.pending()));
+    };
+    return item;
 }
 
 void RunPackageAction(const PackageAction& action) {

@@ -4066,5 +4066,7 @@
   "Delete all shown": "Kustuta kõik näidatud",
   "Deleted": "Kustutatud",
   "Delete the marked files": "Kustuta märgitud failid",
-  "A or START: delete": "A või START: kustuta"
+  "A or START: delete": "A või START: kustuta",
+  "sysNAND": "sysNAND",
+  "No patch for this firmware": "Selle püsivara jaoks puudub paik"
 }

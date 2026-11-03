@@ -47,6 +47,10 @@ struct SettingsItem {
     // a step that is finished (a wizard's list): the name in green with a tick in front of it. With `disabled` the
     // cursor steps over it too
     bool done{false};
+    // a switch drawn in place of the text value: 1 on, 0 off, -1 waiting for the user's choice
+    std::function<int()> tri{};
+    // a status lamp drawn in place of the text value: 1 green, 0 red, -1 grey. A short text may stay in `value`.
+    std::function<int()> lamp{};
 };
 
 struct SettingsCategory {

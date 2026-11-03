@@ -38,16 +38,31 @@ auto Fill(std::string fmt, const std::string& arg) -> std::string {
     return fmt;
 }
 
-auto StatusText() -> std::string {
+// The lamp carries the meaning: green = works now, red = switched off or no ssl patch, grey = not in use.
+// Text stays only where the colour alone would not say why.
+auto StatusLamp() -> int {
     if (!nx::FirmwareOk()) {
-        return "Off (firmware)"_i18n;
+        return 0;
     }
     switch (nx::CurrentMode()) {
-        case nx::Mode::EmuMMC: return nx::EmuEnabled() ? "On"_i18n : "Off"_i18n;
-        case nx::Mode::SemiStock: return nx::SysEnabled() ? "On (sysNAND)"_i18n : "Off"_i18n;
+        case nx::Mode::EmuMMC: return nx::EmuEnabled() ? 1 : 0;
+        case nx::Mode::SemiStock: return nx::SysEnabled() ? 1 : 0;
         case nx::Mode::Other: break;
     }
-    return "Not in use"_i18n;
+    return -1;
+}
+
+auto StatusText() -> std::string {
+    if (!nx::FirmwareOk()) {
+        return "No patch for this firmware"_i18n;
+    }
+    if (nx::CurrentMode() == nx::Mode::SemiStock && nx::SysEnabled()) {
+        return "sysNAND"_i18n;
+    }
+    if (nx::CurrentMode() == nx::Mode::Other) {
+        return "Not in use"_i18n;
+    }
+    return {};
 }
 
 auto StatusHelp() -> std::string {
@@ -80,6 +95,7 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
         [](){ return StatusText(); },
         {},
     });
+    items.back().lamp = StatusLamp;
 
     items.emplace_back(MakeKefirToggle({
         "Nextendo on emuMMC"_i18n,
