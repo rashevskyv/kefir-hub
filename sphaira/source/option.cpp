@@ -45,6 +45,11 @@ auto OptionBase<T>::GetOr(const char* name) -> T {
 }
 
 template<typename T>
+auto OptionBase<T>::IsStored() -> bool {
+    return m_file && ini_haskey(m_section.c_str(), m_name.c_str(), App::CONFIG_PATH);
+}
+
+template<typename T>
 void OptionBase<T>::Set(T value) {
     m_value = value;
     if (m_file) {

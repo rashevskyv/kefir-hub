@@ -52,6 +52,15 @@ int main() {
     assert(PlanRemove(FileState::UserOwned) == RemoveAction::Leave);
     assert(PlanRemove(FileState::Missing) == RemoveAction::Leave);
 
+    // the Hub file ends with its own mark; the same text without it is a Prelude file: written over, never removed
+    assert(HasHubMark(text) && text.size() > kHubMark.size() && text.back() == '\n');
+    std::string prelude = text;
+    prelude.erase(prelude.find(kHubMark));
+    assert(HasMark(prelude) && !HasHubMark(prelude));
+    assert(Classify(prelude, text) == FileState::Foreign);
+    assert(PlanApply(FileState::Foreign) == ApplyAction::Write);
+    assert(PlanRemove(FileState::Foreign) == RemoveAction::Leave);
+
     // config text: the real lines of nextendo_config.h v4.0.11, a comment copy, garbage
     const std::string cfg =
         "#define NEXTENDO_SERVER_IP_DEFAULT  \"1.1.1.1\"\n"

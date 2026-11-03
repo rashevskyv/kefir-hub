@@ -139,8 +139,22 @@ int main() {
     assert(MakePlan(other).empty());
 
     // the default went to off: a card that already runs our hosts file stays on, every other card stays off
-    assert(KeepOnAfterDefaultOff(FileState::Current) && KeepOnAfterDefaultOff(FileState::Stale));
-    assert(!KeepOnAfterDefaultOff(FileState::Missing) && !KeepOnAfterDefaultOff(FileState::UserOwned));
+    assert(KeepOnAfterDefaultOff(false, FileState::Current) && KeepOnAfterDefaultOff(false, FileState::Stale));
+    assert(KeepOnAfterDefaultOff(false, FileState::Foreign)); // a Hub before the mark wrote the same text as Prelude
+    assert(!KeepOnAfterDefaultOff(false, FileState::Missing) && !KeepOnAfterDefaultOff(false, FileState::UserOwned));
+    assert(!KeepOnAfterDefaultOff(true, FileState::Foreign)); // a stored "off" stays off
+
+    // Hub off, the Prelude app runs Nextendo: hosts, PRODINFO and dns keys stay as Prelude set them
+    Inputs pr;
+    pr.mode = Mode::EmuMMC;
+    pr.firmware_ok = true;
+    pr.emu_enabled = false;
+    pr.emu_file = FileState::Foreign;
+    assert(MakePlan(pr).empty());
+    // Hub on over a Prelude file: written over with no backup (a backup would bring Nextendo back after "off")
+    pr.emu_enabled = true;
+    p = MakePlan(pr);
+    assert(Has(p, Step::WriteEmuHosts) && !Has(p, Step::BackupEmuUserHosts));
 
     std::puts("test_nextendo_plan: ok");
     return 0;

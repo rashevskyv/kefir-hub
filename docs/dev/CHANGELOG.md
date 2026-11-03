@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.280 — Nextendo off in the Hub no longer undoes the Prelude app (owner, 2026-11-03)
+The Hub hosts file now ends with `# managed by Kefir Hub`. A Nextendo file without it (the Prelude app, or a Hub before this version) is `Foreign`: with Nextendo off the Hub leaves it, the PRODINFO key and the DNS keys alone (before, every Hub start deleted it, set `blank_prodinfo_emummc=1` and the DNS defaults, so Prelude seemed not to switch); with Nextendo on the Hub writes over it with no backup. The one-time "keep on" check runs only when no choice is stored (`OptionBase::IsStored`), so a stored "off" stays off.
+host tests: pass (--quick) | nro: not built | switch: pending (Hub off + Prelude in Nextendo mode: restart, start the Hub, emummc.txt and blank_prodinfo_emummc=0 stay)
+
 ## v0.14.279 — Battery calibration: one cycle
 Reset, one cycle (drain to the cut-off, the zero, charge until the cell takes no more current, the capacity measured), report, transfer: four steps instead of five. A second cycle only taught the chip. Actions has Check the calibration: one more cycle after the report, which then shows the gauge's percent at the switch-off. A marker left in cycle 2 without a cycle-1 capacity finishes that cycle and goes to the report. Texts no longer say to wait for 100 %. host tests: pass (quick; the known CRLF nand-archive failure) | nro: not built | switch: pending
 

@@ -20,6 +20,9 @@ namespace sphaira::nextendo {
 // and the Kefir dns_mitm patch (0010) switches its Nintendo fallback on when it sees it.
 inline constexpr std::string_view kHostsMark = "NEXTENDO NETWORK - Atmosphere DNS-MITM";
 inline constexpr std::size_t kMarkWindow = 512; // the mark is searched only at the start, like Prelude does
+// Last line of a hosts file Kefir Hub writes. Prelude writes the same text without it, so the Hub can tell its own
+// file from one the Prelude app wrote, and leaves the Prelude one alone while Nextendo is off in the Hub.
+inline constexpr std::string_view kHubMark = "# managed by Kefir Hub";
 
 // "1.2.3.4": four parts of 1..3 digits, each <= 255. Anything else (names, ports, spaces) is refused.
 inline auto IsIpv4(std::string_view s) -> bool {
@@ -79,11 +82,20 @@ inline auto BuildHosts(const ServerIps& ips) -> std::string {
             out += tmpl[i++];
         }
     }
+    if (!out.empty() && out.back() != '\n') {
+        out += '\n';
+    }
+    out += kHubMark;
+    out += '\n';
     return out;
 }
 
 inline auto HasMark(std::string_view text) -> bool {
     return text.substr(0, kMarkWindow).find(kHostsMark) != std::string_view::npos;
+}
+
+inline auto HasHubMark(std::string_view text) -> bool {
+    return text.find(kHubMark) != std::string_view::npos;
 }
 
 // What a hosts file on the card is, compared with what we would write now.
@@ -92,6 +104,7 @@ enum class FileState {
     Current,   // ours and identical to the expected text
     Stale,     // ours (has the mark) but different: old IP or older template
     UserOwned, // not ours: the user's own entries
+    Foreign,   // a Nextendo file without the Hub mark: the Prelude app wrote it (or a Hub before 0.14.280)
 };
 
 inline auto Classify(const std::optional<std::string>& current, std::string_view expected) -> FileState {
@@ -111,6 +124,9 @@ inline auto Classify(const std::optional<std::string>& current, std::string_view
     if (!HasMark(*current)) {
         return FileState::UserOwned;
     }
+    if (!HasHubMark(*current)) {
+        return FileState::Foreign;
+    }
     return *current == expected ? FileState::Current : FileState::Stale;
 }
 
@@ -126,7 +142,9 @@ inline auto PlanApply(FileState s) -> ApplyAction {
 
 enum class RemoveAction { Leave, Delete };
 
-// Switching Nextendo off removes only a file that carries our mark. A user file stays untouched.
+// A Foreign file is a Nextendo file already: the Hub writes over it with no backup (default branch above).
+// Switching Nextendo off removes only a file that carries the Hub mark. A user or Prelude file stays untouched,
+// and so do the PRODINFO and dns keys that go with it (see MakePlan).
 inline auto PlanRemove(FileState s) -> RemoveAction {
     return (s == FileState::Current || s == FileState::Stale) ? RemoveAction::Delete : RemoveAction::Leave;
 }

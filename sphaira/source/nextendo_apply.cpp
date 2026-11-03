@@ -311,7 +311,7 @@ auto Reconcile(bool& changed) -> Result {
     in.firmware_ok = FirmwareOk();
     in.emu_file = Classify(ReadHosts(HOSTS_EMU), expected);
     if (!g_default_off_done.Get()) {
-        if (KeepOnAfterDefaultOff(in.emu_file)) {
+        if (KeepOnAfterDefaultOff(g_emu.IsStored(), in.emu_file)) {
             SetEmuEnabled(true);
         }
         g_default_off_done.Set(true);

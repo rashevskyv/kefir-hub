@@ -17,6 +17,8 @@ struct OptionBase {
     auto Get() -> T;
     auto GetOr(const char* name) -> T;
     void Set(T value);
+    // true once the value is in the config file (a choice was stored), false while the default applies
+    auto IsStored() -> bool;
 
     // returns true if loaded.
     auto LoadFrom(const char* section, const char* name, const char* value) -> bool;
