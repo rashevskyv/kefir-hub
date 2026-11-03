@@ -18,6 +18,7 @@ FetchContent_Declare(libhaze
 FetchContent_Declare(nanovg
     GIT_REPOSITORY https://github.com/ITotalJustice/nanovg-deko3d.git
     GIT_TAG 845c9fc
+    PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_nanovg.cmake
 )
 
 FetchContent_Declare(stb
@@ -170,6 +171,15 @@ execute_process(
 )
 if (NOT libhaze_patch_result EQUAL 0)
     message(FATAL_ERROR "failed to patch libhaze: ${libhaze_patch_result}")
+endif()
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_nanovg.cmake
+    WORKING_DIRECTORY ${nanovg_SOURCE_DIR}
+    RESULT_VARIABLE nanovg_patch_result
+)
+if (NOT nanovg_patch_result EQUAL 0)
+    message(FATAL_ERROR "failed to patch nanovg: ${nanovg_patch_result}")
 endif()
 
 if (USE_NVJPG)

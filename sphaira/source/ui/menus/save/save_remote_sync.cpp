@@ -170,6 +170,7 @@ void Menu::SyncSavesRemoteWithLocation(const location::Entry& loc) {
     // callback so partial failures can be reported without a field on Menu.
     auto failed_count = std::make_shared<size_t>(0);
 
+    m_backup_cache_valid = false; // this writes backups
     App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "", [this, seeds, loc, failed_count](auto pbox) mutable -> Result {
         // the bar runs on synthetic per-file units, so a byte-rate readout would
         // be nonsense - show only percentage/ETA.

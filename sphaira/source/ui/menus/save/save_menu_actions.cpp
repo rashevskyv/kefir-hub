@@ -263,6 +263,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                     std::string dir(target.backup_path.s, slash - target.backup_path.s);
                     if (dir.empty()) dir = "/";
                     const filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
+                    m_backup_cache_valid = false; // the user may change backups there
                     App::Push<filebrowser::Menu>(MenuFlag_None, sd, dir.c_str());
                 }
                 break;

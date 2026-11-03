@@ -204,6 +204,7 @@ void Menu::ExecuteRestore(
     auto recovery_paths = std::make_shared<std::vector<fs::FsPath>>();
 
     // one save that fails is listed and skipped; the others are still restored.
+    m_backup_cache_valid = false; // this writes backups
     App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, sources, targets, restored, failures, stopped, created_slot_kept, recovery_paths](auto pbox) mutable -> Result {
         fs::FsStdio stdio_fs;
         fs::FsNativeSd sd_fs;
@@ -385,6 +386,7 @@ void Menu::RestoreSavesPicked(Entry e, const Entry& group, const dump::DumpLocat
         auto mutation_started = std::make_shared<bool>(false);
         auto created_slot_retained = std::make_shared<bool>(false);
 
+        m_backup_cache_valid = false; // this writes backups
         App::Push<ProgressBox>(0, "Restore"_i18n, "", [this, e, location, backup_root, chosen, recovery_path, mutation_started, created_slot_retained, is_raw](auto pbox) mutable -> Result {
             detail::LoadControlEntry(e);
 

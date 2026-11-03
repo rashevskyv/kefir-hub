@@ -57,6 +57,7 @@ auto Menu::BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs
 void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
     auto created_paths = std::make_shared<std::vector<fs::FsPath>>(entries.size());
     auto up_to_date = std::make_shared<size_t>(0);
+    m_backup_cache_valid = false; // this writes backups
     App::Push<ProgressBox>(0, "Backup"_i18n, "", [this, entries, location, backup_root, created_paths, up_to_date](auto pbox) mutable -> Result {
         // a save unchanged since its newest backup would only be written again, byte for byte.
         fs::FsStdio stdio_fs;
@@ -107,6 +108,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
                         }
                     }
                     const auto loc = target_loc;
+                    m_backup_cache_valid = false; // this writes backups
                     App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, location, created_paths](auto pbox) mutable -> Result {
                         // the bar runs on synthetic per-file units, so a byte-rate
                         // readout would be nonsense - show only percentage/ETA.

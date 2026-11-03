@@ -151,6 +151,7 @@ void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& lo
             Entry e = entries.front();
             const auto run = [this, e, location, backup_root, source_filter](const location::Entry& loc) {
                 auto downloaded = std::make_shared<std::vector<std::string>>();
+                m_backup_cache_valid = false; // this writes backups
                 App::Push<ProgressBox>(0, "Syncing saves..."_i18n, "",
                     [this, e, loc, location, backup_root, downloaded](auto pbox) mutable -> Result {
                         pbox->SetHideSpeed(true);
