@@ -268,7 +268,8 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
 
     const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
     const auto value = item.value ? item.value() : std::string{};
-    const auto value_width = (value.empty() && !item.tri && !item.lamp) ? 0.f : 224.f;
+    // a switch or a lamp alone is narrow; only a text value needs the wide column
+    const auto value_width = !value.empty() ? 224.f : ((item.tri || item.lamp) ? 90.f : 0.f);
 
     if (selected) {
         gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);

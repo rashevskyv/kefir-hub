@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.282 — Kefir Settings: USB 3.0 row gets the switch, the title is translated (UK "Налаштування Кефіра"); Nextendo Status row only when Nextendo cannot work
+USB 3.0 uses `SettingsItem::tri` like the other toggles; `KefirSettingsMenu` title goes through i18n; a switch/lamp-only row reserves 90 px, not 224, so descriptions stop wrapping early; Nextendo Status shows only with no ssl patch or mode Other. The owner's backup-restore crash (Saves > Backups, Y, START) is not fixed: no crash report and the crash session log was overwritten. Verification: host tests: pass (--quick), nro: not built, switch: pending.
+
 ## v0.14.281 — Kefir Settings: toggle rows show a tri-state switch, the Nextendo Status row shows a lamp (owner, 2026-10-31)
 Every `MakeKefirToggle` row draws a rounded switch (knob right + green = on, left + red = off, middle + grey = waits for a choice, only when a row sets `KefirSetting::pending`), with a short slide; Status uses a green/red/grey lamp (`SettingsItem::tri`/`lamp`, drawn by `DrawSettingsIndicator` in both draw sites). Docs drafts on EN/UK kefir-settings. Verification: host tests: pass (new test_settings_switch; the one CRLF-checkout failure test_nand_archive_contract is a worktree artefact), i18n contract: pass, nro: built, switch: pending (look at the switch, the slide and the lamp on the console).
 

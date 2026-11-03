@@ -38,41 +38,20 @@ auto Fill(std::string fmt, const std::string& arg) -> std::string {
     return fmt;
 }
 
-// The lamp carries the meaning: green = works now, red = switched off or no ssl patch, grey = not in use.
-// Text stays only where the colour alone would not say why.
+// The Status row appears only when Nextendo cannot work: red = no ssl patch, grey = not in use.
 auto StatusLamp() -> int {
-    if (!nx::FirmwareOk()) {
-        return 0;
-    }
-    switch (nx::CurrentMode()) {
-        case nx::Mode::EmuMMC: return nx::EmuEnabled() ? 1 : 0;
-        case nx::Mode::SemiStock: return nx::SysEnabled() ? 1 : 0;
-        case nx::Mode::Other: break;
-    }
-    return -1;
+    return nx::FirmwareOk() ? -1 : 0;
 }
 
 auto StatusText() -> std::string {
-    if (!nx::FirmwareOk()) {
-        return "No patch for this firmware"_i18n;
-    }
-    if (nx::CurrentMode() == nx::Mode::SemiStock && nx::SysEnabled()) {
-        return "sysNAND"_i18n;
-    }
-    if (nx::CurrentMode() == nx::Mode::Other) {
-        return "Not in use"_i18n;
-    }
-    return {};
+    return nx::FirmwareOk() ? "Not in use"_i18n : "No patch for this firmware"_i18n;
 }
 
 auto StatusHelp() -> std::string {
     if (!nx::FirmwareOk()) {
         return "This Kefir Hub has no Nextendo patch for this system firmware yet, so Nextendo is off. Kefir Hub updates itself when Prelude-Nextendo adds one."_i18n;
     }
-    if (nx::CurrentMode() == nx::Mode::Other) {
-        return "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on."_i18n;
-    }
-    return "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed."_i18n;
+    return "Nextendo works on the emuMMC, or on the sysNAND while Semi-stock is on."_i18n;
 }
 
 // A toggle: store the choice, make the card match, restart only if something was really written.
@@ -89,13 +68,16 @@ auto ApplyChoice(void (*store)(bool), bool enabled) -> Result {
 auto BuildNextendoItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
-    items.emplace_back(SettingsItem{
-        "Status"_i18n,
-        StatusHelp(),
-        [](){ return StatusText(); },
-        {},
-    });
-    items.back().lamp = StatusLamp;
+    // The toggle already shows on/off; the Status row stays only where it says why Nextendo cannot work.
+    if (!nx::FirmwareOk() || nx::CurrentMode() == nx::Mode::Other) {
+        items.emplace_back(SettingsItem{
+            "Status"_i18n,
+            StatusHelp(),
+            [](){ return StatusText(); },
+            {},
+        });
+        items.back().lamp = StatusLamp;
+    }
 
     items.emplace_back(MakeKefirToggle({
         "Nextendo on emuMMC"_i18n,

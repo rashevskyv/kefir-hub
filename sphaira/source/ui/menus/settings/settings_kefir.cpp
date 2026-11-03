@@ -161,12 +161,10 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
             0.5f,
         }));
     }
-    items.emplace_back(SettingsItem{
+    SettingsItem usb30{
         "USB 3.0"_i18n,
         "Force-enable USB 3.0 in Atmosphère. Changes only take effect after reboot."_i18n,
-        [](){
-            return OnOff(IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x1"));
-        },
+        {},
         [](){
             const bool currently_enabled = IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x1");
             const bool next_enabled = !currently_enabled;
@@ -206,7 +204,11 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
 
             save_setting();
         }
-    });
+    };
+    usb30.tri = [](){
+        return static_cast<int>(TriFromBool(IniValueEquals(ATMOSPHERE_CONFIG, "usb", "usb30_force_enabled", "u8!0x1"), false));
+    };
+    items.emplace_back(std::move(usb30));
 
     if (IsEmummcEnabled()) {
         items.emplace_back(MakeKefirToggle({
@@ -262,7 +264,7 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
 
 } // namespace
 
-KefirSettingsMenu::KefirSettingsMenu() : MenuBase{"Kefir Settings", MenuFlag_None} {
+KefirSettingsMenu::KefirSettingsMenu() : MenuBase{"Kefir Settings"_i18n, MenuFlag_None} {
     m_items = BuildKefirItems();
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
