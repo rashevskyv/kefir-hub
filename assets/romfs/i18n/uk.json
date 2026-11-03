@@ -4049,5 +4049,8 @@
   "the drain is done. Now the charge, until the battery is full.": "розряд завершено. Тепер зарядка, доки батарея не стане повною.",
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "розряд завершено. Вставте зарядку: ємність виміряється сама, коли батарея стане повною",
   "sysNAND": "sysNAND",
-  "No patch for this firmware": "Немає патча для цієї прошивки"
+  "No patch for this firmware": "Немає патча для цієї прошивки",
+  "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Коли консоль вимкнеться, увімкніть її знову (залишивши зарядний пристрій підключеним) та відкрийте Kefir Hub.",
+  "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Коли вона вимкнеться, підключіть зарядний пристрій. Вона може не вмикатися близько 20 хвилин: це нормально. Потім увімкніть її та відкрийте Kefir Hub.",
+  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Нижче 3.3 V: навантаження вимкнено, а екран працює з вашою яскравістю, тому консоль вимикається за невеликого навантаження."
 }

@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.284 — i18n: the 43 missing strings (battery calibration, Nextendo) translated in every language
+Filled by tools/i18n-translate for the release; the deployment i18n contract passes. Verification: host tests: not run, nro: built, switch: pending.
+
 ## v0.14.283 — Saves: no crash with many selected backups; tab switching keeps the backup cache
 The "crash" after Backups > Y > START was deko3d aborting when one frame's draw calls overflowed nanovg's 128 KiB command buffer (a full grid of selected tiles). `cmake/patch_nanovg.cmake` gives the command buffer an add-memory callback that takes more chunks from the data pool on demand (freed after the next fence wait), so there is no fixed limit. `OnFocusGained` no longer drops the backup cache; backup, restore, sync and "open in file browser" drop it instead. Verification: host tests: pass (--quick), nro: built, switch: pending (192.168.50.22).
 
