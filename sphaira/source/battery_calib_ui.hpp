@@ -114,13 +114,13 @@ inline auto Check(std::string yes, std::string no, std::function<bool()> done) -
 inline auto Row(std::string label, std::string value) -> Line { Line l; l.kind = Line::Kind::Row; l.text = std::move(label); l.value = std::move(value); return l; }
 inline auto Boxes(std::vector<std::pair<std::string, std::string>> b) -> Line { Line l; l.kind = Line::Kind::Boxes; l.boxes = std::move(b); return l; }
 
-// The road map at the foot of every calibration page: the six steps as dots with their names, the ones done filled, the
+// The road map at the foot of every calibration page: the four steps as dots with their names, the ones done filled, the
 // current one ringed, so the user always sees where he is. `current` is 1-based (StepIndex); `done_upto` steps are filled.
 inline void DrawRoadmap(NVGcontext* vg, Theme* theme, int current, int done_upto, int count) {
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto good = nvgRGB(0x4C, 0xAF, 0x50);
-    const std::string names[] = {"Reset"_i18n, "Cycle 1"_i18n, "Cycle 2"_i18n, "Report"_i18n, "Transfer"_i18n};
+    const std::string names[] = {"Reset"_i18n, "Calibration cycle"_i18n, "Report"_i18n, "Transfer"_i18n};
     const float y = 594.f, x0 = 150.f, x1 = 1130.f;
     const float step = (x1 - x0) / static_cast<float>(std::max(1, count - 1));
     nvgBeginPath(vg);
@@ -147,7 +147,7 @@ inline void DrawRoadmap(NVGcontext* vg, Theme* theme, int current, int done_upto
         if (done) {
             DrawTick(vg, x - 11.f, y - 11.f, 22.f, nvgRGB(0x10, 0x20, 0x10));
         }
-        ui::gfx::drawTextArgs(vg, x, y + 34.f, 17.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, now ? text : info, "%s", i <= 5 ? names[i - 1].c_str() : "");
+        ui::gfx::drawTextArgs(vg, x, y + 34.f, 17.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, now ? text : info, "%s", i <= 4 ? names[i - 1].c_str() : "");
     }
 }
 
@@ -275,7 +275,7 @@ struct Page final : ui::menu::MenuBase {
             }
         }
         if (m_road_step > 0) {
-            DrawRoadmap(vg, theme, m_road_step, m_road_step - 1, 5);
+            DrawRoadmap(vg, theme, m_road_step, m_road_step - 1, 4);
         }
     }
 

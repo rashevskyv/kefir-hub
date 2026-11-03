@@ -12,7 +12,8 @@ int main() {
     // a calibration begins with the reset; the user's brightness is kept for later
     auto m = Begin(60, true, 500);
     assert(m.step == Step::Reset && !m.drain_started && m.brightness_before == 60 && m.auto_before && m.started_at == 500);
-    assert(StepIndex(Step::Reset) == 1 && StepIndex(Step::Cycle1) == 2 && StepIndex(Step::Transfer) == 5 && StepIndex(Step::Finished) == 5);
+    assert(StepIndex(Step::Reset) == 1 && StepIndex(Step::Cycle1) == 2 && StepIndex(Step::Cycle2) == 2 && StepIndex(Step::Report) == 3);
+    assert(StepIndex(Step::Transfer) == 4 && StepIndex(Step::Finished) == 4 && STEP_COUNT == 4);
     assert(CycleOf(Step::Cycle1) == 1 && CycleOf(Step::Cycle2) == 2 && CycleOf(Step::Report) == 0);
     assert(StepFor(m, false) == Step::Reset && StepFor(m, true) == Step::Cycle1);
     assert(!Sync(m, false) && Sync(m, true) && m.step == Step::Cycle1);
@@ -58,10 +59,26 @@ int main() {
     assert(PhaseOf(m) == Phase::Charge);
     assert(!Sync(m, true) && m.step == Step::Cycle1);
     MarkCycleDone(m, 20000);
-    assert(m.full_at[0] == 20000 && Sync(m, true) && m.step == Step::Cycle2 && m.cutoffs == 0 && !m.drain_started);
+    // a cycle that kept no capacity (an old marker): it runs again as Cycle2
+    {
+        Marker old = m;
+        assert(Sync(old, true) && old.step == Step::Cycle2);
+    }
+    // with its capacity the one cycle is the whole calibration: the report
+    m.cap_raw[0] = 8410;
+    {
+        Marker one = m;
+        assert(Sync(one, true) && one.step == Step::Report);
+        // the check from the Actions: Cycle2 from the drain, and Sync keeps it there until it is done
+        BeginCheck(one);
+        assert(one.step == Step::Cycle2 && !one.full_at[1] && !one.cap_raw[1] && !one.drain_started && one.cutoffs == 0);
+        assert(!Sync(one, true) && one.step == Step::Cycle2);
+    }
+    BeginCheck(m);
+    assert(m.full_at[0] == 20000 && !Sync(m, true) && m.step == Step::Cycle2 && m.cutoffs == 0 && !m.drain_started);
     assert(PhaseOf(m) == Phase::Drain);
 
-    // cycle 2: a cut-off puts it in the charge phase; 100 % ends it, then the report
+    // the check: a cut-off puts it in the charge phase; the full battery ends it, then the report
     StartDrain(m, 21000, 21000);
     assert(Check(m, {true, 30000}) == Found::CutoffCharging && PhaseOf(m) == Phase::Charge);
     MarkCycleDone(m, 40000);

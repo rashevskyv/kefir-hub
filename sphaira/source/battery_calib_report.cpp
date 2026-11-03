@@ -195,12 +195,13 @@ void ShowReport() {
             }
             char v[16];
             std::snprintf(v, sizeof(v), "%.2f", c.mv / 1000.0);
-            const auto where = "Cycle"_i18n + " " + std::to_string(c.step) + (total > 1 ? " (" + std::to_string(index) + "/" + std::to_string(total) + ")" : std::string{});
+            const auto where = (c.step == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n) + (total > 1 ? " (" + std::to_string(index) + "/" + std::to_string(total) + ")" : std::string{});
             const auto shown = c.gauge_pct >= 0 ? std::to_string(c.gauge_pct) + " %" : "not measured"_i18n;
             lines.push_back(cu::Item(where + ": " + "the console switched off at"_i18n + " " + v + " V. " + "The gauge showed"_i18n + " " + shown + "."));
         }
         lines.push_back(cu::Item("Written: calibration on the microSD, copy in this system."_i18n));
-        App::Push<cu::Page>("Calibration report"_i18n, StepLabel(4), std::move(lines), "Go on"_i18n, [facts](cu::Page& p) {
+        lines.push_back(cu::Dim("To check it: Actions, Check the calibration. One more drain to the switch-off: the gauge should show about 0 % there."_i18n));
+        App::Push<cu::Page>("Calibration report"_i18n, StepLabel(3), std::move(lines), "Go on"_i18n, [facts](cu::Page& p) {
             if (auto m = LoadMarker()) {
                 if (m->step == Step::Report) {
                     // the calibration is made here: a new number in the ledger; the other systems take it at their next start
@@ -213,7 +214,7 @@ void ShowReport() {
             }
             p.SetPop();
             ShowTransfer();
-        }, cu::Page::Act{}, std::function<bool()>{}, 4);
+        }, cu::Page::Act{}, std::function<bool()>{}, 3);
     });
 }
 
@@ -242,14 +243,14 @@ void ShowTransfer() {
     }
     lines.push_back(cu::Dim("The hekate hop is a manual action only."_i18n));
     const bool finish = [] { const auto m = LoadMarker(); return m && m->step == Step::Transfer; }();
-    App::Push<cu::Page>("Transfer to the other systems"_i18n, StepLabel(5), std::move(lines), finish ? "Go on"_i18n : std::string{}, [](cu::Page& p) {
+    App::Push<cu::Page>("Transfer to the other systems"_i18n, StepLabel(4), std::move(lines), finish ? "Go on"_i18n : std::string{}, [](cu::Page& p) {
         if (auto m = LoadMarker()) {
             TransferDone(*m);
             SaveMarker(*m);
         }
         p.SetPop();
         ShowSteps();
-    }, cu::Page::Act{}, std::function<bool()>{}, 5);
+    }, cu::Page::Act{}, std::function<bool()>{}, 4);
 }
 
 // at the Hub's start in a system that does not hold the newest calibration yet: write it there, say so, and note it down

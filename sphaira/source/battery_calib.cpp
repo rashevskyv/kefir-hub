@@ -1,10 +1,9 @@
-// Tools > Battery calibration (docs/dev/BATTERY-CALIBRATION.md, docs/dev/BATTERY-HANDOFF.md 1a): five steps.
+// Tools > Battery calibration (docs/dev/BATTERY-CALIBRATION.md, docs/dev/BATTERY-HANDOFF.md 1a): four steps (one cycle since 0.14.279).
 // 1 the factory reset, at any charge level (battery_write.cpp, detail::RunReset: the init of 0.14.111-163; the init seeds the
 //   counters from the voltage, so the old "charge to 100 % first" is not needed).
 // 2 cycle 1: drain to the cut-off; at the next Hub start the last voltage of the drain log is written into the gauge as the
-//   zero (battery_zero_write.cpp); then charge to 100 %.
-// 3 cycle 2: drain to the cut-off, charge to 100 %.
-// 4 report, 5 transfer to the other systems (battery_calib_report.cpp).
+//   zero (battery_zero_write.cpp); then charge until the cell takes no more current, and the capacity is measured.
+// 3 report, 4 transfer to the other systems (battery_calib_report.cpp). The check (Actions) is one more cycle (Step::Cycle2).
 // A cycle counts by the drain log alone (battery_calib_log.hpp, CycleDoneByLog): the console cut off, then a charge line saw
 // 100 %. The marker on the SD (battery_calib_state.hpp, calib.txt) keeps the step, the zero and what a drain needs to go on
 // after a cut-off. The drain and the charge run on the drain page (battery_drain.cpp, StartCalibRun).
@@ -106,7 +105,7 @@ auto ReadLog() -> std::string {
 }
 
 auto CycleName(int cycle) -> std::string {
-    return cycle == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
+    return cycle == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n;
 }
 
 // ---- the cycles: counted by the log --------------------------------------------------------------------------------------
@@ -258,11 +257,11 @@ void WriteZeroThenCharge(Marker m) {
         SaveMarker(*marker);
         char v[16];
         std::snprintf(v, sizeof(v), "%.2f", mv / 1000.0);
-        App::Push<cu::Page>("Cycle 1: the zero"_i18n, StepLabel(2),
+        App::Push<cu::Page>("The zero"_i18n, StepLabel(2),
             std::vector<cu::Line>{
                 cu::Ok("The console switched off at"_i18n + " " + v + " V. " + "This is the empty battery."_i18n),
                 cu::Ok("Written into the gauge: this voltage is now 0 %."_i18n),
-                cu::Item("Now plug the charger in and charge to 100 %. Cycle 1 is then done, and cycle 2 begins."_i18n),
+                cu::Item("Now plug the charger in and charge. When the battery takes no more current, the Hub measures its capacity and shows the report."_i18n),
             },
             "Go on"_i18n, [marker](cu::Page& p) {
                 p.SetPop();
@@ -293,7 +292,7 @@ void BeginNew(std::function<void()> then) {
 }
 
 void ShowIntro2() {
-    App::Push<cu::Page>("What happens to the console"_i18n, "Step by step: the reset, two cycles, report."_i18n,
+    App::Push<cu::Page>("What happens to the console"_i18n, "Step by step: the reset, one cycle, report."_i18n,
         std::vector<cu::Line>{
             cu::Head("When the console switches off (this is normal)"_i18n),
             cu::Para("When the battery is empty, the console switches itself off. This is what the Hub waits for. Plug the charger in and switch the console on: the Hub opens the charge page by itself. If the charger is not plugged in, the page says so."_i18n),
@@ -311,12 +310,12 @@ void ShowIntro2() {
 }
 
 void ShowIntro() {
-    App::Push<cu::Page>("Battery calibration"_i18n, "Step by step: the reset, two cycles, report."_i18n,
+    App::Push<cu::Page>("Battery calibration"_i18n, "Step by step: the reset, one cycle, report."_i18n,
         std::vector<cu::Line>{
             cu::Head("Why this is needed"_i18n),
             cu::Para("With time the charge gauge goes wrong. The console can switch off at 35 %, or show 0 % for a whole hour. The wizard teaches the gauge again, so the percent is honest."_i18n),
             cu::Head("How it works"_i18n),
-            cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the Hub measures the real capacity: the charge that comes in from the switch-off to the full battery is written into the gauge as its capacity."_i18n),
+            cu::Para("First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then one cycle: the battery is run down until the console switches itself off, and charged until it takes no more current. The voltage at the switch-off is written into the gauge as the zero: the real empty battery. The charge that comes in from the switch-off to the full battery is the real capacity: it is written into the gauge too."_i18n),
             cu::Head("What you do"_i18n),
             cu::Para("The reset needs no charging: it is done at once. Then leave the console on a table, the charger can stay in: the Hub gives it a full load by itself. When the console switches off, switch it on again (with the charger in) and open Kefir Hub yourself: it writes the empty point into the gauge and shows the charge. This step is yours: without it nothing is written."_i18n),
             cu::Head("How long it takes"_i18n),
@@ -338,7 +337,7 @@ void ShowResetDone() {
             cu::Ok("Factory model written"_i18n),
             cu::Ok("The backup was made."_i18n),
             cu::Dim("The percent right after the reset is taken from the voltage: while the charger charges it can be too high. It is put right at the switch-off, when the zero is written."_i18n),
-            cu::Item("Now cycle 1: the Hub drains the battery until the console switches itself off. The charger can stay in. After the switch-off, switch the console on (it may need 10 to 15 minutes to start) and open Kefir Hub yourself: it writes that voltage into the gauge as the zero. Then charge to 100 %."_i18n),
+            cu::Item("Now the cycle: the Hub drains the battery until the console switches itself off. The charger can stay in. After the switch-off, switch the console on (it may need 10 to 15 minutes to start) and open Kefir Hub yourself: it writes that voltage into the gauge as the zero. Then the charge, until the battery takes no more current."_i18n),
         },
         "Go on"_i18n, [](cu::Page& p) {
             p.SetPop();
@@ -395,7 +394,7 @@ void ShowCyclePage() {
             lines.push_back(cu::Para(std::move(text)));
         }
         lines.push_back(cu::Para("When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up."_i18n));
-        lines.push_back(cu::Para("When it does not start any more: plug the charger in and switch it on. The Hub shows the charge, and counts the cycle by itself at 100 %."_i18n));
+        lines.push_back(cu::Para("When it does not start any more: plug the charger in and switch it on. The Hub shows the charge and measures the capacity by itself when the battery is full."_i18n));
         label = m->drain_started ? "Open the drain screen"_i18n : "Start the drain"_i18n;
         act = [](cu::Page& p) {
             auto cur = LoadCurrent();
@@ -406,14 +405,14 @@ void ShowCyclePage() {
             StartDrainRun(*cur);
         };
     } else {
-        lines.push_back(cu::Ok(CycleName(cycle) + ": " + "the drain is done."_i18n + " " + "Now plug the charger in and wait for 100 %. The Hub counts the cycle by itself, from the log."_i18n));
+        lines.push_back(cu::Ok(CycleName(cycle) + ": " + "the drain is done."_i18n + " " + "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current."_i18n));
         if (cycle == 1 && m->zero_at) {
             char v[16];
             std::snprintf(v, sizeof(v), "%.2f V", m->zero_mv / 1000.0);
             lines.push_back(cu::Row("The zero (empty battery)"_i18n, v));
         }
         lines.push_back(cu::Check("Charger is plugged in."_i18n, "Plug the charger in."_i18n, []() { return ChargerIn(); }));
-        lines.push_back(cu::Item("You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full."_i18n));
+        lines.push_back(cu::Item("You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured."_i18n));
         lines.push_back(cu::Item("The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n));
         label = "Start charging"_i18n;
         act = [](cu::Page& p) {
@@ -430,8 +429,8 @@ void ShowCyclePage() {
         };
     }
     // the page waits for the charger: the drain starts when it comes out, the charge when it goes in
-    App::Push<cu::Page>(CycleName(cycle), StepLabel(cycle + 1), std::move(lines), label, std::move(act), back,
-        phase == Phase::Charge ? std::function<bool()>([]() { return !ChargerIn(); }) : std::function<bool()>([]() { return ChargerIn(); }), cycle + 1);
+    App::Push<cu::Page>(CycleName(cycle), StepLabel(2), std::move(lines), label, std::move(act), back,
+        phase == Phase::Charge ? std::function<bool()>([]() { return !ChargerIn(); }) : std::function<bool()>([]() { return ChargerIn(); }), 2);
 }
 
 // ---- what the Hub finds when it starts ---------------------------------------------------------------------------------
@@ -483,7 +482,7 @@ auto Resume(Marker m) -> bool {
                 WriteZeroThenCharge(m);
                 return true;
             }
-            App::Notify(CycleName(CycleOf(m.step)) + ": " + "the drain is done. Now charge to 100 %."_i18n);
+            App::Notify(CycleName(CycleOf(m.step)) + ": " + "the drain is done. Now the charge, until the battery is full."_i18n);
             StartChargeRun(m); // the charge page, with the battery and the road map: not the list of steps
             return true;
         case Found::HubRestarted:
@@ -506,7 +505,7 @@ auto StateText(Mark m) -> std::string {
 // what the active cycle row says: where the cycle is and what the user does now
 auto CycleText(const Marker& m) -> std::string {
     if (PhaseOf(m) == Phase::Charge) {
-        return "the drain is done. Plug the charger in and wait for 100 %: the cycle then counts by itself"_i18n;
+        return "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full"_i18n;
     }
     return m.drain_started ? "the drain is going on"_i18n : "next: start the drain (the charger can stay in)"_i18n;
 }
@@ -586,19 +585,20 @@ void ShowSteps() {
     }
     std::vector<Row> rows;
     rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: backup, then the factory model; no charging needed"_i18n : std::string{}, at(Step::Reset), open(StartResetRun)});
-    rows.push_back({"2. Cycle 1: drain, the zero, charge"_i18n, m->step == Step::Cycle1 ? CycleText(*m) : m->zero_at ? "the zero"_i18n + ": " + zero_v : std::string{},
-        at(Step::Cycle1), open(ShowCyclePage)});
-    rows.push_back({"3. Cycle 2: drain, charge"_i18n, m->step == Step::Cycle2 ? CycleText(*m) : std::string{}, at(Step::Cycle2), open(ShowCyclePage)});
-    rows.push_back({"4. Report"_i18n, {}, static_cast<int>(m->step) >= static_cast<int>(Step::Transfer) ? Mark::Done : m->step == Step::Report ? Mark::Active : Mark::Locked,
+    // the check runs on the cycle's row
+    rows.push_back({"2. The cycle: drain, the zero, charge"_i18n,
+        IsCycle(m->step) ? (m->step == Step::Cycle2 ? CycleName(2) + ": " : std::string{}) + CycleText(*m) : m->zero_at ? "the zero"_i18n + ": " + zero_v : std::string{},
+        IsCycle(m->step) ? Mark::Active : at(Step::Cycle1), open(ShowCyclePage)});
+    rows.push_back({"3. Report"_i18n, {}, static_cast<int>(m->step) >= static_cast<int>(Step::Transfer) ? Mark::Done : m->step == Step::Report ? Mark::Active : Mark::Locked,
         open(ShowReport)});
-    rows.push_back({"5. Transfer to the other systems"_i18n, {}, m->step == Step::Finished ? Mark::Done : m->step == Step::Transfer ? Mark::Active : Mark::Locked,
+    rows.push_back({"4. Transfer to the other systems"_i18n, {}, m->step == Step::Finished ? Mark::Done : m->step == Step::Transfer ? Mark::Active : Mark::Locked,
         open(ShowTransfer)});
 
     std::vector<SettingsItem> items;
     for (auto& row : rows) {
         const auto text = StateText(row.mark) + (row.detail.empty() ? std::string{} : ": " + row.detail);
         // an active row acts; the report and the transfer also open once they are done; finished steps do nothing
-        const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("4.") || row.label.starts_with("5.")));
+        const bool acts = row.mark == Mark::Active || (row.mark == Mark::Done && (row.label.starts_with("3.") || row.label.starts_with("4.")));
         auto label = row.label;
         if (row.mark == Mark::Done) { // a green tick takes the place of the number
             if (const auto p = label.find(". "); p != std::string::npos && p <= 2) {
@@ -615,6 +615,25 @@ void ShowSteps() {
     auto menu = std::make_unique<SystemToolsMenu>("Battery calibration"_i18n, std::move(items));
     *self = menu.get();
     App::Push(std::move(menu));
+}
+
+// Actions > Check the calibration: one more cycle after the report; the report then shows what the gauge said at the switch-off
+void StartCheck() {
+    auto m = LoadMarker();
+    if (!m || !m->cap_raw[0] || (m->step != Step::Report && m->step != Step::Transfer && m->step != Step::Finished)) {
+        App::Notify("The check comes after the report: finish the calibration first."_i18n);
+        return;
+    }
+    App::Push<ui::OptionBox>("Check the calibration? The Hub drains the battery until the console switches off, then charges it and measures the capacity again. The report shows what the gauge said at the switch-off: about 0 % means the calibration holds."_i18n,
+        "Cancel"_i18n, "Check"_i18n, 0, [](auto op) {
+            if (op && *op == 1) {
+                if (auto cur = LoadMarker()) {
+                    BeginCheck(*cur);
+                    SaveMarker(*cur);
+                    ShowCyclePage();
+                }
+            }
+        });
 }
 
 // Actions > Start the calibration over: the steps and the cycles counted so far are dropped, step 1 is the reset again

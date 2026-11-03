@@ -491,25 +491,24 @@ void DrainMenu::OnSleptAwake(s64 now) {
 }
 
 auto DrainMenu::CalibTitle() const -> std::string {
-    const auto which = m_calib->step == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
-    return which + ": " + (m_calib->charge ? "charge to 100 %"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
+    const auto which = m_calib->step == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n;
+    return which + ": " + (m_calib->charge ? "charge"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
 }
 
 auto DrainMenu::CalibStatus() const -> std::string {
     if (m_calib->charge) {
-        const auto which = m_calib->step == 2 ? "Cycle 2"_i18n : "Cycle 1"_i18n;
+        const auto which = m_calib->step == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n;
         if (!m_charger) {
             return which + ": " + "the charger is out: the charge is paused. Plug it in to go on."_i18n;
         }
         if (m_pct >= 100) {
             if (!m_measured) {
                 return which + ": " + "the battery still takes current, so it is not full yet. The Hub waits until the current falls near zero, measures the capacity and goes on by itself. Keep the charger in."_i18n
-                    + " " + (m_calib->step == 2 ? "Then the report follows."_i18n : "Then cycle 2 starts: the drain, the charger can stay in."_i18n);
+                    + " " + "Then the report follows."_i18n;
             }
-            return which + ": " + (m_calib->step == 2 ? "the battery is full and its capacity is measured. The report follows."_i18n
-                                                      : "the battery is full and its capacity is measured. Cycle 2 starts: the drain."_i18n);
+            return which + ": " + "the battery is full and its capacity is measured. The report follows."_i18n;
         }
-        return which + ": " + "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration."_i18n;
+        return which + ": " + "charging. Keep the charger in until the battery takes no more current: the Hub then measures the capacity and shows the report by itself. You can use the console meanwhile."_i18n;
     }
     if (m_charger) {
         if (m_step == wizard::DrainStep::CycleCounted) {

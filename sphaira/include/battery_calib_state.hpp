@@ -20,18 +20,26 @@ namespace sphaira::battery::calib {
 
 enum class Step : std::uint8_t {
     Reset = 1,    // the factory model at 100 %
-    Cycle1 = 2,   // drain to the cut-off, the zero written, charge to 100 %
-    Cycle2 = 3,   // drain to the cut-off, charge to 100 %
+    Cycle1 = 2,   // drain to the cut-off, the zero written, charge to the full battery, the capacity measured
+    Cycle2 = 3,   // the check (Actions): drain to the cut-off, charge, measure again; also the repeat of a cycle 1 that kept
+                  // no capacity (before 0.14.279 a cycle counted at the 100 % the console shows)
     Report = 4,
     Transfer = 5,
     Finished = 6,
 };
 
-inline constexpr int STEP_COUNT = 5; // what the user sees: reset, cycle 1, cycle 2, report, transfer
+// One cycle is enough (owner, 2026-11-03): the cut-off is the zero, the full battery the top, the charge between them the
+// capacity. A second cycle only taught the chip, and the chip learns badly.
+inline constexpr int STEP_COUNT = 4; // what the user sees: reset, the cycle, report, transfer
 
-// 1-based position of a step in the list the user sees
+// 1-based position of a step in the list the user sees; the check sits on the cycle's place
 inline auto StepIndex(Step s) -> int {
-    return s == Step::Finished ? STEP_COUNT : static_cast<int>(s);
+    switch (s) {
+        case Step::Reset: return 1;
+        case Step::Cycle1: case Step::Cycle2: return 2;
+        case Step::Report: return 3;
+        default: return 4;
+    }
 }
 
 // where cycle 1 is, in words the pages use
@@ -100,7 +108,21 @@ inline auto StepFor(const Marker& m, bool reset_done) -> Step {
     if (!m.full_at[0]) {
         return Step::Cycle1;
     }
+    // a cycle 1 with its capacity is the whole calibration; the check (or a cycle 1 without a capacity) runs as Cycle2
+    if (m.cap_raw[0] && m.step != Step::Cycle2) {
+        return Step::Report;
+    }
     return m.full_at[1] ? Step::Report : Step::Cycle2;
+}
+
+// Actions > Check the calibration: one more drain to the cut-off (the report shows what the gauge said there), a charge and a
+// new measure of the capacity
+inline void BeginCheck(Marker& m) {
+    m.step = Step::Cycle2;
+    m.full_at[1] = 0;
+    m.cap_raw[1] = 0;
+    m.drain_started = false;
+    m.cutoffs = 0;
 }
 
 // true = the step moved; a new step starts without a running drain and in the maximum load again

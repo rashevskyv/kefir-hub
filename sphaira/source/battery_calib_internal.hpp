@@ -24,6 +24,7 @@ void ShowSteps();
 enum class Measure { NotYet, Done, Refused };
 auto MeasureCapacityIfFull() -> Measure;
 void StartOver();
+void StartCheck();
 void ShowReport();
 void ShowTransfer();
 // at the Hub's start in a system that does not hold the newest calibration yet: write it there

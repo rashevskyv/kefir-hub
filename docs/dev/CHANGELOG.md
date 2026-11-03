@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.279 — Battery calibration: one cycle
+Reset, one cycle (drain to the cut-off, the zero, charge until the cell takes no more current, the capacity measured), report, transfer: four steps instead of five. A second cycle only taught the chip. Actions has Check the calibration: one more cycle after the report, which then shows the gauge's percent at the switch-off. A marker left in cycle 2 without a cycle-1 capacity finishes that cycle and goes to the report. Texts no longer say to wait for 100 %. host tests: pass (quick; the known CRLF nand-archive failure) | nro: not built | switch: pending
+
 ## v0.14.278 — Battery calibration: the charge ends only when the capacity is measured; 99 % while current still flows
 On 2026-11-03 cycle 2 began at 4.195 V with 1 A still going in: the console's early 100 % plus a charger out for a moment ended the charge, and cycle 1 kept no capacity. Now the charge page goes on only after the measure (on the charger, the taper), a cycle counts only with its capacity, and the big battery shows 99 % while the battery takes over 100 mA. host tests: pass (quick; the known CRLF nand-archive failure) | nro: not built | switch: pending
 

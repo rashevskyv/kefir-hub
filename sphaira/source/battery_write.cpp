@@ -328,6 +328,7 @@ void ActionsMenu() {
             App::Notify(R_FAILED(rc) ? "The console did not accept this."_i18n : on ? "Charging is off"_i18n : "Charging is on"_i18n);
         }));
     }
+    items.push_back(row("Check the calibration"_i18n, "One more drain to the switch-off after the report: the gauge should show about 0 % there."_i18n, calib_flow::StartCheck));
     items.push_back(row("Start the calibration over"_i18n, "Drops the steps counted so far. The first step is the reset of the gauge again."_i18n, calib_flow::StartOver));
     items.push_back(row("Back up the chip's values"_i18n, "Saves a copy of the gauge's values on the SD card. Nothing is changed."_i18n, []() {
         std::string name;
