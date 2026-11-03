@@ -445,9 +445,6 @@ void DrainMenu::CalibTick() {
     }
     MeasureOnFull();
     HealFullCharge();
-    if (m_calib->charge && m_charger && m_pct >= 100) {
-        m_full_seen = true;
-    }
     // enough is drained and the charger is in (the console was cut off and now charges): the drain is over, go to the charge
     if (!m_calib->charge && m_charger && (m_step == wizard::DrainStep::Charging || m_calib->tail) && m_calib->on_drained) {
         const auto go = std::move(m_calib->on_drained);
@@ -460,10 +457,10 @@ void DrainMenu::CalibTick() {
         go();
         return;
     }
-    // the cycle is counted (full after enough drained) and the charger came out: the Hub goes on to the next drain by itself
-    const bool counted = m_calib->charge ? m_full_seen : m_step == wizard::DrainStep::CycleCounted;
-    // the charger came out, or (it may stay in now) the capacity of this cycle is measured: on to the next step
-    if (counted && (!m_charger || (m_calib->charge && m_measured)) && m_calib->on_charge_done) {
+    // the charge is over only when the capacity is measured (the cell took no more current): the 100 % the console shows comes
+    // early and means nothing, and a charger taken out for a moment must not end it (owner, 2026-11-03: cycle 2 began at 1 A)
+    const bool counted = m_calib->charge ? m_measured : (m_step == wizard::DrainStep::CycleCounted && !m_charger);
+    if (counted && m_calib->on_charge_done) {
         const auto done = std::move(m_calib->on_charge_done);
         m_calib->on_charge_done = nullptr;
         CloseCalibLog(); // same: the cycle count reads the log
@@ -506,7 +503,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
         }
         if (m_pct >= 100) {
             if (!m_measured) {
-                return which + ": " + "100 % is shown, but the battery is full only when the charging current falls near zero. The Hub waits for that, measures the capacity and goes on by itself."_i18n
+                return which + ": " + "the battery still takes current, so it is not full yet. The Hub waits until the current falls near zero, measures the capacity and goes on by itself. Keep the charger in."_i18n
                     + " " + (m_calib->step == 2 ? "Then the report follows."_i18n : "Then cycle 2 starts: the drain, the charger can stay in."_i18n);
             }
             return which + ": " + (m_calib->step == 2 ? "the battery is full and its capacity is measured. The report follows."_i18n

@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.278 — Battery calibration: the charge ends only when the capacity is measured; 99 % while current still flows
+On 2026-11-03 cycle 2 began at 4.195 V with 1 A still going in: the console's early 100 % plus a charger out for a moment ended the charge, and cycle 1 kept no capacity. Now the charge page goes on only after the measure (on the charger, the taper), a cycle counts only with its capacity, and the big battery shows 99 % while the battery takes over 100 mA. host tests: pass (quick; the known CRLF nand-archive failure) | nro: not built | switch: pending
+
 ## v0.14.277 — Battery drawing: waves and an arrow
 The big battery of the drain page and of the screensaver has a wavy level edge that ripples up while charging and down while draining, and an arrow (up: charging, down: draining) set from the live current. The approximate sign before the percent is gone. host tests: not run (drawing) | nro: not built | switch: pending
 

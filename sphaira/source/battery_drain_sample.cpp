@@ -62,7 +62,8 @@ void DrainMenu::NoteState(bool force) {
 // The capacity is measured by calib_flow::MeasureCapacityIfFull(), whatever page is open (the Hub also tries it at its start). The
 // charge page asks every 5 s while the voltage is at the top, so the result shows at once.
 void DrainMenu::MeasureOnFull() {
-    if (m_measured || !m_calib->charge || !m_read || m_mv < zero::FULL_MV || m_measure_ts.GetSeconds() < 5) {
+    // on the charger only: a charger taken out at the top must not pass for the taper (4.195 V and 1 A going in is not full)
+    if (m_measured || !m_calib->charge || !m_charger || !m_read || m_mv < zero::FULL_MV || m_measure_ts.GetSeconds() < 5) {
         return;
     }
     m_measure_ts.Update();

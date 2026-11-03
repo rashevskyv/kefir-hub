@@ -103,7 +103,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
-    const float pct = std::clamp(m_pct, 0, 100) / 100.f;
+    const float pct = std::clamp(ShownPct(), 0, 100) / 100.f;
     // green only for a battery that is really full: on the charge page the current must have fallen and the capacity be measured
     const bool waiting_full = m_calib->charge && m_charger && !m_measured;
     const auto level = waiting_full ? nvgRGB(0x60, 0xA5, 0xFA)
@@ -122,7 +122,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     nvgFillColor(vg, text);
     nvgFill(vg);
     ui::gfx::drawBatteryLevel(vg, bx + 12.f, by + 12.f, bw - 24.f, bh - 24.f, 10.f, pct, level, BatteryDir());
-    ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 72.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "%d%%", m_pct);
+    ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 72.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "%d%%", ShownPct());
     ui::gfx::drawBatteryArrow(vg, bx + bw - 44.f, by + bh / 2.f, 50.f, BatteryDir(), text);
     calib_ui::DrawWrapped(vg, bx, by + bh + 10.f, 16.f, bw, info, "The percent is approximate: the console may switch off earlier."_i18n);
 
@@ -242,7 +242,7 @@ void DrainMenu::Draw(NVGcontext* vg, Theme* theme) {
     const auto text = theme->GetColour(ThemeEntryID_TEXT);
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
-    const float pct = std::clamp(m_pct, 0, 100) / 100.f;
+    const float pct = std::clamp(ShownPct(), 0, 100) / 100.f;
     // green at full, orange in the middle, red near empty; it breathes while the load runs
     const auto level = pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
                                   : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
@@ -263,7 +263,7 @@ void DrainMenu::Draw(NVGcontext* vg, Theme* theme) {
     nvgRoundedRect(vg, bx + 12.f, by + 12.f, (bw - 24.f) * pct, bh - 24.f, 10.f);
     nvgFillColor(vg, nvgTransRGBAf(level, pulse));
     nvgFill(vg);
-    ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 90.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "%d%%", m_pct);
+    ui::gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 90.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text, "%d%%", ShownPct());
 
     // the figures and what is going on
     const float fx = 560.f;
@@ -273,7 +273,7 @@ void DrainMenu::Draw(NVGcontext* vg, Theme* theme) {
     if (m_charger && m_step != wizard::DrainStep::CycleCounted) {
         // on the charger the page is about charging, whatever the cycle step is
         ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
-            m_step == wizard::DrainStep::Charging ? good : text, "%s %d%% / 100%%", "Charging:"_i18n.c_str(), m_pct);
+            m_step == wizard::DrainStep::Charging ? good : text, "%s %d%% / 100%%", "Charging:"_i18n.c_str(), ShownPct());
     } else if (m_step == wizard::DrainStep::CycleCounted) {
         ui::gfx::drawTextArgs(vg, fx, 165.f, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, good, "%s", "Both cycles done"_i18n.c_str());
     } else {
@@ -324,7 +324,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
     if (m_calib) {
         // as in the guide: the clock, the stage, the battery with an approximate percent, and five columns
         info.battery_view = true;
-        info.battery_percent = m_pct;
+        info.battery_percent = ShownPct();
         info.battery_dir = BatteryDir();
         info.status = CalibTitle();
         info.hint = "Right stick: brightness; left stick: move. Any button exits."_i18n;
@@ -334,7 +334,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         std::snprintf(t, sizeof(t), "%.1f \u00B0C", m_temp);
         const auto load = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         if (m_calib->charge) {
-            info.columns = {{"Charge"_i18n, std::to_string(std::max(0, m_pct)) + " %"}, {"Charging current"_i18n, i}, {"Voltage"_i18n, v},
+            info.columns = {{"Charge"_i18n, std::to_string(std::max(0, ShownPct())) + " %"}, {"Charging current"_i18n, i}, {"Voltage"_i18n, v},
                             {"Temperature"_i18n, t}, {"Charging for"_i18n, HoursMinutes(DrainSeconds())}};
         } else {
             info.columns = {{"Voltage"_i18n, v}, {"Consumption"_i18n, i}, {"Load"_i18n, load}, {"Temperature"_i18n, t},
@@ -343,7 +343,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         return info;
     }
     info.status = m_cycle == 1 ? "First cycle"_i18n : "Second cycle"_i18n;
-    info.ratio = m_pct >= 0 ? m_pct / 100.0 : 0.0;
+    info.ratio = ShownPct() >= 0 ? ShownPct() / 100.0 : 0.0;
     char line[160];
     std::snprintf(line, sizeof(line), "%.1f W · %d mA · %.1f °C", Last(m_watts), std::abs(m_ma), m_temp);
     info.file = line;
@@ -354,7 +354,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         stats = e;
     }
     if (m_charger) {
-        stats += (stats.empty() ? "" : "   ·   ") + "Charging:"_i18n + " " + std::to_string(std::max(0, m_pct)) + "%";
+        stats += (stats.empty() ? "" : "   ·   ") + "Charging:"_i18n + " " + std::to_string(std::max(0, ShownPct())) + "%";
     } else {
         stats += (stats.empty() ? "" : "   ·   ") + HoursMinutesSeconds(DrainSeconds());
         if (m_tte_s) {

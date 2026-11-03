@@ -149,6 +149,8 @@ private:
     auto SaverReadout() const -> ui::SaverInfo;
     // +1 while the battery charges, -1 while it drains (the live current), 0 when it hardly moves
     int BatteryDir() const { return m_ma > 30 ? 1 : m_ma < -30 ? -1 : 0; }
+    // the percent on the screen: 99 while the battery still takes current, so nobody pulls the charger at a 100 % that comes early
+    int ShownPct() const { return m_pct >= 100 && m_ma > 100 ? 99 : m_pct; }
 
     int m_cycle;
     std::optional<CalibRun> m_calib;
@@ -167,7 +169,6 @@ private:
     bool m_measured{};      // the capacity of this cycle is measured, or refused
     TimeStamp m_measure_ts{};
     void MeasureOnFull();
-    bool m_full_seen{};     // a charge phase saw 100 % on the charger
     bool m_stop_ask{};      // the "stop?" question is open: the load is paused
     FILE* m_log{};
     TimeStamp m_log_commit{};

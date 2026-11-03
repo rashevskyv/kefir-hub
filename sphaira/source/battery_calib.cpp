@@ -118,6 +118,10 @@ auto CountCycle(Marker& m) -> bool {
     if (!cycle || m.full_at[cycle - 1]) {
         return false;
     }
+    // a cycle ends with its capacity measured, not with the 100 % the console shows (it comes before the cell is full)
+    if (!m.cap_raw[cycle - 1]) {
+        return false;
+    }
     // cycle 1 begins with the reset; cycle 2 where cycle 1 ended: earlier log lines belong to an older run
     const auto st = detail::LoadState();
     const auto after = cycle == 1 ? static_cast<std::int64_t>(st.reset_at) : m.full_at[0];
@@ -202,7 +206,7 @@ void OnChargeDone(int was) {
     if (m && IsCycle(m->step) && CycleOf(m->step) == was) {
         // the log did not count this cycle (its cut-off is missing): the same drain again would loop, the list says where it is
         log_write("[Calib] the charge ended but cycle %d was not counted: the steps, not a new drain\n", was);
-        App::Notify("This cycle was not counted: its switch-off is not in the log."_i18n);
+        App::Notify("This cycle was not counted: its capacity was not measured. The log says why."_i18n);
         ShowSteps();
     } else if (m && IsCycle(m->step)) {
         StartDrainRun(*m);
