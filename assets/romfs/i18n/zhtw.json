@@ -4169,5 +4169,11 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "放電已完成。請連接充電器：當電池充滿時，容量將自動測量。",
   "the drain is done. Now the charge, until the battery is full.": "放電完成。現在開始充電，直至電池充滿。",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "你可以讓主機保持這樣，或在充電時使用它。主機顯示的 100% 出現得較早：請保持連接充電器，直到 Hub 顯示容量測量完畢。",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "請保持此頁面開啟。當電池充滿電時，Hub 會自動測量電池容量。如果您離開了頁面，請在充電結束時再次開啟電池校準。在此之前，請保持充電器連接。"
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "請保持此頁面開啟。當電池充滿電時，Hub 會自動測量電池容量。如果您離開了頁面，請在充電結束時再次開啟電池校準。在此之前，請保持充電器連接。",
+  "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "記憶體不足，無法解壓縮此壓縮檔（需要非常大的字典）。請在電腦上解壓縮。",
+  "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "壓縮檔已損壞或不完整，或者缺少多部分壓縮檔的一部分。請重新複製或下載。",
+  "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "無法從磁碟機讀取封存檔。請檢查 USB 連接線或記憶卡，然後再試一次。",
+  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "無法開啟此壓縮檔。不支援此格式，或是多磁碟/分卷壓縮檔的一部分（.part1.rar, .r00）。多部分壓縮檔必須在電腦上解壓縮。",
+  "Transfer now": "立即傳輸",
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "按 A：主機將重新啟動到另一個系統。通知會提示你在那裡開啟 Kefir Hub。校准會自行移動，你可以重新啟動回去。"
 }

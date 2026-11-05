@@ -272,6 +272,16 @@ enum class SphairaResult : Result {
     RepackBadRomfs,
     // repack: the title has no mod files to bake in.
     RepackNoMod,
+
+    // archive extraction (appended: inserting mid-enum renumbers every code below).
+    // the archive format was not recognised, or it is one part of a multi-part archive.
+    ArchiveUnsupported,
+    // libarchive found broken / missing data while reading entries.
+    ArchiveDamaged,
+    // reading the archive file from the drive / card failed.
+    ArchiveSourceRead,
+    // libarchive ran out of memory (e.g. a huge rar5 dictionary).
+    ArchiveNoMemory,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -418,6 +428,10 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(RepackBadBktr),
     MAKE_SPHAIRA_RESULT_ENUM(RepackBadRomfs),
     MAKE_SPHAIRA_RESULT_ENUM(RepackNoMod),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchiveUnsupported),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchiveDamaged),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchiveSourceRead),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchiveNoMemory),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

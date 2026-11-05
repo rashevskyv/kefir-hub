@@ -2022,6 +2022,10 @@
   "Failed to remove Homebrew search path": "Не вдалося видалити шлях пошуку Homebrew",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "Ця операція вимагає системної прошивки %s або вище (встановлено: %s). Оновіть системну прошивку консолі перед повторною спробою.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "Файл або передача завершилися до того, як вдалося прочитати всі дані. Скопіюйте або завантажте файл знову.",
+  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "Не вдалося відкрити архів. Його формат не підтримується, або це одна з частин багатотомного архіву (.part1.rar, .r00). Багатотомні архіви потрібно розпаковувати на ПК.",
+  "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "Архів пошкоджений або неповний, або бракує однієї з частин багатотомного архіву. Скопіюйте або завантажте його знову.",
+  "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "Не вдалося прочитати файл архіву з накопичувача. Перевірте USB-кабель або карту й спробуйте ще раз.",
+  "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Не вистачає пам'яті, щоб розпакувати цей архів (потрібен дуже великий словник). Розпакуйте його на ПК.",
   "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "Файл не є дійсним NSP і може бути пошкодженим або неповним. Скопіюйте або завантажте файл знову.",
   "Homebrew search paths and application options.": "Шляхи пошуку Homebrew та параметри додатків.",
   "Homebrew Search Paths": "Шляхи пошуку Homebrew",
@@ -4052,5 +4056,8 @@
   "No patch for this firmware": "Немає патча для цієї прошивки",
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Коли консоль вимкнеться, увімкніть її знову (залишивши зарядний пристрій підключеним) та відкрийте Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Коли вона вимкнеться, підключіть зарядний пристрій. Вона може не вмикатися близько 20 хвилин: це нормально. Потім увімкніть її та відкрийте Kefir Hub.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Нижче 3.3 V: навантаження вимкнено, а екран працює з вашою яскравістю, тому консоль вимикається за невеликого навантаження."
+  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Нижче 3.3 V: навантаження вимкнено, а екран працює з вашою яскравістю, тому консоль вимикається за невеликого навантаження.",
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Натисніть A: консоль перезавантажиться в іншу систему. Сповіщення попросить відкрити там Kefir Hub. Калібрування перенесеться саме, а потім можна повернутися назад.",
+  "Transfer now": "Передати зараз",
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Натисніть A: консоль перезавантажиться в іншу систему. Сповіщення попросить вас відкрити Kefir Hub там. Калібрування рухатиметься самостійно, і ви зможете перезавантажитися назад."
 }

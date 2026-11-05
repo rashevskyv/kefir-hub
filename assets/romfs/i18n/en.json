@@ -1993,6 +1993,10 @@
   "Failed to remove Homebrew search path": "Failed to remove Homebrew search path",
   "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.": "This operation requires system firmware %s or higher (installed: %s). Please update your console system firmware before retrying.",
   "The file or transfer ended early before all data was read. Please copy or download the file again.": "The file or transfer ended early before all data was read. Please copy or download the file again.",
+  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.",
+  "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.",
+  "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "The archive file could not be read from the drive. Check the USB cable or the card, then try again.",
+  "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.",
   "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.": "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again.",
   "Homebrew search paths and application options.": "Homebrew search paths and application options.",
   "Homebrew Search Paths": "Homebrew Search Paths",
@@ -4050,5 +4054,7 @@
   "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current.": "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.",
   "the drain is done. Now the charge, until the battery is full.": "the drain is done. Now the charge, until the battery is full.",
-  "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full"
+  "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full",
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.",
+  "Transfer now": "Transfer now"
 }

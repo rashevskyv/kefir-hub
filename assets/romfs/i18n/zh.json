@@ -4169,5 +4169,11 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "放电已完成。请连接充电器：当电池充满时，容量将自动测量。",
   "the drain is done. Now the charge, until the battery is full.": "放电完成。现在开始充电，直至电池充满。",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "你可以让主机保持这样，或在充电时使用它。主机显示的 100% 出现得较早：请保持连接充电器，直到 Hub 显示容量测量完毕。",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "请保持此页面打开。当电池充满电时，Hub 会自动测量电池容量。如果您离开了页面，请在充电结束时再次打开电池校准。在此之前，请保持充电器连接。"
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "请保持此页面打开。当电池充满电时，Hub 会自动测量电池容量。如果您离开了页面，请在充电结束时再次打开电池校准。在此之前，请保持充电器连接。",
+  "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "内存不足，无法解压此归档（需要非常大的字典）。请在电脑上解压。",
+  "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "归档文件已损坏或不完整，或者缺少多部分归档的一部分。请重新复制或下载。",
+  "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "无法从驱动器读取存档文件。请检查 USB 数据线或内存卡，然后重试。",
+  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "无法打开此归档文件。不支持此格式，或者它是分卷压缩文件的一部分（.part1.rar，.r00）。分卷压缩文件必须在电脑上解压。",
+  "Transfer now": "立即传输",
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "按 A：主机将重新启动到另一个系统。通知会提示你在那里打开 Kefir Hub。校准会自行移动，你可以重新启动回去。"
 }

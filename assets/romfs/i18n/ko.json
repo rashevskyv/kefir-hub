@@ -4116,5 +4116,11 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "방전이 완료되었습니다. 충전기를 연결하세요: 배터리가 완전히 충전되면 용량이 자동으로 측정됩니다.",
   "the drain is done. Now the charge, until the battery is full.": "방전이 완료되었습니다. 배터리가 가득 찰 때까지 충전합니다.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "콘솔을 이 상태로 두거나 충전 중에 사용할 수 있습니다. 콘솔이 표시하는 100%는 일찍 나타납니다. Hub가 용량이 측정되었다고 할 때까지 충전기를 연결해 두세요.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "이 페이지를 열어 둔 상태로 유지하세요. 배터리가 가득 차면 허브가 스스로 배터리 용량을 측정합니다. 페이지를 벗어난 경우 충전이 완료되면 배터리 보정을 다시 여세요. 그때까지 충전기를 연결해 두세요."
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "이 페이지를 열어 둔 상태로 유지하세요. 배터리가 가득 차면 허브가 스스로 배터리 용량을 측정합니다. 페이지를 벗어난 경우 충전이 완료되면 배터리 보정을 다시 여세요. 그때까지 충전기를 연결해 두세요.",
+  "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "이 아카이브를 압축 해제할 메모리가 부족합니다(매우 큰 사전이 필요합니다). PC에서 압축을 해제하세요.",
+  "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "아카이브가 손상되었거나 불완전하거나, 분할 아카이브의 일부가 누락되었습니다. 다시 복사하거나 다운로드하세요.",
+  "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "드라이브에서 아카이브 파일을 읽을 수 없습니다. USB 케이블이나 카드를 확인하고 다시 시도하세요.",
+  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "이 압축 파일을 열 수 없습니다. 지원되지 않는 형식복이거나 분할 압축 파일(.part1.rar, .r00)의 일부입니다. 분할 압축 파일은 PC에서 해제해야 합니다.",
+  "Transfer now": "지금 전송",
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "A를 누르세요: 콘솔이 다른 시스템으로 재시작됩니다. 알림이 거기서 Kefir Hub를 열도록 요청합니다. 캘리브레이션이 저절로 이동하며, 다시 재시작할 수 있습니다."
 }

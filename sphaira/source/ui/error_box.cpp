@@ -175,6 +175,10 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_NtpRecvFailed: return "SphairaError_NtpRecvFailed";
         case Result_NtpBadReply: return "SphairaError_NtpBadReply";
         case Result_NtpSetTimeFailed: return "SphairaError_NtpSetTimeFailed";
+        case Result_ArchiveUnsupported: return "SphairaError_ArchiveUnsupported";
+        case Result_ArchiveDamaged: return "SphairaError_ArchiveDamaged";
+        case Result_ArchiveSourceRead: return "SphairaError_ArchiveSourceRead";
+        case Result_ArchiveNoMemory: return "SphairaError_ArchiveNoMemory";
         case Result_YatiHttpReadFailed: return "SphairaError_YatiHttpReadFailed";
     }
 
@@ -214,6 +218,14 @@ auto GetErrorDescription(Result rc) -> std::string {
         }
         case Result_StreamUnexpectedEof:
             return "The file or transfer ended early before all data was read. Please copy or download the file again."_i18n;
+        case Result_ArchiveUnsupported:
+            return "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC."_i18n;
+        case Result_ArchiveDamaged:
+            return "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again."_i18n;
+        case Result_ArchiveSourceRead:
+            return "The archive file could not be read from the drive. Check the USB cable or the card, then try again."_i18n;
+        case Result_ArchiveNoMemory:
+            return "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC."_i18n;
         case Result_NspBadMagic:
             return "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again."_i18n;
         case Result_AppstoreFailedZipDownload:
@@ -293,6 +305,10 @@ auto ShouldShowIssue(std::optional<Result> rc) -> bool {
         case Result_KeyMissingMasterKey:
         case Result_KeyFailedDecyptETicketDeviceKey:
         case Result_GcEmptyGamecard:
+        case Result_ArchiveUnsupported:
+        case Result_ArchiveDamaged:
+        case Result_ArchiveSourceRead:
+        case Result_ArchiveNoMemory:
         case UsbError_UrbFailed:
         case UsbError_UrbCancelled:
         case UsbError_UrbBadStatus:

@@ -7,6 +7,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <functional>
 #include <vector>
@@ -20,6 +21,7 @@ struct Source {
     fs::File file{};
     s64 size{};
     s64 off{};
+    bool read_failed{};
     std::vector<u8> buf = std::vector<u8>(256 * 1024);
 };
 
@@ -27,6 +29,7 @@ la_ssize_t OnRead(struct archive* a, void* user, const void** out) {
     auto src = static_cast<Source*>(user);
     u64 bytes{};
     if (R_FAILED(src->file.Read(src->off, src->buf.data(), src->buf.size(), 0, &bytes))) {
+        src->read_failed = true;
         archive_set_error(a, EIO, "read failed");
         return -1;
     }
@@ -40,6 +43,17 @@ la_int64_t OnSeek(struct archive*, void* user, la_int64_t offset, int whence) {
     const s64 base = whence == SEEK_CUR ? src->off : whence == SEEK_END ? src->size : 0;
     src->off = std::clamp<s64>(base + offset, 0, src->size);
     return src->off;
+}
+
+// the most specific reason libarchive stopped: our own drive read, no memory, or bad data.
+Result Failure(struct archive* a, const Source& src, Result otherwise) {
+    if (src.read_failed) {
+        return Result_ArchiveSourceRead;
+    }
+    if (archive_errno(a) == ENOMEM) {
+        return Result_ArchiveNoMemory;
+    }
+    return otherwise;
 }
 
 Result WriteEntry(ui::InstallProgress* pbox, struct archive* a, fs::Fs* fs, const fs::FsPath& dest, const Source& src) {
@@ -60,7 +74,7 @@ Result WriteEntry(ui::InstallProgress* pbox, struct archive* a, fs::Fs* fs, cons
         }
         if (r < ARCHIVE_WARN) {
             log_write("[ARCHIVE] data: %s\n", archive_error_string(a));
-            R_THROW(Result_ArchiveRead);
+            R_THROW(Failure(a, src, Result_ArchiveDamaged));
         }
         R_TRY(out.Write(offset, block, size, FsWriteOption_None));
         pbox->UpdateInstallTransfer(src.off, src.size);
@@ -86,7 +100,7 @@ Result Run(ui::InstallProgress* pbox, fs::Fs* fs, const fs::FsPath& archive_path
     archive_read_set_callback_data(a, &src);
     if (archive_read_open1(a) != ARCHIVE_OK) {
         log_write("[ARCHIVE] open %s: %s\n", archive_path.s, archive_error_string(a));
-        R_THROW(Result_ArchiveRead);
+        R_THROW(Failure(a, src, Result_ArchiveUnsupported));
     }
 
     pbox->UpdateInstallTransfer(0, src.size);
@@ -99,7 +113,7 @@ Result Run(ui::InstallProgress* pbox, fs::Fs* fs, const fs::FsPath& archive_path
         }
         if (r < ARCHIVE_WARN) {
             log_write("[ARCHIVE] header: %s\n", archive_error_string(a));
-            R_THROW(Result_ArchiveRead);
+            R_THROW(Failure(a, src, Result_ArchiveDamaged));
         }
 
         const char* name = archive_entry_pathname_utf8(entry);

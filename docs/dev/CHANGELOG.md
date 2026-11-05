@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.286 — archive extraction errors say what is wrong
+Rar/7z/zip extraction now reports: unsupported or multi-part archive, damaged archive, drive read failure, out of memory (4 new codes, plain text in 26 languages, no support link).
+host tests: pass (--quick), nro: not built, switch: pending
+
 ## v0.14.285 — Battery charge page: tells the user to leave the page open (the Hub measures the capacity itself at full)
 The old text said to come back at 100 %, but the Hub already measures by itself while the page is open; en/uk edited by hand, the other languages by translate.py.
 host tests: not run (i18n contract: pass), nro: not built, switch: pending
