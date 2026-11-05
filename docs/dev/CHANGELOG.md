@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.288 — Updater stays without Kefir and offers INSTALL instead of UPDATE; only Kefir Settings is hidden
+Without /switch/kefir-updater/version the Kefir pack row is tagged INSTALL and the firmware prompt button says Install.
+host tests: not run, nro: not built, switch: pending
+
 ## v0.14.287 — README refreshed (current screenshots, 26 languages, not Kefir-only); Updater and Kefir Settings hidden when Kefir is not installed
 Tools tab hides both items when `/switch/kefir-updater/version` is missing. update-docs skill and AGENTS.md now include README.md.
 host tests: not run, nro: not built, switch: pending (Tools tab on a console without Kefir)

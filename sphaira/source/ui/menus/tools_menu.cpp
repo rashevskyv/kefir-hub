@@ -218,10 +218,10 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
 
     LoadIcons();
 
-    // Updater and Kefir Settings only work on Kefir; icons are already attached to the items.
+    // Kefir Settings only work on Kefir; icons are already attached to the items.
     if (hats::getKefirVersion().empty()) {
         std::erase_if(m_items, [](const auto& item) {
-            return item.label == "Updater"_i18n || item.label == "Kefir Settings"_i18n;
+            return item.label == "Kefir Settings"_i18n;
         });
     }
     SetIndex(0);

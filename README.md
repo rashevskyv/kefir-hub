@@ -5,8 +5,9 @@ It launches homebrew, installs games, manages saves, cheats, themes and user pro
 It is the app that comes with Kefir (documentation: [hub.customfw.xyz](https://hub.customfw.xyz/)), but it is **not Kefir-only**.
 It also runs on plain Atmosphère with any other custom firmware pack.
 
-The options that only make sense on Kefir (**Updater** and **Kefir Settings** in the Tools tab) show up only when Kefir is installed.
-Kefir Hub looks for the version file `/switch/kefir-updater/version`. Without it, these options are hidden.
+**Kefir Settings** in the Tools tab show up only when Kefir is installed.
+Kefir Hub looks for the version file `/switch/kefir-updater/version`. Without it, the item is hidden.
+The **Updater** stays and offers **Install** for the Kefir pack instead of **Update**.
 
 [See the GBATemp thread for more details / discussion](https://gbatemp.net/threads/sphaira-hbmenu-replacement.664523/).
 

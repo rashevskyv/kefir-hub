@@ -465,7 +465,7 @@ void Menu::PromptKefirThenFirmware(const UpdaterEntry& firmware_entry) {
 
     App::Push<OptionBox>(
         detail::FirmwareUnsupportedReason(firmware_entry.name, m_supported_firmware),
-        "Cancel"_i18n, "Update Kefir"_i18n, 1,
+        "Cancel"_i18n, (detail::IsKnownVersion(m_current_kefir) ? "Update Kefir"_i18n : "Install"_i18n), 1,
         [this, kefir_entry, firmware_entry](auto op_index) {
             if (!op_index || *op_index != 1) {
                 return;
