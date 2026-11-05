@@ -4,6 +4,7 @@
 #include "battery_page.hpp"
 #include "battery_internal.hpp"
 #include "battery_hop.hpp"
+#include "battery_calib_internal.hpp"
 #include "account/account_restore.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -137,6 +138,11 @@ void PollHop() {
         s.hop_to = s.hop_from = 0;
         detail::SaveState(s);
         account_restore::ClearReopenHubHint();
+        // the wizard ends here: the marker is on the shared microSD, so the first system sees step 5 as done
+        if (auto m = calib_flow::LoadMarker()) {
+            calib::TransferDone(*m);
+            calib_flow::SaveMarker(*m);
+        }
         const auto text = "Calibration complete: both MMCs hold the same calibrated model and one cycle count."_i18n;
         if (!from) {
             App::Push<ui::OptionBox>(text, "OK"_i18n);

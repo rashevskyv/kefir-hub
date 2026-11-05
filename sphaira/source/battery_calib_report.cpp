@@ -227,7 +227,7 @@ void ShowTransfer() {
     if (l.seq) {
         lines.push_back(cu::Item("Calibration saved on the microSD."_i18n + " " + "Marker"_i18n + ": " + "from"_i18n + " " + cutoff::SystemName(l.origin) + ", " +
                                  "number"_i18n + " " + std::to_string(l.seq) + "."));
-        lines.push_back(cu::Item("Open the Hub in the other system. The calibration moves by itself."_i18n));
+        lines.push_back(cu::Item("Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back."_i18n));
         // this system and every system the ledger has seen
         std::vector<std::string> systems{id};
         for (const auto& w : l.written) {
@@ -241,9 +241,15 @@ void ShowTransfer() {
     } else {
         lines.push_back(cu::Ok("Calibration finished"_i18n));
     }
-    lines.push_back(cu::Dim("The hekate hop is a manual action only."_i18n));
     const bool finish = [] { const auto m = LoadMarker(); return m && m->step == Step::Transfer; }();
-    App::Push<cu::Page>("Transfer to the other systems"_i18n, StepLabel(4), std::move(lines), finish ? "Go on"_i18n : std::string{}, [](cu::Page& p) {
+    // another system already holds the calibration: nothing is left to transfer
+    const bool other_done = std::any_of(l.written.begin(), l.written.end(), [&](const auto& w) { return w.system != id && cutoff::WrittenSeq(l, w.system) >= l.seq; });
+    const bool hop = finish && !other_done;
+    App::Push<cu::Page>("Transfer to the other systems"_i18n, StepLabel(4), std::move(lines), finish ? (hop ? "Transfer now"_i18n : "Go on"_i18n) : std::string{}, [hop](cu::Page& p) {
+        if (hop) {
+            OfferHop();
+            return;
+        }
         if (auto m = LoadMarker()) {
             TransferDone(*m);
             SaveMarker(*m);

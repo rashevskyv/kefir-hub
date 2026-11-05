@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 Rar/7z/zip extraction now reports: unsupported or multi-part archive, damaged archive, drive read failure, out of memory (4 new codes, plain text in 26 languages, no support link).
 host tests: pass (--quick), nro: not built, switch: pending
 
+## v0.14.286 — Battery calibration step 5: one button "Transfer now" (hekate hop into the other system, Ultrahand notice there, wizard ends by itself)
+The transfer page no longer tells the user to switch systems by hand; after the match in the other system the marker is set to Finished.
+host tests: not run (i18n contract: pass), nro: not built, switch: pending (hop + Ultrahand notice need a console test)
+
 ## v0.14.285 — Battery charge page: tells the user to leave the page open (the Hub measures the capacity itself at full)
 The old text said to come back at 100 %, but the Hub already measures by itself while the page is open; en/uk edited by hand, the other languages by translate.py.
 host tests: not run (i18n contract: pass), nro: not built, switch: pending
