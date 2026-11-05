@@ -188,7 +188,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
             ui::gfx::drawTextArgs(vg, 70.f, y, 24.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, warn, "%s", "Plug the charger in."_i18n.c_str());
         }
         y += 46.f;
-        calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then."_i18n);
+        calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then."_i18n);
         y += 76.f;
         calib_ui::DrawWrapped(vg, 92.f, y, 21.f, 1110.f, text, "The screen stays on: so the console charges to the end. The screensaver saves the screen."_i18n);
         return;

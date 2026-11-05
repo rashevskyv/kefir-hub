@@ -4111,7 +4111,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "Deşarj tamamlandı. Şarj cihazını takın: kapasite pil dolduğunda otomatik olarak ölçülecektir.",
   "the drain is done. Now the charge, until the battery is full.": "Deşarj tamamlandı. Şimdi pil dolana kadar şarj ediliyor.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "Konsolu bu şekilde bırakabilir veya şarj olurken kullanabilirsiniz. Konsolun gösterdiği %100 erken gelir: Kapasitenin ölçüldüğünü Hub söyleyene kadar şarj cihazını takılı tutun.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Bu sayfayı açık bırakın. Batarya dolduğunda Hub batarya kapasitesini kendi ölçer. Sayfadan ayrıldıysanız, şarj bittiğinde Batarya kalibrasyonunu tekrar açın. O zamana kadar şarj cihazını takılı tutun.",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Bu arşivi açmak için yeterli bellek yok (çok büyük bir sözlük gerektiriyor). Bir PC'de çıkartın.",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "Arşiv hasarlı veya eksik ya da çok parçalı bir arşivin bir kısmı eksik. Yeniden kopyalayın veya indirin.",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "Arşiv dosyası sürücüden okunamadı. USB kablosunu veya kartı kontrol edip tekrar deneyin.",
@@ -4120,5 +4119,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "Bu dosyalar bir arşivin içinde ve doğrudan oradan yükleniyor. Bu, normal bir dosyaya göre daha yavaştır ve bozuk bir arşiv yüklemeyi durdurur. Alanınız varsa, önce bunları çıkarın.",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "Bu arşiv açılamıyor. Biçimi desteklenmiyor veya hasarlı. Bölünmüş bir arşivin tüm parçalarının aynı klasörde olması gerekir.",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "Bu RAR arşivi, Hub'ın okuyamadığı katı (RAR4) olarak sıkıştırılmış. Bir PC'de açın veya katı seçeneği olmadan tekrar sıkıştırın.",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Bu arşiv şifrelenmiş. The Hub şifrelenmiş arşivleri açamaz. Bir PC'de dışarı çıkarın."
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Bu arşiv şifrelenmiş. The Hub şifrelenmiş arşivleri açamaz. Bir PC'de dışarı çıkarın.",
+  "now": "şimdi",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Bu sayfayı açık bırakın. Şarj cihazı şarjı bitirdiğinde Hub dolu pili kendisi kaydeder. Sayfadan çıktıysanız, şarj bittiğinde Pil kalibrasyonunu yeniden açın. O zamana kadar şarj cihazını takılı tutun.",
+  "LiHV (4.32 V): a larger battery": "LiHV (4,32 V): daha büyük bir pil",
+  "LiPo (4.2 V): the standard battery": "LiPo (4,2 V): standart pil",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "Fabrika kapasitesinden fazla: bir pil hiçbir zaman yeniyken tuttuğundan fazlasını tutmaz. Göstergenin değeri yanlış.",
+  "The battery is full: the factory capacity is written": "Pil dolu: fabrika kapasitesi yazıldı",
+  "The gauge did not take the factory capacity.": "Gösterge fabrika kapasitesini almadı.",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "Bu konsolun orijinal LiPo değeri bilinmiyor. PRODINFO'yu /config/kefir/battery içindeki yedeğinden geri yükleyin.",
+  "This is the battery type already.": "Bu zaten pil türü.",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "fabrika kapasitesinin: pilin tutabileceğinden fazla, göstergenin değeri yanlış",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "boşaltma bitti. Şarj cihazını takın ve şarj cihazı şarjı bitirene kadar takılı tutun",
+  "Start the calibration over (Actions, Start the calibration over).": "Kalibrasyonu yeniden başlat (İşlemler, Kalibrasyonu yeniden başlat)."
 }

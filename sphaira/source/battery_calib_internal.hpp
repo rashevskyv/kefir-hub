@@ -18,9 +18,9 @@ auto Now() -> std::int64_t;
 auto StepLabel(int i) -> std::string;
 
 void ShowSteps();
-// The capacity of the cycle (battery_zero.hpp, MeasureCapacity): once the cut-off is behind and the battery is full by voltage and
-// current, charger in or out, the charge counted since the cut-off is written as FullCap. Not tied to the Hub's pages: the Hub also
-// calls it at its start. NotYet = not full / no cycle in the charge phase; Done = written (now or before); Refused = tried, failed.
+// The full battery of the cycle (battery_zero.hpp): the charger is in and it ended the charge. Cycle 1 writes the factory capacity;
+// cycle 2 writes nothing and notes what the chip learned. Not tied to the Hub's pages: the Hub also calls it at its start.
+// NotYet = not full / no cycle in the charge phase; Done = done (now or before); Refused = tried, failed.
 enum class Measure { NotYet, Done, Refused };
 auto MeasureCapacityIfFull() -> Measure;
 void StartOver();
@@ -34,11 +34,8 @@ void ApplyLedger();
 
 // the zero (battery_zero_write.cpp): the cut-off voltage of the zero drain into the gauge
 namespace sphaira::battery::zero_write {
-// once at the Hub's start: the coulomb counter then, for "what came in since the switch-on"
-void ReadQhAtStart();
-auto WriteZero(int mv, std::string& failed, int qh_last) -> Result;
-// the battery is full by voltage and current but the chip shows far less: the counters to 100 % (V_empty stays)
-auto WriteFull(std::string& failed) -> Result;
-// the full battery: the charge counted since the cut-off becomes FullCap and FullCapNom (cap = the new FullCap, 0.5 mAh units)
-auto WriteCapacity(int qh_cut, std::string& failed, std::uint16_t& cap) -> Result;
+// the cut-off voltage into V_empty; the counters stay as the chip has them
+auto WriteZero(int mv, std::string& failed) -> Result;
+// cycle 1, the charger ended the charge: FullCap and FullCapNom = the factory capacity, the counters 100 % (cap = 0.5 mAh units)
+auto WriteFactoryFull(std::string& failed, std::uint16_t& cap) -> Result;
 } // namespace sphaira::battery::zero_write

@@ -444,7 +444,6 @@ void DrainMenu::CalibTick() {
         }
     }
     MeasureOnFull();
-    HealFullCharge();
     // enough is drained and the charger is in (the console was cut off and now charges): the drain is over, go to the charge
     if (!m_calib->charge && m_charger && (m_step == wizard::DrainStep::Charging || m_calib->tail) && m_calib->on_drained) {
         const auto go = std::move(m_calib->on_drained);

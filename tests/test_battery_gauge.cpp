@@ -94,22 +94,18 @@ void CollapsedCapacityIsDesync() {
     assert(r2[0].finding == Finding::BrokenModel && r2[0].detail == "1" && r2[1].finding == Finding::CopyDiffers);
 }
 
-void LargerBatteryIsNotDesync() {
-    // an 8600 mAh cell in an OLED (design 4600 mAh -> 0x2398): learned 7810 mAh, set:cal still says LiPo
+void AboveFactoryIsAWrongValue() {
+    // design 4600 mAh (0x2398), learned 7810 mAh: a wrong gauge value, reported as such, never as a larger battery
     Input in{Sample(), Sample(), 0, 0, 0x2398, 0x3D04, 0, 0, 1, true, std::nullopt, -1, -1, 0};
     in.setcal_version = 0;
     auto r = Diagnose(Known(in));
-    assert(r.size() == 2 && r[0].finding == Finding::NoSign && r[1].finding == Finding::LargerBattery); // not a desync sign
-    assert(r[1].detail == "171 lipo");
-    in.setcal_version = 2;
-    in.cal0_version = 2;
-    in.cycle_reliability = 1;   // after the PRODINFO edit: LiHV, nothing left to suggest
-    r = Diagnose(Known(in));
-    assert(r.back().finding == Finding::LargerBattery && r.back().detail == "171");
-    in.full_cap = 0x2398;    // an original capacity: no remark
+    assert(r.size() == 2 && r[0].finding == Finding::NoSign && r[1].finding == Finding::AboveFactory);
+    assert(r[1].detail == "171");
+    in.full_cap = 0x2398;    // the factory capacity: no remark
     r = Diagnose(Known(in));
     assert(r.size() == 1 && r[0].finding == Finding::NoSign);
     assert(CapacityHigh(0x3D04, 0x2398) && !CapacityHigh(0x2398, 0x2398) && !CapacityHigh(0x2000, 0));
+    assert(CapacityHigh(0x2580, 0x2398) && !CapacityHigh(0x2540, 0x2398)); // 106 % is above, 104 % is not
 }
 
 void OtherMmcAndSocGap() {
@@ -173,7 +169,7 @@ int main() {
     UnknownVersionsAreNotCompared();
     UnreadCopyIsNotCompared();
     CollapsedCapacityIsDesync();
-    LargerBatteryIsNotDesync();
+    AboveFactoryIsAWrongValue();
     OtherMmcAndSocGap();
     CopyFileLayout();
     NinetyPercentRule();

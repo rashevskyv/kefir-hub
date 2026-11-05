@@ -166,9 +166,9 @@ void ShowReport() {
                 lines.push_back(cu::Item("Most likely the calibration went wrong, for example a cycle was cut short. Start it over (Actions, Start the calibration over)."_i18n));
                 lines.push_back(cu::Item("If the result stays this low, the battery is worn out. A new battery is worth considering."_i18n));
                 break;
-            case report::Wear::Larger:
-                lines.push_back(cu::Warn("More than the factory value: this is a bigger battery built in, or a measurement error."_i18n));
-                lines.push_back(cu::Item("If you did not change the battery, start the calibration over (Actions, Start the calibration over)."_i18n));
+            case report::Wear::AboveFactory:
+                lines.push_back(cu::Warn("More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong."_i18n));
+                lines.push_back(cu::Item("Start the calibration over (Actions, Start the calibration over)."_i18n));
                 break;
             case report::Wear::Unknown:
                 lines.push_back(cu::Item("The factory capacity is not known, so there is nothing to compare with."_i18n));

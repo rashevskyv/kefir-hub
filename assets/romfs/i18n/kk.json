@@ -4111,7 +4111,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "Зарядты тауысу аяқталды. Зарядтағышты жалғаңыз: батарея толық болған кезде сыйымдылығы автоматты түрде өлшенеді.",
   "the drain is done. Now the charge, until the battery is full.": "Разрядка аяқталды. Енді батарея толық болғанша зарядталады.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "Консольді осылай қалдыруға немесе зарядталып жатқанда пайдалануға болады. Консоль көрсететін 100 % ерте пайда болады: Hub сыйымдылық өлшенді деп хабарлағанша зарядтағышты қосып қойыңыз.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Бұл бетті ашық қалдырыңыз. Батарея толық болған кезде Hub батарея сыйымдылығын өзі өлшейді. Егер беттен шығып кетсеңіз, зарядтау аяқталған соң Батареяны калибрлеу бөлімін қайта ашыңыз. Зарядтағышты соған дейін қосылған күйде қалдырыңыз.",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Бұл архивті шығаруға жад жеткіліксіз (өте үлкен сөздік қажет). Оны ПК-де шығарыңыз.",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "Архив зақымдалған немесе толық емес, не көп бөлікті архивтің бір бөлігі жоқ. Оны қайта көшіріп алыңыз немесе жүктеңіз.",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "Дисктен архив файлын оқу мүмкін емес. USB кабелін немесе картаны тексеріп, қайтадан көріңіз.",
@@ -4120,5 +4119,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "Бұл файлдар архив ішінде және содан тікелей орнатылады. Бұл қарапайым файлға қарағанда баяуырақ, ал зақымдалған архив орнатуды тоқтатады. Егер орын болса, алдымен оларды шығарып алыңыз.",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "Бұл архивті ашу мүмкін емес. Пішімі қолдау көрсетілмейді немесе зақымдалған. Бөлінген архивтің барлық бөліктері бір папкада болуы керек.",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "Бұл RAR архиві тұтас (RAR4) етіп сығымдалған, оны Hub оқи алмайды. Оны ПК-де шығарыңыз немесе тұтас опциясынсыз қайта сығымдаңыз.",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Бұл архив шифрленген. The Hub шифрленген архивтерді аша алмайды. Оны компьютерде шығарыңыз."
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Бұл архив шифрленген. The Hub шифрленген архивтерді аша алмайды. Оны компьютерде шығарыңыз.",
+  "now": "қазір",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Бұл бетті ашық қалдырыңыз. Зарядтағыш зарядтауды аяқтағанда, Hub толық батареяны өзі белгілейді. Беттен шығып кетсеңіз, зарядтау аяқталғанда батарея калибрлеуін қайта ашыңыз. Оған дейін зарядтағышты ажыратпаңыз.",
+  "LiHV (4.32 V): a larger battery": "LiHV (4,32 В): үлкейтілген батарея",
+  "LiPo (4.2 V): the standard battery": "LiPo (4,2 В): стандартты батарея",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "Зауыттық сыйымдылықтан көп: батарея ешқашан жаңа кезіндегіден көп сыймайды. Заряд өлшегішінің мәні қате.",
+  "The battery is full: the factory capacity is written": "Батарея толық: зауыттық сыйымдылық жазылды",
+  "The gauge did not take the factory capacity.": "Заряд өлшегіші зауыттық сыйымдылықты қабылдамады.",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "Бұл консольдің бастапқы LiPo мәні белгісіз. PRODINFO-ны /config/kefir/battery ішіндегі сақтық көшірмеден қалпына келтіріңіз.",
+  "This is the battery type already.": "Бұл батарея түрі қазірдің өзінде орнатылған.",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "зауыттық сыйымдылықтан: батарея сыйғызатыннан көп, заряд өлшегішінің мәні қате",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "разряд аяқталды. Зарядтағышты қосып, зарядтағыш зарядтауды аяқтағанша ажыратпаңыз",
+  "Start the calibration over (Actions, Start the calibration over).": "Калибрлеуді қайта бастау (Әрекеттер, Калибрлеуді қайта бастау)."
 }

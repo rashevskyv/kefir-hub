@@ -186,6 +186,11 @@ struct Bq {
 
 } // namespace
 
+auto ChargerStatus() -> std::optional<u8> {
+    Bq bq;
+    return bq.Read(0x08);
+}
+
 void RunHizTestIfAsked() {
     fs::FsNativeSd sd;
     if (!sd.FileExists(HIZ_RUN)) {

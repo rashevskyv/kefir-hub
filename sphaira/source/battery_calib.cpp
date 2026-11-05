@@ -244,8 +244,8 @@ void WriteZeroThenCharge(Marker m) {
     }
     auto failed = std::make_shared<std::string>();
     auto marker = std::make_shared<Marker>(std::move(m));
-    App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, std::to_string(mv) + " mV", [failed, mv, qh = marker->qh_last](auto) -> Result {
-        return zero_write::WriteZero(mv, *failed, qh);
+    App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, std::to_string(mv) + " mV", [failed, mv](auto) -> Result {
+        return zero_write::WriteZero(mv, *failed);
     }, [failed, marker, mv](Result rc) {
         if (R_FAILED(rc)) {
             App::Push<ui::OptionBox>("The zero was not written. A backup was saved first."_i18n + (failed->empty() ? std::string{} : "\n\n" + *failed),
@@ -505,7 +505,7 @@ auto StateText(Mark m) -> std::string {
 // what the active cycle row says: where the cycle is and what the user does now
 auto CycleText(const Marker& m) -> std::string {
     if (PhaseOf(m) == Phase::Charge) {
-        return "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full"_i18n;
+        return "the drain is done. Plug the charger in and keep it in until the charger ends the charge"_i18n;
     }
     return m.drain_started ? "the drain is going on"_i18n : "next: start the drain (the charger can stay in)"_i18n;
 }
@@ -528,34 +528,36 @@ auto MeasureCapacityIfFull() -> Measure {
         return Measure::NotYet;
     }
     const auto vcell = g.Read(MAX17050_VCell);
-    const auto avg = g.Current(MAX17050_AvgCurrent);
-    if (!vcell || !avg) {
+    if (!vcell) {
         return Measure::NotYet;
     }
     const int mv = static_cast<int>((*vcell >> 3) * 0.625);
-    const int ma = static_cast<int>(*avg);
     PsmChargerType charger{};
     psmGetChargerType(&charger);
-    const bool in = charger != PsmChargerType_Unconnected;
-    // on the charger only the constant-voltage tail counts; off it a cell still at the top is full (nothing left it since)
-    if (!(in ? zero::FullForHeal(mv, ma) : zero::FullNow(mv, ma))) {
+    // full = the charger chip ended the charge; with the charger out nobody says so: wait for it
+    const auto reg08 = charger != PsmChargerType_Unconnected ? charge::ChargerStatus() : std::nullopt;
+    if (!reg08 || !zero::ChargeDone(*reg08, mv)) {
         return Measure::NotYet;
     }
-    if (m->qh_last <= 0) {
-        log_write("[Cap] cycle %d: full (%d mV, %d mA) but there is no QH note of the cut-off: nothing measured\n", cycle, mv, ma);
-        return Measure::Refused;
+    if (cycle == 2) {
+        // cycle 2 writes nothing: the chip learned its capacity itself; noted for the report
+        const auto full = g.Read(MAX17050_FullCap);
+        m->cap_raw[1] = full && *full ? *full : 1;
+        SaveMarker(*m);
+        log_write("[Cap] cycle 2: the charger ended the charge (%d mV, REG08 %02X); the chip learned FullCap %u, nothing written\n", mv, *reg08, full.value_or(0));
+        return Measure::Done;
     }
     std::string failed;
     std::uint16_t cap{};
-    const auto rc = zero_write::WriteCapacity(m->qh_last, failed, cap);
-    log_write("[Cap] cycle %d: full by voltage (%d mV, %d mA, charger %s), capacity %d mAh, rc 0x%X\n", cycle, mv, ma, in ? "in" : "out", cap / 2, rc);
+    const auto rc = zero_write::WriteFactoryFull(failed, cap);
+    log_write("[Cap] cycle 1: the charger ended the charge (%d mV, REG08 %02X), factory capacity %d mAh, rc 0x%X\n", mv, *reg08, cap / 2, rc);
     if (R_FAILED(rc)) {
-        App::Notify(failed.empty() ? std::string{"The gauge did not take the measured capacity."_i18n} : failed);
+        App::Notify(failed.empty() ? std::string{"The gauge did not take the factory capacity."_i18n} : failed);
         return Measure::Refused;
     }
-    m->cap_raw[cycle - 1] = cap;
+    m->cap_raw[0] = cap;
     SaveMarker(*m);
-    App::Notify("Battery capacity measured and written:"_i18n + " " + std::to_string(cap / 2) + " mAh");
+    App::Notify("The battery is full: the factory capacity is written"_i18n + " (" + std::to_string(cap / 2) + " mAh)");
     return Measure::Done;
 }
 
@@ -684,7 +686,6 @@ void PollCalibration() {
         charge::RunTestIfAsked(); // a diagnostic the owner asked for: it takes the screen, the calibration goes on at the next start
         return;
     }
-    zero_write::ReadQhAtStart(); // before anything charges or drains for long: "what came in since the switch-on"
     const auto m = LoadMarker();
     if (m && m->step != Step::Finished) {
         calib_flow::MeasureCapacityIfFull(); // the charge may have ended while the Hub was closed

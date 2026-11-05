@@ -59,38 +59,14 @@ void DrainMenu::NoteState(bool force) {
     }
 }
 
-// The capacity is measured by calib_flow::MeasureCapacityIfFull(), whatever page is open (the Hub also tries it at its start). The
-// charge page asks every 5 s while the voltage is at the top, so the result shows at once.
+// The full battery is handled by calib_flow::MeasureCapacityIfFull(), whatever page is open (the Hub also tries it at its start).
+// The charge page asks every 5 s while the voltage is near the top, so the result shows at once.
 void DrainMenu::MeasureOnFull() {
-    // on the charger only: a charger taken out at the top must not pass for the taper (4.195 V and 1 A going in is not full)
-    if (m_measured || !m_calib->charge || !m_charger || !m_read || m_mv < zero::FULL_MV || m_measure_ts.GetSeconds() < 5) {
+    if (m_measured || !m_calib->charge || !m_charger || !m_read || m_mv < zero::DONE_MIN_MV || m_measure_ts.GetSeconds() < 5) {
         return;
     }
     m_measure_ts.Update();
-    const auto r = calib_flow::MeasureCapacityIfFull();
-    m_measured = r != calib_flow::Measure::NotYet;
-    m_healed = m_healed || r == calib_flow::Measure::Done; // the counters are at 100 % already
-}
-
-// On cycle 1's charge page (the only place a zero was just written, maybe from a wrong charge baseline) the cell is at the top
-// voltage with a tapered, averaged current, yet the chip shows far less: the counters go to 100 %, once. Cycle 2 has no zero and
-// its gauge is left alone: the capacity it learns there is what the wizard is for.
-void DrainMenu::HealFullCharge() {
-    constexpr int CHIP_TOO_LOW_PCT = 90;
-    if (m_healed || !m_calib->charge || m_calib->step != 1 || !m_charger || !m_read || m_gauge_pct < 0 || m_gauge_pct >= CHIP_TOO_LOW_PCT ||
-        m_mv < zero::HEAL_MV) {
-        return;
-    }
-    FuelGauge g;
-    const auto avg = g.Current(MAX17050_AvgCurrent);
-    if (!avg || !zero::FullForHeal(m_mv, static_cast<int>(*avg))) {
-        return;
-    }
-    m_healed = true;
-    std::string failed;
-    const auto rc = zero_write::WriteFull(failed);
-    log_write("[Calib] full by voltage (%d mV, avg %d mA) but the chip said %d %%: counters to 100 %%, rc 0x%X\n", m_mv, static_cast<int>(*avg), m_gauge_pct, rc);
-    App::Notify(R_SUCCEEDED(rc) ? "The battery is full: the gauge is set to 100 %"_i18n : "The gauge did not take the charge counters."_i18n);
+    m_measured = calib_flow::MeasureCapacityIfFull() != calib_flow::Measure::NotYet;
 }
 
 auto DrainMenu::ZeroSeen() const -> bool {

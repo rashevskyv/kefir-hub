@@ -18,6 +18,8 @@ void RestoreIfLeftOff();
 // the diagnostic: /config/kefir/battery/charge_test.run (a file the Hub finds at its start) runs it once and writes
 // /config/kefir/battery/charge_test.txt: the current of the battery with the charger in, with charging off and with a load
 void RunTestIfAsked();
+// bq24193 REG08 (system status; bits 5-4 CHRG_STAT, 11 = charge done), nullopt = no answer
+auto ChargerStatus() -> std::optional<u8>;
 // the same for the charger chip: /config/kefir/battery/hiz_test.run -> hiz_test.txt: with its input cut (bq24193 EN_HIZ) does the
 // console live on the battery while the charger stays in? Reads the chip's registers; writes REG00 for 30 s and puts it back.
 void RunHizTestIfAsked();

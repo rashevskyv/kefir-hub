@@ -4111,7 +4111,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "Tühjendamine on lõppenud. Ühendage laadija: mahutavus mõõdetakse automaatselt, kui aku on täis.",
   "the drain is done. Now the charge, until the battery is full.": "Tühjendamine on lõpetatud. Nüüd laetakse, kuni aku on täis.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "Võite konsooli selliseks jätta või seda laadimise ajal kasutada. Konsooli näidatud 100 % jõuab kätte varem: hoidke laadijat ühendatuna, kuni Hub teatab, et mahutavus on mõõdetud.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Jätke see leht lahti. Jaotur mõõdab aku mahutavust ise, kui aku on täis. Kui lahkusite lehelt, avage laadimise lõppedes uuesti aku kalibreerimine. Hoidke laadija seni ühendatuna.",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Selle arhiivi lahtipakkimiseks pole piisavalt mälu (vajab väga suurt sõnastikku). Pakkige see lahti arvutis.",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "Arhiiv on kahjustatud või puudulik või osa mitmeosalises arhiivist on puudu. Kopeeri või laadi see uuesti alla.",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "Arhiivifaili ei saanud draivilt lugeda. Kontrollige USB-kaarti või -kaablit ja proovige uuesti.",
@@ -4120,5 +4119,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "Need failid on arhiivis ja installitakse otse sealt. See on aeglasem kui tavaline fail ja kahjustatud arhiiv peatab installimise. Kui teil on ruumi, pakkige need kõigepealt lahti.",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "Seda arhiivi ei saa avada. Selle vormingut ei toetata või see on kahjustatud. Jagatud arhiiv vajab kõiki oma osi samasse kausta.",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "See RAR-arhiiv on pakitud tahkena (RAR4), mida Hub ei saa lugeda. Pakkige see lahti arvutis või pakkige uuesti ilma tahke valikuta.",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "See arhiiv on krüpteeritud. The Hub ei saa krüpteeritud arhiive avada. Pakkige see arvutis lahti."
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "See arhiiv on krüpteeritud. The Hub ei saa krüpteeritud arhiive avada. Pakkige see arvutis lahti.",
+  "now": "nüüd",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Jäta see leht avatuks. Kui laadija lõpetab laadimise, märgib Hub täis aku ise. Kui lahkusid lehelt, ava aku kalibreerimine uuesti, kui laadimine lõpeb. Hoia laadija seni ühendatud.",
+  "LiHV (4.32 V): a larger battery": "LiHV (4,32 V): suurem aku",
+  "LiPo (4.2 V): the standard battery": "LiPo (4,2 V): tavaline aku",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "Rohkem kui tehase mahtuvus: aku ei mahuta kunagi rohkem kui uuena. Laetusemõõturi väärtus on vale.",
+  "The battery is full: the factory capacity is written": "Aku on täis: tehase mahtuvus on kirjutatud",
+  "The gauge did not take the factory capacity.": "Laetusemõõtur ei võtnud tehase mahtuvust vastu.",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "Selle konsooli algne LiPo väärtus pole teada. Taasta PRODINFO varukoopiast kaustas /config/kefir/battery.",
+  "This is the battery type already.": "See on juba aku tüüp.",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "tehase mahtuvusest: rohkem, kui aku mahutab, laetusemõõturi väärtus on vale",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "tühjendamine on lõpetatud. Ühenda laadija ja hoia seda ühendatuna, kuni laadija lõpetab laadimise",
+  "Start the calibration over (Actions, Start the calibration over).": "Alusta kalibreerimist uuesti (Toimingud, Alusta kalibreerimist uuesti)."
 }

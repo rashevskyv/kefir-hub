@@ -20,9 +20,10 @@ int main() {
     assert(Judge(7728, 7728, 9200).wear == Wear::Worn);   // 16 %
     assert(Judge(6440, 6440, 9200).wear == Wear::Worn);   // 30 %
     assert(Judge(6348, 6348, 9200).wear == Wear::VeryWorn); // 31 %
-    // larger than the factory value
+    // above the factory value: a wrong gauge value, never a "larger battery"; the owner's 7066 mAh against 4667 (2026-11-05)
     v = Judge(9900, 9900, 9200);
-    assert(v.wear == Wear::Larger && v.loss_pct < 0);
+    assert(v.wear == Wear::AboveFactory && v.loss_pct < 0);
+    assert(Judge(14132, 14132, 9334).wear == Wear::AboveFactory);
     assert(Judge(9500, 9500, 9200).wear == Wear::New);    // 3 % more is still the same battery
     // the Switch Lite case of 2026-10-31: FullCap 2688 against a factory 3600 mAh (7200), nominal 6228 mAh (12456)
     v = Judge(5376, 12456, 7200);

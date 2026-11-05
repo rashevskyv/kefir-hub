@@ -49,38 +49,22 @@ int main() {
 
     assert(!PlanCounters({0, 0x2304, 0, 0}).ok);
 
-    // the owner's console, 2026-10-31: the console slept at the cut-off, the charger filled it overnight; the Hub looked at
-    // 4200 mV and 276 mA. It is full: 100 %, not the 54 % a QH difference from the Hub's start gave.
-    assert(FullNow(4200, 276) && FullNow(4150, 600) && FullNow(4190, 0) && FullNow(4180, -300));
-    assert(!FullNow(4149, 100) && !FullNow(4200, 601) && !FullNow(3900, 300) && !FullNow(3200, 800));
-    // the repair on the charge page is stricter: a healthy constant-current charge (4.15 V, 500 mA) must not trip it
-    assert(FullForHeal(4200, 276) && FullForHeal(4190, 350) && FullForHeal(4201, 0));
-    assert(!FullForHeal(4150, 500) && !FullForHeal(4189, 100) && !FullForHeal(4200, 351));
     CountersIn top{0x25DC, 0x3219, 0xE26A, 0xFD88, true};
     c = PlanCounters(top);
     assert(c.ok && c.mix == 0x3219 && c.rep == 0x25DC && c.soc == 0x6400);
-    top.full = false; // the same numbers without the full verdict give the partial value
-    assert(PlanCounters(top).soc < 0x6400);
     assert(!PlanCounters({0, 0x2304, 0, 0, true}).ok); // no capacity read: nothing to write, full or not
 
-    // the capacity: the charge counted from the cut-off to the full battery (QH, 0.5 mAh), against the design value
+    // the full battery is the charger's word: bq24193 REG08 CHRG_STAT (bits 5-4) = 11, and a cell near the top
+    assert(ChargeDone(0x30, 4180) && ChargeDone(0xB4, 4100));             // done; the other bits do not matter
+    assert(!ChargeDone(0x20, 4200) && !ChargeDone(0x10, 4200) && !ChargeDone(0x00, 4200)); // fast, pre-charge, not charging
+    assert(!ChargeDone(0x30, 4099));                                      // "done" on a low cell is not a full battery
+    assert(!ChargeDone(0xFF, 4200));                                      // a misread register
+
+    // cycle 1 at the full battery: the factory capacity of the reset table (4667 mAh), never more; the counters 100 %
     {
-        const std::uint16_t design = 0x2476; // 4667 mAh
-        auto m = MeasureCapacity(0xE000, static_cast<std::uint16_t>(0xE000 + 0x2300), design);
-        assert(m.ok && m.raw == 0x2300);
-        // the counter wraps past 0xFFFF: the 16-bit difference still holds
-        m = MeasureCapacity(0xF800, 0x1B00, design);
-        assert(m.ok && m.raw == 0x2300);
-        // outside 50..125 % of the design (a lost baseline, a gauge restart) or going down: not a battery
-        assert(!MeasureCapacity(0x1000, 0x1800, design).ok);          // 0x800 = 22 %
-        assert(!MeasureCapacity(0x1000, 0x5000, design).ok);          // 0x4000 = 175 %
-        assert(!MeasureCapacity(0x5000, 0x4000, design).ok);          // the counter went down
-        assert(!MeasureCapacity(0x1000, 0x3476, 0).ok);               // no design value
-        assert(MeasureCapacity(0, static_cast<std::uint16_t>(design / 2), design).ok);
-        assert(!MeasureCapacity(0, static_cast<std::uint16_t>(design / 2 - 2), design).ok);
-        // the measured capacity feeds the counters: both nominal and rep are the capacity, 100 %
-        const auto c = PlanCounters({m.raw, m.raw, 0, 0, true});
-        assert(c.ok && c.mix == 0x2300 && c.rep == 0x2300 && c.soc == 0x6400);
+        const std::uint16_t factory = 0x2476;
+        const auto f = PlanCounters({factory, factory, 0, 0, true});
+        assert(f.ok && f.mix == factory && f.rep == factory && f.soc == 0x6400);
     }
 
     std::puts("test_battery_zero: ok");

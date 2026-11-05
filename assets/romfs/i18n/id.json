@@ -4111,7 +4111,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "Pengurasan selesai. Colokkan pengisi daya: kapasitas akan diukur secara otomatis saat baterai penuh.",
   "the drain is done. Now the charge, until the battery is full.": "Pengurasan selesai. Sekarang mengisi daya hingga baterai penuh.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "Anda dapat membiarkan konsol seperti ini atau menggunakannya saat mengisi daya. 100 % yang ditampilkan konsol muncul lebih awal: biarkan pengisi daya tetap terhubung hingga Hub menyatakan kapasitasnya telah diukur.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Biarkan halaman ini tetap terbuka. Hub mengukur kapasitas baterai dengan sendirinya saat baterai penuh. Jika Anda meninggalkan halaman tersebut, buka kalibrasi baterai lagi saat pengisian daya selesai. Biarkan pengisi daya tetap terhubung hingga saat itu.",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Memori tidak cukup untuk mengekstrak arsip ini (memerlukan kamus yang sangat besar). Ekstrak di PC.",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "Arsip rusak atau tidak lengkap, atau bagian dari arsip multi-bagian hilang. Salin atau unduh ulang.",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "File arsip tidak dapat dibaca dari drive. Periksa kabel USB atau kartu, lalu coba lagi.",
@@ -4120,5 +4119,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "File-file ini berada di dalam arsip dan dipasang langsung dari sana. Itu lebih lambat daripada file biasa, dan arsip yang rusak akan menghentikan instalasi. Jika Anda memiliki ruang, ekstrak terlebih dahulu.",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "Tidak dapat membuka arsip ini. Format tidak didukung, atau rusak. Arsip terpisah memerlukan semua bagiannya di dalam folder yang sama.",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "Arsip RAR ini dikemas sebagai padat (RAR4), yang tidak dapat dibaca oleh Hub. Ekstrak di PC, atau kemas ulang tanpa opsi padat.",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Arsip ini terenkripsi. The Hub tidak dapat membuka arsip terenkripsi. Ekstrak di PC."
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Arsip ini terenkripsi. The Hub tidak dapat membuka arsip terenkripsi. Ekstrak di PC.",
+  "now": "sekarang",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Biarkan halaman ini terbuka. Saat pengisi daya menyelesaikan pengisian, Hub mencatat baterai penuh dengan sendirinya. Jika Anda meninggalkan halaman, buka lagi Kalibrasi baterai saat pengisian selesai. Biarkan pengisi daya terpasang sampai saat itu.",
+  "LiHV (4.32 V): a larger battery": "LiHV (4,32 V): baterai lebih besar",
+  "LiPo (4.2 V): the standard battery": "LiPo (4,2 V): baterai standar",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "Lebih dari kapasitas pabrik: baterai tidak pernah menampung lebih dari saat baru. Nilai pengukur salah.",
+  "The battery is full: the factory capacity is written": "Baterai penuh: kapasitas pabrik telah ditulis",
+  "The gauge did not take the factory capacity.": "Pengukur tidak menerima kapasitas pabrik.",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "Nilai LiPo asli konsol ini tidak diketahui. Pulihkan PRODINFO dari cadangannya di /config/kefir/battery.",
+  "This is the battery type already.": "Ini sudah jenis baterainya.",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "dari kapasitas pabrik: lebih dari yang dapat ditampung baterai, nilai pengukur salah",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "pengosongan selesai. Pasang pengisi daya dan biarkan terpasang sampai pengisi daya menyelesaikan pengisian",
+  "Start the calibration over (Actions, Start the calibration over).": "Mulai ulang kalibrasi (Tindakan, Mulai ulang kalibrasi)."
 }

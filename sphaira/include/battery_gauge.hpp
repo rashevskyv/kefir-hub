@@ -68,12 +68,12 @@ inline auto CapacityLow(std::uint16_t full, std::uint16_t design) -> bool {
     return design && full * 100u < design * (100u - CAPACITY_LOSS);
 }
 inline constexpr int CHARGING_MA = 100;
-// learned full capacity this many % over the design capacity: a larger battery was built in (an 8600 mAh cell learns 7500-8000
-// against the 4300 of the original), not a fault.
-inline constexpr unsigned LARGER_BATTERY = 130;
+// learned full capacity this many % over the design capacity: the gauge's value is wrong. A battery never holds more than it did
+// new; the Hub does not guess a "larger battery" from this number (owner, 2026-11-05: 7066 of 4667 mAh on a stock battery).
+inline constexpr unsigned ABOVE_FACTORY = 105;
 
 inline auto CapacityHigh(std::uint16_t full, std::uint16_t design) -> bool {
-    return design && full * 100u > design * LARGER_BATTERY;
+    return design && full * 100u > design * ABOVE_FACTORY;
 }
 
 enum class Finding {
@@ -92,8 +92,7 @@ enum class Finding {
                      // on a Lite the charge voltage limit follows the count, so it changes with the MMC
     SocGap,          // on battery: reported % and %-by-voltage differ by SOC_GAP or more (detail: "84 73")
     SocGapLoaded,    // the same gap while charging: read again with the charger out (detail: "84 73")
-    LargerBattery,   // the learned capacity is far above the design capacity (detail: percent; " lipo" when the type
-                     // is not LiHV: the charge limit is the original 4.2 V)
+    AboveFactory,    // the learned capacity is above the design capacity: a wrong value (detail: percent)
     NoSign,          // none of the desync signs; still says what was not checked (OtherUnknown, SocGapLoaded)
 };
 
@@ -148,7 +147,7 @@ inline auto Diagnose(const Input& in) -> std::vector<Diagnosis> {
         out.push_back({Finding::LiteNoCycles, {}});
     }
     if (CapacityHigh(in.full_cap, in.design_cap)) {
-        out.push_back({Finding::LargerBattery, std::to_string(in.full_cap * 100u / in.design_cap) + (in.setcal_version == 2 ? "" : " lipo")});
+        out.push_back({Finding::AboveFactory, std::to_string(in.full_cap * 100u / in.design_cap)});
     }
     // FullCap is the second model parameter; the copy's FullCap is in hos.v[2].
     const bool broken = CapacityLow(in.full_cap, in.design_cap);

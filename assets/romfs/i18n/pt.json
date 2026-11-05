@@ -4143,7 +4143,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "Descarga concluída. Ligue o carregador: a capacidade será medida automaticamente quando a bateria estiver cheia.",
   "the drain is done. Now the charge, until the battery is full.": "Descarga concluída. A carregar até a bateria estar cheia.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "Pode deixar a consola assim ou usá-la enquanto carrega. Os 100 % que a consola mostra chegam cedo: mantenha o carregador ligado até que o Hub indique que a capacidade foi medida.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Deixe esta página aberta. O Hub mede a capacidade da bateria por conta própria quando estiver cheia. Se saiu da página, abra a calibração da bateria novamente quando o carregamento terminar. Mantenha o carregador ligado até lá.",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "Memória insuficiente para descompactar este arquivo (necessita de um dicionário muito grande). Descompacte-o num PC.",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "O arquivo está danificado ou incompleto, ou falta parte de um arquivo dividido. Copie-o ou descarregue-o novamente.",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "Não foi possível ler o arquivo de arquivo da unidade. Verifique o cabo USB ou o cartão e tente novamente.",
@@ -4152,5 +4151,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "Estes ficheiros estão dentro de um arquivo e são instalados diretamente a partir dele. Isso é mais lento do que um ficheiro normal, e um arquivo danificado interrompe a instalação. Se tiveres espaço, extrai-os primeiro.",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "Não é possível abrir este arquivo. O formato não é suportado ou está danificado. Um arquivo dividido precisa de todas as suas partes na mesma pasta.",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "Este arquivo RAR está compactado como sólido (RAR4), que o Hub não consegue ler. Descompacte-o num PC ou compacte-o novamente sem a opção de sólido.",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Este arquivo está encriptado. O The Hub não consegue abrir arquivos encriptados. Descompacte-o num PC."
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "Este arquivo está encriptado. O The Hub não consegue abrir arquivos encriptados. Descompacte-o num PC.",
+  "now": "agora",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Deixe esta página aberta. Quando o carregador terminar a carga, o Hub regista sozinho a bateria cheia. Se saiu da página, abra novamente a calibração da bateria quando a carga terminar. Mantenha o carregador ligado até lá.",
+  "LiHV (4.32 V): a larger battery": "LiHV (4,32 V): uma bateria maior",
+  "LiPo (4.2 V): the standard battery": "LiPo (4,2 V): a bateria padrão",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "Mais do que a capacidade de fábrica: uma bateria nunca guarda mais do que quando nova. O valor do medidor está errado.",
+  "The battery is full: the factory capacity is written": "A bateria está cheia: a capacidade de fábrica foi escrita",
+  "The gauge did not take the factory capacity.": "O medidor não aceitou a capacidade de fábrica.",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "O valor LiPo original desta consola é desconhecido. Reponha o PRODINFO a partir da cópia de segurança em /config/kefir/battery.",
+  "This is the battery type already.": "Este já é o tipo de bateria.",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "da capacidade de fábrica: mais do que a bateria consegue guardar, o valor do medidor está errado",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "a descarga terminou. Ligue o carregador e mantenha-o ligado até o carregador terminar a carga",
+  "Start the calibration over (Actions, Start the calibration over).": "Recomeçar a calibração (Ações, Recomeçar a calibração)."
 }

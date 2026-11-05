@@ -4116,7 +4116,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "방전이 완료되었습니다. 충전기를 연결하세요: 배터리가 완전히 충전되면 용량이 자동으로 측정됩니다.",
   "the drain is done. Now the charge, until the battery is full.": "방전이 완료되었습니다. 배터리가 가득 찰 때까지 충전합니다.",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "콘솔을 이 상태로 두거나 충전 중에 사용할 수 있습니다. 콘솔이 표시하는 100%는 일찍 나타납니다. Hub가 용량이 측정되었다고 할 때까지 충전기를 연결해 두세요.",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "이 페이지를 열어 둔 상태로 유지하세요. 배터리가 가득 차면 허브가 스스로 배터리 용량을 측정합니다. 페이지를 벗어난 경우 충전이 완료되면 배터리 보정을 다시 여세요. 그때까지 충전기를 연결해 두세요.",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "이 아카이브를 압축 해제할 메모리가 부족합니다(매우 큰 사전이 필요합니다). PC에서 압축을 해제하세요.",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "아카이브가 손상되었거나 불완전하거나, 분할 아카이브의 일부가 누락되었습니다. 다시 복사하거나 다운로드하세요.",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "드라이브에서 아카이브 파일을 읽을 수 없습니다. USB 케이블이나 카드를 확인하고 다시 시도하세요.",
@@ -4125,5 +4124,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "이 파일들은 아카이브 안에 있으며 그곳에서 직접 설치됩니다. 일반 파일보다 느리며, 손상된 아카이브는 설치를 중단시킵니다. 여유 공간이 있다면 먼저 압축을 푸세요.",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "이 압축 파일을 열 수 없습니다. 지원되지 않는 형식이거나 손상되었습니다. 분할 압축 파일은 모든 파트가 동일한 폴더에 있어야 합니다.",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "이 RAR 아카이브는 솔리드 방식(RAR4)으로 압축되어 Hub에서 읽을 수 없습니다. PC에서 압축을 풀거나 솔리드 옵션 없이 다시 압축하세요.",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "이 아카이브는 암호화되어 있습니다. The Hub은(는) 암호화된 아카이브를 열 수 없습니다. PC에서 압축을 푸세요."
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "이 아카이브는 암호화되어 있습니다. The Hub은(는) 암호화된 아카이브를 열 수 없습니다. PC에서 압축을 푸세요.",
+  "now": "지금",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "이 페이지를 열어 두세요. 충전기가 충전을 마치면 Hub가 완충을 스스로 기록합니다. 페이지를 나갔다면 충전이 끝났을 때 배터리 보정을 다시 여세요. 그때까지 충전기를 연결해 두세요.",
+  "LiHV (4.32 V): a larger battery": "LiHV (4.32 V): 대용량 배터리",
+  "LiPo (4.2 V): the standard battery": "LiPo (4.2 V): 표준 배터리",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "공장 용량보다 큽니다: 배터리는 새것일 때보다 더 많이 담을 수 없습니다. 게이지 값이 잘못되었습니다.",
+  "The battery is full: the factory capacity is written": "배터리가 가득 찼습니다: 공장 용량을 기록했습니다",
+  "The gauge did not take the factory capacity.": "게이지가 공장 용량을 받아들이지 않았습니다.",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "이 콘솔의 원래 LiPo 값을 알 수 없습니다. /config/kefir/battery의 백업에서 PRODINFO를 복원하세요.",
+  "This is the battery type already.": "이미 이 배터리 종류입니다.",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "(공장 용량 대비): 배터리가 담을 수 있는 양보다 많아 게이지 값이 잘못되었습니다",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "방전이 끝났습니다. 충전기를 연결하고 충전기가 충전을 마칠 때까지 연결해 두세요",
+  "Start the calibration over (Actions, Start the calibration over).": "보정을 처음부터 다시 시작 (동작, 보정을 처음부터 다시 시작)."
 }

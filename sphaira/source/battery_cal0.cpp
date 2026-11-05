@@ -204,16 +204,30 @@ void OpenBatteryType() {
     }
     const int now = cal0::BatteryVersion(img);
     const int original = ValueOf(ReadText(ORIGINAL_PATH), "version");
-    ui::PopupList::Items items{"LiHV (4.32 V): for a larger battery"_i18n};
-    if (original >= 0 && original != 2) {
-        items.push_back("Back to the original"_i18n + " (" + TypeName(original) + ")");
-    }
-    App::Push<ui::PopupList>("Battery type"_i18n + ": " + TypeName(now), items, [original](std::optional<s64> index) {
+    const bool lihv = now == 2;
+    const auto mark = [](bool current) { return current ? "  (" + "now"_i18n + ")" : std::string{}; };
+    // both types, the current one marked and focused
+    ui::PopupList::Items items{"LiPo (4.2 V): the standard battery"_i18n + mark(!lihv), "LiHV (4.32 V): a larger battery"_i18n + mark(lihv)};
+    App::Push<ui::PopupList>("Battery type"_i18n + ": " + TypeName(now), items, [lihv, original](std::optional<s64> index) {
         if (!index) {
             return;
         }
-        Confirm(*index == 0 ? 2 : original);
-    });
+        const bool want_lihv = *index == 1;
+        if (want_lihv == lihv) {
+            App::Notify("This is the battery type already."_i18n);
+            return;
+        }
+        if (want_lihv) {
+            Confirm(2);
+            return;
+        }
+        // LiPo is version 0 or 1, and only the value this console had before tells which
+        if (original < 0 || original == 2) {
+            App::Push<ui::OptionBox>("The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery."_i18n, "OK"_i18n);
+            return;
+        }
+        Confirm(original);
+    }, lihv ? 1 : 0);
 }
 
 // from the app loop, once after the start: a change waits for the restart, so it is done now

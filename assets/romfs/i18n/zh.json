@@ -4169,7 +4169,6 @@
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "放电已完成。请连接充电器：当电池充满时，容量将自动测量。",
   "the drain is done. Now the charge, until the battery is full.": "放电完成。现在开始充电，直至电池充满。",
   "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "你可以让主机保持这样，或在充电时使用它。主机显示的 100% 出现得较早：请保持连接充电器，直到 Hub 显示容量测量完毕。",
-  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "请保持此页面打开。当电池充满电时，Hub 会自动测量电池容量。如果您离开了页面，请在充电结束时再次打开电池校准。在此之前，请保持充电器连接。",
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "内存不足，无法解压此归档（需要非常大的字典）。请在电脑上解压。",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "归档文件已损坏或不完整，或者缺少多部分归档的一部分。请重新复制或下载。",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "无法从驱动器读取存档文件。请检查 USB 数据线或内存卡，然后重试。",
@@ -4178,5 +4177,17 @@
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "这些文件位于压缩包内，并直接从中安装。这比普通文件慢，且损坏的压缩包会中断安装。如果有空间，请先解压它们。",
   "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "无法打开此归档文件。其格式不受支持或已损坏。分卷归档需要其所有部分都在同一个文件夹中。",
   "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "此 RAR 归档文件使用了实体压缩（RAR4），Hub 无法读取。请在电脑上解压，或者在不使用实体压缩的情况下重新打包。",
-  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "此压缩包已加密。The Hub 无法打开加密的压缩包。请在电脑上解压它。"
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "此压缩包已加密。The Hub 无法打开加密的压缩包。请在电脑上解压它。",
+  "now": "现在",
+  "Leave this page open. When the charger ends the charge, the Hub notes the full battery by itself. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "请保持此页面打开。充电器结束充电后，Hub 会自动记录满电。如果离开了此页面，请在充电结束后重新打开电池校准。在此之前请保持充电器连接。",
+  "LiHV (4.32 V): a larger battery": "LiHV (4.32 V)：大容量电池",
+  "LiPo (4.2 V): the standard battery": "LiPo (4.2 V)：标准电池",
+  "More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong.": "超过出厂容量：电池能容纳的电量永远不会超过新电池。电量计的数值有误。",
+  "The battery is full: the factory capacity is written": "电池已充满：已写入出厂容量",
+  "The gauge did not take the factory capacity.": "电量计未接受出厂容量。",
+  "The original LiPo value of this console is not known. Put PRODINFO back from its backup in /config/kefir/battery.": "此主机原始的 LiPo 值未知。请从 /config/kefir/battery 中的备份恢复 PRODINFO。",
+  "This is the battery type already.": "已经是此电池类型。",
+  "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "（相对出厂容量）：超过电池能容纳的电量，电量计的数值有误",
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "放电已完成。请接上充电器，并保持连接直到充电器结束充电",
+  "Start the calibration over (Actions, Start the calibration over).": "重新开始校准 (操作, 重新开始校准)."
 }

@@ -14,7 +14,7 @@ enum class Wear {
     Normal,    // 5 - 15 %: the ordinary wear of the years
     Worn,      // 15 - 30 %: tired, or a cycle was cut short
     VeryWorn,  // over 30 %: more than wear explains, most likely the calibration went wrong
-    Larger,    // more than 5 % above the factory value: a bigger battery was built in, or a measurement error
+    AboveFactory, // more than 5 % above the factory value: a battery never holds more than new, the gauge's value is wrong
 };
 
 struct Verdict {
@@ -26,7 +26,7 @@ struct Verdict {
 inline constexpr int NEW_MAX_LOSS = 5;
 inline constexpr int NORMAL_MAX_LOSS = 15;
 inline constexpr int WORN_MAX_LOSS = 30;
-inline constexpr int LARGER_GAIN = 5;
+inline constexpr int ABOVE_FACTORY_PCT = 5;
 inline constexpr int INCONSISTENT_PCT = 20;
 
 inline auto Judge(std::uint16_t full, std::uint16_t nominal, std::uint16_t design) -> Verdict {
@@ -35,7 +35,7 @@ inline auto Judge(std::uint16_t full, std::uint16_t nominal, std::uint16_t desig
         return v;
     }
     v.loss_pct = (static_cast<int>(design) - static_cast<int>(full)) * 100 / static_cast<int>(design);
-    v.wear = v.loss_pct <= -LARGER_GAIN ? Wear::Larger
+    v.wear = v.loss_pct <= -ABOVE_FACTORY_PCT ? Wear::AboveFactory
            : v.loss_pct <= NEW_MAX_LOSS ? Wear::New
            : v.loss_pct <= NORMAL_MAX_LOSS ? Wear::Normal
            : v.loss_pct <= WORN_MAX_LOSS ? Wear::Worn
