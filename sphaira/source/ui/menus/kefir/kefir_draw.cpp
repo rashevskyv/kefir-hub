@@ -137,7 +137,7 @@ void Menu::DrawList(NVGcontext* vg, Theme* theme) {
         if (kefir_update) {
             gfx::drawTextArgs(vg, v.x + v.w - 15.f, v.y + 17.f, 15.f,
                 NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED),
-                kefir_tag);
+                kefir_tag.c_str());
         } else if (entry.type != UpdaterEntryType::Kefir) {
             const auto label = installed ? std::string{"INSTALLED"_i18n} : unsupported ? UnsupportedFirmwareLabel(m_supported_firmware) : (entry.type == UpdaterEntryType::Firmware && downgrade ? "DOWNGRADE"_i18n : std::string{TypeLabel(entry.type)});
             const auto label_colour = installed ? INSTALLED_COLOUR : (entry.type == UpdaterEntryType::Firmware && downgrade) ? theme->GetColour(ThemeEntryID_ERROR) : theme->GetColour(ThemeEntryID_TEXT_INFO);
