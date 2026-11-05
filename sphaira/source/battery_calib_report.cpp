@@ -195,7 +195,7 @@ void ShowReport() {
             }
             char v[16];
             std::snprintf(v, sizeof(v), "%.2f", c.mv / 1000.0);
-            const auto where = (c.step == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n) + (total > 1 ? " (" + std::to_string(index) + "/" + std::to_string(total) + ")" : std::string{});
+            const auto where = CycleName(c.step) + (total > 1 ? " (" + std::to_string(index) + "/" + std::to_string(total) + ")" : std::string{});
             const auto shown = c.gauge_pct >= 0 ? std::to_string(c.gauge_pct) + " %" : "not measured"_i18n;
             lines.push_back(cu::Item(where + ": " + "the console switched off at"_i18n + " " + v + " V. " + "The gauge showed"_i18n + " " + shown + "."));
         }

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.292 — Battery calibration: cycle 2 is a required step again (drain and charge, nothing written), then the report
+Cycle 1 no longer jumps to the report; pages say "Calibration cycle 1/2" and "2/2"; charge texts say the charger ends the charge (no more "measures the capacity"). A marker already at Report stays there: Actions > Check runs the same cycle 2.
+host tests: pass (quick), nro: not built, switch: pending (cycle 1 -> cycle 2 -> report on the console)
+
 ## v0.14.291 — Updater tags and DBI download text translated, DBI menu has a Languages header
 INSTALL/UPDATE/DOWNGRADE, section names KEFIR/FIRMWARE/OTHER and "Downloading DBI..." go through i18n (en+uk); the DBI language list starts under a "Languages" header instead of a blank gap.
 host tests: pass (--quick), nro: not built, switch: pending (check Updater and DBI screens in uk)

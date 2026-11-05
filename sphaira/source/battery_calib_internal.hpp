@@ -16,6 +16,7 @@ auto LoadMarker() -> std::optional<calib::Marker>;
 void SaveMarker(const calib::Marker& m);
 auto Now() -> std::int64_t;
 auto StepLabel(int i) -> std::string;
+auto CycleName(int cycle) -> std::string; // "Calibration cycle 1/2"
 
 void ShowSteps();
 // The full battery of the cycle (battery_zero.hpp): the charger is in and it ended the charge. Cycle 1 writes the factory capacity;

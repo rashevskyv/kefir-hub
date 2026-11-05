@@ -490,24 +490,23 @@ void DrainMenu::OnSleptAwake(s64 now) {
 }
 
 auto DrainMenu::CalibTitle() const -> std::string {
-    const auto which = m_calib->step == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n;
-    return which + ": " + (m_calib->charge ? "charge"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
+    return calib_flow::CycleName(m_calib->step) + ": " + (m_calib->charge ? "charge"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
 }
 
 auto DrainMenu::CalibStatus() const -> std::string {
     if (m_calib->charge) {
-        const auto which = m_calib->step == 2 ? "Check cycle"_i18n : "Calibration cycle"_i18n;
+        const auto which = calib_flow::CycleName(m_calib->step);
+        const auto next = m_calib->step == 1 ? "Then cycle 2 follows."_i18n : "Then the report follows."_i18n;
         if (!m_charger) {
             return which + ": " + "the charger is out: the charge is paused. Plug it in to go on."_i18n;
         }
         if (m_pct >= 100) {
             if (!m_measured) {
-                return which + ": " + "the battery still takes current, so it is not full yet. The Hub waits until the current falls near zero, measures the capacity and goes on by itself. Keep the charger in."_i18n
-                    + " " + "Then the report follows."_i18n;
+                return which + ": " + "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in."_i18n + " " + next;
             }
-            return which + ": " + "the battery is full and its capacity is measured. The report follows."_i18n;
+            return which + ": " + "the battery is full."_i18n + " " + next;
         }
-        return which + ": " + "charging. Keep the charger in until the battery takes no more current: the Hub then measures the capacity and shows the report by itself. You can use the console meanwhile."_i18n;
+        return which + ": " + "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile."_i18n + " " + next;
     }
     if (m_charger) {
         if (m_step == wizard::DrainStep::CycleCounted) {

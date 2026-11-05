@@ -20,17 +20,16 @@ namespace sphaira::battery::calib {
 
 enum class Step : std::uint8_t {
     Reset = 1,    // the factory model at 100 %
-    Cycle1 = 2,   // drain to the cut-off, the zero written, charge to the full battery, the capacity measured
-    Cycle2 = 3,   // the check (Actions): drain to the cut-off, charge, measure again; also the repeat of a cycle 1 that kept
-                  // no capacity (before 0.14.279 a cycle counted at the 100 % the console shows)
+    Cycle1 = 2,   // drain to the cut-off, the zero written, charge until the charger ends it, the factory capacity written
+    Cycle2 = 3,   // drain to the cut-off and charge again, nothing written: the chip learns by itself (also Actions > Check)
     Report = 4,
     Transfer = 5,
     Finished = 6,
 };
 
-// One cycle is enough (owner, 2026-11-03): the cut-off is the zero, the full battery the top, the charge between them the
-// capacity. A second cycle only taught the chip, and the chip learns badly.
-inline constexpr int STEP_COUNT = 4; // what the user sees: reset, the cycle, report, transfer
+// Two cycles (owner, 2026-11-05): cycle 1 writes the facts (the zero, the factory capacity), cycle 2 writes nothing and lets
+// the chip's own algorithm learn from a full drain and a full charge.
+inline constexpr int STEP_COUNT = 4; // what the user sees: reset, the cycles, report, transfer
 
 // 1-based position of a step in the list the user sees; the check sits on the cycle's place
 inline auto StepIndex(Step s) -> int {
@@ -107,10 +106,6 @@ inline auto StepFor(const Marker& m, bool reset_done) -> Step {
     }
     if (!m.full_at[0]) {
         return Step::Cycle1;
-    }
-    // a cycle 1 with its capacity is the whole calibration; the check (or a cycle 1 without a capacity) runs as Cycle2
-    if (m.cap_raw[0] && m.step != Step::Cycle2) {
-        return Step::Report;
     }
     return m.full_at[1] ? Step::Report : Step::Cycle2;
 }
