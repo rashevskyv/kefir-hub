@@ -1,6 +1,12 @@
 # Kefir Hub
 
-A Kefir-focused homebrew hub for the Nintendo Switch, based on the upstream Sphaira project.
+Kefir Hub is a homebrew hub for the Nintendo Switch, based on the upstream Sphaira project.
+It launches homebrew, installs games, manages saves, cheats, themes and user profiles, and shares files with a PC.
+It is the app that comes with Kefir (documentation: [hub.customfw.xyz](https://hub.customfw.xyz/)), but it is **not Kefir-only**.
+It also runs on plain Atmosphère with any other custom firmware pack.
+
+The options that only make sense on Kefir (**Updater** and **Kefir Settings** in the Tools tab) show up only when Kefir is installed.
+Kefir Hub looks for the version file `/switch/kefir-updater/version`. Without it, these options are hidden.
 
 [See the GBATemp thread for more details / discussion](https://gbatemp.net/threads/sphaira-hbmenu-replacement.664523/).
 
@@ -10,11 +16,21 @@ A Kefir-focused homebrew hub for the Nintendo Switch, based on the upstream Spha
 
 |                          |                          |
 :-------------------------:|:-------------------------:
-![Img](assets/screenshots/homebrew.jpg) | ![Img](assets/screenshots/games.jpg)
-![Img](assets/screenshots/appstore.jpg) | ![Img](assets/screenshots/appstore_page.jpg)
-![Img](assets/screenshots/file_browser.jpg) | ![Img](assets/screenshots/launch_options.jpg)
-![Img](assets/screenshots/themezer.jpg) | ![Img](assets/screenshots/web.jpg)
-![Img](assets/screenshots/ownfoil_main.jpg) | ![Img](assets/screenshots/ownfoil_details.jpg)
+![Homebrew](docs/site/en/img/homebrew-grid.png) | ![Games](docs/site/en/img/games-list.png)
+![Saves](docs/site/en/img/saves-list.png) | ![Updater](docs/site/en/img/updater-main.png)
+![App Store](docs/site/en/img/software-appstore-grid.png) | ![File browser](docs/site/en/img/file-browser-list.png)
+![Themes](docs/site/en/img/themes-list.png) | ![Web file manager](docs/site/en/img/sharing-web-files.png)
+![User profiles](docs/site/en/img/users-list.png) | ![Kefir Settings](docs/site/en/img/kefir-settings-list.png)
+
+## Languages
+
+Kefir Hub speaks 26 languages. The first start asks for one; change it later in **Settings -> General -> Language**.
+
+Belarusian, Chinese (Simplified), Chinese (Traditional), Dutch, English, English (UK), Estonian, French, French (Canada),
+German, Indonesian, Italian, Japanese, Kazakh, Korean, Latvian, Lithuanian, Polish, Portuguese (Brazil), Portuguese (Portugal),
+Spanish, Spanish (Latin America), Swedish, Turkish, Ukrainian, Vietnamese.
+
+The documentation is available in English and Ukrainian.
 
 ## Bug reports
 

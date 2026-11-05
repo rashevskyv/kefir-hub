@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.287 — README refreshed (current screenshots, 26 languages, not Kefir-only); Updater and Kefir Settings hidden when Kefir is not installed
+Tools tab hides both items when `/switch/kefir-updater/version` is missing. update-docs skill and AGENTS.md now include README.md.
+host tests: not run, nro: not built, switch: pending (Tools tab on a console without Kefir)
+
 ## v0.14.286 — archive extraction errors say what is wrong
 Rar/7z/zip extraction now reports: unsupported or multi-part archive, damaged archive, drive read failure, out of memory (4 new codes, plain text in 26 languages, no support link).
 host tests: pass (--quick), nro: not built, switch: pending

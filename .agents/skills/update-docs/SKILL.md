@@ -15,6 +15,7 @@ docs saying otherwise is unfinished. This skill is the same for Codex, Gemini an
 ## Map
 | What | Where |
 |---|---|
+| GitHub landing page (screenshots, feature list, languages) | `README.md` |
 | Docs source (English, the reference) | `docs/site/en/**/*.md` |
 | Ukrainian docs (same files, same headings) | `docs/site/uk/**/*.md` |
 | Writing rules: read before writing | `docs/site/STYLE.md` |
@@ -64,7 +65,10 @@ a translated UI name by hand in docs/site.
 9. **Guide site** (only if it describes the changed thing). Edit in `D:\git\site\switch-hub` on branch
    `kefir-hub`, in the site's own style (Ukrainian, `{% include /inc/btn.txt btn="A" %}`, notices). Link to
    the docs with `{{ site.kefir_hub_docs }}/uk/<page>/#<anchor>`. Labels there are the literal uk.json values.
-10. **Verify** (all must pass):
+10. **README.md.** Keep it current in the same pass: the screenshot table points at `docs/site/en/img/*.png`
+    (retake or swap a shot that no longer matches the UI), the feature list matches the pages, the language
+    list matches `assets/romfs/i18n/*.json` (`__language_name`), and the "not Kefir-only" note still holds.
+11. **Verify** (all must pass):
     - `python tests/test_doc_labels_contract.py` → `0 unknown`. Read its warnings. A label "not found as a
       literal in sphaira/" means either its feature is gone (go to step 6, removed) or the label is built at
       run time (fine).
@@ -72,7 +76,7 @@ a translated UI name by hand in docs/site.
       `built en`, `built uk`, no WARNING or Aborted. First setup: `python3 -m venv ~/.venvs/docs &&
       ~/.venvs/docs/bin/pip install -r docs/site/requirements.txt`.
     - Site changed: `python tools/docs/check_site_links.py` → `0 broken`.
-11. **Commit.** Docs-only: prefix `docs:`, no version bump, one line under `## unreleased` in
+12. **Commit.** Docs-only: prefix `docs:`, no version bump, one line under `## unreleased` in
     `docs/dev/CHANGELOG.md`. Docs written together with the code change go in the same commit as the code
     (that commit has the version bump). Stage by path, never `git add -A`. The site clone is a separate
     repo: commit there on `kefir-hub`. Never push anything.
