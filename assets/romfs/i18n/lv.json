@@ -4117,5 +4117,6 @@
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "Arhīva failu nevarēja nolasīt no diska. Pārbaudiet USB kabeli vai karti un mēģiniet vēlreiz.",
   "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "Nevar atvērt šo arhīvu. Tā formāts netiek atbalstīts vai arī tā ir daļa no vairāku daļu arhīva (.part1.rar, .r00). Vairāku daļu arhīvi ir jāatver datorā.",
   "Transfer now": "Pārsūtīt tagad",
-  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Nospiediet A: konsole restartējas uz citu sistēmu. Paziņojums lūgs tur atvērt Kefir Hub. Kalibrēšana pārvietosies pati, un jūs varat restartēt atpakaļ."
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Nospiediet A: konsole restartējas uz citu sistēmu. Paziņojums lūgs tur atvērt Kefir Hub. Kalibrēšana pārvietosies pati, un jūs varat restartēt atpakaļ.",
+  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "Šie faili atrodas arhīvā un tiek instalēti tieši no tā. Tas ir lēnāk nekā parasts fails, un bojāts arhīvs aptur instalēšanu. Ja jums ir vieta, vispirms izpakojiet tos."
 }

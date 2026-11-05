@@ -69,6 +69,7 @@
 #include <unordered_map>
 #include <limits>
 #include <algorithm>
+#include "fs_archive.hpp"
 #include "ui/menus/filebrowser/filebrowser_internal.hpp"
 
 #if DOCS_DEMO
@@ -83,12 +84,11 @@ void FsView::OpenArchive() {
 
     // probe the archive before switching views, so a corrupt zip reports an
     // error instead of dropping the user into an empty mount.
-    auto probe = std::make_unique<fs::FsZip>(zip_path);
-    if (R_FAILED(probe->GetFsOpenResult())) {
-        App::Push<OptionBox>("Failed to open archive!"_i18n, "OK"_i18n);
+    Result probe_rc{};
+    if (!fs::OpenArchiveFs(zip_path, &probe_rc)) {
+        App::PushErrorBox(probe_rc, "Failed to open archive!"_i18n);
         return;
     }
-    probe.reset();
 
     // remember where to return when the user backs out of the archive root.
     m_archive_return_entry = m_fs_entry;
@@ -565,8 +565,11 @@ void FsView::SetFs(const fs::FsPath& new_path, const FsEntry& new_entry) {
             m_fs = std::make_unique<fs::FsStdio>(true, "root:/");
             break;
         case FsType::Archive:
-            // new_entry.root holds the absolute path of the .zip to mount.
-            m_fs = std::make_unique<fs::FsZip>(new_entry.root);
+            // new_entry.root holds the absolute path of the archive to mount.
+            m_fs = fs::OpenArchiveFs(new_entry.root);
+            if (!m_fs) {
+                m_fs = std::make_unique<fs::FsStdio>(true, "/");
+            }
             break;
         case FsType::Content:
             m_fs = std::make_unique<fs::FsNcm>(new_entry.content_app_id, new_entry.content_meta_type, new_entry.content_storage_id);

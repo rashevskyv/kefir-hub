@@ -4056,5 +4056,6 @@
   "the drain is done. Now the charge, until the battery is full.": "the drain is done. Now the charge, until the battery is full.",
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full",
   "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.",
-  "Transfer now": "Transfer now"
+  "Transfer now": "Transfer now",
+  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first."
 }

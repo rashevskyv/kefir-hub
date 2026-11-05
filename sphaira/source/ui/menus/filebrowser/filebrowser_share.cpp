@@ -28,6 +28,7 @@
 #include "ui/nvg_util.hpp"
 #include "fs.hpp"
 #include "fs_zip.hpp"
+#include "fs_archive.hpp"
 #include "fs_ncm.hpp"
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
@@ -89,7 +90,7 @@ void FsView::MountCurrentOverMtp() {
             std::string(e.name) + " (content)", {}, {}});
     } else if (e.type == FsType::Archive) {
         const fs::FsPath zip_path = e.root;
-        mounts.push_back({[zip_path]{ return std::make_unique<fs::FsZip>(zip_path); },
+        mounts.push_back({[zip_path]{ return fs::OpenArchiveFs(zip_path); },
             std::string(e.name) + " (archive)", {}, {}});
     } else if (IsSd()) {
         targets = GetMountTargets();

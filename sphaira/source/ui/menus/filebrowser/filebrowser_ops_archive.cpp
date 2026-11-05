@@ -348,7 +348,12 @@ void FsView::InstallFiles() {
     PauseRemoteMetadata();
     auto failures = std::make_shared<std::vector<std::pair<std::string, Result>>>();
 
-    App::Push<OptionBox>("Install Selected files?"_i18n, "No"_i18n, "Yes"_i18n, 0, [this, targets, failures](auto op_index){
+    auto question = "Install Selected files?"_i18n;
+    if (m_fs_entry.type == FsType::Archive) {
+        question += "\n\n" + "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first."_i18n;
+    }
+
+    App::Push<OptionBox>(question, "No"_i18n, "Yes"_i18n, 0, [this, targets, failures](auto op_index){
         if (op_index && *op_index) {
             App::PopToMenu();
 

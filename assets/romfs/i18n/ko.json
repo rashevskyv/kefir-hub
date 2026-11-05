@@ -4122,5 +4122,6 @@
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "드라이브에서 아카이브 파일을 읽을 수 없습니다. USB 케이블이나 카드를 확인하고 다시 시도하세요.",
   "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "이 압축 파일을 열 수 없습니다. 지원되지 않는 형식복이거나 분할 압축 파일(.part1.rar, .r00)의 일부입니다. 분할 압축 파일은 PC에서 해제해야 합니다.",
   "Transfer now": "지금 전송",
-  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "A를 누르세요: 콘솔이 다른 시스템으로 재시작됩니다. 알림이 거기서 Kefir Hub를 열도록 요청합니다. 캘리브레이션이 저절로 이동하며, 다시 재시작할 수 있습니다."
+  "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "A를 누르세요: 콘솔이 다른 시스템으로 재시작됩니다. 알림이 거기서 Kefir Hub를 열도록 요청합니다. 캘리브레이션이 저절로 이동하며, 다시 재시작할 수 있습니다.",
+  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "이 파일들은 아카이브 안에 있으며 그곳에서 직접 설치됩니다. 일반 파일보다 느리며, 손상된 아카이브는 설치를 중단시킵니다. 여유 공간이 있다면 먼저 압축을 푸세요."
 }

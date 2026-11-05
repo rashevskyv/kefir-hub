@@ -499,8 +499,14 @@ Result InstallInternalStream(ui::InstallProgress* pbox, source::Base* source, co
 
 Result InstallFromFile(ui::InstallProgress* pbox, fs::Fs* fs, const fs::FsPath& path, const ConfigOverride& override) {
     log_write("[YATI] InstallFromFile start for %s\n", path.s);
-    auto source = std::make_unique<source::File>(fs, path);
-    log_write("[YATI] source::File opened, open result: 0x%X\n", R_VALUE(source->GetOpenResult()));
+    // a file inside an archive is decompressed as it is read: forward only.
+    std::unique_ptr<source::Base> source;
+    if (fs->IsVirtual()) {
+        source = std::make_unique<source::FileStream>(fs, path);
+    } else {
+        source = std::make_unique<source::File>(fs, path);
+    }
+    log_write("[YATI] source opened, open result: 0x%X\n", R_VALUE(source->GetOpenResult()));
     const auto rc = InstallFromSource(pbox, source.get(), path, override);
     log_write("[YATI] InstallFromFile finished, result: 0x%X\n", R_VALUE(rc));
     return rc;

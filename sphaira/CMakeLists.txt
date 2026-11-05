@@ -372,6 +372,8 @@ add_executable(sphaira
     source/system_info_storage.cpp
     source/control_patch.cpp
     source/minizip_helper.cpp
+    source/fs_archive.cpp
+    source/fs_virtual_tree.cpp
     source/fs_zip.cpp
     source/fs_ncm.cpp
     source/utils/utils.cpp

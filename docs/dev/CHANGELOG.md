@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 Tools tab hides both items when `/switch/kefir-updater/version` is missing. update-docs skill and AGENTS.md now include README.md.
 host tests: not run, nro: not built, switch: pending (Tools tab on a console without Kefir)
 
+## v0.14.287 — rar / 7z / tar open like a folder; install from inside an archive
+New FsArchive (libarchive) next to FsZip on a shared FsVirtualTree; files are read straight from the archive (no unpack), NSP/XCI install as a forward-only stream, install dialog warns it is slower than a plain file.
+host tests: not run, nro: built, switch: pending (open a rar, copy a file out, install an NSP from a rar)
+
 ## v0.14.286 — archive extraction errors say what is wrong
 Rar/7z/zip extraction now reports: unsupported or multi-part archive, damaged archive, drive read failure, out of memory (4 new codes, plain text in 26 languages, no support link).
 host tests: pass (--quick), nro: not built, switch: pending

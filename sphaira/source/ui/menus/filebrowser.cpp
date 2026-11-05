@@ -28,6 +28,7 @@
 #include "ui/nvg_util.hpp"
 #include "fs.hpp"
 #include "fs_zip.hpp"
+#include "fs_archive.hpp"
 #include "fs_ncm.hpp"
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
@@ -199,7 +200,7 @@ void Menu::AddSelectedEntries(SelectedType type) {
     std::shared_ptr<fs::Fs> owned_src_fs;
     const auto& e = view->GetFsEntry();
     if (e.type == FsType::Archive) {
-        owned_src_fs = std::make_shared<fs::FsZip>(e.root);
+        owned_src_fs = fs::OpenArchiveFs(e.root);
     } else if (e.type == FsType::Content) {
         owned_src_fs = std::make_shared<fs::FsNcm>(e.content_app_id, e.content_meta_type, e.content_storage_id);
     }
