@@ -3981,7 +3981,6 @@
   "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo를 켤 때까지 꺼져 있습니다. 파일이 변경된 경우에만 Kefir Hub이 이를 설정하고 콘솔을 재시작합니다.",
   "When the console switches off (this is normal)": "콘솔이 꺼질 때 (정상적인 현상입니다)",
   "When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself.": "콘솔이 꺼지는 것은 정상입니다. 충전기를 연결하고 콘솔을 켠 뒤 Kefir Hub를 실행하면 충전 페이지가 자동으로 열립니다.",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "콘솔을 이 상태로 두어도 됩니다. 충전 중에도 사용할 수 있습니다. 충전이 100 %에 도달하면 Kefir Hub으로 돌아와 배터리 캘리브레이션을 여세요. 그때까지 충전기를 연결해 두세요. 완충된 상태에서 Hub가 배터리 용량을 측정합니다.",
   "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.": "버튼을 누르지 않고 %s가 지나면(또는 마이너스 버튼으로 즉시) 화면 보호기가 시작됩니다. 화면이 검게 변하고 숫자가 천천히 움직여 픽셀 번인을 방지합니다. 오른쪽 스틱으로 밝기를 조절하고, 왼쪽 스틱으로 숫자를 이동합니다.",
   "When the battery is empty, the console switches itself off. This is what the Hub waits for. Plug the charger in and switch the console on: the Hub opens the charge page by itself. If the charger is not plugged in, the page says so.": "배터리가 방전되면 본체가 꺼집니다. Hub는 바로 이 순간을 기다립니다. 충전기를 연결하고 본체를 켜면 Hub가 자동으로 충전 페이지를 엽니다. 충전기가 연결되어 있지 않은 경우 페이지에 그 내용이 표시됩니다.",
   "Start over": "처음부터 다시 시작",
@@ -4116,5 +4115,6 @@
   "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current.": "지금 충전기를 연결하세요. 배터리가 더 이상 전류를 받지 않으면 허브가 자체적으로 용량을 측정합니다.",
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "방전이 완료되었습니다. 충전기를 연결하세요: 배터리가 완전히 충전되면 용량이 자동으로 측정됩니다.",
   "the drain is done. Now the charge, until the battery is full.": "방전이 완료되었습니다. 배터리가 가득 찰 때까지 충전합니다.",
-  "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "콘솔을 이 상태로 두거나 충전 중에 사용할 수 있습니다. 콘솔이 표시하는 100%는 일찍 나타납니다. Hub가 용량이 측정되었다고 할 때까지 충전기를 연결해 두세요."
+  "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "콘솔을 이 상태로 두거나 충전 중에 사용할 수 있습니다. 콘솔이 표시하는 100%는 일찍 나타납니다. Hub가 용량이 측정되었다고 할 때까지 충전기를 연결해 두세요.",
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "이 페이지를 열어 둔 상태로 유지하세요. 배터리가 가득 차면 허브가 스스로 배터리 용량을 측정합니다. 페이지를 벗어난 경우 충전이 완료되면 배터리 보정을 다시 여세요. 그때까지 충전기를 연결해 두세요."
 }

@@ -3701,7 +3701,7 @@
   "Cycle 2": "Cycle 2",
   "Charger is plugged in.": "Charger is plugged in.",
   "Plug the charger in.": "Plug the charger in.",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.",
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.",
   "The screen stays on: so the console charges to the end. The screensaver saves the screen.": "The screen stays on: so the console charges to the end. The screensaver saves the screen.",
   "Open the charge screen": "Open the charge screen",
   "Start charging": "Start charging",

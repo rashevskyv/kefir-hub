@@ -3701,7 +3701,7 @@
   "Cycle 2": "Цикл 2",
   "Charger is plugged in.": "Зарядку вставлено.",
   "Plug the charger in.": "Вставте зарядку.",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "Можете залишити консоль так. Можете й користуватися нею, поки вона заряджається. Коли заряд дійде до 100 %, поверніться в Kefir Hub і відкрийте «Калібрування батареї». До того не виймайте зарядку: Hub вимірює ємність батареї, поки вона повна.",
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "Залиште цю сторінку відкритою. Hub сам виміряє ємність батареї, коли вона стане повною. Якщо ви вийшли зі сторінки, відкрийте «Калібрування батареї» знову, коли зарядка закінчиться. До того не виймайте зарядку.",
   "The screen stays on: so the console charges to the end. The screensaver saves the screen.": "Екран лишається увімкненим: так консоль точно зарядиться до кінця. Заставка береже екран.",
   "Open the charge screen": "Відкрити екран заряду",
   "Start charging": "Почати заряд",

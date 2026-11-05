@@ -3981,7 +3981,6 @@
   "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendoは有効にするまでオフになっています。Kefir Hubがセットアップを行い、ファイルが変更された場合のみ本体を再起動します。",
   "When the console switches off (this is normal)": "本体の電源が切れる場合（正常な動作です）",
   "When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself.": "本体の電源が切れても正常な動作です。充電器を接続して本体の電源を入れ、Kefir Hubを開くと、自動的に充電ページが開きます。",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "このままの状態でコンソールを放置しても問題ありません。充電中にも使用できます。充電が100 %に達したら、Kefir Hubに戻ってバッテリーキャリブレーションを開いてください。それまでは充電器を接続したままにしてください。満充電の間、Hubがバッテリー容量を測定します。",
   "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.": "%s間ボタン操作がない場合（マイナスボタンですぐに実行）、スクリーンセーバーが起動します：画面が黒くなり、数字がゆっくりと移動します。これによりピクセルの焼き付きを防ぎます。右スティックで明るさを変更し、左スティックで数字を移動させます。",
   "When the battery is empty, the console switches itself off. This is what the Hub waits for. Plug the charger in and switch the console on: the Hub opens the charge page by itself. If the charger is not plugged in, the page says so.": "バッテリーが切れると、本体の電源が切れます。Hubはこの瞬間を待っています。充電器を接続して本体の電源を入れると、Hubが自動的に充電ページを開きます。充電器が接続されていない場合、ページにその旨が表示されます。",
   "Start over": "最初からやり直す",
@@ -4116,5 +4115,6 @@
   "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current.": "充電器を接続してください。バッテリーが電流を消費しなくなると、Hubが自動的に容量を測定します。",
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "放電が完了しました。充電器を接続してください。満充電時に容量が自動測定されます。",
   "the drain is done. Now the charge, until the battery is full.": "放電が完了しました。バッテリーが満タンになるまで充電します。",
-  "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "本体をそのままにするか、充電しながら使用することができます。本体が表示する100％は実際より早く表示されます。容量の測定が完了したとHubが通知するまで、充電器を接続したままにしてください。"
+  "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "本体をそのままにするか、充電しながら使用することができます。本体が表示する100％は実際より早く表示されます。容量の測定が完了したとHubが通知するまで、充電器を接続したままにしてください。",
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "このページを開いたままにしてください。バッテリーが満充電になると、ハブが自動的にバッテリー容量を測定します。ページを閉じた場合は、充電が完了したらもう一度バッテリー校正を開いてください。それまで充電器を接続したままにしてください。"
 }

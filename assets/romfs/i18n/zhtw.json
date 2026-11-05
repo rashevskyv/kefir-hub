@@ -4034,7 +4034,6 @@
   "Nextendo is off until you switch it on. Kefir Hub then sets it up and restarts the console only if a file changed.": "Nextendo 在您將其開啟之前處於關閉狀態。此後，Kefir Hub 將進行設定，且僅在檔案變更時重新啟動主機。",
   "When the console switches off (this is normal)": "當主機關閉時（這是正常的）",
   "When the console switches off, that is normal. Plug the charger in, switch the console on and open Kefir Hub: it opens the charge page by itself.": "主機關機是正常的。請連接充電器，開啟主機並啟動 Kefir Hub：它將自動開啟充電頁面。",
-  "You can leave the console like this. You can also use it while it charges. When the charge reaches 100 %, come back to Kefir Hub and open Battery calibration. Keep the charger in until then: the Hub measures the battery capacity while it is full.": "您可以保持主機處於此狀態。充電時也可以使用。當電量達到 100 % 時，請返回 Kefir Hub 並開啟電池校準。在此之前請一直連接充電器：Hub 會在電池充滿時測量電池容量。",
   "After %s without a button press (or at once, on Minus), the screen saver starts: the screen goes black and the numbers slowly move across it. This stops the pixels from burning in. The right stick changes the brightness, the left stick moves the numbers.": "在無按鍵操作 %s 後（或按下減號鍵立即啟動），螢幕保護程式將會啟動：螢幕變黑，數字在畫面上緩慢移動。這可防止像素烙印。右搖桿用於更改亮度，左搖桿用於移動數字。",
   "When the battery is empty, the console switches itself off. This is what the Hub waits for. Plug the charger in and switch the console on: the Hub opens the charge page by itself. If the charger is not plugged in, the page says so.": "當電池耗盡時，主機將自動關機。這就是 Hub 等待的時刻。連接充電器並開啟主機電源：Hub 會自動開啟充電頁面。如果未連接充電器，頁面會顯示相關提示。",
   "Start over": "重新開始",
@@ -4169,5 +4168,6 @@
   "Now plug the charger in. The Hub measures the capacity by itself when the battery takes no more current.": "現在請連接充電器。當電池不再充電時，Hub 會自動測量容量。",
   "the drain is done. Plug the charger in: the capacity is measured by itself when the battery is full": "放電已完成。請連接充電器：當電池充滿時，容量將自動測量。",
   "the drain is done. Now the charge, until the battery is full.": "放電完成。現在開始充電，直至電池充滿。",
-  "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "你可以讓主機保持這樣，或在充電時使用它。主機顯示的 100% 出現得較早：請保持連接充電器，直到 Hub 顯示容量測量完畢。"
+  "You can leave the console like this or use it while it charges. The 100 % the console shows comes early: keep the charger in until the Hub says the capacity is measured.": "你可以讓主機保持這樣，或在充電時使用它。主機顯示的 100% 出現得較早：請保持連接充電器，直到 Hub 顯示容量測量完畢。",
+  "Leave this page open. The Hub measures the battery capacity by itself when the battery is full. If you left the page, open Battery calibration again when the charge ends. Keep the charger in until then.": "請保持此頁面開啟。當電池充滿電時，Hub 會自動測量電池容量。如果您離開了頁面，請在充電結束時再次開啟電池校準。在此之前，請保持充電器連接。"
 }
