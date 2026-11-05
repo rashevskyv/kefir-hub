@@ -77,7 +77,7 @@ auto BuildDbiItems() -> std::vector<SettingsItem> {
     }));
 
     if (has_translations) {
-        items.emplace_back(MakeSeparator());
+        items.emplace_back(MakeHeader("Languages"_i18n));
 
         for (const auto& entry : translations) {
             items.emplace_back(MakePackageAction({

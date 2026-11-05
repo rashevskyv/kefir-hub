@@ -4072,5 +4072,12 @@
   "This is the battery type already.": "Цей тип батареї вже встановлено.",
   "now": "зараз",
   "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "від заводської ємності: більше, ніж може тримати батарея, значення контролера заряду хибне",
-  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "розряд завершено. Підключіть зарядку й не виймайте, доки зарядний пристрій не завершить заряд"
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "розряд завершено. Підключіть зарядку й не виймайте, доки зарядний пристрій не завершить заряд",
+  "INSTALL": "ВСТАНОВИТИ",
+  "UPDATE": "ОНОВИТИ",
+  "DOWNGRADE": "ПОНИЖЕННЯ",
+  "KEFIR": "KEFIR",
+  "FIRMWARE": "ПРОШИВКА",
+  "OTHER": "ІНШЕ",
+  "Downloading DBI...": "Завантаження DBI..."
 }

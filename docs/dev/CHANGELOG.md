@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.291 — Updater tags and DBI download text translated, DBI menu has a Languages header
+INSTALL/UPDATE/DOWNGRADE, section names KEFIR/FIRMWARE/OTHER and "Downloading DBI..." go through i18n (en+uk); the DBI language list starts under a "Languages" header instead of a blank gap.
+host tests: pass (--quick), nro: not built, switch: pending (check Updater and DBI screens in uk)
+
 ## v0.14.290 — Battery calibration writes only facts: zero = cut-off V_empty, full = charger done → factory capacity, cycle 2 writes nothing
 No measured capacity is written (a 7066 of 4667 mAh FullCap came from counters set by a QH difference); FullCap never above factory; "larger battery" verdict replaced by "above factory = wrong gauge value"; Battery type lists LiPo and LiHV.
 host tests: pass (quick), nro: not built, switch: pending (calibration cycle 1+2, battery type menu, report on a console with FullCap above factory)

@@ -4070,5 +4070,12 @@
   "This is the battery type already.": "This is the battery type already.",
   "now": "now",
   "of the factory capacity: more than the battery can hold, the gauge's value is wrong": "of the factory capacity: more than the battery can hold, the gauge's value is wrong",
-  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "the drain is done. Plug the charger in and keep it in until the charger ends the charge"
+  "the drain is done. Plug the charger in and keep it in until the charger ends the charge": "the drain is done. Plug the charger in and keep it in until the charger ends the charge",
+  "INSTALL": "INSTALL",
+  "UPDATE": "UPDATE",
+  "DOWNGRADE": "DOWNGRADE",
+  "KEFIR": "KEFIR",
+  "FIRMWARE": "FIRMWARE",
+  "OTHER": "OTHER",
+  "Downloading DBI...": "Downloading DBI..."
 }

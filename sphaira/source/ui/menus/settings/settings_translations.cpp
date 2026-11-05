@@ -410,7 +410,7 @@ auto TranslationExtractFolder(const std::string& zip_name) -> std::string {
 auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) -> Result {
     R_TRY(DownloadFile(
         pbox,
-        "Downloading DBI...",
+        "Downloading DBI..."_i18n,
         "https://github.com/rashevskyv/DBIPatcher/releases/latest/download/DBI.nro",
         "/switch/DBI/DBI_new.nro"
     ));
