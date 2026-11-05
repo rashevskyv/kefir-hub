@@ -8,7 +8,14 @@
 #include <string>
 #include <string_view>
 
+namespace sphaira::rar {
+enum class Error;
+} // namespace sphaira::rar
+
 namespace sphaira::archive {
+
+// the user-facing Result for a RAR backend error (rar_reader.hpp).
+Result RarResult(rar::Error e);
 
 // Extracts a rar / 7z / tar(.gz/.xz/.bz2) archive, or a bare .gz/.xz/.bz2 file, from `fs`
 // into `out_dir` on the same fs. Entries that would leave `out_dir` are skipped.

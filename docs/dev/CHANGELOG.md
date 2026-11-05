@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.289 — RAR via UnRAR (solid RAR4, RAR5, split sets), multi-volume archives, clear archive errors
+Archives: .rar goes through UnRAR 7.3.2 (browse, extract, install from inside); 7z/tar split sets (.001, .partN, .r00) open from any part; errors say what is wrong (damaged, missing part, unreadable drive, out of memory, encrypted, solid). LICENSE: UnRAR is not GPL-compatible, decision pending.
+host tests: pass (quick + rar fixtures); nro: built; switch: pending (open/copy/install from solid RAR4, RAR5, split sets).
+
 ## v0.14.288 — Updater stays without Kefir and offers INSTALL instead of UPDATE; only Kefir Settings is hidden
 Without /switch/kefir-updater/version the Kefir pack row is tagged INSTALL and the firmware prompt button says Install.
 host tests: not run, nro: not built, switch: pending

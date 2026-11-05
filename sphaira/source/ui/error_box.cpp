@@ -179,6 +179,8 @@ auto GetCodeMessage(Result rc) -> const char* {
         case Result_ArchiveDamaged: return "SphairaError_ArchiveDamaged";
         case Result_ArchiveSourceRead: return "SphairaError_ArchiveSourceRead";
         case Result_ArchiveNoMemory: return "SphairaError_ArchiveNoMemory";
+        case Result_ArchiveSolidRar: return "SphairaError_ArchiveSolidRar";
+        case Result_ArchivePassword: return "SphairaError_ArchivePassword";
         case Result_YatiHttpReadFailed: return "SphairaError_YatiHttpReadFailed";
     }
 
@@ -219,13 +221,17 @@ auto GetErrorDescription(Result rc) -> std::string {
         case Result_StreamUnexpectedEof:
             return "The file or transfer ended early before all data was read. Please copy or download the file again."_i18n;
         case Result_ArchiveUnsupported:
-            return "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC."_i18n;
+            return "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder."_i18n;
         case Result_ArchiveDamaged:
             return "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again."_i18n;
         case Result_ArchiveSourceRead:
             return "The archive file could not be read from the drive. Check the USB cable or the card, then try again."_i18n;
         case Result_ArchiveNoMemory:
             return "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC."_i18n;
+        case Result_ArchiveSolidRar:
+            return "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option."_i18n;
+        case Result_ArchivePassword:
+            return "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC."_i18n;
         case Result_NspBadMagic:
             return "The file is not a valid NSP and may be damaged or incomplete. Please copy or download the file again."_i18n;
         case Result_AppstoreFailedZipDownload:
@@ -309,6 +315,8 @@ auto ShouldShowIssue(std::optional<Result> rc) -> bool {
         case Result_ArchiveDamaged:
         case Result_ArchiveSourceRead:
         case Result_ArchiveNoMemory:
+        case Result_ArchiveSolidRar:
+        case Result_ArchivePassword:
         case UsbError_UrbFailed:
         case UsbError_UrbCancelled:
         case UsbError_UrbBadStatus:

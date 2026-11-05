@@ -219,7 +219,7 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
     LoadIcons();
 
     // Kefir Settings only work on Kefir; icons are already attached to the items.
-    if (hats::getKefirVersion().empty()) {
+    if (sphaira::hats::getKefirVersion().empty()) {
         std::erase_if(m_items, [](const auto& item) {
             return item.label == "Kefir Settings"_i18n;
         });

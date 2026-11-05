@@ -4173,8 +4173,10 @@
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "記憶體不足，無法解壓縮此壓縮檔（需要非常大的字典）。請在電腦上解壓縮。",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "壓縮檔已損壞或不完整，或者缺少多部分壓縮檔的一部分。請重新複製或下載。",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "無法從磁碟機讀取封存檔。請檢查 USB 連接線或記憶卡，然後再試一次。",
-  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "無法開啟此壓縮檔。不支援此格式，或是多磁碟/分卷壓縮檔的一部分（.part1.rar, .r00）。多部分壓縮檔必須在電腦上解壓縮。",
   "Transfer now": "立即傳輸",
   "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "按 A：主機將重新啟動到另一個系統。通知會提示你在那裡開啟 Kefir Hub。校准會自行移動，你可以重新啟動回去。",
-  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "這些檔案位於壓縮檔內，並直接從中安裝。這比普通檔案慢，且損壞的壓縮檔會中斷安裝。如果有空間，請先解壓它們。"
+  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "這些檔案位於壓縮檔內，並直接從中安裝。這比普通檔案慢，且損壞的壓縮檔會中斷安裝。如果有空間，請先解壓它們。",
+  "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "無法開啟此壓縮檔。其格式不支援或已損壞。分割壓縮檔需要其所有部分都在同一個資料夾中。",
+  "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "此 RAR 壓縮檔使用了實體壓縮（RAR4），Hub 無法讀取。請在電腦上解壓縮，或者在不使用實體壓縮的情況下重新打包。",
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "此壓縮檔已加密。The Hub 無法開啟加密的壓縮檔。請在電腦上解壓它。"
 }

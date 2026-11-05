@@ -4120,8 +4120,10 @@
   "Not enough memory to unpack this archive (it needs a very large dictionary). Extract it on a PC.": "このアーカイブを解凍するためのメモリが不足しています（非常に大きな辞書が必要です）。PCで解凍してください。",
   "The archive is damaged or incomplete, or a part of a multi-part archive is missing. Copy or download it again.": "アーカイブが破損しているか不完全であるか、分割アーカイブの一部が不足しています。コピーまたは再ダウンロードしてください。",
   "The archive file could not be read from the drive. Check the USB cable or the card, then try again.": "ドライブからアーカイブファイルを読み込めませんでした。USBケーブルまたはカードを確認して、もう一度やり直してください。",
-  "Cannot open this archive. Its format is not supported, or it is one part of a multi-part archive (.part1.rar, .r00). Multi-part archives must be extracted on a PC.": "このアーカイブを開けません。サポートされていない形式であるか、分割アーカイブの一部（.part1.rar、.r00）です。分割アーカイブはPCで解凍する必要があります。",
   "Transfer now": "今すぐ転送",
   "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Aを押す：コンソールが別のシステムに再起動します。通知によりそこでKefir Hubを開くよう求められます。キャリブレーションは自動的に移動し、元に戻すことができます。",
-  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "これらのファイルはアーカイブ内にあるため、そこから直接インストールされます。通常のファイルより処理が遅くなり、アーカイブが破損しているとインストールが中断されます。空き容量がある場合は、事前に解凍してください。"
+  "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "これらのファイルはアーカイブ内にあるため、そこから直接インストールされます。通常のファイルより処理が遅くなり、アーカイブが破損しているとインストールが中断されます。空き容量がある場合は、事前に解凍してください。",
+  "Cannot open this archive. Its format is not supported, or it is damaged. A split archive needs all of its parts in the same folder.": "このアーカイブを開けません。サポートされていない形式であるか、破損しています。分割アーカイブにはすべてのパーツが同じフォルダー内にある必要があります。",
+  "This RAR archive is packed as solid (RAR4), which the Hub cannot read. Unpack it on a PC, or pack it again without the solid option.": "このRARアーカイブはソリッド圧縮（RAR4）されているため、Hubで読み取れません。PCで解凍するか、ソリッド圧縮を無効にして再度圧縮してください。",
+  "This archive is encrypted. The Hub cannot open encrypted archives. Unpack it on a PC.": "このアーカイブは暗号化されています。The Hubは暗号化されたアーカイブを開けません。PCで解凍してください。"
 }

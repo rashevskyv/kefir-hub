@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.288)
+set(sphaira_VERSION 0.14.289)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -332,6 +332,7 @@ add_executable(sphaira
     source/title_nacp.cpp
     source/title_nsp.cpp
     source/archive_extract.cpp
+    source/rar_reader.cpp
     source/sd_bundle.cpp
     source/battery_page.cpp
     source/battery_write.cpp
@@ -547,6 +548,14 @@ find_library(lz4_lib lz4 REQUIRED)
 find_library(expat_lib expat REQUIRED)
 find_library(bz2_lib bz2 REQUIRED)
 target_link_libraries(sphaira PRIVATE ${archive_lib} ${lzma_lib} ${lz4_lib} ${expat_lib} ${bz2_lib} ZLIB::ZLIB)
+
+# rar (solid RAR4, RAR5, split sets) through UnRAR; see cmake/unrar/unrar.cmake.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/unrar/unrar.cmake)
+target_link_libraries(sphaira PRIVATE unrar)
+set_source_files_properties(source/rar_reader.cpp PROPERTIES
+    INCLUDE_DIRECTORIES ${unrar_SOURCE_DIR}
+    COMPILE_DEFINITIONS _UNIX
+)
 
 if (USE_NEW_ZSTD)
     message(STATUS "USING UPSTREAM ZSTD")

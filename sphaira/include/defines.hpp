@@ -282,6 +282,10 @@ enum class SphairaResult : Result {
     ArchiveSourceRead,
     // libarchive ran out of memory (e.g. a huge rar5 dictionary).
     ArchiveNoMemory,
+    // a rar4 archive packed as "solid": libarchive cannot read it.
+    ArchiveSolidRar,
+    // an encrypted (password) archive or entry: passwords are not supported.
+    ArchivePassword,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -432,6 +436,8 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(ArchiveDamaged),
     MAKE_SPHAIRA_RESULT_ENUM(ArchiveSourceRead),
     MAKE_SPHAIRA_RESULT_ENUM(ArchiveNoMemory),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchiveSolidRar),
+    MAKE_SPHAIRA_RESULT_ENUM(ArchivePassword),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

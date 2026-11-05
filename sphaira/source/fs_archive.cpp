@@ -1,8 +1,11 @@
 #include "fs_archive.hpp"
 #include "fs_zip.hpp"
 #include "archive_extract_plan.hpp"
+#include "archive_extract.hpp"
+#include "archive_volumes.hpp"
 #include "defines.hpp"
 #include "log.hpp"
+#include "rar_reader.hpp"
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -10,6 +13,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <dirent.h>
 #include <strings.h>
 
 namespace fs {
@@ -19,10 +23,17 @@ constexpr size_t READ_BUF_SIZE = 256 * 1024;
 constexpr size_t SKIP_BUF_SIZE = 1024 * 1024;
 
 // one libarchive reader on a plain FILE*: the archive path works for sd and network mounts.
+// a split archive (name.part1.rar, name.7z.001...) is one reader that moves on to the next volume.
 struct Reader {
+    struct Volume {
+        Reader* reader{};
+        std::string path;
+    };
+
     FILE* fp{};
     struct archive* a{};
     std::vector<u8> buf = std::vector<u8>(READ_BUF_SIZE);
+    std::vector<Volume> volumes{};
 
     ~Reader() {
         if (a) {
@@ -45,8 +56,22 @@ struct Reader {
         return static_cast<la_int64_t>(ftello(fp));
     }
 
+    int OnSwitch(const Volume* next) {
+        if (fp) {
+            std::fclose(fp);
+        }
+        fp = std::fopen(next->path.c_str(), "rb");
+        return fp ? ARCHIVE_OK : ARCHIVE_FATAL;
+    }
+
     Result Open(const std::string& path) {
-        fp = std::fopen(path.c_str(), "rb");
+        const auto paths = sphaira::archive::VolumePaths(path);
+        volumes.reserve(paths.size());
+        for (const auto& p : paths) {
+            volumes.push_back({this, p});
+        }
+
+        fp = std::fopen(volumes.front().path.c_str(), "rb");
         R_UNLESS(fp, FsError_PathNotFound);
 
         a = archive_read_new();
@@ -54,12 +79,19 @@ struct Reader {
         archive_read_support_format_all(a);
         archive_read_support_format_raw(a);
         archive_read_set_read_callback(a, [](struct archive*, void* user, const void** out) -> la_ssize_t {
-            return static_cast<Reader*>(user)->OnRead(out);
+            return static_cast<Volume*>(user)->reader->OnRead(out);
         });
         archive_read_set_seek_callback(a, [](struct archive*, void* user, la_int64_t offset, int whence) -> la_int64_t {
-            return static_cast<Reader*>(user)->OnSeek(offset, whence);
+            return static_cast<Volume*>(user)->reader->OnSeek(offset, whence);
         });
-        archive_read_set_callback_data(a, this);
+        archive_read_set_switch_callback(a, [](struct archive*, void*, void* next) -> int {
+            const auto v = static_cast<Volume*>(next);
+            return v->reader->OnSwitch(v);
+        });
+        archive_read_set_callback_data(a, &volumes.front());
+        for (size_t i = 1; i < volumes.size(); i++) {
+            archive_read_append_callback_data(a, &volumes[i]);
+        }
         if (archive_read_open1(a) != ARCHIVE_OK) {
             log_write("[FS-ARCHIVE] open %s: %s\n", path.c_str(), archive_error_string(a));
             R_THROW(Result_ArchiveUnsupported);
@@ -68,19 +100,25 @@ struct Reader {
     }
 
     Result Failure() const {
-        return archive_errno(a) == ENOMEM ? Result_ArchiveNoMemory : Result_ArchiveDamaged;
+        if (archive_errno(a) == ENOMEM) {
+            return Result_ArchiveNoMemory;
+        }
+        return sphaira::archive::IsSolidRar(archive_error_string(a)) ? Result_ArchiveSolidRar : Result_ArchiveDamaged;
     }
 };
 
-// where an entry shows up in the tree; empty = skip it.
+// where an entry named `name` shows up in the tree; empty = skip it.
+auto KeyOf(std::string_view name, bool raw, const std::string& archive_path) -> std::string {
+    const auto rel = sphaira::archive::OutputPath(name, raw, archive_path);
+    return rel ? FsVirtualTree::Normalize(rel->c_str()) : std::string{};
+}
+
 auto EntryKey(struct archive* a, struct archive_entry* entry, const std::string& archive_path) -> std::string {
     const char* name = archive_entry_pathname_utf8(entry);
     if (!name) {
         name = archive_entry_pathname(entry);
     }
-    const bool raw = archive_format(a) == ARCHIVE_FORMAT_RAW;
-    const auto rel = sphaira::archive::OutputPath(name ? name : "", raw, archive_path);
-    return rel ? FsVirtualTree::Normalize(rel->c_str()) : std::string{};
+    return KeyOf(name ? name : "", archive_format(a) == ARCHIVE_FORMAT_RAW, archive_path);
 }
 
 // per-open-file state: its own reader, advanced lazily to `pos` inside the entry.
@@ -91,6 +129,36 @@ struct ArchiveOpenFile {
     s64 pos{};
     std::unique_ptr<Reader> reader{};
     std::vector<u8> skip{};
+    // RAR through UnRAR: the first volume, and the stream of this entry.
+    std::string rar_path{};
+    std::unique_ptr<sphaira::rar::EntryStream> stream{};
+
+    // RAR: same contract as Read(); the worker thread decompresses ahead into a bounded pipe.
+    Result ReadRar(s64 off, void* out, u64 n, u64* bytes_read) {
+        if (!stream || off < pos) {
+            stream.reset(); // joins the old worker first
+            pos = 0;
+            stream = std::make_unique<sphaira::rar::EntryStream>(rar_path, [k = key, p = path](const sphaira::rar::Entry& e) {
+                return KeyOf(e.name, false, p) == k;
+            });
+        }
+        const auto failed = [&] { return sphaira::archive::RarResult(stream->GetError()); };
+        while (pos < off) {
+            if (skip.empty()) {
+                skip.resize(SKIP_BUF_SIZE);
+            }
+            const auto want = static_cast<size_t>(std::min<s64>(off - pos, skip.size()));
+            const auto got = stream->Read(skip.data(), want);
+            pos += got;
+            if (got < want) {
+                return failed(); // success = EOF before the offset
+            }
+        }
+        const auto got = stream->Read(out, n);
+        pos += got;
+        *bytes_read = got;
+        return got < n ? failed() : Result{};
+    }
 
     // (re)starts the archive and stops at this entry's data.
     Result Restart() {
@@ -119,6 +187,9 @@ struct ArchiveOpenFile {
     // reads `n` bytes at `off`; going backwards restarts the archive, going forward decompresses and drops.
     Result Read(s64 off, void* out, u64 n, u64* bytes_read) {
         *bytes_read = 0;
+        if (!rar_path.empty()) {
+            return ReadRar(off, out, n, bytes_read);
+        }
         if (!reader || off < pos) {
             R_TRY(Restart());
         }
@@ -158,7 +229,45 @@ struct ArchiveOpenFile {
 
 } // namespace
 
+// RAR: UnRAR reads the headers (cheap even when solid: no data is decompressed).
+Result FsArchive::IndexRar() {
+    sphaira::rar::Reader r;
+    R_TRY(sphaira::archive::RarResult(r.Open(m_rar_path, false)));
+    AddDir("/");
+    while (true) {
+        sphaira::rar::Entry e;
+        bool end{};
+        R_TRY(sphaira::archive::RarResult(r.Next(&e, &end)));
+        if (end) {
+            break;
+        }
+        const auto key = KeyOf(e.name, false, m_path);
+        if (!key.empty() && key != "/") {
+            if (e.is_dir) {
+                AddDir(key);
+            } else if (e.is_file) {
+                FsTimeStampRaw ts{};
+                ts.is_valid = e.mtime != 0;
+                ts.created = ts.modified = ts.accessed = e.mtime;
+                AddFile(key, e.size, ts);
+            }
+        }
+        R_TRY(sphaira::archive::RarResult(r.Skip({})));
+    }
+    log_write("[FS-ARCHIVE] rar indexed %zu files, %zu dirs (solid %d)\n", m_files.size(), m_dirs.size(), r.solid);
+    R_SUCCEED();
+}
+
 FsArchive::FsArchive(const FsPath& archive_path) : m_path{archive_path.s} {
+    if (const auto first = sphaira::archive::VolumePaths(m_path).front(); sphaira::rar::IsRarName(first)) {
+        m_rar_path = first;
+        m_open_result = IndexRar();
+        if (R_FAILED(m_open_result)) {
+            log_write("[FS-ARCHIVE] rar open %s: 0x%X\n", first.c_str(), m_open_result);
+        }
+        return;
+    }
+
     Reader r;
     m_open_result = r.Open(m_path);
     if (R_FAILED(m_open_result)) {
@@ -217,6 +326,7 @@ Result FsArchive::vOpenFile(const FsPath& path, u32 mode, File* f) {
     h->path = m_path;
     h->key = key;
     h->size = it->second.size;
+    h->rar_path = m_rar_path;
     f->m_virtual = h.release();
     R_SUCCEED();
 }

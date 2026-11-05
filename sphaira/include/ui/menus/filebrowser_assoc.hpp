@@ -50,7 +50,7 @@ constexpr std::string_view COMPRESSED_EXTENSIONS[] = {
 };
 // archives the file browser opens like a folder (zip: minizip, the rest: libarchive).
 constexpr std::string_view ZIP_EXTENSIONS[] = {
-    "zip", "rar", "7z", "tar", "gz", "tgz", "xz", "txz", "bz2", "tbz2",
+    "zip", "rar", "r00", "7z", "001", "tar", "gz", "tgz", "xz", "txz", "bz2", "tbz2",
 };
 
 inline constexpr RomDatabaseEntry PATHS[]{
