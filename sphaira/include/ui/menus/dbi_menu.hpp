@@ -7,6 +7,7 @@
 #include "ui/screensaver.hpp"
 #include "ui/screensaver_timeout.hpp"
 #include "ui/menus/dbi/install_queue_state.hpp"
+#include "ui/menus/update_choice.hpp"
 #include "yati/source/usb.hpp"
 #include "yati/yati.hpp"
 #include <array>
@@ -262,9 +263,7 @@ protected:
     std::optional<bool> m_current_file_reinstall_choice{};
     bool m_current_file_skipped{false};
 
-    // how AskUpdate treats no answer. Stream: MTP/FTP/web send each file once, so the
-    // default is kept. Defer: a queue moves the file to its end. Wait: the end is reached.
-    enum class AskMode { Stream, Defer, Wait };
+    // how AskUpdate treats no answer (update_choice.hpp).
     AskMode m_ask_mode{AskMode::Stream};
     // questions of files moved to the end of the queue, by file name (worker thread only).
     std::unordered_map<std::string, std::shared_ptr<PromptData>> m_deferred_prompts{};

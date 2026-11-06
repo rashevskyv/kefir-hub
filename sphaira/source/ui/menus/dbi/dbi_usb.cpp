@@ -214,22 +214,11 @@ void Menu::ThreadFunction() {
             BeginSessionStats();
             bool session_failed{};
             // files whose update question got no answer go once more after the queue.
-            std::vector<size_t> deferred;
-            size_t later = 0;
-            for (size_t cursor = 0;;) {
-                size_t i;
-                bool final_pass{};
-                if (cursor < m_queue.size()) {
-                    i = cursor++;
-                } else if (later < deferred.size()) {
-                    i = deferred[later++];
-                    final_pass = true;
-                } else {
-                    break;
-                }
-                // the live queue freezes everything up to the active index: past the end,
-                // the last entry, so a deferred file does not cut the queue back to itself.
-                const size_t active = final_pass ? m_queue.size() - 1 : i;
+            DeferQueue order;
+            while (const auto item = order.Next(m_queue.size())) {
+                const size_t i = item->index;
+                const bool final_pass = item->final_pass;
+                const size_t active = LiveQueueActive(*item, m_queue.size());
                 if (sync_supported) {
                     std::vector<yati::source::Usb::LiveQueueItem> items;
                     u32 revision = 0;
@@ -271,7 +260,7 @@ void Menu::ThreadFunction() {
 
                 const auto go = CheckQueuedUpdate(i, final_pass);
                 if (!go) {
-                    deferred.push_back(i);
+                    order.Defer(i);
                     continue;
                 }
                 if (!*go) {
@@ -379,7 +368,7 @@ void Menu::ThreadFunction() {
                 const bool fatal_session_error = !user_skipped && R_FAILED(install_rc) && IsDbiSessionError(install_rc);
                 if (m_current_file_deferred && !user_skipped && !cancelled && R_SUCCEEDED(install_rc)) {
                     AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
-                    deferred.push_back(i);
+                    order.Defer(i);
                     continue;
                 }
                 RecordPackageResult(i, install_rc, cancelled, user_skipped, plan_sd,

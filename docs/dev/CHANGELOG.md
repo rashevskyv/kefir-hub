@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.300 — Several updates of one game: the queue order, the 10 s question and the console check are host-tested
+The queue order (DeferQueue), the question timeout (UpdateAskStep), the queue decision (ResolveQueuedUpdate) and the USB live-queue index moved from dbi_local/dbi_usb/dbi_session/dbi_internal into update_choice.hpp; behaviour unchanged. test_update_choice runs whole queues with a fake console: v3+v6 both orders, Ask with a pick, no answer then answers at the end, the only older update deferred then yes/no, all older than the console, MTP no answer, one update from the DBI Backend.
+host tests: pass (quick), nro: built (checkpoint with these sources), switch: pending (not needed for these cases)
+
 ## v0.14.299 — Games: "Send to another console" in the list menu and in Game Actions
 Select games, press + (or one game's Game Actions) → "Send to another console" → USB cable / Wi-Fi; the existing Console Transfer send runs with these games (no "Choose games" step). The receiver still opens Console Transfer → Receive games (plan E.2 popup-on-receiver not done).
 host tests: pass (quick), nro: not built, switch: pending (two consoles, USB-C cable: sender enumerates as host and waits, receiver installs base + update + DLC; Wi-Fi path)

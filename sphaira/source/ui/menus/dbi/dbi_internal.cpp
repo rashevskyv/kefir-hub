@@ -170,39 +170,35 @@ std::optional<bool> InstallSession::CheckQueuedUpdate(size_t i, bool final_pass)
             titles.push_back(e.install_selected ? ParseNameTitle(e.file_name) : NameTitle{});
         }
     }
-    const auto q = FindQueueUpdates(titles, i);
-    if (!q.count) return true;
+    QueueUpdates q{};
+    const auto r = ResolveQueuedUpdate(UpdateChoiceOption().Get(), titles, i, m_update_picks, q,
+        [this](int count, uint32_t version) {
+            char text[256];
+            std::snprintf(text, sizeof(text), "The queue has %d updates for this game. Install v%u?"_i18n.c_str(), count, version >> 16);
+            return AskUpdate(text);
+        });
     m_current_update_count = q.count;
-
-    const auto self = titles[i];
-    const auto pick = m_update_picks.find(self.id);
-    const bool has_pick = pick != m_update_picks.end();
-    switch (QueueUpdateStep(UpdateChoiceOption().Get(), q, has_pick, has_pick ? pick->second : 0, self.version)) {
-        case UpdateStep::Install:
-            m_current_update_picked = has_pick;
+    switch (r) {
+        case QueuedUpdate::Install:
             return true;
-        case UpdateStep::Skip:
-            AddLog("Skipped: "_i18n + name + " — " + (has_pick ? "another update of this game was chosen"_i18n : "a newer update is in the queue"_i18n), LogKind::Success);
+        case QueuedUpdate::Picked:
+            m_current_update_picked = true;
+            return true;
+        case QueuedUpdate::SkipNewerInQueue:
+            AddLog("Skipped: "_i18n + name + " — " + "a newer update is in the queue"_i18n, LogKind::Success);
             return false;
-        case UpdateStep::Ask:
-            break;
+        case QueuedUpdate::SkipOtherPicked:
+            AddLog("Skipped: "_i18n + name + " — " + "another update of this game was chosen"_i18n, LogKind::Success);
+            return false;
+        case QueuedUpdate::SkipNo:
+            AddLog("Skipped: "_i18n + name, LogKind::Success);
+            return false;
+        case QueuedUpdate::NoAnswer:
+            if (!m_current_file_deferred) return false; // cancelled or skipped while asking
+            AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
+            return std::nullopt;
     }
-
-    char text[256];
-    std::snprintf(text, sizeof(text), "The queue has %d updates for this game. Install v%u?"_i18n.c_str(), q.count, self.version >> 16);
-    const auto answer = AskUpdate(text);
-    if (!answer) {
-        if (!m_current_file_deferred) return false; // cancelled or skipped while asking
-        AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
-        return std::nullopt;
-    }
-    if (*answer) {
-        m_update_picks[self.id] = self.version;
-        m_current_update_picked = true;
-        return true;
-    }
-    AddLog("Skipped: "_i18n + name, LogKind::Success);
-    return false;
+    return true;
 }
 
 } // namespace sphaira::ui::menu::dbi

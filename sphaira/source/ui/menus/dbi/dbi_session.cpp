@@ -427,8 +427,6 @@ option::OptionLong& UpdateChoiceOption() {
 }
 
 std::optional<bool> InstallSession::AskUpdate(const std::string& question) {
-    // ponytail: fixed 10 s before the file moves on; a setting if someone wants longer.
-    constexpr u64 GRACE_NS = 10'000'000'000ULL;
     std::string key, title;
     {
         // yati renames m_current_title to the game; the queue file name stays the key.
@@ -451,23 +449,24 @@ std::optional<bool> InstallSession::AskUpdate(const std::string& question) {
     }
 
     const auto start = armTicksToNs(armGetSystemTick());
-    while (data->choice < 0 && !m_cancel_requested && !m_skip_requested && !GetToken().stop_requested()) {
-        if (m_ask_mode != AskMode::Wait && armTicksToNs(armGetSystemTick()) - start >= GRACE_NS) {
-            break;
+    for (;;) {
+        const bool interrupted = m_cancel_requested || m_skip_requested || GetToken().stop_requested();
+        switch (UpdateAskStep(m_ask_mode, data->choice, interrupted, armTicksToNs(armGetSystemTick()) - start)) {
+            case AskEnd::Waiting:
+                svcSleepThread(10'000'000ULL); // 10ms
+                continue;
+            case AskEnd::Answered:
+                return data->choice == 1;
+            case AskEnd::Defer:
+                // the box stays open; its answer is read when the file comes round again.
+                m_deferred_prompts[key] = data;
+                m_current_file_deferred = true;
+                return std::nullopt;
+            case AskEnd::Expire:
+                data->expired = true;
+                return std::nullopt;
         }
-        svcSleepThread(10'000'000ULL); // 10ms
     }
-    if (data->choice >= 0) {
-        return data->choice == 1;
-    }
-    if (m_ask_mode == AskMode::Defer && !m_cancel_requested && !m_skip_requested) {
-        // the box stays open; its answer is read when the file comes round again.
-        m_deferred_prompts[key] = data;
-        m_current_file_deferred = true;
-    } else {
-        data->expired = true;
-    }
-    return std::nullopt;
 }
 
 bool InstallSession::Ask(const std::string& title_name, const std::string& question) {

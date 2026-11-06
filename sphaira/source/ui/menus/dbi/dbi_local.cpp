@@ -115,19 +115,10 @@ void Menu::LocalThreadFunction() {
         BeginSessionStats();
 
         // files whose update question got no answer go once more after the queue.
-        std::vector<size_t> deferred;
-        size_t later = 0;
-        for (size_t cursor = 0;;) {
-            size_t i;
-            bool final_pass{};
-            if (cursor < m_queue.size()) {
-                i = cursor++;
-            } else if (later < deferred.size()) {
-                i = deferred[later++];
-                final_pass = true;
-            } else {
-                break;
-            }
+        DeferQueue order;
+        while (const auto item = order.Next(m_queue.size())) {
+            const size_t i = item->index;
+            const bool final_pass = item->final_pass;
             bool selected{};
             yati::InstallAnalysis analysis{};
             bool plan_sd{};
@@ -157,7 +148,7 @@ void Menu::LocalThreadFunction() {
 
             const auto go = CheckQueuedUpdate(i, final_pass);
             if (!go) {
-                deferred.push_back(i);
+                order.Defer(i);
                 continue;
             }
             if (!*go) {
@@ -210,7 +201,7 @@ void Menu::LocalThreadFunction() {
             const bool cancelled = m_cancel_requested || (!user_skipped && (result == Result_TransferCancelled || result == Result_UsbCancelled));
             if (m_current_file_deferred && !user_skipped && !cancelled && R_SUCCEEDED(result)) {
                 AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
-                deferred.push_back(i);
+                order.Defer(i);
                 continue;
             }
             RecordPackageResult(i, result, cancelled, user_skipped, plan_sd,
