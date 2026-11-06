@@ -12,6 +12,9 @@ std::atomic<u64> g_busy[LOAD_CORES]{};
 
 namespace {
 
+// a cut-off cell rests back up by 0.2-0.3 V; more than this over a sleep gap is the charger's work
+constexpr int CHARGED_ASLEEP_MV = 400;
+
 void Burn(void* arg) {
     const auto core = reinterpret_cast<uintptr_t>(arg);
     // pinned: the idle-tick call answers only for the core the caller runs on, and a sleeping thread
@@ -445,7 +448,8 @@ void DrainMenu::CalibTick() {
     }
     MeasureOnFull();
     // enough is drained and the charger is in (the console was cut off and now charges): the drain is over, go to the charge
-    if (!m_calib->charge && m_charger && (m_step == wizard::DrainStep::Charging || m_calib->tail) && m_calib->on_drained) {
+    const bool drained = (m_charger && (m_step == wizard::DrainStep::Charging || m_calib->tail)) || m_charged_asleep;
+    if (!m_calib->charge && drained && m_calib->on_drained) {
         const auto go = std::move(m_calib->on_drained);
         m_calib->on_drained = nullptr;
         log_write("[Calib] drain over, %llu s on battery; the charge follows\n", static_cast<unsigned long long>(m_state.drain_s[m_cycle - 1]));
@@ -483,10 +487,13 @@ void DrainMenu::OnSleptAwake(s64 now) {
         std::fflush(m_log);
         fsdevCommitDevice("sdmc");
     }
-    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d): counted as a cut-off, the tail mode from here\n",
-              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0);
-    // with the charger in the next tick ends the drain (on_drained): the zero in cycle 1, then the charge page
-    App::Notify(m_charger ? "The console slept: the drain is over"_i18n : "The console slept: the drain goes on slowly"_i18n);
+    // HOS sleeps at the empty battery, and in the sleep the charger input opens again: 3.20 V before, 4.04 V (97 %) after a
+    // night (2026-11-06). The battery charged, so the drain is over, not to be run once more in the tail mode.
+    m_charged_asleep = m_mv > m_tick_mv + CHARGED_ASLEEP_MV;
+    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d, charged asleep %d): counted as a cut-off\n",
+              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0, m_charged_asleep ? 1 : 0);
+    // with the charger in (or charged in the sleep) the next tick ends the drain (on_drained): the zero in cycle 1, then the charge
+    App::Notify(m_charger || m_charged_asleep ? "The console slept: the drain is over"_i18n : "The console slept: the drain goes on slowly"_i18n);
 }
 
 auto DrainMenu::CalibTitle() const -> std::string {

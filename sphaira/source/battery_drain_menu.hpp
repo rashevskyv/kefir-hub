@@ -165,6 +165,7 @@ private:
     int m_tick_qh{};        // the same at the last tick on battery: the baseline of the charge that comes in after the cut-off
     TimeStamp m_qh_saved{}; // when it was last written to the marker
     bool m_measured{};      // the capacity of this cycle is measured, or refused
+    bool m_charged_asleep{}; // the voltage rose over a sleep gap: the charger charged the battery meanwhile, the drain is over
     TimeStamp m_measure_ts{};
     void MeasureOnFull();
     bool m_stop_ask{};      // the "stop?" question is open: the load is paused

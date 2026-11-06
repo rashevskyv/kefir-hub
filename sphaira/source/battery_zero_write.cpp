@@ -1,4 +1,4 @@
-// Battery calibration, cycle 1 (battery_zero.hpp): the zero is the cut-off voltage in V_empty; the full battery (the charger ended
+// Battery calibration, cycle 1 (battery_zero.hpp): the zero is the cut-off voltage in V_empty and the counters at 1 %; the full battery (the charger ended
 // the charge) gets the factory capacity of this console's battery and the counters at 100 %. Nothing is computed from QH.
 #include "battery_page.hpp"
 #include "battery_internal.hpp"
@@ -33,7 +33,7 @@ auto WriteCounters(FuelGauge& g, const zero::Counters& c, std::string& failed) -
 
 } // namespace
 
-// backs the chip up, writes VE, verifies by reading. `failed` says why when it did not.
+// backs the chip up, writes VE and the counters at 1 %, verifies by reading. `failed` says why when it did not.
 auto WriteZero(int mv, std::string& failed) -> Result {
     if (!zero::InRange(mv)) {
         failed = "The cut-off voltage is outside 3.00 - 3.40 V: not a zero."_i18n;
@@ -49,12 +49,17 @@ auto WriteZero(int mv, std::string& failed) -> Result {
     const auto old_ve = g.Read(MAX17050_VEmpty);
     R_UNLESS(old_ve, Result_ArchiveRead);
     const auto ve = zero::VEmptyWith(*old_ve, mv);
-    log_write("[Zero] cut-off %d mV: V_empty %04X -> %04X (the counters are left to the chip)\n", mv, *old_ve, ve);
+    log_write("[Zero] cut-off %d mV: V_empty %04X -> %04X, the counters to 1 %%\n", mv, *old_ve, ve);
     if (!g.WriteVerify(MAX17050_VEmpty, ve)) {
         failed = "The gauge did not take the empty voltage."_i18n;
         R_THROW(Result_ArchiveRead);
     }
-    R_SUCCEED();
+    // the cut-off is the empty battery: the counters start from it (1 %, not 0: HOS switches off at 0 %), else the chip
+    // keeps the % it had (91 % at a 3.18 V cut-off, 2026-11-06) and the charge seems to start near full
+    const auto full = g.Read(MAX17050_FullCap);
+    const auto nom = g.Read(MAX17050_FullCapNom);
+    R_UNLESS(full && nom && *full && *nom, Result_ArchiveRead);
+    return WriteCounters(g, zero::Counters{true, static_cast<std::uint16_t>(*nom / 100), static_cast<std::uint16_t>(*full / 100), 0x0100}, failed);
 }
 
 // The charger ended the charge: FullCap and FullCapNom = the factory capacity of the battery in PRODINFO (the table the reset

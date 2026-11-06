@@ -17,7 +17,7 @@ inline void drawBatteryLevel(NVGcontext* vg, float x, float y, float w, float h,
     const float edge = x + w * std::clamp(pct, 0.f, 1.f);
     // the waves die out at the empty and the full end, so a full battery is a clean block
     const float amp = dir == 0 ? 0.f : std::min(h * 0.05f, w * 0.5f * std::min(pct, 1.f - pct));
-    const float phase = static_cast<float>(std::fmod(t * 2.5, 6.2831853)) * (dir > 0 ? -1.f : 1.f);
+    const float phase = static_cast<float>(std::fmod(t * 2.5, 6.2831853)) * (dir > 0 ? 1.f : -1.f); // the ripple runs up the edge while charging
     nvgBeginPath(vg);
     nvgMoveTo(vg, x + r, y);
     for (float yy = 0.f; yy <= h; yy += 3.f) {

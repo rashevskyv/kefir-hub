@@ -240,7 +240,8 @@ void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float c
     // the battery
     const float bw = 220.f, bh = 96.f, bx = cx - bw / 2.f - 8.f, by = y0 + 156.f;
     const float pct = std::clamp(info.battery_percent, 0, 100) / 100.f;
-    const auto level = pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
+    const auto level = info.battery_dir > 0 ? nvgRGB(0x4C, 0xAF, 0x50) // charging is green, as on the drain page
+        : pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
                                   : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
     nvgBeginPath(vg);
     nvgRoundedRect(vg, bx, by, bw, bh, 12.f);

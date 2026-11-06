@@ -104,9 +104,9 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
     const float pct = std::clamp(ShownPct(), 0, 100) / 100.f;
-    // green only for a battery that is really full: on the charge page the current must have fallen and the capacity be measured
-    const bool waiting_full = m_calib->charge && m_charger && !m_measured;
-    const auto level = waiting_full ? nvgRGB(0x60, 0xA5, 0xFA)
+    // charging is green (owner, 2026-11-06); the drain goes from green to red with the level
+    const bool charging = m_calib->charge && m_charger;
+    const auto level = charging ? nvgRGB(0x4C, 0xAF, 0x50)
         : pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
                      : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
 
