@@ -1,6 +1,7 @@
 #include "app_frame_buffer.hpp"
 #include "app.hpp"
 #include "fancontrol_cleanup.hpp"
+#include "hbp_bridge.hpp"
 #include "battery_page.hpp"
 #include "nextendo_apply.hpp"
 #include "app_paths.hpp"
@@ -502,6 +503,11 @@ App::App(const char* argv0) {
     }
 
     mark("usb mass storage");
+
+    // a game compress (Game Actions > Compress game) a power cut interrupted: finish or undo it now.
+    if (const auto err = hbp::RecoverIfNeeded(); !err.empty()) {
+        log_write("[hbp] recover failed: %s\n", err.c_str());
+    }
 
     curl::Init();
     nextendo::RefreshServerIpsAsync(); // only while Nextendo is active, once a day

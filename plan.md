@@ -771,6 +771,16 @@ Design rules:
 
 ---
 
+## Phase Z — compressed games through the hacBrewPackLZ engine (decided 2026-11-06)
+Engine: gitlab.com/ismaellozanoperezserrano/hacbrewpacklz v1.4.3 (`sphaira/cmake/hbp`), author agreed to relicense.
+Official updates do not install over a compressed game (the update reads the original base); merging is the only way.
+- [x] Z.1 **Compress game** in Game Actions: estimate (size now / after / saved), confirm with the update warning, replace.
+- [ ] Z.2 **Merged repack detection** (Application version > 0 and NCA fixed-key signature invalid): auto-compress after install.
+- [ ] Z.3 **Opt-in "compress every install"** setting with the update-loss warning (off by default).
+- [ ] Z.4 **[USER]** console check: one small game compressed, launches, a power cut mid-replace recovers.
+
+---
+
 ## Not to do (from audit)
 - No refactor of `App`; no new abstractions, registries, interfaces with one implementation.
 - No file splits for their own sake; the 600-line cap is already met.

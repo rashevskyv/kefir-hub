@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.292)
+set(sphaira_VERSION 0.14.293)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -217,6 +217,7 @@ add_executable(sphaira
     source/ui/menus/game/game_internal.cpp
     source/ui/menus/game/game_details.cpp
     source/ui/menus/game/game_details_ops.cpp
+    source/ui/menus/game/game_compress.cpp
     source/ui/menus/game/game_details_delete.cpp
     source/ui/menus/game/game_save_manager.cpp
     source/ui/menus/game/game_scan.cpp
@@ -556,6 +557,10 @@ set_source_files_properties(source/rar_reader.cpp PROPERTIES
     INCLUDE_DIRECTORIES ${unrar_SOURCE_DIR}
     COMPILE_DEFINITIONS _UNIX
 )
+
+# compress installed games (NCA compression layer) through the hacBrewPackLZ engine; see cmake/hbp/hbp.cmake.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/hbp/hbp.cmake)
+target_link_libraries(sphaira PRIVATE hbp)
 
 if (USE_NEW_ZSTD)
     message(STATUS "USING UPSTREAM ZSTD")

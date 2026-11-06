@@ -10,6 +10,7 @@
 #include "ui/menus/game/game_save_manager.hpp"
 
 #include <array>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -66,6 +67,8 @@ auto MovingToLabel(u8 target) -> std::string;
 auto MovedToLabel(u8 target) -> std::string;
 void DropBoostForMove();
 auto BuildMoveSummary(const title::MovePlan& plan, NcmStorageId target) -> std::string;
+// Game Actions > Compress game (game_compress.cpp). on_done runs after a successful compress.
+void ShowCompressGame(u64 app_id, const std::string& name, std::function<void()> on_done);
 
 auto CollectEntryBadgeLabels(const Entry& e, bool include_storage,
     std::array<const char*, kMaxGameBadges>& out) -> std::size_t;

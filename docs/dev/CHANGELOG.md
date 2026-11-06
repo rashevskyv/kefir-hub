@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.293 — Game Actions > "Compress game" (hacBrewPackLZ engine): estimate the saving, then LZ4-compress the installed game
+Engine built from hacBrewPackLZ v1.4.3 as a static lib (sphaira/cmake/hbp, bridge in source/hbp_bridge.cpp); a power cut mid-compress is finished or undone at start-up. Needs FW 12.0.0+, sigpatches, prod.keys; official updates no longer install over a compressed game. License: the author agreed to relicense (GPL-2.0-only upstream, change pending).
+host tests: pass (quick), nro: built, switch: pending (estimate, compress, play, power-cut recovery)
+
 ## v0.14.292 — Battery calibration: cycle 2 is a required step again (drain and charge, nothing written), then the report
 Cycle 1 no longer jumps to the report; pages say "Calibration cycle 1/2" and "2/2"; charge texts say the charger ends the charge (no more "measures the capacity"). A marker already at Report stays there: Actions > Check runs the same cycle 2.
 host tests: pass (quick), nro: not built, switch: pending (cycle 1 -> cycle 2 -> report on the console)

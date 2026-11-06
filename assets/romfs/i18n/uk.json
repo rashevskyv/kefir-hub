@@ -4080,5 +4080,17 @@
   "When it does not start any more: plug the charger in and switch it on. The Hub shows the charge and notes the full battery by itself when the charger ends the charge.": "Якщо консоль більше не вмикається: підключіть зарядку й увімкніть її. Hub показує заряд і сам позначить повну батарею, коли зарядний пристрій завершить заряд.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. The Hub then goes on with the charge and writes nothing: the console learns by itself. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Коли консоль вимкнеться, це нормально. Увімкніть її знову (із зарядкою) і самі відкрийте Kefir Hub. Hub продовжить заряд і нічого не запише: консоль калібрується сама. Консоль може увімкнутися не одразу: із зарядкою це може тривати 10–15 хвилин. Зачекайте, не здавайтеся.",
   "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile.": "заряджання. Не виймайте зарядку, доки зарядний пристрій не завершить заряд: тоді Hub продовжить сам. Тим часом консоллю можна користуватися.",
-  "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in.": "зарядний пристрій ще заряджає, тож батарея ще не повна. Hub чекає, доки зарядний пристрій завершить заряд, і продовжить сам. Не виймайте зарядку."
+  "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in.": "зарядний пристрій ще заряджає, тож батарея ще не повна. Hub чекає, доки зарядний пристрій завершить заряд, і продовжить сам. Не виймайте зарядку.",
+  "Compress game": "Стиснути гру",
+  "Estimate the saving, then store the game data LZ4-compressed. The game plays the same and takes less space.": "Оцінити економію, потім зберегти дані гри стиснутими LZ4. Гра працює так само й займає менше місця.",
+  "Estimating": "Оцінка",
+  "Compressing": "Стиснення",
+  "Size now": "Розмір зараз",
+  "After compressing": "Після стиснення",
+  "Space saved": "Звільниться",
+  "The update becomes part of the game.": "Оновлення стане частиною гри.",
+  "Official updates do not install over a compressed game. Install the original game again first.": "Офіційні оновлення не встановлюються поверх стиснутої гри. Спершу знову встановіть оригінальну гру.",
+  "Needs firmware 12.0.0+ and sigpatches.": "Потрібні прошивка 12.0.0+ і sigpatches.",
+  "This game is already compressed": "Ця гра вже стиснута",
+  "Compressed, freed": "Стиснуто, звільнено"
 }

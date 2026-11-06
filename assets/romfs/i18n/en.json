@@ -4078,5 +4078,17 @@
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. The Hub then goes on with the charge and writes nothing: the console learns by itself. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. The Hub then goes on with the charge and writes nothing: the console learns by itself. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.",
   "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile.": "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile.",
   "the battery is full.": "the battery is full.",
-  "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in.": "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in."
+  "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in.": "the charger still charges, so the battery is not full yet. The Hub waits until the charger ends the charge and goes on by itself. Keep the charger in.",
+  "Compress game": "Compress game",
+  "Estimate the saving, then store the game data LZ4-compressed. The game plays the same and takes less space.": "Estimate the saving, then store the game data LZ4-compressed. The game plays the same and takes less space.",
+  "Estimating": "Estimating",
+  "Compressing": "Compressing",
+  "Size now": "Size now",
+  "After compressing": "After compressing",
+  "Space saved": "Space saved",
+  "The update becomes part of the game.": "The update becomes part of the game.",
+  "Official updates do not install over a compressed game. Install the original game again first.": "Official updates do not install over a compressed game. Install the original game again first.",
+  "Needs firmware 12.0.0+ and sigpatches.": "Needs firmware 12.0.0+ and sigpatches.",
+  "This game is already compressed": "This game is already compressed",
+  "Compressed, freed": "Compressed, freed"
 }

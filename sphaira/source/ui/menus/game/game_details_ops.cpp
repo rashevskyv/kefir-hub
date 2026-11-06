@@ -379,6 +379,9 @@ void DbiDetailsMenu::ShowGameActions() {
         options->Add<SidebarEntryCallback>("Create repack"_i18n, [this](){
             ShowCreateRepackSidebar();
         }, true, "Export selected installed components as one merged NSP."_i18n)->SetIcon(ActionIcon::Compress);
+        options->Add<SidebarEntryCallback>("Compress game"_i18n, [this](){
+            ShowCompressGame(CurrentEntry().app_id, CurrentEntry().GetName(), [this](){ LoadGame(); });
+        }, true, "Estimate the saving, then store the game data LZ4-compressed. The game plays the same and takes less space."_i18n)->SetIcon(ActionIcon::Compress);
         options->Add<SidebarEntryCallback>(CurrentEntry().mods_folder ? "Open mods folder"_i18n : "Create mods folder"_i18n, [this](){
             OpenModsFolder();
         }, "LayeredFS uses this Atmosphere folder to replace game files with mods. Creating an empty folder does not install a mod."_i18n)->SetIcon(ActionIcon::Folder);
