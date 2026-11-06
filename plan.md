@@ -771,13 +771,21 @@ Design rules:
 
 ---
 
-## Phase Z — compressed games through the hacBrewPackLZ engine (decided 2026-11-06)
-Engine: gitlab.com/ismaellozanoperezserrano/hacbrewpacklz v1.4.3 (`sphaira/cmake/hbp`), author agreed to relicense.
-Official updates do not install over a compressed game (the update reads the original base); merging is the only way.
+## Phase Z — compressed games through the hacBrewPackLZ engine (decided 2026-11-06, PAUSED until engine 1.5.0)
+Engine pinned to v1.4.2 (`b32546855b`, `sphaira/cmake/hbp`); author agreed to relicense. 1.4.x has open bugs (SD/emuMMC
+corruption, "update required" prompt, save error, journal errors); the author says wait for 1.5.0. A daily scheduled task
+checks GitLab tags. Design + thread findings: https://claude.ai/artifact/6ZyH6sWnYzsr37qZxkptMk
+Phase-2 code (setting, `compress_policy.hpp`, `yati_compress.cpp`, test) is parked in `scratch/hbp-phase2/`.
 - [x] Z.1 **Compress game** in Game Actions: estimate (size now / after / saved), confirm with the update warning, replace.
-- [ ] Z.2 **Merged repack detection** (Application version > 0 and NCA fixed-key signature invalid): auto-compress after install.
-- [ ] Z.3 **Opt-in "compress every install"** setting with the update-loss warning (off by default).
-- [ ] Z.4 **[USER]** console check: one small game compressed, launches, a power cut mid-replace recovers.
+- [ ] Z.2 Re-pin the engine to 1.5.0; read its update handling before building more.
+- [ ] Z.3 **Several games at once**: multi-select in the games list, compressed one after another, one summary at the end.
+- [ ] Z.4 After a compress, run the patch launch-version reset (`ResetPatchLaunchRequiredVersion`, as yati does after a
+      patch): the "update required" prompt is most likely the game asking for its update (some languages say "system").
+- [ ] Z.5 **Compress on install** setting (Off default / Only merged repacks / Everything, asks first), compressing ONCE at
+      session end: file queue end, DBI backend last file, MTP screen left or "Compress now"; pending list on SD.
+- [ ] Z.6 Block an update for a compressed base before any write (dialog "Pick the original game file"; MTP: refuse + notify).
+- [ ] Z.7 Thread fixes: keys-too-old text, < 5 % gain warning (Back default; auto modes skip), temp space shown and checked.
+- [ ] Z.8 **[USER]** console check: game without update, base + update, frequent-save game, game with DLC, power cut.
 
 ---
 

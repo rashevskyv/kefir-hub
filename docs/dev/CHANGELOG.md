@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## unreleased
+- Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
+
 ## v0.14.295 — Battery calibration: the zero sets the counters to 1 %, a battery charged in the sleep ends the drain, charging is green
 The zero writes V_empty and the counters at 1 % (the chip said 91 % at a 3.18 V cut-off). HOS sleeps at the empty battery and the charger input opens in the sleep: a voltage 0.4 V+ higher after the gap ends the drain (zero from the voltage before the sleep, then the charge) instead of a second tail drain from 97 %. The charge level is green and its ripple runs up (also on the screensaver).
 host tests: pass (quick), nro: not built, switch: pending (zero -> 1 %, sleep at the cut-off on the charger, charge colour)
@@ -12,8 +15,8 @@ The page names the cycle (1/2) and the step; the old text about measuring the ca
 host tests: pass (quick), nro: not built, switch: pending (zero page -> plug the charger -> the charge page opens by itself)
 
 ## v0.14.293 — Game Actions > "Compress game" (hacBrewPackLZ engine): estimate the saving, then LZ4-compress the installed game
-Engine built from hacBrewPackLZ v1.4.3 as a static lib (sphaira/cmake/hbp, bridge in source/hbp_bridge.cpp); a power cut mid-compress is finished or undone at start-up. Needs FW 12.0.0+, sigpatches, prod.keys; official updates no longer install over a compressed game. License: the author agreed to relicense (GPL-2.0-only upstream, change pending).
-host tests: pass (quick), nro: built, switch: pending (estimate, compress, play, power-cut recovery)
+Engine built from hacBrewPackLZ v1.4.2 (pin b32546855b; was wrongly noted as 1.4.3) as a static lib (sphaira/cmake/hbp, bridge in source/hbp_bridge.cpp); a power cut mid-compress is finished or undone at start-up. Needs FW 12.0.0+, sigpatches, prod.keys; official updates no longer install over a compressed game. License: the author agreed to relicense (GPL-2.0-only upstream, change pending).
+host tests: pass (quick), nro: built before the bridge moved to source/, not rebuilt since, switch: pending (estimate, compress, play, power-cut recovery)
 
 ## v0.14.292 — Battery calibration: cycle 2 is a required step again (drain and charge, nothing written), then the report
 Cycle 1 no longer jumps to the report; pages say "Calibration cycle 1/2" and "2/2"; charge texts say the charger ends the charge (no more "measures the capacity"). A marker already at Report stays there: Actions > Check runs the same cycle 2.

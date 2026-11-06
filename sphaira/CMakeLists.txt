@@ -410,7 +410,6 @@ add_executable(sphaira
     source/yati/yati.cpp
     source/yati/yati_analysis.cpp
     source/yati/yati_pipeline.cpp
-    source/yati/yati_compress.cpp
     source/yati/yati_metadata.cpp
     source/yati/container/nsp.cpp
     source/yati/container/xci.cpp

@@ -7,7 +7,7 @@
 
 FetchContent_Declare(hbp
     GIT_REPOSITORY https://gitlab.com/ismaellozanoperezserrano/hacbrewpacklz.git
-    GIT_TAG b32546855b33b7b868e9c5ea9635225e924e4caf # v1.4.3
+    GIT_TAG b32546855b33b7b868e9c5ea9635225e924e4caf # v1.4.2
     # no CMakeLists.txt upstream: the target is defined below.
     SOURCE_SUBDIR NONE
 )
