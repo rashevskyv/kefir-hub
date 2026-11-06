@@ -113,7 +113,7 @@ struct DrainMenu final : ui::menu::MenuBase {
 
     auto Since(const std::uint64_t at) const -> u64;
 
-    // The charts keep the whole drain: a point is taken every m_stride samples; when a chart is full, every two
+    // The power, voltage and temperature charts keep the whole drain (the CPU / GPU load only the last minute): a point is taken every m_stride samples; when a chart is full, every two
     // neighbours merge into their mean and the stride doubles, so the left end stays on screen as the right end grows.
     void Push(std::deque<float>& d, float v);
     void Squash();

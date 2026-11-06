@@ -85,7 +85,7 @@ void DrainMenu::Push(std::deque<float>& d, float v) {
 }
 
 void DrainMenu::Squash() {
-    for (auto* d : {&m_cpu[0], &m_cpu[1], &m_cpu[2], &m_gpu, &m_watts, &m_volts, &m_temps}) {
+    for (auto* d : {&m_watts, &m_volts, &m_temps}) {
         std::deque<float> half;
         for (size_t k = 0; k + 1 < d->size(); k += 2) {
             half.push_back(((*d)[k] + (*d)[k + 1]) / 2.f);
@@ -97,18 +97,25 @@ void DrainMenu::Squash() {
 
 void DrainMenu::SampleLive() {
     m_sample_n++;
+    // the load is live, not a history: the last LIVE_N samples (one minute) scroll to the left
+    const auto Roll = [](std::deque<float>& d, float v) {
+        d.push_back(v);
+        if (d.size() > LIVE_N) {
+            d.pop_front();
+        }
+    };
     const u64 tick = armGetSystemTick();
     for (int i = 0; i < LOAD_CORES; i++) {
         const u64 busy = g_busy[i];
         if (m_tick && tick > m_tick) {
-            Push(m_cpu[i], std::min(100.f, (busy - m_busy[i]) * 100.f / (tick - m_tick)));
+            Roll(m_cpu[i], std::min(100.f, (busy - m_busy[i]) * 100.f / (tick - m_tick)));
         }
         m_busy[i] = busy;
     }
     m_tick = tick;
     u32 gpu{};
     if (m_gpu_fd_ok && R_SUCCEEDED(nvIoctl(m_gpu_fd, NVGPU_GET_GPU_LOAD, &gpu)) && gpu <= 1000) {
-        Push(m_gpu, gpu / 10.f);
+        Roll(m_gpu, gpu / 10.f);
         if (g_load && gpu < GPU_BUSY) {
             m_circles = std::min(CIRCLES, m_circles + 2);
         }
