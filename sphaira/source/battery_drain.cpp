@@ -280,8 +280,10 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     // The calibration's drain with the charger left in (owner, 2026-11-01): the charger's input is cut, so the console drains on
     // the battery. Unplugged: the input is given back and the drain is the old one. Plugged in again: cut again (HizTick also
     // sets it again when the plug reset the chip). Not in a dock: the dock's power is not ours to cut.
-    if (m_calib && !m_calib->charge) {
-        charge::HizSet(charger != PsmChargerType_Unconnected && appletGetOperationMode() != AppletOperationMode_Console);
+    // The charge page gives the input back: a cut left by the drain page under it was renewed here and the battery drained on
+    // the charge page (3.62 -> 3.60 V, "charger disconnected", 2026-11-06)
+    if (m_calib) {
+        charge::HizSet(!m_calib->charge && charger != PsmChargerType_Unconnected && appletGetOperationMode() != AppletOperationMode_Console);
     }
     if (charge::HizActive()) {
         charge::HizTick(m_mv, m_ma, m_pct); // the live current: the average still holds the charge of the seconds before the cut

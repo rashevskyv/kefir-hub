@@ -31,9 +31,11 @@ auto WriteCounters(FuelGauge& g, const zero::Counters& c, std::string& failed) -
     R_SUCCEED();
 }
 
+constexpr unsigned NEAR_EMPTY_PCT = 10;
+
 } // namespace
 
-// backs the chip up, writes VE and the counters at 1 %, verifies by reading. `failed` says why when it did not.
+// backs the chip up, writes VE and (when the chip is not near empty) the counters at 1 %, verifies by reading. `failed` says why when it did not.
 auto WriteZero(int mv, std::string& failed) -> Result {
     if (!zero::InRange(mv)) {
         failed = "The cut-off voltage is outside 3.00 - 3.40 V: not a zero."_i18n;
@@ -49,13 +51,18 @@ auto WriteZero(int mv, std::string& failed) -> Result {
     const auto old_ve = g.Read(MAX17050_VEmpty);
     R_UNLESS(old_ve, Result_ArchiveRead);
     const auto ve = zero::VEmptyWith(*old_ve, mv);
-    log_write("[Zero] cut-off %d mV: V_empty %04X -> %04X, the counters to 1 %%\n", mv, *old_ve, ve);
+    log_write("[Zero] cut-off %d mV: V_empty %04X -> %04X\n", mv, *old_ve, ve);
     if (!g.WriteVerify(MAX17050_VEmpty, ve)) {
         failed = "The gauge did not take the empty voltage."_i18n;
         R_THROW(Result_ArchiveRead);
     }
-    // the cut-off is the empty battery: the counters start from it (1 %, not 0: HOS switches off at 0 %), else the chip
-    // keeps the % it had (91 % at a 3.18 V cut-off, 2026-11-06) and the charge seems to start near full
+    // the cut-off is the empty battery: a chip far from it gets the counters at 1 % (not 0: HOS switches off at 0 %), else it
+    // keeps the % it had (91 % at a 3.18 V cut-off, 2026-11-06) and the charge seems to start near full. A chip already near
+    // empty (5 % after the sleep, owner 2026-11-06) keeps its own %: the charge goes on from it.
+    if (const auto soc = g.Read(MAX17050_RepSOC); soc && static_cast<unsigned>(*soc >> 8) <= NEAR_EMPTY_PCT) {
+        log_write("[Zero] the chip says %u %%: near empty, the counters stay\n", static_cast<unsigned>(*soc >> 8));
+        R_SUCCEED();
+    }
     const auto full = g.Read(MAX17050_FullCap);
     const auto nom = g.Read(MAX17050_FullCapNom);
     R_UNLESS(full && nom && *full && *nom, Result_ArchiveRead);

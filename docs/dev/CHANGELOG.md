@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Game names from a NACP v2 (Zelda BotW showed "E"): The title cache took its own language entry from the raw NACP, which in v2 is junk; Hub now writes the decoded name into the copy it caches, also tries v2 when ns gives a one-letter name, and reloads a cached one-letter name. host tests: pass (quick), nro: not built, switch: pending (Games: BotW tile shows the full name; log has "[nacp v2] decoded name" for 01007EF00011E000 on the first launch)
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.302 — Battery calibration: the charge page gives the charger input back, a zero near empty keeps the chip's %
+The drain page's input cut stayed on under the charge page (HizTick renewed it): the battery drained there, "charger disconnected", arrow down (v0.14.301). The zero writes the counters at 1 % only when the chip says more than 10 % (5 % after the sleep goes on from 5 %).
+host tests: pass (quick), nro: not built, switch: pending (charge page after the zero: voltage rises, arrow up, green; zero at 5 % keeps 5 %)
+
 ## v0.14.301 — The install queue never waits for a question; a Resolve page after the queue
 DBI queue (USB, local, Install recursively): "Reinstall?", an update older than the console's and Ask-mode duplicates no longer show a box; the file goes to the end of the queue at once ("Asked after the queue"). After the queue the page "Skipped during the queue" lists one row per game (on the console / in the queue, A Change, X Resolve, B Skip all; default keeps the console), then the chosen files install without questions. MTP/FTP/web cannot defer: the box waits 10 s (now also for "Reinstall?", which waited forever). test_update_choice drives whole queues through the page.
 host tests: pass (quick; full: same 3 failures as before — en/uk parity 2 old uk keys, http fixture, 6 old doc labels), nro: not built (build stopped by the user), switch: pending (Resolve page look and buttons, USB queue with a deferred file)
