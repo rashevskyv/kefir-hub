@@ -245,7 +245,7 @@ void WriteZeroThenCharge(Marker m) {
     }
     auto failed = std::make_shared<std::string>();
     auto marker = std::make_shared<Marker>(std::move(m));
-    App::Push<ui::ProgressBox>(0, "Setting the zero"_i18n, std::to_string(mv) + " mV", [failed, mv](auto) -> Result {
+    App::Push<ui::ProgressBox>(0, "Writing the empty battery as 0 %"_i18n, std::to_string(mv) + " mV", [failed, mv](auto) -> Result {
         return zero_write::WriteZero(mv, *failed);
     }, [failed, marker, mv](Result rc) {
         if (R_FAILED(rc)) {
@@ -258,16 +258,17 @@ void WriteZeroThenCharge(Marker m) {
         SaveMarker(*marker);
         char v[16];
         std::snprintf(v, sizeof(v), "%.2f", mv / 1000.0);
-        App::Push<cu::Page>("The zero"_i18n, StepLabel(2),
+        // the charge starts by itself when the charger goes in; with the charger in already, Go on
+        App::Push<cu::Page>("Empty battery is now 0 %"_i18n, CycleName(1) + " · " + StepLabel(2),
             std::vector<cu::Line>{
                 cu::Ok("The console switched off at"_i18n + " " + v + " V. " + "This is the empty battery."_i18n),
                 cu::Ok("Written into the gauge: this voltage is now 0 %."_i18n),
-                cu::Item("Now plug the charger in and charge. When the battery takes no more current, the Hub measures its capacity and shows the report."_i18n),
+                cu::Item("Next in this cycle: the charge. Plug the charger in and the charge starts by itself. If the charger is in already, press Go on."_i18n),
             },
             "Go on"_i18n, [marker](cu::Page& p) {
                 p.SetPop();
                 StartChargeRun(*marker);
-            }, cu::Page::Act{}, std::function<bool()>{}, 2);
+            }, cu::Page::Act{}, std::function<bool()>([]() { return !ChargerIn(); }), 2);
     });
 }
 
@@ -471,7 +472,7 @@ auto Resume(Marker m) -> bool {
             SaveMarker(m);
             if (zero_due) {
                 // switched on without the charger: the zero is written now, the drain goes on in the tail mode
-                App::Notify("The console switched off: setting the zero"_i18n);
+                App::Notify("The console switched off: the empty battery becomes 0 %"_i18n);
                 WriteZeroThenCharge(m);
                 return true;
             }
@@ -481,7 +482,7 @@ auto Resume(Marker m) -> bool {
             return true;
         case Found::CutoffCharging:
             if (zero_due) {
-                App::Notify("The console switched off: setting the zero"_i18n);
+                App::Notify("The console switched off: the empty battery becomes 0 %"_i18n);
                 WriteZeroThenCharge(m);
                 return true;
             }
@@ -592,7 +593,7 @@ void ShowSteps() {
     rows.push_back({"1. Reset the gauge"_i18n, m->step == Step::Reset ? "next: backup, then the factory model; no charging needed"_i18n : std::string{}, at(Step::Reset), open(StartResetRun)});
     // the check runs on the cycle's row
     rows.push_back({"2. Two cycles: drain and charge"_i18n,
-        IsCycle(m->step) ? CycleName(CycleOf(m->step)) + ": " + CycleText(*m) : m->zero_at ? "the zero"_i18n + ": " + zero_v : std::string{},
+        IsCycle(m->step) ? CycleName(CycleOf(m->step)) + ": " + CycleText(*m) : m->zero_at ? "empty battery (0 %)"_i18n + ": " + zero_v : std::string{},
         IsCycle(m->step) ? Mark::Active : at(Step::Cycle1), open(ShowCyclePage)});
     rows.push_back({"3. Report"_i18n, {}, static_cast<int>(m->step) >= static_cast<int>(Step::Transfer) ? Mark::Done : m->step == Step::Report ? Mark::Active : Mark::Locked,
         open(ShowReport)});

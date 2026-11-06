@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.293)
+set(sphaira_VERSION 0.14.294)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -410,6 +410,7 @@ add_executable(sphaira
     source/yati/yati.cpp
     source/yati/yati_analysis.cpp
     source/yati/yati_pipeline.cpp
+    source/yati/yati_compress.cpp
     source/yati/yati_metadata.cpp
     source/yati/container/nsp.cpp
     source/yati/container/xci.cpp

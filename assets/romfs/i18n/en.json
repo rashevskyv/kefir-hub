@@ -4029,7 +4029,6 @@
   "The percent right after the reset is taken from the voltage: while the charger charges it can be too high. It is put right at the switch-off, when the zero is written.": "The percent right after the reset is taken from the voltage: while the charger charges it can be too high. It is put right at the switch-off, when the zero is written.",
   "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero.": "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero.",
   "Calibration cycle": "Calibration cycle",
-  "The zero": "The zero",
   "Now plug the charger in and charge. When the battery takes no more current, the Hub measures its capacity and shows the report.": "Now plug the charger in and charge. When the battery takes no more current, the Hub measures its capacity and shows the report.",
   "Step by step: the reset, one cycle, report.": "Step by step: the reset, one cycle, report.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then one cycle: the battery is run down until the console switches itself off, and charged until it takes no more current. The voltage at the switch-off is written into the gauge as the zero: the real empty battery. The charge that comes in from the switch-off to the full battery is the real capacity: it is written into the gauge too.": "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then one cycle: the battery is run down until the console switches itself off, and charged until it takes no more current. The voltage at the switch-off is written into the gauge as the zero: the real empty battery. The charge that comes in from the switch-off to the full battery is the real capacity: it is written into the gauge too.",
@@ -4090,5 +4089,17 @@
   "Official updates do not install over a compressed game. Install the original game again first.": "Official updates do not install over a compressed game. Install the original game again first.",
   "Needs firmware 12.0.0+ and sigpatches.": "Needs firmware 12.0.0+ and sigpatches.",
   "This game is already compressed": "This game is already compressed",
-  "Compressed, freed": "Compressed, freed"
+  "Compressed, freed": "Compressed, freed",
+  "Compress on install": "Compress on install",
+  "Only merged repacks": "Only merged repacks",
+  "Everything": "Everything",
+  "Store new installs LZ4-compressed, so they take less space. Only merged repacks: games with the update built in. They take no official update anyway, so nothing is lost. Everything: every new game, but official updates then no longer install over it. To update or undo: delete the game and install the original file again. Needs firmware 12.0.0+ and sigpatches. The install takes longer. One game can also be compressed later: Game Actions > Compress game.": "Store new installs LZ4-compressed, so they take less space. Only merged repacks: games with the update built in. They take no official update anyway, so nothing is lost. Everything: every new game, but official updates then no longer install over it. To update or undo: delete the game and install the original file again. Needs firmware 12.0.0+ and sigpatches. The install takes longer. One game can also be compressed later: Game Actions > Compress game.",
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.",
+  "Turn on": "Turn on",
+  "Installed, but not compressed:": "Installed, but not compressed:",
+  "Empty battery is now 0 %": "Empty battery is now 0 %",
+  "Next in this cycle: the charge. Plug the charger in and the charge starts by itself. If the charger is in already, press Go on.": "Next in this cycle: the charge. Plug the charger in and the charge starts by itself. If the charger is in already, press Go on.",
+  "The console switched off: the empty battery becomes 0 %": "The console switched off: the empty battery becomes 0 %",
+  "Writing the empty battery as 0 %": "Writing the empty battery as 0 %",
+  "empty battery (0 %)": "empty battery (0 %)"
 }
