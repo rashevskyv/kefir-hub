@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.296 — Restore of several saves asks first, then scans the backups
+"Saves to restore: N" (No / Without a copy / Restore) comes right after the Restore choice; the backup scan runs after the answer and the restore starts without a second question (a user picker on the way still asks again at the end).
+host tests: pass (quick), nro: not built, switch: pending (several saves: question before the wait, no second question)
+
 ## v0.14.295 — Battery calibration: the zero sets the counters to 1 %, a battery charged in the sleep ends the drain, charging is green
 The zero writes V_empty and the counters at 1 % (the chip said 91 % at a 3.18 V cut-off). HOS sleeps at the empty battery and the charger input opens in the sleep: a voltage 0.4 V+ higher after the gap ends the drain (zero from the voltage before the sleep, then the charge) instead of a second tail drain from 97 %. The charge level is green and its ripple runs up (also on the screensaver).
 host tests: pass (quick), nro: not built, switch: pending (zero -> 1 %, sleep at the cut-off on the charger, charge colour)

@@ -249,7 +249,11 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
                 break;
 
             case ActionType::Restore:
-                RestoreBackupGroups(actual_seeds, false, true);
+                if (actual_seeds.size() > 1) {
+                    ConfirmBatchRestore(actual_seeds.size(), [this, actual_seeds]() { RestoreBackupGroups(actual_seeds, false, true); });
+                } else {
+                    RestoreBackupGroups(actual_seeds, false, true);
+                }
                 break;
 
             case ActionType::RestoreForUser:

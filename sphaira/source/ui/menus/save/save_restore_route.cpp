@@ -139,6 +139,12 @@ auto Menu::MakeBackupGroupFromLiveEntry(const Entry& live, const fs::FsPath& bac
 void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter) {
     entries = ExpandGameGroups(entries);
     if (entries.empty()) return;
+    if (entries.size() > 1 && !m_batch_restore_copy) {
+        ConfirmBatchRestore(entries.size(), [this, entries, location, backup_root, source_filter]() {
+            StartRestore(entries, location, backup_root, source_filter);
+        });
+        return;
+    }
 
     if (m_category == Category::Backups || entries.front().is_backup) {
         RestoreBackupGroups(std::move(entries), false, location, backup_root);

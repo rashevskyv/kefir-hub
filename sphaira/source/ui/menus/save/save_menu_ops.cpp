@@ -109,7 +109,39 @@ auto BackupBytes(fs::Fs* fs, const fs::FsPath& path, bool is_directory) -> s64 {
     return size;
 }
 
+// the lines of the restore question that do not name a game.
+auto RestoreNotes(bool many, bool replaces_live) -> std::string {
+    std::string notes;
+    if (many) {
+        notes += "If a save cannot be restored, the others still are; the ones that failed are listed at the end."_i18n + "\n";
+    }
+    if (replaces_live) {
+        notes += "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery)."_i18n + "\n";
+    }
+    // started as a title, Kefir Hub is the running game itself; only a game suspended under the
+    // Homebrew Menu or the Album can hold a save open.
+    if (App::IsApplet() && account_link::HasSuspendedApplication()) {
+        notes += "A game is suspended in the background. Close it first: its save cannot be replaced while it runs."_i18n;
+    }
+    return notes;
+}
+
 } // namespace
+
+// the question comes before the backup scan, so the wait is after the answer, not before it.
+void Menu::ConfirmBatchRestore(size_t count, std::function<void()> scan) {
+    const auto prompt = "Saves to restore: "_i18n + std::to_string(count) + "\n\n" + RestoreNotes(true, true);
+    App::Push<OptionBox>(prompt, "No"_i18n, "Without a copy"_i18n, "Restore"_i18n, 2, [this, scan](auto choice) {
+        if (!choice || *choice == 0) {
+            return;
+        }
+        // ShowRestoreConfirm takes the answer when the scan reaches it in this call; a question on the
+        // way (a user picker) answers later, and then ShowRestoreConfirm asks again.
+        m_batch_restore_copy = *choice == 2;
+        scan();
+        m_batch_restore_copy.reset();
+    });
+}
 
 // One confirmation for the whole restore: which game goes to which user.
 void Menu::ShowRestoreConfirm(
@@ -117,6 +149,13 @@ void Menu::ShowRestoreConfirm(
     std::shared_ptr<std::vector<Entry>> targets,
     const dump::DumpLocation& location,
     const fs::FsPath& backup_root) {
+
+    if (m_batch_restore_copy) { // asked already, before the scan
+        const bool make_safety_copy = *m_batch_restore_copy;
+        m_batch_restore_copy.reset();
+        ExecuteRestore(sources, targets, location, backup_root, make_safety_copy);
+        return;
+    }
 
     const auto accounts = App::GetAccountList();
     // the game name comes with the control data; without it the list showed bare title ids.
@@ -146,18 +185,8 @@ void Menu::ShowRestoreConfirm(
         prompt += "  " + std::string(GetBackupSourceLabel(src.backup_source)) + ", " + FormatBackupTimestamp(src.backup_members.front().ts, false) + "\n\n";
     }
 
-    if (sources->size() > 1) {
-        prompt += "If a save cannot be restored, the others still are; the ones that failed are listed at the end."_i18n + "\n";
-    }
     const bool replaces_live = std::any_of(targets->begin(), targets->end(), [](const Entry& dst) { return !dst.is_planned_create; });
-    if (replaces_live) {
-        prompt += "Before a save is replaced, a copy of it is kept on the microSD card (/dumps/recovery)."_i18n + "\n";
-    }
-    // started as a title, Kefir Hub is the running game itself; only a game suspended under the
-    // Homebrew Menu or the Album can hold a save open.
-    if (App::IsApplet() && account_link::HasSuspendedApplication()) {
-        prompt += "A game is suspended in the background. Close it first: its save cannot be replaced while it runs."_i18n;
-    }
+    prompt += RestoreNotes(sources->size() > 1, replaces_live);
 
     const auto run = [this, sources, targets, location, backup_root](bool make_safety_copy) {
         ExecuteRestore(sources, targets, location, backup_root, make_safety_copy);

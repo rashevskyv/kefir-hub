@@ -271,6 +271,8 @@ private:
         const dump::DumpLocation& location,
         const fs::FsPath& backup_root,
         bool make_safety_copy = true);
+    // several saves: ask first, then run the slow backup scan in `scan`; the answer skips ShowRestoreConfirm.
+    void ConfirmBatchRestore(size_t count, std::function<void()> scan);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
     void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt);
@@ -356,6 +358,7 @@ private:
     bool m_dirty{};
     mutable std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()
     mutable bool m_backup_cache_valid{};
+    std::optional<bool> m_batch_restore_copy{}; // set only while ConfirmBatchRestore runs its scan
     bool m_backup_scan_pending{}; // the current view needs the library; Update() starts the scan
     struct BackupScanJob; // thread + progress, see save_menu_scan.cpp
     std::unique_ptr<BackupScanJob> m_backup_scan{};
