@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Atsakymo nėra: konsolėje paliktas naujesnis atnaujinimas",
   "a newer update is on the console": "konsoleje yra naujesnis naujinimas",
   "another update of this game was chosen": "pasirinktas kitas šio žaidimo atnaujinimas",
-  "a newer update is in the queue": "naujesnis atnaujinimas yra eilėje"
+  "a newer update is in the queue": "naujesnis atnaujinimas yra eilėje",
+  "Install ": "Diegti ",
+  "Asked after the queue: ": "Po eilės: ",
+  "In the queue: ": "Eilėje: ",
+  "Already installed: ": "Jau įdiegta: ",
+  "Change": "Keisti",
+  "Keep ": "Išlaikyti ",
+  "Skipped during the queue": "Praleista eilėje",
+  "Skip all": "Praleisti viską",
+  "On the console: ": "Konsolėje: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Eilė nelaukė šių klausimų. Pasirinkite kiekvienam žaidimui ir paspauskite X.",
+  "Resolve": "Išspręsti",
+  "Queue done. Choose what to do with the skipped files.": "Eilė baigta. Pasirinkite, ką daryti su praleistais failais."
 }

@@ -131,12 +131,14 @@ struct InstallSession : MenuBase, InstallProgress {
     void InstallYield() override;
     bool PromptReinstall(const std::string& title_name) override;
     bool PromptDowngrade(const std::string& title_name, u32 installed, u32 incoming) override;
-    // shows "<title>\n\n<question>" with No / Yes on the UI thread and waits; one answer per package.
+    // "Already installed. Reinstall?" via AskOrDefer; one answer per package.
     bool Ask(const std::string& title_name, const std::string& question);
-    // the same question, but it waits only a short time (see m_ask_mode): nullopt = no answer yet.
-    std::optional<bool> AskUpdate(const std::string& question);
+    // A queue does not wait: in its first pass the question is noted for the Resolve page and
+    // the file goes to the end. Stream: a box for 10 s. nullopt = no answer (noted or expired).
+    std::optional<bool> AskOrDefer(const std::string& question, PendingInstall pending);
+    // after the first pass: the Resolve page for the noted questions; waits for its button.
+    void ResolvePending();
     // before queue entry i starts: false = skipped (logged), nullopt = moved to the end of the queue.
-    // final_pass: the entry already went to the end once, so the question waits for the answer.
     std::optional<bool> CheckQueuedUpdate(size_t i, bool final_pass);
     void OnInstallSkipped() override;
     void OnCompatibilityWarning(const CompatibilityWarning& warning) override;
@@ -260,18 +262,22 @@ protected:
         Widget* box{};                // the shown box, touched only on the UI thread
     };
     std::shared_ptr<PromptData> m_prompt_data{};
+    // UI thread: shows a posted question box, or the Resolve page.
+    void ShowPrompts(const std::shared_ptr<PromptData>& prompt, const std::shared_ptr<ResolveData>& resolve);
     std::optional<bool> m_current_file_reinstall_choice{};
     bool m_current_file_skipped{false};
 
-    // how AskUpdate treats no answer (update_choice.hpp).
+    // how AskOrDefer treats a question (update_choice.hpp).
     AskMode m_ask_mode{AskMode::Stream};
-    // questions of files moved to the end of the queue, by file name (worker thread only).
-    std::unordered_map<std::string, std::shared_ptr<PromptData>> m_deferred_prompts{};
+    // questions the first pass did not wait for, and their answers from the Resolve page (worker thread only).
+    std::vector<PendingInstall> m_pending{};
+    std::unordered_map<size_t, bool> m_resolved{};
+    std::shared_ptr<ResolveData> m_resolve_data{}; // the open Resolve page, guarded by m_mutex
     // the update version the user chose for a game, by title id (worker thread only).
     std::unordered_map<u64, u32> m_update_picks{};
     int m_current_update_count{};      // ticked updates of this game in the queue, 0 unknown
     bool m_current_update_picked{};    // the user chose this update in the queue
-    bool m_current_file_deferred{};    // AskUpdate got no answer: install the file later
+    bool m_current_file_deferred{};    // a question was noted: install the file after the Resolve page
 
     s64 m_plan_total_bytes{0};
     s64 m_plan_done_bytes{0};

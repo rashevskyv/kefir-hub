@@ -4176,5 +4176,17 @@
   "No answer: kept the newer update on the console": "Geen antwoord: nieuwere update op de console behouden",
   "a newer update is on the console": "er is een newer update op de console",
   "another update of this game was chosen": "er is another update of this game was chosen",
-  "a newer update is in the queue": "een nieuwere update staat in de wachtrij"
+  "a newer update is in the queue": "een nieuwere update staat in de wachtrij",
+  "Install ": "Installeren ",
+  "Asked after the queue: ": "Na de wachtrij: ",
+  "In the queue: ": "In de wachtrij: ",
+  "Already installed: ": "Al geïnstalleerd: ",
+  "Change": "Wijzigen",
+  "Keep ": "Behouden ",
+  "Skipped during the queue": "Overgeslagen tijdens de wachtrij",
+  "Skip all": "Alles overslaan",
+  "On the console: ": "Op de console: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "De wachtrij heeft niet op deze vragen gewacht. Kies voor elke game en druk dan op X.",
+  "Resolve": "Oplossen",
+  "Queue done. Choose what to do with the skipped files.": "Wachtrij klaar. Kies wat u wilt doen met de overgeslagen bestanden."
 }

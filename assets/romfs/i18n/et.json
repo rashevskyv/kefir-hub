@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Vastus puudub: konsoolile jäeti uuem värskendus",
   "a newer update is on the console": "konsoolil on uuem värskendus",
   "another update of this game was chosen": "sellele mängule valiti teine värskendus",
-  "a newer update is in the queue": "uudem uuendus on järjekorras"
+  "a newer update is in the queue": "uudem uuendus on järjekorras",
+  "Install ": "Installi ",
+  "Asked after the queue: ": "Pärast järjekorda: ",
+  "In the queue: ": "Järjekorras: ",
+  "Already installed: ": "Juba installitud: ",
+  "Change": "Muuda",
+  "Keep ": "Säilita ",
+  "Skipped during the queue": "Järjekorras vahele jäetud",
+  "Skip all": "Jäta kõik vahele",
+  "On the console: ": "Konsoolil: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Järjekord ei oodanud neid küsimusi. Vali iga mängu jaoks ja vajuta X.",
+  "Resolve": "Lahenda",
+  "Queue done. Choose what to do with the skipped files.": "Järjekord valmis. Valige, mida vahele jäetud failidega teha."
 }

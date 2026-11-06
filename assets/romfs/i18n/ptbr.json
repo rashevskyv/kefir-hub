@@ -4203,5 +4203,17 @@
   "No answer: kept the newer update on the console": "Sem resposta: mantida a atualização mais recente no console",
   "a newer update is on the console": "há uma atualização mais recente no console",
   "another update of this game was chosen": "outra atualização deste jogo foi escolhida",
-  "a newer update is in the queue": "uma atualização mais recente está na fila"
+  "a newer update is in the queue": "uma atualização mais recente está na fila",
+  "Install ": "Instalar ",
+  "Asked after the queue: ": "Após a fila: ",
+  "In the queue: ": "Na fila: ",
+  "Already installed: ": "Já instalado: ",
+  "Change": "Alterar",
+  "Keep ": "Manter ",
+  "Skipped during the queue": "Ignorado durante a fila",
+  "Skip all": "Pular tudo",
+  "On the console: ": "No console: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "A fila não esperou por estas perguntas. Escolha para cada jogo e pressione X.",
+  "Resolve": "Resolver",
+  "Queue done. Choose what to do with the skipped files.": "Fila concluída. Escolha o que fazer com os arquivos ignorados."
 }

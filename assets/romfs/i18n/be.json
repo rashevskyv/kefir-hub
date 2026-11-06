@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Без адказу: на кансолі засталося навейшае абнаўленне",
   "a newer update is on the console": "на кансолі ёсць больш новае абнаўленне",
   "another update of this game was chosen": "быў абраны іншы абнаўленне для гэтай гульні",
-  "a newer update is in the queue": "новае абнаўленне ў чарзе"
+  "a newer update is in the queue": "новае абнаўленне ў чарзе",
+  "Install ": "Усталяваць ",
+  "Asked after the queue: ": "Пасля чаргі: ",
+  "In the queue: ": "У чарзе: ",
+  "Already installed: ": "Ужо ўсталявана: ",
+  "Change": "Змяніць",
+  "Keep ": "Захаваць ",
+  "Skipped during the queue": "Прапушчана ў чарзе",
+  "Skip all": "Прапусціць усё",
+  "On the console: ": "На кансолі: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Чарка не чака іх. Выберыце для кожнай гульні, затым націсніце X.",
+  "Resolve": "Вырашыць",
+  "Queue done. Choose what to do with the skipped files.": "Чаргоўнік завершаны. Выберыце, што рабіць з прапушчанымі файламі."
 }

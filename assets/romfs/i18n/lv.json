@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Nav atbildes: konsolē saglabāts jaunākais atjauninājums",
   "a newer update is on the console": "konsolē ir jaunāks atjauninājums",
   "another update of this game was chosen": "šai spēlei tika izvēlēts cits atjauninājums",
-  "a newer update is in the queue": "jaunāks atjauninājums ir rindā"
+  "a newer update is in the queue": "jaunāks atjauninājums ir rindā",
+  "Install ": "Instalēt ",
+  "Asked after the queue: ": "Pēc rindas: ",
+  "In the queue: ": "Rindā: ",
+  "Already installed: ": "Jau instalēts: ",
+  "Change": "Mainīt",
+  "Keep ": "Saglabāt ",
+  "Skipped during the queue": "Izlaists rindas laikā",
+  "Skip all": "Izlaist visu",
+  "On the console: ": "Konsolē: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Rinda negaidīja šos jautājumus. Izvēlieties katrai spēlei un nospiediet X.",
+  "Resolve": "Atrisināt",
+  "Queue done. Choose what to do with the skipped files.": "Rinda pabeigta. Izvēlieties, ko darīt ar izlaistajiem failiem."
 }

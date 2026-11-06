@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.300)
+set(sphaira_VERSION 0.14.301)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -210,6 +210,7 @@ add_executable(sphaira
     source/ui/menus/dbi/dbi_local.cpp
     source/ui/menus/dbi/dbi_plan.cpp
     source/ui/menus/dbi/dbi_session.cpp
+    source/ui/menus/dbi/dbi_resolve.cpp
 
     source/ui/menus/gc_menu.cpp
     source/ui/menus/gc_menu_ops.cpp

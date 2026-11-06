@@ -4,9 +4,13 @@
 #include "ui/menus/install_plan.hpp"
 
 #include <cstddef>
+#include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -64,19 +68,19 @@ constexpr UpdateStep OlderThanConsoleStep(long mode, int count, bool picked) {
     return UpdateStep::Skip;
 }
 
-// How long an update question waits. Stream: MTP/FTP/web, the file cannot wait.
-// Defer: first pass of a queue. Wait: the files that come round again at the end.
+// What an install question does. Defer: the first pass of a queue notes it for the Resolve
+// page, no box. Wait: after the page, a box until answered. Stream: MTP/FTP/web, the data
+// cannot wait, a box for 10 s.
 enum class AskMode { Stream, Defer, Wait };
-enum class AskEnd { Waiting, Answered, Defer, Expire };
-// ponytail: fixed 10 s before the file moves on; a setting if someone wants longer.
+enum class AskEnd { Waiting, Answered, Expire };
+// ponytail: fixed 10 s before a stream keeps the console as it is; a setting if someone wants longer.
 inline constexpr uint64_t UpdateAskGraceNs = 10'000'000'000ULL;
 
-// choice: < 0 no answer yet, 0 no, 1 yes. interrupted: cancel, skip or exit.
+// A shown box. choice: < 0 no answer yet, 0 no, 1 yes. interrupted: cancel, skip or exit.
 constexpr AskEnd UpdateAskStep(AskMode mode, int choice, bool interrupted, uint64_t waited_ns) {
     if (choice >= 0) return AskEnd::Answered;
-    const bool timed_out = mode != AskMode::Wait && waited_ns >= UpdateAskGraceNs;
-    if (!interrupted && !timed_out) return AskEnd::Waiting;
-    return mode == AskMode::Defer && !interrupted ? AskEnd::Defer : AskEnd::Expire;
+    const bool timed_out = mode == AskMode::Stream && waited_ns >= UpdateAskGraceNs;
+    return interrupted || timed_out ? AskEnd::Expire : AskEnd::Waiting;
 }
 
 enum class QueuedUpdate {
@@ -110,20 +114,109 @@ QueuedUpdate ResolveQueuedUpdate(long mode, std::span<const NameTitle> titles, s
     return QueuedUpdate::Picked;
 }
 
-// The install order: the queue once, then the files that got no answer, once more.
+// The install order: the queue once, then the files that had a question, once more.
+// starts_final: the first file after the queue; the questions are resolved before it.
 class DeferQueue {
 public:
-    struct Item { size_t index; bool final_pass; };
+    struct Item { size_t index; bool final_pass; bool starts_final{}; };
     std::optional<Item> Next(size_t size) {
-        if (m_cursor < size) return Item{m_cursor++, false};
-        if (m_later < m_deferred.size()) return Item{m_deferred[m_later++], true};
+        if (m_cursor < size) {
+            m_in_final = false;
+            return Item{m_cursor++, false};
+        }
+        if (m_later < m_deferred.size()) {
+            const bool starts = !m_in_final;
+            m_in_final = true;
+            return Item{m_deferred[m_later++], true, starts};
+        }
         return std::nullopt;
     }
     void Defer(size_t index) { m_deferred.push_back(index); }
 private:
     std::vector<size_t> m_deferred;
     size_t m_cursor{}, m_later{};
+    bool m_in_final{};
 };
+
+// A question the queue did not wait for. It is answered on the Resolve page after the queue.
+enum class PendingKind {
+    Reinstall, // this version is already on the console
+    Older,     // an update older than the console's
+    Several,   // Ask mode: one of several updates of the game in the queue
+};
+
+struct PendingInstall {
+    size_t file{};                   // queue index
+    PendingKind kind{};
+    uint64_t id{};                   // title id from the file name
+    uint32_t version{};              // raw, from the file name or the cnmt
+    std::optional<uint32_t> console; // raw version on the console, nullopt when none
+    std::string game;
+};
+
+// One row of the Resolve page: a game, or one file for Reinstall.
+// choice 0 keeps the console as it is; choice k installs files[k - 1], the rest are skipped.
+struct ResolveRow {
+    std::string game;
+    PendingKind kind{};
+    std::optional<uint32_t> console;
+    std::vector<size_t> files;
+    std::vector<uint32_t> versions;
+    int choice{};
+};
+
+// The updates of one game share a row; each Reinstall file has its own.
+inline std::vector<ResolveRow> BuildResolveRows(std::span<const PendingInstall> pending) {
+    std::vector<ResolveRow> rows;
+    std::vector<uint64_t> row_ids; // title id per row, 0 for a Reinstall row
+    for (const auto& p : pending) {
+        const uint64_t id = p.kind == PendingKind::Reinstall ? 0 : p.id;
+        ResolveRow* row = nullptr;
+        for (size_t r = 0; id && r < rows.size(); r++) {
+            if (row_ids[r] == id) row = &rows[r];
+        }
+        if (row && std::find(row->files.begin(), row->files.end(), p.file) != row->files.end()) continue;
+        if (!row) {
+            rows.push_back({p.game, p.kind, p.console, {}, {}, 0});
+            row_ids.push_back(id);
+            row = &rows.back();
+        } else {
+            row->kind = PendingKind::Several;
+            if (!row->console) row->console = p.console;
+        }
+        row->files.push_back(p.file);
+        row->versions.push_back(p.version);
+    }
+    return rows;
+}
+
+// Between the worker and the Resolve page. The page writes the choices, then sets done;
+// the worker sets done too when the session ends, and the page closes.
+struct ResolveData {
+    std::vector<ResolveRow> rows;
+    std::atomic<bool> shown{};
+    std::atomic<bool> done{};
+};
+
+// file index -> install it (true) or skip it (false)
+inline std::unordered_map<size_t, bool> ResolveAnswers(std::span<const ResolveRow> rows) {
+    std::unordered_map<size_t, bool> out;
+    for (const auto& r : rows) {
+        for (size_t k = 0; k < r.files.size(); k++) {
+            out[r.files[k]] = r.choice == static_cast<int>(k) + 1;
+        }
+    }
+    return out;
+}
+
+// "Zelda [0100...][v196608].nsp" -> "Zelda"
+inline std::string GameName(std::string_view file_name) {
+    auto end = file_name.find('[');
+    if (end == std::string_view::npos) end = file_name.rfind('.');
+    auto name = file_name.substr(0, end);
+    while (!name.empty() && (name.back() == ' ' || name.back() == '_')) name.remove_suffix(1);
+    return std::string{name.empty() ? file_name : name};
+}
 
 // USB live queue freezes the entries up to this index. In the final pass all of them,
 // so a deferred file does not cut the queue back to itself.

@@ -4176,5 +4176,17 @@
   "No answer: kept the newer update on the console": "Inget svar: behöll den nyare uppdateringen på konsolen",
   "a newer update is on the console": "en nyare uppdatering finns på konsolen",
   "another update of this game was chosen": "en annan uppdatering av det här spelet valdes",
-  "a newer update is in the queue": "en nyare uppdatering är i kön"
+  "a newer update is in the queue": "en nyare uppdatering är i kön",
+  "Install ": "Installera ",
+  "Asked after the queue: ": "Efter kön: ",
+  "In the queue: ": "I kö: ",
+  "Already installed: ": "Redan installerad: ",
+  "Change": "Ändra",
+  "Keep ": "Behåll ",
+  "Skipped during the queue": "Hoppade över i kön",
+  "Skip all": "Hoppa över alla",
+  "On the console: ": "På konsolen: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Köer väntade inte på dessa frågor. Välj för varje spel och tryck sedan på X.",
+  "Resolve": "Lös",
+  "Queue done. Choose what to do with the skipped files.": "Kö klar. Välj vad du vill göra med de överhoppade filerna."
 }

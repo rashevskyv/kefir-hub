@@ -4176,5 +4176,17 @@
   "No answer: kept the newer update on the console": "아니요: 본체의 최신 업데이트 유지",
   "a newer update is on the console": "콘솔에 더 최신 업데이트가 있습니다",
   "another update of this game was chosen": "이 게임의 다른 업데이트가 선택되었습니다",
-  "a newer update is in the queue": "새로운 업데이트가 대기 중입니다"
+  "a newer update is in the queue": "새로운 업데이트가 대기 중입니다",
+  "Install ": "설치 ",
+  "Asked after the queue: ": "대기열 이후: ",
+  "In the queue: ": "대기열: ",
+  "Already installed: ": "이미 설치됨: ",
+  "Change": "변경",
+  "Keep ": "유지",
+  "Skipped during the queue": "대기열에서 건너뜀",
+  "Skip all": "모두 건너뛰기",
+  "On the console: ": "본체: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "대기열이 이 질문들을 기다리지 않았습니다. 각 게임에 대해 선택한 후 X를 누르세요.",
+  "Resolve": "해결",
+  "Queue done. Choose what to do with the skipped files.": "대기열 완료. 건너뛴 파일로 수행할 작업을 선택하세요."
 }

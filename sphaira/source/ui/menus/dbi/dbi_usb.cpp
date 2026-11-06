@@ -218,6 +218,7 @@ void Menu::ThreadFunction() {
             while (const auto item = order.Next(m_queue.size())) {
                 const size_t i = item->index;
                 const bool final_pass = item->final_pass;
+                if (item->starts_final) ResolvePending(); // the Resolve page for the skipped questions
                 const size_t active = LiveQueueActive(*item, m_queue.size());
                 if (sync_supported) {
                     std::vector<yati::source::Usb::LiveQueueItem> items;
@@ -367,7 +368,7 @@ void Menu::ThreadFunction() {
                 const bool cancelled = m_cancel_requested || (!user_skipped && (install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled));
                 const bool fatal_session_error = !user_skipped && R_FAILED(install_rc) && IsDbiSessionError(install_rc);
                 if (m_current_file_deferred && !user_skipped && !cancelled && R_SUCCEEDED(install_rc)) {
-                    AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
+                    AddLog("Asked after the queue: "_i18n + name, LogKind::Normal);
                     order.Defer(i);
                     continue;
                 }

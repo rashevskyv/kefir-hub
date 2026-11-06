@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Жауап жоқ: консольдегі жаңарақ жаңарту сақталды",
   "a newer update is on the console": "консольде жаңарақ жаңарту бар",
   "another update of this game was chosen": "бұл ойынның басқа жаңартуы таңдалды",
-  "a newer update is in the queue": "жаңа жаңарту кезекте тұр"
+  "a newer update is in the queue": "жаңа жаңарту кезекте тұр",
+  "Install ": "Орнату ",
+  "Asked after the queue: ": "Кезекten кейін: ",
+  "In the queue: ": "Кезекте: ",
+  "Already installed: ": "Тартылып қойылған: ",
+  "Change": "Өзгерту",
+  "Keep ": "Сақтау ",
+  "Skipped during the queue": "Кезек кезінде өткізіліп жіберілді",
+  "Skip all": "Барлығын өткізіп жіберу",
+  "On the console: ": "Консольде: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Кезек бұл сұрақтарды күтпеді. Әр ойын үшін таңдап, X басыңыз.",
+  "Resolve": "Шешу",
+  "Queue done. Choose what to do with the skipped files.": "Кезек аяқталды. Өткізіліп жіберілген файлдармен не істеу керектігін таңдаңыз."
 }

@@ -4177,5 +4177,17 @@
   "No answer: kept the newer update on the console": "Keine Antwort: Neueres Update auf der Konsole behalten",
   "a newer update is on the console": "Ein neueres Update ist auf der Konsole",
   "another update of this game was chosen": "Ein anderes Update für dieses Spiel wurde ausgewählt",
-  "a newer update is in the queue": "ein neueres Update ist in der Warteschlange"
+  "a newer update is in the queue": "ein neueres Update ist in der Warteschlange",
+  "Install ": "Installieren ",
+  "Asked after the queue: ": "Nach der Warteschlange: ",
+  "In the queue: ": "In der Warteschlange: ",
+  "Already installed: ": "Bereits installiert: ",
+  "Change": "Ändern",
+  "Keep ": "Behalten ",
+  "Skipped during the queue": "Übersprungen in der Warteschlange",
+  "Skip all": "Alle überspringen",
+  "On the console: ": "Auf der Konsole: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Die Warteschlange hat nicht auf diese Fragen gewartet. Wähle für jedes Spiel und drücke dann X.",
+  "Resolve": "Auflösen",
+  "Queue done. Choose what to do with the skipped files.": "Warteschlange abgeschlossen. Wählen Sie, was mit den übersprungenen Dateien geschehen soll."
 }

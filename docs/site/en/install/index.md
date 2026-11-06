@@ -75,8 +75,10 @@ In the install queue you can also set the target of one package: highlight it an
 - [[Newest]]: when the queue holds two or more updates of one game (version from the file name, e.g. [v196608]), only the highest one installs; the others are skipped with "a newer update is in the queue"
 - [[Ask]]: each of those updates asks "The queue has N updates for this game. Install vX?"; the first **Yes** picks that update, the other updates of the game are skipped
 - an update older than the one on the console, and the only update of that game in the queue, is always asked about (a translation or mod may need it), in both modes; with several updates and [[Newest]] the console's newer update stays
-- the queue does not wait for the answer: after 10 seconds without an answer the file moves to the end of the queue and the next file starts; the question stays on screen; at the end of the queue the Hub waits for the answers
-- MTP, FTP and the web upload send each file once: there, after 10 seconds without an answer, the older update is skipped and the console keeps the newer one
+- the queue does not wait for any answer: a file with a question ([[Ask]] with several updates, an update older than the console, "Already installed. Reinstall?") goes to the end of the queue at once, no box, and the next file starts; the log says [[Asked after the queue: ]]
+- after the queue the page [[Skipped during the queue]] opens: one row per game (a Reinstall row per file), with [[On the console: ]] and [[In the queue: ]] versions; A = [[Change]] (choices [[Keep ]]vN / [[Skip]], [[Install ]]vN, [[Reinstall]]), X = [[Resolve]] installs the choices, B = [[Skip all]]; default of every row: keep the console as it is
+- shot: the Resolve page with two games (an older update and two updates in the queue)
+- MTP, FTP and the web upload send each file once, so they cannot defer: the question box waits 10 seconds, then the file is skipped and the console keeps what it has (also for "Reinstall?")
 - [[Allow downgrade]] on still installs an older update without a question
 - the Install recursively order no longer decides which update stays (before: the last file in alphabetical order won)
 -->

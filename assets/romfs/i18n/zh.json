@@ -4229,5 +4229,17 @@
   "No answer: kept the newer update on the console": "无回答：保留主机上的较新更新",
   "a newer update is on the console": "控制台上有更新的版本",
   "another update of this game was chosen": "已选择此游戏的另一个更新",
-  "a newer update is in the queue": "较新的更新在队列中"
+  "a newer update is in the queue": "较新的更新在队列中",
+  "Install ": "安装 ",
+  "Asked after the queue: ": "队列之后：",
+  "In the queue: ": "队列中：",
+  "Already installed: ": "已安装：",
+  "Change": "更改",
+  "Keep ": "保留",
+  "Skipped during the queue": "在队列中已跳过",
+  "Skip all": "跳过全部",
+  "On the console: ": "在主机上： ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "队列未等待这些问题。请为每个游戏进行选择，然后按 X。",
+  "Resolve": "解决",
+  "Queue done. Choose what to do with the skipped files.": "队列已完成。请选择如何处理跳过的文件。"
 }

@@ -119,6 +119,7 @@ void Menu::LocalThreadFunction() {
         while (const auto item = order.Next(m_queue.size())) {
             const size_t i = item->index;
             const bool final_pass = item->final_pass;
+            if (item->starts_final) ResolvePending(); // the Resolve page for the skipped questions
             bool selected{};
             yati::InstallAnalysis analysis{};
             bool plan_sd{};
@@ -200,7 +201,7 @@ void Menu::LocalThreadFunction() {
             }
             const bool cancelled = m_cancel_requested || (!user_skipped && (result == Result_TransferCancelled || result == Result_UsbCancelled));
             if (m_current_file_deferred && !user_skipped && !cancelled && R_SUCCEEDED(result)) {
-                AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
+                AddLog("Asked after the queue: "_i18n + name, LogKind::Normal);
                 order.Defer(i);
                 continue;
             }

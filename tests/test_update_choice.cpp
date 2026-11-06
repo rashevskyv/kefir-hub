@@ -15,61 +15,78 @@ namespace {
 constexpr uint64_t GAME = 0x0100ABF008968800;
 constexpr uint32_t V3 = 3 << 16, V6 = 6 << 16, V9 = 9 << 16;
 
-// the user's answer to a question: 1 yes, 0 no, -1 none within 10 s
-using Answers = std::function<int(const std::string& file, bool final_pass)>;
+// The user on the Resolve page: the choice for each row (0 keeps the console).
+// Also records the rows the page showed.
+struct Page {
+    std::function<int(const ResolveRow&)> choose = [](const ResolveRow&) { return 0; };
+    std::vector<ResolveRow> shown;
+};
 
 std::string Label(const std::string& file) {
     return file.substr(0, file.find(' '));
 }
 
-// AskUpdate with a user who answers at once or not at all.
-std::optional<bool> Ask(AskMode mode, int answer, bool& deferred) {
-    auto end = UpdateAskStep(mode, answer, false, answer >= 0 ? 0 : UpdateAskGraceNs);
-    if (end == AskEnd::Waiting) end = UpdateAskStep(mode, answer, true, 0); // the end of the queue: the user skips
-    if (end == AskEnd::Answered) return answer == 1;
-    deferred = end == AskEnd::Defer;
-    return std::nullopt;
-}
-
-// One queue as dbi_local.cpp / dbi_usb.cpp drive it, with a fake console (update version
-// per game) and "Allow downgrade" off. Returns "install|skip|defer <label>" in order.
+// One queue as dbi_local.cpp / dbi_usb.cpp drive it, with a fake console (version per
+// title id), "Allow downgrade" off and "Already installed" on Prompt.
+// Returns "install|skip|defer <label>" in order.
 std::vector<std::string> RunQueue(long mode, const std::vector<std::string>& files,
-                                  std::unordered_map<uint64_t, uint32_t>& console, const Answers& answers,
-                                  int* asked = nullptr) {
+                                  std::unordered_map<uint64_t, uint32_t>& console, Page& page) {
     std::vector<NameTitle> titles;
     for (const auto& f : files) titles.push_back(ParseNameTitle(f));
     std::unordered_map<uint64_t, uint32_t> picks;
+    std::vector<PendingInstall> pending;
+    std::unordered_map<size_t, bool> resolved;
     std::vector<std::string> log;
     DeferQueue order;
     while (const auto item = order.Next(files.size())) {
+        if (item->starts_final && !pending.empty()) { // ResolvePending
+            auto rows = BuildResolveRows(pending);
+            pending.clear();
+            for (auto& r : rows) r.choice = page.choose(r);
+            page.shown.insert(page.shown.end(), rows.begin(), rows.end());
+            resolved = ResolveAnswers(rows);
+        }
         const auto& file = files[item->index];
-        const auto mode_now = item->final_pass ? AskMode::Wait : AskMode::Defer;
+        const auto ask_mode = item->final_pass ? AskMode::Wait : AskMode::Defer;
         bool deferred = false;
-        auto ask = [&] {
-            if (asked) ++*asked;
-            return Ask(mode_now, answers(file, item->final_pass), deferred);
+        // AskOrDefer; in the Wait mode a question the page did not cover is skipped by the user
+        auto ask = [&](PendingInstall p) -> std::optional<bool> {
+            p.file = item->index;
+            if (const auto it = resolved.find(p.file); it != resolved.end()) return it->second;
+            if (ask_mode == AskMode::Defer) {
+                p.game = GameName(file);
+                pending.push_back(p);
+                deferred = true;
+            }
+            return std::nullopt;
         };
-        auto no_answer = [&] {
+        auto skip_or_defer = [&] {
             if (deferred) order.Defer(item->index);
             log.push_back((deferred ? "defer " : "skip ") + Label(file));
         };
 
-        // CheckQueuedUpdate
-        QueueUpdates q{};
-        const auto r = ResolveQueuedUpdate(mode, titles, item->index, picks, q, [&](int, uint32_t) { return ask(); });
-        if (r == QueuedUpdate::NoAnswer) { no_answer(); continue; }
-        if (r != QueuedUpdate::Install && r != QueuedUpdate::Picked) { log.push_back("skip " + Label(file)); continue; }
-
-        // yati GetLatestVersion -> PromptDowngrade
         const auto t = titles[item->index];
         const auto on_console = console.find(t.id);
-        if (IsUpdateId(t.id) && on_console != console.end() && on_console->second > t.version) {
+        const std::optional<uint32_t> console_v = on_console != console.end() ? std::optional{on_console->second} : std::nullopt;
+
+        // CheckQueuedUpdate
+        QueueUpdates q{};
+        const auto r = ResolveQueuedUpdate(mode, titles, item->index, picks, q, [&](int, uint32_t version) {
+            return ask({0, PendingKind::Several, t.id, version, console_v, {}});
+        });
+        if (r == QueuedUpdate::NoAnswer) { skip_or_defer(); continue; }
+        if (r != QueuedUpdate::Install && r != QueuedUpdate::Picked) { log.push_back("skip " + Label(file)); continue; }
+
+        // yati: PromptReinstall, then GetLatestVersion -> PromptDowngrade
+        if (console_v && *console_v == t.version) {
+            const auto a = ask({0, PendingKind::Reinstall, t.id, t.version, console_v, {}});
+            if (!a || !*a) { skip_or_defer(); continue; }
+        } else if (IsUpdateId(t.id) && console_v && *console_v > t.version) {
             const auto step = OlderThanConsoleStep(mode, q.count, r == QueuedUpdate::Picked);
             if (step == UpdateStep::Skip) { log.push_back("skip " + Label(file)); continue; }
             if (step == UpdateStep::Ask) {
-                const auto a = ask();
-                if (!a) { no_answer(); continue; }
-                if (!*a) { log.push_back("skip " + Label(file)); continue; }
+                const auto a = ask({0, PendingKind::Older, t.id, t.version, console_v, {}});
+                if (!a || !*a) { skip_or_defer(); continue; }
             }
         }
         console[t.id] = t.version;
@@ -122,16 +139,12 @@ void TestDecisions() {
 }
 
 void TestAskTimeout() {
-    // under 10 s every mode waits
-    assert(UpdateAskStep(AskMode::Defer, -1, false, UpdateAskGraceNs - 1) == AskEnd::Waiting);
+    // MTP/FTP/web: the box waits 10 s, then the console keeps what it has
     assert(UpdateAskStep(AskMode::Stream, -2, false, UpdateAskGraceNs - 1) == AskEnd::Waiting);
-    // after 10 s: a queue moves the file to its end, MTP/FTP/web closes the box
-    assert(UpdateAskStep(AskMode::Defer, -1, false, UpdateAskGraceNs) == AskEnd::Defer);
     assert(UpdateAskStep(AskMode::Stream, -1, false, UpdateAskGraceNs) == AskEnd::Expire);
-    // the final pass never times out, so a file is deferred at most once
+    // after the Resolve page a box waits for the answer
     assert(UpdateAskStep(AskMode::Wait, -2, false, UpdateAskGraceNs * 1000) == AskEnd::Waiting);
-    // cancel or skip while asking: no deferral
-    assert(UpdateAskStep(AskMode::Defer, -2, true, 0) == AskEnd::Expire);
+    // cancel or skip while asking closes the box
     assert(UpdateAskStep(AskMode::Wait, -2, true, 0) == AskEnd::Expire);
     // an answer counts in every mode, also one given to a box that stayed open
     assert(UpdateAskStep(AskMode::Wait, 0, false, 0) == AskEnd::Answered);
@@ -141,19 +154,27 @@ void TestAskTimeout() {
 void TestDeferQueue() {
     DeferQueue order;
     std::vector<std::pair<size_t, bool>> seen;
+    std::vector<bool> starts;
     while (const auto item = order.Next(3)) {
         seen.emplace_back(item->index, item->final_pass);
-        if (item->index == 1 && !item->final_pass) order.Defer(1);
+        starts.push_back(item->starts_final);
+        if (!item->final_pass && item->index != 2) order.Defer(item->index);
     }
-    assert((seen == std::vector<std::pair<size_t, bool>>{{0, false}, {1, false}, {2, false}, {1, true}}));
+    assert((seen == std::vector<std::pair<size_t, bool>>{{0, false}, {1, false}, {2, false}, {0, true}, {1, true}}));
+    // the Resolve page opens once, before the first file of the final pass
+    assert((starts == std::vector<bool>{false, false, false, true, false}));
 
-    // the USB live queue grows during the final pass: new files go first, in the normal pass
+    // the USB live queue grows during the final pass: new files go first, in the normal pass,
+    // and their questions get a Resolve page of their own
     DeferQueue grow;
     assert(grow.Next(1)->index == 0);
     grow.Defer(0);
-    assert(grow.Next(1)->final_pass);
+    assert(grow.Next(1)->starts_final);
     const auto added = grow.Next(2);
     assert(added->index == 1 && !added->final_pass);
+    grow.Defer(1);
+    const auto again = grow.Next(2);
+    assert(again->index == 1 && again->final_pass && again->starts_final);
     assert(!grow.Next(2));
 
     // the live queue keeps the entries up to the file that installs
@@ -162,75 +183,115 @@ void TestDeferQueue() {
 }
 
 void TestScenarios() {
-    const Answers silent = [](const std::string&, bool) { return -1; };
+    const std::string F_OTHER_V2 = "Mario Kart [0100000000020800][v131072].nsp";
+    constexpr uint64_t OTHER_UPD = 0x0100000000020800;
 
-    // Newest: v3 and v6 in a queue, in both orders; v6 installs, no question
+    // Newest: v3 and v6 in a queue, in both orders; v6 installs, no page
     {
         std::unordered_map<uint64_t, uint32_t> console;
-        int asked = 0;
-        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_V6}, console, silent, &asked) == Log{"skip v3", "install v6"}));
-        assert(console[GAME] == V6 && asked == 0);
+        Page page;
+        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_V6}, console, page) == Log{"skip v3", "install v6"}));
+        assert(console[GAME] == V6 && page.shown.empty());
         console.clear();
-        assert((RunQueue(UpdateChoice_Newest, {F_V6, F_V3}, console, silent) == Log{"install v6", "skip v3"}));
-        assert(console[GAME] == V6);
+        assert((RunQueue(UpdateChoice_Newest, {F_V6, F_V3}, console, page) == Log{"install v6", "skip v3"}));
+        assert(console[GAME] == V6 && page.shown.empty());
     }
-    // Ask: the user picks v3 at once; v6 is skipped without a question
+    // Ask: nothing waits; both updates go to the end, the next game installs first,
+    // the page shows one row for the game with both versions; the user picks v3
     {
         std::unordered_map<uint64_t, uint32_t> console;
-        int asked = 0;
-        const Answers yes_v3 = [](const std::string& f, bool) { return f == F_V3 ? 1 : -1; };
-        assert((RunQueue(UpdateChoice_Ask, {F_V3, F_V6}, console, yes_v3, &asked) == Log{"install v3", "skip v6"}));
-        assert(console[GAME] == V3 && asked == 1);
+        Page page;
+        page.choose = [](const ResolveRow&) { return 1; }; // files[0] = v3
+        assert((RunQueue(UpdateChoice_Ask, {F_V3, F_V6, F_OTHER}, console, page) ==
+                Log{"defer v3", "defer v6", "install other", "install v3", "skip v6"}));
+        assert(page.shown.size() == 1);
+        const auto& row = page.shown[0];
+        assert(row.kind == PendingKind::Several && row.game == "v3" && !row.console);
+        assert((row.versions == std::vector<uint32_t>{V3, V6}));
+        assert(console[GAME] == V3);
     }
-    // Ask, no answer in the first pass: both go to the end; there the user says no to v3, yes to v6
-    {
-        std::unordered_map<uint64_t, uint32_t> console;
-        const Answers late = [](const std::string& f, bool final_pass) { return final_pass ? (f == F_V6 ? 1 : 0) : -1; };
-        assert((RunQueue(UpdateChoice_Ask, {F_V3, F_V6, F_OTHER}, console, late) ==
-                Log{"defer v3", "defer v6", "install other", "skip v3", "install v6"}));
-        assert(console[GAME] == V6);
-    }
-    // the only update, older than the console, no answer: the next file installs first,
-    // the old update is asked again at the end (a translation needs it)
+    // the only update, older than the console: the queue does not wait, the page asks
     {
         std::unordered_map<uint64_t, uint32_t> console{{GAME, V6}};
-        const Answers late_yes = [](const std::string&, bool final_pass) { return final_pass ? 1 : -1; };
-        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_OTHER}, console, late_yes) ==
-                Log{"defer v3", "install other", "install v3"}));
-        assert(console[GAME] == V3);
-        // the user says no at the end: the console keeps v6
-        console[GAME] = V6;
-        const Answers late_no = [](const std::string&, bool final_pass) { return final_pass ? 0 : -1; };
-        assert((RunQueue(UpdateChoice_Newest, {F_V3}, console, late_no) == Log{"defer v3", "skip v3"}));
+        Page keep;
+        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_OTHER}, console, keep) ==
+                Log{"defer v3", "install other", "skip v3"}));
         assert(console[GAME] == V6);
+        assert(keep.shown.size() == 1 && keep.shown[0].kind == PendingKind::Older && keep.shown[0].console == V6);
+        Page install;
+        install.choose = [](const ResolveRow&) { return 1; };
+        assert((RunQueue(UpdateChoice_Newest, {F_V3}, console, install) == Log{"defer v3", "install v3"}));
+        assert(console[GAME] == V3);
     }
-    // Newest, both in the queue are older than the console: nothing installs, no question
+    // two games with questions: two rows, each chosen on its own
+    {
+        std::unordered_map<uint64_t, uint32_t> console{{GAME, V6}, {OTHER_UPD, 3 << 16}};
+        Page page;
+        page.choose = [](const ResolveRow& r) { return r.game == "v3" ? 0 : 1; };
+        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_OTHER_V2}, console, page) ==
+                Log{"defer v3", "defer Mario", "skip v3", "install Mario"}));
+        assert(page.shown.size() == 2 && page.shown[1].game == "Mario Kart");
+        assert(console[GAME] == V6 && console[OTHER_UPD] == 2u << 16);
+    }
+    // the same version is on the console: "Reinstall?" goes to the page too
+    {
+        std::unordered_map<uint64_t, uint32_t> console{{GAME, V6}};
+        Page page;
+        page.choose = [](const ResolveRow&) { return 1; };
+        assert((RunQueue(UpdateChoice_Newest, {F_V6, F_OTHER}, console, page) ==
+                Log{"defer v6", "install other", "install v6"}));
+        assert(page.shown.size() == 1 && page.shown[0].kind == PendingKind::Reinstall);
+    }
+    // Ask, the console has v9: the user picks v6 on the page; no second question about the older update
     {
         std::unordered_map<uint64_t, uint32_t> console{{GAME, V9}};
-        int asked = 0;
-        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_V6}, console, silent, &asked) == Log{"skip v3", "skip v6"}));
-        assert(console[GAME] == V9 && asked == 0);
+        Page page;
+        page.choose = [](const ResolveRow&) { return 2; }; // files[1] = v6
+        assert((RunQueue(UpdateChoice_Ask, {F_V3, F_V6}, console, page) ==
+                Log{"defer v3", "defer v6", "skip v3", "install v6"}));
+        assert(page.shown.size() == 1 && page.shown[0].console == V9);
+        assert(console[GAME] == V6);
     }
-    // Ask: the user picks v3 in the queue, the console has v6: no second question
+    // "Skip all" (or a cancelled session): every choice 0, the console stays as it was
     {
         std::unordered_map<uint64_t, uint32_t> console{{GAME, V6}};
-        int asked = 0;
-        const Answers yes_v3 = [](const std::string& f, bool) { return f == F_V3 ? 1 : 0; };
-        assert((RunQueue(UpdateChoice_Ask, {F_V3, F_V6}, console, yes_v3, &asked) == Log{"install v3", "skip v6"}));
-        assert(console[GAME] == V3 && asked == 1);
+        Page page;
+        assert((RunQueue(UpdateChoice_Ask, {F_V3, F_OTHER_V2, F_V6}, console, page) ==
+                Log{"defer v3", "install Mario", "defer v6", "skip v3", "skip v6"}));
+        assert(console[GAME] == V6);
     }
-    // MTP/FTP/web: no queue (count 0), an older update, no answer in 10 s: the console keeps v6
+    // Newest, both in the queue are older than the console: nothing installs, no page
     {
-        bool deferred = false;
-        assert(OlderThanConsoleStep(UpdateChoice_Newest, 0, false) == UpdateStep::Ask);
-        assert(!Ask(AskMode::Stream, -1, deferred) && !deferred);
-        assert(Ask(AskMode::Stream, 1, deferred) == true);
+        std::unordered_map<uint64_t, uint32_t> console{{GAME, V9}};
+        Page page;
+        assert((RunQueue(UpdateChoice_Newest, {F_V3, F_V6}, console, page) == Log{"skip v3", "skip v6"}));
+        assert(console[GAME] == V9 && page.shown.empty());
     }
     // the DBI Backend sends one update of the game: it installs as sent
     {
         std::unordered_map<uint64_t, uint32_t> console{{GAME, V3}};
-        assert((RunQueue(UpdateChoice_Newest, {F_V6}, console, silent) == Log{"install v6"}));
+        Page page;
+        assert((RunQueue(UpdateChoice_Newest, {F_V6}, console, page) == Log{"install v6"}));
     }
+}
+
+void TestResolveRows() {
+    // the same file noted twice (two cnmt in one NSP) is one choice
+    std::vector<PendingInstall> p{
+        {4, PendingKind::Older, GAME, V3, V6, "Zelda"},
+        {4, PendingKind::Older, GAME, V3, V6, "Zelda"},
+        {7, PendingKind::Reinstall, 0x0100000000010000, 0, 0, "Other"},
+    };
+    auto rows = BuildResolveRows(p);
+    assert(rows.size() == 2 && rows[0].files.size() == 1 && rows[0].kind == PendingKind::Older);
+    rows[0].choice = 1;
+    const auto a = ResolveAnswers(rows);
+    assert(a.at(4) && !a.at(7));
+
+    assert(GameName("Zelda TotK [0100ABF008968800][v196608].nsp") == "Zelda TotK");
+    assert(GameName("Zelda_[0100ABF008968800].nsz") == "Zelda");
+    assert(GameName("plain.nsp") == "plain");
+    assert(GameName("[0100ABF008968800].nsp") == "[0100ABF008968800].nsp");
 }
 
 } // namespace
@@ -240,6 +301,7 @@ int main() {
     TestAskTimeout();
     TestDeferQueue();
     TestScenarios();
+    TestResolveRows();
     std::puts("test_update_choice: ok");
     return 0;
 }

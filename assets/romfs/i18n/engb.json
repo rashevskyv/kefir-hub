@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "No answer: kept the newer update on the console",
   "a newer update is on the console": "a newer update is on the console",
   "another update of this game was chosen": "another update of this game was chosen",
-  "a newer update is in the queue": "a newer update is in the queue"
+  "a newer update is in the queue": "a newer update is in the queue",
+  "Install ": "Install ",
+  "Asked after the queue: ": "Asked after the queue: ",
+  "In the queue: ": "In the queue: ",
+  "Already installed: ": "Already installed: ",
+  "Change": "Change",
+  "Keep ": "Keep ",
+  "Skipped during the queue": "Skipped during the queue",
+  "Skip all": "Skip all",
+  "On the console: ": "On the console: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "The queue did not wait for these questions. Choose for each game, then press X.",
+  "Resolve": "Resolve",
+  "Queue done. Choose what to do with the skipped files.": "Queue done. Choose what to do with the skipped files."
 }

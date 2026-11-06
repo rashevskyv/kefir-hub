@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Yanıt yok: konsoldaki daha yeni güncelleme korundu",
   "a newer update is on the console": "konsolda daha yeni bir güncelleme var",
   "another update of this game was chosen": "bu oyun için başka bir güncelleme seçildi",
-  "a newer update is in the queue": "daha yeni bir güncelleme kuyrukta"
+  "a newer update is in the queue": "daha yeni bir güncelleme kuyrukta",
+  "Install ": "Yükle ",
+  "Asked after the queue: ": "Kuyruktan sonra: ",
+  "In the queue: ": "Kuyrukta: ",
+  "Already installed: ": "Zaten kurulu: ",
+  "Change": "Değiştir",
+  "Keep ": "Koru ",
+  "Skipped during the queue": "Kuyruk sırasında atlandı",
+  "Skip all": "Tümünü atla",
+  "On the console: ": "Konsolda: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Kuyruk bu soruları beklemedi. Her oyun için seçim yapın ve X tuşuna basın.",
+  "Resolve": "Çöz",
+  "Queue done. Choose what to do with the skipped files.": "Kuyruk tamamlandı. Atlanan dosyalarla ne yapılacağını seçin."
 }

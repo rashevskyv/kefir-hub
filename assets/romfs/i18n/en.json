@@ -4110,5 +4110,17 @@
   "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.",
   "a newer update is in the queue": "a newer update is in the queue",
   "a newer update is on the console": "a newer update is on the console",
-  "another update of this game was chosen": "another update of this game was chosen"
+  "another update of this game was chosen": "another update of this game was chosen",
+  "Already installed: ": "Already installed: ",
+  "Asked after the queue: ": "Asked after the queue: ",
+  "Change": "Change",
+  "In the queue: ": "In the queue: ",
+  "Install ": "Install ",
+  "Keep ": "Keep ",
+  "On the console: ": "On the console: ",
+  "Queue done. Choose what to do with the skipped files.": "Queue done. Choose what to do with the skipped files.",
+  "Resolve": "Resolve",
+  "Skip all": "Skip all",
+  "Skipped during the queue": "Skipped during the queue",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "The queue did not wait for these questions. Choose for each game, then press X."
 }

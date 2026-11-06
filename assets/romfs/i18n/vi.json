@@ -4176,5 +4176,17 @@
   "No answer: kept the newer update on the console": "Không có câu trả lời: giữ lại bản cập nhật mới hơn trên máy",
   "a newer update is on the console": "có bản cập nhật mới hơn trên bảng điều khiển",
   "another update of this game was chosen": "một bản cập nhật khác của trò chơi này đã được chọn",
-  "a newer update is in the queue": "bản cập nhật mới hơn đang trong hàng đợi"
+  "a newer update is in the queue": "bản cập nhật mới hơn đang trong hàng đợi",
+  "Install ": "Cài đặt ",
+  "Asked after the queue: ": "Sau hàng đợi: ",
+  "In the queue: ": "Trong hàng đợi: ",
+  "Already installed: ": "Đã cài đặt: ",
+  "Change": "Thay đổi",
+  "Keep ": "Giữ ",
+  "Skipped during the queue": "Bỏ qua trong hàng đợi",
+  "Skip all": "Bỏ qua tất cả",
+  "On the console: ": "Trên máy: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Hàng đợi không chờ các câu hỏi này. Chọn cho mỗi trò chơi, sau đó nhấn X.",
+  "Resolve": "Giải quyết",
+  "Queue done. Choose what to do with the skipped files.": "Đã xong hàng đợi. Chọn việc cần làm với các tệp bị bỏ qua."
 }

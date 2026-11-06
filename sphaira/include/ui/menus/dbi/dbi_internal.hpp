@@ -36,6 +36,8 @@ Result AnalyzeQueueName(yati::source::Usb* source, const std::string& name, yati
 s64 QueuePackageSize(const QueueEntry& entry);
 bool IsEntryAlreadyInstalled(const QueueEntry& entry);
 bool IsBaseMissing(const QueueEntry& entry);
+// the newest version of this title id on the console, nullopt when it is not installed
+std::optional<u32> ConsoleVersion(u64 id);
 
 // one "label: value" cell of a stats row.
 struct StatItem {

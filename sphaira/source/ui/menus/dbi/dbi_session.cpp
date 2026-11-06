@@ -256,7 +256,8 @@ void InstallSession::ToggleErrorView() {
 void InstallSession::BeginSessionStats() {
     orphan_content::SetInstallRunning(true); // no "update without base" question while packages are still going in
     m_update_picks.clear();
-    m_deferred_prompts.clear();
+    m_pending.clear();
+    m_resolved.clear();
     SCOPED_MUTEX(&m_mutex);
     m_stats = {};
     m_errors.clear();
@@ -414,7 +415,15 @@ bool InstallSession::PromptDowngrade(const std::string& title_name, u32 installe
     char text[512];
     std::snprintf(text, sizeof(text), "This update (v%u) is older than the one on the console (v%u). Install it? The game goes back to v%u. Some mods need an older update."_i18n.c_str(),
         incoming >> 16, installed >> 16, incoming >> 16);
-    const auto answer = AskUpdate(text);
+    PendingInstall pending{};
+    pending.kind = PendingKind::Older;
+    pending.version = incoming;
+    pending.console = installed;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (m_current_package < m_queue.size()) pending.id = ParseNameTitle(m_queue[m_current_package].file_name).id;
+    }
+    const auto answer = AskOrDefer(text, pending);
     if (!answer && m_ask_mode == AskMode::Stream) {
         AddLog("No answer: kept the newer update on the console"_i18n, LogKind::Warning);
     }
@@ -426,28 +435,33 @@ option::OptionLong& UpdateChoiceOption() {
     return opt;
 }
 
-std::optional<bool> InstallSession::AskUpdate(const std::string& question) {
-    std::string key, title;
+std::optional<bool> InstallSession::AskOrDefer(const std::string& question, PendingInstall pending) {
+    std::string title, file_name;
     {
-        // yati renames m_current_title to the game; the queue file name stays the key.
         SCOPED_MUTEX(&m_mutex);
-        title = m_current_title;
-        key = m_current_package < m_queue.size() ? m_queue[m_current_package].file_name : title;
+        title = m_current_title; // yati renames it to the game
+        pending.file = m_current_package;
+        if (m_current_package < m_queue.size()) file_name = m_queue[m_current_package].file_name;
     }
-    std::shared_ptr<PromptData> data;
-    if (auto it = m_deferred_prompts.find(key); it != m_deferred_prompts.end()) {
-        data = it->second; // asked in the first pass; the box may still be open
-        m_deferred_prompts.erase(it);
-    } else {
-        data = std::make_shared<PromptData>();
-        data->title = title;
-        data->question = question;
+    if (m_ask_mode != AskMode::Stream) {
+        if (const auto it = m_resolved.find(pending.file); it != m_resolved.end()) return it->second;
     }
-    if (data->choice == -1) {
+    if (m_ask_mode == AskMode::Defer) {
+        pending.game = title.empty() || title == file_name ? GameName(file_name) : title;
+        const bool noted = std::any_of(m_pending.begin(), m_pending.end(), [&](const auto& p) { return p.file == pending.file; });
+        if (!noted) m_pending.push_back(std::move(pending));
+        m_current_file_deferred = true;
+        return std::nullopt;
+    }
+
+    // Stream: 10 s, the data cannot wait. Wait: a question the Resolve page did not cover.
+    auto data = std::make_shared<PromptData>();
+    data->title = title;
+    data->question = question;
+    {
         SCOPED_MUTEX(&m_mutex);
         m_prompt_data = data;
     }
-
     const auto start = armTicksToNs(armGetSystemTick());
     for (;;) {
         const bool interrupted = m_cancel_requested || m_skip_requested || GetToken().stop_requested();
@@ -457,16 +471,32 @@ std::optional<bool> InstallSession::AskUpdate(const std::string& question) {
                 continue;
             case AskEnd::Answered:
                 return data->choice == 1;
-            case AskEnd::Defer:
-                // the box stays open; its answer is read when the file comes round again.
-                m_deferred_prompts[key] = data;
-                m_current_file_deferred = true;
-                return std::nullopt;
             case AskEnd::Expire:
                 data->expired = true;
                 return std::nullopt;
         }
     }
+}
+
+void InstallSession::ResolvePending() {
+    if (m_pending.empty()) return;
+    auto data = std::make_shared<ResolveData>();
+    data->rows = BuildResolveRows(m_pending);
+    m_pending.clear();
+    AddLog("Queue done. Choose what to do with the skipped files."_i18n, LogKind::Event);
+    {
+        SCOPED_MUTEX(&m_mutex);
+        m_resolve_data = data;
+    }
+    while (!data->done && !m_cancel_requested && !GetToken().stop_requested()) {
+        svcSleepThread(10'000'000ULL); // 10ms
+    }
+    data->done = true; // cancelled: the page closes
+    {
+        SCOPED_MUTEX(&m_mutex);
+        m_resolve_data = nullptr;
+    }
+    m_resolved = ResolveAnswers(data->rows);
 }
 
 bool InstallSession::Ask(const std::string& title_name, const std::string& question) {
@@ -476,36 +506,24 @@ bool InstallSession::Ask(const std::string& title_name, const std::string& quest
             return *m_current_file_reinstall_choice;
         }
     }
-
-    std::string display_name = m_current_title;
-    if (display_name.empty()) {
-        display_name = title_name;
-    }
-
-    auto data = std::make_shared<PromptData>();
-    data->title = display_name;
-    data->question = question;
-
+    PendingInstall pending{};
+    pending.kind = PendingKind::Reinstall;
     {
         SCOPED_MUTEX(&m_mutex);
-        m_prompt_data = data;
+        if (m_current_title.empty()) m_current_title = title_name;
+        if (m_current_package < m_queue.size()) {
+            const auto t = ParseNameTitle(m_queue[m_current_package].file_name);
+            pending.id = t.id;
+            pending.version = t.version;
+            pending.console = t.version;
+        }
     }
-
-    while (data->choice == -1 && !m_cancel_requested && !m_skip_requested && !GetToken().stop_requested()) {
-        svcSleepThread(10'000'000ULL); // 10ms
-    }
-
-    if (m_cancel_requested || m_skip_requested || GetToken().stop_requested()) {
-        return false;
-    }
-
-    bool result = data->choice == 1;
-    {
+    const auto answer = AskOrDefer(question, pending);
+    if (answer) {
         SCOPED_MUTEX(&m_mutex);
-        m_current_file_reinstall_choice = result;
-        m_prompt_data = nullptr;
+        m_current_file_reinstall_choice = *answer;
     }
-    return result;
+    return answer.value_or(false);
 }
 
 void InstallSession::OnCompatibilityWarning(const CompatibilityWarning& warning) {

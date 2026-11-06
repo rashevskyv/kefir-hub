@@ -353,12 +353,14 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
     }
 
     std::shared_ptr<PromptData> prompt{}, expired{};
+    std::shared_ptr<ResolveData> resolve{};
     if (mutexTryLock(&m_mutex)) {
         if (m_prompt_data && m_prompt_data->expired) {
             expired = std::move(m_prompt_data);
         } else if (m_prompt_data && m_prompt_data->choice == -1) {
             prompt = m_prompt_data;
         }
+        if (m_resolve_data && !m_resolve_data->shown) resolve = m_resolve_data;
         mutexUnlock(&m_mutex);
     }
     // a stream question nobody waits for any more (the default was kept): close its box.
@@ -420,7 +422,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
     }
 
     if (m_screensaver.IsActive()) {
-        if (prompt) {
+        if (prompt || resolve) {
             m_screensaver.Stop();
             m_inactivity_tracker.Reset(now_sec);
         } else {
@@ -433,23 +435,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         }
     }
 
-    if (prompt) {
-        int expected = -1;
-        if (prompt->choice.compare_exchange_strong(expected, -2)) {
-            std::string msg = prompt->title + "\n\n" + prompt->question;
-            // dies with the box (inside its callback), so a box closed some other way is never touched.
-            std::shared_ptr<int> alive{new int{}, [prompt](int* p) { delete p; prompt->box = nullptr; }};
-            auto box = std::make_unique<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0, [prompt, alive](std::optional<s64> choice) {
-                if (choice && *choice == 1) {
-                    prompt->choice = 1; // Yes
-                } else {
-                    prompt->choice = 0; // No
-                }
-            });
-            prompt->box = box.get();
-            App::Push(std::move(box));
-        }
-    }
+    ShowPrompts(prompt, resolve);
 
     std::optional<CompatibilityWarning> warn_popup{};
     {

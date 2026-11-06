@@ -4171,5 +4171,17 @@
   "No answer: kept the newer update on the console": "Tidak ada jawaban: pembaruan yang lebih baru dipertahankan di konsol",
   "a newer update is on the console": "pembaruan yang lebih baru ada di konsol",
   "another update of this game was chosen": "pembaruan lain dari gim ini dipilih",
-  "a newer update is in the queue": "pembaruan yang lebih baru ada dalam antrean"
+  "a newer update is in the queue": "pembaruan yang lebih baru ada dalam antrean",
+  "Install ": "Pasang ",
+  "Asked after the queue: ": "Setelah antrean: ",
+  "In the queue: ": "Dalam antrean: ",
+  "Already installed: ": "Sudah terpasang: ",
+  "Change": "Ubah",
+  "Keep ": "Simpan ",
+  "Skipped during the queue": "Dilewati selama antrean",
+  "Skip all": "Lewati semua",
+  "On the console: ": "Pada konsol: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "Antrean tidak menunggu pertanyaan ini. Pilih untuk setiap game, lalu tekan X.",
+  "Resolve": "Selesaikan",
+  "Queue done. Choose what to do with the skipped files.": "Antrean selesai. Pilih tindakan untuk file yang dilewati."
 }

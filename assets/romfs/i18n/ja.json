@@ -4176,5 +4176,17 @@
   "No answer: kept the newer update on the console": "いいえ：本体の新しいアップデートを維持しました",
   "a newer update is on the console": "コンソールにより新しいアップデートがあります",
   "another update of this game was chosen": "このゲームの別の更新データが選択されました",
-  "a newer update is in the queue": "新しいアップデートがキューにあります"
+  "a newer update is in the queue": "新しいアップデートがキューにあります",
+  "Install ": "インストール ",
+  "Asked after the queue: ": "キューの後: ",
+  "In the queue: ": "キュー内: ",
+  "Already installed: ": "インストール済み: ",
+  "Change": "変更",
+  "Keep ": "保持",
+  "Skipped during the queue": "キュー内でスキップされました",
+  "Skip all": "すべてスキップ",
+  "On the console: ": "本体: ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "キューはこれらの質問を待ちませんでした。各ゲームで選択し、Xを押してください。",
+  "Resolve": "解決",
+  "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。"
 }

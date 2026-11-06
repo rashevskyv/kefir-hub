@@ -4229,5 +4229,17 @@
   "No answer: kept the newer update on the console": "無回答：保留主機上的較新更新",
   "a newer update is on the console": "主機上有更新的版本",
   "another update of this game was chosen": "已選擇此遊戲的另一更新",
-  "a newer update is in the queue": "較新的更新在佇列中"
+  "a newer update is in the queue": "較新的更新在佇列中",
+  "Install ": "安裝 ",
+  "Asked after the queue: ": "佇列之後：",
+  "In the queue: ": "佇列中：",
+  "Already installed: ": "已安裝：",
+  "Change": "變更",
+  "Keep ": "保留",
+  "Skipped during the queue": "在佇列中已略過",
+  "Skip all": "略過全部",
+  "On the console: ": "在主機上： ",
+  "The queue did not wait for these questions. Choose for each game, then press X.": "佇列未等待這些問題。請為每個遊戲進行選擇，然後按 X。",
+  "Resolve": "解決",
+  "Queue done. Choose what to do with the skipped files.": "佇列已完成。請選擇如何處理略過的檔案。"
 }
