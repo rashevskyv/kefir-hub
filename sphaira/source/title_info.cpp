@@ -310,7 +310,7 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
                     }
                     // the cache picks its own entry from the raw NACP, which in v2 is junk: give it the decoded name.
                     if (decoded) {
-                        for (auto& entry : control->nacp.lang) {
+                        for (auto& entry : control->nacp.lang_data.lang) {
                             entry = result->lang;
                         }
                     }
