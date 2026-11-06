@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.299 — Games: "Send to another console" in the list menu and in Game Actions
+Select games, press + (or one game's Game Actions) → "Send to another console" → USB cable / Wi-Fi; the existing Console Transfer send runs with these games (no "Choose games" step). The receiver still opens Console Transfer → Receive games (plan E.2 popup-on-receiver not done).
+host tests: pass (quick), nro: not built, switch: pending (two consoles, USB-C cable: sender enumerates as host and waits, receiver installs base + update + DLC; Wi-Fi path)
+
 ## v0.14.298 — Battery drain: the CPU / GPU load chart scrolls (the last minute), not the whole drain
 The other charts still keep the whole drain.
 host tests: pass (quick), nro: not built, switch: pending (load chart scrolls left, power/voltage/temperature charts unchanged)

@@ -70,6 +70,19 @@ Moving copies the content to the other storage, switches the game over to the ne
 2. Choose [[Move to SD]] or [[Move to NAND]]. This starts at once, without a summary.
 
 **One part only (for example only the DLC):** on the [[Content]] tab press **A** on the part and choose [[Move component to SD]] or [[Move component to NAND]].
+<!-- draft
+- Several games, mixed storage: [[Move to NAND]] is shown when at least one selected game has a part on microSD; [[Move to SD]] when at least one has a part on NAND; both are shown for a mixed selection
+- each game moves only its parts that are on the other storage; parts already on the target stay where they are
+- the free-space check runs per game: a long selection can move the first games and stop with a not-enough-space error on a later one
+-->
+
+## Send a game to another console
+<!-- draft
+- new in v0.14.299: [[Send to another console]] in the list menu (select games, press **+**) and in [[Game Actions]] of one game (open with **A**, press **+**)
+- it asks [[How is the other console connected?]]: [[USB cable]] or [[Wi-Fi (same network)]]; the games skip the [[Choose games]] step
+- then the same flow as [[Console Transfer]] → [[Send installed games]]: see the console-transfer page, section Move installed games
+- base game, updates and DLC of each selected game are sent
+-->
 
 !!! warning
     Moving a whole game is refused before it starts if the target storage does not have enough free space. You can cancel while data is copied; near the end, when the game is switched to the new copy, cancelling is no longer possible. Do not turn the console off during a move.

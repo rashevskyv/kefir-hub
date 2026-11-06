@@ -111,6 +111,10 @@
 У режимі USB-кабелю використовується кабель USB-C — USB-C між двома консолями. Консоль-відправник виступає в ролі USB-хоста та надсилає вибрані ігри (по одному NSP-файлу для базової гри, оновлень і DLC) так само, як це робить функція Dump → [[USB transfer (Switch 2 Switch)]]. Консоль-отримувач відкриває екран [[PC Install (USB)]], список надходить автоматично, після чого стає доступною звичайна черга: виберіть потрібні елементи й натисніть **A** ([[Install selected]]).
 
 Передача через кабель ігнорує опцію дампа [[USB transfer stream]], оскільки потоковий режим ніколи не використовується між двома консолями.
+<!-- draft
+- new in v0.14.299: the same send starts from [[Games]]: select games, press **+**, [[Send to another console]] (or from one game's [[Game Actions]]); it asks [[USB cable]] or [[Wi-Fi (same network)]]
+- with [[USB cable]] the sending console waits for the cable; the receiving console opens [[Console Transfer]] → [[Receive games]] → [[USB cable]]
+-->
 
 ## Перенести копії збережень {#move-save-backups}
 1. На консолі-відправнику зробіть копії потрібних збережень у [[Saves]]. Див. [Збереження](saves.md).

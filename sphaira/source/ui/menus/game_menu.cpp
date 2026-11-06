@@ -11,6 +11,7 @@
 #include "ui/menus/game/game_internal.hpp"
 #include "ui/menus/game/game_details.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/menus/console_games_transfer.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -286,6 +287,12 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
 
                 add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move all selected games to SD card."_i18n);
                 add_move(NcmStorageId_BuiltInUser, "Move to NAND"_i18n, "Move all selected games to NAND system memory."_i18n);
+
+                options->Add<SidebarEntryCallback>("Send to another console"_i18n, [targets](){
+                    std::vector<u64> ids;
+                    for (const auto& e : targets) ids.push_back(e.app_id);
+                    games_transfer::Send(std::move(ids));
+                }, true, "Connect the two consoles with a USB-C cable. The other console opens Console Transfer → Receive games → USB cable."_i18n)->SetIcon(ActionIcon::Move);
 
                 options->Add<SidebarEntryCallback>("Create mods folders"_i18n, [this](){
                     CreateContentsFolders();

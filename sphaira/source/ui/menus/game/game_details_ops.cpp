@@ -1,5 +1,6 @@
 #include "ui/menus/game/game_details_internal.hpp"
 #include "ui/menus/game_menu.hpp"
+#include "ui/menus/console_games_transfer.hpp"
 #include "forced_language.hpp"
 #include "romfs_pack.hpp"
 #include "repack/repack.hpp"
@@ -372,6 +373,10 @@ void DbiDetailsMenu::ShowGameActions() {
 
         add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move game components from NAND to SD card."_i18n);
         add_move(NcmStorageId_BuiltInUser, "Move to NAND"_i18n, "Move game components from SD card to NAND system memory."_i18n);
+
+        options->Add<SidebarEntryCallback>("Send to another console"_i18n, [app_id = entry.app_id](){
+            games_transfer::Send({app_id});
+        }, true, "Connect the two consoles with a USB-C cable. The other console opens Console Transfer → Receive games → USB cable."_i18n)->SetIcon(ActionIcon::Move);
 
         options->Add<SidebarEntryCallback>("Dump all components"_i18n, [this](){
             m_dump_callback(CurrentEntry(), title::ContentFlag_All);

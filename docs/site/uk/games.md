@@ -70,6 +70,19 @@
 2. Виберіть [[Move to SD]] або [[Move to NAND]]. Перенесення почнеться одразу, без зведення.
 
 **Лише одна частина (наприклад, тільки DLC):** на вкладці [[Content]] натисніть **A** на потрібній частині й виберіть [[Move component to SD]] або [[Move component to NAND]].
+<!-- draft
+- Several games, mixed storage: [[Move to NAND]] is shown when at least one selected game has a part on microSD; [[Move to SD]] when at least one has a part on NAND; both are shown for a mixed selection
+- each game moves only its parts that are on the other storage; parts already on the target stay where they are
+- the free-space check runs per game: a long selection can move the first games and stop with a not-enough-space error on a later one
+-->
+
+## Send a game to another console
+<!-- draft
+- new in v0.14.299: [[Send to another console]] in the list menu (select games, press **+**) and in [[Game Actions]] of one game (open with **A**, press **+**)
+- it asks [[How is the other console connected?]]: [[USB cable]] or [[Wi-Fi (same network)]]; the games skip the [[Choose games]] step
+- then the same flow as [[Console Transfer]] → [[Send installed games]]: see the console-transfer page, section Move installed games
+- base game, updates and DLC of each selected game are sent
+-->
 
 !!! warning
     Перенесення цілої гри не почнеться, якщо в цільовому сховищі замало вільного місця. Поки дані копіюються, перенесення можна скасувати; наприкінці, коли гра перемикається на нову копію, скасувати вже не можна. Не вимикайте консоль під час перенесення.

@@ -118,6 +118,10 @@ You can also send games over a USB-C to USB-C cable between the two consoles:
 2. On the receiving console, when asked [[How is the other console connected?]], choose [[USB cable]] (or [[Wi-Fi (same network)]] for Wi-Fi).
 3. The sending console acts as the USB host and sends the chosen games (one NSP per base game, update, and DLC) the way Dump → [[USB transfer (Switch 2 Switch)]] does, ignoring the [[USB transfer stream]] dump option.
 4. The receiving console opens its [[PC Install (USB)]] screen, the list arrives by itself, and you select the games in the queue and press **A** ([[Install selected]]).
+<!-- draft
+- new in v0.14.299: the same send starts from [[Games]]: select games, press **+**, [[Send to another console]] (or from one game's [[Game Actions]]); it asks [[USB cable]] or [[Wi-Fi (same network)]]
+- with [[USB cable]] the sending console waits for the cable; the receiving console opens [[Console Transfer]] → [[Receive games]] → [[USB cable]]
+-->
 
 ## Move save backups
 1. On the sending console, back up the saves you need in [[Saves]]. See [Saves](saves.md).

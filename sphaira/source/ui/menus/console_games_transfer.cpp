@@ -316,7 +316,14 @@ void ShowReceivePicker(const std::string& base_url, std::shared_ptr<std::vector<
 
 void Send(std::vector<u64> preselected) {
     if (!preselected.empty()) {
-        StartSharing(std::move(preselected));
+        PopupList::Items items{"USB cable"_i18n, "Wi-Fi (same network)"_i18n};
+        App::Push<PopupList>("How is the other console connected?"_i18n, items, [ids = std::move(preselected)](auto op_index){
+            if (op_index && *op_index == 0) {
+                StartSendingByCable(ids);
+            } else if (op_index) {
+                StartSharing(ids);
+            }
+        });
         return;
     }
 
