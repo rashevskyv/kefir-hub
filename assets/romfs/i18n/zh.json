@@ -4220,5 +4220,14 @@
   "The console switched off: the empty battery becomes 0 %": "主机已关机：电量耗尽变为 0 %",
   "Writing the empty battery as 0 %": "正在将空电池写入为 0%",
   "empty battery (0 %)": "电量耗尽 (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "从现在起，官方更新将不会覆盖安装在已安装的游戏上。若要更新，请将其删除并重新安装原文件。"
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "从现在起，官方更新将不会覆盖安装在已安装的游戏上。若要更新，请将其删除并重新安装原文件。",
+  "No answer yet, moved to the end of the queue: ": "尚无回答，已移至队列末尾： ",
+  "Several updates of one game": "同一游戏的多个更新",
+  "The queue has %d updates for this game. Install v%u?": "此游戏队列中有 %d 个更新。是否安装 v%u？",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "队列中有游戏的多个更新：仅安装最新版本或询问。控制台已有更新的旧版本更新会在队列中只有它时被询问。",
+  "Newest": "最新",
+  "No answer: kept the newer update on the console": "无回答：保留主机上的较新更新",
+  "a newer update is on the console": "控制台上有更新的版本",
+  "another update of this game was chosen": "已选择此游戏的另一个更新",
+  "a newer update is in the queue": "较新的更新在队列中"
 }

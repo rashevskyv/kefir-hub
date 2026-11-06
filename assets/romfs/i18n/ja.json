@@ -4167,5 +4167,14 @@
   "The console switched off: the empty battery becomes 0 %": "本体の電源が切れました：バッテリー残量が0%になりました",
   "Writing the empty battery as 0 %": "空のバッテリーを0%として書き込み中",
   "empty battery (0 %)": "バッテリー残量なし (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "これ以降、インストール済みのゲームに対して公式アップデートは上書きインストールされません。更新するには、一度削除して元のファイルを再度インストールしてください。"
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "これ以降、インストール済みのゲームに対して公式アップデートは上書きインストールされません。更新するには、一度削除して元のファイルを再度インストールしてください。",
+  "No answer yet, moved to the end of the queue: ": "まだ回答がありません。キューの最後に移動しました: ",
+  "Several updates of one game": "1つのゲームの複数のアップデート",
+  "The queue has %d updates for this game. Install v%u?": "このゲームには%d個のアップデートがあります。v%uをインストールしますか？",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "キューにゲームのアップデートが複数あります：最新のものだけをインストールするか、どれにするか尋ねます。コンソールにあるものより古いアップデートは、キュー内がそれだけの場合に尋ねられます。",
+  "Newest": "最新",
+  "No answer: kept the newer update on the console": "いいえ：本体の新しいアップデートを維持しました",
+  "a newer update is on the console": "コンソールにより新しいアップデートがあります",
+  "another update of this game was chosen": "このゲームの別の更新データが選択されました",
+  "a newer update is in the queue": "新しいアップデートがキューにあります"
 }

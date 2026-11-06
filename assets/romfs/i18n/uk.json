@@ -4103,5 +4103,14 @@
   "Next in this cycle: the charge. Plug the charger in and the charge starts by itself. If the charger is in already, press Go on.": "Наступний етап цього циклу: зарядка. Підключіть зарядний пристрій, і зарядка почнеться автоматично. Якщо зарядний пристрій уже підключено, натисніть «Далі».",
   "The console switched off: the empty battery becomes 0 %": "Консоль вимкнулася: порожня батарея стає 0 %",
   "Writing the empty battery as 0 %": "Записую порожню батарею як 0 %",
-  "empty battery (0 %)": "порожня батарея (0 %)"
+  "empty battery (0 %)": "порожня батарея (0 %)",
+  "No answer yet, moved to the end of the queue: ": "Ще немає відповіді, перенесено в кінець черги: ",
+  "Several updates of one game": "Кілька оновлень для однієї гри",
+  "The queue has %d updates for this game. Install v%u?": "Оновлень цієї гри в черзі: %d. Встановити v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "У черзі є понад одне оновлення для гри: встановити лише найновіше або запитати. Про оновлення, старіше за те, що на консолі, запитують, коли воно є єдиним у черзі.",
+  "Newest": "Найновіше",
+  "No answer: kept the newer update on the console": "Без відповіді: на консолі залишено новіше оновлення",
+  "a newer update is on the console": "на консолі є новіше оновлення",
+  "another update of this game was chosen": "було вибрано інше оновлення для цієї гри",
+  "a newer update is in the queue": "новіше оновлення в черзі"
 }

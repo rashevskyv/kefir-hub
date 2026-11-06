@@ -150,6 +150,7 @@ Install behaviour and safety switches. What each option does is on the [Install]
 | [[Ban warning on sysMMC]] | On |
 | [[Install location]] | [[Automatic]] |
 | [[Allow downgrade]] | Off |
+| [[Several updates of one game]] | [[Newest]] |
 | [[Skip if already installed]] | [[Skip]] |
 | [[Save options globally]] | On |
 | [[Boost CPU during transfer]] | On |

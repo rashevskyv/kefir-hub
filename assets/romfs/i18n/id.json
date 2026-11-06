@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Konsol dimatikan: baterai kosong mencapai 0 %",
   "Writing the empty battery as 0 %": "Menulis baterai kosong sebagai 0 %",
   "empty battery (0 %)": "baterai habis (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Pembaruan resmi tidak akan dipasang di atas game yang dipasang mulai sekarang. Untuk memperbaruinya, hapus game tersebut dan pasang file asli kembali."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Pembaruan resmi tidak akan dipasang di atas game yang dipasang mulai sekarang. Untuk memperbaruinya, hapus game tersebut dan pasang file asli kembali.",
+  "No answer yet, moved to the end of the queue: ": "Belum ada jawaban, dipindahkan ke akhir antrean: ",
+  "Several updates of one game": "Beberapa pembaruan dari satu game",
+  "The queue has %d updates for this game. Install v%u?": "Antrean memiliki %d pembaruan untuk gim ini. Instal v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Antrean memiliki lebih dari satu pembaruan untuk sebuah gim: instal yang terbaru saja, atau tanyakan. Pembaruan yang lebih lama dari yang ada di konsol akan ditanyakan jika itu adalah satu-satunya di antrean.",
+  "Newest": "Terbaru",
+  "No answer: kept the newer update on the console": "Tidak ada jawaban: pembaruan yang lebih baru dipertahankan di konsol",
+  "a newer update is on the console": "pembaruan yang lebih baru ada di konsol",
+  "another update of this game was chosen": "pembaruan lain dari gim ini dipilih",
+  "a newer update is in the queue": "pembaruan yang lebih baru ada dalam antrean"
 }

@@ -76,6 +76,17 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 | [[Boost CPU during transfer]] | Під час передавання процесор працює швидше. | Вимк. |
 | [[Screen off (Minus)]] | Що робить **−**, поки працює черга, див. [Вимкніть екран](sd-card.md#screen-off). | — |
 
+<!-- draft
+- new option [[Several updates of one game]] in this table, after [[Allow downgrade]]: values [[Newest]] and [[Ask]], default [[Newest]]
+- [[Newest]]: when the queue holds two or more updates of one game (version from the file name, e.g. [v196608]), only the highest one installs; the others are skipped with "a newer update is in the queue"
+- [[Ask]]: each of those updates asks "The queue has N updates for this game. Install vX?"; the first **Yes** picks that update, the other updates of the game are skipped
+- an update older than the one on the console, and the only update of that game in the queue, is always asked about (a translation or mod may need it), in both modes; with several updates and [[Newest]] the console's newer update stays
+- the queue does not wait for the answer: after 10 seconds without an answer the file moves to the end of the queue and the next file starts; the question stays on screen; at the end of the queue the Hub waits for the answers
+- MTP, FTP and the web upload send each file once: there, after 10 seconds without an answer, the older update is skipped and the console keeps the newer one
+- [[Allow downgrade]] on still installs an older update without a question
+- the Install recursively order no longer decides which update stays (before: the last file in alphabetical order won)
+-->
+
 [[What to install]]
 
 | Параметр | Що робить | Типово |
@@ -130,6 +141,10 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 **Пакет пропущено, бо його вже встановлено.** [[Skip if already installed]] має значення [[Skip]]. Виберіть [[Reinstall]] або [[Prompt]].
 
 **Оновлення пропущено.** Воно старіше за встановлене. Увімкніть [[Allow downgrade]], якщо хочете повернутися до нього.
+<!-- draft
+- with [[Several updates of one game]] = [[Newest]] an older update is also skipped when the queue has a newer update of that game ("a newer update is in the queue") or when the console has a newer one and the queue had several updates
+- the only update of a game that is older than the console's is asked about instead of skipped
+-->
 
 **Файли NSZ не встановлюються в режимі аплету.** Запустіть Kefir Hub у режимі тайтлу.
 

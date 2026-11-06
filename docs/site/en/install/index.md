@@ -70,6 +70,17 @@ In the install queue you can also set the target of one package: highlight it an
 | [[Boost CPU during transfer]] | Runs the CPU faster during transfers. | On |
 | [[Screen off (Minus)]] | What **−** does while a queue runs, see [Turn the screen off](sd-card.md#screen-off). | — |
 
+<!-- draft
+- new option [[Several updates of one game]] in this table, after [[Allow downgrade]]: values [[Newest]] and [[Ask]], default [[Newest]]
+- [[Newest]]: when the queue holds two or more updates of one game (version from the file name, e.g. [v196608]), only the highest one installs; the others are skipped with "a newer update is in the queue"
+- [[Ask]]: each of those updates asks "The queue has N updates for this game. Install vX?"; the first **Yes** picks that update, the other updates of the game are skipped
+- an update older than the one on the console, and the only update of that game in the queue, is always asked about (a translation or mod may need it), in both modes; with several updates and [[Newest]] the console's newer update stays
+- the queue does not wait for the answer: after 10 seconds without an answer the file moves to the end of the queue and the next file starts; the question stays on screen; at the end of the queue the Hub waits for the answers
+- MTP, FTP and the web upload send each file once: there, after 10 seconds without an answer, the older update is skipped and the console keeps the newer one
+- [[Allow downgrade]] on still installs an older update without a question
+- the Install recursively order no longer decides which update stays (before: the last file in alphabetical order won)
+-->
+
 [[What to install]]
 
 | Option | What it does | Default |
@@ -120,6 +131,10 @@ After an install from any source that leaves an update or DLC without its base g
 **A package is skipped with "already installed".** [[Skip if already installed]] is set to [[Skip]]. Set it to [[Reinstall]] or [[Prompt]].
 
 **An update is skipped.** It is older than the installed update. Turn on [[Allow downgrade]] if you want to go back to it.
+<!-- draft
+- with [[Several updates of one game]] = [[Newest]] an older update is also skipped when the queue has a newer update of that game ("a newer update is in the queue") or when the console has a newer one and the queue had several updates
+- the only update of a game that is older than the console's is asked about instead of skipped
+-->
 
 **NSZ files fail in Applet Mode.** Start Kefir Hub in Title Mode.
 

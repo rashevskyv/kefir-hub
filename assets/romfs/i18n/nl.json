@@ -4167,5 +4167,14 @@
   "The console switched off: the empty battery becomes 0 %": "De console is uitgeschakeld: de lege accu bereikt 0 %",
   "Writing the empty battery as 0 %": "Lege batterij wegschrijven als 0 %",
   "empty battery (0 %)": "lege batterij (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Officiële updates worden vanaf nu niet meer over geïnstalleerde games heen geïnstalleerd. Om er een bij te werken, verwijdert u deze en installeert u het originele bestand opnieuw."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Officiële updates worden vanaf nu niet meer over geïnstalleerde games heen geïnstalleerd. Om er een bij te werken, verwijdert u deze en installeert u het originele bestand opnieuw.",
+  "No answer yet, moved to the end of the queue: ": "Nog geen antwoord, verplaatst naar het einde van de wachtrij: ",
+  "Several updates of one game": "Meerdere updates van één game",
+  "The queue has %d updates for this game. Install v%u?": "De wachtrij heeft %d updates voor dit spel. Versie %u installeren?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "De wachtrij bevat meer dan één update voor een game: installeer alleen de nieuwste of vraag welke. Er wordt gevraagd naar een update die ouder is dan die op de console wanneer dit de enige in de wachtrij is.",
+  "Newest": "Nieuwste",
+  "No answer: kept the newer update on the console": "Geen antwoord: nieuwere update op de console behouden",
+  "a newer update is on the console": "er is een newer update op de console",
+  "another update of this game was chosen": "er is another update of this game was chosen",
+  "a newer update is in the queue": "een nieuwere update staat in de wachtrij"
 }

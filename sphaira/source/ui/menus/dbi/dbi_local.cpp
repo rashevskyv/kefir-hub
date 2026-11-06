@@ -114,7 +114,20 @@ void Menu::LocalThreadFunction() {
         m_actions_dirty = true;
         BeginSessionStats();
 
-        for (size_t i = 0; i < m_queue.size(); i++) {
+        // files whose update question got no answer go once more after the queue.
+        std::vector<size_t> deferred;
+        size_t later = 0;
+        for (size_t cursor = 0;;) {
+            size_t i;
+            bool final_pass{};
+            if (cursor < m_queue.size()) {
+                i = cursor++;
+            } else if (later < deferred.size()) {
+                i = deferred[later++];
+                final_pass = true;
+            } else {
+                break;
+            }
             bool selected{};
             yati::InstallAnalysis analysis{};
             bool plan_sd{};
@@ -141,6 +154,16 @@ void Menu::LocalThreadFunction() {
             }
             if (!selected) continue;
             if (m_cancel_requested) break;
+
+            const auto go = CheckQueuedUpdate(i, final_pass);
+            if (!go) {
+                deferred.push_back(i);
+                continue;
+            }
+            if (!*go) {
+                RecordPackageResult(i, 0, false, true, plan_sd, 0, 0);
+                continue;
+            }
 
             // Auto re-picks from live usable space; pinned Sd/Nand stay frozen.
             plan_sd = RefreshAutoInstallTarget(i);
@@ -185,6 +208,11 @@ void Menu::LocalThreadFunction() {
                 user_skipped = m_skip_gate.Close();
             }
             const bool cancelled = m_cancel_requested || (!user_skipped && (result == Result_TransferCancelled || result == Result_UsbCancelled));
+            if (m_current_file_deferred && !user_skipped && !cancelled && R_SUCCEEDED(result)) {
+                AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
+                deferred.push_back(i);
+                continue;
+            }
             RecordPackageResult(i, result, cancelled, user_skipped, plan_sd,
                 m_total_read.load() - read_before, m_total_write.load() - write_before);
             if (user_skipped) {

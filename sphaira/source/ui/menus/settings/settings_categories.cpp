@@ -23,6 +23,7 @@
 #include "i18n.hpp"
 #include "location.hpp"
 #include "swkbd.hpp"
+#include "ui/menus/update_choice.hpp"
 
 #include <algorithm>
 #include <array>
@@ -435,6 +436,21 @@ void Menu::BuildCategories() {
                     }, App::GetInstallLocation());
                 }},
                 MakeOptionItem("Allow downgrade"_i18n, "Allow lower title updates to be installed."_i18n, app->m_allow_downgrade),
+#if ENABLE_NETWORK_INSTALL
+                { "Several updates of one game"_i18n, "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue."_i18n, [](){
+                    const auto val = dbi::UpdateChoiceOption().Get();
+                    return val == dbi::UpdateChoice_Ask ? "Ask"_i18n : "Newest"_i18n;
+                }, [](){
+                    PopupList::Items items;
+                    items.push_back("Newest"_i18n);
+                    items.push_back("Ask"_i18n);
+                    App::Push<PopupList>("Several updates of one game"_i18n, std::move(items), [](std::optional<s64> op_index){
+                        if (op_index) {
+                            dbi::UpdateChoiceOption().Set(*op_index);
+                        }
+                    }, dbi::UpdateChoiceOption().Get());
+                }},
+#endif
                 { "Skip if already installed"_i18n, "Skip or prompt for titles or NCAs that are already installed."_i18n, [](){
                     const auto val = App::GetApp()->m_skip_if_already_installed.Get();
                     if (val >= 0 && val < 3) {

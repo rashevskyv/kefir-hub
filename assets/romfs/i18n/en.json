@@ -4101,5 +4101,14 @@
   "Next in this cycle: the charge. Plug the charger in and the charge starts by itself. If the charger is in already, press Go on.": "Next in this cycle: the charge. Plug the charger in and the charge starts by itself. If the charger is in already, press Go on.",
   "The console switched off: the empty battery becomes 0 %": "The console switched off: the empty battery becomes 0 %",
   "Writing the empty battery as 0 %": "Writing the empty battery as 0 %",
-  "empty battery (0 %)": "empty battery (0 %)"
+  "empty battery (0 %)": "empty battery (0 %)",
+  "Newest": "Newest",
+  "No answer yet, moved to the end of the queue: ": "No answer yet, moved to the end of the queue: ",
+  "No answer: kept the newer update on the console": "No answer: kept the newer update on the console",
+  "Several updates of one game": "Several updates of one game",
+  "The queue has %d updates for this game. Install v%u?": "The queue has %d updates for this game. Install v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.",
+  "a newer update is in the queue": "a newer update is in the queue",
+  "a newer update is on the console": "a newer update is on the console",
+  "another update of this game was chosen": "another update of this game was chosen"
 }

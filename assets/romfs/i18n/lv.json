@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Konsole izslēdzās: tukšais akumulators sasniedz 0 %",
   "Writing the empty battery as 0 %": "Tukšā akumulatora rakstīšana kā 0 %",
   "empty battery (0 %)": "tukšs akumulators (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Oficiālie atjauninājumi turpmāk netiks instalēti virs instalētajām spēlēm. Lai atjauninātu kādu no tām, izdzēsiet to un instalējiet oriģinālo failu vēlreiz."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Oficiālie atjauninājumi turpmāk netiks instalēti virs instalētajām spēlēm. Lai atjauninātu kādu no tām, izdzēsiet to un instalējiet oriģinālo failu vēlreiz.",
+  "No answer yet, moved to the end of the queue: ": "Atbildes vēl nav, pārvietots uz rindu beigām: ",
+  "Several updates of one game": "Vairāki vienas spēles atjauninājumi",
+  "The queue has %d updates for this game. Install v%u?": "Rindā ir %d atjauninājumi šai spēlei. Instalēt v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Rindā ir vairāk nekā viens spēles atjauninājums: instalēt tikai jaunāko vai jautāt. Par atjauninājumu, kas ir vecāks par konsolē esošo, tiek jautāts, kad tas ir vienīgais rindā.",
+  "Newest": "Jaunākā",
+  "No answer: kept the newer update on the console": "Nav atbildes: konsolē saglabāts jaunākais atjauninājums",
+  "a newer update is on the console": "konsolē ir jaunāks atjauninājums",
+  "another update of this game was chosen": "šai spēlei tika izvēlēts cits atjauninājums",
+  "a newer update is in the queue": "jaunāks atjauninājums ir rindā"
 }

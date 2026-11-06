@@ -4168,5 +4168,14 @@
   "The console switched off: the empty battery becomes 0 %": "La console s'est éteinte : la batterie vide atteint 0 %",
   "Writing the empty battery as 0 %": "Écriture de la batterie vide à 0 %",
   "empty battery (0 %)": "batterie vide (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Les mises à jour officielles ne s'installeront plus par-dessus les jeux installés à partir de maintenant. Pour en mettre un à jour, supprimez-le et réinstallez le fichier d'origine."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Les mises à jour officielles ne s'installeront plus par-dessus les jeux installés à partir de maintenant. Pour en mettre un à jour, supprimez-le et réinstallez le fichier d'origine.",
+  "No answer yet, moved to the end of the queue: ": "Pas encore de réponse, déplacé à la fin de la file d'attente : ",
+  "Several updates of one game": "Plusieurs mises à jour pour un jeu",
+  "The queue has %d updates for this game. Install v%u?": "La file d'attente contient %d mises à jour pour ce jeu. Installer la v%u ?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "La file d'attente contient plusieurs mises à jour pour un jeu : n'installer que la plus récente ou demander laquelle. Une mise à jour plus ancienne que celle de la console est demandée lorsqu'elle est la seule dans la file.",
+  "Newest": "Plus récente",
+  "No answer: kept the newer update on the console": "Aucune réponse : conservation de la mise à jour la plus récente sur la console",
+  "a newer update is on the console": "une mise à jour plus récente est sur la console",
+  "another update of this game was chosen": "une autre mise à jour de ce jeu a été choisie",
+  "a newer update is in the queue": "une mise à jour plus récente est dans la file d'attente"
 }

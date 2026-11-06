@@ -4168,5 +4168,14 @@
   "The console switched off: the empty battery becomes 0 %": "La consola se apagó: la batería agotada llega al 0 %",
   "Writing the empty battery as 0 %": "Escribiendo la batería vacía como 0 %",
   "empty battery (0 %)": "batería descargada (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Las actualizaciones oficiales no se instalarán sobre los juegos instalados a partir de ahora. Para actualizar uno, bórralo e instala el archivo original de nuevo."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Las actualizaciones oficiales no se instalarán sobre los juegos instalados a partir de ahora. Para actualizar uno, bórralo e instala el archivo original de nuevo.",
+  "No answer yet, moved to the end of the queue: ": "Sin respuesta todavía, movido al final de la cola: ",
+  "Several updates of one game": "Varias actualizaciones de un juego",
+  "The queue has %d updates for this game. Install v%u?": "La cola tiene %d actualizaciones para este juego. ¿Instalar v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "La cola tiene más de una actualización para un juego: instalar solo la más nueva o preguntar cuál. Se pregunta por una actualización anterior a la de la consola cuando es la única en la cola.",
+  "Newest": "Más reciente",
+  "No answer: kept the newer update on the console": "Sin respuesta: se mantuvo la actualización más reciente en la consola",
+  "a newer update is on the console": "hay una actualización más reciente en la consola",
+  "another update of this game was chosen": "se ha elegido otra actualización de este juego",
+  "a newer update is in the queue": "una actualización más reciente está en la cola"
 }

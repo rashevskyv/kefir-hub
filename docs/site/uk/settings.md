@@ -159,6 +159,7 @@ Kefir Hub перевіряє наявність нової версії один
 | [[Ban warning on sysMMC]] | Увімк. |
 | [[Install location]] | [[Automatic]] |
 | [[Allow downgrade]] | Вимк. |
+| [[Several updates of one game]] | [[Newest]] |
 | [[Skip if already installed]] | [[Skip]] |
 | [[Save options globally]] | Увімк. |
 | [[Boost CPU during transfer]] | Увімк. |

@@ -2,6 +2,7 @@
 
 #include "ui/menus/dbi/dbi_internal.hpp"
 #include "ui/menus/install_plan.hpp"
+#include "ui/menus/update_choice.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
 #include "orphan_content.hpp"
@@ -150,6 +151,8 @@ void InstallSession::SetCurrentPackage(const std::string& batch_id, const std::s
     if (index != QueueIndexNotFound) {
         m_current_package = index;
         m_current_title = m_queue[index].file_name;
+        // stream files come one by one: the last file's Reinstall answer must not carry over.
+        m_current_file_reinstall_choice = std::nullopt;
         m_queue[index].install_sd = to_sd;
         m_queue[index].planned_sd = to_sd;
         m_queue[index].target = to_sd ? InstallTarget::Sd : InstallTarget::Nand;
@@ -174,6 +177,7 @@ void InstallSession::SetCurrentPackage(const std::string& batch_id, const std::s
     m_queue.push_back(std::move(entry));
     m_current_package = m_queue.size() - 1;
     m_current_title = name;
+    m_current_file_reinstall_choice = std::nullopt;
     m_package_write_start = m_total_write.load();
     m_actions_dirty = true;
 }
@@ -251,6 +255,8 @@ void InstallSession::ToggleErrorView() {
 
 void InstallSession::BeginSessionStats() {
     orphan_content::SetInstallRunning(true); // no "update without base" question while packages are still going in
+    m_update_picks.clear();
+    m_deferred_prompts.clear();
     SCOPED_MUTEX(&m_mutex);
     m_stats = {};
     m_errors.clear();
@@ -398,11 +404,70 @@ bool InstallSession::PromptReinstall(const std::string& title_name) {
 }
 
 bool InstallSession::PromptDowngrade(const std::string& title_name, u32 installed, u32 incoming) {
+    const auto step = OlderThanConsoleStep(UpdateChoiceOption().Get(), m_current_update_count, m_current_update_picked);
+    if (step == UpdateStep::Install) return true;
+    if (step == UpdateStep::Skip) {
+        AddLog("Skipped: "_i18n + title_name + " — " + "a newer update is on the console"_i18n, LogKind::Success);
+        return false;
+    }
     // patch versions are major << 16; the release names them v2, v4
     char text[512];
     std::snprintf(text, sizeof(text), "This update (v%u) is older than the one on the console (v%u). Install it? The game goes back to v%u. Some mods need an older update."_i18n.c_str(),
         incoming >> 16, installed >> 16, incoming >> 16);
-    return Ask(title_name, text);
+    const auto answer = AskUpdate(text);
+    if (!answer && m_ask_mode == AskMode::Stream) {
+        AddLog("No answer: kept the newer update on the console"_i18n, LogKind::Warning);
+    }
+    return answer.value_or(false);
+}
+
+option::OptionLong& UpdateChoiceOption() {
+    static option::OptionLong opt{App::INI_SECTION, "multi_update_choice", UpdateChoice_Newest};
+    return opt;
+}
+
+std::optional<bool> InstallSession::AskUpdate(const std::string& question) {
+    // ponytail: fixed 10 s before the file moves on; a setting if someone wants longer.
+    constexpr u64 GRACE_NS = 10'000'000'000ULL;
+    std::string key, title;
+    {
+        // yati renames m_current_title to the game; the queue file name stays the key.
+        SCOPED_MUTEX(&m_mutex);
+        title = m_current_title;
+        key = m_current_package < m_queue.size() ? m_queue[m_current_package].file_name : title;
+    }
+    std::shared_ptr<PromptData> data;
+    if (auto it = m_deferred_prompts.find(key); it != m_deferred_prompts.end()) {
+        data = it->second; // asked in the first pass; the box may still be open
+        m_deferred_prompts.erase(it);
+    } else {
+        data = std::make_shared<PromptData>();
+        data->title = title;
+        data->question = question;
+    }
+    if (data->choice == -1) {
+        SCOPED_MUTEX(&m_mutex);
+        m_prompt_data = data;
+    }
+
+    const auto start = armTicksToNs(armGetSystemTick());
+    while (data->choice < 0 && !m_cancel_requested && !m_skip_requested && !GetToken().stop_requested()) {
+        if (m_ask_mode != AskMode::Wait && armTicksToNs(armGetSystemTick()) - start >= GRACE_NS) {
+            break;
+        }
+        svcSleepThread(10'000'000ULL); // 10ms
+    }
+    if (data->choice >= 0) {
+        return data->choice == 1;
+    }
+    if (m_ask_mode == AskMode::Defer && !m_cancel_requested && !m_skip_requested) {
+        // the box stays open; its answer is read when the file comes round again.
+        m_deferred_prompts[key] = data;
+        m_current_file_deferred = true;
+    } else {
+        data->expired = true;
+    }
+    return std::nullopt;
 }
 
 bool InstallSession::Ask(const std::string& title_name, const std::string& question) {

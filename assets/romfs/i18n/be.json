@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Кансоль выключана: разраджаны акумулятар стане 0 %",
   "Writing the empty battery as 0 %": "Запіс пустога акумулятара як 0 %",
   "empty battery (0 %)": "разраджаны акумулятар (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Афіцыйныя абнаўленні не будуць усталёўвацца па-над гульнямі, усталяванымі ад гэтага моманту. Каб абнавіць адну з іх, выдаліце яе і зноў усталюйце арыгінальны файл."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Афіцыйныя абнаўленні не будуць усталёўвацца па-над гульнямі, усталяванымі ад гэтага моманту. Каб абнавіць адну з іх, выдаліце яе і зноў усталюйце арыгінальны файл.",
+  "No answer yet, moved to the end of the queue: ": "Адказа няма, перанесена ў канец чаргі: ",
+  "Several updates of one game": "Некалькі абнаўленняў для адной гульні",
+  "The queue has %d updates for this game. Install v%u?": "У чарзе %d абнаўленняў для гэтай гульні. Усталяваць v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "У чарзе больш за адно абнаўленне для гульні: усталяваць толькі найноўшае або запытаць. Абнаўленне старэйшае за тое, што на кансолі, запытваецца, калі яно адзінае ў чарзе.",
+  "Newest": "Найноўшая",
+  "No answer: kept the newer update on the console": "Без адказу: на кансолі засталося навейшае абнаўленне",
+  "a newer update is on the console": "на кансолі ёсць больш новае абнаўленне",
+  "another update of this game was chosen": "быў абраны іншы абнаўленне для гэтай гульні",
+  "a newer update is in the queue": "новае абнаўленне ў чарзе"
 }

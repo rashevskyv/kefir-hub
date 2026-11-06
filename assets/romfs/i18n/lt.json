@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Konsolė išsijungė: tuščia baterija pasiekia 0 %",
   "Writing the empty battery as 0 %": "Tuščio akumuliatoriaus įrašymas kaip 0 %",
   "empty battery (0 %)": "akumuliatorius išsikrovęs (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Oficialūs atnaujinimai nuo šiol neįsidiegs ant įdiegtų žaidimų. Norėdami atnaujinti, ištrinkite jį ir vėl įdiekite originalų failą."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Oficialūs atnaujinimai nuo šiol neįsidiegs ant įdiegtų žaidimų. Norėdami atnaujinti, ištrinkite jį ir vėl įdiekite originalų failą.",
+  "No answer yet, moved to the end of the queue: ": "Atsakymo dar nėra, perkelta į eilės pabaigą: ",
+  "Several updates of one game": "Keli vieno žaidimo atnaujinimai",
+  "The queue has %d updates for this game. Install v%u?": "Eilėje yra %d šio žaidimo atnaujinimai. Įdiegti v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Eilėje yra daugiau nei viena žaidimo naujinimo versija: įdiegti tik naujausią arba klausti. Dėl naujinimo, senesnio nei konsolėje, klausiama, kai jis yra vienintelis eilėje.",
+  "Newest": "Naujausia",
+  "No answer: kept the newer update on the console": "Atsakymo nėra: konsolėje paliktas naujesnis atnaujinimas",
+  "a newer update is on the console": "konsoleje yra naujesnis naujinimas",
+  "another update of this game was chosen": "pasirinktas kitas šio žaidimo atnaujinimas",
+  "a newer update is in the queue": "naujesnis atnaujinimas yra eilėje"
 }

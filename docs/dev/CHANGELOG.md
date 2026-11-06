@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.297 — Several updates of one game: the newest installs, a question no longer stops the queue
+Settings > Install > "Several updates of one game" (Newest, default / Ask; `update_choice.hpp`, test_update_choice). Newest: of the ticked updates of one game in a DBI queue (USB, local, Install recursively) only the highest version from the file name installs; the old order rule (last file alphabetically wins) is gone. Ask: each asks until one is picked. An older update than the console's that is the only one of its game is asked about in both modes (translations need it). Questions wait 10 s, then the file moves to the end of the queue and the next one starts; at the end the Hub waits. MTP/FTP/web: 10 s, then the console's newer update stays and the box closes. Fix: a stream session reused the first Reinstall answer for every later file.
+host tests: pass (quick), nro: not built, switch: pending (local queue v3+v6, Ask mode, older-only update + no answer -> deferred, MTP older update + no answer; USB live queue with a deferred file)
+
 ## v0.14.296 — Restore of several saves asks first, then scans the backups
 "Saves to restore: N" (No / Without a copy / Restore) comes right after the Restore choice; the backup scan runs after the answer and the restore starts without a second question (a user picker on the way still asks again at the end).
 host tests: pass (quick), nro: not built, switch: pending (several saves: question before the wait, no second question)

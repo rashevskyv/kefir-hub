@@ -11,6 +11,7 @@
 #include "yati/yati.hpp"
 #include <array>
 #include <optional>
+#include <unordered_map>
 
 namespace sphaira::ui::menu::dbi {
 
@@ -131,6 +132,11 @@ struct InstallSession : MenuBase, InstallProgress {
     bool PromptDowngrade(const std::string& title_name, u32 installed, u32 incoming) override;
     // shows "<title>\n\n<question>" with No / Yes on the UI thread and waits; one answer per package.
     bool Ask(const std::string& title_name, const std::string& question);
+    // the same question, but it waits only a short time (see m_ask_mode): nullopt = no answer yet.
+    std::optional<bool> AskUpdate(const std::string& question);
+    // before queue entry i starts: false = skipped (logged), nullopt = moved to the end of the queue.
+    // final_pass: the entry already went to the end once, so the question waits for the answer.
+    std::optional<bool> CheckQueuedUpdate(size_t i, bool final_pass);
     void OnInstallSkipped() override;
     void OnCompatibilityWarning(const CompatibilityWarning& warning) override;
     void SetInstallTarget(bool to_sd) override;
@@ -248,11 +254,25 @@ protected:
     struct PromptData {
         std::string title;
         std::string question;
-        std::atomic<int> choice{-1};
+        std::atomic<int> choice{-1}; // -1 new, -2 shown, 0 No, 1 Yes
+        std::atomic<bool> expired{};  // nobody waits for it any more: the UI closes the box
+        Widget* box{};                // the shown box, touched only on the UI thread
     };
     std::shared_ptr<PromptData> m_prompt_data{};
     std::optional<bool> m_current_file_reinstall_choice{};
     bool m_current_file_skipped{false};
+
+    // how AskUpdate treats no answer. Stream: MTP/FTP/web send each file once, so the
+    // default is kept. Defer: a queue moves the file to its end. Wait: the end is reached.
+    enum class AskMode { Stream, Defer, Wait };
+    AskMode m_ask_mode{AskMode::Stream};
+    // questions of files moved to the end of the queue, by file name (worker thread only).
+    std::unordered_map<std::string, std::shared_ptr<PromptData>> m_deferred_prompts{};
+    // the update version the user chose for a game, by title id (worker thread only).
+    std::unordered_map<u64, u32> m_update_picks{};
+    int m_current_update_count{};      // ticked updates of this game in the queue, 0 unknown
+    bool m_current_update_picked{};    // the user chose this update in the queue
+    bool m_current_file_deferred{};    // AskUpdate got no answer: install the file later
 
     s64 m_plan_total_bytes{0};
     s64 m_plan_done_bytes{0};

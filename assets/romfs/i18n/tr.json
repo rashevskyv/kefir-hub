@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Konsol kapatıldı: boşalan pil %0 seviyesine ulaştı",
   "Writing the empty battery as 0 %": "Boş pil %0 olarak yazılıyor",
   "empty battery (0 %)": "boş pil (%0)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Resmi güncellemeler bundan sonra kurulan oyunların üzerine kurulmayacak. Birini güncellemek için oyunu silin ve orijinal dosyayı tekrar kurun."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Resmi güncellemeler bundan sonra kurulan oyunların üzerine kurulmayacak. Birini güncellemek için oyunu silin ve orijinal dosyayı tekrar kurun.",
+  "No answer yet, moved to the end of the queue: ": "Henüz yanıt yok, kuyruğun sonuna taşındı: ",
+  "Several updates of one game": "Bir oyun için birkaç güncelleme",
+  "The queue has %d updates for this game. Install v%u?": "Bu oyun için kuyrukta %d güncelleme var. v%u kurulsun mu?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Kuyrukta bir oyun için birden fazla güncelleme var: yalnızca en yenisini yükleyin veya hangisi olduğunu sorun. Konsoldakinden daha eski bir güncelleme, kuyruktaki tek güncelleme olduğunda sorulur.",
+  "Newest": "En yeni",
+  "No answer: kept the newer update on the console": "Yanıt yok: konsoldaki daha yeni güncelleme korundu",
+  "a newer update is on the console": "konsolda daha yeni bir güncelleme var",
+  "another update of this game was chosen": "bu oyun için başka bir güncelleme seçildi",
+  "a newer update is in the queue": "daha yeni bir güncelleme kuyrukta"
 }

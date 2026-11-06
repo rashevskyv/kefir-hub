@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Konsool lülitus välja: tühi aku jõuab 0 %-ni",
   "Writing the empty battery as 0 %": "Tühja aku kirjutamine väärtusega 0 %",
   "empty battery (0 %)": "tühi aku (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Ametlikke uuendusi ei saa edaspidi installitud mängude peale installida. Mõne mängu uuendamiseks kustuta see ja installi originaalfail uuesti."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Ametlikke uuendusi ei saa edaspidi installitud mängude peale installida. Mõne mängu uuendamiseks kustuta see ja installi originaalfail uuesti.",
+  "No answer yet, moved to the end of the queue: ": "Vastust polnud, liigutatud järjekorra lõppu: ",
+  "Several updates of one game": "Ühe mängu mitu värskendust",
+  "The queue has %d updates for this game. Install v%u?": "Järjekorras on sellele mängule %d uuendust. Kas paigaldada v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Järjekorras on mängu jaoks rohkem kui üks värskendus: installige ainult uvim või küsige. Konsoolil olevast vanema värskenduse kohta küsitakse siis, kui see on järjekorras ainus.",
+  "Newest": "Uusim",
+  "No answer: kept the newer update on the console": "Vastus puudub: konsoolile jäeti uuem värskendus",
+  "a newer update is on the console": "konsoolil on uuem värskendus",
+  "another update of this game was chosen": "sellele mängule valiti teine värskendus",
+  "a newer update is in the queue": "uudem uuendus on järjekorras"
 }

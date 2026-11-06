@@ -4167,5 +4167,14 @@
   "The console switched off: the empty battery becomes 0 %": "Máy đã tắt: pin cạn đạt 0 %",
   "Writing the empty battery as 0 %": "Đang ghi pin yếu là 0 %",
   "empty battery (0 %)": "pin yếu (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Các bản cập nhật chính thức sẽ không cài đè lên các trò chơi được cài đặt từ bây giờ. Để cập nhật, hãy xóa trò chơi đó và cài đặt lại tệp gốc."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Các bản cập nhật chính thức sẽ không cài đè lên các trò chơi được cài đặt từ bây giờ. Để cập nhật, hãy xóa trò chơi đó và cài đặt lại tệp gốc.",
+  "No answer yet, moved to the end of the queue: ": "Chưa có phản hồi, đã chuyển xuống cuối hàng đợi: ",
+  "Several updates of one game": "Nhiều bản cập nhật của một trò chơi",
+  "The queue has %d updates for this game. Install v%u?": "Hàng đợi có %d bản cập nhật cho trò chơi này. Cài đặt v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Hàng đợi có nhiều hơn một bản cập nhật cho trò chơi: chỉ cài đặt bản mới nhất hoặc hỏi. Bản cập nhật cũ hơn bản trên máy sẽ được hỏi khi nó là bản duy nhất trong hàng đợi.",
+  "Newest": "Mới nhất",
+  "No answer: kept the newer update on the console": "Không có câu trả lời: giữ lại bản cập nhật mới hơn trên máy",
+  "a newer update is on the console": "có bản cập nhật mới hơn trên bảng điều khiển",
+  "another update of this game was chosen": "một bản cập nhật khác của trò chơi này đã được chọn",
+  "a newer update is in the queue": "bản cập nhật mới hơn đang trong hàng đợi"
 }

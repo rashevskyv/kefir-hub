@@ -4167,5 +4167,14 @@
   "The console switched off: the empty battery becomes 0 %": "Konsolen stängdes av: det tomma batteriet når 0 %",
   "Writing the empty battery as 0 %": "Skriver det tomma batteriet som 0 %",
   "empty battery (0 %)": "tomt batteri (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Officiella uppdateringar kommer inte att installeras över spel som installeras från och med nu. För att uppdatera ett spel, ta bort det och installera originalfilen igen."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Officiella uppdateringar kommer inte att installeras över spel som installeras från och med nu. För att uppdatera ett spel, ta bort det och installera originalfilen igen.",
+  "No answer yet, moved to the end of the queue: ": "Inget svar ännu, flyttad till slutet av kön: ",
+  "Several updates of one game": "Flera uppdateringar av ett spel",
+  "The queue has %d updates for this game. Install v%u?": "Kön har %d uppdateringar för det här spelet. Vill du installera v%u?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Kön har mer än en uppdatering för ett spel: installera endast den nyaste eller fråga vilken. En uppdatering som är äldre än den på konsolen efterfrågas när den är den enda i kön.",
+  "Newest": "Senaste",
+  "No answer: kept the newer update on the console": "Inget svar: behöll den nyare uppdateringen på konsolen",
+  "a newer update is on the console": "en nyare uppdatering finns på konsolen",
+  "another update of this game was chosen": "en annan uppdatering av det här spelet valdes",
+  "a newer update is in the queue": "en nyare uppdatering är i kön"
 }

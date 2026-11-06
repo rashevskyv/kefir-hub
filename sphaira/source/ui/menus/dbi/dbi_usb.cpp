@@ -213,12 +213,28 @@ void Menu::ThreadFunction() {
             m_actions_dirty = true;
             BeginSessionStats();
             bool session_failed{};
-            for (size_t i = 0; i < m_queue.size(); i++) {
+            // files whose update question got no answer go once more after the queue.
+            std::vector<size_t> deferred;
+            size_t later = 0;
+            for (size_t cursor = 0;;) {
+                size_t i;
+                bool final_pass{};
+                if (cursor < m_queue.size()) {
+                    i = cursor++;
+                } else if (later < deferred.size()) {
+                    i = deferred[later++];
+                    final_pass = true;
+                } else {
+                    break;
+                }
+                // the live queue freezes everything up to the active index: past the end,
+                // the last entry, so a deferred file does not cut the queue back to itself.
+                const size_t active = final_pass ? m_queue.size() - 1 : i;
                 if (sync_supported) {
                     std::vector<yati::source::Usb::LiveQueueItem> items;
                     u32 revision = 0;
                     if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {
-                        ApplyLiveQueue(items, i, true);
+                        ApplyLiveQueue(items, active, true);
                         if (revision > 0 && revision != m_last_acked_revision) {
                             if (R_SUCCEEDED(m_usb_source->SendQueueAck(revision))) {
                                 m_last_acked_revision = revision;
@@ -252,6 +268,19 @@ void Menu::ThreadFunction() {
                 }
                 if (!selected) continue;
                 if (m_cancel_requested) break;
+
+                const auto go = CheckQueuedUpdate(i, final_pass);
+                if (!go) {
+                    deferred.push_back(i);
+                    continue;
+                }
+                if (!*go) {
+                    RecordPackageResult(i, 0, false, true, plan_sd, 0, 0);
+                    if (m_usb_source && m_usb_source->HasSelectionSync()) {
+                        m_usb_source->SendPackageStatus(name, 1, 0); // skipped
+                    }
+                    continue;
+                }
 
                 if (analysis_deferred) {
                     const auto a_rc = AnalyzeQueueName(m_usb_source.get(), name, analysis);
@@ -305,13 +334,13 @@ void Menu::ThreadFunction() {
                 for (u32 attempt = 0; ; attempt++) {
                     m_usb_source->SetFileNameForTranfser(name);
                     if (sync_supported) {
-                        m_usb_source->SetPostReadHook([this, i, &hook_poll]() {
+                        m_usb_source->SetPostReadHook([this, active, &hook_poll]() {
                             if (hook_poll.GetNs() >= 500'000'000) {
                                 hook_poll.Update();
                                 std::vector<yati::source::Usb::LiveQueueItem> items;
                                 u32 revision = 0;
                                 if (R_SUCCEEDED(m_usb_source->FetchLiveQueue(items, revision))) {
-                                    ApplyLiveQueue(items, i, true);
+                                    ApplyLiveQueue(items, active, true);
                                     if (revision > 0 && revision != m_last_acked_revision) {
                                         if (R_SUCCEEDED(m_usb_source->SendQueueAck(revision))) {
                                             m_last_acked_revision = revision;
@@ -348,6 +377,11 @@ void Menu::ThreadFunction() {
                 }
                 const bool cancelled = m_cancel_requested || (!user_skipped && (install_rc == Result_TransferCancelled || install_rc == Result_UsbCancelled));
                 const bool fatal_session_error = !user_skipped && R_FAILED(install_rc) && IsDbiSessionError(install_rc);
+                if (m_current_file_deferred && !user_skipped && !cancelled && R_SUCCEEDED(install_rc)) {
+                    AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
+                    deferred.push_back(i);
+                    continue;
+                }
                 RecordPackageResult(i, install_rc, cancelled, user_skipped, plan_sd,
                     m_total_read.load() - read_before, m_total_write.load() - write_before);
                 if (user_skipped) {

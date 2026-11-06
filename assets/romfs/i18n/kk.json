@@ -4162,5 +4162,14 @@
   "The console switched off: the empty battery becomes 0 %": "Консоль өшті: бос батарея 0 % болды",
   "Writing the empty battery as 0 %": "Бос батареяны 0 % етіп жазу",
   "empty battery (0 %)": "батарея заряды жоқ (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Бұдан былай ресми жаңартулар орнатылған ойындардың үстіне орнатылмайды. Біреуін жаңарту үшін оны жойып, бастапқы файлды қайта орнатыңыз."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "Бұдан былай ресми жаңартулар орнатылған ойындардың үстіне орнатылмайды. Біреуін жаңарту үшін оны жойып, бастапқы файлды қайта орнатыңыз.",
+  "No answer yet, moved to the end of the queue: ": "Әзірге жауап жоқ, кезек соңына жылжытылды: ",
+  "Several updates of one game": "Бір ойынның бірнеше жаңартуы",
+  "The queue has %d updates for this game. Install v%u?": "Кезекте бұл ойын үшін %d жаңарту бар. v%u орнату керек пе?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "Кезекте ойын үшін бірнеше жаңарту бар: тек ең жаңасын орнату немесе сұрау. Консольдегіден ескі жаңарту кезекте жалғыз болған кезде сұралады.",
+  "Newest": "Ең жаңа",
+  "No answer: kept the newer update on the console": "Жауап жоқ: консольдегі жаңарақ жаңарту сақталды",
+  "a newer update is on the console": "консольде жаңарақ жаңарту бар",
+  "another update of this game was chosen": "бұл ойынның басқа жаңартуы таңдалды",
+  "a newer update is in the queue": "жаңа жаңарту кезекте тұр"
 }

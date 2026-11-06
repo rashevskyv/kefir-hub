@@ -9,6 +9,7 @@
 #include "usb/usbds.hpp"
 #include "title_info.hpp"
 #include "ui/menus/install_plan.hpp"
+#include "ui/menus/update_choice.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -150,6 +151,58 @@ auto FormatEta(s64 bytes_left, s64 bps) -> std::string {
         std::snprintf(buf, sizeof(buf), "%zum %zus", seconds_left / 60, seconds_left % 60);
     }
     return buf;
+}
+
+std::optional<bool> InstallSession::CheckQueuedUpdate(size_t i, bool final_pass) {
+    m_ask_mode = final_pass ? AskMode::Wait : AskMode::Defer;
+    m_current_file_deferred = false;
+    m_current_update_count = 0;
+    m_current_update_picked = false;
+
+    std::vector<NameTitle> titles;
+    std::string name;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        if (i >= m_queue.size()) return true;
+        name = m_queue[i].file_name;
+        titles.reserve(m_queue.size());
+        for (const auto& e : m_queue) {
+            titles.push_back(e.install_selected ? ParseNameTitle(e.file_name) : NameTitle{});
+        }
+    }
+    const auto q = FindQueueUpdates(titles, i);
+    if (!q.count) return true;
+    m_current_update_count = q.count;
+
+    const auto self = titles[i];
+    const auto pick = m_update_picks.find(self.id);
+    const bool has_pick = pick != m_update_picks.end();
+    switch (QueueUpdateStep(UpdateChoiceOption().Get(), q, has_pick, has_pick ? pick->second : 0, self.version)) {
+        case UpdateStep::Install:
+            m_current_update_picked = has_pick;
+            return true;
+        case UpdateStep::Skip:
+            AddLog("Skipped: "_i18n + name + " — " + (has_pick ? "another update of this game was chosen"_i18n : "a newer update is in the queue"_i18n), LogKind::Success);
+            return false;
+        case UpdateStep::Ask:
+            break;
+    }
+
+    char text[256];
+    std::snprintf(text, sizeof(text), "The queue has %d updates for this game. Install v%u?"_i18n.c_str(), q.count, self.version >> 16);
+    const auto answer = AskUpdate(text);
+    if (!answer) {
+        if (!m_current_file_deferred) return false; // cancelled or skipped while asking
+        AddLog("No answer yet, moved to the end of the queue: "_i18n + name, LogKind::Normal);
+        return std::nullopt;
+    }
+    if (*answer) {
+        m_update_picks[self.id] = self.version;
+        m_current_update_picked = true;
+        return true;
+    }
+    AddLog("Skipped: "_i18n + name, LogKind::Success);
+    return false;
 }
 
 } // namespace sphaira::ui::menu::dbi

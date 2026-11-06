@@ -352,12 +352,18 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         App::PlaySoundEffect(SoundEffect_Focus);
     }
 
-    std::shared_ptr<PromptData> prompt{};
+    std::shared_ptr<PromptData> prompt{}, expired{};
     if (mutexTryLock(&m_mutex)) {
-        if (m_prompt_data && m_prompt_data->choice == -1) {
+        if (m_prompt_data && m_prompt_data->expired) {
+            expired = std::move(m_prompt_data);
+        } else if (m_prompt_data && m_prompt_data->choice == -1) {
             prompt = m_prompt_data;
         }
         mutexUnlock(&m_mutex);
+    }
+    // a stream question nobody waits for any more (the default was kept): close its box.
+    if (expired && expired->choice == -2 && expired->box) {
+        expired->box->SetPop();
     }
 
     const double graph_elapsed = m_graph_timestamp.GetSecondsD();
@@ -431,13 +437,17 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
         int expected = -1;
         if (prompt->choice.compare_exchange_strong(expected, -2)) {
             std::string msg = prompt->title + "\n\n" + prompt->question;
-            App::Push<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0, [prompt](std::optional<s64> choice) {
+            // dies with the box (inside its callback), so a box closed some other way is never touched.
+            std::shared_ptr<int> alive{new int{}, [prompt](int* p) { delete p; prompt->box = nullptr; }};
+            auto box = std::make_unique<OptionBox>(msg, "No"_i18n, "Yes"_i18n, 0, [prompt, alive](std::optional<s64> choice) {
                 if (choice && *choice == 1) {
                     prompt->choice = 1; // Yes
                 } else {
                     prompt->choice = 0; // No
                 }
             });
+            prompt->box = box.get();
+            App::Push(std::move(box));
         }
     }
 

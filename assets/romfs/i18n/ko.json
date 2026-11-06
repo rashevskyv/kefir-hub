@@ -4167,5 +4167,14 @@
   "The console switched off: the empty battery becomes 0 %": "본체 전원이 꺼졌습니다: 방전된 배터리가 0 %가 되었습니다",
   "Writing the empty battery as 0 %": "빈 배터리를 0%로 쓰는 중",
   "empty battery (0 %)": "배터리 없음 (0 %)",
-  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "지금부터 설치되는 게임에는 공식 업데이트가 덮어씌워지지 않습니다. 업데이트하려면 해당 게임을 삭제한 뒤 원본 파일을 다시 설치하세요."
+  "Official updates will not install over games installed from now on. To update one, delete it and install the original file again.": "지금부터 설치되는 게임에는 공식 업데이트가 덮어씌워지지 않습니다. 업데이트하려면 해당 게임을 삭제한 뒤 원본 파일을 다시 설치하세요.",
+  "No answer yet, moved to the end of the queue: ": "아직 답변이 없어 대기열의 끝으로 이동됨: ",
+  "Several updates of one game": "한 게임의 여러 업데이트",
+  "The queue has %d updates for this game. Install v%u?": "이 게임에 대한 업데이트 %d개가 대기 중입니다. v%u을(를) 설치하시겠습니까?",
+  "The queue has more than one update for a game: install only the newest one, or ask which one. An update older than the one on the console is asked about when it is the only one in the queue.": "대기열에 게임 업데이트가 여러 개 있습니다: 가장 최신 버전만 설치하거나 선택을 묻습니다. 콘솔에 있는 것보다 오래된 업데이트는 대기열에 그것만 있을 때 확인합니다.",
+  "Newest": "최신",
+  "No answer: kept the newer update on the console": "아니요: 본체의 최신 업데이트 유지",
+  "a newer update is on the console": "콘솔에 더 최신 업데이트가 있습니다",
+  "another update of this game was chosen": "이 게임의 다른 업데이트가 선택되었습니다",
+  "a newer update is in the queue": "새로운 업데이트가 대기 중입니다"
 }
