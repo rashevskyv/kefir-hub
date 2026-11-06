@@ -239,7 +239,14 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
     constexpr bool demo_title = false;
 #endif
 
-    if (auto data = demo_title ? nullptr : nxtcGetApplicationMetadataEntryById(app_id)) {
+    auto data = demo_title ? nullptr : nxtcGetApplicationMetadataEntryById(app_id);
+    // ponytail: a one-letter name is a NACP v2 entry cached raw before v0.14.297 ("E" for Zelda BotW);
+    // load it again. Longer junk needs "Title cache" off/on in the Games options.
+    if (data && std::strlen(data->name) <= 1) {
+        nxtcFreeApplicationMetadata(&data);
+        data = nullptr;
+    }
+    if (data) {
         log_write("[NXTC] loaded from cache time taken: %.2fs %zums %zuns\n", ts.GetSecondsD(), ts.GetMs(), ts.GetNs());
         ON_SCOPE_EXIT(nxtcFreeApplicationMetadata(&data));
 
@@ -289,16 +296,23 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
             if (R_SUCCEEDED(nsGetApplicationDesiredLanguage(&control->nacp, &lang))) {
                 result->lang = *lang;
 
-                // NACP v2 fallback: if name is empty, the game uses the new compressed format (FW 20.0+)
-                if (result->lang.name[0] == '\0') {
+                // NACP v2 fallback: an empty (or one-letter junk) name means the new compressed format (FW 20.0+)
+                if (strnlen(result->lang.name, sizeof(result->lang.name)) <= 1) {
                     const auto* raw = reinterpret_cast<const u8*>(&control->nacp);
-                    if (TryParseNacpV2(raw, sizeof(NacpStruct), result->lang.name, result->lang.author)) {
+                    bool decoded = TryParseNacpV2(raw, sizeof(NacpStruct), result->lang.name, result->lang.author);
+                    if (decoded) {
                         log_write("\t\t[nacp v2] decoded name: %s\n", result->lang.name);
                     } else {
                         log_write("\t\t[nacp v2] fallback failed, trying full raw nacp block\n");
                         // Try on full control block (name section may be in the trailing bytes after nacp)
                         const auto* raw_full = reinterpret_cast<const u8*>(control.get());
-                        TryParseNacpV2(raw_full, actual_size, result->lang.name, result->lang.author);
+                        decoded = TryParseNacpV2(raw_full, actual_size, result->lang.name, result->lang.author);
+                    }
+                    // the cache picks its own entry from the raw NACP, which in v2 is junk: give it the decoded name.
+                    if (decoded) {
+                        for (auto& entry : control->nacp.lang) {
+                            entry = result->lang;
+                        }
                     }
                 }
             } else {
