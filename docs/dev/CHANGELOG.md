@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.285 — Prelude-Nextendo v4.0.19 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
 ## v0.14.284 — i18n: the 43 missing strings (battery calibration, Nextendo) translated in every language
 Filled by tools/i18n-translate for the release; the deployment i18n contract passes. Verification: host tests: not run, nro: built, switch: pending.
 
