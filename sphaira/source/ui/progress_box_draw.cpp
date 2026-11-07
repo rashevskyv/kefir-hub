@@ -308,9 +308,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
     }
 
-    if (!m_detached) {
-        gfx::dimBackground(vg);
-    }
+    // a detached box sits over a live menu: a lighter dim there, the full one for a modal box.
+    gfx::dimBackground(vg, m_detached ? 110 : 180);
+    gfx::dropShadow(vg, m_pos, 5);
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5);
 
     // The pop up shape.
@@ -481,7 +481,9 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         draw_text(m_scroll_alt, alt, m_pos.y + 150, 18, 12, ThemeEntryID_TEXT_INFO);
     }
     if (!transfer.empty()) {
-        draw_text(m_scroll_transfer, transfer, m_pos.y + (alt.empty() ? 160 : 180), 18, 12, ThemeEntryID_TEXT_INFO);
+        // with the "Copied so far" line above the bar, the file name goes right under the title: at 160 they overlapped.
+        const float transfer_y = overall_open && !show_overall && !m_show_graph ? 134 : (alt.empty() ? 160 : 180);
+        draw_text(m_scroll_transfer, transfer, m_pos.y + transfer_y, 18, 12, ThemeEntryID_TEXT_INFO);
     }
 
     // every transfer gets a stop button, including one with a known total: a

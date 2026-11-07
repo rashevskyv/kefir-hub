@@ -252,8 +252,17 @@ void textBoundsArgs(NVGcontext* vg, float x, float y, float *bounds, const char*
 
 // NEW-----------
 
-void dimBackground(NVGcontext* vg) {
-    drawRectIntenal(vg, {0.f,0.f,SCREEN_WIDTH,SCREEN_HEIGHT}, nvgRGBA(0, 0, 0, 180), false);
+void dropShadow(NVGcontext* vg, const Vec4& v, float rounding) {
+    constexpr float feather = 40.f;
+    const auto paint = nvgBoxGradient(vg, v.x, v.y + 10.f, v.w, v.h, rounding * 2, feather, nvgRGBA(0, 0, 0, 200), nvgRGBA(0, 0, 0, 0));
+    nvgBeginPath(vg);
+    nvgRect(vg, v.x - feather * 2, v.y - feather, v.w + feather * 4, v.h + feather * 4);
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+}
+
+void dimBackground(NVGcontext* vg, u8 alpha) {
+    drawRectIntenal(vg, {0.f,0.f,SCREEN_WIDTH,SCREEN_HEIGHT}, nvgRGBA(0, 0, 0, alpha), false);
 }
 
 void drawRect(NVGcontext* vg, float x, float y, float w, float h, const NVGcolor& c, float rounded) {

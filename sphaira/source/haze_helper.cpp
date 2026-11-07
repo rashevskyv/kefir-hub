@@ -6,6 +6,7 @@
 #include "evman.hpp"
 #include "i18n.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/menus/homebrew.hpp"
 #include <usbhsfs.h>
 
 #include <functional>
@@ -333,6 +334,15 @@ void haze_callback(const ::haze::CallbackData *data) {
                 }
             }
             ueventSignal(&g_mtp_done_event);
+            // a file pushed from the PC into a homebrew folder: refresh the Homebrew list when it is done
+            // (the fs proxy signals too, but only for the paths it opens itself).
+            if (e.type == ::haze::CallbackType_WriteEnd && !e.file.aborted) {
+                std::string_view written = e.file.filename;
+                while (written.starts_with("//")) {
+                    written.remove_prefix(1);
+                }
+                ui::menu::homebrew::NotifyFileCreated(written);
+            }
             break;
         }
     }

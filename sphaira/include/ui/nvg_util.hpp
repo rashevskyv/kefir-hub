@@ -9,7 +9,9 @@ namespace sphaira::ui::gfx {
 void drawImage(NVGcontext*, float x, float y, float w, float h, int texture, float rounded = 0.F, float alpha = 1.0F);
 void drawImage(NVGcontext*, const Vec4& v, int texture, float rounded = 0.F, float alpha = 1.0F);
 
-void dimBackground(NVGcontext*);
+void dimBackground(NVGcontext*, u8 alpha = 180);
+// soft drop shadow under a popup (a box gradient: one GPU quad, no blur pass).
+void dropShadow(NVGcontext*, const Vec4& box, float rounding);
 
 void drawRect(NVGcontext*, float x, float y, float w, float h, const NVGcolor& c, float rounding = 0.F);
 void drawRect(NVGcontext*, const Vec4& v, const NVGcolor& c, float rounding = 0.F);
