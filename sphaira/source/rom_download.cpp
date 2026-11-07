@@ -315,7 +315,17 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
         const auto all = ToJobs(c, hits);
         options->Add<ui::SidebarEntryCallback>("Download all"_i18n,
             [c, all, refresh]() { jobs::Run(c.label, all, refresh); }, true, jobs::Describe(all))->SetIcon(ActionIcon::Dump);
-        options->Add<ui::SidebarEntryCallback>("Remove the collection"_i18n, [c, reopen]() { Remove(c, reopen); }, true)->SetIcon(ActionIcon::Delete);
+        const auto saved = Load();
+        if (std::any_of(saved.begin(), saved.end(), [&](const Collection& e) { return e.console == c.console && e.item == c.item; })) {
+            options->Add<ui::SidebarEntryCallback>("Remove the collection"_i18n, [c, reopen]() { Remove(c, reopen); }, true)->SetIcon(ActionIcon::Delete);
+        } else {
+            options->Add<ui::SidebarEntryCallback>("Keep the collection"_i18n, [c, reopen]() {
+                auto list = Load();
+                list.push_back(c);
+                Save(list);
+                reopen();
+            }, true)->SetIcon(ActionIcon::Save);
+        }
     });
     App::Push(std::move(menu));
 }
@@ -350,18 +360,8 @@ void ConfirmItem(const std::string& console, const std::string& id, std::functio
             App::Push<ui::OptionBox>("The item "_i18n + id + " has no files to download."_i18n, "OK"_i18n);
             return;
         }
-        Collection c{console, id, item->title.empty() ? id : item->title};
-        const auto plan = ToJobs(c, item->files);
-        App::Push<ui::OptionBox>(c.label + "\n" + jobs::Describe(plan) + " → " + ROMS_ROOT + console + "/",
-            "Back"_i18n, "Keep and open the collection"_i18n, 1, [c, reopen](auto op) {
-                if (!op || *op != 1) return;
-                auto list = Load();
-                std::erase_if(list, [&](const Collection& e) { return e.console == c.console && e.item == c.item; });
-                list.push_back(c);
-                Save(list);
-                reopen();
-                OpenCollection(c, reopen); // straight to its files: the game is picked there (a set opens into its games)
-            });
+        // the files open at once and nothing is saved: "Keep the collection" in the options does that
+        ShowCollection(Collection{console, id, item->title.empty() ? id : item->title}, item, "", reopen);
     });
 }
 
@@ -423,11 +423,11 @@ void Add(std::function<void()> reopen) {
     for (const auto& c : Consoles()) {
         names.push_back(std::string{c.name} + "  (/roms/" + c.folder + ")");
     }
-    App::Push<ui::PopupList>("Which console is the collection for?"_i18n, names, [reopen](auto op) {
+    auto consoles = std::make_unique<ui::PopupList>("Which console is the collection for?"_i18n, names, [reopen](auto op) {
         if (!op || *op < 0 || static_cast<size_t>(*op) >= Consoles().size()) return;
         const std::string console = Consoles()[*op].folder;
         ui::PopupList::Items ways{"Popular on archive.org"_i18n, "Search archive.org"_i18n, "Enter an item id"_i18n};
-        App::Push<ui::PopupList>(std::string{ConsoleName(console)} + " → " + ROMS_ROOT + console + "/", ways, [console, reopen](auto way) {
+        auto menu = std::make_unique<ui::PopupList>(std::string{ConsoleName(console)} + " → " + ROMS_ROOT + console + "/", ways, [console, reopen](auto way) {
             if (!way) return;
             if (*way == 0) {
                 OpenSearch(console, "", reopen);
@@ -446,7 +446,12 @@ void Add(std::function<void()> reopen) {
                 if (!id.empty()) ConfirmItem(console, id, reopen);
             });
         });
+        // B returns to the console list; nothing is chosen yet, so no row carries a tick
+        menu->SetMenuStyle(true).SetOnCancel([reopen]() { Add(reopen); });
+        App::Push(std::move(menu));
     });
+    consoles->SetMenuStyle(true);
+    App::Push(std::move(consoles));
 }
 
 } // namespace

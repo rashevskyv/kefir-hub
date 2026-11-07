@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.309 — Add a collection: no ticks, Back returns one step, an item opens without being saved
+- The console and way lists are menu-style (no tick on the first row); B in the way list reopens the console list. A result row opens the item's files at once; saving is "Keep the collection" in the options ("Remove" only for saved ones).
+- host tests: not run, nro: not built, switch: pending (Add a collection > SNES > Popular > a set > A: files open, nothing saved; B goes back)
+
 ## v0.14.308 — battery drain: full load and brightness down to 3.2 V, a manual restart is not a cut-off
 - Every drain (calibration and plain) runs at the full load and the full brightness (HIZ cut with the charger in, bright saver) until 3.2 V under load; only below it the load goes off and the brightness goes to 0.01. The 35 % gentle mode, the 3.3 V "your brightness" mode and the tail's minimum are gone.
 - A new boot with no low line in the drain log (a restart by hand at 69 %) no longer counts as a cut-off: the drain goes on at the full load. host tests: pass (quick), nro: not built, switch: pending (calibration drain shows load Maximum and brightness 100 % above 3.2 V; log "[Battery] ... mV under load" only near 3.2 V)

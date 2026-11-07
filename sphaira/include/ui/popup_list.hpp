@@ -47,6 +47,8 @@ public:
     }
 
     auto SetAllowCancel(bool allow) -> PopupList&;
+    // runs after B closes the list, e.g. to reopen the step before it
+    auto SetOnCancel(std::function<void()> cb) -> PopupList& { m_on_cancel = std::move(cb); return *this; }
 
     // check list: the first checks->size() rows get a tick box that A toggles without closing the
     // list; the rows after them (e.g. "Start") run the callback and close it as usual.
@@ -77,6 +79,7 @@ private:
     s64 m_starting_index{};
     bool m_menu_style{};
     bool m_allow_cancel{true};
+    std::function<void()> m_on_cancel{};
     std::vector<bool> m_markers{};
     std::vector<std::optional<ActionIcon>> m_icons{};
     std::shared_ptr<std::vector<bool>> m_checks{};

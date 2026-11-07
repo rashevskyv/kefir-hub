@@ -109,6 +109,7 @@ PopupList::PopupList(std::string title, Items items, Callback cb, s64 index)
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             if (m_allow_cancel) {
                 SetPop();
+                if (m_on_cancel) m_on_cancel();
             }
         }})
     );
