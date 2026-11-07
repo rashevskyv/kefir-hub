@@ -62,6 +62,9 @@ struct SaverInfo {
     int battery_dir{0}; // +1 charging, -1 draining, 0 idle
     std::vector<std::pair<std::string, std::string>> columns{};
     std::string hint{};
+    // a drain under load: every pixel lit in slowly drifting colours instead of black (OLED: a lit pixel draws the power, and the
+    // colours keep moving so nothing burns in); the readout sits on a dark plate
+    bool bright{false};
 
     // Live R/W speed graph history
     bool has_graph{false};

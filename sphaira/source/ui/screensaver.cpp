@@ -322,6 +322,10 @@ void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& inf
     const float left = cx - BLOCK_W / 2.f;
 
     if (info.battery_view) {
+        if (info.bright) {
+            gfx::drawDrainFill(vg, SCREEN_WIDTH, SCREEN_HEIGHT, t);
+            gfx::drawRect(vg, Vec4{cx - 340.f, cy - 210.f, 680.f, 380.f}, nvgRGBA(0, 0, 0, 170), 24.f);
+        }
         DrawBatteryView(vg, info, cx, cy, pdata);
         DrawBrightnessNote(vg);
         return;
