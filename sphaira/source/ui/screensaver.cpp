@@ -329,7 +329,8 @@ void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& inf
         if (info.bright) {
             gfx::drawDrainFill(vg, SCREEN_WIDTH, SCREEN_HEIGHT, t);
         }
-        DrawBatteryView(vg, info, cx, cy, pdata);
+        // the block spans cy-190 .. cy+145 and about 640 px: keep all of it on the panel, whatever the stick and the drift add up to.
+        DrawBatteryView(vg, info, std::clamp(cx, 330.f, SCREEN_WIDTH - 330.f), std::clamp(cy, 200.f, SCREEN_HEIGHT - 155.f), pdata);
         DrawBrightnessNote(vg);
         return;
     }
@@ -393,7 +394,7 @@ void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& inf
     total += show_graph ? graph_h + 10.f : 0.f;
     total += show_completion ? completion_h + 10.f : 0.f;
 
-    float y = cy - total / 2.f;
+    float y = std::clamp(cy - total / 2.f, 10.f, std::max(10.f, SCREEN_HEIGHT - 10.f - total));
 
     // the clock is deliberately the biggest thing on the panel: it is what a
     // glance from across the room can actually resolve.
