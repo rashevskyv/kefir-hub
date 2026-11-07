@@ -124,6 +124,7 @@ struct DrainMenu final : ui::menu::MenuBase {
     struct Line {
         const std::deque<float>* d;
         NVGcolor c;
+        bool live{}; // the last LIVE_N samples at a fixed step from the right edge: new points push the line left, nothing squeezes
     };
 
     // A chart of the whole drain: the first point at the left edge, the newest at the right edge.

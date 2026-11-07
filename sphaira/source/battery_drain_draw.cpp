@@ -57,7 +57,10 @@ void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const 
         if (n < 2) {
             continue;
         }
-        const auto X = [&](size_t k) { return px + pw * static_cast<float>(k) / static_cast<float>(n - 1); };
+        const auto X = [&](size_t k) {
+            return line.live ? px + pw - pw * static_cast<float>(n - 1 - k) / static_cast<float>(LIVE_N - 1)
+                             : px + pw * static_cast<float>(k) / static_cast<float>(n - 1);
+        };
         nvgBeginPath(vg);
         nvgMoveTo(vg, X(0), py + ph);
         for (size_t k = 0; k < n; k++) {
@@ -198,13 +201,13 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
     Chart(vg, 60.f, cy, cw, ch, "Voltage"_i18n, v, {{&m_volts, nvgRGB(0x60, 0xA5, 0xFA)}}, 3.0f, 4.3f, text, info, 3.2f);
     // the load: three cores and the GPU in one chart; the legend names each line with its value
-    const auto core = "Core"_i18n;
+    // the names are not translated (owner, 2026-11-07): short in every language, the legend keeps its scale
     const auto pct_text = [](float f) { char b[16]; std::snprintf(b, sizeof(b), " %.0f%%", f); return std::string{b}; };
     const NVGcolor c0 = nvgRGB(0x2D, 0xD4, 0xBF), c1 = nvgRGB(0x60, 0xA5, 0xFA), c2 = nvgRGB(0xA7, 0x8B, 0xFA), c3 = nvgRGB(0x4A, 0xDE, 0x80);
-    Chart(vg, 60.f + cw + gap, cy, cw, ch, "CPU / GPU load"_i18n, "", {{&m_cpu[0], c0}, {&m_cpu[1], c1}, {&m_cpu[2], c2}, {&m_gpu, c3}},
+    Chart(vg, 60.f + cw + gap, cy, cw, ch, "CPU / GPU", "", {{&m_cpu[0], c0, true}, {&m_cpu[1], c1, true}, {&m_cpu[2], c2, true}, {&m_gpu, c3, true}},
           0.f, 105.f, text, info, -1.f,
-          {{c0, core + " 1" + pct_text(Last(m_cpu[0]))}, {c1, core + " 2" + pct_text(Last(m_cpu[1]))},
-           {c2, core + " 3" + pct_text(Last(m_cpu[2]))}, {c3, "GPU"_i18n + pct_text(Last(m_gpu))}});
+          {{c0, "CPU-1" + pct_text(Last(m_cpu[0]))}, {c1, "CPU-2" + pct_text(Last(m_cpu[1]))},
+           {c2, "CPU-3" + pct_text(Last(m_cpu[2]))}, {c3, "GPU" + pct_text(Last(m_gpu))}});
     std::snprintf(v, sizeof(v), "%.1f \u00B0C", Last(m_temps));
     Chart(vg, 60.f + 2.f * (cw + gap), cy, cw, ch, "Temperature"_i18n, v, {{&m_temps, nvgRGB(0xF8, 0x71, 0x71)}}, 20.f, 70.f, text, info, static_cast<float>(HOT_C));
 }
@@ -301,12 +304,12 @@ void DrainMenu::Draw(NVGcontext* vg, Theme* theme) {
     const float cx = 120.f, cy = 332.f, cw = 510.f, ch = 138.f, gap = 20.f;
     char v[64];
     std::snprintf(v, sizeof(v), "%.0f%% · %.0f%% · %.0f%%", Last(m_cpu[0]), Last(m_cpu[1]), Last(m_cpu[2]));
-    Chart(vg, cx, cy, cw, ch, "CPU"_i18n, v,
-          {{&m_cpu[0], nvgRGB(0x2D, 0xD4, 0xBF)}, {&m_cpu[1], nvgRGB(0x60, 0xA5, 0xFA)}, {&m_cpu[2], nvgRGB(0xA7, 0x8B, 0xFA)}},
+    Chart(vg, cx, cy, cw, ch, "CPU", v,
+          {{&m_cpu[0], nvgRGB(0x2D, 0xD4, 0xBF), true}, {&m_cpu[1], nvgRGB(0x60, 0xA5, 0xFA), true}, {&m_cpu[2], nvgRGB(0xA7, 0x8B, 0xFA), true}},
           0.f, 100.f, text, info);
     if (m_gpu_fd_ok) {
         std::snprintf(v, sizeof(v), "%.0f%%", Last(m_gpu));
-        Chart(vg, cx + cw + gap, cy, cw, ch, "GPU"_i18n, v, {{&m_gpu, nvgRGB(0x4A, 0xDE, 0x80)}}, 0.f, 100.f, text, info);
+        Chart(vg, cx + cw + gap, cy, cw, ch, "GPU", v, {{&m_gpu, nvgRGB(0x4A, 0xDE, 0x80), true}}, 0.f, 100.f, text, info);
     }
     float peak = 5.f;
     for (const auto w : m_watts) {
