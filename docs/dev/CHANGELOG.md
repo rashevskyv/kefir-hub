@@ -8,6 +8,7 @@ Entries without a detail line are commit titles only; their verification state w
 - A new boot with no low line in the drain log (a restart by hand at 69 %) no longer counts as a cut-off: the drain goes on at the full load. host tests: pass (quick), nro: not built, switch: pending (calibration drain shows load Maximum and brightness 100 % above 3.2 V; log "[Battery] ... mV under load" only near 3.2 V)
 
 ## unreleased
+- docs: battery calibration drafts: the drain is full load and brightness down to 3.2 V (v0.14.308).
 - docs: drafts for Settings > Screensaver > "Screen type" (v0.14.307) on the EN and UK settings pages.
 - Game names from a NACP v2 (Zelda BotW showed "E"): The title cache took its own language entry from the raw NACP, which in v2 is junk; Hub now writes the decoded name into the copy it caches, also tries v2 when ns gives a one-letter name, and reloads a cached one-letter name. host tests: pass (quick), nro: not built, switch: pending (Games: BotW tile shows the full name; log has "[nacp v2] decoded name" for 01007EF00011E000 on the first launch)
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
@@ -427,6 +428,7 @@ The wizard (Tools > Battery calibration, and + on the Battery page: one wizard n
 host tests: quick pass, doc labels 0 unknown, i18n deployment contract fails as before (262 keys untranslated in 24 languages) | nro: not built | switch: pending (a full run: reset, two cycles, report; the guide still shows the 0.14.197 order)
 
 ## unreleased
+- docs: battery calibration drafts: the drain is full load and brightness down to 3.2 V (v0.14.308).
 docs: all draft blocks in `docs/site` (EN, UK) written out as prose by hand after `finish.py` was rejected by its reviewer on 12 UK pages; the stale "planned" status of the battery calibration page fixed. Labels: 0 unknown; mkdocs build: built en, built uk.
 `docs/site/{en,uk}/roadmap.md`: public roadmap page (recently added; planned and in progress) from plan.md Phase F and N, nav entry before troubleshooting. Labels: 0 unknown; mkdocs build: built en, built uk.
 `docs/dev/BATTERY-HANDOFF.md`: everything about the battery calibration for a fresh session (the decision, gauge facts, code state, the console test of 2026-10-27, traps). No code.
@@ -882,6 +884,7 @@ host tests: not run, nro: not built, switch: pending (PC Install: toggle with X;
 - host tests: not run (log format only) · nro: built · switch: verified (.69, title mode)
 
 ## unreleased
+- docs: battery calibration drafts: the drain is full load and brightness down to 3.2 V (v0.14.308).
 - docs: romfs.bin verified in a game on .69 (Kefir 925): SteamWorld Dig 2 ran with a Hub-packed image holding all 412 of its own files plus 40005 extra (40417 entries, fs.mitm build in game memory); a one-file mod packed by Hub changed the in-game "Use" prompt; an image with data out of fs.mitm's order made the game start without mods and Ultrahand showed the Kefirosphere "mods not applied" notice; packing refused with "not enough space" (keep: sum of images) and went through (delete: largest image) on a card filled to 73 MB free.
 - fix: Kefir update changelog: the red "scroll to the bottom" hint wraps in the space left of Install instead of running under it; code spans drop their backticks (grey marks them), so a wrap no longer leaves a lone backtick. No version bump: lands on top of 0.14.092 from a parallel session. switch: verified (.69, Kefir 925 changelog dialog).
 - docs: plan.md F.18 — battery gauge tool (Battery Desync Fix reversed, queued).
@@ -1247,6 +1250,7 @@ host tests: not run, nro: not built, switch: pending (PC Install: toggle with X;
 - host tests: pass (quick, 120 notes) · i18n parity: pass · docs: built en/uk, 0 unknown labels · nro: built (ReleaseWithInstall checkpoint, 0.14.017, copied to the test card) · switch: pending — open /, /atmosphere, /bootloader, /config, /config/kefir, /switch in list layout: notes under the names; /atmosphere/contents still shows module and game names.
 
 ## unreleased
+- docs: battery calibration drafts: the drain is full load and brightness down to 3.2 V (v0.14.308).
 - finish.py: a second, independent proxy request reviews each finished page (draft facts in, nothing invented, unrelated lines untouched) before it replaces the page; a rejection feeds the problems into the next attempt, three attempts. Live run on cheats.md EN+UK copies: both reviewed and clean. Product code unchanged.
 - docs: new page "What is on the microSD card" (EN/UK): every Kefir folder and file on the card with its purpose, linked from Settings → Where settings are stored.
 - Embed TegraExplorer 4.2.29: the Joy-Con connect rumble is muted with a neutral pattern before the disable subcommand, so third-party controllers stop buzzing at TE start (hekate 6.5.4 sequence). nro: built (ReleaseWithInstall checkpoint clean, build/ReleaseWithInstall/kefir-hub.nro 0.14.013 with TE 4.2.29) · switch: pending — start TE with a third-party controller attached.
@@ -1399,6 +1403,7 @@ host tests: not run, nro: not built, switch: pending (PC Install: toggle with X;
 - host tests: pass · nro: built (DocsDemo, ReleaseWithInstall) · switch: n/a (demo build only; release path unchanged when OFF)
 
 ## unreleased
+- docs: battery calibration drafts: the drain is full load and brightness down to 3.2 V (v0.14.308).
 - docs: Hub docs published at https://hub.customfw.xyz/ (Pages custom domain of this repo; customfw.xyz/kefir-hub/ redirects there): indexed, canonical links and per-language sitemap.xml (`DOCS_SITE_BASE` in build.sh → `site_url`), robots.txt; the guide preview moves to /guide/ and stays noindex. docs build: pass (local, DOCS_SITE_BASE set).
 - docs: online preview https://customfw.xyz/kefir-hub/ (GitHub Pages, `.github/workflows/docs-preview.yml`): Hub docs from branch `docs` (en, `/uk/`) and the reworked guide from rashevskyv/switch branch `kefir-hub` under `/guide/`, rebuilt on push to either (switch sends `guide-updated`); edit link on every page, noindex. mkdocs.yml: repo_url/edit_uri/noindex/language links from env (unset locally = as before). docs build: pass.
 - test: tests/test_demo_fixtures_contract.py (plan S.5) — DOCS_DEMO fixtures: titles.json ids/icons (256x256 JPEG)/save owners, every JSON http fixture parses, demo save backups carry a valid 128-byte .nx_save_meta.bin of a demo game with an owner, shots.json entries are recipes or user; runs in tests/run.sh. host tests: pass.
