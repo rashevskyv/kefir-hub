@@ -55,10 +55,12 @@ int main() {
     assert(!PlanCounters({0, 0x2304, 0, 0, true}).ok); // no capacity read: nothing to write, full or not
 
     // the full battery is the charger's word: bq24193 REG08 CHRG_STAT (bits 5-4) = 11, and a cell near the top
-    assert(ChargeDone(0x30, 4180) && ChargeDone(0xB4, 4100));             // done; the other bits do not matter
-    assert(!ChargeDone(0x20, 4200) && !ChargeDone(0x10, 4200) && !ChargeDone(0x00, 4200)); // fast, pre-charge, not charging
-    assert(!ChargeDone(0x30, 4099));                                      // "done" on a low cell is not a full battery
-    assert(!ChargeDone(0xFF, 4200));                                      // a misread register
+    assert(ChargeDone(0x30, 4180, 300) && ChargeDone(0xB4, 4100, 300));   // done; the other bits do not matter
+    assert(!ChargeDone(0x20, 4200, 300) && !ChargeDone(0x10, 4200, 300) && !ChargeDone(0x00, 4200, 300)); // fast, pre-charge, not charging
+    assert(!ChargeDone(0x30, 4099, 0));                                   // "done" on a low cell is not a full battery
+    assert(!ChargeDone(0xFF, 4200, 0));                                   // a misread register
+    assert(ChargeDone(0x00, 4172, 0) && ChargeDone(0x20, 4173, -2));      // 2026-11-06: HOS ended the charge, CHRG_STAT not 11
+    assert(!ChargeDone(0x20, 4201, 147) && !ChargeDone(0x00, 4120, 0));   // still tapering; a cell not high enough
 
     // cycle 1 at the full battery: the factory capacity of the reset table (4667 mAh), never more; the counters 100 %
     {

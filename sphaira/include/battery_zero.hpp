@@ -35,8 +35,16 @@ inline auto VEmptyMv(std::uint16_t reg) -> int {
 // A cell above 4.1 V too, so a misread register (0xFF) is not taken for it.
 inline constexpr int DONE_MIN_MV = 4100;
 
-inline auto ChargeDone(std::uint8_t reg08, int mv) -> bool {
-    return reg08 != 0xFF && ((reg08 >> 4) & 0x3) == 0x3 && mv >= DONE_MIN_MV;
+// HOS does not leave CHRG_STAT at 11 (2026-11-06: 4.2 V, 0 mA, the gauge at 100 % for 11 hours, never "done"): a high cell that
+// takes no current with the charger in is full too
+inline constexpr int TAPER_MIN_MV = 4150;
+inline constexpr int TAPER_MA = 50;
+
+inline auto ChargeDone(std::uint8_t reg08, int mv, int avg_ma) -> bool {
+    if (reg08 == 0xFF) {
+        return false;
+    }
+    return (((reg08 >> 4) & 0x3) == 0x3 && mv >= DONE_MIN_MV) || (mv >= TAPER_MIN_MV && avg_ma < TAPER_MA && avg_ma > -TAPER_MA);
 }
 
 struct CountersIn {

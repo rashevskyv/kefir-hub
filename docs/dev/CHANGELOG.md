@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Game names from a NACP v2 (Zelda BotW showed "E"): The title cache took its own language entry from the raw NACP, which in v2 is junk; Hub now writes the decoded name into the copy it caches, also tries v2 when ns gives a one-letter name, and reloads a cached one-letter name. host tests: pass (quick), nro: not built, switch: pending (Games: BotW tile shows the full name; log has "[nacp v2] decoded name" for 01007EF00011E000 on the first launch)
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.303 — Battery calibration: a full battery is also a high cell that takes no current on the charger
+HOS does not leave the charger's CHRG_STAT at 11: the charge ended at 23:28 (4.2 V, 0 mA, 100 %) and the page still waited at 10:45. Full = CHRG_STAT done, or a cell at 4.15 V+ with |avg current| under 50 mA and the charger in.
+host tests: pass (quick), nro: not built, switch: pending (cycle 1 charge ends by itself at the top, cycle 2 drain follows)
+
 ## v0.14.302 — Battery calibration: the charge page gives the charger input back, a zero near empty keeps the chip's %
 The drain page's input cut stayed on under the charge page (HizTick renewed it): the battery drained there, "charger disconnected", arrow down (v0.14.301). The zero writes the counters at 1 % only when the chip says more than 10 % (5 % after the sleep goes on from 5 %).
 host tests: pass (quick), nro: not built, switch: pending (charge page after the zero: voltage rises, arrow up, green; zero at 5 % keeps 5 %)

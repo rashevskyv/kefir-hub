@@ -540,7 +540,8 @@ auto MeasureCapacityIfFull() -> Measure {
     psmGetChargerType(&charger);
     // full = the charger chip ended the charge; with the charger out nobody says so: wait for it
     const auto reg08 = charger != PsmChargerType_Unconnected ? charge::ChargerStatus() : std::nullopt;
-    if (!reg08 || !zero::ChargeDone(*reg08, mv)) {
+    const auto avg = g.Current(MAX17050_AvgCurrent);
+    if (!reg08 || !avg || !zero::ChargeDone(*reg08, mv, static_cast<int>(*avg))) {
         return Measure::NotYet;
     }
     if (cycle == 2) {
