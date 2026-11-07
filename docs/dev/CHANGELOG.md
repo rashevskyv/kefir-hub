@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.313 — build fix
+- filebrowser_assoc.cpp: GetNewPath was a Menu method, now fs::AppendPath in the free loader. Build was clean after it (the 0.14.312 build is the first one with the cover search).
+- host tests: pass (quick), nro: built (0.14.313 not rebuilt), switch: pending
+
 ## v0.14.312 — ROM lists: the cover is found by a loose name; A on a downloaded game starts it in an emulator; screensaver stays on the panel
 - Cover: the file name "Aladdin (U).smc" now finds "Aladdin (USA)" on thumbnails.libretro.com (box art, else screenshot) by its words and region; the server's name list is kept per system. "On the card" list: A opens the emulators (file browser list), the pane shows the cover; delete stays on START. Also: transfer box shadow + dim, MTP write refreshes Homebrew, screensaver block clamped to the panel.
 - host tests: pass (quick), nro: not built, switch: pending (cover for old-style names; A starts the game; shadow/dim look)

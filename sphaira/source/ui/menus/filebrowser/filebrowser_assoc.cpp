@@ -229,7 +229,7 @@ static void LoadAssocEntriesPath(const fs::FsPath& path, std::vector<FileAssocEn
             continue;
         }
 
-        const auto full_path = GetNewPath(path, d->d_name);
+        const auto full_path = fs::AppendPath(path, d->d_name);
         FileAssocEntry assoc{};
 
         ini_browse([](const mTCHAR *Section, const mTCHAR *Key, const mTCHAR *Value, void *UserData) {
