@@ -4184,5 +4184,20 @@
   "Queue done. Choose what to do with the skipped files.": "Wachtrij klaar. Kies wat u wilt doen met de overgeslagen bestanden.",
   "Screen type": "Schermtype",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto herkent alleen het Switch OLED-model. Kies OLED voor een aftermarket OLED-paneel: het stroomverbruik verlicht dan het hele scherm.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Onder 3,5 V: de belasting is uitgeschakeld en de helderheid staat op het minimum, zodat de console langzaam leegloopt tot hij echt leeg is."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Onder 3,5 V: de belasting is uitgeschakeld en de helderheid staat op het minimum, zodat de console langzaam leegloopt tot hij echt leeg is.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Voegt dit item toe aan je ROMs-lijst zodat je it opnieuw kunt openen. Download niets.",
+  "About 0 %: the zero is right.": "Ongeveer 0 %: de nul is juist.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Boven 3%: de nulstand klopt niet. Start de kalibratie opnieuw.",
+  "type words from the name to narrow the list": "typ woorden uit de naam om de lijst te verfijnen",
+  "Both checks below passed: the battery is really tired.": "Beide tests hieronder zijn geslaagd: de batterij is echt versleten.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Dit komt overeen met de capaciteit die de meter heeft geleerd: het getal is van de accu, geen fout in de meter.",
+  "It differs from the capacity the gauge learned by": "Verschilt van de door de meter geleerde capaciteit met",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Beide checks hieronder geslaagd: de accu gaat echt zo kort mee. Een nieuwe accu is het overwegen waard.",
+  "Charge counted from the switch-off to full": "Lading van uitgeschakeld tot vol",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Niet gemeten: het ontladingslogboek bevat geen uitschakeling voor cyclus 2.",
+  "The gauge did not learn right: start the calibration over.": "De meter is niet correct geleerd: start de kalibratie opnieuw.",
+  "The gauge at cycle 2's switch-off": "De meter bij het uitschakelen van cyclus 2",
+  "The checks": "Controles",
+  "Before the calibration": "Vóór de kalibratie",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Niet geteld: de oplaadteller bij het uitschakelen van cyclus 2 werd niet gezien."
 }

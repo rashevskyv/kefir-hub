@@ -212,6 +212,13 @@ Every open saves this MMC's copy (`/config/kefir/battery/<mmc>-copy.cal`); opene
 
 First row of [[Verdict]]: [[Full capacity / design]] in mAh and %; more than 10 % under design is drawn orange and counts as desync (" — desync, the saved copy too").
 
+<!-- draft
+- since 0.14.310: a section [[Before the calibration]] (date) / [[now]], right after [[Verdict]], once a calibration was started on this console
+- the values come from /config/kefir/battery/calib-before.cal, saved when [[Start calibration]] backs the chip up (before the reset)
+- rows: [[Full capacity / design]] then and now (mAh and %), [[Charge cycles]] then and now, the nine model parameters (RCOMP0 … QRTable30) as then / now in hex, FullCap and FullCapNom also in mAh; ≠ marks a changed value
+- a new calibration replaces the "before" values
+-->
+
 [[Charge cycles: this / other MMC]] in orange when the two MMCs count a cycle or more apart (Lite: the charge voltage limit follows the count).
 
 **A** on a row shows what it means; **A** on a section caption opens or closes it.

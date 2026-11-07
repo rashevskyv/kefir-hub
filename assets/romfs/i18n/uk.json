@@ -4120,5 +4120,20 @@
   "Queue done. Choose what to do with the skipped files.": "Чергу завершено. Виберіть, що робити з пропущеними файлами.",
   "Screen type": "Тип екрана",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "«Автоматично» розпізнає лише Switch OLED. Для неоригінальної OLED-панелі виберіть OLED: тоді під час розряду батареї світиться весь екран.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Нижче 3,5 В: навантаження вимкнено, яскравість мінімальна, тож консоль повільно розряджається до справжнього нуля."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Нижче 3,5 В: навантаження вимкнено, яскравість мінімальна, тож консоль повільно розряджається до справжнього нуля.",
+  "About 0 %: the zero is right.": "Близько 0 %: нуль правильний.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Понад 3 %: нуль неправильний. Почніть калібрування заново.",
+  "Before the calibration": "До калібрування",
+  "Both checks below passed: the battery is really tired.": "Обидві перевірки нижче пройдено: батарея справді втомлена.",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Обидві перевірки нижче пройдено: батарея справді тримає так мало. Варто подумати про нову батарею.",
+  "Charge counted from the switch-off to full": "Заряд, порахований від вимкнення до повної",
+  "It differs from the capacity the gauge learned by": "Він відрізняється від ємності, яку вивчив датчик, на",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Він збігається з ємністю, яку вивчив датчик: це число батареї, а не помилка датчика.",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Не пораховано: лічильник заряду на вимкненні циклу 2 не зчитано.",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Не виміряно: у журналі розряду немає вимкнення циклу 2.",
+  "The checks": "Перевірки",
+  "The gauge at cycle 2's switch-off": "Датчик на вимкненні циклу 2",
+  "The gauge did not learn right: start the calibration over.": "Датчик вивчив неправильно: почніть калібрування заново.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Додає цей елемент до списку ROM, щоб ви могли відкрити його знову. Нічого не завантажує.",
+  "type words from the name to narrow the list": "введіть слова з назви, щоб звузити список"
 }

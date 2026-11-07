@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Kolejka ukończona. Wybierz, co zrobić z pominiętymi plikami.",
   "Screen type": "Typ ekranu",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto rozpoznaje tylko model Switch OLED. Wybierz OLED dla niefabrycznego panelu OLED: pobór prądu podświetli wówczas cały ekran.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Poniżej 3,5 V: obciążenie jest wyłączone, a jasność jest na minimum, więc konsola powoli rozładowuje się do całkowiteго rozładowania."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Poniżej 3,5 V: obciążenie jest wyłączone, a jasność jest na minimum, więc konsola powoli rozładowuje się do całkowiteго rozładowania.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Dodaje ten element do listy ROM-ów, aby można go było ponownie otworzyć. Niczego nie pobiera.",
+  "About 0 %: the zero is right.": "Około 0 %: zero jest poprawne.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Powyżej 3%: zero jest rozregulowane. Rozpocznij kalibrację ponownie.",
+  "type words from the name to narrow the list": "wpisz słowa z nazwy, aby ograniczyć listę",
+  "Both checks below passed: the battery is really tired.": "Oba poniższe testy pomyślne: bateria jest naprawdę zużyta.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Odpowiada to pojemności wyuczonej przez wskaźnik: ta liczba należy do baterii, a nie jest błędem wskaźnika.",
+  "It differs from the capacity the gauge learned by": "Różni się od pojemności wyuczonej przez wskaźnik o",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Obie weryfikacje pomyślne: bateria rzeczywiście trzyma tak krótko. Warto pomyśleć o nowej baterii.",
+  "Charge counted from the switch-off to full": "Ładowanie od wyłączenia do pełna",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Nie zmierzono: dziennik rozładowania nie zawiera wyłączenia dla cyklu 2.",
+  "The gauge did not learn right: start the calibration over.": "Wskaźnik nie nauczył się poprawnie: uruchom kalibrację ponownie.",
+  "The gauge at cycle 2's switch-off": "Wskaźnik przy wyłączeniu cyklu 2",
+  "The checks": "Sprawdzenia",
+  "Before the calibration": "Przed kalibracją",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nie policzono: nie zarejestrowano licznika ładowania przy wyłączeniu cyklu 2."
 }

@@ -4185,5 +4185,20 @@
   "Queue done. Choose what to do with the skipped files.": "Warteschlange abgeschlossen. Wählen Sie, was mit den übersprungenen Dateien geschehen soll.",
   "Screen type": "Bildschirmtyp",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto erkennt nur das Switch-OLED-Modell. Wählen Sie OLED für ein Aftermarket-OLED-Panel: Der Stromverbrauch beleuchtet dann den gesamten Bildschirm.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Unter 3,5 V: Die Last ist abgeschaltet und die Helligkeit ist auf dem Minimum, sodass sich die Konsole langsam vollständig entlädt."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Unter 3,5 V: Die Last ist abgeschaltet und die Helligkeit ist auf dem Minimum, sodass sich die Konsole langsam vollständig entlädt.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Fügt dieses Element deiner ROMs-Liste hinzu, damit du es erneut öffnen kannst. Lädt nichts herunter.",
+  "About 0 %: the zero is right.": "Etwa 0 %: Die Null ist korrekt.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Über 3 %: Der Nullpunkt stimmt nicht. Kalibrierung neu starten.",
+  "type words from the name to narrow the list": "Wörter aus dem Namen eingeben, um die Liste einzuschränken",
+  "Both checks below passed: the battery is really tired.": "Beide Prüfungen bestanden: Der Akku ist wirklich erschöpft.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Dies entspricht der vom Messgerät gelernten Kapazität: Die Zahl stammt vom Akku, nicht von einem Messfehler.",
+  "It differs from the capacity the gauge learned by": "Weicht von der gelernten Kapazität des Messgeräts ab um",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Beide Prüfungen bestanden: Der Akku hält wirklich so wenig. Ein neuer Akku ist eine Überlegung wert.",
+  "Charge counted from the switch-off to full": "Ladung von ausgeschaltet bis voll",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Nicht gemessen: Im Entladeprotokoll fehlt das Ausschalten für Zyklus 2.",
+  "The gauge did not learn right: start the calibration over.": "Die Anzeige wurde nicht richtig kalibriert: Starten Sie die Kalibrierung neu.",
+  "The gauge at cycle 2's switch-off": "Die Anzeige beim Ausschalten von Zyklus 2",
+  "The checks": "Prüfungen",
+  "Before the calibration": "Vor der Kalibrierung",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nicht gezählt: Ladezähler beim Ausschalten von Zyklus 2 nicht erfasst."
 }

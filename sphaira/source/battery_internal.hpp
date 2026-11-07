@@ -38,6 +38,7 @@ struct Snapshot {
     std::string lot;
     bool emummc{};
     std::optional<CopyFile> other; // the other MMC's copy file
+    std::optional<CopyFile> before; // the chip when the calibration began (calib-before.cal), for the page's before / now
     int psm_percent{-1};           // what the console shows (psm)
 };
 
@@ -45,6 +46,8 @@ struct Snapshot {
 auto Read() -> Snapshot;
 // <stamp>-<mmc>.cal (batt.cal format) + .txt register dump in BACKUP_DIR; `name` without extension.
 auto Backup(const Snapshot& s, std::string& name) -> Result;
+// the chip's model when a calibration begins (calib-before.cal, CopyFile): the page shows it beside the values now
+auto SaveCalibBefore(const Snapshot& s) -> Result;
 // this MMC's copy of the learned values := what the chip has now (HOS must not bring the old ones back)
 auto SaveCopyOf(FuelGauge& g) -> Result;
 auto ChipParams(const Snapshot& s) -> Params;

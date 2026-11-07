@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.311 — battery: the report checks the capacity and the zero; Tools > Battery shows before / now
+- Report: the QH charge from cycle 2's cut-off to full (marker qh_cap2) against the learned FullCap (within 7 %, less the cut-off %), and the gauge at cycle 2's cut-off (≤ 3 % = the zero is right). Both passed: a low capacity is real wear. Ledger "good" = report::Good (no AboveFactory, no 20 % inconsistency, no failed check).
+- Start calibration saves calib-before.cal; Tools > Battery gets "Before the calibration (date) / now": capacity, cycles, the nine model values. host tests: pass (quick), nro: not built, switch: pending (cycle 2 log "QH counted N"; report "The checks"; before / now after a new start)
+
 ## v0.14.310 — ROM file lists: wide name column, one filter cell, A downloads the marked files
 - File lists of a collection and of an archive give the name 80 % of the row; the filter is one cell; A with marked rows downloads them; "Keep the collection" has a description.
 - host tests: pass (quick), nro: not built, switch: pending (speed of a single file out of a zip is archive.org's: not changed)
@@ -19,6 +23,7 @@ Entries without a detail line are commit titles only; their verification state w
 - A new boot with no low line in the drain log (a restart by hand at 69 %) no longer counts as a cut-off: the drain goes on at the full load. host tests: pass (quick), nro: not built, switch: pending (calibration drain shows load Maximum and brightness 100 % above 3.2 V; log "[Battery] ... mV under load" only near 3.2 V)
 
 ## unreleased
+- docs: drafts for the report checks and the Tools > Battery before / now section (v0.14.311).
 - docs: battery calibration drafts: the drain is full load and brightness down to 3.2 V (v0.14.308).
 - docs: drafts for Settings > Screensaver > "Screen type" (v0.14.307) on the EN and UK settings pages.
 - Game names from a NACP v2 (Zelda BotW showed "E"): The title cache took its own language entry from the raw NACP, which in v2 is junk; Hub now writes the decoded name into the copy it caches, also tries v2 when ns gives a one-letter name, and reloads a cached one-letter name. host tests: pass (quick), nro: not built, switch: pending (Games: BotW tile shows the full name; log has "[nacp v2] decoded name" for 01007EF00011E000 on the first launch)

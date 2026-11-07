@@ -3919,7 +3919,6 @@
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.",
   "The battery is full: the gauge is set to 100 %": "The battery is full: the gauge is set to 100 %",
-  "Keep the collection": "Keep the collection",
   "Type words from the name to narrow the list": "Type words from the name to narrow the list",
   "type words from the name to narrow the list": "type words from the name to narrow the list",
   "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Adds this item to your ROMS list so you can open it again. Downloads nothing.",
@@ -4120,5 +4119,18 @@
   "The queue did not wait for these questions. Choose for each game, then press X.": "The queue did not wait for these questions. Choose for each game, then press X.",
   "Screen type": "Screen type",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.",
+  "About 0 %: the zero is right.": "About 0 %: the zero is right.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Above 3 %: the zero is off. Start the calibration over.",
+  "Before the calibration": "Before the calibration",
+  "Both checks below passed: the battery is really tired.": "Both checks below passed: the battery is really tired.",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Both checks below passed: the battery really holds this little. A new battery is worth considering.",
+  "Charge counted from the switch-off to full": "Charge counted from the switch-off to full",
+  "It differs from the capacity the gauge learned by": "It differs from the capacity the gauge learned by",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Not counted: the charge counter at cycle 2's switch-off was not seen.",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Not measured: the drain log has no cycle 2 switch-off.",
+  "The checks": "The checks",
+  "The gauge at cycle 2's switch-off": "The gauge at cycle 2's switch-off",
+  "The gauge did not learn right: start the calibration over.": "The gauge did not learn right: start the calibration over."
 }

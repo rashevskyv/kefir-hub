@@ -4184,5 +4184,20 @@
   "Queue done. Choose what to do with the skipped files.": "Coda completata. Scegli cosa fare con i file saltati.",
   "Screen type": "Tipo di schermo",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto riconosce solo il modello Switch OLED. Scegli OLED per un pannello OLED aftermarket: il consumo della batteria illuminerà l'intero schermo.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Sotto i 3,5 V: il carico è disattivato e la luminosità è al minimo, quindi la console si scarica lentamente fino a svuotarsi completamente."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Sotto i 3,5 V: il carico è disattivato e la luminosità è al minimo, quindi la console si scarica lentamente fino a svuotarsi completamente.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Aggiunge questo elemento alla tua lista di ROM in modo da poterlo riaprire. Non scarica nulla.",
+  "About 0 %: the zero is right.": "Circa 0 %: lo zero è corretto.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Oltre il 3%: lo zero non è corretto. Riavvia la calibrazione.",
+  "type words from the name to narrow the list": "digita parole del nome per restringere l'elenco",
+  "Both checks below passed: the battery is really tired.": "Entrambi i controlli superati: la batteria è davvero esausta.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Corrisponde alla capacità appresa dal misuratore: il numero appartiene alla batteria, non a un errore del misuratore.",
+  "It differs from the capacity the gauge learned by": "Differisce dalla capacità appresa dal misuratore di",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Entrambi i controlli superati: la batteria dura davvero così poco. Vale la pena considerare una nuova batteria.",
+  "Charge counted from the switch-off to full": "Carica misurata dallo spegnimento al massimo",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Non misurato: il registro di scarica non contiene lo spegnimento per il ciclo 2.",
+  "The gauge did not learn right: start the calibration over.": "Il livello non è stato calibrato correttamente: riavvia la calibrazione.",
+  "The gauge at cycle 2's switch-off": "L'indicatore allo spegnimento del ciclo 2",
+  "The checks": "Controlli",
+  "Before the calibration": "Prima della calibrazione",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Non conteggiato: il contatore della carica allo spegnimento del ciclo 2 non è stato rilevato."
 }

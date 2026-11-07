@@ -198,6 +198,12 @@ Hub завантажує список останніх оновлень ігор
 
 - [[Verdict]]: [[No sign of desync on this MMC]] або знайдені ознаки: [[Restore flag (MiscCFG bit 15)]] (мікросхема втратила живлення, HOS запише збережену копію цього MMC при наступному запуску), [[Restart flag (Status POR)]], [[Chip vs this MMC's copy]] з параметрами, що відрізняються. Також [[Battery version]] (CAL0 і set:cal не збігаються), [[Cycle count]] (Lite: не довіряють, ліміт заряду 4,192 В) і [[Learned capacity]] менше ніж 70 % від проєктної.
 - Перший рядок [[Verdict]]: [[Full capacity / design]] у мА·год і відсотках. Якщо ємність більш ніж на 10 % менша за проєктну, рядок оранжевий і вважається десинхронізацією («— desync, the saved copy too»).
+<!-- draft
+- since 0.14.310: a section [[Before the calibration]] (date) / [[now]], right after [[Verdict]], once a calibration was started on this console
+- the values come from /config/kefir/battery/calib-before.cal, saved when [[Start calibration]] backs the chip up (before the reset)
+- rows: [[Full capacity / design]] then and now (mAh and %), [[Charge cycles]] then and now, the nine model parameters (RCOMP0 … QRTable30) as then / now in hex, FullCap and FullCapNom also in mAh; ≠ marks a changed value
+- a new calibration replaces the "before" values
+-->
 - «Model: chip / sysMMC|emuMMC»: дев'ять навчених параметрів (RCOMP0, TempCo, FullCap, FullCapNom, IAvgEmpty, QRTable00..30) як мікросхема / збережена копія, у hex, ємності також у мА·год. Рядок, що відрізняється, позначено ≠.
 - [[Fuel gauge (chip)]]: заряд, залишок, повна й проєктна ємність, напруга елемента й розімкнутого кола, регістр циклів, MiscCFG / Status.
 - [[Saved by the system]]: цикли заряду й надійність лічильника циклів для MMC, у якому ви зараз. sysMMC і emuMMC мають кожен свою копію, тож відкрийте сторінку в обох.

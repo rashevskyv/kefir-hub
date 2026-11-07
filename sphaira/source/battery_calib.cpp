@@ -278,7 +278,12 @@ void WriteZeroThenCharge(Marker m) {
 void BeginNew(std::function<void()> then) {
     auto name = std::make_shared<std::string>();
     App::Push<ui::ProgressBox>(0, "Back up the chip's values"_i18n, "Battery"_i18n, [name](auto) -> Result {
-        return detail::Backup(detail::Read(), *name);
+        const auto s = detail::Read();
+        R_TRY(detail::Backup(s, *name));
+        if (const auto rc = detail::SaveCalibBefore(s); R_FAILED(rc)) {
+            log_write("[Calib] the values before the calibration were not saved: 0x%X\n", rc); // only the page's before / now
+        }
+        R_SUCCEED();
     }, [name, then = std::move(then)](Result rc) {
         if (R_FAILED(rc)) {
             App::PushErrorBox(rc, "Backup failed"_i18n);
@@ -548,8 +553,14 @@ auto MeasureCapacityIfFull() -> Measure {
         // cycle 2 writes nothing: the chip learned its capacity itself; noted for the report
         const auto full = g.Read(MAX17050_FullCap);
         m->cap_raw[1] = full && *full ? *full : 1;
+        // the second measure for the report: what the QH counter saw come in since the cut-off (qh_last = QH + 1 there)
+        if (const auto qh = g.Read(MAX17050_QH); qh && m->qh_last) {
+            const auto in = static_cast<std::int16_t>(*qh - static_cast<std::uint16_t>(m->qh_last - 1));
+            m->qh_cap2 = in > 0 ? in : 0;
+        }
         SaveMarker(*m);
-        log_write("[Cap] cycle 2: the charger ended the charge (%d mV, REG08 %02X); the chip learned FullCap %u, nothing written\n", mv, *reg08, full.value_or(0));
+        log_write("[Cap] cycle 2: the charger ended the charge (%d mV, REG08 %02X); the chip learned FullCap %u, QH counted %d, nothing written\n",
+                  mv, *reg08, full.value_or(0), m->qh_cap2);
         return Measure::Done;
     }
     std::string failed;

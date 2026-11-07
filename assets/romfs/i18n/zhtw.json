@@ -4237,5 +4237,20 @@
   "Queue done. Choose what to do with the skipped files.": "佇列已完成。請選擇如何處理略過的檔案。",
   "Screen type": "螢幕類型",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」僅識別 Switch OLED 機型。如使用副廠 OLED 面板請選擇 OLED：此時電池消耗會點亮整個螢幕。",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5 V 以下：負載關閉且亮度降至最低，因此主機緩慢耗電至徹底放空。"
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5 V 以下：負載關閉且亮度降至最低，因此主機緩慢耗電至徹底放空。",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "將此項目新增至您的 ROM 列表，以便再次開啟。不會下載任何內容。",
+  "About 0 %: the zero is right.": "大約 0%：零是正確的。",
+  "Above 3 %: the zero is off. Start the calibration over.": "3%以上：零點不準。請重新開始校准。",
+  "type words from the name to narrow the list": "輸入名稱中的字詞以縮小清單範圍",
+  "Both checks below passed: the battery is really tired.": "以下兩項檢查均已通過：電池確實已經很疲勞了。",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "這與電量計學習到的容量相符：該數值屬於電池本身，而非電量計錯誤。",
+  "It differs from the capacity the gauge learned by": "與電量計學習到的容量相差：",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "兩項檢查均已通過：電池續航確實這麼短。建議考慮更換新電池。",
+  "Charge counted from the switch-off to full": "關機到充滿的充電量",
+  "Not measured: the drain log has no cycle 2 switch-off.": "未測量：放電日誌中沒有週期 2 的關機記錄。",
+  "The gauge did not learn right: start the calibration over.": "電量計校准錯誤：請重新開始校准。",
+  "The gauge at cycle 2's switch-off": "循環 2 關閉時的儀表",
+  "The checks": "檢查項",
+  "Before the calibration": "校準前",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "未計入：未偵測到循環 2 關閉時的充電計數器。"
 }

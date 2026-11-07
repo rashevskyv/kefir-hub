@@ -98,6 +98,20 @@ auto CopyPath(bool emummc) -> fs::FsPath {
     return fs::FsPath{std::string{BACKUP_DIR} + (emummc ? "/emummc-copy.cal" : "/sysmmc-copy.cal")};
 }
 
+auto BeforePath() -> fs::FsPath {
+    return fs::FsPath{std::string{BACKUP_DIR} + "/calib-before.cal"};
+}
+
+auto ReadCopyFile(fs::FsNativeSd& fs, const fs::FsPath& path) -> std::optional<CopyFile> {
+    std::vector<u8> data;
+    if (R_FAILED(fs.read_entire_file(path, data)) || data.size() != sizeof(CopyFile)) {
+        return std::nullopt;
+    }
+    CopyFile f{};
+    std::memcpy(&f, data.data(), sizeof(f));
+    return f;
+}
+
 // every open saves this MMC's copy and reads the other MMC's, so opening the page once in each MMC is enough.
 void SyncCopies(Snapshot& s) {
     fs::FsNativeSd fs;
@@ -113,12 +127,18 @@ void SyncCopies(Snapshot& s) {
         const auto* p = reinterpret_cast<const u8*>(&mine);
         fs.write_entire_file(CopyPath(s.emummc), std::vector<u8>(p, p + sizeof(mine)));
     }
-    std::vector<u8> data;
-    if (R_SUCCEEDED(fs.read_entire_file(CopyPath(!s.emummc), data)) && data.size() == sizeof(CopyFile)) {
-        CopyFile other{};
-        std::memcpy(&other, data.data(), sizeof(other));
-        s.other = other;
-    }
+    s.other = ReadCopyFile(fs, CopyPath(!s.emummc));
+    s.before = ReadCopyFile(fs, BeforePath());
+}
+
+auto SaveCalibBefore(const Snapshot& s) -> Result {
+    R_UNLESS(s.gauge, Result_ArchiveRead);
+    fs::FsNativeSd fs;
+    R_TRY(fs.GetFsOpenResult());
+    fs.CreateDirectoryRecursively(BACKUP_DIR);
+    CopyFile f{Pack(ChipParams(s), s.hos.cycles, s.hos.cycles_actual), static_cast<u64>(std::time(nullptr))};
+    const auto* p = reinterpret_cast<const u8*>(&f);
+    return fs.write_entire_file(BeforePath(), std::vector<u8>(p, p + sizeof(f)));
 }
 
 auto ChipParams(const Snapshot& s) -> Params {
@@ -245,6 +265,28 @@ auto Groups(const Snapshot& s) -> std::vector<system_info::Group> {
         verdict.rows.push_back(FindingRow(r));
     }
     out.push_back(std::move(verdict));
+
+    // the calibration: what the chip held when it began, beside what it holds now
+    if (s.before) {
+        const auto old = ParamsOf(s.before->cal);
+        char day[16]{};
+        const auto at = static_cast<std::time_t>(s.before->saved_at);
+        std::strftime(day, sizeof(day), "%Y-%m-%d", std::localtime(&at));
+        const auto pct = [design](u16 v) { return design ? v * 100u / design : 0u; };
+        system_info::Group cmp{"Before the calibration"_i18n + " (" + day + ") / " + "now"_i18n, {
+            {"Full capacity / design"_i18n, Fmt("%u mAh (%u%%) / %u mAh (%u%%)", old.v[2] / 2, pct(old.v[2]), full / 2, pct(full)),
+             CapacityLow(full, design)},
+            {"Charge cycles"_i18n, Fmt("%.2f / %.2f", s.before->cal.cycles / 100.0, s.hos.cycles_actual / 100.0)},
+        }};
+        for (size_t i = 0; i < PARAM_REGS.size(); i++) {
+            std::string v = Fmt("%04X / %04X", old.v[i], chip.v[i]);
+            if (i == 2 || i == 3) {
+                v += Fmt("  (%u / %u mAh)", old.v[i] / 2, chip.v[i] / 2);
+            }
+            cmp.rows.push_back({std::string{PARAM_NAMES[i]} + (old.v[i] != chip.v[i] ? "  ≠" : ""), v});
+        }
+        out.push_back(std::move(cmp));
+    }
 
     // the nine learned parameters side by side: a row that differs is the thing to look at
     system_info::Group params{"Model: chip / "_i18n + MmcName(s), {}};

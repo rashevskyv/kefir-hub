@@ -4184,5 +4184,20 @@
   "Queue done. Choose what to do with the skipped files.": "Đã xong hàng đợi. Chọn việc cần làm với các tệp bị bỏ qua.",
   "Screen type": "Kiểu màn hình",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto chỉ nhận diện mẫu Switch OLED. Chọn OLED cho tấm nền OLED thay thế: mức tiêu thụ pin khi đó sẽ làm sáng toàn bộ màn hình.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Dưới 3,5 V: tải bị tắt và độ sáng ở mức tối thiểu, do đó máy cạn pin từ từ cho đến khi hết hoàn toàn."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Dưới 3,5 V: tải bị tắt và độ sáng ở mức tối thiểu, do đó máy cạn pin từ từ cho đến khi hết hoàn toàn.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Thêm mục này vào danh sách ROM của bạn để bạn có thể mở lại. Không tải xuống bất cứ thứ gì.",
+  "About 0 %: the zero is right.": "Khoảng 0 %: số không đúng.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Trên 3%: điểm không bị sai lệch. Bắt đầu lại quá trình hiệu chuẩn.",
+  "type words from the name to narrow the list": "nhập từ trong tên để thu hẹp danh sách",
+  "Both checks below passed: the battery is really tired.": "Cả hai bài kiểm tra bên dưới đã vượt qua: pin thực sự đã chai.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Điều này khớp với dung lượng mà đồng hồ đo đã học: con số này là của pin, không phải lỗi đồng hồ.",
+  "It differs from the capacity the gauge learned by": "Khác với dung lượng đồng hồ đo học được là",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Cả hai bài kiểm tra đều đạt: pin thực sự giữ được rất ít. Nên cân nhắc thay pin mới.",
+  "Charge counted from the switch-off to full": "Lượng sạc từ lúc tắt nguồn đến đầy",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Chưa đo: nhật ký xả không có mục tắt chu kỳ 2.",
+  "The gauge did not learn right: start the calibration over.": "Đồng hồ đo học sai: bắt đầu lại quá trình hiệu chuẩn.",
+  "The gauge at cycle 2's switch-off": "Thước đo khi tắt chu kỳ 2",
+  "The checks": "Kiểm tra",
+  "Before the calibration": "Trước khi hiệu chuẩn",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Không tính: không phát hiện bộ đếm sạc khi tắt chu kỳ 2."
 }

@@ -4184,5 +4184,20 @@
   "Queue done. Choose what to do with the skipped files.": "Kö klar. Välj vad du vill göra med de överhoppade filerna.",
   "Screen type": "Skärmtyp",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto känner bara igen Switch OLED-modellen. Välj OLED för en tredjeparts OLED-panel: batteriförbrukningen lyser då upp hela skärmen.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Under 3,5 V: belastningen är avstängd och ljusstyrkan är på ett minimum, så konsolen laddas ur långsamt tills den är helt tom."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Under 3,5 V: belastningen är avstängd och ljusstyrkan är på ett minimum, så konsolen laddas ur långsamt tills den är helt tom.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Lägger till detta objekt i din ROM-lista så att du kan öppna det igen. Laddar inte ner något.",
+  "About 0 %: the zero is right.": "Cirka 0 %: nollan är rätt.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Över 3%: nollpunkten är fel. Starta om kalibreringen.",
+  "type words from the name to narrow the list": "skriv ord från namnet för att begränsa listan",
+  "Both checks below passed: the battery is really tired.": "Båda testerna nedan klarades: batteriet är verkligen slitet.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Detta matchar den kapacitet som mätaren har lärt sig: siffran tillhör batteriet, inte ett mätarfel.",
+  "It differs from the capacity the gauge learned by": "Skiljer sig från den kapacitet mätaren har lärt sig med",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Båda kontrollerna godkända: batteriet håller faktiskt så lite. Det är värt att överväga ett nytt batteri.",
+  "Charge counted from the switch-off to full": "Laddning från avstängd till full",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Ej uppmätt: urladdningsloggen har ingen avstängning för cykel 2.",
+  "The gauge did not learn right: start the calibration over.": "Mätaren kalibrerades inte korrekt: starta om kalibreringen.",
+  "The gauge at cycle 2's switch-off": "Mätaren vid avstängning av cykel 2",
+  "The checks": "Kontroller",
+  "Before the calibration": "Före kalibrering",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Ej räknat: laddningsräknaren vid avstängning av cykel 2 syntes inte."
 }

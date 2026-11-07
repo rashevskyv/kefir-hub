@@ -4184,5 +4184,20 @@
   "Queue done. Choose what to do with the skipped files.": "대기열 완료. 건너뛴 파일로 수행할 작업을 선택하세요.",
   "Screen type": "화면 유형",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "자동(Auto)은 Switch OLED 모델만 인식합니다. 애프터마켓 OLED 패널의 경우 OLED를 선택하세요. 배터리 소모로 인해 화면 전체가 켜집니다.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5 V 미만: 부하가 꺼지고 밝기가 최솟값으로 설정되어 콘솔이 완전히 방전될 때까지 천천히 소모됩니다."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5 V 미만: 부하가 꺼지고 밝기가 최솟값으로 설정되어 콘솔이 완전히 방전될 때까지 천천히 소모됩니다.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "이 항목을 ROMs 목록에 추가하여 나중에 다시 열 수 있습니다. 다운로드하지는 않습니다.",
+  "About 0 %: the zero is right.": "약 0%: 0이 맞습니다.",
+  "Above 3 %: the zero is off. Start the calibration over.": "3% 초과: 영점이 맞지 않습니다. 캘리브레이션을 다시 시작하세요.",
+  "type words from the name to narrow the list": "이름의 단어를 입력하여 목록 줄이기",
+  "Both checks below passed: the battery is really tired.": "아래의 두 가지 검사를 모두 통과했습니다: 배터리가 상당히 열화되었습니다.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "게이지가 학습한 용량과 일치합니다. 이 숫자는 게이지 오류가 아니라 배터리의 값입니다.",
+  "It differs from the capacity the gauge learned by": "게이지가 학습한 용량과의 차이:",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "아래 두 가지 검사를 모두 통과했습니다. 배터리 지속 시간이 실제로 매우 짧습니다. 새 배터리로 교체를 고려해 보세요.",
+  "Charge counted from the switch-off to full": "전원 꺼짐부터 완충까지 충전량",
+  "Not measured: the drain log has no cycle 2 switch-off.": "측정되지 않음: 방전 로그에 사이클 2 종료 기록이 없습니다.",
+  "The gauge did not learn right: start the calibration over.": "배터리 게이지 학습에 실패했습니다. 보정을 다시 시작하세요.",
+  "The gauge at cycle 2's switch-off": "사이클 2 종료 시점의 게이지",
+  "The checks": "검사",
+  "Before the calibration": "보정 전",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "집계되지 않음: 사이클 2 종료 시 충전 카운터가 감지되지 않았습니다."
 }

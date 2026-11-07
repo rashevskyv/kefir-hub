@@ -48,4 +48,36 @@ inline auto Judge(std::uint16_t full, std::uint16_t nominal, std::uint16_t desig
     return v;
 }
 
+// Two checks that tell a bad calibration from a worn battery (owner, 2026-11-07). The capacity: the charge the QH counter saw
+// from cycle 2's cut-off to the full battery is a second measure, by the shunt and not by the chip's model. The gauge stood at
+// cut_pct at the cut-off, so the charge that came in is the learned FullCap less that part. The zero: the gauge at cycle 2's
+// cut-off should show about 0 %, the zero cycle 1 wrote.
+enum class Check { Unknown, Pass, Fail };
+
+inline constexpr int CAP_MATCH_PCT = 7;
+inline constexpr int ZERO_OK_PCT = 3;
+
+// counted, learned: FullCap units; cut_pct: the gauge at the cut-off, -1 = unknown (taken as 0)
+inline auto CapacityDiffPct(int counted, int learned, int cut_pct) -> int {
+    const int expected = learned * (100 - (cut_pct > 0 ? cut_pct : 0)) / 100;
+    const int d = counted - expected;
+    return expected > 0 ? (d < 0 ? -d : d) * 100 / expected : 0;
+}
+
+inline auto CheckCapacity(int counted, int learned, int cut_pct) -> Check {
+    if (counted <= 0 || learned <= 1) { // learned 1 = the chip gave no FullCap at cycle 2's full
+        return Check::Unknown;
+    }
+    return CapacityDiffPct(counted, learned, cut_pct) <= CAP_MATCH_PCT ? Check::Pass : Check::Fail;
+}
+
+inline auto CheckZero(int cut_pct) -> Check {
+    return cut_pct < 0 ? Check::Unknown : cut_pct <= ZERO_OK_PCT ? Check::Pass : Check::Fail;
+}
+
+// the calibration may go to the other systems: a worn battery measured right is a good calibration, a gauge that learned wrong is not
+inline auto Good(const Verdict& v, Check capacity, Check zero) -> bool {
+    return v.wear != Wear::AboveFactory && !v.inconsistent && capacity != Check::Fail && zero != Check::Fail;
+}
+
 } // namespace sphaira::battery::report

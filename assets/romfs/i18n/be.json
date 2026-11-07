@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Чаргоўнік завершаны. Выберыце, што рабіць з прапушчанымі файламі.",
   "Screen type": "Тып экрана",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Аўтаматычна распазнаецца толькі мадэль Switch OLED. Выберыце OLED для заменнай OLED-панэлі: спажыванне энергіі тады падсвятляе ўвесь экран.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Ніжэй 3,5 В: нагрузка адключана, а яркасць мінімальная, таму кансоль павольна разраджаецца да нуля."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Ніжэй 3,5 В: нагрузка адключана, а яркасць мінімальная, таму кансоль павольна разраджаецца да нуля.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Дадае гэты элемент у спіс ROM, каб вы маглі адкрыць яго зноў. Нічога не спампоўвае.",
+  "About 0 %: the zero is right.": "Каля 0 %: нуль правільны.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Вышэй за 3%: нулявое значэнне не правільнае. Пачніце каліброўку спачатку.",
+  "type words from the name to narrow the list": "увядзіце словы з назвы, каб звузіць спіс",
+  "Both checks below passed: the battery is really tired.": "Абедзве праверкі ніжэй паспяховыя: акумулятар вельмі зношаны.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Гэта адпавядае ёмістасці, якой навучыўся датчык: гэта лічба батарэі, а не памылка датчыка.",
+  "It differs from the capacity the gauge learned by": "Адрозніваецца ад ёмістасці, якую вывучыў датчык, на",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Абодва тэсты ніжэй пройдзены: батарэя сапраўды так мала трымае. Варта падумаць пра новую батарэю.",
+  "Charge counted from the switch-off to full": "Зарад з моманту выключэння да поўнага",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Не вымерана: у часопісе разрадкі няма выключэння ў цыкле 2.",
+  "The gauge did not learn right: start the calibration over.": "Шкала навучылася няправільна: пачніце каліброўку спачатку.",
+  "The gauge at cycle 2's switch-off": "Датчык пры адключэнні цыклу 2",
+  "The checks": "Праверкі",
+  "Before the calibration": "Перад каліброўкай",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Не ўлічана: лічыльнік зараду пры выключэнні цыклу 2 не зафіксаваны."
 }

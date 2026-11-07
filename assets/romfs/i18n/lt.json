@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Eilė baigta. Pasirinkite, ką daryti su praleistais failais.",
   "Screen type": "Ekrano tipas",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Automatinis režimas atpažįsta tik „Switch OLED“ modelį. Pasirinkite OLED trečiosios šalies OLED ekranui: baterijos sąnaudos tuomet apšvies visą ekraną.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Žemiau 3,5 V: apkrova išjungta, o ryškumas minimalus, todėl konsolė lėtai išsikrauna iki visiško išsikrovimo."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Žemiau 3,5 V: apkrova išjungta, o ryškumas minimalus, todėl konsolė lėtai išsikrauna iki visiško išsikrovimo.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Prideda šį elementą į jūsų ROM sąrašą, kad galėtumėte jį vėl atidaryti. Nieko atsisiunčia.",
+  "About 0 %: the zero is right.": "Apie 0 %: nulis teisingas.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Virš 3 %: nulis išderintas. Kalibravimą pradėkite iš naujo.",
+  "type words from the name to narrow the list": "įveskite pavadinimo žodžius sąrašui susiaurinti",
+  "Both checks below passed: the battery is really tired.": "Abu patikrinimai praėjo sėkmingai: baterija tikrai nusidėvėjusi.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Tai atitinka talpą, kurią išmoko matuoklis: skaičius yra baterijos, o ne matuoklio klaida.",
+  "It differs from the capacity the gauge learned by": "Skiriasi nuo matuoklio išmoktos talpos per",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Abu patikrinimai praėjo: baterija tikrai tiek mažai laiko. Verta pagalvoti apie naują bateriją.",
+  "Charge counted from the switch-off to full": "Įkrova nuo išjungimo iki pilnos",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Neišmatuota: iškrovos žurnale nėra 2 ciklo išjungimo.",
+  "The gauge did not learn right: start the calibration over.": "Matuoklis nesureagavo tinkamai: pradėkite kalibravimą iš naujo.",
+  "The gauge at cycle 2's switch-off": "Matuoklis 2-ojo ciklo išjungimo metu",
+  "The checks": "Patikros",
+  "Before the calibration": "Prieš kalibravimą",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Neskaičiuota: 2-ojo ciklo išjungimo metu įkrovimo skaitiklio nesimatė."
 }

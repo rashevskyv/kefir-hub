@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Antrean selesai. Pilih tindakan untuk file yang dilewati.",
   "Screen type": "Jenis layar",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Otomatis hanya mendeteksi model Switch OLED. Pilih OLED untuk panel OLED aftermarket: penggunaan baterai akan menerangi seluruh layar.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Di bawah 3,5 V: beban dimatikan dan tingkat kecerahan berada pada minimum, sehingga konsol terkuras perlahan hingga benar-benar kosong."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Di bawah 3,5 V: beban dimatikan dan tingkat kecerahan berada pada minimum, sehingga konsol terkuras perlahan hingga benar-benar kosong.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Menambahkan item ini ke daftar ROM Anda sehingga Anda dapat membukanya lagi. Tidak mengunduh apa pun.",
+  "About 0 %: the zero is right.": "Sekitar 0 %: angka nol benar.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Di atas 3%: titik nol meleset. Mulai ulang kalibrasi.",
+  "type words from the name to narrow the list": "ketik kata dari nama untuk mempersempit daftar",
+  "Both checks below passed: the battery is really tired.": "Kedua pemeriksaan di bawah berhasil: baterai benar-benar aus.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Ini cocok dengan kapasitas yang dipelajari pengukur: angka tersebut adalah milik baterai, bukan kesalahan pengukur.",
+  "It differs from the capacity the gauge learned by": "Berbeda dari kapasitas yang dipelajari pengukur sebesar",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Kedua pemeriksaan berhasil: baterai benar-benar bertahan sesingkat ini. Pertimbangkan untuk mengganti baterai baru.",
+  "Charge counted from the switch-off to full": "Muatan dari kondisi mati hingga penuh",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Tidak diukur: log pengurasan tidak memiliki pematian siklus 2.",
+  "The gauge did not learn right: start the calibration over.": "Pengukur tidak terbaca dengan benar: mulai ulang kalibrasi.",
+  "The gauge at cycle 2's switch-off": "Indikator pada saat siklus 2 dimatikan",
+  "The checks": "Pemeriksaan",
+  "Before the calibration": "Sebelum kalibrasi",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Tidak dihitung: penghitung pengisian daya pada saat mati siklus 2 tidak terlihat."
 }

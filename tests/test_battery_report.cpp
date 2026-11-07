@@ -36,6 +36,28 @@ int main() {
     // the nominal missing: not called inconsistent
     assert(!Judge(8600, 0, 9200).inconsistent);
 
+    // the capacity check: the QH charge from cycle 2's cut-off to full against the learned FullCap, less the cut-off's %
+    assert(CheckCapacity(7300, 7600, 0) == Check::Pass);     // 3.9 % off
+    assert(CheckCapacity(7300, 7600, 2) == Check::Pass);     // expected 7448: 2 % off
+    assert(CheckCapacity(6500, 7600, 0) == Check::Fail);     // 14 % off: the gauge learned wrong
+    assert(CheckCapacity(9000, 7600, 0) == Check::Fail);     // more came in than the gauge thinks it holds
+    assert(CheckCapacity(6500, 7600, 15) == Check::Pass);    // a cut-off at 15 %: 6460 expected
+    assert(CapacityDiffPct(7068, 7600, 0) == 7 && CheckCapacity(7068, 7600, 0) == Check::Pass); // the edge
+    assert(CheckCapacity(0, 7600, 0) == Check::Unknown);     // nothing counted
+    assert(CheckCapacity(7300, 1, 0) == Check::Unknown);     // the chip gave no FullCap at the full
+    // the zero check: the gauge at cycle 2's cut-off
+    assert(CheckZero(0) == Check::Pass && CheckZero(3) == Check::Pass);
+    assert(CheckZero(4) == Check::Fail && CheckZero(91) == Check::Fail);
+    assert(CheckZero(-1) == Check::Unknown);
+    // good for the other systems: a worn battery measured right is good; a wrong gauge or a failed check is not
+    const auto worn = Judge(6900, 6900, 9200);                // 25 % below
+    assert(Good(worn, Check::Pass, Check::Pass));
+    assert(Good(worn, Check::Unknown, Check::Unknown));
+    assert(!Good(worn, Check::Fail, Check::Pass));
+    assert(!Good(worn, Check::Pass, Check::Fail));
+    assert(!Good(Judge(9900, 9900, 9200), Check::Pass, Check::Pass));
+    assert(!Good(Judge(5376, 12456, 7200), Check::Pass, Check::Pass));
+
     std::puts("test_battery_report: ok");
     return 0;
 }

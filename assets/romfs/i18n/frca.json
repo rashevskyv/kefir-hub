@@ -4185,5 +4185,20 @@
   "Queue done. Choose what to do with the skipped files.": "File d'attente terminée. Choisissez quoi faire des fichiers ignorés.",
   "Screen type": "Type d'écran",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto ne reconnaît que le modèle Switch OLED. Choisissez OLED pour un écran OLED de rechange : la consommation de la pile éclaire alors tout l'écran.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "En dessous de 3,5 V : la charge est désactivée et la luminosité est au minimum, de sorte que la console se décharge lentement jusqu'à être complètement vide."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "En dessous de 3,5 V : la charge est désactivée et la luminosité est au minimum, de sorte que la console se décharge lentement jusqu'à être complètement vide.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Ajoute cet élément à votre liste de ROMs pour pouvoir l'ouvrir à nouveau. Ne télécharge rien.",
+  "About 0 %: the zero is right.": "Environ 0 % : le zéro est correct.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Au-dessus de 3 % : le zéro est déréglé. Recommencez l'étalonnage.",
+  "type words from the name to narrow the list": "tapez des mots du nom pour affiner la liste",
+  "Both checks below passed: the battery is really tired.": "Les deux vérifications ci-dessous ont réussi : la batterie est vraiment fatiguée.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Cela correspond à la capacité apprise par la jauge : le chiffre provient de la batterie, pas d'une erreur de jauge.",
+  "It differs from the capacity the gauge learned by": "Diffère de la capacité apprise par la jauge de",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Les deux vérifications ont réussi : la batterie tient vraiment aussi peu. Il vaut la peine d'envisager une nouvelle batterie.",
+  "Charge counted from the switch-off to full": "Charge mesurée de l'arrêt au maximum",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Non mesuré : l'arrêt du cycle 2 est absent du journal de décharge.",
+  "The gauge did not learn right: start the calibration over.": "La jauge n'a pas été étalonnée correctement : recommencez l'étalonnage.",
+  "The gauge at cycle 2's switch-off": "La jauge lors de l'arrêt du cycle 2",
+  "The checks": "Vérifications",
+  "Before the calibration": "Avant l'étalonnage",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Non comptabilisé : le compteur de charge à l'extinction du cycle 2 n'a pas été détecté."
 }

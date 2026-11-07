@@ -105,8 +105,11 @@ void ShowReport() {
         int design_mah{-1};
         report::Verdict verdict;
         std::vector<Cutoff> cuts;
-        bool large{};
-        bool low{};
+        int counted_mah{-1};   // the QH charge from cycle 2's cut-off to full
+        int capacity_diff{};   // % between it and the learned FullCap
+        int cut2_pct{-1};      // the gauge at cycle 2's cut-off
+        report::Check capacity{report::Check::Unknown};
+        report::Check zero{report::Check::Unknown};
         std::string model;
     };
     auto facts = std::make_shared<Facts>();
@@ -117,14 +120,24 @@ void ShowReport() {
         const auto design = s.regs[MAX17050_DesignCap];
         facts->full_mah = full / 2;
         facts->design_mah = design / 2;
-        facts->large = CapacityHigh(full, design);
-        facts->low = CapacityLow(full, design);
         facts->verdict = report::Judge(full, s.regs[MAX17050_FullCapNom], design);
         facts->model = ModelOf(s);
         std::vector<u8> log;
         if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(LOG_PATH, log)) && !log.empty()) {
-            facts->cuts = Cutoffs({reinterpret_cast<const char*>(log.data()), log.size()});
+            const std::string_view text{reinterpret_cast<const char*>(log.data()), log.size()};
+            facts->cuts = Cutoffs(text);
+            if (const auto m = LoadMarker(); m && m->full_at[0]) {
+                if (const auto cut = ZeroCutoff(text, 2, m->full_at[0])) {
+                    facts->cut2_pct = cut->gauge_pct;
+                }
+            }
         }
+        if (const auto m = LoadMarker()) {
+            facts->counted_mah = m->qh_cap2 ? m->qh_cap2 / 2 : -1;
+            facts->capacity = report::CheckCapacity(m->qh_cap2, m->cap_raw[1], facts->cut2_pct);
+            facts->capacity_diff = report::CapacityDiffPct(m->qh_cap2, m->cap_raw[1], facts->cut2_pct);
+        }
+        facts->zero = report::CheckZero(facts->cut2_pct);
         R_SUCCEED();
     }, [facts](Result rc) {
         if (R_FAILED(rc)) {
@@ -139,6 +152,8 @@ void ShowReport() {
         }
         // 1. the battery, in plain words: how much it holds against the factory value, what that means, what to do
         const auto& vd = facts->verdict;
+        // both checks passed: the number is the battery's, so a low one is real wear, not a calibration to run again
+        const bool measured = facts->capacity == report::Check::Pass && facts->zero == report::Check::Pass;
         lines.push_back(cu::Head("Your battery"_i18n));
         lines.push_back(cu::Row("Capacity now"_i18n, std::to_string(facts->full_mah) + " mAh"));
         lines.push_back(cu::Row("Factory capacity"_i18n, std::to_string(facts->design_mah) + " mAh"));
@@ -159,12 +174,20 @@ void ShowReport() {
             case report::Wear::Worn:
                 lines.push_back(cu::Warn("Noticeably worn: the battery holds less than it should."_i18n));
                 lines.push_back(cu::Item("The console works, but it runs shorter than a new one. Either the battery is really tired, or a cycle was cut short (the charger came out before 100 %, the console was used hard while it charged)."_i18n));
-                lines.push_back(cu::Item("To tell which: run the calibration again (Actions, Start the calibration over). The same number again means the battery is like that."_i18n));
+                if (measured) {
+                    lines.push_back(cu::Item("Both checks below passed: the battery is really tired."_i18n));
+                } else {
+                    lines.push_back(cu::Item("To tell which: run the calibration again (Actions, Start the calibration over). The same number again means the battery is like that."_i18n));
+                }
                 break;
             case report::Wear::VeryWorn:
                 lines.push_back(cu::Warn("Very low: more than ordinary wear explains."_i18n));
-                lines.push_back(cu::Item("Most likely the calibration went wrong, for example a cycle was cut short. Start it over (Actions, Start the calibration over)."_i18n));
-                lines.push_back(cu::Item("If the result stays this low, the battery is worn out. A new battery is worth considering."_i18n));
+                if (measured) {
+                    lines.push_back(cu::Item("Both checks below passed: the battery really holds this little. A new battery is worth considering."_i18n));
+                } else {
+                    lines.push_back(cu::Item("Most likely the calibration went wrong, for example a cycle was cut short. Start it over (Actions, Start the calibration over)."_i18n));
+                    lines.push_back(cu::Item("If the result stays this low, the battery is worn out. A new battery is worth considering."_i18n));
+                }
                 break;
             case report::Wear::AboveFactory:
                 lines.push_back(cu::Warn("More than the factory capacity: a battery never holds more than it did new. The gauge's value is wrong."_i18n));
@@ -177,7 +200,30 @@ void ShowReport() {
         if (vd.inconsistent) {
             lines.push_back(cu::Warn("The gauge holds two different capacities: it did not learn cleanly. Start the calibration over."_i18n));
         }
-        // 2. the switch-offs
+        // 2. the checks: a second measure of the capacity and the zero at cycle 2's switch-off
+        lines.push_back(cu::Head("The checks"_i18n));
+        if (facts->counted_mah >= 0) {
+            lines.push_back(cu::Row("Charge counted from the switch-off to full"_i18n, std::to_string(facts->counted_mah) + " mAh"));
+        }
+        if (facts->capacity == report::Check::Pass) {
+            lines.push_back(cu::Ok("It matches the capacity the gauge learned: the number is the battery's, not a gauge error."_i18n));
+        } else if (facts->capacity == report::Check::Fail) {
+            lines.push_back(cu::Warn("It differs from the capacity the gauge learned by"_i18n + " " + std::to_string(facts->capacity_diff) + " %. "
+                + "The gauge did not learn right: start the calibration over."_i18n));
+        } else {
+            lines.push_back(cu::Item("Not counted: the charge counter at cycle 2's switch-off was not seen."_i18n));
+        }
+        if (facts->cut2_pct >= 0) {
+            lines.push_back(cu::Row("The gauge at cycle 2's switch-off"_i18n, std::to_string(facts->cut2_pct) + " %"));
+        }
+        if (facts->zero == report::Check::Pass) {
+            lines.push_back(cu::Ok("About 0 %: the zero is right."_i18n));
+        } else if (facts->zero == report::Check::Fail) {
+            lines.push_back(cu::Warn("Above 3 %: the zero is off. Start the calibration over."_i18n));
+        } else {
+            lines.push_back(cu::Item("Not measured: the drain log has no cycle 2 switch-off."_i18n));
+        }
+        // 3. the switch-offs
         lines.push_back(cu::Head("The switch-offs"_i18n));
         lines.push_back(cu::Item("At a switch-off the gauge should show about 0 %. A higher number means it was off; the calibration corrects that."_i18n));
         const auto& cuts = facts->cuts;
@@ -206,7 +252,7 @@ void ShowReport() {
                 if (m->step == Step::Report) {
                     // the calibration is made here: a new number in the ledger; the other systems take it at their next start
                     auto l = LoadLedger();
-                    cutoff::RecordCalibration(l, CurrentSystemId(), facts->model, !facts->low && !facts->verdict.inconsistent, Now());
+                    cutoff::RecordCalibration(l, CurrentSystemId(), facts->model, report::Good(facts->verdict, facts->capacity, facts->zero), Now());
                     SaveLedger(l);
                 }
                 ReportSeen(*m);

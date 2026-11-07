@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Järjekord valmis. Valige, mida vahele jäetud failidega teha.",
   "Screen type": "Ekraani tüüp",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto tuvastab ainult Switch OLED mudeli. Vali OLED järelturu OLED-paneeli jaoks: aku tarbimine valgustab siis kogu ekraani.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Alla 3,5 V: koormus on välja lülitatud ja heledus on miinimumil, nii et konsool tühjeneb aeglaselt täielikult."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Alla 3,5 V: koormus on välja lülitatud ja heledus on miinimumil, nii et konsool tühjeneb aeglaselt täielikult.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Lisab selle üksuse teie ROM-ide loendisse, et saaksite selle uuesti avada. Ei laadi midagi alla.",
+  "About 0 %: the zero is right.": "Umbes 0 %: null on õige.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Üle 3%: nullpunkt on paigast ära. Alusta kalibreerimist uuesti.",
+  "type words from the name to narrow the list": "sisesta nime sõnad loendi kitsendamiseks",
+  "Both checks below passed: the battery is really tired.": "Mõlemad alltoodud kontrollid läbitud: aku on tõsiselt väsinud.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "See vastab mahutavusele, mille mõõdik on õppinud: number on aku oma, mitte mõõdiku viga.",
+  "It differs from the capacity the gauge learned by": "Erineb anduri õpitud mahutavusest",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Mõlemad kontrollid läbitud: aku peab tõesti nii vähe vastu. Uue aku hankimist tasub kaaluda.",
+  "Charge counted from the switch-off to full": "Laeng väljalülitamisest täisini",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Mõõtmata: tühjenduslogis puudub 2. tsükli väljalülitus.",
+  "The gauge did not learn right: start the calibration over.": "Aku mõõtur ei õppinud korralikult: alusta kalibreerimist uuesti.",
+  "The gauge at cycle 2's switch-off": "Näidik tsükli 2 väljalülitamisel",
+  "The checks": "Kontrollid",
+  "Before the calibration": "Enne kalibreerimist",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Arvestamata: tsükli 2 väljalülitamisel ei märgatud laadimisloendurit."
 }

@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Rinda pabeigta. Izvēlieties, ko darīt ar izlaistajiem failiem.",
   "Screen type": "Ekrāna veids",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Automātiskais režīms atpazīst tikai Switch OLED modeli. Izvēlieties OLED pēctirgus OLED panelim: akumulatora patēriņš tad izgaismos visu ekrānu.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Zem 3,5 V: slodze ir izslēgta un spilgtums ir minimumā, tāpēc konsole lēni izlādējas līdz pilnīgai tukšumam."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Zem 3,5 V: slodze ir izslēgta un spilgtums ir minimumā, tāpēc konsole lēni izlādējas līdz pilnīgai tukšumam.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Pievieno šo vienumu jūsu ROM sarakstam, lai jūs varētu to atkal atvērt. Neko lejupielādē.",
+  "About 0 %: the zero is right.": "Aptuveni 0 %: nulle ir pareiza.",
+  "Above 3 %: the zero is off. Start the calibration over.": "Virs 3%: nulle ir nepareiza. Sāciet kalibrēšanu no jauna.",
+  "type words from the name to narrow the list": "ievadiet vārdus no nosaukuma, lai sašaurinātu sarakstu",
+  "Both checks below passed: the battery is really tired.": "Abas zemāk minētās pārbaudes ir izturētas: akumulators ir patiešām nolietojies.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Tas atbilst ietilpībai, ko mērierīce ir iemācījusies: šis skaitlis ir no akumulatora, nevis mērierīces kļūda.",
+  "It differs from the capacity the gauge learned by": "Atšķiras no mēraparāta apgūtās ietilpības par",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Abas pārbaudes izturētas: akumulators tiešām tur tik maz. Ir vērts apsvērt jaunu akumulatoru.",
+  "Charge counted from the switch-off to full": "Uzlāde no izslēgšanas līdz pilnai",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Nav izmērīts: izlādes žurnālā nav 2. cikla izslēgšanas.",
+  "The gauge did not learn right: start the calibration over.": "Mērītājs pareizi neapguva datus: sāciet kalibrēšanu no jauna.",
+  "The gauge at cycle 2's switch-off": "Mērinstruments 2. cikla izslēgšanas brīdī",
+  "The checks": "Pārbaudes",
+  "Before the calibration": "Pirms kalibrēšanas",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nav ieskaitīts: uzlādes skaitītājs 2. cikla izslēgšanas brīdī netika konstatēts."
 }

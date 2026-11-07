@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Кезек аяқталды. Өткізіліп жіберілген файлдармен не істеу керектігін таңдаңыз.",
   "Screen type": "Экран түрі",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto тек Switch OLED моделін анықтайды. Қосымша OLED панелі үшін OLED таңдаңыз: содан кейін батарея қуаты барлық экранды жарықтандырады.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,5 В төмен: жүктеме өшіріліп, жарықтық минимумға қойылады, сондықтан консоль толық бос қалғанша баяу разрядталады."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,5 В төмен: жүктеме өшіріліп, жарықтық минимумға қойылады, сондықтан консоль толық бос қалғанша баяу разрядталады.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Бұл элементті қайта ашу үшін ROM тізіміне қосады. Ештеңе жүктеп алмайды.",
+  "About 0 %: the zero is right.": "Шамамен 0 %: нөл дұрыс.",
+  "Above 3 %: the zero is off. Start the calibration over.": "3% көрсеткішінен жоғары: нөл мәні қате. Калибрлеуді қайта бастаңыз.",
+  "type words from the name to narrow the list": "тізімді тарылту үшін атаудан сөздерді енгізіңіз",
+  "Both checks below passed: the battery is really tired.": "Төмендегі екі тексеру де сәтті өтті: аккумулятор қатты тозған.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Бұл өлшеуіш үйренген сыйымдылыққа сәйкес келеді: бұл сан өлшеуіш қатесі емес, батареяныкі.",
+  "It differs from the capacity the gauge learned by": "Өлшеуіш үйренген сыйымдылықтан айырмашылығы:",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Төмендегі екі тексеру де сәтті өтті: батарея шынымен де өте аз ұстайды. Жаңа батареяны қарастырған жөн.",
+  "Charge counted from the switch-off to full": "Өшірілгеннен толық зарядталғанға дейін",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Өлшенген жоқ: разрядтау журналында 2-ші циклдің өшірілуі жоқ.",
+  "The gauge did not learn right: start the calibration over.": "Шкала дұрыс үйренбеді: калибрлеуді қайта бастаңыз.",
+  "The gauge at cycle 2's switch-off": "2-ші циклді өшірген кездегі көрсеткіш",
+  "The checks": "Тексерулер",
+  "Before the calibration": "Калибрлеуге дейін",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Есептелмеді: 2-ші циклді өшіру кезінде заряд есептегіші байқалмады."
 }

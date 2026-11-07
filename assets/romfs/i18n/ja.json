@@ -4184,5 +4184,20 @@
   "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。",
   "Screen type": "画面タイプ",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」はSwitch OLEDモデルのみを認識します。社外品のOLEDパネルの場合は「OLED」を選択してください。バッテリー消費により画面全体が点灯します。",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5V未満：負荷がオフになり、明るさが最小になるため、コンソールが完全に空になるまでゆっくり放電します。"
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5V未満：負荷がオフになり、明るさが最小になるため、コンソールが完全に空になるまでゆっくり放電します。",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "このアイテムをROMsリストに追加し、後から再度開けるようにします。ダウンロードは行われません。",
+  "About 0 %: the zero is right.": "約0%：ゼロは正しいです。",
+  "Above 3 %: the zero is off. Start the calibration over.": "3%超：ゼロ点がずれています。キャリブレーションをやり直してください。",
+  "type words from the name to narrow the list": "名前の一部を入力して絞り込む",
+  "Both checks below passed: the battery is really tired.": "以下の両方のチェックに合格しました：バッテリーがかなり劣化しています。",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "これはゲージが学習した容量と一致しています。この数値はゲージのエラーではなく、バッテリーのものです。",
+  "It differs from the capacity the gauge learned by": "ゲージが学習した容量との差:",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "両方のチェックに合格しました。バッテリーの持ちが本当に悪くなっています。新しいバッテリーへの交換をご検討ください。",
+  "Charge counted from the switch-off to full": "電源オフから満充電までの充電量",
+  "Not measured: the drain log has no cycle 2 switch-off.": "未計測: 放電ログにサイクル2のシャットダウン記録がありません。",
+  "The gauge did not learn right: start the calibration over.": "バッテリー残量の学習に失敗しました。校正をやり直してください。",
+  "The gauge at cycle 2's switch-off": "サイクル2のシャットダウン時のゲージ",
+  "The checks": "チェック",
+  "Before the calibration": "キャリブレーション前",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "未カウント: サイクル2のシャットダウン時の充電カウンターが確認できませんでした。"
 }

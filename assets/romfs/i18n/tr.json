@@ -4179,5 +4179,20 @@
   "Queue done. Choose what to do with the skipped files.": "Kuyruk tamamlandı. Atlanan dosyalarla ne yapılacağını seçin.",
   "Screen type": "Ekran türü",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto yalnızca Switch OLED modelini tanır. Yan sanayi bir OLED panel için OLED seçin: pil tüketimi bu durumda tüm ekranı aydınlatır.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,5 V altında: yük kapalı ve parlaklık minimumda, bu nedenle konsol tamamen boşalana kadar yavaşça deşarj olur."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,5 V altında: yük kapalı ve parlaklık minimumda, bu nedenle konsol tamamen boşalana kadar yavaşça deşarj olur.",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Bu öğeyi tekrar açabilmeniz için ROMs listenize ekler. Hiçbir şey indirmez.",
+  "About 0 %: the zero is right.": "Yaklaşık %0: sıfır doğrudur.",
+  "Above 3 %: the zero is off. Start the calibration over.": "%3 üzerinde: sıfır noktası hatalı. Kalibrasyonu yeniden başlatın.",
+  "type words from the name to narrow the list": "listeyi daraltmak için addan kelimeler yazın",
+  "Both checks below passed: the battery is really tired.": "Aşağıdaki her iki test de geçti: batarya gerçekten çok yıpranmış.",
+  "It matches the capacity the gauge learned: the number is the battery's, not a gauge error.": "Ölçüm cihazının öğrendiği kapasiteyle eşleşiyor: sayı pilin değeridir, ölçüm hatası değildir.",
+  "It differs from the capacity the gauge learned by": "Ölçerin öğrendiği kapasiteden farkı:",
+  "Both checks below passed: the battery really holds this little. A new battery is worth considering.": "Aşağıdaki her iki test de başarıyla geçildi: pil gerçekten de bu kadar az dayanıyor. Yeni bir pil düşünmeye değer.",
+  "Charge counted from the switch-off to full": "Kapalı konumdan tam doluma kadar şarj",
+  "Not measured: the drain log has no cycle 2 switch-off.": "Ölçülmedi: deşarj günlüğünde döngü 2 kapanışı yok.",
+  "The gauge did not learn right: start the calibration over.": "Ölçüm cihazı doğru öğrenmedi: kalibrasyonu yeniden başlatın.",
+  "The gauge at cycle 2's switch-off": "Döngü 2 kapatıldığındaki gösterge",
+  "The checks": "Kontroller",
+  "Before the calibration": "Kalibrasyondan önce",
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Sayılmadı: döngü 2 kapanışındaki şarj sayacı görülmedi."
 }
