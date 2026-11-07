@@ -3494,7 +3494,6 @@
   "INSTALLED": "INSTALLIERT",
   "Align the charge to the voltage": "Ladung an Spannung anpassen",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Nicht jetzt: Das Ladegerät muss entfernt sein, die Spannung muss 10% oder weniger betragen und der Chip muss mindestens 15 Punkte mehr als die Spannung anzeigen.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Unter 35 %: Die Last ist weg und der Bildschirm gedimmt, sodass sich die Konsole sanft bis zur echten Leere entlädt. Sie schaltet sich selbst aus; danach auf 100 % aufladen.",
   "while its voltage says": "während die Spannung anzeigt",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Den Chip-Ladestand auf die Volt-Angabe einstellen? Dann die Konsole vollständig laden.",
   "The console switched itself off during the battery drain, and the chip still shows": "Die Konsole hat sich während der Entleerung der Batterie ausgeschaltet, und der Chip zeigt immer noch",
@@ -3673,7 +3672,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Auf 100 % aufgeladen. Jetzt entladen: Bitte trennen Sie das Ladegerät.",
   "Drain after the cut-off": "Nach Grenzwert entladen",
   "The charger is out: the charge is paused. Plug it in to go on.": "Das Ladegerät ist entfernt: Ladevorgang pausiert. Einstecken, um fortzufahren.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Die Konsole ist bereits ausgeschaltet: sie entlädt sich nun langsam, um die letzte Ladung herauszuholen. Die automatische Helligkeit ist aus und die Helligkeit ist auf dem Minimum.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "Das Ladekabel ist angeschlossen. Der Entladevorgang ist pausiert. Entferne das Ladekabel, um fortzufahren.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Vollast: Die Konsole entlädt sich so schnell wie möglich. Wenn sie sich ausschaltet, schalte sie wieder ein und öffne Kefir Hub.",
   "Remembered": "Gemerkt",
@@ -4074,7 +4072,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Wenn sich die Konsole ausschaltet, schalten Sie sie wieder ein (lassen Sie das Ladekabel eingesteckt) und öffnen Sie Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Wenn sie ausgeht, schließen Sie das Ladegerät an. Sie startet möglicherweise etwa 20 Minuten lang nicht: Das ist normal. Schalten Sie sie dann ein und öffnen Sie Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Voll. Der Hub misst die Kapazität, danach startet die Entladung von selbst: Das Ladegerät kann angeschlossen bleiben.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Unter 3,3 V: Die Last ist abgeschaltet und der Bildschirm läuft mit Ihrer eigenen Helligkeit, sodass sich die Konsole bei geringer Last abschaltet.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Die Abschaltspannung liegt außerhalb von 3,00 - 3,40 V: kein Nullpunkt.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Wenn sich die Konsole ausschaltet, ist das normal. Schalte sie wieder ein (mit eingestecktem Ladekabel) und öffne Kefir Hub selbst. Erst dann schreibt der Hub den Leerpunkt in die Anzeige und setzt den Ladevorgang fort: Er startet nicht von selbst. Falls das Ladekabel nicht angeschlossen war, stecke es zuerst ein. Die Konsole startet eventuell nicht sofort: Mit angeschlossenem Ladekabel kann dies 10 bis 15 Minuten dauern. Warte, gib nicht auf.",
   "This cycle is counted: the next step starts by itself.": "Dieser Zyklus wird gezählt: Der nächste Schritt startet von selbst.",
@@ -4187,5 +4184,6 @@
   "Resolve": "Auflösen",
   "Queue done. Choose what to do with the skipped files.": "Warteschlange abgeschlossen. Wählen Sie, was mit den übersprungenen Dateien geschehen soll.",
   "Screen type": "Bildschirmtyp",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto erkennt nur das Switch-OLED-Modell. Wählen Sie OLED für ein Aftermarket-OLED-Panel: Der Stromverbrauch beleuchtet dann den gesamten Bildschirm."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto erkennt nur das Switch-OLED-Modell. Wählen Sie OLED für ein Aftermarket-OLED-Panel: Der Stromverbrauch beleuchtet dann den gesamten Bildschirm.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Unter 3,2 V: Die Last ist abgeschaltet und die Helligkeit ist auf dem Minimum, sodass sich die Konsole langsam vollständig entlädt."
 }

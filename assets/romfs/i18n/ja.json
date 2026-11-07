@@ -3493,7 +3493,6 @@
   "INSTALLED": "インストール済み",
   "Align the charge to the voltage": "電圧に合わせて充電を調整",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "今はできません：充電器を外し、電圧が10%以下で、チップの数値が電圧よりも少なくとも15ポイント高い必要があります。",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "35%未満：負荷が切れ、画面が暗くなるため、コンソールはゆっくりと完全に放電されます。自動的に電源が切れるため、その後100%まで充電してください。",
   "while its voltage says": "電圧が示している間",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "チップの充電量を電圧の設定値に合わせますか？その後、本体を完全に充電してください。",
   "The console switched itself off during the battery drain, and the chip still shows": "バッテリー消耗中に本体の電源が切れましたが、チップはまだ次の状態を示しています",
@@ -3672,7 +3671,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "100%まで充電されました。次は放電します：充電器を抜いてください。",
   "Drain after the cut-off": "カットオフ後に放電",
   "The charger is out: the charge is paused. Plug it in to go on.": "充電器が抜かれました: 充電が一時停止しています。続行するには接続してください。",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "本体の電源はすでに切られています。最後の電力を絞り出すようにバッテリーがゆっくりと消耗しています。自動明るさはオフで、明るさは最小です。",
   "The charger is in. The drain is paused. Take the charger out to go on.": "充電器が接続されています。電力消費は一時停止中です。続行するには充電器を抜いてください。",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "フル負荷：コンソールは可能な限り急速にバッテリーを消費します。電源が切れたら、再度電源を入れてKefir Hubを開いてください。",
   "Remembered": "記憶済み",
@@ -4073,7 +4071,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "本体の電源が切れたら、電源を入れ直し（充電器を接続したまま）、Kefir Hubを開いてください。",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "本体の電源が切れたら、充電器を接続してください。20分ほど起動しないことがありますが、これは正常です。その後、電源を入れてKefir Hubを開いてください。",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "満充電。ハブが容量を測定した後、自動的に放電が開始されます。充電器は接続したままで構いません。",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "3.3 V未満: 負荷がオフになり画面の明るさも独自の設定になるため、軽い負荷でも本体の電源が切れます。",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "カットオフ電圧が3.00〜3.40Vの範囲外です：ゼロではありません。",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "本体の電源が切れても、それは正常です。（充電器を接続した状態で）もう一度電源を入れ、自分でKefir Hubを開いてください。そうすることで初めてHubがゲージに空のポイントを書き込み、充電を継続します。自動的には開始されません。充電器が抜かれていた場合は、まず接続してください。本体がすぐに起動しない場合があります。充電器を接続した状態で10〜15分かかることがあります。お待ちください、諦めないでください。",
   "This cycle is counted: the next step starts by itself.": "このサイクルはカウントされています：次のステップは自動的に始まります。",
@@ -4186,5 +4183,6 @@
   "Resolve": "解決",
   "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。",
   "Screen type": "画面タイプ",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」はSwitch OLEDモデルのみを認識します。社外品のOLEDパネルの場合は「OLED」を選択してください。バッテリー消費により画面全体が点灯します。"
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」はSwitch OLEDモデルのみを認識します。社外品のOLEDパネルの場合は「OLED」を選択してください。バッテリー消費により画面全体が点灯します。",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.2V未満：負荷がオフになり、明るさが最小になるため、コンソールが完全に空になるまでゆっくり放電します。"
 }

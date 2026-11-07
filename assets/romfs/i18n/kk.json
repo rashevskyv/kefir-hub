@@ -3488,7 +3488,6 @@
   "INSTALLED": "ОРНАТЫЛҒАН",
   "Align the charge to the voltage": "Зарядты кернеуге сәйкестендіру",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Қазір емес: зарядтағыш ажыратылуы тиіс, кернеу 10% немесе одан аз болуы керек, ал чип кернеуден кемінде 15 пайызға жоғары болуы тиіс.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "35%-тен төмен: жүктеме өшіп, экран күңгірттеледі, сондықтан консоль толық босағанша ақырын таусылады. Ол өзі өшеді; содан кейін оны 100%-ға дейін зарядтаңыз.",
   "while its voltage says": "кернеуі көрсетіп тұрғанда",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Чип зарядын кернеуге сәйкес орнату керек пе? Содан кейін консольді толық зарядтаңыз.",
   "The console switched itself off during the battery drain, and the chip still shows": "Консоль батарея заряды таусылған кезде өшіп қалды, және чип әлі де көрсетеді",
@@ -3667,7 +3666,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "100 % зарядталды. Енді зарядсыздандырамыз: зарядтағышты ажыратыңыз.",
   "Drain after the cut-off": "Шектен кейін разрядтау",
   "The charger is out: the charge is paused. Plug it in to go on.": "Зарядтағыш ажыратылды: зарядтау кідртілді. Жалғастыру үшін қосыңыз.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Консоль өшіп қалды: енді соңғы зарядты сығып алу үшін ол баяу разрядталуда. Автожарықтық сөндірілген және жарықтық минимумда.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "Зарядтағыш қосылған. Зарядтың таусылуы кідртілді. Жалғастыру үшін зарядтағышты ажыратыңыз.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Толық жүктеме: консоль мүмкіндігінше тез қуатсызданады. Ол өшкен соң, оны қайта қосып, Kefir Hub қолданбасын ашыңыз.",
   "Remembered": "Есте сақталған",
@@ -4068,7 +4066,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Консоль өшкен кезде, оны қайта қосыңыз (зарядтағышты қалдырып) және Kefir Hub ашыңыз.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Ол сөнген кезде, зарядтағышты қосыңыз. Шамамен 20 минут бойы қосылмауы мүмкін: бұл қалыпты жағдай. Содан кейін оны қосып, Kefir Hub қолданбасын ашыңыз.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Толық. Хаб сыйымдылықты өлшейді, содан кейін зарядсыздану өздігінен басталады: зарядтағыш жалғана беруі мүмкін.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "3.3 V төмен: жүктеме өшірулі және экран өз жарықтығыңызда, сондықтан консоль аз жүктемеде өшеді.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Керуді өшіру кернеуі 3.00 - 3.40 В аралығынан тыс: нөл емес.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Консоль өшіп қалса, бұл қалыпты жағдай. Оны қайтадан қосыңыз (зарядтағыш қосулы күйде) және Kefir Hub қолданбасын өзіңіз ашыңыз. Тек содан кейін Hub шкалаға бос нүктені жазып, зарядтауды жалғастырады: ол өздігінен басталмайды. Егер зарядтағыш ажыратылған болса, оны алдымен жалғаңыз. Консоль бірден қосылмауы мүмкін: зарядтағыш қосулы болса, бұл 10-15 минут алуы мүмкін. Күтіңіз, берілмеңіз.",
   "This cycle is counted: the next step starts by itself.": "Бұл цикл саналып жатыр: келесі қадам өзі басталады.",
@@ -4181,5 +4178,6 @@
   "Resolve": "Шешу",
   "Queue done. Choose what to do with the skipped files.": "Кезек аяқталды. Өткізіліп жіберілген файлдармен не істеу керектігін таңдаңыз.",
   "Screen type": "Экран түрі",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto тек Switch OLED моделін анықтайды. Қосымша OLED панелі үшін OLED таңдаңыз: содан кейін батарея қуаты барлық экранды жарықтандырады."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto тек Switch OLED моделін анықтайды. Қосымша OLED панелі үшін OLED таңдаңыз: содан кейін батарея қуаты барлық экранды жарықтандырады.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,2 В төмен: жүктеме өшіріліп, жарықтық минимумға қойылады, сондықтан консоль толық бос қалғанша баяу разрядталады."
 }

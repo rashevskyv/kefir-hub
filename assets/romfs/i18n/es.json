@@ -3494,7 +3494,6 @@
   "INSTALLED": "INSTALADOS",
   "Align the charge to the voltage": "Ajustar la carga al voltaje",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Ahora no: el cargador debe estar desconectado, el voltaje debe indicar un 10% o menos, y el chip debe mostrar al menos 15 puntos más que el voltaje.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Por debajo del 35 %: la carga se desconecta y la pantalla se atenúa, por lo que la consola se descarga suavemente hasta vaciarse por completo. Se apaga sola; luego cárgala al 100 %.",
   "while its voltage says": "mientras su voltaje indica",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "¿Ajustar la carga del chip según el voltaje? Luego carga la consola por completo.",
   "The console switched itself off during the battery drain, and the chip still shows": "La consola se apagó sola durante la descarga de la batería, y el chip todavía muestra",
@@ -3673,7 +3672,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Cargado al 100 %. Ahora toca descargar: desconecta el cargador.",
   "Drain after the cut-off": "Descargar después del límite",
   "The charger is out: the charge is paused. Plug it in to go on.": "El cargador está desconectado: carga en pausa. Conéctalo para continuar.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "La consola ya se ha apagado: ahora se descarga lentamente para exprimir la última carga. El brillo automático está desactivado y el brillo está al mínimo.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "El cargador está conectado. El consumo está pausado. Desconecta el cargador para continuar.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Carga completa: la consola se descarga lo más rápido posible. Cuando se apague, vuelve a encenderla y abre Kefir Hub.",
   "Remembered": "Recordado",
@@ -4074,7 +4072,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Cuando la consola se apague, enciéndela de nuevo (deja el cargador conectado) y abre Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Cuando se apague, conéctala al cargador. Puede que no encienda durante unos 20 minutos: esto es normal. Luego enciéndela y abre Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Completo. El Hub mide la capacidad y luego el drenaje comienza solo: el cargador puede quedarse conectado.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Por debajo de 3.3 V: la carga está desactivada y la pantalla está con tu propio brillo, por lo que la consola se apaga con poca carga.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "El voltaje de corte está fuera de 3.00 - 3.40 V: no es un cero.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Cuando la consola se apaga, es normal. Enciéndela de nuevo (con el cargador conectado) y abre Kefir Hub tú mismo. Solo entonces el Hub escribe el punto vacío en el medidor y continúa con la carga: no se inicia solo. Si el cargador estaba desconectado, conéctalo primero. Es posible que la consola no arrastre de inmediato: con el cargador conectado puede tardar de 10 a 15 minutos. Espera, no te rindas.",
   "This cycle is counted: the next step starts by itself.": "Este ciclo se cuenta: el siguiente paso comienza solo.",
@@ -4187,5 +4184,6 @@
   "Resolve": "Resolver",
   "Queue done. Choose what to do with the skipped files.": "Cola terminada. Elige qué hacer con los archivos omitidos.",
   "Screen type": "Tipo de pantalla",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto solo reconoce el modelo Switch OLED. Elige OLED para un panel OLED de terceros: el consumo de batería iluminará toda la pantalla."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto solo reconoce el modelo Switch OLED. Elige OLED para un panel OLED de terceros: el consumo de batería iluminará toda la pantalla.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Por debajo de 3.2 V: la carga está desactivada y el brillo al mínimo, por lo que la consola se descarga lentamente hasta vaciarse por completo."
 }

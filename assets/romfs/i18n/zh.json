@@ -3546,7 +3546,6 @@
   "INSTALLED": "已安装",
   "Align the charge to the voltage": "根据电压调整电荷",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "现在不行：必须拔掉充电器，电压必须在 10% 或以下，并且芯片显示的数值必须比电压高至少 15 点。",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "35% 以下：负载已断开且屏幕变暗，因此主机平缓耗电直至完全耗尽。它会自动关机；随后将其充电至 100%。",
   "while its voltage says": "当其电压显示",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "根据电压设置芯片电量？然后将主机完全充满电。",
   "The console switched itself off during the battery drain, and the chip still shows": "控制台在电池耗尽期间自动关机，芯片仍然显示",
@@ -3725,7 +3724,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "已充电至 100%。现在开始放电：请拔下充电器。",
   "Drain after the cut-off": "达到限制后放电",
   "The charger is out: the charge is paused. Plug it in to go on.": "充电器已拔出：充电暂停。请将其接入以继续。",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "控制台已关机：现在正缓慢放电以榨干最后一点电量。自动亮度已关闭，亮度处于最低。",
   "The charger is in. The drain is paused. Take the charger out to go on.": "充电器已连接。电量消耗已暂停。拔下充电器以继续。",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "满负载：主机将以最快速度耗尽电量。关机后，请重新开机并打开 Kefir Hub。",
   "Remembered": "已记住",
@@ -4126,7 +4124,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "当主机关闭时，请重新开机（保持连接充电器）并打开 Kefir Hub。",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "关机后，请连接充电器。设备可能会在约 20 分钟内无法开机：这是正常的。然后开机并打开 Kefir Hub。",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "已充满。Hub 会测量容量，然后自动开始放电：充电器可以保持连接。",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "3.3 V 以下：负载已关闭且屏幕处于您自己的亮度，因此主机在轻负载下会关机。",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "截止电压在 3.00 - 3.40 V 范围外：不是零。",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "当主机关闭时，这是正常的。（在连接充电器的情况下）再次开机并自行打开 Kefir Hub。只有这样，Hub 才会将空点写入电量计并继续充电：它不会自动启动。如果充电器拔掉了，请先插上。主机可能不会立即启动：连接充电器时可能需要 10 到 15 分钟。请稍候，不要放弃。",
   "This cycle is counted: the next step starts by itself.": "此周期正在计算：下一步将自动开始。",
@@ -4239,5 +4236,6 @@
   "Resolve": "解决",
   "Queue done. Choose what to do with the skipped files.": "队列已完成。请选择如何处理跳过的文件。",
   "Screen type": "屏幕类型",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "“自动”仅识别 Switch OLED 机型。如使用第三方 OLED 面板请选择 OLED：此时电池电量消耗会点亮整个屏幕。"
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "“自动”仅识别 Switch OLED 机型。如使用第三方 OLED 面板请选择 OLED：此时电池电量消耗会点亮整个屏幕。",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.2 V 以下：负载关闭，亮度降至最低，因此主机缓慢耗电至彻底放空。"
 }

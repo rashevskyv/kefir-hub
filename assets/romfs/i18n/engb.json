@@ -3488,7 +3488,6 @@
   "INSTALLED": "INSTALLED",
   "Align the charge to the voltage": "Align the charge to the voltage",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.",
   "while its voltage says": "while its voltage says",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Set the chip's charge to what the voltage says? Then charge the console fully.",
   "The console switched itself off during the battery drain, and the chip still shows": "The console switched itself off during the battery drain, and the chip still shows",
@@ -3667,7 +3666,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Charged to 100 %. Now we drain: take the charger out.",
   "Drain after the cut-off": "Drain after the cut-off",
   "The charger is out: the charge is paused. Plug it in to go on.": "The charger is out: the charge is paused. Plug it in to go on.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "The charger is plugged in. The drain is paused. Unplug the charger to continue.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.",
   "Remembered": "Remembered",
@@ -4068,7 +4066,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.",
   "This cycle is counted: the next step starts by itself.": "This cycle is counted: the next step starts by itself.",
@@ -4181,5 +4178,6 @@
   "Resolve": "Resolve",
   "Queue done. Choose what to do with the skipped files.": "Queue done. Choose what to do with the skipped files.",
   "Screen type": "Screen type",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."
 }

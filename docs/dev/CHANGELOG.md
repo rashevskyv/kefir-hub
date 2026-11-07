@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.308 — battery drain: full load and brightness down to 3.2 V, a manual restart is not a cut-off
+- Every drain (calibration and plain) runs at the full load and the full brightness (HIZ cut with the charger in, bright saver) until 3.2 V under load; only below it the load goes off and the brightness goes to 0.01. The 35 % gentle mode, the 3.3 V "your brightness" mode and the tail's minimum are gone.
+- A new boot with no low line in the drain log (a restart by hand at 69 %) no longer counts as a cut-off: the drain goes on at the full load. host tests: pass (quick), nro: not built, switch: pending (calibration drain shows load Maximum and brightness 100 % above 3.2 V; log "[Battery] ... mV under load" only near 3.2 V)
+
 ## unreleased
 - docs: drafts for Settings > Screensaver > "Screen type" (v0.14.307) on the EN and UK settings pages.
 - Game names from a NACP v2 (Zelda BotW showed "E"): The title cache took its own language entry from the raw NACP, which in v2 is junk; Hub now writes the decoded name into the copy it caches, also tries v2 when ns gives a one-letter name, and reloads a cached one-letter name. host tests: pass (quick), nro: not built, switch: pending (Games: BotW tile shows the full name; log has "[nacp v2] decoded name" for 01007EF00011E000 on the first launch)

@@ -44,14 +44,10 @@ constexpr int CIRCLES_START = 8;
 constexpr int CIRCLES_MIN = 2;
 constexpr u32 GPU_BUSY = 950;       // nvgpu load, 1000 = 100 %
 constexpr double SLOW_FRAME_MS = 70.0;
-// below this shown charge the load goes off and only the bright screen drains the battery: on a worn battery the
-// voltage under load collapses from about 30 % and the console cuts off before the chip sees a real empty
-constexpr int GENTLE_PCT = 35;
-constexpr float MIN_BRIGHTNESS = 0.02f; // the lowest the screen still shows something
-constexpr float TAIL_BRIGHTNESS = 0.01f; // the calibration after a cut-off: as low as the panel goes
-// the calibration's drain: at this voltage under load (SOFT_TICKS polls in a row) the load goes off for good and the user's own
-// screen comes back, so the console cuts off at a light load and the zero is a voltage near the battery's own, not one sagged by 1 A
-constexpr int SOFT_MV = 3300;
+constexpr float TAIL_BRIGHTNESS = 0.01f; // below SOFT_MV: as low as the panel goes
+// every drain: at this voltage under load (SOFT_TICKS polls in a row) the load goes off for good and the brightness goes to the
+// minimum, so the console drains slowly to a real empty. Above it the drain is the full load and the full brightness, always.
+constexpr int SOFT_MV = 3200;
 constexpr int SOFT_TICKS = 5;
 constexpr const char* CALIB_LOG = "/config/kefir/battery/calib-log.csv";
 constexpr size_t CALIB_LOG_MAX = 4u * 1024 * 1024; // a longer log is kept as .old and a new one is started
@@ -91,7 +87,7 @@ struct DrainMenu final : ui::menu::MenuBase {
     void CalibTick();
 
     // the console slept at a low battery (the lock screen) and was woken while it still drains: a cut-off for the drain.
-    // A flag line in the log, the marker counts it, and the run goes to the tail (no load, minimum brightness)
+    // A flag line in the log, the marker counts it, and the run goes to the tail (its title; the load and the brightness follow SOFT_MV)
     void OnSleptAwake(s64 now);
 
     auto CalibTitle() const -> std::string;
@@ -157,8 +153,8 @@ private:
 
     int m_cycle;
     std::optional<CalibRun> m_calib;
-    int m_calib_mode{-1};   // 1 the user's screen (charger in), 2 the tail, 3 full, 4 the user's screen (below SOFT_MV); -1 = put it back at the next poll
-    bool m_soft{};          // the drain got to SOFT_MV: no load until the cut-off
+    int m_calib_mode{-1};   // 1 the user's screen (charger in), 2 the minimum (below SOFT_MV), 3 full; -1 = put it back at the next poll
+    bool m_soft{};          // the drain got to SOFT_MV: no load and the minimum brightness until the cut-off
     int m_soft_n{};         // polls in a row at or below SOFT_MV
     u64 m_run_s{};          // seconds of this run
     s64 m_calib_last{};

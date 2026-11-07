@@ -3493,7 +3493,6 @@
   "Copying from the console": "Copying from the console",
   "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.": "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.",
   "INSTALLED": "INSTALLED",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.",
   "Align the charge to the voltage": "Align the charge to the voltage",
   "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says": "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.",
@@ -3658,7 +3657,6 @@
   "Stop the drain? The calibration remembers where it is.": "Stop the drain? The calibration remembers where it is.",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.",
   "The charger is in. The Hub cuts its input in a moment: the console then drains on the battery.": "The charger is in. The Hub cuts its input in a moment: the console then drains on the battery.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.",
   "Everything is written to a log.": "Everything is written to a log.",
   "Remembered": "Remembered",
@@ -4008,7 +4006,6 @@
   "Delete all shown": "Delete all shown",
   "This cannot be undone.": "This cannot be undone.",
   "Deleted": "Deleted",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.",
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.",
@@ -4120,5 +4117,6 @@
   "Skipped during the queue": "Skipped during the queue",
   "The queue did not wait for these questions. Choose for each game, then press X.": "The queue did not wait for these questions. Choose for each game, then press X.",
   "Screen type": "Screen type",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."
 }

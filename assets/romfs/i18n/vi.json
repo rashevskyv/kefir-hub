@@ -3493,7 +3493,6 @@
   "INSTALLED": "ĐÃ CÀI ĐẶT",
   "Align the charge to the voltage": "Điều chỉnh sạc theo điện áp",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Không phải lúc nào: bộ sạc phải được rút ra, điện áp phải ở mức 10% hoặc thấp hơn, và chip phải hiển thị cao hơn điện áp ít nhất 15 điểm.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Dưới 35%: tải được ngắt và màn hình được làm mờ, do đó máy cạn dần cho đến khi cạn kiệt hoàn toàn. Máy sẽ tự tắt; sau đó hãy sạc đầy 100%.",
   "while its voltage says": "trong khi điện áp của nó cho biết",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Đặt mức sạc của chip theo điện áp? Sau đó sạc đầy máy.",
   "The console switched itself off during the battery drain, and the chip still shows": "Máy đã tự tắt nguồn trong quá trình cạn pin, và chip vẫn hiển thị",
@@ -3672,7 +3671,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Đã sạc đến 100 %. Bây giờ xả pin: hãy rút sạc ra.",
   "Drain after the cut-off": "Xả sau ngưỡng",
   "The charger is out: the charge is paused. Plug it in to go on.": "Bộ sạc đã rút: quá trình sạc tạm dừng. Cắm sạc để tiếp tục.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Máy chơi game đã tắt nguồn: bây giờ pin cạn dần để vắt kiệt lượng sạc cuối cùng. Độ sáng tự động đã tắt và độ sáng đang ở mức tối thiểu.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "Đã cắm sạc. Đã tạm dừng tiêu hao pin. Rút sạc để tiếp tục.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Tải đầy: máy cạn pin nhanh nhất có thể. Khi máy tắt, hãy bật lại và mở Kefir Hub.",
   "Remembered": "Đã ghi nhớ",
@@ -4073,7 +4071,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Khi bảng điều khiển tắt nguồn, hãy bật lại (giữ cắm sạc) và mở Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Khi thiết bị tắt, hãy cắm bộ sạc vào. Thiết bị có thể không khởi động trong khoảng 20 phút: điều này là bình thường. Sau đó, bật nguồn và mở Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Đầy. Hub đo dung lượng, sau đó quá trình xả pin tự động bắt đầu: bộ sạc có thể giữ nguyên kết nối.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Dưới 3.3 V: tải được tắt và màn hình ở mức độ sáng của riêng bạn, vì vậy máy sẽ tắt ở tải nhẹ.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Điện áp ngắt nằm ngoài khoảng 3.00 - 3.40 V: không phải số không.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Khi máy chơi game tắt nguồn, đó là điều bình thường. Bật lại máy (với bộ sạc đã cắm) và tự mở Kefir Hub. Chỉ khi đó Hub mới ghi điểm trống vào thanh đo và tiếp tục sạc: nó không tự động khởi động. Nếu bộ sạc chưa được cắm, hãy cắm nó trước. Máy có thể không khởi động ngay lập tức: với bộ sạc cắm sẵn, quá trình này có thể mất từ 10 đến 15 phút. Hãy đợi, đừng bỏ cuộc.",
   "This cycle is counted: the next step starts by itself.": "Chu kỳ này đang được tính: bước tiếp theo sẽ tự động bắt đầu.",
@@ -4186,5 +4183,6 @@
   "Resolve": "Giải quyết",
   "Queue done. Choose what to do with the skipped files.": "Đã xong hàng đợi. Chọn việc cần làm với các tệp bị bỏ qua.",
   "Screen type": "Kiểu màn hình",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto chỉ nhận diện mẫu Switch OLED. Chọn OLED cho tấm nền OLED thay thế: mức tiêu thụ pin khi đó sẽ làm sáng toàn bộ màn hình."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto chỉ nhận diện mẫu Switch OLED. Chọn OLED cho tấm nền OLED thay thế: mức tiêu thụ pin khi đó sẽ làm sáng toàn bộ màn hình.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Dưới 3,2 V: tải bị tắt và độ sáng ở mức tối thiểu, do đó máy cạn pin từ từ cho đến khi hết hoàn toàn."
 }

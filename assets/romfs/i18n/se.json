@@ -3493,7 +3493,6 @@
   "INSTALLED": "INSTALLERADE",
   "Align the charge to the voltage": "Justera laddningen efter spänningen",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Inte nu: laddaren måste vara urkopplad, spänningen måste vara 10% eller mindre, och chipet måste visa minst 15 poäng mer än spänningen.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Under 35 %: belastningen är avstängd och skärmen är dimmad, så konsolen laddar ur långsamt tills den är helt tom. Den stängs av själv; ladda den sedan till 100 %.",
   "while its voltage says": "medan dess spänning visar",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Ställ in chipets laddning efter spänningen? Ladda sedan konsolen fullt ut.",
   "The console switched itself off during the battery drain, and the chip still shows": "Konsolen stängdes av under batteriurladdningen och chipet visar fortfarande",
@@ -3672,7 +3671,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Laddad till 100 %. Nu laddar vi ur: dra ur laddaren.",
   "Drain after the cut-off": "Ladda ur efter gränsen",
   "The charger is out: the charge is paused. Plug it in to go on.": "Laddaren är urkopplad: laddningen är pausad. Anslut för att fortsätta.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Konsolen har redan stängts av: nu laddar den ur långsamt för att pressa ut den sista laddningen. Automatisk ljusstyrka är avstängd och ljusstyrkan är på minimum.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "Laddaren är ansluten. Urladdningen är pausad. Koppla ur laddaren för att fortsätta.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Full last: konsolen laddas ur så snabb som möjligt. När den stängs av, slå på den igen och öppna Kefir Hub.",
   "Remembered": "Kom ihåg",
@@ -4073,7 +4071,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "När konsolen stängs av, slå på den igen (låt laddaren vara ansluten) och öppna Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "När den stängs av, anslut laddaren. Den kanske inte startar på ungefär 20 minuter: det är normalt. Slå sedan på den och öppna Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Fullt. Hubben mäter kapaciteten, sedan startar urladdningen av sig själv: laddaren kan sitta kvar.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Under 3,3 V: belastningen är avstängd och skärmen är på din egen ljusstyrka, så konsolen stängs av vid låg belastning.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Avstängningsspänningen är utanför 3.00 - 3.40 V: inte en nolla.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "När konsolen stängs av är det normalt. Slå på den igen (med laddaren i) och öppna Kefir Hub själv. Först då skriver Hubben den tomma punkten i mätaren och fortsätter laddningen: den startar inte av sig själv. Om laddaren var urkopplad, koppla in den först. Konsolen kanske inte startar på en gång: med laddaren i kan det ta 10 till 15 minuter. Vänta, ge inte upp.",
   "This cycle is counted: the next step starts by itself.": "Denna cykel räknas: nästa steg startar av sig själv.",
@@ -4186,5 +4183,6 @@
   "Resolve": "Lös",
   "Queue done. Choose what to do with the skipped files.": "Kö klar. Välj vad du vill göra med de överhoppade filerna.",
   "Screen type": "Skärmtyp",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto känner bara igen Switch OLED-modellen. Välj OLED för en tredjeparts OLED-panel: batteriförbrukningen lyser då upp hela skärmen."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto känner bara igen Switch OLED-modellen. Välj OLED för en tredjeparts OLED-panel: batteriförbrukningen lyser då upp hela skärmen.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Under 3,2 V: belastningen är avstängd och ljusstyrkan är på ett minimum, så konsolen laddas ur långsamt tills den är helt tom."
 }

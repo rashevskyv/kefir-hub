@@ -165,7 +165,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         return w;
     };
     if (!m_calib->charge) {
-        const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
+        const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_soft && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
             : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
         const float w1 = Chip(fx, 282.f + below, "Load:"_i18n, load_text);
@@ -336,7 +336,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         std::snprintf(i, sizeof(i), "%d mA", std::abs(m_ma));
         std::snprintf(t, sizeof(t), "%.1f \u00B0C", m_temp);
         info.bright = DrainLoad() && App::IsOledModel(); // an LCD's backlight drains the same on black: full brightness is enough
-        const auto load = m_calib->charge || m_charger || !g_load ?(m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
+        const auto load = m_calib->charge || m_charger || !g_load ?(m_soft && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         if (m_calib->charge) {
             info.columns = {{"Charge"_i18n, std::to_string(std::max(0, ShownPct())) + " %"}, {"Charging current"_i18n, i}, {"Voltage"_i18n, v},
                             {"Temperature"_i18n, t}, {"Charging for"_i18n, HoursMinutes(DrainSeconds())}};

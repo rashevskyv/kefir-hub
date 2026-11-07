@@ -3488,7 +3488,6 @@
   "INSTALLED": "УСТАНОВАНЫ",
   "Align the charge to the voltage": "Падладніце зарад пад напружанне",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Не зараз: зараднік павінен быць адключаны, напружанне павінна быць 10% ці менш, а чып павінен паказваць хаця б на 15 балаў больш, чым напружанне.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Калі ніжэй за 35%: нагрузка знятая і экран зацямнены, таму кансоль павольна разраджаецца да поўнага разрадку. Яна выключаецца сама; пасля зарадзіце яе да 100%.",
   "while its voltage says": "пакуль яго напружанне паказвае",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Наладзіць зарад чыпа па напрузе? Затым цалкам зарадзіць кансоль.",
   "The console switched itself off during the battery drain, and the chip still shows": "Кансоль выключылася падчас разрадкі батарэі, і чып усё яшчэ паказвае",
@@ -3667,7 +3666,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Зараджана на 100 %. Зараз разраджаем: адключыце зарадная прыладу.",
   "Drain after the cut-off": "Разраджаць пасля адсечкі",
   "The charger is out: the charge is paused. Plug it in to go on.": "Зарадка адключана: зарадка прыпынена. Падключыце зараднай прыладзе, каб працягнуць.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Кансоль ужо выключана: цяпер яна павольна разраджаецца, каб выціснуць апошні зарад. Аўтаяркасць выключана, а яркасць на мінімуме.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "Зараднае прыставанне падключана. Разрад прыпынены. Адключыце зараднае прыставанне, каб працягнуць.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Поўная нагрузка: кансоль разраджаецца максімальна хутка. Калі яна выключыцца, уключыце яе зноў і запусціце Kefir Hub.",
   "Remembered": "Запомненае",
@@ -4068,7 +4066,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Калі кансоль выключыцца, уключыце яе зноў (пакінуўшы зарадная прыладу падключанай) і адкрыйце Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Калі яна выключыцца, падключыце зарадную прыладу. Яна можа не ўключацца каля 20 хвілін: гэта нармальна. Затым уключыце яе і адкрыйце Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Поўны. Хаб вымярае ёмістасць, пасля чаго разрад пачынаецца самастойна: зарадная прылада можа заставацца падключанай.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Ніжэй 3.3 V: нагрузка адключана, а экран працуе з вашай яскравасцю, таму прылада выключаецца пры нязначнай нагрузцы.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Напруга адсячэння па-за межамі 3.00 - 3.40 В: не нуль.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Калі кансоль выключаецца, гэта нармальна. Уключыце яе зноў (з падлучанай зараднай прыладай) і самі адкрыйце Kefir Hub. Толькі пасля гэтага Hub запісвае пустую кропку ў шкалу і працягвае зарадку: яна не запускаецца сама па сабе. Калі зарадная прылада была выключана, спачатку падключыце яе. Кансоль можа не запусціцца адразу: з зараднай прыладай гэта можа заняць ад 10 да 15 хвілін. Пачакайце, не здавайцеся.",
   "This cycle is counted: the next step starts by itself.": "Гэты цыкл падлічваецца: наступны крок пачнецца сам.",
@@ -4181,5 +4178,6 @@
   "Resolve": "Вырашыць",
   "Queue done. Choose what to do with the skipped files.": "Чаргоўнік завершаны. Выберыце, што рабіць з прапушчанымі файламі.",
   "Screen type": "Тып экрана",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Аўтаматычна распазнаецца толькі мадэль Switch OLED. Выберыце OLED для заменнай OLED-панэлі: спажыванне энергіі тады падсвятляе ўвесь экран."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Аўтаматычна распазнаецца толькі мадэль Switch OLED. Выберыце OLED для заменнай OLED-панэлі: спажыванне энергіі тады падсвятляе ўвесь экран.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Ніжэй 3,2 В: нагрузка адключана, а яркасць мінімальная, таму кансоль павольна разраджаецца да нуля."
 }

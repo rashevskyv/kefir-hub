@@ -3488,7 +3488,6 @@
   "INSTALLED": "TERPASANG",
   "Align the charge to the voltage": "Sesuaikan pengisian daya dengan voltase",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Jangan sekarang: pengisi daya harus dicabut, tegangan harus 10% atau kurang, dan chip harus menunjukkan setidaknya 15 poin lebih tinggi dari tegangan.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Di bawah 35%: beban mati dan layar diredupkan, jadi konsol habis secara perlahan hingga benar-benar kosong. Konsol akan mati sendiri; lalu isi daya hingga 100%.",
   "while its voltage says": "sementara tegangannya menunjukkan",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Atur pengisian daya chip sesuai voltase? Lalu isi daya konsol hingga penuh.",
   "The console switched itself off during the battery drain, and the chip still shows": "Konsol mati sendiri selama pengurasan baterai, dan cip masih menunjukkan",
@@ -3667,7 +3666,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Terisi hingga 100 %. Sekarang kita kosongkan: cabut pengisi daya.",
   "Drain after the cut-off": "Kuras setelah batas",
   "The charger is out: the charge is paused. Plug it in to go on.": "Pengisi daya dicabut: pengisian dijeda. Colokkan untuk melanjutkan.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Konsol sudah dimatikan: sekarang dayanya terkuras perlahan untuk memeras sisa pengisian terakhir. Keterangan otomatis nonaktif dan tingkat keterangan berada di minimum.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "Pengisi daya terhubung. Pengosongan dijeda. Cabut pengisi daya untuk melanjutkan.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Beban penuh: konsol menguras daya secepat mungkin. Saat mati, nyalakan kembali dan buka Kefir Hub.",
   "Remembered": "Diingat",
@@ -4068,7 +4066,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Saat konsol mati, nyalakan kembali (biarkan pengisi daya tetap tercolok) dan buka Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Saat perangkat mati, colokkan pengisi daya. Perangkat mungkin tidak menyala selama sekitar 20 menit: ini normal. Kemudian nyalakan dan buka Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Penuh. Hub mengukur kapasitas, lalu pengurasan dimulai sendiri: pengisi daya dapat tetap terhubung.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Di bawah 3,3 V: beban dimatikan dan layar menggunakan kecerahan Anda sendiri, sehingga konsol mati pada beban ringan.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Tegangan putus berada di luar 3.00 - 3.40 V: bukan nol.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Ketika konsol mati, itu normal. Nyalakan kembali (dengan pengisi daya terpasang) dan buka Kefir Hub sendiri. Baru setelah itu Hub menulis titik kosong ke pengukur dan melanjutkan pengisian daya: pengisian tidak dimulai dengan sendirinya. Jika pengisi daya terlepas, colokkan terlebih dahulu. Konsol mungkin tidak langsung menyala: dengan pengisi daya terpasang, ini bisa memakan waktu 10 hingga 15 menit. Tunggu, jangan menyerah.",
   "This cycle is counted: the next step starts by itself.": "Siklus ini dihitung: langkah berikutnya dimulai sendiri.",
@@ -4181,5 +4178,6 @@
   "Resolve": "Selesaikan",
   "Queue done. Choose what to do with the skipped files.": "Antrean selesai. Pilih tindakan untuk file yang dilewati.",
   "Screen type": "Jenis layar",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Otomatis hanya mendeteksi model Switch OLED. Pilih OLED untuk panel OLED aftermarket: penggunaan baterai akan menerangi seluruh layar."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Otomatis hanya mendeteksi model Switch OLED. Pilih OLED untuk panel OLED aftermarket: penggunaan baterai akan menerangi seluruh layar.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Di bawah 3,2 V: beban dimatikan dan tingkat kecerahan berada pada minimum, sehingga konsol terkuras perlahan hingga benar-benar kosong."
 }

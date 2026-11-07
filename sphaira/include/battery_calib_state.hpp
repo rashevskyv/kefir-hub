@@ -198,6 +198,11 @@ inline auto Check(Marker& m, const Battery& b) -> Found {
         return b.charger_in ? Found::Nothing : Found::HubRestarted;
     }
     m.boot_time = b.boot_time;
+    // a new boot, but the log has no low line before a gap: the console was restarted by hand at a charged battery (69 %,
+    // 2026-11-07), not cut off. The drain goes on at the full load.
+    if (!b.cut_in_log) {
+        return Found::HubRestarted;
+    }
     if (b.charger_in) {
         m.drain_started = false; // the console was off and is charging: the drain is over
         m.cutoffs++;             // and it did cut off: the charge phase follows, whatever the cycle total says

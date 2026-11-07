@@ -3493,7 +3493,6 @@
   "INSTALLED": "GEINSTALLEERD",
   "Align the charge to the voltage": "Lading afstemmen op voltage",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Niet nu: de lader moet zijn losgekoppeld, het voltage moet 10% of minder zijn en de chip moet ten minste 15 punten meer aangeven dan het voltage.",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Onder 35%: de belasting is eraf en het scherm is gedimd, zodat de console langzaam leegloopt tot een echte lege batterij. Hij schakelt zichzelf uit; laad hem daarna op tot 100%.",
   "while its voltage says": "terwijl de spanning aangeeft",
   "Set the chip's charge to what the voltage says? Then charge the console fully.": "Lading van de chip instellen op het voltage? Laad de console daarna volledig op.",
   "The console switched itself off during the battery drain, and the chip still shows": "De console schakelde zichzelf uit tijdens het leeglopen van de batterij en de chip toont nog steeds",
@@ -3672,7 +3671,6 @@
   "Charged to 100 %. Now we drain: take the charger out.": "Opgeladen tot 100 %. Nu ontladen: koppel de lader los.",
   "Drain after the cut-off": "Ontladen na de limiet",
   "The charger is out: the charge is paused. Plug it in to go on.": "De oplader is losgekoppeld: opladen gepauzeerd. Sluit hem aan om door te gaan.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "De console is al uitgeschakeld: nu loopt hij langzaam leeg om de laatste lading eruit te persen. Automatische helderheid is uitgeschakeld en de helderheid staat op het minimum.",
   "The charger is in. The drain is paused. Take the charger out to go on.": "De lader is aangesloten. Het ontladen is gepauzeerd. Koppel de lader los om door te gaan.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Volle belasting: de console ontlaadt zo snel mogelijk. Wanneer deze uitschakelt, schakel hem dan weer in en open Kefir Hub.",
   "Remembered": "Onthouden",
@@ -4073,7 +4071,6 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Wanneer de console uitschakelt, zet hem dan weer aan (laat de lader eingeprikt) en open Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Sluit de oplader aan wanneer het apparaat wordt uitgeschakeld. Het kan ongeveer 20 minuten duren voordat het weer opstart: dit is normaal. Schakel het daarna in en open Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Vol. De Hub meet de capaciteit, daarna start het ontladen vanzelf: de oplader kan aangesloten blijven.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Onder 3,3 V: de belasting is uitgeschakeld en het scherm staat op je eigen helderheid, dus de console schakelt uit bij een lichte belasting.",
   "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "De afsnijspanning ligt buiten 3.00 - 3.40 V: geen nul.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Wanneer de console uitschakelt, is dat normaal. Zet hem weer aan (met de oplader erin) en open Kefir Hub zelf. Pas dan schrijft de Hub het lege punt in de meter en gaat door met opladen: hij start niet vanzelf. Als de oplader eruit was, sluit deze dan eerst aan. De console start mogelijk niet meteen: met de oplader erin kan dit 10 tot 15 minuten duren. Wacht, geef niet op.",
   "This cycle is counted: the next step starts by itself.": "Deze cyclus wordt geteld: de volgende stap begint vanzelf.",
@@ -4186,5 +4183,6 @@
   "Resolve": "Oplossen",
   "Queue done. Choose what to do with the skipped files.": "Wachtrij klaar. Kies wat u wilt doen met de overgeslagen bestanden.",
   "Screen type": "Schermtype",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto herkent alleen het Switch OLED-model. Kies OLED voor een aftermarket OLED-paneel: het stroomverbruik verlicht dan het hele scherm."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto herkent alleen het Switch OLED-model. Kies OLED voor een aftermarket OLED-paneel: het stroomverbruik verlicht dan het hele scherm.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Onder 3,2 V: de belasting is uitgeschakeld en de helderheid staat op het minimum, zodat de console langzaam leegloopt tot hij echt leeg is."
 }

@@ -3493,7 +3493,6 @@
   "Copying from the console": "Копіювання з консолі",
   "Only the files your console does not have yet are downloaded; the firmware is prepared in /firmware.": "Завантажуються лише файли, яких у консолі ще немає; прошивка готується в /firmware.",
   "INSTALLED": "ВСТАНОВЛЕНА",
-  "Below 35%: the load is off and the screen is dimmed, so the console runs down gently to a real empty. It switches itself off; then charge it to 100%.": "Нижче 35%: навантаження вимкнено, екран притемнено, тож консоль плавно доходить до справжнього нуля. Вона вимкнеться сама; тоді зарядіть її до 100%.",
   "Align the charge to the voltage": "Вирівняти заряд за напругою",
   "Use it right after the console switched itself off at 20-30 %: the chip's charge is set to what its voltage says": "Користуйтеся одразу після того, як консоль сама вимкнулася на 20–30 %: заряд чіпа ставиться за його напругою",
   "Not now: the charger must be out, the voltage must say 10% or less, and the chip must show at least 15 points more than the voltage.": "Зараз не можна: зарядка має бути вийнята, напруга має казати 10% або менше, а чіп має показувати щонайменше на 15 пунктів більше за напругу.",
@@ -3658,7 +3657,6 @@
   "Stop the drain? The calibration remembers where it is.": "Зупинити розряд? Калібрування пам'ятає, де воно зупинилось.",
   "Battery calibration is not finished. Open Kefir Hub: it goes on by itself.": "Калібрування батареї не завершено. Відкрийте Kefir Hub: воно продовжиться само.",
   "The charger is in. The Hub cuts its input in a moment: the console then drains on the battery.": "Зарядка вставлена. За мить Hub відріже її вхід: тоді консоль розряджатиметься від батареї.",
-  "The console has switched off already: now it drains slowly to squeeze out the last charge. Auto-brightness is off and the brightness is at the minimum.": "Консоль уже вимикалась: тепер вона розряджається повільно, щоб вичавити останній заряд. Автояскравість вимкнено, яскравість на мінімумі.",
   "Full load: the console drains as fast as it can. When it switches off, switch it on again and open Kefir Hub.": "Повне навантаження: консоль розряджається найшвидше. Коли вона вимкнеться, ввімкніть її знову і відкрийте Kefir Hub.",
   "Everything is written to a log.": "Усе записується в журнал.",
   "Remembered": "Запам'ятовується",
@@ -4041,7 +4039,6 @@
   "No patch for this firmware": "Немає патча для цієї прошивки",
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Коли консоль вимкнеться, увімкніть її знову (залишивши зарядний пристрій підключеним) та відкрийте Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Коли вона вимкнеться, підключіть зарядний пристрій. Вона може не вмикатися близько 20 хвилин: це нормально. Потім увімкніть її та відкрийте Kefir Hub.",
-  "Below 3.3 V: the load is off and the screen is at your own brightness, so the console switches off at a light load.": "Нижче 3.3 V: навантаження вимкнено, а екран працює з вашою яскравістю, тому консоль вимикається за невеликого навантаження.",
   "Press A: the console restarts into the other system. A notification asks you to open Kefir Hub there. The calibration moves by itself, and you can restart back.": "Натисніть A: консоль перезавантажиться в іншу систему. Сповіщення попросить вас відкрити Kefir Hub там. Калібрування рухатиметься самостійно, і ви зможете перезавантажитися назад.",
   "Transfer now": "Передати зараз",
   "These files are inside an archive and install straight from it. That is slower than a plain file, and a damaged archive stops the install. If you have the space, extract them first.": "Ці файли знаходяться в архіві та встановлюються безпосередньо з нього. Це повільніше за звичайний файл, а пошкоджений архів зупиняє встановлення. Якщо маєте місце, спершу розпакуйте їх.",
@@ -4122,5 +4119,6 @@
   "Resolve": "Вирішити",
   "Queue done. Choose what to do with the skipped files.": "Чергу завершено. Виберіть, що робити з пропущеними файлами.",
   "Screen type": "Тип екрана",
-  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "«Автоматично» розпізнає лише Switch OLED. Для неоригінальної OLED-панелі виберіть OLED: тоді під час розряду батареї світиться весь екран."
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "«Автоматично» розпізнає лише Switch OLED. Для неоригінальної OLED-панелі виберіть OLED: тоді під час розряду батареї світиться весь екран.",
+  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Нижче 3,2 В: навантаження вимкнено, яскравість мінімальна, тож консоль повільно розряджається до справжнього нуля."
 }
