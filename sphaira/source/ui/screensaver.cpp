@@ -45,12 +45,13 @@ auto FieldEnabled(SaverField field) -> bool {
 
 } // namespace
 
-void Screensaver::Start() {
+void Screensaver::Start(bool drain) {
     if (m_active) {
         return;
     }
 
-    m_mode = static_cast<BlankMode>(App::GetBlankMode());
+    // a battery drain wants the panel to burn power: the readout page at full brightness, whatever blank mode is set
+    m_mode = drain ? BlankMode::Screensaver : static_cast<BlankMode>(App::GetBlankMode());
     m_active = true;
     m_started.Update();
     m_drift.Update();
@@ -84,7 +85,9 @@ void Screensaver::Start() {
     }
 
     const bool is_oled = App::IsOledModel();
-    if (m_mode == BlankMode::Screensaver && is_oled) {
+    if (drain) {
+        m_current_brightness = 1.0f;
+    } else if (m_mode == BlankMode::Screensaver && is_oled) {
         // On OLED screensavers, black background pixels are physically off (0W),
         // so retain the user's configured brightness to keep the drifting clock and stats crisp.
         if (!m_brightness_dirty) {
@@ -225,8 +228,9 @@ void Screensaver::DrawBrightnessNote(NVGcontext* vg) {
 
 // the calibration's readout: clock, status, a battery with an approximate percent, and up to five columns of figures
 void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float cx, float cy, const menu::PolledData& pdata) {
-    const auto text_col = nvgRGB(232, 232, 232);
-    const auto dim_col = nvgRGB(140, 144, 154);
+    // on the lit drain background the readout is dark: thin dark strokes leave the most pixels lit
+    const auto text_col = info.bright ? nvgRGB(16, 16, 20) : nvgRGB(232, 232, 232);
+    const auto dim_col = info.bright ? nvgRGB(56, 60, 70) : nvgRGB(140, 144, 154);
     const float y0 = cy - 190.f;
 
     if (App::Get12HourTimeEnable()) {
@@ -265,7 +269,7 @@ void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float c
         gfx::drawTextArgs(vg, x, cols_y + 22.f, 21.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%s", info.columns[i].second.c_str());
     }
     if (!info.hint.empty()) {
-        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 40.f, 19.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, nvgRGB(109, 127, 136), "%s", info.hint.c_str());
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 40.f, 19.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, info.bright ? dim_col : nvgRGB(109, 127, 136), "%s", info.hint.c_str());
     }
 }
 
@@ -324,7 +328,6 @@ void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& inf
     if (info.battery_view) {
         if (info.bright) {
             gfx::drawDrainFill(vg, SCREEN_WIDTH, SCREEN_HEIGHT, t);
-            gfx::drawRect(vg, Vec4{cx - 340.f, cy - 210.f, 680.f, 380.f}, nvgRGBA(0, 0, 0, 170), 24.f);
         }
         DrawBatteryView(vg, info, cx, cy, pdata);
         DrawBrightnessNote(vg);

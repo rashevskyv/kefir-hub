@@ -148,6 +148,8 @@ struct DrainMenu final : ui::menu::MenuBase {
 private:
     // what the screensaver paints: the cycle, the battery bar, power and temperature, the energy, the time on battery
     auto SaverReadout() const -> ui::SaverInfo;
+    // the calibration's drain under load on the battery: the screen is part of the load (the saver at full brightness)
+    bool DrainLoad() const { return m_calib && !m_calib->charge && !m_charger && g_load; }
     // +1 while the battery charges, -1 while it drains (the live current), 0 when it hardly moves
     int BatteryDir() const { return m_ma > 30 ? 1 : m_ma < -30 ? -1 : 0; }
     // the percent on the screen: 99 while the battery still takes current, so nobody pulls the charger at a 100 % that comes early

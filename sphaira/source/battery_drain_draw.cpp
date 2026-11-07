@@ -335,7 +335,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         std::snprintf(v, sizeof(v), "%.2f V", m_mv / 1000.0);
         std::snprintf(i, sizeof(i), "%d mA", std::abs(m_ma));
         std::snprintf(t, sizeof(t), "%.1f \u00B0C", m_temp);
-        info.bright = !m_calib->charge && !m_charger && g_load; // the full drain: the screen is part of the load
+        info.bright = DrainLoad() && App::IsOledModel(); // an LCD's backlight drains the same on black: full brightness is enough
         const auto load = m_calib->charge || m_charger || !g_load ?(m_calib->tail && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         if (m_calib->charge) {
             info.columns = {{"Charge"_i18n, std::to_string(std::max(0, ShownPct())) + " %"}, {"Charging current"_i18n, i}, {"Voltage"_i18n, v},

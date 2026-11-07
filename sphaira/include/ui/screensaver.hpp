@@ -62,8 +62,8 @@ struct SaverInfo {
     int battery_dir{0}; // +1 charging, -1 draining, 0 idle
     std::vector<std::pair<std::string, std::string>> columns{};
     std::string hint{};
-    // a drain under load: every pixel lit in slowly drifting colours instead of black (OLED: a lit pixel draws the power, and the
-    // colours keep moving so nothing burns in); the readout sits on a dark plate
+    // a drain under load on an OLED: every pixel lit near white in slowly drifting tints instead of black (a lit pixel draws the
+    // power, the moving tints keep anything from burning in); the readout is drawn dark on it
     bool bright{false};
 
     // Live R/W speed graph history
@@ -83,8 +83,8 @@ struct Screensaver {
         FlushPendingBrightness();
     }
 
-    // starts whichever mode the settings ask for. no-op if already running.
-    void Start();
+    // starts whichever mode the settings ask for (drain: the readout page at full brightness). no-op if already running.
+    void Start(bool drain = false);
     void Stop();
 
     auto IsActive() const { return m_active; }

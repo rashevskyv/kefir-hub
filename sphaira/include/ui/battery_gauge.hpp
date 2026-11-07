@@ -51,15 +51,15 @@ inline void drawBatteryArrow(NVGcontext* vg, float cx, float cy, float s, int di
     nvgFill(vg);
 }
 
-// the drain's screensaver background: the whole w x h lit in two hues 120° apart, a full turn in two minutes, the gradient's
-// direction turning slower still (OLED: a lit pixel draws the power, the moving colours keep it from burning in)
+// the OLED drain's screensaver background: the whole w x h near white (lightness 0.9: every subpixel at 80 % or more, the most
+// power an OLED draws) in two tints 120° apart, a full turn in two minutes, the gradient's direction turning slower still
 inline void drawDrainFill(NVGcontext* vg, float w, float h, float t) {
     const float hue = std::fmod(t / 120.f, 1.f), a = t * 0.01f;
     const float dx = std::cos(a) * w / 2.f, dy = std::sin(a) * h / 2.f;
     nvgBeginPath(vg);
     nvgRect(vg, 0.f, 0.f, w, h);
-    nvgFillPaint(vg, nvgLinearGradient(vg, w / 2.f - dx, h / 2.f - dy, w / 2.f + dx, h / 2.f + dy, nvgHSL(hue, 0.8f, 0.7f),
-                                       nvgHSL(std::fmod(hue + 0.33f, 1.f), 0.8f, 0.7f)));
+    nvgFillPaint(vg, nvgLinearGradient(vg, w / 2.f - dx, h / 2.f - dy, w / 2.f + dx, h / 2.f + dy, nvgHSL(hue, 1.f, 0.9f),
+                                       nvgHSL(std::fmod(hue + 0.33f, 1.f), 1.f, 0.9f)));
     nvgFill(vg);
 }
 

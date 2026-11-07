@@ -101,7 +101,7 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     // Minus starts the screensaver here (the menus use it to jump to the Homebrew tab, which would close this page)
     SetAction(Button::SELECT, Action{"Screensaver"_i18n, [this]() {
         if (!m_saver.IsActive()) {
-            m_saver.Start();
+            m_saver.Start(DrainLoad());
             m_idle.Reset(m_idle_clock.GetSecondsD());
         }
     }});
@@ -232,7 +232,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
         }
         const long timeout = detail::SaverSeconds();
         if (m_idle.Update(ui::BlankPhase_Installing, false, timeout, in, now_sec)) {
-            m_saver.Start();
+            m_saver.Start(DrainLoad());
             m_idle.Reset(now_sec);
         }
     }
