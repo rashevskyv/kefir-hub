@@ -3921,6 +3921,8 @@
   "The battery is full: the gauge is set to 100 %": "The battery is full: the gauge is set to 100 %",
   "Keep the collection": "Keep the collection",
   "Type words from the name to narrow the list": "Type words from the name to narrow the list",
+  "type words from the name to narrow the list": "type words from the name to narrow the list",
+  "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Adds this item to your ROMS list so you can open it again. Downloads nothing.",
   "shown. Narrow the list with the filter above.": "shown. Narrow the list with the filter above.",
   "Sends the online services of supported games to the Nextendo Network on the emuMMC.": "Sends the online services of supported games to the Nextendo Network on the emuMMC.",
   "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s": "Nextendo needs a patch for the ssl module of this firmware. ssl ID: %s",

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.310 — ROM file lists: wide name column, one filter cell, A downloads the marked files
+- File lists of a collection and of an archive give the name 80 % of the row; the filter is one cell; A with marked rows downloads them; "Keep the collection" has a description.
+- host tests: pass (quick), nro: not built, switch: pending (speed of a single file out of a zip is archive.org's: not changed)
+
 ## v0.14.309 — Add a collection: no ticks, Back returns one step, an item opens without being saved
 - The console and way lists are menu-style (no tick on the first row); B in the way list reopens the console list. A result row opens the item's files at once; saving is "Keep the collection" in the options ("Remove" only for saved ones).
 - host tests: not run, nro: not built, switch: pending (Add a collection > SNES > Popular > a set > A: files open, nothing saved; B goes back)

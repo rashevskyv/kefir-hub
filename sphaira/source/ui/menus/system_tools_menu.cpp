@@ -339,7 +339,7 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
     if (item.done) {
         // a finished step: a green tick where the number was, the name in green, the detail dimmed
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);
-        const float split = v.x + v.w * 0.36f;
+        const float split = v.x + v.w * m_name_share;
         if (selected) {
             gfx::drawRect(vg, v.x, v.y + 2.f, v.w, v.h - 4.f, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
             gfx::drawRectOutline(vg, theme, 4.f, v.x, v.y + 2.f, v.w, v.h - 4.f);
@@ -368,7 +368,7 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
     if (item.disabled) {
         // same layout as a live row, in the dimmed colour
         const auto dim = nvgTransRGBAf(theme->GetColour(ThemeEntryID_TEXT_INFO), 0.55f);
-        const float split = v.x + v.w * 0.36f;
+        const float split = v.x + v.w * m_name_share;
         nvgSave(vg);
         nvgIntersectScissor(vg, v.x, v.y, split - v.x - 10.f, v.h);
         gfx::drawText(vg, v.x + 24.f, mid_y, 19.f, dim, item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
@@ -389,7 +389,7 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
         gfx::drawMarkedRow(vg, theme, v);
     }
     // name on the left, description on the right, each clipped to its half.
-    const float split = v.x + v.w * 0.36f;
+    const float split = v.x + v.w * m_name_share;
     nvgSave(vg);
     nvgIntersectScissor(vg, v.x, v.y, split - v.x - 10.f, v.h);
     gfx::drawText(vg, v.x + 24.f, mid_y, 19.f, theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT), item.label.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
@@ -481,6 +481,16 @@ void SystemToolsMenu::SetOptions(std::function<void(const std::vector<size_t>&)>
 }
 
 void SystemToolsMenu::OnSelect() {
+    if (m_on_marked) {
+        std::vector<size_t> marked;
+        for (size_t i = 0; i < m_items.size(); i++) {
+            if (m_items[i].selectable && m_items[i].marked) marked.push_back(i);
+        }
+        if (!marked.empty()) {
+            m_on_marked(marked);
+            return;
+        }
+    }
     if (!m_items.empty() && m_items[m_index].action) {
         m_items[m_index].action();
     }

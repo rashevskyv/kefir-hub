@@ -75,16 +75,22 @@ struct SystemToolsMenu final : MenuBase {
     auto TargetRows() const -> std::vector<size_t>;
     // START: the context menu of the page; gets TargetRows()
     void SetOptions(std::function<void(const std::vector<size_t>&)> cb);
+    // A with rows marked runs this on them instead of opening the row under the cursor
+    void SetOnMarked(std::function<void(const std::vector<size_t>&)> cb) { m_on_marked = std::move(cb); }
+    // the share of the row width the name column takes (the rest is the description)
+    void SetNameShare(float share) { m_name_share = share; }
 
 private:
     void SetIndex(s64 index);
     void OnSelect();
-    static void DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected);
+    void DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected);
 
 private:
     // SettingsItem rows so the list can carry captions (SettingsItemKind::Header).
     std::vector<settings::SettingsItem> m_items;
     s64 m_index{};
+    float m_name_share{0.36f};
+    std::function<void(const std::vector<size_t>&)> m_on_marked{};
     std::unique_ptr<List> m_list;
 };
 

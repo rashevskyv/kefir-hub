@@ -135,7 +135,8 @@ auto InnerJobs(const Collection& c, const std::vector<ArchiveEntry>& entries) ->
 
 // the first row of a file list: A types words, the list is drawn again with only the names that hold them
 auto SearchRow(const std::string& words, std::function<void(std::string)> redraw) -> SettingsItem {
-    SettingsItem row{"Filter by words"_i18n, words.empty() ? "Type words from the name to narrow the list"_i18n : "[" + words + "]"};
+    // one cell: the file lists give the name column most of the width, so a split label and hint would be cut
+    SettingsItem row{"Filter by words"_i18n + ": " + (words.empty() ? "type words from the name to narrow the list"_i18n : "[" + words + "]"), ""};
     row.action = [redraw]() {
         ui::remote_input::Options opts;
         opts.title = "Filter by words"_i18n;
@@ -147,6 +148,8 @@ auto SearchRow(const std::string& words, std::function<void(std::string)> redraw
 
 // rows of a file list: 0 is the header, 1 the search row, the files follow
 constexpr size_t FIRST_FILE_ROW = 2;
+// the name column of a file list: a size is short, a name is long
+constexpr float FILE_NAME_SHARE = 0.8f;
 
 // the files of the archive that match `words`: A downloads one, X/Y mark several, START downloads the marked ones or all
 void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr<const std::vector<ArchiveEntry>> all, const std::string& words) {
@@ -191,6 +194,15 @@ void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr
 
     auto menu = std::make_unique<SystemToolsMenu>(archive.name, std::move(rows));
     *self = menu.get();
+    menu->SetNameShare(FILE_NAME_SHARE);
+    // A with rows marked downloads them, not the row under the cursor
+    menu->SetOnMarked([c, archive, hits, shown, refresh](const std::vector<size_t>& marked) {
+        std::vector<ArchiveEntry> picked;
+        for (auto i : marked) {
+            if (i >= FIRST_FILE_ROW && i - FIRST_FILE_ROW < shown) picked.push_back(hits[i - FIRST_FILE_ROW]);
+        }
+        if (!picked.empty()) jobs::Run(archive.name, InnerJobs(c, picked), refresh);
+    });
     menu->SetOptions([c, archive, hits, shown, refresh](const std::vector<size_t>& marked) {
         auto options = std::make_unique<ui::Sidebar>("Options"_i18n, ui::Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -300,6 +312,14 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
 
     auto menu = std::make_unique<SystemToolsMenu>(c.label, std::move(rows));
     *self = menu.get();
+    menu->SetNameShare(FILE_NAME_SHARE);
+    menu->SetOnMarked([c, hits, shown, refresh](const std::vector<size_t>& marked) {
+        std::vector<RemoteFile> files;
+        for (auto i : marked) {
+            if (i >= FIRST_FILE_ROW && i - FIRST_FILE_ROW < shown) files.push_back(hits[i - FIRST_FILE_ROW]);
+        }
+        if (!files.empty()) jobs::Run(c.label, ToJobs(c, files), refresh);
+    });
     menu->SetOptions([c, hits, shown, reopen, refresh](const std::vector<size_t>& marked) {
         auto options = std::make_unique<ui::Sidebar>("Options"_i18n, ui::Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -324,7 +344,7 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
                 list.push_back(c);
                 Save(list);
                 reopen();
-            }, true)->SetIcon(ActionIcon::Save);
+            }, true, "Adds this item to your ROMS list so you can open it again. Downloads nothing."_i18n)->SetIcon(ActionIcon::Save);
         }
     });
     App::Push(std::move(menu));
