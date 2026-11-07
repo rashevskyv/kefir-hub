@@ -214,6 +214,42 @@ inline std::string DestPath(std::string_view console, std::string_view name) {
     return std::string{ROMS_ROOT} + std::string{console} + "/" + std::string{base};
 }
 
+// ---- a game's screenshot: github.com/libretro-thumbnails, one repository per system, named by the No-Intro name ----
+
+inline const char* ThumbRepo(std::string_view folder) {
+    struct Repo { std::string_view folder; const char* repo; };
+    static constexpr Repo REPOS[] = {
+        {"nes", "Nintendo_-_Nintendo_Entertainment_System"}, {"snes", "Nintendo_-_Super_Nintendo_Entertainment_System"},
+        {"n64", "Nintendo_-_Nintendo_64"}, {"gb", "Nintendo_-_Game_Boy"}, {"gbc", "Nintendo_-_Game_Boy_Color"},
+        {"gba", "Nintendo_-_Game_Boy_Advance"}, {"genesis", "Sega_-_Mega_Drive_-_Genesis"},
+        {"master-system", "Sega_-_Master_System_-_Mark_III"}, {"game-gear", "Sega_-_Game_Gear"},
+    };
+    for (const auto& r : REPOS) {
+        if (r.folder == folder) return r.repo;
+    }
+    return "";
+}
+
+// the file name without its folder and extension; & * / : ` < > ? \ | " are written as _ in a thumbnail name
+inline std::string ThumbName(std::string_view file) {
+    const auto slash = file.rfind('/');
+    if (slash != std::string_view::npos) file = file.substr(slash + 1);
+    const auto dot = file.rfind('.');
+    if (dot != std::string_view::npos && dot > 0 && file.size() - dot <= 5) file = file.substr(0, dot);
+    std::string out{file};
+    for (auto& c : out) {
+        if (std::string_view{"&*/:`<>?\\|\""}.find(c) != std::string_view::npos) c = '_';
+    }
+    return out;
+}
+
+// empty for a system without a thumbnail repository
+inline std::string ThumbUrl(std::string_view folder, std::string_view file) {
+    const std::string_view repo = ThumbRepo(folder);
+    if (repo.empty()) return {};
+    return "https://raw.githubusercontent.com/libretro-thumbnails/" + std::string{repo} + "/master/Named_Snaps/" + bios::EncodePath(ThumbName(file) + ".png");
+}
+
 // ---- inside a whole-set archive (zip, 7z, rar) ----
 // archive.org lists the files of an archive at <download url>/ and serves each one on its own, so one ROM
 // of a 300 MB set is fetched without the rest.

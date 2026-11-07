@@ -151,6 +151,20 @@ constexpr size_t FIRST_FILE_ROW = 2;
 // the name column of a file list: a size is short, a name is long
 constexpr float FILE_NAME_SHARE = 0.8f;
 
+// the pane of a file row: the screenshot of the game (when its system has a thumbnail repository) and the facts
+template<typename Hit>
+auto RowPreview(const Collection& c, const std::vector<Hit>& hits, size_t shown, size_t row) -> std::optional<ui::menu::tools::PreviewInfo> {
+    if (row < FIRST_FILE_ROW || row - FIRST_FILE_ROW >= shown) return std::nullopt;
+    const auto& h = hits[row - FIRST_FILE_ROW];
+    const auto slash = h.name.rfind('/');
+    ui::menu::tools::PreviewInfo info;
+    info.title = ThumbName(slash == std::string::npos ? h.name : h.name.substr(slash + 1));
+    info.url = ThumbUrl(c.console, h.name);
+    if (!info.url.empty()) info.key = c.console + "/" + info.title + ".png";
+    info.lines = {ui::menu::grid::FormatBytes(h.size), ConsoleName(c.console), std::string{ROMS_ROOT} + c.console + "/"};
+    return info;
+}
+
 // the files of the archive that match `words`: A downloads one, X/Y mark several, START downloads the marked ones or all
 void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr<const std::vector<ArchiveEntry>> all, const std::string& words) {
     std::vector<ArchiveEntry> hits;
@@ -195,6 +209,7 @@ void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr
     auto menu = std::make_unique<SystemToolsMenu>(archive.name, std::move(rows));
     *self = menu.get();
     menu->SetNameShare(FILE_NAME_SHARE);
+    menu->SetPreview([c, hits, shown](size_t row) { return RowPreview(c, hits, shown, row); });
     // A with rows marked downloads them, not the row under the cursor
     menu->SetOnMarked([c, archive, hits, shown, refresh](const std::vector<size_t>& marked) {
         std::vector<ArchiveEntry> picked;
@@ -313,6 +328,7 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
     auto menu = std::make_unique<SystemToolsMenu>(c.label, std::move(rows));
     *self = menu.get();
     menu->SetNameShare(FILE_NAME_SHARE);
+    menu->SetPreview([c, hits, shown](size_t row) { return RowPreview(c, hits, shown, row); });
     menu->SetOnMarked([c, hits, shown, refresh](const std::vector<size_t>& marked) {
         std::vector<RemoteFile> files;
         for (auto i : marked) {

@@ -150,6 +150,7 @@ add_executable(sphaira
     source/ui/menus/theme_creator.cpp
     source/ui/menus/tools_menu.cpp
     source/ui/menus/system_tools_menu.cpp
+    source/ui/menus/preview_pane.cpp
     source/ui/menus/system_info_menu.cpp
     source/ui/menus/wifi_menu.cpp
     source/wifi_manager.cpp

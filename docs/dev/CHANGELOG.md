@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Report: the QH charge from cycle 2's cut-off to full (marker qh_cap2) against the learned FullCap (within 7 %, less the cut-off %), and the gauge at cycle 2's cut-off (≤ 3 % = the zero is right). Both passed: a low capacity is real wear. Ledger "good" = report::Good (no AboveFactory, no 20 % inconsistency, no failed check).
 - Start calibration saves calib-before.cal; Tools > Battery gets "Before the calibration (date) / now": capacity, cycles, the nine model values. host tests: pass (quick), nro: not built, switch: pending (cycle 2 log "QH counted N"; report "The checks"; before / now after a new start)
 
+## v0.14.311 — ROM file lists: a pane with the game's screenshot and facts
+- Collection and archive file lists show on the right the libretro-thumbnails screenshot of the game under the cursor (NES, SNES, N64, GB, GBC, GBA, Genesis, Master System, Game Gear), the size, the system and the folder. The screenshot loads after the cursor rests 0.5 s (PreviewPane::DWELL_MS) and is cached in /config/kefir/cache/thumbs/.
+- host tests: pass (quick), nro: built, switch: pending (does a screenshot appear after a pause; do names without a match show "No screenshot")
+
 ## v0.14.310 — ROM file lists: wide name column, one filter cell, A downloads the marked files
 - File lists of a collection and of an archive give the name 80 % of the row; the filter is one cell; A with marked rows downloads them; "Keep the collection" has a description.
 - host tests: pass (quick), nro: not built, switch: pending (speed of a single file out of a zip is archive.org's: not changed)

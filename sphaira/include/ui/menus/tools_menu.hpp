@@ -3,9 +3,11 @@
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/menus/settings_menu.hpp"
+#include "ui/menus/preview_pane.hpp"
 #include "ui/scrolling_text.hpp"
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -79,10 +81,14 @@ struct SystemToolsMenu final : MenuBase {
     void SetOnMarked(std::function<void(const std::vector<size_t>&)> cb) { m_on_marked = std::move(cb); }
     // the share of the row width the name column takes (the rest is the description)
     void SetNameShare(float share) { m_name_share = share; }
+    // a pane on the right shows what `provider` says about the row under the cursor (nullopt: nothing); the list
+    // narrows to make room, so call this after SetNameShare
+    void SetPreview(std::function<std::optional<PreviewInfo>(size_t row)> provider);
 
 private:
     void SetIndex(s64 index);
     void OnSelect();
+    void BuildList(float width);
     void DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected);
 
 private:
@@ -91,6 +97,9 @@ private:
     s64 m_index{};
     float m_name_share{0.36f};
     std::function<void(const std::vector<size_t>&)> m_on_marked{};
+    std::function<std::optional<PreviewInfo>(size_t)> m_preview_provider{};
+    std::unique_ptr<PreviewPane> m_preview{};
+    s64 m_preview_index{-1};
     std::unique_ptr<List> m_list;
 };
 

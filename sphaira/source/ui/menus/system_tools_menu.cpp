@@ -313,13 +313,25 @@ SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings:
     // compact rows: the tools list fits on one screen. A longer list (a page of results)
     // shows 11 rows and scrolls. The list area is as tall as its rows plus room for the
     // cursor outline, so the last row and its frame are never cut by the list's own clip.
+    BuildList(1145.f);
+    SetIndex(0);
+}
+
+void SystemToolsMenu::BuildList(float width) {
     constexpr float row_h = 44.f;
     const auto rows = std::min<s64>(static_cast<s64>(m_items.size()), 11);
     m_list = std::make_unique<List>(1, rows,
-        Vec4{75.f, 132.f, 1145.f, row_h * static_cast<float>(rows) + 8.f}, Vec4{75.f, 132.f, 1130.f, row_h});
+        Vec4{75.f, 132.f, width, row_h * static_cast<float>(rows) + 8.f}, Vec4{75.f, 132.f, width - 15.f, row_h});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    SetIndex(0);
+}
+
+void SystemToolsMenu::SetPreview(std::function<std::optional<PreviewInfo>(size_t row)> provider) {
+    m_preview_provider = std::move(provider);
+    m_preview = std::make_unique<PreviewPane>();
+    m_name_share = 0.7f;
+    BuildList(700.f);
+    SetIndex(m_index);
 }
 
 void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected) {
@@ -402,6 +414,14 @@ void SystemToolsMenu::DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const
 
 void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+    if (m_preview) {
+        if (m_index != m_preview_index) {
+            m_preview_index = m_index;
+            const auto info = m_preview_provider(static_cast<size_t>(m_index));
+            if (info) m_preview->Show(*info); else m_preview->Clear();
+        }
+        m_preview->Update();
+    }
     // left/right jump to the first item of the previous / next caption, so
     // three presses walk Diagnostics → Settings → Maintenance and back.
     if (controller && !m_items.empty() && (controller->GotDown(Button::RIGHT) || controller->GotDown(Button::LEFT))) {
@@ -439,6 +459,7 @@ void SystemToolsMenu::Draw(NVGcontext* vg, Theme* theme) {
     m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         DrawRow(vg, theme, v, m_items[i], m_index == i);
     });
+    if (m_preview) m_preview->Draw(vg, theme, Vec4{805.f, 150.f, 400.f, 480.f});
 }
 
 void SystemToolsMenu::OnFocusGained() {

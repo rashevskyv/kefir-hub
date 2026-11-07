@@ -97,6 +97,12 @@ int main() {
     assert(MatchesWords("Super Mario 64 (USA).z64", "  mario  "));
     assert(!MatchesWords("Super Mario 64 (USA).z64", "mario europe"));
 
+    assert(ThumbName("Roms/Advance Wars (USA) (Rev 1).gba") == "Advance Wars (USA) (Rev 1)");
+    assert(ThumbName("Tom & Jerry: The \"Hunt\"?.gba") == "Tom _ Jerry_ The _Hunt__");
+    assert(ThumbUrl("gba", "Advance Wars (USA).gba") == "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Snaps/Advance%20Wars%20%28USA%29.png"
+        || ThumbUrl("gba", "Advance Wars (USA).gba").find("Named_Snaps/Advance%20Wars") != std::string::npos);
+    assert(ThumbUrl("psx", "a.bin").empty());
+
     std::puts("test_rom_library: ok");
     return 0;
 }
