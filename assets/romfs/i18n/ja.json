@@ -4184,5 +4184,7 @@
   "On the console: ": "本体: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "キューはこれらの質問を待ちませんでした。各ゲームで選択し、Xを押してください。",
   "Resolve": "解決",
-  "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。"
+  "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。",
+  "Screen type": "画面タイプ",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」はSwitch OLEDモデルのみを認識します。社外品のOLEDパネルの場合は「OLED」を選択してください。バッテリー消費により画面全体が点灯します。"
 }

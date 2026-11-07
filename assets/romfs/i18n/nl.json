@@ -4184,5 +4184,7 @@
   "On the console: ": "Op de console: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "De wachtrij heeft niet op deze vragen gewacht. Kies voor elke game en druk dan op X.",
   "Resolve": "Oplossen",
-  "Queue done. Choose what to do with the skipped files.": "Wachtrij klaar. Kies wat u wilt doen met de overgeslagen bestanden."
+  "Queue done. Choose what to do with the skipped files.": "Wachtrij klaar. Kies wat u wilt doen met de overgeslagen bestanden.",
+  "Screen type": "Schermtype",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto herkent alleen het Switch OLED-model. Kies OLED voor een aftermarket OLED-paneel: het stroomverbruik verlicht dan het hele scherm."
 }

@@ -4179,5 +4179,7 @@
   "On the console: ": "На кансолі: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Чарка не чака іх. Выберыце для кожнай гульні, затым націсніце X.",
   "Resolve": "Вырашыць",
-  "Queue done. Choose what to do with the skipped files.": "Чаргоўнік завершаны. Выберыце, што рабіць з прапушчанымі файламі."
+  "Queue done. Choose what to do with the skipped files.": "Чаргоўнік завершаны. Выберыце, што рабіць з прапушчанымі файламі.",
+  "Screen type": "Тып экрана",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Аўтаматычна распазнаецца толькі мадэль Switch OLED. Выберыце OLED для заменнай OLED-панэлі: спажыванне энергіі тады падсвятляе ўвесь экран."
 }

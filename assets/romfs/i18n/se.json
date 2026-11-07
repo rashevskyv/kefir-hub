@@ -4184,5 +4184,7 @@
   "On the console: ": "På konsolen: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Köer väntade inte på dessa frågor. Välj för varje spel och tryck sedan på X.",
   "Resolve": "Lös",
-  "Queue done. Choose what to do with the skipped files.": "Kö klar. Välj vad du vill göra med de överhoppade filerna."
+  "Queue done. Choose what to do with the skipped files.": "Kö klar. Välj vad du vill göra med de överhoppade filerna.",
+  "Screen type": "Skärmtyp",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto känner bara igen Switch OLED-modellen. Välj OLED för en tredjeparts OLED-panel: batteriförbrukningen lyser då upp hela skärmen."
 }

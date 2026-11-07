@@ -4237,5 +4237,7 @@
   "On the console: ": "在主机上： ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "队列未等待这些问题。请为每个游戏进行选择，然后按 X。",
   "Resolve": "解决",
-  "Queue done. Choose what to do with the skipped files.": "队列已完成。请选择如何处理跳过的文件。"
+  "Queue done. Choose what to do with the skipped files.": "队列已完成。请选择如何处理跳过的文件。",
+  "Screen type": "屏幕类型",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "“自动”仅识别 Switch OLED 机型。如使用第三方 OLED 面板请选择 OLED：此时电池电量消耗会点亮整个屏幕。"
 }

@@ -316,7 +316,11 @@ public:
 
     static void ShowTitleModeHelp(const std::string& feature = {});
 
+    // the panel is an OLED: the "Screen type" setting (0 auto, 1 OLED, 2 LCD; an aftermarket panel is not seen by the Hub),
+    // on Auto the hardware type (Aula)
     static auto IsOledModel() -> bool;
+    static auto GetScreenType() -> long;
+    static void SetScreenType(long type);
     static auto IsEmummc() -> bool;
     static auto HasEmummc() -> bool;
     static auto IsParitionBaseEmummc() -> bool;
@@ -504,6 +508,7 @@ public:
     option::OptionLong m_blank_brightness{INI_SECTION, "blank_brightness", 10}; // percent
     option::OptionLong m_blank_timeout{INI_SECTION, "blank_timeout", 0}; // seconds (0 = off)
     option::OptionBool m_saver_oled{INI_SECTION, "saver_oled", true};
+    option::OptionLong m_screen_type{INI_SECTION, "screen_type", 0};
     option::OptionLong m_saver_fields{INI_SECTION, "saver_fields", ui::SaverField_ALL};
 
     // install options

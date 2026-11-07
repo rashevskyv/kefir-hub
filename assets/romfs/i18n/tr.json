@@ -4179,5 +4179,7 @@
   "On the console: ": "Konsolda: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Kuyruk bu soruları beklemedi. Her oyun için seçim yapın ve X tuşuna basın.",
   "Resolve": "Çöz",
-  "Queue done. Choose what to do with the skipped files.": "Kuyruk tamamlandı. Atlanan dosyalarla ne yapılacağını seçin."
+  "Queue done. Choose what to do with the skipped files.": "Kuyruk tamamlandı. Atlanan dosyalarla ne yapılacağını seçin.",
+  "Screen type": "Ekran türü",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto yalnızca Switch OLED modelini tanır. Yan sanayi bir OLED panel için OLED seçin: pil tüketimi bu durumda tüm ekranı aydınlatır."
 }

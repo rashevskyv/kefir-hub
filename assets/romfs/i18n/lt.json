@@ -4179,5 +4179,7 @@
   "On the console: ": "Konsolėje: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Eilė nelaukė šių klausimų. Pasirinkite kiekvienam žaidimui ir paspauskite X.",
   "Resolve": "Išspręsti",
-  "Queue done. Choose what to do with the skipped files.": "Eilė baigta. Pasirinkite, ką daryti su praleistais failais."
+  "Queue done. Choose what to do with the skipped files.": "Eilė baigta. Pasirinkite, ką daryti su praleistais failais.",
+  "Screen type": "Ekrano tipas",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Automatinis režimas atpažįsta tik „Switch OLED“ modelį. Pasirinkite OLED trečiosios šalies OLED ekranui: baterijos sąnaudos tuomet apšvies visą ekraną."
 }

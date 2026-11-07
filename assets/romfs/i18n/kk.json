@@ -4179,5 +4179,7 @@
   "On the console: ": "Консольде: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Кезек бұл сұрақтарды күтпеді. Әр ойын үшін таңдап, X басыңыз.",
   "Resolve": "Шешу",
-  "Queue done. Choose what to do with the skipped files.": "Кезек аяқталды. Өткізіліп жіберілген файлдармен не істеу керектігін таңдаңыз."
+  "Queue done. Choose what to do with the skipped files.": "Кезек аяқталды. Өткізіліп жіберілген файлдармен не істеу керектігін таңдаңыз.",
+  "Screen type": "Экран түрі",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto тек Switch OLED моделін анықтайды. Қосымша OLED панелі үшін OLED таңдаңыз: содан кейін батарея қуаты барлық экранды жарықтандырады."
 }

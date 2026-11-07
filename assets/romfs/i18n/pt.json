@@ -4211,5 +4211,7 @@
   "On the console: ": "Na consola: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "A fila não esperou por estas perguntas. Escolha para cada jogo e prima X.",
   "Resolve": "Resolver",
-  "Queue done. Choose what to do with the skipped files.": "Fila concluída. Escolha o que fazer com os ficheiros ignorados."
+  "Queue done. Choose what to do with the skipped files.": "Fila concluída. Escolha o que fazer com os ficheiros ignorados.",
+  "Screen type": "Tipo de ecrã",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "O Auto apenas reconhece o modelo Switch OLED. Escolha OLED para um painel OLED de substituição: o consumo da bateria iluminará todo o ecrã."
 }

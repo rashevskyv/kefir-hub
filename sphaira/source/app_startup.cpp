@@ -326,6 +326,7 @@ App::App(const char* argv0) {
             else if (app->m_blank_brightness.LoadFrom(Key, Value)) {}
             else if (app->m_blank_timeout.LoadFrom(Key, Value)) {}
             else if (app->m_saver_oled.LoadFrom(Key, Value)) {}
+            else if (app->m_screen_type.LoadFrom(Key, Value)) {}
             else if (app->m_saver_fields.LoadFrom(Key, Value)) {}
             else if (app->m_allow_downgrade.LoadFrom(Key, Value)) {}
             else if (app->m_skip_if_already_installed.LoadFrom(Key, Value)) {}

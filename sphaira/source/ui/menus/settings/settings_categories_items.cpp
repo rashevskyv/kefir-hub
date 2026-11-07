@@ -495,6 +495,23 @@ auto BuildScreenOffItems() -> std::vector<SettingsItem> {
         }
     });
 
+    items.emplace_back(SettingsItem{
+        "Screen type"_i18n,
+        "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen."_i18n,
+        [](){
+            const long type = App::GetScreenType();
+            return type == 1 ? std::string{"OLED"} : type == 2 ? std::string{"LCD"}
+                : "Auto"_i18n + (App::IsOledModel() ? " (OLED)" : " (LCD)");
+        },
+        [](){
+            App::Push<PopupList>("Screen type"_i18n, PopupList::Items{"Auto"_i18n, "OLED", "LCD"}, [](std::optional<s64> op_index){
+                if (op_index) {
+                    App::SetScreenType(*op_index);
+                }
+            }, App::GetScreenType());
+        }
+    });
+
     items.emplace_back(MakeBoolItem("OLED mode"_i18n,
         "Light only the pixels that carry information: the empty part of the progress bar is left black."_i18n,
         App::GetSaverOled, App::SetSaverOled));

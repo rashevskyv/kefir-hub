@@ -566,7 +566,18 @@ auto App::Install(ui::ProgressBox* pbox, OwoConfig& config) -> Result {
     return install_forwarder(pbox, config, GetInstallSdEnable() ? NcmStorageId_SdCard : NcmStorageId_BuiltInUser);
 }
 
+auto App::GetScreenType() -> long {
+    return std::clamp<long>(g_app->m_screen_type.Get(), 0, 2);
+}
+
+void App::SetScreenType(long type) {
+    g_app->m_screen_type.Set(std::clamp<long>(type, 0, 2));
+}
+
 auto App::IsOledModel() -> bool {
+    if (const auto type = GetScreenType()) {
+        return type == 1;
+    }
     static int s_is_oled = -1;
     if (s_is_oled != -1) {
         return s_is_oled == 1;

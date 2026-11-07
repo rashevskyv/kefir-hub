@@ -4179,5 +4179,7 @@
   "On the console: ": "Pada konsol: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Antrean tidak menunggu pertanyaan ini. Pilih untuk setiap game, lalu tekan X.",
   "Resolve": "Selesaikan",
-  "Queue done. Choose what to do with the skipped files.": "Antrean selesai. Pilih tindakan untuk file yang dilewati."
+  "Queue done. Choose what to do with the skipped files.": "Antrean selesai. Pilih tindakan untuk file yang dilewati.",
+  "Screen type": "Jenis layar",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Otomatis hanya mendeteksi model Switch OLED. Pilih OLED untuk panel OLED aftermarket: penggunaan baterai akan menerangi seluruh layar."
 }

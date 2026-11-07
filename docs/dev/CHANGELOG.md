@@ -7,6 +7,10 @@ Entries without a detail line are commit titles only; their verification state w
 - Game names from a NACP v2 (Zelda BotW showed "E"): The title cache took its own language entry from the raw NACP, which in v2 is junk; Hub now writes the decoded name into the copy it caches, also tries v2 when ns gives a one-letter name, and reloads a cached one-letter name. host tests: pass (quick), nro: not built, switch: pending (Games: BotW tile shows the full name; log has "[nacp v2] decoded name" for 01007EF00011E000 on the first launch)
 - Phase Z paused until hacBrewPackLZ 1.5.0: "Compress on install" code parked in scratch/hbp-phase2/ (it compressed mid-session, before an update arrived); dropped its stray CMake line.
 
+## v0.14.307 — Settings > Screensaver: "Screen type" Auto / OLED / LCD
+Auto is the hardware type (Switch OLED only); OLED or LCD is for an aftermarket panel the Hub cannot see. It decides the lit drain saver and the screensaver's brightness (App::IsOledModel).
+host tests: pass (quick), nro: not built, switch: pending (Auto shows "(OLED)"/"(LCD)", OLED on an LCD console lights the drain saver)
+
 ## v0.14.306 — Battery calibration: the lit drain saver is for an OLED only, near white; an LCD gets full brightness
 The drain under load starts the saver as the readout page at full brightness whatever the blank mode (Dim / backlight off drained less). Only an OLED (Aula, by the hardware type) gets the lit background, now near white (HSL lightness 0.9, every subpixel at 80 %+) in drifting tints, with the readout drawn dark on it, no plate. Aftermarket OLED panels are not detected (Exosphère keeps the panel id).
 host tests: pass (quick), nro: not built, switch: pending (OLED: near-white moving tints, dark readout; LCD: black saver at 100 % brightness)

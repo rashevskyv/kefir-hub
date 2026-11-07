@@ -4179,5 +4179,7 @@
   "On the console: ": "Konsolē: ",
   "The queue did not wait for these questions. Choose for each game, then press X.": "Rinda negaidīja šos jautājumus. Izvēlieties katrai spēlei un nospiediet X.",
   "Resolve": "Atrisināt",
-  "Queue done. Choose what to do with the skipped files.": "Rinda pabeigta. Izvēlieties, ko darīt ar izlaistajiem failiem."
+  "Queue done. Choose what to do with the skipped files.": "Rinda pabeigta. Izvēlieties, ko darīt ar izlaistajiem failiem.",
+  "Screen type": "Ekrāna veids",
+  "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Automātiskais režīms atpazīst tikai Switch OLED modeli. Izvēlieties OLED pēctirgus OLED panelim: akumulatora patēriņš tad izgaismos visu ekrānu."
 }
