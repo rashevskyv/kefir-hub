@@ -5,6 +5,7 @@
 // The Hub ships no item ids. No libnx here: tests/test_rom_library.cpp runs it on the host.
 
 #include "bios_plan.hpp" // EncodePath
+#include <algorithm>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -248,6 +249,133 @@ inline std::string ThumbUrl(std::string_view folder, std::string_view file) {
     const std::string_view repo = ThumbRepo(folder);
     if (repo.empty()) return {};
     return "https://raw.githubusercontent.com/libretro-thumbnails/" + std::string{repo} + "/master/Named_Snaps/" + bios::EncodePath(ThumbName(file) + ".png");
+}
+
+// ---- the picture of a game by a loose name ----
+// A set names its files "Aladdin (U).smc"; the picture server names them "Disney's Aladdin (USA).png". The server lists a
+// folder of every system (one page, cached on the card), and the name of a file is matched to a name on that list by its words.
+
+// the folder of a system on thumbnails.libretro.com; kind is "Named_Boxarts" or "Named_Snaps". Empty for a system without pictures.
+inline std::string ThumbDirUrl(std::string_view folder, std::string_view kind) {
+    std::string system{ThumbRepo(folder)};
+    if (system.empty()) return {};
+    for (size_t at; (at = system.find("_-_")) != std::string::npos;) system.replace(at, 3, " - ");
+    for (auto& c : system) if (c == '_') c = ' ';
+    return "https://thumbnails.libretro.com/" + bios::EncodePath(system) + "/" + std::string{kind} + "/";
+}
+
+inline std::string UrlDecode(std::string_view s) {
+    std::string out;
+    for (size_t i = 0; i < s.size(); i++) {
+        const auto hex = [](char c) { return c >= '0' && c <= '9' ? c - '0' : c >= 'A' && c <= 'F' ? c - 'A' + 10 : c >= 'a' && c <= 'f' ? c - 'a' + 10 : -1; };
+        if (s[i] == '%' && i + 2 < s.size() && hex(s[i + 1]) >= 0 && hex(s[i + 2]) >= 0) {
+            out += static_cast<char>(hex(s[i + 1]) * 16 + hex(s[i + 2]));
+            i += 2;
+        } else {
+            out += s[i];
+        }
+    }
+    return out;
+}
+
+// the names (no ".png") on an Apache folder page: <a href="Aladdin%20(USA).png">
+inline std::vector<std::string> ParseThumbIndex(std::string_view html) {
+    std::vector<std::string> out;
+    constexpr std::string_view key = "href=\"";
+    for (size_t at = html.find(key); at != std::string_view::npos; at = html.find(key, at)) {
+        at += key.size();
+        const auto end = html.find('"', at);
+        if (end == std::string_view::npos) break;
+        const auto href = html.substr(at, end - at);
+        if (href.size() > 4 && href.substr(href.size() - 4) == ".png" && href.front() != '?' && href.front() != '/') {
+            out.push_back(UrlDecode(href.substr(0, href.size() - 4)));
+        }
+        at = end;
+    }
+    return out;
+}
+
+namespace detail {
+
+struct ThumbKey {
+    std::vector<std::string> words; // lowercase words of the title, without "the"
+    std::vector<std::string> tags;  // lowercase text of each (...) group
+};
+
+inline ThumbKey ThumbKeyOf(std::string_view name) {
+    ThumbKey key;
+    const auto cut = name.find_first_of("([");
+    std::string word;
+    const auto flush = [&]() { if (!word.empty() && word != "the") key.words.push_back(word); word.clear(); };
+    for (const char raw : name.substr(0, cut)) {
+        const char c = (raw >= 'A' && raw <= 'Z') ? static_cast<char>(raw + 32) : raw;
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) word += c; else if (c != '\'') flush();
+    }
+    flush();
+    for (size_t at = name.find('('); at != std::string_view::npos; at = name.find('(', at)) {
+        const auto end = name.find(')', at);
+        if (end == std::string_view::npos) break;
+        key.tags.emplace_back(name.substr(at + 1, end - at - 1));
+        for (auto& c : key.tags.back()) c = (c >= 'A' && c <= 'Z') ? static_cast<char>(c + 32) : c;
+        at = end;
+    }
+    return key;
+}
+
+// the regions a name asks for, in the order of preference; the one-letter codes of GoodTools and the words of No-Intro
+inline std::vector<std::string> WantedRegions(const ThumbKey& key) {
+    std::vector<std::string> out;
+    const auto add = [&](std::string r) { if (std::find(out.begin(), out.end(), r) == out.end()) out.push_back(std::move(r)); };
+    for (const auto& tag : key.tags) {
+        if (tag == "u" || tag == "ue" || tag == "ju" || tag == "usa") add("usa");
+        if (tag == "e" || tag == "ue" || tag == "europe") add("europe");
+        if (tag == "j" || tag == "ju" || tag == "japan") add("japan");
+        if (tag == "w" || tag == "world") add("world");
+    }
+    for (std::string r : {"usa", "world", "europe", "japan"}) add(r);
+    return out;
+}
+
+} // namespace detail
+
+// the name on the list that is the same game as `file` (a path or a file name), or empty. All words of the file name
+// must be in the listed name ("Aladdin" is in "Disney's Aladdin"); the fewest extra words win, then a release that is not
+// a beta or a demo, then the region the file name asks for (U = USA), else USA, World, Europe, Japan.
+inline std::string PickThumb(const std::vector<std::string>& names, std::string_view file) {
+    const auto slash = file.rfind('/');
+    if (slash != std::string_view::npos) file = file.substr(slash + 1);
+    const auto dot = file.rfind('.');
+    if (dot != std::string_view::npos && dot > 0 && file.size() - dot <= 5) file = file.substr(0, dot);
+    const auto want = detail::ThumbKeyOf(file);
+    if (want.words.empty()) return {};
+    const auto regions = detail::WantedRegions(want);
+
+    const std::string* best = nullptr;
+    size_t best_score[4]{};
+    for (const auto& name : names) {
+        const auto cand = detail::ThumbKeyOf(name);
+        size_t extra = 0;
+        for (const auto& w : cand.words) extra += std::find(want.words.begin(), want.words.end(), w) == want.words.end();
+        const bool all_in = std::all_of(want.words.begin(), want.words.end(), [&](const std::string& w) {
+            return std::find(cand.words.begin(), cand.words.end(), w) != cand.words.end();
+        });
+        if (!all_in || extra > 3) continue;
+        size_t odd = 0, region = regions.size();
+        for (const auto& tag : cand.tags) {
+            for (std::string_view bad : {"beta", "proto", "demo", "sample", "unl", "pirate", "aftermarket", "alt", "kiosk"}) {
+                odd += tag.find(bad) != std::string::npos;
+            }
+            for (size_t i = 0; i < regions.size(); i++) {
+                if (tag.find(regions[i]) != std::string::npos) region = std::min(region, i);
+            }
+        }
+        const size_t score[4]{extra, odd, region, name.size()};
+        if (!best || std::lexicographical_compare(score, score + 4, best_score, best_score + 4)) {
+            best = &name;
+            std::copy(score, score + 4, best_score);
+        }
+    }
+    return best ? *best : std::string{};
 }
 
 // ---- inside a whole-set archive (zip, 7z, rar) ----

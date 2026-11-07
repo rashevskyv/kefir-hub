@@ -132,12 +132,9 @@ auto HasNxmp() -> bool {
 namespace sphaira::ui::menu::filebrowser {
 using namespace detail;
 
-auto Menu::FindFileAssocFor() -> std::vector<FileAssocEntry> {
+auto FindAssocFor(const std::vector<FileAssocEntry>& all, std::string_view folder_path, std::string_view extension, std::string_view internal_extension) -> std::vector<FileAssocEntry> {
     // only support roms in correctly named folders, sorry!
-    const auto db_indexs = GetRomDatabaseFromPath(view->m_path);
-    const auto& entry = view->GetEntry();
-    const auto extension = entry.GetExtension();
-    const auto internal_extension = entry.GetInternalExtension();
+    const auto db_indexs = GetRomDatabaseFromPath(folder_path);
     if (extension.empty() && internal_extension.empty()) {
         // log_write("failed to get extension for db: %s path: %s\n", database_entry.c_str(), m_path);
         return {};
@@ -147,7 +144,7 @@ auto Menu::FindFileAssocFor() -> std::vector<FileAssocEntry> {
     if (!db_indexs.empty()) {
         // if database isn't empty, then we are in a valid folder
         // search for an entry that matches the db and ext
-        for (const auto& assoc : m_assoc_entries) {
+        for (const auto& assoc : all) {
             for (const auto& assoc_db : assoc.database) {
                 // if (assoc_db == PATHS[db_idx].folder || assoc_db == PATHS[db_idx].database) {
                 for (auto db_idx : db_indexs) {
@@ -168,7 +165,7 @@ auto Menu::FindFileAssocFor() -> std::vector<FileAssocEntry> {
         // and the extension is enough info to know what type of file it is.
         // whereas with roms, a .iso can be used for multiple systems, so it needs
         // to be in the correct folder, ie psx, to know what system that .iso is for.
-        for (const auto& assoc : m_assoc_entries) {
+        for (const auto& assoc : all) {
             if (assoc.database.empty()) {
                 if (assoc.IsExtension(extension, internal_extension)) {
                     log_write("found ext: %s\n", assoc.path.s);
@@ -211,7 +208,7 @@ auto Menu::FindFileAssocFor() -> std::vector<FileAssocEntry> {
     return out_entries;
 }
 
-void Menu::LoadAssocEntriesPath(const fs::FsPath& path) {
+static void LoadAssocEntriesPath(const fs::FsPath& path, std::vector<FileAssocEntry>& out) {
     auto dir = opendir(path);
     if (!dir) {
         return;
@@ -276,7 +273,7 @@ void Menu::LoadAssocEntriesPath(const fs::FsPath& path) {
         // if path isn't empty, check if the file exists
         bool file_exists{};
         if (!assoc.path.empty()) {
-            file_exists = view->m_fs->FileExists(assoc.path);
+            file_exists = fs::FsNativeSd().FileExists(assoc.path);
         } else {
             const auto nro_name = assoc.name + ".nro";
             for (const auto& nro : homebrew::GetNroEntries()) {
@@ -297,7 +294,7 @@ void Menu::LoadAssocEntriesPath(const fs::FsPath& path) {
             continue;
         }
 
-        m_assoc_entries.emplace_back(assoc);
+        out.emplace_back(assoc);
     }
 }
 
@@ -329,7 +326,8 @@ static size_t CountAssocEntriesPath(const fs::FsPath& path) {
     return count;
 }
 
-void Menu::LoadAssocEntries() {
+auto LoadAssocList() -> std::vector<FileAssocEntry> {
+    std::vector<FileAssocEntry> out;
     size_t count = 0;
     const bool romfs_ok = R_SUCCEEDED(romfsInit());
     if (romfs_ok) {
@@ -337,15 +335,25 @@ void Menu::LoadAssocEntries() {
     }
     count += CountAssocEntriesPath(paths::ASSOC);
 
-    m_assoc_entries.reserve(count);
+    out.reserve(count);
 
     // load from romfs first
     if (romfs_ok) {
-        LoadAssocEntriesPath("romfs:/assoc/");
+        LoadAssocEntriesPath("romfs:/assoc/", out);
         romfsExit();
     }
     // then load custom entries
-    LoadAssocEntriesPath(paths::ASSOC);
+    LoadAssocEntriesPath(paths::ASSOC, out);
+    return out;
+}
+
+auto Menu::FindFileAssocFor() -> std::vector<FileAssocEntry> {
+    const auto& entry = view->GetEntry();
+    return FindAssocFor(m_assoc_entries, view->m_path, entry.GetExtension(), entry.GetInternalExtension());
+}
+
+void Menu::LoadAssocEntries() {
+    m_assoc_entries = LoadAssocList();
 }
 
 } // namespace sphaira::ui::menu::filebrowser

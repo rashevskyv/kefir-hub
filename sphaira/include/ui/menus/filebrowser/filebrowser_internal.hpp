@@ -36,5 +36,8 @@ void metadata_thread_func(void* user);
 auto HasExtraRootSources() -> bool;
 auto IdentifyPayload(fs::Fs* fs, const fs::FsPath& file_path) -> std::string;
 auto MakeLauncherLabel(const FileAssocEntry& assoc) -> std::string;
+// the emulators and players that can open a file of this extension in this folder, best first (the rom lists use them too)
+auto LoadAssocList() -> std::vector<FileAssocEntry>;
+auto FindAssocFor(const std::vector<FileAssocEntry>& all, std::string_view folder_path, std::string_view extension, std::string_view internal_extension) -> std::vector<FileAssocEntry>;
 
 } // namespace sphaira::ui::menu::filebrowser

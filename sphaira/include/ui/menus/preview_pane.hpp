@@ -3,6 +3,7 @@
 #include "ui/widget.hpp"
 #include "utils/thread.hpp"
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <stop_token>
 #include <string>
@@ -13,7 +14,8 @@ namespace sphaira::ui::menu::tools {
 // what the pane shows for the row under the cursor: a picture fetched from `url` and a few lines of text
 struct PreviewInfo {
     std::string key;   // names the cached picture under /config/kefir/cache/thumbs/; empty: no picture
-    std::string url;
+    std::string url;   // where the picture is, or empty when `resolve` finds out
+    std::function<std::string(std::stop_token)> resolve; // worker thread: the url of the picture, empty when there is none
     std::string title;
     std::vector<std::string> lines;
 };

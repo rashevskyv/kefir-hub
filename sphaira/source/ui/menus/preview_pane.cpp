@@ -25,7 +25,9 @@ auto LoadPicture(const PreviewInfo& info, std::stop_token token) -> ImageResult 
         if (!cached.data.empty()) return cached;
     }
     fs::CreateDirectoryRecursively(fs::FsPath{path.substr(0, path.rfind('/'))});
-    const auto result = curl::Api().ToFile(curl::Url{info.url}, curl::Path{path}, curl::StopToken{token});
+    const auto url = info.resolve ? info.resolve(token) : info.url;
+    if (url.empty()) return {};
+    const auto result = curl::Api().ToFile(curl::Url{url}, curl::Path{path}, curl::StopToken{token});
     if (!result.success) {
         sd.DeleteFile(path); // a failed download must not stay as a "cached" file
         return {};
@@ -69,7 +71,7 @@ void PreviewPane::Clear() {
 }
 
 void PreviewPane::Update() {
-    if (!m_has || m_started || m_info.key.empty() || m_info.url.empty()) return;
+    if (!m_has || m_started || m_info.key.empty() || (m_info.url.empty() && !m_info.resolve)) return;
     if (std::chrono::steady_clock::now() - m_since < std::chrono::milliseconds{DWELL_MS}) return;
     m_started = true;
 

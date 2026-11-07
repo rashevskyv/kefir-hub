@@ -103,6 +103,24 @@ int main() {
         || ThumbUrl("gba", "Advance Wars (USA).gba").find("Named_Snaps/Advance%20Wars") != std::string::npos);
     assert(ThumbUrl("psx", "a.bin").empty());
 
+    // a loose name finds its picture
+    const std::vector<std::string> names{"Aladdin (Europe)", "Aladdin (USA) (Beta)", "Aladdin (USA)", "Aladdin (Japan)",
+        "Disney's Aladdin (USA)", "Aladdin II (USA)", "Contra III - The Alien Wars (USA)", "Super Mario World (USA)",
+        "Super Mario World 2 - Yoshi's Island (USA)"};
+    assert(PickThumb(names, "Aladdin (U).smc") == "Aladdin (USA)");
+    assert(PickThumb(names, "Aladdin (E) [!].zip") == "Aladdin (Europe)");
+    assert(PickThumb(names, "Aladdin (J).smc") == "Aladdin (Japan)");
+    assert(PickThumb(names, "Aladdin.sfc") == "Aladdin (USA)");
+    assert(PickThumb({"Disney's Aladdin (USA)"}, "Aladdin (U).smc") == "Disney's Aladdin (USA)");
+    assert(PickThumb(names, "Contra 3 (U).smc").empty());
+    assert(PickThumb(names, "Contra III - The Alien Wars (U).smc") == "Contra III - The Alien Wars (USA)");
+    assert(PickThumb(names, "Super Mario World (U) [!].smc") == "Super Mario World (USA)");
+    assert(PickThumb(names, "Nothing Like It (U).smc").empty());
+    assert(ThumbDirUrl("snes", "Named_Boxarts") == "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/");
+    assert(ThumbDirUrl("psx", "Named_Boxarts").empty());
+    const auto parsed = ParseThumbIndex("<a href=\"?C=N;O=D\">Name</a><a href=\"/up/\">x</a><a href=\"Aladdin%20(USA).png\">a</a><a href=\"Tom%20_%20Jerry.png\">b</a>");
+    assert(parsed.size() == 2 && parsed[0] == "Aladdin (USA)" && parsed[1] == "Tom _ Jerry");
+
     std::puts("test_rom_library: ok");
     return 0;
 }

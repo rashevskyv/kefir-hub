@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.312 — ROM lists: the cover is found by a loose name; A on a downloaded game starts it in an emulator; screensaver stays on the panel
+- Cover: the file name "Aladdin (U).smc" now finds "Aladdin (USA)" on thumbnails.libretro.com (box art, else screenshot) by its words and region; the server's name list is kept per system. "On the card" list: A opens the emulators (file browser list), the pane shows the cover; delete stays on START. Also: transfer box shadow + dim, MTP write refreshes Homebrew, screensaver block clamped to the panel.
+- host tests: pass (quick), nro: not built, switch: pending (cover for old-style names; A starts the game; shadow/dim look)
+
 ## v0.14.311 — battery: the report checks the capacity and the zero; Tools > Battery shows before / now
 - Report: the QH charge from cycle 2's cut-off to full (marker qh_cap2) against the learned FullCap (within 7 %, less the cut-off %), and the gauge at cycle 2's cut-off (≤ 3 % = the zero is right). Both passed: a low capacity is real wear. Ledger "good" = report::Good (no AboveFactory, no 20 % inconsistency, no failed check).
 - Start calibration saves calib-before.cal; Tools > Battery gets "Before the calibration (date) / now": capacity, cycles, the nine model values. host tests: pass (quick), nro: not built, switch: pending (cycle 2 log "QH counted N"; report "The checks"; before / now after a new start)

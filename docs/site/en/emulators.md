@@ -50,7 +50,7 @@ BIOS files for the emulators on your microSD card: Kefir Hub finds the installed
 
 <!-- draft
 - the ROMS section is grouped by system, in the order of the console table: a header with the system name (for example [[Nintendo - NES]]), its collections, then a row [[On the card]] with the number of files and their size in `/roms/<console>/`; a system with neither is not shown
-- [[On the card]] opens the files the Hub downloaded: a filter row, the files with their sizes; **A** on a file asks to delete it; **X** marks a file, **Y** inverts the marks, **START** opens [[Delete the marked files]] (the marks, or the file under the cursor when none is marked) and [[Delete all shown]]; a question with [[Delete]] always comes first and says it cannot be undone
+- [[On the card]] opens the files the Hub downloaded: a filter row, the files with their sizes; **A** on a game opens the list of emulators that run it (one emulator starts at once; none: [[No emulator found for this file]]), on a folder it asks to delete it; the right pane shows the cover (box art, else the screenshot) found by the loose file name: "Aladdin (U).smc" finds "Aladdin (USA)" on thumbnails.libretro.com, the list of names is read once per system and kept in `/config/kefir/cache/thumbs/index/`; **X** marks a file, **Y** inverts the marks, **START** opens [[Delete the marked files]] (the marks, or the file under the cursor when none is marked) and [[Delete all shown]]; a question with [[Delete]] always comes first and says it cannot be undone
 - a folder in `/roms/<console>/` is listed with a slash and is deleted with everything in it
 -->
 

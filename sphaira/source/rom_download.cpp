@@ -1,5 +1,6 @@
 #include "rom_download.hpp"
 #include "rom_library.hpp"
+#include "rom_thumbs.hpp"
 #include "rom_files.hpp"
 #include "download_jobs.hpp"
 #include "app.hpp"
@@ -156,13 +157,7 @@ template<typename Hit>
 auto RowPreview(const Collection& c, const std::vector<Hit>& hits, size_t shown, size_t row) -> std::optional<ui::menu::tools::PreviewInfo> {
     if (row < FIRST_FILE_ROW || row - FIRST_FILE_ROW >= shown) return std::nullopt;
     const auto& h = hits[row - FIRST_FILE_ROW];
-    const auto slash = h.name.rfind('/');
-    ui::menu::tools::PreviewInfo info;
-    info.title = ThumbName(slash == std::string::npos ? h.name : h.name.substr(slash + 1));
-    info.url = ThumbUrl(c.console, h.name);
-    if (!info.url.empty()) info.key = c.console + "/" + info.title + ".png";
-    info.lines = {ui::menu::grid::FormatBytes(h.size), ConsoleName(c.console), std::string{ROMS_ROOT} + c.console + "/"};
-    return info;
+    return GamePreview(c.console, h.name, h.size);
 }
 
 // the files of the archive that match `words`: A downloads one, X/Y mark several, START downloads the marked ones or all

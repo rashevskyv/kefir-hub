@@ -439,7 +439,6 @@ private:
     void RefreshViews();
     void ConnectToLocation(const ::sphaira::location::Entry& e);
 
-    void LoadAssocEntriesPath(const fs::FsPath& path);
     void LoadAssocEntries();
     auto FindFileAssocFor() -> std::vector<FileAssocEntry>;
 

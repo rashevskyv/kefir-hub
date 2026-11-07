@@ -1,16 +1,20 @@
 #include "rom_files.hpp"
 #include "rom_library.hpp"
+#include "rom_thumbs.hpp"
+#include "nro.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 #include "ui/option_box.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/remote_input.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/menus/tools_menu.hpp"
 #include "ui/menus/grid_menu_base.hpp"
+#include "ui/menus/filebrowser/filebrowser_internal.hpp"
 #include "ui/menus/settings/settings_internal.hpp"
 
 #include <algorithm>
@@ -98,6 +102,29 @@ void ConfirmDelete(const std::string& folder, const std::vector<Entry>& targets,
         });
 }
 
+// A on a game: the emulators that open it (the same list as the file browser), then the game starts in the one picked
+void Launch(const std::string& folder, const Entry& e) {
+    using namespace ui::menu::filebrowser;
+    const auto dot = e.name.rfind('.');
+    const std::string ext = dot == std::string::npos ? "" : e.name.substr(dot + 1);
+    const auto list = FindAssocFor(LoadAssocList(), std::string{ROMS_ROOT} + folder, ext, ext);
+    if (list.empty()) {
+        App::Notify("No emulator found for this file"_i18n);
+        return;
+    }
+    const fs::FsPath rom{(std::string{ROMS_ROOT} + folder + "/" + e.name).c_str()};
+    const auto run = [rom](const FileAssocEntry& assoc) { nro_launch(assoc.path, assoc.GetRomArgs(rom)); };
+    if (list.size() == 1) {
+        run(list.front());
+        return;
+    }
+    ui::PopupList::Items items;
+    for (const auto& assoc : list) items.emplace_back(MakeLauncherLabel(assoc));
+    App::Push<ui::PopupList>("Launch option for: "_i18n + e.name, items, [list, run](auto op) {
+        if (op) run(list[*op]);
+    });
+}
+
 void Show(const std::string& folder, std::function<void()> refreshed, const std::string& words) {
     std::vector<Entry> hits;
     for (const auto& e : List(folder)) {
@@ -137,8 +164,9 @@ void Show(const std::string& folder, std::function<void()> refreshed, const std:
         const auto& e = hits[i];
         SettingsItem row{e.dir ? e.name + "/" : e.name, e.dir ? "folder"_i18n : ui::menu::grid::FormatBytes(e.size)};
         row.selectable = true;
-        // A asks to delete the file under the cursor; START has the same for the marked ones
-        row.action = [folder, e, done]() { ConfirmDelete(folder, {e}, done); };
+        // A starts a game; a folder asks to be deleted. START deletes the marked files (or the one under the cursor)
+        row.action = e.dir ? std::function<void()>{[folder, e, done]() { ConfirmDelete(folder, {e}, done); }}
+                           : std::function<void()>{[folder, e]() { Launch(folder, e); }};
         rows.push_back(std::move(row));
     }
     if (shown < hits.size()) {
@@ -149,6 +177,12 @@ void Show(const std::string& folder, std::function<void()> refreshed, const std:
 
     auto menu = std::make_unique<SystemToolsMenu>(title, std::move(rows));
     *self = menu.get();
+    menu->SetNameShare(0.8f);
+    menu->SetPreview([folder, hits, shown](size_t row) -> std::optional<ui::menu::tools::PreviewInfo> {
+        if (row < FIRST_ROW || row - FIRST_ROW >= shown || hits[row - FIRST_ROW].dir) return std::nullopt;
+        const auto& h = hits[row - FIRST_ROW];
+        return GamePreview(folder, h.name, h.size);
+    });
     menu->SetOptions([folder, hits, shown, done](const std::vector<size_t>& marked) {
         auto options = std::make_unique<ui::Sidebar>("Options"_i18n, ui::Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
