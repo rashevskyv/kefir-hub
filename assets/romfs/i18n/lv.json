@@ -4179,5 +4179,5 @@
   "Queue done. Choose what to do with the skipped files.": "Rinda pabeigta. Izvēlieties, ko darīt ar izlaistajiem failiem.",
   "Screen type": "Ekrāna veids",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Automātiskais režīms atpazīst tikai Switch OLED modeli. Izvēlieties OLED pēctirgus OLED panelim: akumulatora patēriņš tad izgaismos visu ekrānu.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Zem 3,2 V: slodze ir izslēgta un spilgtums ir minimumā, tāpēc konsole lēni izlādējas līdz pilnīgai tukšumam."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Zem 3,5 V: slodze ir izslēgta un spilgtums ir minimumā, tāpēc konsole lēni izlādējas līdz pilnīgai tukšumam."
 }

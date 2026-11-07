@@ -335,7 +335,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     } else {
         m_status = m_docked ? "Paused: take the console out of the dock"_i18n
             : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
-            : m_soft ? "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."_i18n
+            : m_soft ? "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."_i18n
         : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
     }
 }
@@ -528,7 +528,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
         return "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n;
     }
     if (m_soft) {
-        return "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."_i18n
+        return "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."_i18n
             + " " + (charge::HizActive()
                 ? "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n
                 : "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);

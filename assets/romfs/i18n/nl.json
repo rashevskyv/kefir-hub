@@ -4184,5 +4184,5 @@
   "Queue done. Choose what to do with the skipped files.": "Wachtrij klaar. Kies wat u wilt doen met de overgeslagen bestanden.",
   "Screen type": "Schermtype",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto herkent alleen het Switch OLED-model. Kies OLED voor een aftermarket OLED-paneel: het stroomverbruik verlicht dan het hele scherm.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Onder 3,2 V: de belasting is uitgeschakeld en de helderheid staat op het minimum, zodat de console langzaam leegloopt tot hij echt leeg is."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Onder 3,5 V: de belasting is uitgeschakeld en de helderheid staat op het minimum, zodat de console langzaam leegloopt tot hij echt leeg is."
 }

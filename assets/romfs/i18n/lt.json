@@ -4179,5 +4179,5 @@
   "Queue done. Choose what to do with the skipped files.": "Eilė baigta. Pasirinkite, ką daryti su praleistais failais.",
   "Screen type": "Ekrano tipas",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Automatinis režimas atpažįsta tik „Switch OLED“ modelį. Pasirinkite OLED trečiosios šalies OLED ekranui: baterijos sąnaudos tuomet apšvies visą ekraną.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Žemiau 3,2 V: apkrova išjungta, o ryškumas minimalus, todėl konsolė lėtai išsikrauna iki visiško išsikrovimo."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Žemiau 3,5 V: apkrova išjungta, o ryškumas minimalus, todėl konsolė lėtai išsikrauna iki visiško išsikrovimo."
 }

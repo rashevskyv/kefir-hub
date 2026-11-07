@@ -4184,5 +4184,5 @@
   "Queue done. Choose what to do with the skipped files.": "Đã xong hàng đợi. Chọn việc cần làm với các tệp bị bỏ qua.",
   "Screen type": "Kiểu màn hình",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto chỉ nhận diện mẫu Switch OLED. Chọn OLED cho tấm nền OLED thay thế: mức tiêu thụ pin khi đó sẽ làm sáng toàn bộ màn hình.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Dưới 3,2 V: tải bị tắt và độ sáng ở mức tối thiểu, do đó máy cạn pin từ từ cho đến khi hết hoàn toàn."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Dưới 3,5 V: tải bị tắt và độ sáng ở mức tối thiểu, do đó máy cạn pin từ từ cho đến khi hết hoàn toàn."
 }

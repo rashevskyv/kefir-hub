@@ -4179,5 +4179,5 @@
   "Queue done. Choose what to do with the skipped files.": "Järjekord valmis. Valige, mida vahele jäetud failidega teha.",
   "Screen type": "Ekraani tüüp",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto tuvastab ainult Switch OLED mudeli. Vali OLED järelturu OLED-paneeli jaoks: aku tarbimine valgustab siis kogu ekraani.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Alla 3,2 V: koormus on välja lülitatud ja heledus on miinimumil, nii et konsool tühjeneb aeglaselt täielikult."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Alla 3,5 V: koormus on välja lülitatud ja heledus on miinimumil, nii et konsool tühjeneb aeglaselt täielikult."
 }

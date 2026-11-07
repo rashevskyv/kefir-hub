@@ -4179,5 +4179,5 @@
   "Queue done. Choose what to do with the skipped files.": "Kuyruk tamamlandı. Atlanan dosyalarla ne yapılacağını seçin.",
   "Screen type": "Ekran türü",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto yalnızca Switch OLED modelini tanır. Yan sanayi bir OLED panel için OLED seçin: pil tüketimi bu durumda tüm ekranı aydınlatır.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,2 V altında: yük kapalı ve parlaklık minimumda, bu nedenle konsol tamamen boşalana kadar yavaşça deşarj olur."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,5 V altında: yük kapalı ve parlaklık minimumda, bu nedenle konsol tamamen boşalana kadar yavaşça deşarj olur."
 }

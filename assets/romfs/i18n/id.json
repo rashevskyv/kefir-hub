@@ -4179,5 +4179,5 @@
   "Queue done. Choose what to do with the skipped files.": "Antrean selesai. Pilih tindakan untuk file yang dilewati.",
   "Screen type": "Jenis layar",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Otomatis hanya mendeteksi model Switch OLED. Pilih OLED untuk panel OLED aftermarket: penggunaan baterai akan menerangi seluruh layar.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Di bawah 3,2 V: beban dimatikan dan tingkat kecerahan berada pada minimum, sehingga konsol terkuras perlahan hingga benar-benar kosong."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Di bawah 3,5 V: beban dimatikan dan tingkat kecerahan berada pada minimum, sehingga konsol terkuras perlahan hingga benar-benar kosong."
 }

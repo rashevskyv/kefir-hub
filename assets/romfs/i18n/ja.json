@@ -4184,5 +4184,5 @@
   "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。",
   "Screen type": "画面タイプ",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」はSwitch OLEDモデルのみを認識します。社外品のOLEDパネルの場合は「OLED」を選択してください。バッテリー消費により画面全体が点灯します。",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.2V未満：負荷がオフになり、明るさが最小になるため、コンソールが完全に空になるまでゆっくり放電します。"
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5V未満：負荷がオフになり、明るさが最小になるため、コンソールが完全に空になるまでゆっくり放電します。"
 }

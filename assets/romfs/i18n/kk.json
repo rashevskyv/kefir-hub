@@ -4179,5 +4179,5 @@
   "Queue done. Choose what to do with the skipped files.": "Кезек аяқталды. Өткізіліп жіберілген файлдармен не істеу керектігін таңдаңыз.",
   "Screen type": "Экран түрі",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto тек Switch OLED моделін анықтайды. Қосымша OLED панелі үшін OLED таңдаңыз: содан кейін батарея қуаты барлық экранды жарықтандырады.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,2 В төмен: жүктеме өшіріліп, жарықтық минимумға қойылады, сондықтан консоль толық бос қалғанша баяу разрядталады."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3,5 В төмен: жүктеме өшіріліп, жарықтық минимумға қойылады, сондықтан консоль толық бос қалғанша баяу разрядталады."
 }

@@ -4184,5 +4184,5 @@
   "Queue done. Choose what to do with the skipped files.": "Coda completata. Scegli cosa fare con i file saltati.",
   "Screen type": "Tipo di schermo",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto riconosce solo il modello Switch OLED. Scegli OLED per un pannello OLED aftermarket: il consumo della batteria illuminerà l'intero schermo.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Sotto i 3,2 V: il carico è disattivato e la luminosità è al minimo, quindi la console si scarica lentamente fino a svuotarsi completamente."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Sotto i 3,5 V: il carico è disattivato e la luminosità è al minimo, quindi la console si scarica lentamente fino a svuotarsi completamente."
 }

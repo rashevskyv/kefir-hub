@@ -47,7 +47,7 @@ constexpr double SLOW_FRAME_MS = 70.0;
 constexpr float TAIL_BRIGHTNESS = 0.01f; // below SOFT_MV: as low as the panel goes
 // every drain: at this voltage under load (SOFT_TICKS polls in a row) the load goes off for good and the brightness goes to the
 // minimum, so the console drains slowly to a real empty. Above it the drain is the full load and the full brightness, always.
-constexpr int SOFT_MV = 3200;
+constexpr int SOFT_MV = 3500;
 constexpr int SOFT_TICKS = 5;
 constexpr const char* CALIB_LOG = "/config/kefir/battery/calib-log.csv";
 constexpr size_t CALIB_LOG_MAX = 4u * 1024 * 1024; // a longer log is kept as .old and a new one is started

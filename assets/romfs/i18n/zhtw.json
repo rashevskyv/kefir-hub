@@ -4237,5 +4237,5 @@
   "Queue done. Choose what to do with the skipped files.": "佇列已完成。請選擇如何處理略過的檔案。",
   "Screen type": "螢幕類型",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "「自動」僅識別 Switch OLED 機型。如使用副廠 OLED 面板請選擇 OLED：此時電池消耗會點亮整個螢幕。",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.2 V 以下：負載關閉且亮度降至最低，因此主機緩慢耗電至徹底放空。"
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5 V 以下：負載關閉且亮度降至最低，因此主機緩慢耗電至徹底放空。"
 }

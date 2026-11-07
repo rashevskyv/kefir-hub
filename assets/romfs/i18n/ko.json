@@ -4184,5 +4184,5 @@
   "Queue done. Choose what to do with the skipped files.": "대기열 완료. 건너뛴 파일로 수행할 작업을 선택하세요.",
   "Screen type": "화면 유형",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "자동(Auto)은 Switch OLED 모델만 인식합니다. 애프터마켓 OLED 패널의 경우 OLED를 선택하세요. 배터리 소모로 인해 화면 전체가 켜집니다.",
-  "Below 3.2 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.2 V 미만: 부하가 꺼지고 밝기가 최솟값으로 설정되어 콘솔이 완전히 방전될 때까지 천천히 소모됩니다."
+  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "3.5 V 미만: 부하가 꺼지고 밝기가 최솟값으로 설정되어 콘솔이 완전히 방전될 때까지 천천히 소모됩니다."
 }
