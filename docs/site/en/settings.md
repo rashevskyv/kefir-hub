@@ -193,6 +193,14 @@ While the install queue runs, press **−** to darken the screen. These options 
 | [[Preview]] | Shows the screensaver at its real brightness. Any button exits. | |
 | [[Show on screensaver]] | One switch per item: [[Clock]], [[Status]], [[Package counter]], [[Current file]], [[Progress bar]], [[Average speed]], [[Time remaining]], [[Elapsed time]], [[Battery]], [[Errors]], [[Speed graph]]. | all On |
 
+<!-- draft
+- new option [[Screen type]] in this table, after [[OLED mode]]: [[Auto]], OLED, LCD; default [[Auto]]
+- [[Auto]] knows only the Switch OLED model (hardware type); the row shows "[[Auto]] (OLED)" or "[[Auto]] (LCD)"
+- choose OLED for an aftermarket OLED panel (Retro Remake SUPER7 OLED, SUPER5 OLED on a Lite): the Hub cannot read the panel
+- on an OLED the battery calibration's drain screensaver lights the whole screen near white in slowly moving tints, the readout dark on it (a lit OLED pixel draws power); on an LCD the screensaver stays black at 100 % brightness
+- during the drain the screensaver ignores [[Minus button]] and [[Brightness]]: it is the readout page at full brightness
+-->
+
 ## [[Dump]] {#dump}
 
 How game dumps are named and sent. Dumping itself is described on [Games](games.md).
