@@ -1,0 +1,136 @@
+{
+  "titles": {
+    "CLV-P-NAARE": {
+      "code": "CLV-P-NAARE",
+      "rom": "/titles/CLV-P-NAARE/CLV-P-NAARE.nes",
+      "sort_title": "balloon fight",
+      "details_screen": "/titles/CLV-P-NAARE/CLV-P-NAARE00.xtx.z",
+      "copyright": "©1984 Nintendo.",
+      "title": "Balloon Fight™",
+      "armet_threshold": 85,
+      "lcla6_release_date": "2018-09-01",
+      "armet_version": "v1",
+      "sort_publisher": "nintendo",
+      "title_zhHant": "ー",
+      "save_count": 0,
+      "volume": 76,
+      "fadein": [
+        3,
+        2
+      ],
+      "title_zhHans": "ー",
+      "publisher": "Nintendo",
+      "title_ko": "Balloon Fight™",
+      "rewind_interval": 1.5,
+      "release_date": "1986-06-01",
+      "players_count": 2,
+      "cover": "/titles/_PAL/CLV-P-NAARE.xtx.z",
+      "overscan": [
+        0,
+        0,
+        9,
+        3
+      ],
+      "simultaneous": true
+    },
+    "CLV-P-NADPE": {
+      "code": "CLV-P-NADPE",
+      "rom": "/titles/CLV-P-NADPE/CLV-P-NADPE.nes",
+      "sort_title": "baseball",
+      "details_screen": "/titles/CLV-P-NADPE/CLV-P-NADPE00.xtx.z",
+      "copyright": "©1984 Nintendo.",
+      "title": "Baseball",
+      "armet_threshold": 85,
+      "lcla6_release_date": "2018-09-01",
+      "armet_version": "v2_blend",
+      "sort_publisher": "nintendo",
+      "title_zhHant": "ー",
+      "save_count": 0,
+      "volume": 72,
+      "fadein": [
+        3,
+        2
+      ],
+      "title_zhHans": "ー",
+      "publisher": "Nintendo",
+      "title_ko": "Baseball",
+      "rewind_interval": 1.5,
+      "release_date": "1985-10-18",
+      "players_count": 2,
+      "cover": "/titles/_PAL/CLV-P-NADPE.xtx.z",
+      "overscan": [
+        0,
+        0,
+        9,
+        3
+      ],
+      "simultaneous": true
+    },
+    "CLV-P-NAAEE": {
+      "code": "CLV-P-NAAEE",
+      "rom": "/titles/CLV-P-NAAEE/CLV-P-NAAEE.nes",
+      "sort_title": "donkey kong",
+      "details_screen": "/titles/CLV-P-NAAEE/CLV-P-NAAEE00.xtx.z",
+      "copyright": "©1981 Nintendo.",
+      "title": "Donkey Kong™",
+      "armet_threshold": 85,
+      "lcla6_release_date": "2018-09-01",
+      "armet_version": "v1",
+      "sort_publisher": "nintendo",
+      "title_zhHant": "ー",
+      "save_count": 0,
+      "volume": 78,
+      "fadein": [
+        3,
+        2
+      ],
+      "title_zhHans": "ー",
+      "publisher": "Nintendo",
+      "title_ko": "동키콩",
+      "rewind_interval": 1.5,
+      "release_date": "1986-06-01",
+      "players_count": 2,
+      "cover": "/titles/_PAL/CLV-P-NAAEE.xtx.z",
+      "overscan": [
+        0,
+        0,
+        9,
+        3
+      ],
+      "simultaneous": false
+    },
+    "CLV-P-NACFE": {
+      "code": "CLV-P-NACFE",
+      "rom": "/titles/CLV-P-NACFE/CLV-P-NACFE.nes",
+      "sort_title": "double dragon",
+      "details_screen": "/titles/CLV-P-NACFE/CLV-P-NACFE00.xtx.z",
+      "copyright": "© ARC SYSTEM WORKS",
+      "title": "Double Dragon",
+      "armet_threshold": 140,
+      "lcla6_release_date": "2018-09-01",
+      "armet_version": "v2_blend",
+      "sort_publisher": "arc system works",
+      "title_zhHant": "ー",
+      "save_count": 0,
+      "volume": 73,
+      "fadein": [
+        3,
+        2
+      ],
+      "title_zhHans": "ー",
+      "publisher": "ARC SYSTEM WORKS",
+      "title_ko": "Double Dragon",
+      "rewind_interval": 1.5,
+      "release_date": "1988-06-01",
+      "players_count": 2,
+      "cover": "/titles/CLV-P-NACFE/CLV-P-NACFE.xtx.z",
+      "overscan": [
+        0,
+        0,
+        9,
+        3
+      ],
+      "simultaneous": false
+    }
+  }
+}

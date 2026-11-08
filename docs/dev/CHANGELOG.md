@@ -5,6 +5,8 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## unreleased
 - docs: NSO mod format specs (docs/dev/NSO-*.md): NES/SNES, Genesis/GB/GBA, N64/Virtual Boy, cover xtx; proven on PC against existing mods, nothing run on a console.
+- chore: NSO core (sphaira/include/nso/*.hpp): ROM wrapping, titlesdb editor, entries, add/remove plan, xtx; host tests pass; not wired into the UI, nothing run on a console.
+- docs: SaltyNX research and translation-repack metadata design.
 
 ## v0.14.317 — game facts appear live; Get RetroArch / Get Tico rows; Add to RetroArch/Tico in the file manager
 - The pane refreshes its facts when the download ends (no cursor move); the labels are translated on the UI thread. Emulators page: rows Get RetroArch / Get Tico (only when the emulator is missing) open the Homebrew App Store, B returns to the page. File manager: Add to RetroArch / Tico in /roms/<console> on the SD.
