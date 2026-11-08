@@ -8,6 +8,7 @@
 #include "i18n.hpp"
 #include "log.hpp"
 #include "ui/option_box.hpp"
+#include "ui/menus/appstore.hpp"
 #include "ui/menus/tools_menu.hpp"
 #include "ui/menus/settings/settings_internal.hpp"
 
@@ -182,6 +183,13 @@ void AddBiosRows(std::vector<ui::menu::settings::SettingsItem>& rows) {
         known += known.empty() ? "" : ", ";
         known += info.name;
         if (!fs.DirExists(info.detect)) {
+            if (info.target == Target::RetroArch || info.target == Target::Tico) {
+                // not installed: the Hub store has it. B in the store pops that page, so it returns to this one.
+                SettingsItem get{info.target == Target::RetroArch ? "Get RetroArch"_i18n : "Get Tico"_i18n,
+                                 "Install it from the Homebrew App Store."_i18n};
+                get.action = []() { App::Push<ui::menu::appstore::Menu>(ui::menu::MenuFlag_None); };
+                rows.push_back(std::move(get));
+            }
             continue;
         }
         any = true;

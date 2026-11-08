@@ -105,7 +105,10 @@ void PreviewPane::DropTexture() {
 }
 
 void PreviewPane::Show(PreviewInfo info) {
-    if (m_has && info.key == m_info.key && info.title == m_info.title) return;
+    if (m_has && info.key == m_info.key && info.title == m_info.title) {
+        m_info.lines = std::move(info.lines); // the same row asked again: the newest text
+        return;
+    }
     Cancel();
     DropTexture();
     m_info = std::move(info);
@@ -141,7 +144,15 @@ void PreviewPane::Update() {
             m_w = picture.w;
             m_h = picture.h;
         }, token}, false);
-        if (info.after && !token.stop_requested()) info.after(token);
+        if (info.after && !token.stop_requested()) {
+            auto lines = info.after(token, info.lines);
+            if (!lines.empty() && !token.stop_requested()) {
+                evman::push(evman::CallbackEventData{[this, key = info.key, title = info.title, lines = std::move(lines)]() {
+                    // only for the row the cursor is still on
+                    if (m_has && m_info.key == key && m_info.title == title) m_info.lines = lines;
+                }, token}, false);
+            }
+        }
     });
 }
 

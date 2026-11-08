@@ -10,6 +10,7 @@
 #include "ui/menus/grid_menu_base.hpp"
 
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace sphaira::rom {
@@ -60,6 +61,29 @@ auto MetaLabel(std::string_view label) -> std::string {
     return "Genre"_i18n;
 }
 
+// the text lines of a game row: size, system, the facts when the card has them, folder
+using Labels = std::vector<std::pair<std::string, std::string>>; // English -> translated, made on the UI thread (the i18n cache is not thread safe)
+
+auto MakeLabels() -> Labels {
+    return {{"Year", MetaLabel("Year")}, {"Publisher", MetaLabel("Publisher")}, {"Developer", MetaLabel("Developer")},
+        {"Players", MetaLabel("Players")}, {"Genre", MetaLabel("Genre")}};
+}
+
+auto BuildLines(const std::string& console, const std::string& file, std::uint64_t size, const Labels& labels) -> std::vector<std::string> {
+    std::vector<std::string> lines{ui::menu::grid::FormatBytes(size), std::string{ConsoleName(console)}};
+    if (const auto table = LoadMeta(console)) {
+        if (const auto* rec = FindMeta(*table, file)) {
+            for (const auto& [label, value] : MetaLines(*rec)) {
+                std::string name{label};
+                for (const auto& [en, tr] : labels) if (en == label) name = tr;
+                lines.push_back(name + ": " + value);
+            }
+        }
+    }
+    lines.push_back(std::string{ROMS_ROOT} + console + "/");
+    return lines;
+}
+
 } // namespace
 
 auto ResolveThumbUrl(const std::string& folder, const std::string& file, std::stop_token token) -> std::string {
@@ -76,19 +100,19 @@ auto GamePreview(const std::string& console, const std::string& file, std::uint6
     ui::menu::tools::PreviewInfo info;
     const auto slash = file.rfind('/');
     info.title = ThumbName(slash == std::string::npos ? file : file.substr(slash + 1));
+    const auto labels = MakeLabels();
     if (!ThumbDirUrl(console, "Named_Boxarts").empty()) {
         info.key = console + "/" + info.title + ".png";
         // the worker runs when the cursor rests on the row: the picture, then (once per system) the game facts for the next draw
         info.resolve = [console, file](std::stop_token token) { return ResolveThumbUrl(console, file, token); };
-        info.after = [console](std::stop_token token) { PrefetchMeta(console, token); };
+        // the facts (once per system), then the lines again; empty when nothing changed, so the pane keeps its text
+        info.after = [console, file, size, labels](std::stop_token token, const std::vector<std::string>& shown) -> std::vector<std::string> {
+            if (!PrefetchMeta(console, token) || token.stop_requested()) return {};
+            auto lines = BuildLines(console, file, size, labels);
+            return lines == shown ? std::vector<std::string>{} : lines;
+        };
     }
-    info.lines = {ui::menu::grid::FormatBytes(size), ConsoleName(console)};
-    if (const auto table = LoadMeta(console)) {
-        if (const auto* rec = FindMeta(*table, file)) {
-            for (const auto& [label, value] : MetaLines(*rec)) info.lines.push_back(MetaLabel(label) + ": " + value);
-        }
-    }
-    info.lines.push_back(std::string{ROMS_ROOT} + console + "/");
+    info.lines = BuildLines(console, file, size, labels);
     return info;
 }
 

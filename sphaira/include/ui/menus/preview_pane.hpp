@@ -16,7 +16,9 @@ struct PreviewInfo {
     std::string key;   // names the cached picture under /config/kefir/cache/thumbs/; empty: no picture
     std::string url;   // where the picture is, or empty when `resolve` finds out
     std::function<std::string(std::stop_token)> resolve; // worker thread: the url of the picture, empty when there is none
-    std::function<void(std::stop_token)> after; // worker thread, after the picture (cached or fetched): game facts
+    // worker thread, after the picture (cached or fetched), given the lines now shown: fetches the game facts and returns
+    // the new lines, or an empty vector when there is nothing new. The pane swaps them in without a cursor move.
+    std::function<std::vector<std::string>(std::stop_token, const std::vector<std::string>&)> after;
     std::string title;
     std::vector<std::string> lines;
 };

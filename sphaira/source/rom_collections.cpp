@@ -11,6 +11,7 @@
 #include "image.hpp"
 #include "log.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/sidebar.hpp"
 #include "ui/menus/filebrowser/filebrowser_internal.hpp"
 
 #include <memory>
@@ -224,8 +225,29 @@ void Start(Frontend f, const std::string& console, const std::vector<std::string
 
 } // namespace
 
-bool HasFrontend(Frontend frontend, const std::string& console, const std::string& file) {
-    return FindCore(ui::menu::filebrowser::LoadAssocList(), frontend, console, file).has_value();
+void AddFrontendOptions(ui::Sidebar* sidebar, const std::string& console, const std::vector<std::string>& files) {
+    if (files.empty()) return;
+    const auto all = ui::menu::filebrowser::LoadAssocList(); // once for both entries
+    if (FindCore(all, Frontend::RetroArch, console, files.front())) {
+        sidebar->Add<ui::SidebarEntryCallback>("Add to RetroArch"_i18n, [console, files]() {
+            AddToRetroArch(console, files);
+        }, true, std::to_string(files.size()) + " " + "files"_i18n);
+    }
+    if (FindCore(all, Frontend::Tico, console, files.front())) {
+        sidebar->Add<ui::SidebarEntryCallback>("Add to Tico"_i18n, [console, files]() {
+            AddToTico(console, files);
+        }, true, "Cover only: Tico reads the games from its game folders"_i18n);
+    }
+}
+
+void AddFrontendOptionsFor(ui::Sidebar* sidebar, const std::string& dir, const std::vector<ui::menu::filebrowser::FileEntry>& entries) {
+    const auto console = coll::RomConsoleOf(dir);
+    if (console.empty() || !FindConsole(console)) return;
+    std::vector<std::string> files;
+    for (const auto& e : entries) {
+        if (e.IsFile()) files.push_back(e.name);
+    }
+    AddFrontendOptions(sidebar, console, files);
 }
 
 void AddToRetroArch(const std::string& console, const std::vector<std::string>& files) {

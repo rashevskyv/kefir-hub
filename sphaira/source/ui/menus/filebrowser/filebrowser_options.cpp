@@ -1,6 +1,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "archive_extract_plan.hpp"
 #include "text_helper.hpp"
+#include "rom_collections_ui.hpp"
 #include "path_util.hpp"
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "ui/menus/filebrowser_forwarder.hpp"
@@ -200,6 +201,7 @@ void FsView::DisplayOptions() {
         }, "Restore this save backup directory to the console."_i18n);
     }
     AddRomfsPackOption(options.get());
+    if (IsSd() && m_entries_current.size()) rom::AddFrontendOptionsFor(options.get(), m_path.s, GetSelectedEntries());
 
     if (m_entries_current.size() && !m_selected_count && GetEntry().IsFile()) {
         options->Add<SidebarEntryCallback>("View as text"_i18n, [this](){

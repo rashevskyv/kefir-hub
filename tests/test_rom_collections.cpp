@@ -95,6 +95,13 @@ int main() {
     assert(!AddToPlaylist("{\"items\": [ {\"path\": ", g));       // cut off
     assert(!AddToPlaylist("{\"items\": {\"a\": 1}}", g));         // items is not a list
 
+    // only "/roms/<console>" counts as a ROM folder
+    assert(RomConsoleOf("/roms/snes") == "snes");
+    assert(RomConsoleOf("/roms/snes/") == "snes");
+    assert(RomConsoleOf("/roms/snes/sub").empty());
+    assert(RomConsoleOf("/roms").empty() && RomConsoleOf("/roms/").empty() && RomConsoleOf("/").empty());
+    assert(RomConsoleOf("/romsx/snes").empty() && RomConsoleOf("").empty());
+
     std::puts("rom_collections: ok");
     return 0;
 }

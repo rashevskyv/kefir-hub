@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.317 — game facts appear live; Get RetroArch / Get Tico rows; Add to RetroArch/Tico in the file manager
+- The pane refreshes its facts when the download ends (no cursor move); the labels are translated on the UI thread. Emulators page: rows Get RetroArch / Get Tico (only when the emulator is missing) open the Homebrew App Store, B returns to the page. File manager: Add to RetroArch / Tico in /roms/<console> on the SD.
+- host tests: pass (quick); nro: built; switch: pending. NSO (Cave) not done: closed Windows tool, mods are LayeredFS romfs + lclassics.titlesdb JSON + converted ROM + xtx.z cover.
+
 ## v0.14.316 — ROM list: game facts, 1 GB cover cache, full-screen cover, Add to RetroArch / Tico
 - Pane shows year, publisher, players, genre (libretro metadat, cached in /config/kefir/cache/meta); cover cache capped at 1 GB (oldest first); RIGHT then A shows the cover full screen; START: Add to RetroArch (.lpl playlist + cover in thumbnails) and Add to Tico (cover only). No game description: no free source. Review fixes: unreadable playlist is never overwritten, facts also fetched when the cover is cached.
 - host tests: pass (quick); nro: built; switch: pending (RetroArch playlist + cover, Tico cover folder, fullscreen, facts after the first fetch)

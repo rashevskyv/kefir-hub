@@ -40,6 +40,16 @@ inline std::string RootOf(std::string_view path) {
     return out;
 }
 
+// the console folder of a card folder that is exactly "/roms/<console>" (a trailing slash is allowed); "" for any other folder
+inline std::string RomConsoleOf(std::string_view dir) {
+    constexpr std::string_view prefix = "/roms/";
+    if (!dir.starts_with(prefix)) return {};
+    dir.remove_prefix(prefix.size());
+    if (!dir.empty() && dir.back() == '/') dir.remove_suffix(1);
+    if (dir.empty() || dir.find('/') != std::string_view::npos) return {};
+    return std::string{dir};
+}
+
 // the file name without its folder and its extension (an extension is up to 4 letters after the last dot)
 inline std::string Stem(std::string_view file) {
     const auto slash = file.rfind('/');
