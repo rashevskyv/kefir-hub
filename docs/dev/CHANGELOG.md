@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.316 — ROM list: game facts, 1 GB cover cache, full-screen cover, Add to RetroArch / Tico
+- Pane shows year, publisher, players, genre (libretro metadat, cached in /config/kefir/cache/meta); cover cache capped at 1 GB (oldest first); RIGHT then A shows the cover full screen; START: Add to RetroArch (.lpl playlist + cover in thumbnails) and Add to Tico (cover only). No game description: no free source. Review fixes: unreadable playlist is never overwritten, facts also fetched when the cover is cached.
+- host tests: pass (quick); nro: built; switch: pending (RetroArch playlist + cover, Tico cover folder, fullscreen, facts after the first fetch)
+
 ## v0.14.315 — the Ultrahand boot notice "open Kefir Hub" closes when the Hub opens
 - The Hub writes /config/ultrahand/notifications/kefir.dismiss at start (account_restore::DismissShownReopenHint); Kefir's Ultrahand (fork: libultrahand branch kefir-dismiss c1e570a, Ultrahand 91b09072, also a libnx 4.12 build fix) checks once a second, fades the notice named "kefir" and deletes the file; a new notice deletes a stale one. ovlmenu.ovl rebuilt into _kefir/kefir/switch/.overlays.
 - host tests: not run (no logic in tests); nro: built (0.14.315); switch: pending (needs the new ovlmenu.ovl on the card: boot after a cut-off, open the Hub, the notice fades)

@@ -16,6 +16,7 @@ struct PreviewInfo {
     std::string key;   // names the cached picture under /config/kefir/cache/thumbs/; empty: no picture
     std::string url;   // where the picture is, or empty when `resolve` finds out
     std::function<std::string(std::stop_token)> resolve; // worker thread: the url of the picture, empty when there is none
+    std::function<void(std::stop_token)> after; // worker thread, after the picture (cached or fetched): game facts
     std::string title;
     std::vector<std::string> lines;
 };
@@ -34,6 +35,13 @@ public:
     void Update();               // every frame: starts the fetch once the cursor has dwelt
     void Draw(NVGcontext* vg, Theme* theme, const Vec4& area);
 
+    // only a pane that holds a picture can take the focus or open it full screen
+    auto HasPicture() const -> bool { return m_texture && m_w > 0 && m_h > 0; }
+    void SetFocused(bool focused) { m_focused = focused && HasPicture(); if (!m_focused) m_full = false; }
+    auto Focused() const -> bool { return m_focused; }
+    void SetFull(bool full) { m_full = full && m_focused; }
+    auto Full() const -> bool { return m_full; }
+
 private:
     void Cancel();
     void DropTexture();
@@ -42,6 +50,8 @@ private:
     bool m_has{};
     bool m_started{};
     bool m_failed{};
+    bool m_focused{};
+    bool m_full{};
     int m_texture{};
     int m_w{}, m_h{};
     std::chrono::steady_clock::time_point m_since{};

@@ -1,5 +1,6 @@
 #include "rom_files.hpp"
 #include "rom_library.hpp"
+#include "rom_collections_ui.hpp"
 #include "rom_thumbs.hpp"
 #include "nro.hpp"
 #include "app.hpp"
@@ -190,6 +191,24 @@ void Show(const std::string& folder, std::function<void()> refreshed, const std:
         std::vector<Entry> picked;
         for (auto i : marked) {
             if (i >= FIRST_ROW && i - FIRST_ROW < shown) picked.push_back(hits[i - FIRST_ROW]);
+        }
+        // the games among the picked rows go into the game list of a frontend, when its program is on the card
+        std::vector<std::string> games;
+        for (const auto& p : picked) {
+            if (!p.dir) games.push_back(p.name);
+        }
+        if (!games.empty()) {
+            const auto count = std::to_string(games.size()) + " " + "files"_i18n;
+            if (HasFrontend(Frontend::RetroArch, folder, games.front())) {
+                options->Add<ui::SidebarEntryCallback>("Add to RetroArch"_i18n, [folder, games]() {
+                    AddToRetroArch(folder, games);
+                }, true, count);
+            }
+            if (HasFrontend(Frontend::Tico, folder, games.front())) {
+                options->Add<ui::SidebarEntryCallback>("Add to Tico"_i18n, [folder, games]() {
+                    AddToTico(folder, games);
+                }, true, "Cover only: Tico reads the games from its game folders"_i18n);
+            }
         }
         if (!picked.empty()) {
             options->Add<ui::SidebarEntryCallback>("Delete the marked files"_i18n, [folder, picked, done]() {

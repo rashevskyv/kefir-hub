@@ -90,8 +90,17 @@ private:
     void OnSelect();
     void BuildList(float width);
     void DrawRow(NVGcontext* vg, Theme* theme, const Vec4& v, const settings::SettingsItem& item, bool selected);
+    // RIGHT takes the focus to the picture, A opens it full screen, B / LEFT go back. The button callbacks only
+    // leave a request here: the actions map must not change while it is being walked.
+    void UpdatePaneFocus(Controller* controller);
 
 private:
+    enum class PaneRequest { None, Focus, Unfocus, Full, CloseFull };
+    PaneRequest m_pane_request{PaneRequest::None};
+    int m_pane_mode{};          // 0: the list has the focus, 1: the picture has it, 2: the picture is full screen
+    bool m_right_hint{};        // the RIGHT hint is set
+    Actions m_list_actions{};   // the actions of the list, kept while the picture has the focus
+
     // SettingsItem rows so the list can carry captions (SettingsItemKind::Header).
     std::vector<settings::SettingsItem> m_items;
     s64 m_index{};

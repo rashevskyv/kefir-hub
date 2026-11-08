@@ -104,9 +104,7 @@ int main() {
     assert(ThumbUrl("psx", "a.bin").empty());
 
     // a loose name finds its picture
-    const std::vector<std::string> names{"Aladdin (Europe)", "Aladdin (USA) (Beta)", "Aladdin (USA)", "Aladdin (Japan)",
-        "Disney's Aladdin (USA)", "Aladdin II (USA)", "Contra III - The Alien Wars (USA)", "Super Mario World (USA)",
-        "Super Mario World 2 - Yoshi's Island (USA)"};
+    const std::vector<std::string> names{"Aladdin (Europe)", "Aladdin (USA) (Beta)", "Aladdin (USA)", "Aladdin (Japan)", "Disney's Aladdin (USA)", "Aladdin II (USA)", "Contra III - The Alien Wars (USA)", "Super Mario World (USA)", "Super Mario World 2 - Yoshi's Island (USA)"};
     assert(PickThumb(names, "Aladdin (U).smc") == "Aladdin (USA)");
     assert(PickThumb(names, "Aladdin (E) [!].zip") == "Aladdin (Europe)");
     assert(PickThumb(names, "Aladdin (J).smc") == "Aladdin (Japan)");

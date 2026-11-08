@@ -4138,5 +4138,17 @@
   "The gauge did not learn right: start the calibration over.": "Датчик вивчив неправильно: почніть калібрування заново.",
   "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Додає цей елемент до списку ROM, щоб ви могли відкрити його знову. Нічого не завантажує.",
   "type words from the name to narrow the list": "введіть слова з назви, щоб звузити список",
-  "No screenshot": "Немає знімка екрана"
+  "No screenshot": "Немає знімка екрана",
+  "Add to RetroArch": "Додати в RetroArch",
+  "Add to Tico": "Додати в Tico",
+  "Adding to RetroArch": "Додаємо в RetroArch",
+  "Adding to Tico": "Додаємо в Tico",
+  "Looking for the cover": "Шукаємо обкладинку",
+  "Add failed!": "Не вдалося додати!",
+  "Nothing was added": "Нічого не додано",
+  "Added to RetroArch": "Додано в RetroArch",
+  "Added to Tico": "Додано в Tico",
+  "Cover only: Tico reads the games from its game folders": "Лише обкладинка: Tico бере ігри зі своїх папок з іграми",
+  "Year": "Рік",
+  "Developer": "Розробник"
 }

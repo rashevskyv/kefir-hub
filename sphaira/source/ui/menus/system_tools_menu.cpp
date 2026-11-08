@@ -24,6 +24,7 @@
 #include "fs.hpp"
 #include "ui/remote_input.hpp"
 #include <functional>
+#include <utility>
 #include "ui/menus/storage_menu.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -421,10 +422,12 @@ void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
             if (info) m_preview->Show(*info); else m_preview->Clear();
         }
         m_preview->Update();
+        UpdatePaneFocus(controller);
     }
     // left/right jump to the first item of the previous / next caption, so
     // three presses walk Diagnostics → Settings → Maintenance and back.
-    if (controller && !m_items.empty() && (controller->GotDown(Button::RIGHT) || controller->GotDown(Button::LEFT))) {
+    // A page with a picture pane uses RIGHT / LEFT for the pane instead.
+    if (controller && !m_preview && !m_items.empty() && (controller->GotDown(Button::RIGHT) || controller->GotDown(Button::LEFT))) {
         const auto count = static_cast<s64>(m_items.size());
         const auto is_header = [this](s64 i) { return m_items[i].kind == settings::SettingsItemKind::Header; };
         // the caption this item belongs to.
@@ -441,6 +444,10 @@ void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
         App::PlaySoundEffect(SoundEffect_Focus);
         SetIndex(target + 1); // first item under the caption (ResolveItemIndex skips captions anyway)
     }
+    // while the picture has the focus, UP / DOWN must not move the cursor
+    if (m_preview && m_preview->Focused()) {
+        return;
+    }
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
         if (touch && i < static_cast<s64>(m_items.size()) && (m_items[i].kind == settings::SettingsItemKind::Header || m_items[i].disabled)) {
             return;
@@ -452,6 +459,52 @@ void SystemToolsMenu::Update(Controller* controller, TouchInfo* touch) {
             SetIndex(i);
         }
     }, this);
+}
+
+void SystemToolsMenu::UpdatePaneFocus(Controller* controller) {
+    switch (std::exchange(m_pane_request, PaneRequest::None)) {
+        case PaneRequest::Focus:    m_preview->SetFocused(true); break; // refused when there is no picture
+        case PaneRequest::Unfocus:  m_preview->SetFocused(false); break;
+        case PaneRequest::Full:     m_preview->SetFull(true); break;
+        case PaneRequest::CloseFull: m_preview->SetFull(false); break;
+        case PaneRequest::None: break;
+    }
+    if (controller && m_preview->Focused() && !m_preview->Full() && controller->GotDown(Button::LEFT)) {
+        m_preview->SetFocused(false);
+    }
+
+    const int mode = !m_preview->Focused() ? 0 : (m_preview->Full() ? 2 : 1);
+    if (mode != m_pane_mode) {
+        if (m_pane_mode == 0) {
+            // the list's buttons are put away while the picture has the focus: X / Y / START act on rows
+            RemoveAction(Button::RIGHT);
+            m_right_hint = false;
+            m_list_actions = GetActions();
+            RemoveActions();
+        } else if (mode == 0) {
+            RemoveActions();
+            SetActions(m_list_actions);
+        }
+        if (mode == 1) {
+            SetAction(Button::A, Action{"Full screen"_i18n, [this](){ m_pane_request = PaneRequest::Full; }});
+            SetAction(Button::B, Action{"Back"_i18n, [this](){ m_pane_request = PaneRequest::Unfocus; }});
+        } else if (mode == 2) {
+            SetAction(Button::A, Action{"Close"_i18n, [this](){ m_pane_request = PaneRequest::CloseFull; }});
+            SetAction(Button::B, Action{"Back"_i18n, [this](){ m_pane_request = PaneRequest::CloseFull; }});
+        }
+        m_pane_mode = mode;
+    }
+
+    // the hint shows only while there is a picture to go to
+    const bool want_right = mode == 0 && m_preview->HasPicture();
+    if (want_right != m_right_hint) {
+        if (want_right) {
+            SetAction(Button::RIGHT, Action{"View"_i18n, [this](){ m_pane_request = PaneRequest::Focus; }});
+        } else {
+            RemoveAction(Button::RIGHT);
+        }
+        m_right_hint = want_right;
+    }
 }
 
 void SystemToolsMenu::Draw(NVGcontext* vg, Theme* theme) {

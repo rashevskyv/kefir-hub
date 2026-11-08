@@ -1,6 +1,8 @@
 #include "rom_thumbs.hpp"
 #include "rom_library.hpp"
+#include "rom_meta_fetch.hpp"
 #include "app_paths.hpp"
+#include "i18n.hpp"
 #include "download.hpp"
 #include "fs.hpp"
 #include "log.hpp"
@@ -49,6 +51,15 @@ auto LoadIndex(const std::string& folder, std::string_view kind, std::stop_token
     return names;
 }
 
+// the translated label of a fact (rom_meta.hpp gives the English one)
+auto MetaLabel(std::string_view label) -> std::string {
+    if (label == "Year") return "Year"_i18n;
+    if (label == "Publisher") return "Publisher"_i18n;
+    if (label == "Developer") return "Developer"_i18n;
+    if (label == "Players") return "Players"_i18n;
+    return "Genre"_i18n;
+}
+
 } // namespace
 
 auto ResolveThumbUrl(const std::string& folder, const std::string& file, std::stop_token token) -> std::string {
@@ -67,10 +78,22 @@ auto GamePreview(const std::string& console, const std::string& file, std::uint6
     info.title = ThumbName(slash == std::string::npos ? file : file.substr(slash + 1));
     if (!ThumbDirUrl(console, "Named_Boxarts").empty()) {
         info.key = console + "/" + info.title + ".png";
+        // the worker runs when the cursor rests on the row: the picture, then (once per system) the game facts for the next draw
         info.resolve = [console, file](std::stop_token token) { return ResolveThumbUrl(console, file, token); };
+        info.after = [console](std::stop_token token) { PrefetchMeta(console, token); };
     }
-    info.lines = {ui::menu::grid::FormatBytes(size), ConsoleName(console), std::string{ROMS_ROOT} + console + "/"};
+    info.lines = {ui::menu::grid::FormatBytes(size), ConsoleName(console)};
+    if (const auto table = LoadMeta(console)) {
+        if (const auto* rec = FindMeta(*table, file)) {
+            for (const auto& [label, value] : MetaLines(*rec)) info.lines.push_back(MetaLabel(label) + ": " + value);
+        }
+    }
+    info.lines.push_back(std::string{ROMS_ROOT} + console + "/");
     return info;
+}
+
+bool PrefetchMeta(const std::string& console, std::stop_token token) {
+    return FetchMeta(console, token);
 }
 
 } // namespace sphaira::rom

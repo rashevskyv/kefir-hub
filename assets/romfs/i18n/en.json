@@ -4135,5 +4135,17 @@
   "Not measured: the drain log has no cycle 2 switch-off.": "Not measured: the drain log has no cycle 2 switch-off.",
   "The checks": "The checks",
   "The gauge at cycle 2's switch-off": "The gauge at cycle 2's switch-off",
-  "The gauge did not learn right: start the calibration over.": "The gauge did not learn right: start the calibration over."
+  "The gauge did not learn right: start the calibration over.": "The gauge did not learn right: start the calibration over.",
+  "Add to RetroArch": "Add to RetroArch",
+  "Add to Tico": "Add to Tico",
+  "Adding to RetroArch": "Adding to RetroArch",
+  "Adding to Tico": "Adding to Tico",
+  "Looking for the cover": "Looking for the cover",
+  "Add failed!": "Add failed!",
+  "Nothing was added": "Nothing was added",
+  "Added to RetroArch": "Added to RetroArch",
+  "Added to Tico": "Added to Tico",
+  "Cover only: Tico reads the games from its game folders": "Cover only: Tico reads the games from its game folders",
+  "Year": "Year",
+  "Developer": "Developer"
 }
