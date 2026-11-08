@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace sphaira::ui { class Sidebar; }
+namespace sphaira::ui { class Sidebar; struct ProgressBox; }
 
 namespace sphaira::rom {
 
@@ -24,6 +24,10 @@ void AddFrontendOptionsFor(ui::Sidebar* sidebar, const std::string& dir, const s
 // RetroArch: puts the games into /retroarch/playlists/<system>.lpl, with the cover in /retroarch/thumbnails.
 // Tico: puts the cover into /tico/assets/covers/<console>/ (Tico has no game list; it scans folders).
 // The cover comes from the preview cache or is fetched. Shows a progress box, then a notification.
+// The PNG cover of a game of /roms/<console>: from the preview cache, else fetched and kept there. Empty when there is none.
+// Runs in a ProgressBox thread.
+auto FetchCover(ui::ProgressBox* pbox, const std::string& console, const std::string& file) -> std::vector<u8>;
+
 void AddToRetroArch(const std::string& console, const std::vector<std::string>& files);
 void AddToTico(const std::string& console, const std::vector<std::string>& files);
 

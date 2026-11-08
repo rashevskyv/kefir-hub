@@ -10,6 +10,7 @@
 #include "i18n.hpp"
 #include "image.hpp"
 #include "log.hpp"
+#include "nso_ui.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/menus/filebrowser/filebrowser_internal.hpp"
@@ -238,16 +239,24 @@ void AddFrontendOptions(ui::Sidebar* sidebar, const std::string& console, const 
             AddToTico(console, files);
         }, true, "Cover only: Tico reads the games from its game folders"_i18n);
     }
+    nso_ui::AddOptions(sidebar, std::string{ROMS_ROOT} + console, console, files);
 }
 
 void AddFrontendOptionsFor(ui::Sidebar* sidebar, const std::string& dir, const std::vector<ui::menu::filebrowser::FileEntry>& entries) {
     const auto console = coll::RomConsoleOf(dir);
-    if (console.empty() || !FindConsole(console)) return;
     std::vector<std::string> files;
     for (const auto& e : entries) {
         if (e.IsFile()) files.push_back(e.name);
     }
+    if (console.empty() || !FindConsole(console)) {
+        nso_ui::AddOptions(sidebar, dir, "", files); // a ROM in any folder can go to Nintendo Switch Online
+        return;
+    }
     AddFrontendOptions(sidebar, console, files);
+}
+
+auto FetchCover(ui::ProgressBox* pbox, const std::string& console, const std::string& file) -> std::vector<u8> {
+    return GetCover(pbox, console, file);
 }
 
 void AddToRetroArch(const std::string& console, const std::vector<std::string>& files) {

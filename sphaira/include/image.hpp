@@ -23,6 +23,8 @@ auto ImageLoadFromFile(const fs::FsPath& file, u32 flags = ImageFlag_None) -> Im
 auto ImageResize(std::span<const u8> data, int inx, int iny, int outx, int outy) -> ImageResult;
 auto ImageCrop(std::span<const u8> data, int inx, int iny, int crop_x, int crop_y, int crop_w, int crop_h) -> ImageResult;
 auto ImageConvertToJpg(std::span<const u8> data, int x, int y) -> ImageResult;
+// RGBA -> PNG file bytes (in ImageResult::data).
+auto ImageConvertToPng(std::span<const u8> data, int x, int y) -> ImageResult;
 
 // Loads and decodes an icon with strict bounds: positive dimensions, max 1024
 // per axis, max 1024*1024 pixels. Valid non-256x256 icons are resized to 256x256.

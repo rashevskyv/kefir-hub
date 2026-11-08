@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.318 — Add to / Remove from Nintendo Switch Online (LayeredFS overlay) in the ROM list and file manager
+- Writes the ROM, covers and an edited lclassics.titlesdb to /atmosphere/contents/<NSO tid>/romfs; only entries the Hub added can be removed. N64 without a tested config is experimental and warns.
+- host tests: pass, nro: built, switch: pending (RomFS read needs prod.keys; covers, SNES sfromsig, GBA, Genesis PNG, Virtual Boy and N64 untested on a console).
+
 ## unreleased
 - docs: NSO mod format specs (docs/dev/NSO-*.md): NES/SNES, Genesis/GB/GBA, N64/Virtual Boy, cover xtx; proven on PC against existing mods, nothing run on a console.
 - chore: NSO core (sphaira/include/nso/*.hpp): ROM wrapping, titlesdb editor, entries, add/remove plan, xtx; host tests pass; not wired into the UI, nothing run on a console.

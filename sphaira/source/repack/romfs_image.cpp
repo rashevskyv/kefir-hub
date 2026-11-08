@@ -28,7 +28,7 @@ struct Source {
     u64 data{};    // offset in the new image.
 };
 
-using ReadFn = std::function<Result(void*, u64, u64)>;
+} // namespace
 
 Result ListImage(const ReadFn& read, std::vector<RomfsFile>& out) {
     romfs_header h;
@@ -41,6 +41,8 @@ Result ListImage(const ReadFn& read, std::vector<RomfsFile>& out) {
     R_UNLESS(WalkRomfs(dirs, files, h.fileDataOff, out), Result_RepackBadRomfs);
     R_SUCCEED();
 }
+
+namespace {
 
 Result ReadFull(fs::File& f, u64 off, void* buf, u64 size) {
     auto out = static_cast<u8*>(buf);

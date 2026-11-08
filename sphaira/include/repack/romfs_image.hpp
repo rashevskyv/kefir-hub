@@ -2,11 +2,17 @@
 
 #include "fs.hpp"
 #include "repack/program_romfs.hpp"
+#include "repack/romfs_walk.hpp"
+#include <functional>
 #include <memory>
 
 namespace sphaira::ui { struct ProgressBox; }
 
 namespace sphaira::repack {
+
+// Lists the files of a romfs image read through read(buf, offset, size).
+using ReadFn = std::function<Result(void*, u64, u64)>;
+Result ListImage(const ReadFn& read, std::vector<RomfsFile>& out);
 
 // A RomFS image built on the fly: the game's files with the title's LayeredFS mod on top, in the
 // order Atmosphère applies them: loose files in <contents>/romfs, then <contents>/romfs.bin, then

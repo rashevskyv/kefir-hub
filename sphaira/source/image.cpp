@@ -448,6 +448,26 @@ auto ImageConvertToJpg(std::span<const u8> data, int x, int y) -> ImageResult {
     return {};
 }
 
+auto ImageConvertToPng(std::span<const u8> data, int x, int y) -> ImageResult {
+    size_t expected_bytes = 0;
+    if (x <= 0 || y <= 0 || !GetImageByteSize(x, y, expected_bytes) || data.size() < expected_bytes) {
+        log_write("ImageConvertToPng: bad input %dx%d\n", x, y);
+        return {};
+    }
+    JpgWriteContext ctx;
+    const auto cb = [](void *context, void *chunk_data, int size) -> void {
+        auto* c = static_cast<JpgWriteContext*>(context);
+        if (!c || !chunk_data || size <= 0 || c->overflow) return;
+        const auto* p = static_cast<const u8*>(chunk_data);
+        c->out.insert(c->out.end(), p, p + size);
+    };
+    if (stbi_write_png_to_func(cb, &ctx, x, y, BPP, data.data(), x * BPP) && !ctx.out.empty()) {
+        return { std::move(ctx.out), x, y };
+    }
+    log_write("failed png convert\n");
+    return {};
+}
+
 auto ImageCrop(std::span<const u8> data, int inx, int iny, int crop_x, int crop_y, int crop_w, int crop_h) -> ImageResult {
     log_write("doing crop inx: %d iny: %d to %d %d %d %d\n", inx, iny, crop_x, crop_y, crop_w, crop_h);
     if (inx <= 0 || iny <= 0 || crop_w <= 0 || crop_h <= 0) {
