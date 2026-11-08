@@ -3883,7 +3883,6 @@
   "Report": "Aruanne",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "laadimine kuni 100 %. Ekraan jääb sisselülitatuks, nii et konsool laadib kindlasti lõpuni. Võite konsooli selliseks jätta või seda kasutada; kui see jõuab 100 %-ni, tulge tagasi Kefir Hubi ja avage aku kalibreerimine.",
   "Step by step: the reset, two cycles, report.": "Samm-sammult: lähtestamine, kaks tsüklit, aruanne.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Konsool lülitus välja, kuid tühjenemislogis pole viimast pinget. Nulli ei saa sellest määrata. Võtke laadija välja ja käivitage tühjendamine uuesti.",
   "Cycle 1: the zero": "Tsükkel 1: null",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Nüüd tsükkel 1: ühenda laadija lahti, Hub tühjendab akut, kuni konsool lülitub ise välja. See pinge saab nulliks. Seejärel lae 100 %-ni.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Esmalt teeb Hub mõõdikust varukoopia ja kirjutab sellesse tehase akumudeli, nii et mõõdiku valesti õpitud andmed kustutatakse. Seejärel tehakse kaks tsüklit: akut tühjendatakse, kuni konsool ise välja lülitub, ja laetakse 100 %-ni. Esimeses tsüklis kirjutatakse väljalülitamisel mõõdetud pinge mõõdikusse nullina: tegelik tühi aku. Tsüklite käigus õpib mõõdik tegeliku mahutavuse ära.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Kui konsool lülitub välja, lülitage see uuesti sisse (jätke laadija ühendatuks) ja avage Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Kui see lülitub välja, ühendage laadija. See ei pruugi umbes 20 minutit käivituda: see on normaalne. Seejärel lülitage see sisse ja avage Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Täis. Jaotur mõõdab mahtuvust, seejärel algab tühjenemine iseenesest: laadija võib ühendatuks jääda.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Katkestuspinge on väljaspool vahemikku 3.00 - 3.40 V: mitte null.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Katkestuspinge on väljaspool vahemikku 2.80 - 3.40 V: mitte null.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Kui konsool lülitub välja, on see normaalne. Lülitage see uuesti sisse (laadijaga) ja avage Kefir Hub ise. Alles siis kirjutab Hub tühja punkti näidikule ja jätkab laadimist: see ei käivitu ise. Kui laadija oli väljas, ühendage see kõigepealt vooluvõrku. Konsool ei pruugi kohe käivituda: laadijaga võib see võtta 10 kuni 15 minutit. Oodake, ärge andke alla.",
   "This cycle is counted: the next step starts by itself.": "Seda tsüklit loendatakse: järgmine samm algab iseenesest.",
   "next: start the drain (the charger can stay in)": "järgmine: alusta tühjendamist (laadija võib ühendatuks jääda)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "Näidik tsükli 2 väljalülitamisel",
   "The checks": "Kontrollid",
   "Before the calibration": "Enne kalibreerimist",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Arvestamata: tsükli 2 väljalülitamisel ei märgatud laadimisloendurit."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Arvestamata: tsükli 2 väljalülitamisel ei märgatud laadimisloendurit.",
+  "No emulator found for this file": "Sellele failile ei leitud emulaatorit",
+  "No screenshot": "Ekraanipilt puudub",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsool lülitus välja, aga tühjenemislogis pole viimast pinget. Nulli ei saa selle järgi määrata.",
+  "OK starts the drain again.": "OK alustab tühjendamist uuesti."
 }

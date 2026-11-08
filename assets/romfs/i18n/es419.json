@@ -3889,7 +3889,6 @@
   "Report": "Informe",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "cargando al 100 %. La pantalla permanece encendida, por lo que la consola seguro que se carga hasta el final. Puedes dejar la consola tal cual o usarla; cuando llegue al 100 %, regresa a Kefir Hub y abre la calibración de batería.",
   "Step by step: the reset, two cycles, report.": "Paso a paso: el reinicio, dos ciclos, informe.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "La consola se apagó, pero el registro de descarga no tiene el último voltaje. No se puede establecer el cero a partir de él. Desconecte el cargador y vuelva a ejecutar la descarga.",
   "Cycle 1: the zero": "Ciclo 1: el cero",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Ahora ciclo 1: desconecta el cargador, el Hub descarga la batería hasta que la consola se apaga sola. Ese voltaje se convierte en el cero. Luego cárgala al 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Primero, el Hub respalda el medidor y escribe el modelo de batería de fábrica en él, descartando lo que el medidor haya aprendido erróneamente. Luego, se realizan dos ciclos: la batería se descarga hasta que la consola se apaga y se carga al 100 %. En el primer ciclo, el voltaje al apagarse se escribe en el medidor como el cero: la batería vacía real. En los ciclos, el medidor aprende la capacidad real.",
@@ -4072,7 +4071,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Cuando la consola se apague, enciéndela de nuevo (deja el cargador conectado) y abre Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Cuando se apague, conéctala al cargador. Puede que no encienda durante unos 20 minutos: esto es normal. Luego enciéndela y abre Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Completo. El Hub mide la capacidad y luego la descarga comienza sola: el cargador puede permanecer conectado.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "El voltaje de corte está fuera de 3.00 - 3.40 V: no es un cero.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "El voltaje de corte está fuera de 2.80 - 3.40 V: no es un cero.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Cuando la consola se apaga, es normal. Enciéndela de nuevo (con el cargador conectado) y abre Kefir Hub tú mismo. Solo entonces el Hub escribe el punto vacío en el medidor y continúa con la carga: no se inicia solo. Si el cargador estaba desconectado, conéctalo primero. Es posible que la consola no encienda de inmediato: con el cargador conectado puede tardar de 10 a 15 minutos. Espera, no te rindas.",
   "This cycle is counted: the next step starts by itself.": "Este ciclo se cuenta: el siguiente paso comienza solo.",
   "next: start the drain (the charger can stay in)": "siguiente: iniciar descarga (el cargador puede quedarse conectado)",
@@ -4200,5 +4199,9 @@
   "The gauge at cycle 2's switch-off": "El medidor en el apagado del ciclo 2",
   "The checks": "Comprobaciones",
   "Before the calibration": "Antes de la calibración",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "No contado: no se vio el contador de carga al apagar el ciclo 2."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "No contado: no se vio el contador de carga al apagar el ciclo 2.",
+  "No emulator found for this file": "No se encontró ningún emulador para este archivo",
+  "No screenshot": "Sin captura de pantalla",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "La consola se apagó, pero el registro de descarga no tiene el último voltaje. No se puede establecer el cero a partir de él.",
+  "OK starts the drain again.": "OK vuelve a iniciar el vaciado."
 }

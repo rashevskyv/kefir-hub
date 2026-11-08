@@ -3888,7 +3888,6 @@
   "Report": "レポート",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "100%まで充電しています。画面が点灯したままになるため、本体は確実に最後まで充電されます。そのまま放置するか使用しても構いません。100%に達したら、Kefir Hubに戻ってバッテリー調整を開いてください。",
   "Step by step: the reset, two cycles, report.": "ステップ・バイ・ステップ: リセット、2サイクル、レポート。",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "本体の電源が切れましたが、放電ログに最後の電圧がありません。そこからゼロを設定することはできません。充電器を外し、再度放電を実行してください。",
   "Cycle 1: the zero": "サイクル1：ゼロ",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "サイクル1: 充電器を外し、コンソールが自動でシャットダウンするまでハブがバッテリーを放電させます。その電圧がゼロになります。その後、100%まで充電してください。",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "まずHubがゲージのバックアップを取り、工場のバッテリーモデルを書き込んで、ゲージが誤って学習した内容をリセットします。その後、2つのサイクルを実行します：コンソールが自動的にシャットダウンするまでバッテリーを使い切り、100%まで充電します。最初のサイクルでは、シャットダウン時の電圧がゼロ（実際のバッテリー空状態）としてゲージに書き込まれます。サイクルを通じて、ゲージは実際の容量を学習します。",
@@ -4071,7 +4070,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "本体の電源が切れたら、電源を入れ直し（充電器を接続したまま）、Kefir Hubを開いてください。",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "本体の電源が切れたら、充電器を接続してください。20分ほど起動しないことがありますが、これは正常です。その後、電源を入れてKefir Hubを開いてください。",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "満充電。ハブが容量を測定した後、自動的に放電が開始されます。充電器は接続したままで構いません。",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "カットオフ電圧が3.00〜3.40Vの範囲外です：ゼロではありません。",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "カットオフ電圧が2.80〜3.40Vの範囲外です：ゼロではありません。",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "本体の電源が切れても、それは正常です。（充電器を接続した状態で）もう一度電源を入れ、自分でKefir Hubを開いてください。そうすることで初めてHubがゲージに空のポイントを書き込み、充電を継続します。自動的には開始されません。充電器が抜かれていた場合は、まず接続してください。本体がすぐに起動しない場合があります。充電器を接続した状態で10〜15分かかることがあります。お待ちください、諦めないでください。",
   "This cycle is counted: the next step starts by itself.": "このサイクルはカウントされています：次のステップは自動的に始まります。",
   "next: start the drain (the charger can stay in)": "次へ: 放電を開始 (充電器を接続したままで可)",
@@ -4199,5 +4198,9 @@
   "The gauge at cycle 2's switch-off": "サイクル2のシャットダウン時のゲージ",
   "The checks": "チェック",
   "Before the calibration": "キャリブレーション前",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "未カウント: サイクル2のシャットダウン時の充電カウンターが確認できませんでした。"
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "未カウント: サイクル2のシャットダウン時の充電カウンターが確認できませんでした。",
+  "No emulator found for this file": "このファイルに対応するエミュレータが見つかりません",
+  "No screenshot": "スクリーンショットなし",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "本体の電源が切れましたが、放電ログに最後の電圧がありません。そこからゼロを設定することはできません。",
+  "OK starts the drain again.": "OKでドレインを再開します。"
 }

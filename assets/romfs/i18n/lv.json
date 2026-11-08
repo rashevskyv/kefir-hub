@@ -3883,7 +3883,6 @@
   "Report": "Atskaite",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "notiek uzlāde līdz 100 %. Ekrāns paliek ieslēgts, tāpēc konsole noteikti uzlādēsies līdz galam. Varat atstāt konsoli tādu, kāda tā ir, vai izmantot to; kad tā sasniedz 100 %, atgriezieties Kefir Hub un atveriet akumulatora kalibrēšanu.",
   "Step by step: the reset, two cycles, report.": "Soli pa solim: atiestatīšana, divi cikli, atskaite.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Konsole izslēdzās, bet izlādes žurnālā nav pēdējā sprieguma. Nulli no tā nevar iestatīt. Izņemiet lādētāju un palaidiet izlādi vēlreiz.",
   "Cycle 1: the zero": "1. cikls: nulle",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Tagad 1. cikls: atvienojiet lādētāju, Hub izlādē akumulatoru, līdz konsole pati izslēdzas. Šis spriegums kļūst par nulli. Pēc tam uzlādējiet līdz 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Vispirms Hub izveido mērītāja dublējumu un ieraksta tajā rūpnīcas akumulatora modeli, lai dzēstu mērītāja nepareizi apgūtos datus. Pēc tam seko divi cikli: akumulators tiek izlādēts, līdz konsole pati izslēdzas, un uzlādēts līdz 100 %. Pirmajā ciklā spriegums izslēgšanas brīdī tiek ierakstīts mērītājā kā nulle: reālais tukšais akumulators. Ciklu laikā mērītājs apgūst reālo ietilpību.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Kad konsole izslēdzas, ieslēdziet to no jauna (atstājiet lādētāju pievienotu) un atveriet Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Kad tā izslēdzas, pievienojiet lādētāju. Tā var neieslēgties apmēram 20 minūtes: tas ir normāli. Pēc tam ieslēdziet to un atveriet Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Pilns. Hub mēra ietilpību, tad izlāde sākas pati: lādētājs var palikt pieslēgts.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Atvienošanas spriegums ir ārpus 3.00 - 3.40 V diapazona: nav nulle.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Atvienošanas spriegums ir ārpus 2.80 - 3.40 V diapazona: nav nulle.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Kad konsole izslēdzas, tas ir normāli. Ieslēdziet to no jauna (ar pievienotu lādētāju) un pats atveriet Kefir Hub. Tikai tad Hub ieraksta tukšo punktu mērītājā un turpina uzlādi: tā nesākas patstāvīgi. Ja lādētājs bija atvienots, vispirms pievienojiet to. Konsole var neieslēdzties uzreiz: ar lādētāju tam var būt nepieciešamas 10 līdz 15 minūtes. Pagaidiet, nepadodieties.",
   "This cycle is counted: the next step starts by itself.": "Šis cikls tiek skaitīts: nākamais solis sākas pats.",
   "next: start the drain (the charger can stay in)": "nākamais: sākt izlādi (lādētājs var palikt pievienots)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "Mērinstruments 2. cikla izslēgšanas brīdī",
   "The checks": "Pārbaudes",
   "Before the calibration": "Pirms kalibrēšanas",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nav ieskaitīts: uzlādes skaitītājs 2. cikla izslēgšanas brīdī netika konstatēts."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nav ieskaitīts: uzlādes skaitītājs 2. cikla izslēgšanas brīdī netika konstatēts.",
+  "No emulator found for this file": "Šim failam nav atrasts neviensulators",
+  "No screenshot": "Nav ekrānuzņēmuma",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsole izslēdzās, bet izlādes žurnālā nav pēdējā sprieguma. Nulli no tā nevar iestatīt.",
+  "OK starts the drain again.": "OK atkal sāk iztukšošanu."
 }

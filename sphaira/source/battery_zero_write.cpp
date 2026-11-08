@@ -38,7 +38,7 @@ constexpr unsigned NEAR_EMPTY_PCT = 10;
 // backs the chip up, writes VE and (when the chip is not near empty) the counters at 1 %, verifies by reading. `failed` says why when it did not.
 auto WriteZero(int mv, std::string& failed) -> Result {
     if (!zero::InRange(mv)) {
-        failed = "The cut-off voltage is outside 3.00 - 3.40 V: not a zero."_i18n;
+        failed = "The cut-off voltage is outside 2.80 - 3.40 V: not a zero."_i18n;
         R_THROW(Result_ArchiveRead);
     }
     auto s = detail::Read();

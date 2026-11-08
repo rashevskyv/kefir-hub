@@ -3888,7 +3888,6 @@
   "Report": "Rapport",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "laddar till 100 %. Skärmen förblir tänd, så konsolen laddas säkert fullt ut. Du kan lämna konsolen som den är eller använda den; när den når 100 %, gå tillbaka till Kefir Hub och öppna batterikalibrering.",
   "Step by step: the reset, two cycles, report.": "Steg för steg: återställning, två cykler, rapport.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Konsolen stängdes av, men urladdningsloggen har ingen sista spänning. Nollan kan inte ställas in från den. Ta ur laddaren och kör urladdningen igen.",
   "Cycle 1: the zero": "Cykel 1: noll",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Nu cykel 1: dra ur laddaren, Hub laddar ur batteriet tills konsolen stänger av sig själv. Den spänningen blir noll. Ladda sedan till 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Först säkerhetskopierar Hubben mätaren och skriver in fabriksbatterimodellen i den, så att det mätaren felaktigt har lärt sig rensas bort. Sedan följer två cykler: batteriet laddas ur tills konsolen stängs av och laddas till 100 %. I den första cykeln skrivs spänningen vid avstängningen in i mätaren som noll: det verkliga tomma batteriet. Under cyklerna läser mätaren in den verkliga kapaciteten.",
@@ -4071,7 +4070,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "När konsolen stängs av, slå på den igen (låt laddaren vara ansluten) och öppna Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "När den stängs av, anslut laddaren. Den kanske inte startar på ungefär 20 minuter: det är normalt. Slå sedan på den och öppna Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Fullt. Hubben mäter kapaciteten, sedan startar urladdningen av sig själv: laddaren kan sitta kvar.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Avstängningsspänningen är utanför 3.00 - 3.40 V: inte en nolla.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Avstängningsspänningen är utanför 2.80 - 3.40 V: inte en nolla.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "När konsolen stängs av är det normalt. Slå på den igen (med laddaren i) och öppna Kefir Hub själv. Först då skriver Hubben den tomma punkten i mätaren och fortsätter laddningen: den startar inte av sig själv. Om laddaren var urkopplad, koppla in den först. Konsolen kanske inte startar på en gång: med laddaren i kan det ta 10 till 15 minuter. Vänta, ge inte upp.",
   "This cycle is counted: the next step starts by itself.": "Denna cykel räknas: nästa steg startar av sig själv.",
   "next: start the drain (the charger can stay in)": "nästa: starta urladdning (laddaren kan vara ansluten)",
@@ -4199,5 +4198,9 @@
   "The gauge at cycle 2's switch-off": "Mätaren vid avstängning av cykel 2",
   "The checks": "Kontroller",
   "Before the calibration": "Före kalibrering",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Ej räknat: laddningsräknaren vid avstängning av cykel 2 syntes inte."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Ej räknat: laddningsräknaren vid avstängning av cykel 2 syntes inte.",
+  "No emulator found for this file": "Ingen emulator hittades för den här filen",
+  "No screenshot": "Ingen skärmbild",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsolen stängdes av, men urladdningsloggen har ingen senaste spänning. Nollan kan inte ställas in från den.",
+  "OK starts the drain again.": "OK startar tömningen igen."
 }

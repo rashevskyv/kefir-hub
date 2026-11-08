@@ -3883,7 +3883,6 @@
   "Report": "Есеп",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "100 % деңгейіне дейін зарядталуда. Экран қосулы күйінде қалады, сондықтан консоль соңына дейін міндетті түрде зарядталады. Консольді сол күйінде қалдыруға немесе пайдалануға болады; 100 % жеткен кезде, Kefir Hub жүйесіне оралып, батареяны калибрлеуді ашыңыз.",
   "Step by step: the reset, two cycles, report.": "Қадам бойынша: қалпына келтіру, екі цикл, есеп.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Консоль өшіп қалды, бірақ разряд журналында соңғы кернеу жоқ. Одан нөлді орнату мүмкін емес. Зарядтағышты ажыратып, разрядты қайта іске қосыңыз.",
   "Cycle 1: the zero": "1-ші цикл: нөл",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Қазір 1-цикл: зарядтағышты ажыратыңыз, консоль өшіп қалғанша Hub батареяны разрядтайды. Бұл кернеу нөлге айналады. Содан кейін 100 % дейін зарядтаңыз.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Алдымен Hub датчиктің сақтық көшірмесін жасап, оған зауыттық батарея моделін жазады, осылайша датчиктің қате үйренген мәліметтері жойылады. Содан кейін екі цикл орындалады: консоль өшкенше батарея толығымен отырады және 100 % дейін зарядталады. Бірінші циклде өшу сәтіндегі кернеу датчике нөл ретінде жазылады: шын бос батарея. Циклдар барысында датчик нақты сыйымдылықты үйренеді.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Консоль өшкен кезде, оны қайта қосыңыз (зарядтағышты қалдырып) және Kefir Hub ашыңыз.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Ол сөнген кезде, зарядтағышты қосыңыз. Шамамен 20 минут бойы қосылмауы мүмкін: бұл қалыпты жағдай. Содан кейін оны қосып, Kefir Hub қолданбасын ашыңыз.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Толық. Хаб сыйымдылықты өлшейді, содан кейін зарядсыздану өздігінен басталады: зарядтағыш жалғана беруі мүмкін.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Керуді өшіру кернеуі 3.00 - 3.40 В аралығынан тыс: нөл емес.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Керуді өшіру кернеуі 2.80 - 3.40 В аралығынан тыс: нөл емес.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Консоль өшіп қалса, бұл қалыпты жағдай. Оны қайтадан қосыңыз (зарядтағыш қосулы күйде) және Kefir Hub қолданбасын өзіңіз ашыңыз. Тек содан кейін Hub шкалаға бос нүктені жазып, зарядтауды жалғастырады: ол өздігінен басталмайды. Егер зарядтағыш ажыратылған болса, оны алдымен жалғаңыз. Консоль бірден қосылмауы мүмкін: зарядтағыш қосулы болса, бұл 10-15 минут алуы мүмкін. Күтіңіз, берілмеңіз.",
   "This cycle is counted: the next step starts by itself.": "Бұл цикл саналып жатыр: келесі қадам өзі басталады.",
   "next: start the drain (the charger can stay in)": "келесі: зарядсыздандыруды бастау (зарядтағышты қос күйінде қалдыруға болады)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "2-ші циклді өшірген кездегі көрсеткіш",
   "The checks": "Тексерулер",
   "Before the calibration": "Калибрлеуге дейін",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Есептелмеді: 2-ші циклді өшіру кезінде заряд есептегіші байқалмады."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Есептелмеді: 2-ші циклді өшіру кезінде заряд есептегіші байқалмады.",
+  "No emulator found for this file": "Бұл файл үшін эмулятор табылмады",
+  "No screenshot": "Скриншот жоқ",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Консоль өшті, бірақ разряд журналында соңғы кернеу жоқ. Одан нөлді орнату мүмкін емес.",
+  "OK starts the drain again.": "OK ағызуды қайта бастайды."
 }

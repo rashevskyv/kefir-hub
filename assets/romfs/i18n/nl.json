@@ -3888,7 +3888,6 @@
   "Report": "Rapport",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "laten opladen tot 100 %. Het scherm blijft aan, zodat de console zeker tot het einde oplaadt. Je kunt de console zo laten of gebruiken; zodra deze 100 % bereikt, ga je terug naar Kefir Hub en open je de batterijkalibratie.",
   "Step by step: the reset, two cycles, report.": "Stap voor stap: de reset, twee cycli, rapport.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "De console is uitgeschakeld, maar het ontladingslogboek heeft geen laatste spanning. De nul kan hieruit niet worden ingesteld. Haal de oplader eruit en voer de ontlading opnieuw uit.",
   "Cycle 1: the zero": "Cyclus 1: de nul",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Nu cyclus 1: haal de oplader eruit, de Hub ontlaadt de batterij totdat de console zichzelf uitschakelt. Die spanning wordt de nul. Laad dan op tot 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Eerst maakt de Hub een back-up van de meter en schrijft het fabrieksbatterijmodel erin, zodat foutief aangeleerde waarden van de meter worden gewist. Vervolgens twee cycli: de batterij wordt leeggedraaid totdat de console zichzelf uitschakelt, en opgeladen tot 100 %. In de eerste cyclus wordt de spanning bij het uitschakelen naar de meter geschreven als de nul: de werkelijk lege batterij. Tijdens de cycli leert de meter de werkelijke capaciteit.",
@@ -4071,7 +4070,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Wanneer de console uitschakelt, zet hem dan weer aan (laat de lader eingeprikt) en open Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Sluit de oplader aan wanneer het apparaat wordt uitgeschakeld. Het kan ongeveer 20 minuten duren voordat het weer opstart: dit is normaal. Schakel het daarna in en open Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Vol. De Hub meet de capaciteit, daarna start het ontladen vanzelf: de oplader kan aangesloten blijven.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "De afsnijspanning ligt buiten 3.00 - 3.40 V: geen nul.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "De afsnijspanning ligt buiten 2.80 - 3.40 V: geen nul.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Wanneer de console uitschakelt, is dat normaal. Zet hem weer aan (met de oplader erin) en open Kefir Hub zelf. Pas dan schrijft de Hub het lege punt in de meter en gaat door met opladen: hij start niet vanzelf. Als de oplader eruit was, sluit deze dan eerst aan. De console start mogelijk niet meteen: met de oplader erin kan dit 10 tot 15 minuten duren. Wacht, geef niet op.",
   "This cycle is counted: the next step starts by itself.": "Deze cyclus wordt geteld: de volgende stap begint vanzelf.",
   "next: start the drain (the charger can stay in)": "volgende: ontlading starten (oplader kan aangesloten blijven)",
@@ -4199,5 +4198,9 @@
   "The gauge at cycle 2's switch-off": "De meter bij het uitschakelen van cyclus 2",
   "The checks": "Controles",
   "Before the calibration": "Vóór de kalibratie",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Niet geteld: de oplaadteller bij het uitschakelen van cyclus 2 werd niet gezien."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Niet geteld: de oplaadteller bij het uitschakelen van cyclus 2 werd niet gezien.",
+  "No emulator found for this file": "Geen emulator gevonden voor dit bestand",
+  "No screenshot": "Geen screenshot",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "De console is uitgeschakeld, maar het ontladingslogboek heeft geen laatste spanning. De nul kan hieruit niet worden ingesteld.",
+  "OK starts the drain again.": "OK start het leegmaken opnieuw."
 }

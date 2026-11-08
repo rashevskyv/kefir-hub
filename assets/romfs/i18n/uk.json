@@ -3828,7 +3828,7 @@
   "The console switched off: setting the zero": "Консоль вимкнулась: задаю нуль",
   "The zero (empty battery)": "Нуль (порожня батарея)",
   "Transfer to the other systems": "Перенос в інші системи",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Напруга відсіку поза межами 3,00–3,40 В: це не нуль.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Напруга відсіку поза межами 2,80–3,40 В: це не нуль.",
   "The gauge did not take the empty voltage.": "Датчик заряду не прийняв напругу порожньої батареї.",
   "The gauge did not take the charge counters.": "Датчик заряду не прийняв лічильники заряду.",
   "Now plug the charger in and wait for 100 %. The Hub counts the cycle by itself, from the log.": "Тепер підключіть зарядку і дочекайтесь 100 %. Hub сам зарахує цикл за журналом.",
@@ -3842,7 +3842,8 @@
   "Transfer": "Перенос",
   "the drain is done. Now charge to 100 %.": "розряд завершено. Тепер зарядіть до 100 %.",
   "the drain is done. Plug the charger in and wait for 100 %: the cycle then counts by itself": "розряд завершено. Підключіть зарядку і дочекайтесь 100 %: цикл зарахується сам",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Консоль вимкнулась, але в журналі розряду немає останньої напруги. Нуль із нього задати не можна. Відключіть зарядку і запустіть розряд ще раз.",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Консоль вимкнулася, але в журналі розряду немає останньої напруги. Нуль із нього не встановити.",
+  "OK starts the drain again.": "OK знову запускає розряд.",
   "Cycle 1: the zero": "Цикл 1: нуль",
   "Now plug the charger in and charge to 100 %. Cycle 1 is then done, and cycle 2 begins.": "Тепер підключіть зарядку і зарядіть до 100 %. Цикл 1 тоді завершено, і починається цикл 2.",
   "Step by step: the reset, two cycles, report.": "Крок за кроком: скидання, два цикли, звіт.",
@@ -4136,5 +4137,6 @@
   "The gauge at cycle 2's switch-off": "Датчик на вимкненні циклу 2",
   "The gauge did not learn right: start the calibration over.": "Датчик вивчив неправильно: почніть калібрування заново.",
   "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Додає цей елемент до списку ROM, щоб ви могли відкрити його знову. Нічого не завантажує.",
-  "type words from the name to narrow the list": "введіть слова з назви, щоб звузити список"
+  "type words from the name to narrow the list": "введіть слова з назви, щоб звузити список",
+  "No screenshot": "Немає знімка екрана"
 }

@@ -3888,7 +3888,6 @@
   "Report": "보고서",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "100%까지 충전 중입니다. 화면이 켜져 있으므로 콘솔이 확실히 끝까지 충전됩니다. 콘솔을 그대로 두거나 사용할 수 있으며, 100%에 도달하면 Kefir Hub로 돌아가 배터리 보정을 여세요.",
   "Step by step: the reset, two cycles, report.": "단계별: 재설정, 두 번의 주기, 보고서.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "콘솔이 꺼졌지만, 방전 로그에 마지막 전압이 없습니다. 그로부터 0을 설정할 수 없습니다. 충전기를 빼고 방전을 다시 실행하세요.",
   "Cycle 1: the zero": "주기 1: 제로",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "이제 사이클 1: 충전기를 빼고, 콘솔이 꺼질 때까지 허브가 배터리를 방전시킵니다. 그 전압이 0이 됩니다. 그런 다음 100%까지 충전하세요.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "먼저 Hub가 게이지를 백업하고 공장 배터리 모델을 기록하여 게이지가 잘못 학습한 내용을 지웁니다. 그런 다음 두 개의 사이클을 거칩니다: 콘솔이 꺼질 때까지 배터리를 방전시킨 후 100%까지 충전합니다. 첫 번째 사이클에서는 꺼질 때의 전압이 실제 빈 배터리인 '0'으로 게이지에 기록됩니다. 사이클을 거치면서 게이지는 실제 용량을 학습합니다.",
@@ -4071,7 +4070,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "콘솔이 꺼지면 다시 켜고(충전기는 꽂아둔 상태로) Kefir Hub를 여세요.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "전원이 꺼지면 충전기를 연결하세요. 약 20분 동안 켜지지 않을 수 있지만, 이는 정상입니다. 그런 다음 전원을 켜고 Kefir Hub를 여세요.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "완충됨. 허브가 용량을 측정한 후 방전이 자동으로 시작됩니다. 충전기를 계속 연결해 둘 수 있습니다.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "차단 전압이 3.00 ~ 3.40 V 범위를 벗어났습니다: 0이 아닙니다.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "차단 전압이 2.80 ~ 3.40 V 범위를 벗어났습니다: 0이 아닙니다.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "콘솔이 꺼지는 것은 정상입니다. (충전기를 꽂은 상태로) 다시 켜고 직접 Kefir Hub를 여세요. 그래야만 Hub가 게이지에 빈 포인트를 기록하고 충전을 계속합니다. 저절로 시작되지 않습니다. 충전기가 분리되어 있었다면 먼저 꽂으십시오. 콘솔이 즉시 켜지지 않을 수 있습니다. 충전기를 꽂은 상태로 10~15분이 걸릴 수 있습니다. 기다리세요, 포기하지 마세요.",
   "This cycle is counted: the next step starts by itself.": "이 주기는 카운트됩니다: 다음 단계가 자동으로 시작됩니다.",
   "next: start the drain (the charger can stay in)": "다음: 방전 시작 (충전기를 연결해 둔 채로 진행 가능)",
@@ -4199,5 +4198,9 @@
   "The gauge at cycle 2's switch-off": "사이클 2 종료 시점의 게이지",
   "The checks": "검사",
   "Before the calibration": "보정 전",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "집계되지 않음: 사이클 2 종료 시 충전 카운터가 감지되지 않았습니다."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "집계되지 않음: 사이클 2 종료 시 충전 카운터가 감지되지 않았습니다.",
+  "No emulator found for this file": "이 파일에 대한 에뮬레이터를 찾을 수 없습니다",
+  "No screenshot": "스크린샷 없음",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "콘솔이 꺼졌지만, 방전 로그에 마지막 전압이 없습니다. 그것으로부터 0을 설정할 수 없습니다.",
+  "OK starts the drain again.": "OK로 배출을 다시 시작합니다."
 }

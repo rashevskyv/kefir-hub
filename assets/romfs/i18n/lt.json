@@ -3883,7 +3883,6 @@
   "Report": "Ataskaita",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "kraunama iki 100 %. Ekranas lieka įjungtas, todėl konsolė tikrai pasikraus iki galo. Galite palikti konsolę tokią, kokia yra, arba ją naudoti; kai ji pasieks 100 %, grįžkite į „Kefir Hub“ ir atidarykite baterijos kalibravimą.",
   "Step by step: the reset, two cycles, report.": "Žingsnis po žingsnio: atstatymas, du ciklai, ataskaita.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Konsolė išsijungė, bet iškrovos žurnale nėra paskutinės įtampos. Nulio nustatyti iš jo negalima. Ištraukite įkroviklį ir vėl paleiskite iškrovą.",
   "Cycle 1: the zero": "1 ciklas: nulis",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Dabar 1 ciklas: ištraukite įkroviklį, „Hub“ iškrauna akumuliatorių, kol konsolė išsijungia. Ši įtampa tampa nuliu. Tada įkraukite iki 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Pirmiausia „Hub“ padaro matuoklio atsarginę kopiją ir įrašo į jį gamyklinį akumuliatoriaus modelį, kad klaidingai išmokti matuoklio duomenys būtų pašalinti. Tada atliekami du ciklai: akumuliatorius iškraunamas, kol konsolė pati išsijungia, ir įkraunamas iki 100 %. Pirmajame cikle įtampa išsijungimo metu įrašoma į matuoklį kaip nulis: tikrasis tuščias akumuliatorius. Ciklų metu matuoklis išmoksta tikrąją talpą.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Kai konsolė išsijungia, vėl ją įjunkite (palikite įkroviklį prijungtą) ir atidarykite „Kefir Hub“.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Kai ji išsijungs, prijunkite kroviklį. Ji gali neįsijungti apie 20 minučių: tai normalu. Tada įjunkite ją ir atidarykite Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Pilnas. Šakotuvas išmatuoja talpą, tuomet iškrovimas prasideda savaime: įkroviklis gali likti prijungtas.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Atjungimo įtampa yra už 3.00 - 3.40 V ribų: ne nulis.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Atjungimo įtampa yra už 2.80 - 3.40 V ribų: ne nulis.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Kai konsolė išsijungia, tai normalu. Įjunkite ją vėl (su prijungtu įkrovikliu) ir patys atidarykite „Kefir Hub“. Tik tada „Hub“ įrašo tuščią tašką į matuoklį ir tęsia įkrovimą: jis nepasileidžia pats. Jei įkroviklis buvo ištrauktas, pirmiausia jį prijunkite. Konsolė gali nepasileisti iš karto: su įkrovikliu tai gali užtrukti nuo 10 iki 15 minučių. Palaukite, nepasiduokite.",
   "This cycle is counted: the next step starts by itself.": "Šis ciklas skaičiuojamas: kitas žingsnis prasideda savaime.",
   "next: start the drain (the charger can stay in)": "kitas: pradėti iškrovimą (įkroviklis gali likti prijungtas)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "Matuoklis 2-ojo ciklo išjungimo metu",
   "The checks": "Patikros",
   "Before the calibration": "Prieš kalibravimą",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Neskaičiuota: 2-ojo ciklo išjungimo metu įkrovimo skaitiklio nesimatė."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Neskaičiuota: 2-ojo ciklo išjungimo metu įkrovimo skaitiklio nesimatė.",
+  "No emulator found for this file": "Šiam failui nerasta emuliatoriaus",
+  "No screenshot": "Ekrano kopijos nėra",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsolė išsijungė, bet išsikrovimo žurnale nėra paskutinės įtampos. Nulio iš jo nustatyti negalima.",
+  "OK starts the drain again.": "OK vėl pradeda išleidimą."
 }

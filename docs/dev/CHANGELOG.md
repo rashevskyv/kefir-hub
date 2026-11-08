@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.314 — battery: the zero accepts 2.80 V; a failed zero drains again; the zero page goes on to the charge in 10 s
+- Owner run 2026-11-08: the first cut-off fell under 3.00 V (2990 mV read at the restart, load off below 3.5 V), WriteZero refused it and sent the user to the steps. zero::MIN_MV 3000 → 2800; every "zero not written" box ends with "OK starts the drain again." and OK starts the drain (DrainAgain); "Empty battery is now 0 %" does Go on by itself after 10 s (cu::Page::AutoA, a button press cancels).
+- The Ultrahand boot notice cannot be closed from the Hub: Ultrahand has no command for a shown notice (duration 0 = until tapped). host tests: battery pass, quick run fails in test_rom_library.cpp (another session's work); nro: not built; switch: pending (a zero refused → OK drains; the zero page counts 10 → charge)
+
 ## v0.14.313 — build fix
 - filebrowser_assoc.cpp: GetNewPath was a Menu method, now fs::AppendPath in the free loader. Build was clean after it (the 0.14.312 build is the first one with the cover search).
 - host tests: pass (quick), nro: built (0.14.313 not rebuilt), switch: pending

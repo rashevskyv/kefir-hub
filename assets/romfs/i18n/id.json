@@ -3883,7 +3883,6 @@
   "Report": "Laporan",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "mengisi daya hingga 100 %. Layar tetap menyala, sehingga konsol pasti terisi hingga penuh. Anda dapat membiarkan konsol apa adanya atau menggunakannya; saat mencapai 100 %, kembali ke Kefir Hub dan buka kalibrasi baterai.",
   "Step by step: the reset, two cycles, report.": "Langkah demi langkah: setel ulang, dua siklus, laporan.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Konsol dimatikan, tetapi log pengurasan tidak memiliki tegangan terakhir. Nol tidak dapat disetel darinya. Cabut pengisi daya dan jalankan pengurasan lagi.",
   "Cycle 1: the zero": "Siklus 1: nol",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Sekarang siklus 1: cabut pengisi daya, Hub mengosongkan baterai hingga konsol mati sendiri. Tegangan tersebut menjadi titik nol. Lalu isi daya hingga 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Pertama, Hub mencadangkan pengukur dan menuliskan model baterai pabrik ke dalamnya, sehingga apa yang salah dipelajari oleh pengukur akan dihapus. Kemudian dua siklus: baterai dikuras hingga konsol mati sendiri, lalu diisi hingga 100 %. Pada siklus pertama, tegangan saat mati ditulis ke dalam pengukur sebagai nol: baterai kosong yang sebenarnya. Selama siklus berlangsung, pengukur mempelajari kapasitas yang sebenarnya.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Saat konsol mati, nyalakan kembali (biarkan pengisi daya tetap tercolok) dan buka Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Saat perangkat mati, colokkan pengisi daya. Perangkat mungkin tidak menyala selama sekitar 20 menit: ini normal. Kemudian nyalakan dan buka Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Penuh. Hub mengukur kapasitas, lalu pengurasan dimulai sendiri: pengisi daya dapat tetap terhubung.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Tegangan putus berada di luar 3.00 - 3.40 V: bukan nol.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Tegangan putus berada di luar 2.80 - 3.40 V: bukan nol.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Ketika konsol mati, itu normal. Nyalakan kembali (dengan pengisi daya terpasang) dan buka Kefir Hub sendiri. Baru setelah itu Hub menulis titik kosong ke pengukur dan melanjutkan pengisian daya: pengisian tidak dimulai dengan sendirinya. Jika pengisi daya terlepas, colokkan terlebih dahulu. Konsol mungkin tidak langsung menyala: dengan pengisi daya terpasang, ini bisa memakan waktu 10 hingga 15 menit. Tunggu, jangan menyerah.",
   "This cycle is counted: the next step starts by itself.": "Siklus ini dihitung: langkah berikutnya dimulai sendiri.",
   "next: start the drain (the charger can stay in)": "berikutnya: mulai pengurasan (pengisi daya dapat tetap terhubung)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "Indikator pada saat siklus 2 dimatikan",
   "The checks": "Pemeriksaan",
   "Before the calibration": "Sebelum kalibrasi",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Tidak dihitung: penghitung pengisian daya pada saat mati siklus 2 tidak terlihat."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Tidak dihitung: penghitung pengisian daya pada saat mati siklus 2 tidak terlihat.",
+  "No emulator found for this file": "Tidak ada emulator yang ditemukan untuk file ini",
+  "No screenshot": "Tidak ada tangkapan layar",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsol mati, tetapi log pengosongan tidak memiliki voltase terakhir. Nol tidak dapat diatur darinya.",
+  "OK starts the drain again.": "OK memulai ulang pengurasan."
 }

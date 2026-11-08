@@ -3883,7 +3883,8 @@
   "Report": "Report",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.",
   "Step by step: the reset, two cycles, report.": "Step by step: the reset, two cycles, report.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.",
+  "OK starts the drain again.": "OK starts the drain again.",
   "Cycle 1: the zero": "Cycle 1: the zero",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.",
@@ -4066,7 +4067,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.",
   "This cycle is counted: the next step starts by itself.": "This cycle is counted: the next step starts by itself.",
   "next: start the drain (the charger can stay in)": "next: start the drain (the charger can stay in)",
@@ -4194,5 +4195,7 @@
   "The gauge at cycle 2's switch-off": "The gauge at cycle 2's switch-off",
   "The gauge did not learn right: start the calibration over.": "The gauge did not learn right: start the calibration over.",
   "Adds this item to your ROMS list so you can open it again. Downloads nothing.": "Adds this item to your ROMs list so you can open it again. Downloads nothing.",
-  "type words from the name to narrow the list": "type words from the name to narrow the list"
+  "type words from the name to narrow the list": "type words from the name to narrow the list",
+  "No emulator found for this file": "No emulator found for this file",
+  "No screenshot": "No screenshot"
 }

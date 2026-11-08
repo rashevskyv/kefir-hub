@@ -3941,7 +3941,6 @@
   "Report": "报告",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "正在充电至 100%。屏幕将保持常亮，因此控制台肯定能充满电。你可以让控制台保持原状或继续使用它；当电量达到 100% 时，请返回 Kefir Hub 并打开电池校准。",
   "Step by step: the reset, two cycles, report.": "循序渐进：重置、两个周期、报告。",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "主机已关机，但放电日志中没有最后电压。无法据此设置零点。请拔下充电器并重新运行放电。",
   "Cycle 1: the zero": "循环 1：零",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "现在是循环 1：拔掉充电器，Hub 会将电池耗尽直到主机自动关机。该电压将成为零点。然后充电至 100 %。",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "首先，Hub 会备份电量计并写入出厂电池模型，从而清除电量计错误学习的内容。随后进行两个循环：将电池耗尽直至主机自动关机，然后充电至 100%。在第一个循环中，关机时的电压作为零（即真正的电池耗尽状态）写入电量计中。通过这些循环，电量计将学习到真实的容量。",
@@ -4124,7 +4123,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "当主机关闭时，请重新开机（保持连接充电器）并打开 Kefir Hub。",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "关机后，请连接充电器。设备可能会在约 20 分钟内无法开机：这是正常的。然后开机并打开 Kefir Hub。",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "已充满。Hub 会测量容量，然后自动开始放电：充电器可以保持连接。",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "截止电压在 3.00 - 3.40 V 范围外：不是零。",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "截止电压在 2.80 - 3.40 V 范围外：不是零。",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "当主机关闭时，这是正常的。（在连接充电器的情况下）再次开机并自行打开 Kefir Hub。只有这样，Hub 才会将空点写入电量计并继续充电：它不会自动启动。如果充电器拔掉了，请先插上。主机可能不会立即启动：连接充电器时可能需要 10 到 15 分钟。请稍候，不要放弃。",
   "This cycle is counted: the next step starts by itself.": "此周期正在计算：下一步将自动开始。",
   "next: start the drain (the charger can stay in)": "下一步：开始放电（可保持连接充电器）",
@@ -4252,5 +4251,9 @@
   "The gauge at cycle 2's switch-off": "循环 2 关闭时的仪表",
   "The checks": "检查项",
   "Before the calibration": "校准前",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "未计入：未检测到循环 2 关闭时的充电计数器。"
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "未计入：未检测到循环 2 关闭时的充电计数器。",
+  "No emulator found for this file": "未找到此文件的模拟器",
+  "No screenshot": "无截图",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "控制台已关机，但放电日志中没有最后的电压。无法从中设置零。",
+  "OK starts the drain again.": "确定重新开始排空。"
 }

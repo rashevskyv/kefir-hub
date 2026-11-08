@@ -3889,7 +3889,6 @@
   "Report": "Rapport",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "chargement à 100 %. L'écran reste allumé, de sorte que la console se charge assurément jusqu'au bout. Vous pouvez laisser la console telle quelle ou l'utiliser ; lorsqu'elle atteint 100 %, revenez à Kefir Hub et ouvrez le calibrage de la batterie.",
   "Step by step: the reset, two cycles, report.": "Étape par étape : la réinitialisation, deux cycles, rapport.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "La console s'est éteinte, mais le journal de décharge n'a pas de dernière tension. Le zéro ne peut pas être défini à partir de celui-ci. Retirez le chargeur et relancez la décharge.",
   "Cycle 1: the zero": "Cycle 1 : le zéro",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Maintenant cycle 1 : débranchez le chargeur, le Hub décharge la batterie jusqu'à ce que la console s'éteigne d'elle-même. Cette tension devient le zéro. Ensuite, chargez à 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Première étape : le Hub sauvegarde la jauge et y écrit le modèle de batterie d'usine, afin d'effacer les données erronées apprises par la jauge. Ensuite, deux cycles : la batterie est déchargée jusqu'à ce que la console s'éteigne, puis chargée à 100 %. Lors du premier cycle, la tension au moment de l'extinction est enregistrée dans la jauge comme étant le zéro : la batterie réellement vide. Au fil des cycles, la jauge apprend la capacité réelle.",
@@ -4072,7 +4071,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Lorsque la console s'éteint, rallumez-la (laissez le chargeur branché) et ouvrez Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Lorsqu'elle s'éteint, branchez le chargeur. Elle risque de ne pas démarrer pendant environ 20 minutes : c'est normal. Allumez-la ensuite et ouvrez Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Plein. Le Hub mesure la capacité, puis la décharge commence d'elle-même : le chargeur peut rester branché.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "La tension de coupure est hors de la plage 3,00 - 3,40 V : pas un zéro.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "La tension de coupure est hors de la plage 2,80 - 3,40 V : pas un zéro.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Quand la console s'éteint, c'est normal. Rallumez-la (avec le chargeur branché) et ouvrez Kefir Hub vous-même. Ce n'est qu'alors que le Hub écrit le point vide dans la jauge et poursuit la charge : il ne démarre pas tout seul. Si le chargeur était débranché, branchez-le d'abord. La console peut ne pas démarrer tout de suite : avec le chargeur branché, cela peut prendre 10 à 15 minutes. Patientez, n'abandonnez pas.",
   "This cycle is counted: the next step starts by itself.": "Ce cycle est compté : la prochaine étape commence seule.",
   "next: start the drain (the charger can stay in)": "suivant : démarrer la décharge (le chargeur peut rester branché)",
@@ -4200,5 +4199,9 @@
   "The gauge at cycle 2's switch-off": "La jauge lors de l'arrêt du cycle 2",
   "The checks": "Vérifications",
   "Before the calibration": "Avant l'étalonnage",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Non comptabilisé : le compteur de charge à l'extinction du cycle 2 n'a pas été détecté."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Non comptabilisé : le compteur de charge à l'extinction du cycle 2 n'a pas été détecté.",
+  "No emulator found for this file": "Aucun émulateur trouvé pour ce fichier",
+  "No screenshot": "Aucune capture",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "La console s'est éteinte, mais le journal de décharge n'a pas de dernière tension. Le zéro ne peut pas être défini à partir de celui-ci.",
+  "OK starts the drain again.": "OK relance la vidange."
 }

@@ -170,19 +170,40 @@ struct Page final : ui::menu::MenuBase {
             }
         }});
         if (!a_label.empty()) {
-            SetAction(Button::A, Action{a_label, [this]() {
-                if (m_on_a) {
-                    m_on_a(*this);
-                }
-            }});
+            SetA(a_label);
         }
         SetTitleSubHeading(sub, true);
     }
 
     auto GetShortTitle() const -> const char* override { return "Battery calibration"; }
 
+    // A by itself after `seconds` without a button press (nobody at the console); a press keeps the page waiting for A.
+    // The A label counts down.
+    void AutoA(int seconds, std::string label) {
+        m_auto = seconds;
+        m_auto_label = std::move(label);
+        m_auto_since.Update();
+        m_auto_shown = -1;
+    }
+
     void Update(Controller* controller, TouchInfo* touch) override {
         MenuBase::Update(controller, touch);
+        if (m_auto > 0) {
+            const int left = m_auto - static_cast<int>(m_auto_since.GetSeconds());
+            if (controller->m_kdown) {
+                m_auto = 0; // the user is here
+                SetA(m_auto_label);
+            } else if (left <= 0) {
+                m_auto = 0;
+                if (m_on_a) {
+                    m_on_a(*this);
+                }
+                return;
+            } else if (left != m_auto_shown) {
+                m_auto_shown = left;
+                SetA(m_auto_label + " (" + std::to_string(left) + ")");
+            }
+        }
         // the checks follow the charger: look about once a second
         if (m_poll.GetSeconds() >= 1 || !m_polled) {
             m_poll.Update();
@@ -280,6 +301,18 @@ struct Page final : ui::menu::MenuBase {
     }
 
 private:
+    void SetA(const std::string& label) {
+        SetAction(Button::A, Action{label, [this]() {
+            if (m_on_a) {
+                m_on_a(*this);
+            }
+        }});
+    }
+
+    int m_auto{};
+    int m_auto_shown{-1};
+    std::string m_auto_label;
+    TimeStamp m_auto_since{};
     std::vector<Line> m_lines;
     Act m_on_a;
     Act m_on_b;

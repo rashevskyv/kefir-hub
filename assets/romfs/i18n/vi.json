@@ -3888,7 +3888,6 @@
   "Report": "Báo cáo",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "đang sạc đến 100 %. Màn hình vẫn bật, vì vậy máy chắc chắn sẽ sạc đến đầy. Bạn có thể để nguyên máy hoặc sử dụng nó; khi đạt đến 100 %, hãy quay lại Kefir Hub và mở phần hiệu chỉnh pin.",
   "Step by step: the reset, two cycles, report.": "Từng bước một: đặt lại, hai chu kỳ, báo cáo.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Máy đã tắt, nhưng nhật ký xả không có điện áp cuối cùng. Không thể thiết lập số không từ đó. Rút bộ sạc ra và chạy lại quá trình xả.",
   "Cycle 1: the zero": "Chu kỳ 1: số không",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Bây giờ chu kỳ 1: rút sạc ra, Hub xả pin cho đến khi máy tự tắt. Điện áp đó trở thành mức không. Sau đó sạc đến 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Đầu tiên, Hub sao lưu bộ đo và ghi mô hình pin nhà máy vào đó, do đó những gì bộ đo học nhầm sẽ bị xóa. Sau đó thực hiện hai chu kỳ: xả pin cho đến khi máy tự tắt, và sạc đến 100 %. Trong chu kỳ đầu tiên, điện áp tại thời điểm tắt máy được ghi vào bộ đo là số không: cục pin thực sự cạn. Qua các chu kỳ, bộ đo sẽ học được dung lượng thực tế.",
@@ -4071,7 +4070,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Khi bảng điều khiển tắt nguồn, hãy bật lại (giữ cắm sạc) và mở Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Khi thiết bị tắt, hãy cắm bộ sạc vào. Thiết bị có thể không khởi động trong khoảng 20 phút: điều này là bình thường. Sau đó, bật nguồn và mở Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Đầy. Hub đo dung lượng, sau đó quá trình xả pin tự động bắt đầu: bộ sạc có thể giữ nguyên kết nối.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Điện áp ngắt nằm ngoài khoảng 3.00 - 3.40 V: không phải số không.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Điện áp ngắt nằm ngoài khoảng 2.80 - 3.40 V: không phải số không.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Khi máy chơi game tắt nguồn, đó là điều bình thường. Bật lại máy (với bộ sạc đã cắm) và tự mở Kefir Hub. Chỉ khi đó Hub mới ghi điểm trống vào thanh đo và tiếp tục sạc: nó không tự động khởi động. Nếu bộ sạc chưa được cắm, hãy cắm nó trước. Máy có thể không khởi động ngay lập tức: với bộ sạc cắm sẵn, quá trình này có thể mất từ 10 đến 15 phút. Hãy đợi, đừng bỏ cuộc.",
   "This cycle is counted: the next step starts by itself.": "Chu kỳ này đang được tính: bước tiếp theo sẽ tự động bắt đầu.",
   "next: start the drain (the charger can stay in)": "tiếp theo: bắt đầu xả pin (có thể cắm bộ sạc)",
@@ -4199,5 +4198,9 @@
   "The gauge at cycle 2's switch-off": "Thước đo khi tắt chu kỳ 2",
   "The checks": "Kiểm tra",
   "Before the calibration": "Trước khi hiệu chuẩn",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Không tính: không phát hiện bộ đếm sạc khi tắt chu kỳ 2."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Không tính: không phát hiện bộ đếm sạc khi tắt chu kỳ 2.",
+  "No emulator found for this file": "Không tìm thấy trình giả lập cho tệp này",
+  "No screenshot": "Không có ảnh chụp màn hình",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Bảng điều khiển đã tắt, nhưng nhật ký xả không có điện áp cuối cùng. Không thể đặt số không từ nó.",
+  "OK starts the drain again.": "OK bắt đầu xả lại."
 }

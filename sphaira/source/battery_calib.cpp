@@ -227,6 +227,15 @@ void StartChargeRun(const Marker& m) {
 
 // ---- the zero (in cycle 1, after the cut-off) ----------------------------------------------------------------------------
 
+// no zero from this cut-off: only the next one can give it, so the drain starts again (the user is not sent to the steps)
+void DrainAgain() {
+    if (auto cur = LoadCurrent(); cur && IsCycle(cur->step)) {
+        StartDrainRun(*cur);
+    } else {
+        ShowSteps();
+    }
+}
+
 // cycle 1's drain cut the console off: the last voltage of the log becomes the gauge's empty point, then the charge page
 void WriteZeroThenCharge(Marker m) {
     const auto after = static_cast<std::int64_t>(detail::LoadState().reset_at);
@@ -239,8 +248,9 @@ void WriteZeroThenCharge(Marker m) {
     }
     if (!mv) {
         log_write("[Zero] the log has no cut-off of cycle 1's drain\n");
-        App::Push<ui::OptionBox>("The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again."_i18n,
-            "OK"_i18n, [](auto) { ShowSteps(); });
+        // the zero comes only from a cut-off: OK drains again, the next switch-off gives it
+        App::Push<ui::OptionBox>("The console switched off, but the drain log has no last voltage. The zero cannot be set from it."_i18n + "\n\n" + "OK starts the drain again."_i18n,
+            "OK"_i18n, [](auto) { DrainAgain(); });
         return;
     }
     auto failed = std::make_shared<std::string>();
@@ -249,8 +259,8 @@ void WriteZeroThenCharge(Marker m) {
         return zero_write::WriteZero(mv, *failed);
     }, [failed, marker, mv](Result rc) {
         if (R_FAILED(rc)) {
-            App::Push<ui::OptionBox>("The zero was not written. A backup was saved first."_i18n + (failed->empty() ? std::string{} : "\n\n" + *failed),
-                "OK"_i18n, [](auto) { ShowSteps(); });
+            App::Push<ui::OptionBox>("The zero was not written. A backup was saved first."_i18n + (failed->empty() ? std::string{} : "\n\n" + *failed) + "\n\n" + "OK starts the drain again."_i18n,
+                "OK"_i18n, [](auto) { DrainAgain(); });
             return;
         }
         marker->zero_mv = mv;
@@ -258,8 +268,8 @@ void WriteZeroThenCharge(Marker m) {
         SaveMarker(*marker);
         char v[16];
         std::snprintf(v, sizeof(v), "%.2f", mv / 1000.0);
-        // the charge starts by itself when the charger goes in; with the charger in already, Go on
-        App::Push<cu::Page>("Empty battery is now 0 %"_i18n, CycleName(1) + " · " + StepLabel(2),
+        // the charge starts by itself when the charger goes in; with the charger in already, Go on, or by itself in 10 s
+        auto page = std::make_unique<cu::Page>("Empty battery is now 0 %"_i18n, CycleName(1) + " · " + StepLabel(2),
             std::vector<cu::Line>{
                 cu::Ok("The console switched off at"_i18n + " " + v + " V. " + "This is the empty battery."_i18n),
                 cu::Ok("Written into the gauge: this voltage is now 0 %."_i18n),
@@ -269,6 +279,8 @@ void WriteZeroThenCharge(Marker m) {
                 p.SetPop();
                 StartChargeRun(*marker);
             }, cu::Page::Act{}, std::function<bool()>([]() { return !ChargerIn(); }), 2);
+        page->AutoA(10, "Go on"_i18n);
+        App::Push(std::move(page));
     });
 }
 

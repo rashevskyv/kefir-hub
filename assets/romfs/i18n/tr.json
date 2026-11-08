@@ -3883,7 +3883,6 @@
   "Report": "Rapor",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "100 % seviyesine kadar şarj ediliyor. Ekran açık kalır, böylece konsol kesinlikle sonuna kadar şarj olur. Konsolu olduğu gibi bırakabilir veya kullanabilirsiniz; 100 % seviyesine ulaştığında Kefir Hub uygulamasına geri dönün ve pil kalibrasyonunu açın.",
   "Step by step: the reset, two cycles, report.": "Adım adım: sıfırlama, iki döngü, rapor.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Konsol kapandı ancak deşarj günlüğünde son voltaj yok. Sıfır bundan ayarlanamaz. Şarj cihazını çıkarın ve deşarjı tekrar çalıştırın.",
   "Cycle 1: the zero": "Döngü 1: sıfır",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Şimdi döngü 1: şarj cihazını çıkarın, konsol kendini kapatana kadar Hub pili boşaltır. O voltaj sıfır olur. Ardından %100 seviyesine kadar şarj edin.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "İlk olarak Hub, ölçüm cihazının yedeğini alır ve fabrika batarya modelini içine yazar, böylece ölçüm cihazının yanlış öğrendiği veriler silinir. Ardından iki döngü gerçekleşir: Konsol kapanana kadar batarya tamamen boşaltılır ve %100 seviyesine kadar şarj edilir. İlk döngüde, kapanma anındaki voltaj ölçüm cihazına sıfır olarak yazılır: gerçek boş batarya. Döngüler boyunca ölçüm cihazı gerçek kapasiteyi öğrenir.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Konsol kapandığında tekrar açın (şarj aletini takılı bırakın) ve Kefir Hub uygulamasını açın.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Kapandığında şarj cihazını takın. Yaklaşık 20 dakika boyunca açılmayabilir: bu normaldir. Ardından açın ve Kefir Hub uygulamasını açın.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Dolu. Hub kapasiteyi ölçer, ardından deşarj kendi kendine başlar: şarj cihazı takılı kalabilir.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Kesme gerilimi 3.00 - 3.40 V aralığının dışında: sıfır değil.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Kesme gerilimi 2.80 - 3.40 V aralığının dışında: sıfır değil.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Konsol kapandığında bu normaldir. Tekrar açın (şarj cihazı takılı halde) ve Kefir Hub'ı kendiniz açın. Yalnızca o zaman Hub göstergeye boş noktayı yazar ve şarj işlemine devam eder: kendi kendine başlamaz. Şarj cihazı takılı değilse önce onu takın. Konsol hemen başlamayabilir: şarj cihazı takılıyken 10 ila 15 dakika sürebilir. Bekleyin, vazgeçmeyin.",
   "This cycle is counted: the next step starts by itself.": "Bu döngü sayılıyor: sonraki adım kendi kendine başlıyor.",
   "next: start the drain (the charger can stay in)": "sonraki: deşarjı başlat (şarj cihazı takılı kalabilir)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "Döngü 2 kapatıldığındaki gösterge",
   "The checks": "Kontroller",
   "Before the calibration": "Kalibrasyondan önce",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Sayılmadı: döngü 2 kapanışındaki şarj sayacı görülmedi."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Sayılmadı: döngü 2 kapanışındaki şarj sayacı görülmedi.",
+  "No emulator found for this file": "Bu dosya için emülatör bulunamadı",
+  "No screenshot": "Ekran görüntüsü yok",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsol kapandı, ancak deşarj günlüğünde son voltaj yok. Sıfır bundan ayarlanamaz.",
+  "OK starts the drain again.": "OK boşaltmayı yeniden başlatır."
 }

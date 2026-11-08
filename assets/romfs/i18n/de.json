@@ -3889,7 +3889,6 @@
   "Report": "Bericht",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "auf 100 % aufladen. Der Bildschirm bleibt an, damit die Konsole sicher vollständig geladen wird. Sie können die Konsole so lassen oder weiterverwenden; sobald 100 % erreicht sind, kehren Sie zum Kefir Hub zurück und öffnen Sie die Akkukalibrierung.",
   "Step by step: the reset, two cycles, report.": "Schritt für Schritt: Zurücksetzen, zwei Zyklen, Bericht.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Die Konsole hat sich ausgeschaltet, aber das Entladungsprotokoll enthält keine letzte Spannung. Der Nullpunkt kann daraus nicht festgelegt werden. Ziehen Sie das Ladegerät ab und starten Sie die Entladung erneut.",
   "Cycle 1: the zero": "Zyklus 1: die Null",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Jetzt Zyklus 1: Ziehe das Ladegerät ab, der Hub entlädt den Akku, bis sich die Konsole selbst ausschaltet. Diese Spannung wird zu Null. Dann auf 100 % laden.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Zuerst sichert der Hub den Messwertgeber und schreibt das Werksbatteriemodell hinein, sodass falsch gelernte Daten verworfen werden. Dann folgen zwei Zyklen: Der Akku wird entladen, bis sich die Konsole ausschaltet, und auf 100 % aufgeladen. Im ersten Zyklus wird die Spannung beim Ausschalten als Null in den Messwertgeber geschrieben: die real leere Batterie. Während der Zyklen lernt der Messwertgeber die reale Kapazität.",
@@ -4072,7 +4071,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Wenn sich die Konsole ausschaltet, schalten Sie sie wieder ein (lassen Sie das Ladekabel eingesteckt) und öffnen Sie Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Wenn sie ausgeht, schließen Sie das Ladegerät an. Sie startet möglicherweise etwa 20 Minuten lang nicht: Das ist normal. Schalten Sie sie dann ein und öffnen Sie Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Voll. Der Hub misst die Kapazität, danach startet die Entladung von selbst: Das Ladegerät kann angeschlossen bleiben.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Die Abschaltspannung liegt außerhalb von 3,00 - 3,40 V: kein Nullpunkt.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Die Abschaltspannung liegt außerhalb von 2,80 - 3,40 V: kein Nullpunkt.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Wenn sich die Konsole ausschaltet, ist das normal. Schalte sie wieder ein (mit eingestecktem Ladekabel) und öffne Kefir Hub selbst. Erst dann schreibt der Hub den Leerpunkt in die Anzeige und setzt den Ladevorgang fort: Er startet nicht von selbst. Falls das Ladekabel nicht angeschlossen war, stecke es zuerst ein. Die Konsole startet eventuell nicht sofort: Mit angeschlossenem Ladekabel kann dies 10 bis 15 Minuten dauern. Warte, gib nicht auf.",
   "This cycle is counted: the next step starts by itself.": "Dieser Zyklus wird gezählt: Der nächste Schritt startet von selbst.",
   "next: start the drain (the charger can stay in)": "weiter: Entladung starten (Ladekabel kann eingesteckt bleiben)",
@@ -4200,5 +4199,9 @@
   "The gauge at cycle 2's switch-off": "Die Anzeige beim Ausschalten von Zyklus 2",
   "The checks": "Prüfungen",
   "Before the calibration": "Vor der Kalibrierung",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nicht gezählt: Ladezähler beim Ausschalten von Zyklus 2 nicht erfasst."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Nicht gezählt: Ladezähler beim Ausschalten von Zyklus 2 nicht erfasst.",
+  "No emulator found for this file": "Kein Emulator für diese Datei gefunden",
+  "No screenshot": "Kein Screenshot",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Die Konsole hat sich ausgeschaltet, aber das Entnahmeprotokoll enthält keine letzte Spannung. Der Nullpunkt kann daraus nicht ermittelt werden.",
+  "OK starts the drain again.": "OK startet den Entleerungsvorgang erneut."
 }

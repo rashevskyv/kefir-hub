@@ -3883,7 +3883,6 @@
   "Report": "Справаздача",
   "charging to 100 %. The screen stays on, so the console surely charges to the end. You can leave the console as it is or use it; when it reaches 100 %, come back to Kefir Hub and open Battery calibration.": "зарадка да 100 %. Экран застаецца ўключаным, таму кансоль напэўна зарадзіцца да канца. Вы можаце пакінуць кансоль як ёсць або карыстацца ёю; калі яна дасягне 100 %, вярніцеся ў Kefir Hub і адкрыйце каліброўку батарэі.",
   "Step by step: the reset, two cycles, report.": "Крок за крокам: скід, два цыклы, справаздача.",
-  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it. Take the charger out and run the drain again.": "Кансоль выключылася, але ў лозе разрадкі няма апошняга напружання. Нуль немагчыма ўсталяваць з яго. Адключыце зарадную прыладу і запусціце разрадку зноў.",
   "Cycle 1: the zero": "Цыкл 1: нуль",
   "Now cycle 1: take the charger out, the Hub drains the battery until the console switches itself off. That voltage becomes the zero. Then charge to 100 %.": "Цыкл 1: выміце зарадную прыладу, Хаб разраджае батарэю, пакуль кансоль сама не выключыцца. Гэтая напруга становіцца нулём. Затым зарадзіце да 100 %.",
   "First the Hub backs the gauge up and writes the factory battery model into it, so what the gauge learned wrongly is dropped. Then two cycles: the battery is run down until the console switches itself off, and charged to 100 %. In the first cycle the voltage at the switch-off is written into the gauge as the zero: the real empty battery. On the cycles the gauge learns the real capacity.": "Спачатку Hub робіць рэзервовую копію датчыка і запісвае ў яго завадскую мадэль батарэі, дзякуючы чаму памылкова навучаныя даныя датчыка скідваюцца. Затым праходзяць два цыклы: батарэя разраджаецца, пакуль кансоль не выключыцца сама, і зараджаецца да 100 %. У першым цыкле напружанне пры выключэнні запісваецца ў датчык як нуль: рэальная пустая батарэя. Падчас цыклаў датчык вывучае рэальную ёмістасць.",
@@ -4066,7 +4065,7 @@
   "When the console switches off, switch it on again (keep the charger in) and open Kefir Hub.": "Калі кансоль выключыцца, уключыце яе зноў (пакінуўшы зарадная прыладу падключанай) і адкрыйце Kefir Hub.",
   "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Калі яна выключыцца, падключыце зарадную прыладу. Яна можа не ўключацца каля 20 хвілін: гэта нармальна. Затым уключыце яе і адкрыйце Kefir Hub.",
   "Full. The Hub measures the capacity, then the drain starts by itself: the charger can stay in.": "Поўны. Хаб вымярае ёмістасць, пасля чаго разрад пачынаецца самастойна: зарадная прылада можа заставацца падключанай.",
-  "The cut-off voltage is outside 3.00 - 3.40 V: not a zero.": "Напруга адсячэння па-за межамі 3.00 - 3.40 В: не нуль.",
+  "The cut-off voltage is outside 2.80 - 3.40 V: not a zero.": "Напруга адсячэння па-за межамі 2.80 - 3.40 В: не нуль.",
   "When the console switches off, that is normal. Switch it on again (with the charger in) and open Kefir Hub yourself. Only then the Hub writes the empty point into the gauge and goes on with the charge: it does not start by itself. If the charger was out, plug it in first. The console may not start at once: with the charger in it can take 10 to 15 minutes. Wait, do not give up.": "Калі кансоль выключаецца, гэта нармальна. Уключыце яе зноў (з падлучанай зараднай прыладай) і самі адкрыйце Kefir Hub. Толькі пасля гэтага Hub запісвае пустую кропку ў шкалу і працягвае зарадку: яна не запускаецца сама па сабе. Калі зарадная прылада была выключана, спачатку падключыце яе. Кансоль можа не запусціцца адразу: з зараднай прыладай гэта можа заняць ад 10 да 15 хвілін. Пачакайце, не здавайцеся.",
   "This cycle is counted: the next step starts by itself.": "Гэты цыкл падлічваецца: наступны крок пачнецца сам.",
   "next: start the drain (the charger can stay in)": "далей: пачаць разрадку (зараднае можна пакінуць)",
@@ -4194,5 +4193,9 @@
   "The gauge at cycle 2's switch-off": "Датчык пры адключэнні цыклу 2",
   "The checks": "Праверкі",
   "Before the calibration": "Перад каліброўкай",
-  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Не ўлічана: лічыльнік зараду пры выключэнні цыклу 2 не зафіксаваны."
+  "Not counted: the charge counter at cycle 2's switch-off was not seen.": "Не ўлічана: лічыльнік зараду пры выключэнні цыклу 2 не зафіксаваны.",
+  "No emulator found for this file": "Для гэтага файла не знойдзена эмулятара",
+  "No screenshot": "Няма скрыншота",
+  "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Кансоль выключылася, але ў часопісе разрадкі няма апошняга напружання. Нуль не можа быць зададзены з яго.",
+  "OK starts the drain again.": "OK зноў запускае зліў."
 }
