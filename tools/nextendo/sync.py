@@ -10,7 +10,7 @@ Strict checks stand in for a human review (the robot releases without one). Any 
 exit code 2 and a reason: a hosts line that is not "{IP} host", a file outside the patch folders, a changed
 license, no ssl patch folder.
 
-  sync.py                       newest release from GitHub; does nothing when it is already in the Hub
+  sync.py                       newest release from the Nextendo Forgejo; does nothing when it is already in the Hub
   sync.py --src DIR --tag TAG   a source tree that is already on disk
   --bump                        also raise sphaira_VERSION and add a CHANGELOG entry (the robot does this)
 
@@ -20,7 +20,6 @@ import argparse
 import io
 import ipaddress
 import json
-import os
 import re
 import shutil
 import sys
@@ -30,6 +29,7 @@ import zipfile
 from pathlib import Path
 
 REPO = "NextendoNetwork/Prelude-Nextendo"
+FORGE = "https://git.nextendo.network/api/v1/repos/" + REPO  # Prelude left GitHub on 2026-11-07 (v4.0.19)
 ROOT = Path(__file__).resolve().parents[2]
 HEADER = ROOT / "sphaira/include/nextendo_snapshot.hpp"
 ROMFS = ROOT / "assets/romfs/nextendo"
@@ -260,16 +260,15 @@ def bump(tag, summary_line):
 
 # --- source download ---------------------------------------------------------------------------------------
 
-def github(url):
-    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json", "User-Agent": "kefir-hub-sync"})
-    if os.environ.get("GITHUB_TOKEN"):
-        req.add_header("Authorization", "Bearer " + os.environ["GITHUB_TOKEN"])
+def fetch(url):
+    # no token: the Forgejo is public, and the GitHub token must never leave GitHub
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "kefir-hub-sync"})
     with urllib.request.urlopen(req, timeout=60) as r:
         return r.read()
 
 
 def download(tag, into):
-    with zipfile.ZipFile(io.BytesIO(github("https://api.github.com/repos/%s/zipball/%s" % (REPO, tag)))) as zf:
+    with zipfile.ZipFile(io.BytesIO(fetch("%s/archive/%s.zip" % (FORGE, tag)))) as zf:
         zf.extractall(into)
     (top,) = [p for p in Path(into).iterdir() if p.is_dir()]
     return top
@@ -321,7 +320,7 @@ def main():
         if a.src:
             result = sync(a.src, a.tag or "", a.bump)
         else:
-            tag = a.tag or json.loads(github("https://api.github.com/repos/%s/releases/latest" % REPO))["tag_name"]
+            tag = a.tag or json.loads(fetch(FORGE + "/releases/latest"))["tag_name"]
             if tag == read_header()["tag"]:
                 result = {"changed": "0", "tag": tag}
             else:

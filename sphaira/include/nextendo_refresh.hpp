@@ -14,6 +14,8 @@
 
 namespace sphaira::nextendo {
 
+// Prelude left GitHub for the Nextendo Forgejo on 2026-11-07 (v4.0.19); the GitHub repository is gone.
+inline constexpr std::string_view kForge = "https://git.nextendo.network";
 inline constexpr std::string_view kRepo = "NextendoNetwork/Prelude-Nextendo";
 inline constexpr std::int64_t kRefreshEverySeconds = 24 * 60 * 60;
 
@@ -31,8 +33,12 @@ inline auto IsSafeTag(std::string_view tag) -> bool {
     return true;
 }
 
+inline auto LatestReleaseUrl() -> std::string {
+    return std::string{kForge} + "/api/v1/repos/" + std::string{kRepo} + "/releases/latest";
+}
+
 inline auto ConfigUrl(std::string_view tag) -> std::string {
-    return "https://raw.githubusercontent.com/" + std::string{kRepo} + "/" + std::string{tag} + "/source/nextendo_config.h";
+    return std::string{kForge} + "/" + std::string{kRepo} + "/raw/tag/" + std::string{tag} + "/source/nextendo_config.h";
 }
 
 // The server must be a public address: a refresh must never point the hosts file into the user's own network.

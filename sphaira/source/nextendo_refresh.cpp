@@ -76,8 +76,8 @@ void RefreshServerIpsAsync() {
         return; // Nextendo off: no network call at all
     }
     curl::Api().ToMemoryAsync(
-        curl::Url{"https://api.github.com/repos/" + std::string{kRepo} + "/releases/latest"},
-        curl::Header{{"Accept", "application/vnd.github+json"}},
+        curl::Url{LatestReleaseUrl()},
+        curl::Header{{"Accept", "application/json"}},
         curl::StopToken{},
         curl::OnComplete{[](auto& result) {
             const auto tag = result.success ? TagFromRelease(result.data) : std::string{};

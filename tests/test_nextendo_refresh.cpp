@@ -10,7 +10,8 @@ using namespace sphaira::nextendo;
 int main() {
     assert(IsSafeTag("v4.0.11") && IsSafeTag("v4.0.12-rc1") && IsSafeTag("release_2"));
     assert(!IsSafeTag("") && !IsSafeTag("v4/../x") && !IsSafeTag("a b") && !IsSafeTag("x?y=1") && !IsSafeTag(std::string(41, 'a')));
-    assert(ConfigUrl("v4.0.11") == "https://raw.githubusercontent.com/NextendoNetwork/Prelude-Nextendo/v4.0.11/source/nextendo_config.h");
+    assert(ConfigUrl("v4.0.11") == "https://git.nextendo.network/NextendoNetwork/Prelude-Nextendo/raw/tag/v4.0.11/source/nextendo_config.h");
+    assert(LatestReleaseUrl() == "https://git.nextendo.network/api/v1/repos/NextendoNetwork/Prelude-Nextendo/releases/latest");
 
     // public: the real Nextendo servers
     assert(IsPublicIpv4("51.178.29.194") && IsPublicIpv4("164.132.111.120") && IsPublicIpv4("3.135.232.168"));
