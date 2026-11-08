@@ -104,6 +104,9 @@ auto LaunchTegraDump() -> bool;
 // show_now = false: only the boot notice (Ultrahand shows a .notify file the moment it appears).
 auto ArmReopenHubHint(const std::string& message = {}, bool show_now = true) -> void;
 auto ClearReopenHubHint() -> Result;
+// The Hub is open: the boot notice did its job. Kefir's Ultrahand closes a shown notice named "kefir" when
+// /config/ultrahand/notifications/kefir.dismiss appears (and drops a stale one at its next notice).
+auto DismissShownReopenHint() -> void;
 
 // After Hub confirms a finished nand dump: drop handshake temps only.
 // Keeps pack folder, state.json (phase applied), nand flag, Undo snapshots.

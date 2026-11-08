@@ -3,6 +3,7 @@
 #include "fancontrol_cleanup.hpp"
 #include "hbp_bridge.hpp"
 #include "battery_page.hpp"
+#include "account/account_restore.hpp"
 #include "nextendo_apply.hpp"
 #include "app_paths.hpp"
 #include "defines.hpp"
@@ -427,6 +428,8 @@ App::App(const char* argv0) {
     RemoveFunControl();
     // a battery drain that ended without restoring the screen (crash, switch-off) leaves the brightness changed
     battery::RestoreDrainBrightness();
+    // the boot notice "open Kefir Hub" stays until it is tapped: the Hub is open now, so it goes
+    account_restore::DismissShownReopenHint();
 
     // get emummc config.
     alignas(0x1000) AmsEmummcPaths paths{};

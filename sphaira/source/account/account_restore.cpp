@@ -486,12 +486,18 @@ auto ArmReopenHubHint(const std::string& message, bool show_now) -> void {
     sd.write_entire_file(ReopenHubFlagPath(), flag);
 
     const auto json = std::string{"{\"text\":\""} + msg +
-        "\",\"duration\":0,\"title\":\"Kefir Hub\",\"priority\":20}\n";
+        "\",\"duration\":30000,\"title\":\"Kefir Hub\",\"priority\":20}\n";
     if (show_now) {
         sd.write_entire_file(kNotifyJsonPath, std::vector<u8>(json.begin(), json.end()));
     }
     UpsertUltrahandBootHook(msg);
     log_write("[RESTORE] armed Ultrahand reopen-hub hint\n");
+}
+
+auto DismissShownReopenHint() -> void {
+    fs::FsNativeSd sd;
+    sd.CreateDirectoryRecursively("/config/ultrahand/notifications");
+    sd.write_entire_file("/config/ultrahand/notifications/kefir.dismiss", std::vector<u8>{});
 }
 
 auto ClearReopenHubHint() -> Result {
