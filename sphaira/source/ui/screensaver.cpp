@@ -1,4 +1,5 @@
 #include "ui/screensaver.hpp"
+#include "ui/screensaver_views.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/battery_gauge.hpp"
 #include "ui/menus/menu_base.hpp"
@@ -13,9 +14,7 @@
 namespace sphaira::ui {
 namespace {
 
-// the block never fills the panel: it drifts inside the margin left over, so a
-// two hour install does not burn its outline into an OLED.
-constexpr float BLOCK_W = 840.f;
+// the drift of every view's centre; the block never fills the panel, so a two hour install does not burn its outline into an OLED.
 constexpr float DRIFT_X = 170.f;
 constexpr float DRIFT_Y = 90.f;
 
@@ -27,21 +26,6 @@ constexpr u64 BACKLIGHT_FADE_NS = 300000000;
 constexpr u64 WAKE_GRACE_MS = 700;
 // the old-television switch-on when the black page appears: a line of light, then it opens to the full screen.
 constexpr u64 CRT_ON_MS = 650;
-
-auto FormatElapsed(u64 ns) -> std::string {
-    const auto secs = ns / 1000000000ULL;
-    char buf[32]{};
-    if (secs >= 3600) {
-        std::snprintf(buf, sizeof(buf), "%zuh %zum", (size_t)(secs / 3600), (size_t)(secs % 3600 / 60));
-    } else {
-        std::snprintf(buf, sizeof(buf), "%zum %zus", (size_t)(secs / 60), (size_t)(secs % 60));
-    }
-    return buf;
-}
-
-auto FieldEnabled(SaverField field) -> bool {
-    return App::GetSaverFields() & field;
-}
 
 } // namespace
 
@@ -226,53 +210,6 @@ void Screensaver::DrawBrightnessNote(NVGcontext* vg) {
     gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, 48.f, 28.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, nvgRGB(232, 232, 232), "%s", note.c_str());
 }
 
-// the calibration's readout: clock, status, a battery with an approximate percent, and up to five columns of figures
-void Screensaver::DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float cx, float cy, const menu::PolledData& pdata) {
-    // on the lit drain background the readout is dark: thin dark strokes leave the most pixels lit
-    const auto text_col = info.bright ? nvgRGB(16, 16, 20) : nvgRGB(232, 232, 232);
-    const auto dim_col = info.bright ? nvgRGB(56, 60, 70) : nvgRGB(140, 144, 154);
-    const float y0 = cy - 190.f;
-
-    if (App::Get12HourTimeEnable()) {
-        gfx::drawTextArgs(vg, cx, y0, 100.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%02u:%02u %s",
-            (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12, pdata.tm.tm_min, pdata.tm.tm_hour < 12 ? "AM" : "PM");
-    } else {
-        gfx::drawTextArgs(vg, cx, y0, 100.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%02u:%02u", pdata.tm.tm_hour, pdata.tm.tm_min);
-    }
-    gfx::drawTextArgs(vg, cx, y0 + 112.f, 26.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.status.c_str());
-
-    // the battery
-    const float bw = 220.f, bh = 96.f, bx = cx - bw / 2.f - 8.f, by = y0 + 156.f;
-    const float pct = std::clamp(info.battery_percent, 0, 100) / 100.f;
-    const auto level = info.battery_dir > 0 ? nvgRGB(0x4C, 0xAF, 0x50) // charging is green, as on the drain page
-        : pct > 0.5f ? nvgLerpRGBA(nvgRGB(0xF5, 0x9E, 0x0B), nvgRGB(0x4C, 0xAF, 0x50), (pct - 0.5f) * 2.f)
-                                  : nvgLerpRGBA(nvgRGB(0xE5, 0x39, 0x35), nvgRGB(0xF5, 0x9E, 0x0B), pct * 2.f);
-    nvgBeginPath(vg);
-    nvgRoundedRect(vg, bx, by, bw, bh, 12.f);
-    nvgStrokeColor(vg, text_col);
-    nvgStrokeWidth(vg, 4.f);
-    nvgStroke(vg);
-    nvgBeginPath(vg);
-    nvgRoundedRect(vg, bx + bw, by + bh / 2.f - 20.f, 14.f, 40.f, 4.f);
-    nvgFillColor(vg, text_col);
-    nvgFill(vg);
-    gfx::drawBatteryLevel(vg, bx + 8.f, by + 8.f, bw - 16.f, bh - 16.f, 7.f, pct, level, info.battery_dir);
-    gfx::drawTextArgs(vg, bx + bw / 2.f, by + bh / 2.f, 44.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, text_col, "%d%%", info.battery_percent);
-    gfx::drawBatteryArrow(vg, bx + bw - 34.f, by + bh / 2.f, 34.f, info.battery_dir, text_col);
-
-    // the columns
-    const float cols_y = by + bh + 30.f, col_w = 120.f;
-    const size_t n = std::min<size_t>(info.columns.size(), 5);
-    for (size_t i = 0; i < n; i++) {
-        const float x = cx + (static_cast<float>(i) - (static_cast<float>(n) - 1.f) / 2.f) * col_w;
-        gfx::drawTextArgs(vg, x, cols_y, 15.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.columns[i].first.c_str());
-        gfx::drawTextArgs(vg, x, cols_y + 22.f, 21.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%s", info.columns[i].second.c_str());
-    }
-    if (!info.hint.empty()) {
-        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 40.f, 19.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, info.bright ? dim_col : nvgRGB(109, 127, 136), "%s", info.hint.c_str());
-    }
-}
-
 void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
     const auto ms = m_started.GetMs();
     if (ms >= CRT_ON_MS) {
@@ -305,283 +242,29 @@ void Screensaver::Draw(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
 }
 
 void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& info) {
-    // the readout is drawn on a black page, so it uses its own palette rather
-    // than the theme: a light theme would paint black text onto it.
-    const auto text_col = nvgRGB(232, 232, 232);
-    const auto dim_col = nvgRGB(140, 144, 154);
-    const auto accent_col = nvgRGB(80, 170, 255);
-    const auto bad_col = nvgRGB(235, 90, 80);
-
-    const bool oled = App::GetSaverOled();
-    const auto pdata = menu::MenuBase::GetPolledData();
-
     gfx::drawRect(vg, Vec4{0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}, nvgRGB(0, 0, 0));
 
     // two incommensurate periods, so the block never retraces the same path.
     const auto t = m_drift_accum > 0.f ? m_drift_accum : (float)m_drift.GetSecondsD();
+    if (info.bright) {
+        gfx::drawDrainFill(vg, SCREEN_WIDTH, SCREEN_HEIGHT, t);
+    }
+
     // whole pixels: the font puts every glyph on a whole pixel while bars and lines take fractions,
     // so at this slow drift the text stepped a pixel at a time and the rest slid on its own.
     float cx = std::round(SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x);
     float cy = std::round(SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y);
 
-    // the block is a rectangle around (cx, cy): half_w each side, `up` above, `down` below.
-    // Keep the whole rectangle on the panel, and give the stick back what the edge took,
-    // so pushing into an edge does not wind up an offset the block then has to unwind.
-    const auto fit = [&](float half_w, float up, float down) {
-        constexpr float MARGIN = 10.f;
-        const float fx = std::clamp(cx, MARGIN + half_w, std::max(MARGIN + half_w, SCREEN_WIDTH - MARGIN - half_w));
-        const float fy = std::clamp(cy, MARGIN + up, std::max(MARGIN + up, SCREEN_HEIGHT - MARGIN - down));
-        m_user_offset_x += fx - cx;
-        m_user_offset_y += fy - cy;
-        cx = fx;
-        cy = fy;
-    };
+    // every view is drawn in the same frame: the rectangle it asks for, kept whole on the panel.
+    const auto pdata = menu::MenuBase::GetPolledData();
+    const auto block = FitSaverFrame(saver_view::Measure(info, pdata), SCREEN_WIDTH, SCREEN_HEIGHT, cx, cy, m_user_offset_x, m_user_offset_y);
+    saver_view::Draw(vg, info, block, pdata);
 
-    if (info.battery_view) {
-        if (info.bright) {
-            gfx::drawDrainFill(vg, SCREEN_WIDTH, SCREEN_HEIGHT, t);
-        }
-        // the battery block spans cy-190 .. cy+145 and about 640 px across (five 120 px columns).
-        fit(330.f, 190.f, 145.f);
-        DrawBatteryView(vg, info, cx, cy, pdata);
-        DrawBrightnessNote(vg);
-        return;
+    if (!info.hint.empty()) {
+        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 40.f, 19.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP,
+            info.bright ? nvgRGB(56, 60, 70) : nvgRGB(109, 127, 136), "%s", info.hint.c_str());
     }
-
-    // speed / eta / elapsed / battery share one line, so how many of them are
-    // on decides whether that line takes any height at all.
-    std::string stats;
-    const auto add_stat = [&stats](const std::string& value) {
-        if (!value.empty()) {
-            stats += stats.empty() ? value : "   ·   " + value;
-        }
-    };
-
-    if (!info.stats_text.empty()) {
-        add_stat(info.stats_text);
-    }
-    if (info.stats_text.empty() && FieldEnabled(SaverField_Speed)) {
-        char buf[96]{};
-        if (info.now_mib >= 0.0) {
-            std::snprintf(buf, sizeof(buf), "%.1f MiB/s (%s %.1f)", info.now_mib, "Average"_i18n.c_str(), info.speed_mib);
-        } else {
-            std::snprintf(buf, sizeof(buf), "%.1f MiB/s", info.speed_mib);
-        }
-        add_stat(buf);
-    }
-    if (info.stats_text.empty() && FieldEnabled(SaverField_Eta) && !info.eta.empty()) {
-        add_stat(info.eta + " " + "left"_i18n);
-    }
-    if (info.stats_text.empty() && FieldEnabled(SaverField_Elapsed) && info.elapsed_ns) {
-        add_stat(FormatElapsed(info.elapsed_ns));
-    }
-    if (FieldEnabled(SaverField_Battery)) {
-        char buf[32]{};
-        std::snprintf(buf, sizeof(buf), "%s%u%%",
-            pdata.charger_type != 0 ? "+" : "", pdata.battery_percetange);
-        add_stat(buf);
-    }
-
-    const bool show_clock = FieldEnabled(SaverField_Clock);
-    const bool show_completion = info.is_complete;
-    const bool show_status = FieldEnabled(SaverField_Status) && !info.status.empty() && !show_completion;
-    const bool show_counter = FieldEnabled(SaverField_Counter) && info.package_count;
-    const bool show_file = FieldEnabled(SaverField_File) && !info.file.empty();
-    const bool show_bar = FieldEnabled(SaverField_Bar);
-    const bool show_stats = !stats.empty();
-    const bool show_errors = FieldEnabled(SaverField_Errors) && info.failed;
-    const bool show_graph = FieldEnabled(SaverField_Graph) && info.has_graph && info.history_count >= 2 && !show_completion;
-
-    const float clock_h = 86.f, status_h = 32.f, counter_h = 34.f;
-    const float file_h = 32.f, bar_h = 52.f, stats_h = 32.f, errors_h = 30.f;
-    const float graph_h = 115.f, completion_h = 50.f;
-
-    float total = 0.f;
-    total += show_clock ? clock_h : 0.f;
-    total += show_status ? status_h : 0.f;
-    total += show_counter ? counter_h : 0.f;
-    total += show_file ? file_h : 0.f;
-    total += show_bar ? bar_h : 0.f;
-    total += show_stats ? stats_h : 0.f;
-    total += show_errors ? errors_h : 0.f;
-    total += show_graph ? graph_h + 10.f : 0.f;
-    total += show_completion ? completion_h + 10.f : 0.f;
-
-    fit(BLOCK_W / 2.f, total / 2.f, total / 2.f);
-    const float left = cx - BLOCK_W / 2.f;
-    float y = cy - total / 2.f;
-
-    // the clock is deliberately the biggest thing on the panel: it is what a
-    // glance from across the room can actually resolve.
-    if (show_clock) {
-        if (App::Get12HourTimeEnable()) {
-            gfx::drawTextArgs(vg, cx, y, 76.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%02u:%02u %s",
-                (pdata.tm.tm_hour == 0 || pdata.tm.tm_hour == 12) ? 12 : pdata.tm.tm_hour % 12,
-                pdata.tm.tm_min, pdata.tm.tm_hour < 12 ? "AM" : "PM");
-        } else {
-            gfx::drawTextArgs(vg, cx, y, 76.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%02u:%02u",
-                pdata.tm.tm_hour, pdata.tm.tm_min);
-        }
-        y += clock_h;
-    }
-
-    if (show_status) {
-        gfx::drawTextArgs(vg, cx, y, 24.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP,
-            info.failed ? bad_col : dim_col, "%s", info.status.c_str());
-        y += status_h;
-    }
-
-    if (show_counter) {
-        gfx::drawTextArgs(vg, cx, y, 26.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, text_col, "%s %zu / %zu",
-            "Package"_i18n.c_str(), info.package, info.package_count);
-        y += counter_h;
-    }
-
-    if (show_file) {
-        nvgSave(vg);
-        nvgIntersectScissor(vg, left, y, BLOCK_W, file_h);
-
-        float font_sz = 22.f;
-        nvgFontSize(vg, font_sz);
-        float bounds[4]{};
-        gfx::textBounds(vg, 0, 0, bounds, info.file.c_str());
-        float text_w = bounds[2] - bounds[0];
-
-        // If text is slightly too long for BLOCK_W, adapt font size down to 18px to fit
-        if (text_w > BLOCK_W && font_sz > 18.f) {
-            font_sz = std::max(18.f, font_sz * (BLOCK_W / text_w));
-            nvgFontSize(vg, font_sz);
-            gfx::textBounds(vg, 0, 0, bounds, info.file.c_str());
-            text_w = bounds[2] - bounds[0];
-        }
-
-        if (text_w <= BLOCK_W) {
-            // Fits within BLOCK_W: center it nicely
-            gfx::drawTextArgs(vg, cx, y, font_sz, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", info.file.c_str());
-        } else {
-            // Still exceeds BLOCK_W: align left from left margin so the beginning of the title is never clipped
-            gfx::drawTextArgs(vg, left, y, font_sz, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, dim_col, "%s", info.file.c_str());
-        }
-        nvgRestore(vg);
-        y += file_h;
-    }
-
-    if (show_bar) {
-        const Vec4 bar{left, y + 28.f, BLOCK_W, 14.f};
-        // OLED mode lights only the pixels that carry information, so the empty
-        // part of the track stays unlit; the filled length still reads.
-        if (!oled) {
-            gfx::drawRect(vg, bar, nvgRGBA(255, 255, 255, 40), 7.f);
-        }
-        gfx::drawRect(vg, bar.x, bar.y, std::max(4.f, bar.w * (float)info.ratio), bar.h, accent_col, 7.f);
-        if (info.package_count) {
-            gfx::drawTextArgs(vg, left, y, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, dim_col, "%s: %zu",
-                "Installed"_i18n.c_str(), info.installed);
-        }
-        gfx::drawTextArgs(vg, left + BLOCK_W, y, 22.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, accent_col,
-            "%.0f%%", info.ratio * 100.0);
-        y += bar_h;
-    }
-
-    if (show_stats) {
-        gfx::drawTextArgs(vg, cx, y, 22.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, dim_col, "%s", stats.c_str());
-        y += stats_h;
-    }
-
-    if (show_errors) {
-        gfx::drawTextArgs(vg, cx, y, 22.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, bad_col, "%s: %zu",
-            "Failed"_i18n.c_str(), info.failed);
-        y += errors_h;
-    }
-
-    if (show_completion) {
-        y += 10.f;
-        const auto comp_col = info.is_failed ? bad_col : accent_col;
-        const auto& comp_text = !info.status.empty() ? info.status : (info.is_failed ? "Finished with errors"_i18n : "Finished"_i18n);
-        gfx::drawTextArgs(vg, cx, y, 32.f, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, comp_col, "%s", comp_text.c_str());
-        y += completion_h;
-    }
-
-    if (show_graph) {
-        y += 6.f;
-        const auto red = nvgRGBA(231, 76, 60, 255);
-        const auto blue = nvgRGBA(52, 152, 219, 255);
-        const float graph_w = 600.f;
-        // on the drifting centre like the rest of the block (it used to stay at the screen centre).
-        const Vec4 plot{cx - graph_w / 2.f, y, graph_w, 95.f};
-        const float pad = 4.f;
-
-        gfx::drawRect(vg, plot, nvgRGBA(20, 20, 25, 220), 5.f);
-
-        s64 peak = 1;
-        for (size_t i = 0; i < info.history_count; i++) {
-            const auto idx = (info.history_index + 96 - info.history_count + i) % 96;
-            peak = std::max({peak, info.read_history[idx], info.write_history[idx]});
-        }
-        const double peak_mib = (double)peak / (1024.0 * 1024.0);
-
-        const auto nice_step = [](double range) -> double {
-            double s = 1.0;
-            while (true) {
-                if (range <= s) return s;
-                if (range <= s * 2.0) return s * 2.0;
-                if (range <= s * 5.0) return s * 5.0;
-                s *= 10.0;
-            }
-        };
-        const double step_mib = nice_step(std::max(peak_mib, 1.0) / 4.0);
-        int steps = 1;
-        while (step_mib * steps < peak_mib) steps++;
-        const double top_mib = step_mib * steps;
-        const double top = top_mib * 1024.0 * 1024.0;
-
-        nvgSave(vg);
-        nvgIntersectScissor(vg, plot.x, plot.y, plot.w, plot.h);
-
-        auto grid_col = nvgRGBA(255, 255, 255, 30);
-        const auto label_col = nvgRGBA(140, 144, 154, 255);
-        const float inner_h = plot.h - pad * 2.f;
-        for (int k = 0; k <= steps; k++) {
-            const float gy = plot.y + plot.h - pad - inner_h * (float)k / (float)steps;
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, plot.x + pad, gy);
-            nvgLineTo(vg, plot.x + plot.w - pad, gy);
-            nvgStrokeColor(vg, grid_col);
-            nvgStrokeWidth(vg, 1.f);
-            nvgStroke(vg);
-            if (k > 0) {
-                const double val = step_mib * k;
-                if (k == steps) {
-                    gfx::drawTextArgs(vg, plot.x + pad + 4.f, gy + 2.f, 11.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, label_col, "%g MiB/s", val);
-                }
-            }
-        }
-
-        const auto draw_line = [&](const std::array<s64, 96>& history, NVGcolor colour) {
-            nvgBeginPath(vg);
-            for (size_t i = 0; i < info.history_count; i++) {
-                const auto idx = (info.history_index + 96 - info.history_count + i) % 96;
-                const auto slot = 96 - info.history_count + i;
-                const float px = plot.x + pad + (plot.w - pad * 2.f) * slot / 95.f;
-                const double frac = std::clamp((double)history[idx] / top, 0.0, 1.0);
-                const float py = plot.y + plot.h - pad - inner_h * (float)frac;
-                if (i == 0) nvgMoveTo(vg, px, py);
-                else nvgLineTo(vg, px, py);
-            }
-            nvgStrokeColor(vg, colour);
-            nvgStrokeWidth(vg, 2.f);
-            nvgStroke(vg);
-        };
-
-        nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
-        if (info.has_read) {
-            draw_line(info.read_history, red);
-        }
-        draw_line(info.write_history, blue);
-
-        nvgRestore(vg);
-        y += graph_h;
-    }
+    DrawBrightnessNote(vg);
 }
 
 SaverPreview::SaverPreview() {

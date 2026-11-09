@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.322 — one screensaver frame for every view: the inside is separate from the frame
+- ui/saver_frame.hpp (FitSaverFrame) is the frame of every screensaver: the drifting, stick-moved centre and the rectangle kept whole on the panel. ui/screensaver_views.cpp is the inside: each view (transfer, battery calibration) gives its size (Measure) and draws in the rectangle it gets (Draw). screensaver.cpp keeps only what is the same for all: brightness, drift, stick, switch-on, the brightness note, the hint line; the brightness note now shows on the transfer saver too.
+- host tests: pass (quick, new test_saver_frame), nro: built (0.14.322), switch: pending.
+
 ## v0.14.321 — screensaver block stays inside the screen on every side
 - One rectangle per view (transfer: 840 px x the visible rows; battery: 660 x 335 px) is clamped to the panel with a 10 px margin; the stick offset gives back what the edge took, so it does not wind up. Before, the transfer view had no horizontal limit and went off the left and right edges.
 - host tests: not run (UI only), nro: not built, switch: pending.

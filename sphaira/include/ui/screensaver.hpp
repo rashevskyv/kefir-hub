@@ -103,9 +103,8 @@ struct Screensaver {
     void FlushPendingBrightness();
 
 private:
-    // the readout itself; Draw() wraps it in the switch-on effect for the first moments.
+    // the page: the frame every view shares (drift, stick, edges) around saver_view's inside; Draw() adds the switch-on.
     void DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& info);
-    void DrawBatteryView(NVGcontext* vg, const SaverInfo& info, float cx, float cy, const menu::PolledData& pdata);
     void DrawBrightnessNote(NVGcontext* vg);
     bool m_active{};
     BlankMode m_mode{};
