@@ -130,7 +130,7 @@ Selecting the item again updates the app to the latest version.
 In [[Extract Options]]:
 
 - If the archive contains one app, choose [[Install the app to /switch]].
-- Otherwise tick the files you want (**X** selects, **Y** inverts) and choose where to put them:
+- Otherwise mark the files you want (**X** marks and moves to the next row, **Y** inverts, **A** goes to the extract choices) and choose where to put them:
   [[Extract files to /downloads]], a new folder named after the archive, or [[Extract files to...]] to pick a folder.
 - After extracting, Kefir Hub asks whether to delete the downloaded `.zip`, and may offer to launch the app or open the folder in the [File Browser](file-browser.md).
 

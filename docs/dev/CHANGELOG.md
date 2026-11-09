@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.329 — cheat list, tick popups and the archive tree use the same X / Y marks
+- `cheat_download_menu.cpp` (nx-cheats-db): X [[Select]] marks and steps on, Y [[Invert]], A [[Download]] the marked cheats or the one under the cursor (was A Toggle, X Select All, Y Download); the mark is drawn with `gfx::drawMarkedRow` (was "[X]"); CheatSlips [[Preview]] moves from X to R. `popup_multi_select.cpp` (Choose games / Choose files / Add-on content): X marks and steps on, Y inverts, A or B close (was A tick, X All, Y None); a tap marks the row; drawn with `drawMarkedRow`. `zip_extract_box.cpp`: X steps on; A on the tree goes to the extract rows (was a second toggle). Docs: cheats, console transfer, software (EN, UK).
+- host tests: pass (quick), nro: built, switch: pending (cheat list X/Y/A; Choose games X/Y, tap; Extract Options X steps, A goes down).
+
 ## v0.14.328 — one X / Y selection handler for every list (`ui/marks.hpp`)
 - New `sphaira/include/ui/marks.hpp`: Toggle (X marks and steps to the next row that takes a mark), Invert (Y), SetAll, Count, Marked, Targets (marked rows, else the cursor row). Homebrew, file browser, save menu, games, game components, DBI queue, system tools lists, Wi-Fi, users, backups, NAND library, restore lists, save picker and the image viewer now call it instead of their own loops. Behaviour now the same everywhere: X steps over rows that take no mark (folders, headers, failed DBI rows); Y clears such rows; game components' Y is [[Invert]] (was Select all) and X steps on; the image viewer keeps the picture on X. Left out: archive tree checkboxes (zip extract) and the cheat list (A toggles there).
 - host tests: pass (quick, new test_marks), nro: built (labelled 0.14.327), switch: pending (X/Y in homebrew with folders, file browser files vs folders, game components, DBI queue).

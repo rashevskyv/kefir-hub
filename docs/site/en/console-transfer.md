@@ -101,7 +101,7 @@ Both consoles must be on the same Wi-Fi network. On the receiving console, on sy
 
 On the sending console:
 1. Open [[Tools]] → [[Console Transfer]] → [[Send installed games]]. Kefir Hub reads the installed games and shows a progress box.
-2. In the sidebar, select [[Choose games]] to open the tick list. Press **A** to tick or untick a game, **X** to tick all, **Y** to untick all, and **B** to close. The row shows ticked and total counts.
+2. In the sidebar, select [[Choose games]] to open the tick list. Press **X** to mark or unmark a game (the cursor moves to the next one), **Y** to invert the marks, and **A** or **B** to close. The row shows ticked and total counts.
 3. Select [[Start sharing]]. If nothing is ticked, the message [[No games chosen]] appears.
 4. The server screen opens titled [[Send installed games]] with the address, a QR code, and a progress bar showing "Sending: <file>" while the other console downloads. Press **B** to stop.
 

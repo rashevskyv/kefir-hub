@@ -5,6 +5,7 @@
 #include "ui/menus/cheats/cheats_ops.hpp"
 #include "ui/menus/cheats/cheats_db.hpp"
 
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -153,38 +154,41 @@ CheatDownloadMenu::CheatDownloadMenu(CheatSource source, const GameCheatInfo& ga
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){
                 SetPop();
             }}),
-            std::make_pair(Button::X, Action{"Preview"_i18n, [this](){
+            std::make_pair(Button::R, Action{"Preview"_i18n, [this](){
                 if (!m_cheats.empty() && !m_loading && m_index < (s64)m_cheats.size()) {
                     PreviewCheat();
                 }
             }})
         );
     } else {
-        // NxDb: Individual selection + Select All + Download + Manage + Preview
+        // NxDb: X / Y marks (ui/marks.hpp); A downloads the marked cheats, or the one under the cursor.
         this->SetActions(
-            std::make_pair(Button::A, Action{"Toggle"_i18n, [this](){
-                if (!m_cheats.empty() && !m_loading) {
-                    if (m_index < (s64)m_cheats.size()) {
-                        m_cheats[m_index].selected = !m_cheats[m_index].selected;
-                    }
+            std::make_pair(Button::A, Action{"Download"_i18n, [this](){
+                if (m_cheats.empty() || m_loading) {
+                    return;
                 }
+                // DownloadCheats writes the marked cheats, so the cursor row gets the mark.
+                for (const auto i : marks::Targets(m_cheats.size(), m_index, marks::Selected(m_cheats))) {
+                    m_cheats[i].selected = true;
+                }
+                DownloadCheats();
             }}),
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){
                 SetPop();
             }}),
-            std::make_pair(Button::X, Action{"Select All"_i18n, [this](){
-                if (!m_cheats.empty() && !m_loading) {
-                    // Select/deselect all cheats
-                    bool all_selected = std::all_of(m_cheats.begin(), m_cheats.end(),
-                        [](const CheatEntry& c) { return c.selected; });
-                    for (auto& cheat : m_cheats) {
-                        cheat.selected = !all_selected;
-                    }
+            std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+                if (m_cheats.empty() || m_loading) {
+                    return;
+                }
+                const auto next = marks::Toggle(m_cheats.size(), m_index, marks::Selected(m_cheats));
+                if (next != m_index) {
+                    SetIndex(next);
+                    m_list->EnsureVisible(m_index, m_cheats.size());
                 }
             }}),
-            std::make_pair(Button::Y, Action{"Download"_i18n, [this](){
+            std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
                 if (!m_cheats.empty() && !m_loading) {
-                    DownloadCheats();
+                    marks::Invert(m_cheats.size(), marks::Selected(m_cheats));
                 }
             }}),
             std::make_pair(Button::R, Action{"Preview"_i18n, [this](){
@@ -301,19 +305,9 @@ void CheatDownloadMenu::Draw(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        // Selection indicator - only for NxDb, not for CheatSlips
-        if (m_source != CheatSource::Cheatslips) {
-            if (cheat.selected) {
-                gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f, 20.f,
-                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
-                    theme->GetColour(ThemeEntryID_HIGHLIGHT_1),
-                    "[X]");
-            } else {
-                gfx::drawTextArgs(vg, x + text_xoffset, y + h / 2.f, 20.f,
-                    NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
-                    theme->GetColour(ThemeEntryID_TEXT_INFO),
-                    "[ ]");
-            }
+        // a marked cheat (NxDb only; CheatSlips downloads the bundle)
+        if (m_source != CheatSource::Cheatslips && cheat.selected) {
+            gfx::drawMarkedRow(vg, theme, v);
         }
 
         // Cheat name (truncated)
@@ -322,8 +316,7 @@ void CheatDownloadMenu::Draw(NVGcontext* vg, Theme* theme) {
             name = name.substr(0, 57) + "...";
         }
 
-        // Adjust text offset based on source type
-        float text_offset = (m_source == CheatSource::Cheatslips) ? text_xoffset : text_xoffset + 50.f;
+        const float text_offset = text_xoffset;
 
         // Draw cheat name (removed source badges - they're only in View Cheats)
         gfx::drawTextArgs(vg, x + text_offset, y + h / 2.f, 18.f,

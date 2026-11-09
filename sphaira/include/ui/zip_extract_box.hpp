@@ -32,7 +32,7 @@ public:
 private:
     void UpdateAHint();
     void SetFocusActions(bool actions);
-    void Toggle(s64 index);
+    auto Toggle(s64 index) -> s64;
     void SyncDirChecks();
     void Invert();
     void OnA();

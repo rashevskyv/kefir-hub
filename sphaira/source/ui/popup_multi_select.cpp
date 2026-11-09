@@ -1,4 +1,5 @@
 #include "ui/popup_multi_select.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
@@ -12,17 +13,18 @@ PopupMultiSelect::PopupMultiSelect(const std::string& title, const Items& items,
 , m_items{items}
 , m_selected{selected}
 , m_callback{cb} {
-    // A ticks rather than settling the list, so B is what closes the popup - and
-    // leaves the ticks as they stand, every press having already been acted on.
+    // X / Y marks (ui/marks.hpp): X marks the row and steps on, Y inverts. The marks are
+    // reported back as they change, so A and B both close and keep them.
     this->SetActions(
-        std::make_pair(Button::A, Action{"Select"_i18n, [this](){
-            Toggle(m_index);
+        std::make_pair(Button::A, Action{"OK"_i18n, [this](){
+            SetPop();
         }}),
-        std::make_pair(Button::X, Action{"All"_i18n, [this](){
-            SetAll(true);
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+            m_index = Toggle(m_index);
+            m_list->EnsureVisible(m_index, m_items.size());
         }}),
-        std::make_pair(Button::Y, Action{"None"_i18n, [this](){
-            SetAll(false);
+        std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
+            Invert();
         }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             SetPop();
@@ -57,7 +59,7 @@ auto PopupMultiSelect::Update(Controller* controller, TouchInfo* touch) -> void 
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
         m_index = i;
         if (touch) {
-            FireAction(Button::A);
+            Toggle(i); // a tap marks the row; the cursor stays on it
         }
     });
 }
@@ -88,19 +90,16 @@ auto PopupMultiSelect::Draw(NVGcontext* vg, Theme* theme) -> void {
         const auto ticked = IsSelected(i);
         const auto mid = y + (h / 2.f);
 
+        if (ticked) {
+            gfx::drawMarkedRow(vg, theme, v);
+        }
         if (focused) {
             gfx::drawRectOutline(vg, theme, 4.f, v);
         } else if (i != m_items.size() - 1) {
             gfx::drawRect(vg, x, y + h, w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
         }
 
-        // the tick keeps its place on every row, so a name is cut where the next
-        // row's is whether or not this one is ticked.
         auto right = x + w - m_text_xoffset;
-        if (ticked) {
-            gfx::drawText(vg, right, mid, 20.f, "", nullptr, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
-        }
-        right -= m_tick_width;
 
         const auto& item = m_items[i];
         if (!item.note.empty()) {
@@ -135,25 +134,19 @@ auto PopupMultiSelect::OnFocusLost() noexcept -> void {
     SetHidden(true);
 }
 
-void PopupMultiSelect::Toggle(s64 index) {
-    if (index < 0 || index >= static_cast<s64>(m_selected.size()) || m_items[index].disabled) {
-        return;
-    }
-
-    m_selected[index] ^= 1;
+auto PopupMultiSelect::Toggle(s64 index) -> s64 {
+    const auto next = marks::Toggle(m_selected.size(), index, Mark(), Markable());
     OnChanged();
+    return next;
 }
 
-void PopupMultiSelect::SetAll(bool selected) {
-    for (size_t i = 0; i < m_selected.size(); i++) {
-        m_selected[i] = selected && !m_items[i].disabled;
-    }
-
+void PopupMultiSelect::Invert() {
+    marks::Invert(m_selected.size(), Mark(), Markable());
     OnChanged();
 }
 
 auto PopupMultiSelect::GetSelectedCount() const -> s64 {
-    return std::count(m_selected.cbegin(), m_selected.cend(), 1);
+    return static_cast<s64>(marks::Count(m_selected.size(), Mark()));
 }
 
 auto PopupMultiSelect::IsSelected(s64 index) const -> bool {

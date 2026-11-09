@@ -36,10 +36,10 @@ The pack's cheats are added to the game's cheat file by name: cheats you already
 2. A list of your installed games opens. Focus a game and press **A**.
 3. Kefir Hub finds the game's Build ID and loads the matching cheats. The Build ID is shown next to the game name at the top.
 4. Pick cheats:
-    - **A** — [[Toggle]] the focused cheat.
-    - **X** — [[Select All]] (press again to unselect all).
+    - **X** — [[Select]] the focused cheat; the cursor moves to the next one.
+    - **Y** — [[Invert]] the marks.
     - **R** — [[Preview]] the cheat code.
-5. Press **Y** ([[Download]]) and confirm.
+5. Press **A** ([[Download]]) and confirm. With no marks, A downloads the cheat under the cursor.
 
 <!-- shot: cheats-select | Cheat list for one game: game name and Build ID at the top, three cheats ticked [X] -->
 

@@ -11,9 +11,8 @@
 namespace sphaira::ui {
 
 // a scrollable list of on/off choices, drawn over the dim background like a
-// PopupList. unlike it, A toggles the highlighted row rather than choosing it
-// and leaving, and the list of ticks is reported back into `selected` as they
-// happen rather than when the popup closes.
+// PopupList. X marks a row and steps on, Y inverts (ui/marks.hpp), A or B close;
+// the marks are reported back into `selected` as they change, not when it closes.
 class PopupMultiSelect final : public Widget {
 public:
     struct Item {
@@ -33,8 +32,11 @@ public:
     auto OnFocusLost() noexcept -> void override;
 
 private:
-    void Toggle(s64 index);
-    void SetAll(bool selected);
+    auto Toggle(s64 index) -> s64;
+    void Invert();
+    auto Mark() { return [this](std::size_t i) -> u8& { return m_selected[i]; }; }
+    auto Mark() const { return [this](std::size_t i) { return m_selected[i] != 0; }; }
+    auto Markable() const { return [this](std::size_t i) { return i < m_items.size() && !m_items[i].disabled; }; }
     auto GetSelectedCount() const -> s64;
     auto IsSelected(s64 index) const -> bool;
     void OnChanged();
@@ -46,9 +48,6 @@ private:
     static constexpr Vec4 m_block{140.f, 110.f, 1000.f, 60.f};
     static constexpr float m_text_xoffset{15.f};
     static constexpr float m_line_width{1220.f};
-    // the room the tick keeps at the end of a row, held whether or not the row
-    // has one, so a name is cut at the same place either way.
-    static constexpr float m_tick_width{40.f};
 
     const std::string m_title;
     const Items m_items;

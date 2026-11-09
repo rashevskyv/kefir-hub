@@ -1,5 +1,6 @@
 #include "ui/zip_extract_box.hpp"
 #include "ui/layout.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "app.hpp"
@@ -89,9 +90,12 @@ ZipExtractBox::ZipExtractBox(std::string title, std::vector<std::string> entry_n
     m_action_list->SetWrap(false);
 
     this->SetActions(
-        std::make_pair(Button::A, Action{"Toggle"_i18n, [this](){ OnA(); }}),
+        std::make_pair(Button::A, Action{"Extract"_i18n, [this](){ OnA(); }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
-        std::make_pair(Button::X, Action{"Select"_i18n, [this](){ Toggle(m_tree_index); }}),
+        std::make_pair(Button::X, Action{"Select"_i18n, [this](){
+            m_tree_index = Toggle(m_tree_index);
+            m_tree_list->EnsureVisible(m_tree_index, static_cast<s64>(m_nodes.size()));
+        }}),
         std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){ Invert(); }})
     );
     UpdateAHint();
@@ -100,7 +104,7 @@ ZipExtractBox::ZipExtractBox(std::string title, std::vector<std::string> entry_n
 }
 
 void ZipExtractBox::UpdateAHint() {
-    SetAction(Button::A, Action{m_focus_actions ? "Select"_i18n : "Toggle"_i18n, [this](){ OnA(); }});
+    SetAction(Button::A, Action{m_focus_actions ? "Select"_i18n : "Extract"_i18n, [this](){ OnA(); }});
 }
 
 void ZipExtractBox::SetFocusActions(bool actions) {
@@ -144,26 +148,24 @@ void ZipExtractBox::SyncDirChecks() {
     }
 }
 
-void ZipExtractBox::Toggle(s64 index) {
+// X (ui/marks.hpp): flips the row's mark, a folder passes it to everything under it. Returns the next row.
+auto ZipExtractBox::Toggle(s64 index) -> s64 {
+    const auto next = marks::Toggle(m_nodes.size(), index, [this](std::size_t i) -> char& { return m_checked[i]; });
     if (index < 0 || static_cast<std::size_t>(index) >= m_nodes.size()) {
-        return;
+        return next;
     }
     const auto i = static_cast<std::size_t>(index);
-    const bool next = !m_checked[i];
     const int depth = m_nodes[i].depth;
-    m_checked[i] = next ? 1 : 0;
     for (std::size_t j = i + 1; j < m_nodes.size() && m_nodes[j].depth > depth; ++j) {
-        m_checked[j] = next ? 1 : 0;
+        m_checked[j] = m_checked[i];
     }
     SyncDirChecks();
+    return next;
 }
 
+// Y: every row flips; a folder then takes the marks of its files again.
 void ZipExtractBox::Invert() {
-    for (std::size_t i = 0; i < m_nodes.size(); ++i) {
-        if (!m_nodes[i].is_dir) {
-            m_checked[i] = m_checked[i] ? 0 : 1;
-        }
-    }
+    marks::Invert(m_nodes.size(), [this](std::size_t i) -> char& { return m_checked[i]; });
     SyncDirChecks();
 }
 
@@ -172,10 +174,11 @@ auto ZipExtractBox::SelectedFiles() const -> std::vector<std::string> {
 }
 
 void ZipExtractBox::OnA() {
+    // on the tree A goes down to the extract rows: they say where the marked files go.
     if (m_focus_actions) {
         RunExtractAction(m_action_index);
     } else {
-        Toggle(m_tree_index);
+        SetFocusActions(true);
     }
 }
 
