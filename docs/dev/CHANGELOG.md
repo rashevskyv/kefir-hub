@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.325 — PC Install (USB) question: once per cable connection, whatever the answer
+- `app_usb.cpp`: the flag is set when either "A PC install app is waiting." question is shown, not only on "No". Before, PC Install (USB) → Back re-enabled MTP, DBI Backend dropped its marker again and the question came back with the cable still in. Unplug resets the flag again (v0.14.324's "until restart" is undone); the plug-in probe is skipped while the flag is set.
+- host tests: pass (quick; app_usb.cpp is libnx-only, no host test), nro: not built, switch: pending (answer once, open and leave PC Install (USB) and the save menus: no second question; unplug and plug in: the question comes again).
+
 ## v0.14.324 — "No" to PC Install (USB) holds until Kefir Hub restarts
 - `app_usb.cpp`: a "No" (or B) to either "A PC install app is waiting." question no longer resets on unplug; the plug-in install probe is skipped (MTP starts at once) and the backend's marker is removed without a question until the app restarts.
 - host tests: pass (quick; app_usb.cpp is libnx-only, no host test), nro: not built, switch: pending (No → unplug → plug in again with DBI Backend running: no question, MTP starts).

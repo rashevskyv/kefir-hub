@@ -31,8 +31,8 @@
 7. Дочекайтеся [[Session summary]].
 
 <!-- draft
-- [[No]] (or B) to "A PC install app is waiting." — on plug-in or after the marker file — holds until Kefir Hub restarts: no more PC Install questions on any cable, MTP starts at once, the marker file is removed without a question
-- [[PC Install (USB)]] in the menu still works after that; restart Kefir Hub to get the question again
+- "A PC install app is waiting." comes once per cable connection, whatever the answer ([[No]], B, or [[PC Install (USB)]] and then Back); until the cable is unplugged, the marker file is removed without a question
+- unplug and plug in the cable to get the question again; [[PC Install (USB)]] in the menu works at any time
 -->
 
 Коли USB-черга завершується, Kefir Hub спершу завершує сеанс із ПК, а потім чекає на [[Session summary]]. DBI Backend Qt може зупинити свій сервер і змінити режим, поки підсумок лишається відкритим. Натисніть **B** ([[Back]]), щоб закрити екран. Щоб установити ще раз через USB, знову відкрийте [[PC Install (USB)]] і запустіть сервер на ПК. Вихід із сеансу більше не заморожує екран на кілька секунд.

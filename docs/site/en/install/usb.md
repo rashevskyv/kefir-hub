@@ -31,8 +31,8 @@ On sysMMC, Kefir Hub shows the ban warning when you choose [[PC Install (USB)]].
 7. Wait for the [[Session summary]].
 
 <!-- draft
-- [[No]] (or B) to "A PC install app is waiting." — on plug-in or after the marker file — holds until Kefir Hub restarts: no more PC Install questions on any cable, MTP starts at once, the marker file is removed without a question
-- [[PC Install (USB)]] in the menu still works after that; restart Kefir Hub to get the question again
+- "A PC install app is waiting." comes once per cable connection, whatever the answer ([[No]], B, or [[PC Install (USB)]] and then Back); until the cable is unplugged, the marker file is removed without a question
+- unplug and plug in the cable to get the question again; [[PC Install (USB)]] in the menu works at any time
 -->
 
 When the USB queue finishes, Kefir Hub ends the PC session first and then waits on [[Session summary]]. DBI Backend Qt can stop its server and switch modes while the summary stays open. Press **B** ([[Back]]) to close the screen. To install again over USB, open [[PC Install (USB)]] again and start the PC server. Leaving the session no longer freezes the screen for seconds.
