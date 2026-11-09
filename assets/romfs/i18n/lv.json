@@ -3955,7 +3955,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Šis vienums ir ierobežots: archive.org ļauj to lejupielādēt tikai pieteikušamies lietotājiem, un Hub nevar pieteikties. Tā faili netiek piedāvāti.",
   "Reading the archive on archive.org": "Lasa arhīvu no archive.org",
   "Could not read the archive on archive.org": "Neizdevās nolasīt arhīvu no archive.org",
-  "Download the whole archive": "Lejupielādēt visu arhīvu",
   "Words from the file name, for example a game; empty shows every file": "Vārdi no faila nosaukuma, piemēram, spēles; tukšs rāda visus failus",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Nekavējoties pievienojiet lādētāju un uzlādējiet to līdz 100 %. Konsole var neieslēgties apmēram 20 minūtes: akumulators ir tukšs, un tam kādu laiku jāpastāv uz lādētāja. Tas ir normāli. Neatstājiet tukšo konsoli bez lādētāja uz ilgu laiku. Ja konsole paliek izslēgta, centrs joprojām uzskaita lādiņu, kas pa šo laiku ienācis.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Pilna slodze: konsole izlādējas, cik ātri vien iespējams. Kad tā izslēdzas, pievienojiet lādētāju. Tā var neieslēgties apmēram 20 minūtes: tas ir normāli. Pēc tam ieslēdziet to un atveriet Kefir Hub.",
@@ -4197,5 +4196,11 @@
   "No emulator found for this file": "Šim failam nav atrasts neviensulators",
   "No screenshot": "Nav ekrānuzņēmuma",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsole izslēdzās, bet izlādes žurnālā nav pēdējā sprieguma. Nulli no tā nevar iestatīt.",
-  "OK starts the drain again.": "OK atkal sāk iztukšošanu."
+  "OK starts the drain again.": "OK atkal sāk iztukšošanu.",
+  "Marked files: ": "Atzīmētie faili: ",
+  "Download all the marked files or only the file under the cursor?": "Lejupielādēt visus atzīmētos failus vai tikai failu zem kursora?",
+  "All marked": "Visus atzīmētos",
+  "Only this file": "Tikai šo failu",
+  "Download the listed files one by one": "Lejupielādēt saraksta failus pa vienam",
+  "Download the archive as one packed file": "Lejupielādēt arhīvu kā vienu saspiestu failu"
 }

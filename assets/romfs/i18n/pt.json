@@ -3987,7 +3987,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Este item é restrito: o archive.org permite apenas a utilizadores com sessão iniciada descarregá-lo, e o Hub não consegue iniciar sessão. Os seus ficheiros não são oferecidos.",
   "Reading the archive on archive.org": "A ler o arquivo em archive.org",
   "Could not read the archive on archive.org": "Não foi possível ler o arquivo em archive.org",
-  "Download the whole archive": "Transferir todo o arquivo",
   "Words from the file name, for example a game; empty shows every file": "Palavras do nome do ficheiro, por exemplo um jogo; vazio mostra todos os ficheiros",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Ligue o carregador imediatamente e carregue-o até 100 %. A consola pode não iniciar durante cerca de 20 minutos: a bateria está vazia e precisa de ficar um pouco no carregador. Isto é normal. Não deixe a consola vazia sem o carregador durante muito tempo. Se a consola permanecer desligada, o Hub continua a contar a carga recebida entretanto.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Carga máxima: a consola descarrega o mais rapidamente possível. Quando se desligar, liga o carregador. Pode demorar cerca de 20 minutos a arrancar: isto é normal. Depois, liga-a e abre o Kefir Hub.",
@@ -4229,5 +4228,11 @@
   "No emulator found for this file": "Nenhum emulador encontrado para este ficheiro",
   "No screenshot": "Sem captura de ecrã",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "A consola desligou-se, mas o registo de descarga não tem a última tensão. O zero não pode ser definido a partir dela.",
-  "OK starts the drain again.": "OK inicia o esvaziamento novamente."
+  "OK starts the drain again.": "OK inicia o esvaziamento novamente.",
+  "Marked files: ": "Ficheiros marcados: ",
+  "Download all the marked files or only the file under the cursor?": "Transferir todos os ficheiros marcados ou apenas o ficheiro sob o cursor?",
+  "All marked": "Todos os marcados",
+  "Only this file": "Apenas este ficheiro",
+  "Download the listed files one by one": "Transferir os ficheiros da lista um a um",
+  "Download the archive as one packed file": "Transferir o arquivo como um único ficheiro compactado"
 }

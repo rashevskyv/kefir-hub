@@ -3955,7 +3955,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Šis elementas apribotas: „archive.org“ leidžia jį atsisiųsti tik prisijungusiems vartotojams, o „Hub“ negali prisijungti. Jo failai nesiūlomi.",
   "Reading the archive on archive.org": "Skaitomas archyvas iš archive.org",
   "Could not read the archive on archive.org": "Nepavyko perskaityti archyvo iš archive.org",
-  "Download the whole archive": "Atsisiųsti visą archyvą",
   "Words from the file name, for example a game; empty shows every file": "Žodžiai iš failo pavadinimo, pavyzdžiui, žaidimo; tuščias rodo visus failus",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Nedelsiant prijunkite įkroviklį ir įkraukite iki 100 %. Konsolė gali neįsijungti apie 20 minučių: baterija tuščia ir jai reikia kurį laiką pabūti ant įkroviklio. Tai normalu. Nepalikite tuščios konsolės ilgam laikui be įkroviklio. Jei konsolė lieka išjungta, šakotuvas vis tiek skaičiuoja tuo metu gautą įkrovą.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Pilna apkrova: konsolė išsikrauna kuo greičiau. Jai išsijungus, prijunkite įkroviklį. Ji gali neįsijungti apie 20 minučių: tai normalu. Tada įjunkite ją ir atidarykite Kefir Hub.",
@@ -4197,5 +4196,11 @@
   "No emulator found for this file": "Šiam failui nerasta emuliatoriaus",
   "No screenshot": "Ekrano kopijos nėra",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsolė išsijungė, bet išsikrovimo žurnale nėra paskutinės įtampos. Nulio iš jo nustatyti negalima.",
-  "OK starts the drain again.": "OK vėl pradeda išleidimą."
+  "OK starts the drain again.": "OK vėl pradeda išleidimą.",
+  "Marked files: ": "Pažymėta failų: ",
+  "Download all the marked files or only the file under the cursor?": "Atsisiųsti visus pažymėtus failus ar tik failą po žymekliu?",
+  "All marked": "Visus pažymėtus",
+  "Only this file": "Tik šį failą",
+  "Download the listed files one by one": "Atsisiųsti sąrašo failus po vieną",
+  "Download the archive as one packed file": "Atsisiųsti archyvą kaip vieną suglaudintą failą"
 }

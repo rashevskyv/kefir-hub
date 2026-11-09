@@ -77,7 +77,8 @@ struct SystemToolsMenu final : MenuBase {
     auto TargetRows() const -> std::vector<size_t>;
     // START: the context menu of the page; gets TargetRows()
     void SetOptions(std::function<void(const std::vector<size_t>&)> cb);
-    // A with rows marked runs this on them instead of opening the row under the cursor
+    // A with rows marked runs this on them (a download of the marked files); A on another file asks first: the
+    // marked ones or only that one
     void SetOnMarked(std::function<void(const std::vector<size_t>&)> cb) { m_on_marked = std::move(cb); }
     // the share of the row width the name column takes (the rest is the description)
     void SetNameShare(float share) { m_name_share = share; }

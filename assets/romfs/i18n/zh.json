@@ -4013,7 +4013,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "此项目受限：archive.org 仅允许登录用户下载，且 Hub 无法登录。其文件不提供下载。",
   "Reading the archive on archive.org": "正在从 archive.org 读取归档",
   "Could not read the archive on archive.org": "无法读取 archive.org 上的归档。",
-  "Download the whole archive": "下载整个存档",
   "Words from the file name, for example a game; empty shows every file": "文件名中的词语，例如游戏；留空则显示所有文件",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "请立即插入充电器并将其充电至 100 %。主机可能需要大约 20 分钟才能启动：电池电量已耗尽，需要在充电器上放置一段时间。这是正常现象。请勿让电量耗尽的主机长时间脱离充电器。如果主机保持关闭状态，Hub 仍会计算在此期间充入的电量。",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "满载：主机将以最快速度耗尽电量。关机后，请连接充电器。它可能需要大约 20 分钟才能开机：这是正常的。然后开机并打开 Kefir Hub。",
@@ -4255,5 +4254,11 @@
   "No emulator found for this file": "未找到此文件的模拟器",
   "No screenshot": "无截图",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "控制台已关机，但放电日志中没有最后的电压。无法从中设置零。",
-  "OK starts the drain again.": "确定重新开始排空。"
+  "OK starts the drain again.": "确定重新开始排空。",
+  "Marked files: ": "已标记的文件：",
+  "Download all the marked files or only the file under the cursor?": "下载所有已标记的文件，还是只下载光标所在的文件？",
+  "All marked": "全部已标记",
+  "Only this file": "仅此文件",
+  "Download the listed files one by one": "逐个下载列表中的文件",
+  "Download the archive as one packed file": "将压缩包作为一个文件下载"
 }

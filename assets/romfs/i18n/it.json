@@ -3960,7 +3960,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Questo elemento è limitato: archive.org consente il download solo agli utenti che hanno effettuato l'accesso e l'Hub non può effettuare l'accesso. I suoi file non vengono offerti.",
   "Reading the archive on archive.org": "Lettura dell'archivio da archive.org",
   "Could not read the archive on archive.org": "Impossibile leggere l'archivio su archive.org",
-  "Download the whole archive": "Scarica l'intero archivio",
   "Words from the file name, for example a game; empty shows every file": "Parole dal nome file, ad esempio un gioco; vuoto mostra tutti i file",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Collega subito il caricabatterie e caricalo al 100 %. La console potrebbe non avviarsi per circa 20 minuti: la batteria è scarica e deve rimanere un po' sul caricabatterie. È normale. Non lasciare la console scarica senza caricabatterie per molto tempo. Se la console rimane spenta, l'Hub conta comunque la carica ricevuta nel frattempo.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Carico massimo: la console si scarica il più velocemente possibile. Quando si spegne, collega il caricabatterie. Potrebbe non avviarsi per circa 20 minuti: è normale. Quindi accendila e apri Kefir Hub.",
@@ -4202,5 +4201,11 @@
   "No emulator found for this file": "Nessun emulatore trovato per questo file",
   "No screenshot": "Nessuna schermata",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "La console si è spenta, ma il registro di scarica non ha l'ultima tensione. Lo zero non può essere impostato da esso.",
-  "OK starts the drain again.": "OK riavvia lo svuotamento."
+  "OK starts the drain again.": "OK riavvia lo svuotamento.",
+  "Marked files: ": "File contrassegnati: ",
+  "Download all the marked files or only the file under the cursor?": "Scaricare tutti i file contrassegnati o solo il file sotto il cursore?",
+  "All marked": "Tutti i contrassegnati",
+  "Only this file": "Solo questo file",
+  "Download the listed files one by one": "Scarica i file dell'elenco uno alla volta",
+  "Download the archive as one packed file": "Scarica l'archivio come un unico file compresso"
 }

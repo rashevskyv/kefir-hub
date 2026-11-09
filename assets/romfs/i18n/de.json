@@ -3961,7 +3961,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Dieser Artikel ist eingeschränkt: archive.org erlaubt nur angemeldeten Benutzern den Download, und der Hub kann sich nicht anmelden. Seine Dateien werden nicht angeboten.",
   "Reading the archive on archive.org": "Archiv von archive.org lesen",
   "Could not read the archive on archive.org": "Das Archiv auf archive.org konnte nicht gelesen werden",
-  "Download the whole archive": "Gesamtes Archiv herunterladen",
   "Words from the file name, for example a game; empty shows every file": "Wörter aus dem Dateinamen, z. B. ein Spiel; leer zeigt jede Datei",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Schließen Sie das Ladegerät sofort an und laden Sie das Gerät auf 100 % auf. Die Konsole startet möglicherweise erst nach etwa 20 Minuten: Der Akku ist leer und muss eine Weile am Ladegerät liegen. Das ist normal. Lassen Sie die leere Konsole nicht lange ohne Ladegerät. Wenn die Konsole ausgeschaltet bleibt, zählt der Hub trotzdem die Ladung, die in der Zwischenzeit hinzugekommen ist.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Volllast: Die Konsole entlädt sich so schnell wie möglich. Wenn sie ausgeht, schließen Sie das Ladegerät an. Sie schaltet sich möglicherweise erst nach ca. 20 Minuten wieder ein: Das ist normal. Schalten Sie sie dann ein und öffnen Sie Kefir Hub.",
@@ -4203,5 +4202,11 @@
   "No emulator found for this file": "Kein Emulator für diese Datei gefunden",
   "No screenshot": "Kein Screenshot",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Die Konsole hat sich ausgeschaltet, aber das Entnahmeprotokoll enthält keine letzte Spannung. Der Nullpunkt kann daraus nicht ermittelt werden.",
-  "OK starts the drain again.": "OK startet den Entleerungsvorgang erneut."
+  "OK starts the drain again.": "OK startet den Entleerungsvorgang erneut.",
+  "Marked files: ": "Markierte Dateien: ",
+  "Download all the marked files or only the file under the cursor?": "Alle markierten Dateien herunterladen oder nur die Datei unter dem Cursor?",
+  "All marked": "Alle markierten",
+  "Only this file": "Nur diese Datei",
+  "Download the listed files one by one": "Die Dateien der Liste einzeln herunterladen",
+  "Download the archive as one packed file": "Das Archiv als eine gepackte Datei herunterladen"
 }

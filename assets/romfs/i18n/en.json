@@ -3919,7 +3919,6 @@
   "shown. Narrow the list with a filter (START).": "shown. Narrow the list with a filter (START).",
   "Filter by words": "Filter by words",
   "Words from the file name, for example a game; empty shows every file": "Words from the file name, for example a game; empty shows every file",
-  "Download the whole archive": "Download the whole archive",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.",
   "The battery is full: the gauge is set to 100 %": "The battery is full: the gauge is set to 100 %",
@@ -4190,5 +4189,11 @@
   "A folder for this game already exists in the overlay": "A folder for this game already exists in the overlay",
   "Cannot compress the ROM": "Cannot compress the ROM",
   "Cannot make the cover image": "Cannot make the cover image",
-  "Cannot write the files to the SD card": "Cannot write the files to the SD card"
+  "Cannot write the files to the SD card": "Cannot write the files to the SD card",
+  "Marked files: ": "Marked files: ",
+  "Download all the marked files or only the file under the cursor?": "Download all the marked files or only the file under the cursor?",
+  "All marked": "All marked",
+  "Only this file": "Only this file",
+  "Download the listed files one by one": "Download the listed files one by one",
+  "Download the archive as one packed file": "Download the archive as one packed file"
 }

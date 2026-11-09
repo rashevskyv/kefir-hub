@@ -3961,7 +3961,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Este elemento está restringido: archive.org solo permite descargarlo a usuarios con sesión iniciada, y el Hub no puede iniciar sesión. No se ofrecen sus archivos.",
   "Reading the archive on archive.org": "Leyendo el archivo en archive.org",
   "Could not read the archive on archive.org": "No se pudo leer el archivo en archive.org",
-  "Download the whole archive": "Descargar todo el archivo",
   "Words from the file name, for example a game; empty shows every file": "Palabras del nombre de archivo, por ejemplo un juego; vacío muestra todos los archivos",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Conecte el cargador de inmediato y cárguelo al 100 %. Es posible que la consola no encienda durante unos 20 minutos: la batería está vacía y necesita estar un rato en el cargador. Esto es normal. No deje la consola vacía sin el cargador por mucho tiempo. Si la consola permanece apagada, el Hub aún cuenta la carga que ingresó mientras tanto.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Carga completa: la consola se descarga lo más rápido posible. Cuando se apague, conéctala al cargador. Es posible que no encienda durante unos 20 minutos: esto es normal. Luego enciéndela y abre Kefir Hub.",
@@ -4203,5 +4202,11 @@
   "No emulator found for this file": "No se encontró ningún emulador para este archivo",
   "No screenshot": "Sin captura",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "La consola se apagó, pero el registro de descarga no tiene el último voltaje. No se puede establecer el cero a partir de él.",
-  "OK starts the drain again.": "OK vuelve a iniciar el vaciado."
+  "OK starts the drain again.": "OK vuelve a iniciar el vaciado.",
+  "Marked files: ": "Archivos marcados: ",
+  "Download all the marked files or only the file under the cursor?": "¿Descargar todos los archivos marcados o solo el archivo bajo el cursor?",
+  "All marked": "Todos los marcados",
+  "Only this file": "Solo este archivo",
+  "Download the listed files one by one": "Descargar los archivos de la lista uno a uno",
+  "Download the archive as one packed file": "Descargar el archivo comprimido como un solo archivo"
 }

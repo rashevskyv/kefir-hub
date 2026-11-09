@@ -147,38 +147,66 @@ auto SearchRow(const std::string& words, std::function<void(std::string)> redraw
     return row;
 }
 
-// rows of a file list: 0 is the header, 1 the search row, the files follow
-constexpr size_t FIRST_FILE_ROW = 2;
+// rows of a file list: 0 is the header, then the search row when the list has more than one file, then the files
+auto FirstFileRow(size_t files, const std::string& words) -> size_t {
+    return files > 1 || !words.empty() ? 2 : 1;
+}
 // the name column of a file list: a size is short, a name is long
 constexpr float FILE_NAME_SHARE = 0.8f;
 
 // the pane of a file row: the screenshot of the game (when its system has a thumbnail repository) and the facts
 template<typename Hit>
-auto RowPreview(const Collection& c, const std::vector<Hit>& hits, size_t shown, size_t row) -> std::optional<ui::menu::tools::PreviewInfo> {
-    if (row < FIRST_FILE_ROW || row - FIRST_FILE_ROW >= shown) return std::nullopt;
-    const auto& h = hits[row - FIRST_FILE_ROW];
+auto RowPreview(const Collection& c, const std::vector<Hit>& hits, size_t shown, size_t first, size_t row) -> std::optional<ui::menu::tools::PreviewInfo> {
+    if (row < first || row - first >= shown) return std::nullopt;
+    const auto& h = hits[row - first];
     return GamePreview(c.console, h.name, h.size);
 }
 
+// the files of the marked rows
+template<typename Hit>
+auto MarkedHits(const std::vector<Hit>& hits, size_t shown, size_t first, const std::vector<size_t>& marked) -> std::vector<Hit> {
+    std::vector<Hit> out;
+    for (auto i : marked) {
+        if (i >= first && i - first < shown) out.push_back(hits[i - first]);
+    }
+    return out;
+}
+
+// START: keep the item in the ROMS list, or remove it from there
+void AddKeepEntry(ui::Sidebar& options, const Collection& c, std::function<void()> reopen) {
+    const auto saved = Load();
+    if (std::any_of(saved.begin(), saved.end(), [&](const Collection& e) { return e.console == c.console && e.item == c.item; })) {
+        options.Add<ui::SidebarEntryCallback>("Remove the collection"_i18n, [c, reopen]() { Remove(c, reopen); }, true)->SetIcon(ActionIcon::Delete);
+    } else {
+        options.Add<ui::SidebarEntryCallback>("Keep the collection"_i18n, [c, reopen]() {
+            auto list = Load();
+            list.push_back(c);
+            Save(list);
+            reopen();
+        }, true, "Adds this item to your ROMS list so you can open it again. Downloads nothing."_i18n)->SetIcon(ActionIcon::Save);
+    }
+}
+
 // the files of the archive that match `words`: A downloads one, X/Y mark several, START downloads the marked ones or all
-void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr<const std::vector<ArchiveEntry>> all, const std::string& words) {
+void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr<const std::vector<ArchiveEntry>> all, const std::string& words, std::function<void()> reopen) {
     std::vector<ArchiveEntry> hits;
     for (const auto& e : *all) {
         if (MatchesWords(e.name, words)) hits.push_back(e);
     }
     const size_t shown = std::min(hits.size(), ARCHIVE_PAGE_ROWS);
+    const size_t first = FirstFileRow(all->size(), words);
 
     auto self = std::make_shared<SystemToolsMenu*>(nullptr);
-    const std::function<void(std::string)> redraw = [self, c, archive, all](std::string w) {
+    const std::function<void(std::string)> redraw = [self, c, archive, all, reopen](std::string w) {
         if (*self) (*self)->SetPop();
-        ShowArchive(c, archive, all, w);
+        ShowArchive(c, archive, all, w, reopen);
     };
     const std::function<void()> refresh = [redraw, words]() { redraw(words); };
 
     const std::string folder = std::string{ROMS_ROOT} + c.console + "/";
     std::vector<SettingsItem> rows;
     rows.push_back(ui::menu::settings::MakeHeader(archive.name + (words.empty() ? "" : " · " + words) + " → " + folder + " (" + jobs::Describe(InnerJobs(c, hits)) + ")"));
-    rows.push_back(SearchRow(words, redraw));
+    if (first == 2) rows.push_back(SearchRow(words, redraw));
     if (hits.empty()) {
         SettingsItem row{"Nothing found"_i18n, ""};
         row.disabled = true;
@@ -204,33 +232,29 @@ void ShowArchive(const Collection& c, const RemoteFile& archive, std::shared_ptr
     auto menu = std::make_unique<SystemToolsMenu>(archive.name, std::move(rows));
     *self = menu.get();
     menu->SetNameShare(FILE_NAME_SHARE);
-    menu->SetPreview([c, hits, shown](size_t row) { return RowPreview(c, hits, shown, row); });
-    // A with rows marked downloads them, not the row under the cursor
-    menu->SetOnMarked([c, archive, hits, shown, refresh](const std::vector<size_t>& marked) {
-        std::vector<ArchiveEntry> picked;
-        for (auto i : marked) {
-            if (i >= FIRST_FILE_ROW && i - FIRST_FILE_ROW < shown) picked.push_back(hits[i - FIRST_FILE_ROW]);
-        }
+    menu->SetPreview([c, hits, shown, first](size_t row) { return RowPreview(c, hits, shown, first, row); });
+    // A with rows marked downloads them (A on another file asks: the marked ones or only that one)
+    menu->SetOnMarked([c, archive, hits, shown, first, refresh](const std::vector<size_t>& marked) {
+        const auto picked = MarkedHits(hits, shown, first, marked);
         if (!picked.empty()) jobs::Run(archive.name, InnerJobs(c, picked), refresh);
     });
-    menu->SetOptions([c, archive, hits, shown, refresh](const std::vector<size_t>& marked) {
+    menu->SetOptions([c, archive, hits, shown, first, refresh, reopen](const std::vector<size_t>& marked) {
         auto options = std::make_unique<ui::Sidebar>("Options"_i18n, ui::Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
-        std::vector<ArchiveEntry> picked_entries;
-        for (auto i : marked) {
-            if (i >= FIRST_FILE_ROW && i - FIRST_FILE_ROW < shown) picked_entries.push_back(hits[i - FIRST_FILE_ROW]);
-        }
+        const auto picked_entries = MarkedHits(hits, shown, first, marked);
         if (!picked_entries.empty()) {
             const auto picked = InnerJobs(c, picked_entries);
             options->Add<ui::SidebarEntryCallback>("Download the marked files"_i18n,
                 [c, archive, picked, refresh]() { jobs::Run(archive.name, picked, refresh); }, true, jobs::Describe(picked))->SetIcon(ActionIcon::Dump);
         }
+        // the files of the list come one by one, ready to run; the archive comes as one packed file, as it lies on archive.org
         const auto all_hits = InnerJobs(c, hits);
-        options->Add<ui::SidebarEntryCallback>("Download all"_i18n,
+        options->Add<ui::SidebarEntryCallback>("Download the listed files one by one"_i18n,
             [c, archive, all_hits, refresh]() { jobs::Run(archive.name, all_hits, refresh); }, true, jobs::Describe(all_hits))->SetIcon(ActionIcon::Dump);
         const std::vector<jobs::Job> whole{{DownloadUrl(c.item, archive.name), DestPath(c.console, archive.name), "", hash::Type::Md5, archive.size}};
-        options->Add<ui::SidebarEntryCallback>("Download the whole archive"_i18n,
-            [archive, whole, refresh]() { jobs::Run(archive.name, whole, refresh); }, true, jobs::Describe(whole))->SetIcon(ActionIcon::Dump);
+        options->Add<ui::SidebarEntryCallback>("Download the archive as one packed file"_i18n,
+            [archive, whole, refresh]() { jobs::Run(archive.name, whole, refresh); }, true, archive.name + ", " + ui::menu::grid::FormatBytes(archive.size))->SetIcon(ActionIcon::Dump);
+        AddKeepEntry(*options, c, reopen);
     });
     App::Push(std::move(menu));
 }
@@ -255,11 +279,11 @@ auto FetchListing(ui::ProgressBox* pbox, const std::string& url, Listing& out) -
     R_SUCCEED();
 }
 
-void OpenArchive(const Collection& c, const RemoteFile& archive) {
+void OpenArchive(const Collection& c, const RemoteFile& archive, std::function<void()> reopen) {
     auto listing = std::make_shared<Listing>();
     App::Push<ui::ProgressBox>(0, archive.name, "", [listing, c, archive](auto pbox) -> Result {
         return FetchListing(pbox, ArchiveListUrl(c.item, archive.name), *listing);
-    }, [listing, c, archive](Result rc) {
+    }, [listing, c, archive, reopen](Result rc) {
         if (rc == Result_TransferCancelled) return;
         if (R_FAILED(rc)) {
             if (listing->code == 401 || listing->code == 403) {
@@ -269,7 +293,7 @@ void OpenArchive(const Collection& c, const RemoteFile& archive) {
             }
             return;
         }
-        ShowArchive(c, archive, std::make_shared<const std::vector<ArchiveEntry>>(std::move(listing->entries)), "");
+        ShowArchive(c, archive, std::make_shared<const std::vector<ArchiveEntry>>(std::move(listing->entries)), "", reopen);
     });
 }
 
@@ -282,7 +306,13 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
         archives += IsArchiveName(f.name) ? 1 : 0;
         if (MatchesWords(f.name, words)) hits.push_back(f);
     }
+    // the item is one set and nothing more: its files open at once (B goes back past the item)
+    if (item->files.size() == 1 && words.empty() && LookInside(item->files[0].name, item->files[0].size, archives)) {
+        OpenArchive(c, item->files[0], reopen);
+        return;
+    }
     const size_t shown = std::min(hits.size(), ARCHIVE_PAGE_ROWS);
+    const size_t first = FirstFileRow(item->files.size(), words);
 
     // after a download or a new filter the page is rebuilt, so "on the card" is current and no second read of the item is needed
     auto self = std::make_shared<SystemToolsMenu*>(nullptr);
@@ -295,7 +325,7 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
     const std::string folder = std::string{ROMS_ROOT} + c.console + "/";
     std::vector<SettingsItem> rows;
     rows.push_back(ui::menu::settings::MakeHeader(c.label + (words.empty() ? "" : " · " + words) + " → " + folder + " (" + jobs::Describe(ToJobs(c, hits)) + ")"));
-    rows.push_back(SearchRow(words, redraw));
+    if (first == 2) rows.push_back(SearchRow(words, redraw));
     if (hits.empty()) {
         SettingsItem row{item->files.empty() ? "The item has no files to download"_i18n : "Nothing found"_i18n, ""};
         row.disabled = true;
@@ -308,7 +338,7 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
         SettingsItem row{f.name, ui::menu::grid::FormatBytes(f.size) + (inside ? " · " + "a set: A picks files inside"_i18n : fs.FileExists(DestPath(c.console, f.name)) ? " · " + "on the card"_i18n : "")};
         row.selectable = true;
         if (inside) {
-            row.action = [c, f]() { OpenArchive(c, f); };
+            row.action = [c, f, reopen]() { OpenArchive(c, f, reopen); };
         } else {
             row.action = [c, f, refresh]() { jobs::Run(c.label, ToJobs(c, {f}), refresh); };
         }
@@ -323,22 +353,16 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
     auto menu = std::make_unique<SystemToolsMenu>(c.label, std::move(rows));
     *self = menu.get();
     menu->SetNameShare(FILE_NAME_SHARE);
-    menu->SetPreview([c, hits, shown](size_t row) { return RowPreview(c, hits, shown, row); });
-    menu->SetOnMarked([c, hits, shown, refresh](const std::vector<size_t>& marked) {
-        std::vector<RemoteFile> files;
-        for (auto i : marked) {
-            if (i >= FIRST_FILE_ROW && i - FIRST_FILE_ROW < shown) files.push_back(hits[i - FIRST_FILE_ROW]);
-        }
+    menu->SetPreview([c, hits, shown, first](size_t row) { return RowPreview(c, hits, shown, first, row); });
+    menu->SetOnMarked([c, hits, shown, first, refresh](const std::vector<size_t>& marked) {
+        const auto files = MarkedHits(hits, shown, first, marked);
         if (!files.empty()) jobs::Run(c.label, ToJobs(c, files), refresh);
     });
-    menu->SetOptions([c, hits, shown, reopen, refresh](const std::vector<size_t>& marked) {
+    menu->SetOptions([c, hits, shown, first, reopen, refresh](const std::vector<size_t>& marked) {
         auto options = std::make_unique<ui::Sidebar>("Options"_i18n, ui::Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
-        if (!marked.empty()) {
-            std::vector<RemoteFile> files;
-            for (auto i : marked) {
-                if (i >= FIRST_FILE_ROW && i - FIRST_FILE_ROW < shown) files.push_back(hits[i - FIRST_FILE_ROW]);
-            }
+        const auto files = MarkedHits(hits, shown, first, marked);
+        if (!files.empty()) {
             const auto picked = ToJobs(c, files);
             options->Add<ui::SidebarEntryCallback>("Download the marked files"_i18n,
                 [c, picked, refresh]() { jobs::Run(c.label, picked, refresh); }, true, jobs::Describe(picked))->SetIcon(ActionIcon::Dump);
@@ -346,17 +370,7 @@ void ShowCollection(const Collection& c, std::shared_ptr<const Item> item, const
         const auto all = ToJobs(c, hits);
         options->Add<ui::SidebarEntryCallback>("Download all"_i18n,
             [c, all, refresh]() { jobs::Run(c.label, all, refresh); }, true, jobs::Describe(all))->SetIcon(ActionIcon::Dump);
-        const auto saved = Load();
-        if (std::any_of(saved.begin(), saved.end(), [&](const Collection& e) { return e.console == c.console && e.item == c.item; })) {
-            options->Add<ui::SidebarEntryCallback>("Remove the collection"_i18n, [c, reopen]() { Remove(c, reopen); }, true)->SetIcon(ActionIcon::Delete);
-        } else {
-            options->Add<ui::SidebarEntryCallback>("Keep the collection"_i18n, [c, reopen]() {
-                auto list = Load();
-                list.push_back(c);
-                Save(list);
-                reopen();
-            }, true, "Adds this item to your ROMS list so you can open it again. Downloads nothing."_i18n)->SetIcon(ActionIcon::Save);
-        }
+        AddKeepEntry(*options, c, reopen);
     });
     App::Push(std::move(menu));
 }

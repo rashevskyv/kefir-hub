@@ -3955,7 +3955,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "See üksus on piiratud: archive.org lubab seda alla laadida ainult sisselogitud kasutajatel ja Hub ei saa sisse logida. Selle faile ei pakuta.",
   "Reading the archive on archive.org": "Arhiivi lugemine saidilt archive.org",
   "Could not read the archive on archive.org": "Arhiivi lugemine saidilt archive.org ebaõnnestus",
-  "Download the whole archive": "Laadi alla kogu arhiiv",
   "Words from the file name, for example a game; empty shows every file": "Sõnad failnimest, näiteks mäng; tühjana kuvatakse kõik failid",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Ühendage laadija kohe vooluvõrku ja laadige see 100 %-ni. Konsool ei pruugi umbes 20 minutit käivituda: aku on tühjenenud ja peab veidi laadijal olema. See on normaalne. Ärge jätke tühja konsooli pikaks ajaks ilma laadijata. Kui konsool jääb väljalülitatuks, loeb keskus siiski vahepeal saabunud laengut.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Täiskoormus: konsool tühjeneb nii kiiresti kui võimalik. Kui see lülitub välja, ühendage laadija külge. See ei pruugi umbes 20 minutit käivituda: see on normaalne. Seejärel lülitage see sisse ja avage Kefir Hub.",
@@ -4197,5 +4196,11 @@
   "No emulator found for this file": "Sellele failile ei leitud emulaatorit",
   "No screenshot": "Ekraanipilt puudub",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsool lülitus välja, aga tühjenemislogis pole viimast pinget. Nulli ei saa selle järgi määrata.",
-  "OK starts the drain again.": "OK alustab tühjendamist uuesti."
+  "OK starts the drain again.": "OK alustab tühjendamist uuesti.",
+  "Marked files: ": "Märgitud faile: ",
+  "Download all the marked files or only the file under the cursor?": "Kas laadida alla kõik märgitud failid või ainult kursori all olev fail?",
+  "All marked": "Kõik märgitud",
+  "Only this file": "Ainult see fail",
+  "Download the listed files one by one": "Laadi loendi failid alla ükshaaval",
+  "Download the archive as one packed file": "Laadi arhiiv alla ühe pakitud failina"
 }

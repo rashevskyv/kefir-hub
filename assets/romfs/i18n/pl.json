@@ -3955,7 +3955,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Ten element jest ograniczony: archive.org zezwala na pobieranie tylko zalogowanym użytkownikom, a Hub nie może się zalogować. Jego pliki nie są oferowane.",
   "Reading the archive on archive.org": "Odczytywanie archiwum z archive.org",
   "Could not read the archive on archive.org": "Nie udało się odczytać archiwum z archive.org",
-  "Download the whole archive": "Pobierz całe archiwum",
   "Words from the file name, for example a game; empty shows every file": "Słowa z nazwy pliku, na przykład gry; puste pole pokazuje wszystkie pliki",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Podłącz ładowarkę natychmiast i naładuj ją do 100 %. Konsola może nie włączać się przez około 20 minut: bateria jest rozładowana i musi przez chwilę postać na ładowarce. To normalne. Nie zostawiaj rozładowanej konsoli bez ładowarki na długo. Jeśli konsola pozostaje wyłączona, Hub nadal zlicza ładunek, który w tym czasie napłynął.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Pełne obciążenie: konsola rozładowuje się tak szybko, jak to możliwe. Po jej wyłączeniu podłącz ładowarkę. Może się nie włączać przez około 20 minut: to normalne. Następnie włącz ją i otwórz Kefir Hub.",
@@ -4197,5 +4196,11 @@
   "No emulator found for this file": "Nie znaleziono emulatora dla tego pliku",
   "No screenshot": "Brak zrzutu ekranu",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsola wyłączyła się, ale dziennik rozładowania nie ma ostatniego napięcia. Nie można z niego ustawić zera.",
-  "OK starts the drain again.": "OK ponownie uruchamia opróżnianie."
+  "OK starts the drain again.": "OK ponownie uruchamia opróżnianie.",
+  "Marked files: ": "Zaznaczone pliki: ",
+  "Download all the marked files or only the file under the cursor?": "Pobrać wszystkie zaznaczone pliki czy tylko plik pod kursorem?",
+  "All marked": "Wszystkie zaznaczone",
+  "Only this file": "Tylko ten plik",
+  "Download the listed files one by one": "Pobierz pliki z listy po kolei",
+  "Download the archive as one packed file": "Pobierz archiwum jako jeden spakowany plik"
 }

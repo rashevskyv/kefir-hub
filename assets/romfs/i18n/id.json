@@ -3955,7 +3955,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "Item ini dibatasi: archive.org hanya mengizinkan pengguna yang masuk untuk mengunduhnya, dan Hub tidak dapat masuk. File-filenya tidak ditawarkan.",
   "Reading the archive on archive.org": "Membaca arsip di archive.org",
   "Could not read the archive on archive.org": "Tidak dapat membaca arsip di archive.org",
-  "Download the whole archive": "Unduh seluruh arsip",
   "Words from the file name, for example a game; empty shows every file": "Kata dari nama file, misalnya game; kosong menampilkan semua file",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "Colokkan pengisi daya segera dan isi daya hingga 100 %. Konsol mungkin tidak menyala selama sekitar 20 menit: baterai kosong, dan perlu mengisi daya selama beberapa waktu. Ini normal. Jangan biarkan konsol yang kosong tanpa pengisi daya terlalu lama. Jika konsol tetap mati, Hub tetap menghitung daya yang masuk selama waktu tersebut.",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "Beban penuh: konsol menguras daya secepat mungkin. Saat mati, sambungkan pengisi daya. Konsol mungkin tidak menyala selama sekitar 20 menit: ini normal. Kemudian nyalakan dan buka Kefir Hub.",
@@ -4197,5 +4196,11 @@
   "No emulator found for this file": "Tidak ada emulator yang ditemukan untuk file ini",
   "No screenshot": "Tidak ada tangkapan layar",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "Konsol mati, tetapi log pengosongan tidak memiliki voltase terakhir. Nol tidak dapat diatur darinya.",
-  "OK starts the drain again.": "OK memulai ulang pengurasan."
+  "OK starts the drain again.": "OK memulai ulang pengurasan.",
+  "Marked files: ": "File yang ditandai: ",
+  "Download all the marked files or only the file under the cursor?": "Unduh semua file yang ditandai atau hanya file di bawah kursor?",
+  "All marked": "Semua yang ditandai",
+  "Only this file": "Hanya file ini",
+  "Download the listed files one by one": "Unduh file dalam daftar satu per satu",
+  "Download the archive as one packed file": "Unduh arsip sebagai satu file terkemas"
 }

@@ -295,11 +295,15 @@ SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings:
         SetAction(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }});
     }
     SetAction(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }});
-    // selectable rows (the Web browser favourites) are marked like files in the File Browser: X marks one, Y inverts all
+    // selectable rows (the Web browser favourites) are marked like files in the File Browser: X marks one and
+    // moves to the next row, Y inverts all
     if (std::any_of(m_items.begin(), m_items.end(), [](const auto& item) { return item.selectable; })) {
         SetAction(Button::X, Action{"Select"_i18n, [this](){
             if (m_items[m_index].selectable) {
                 m_items[m_index].marked = !m_items[m_index].marked;
+            }
+            if (m_index + 1 < static_cast<s64>(m_items.size())) {
+                SetIndex(m_index + 1);
             }
         }});
         SetAction(Button::Y, Action{"Invert"_i18n, [this](){
@@ -560,7 +564,22 @@ void SystemToolsMenu::OnSelect() {
         for (size_t i = 0; i < m_items.size(); i++) {
             if (m_items[i].selectable && m_items[i].marked) marked.push_back(i);
         }
-        if (!marked.empty()) {
+        const auto& here = m_items[m_index];
+        // a row that is not a file (the filter row) does its own thing
+        if (!marked.empty() && (here.selectable || !here.action)) {
+            // A on a file that is not the only marked one: the user may mean the marks or just this file
+            if (here.selectable && here.action && !(marked.size() == 1 && marked[0] == static_cast<size_t>(m_index))) {
+                App::Push<ui::OptionBox>("Marked files: "_i18n + std::to_string(marked.size()) + "\n" + "Download all the marked files or only the file under the cursor?"_i18n,
+                    "All marked"_i18n, "Only this file"_i18n, 0, [this, marked](auto op) {
+                        if (!op) return;
+                        if (*op == 0) {
+                            m_on_marked(marked);
+                        } else if (m_items[m_index].action) {
+                            m_items[m_index].action();
+                        }
+                    });
+                return;
+            }
             m_on_marked(marked);
             return;
         }

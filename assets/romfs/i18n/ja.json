@@ -3960,7 +3960,6 @@
   "This item is restricted: archive.org lets only signed-in users download it, and the Hub cannot sign in. Its files are not offered.": "このアイテムは制限されています：archive.orgはサインインしたユーザーのみダウンロードを許可しており、Hubはサインインできません。ファイルは提供されません。",
   "Reading the archive on archive.org": "archive.org からアーカイブを読み込んでいます",
   "Could not read the archive on archive.org": "archive.org のアーカイブを読み込めませんでした。",
-  "Download the whole archive": "アーカイブ全体をダウンロード",
   "Words from the file name, for example a game; empty shows every file": "ファイル名に含まれる単語（例：ゲーム名）。空欄の場合はすべてのファイルを表示します",
   "Plug the charger in at once and charge it to 100 %. The console may not start for about 20 minutes: the battery is empty, and it needs to lie on the charger for a while. This is normal. Do not leave the empty console without the charger for long. If the console stays off, the Hub still counts the charge that came in meanwhile.": "すぐに充電器を接続し、100%まで充電してください。バッテリーが空のため、コンソールが起動するまでに約20分かかる場合があります。しばらく充電器につないでおく必要がありますが、これは正常です。バッテリーが空のコンソールを充電器なしで長時間放置しないでください。コンソールがオフのままでも、ハブはその間に供給された充電量をカウントします。",
   "Full load: the console drains as fast as it can. When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub.": "高負荷：本体のバッテリーを可能な限り急速に消費します。電源が切れたら充電器を接続してください。約20分間起動しない場合がありますが、これは正常です。その後、電源を入れてKefir Hubを開いてください。",
@@ -4202,5 +4201,11 @@
   "No emulator found for this file": "このファイルに対応するエミュレータが見つかりません",
   "No screenshot": "スクリーンショットなし",
   "The console switched off, but the drain log has no last voltage. The zero cannot be set from it.": "本体の電源が切れましたが、放電ログに最後の電圧がありません。そこからゼロを設定することはできません。",
-  "OK starts the drain again.": "OKでドレインを再開します。"
+  "OK starts the drain again.": "OKでドレインを再開します。",
+  "Marked files: ": "マークしたファイル: ",
+  "Download all the marked files or only the file under the cursor?": "マークしたファイルをすべてダウンロードしますか？それともカーソル位置のファイルだけですか？",
+  "All marked": "マークしたすべて",
+  "Only this file": "このファイルのみ",
+  "Download the listed files one by one": "リストのファイルを1つずつダウンロード",
+  "Download the archive as one packed file": "アーカイブを圧縮ファイル1つとしてダウンロード"
 }
