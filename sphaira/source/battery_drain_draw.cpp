@@ -3,6 +3,15 @@
 #include "ui/battery_gauge.hpp"
 
 namespace sphaira::battery {
+namespace {
+
+// the gauge's own sign (the cell's sense resistor; the console's supply from the charger does not pass it): the value is shown
+// without a sign, the label says the direction (owner, 2026-11-09)
+auto CurrentLabel(int ma) -> std::string {
+    return ma >= 0 ? "Into the battery"_i18n : "From the battery"_i18n;
+}
+
+} // namespace
 
 void DrainMenu::Chart(NVGcontext* vg, float x, float y, float w, float h, const std::string& title, const std::string& value,
            std::initializer_list<Line> lines, float lo, float hi, NVGcolor text, NVGcolor info, float mark,
@@ -176,7 +185,7 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
     // the figures
     char v[64];
     std::snprintf(v, sizeof(v), "%d mA", std::abs(m_ma));
-    ui::gfx::drawTextArgs(vg, fx, 340.f + below, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "Charging current"_i18n : "Consumption from the battery"_i18n).c_str());
+    ui::gfx::drawTextArgs(vg, fx, 340.f + below, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", CurrentLabel(m_ma).c_str());
     ui::gfx::drawTextArgs(vg, fx + 690.f, 340.f + below, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", v);
     ui::gfx::drawTextArgs(vg, fx, 370.f + below, 19.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, info, "%s", (m_calib->charge ? "The charge has lasted"_i18n : "The drain has lasted"_i18n).c_str());
     ui::gfx::drawTextArgs(vg, fx + 690.f, 370.f + below, 19.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE, text, "%s", HoursMinutesSeconds(DrainSeconds()).c_str());
@@ -338,10 +347,10 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         info.bright = DrainLoad() && App::IsOledModel(); // an LCD's backlight drains the same on black: full brightness is enough
         const auto load = m_calib->charge || m_charger || !g_load ?(m_soft && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
         if (m_calib->charge) {
-            info.columns = {{"Charge"_i18n, std::to_string(std::max(0, ShownPct())) + " %"}, {"Charging current"_i18n, i}, {"Voltage"_i18n, v},
+            info.columns = {{"Charge"_i18n, std::to_string(std::max(0, ShownPct())) + " %"}, {CurrentLabel(m_ma), i}, {"Voltage"_i18n, v},
                             {"Temperature"_i18n, t}, {"Charging for"_i18n, HoursMinutes(DrainSeconds())}};
         } else {
-            info.columns = {{"Voltage"_i18n, v}, {"Consumption"_i18n, i}, {"Load"_i18n, load}, {"Temperature"_i18n, t},
+            info.columns = {{"Voltage"_i18n, v}, {CurrentLabel(m_ma), i}, {"Load"_i18n, load}, {"Temperature"_i18n, t},
                             {"Elapsed"_i18n, HoursMinutes(DrainSeconds())}};
         }
         return info;

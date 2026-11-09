@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.327 — battery pages: the current is labelled "Into the battery" / "From the battery"
+- The drain/charge page and the saver label the gauge's Current by its sign (the value stays without a sign); it is the cell's own current, the console's supply from the charger does not pass the sense resistor.
+- host tests: not run (UI labels only), nro: built (labelled 0.14.326), switch: pending.
+
 ## v0.14.326 — ROM downloads: a one-set item opens its files; X moves on; A with marks asks
 - `rom_download.cpp`: an item that is one set opens straight into its files; the [[Filter by words]] row only with more than one file; inside a set START says "Download the listed files one by one" and "Download the archive as one packed file" (was "Download all" / "Download the whole archive") and offers Keep / Remove the collection. `system_tools_menu.cpp`: X moves the cursor to the next row; A on a file while other files are marked asks: all marked or only this file; A on the filter row with marks opens the filter.
 - host tests: pass (quick), nro: built, switch: pending (Perfect NES item opens its files; X then A on another file asks; START labels).

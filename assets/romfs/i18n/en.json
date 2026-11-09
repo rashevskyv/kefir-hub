@@ -3863,6 +3863,8 @@
   "The console slept: the drain goes on slowly": "The console slept: the drain goes on slowly",
   "FOLDERS": "FOLDERS",
   "The console slept: the drain is over": "The console slept: the drain is over",
+  "Into the battery": "Into the battery",
+  "From the battery": "From the battery",
   "The console charged in the sleep: the drain starts over": "The console charged in the sleep: the drain starts over",
   "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).": "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64).",
   "BIOS files for the installed emulators.": "BIOS files for the installed emulators.",
