@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.324 — "No" to PC Install (USB) holds until Kefir Hub restarts
+- `app_usb.cpp`: a "No" (or B) to either "A PC install app is waiting." question no longer resets on unplug; the plug-in install probe is skipped (MTP starts at once) and the backend's marker is removed without a question until the app restarts.
+- host tests: pass (quick; app_usb.cpp is libnx-only, no host test), nro: not built, switch: pending (No → unplug → plug in again with DBI Backend running: no question, MTP starts).
+
 ## v0.14.323 — bulk save restore: one question, first; the check runs right before the restore
 - The answer to [[Saves to restore: ]] (Restore / Without a copy) now goes with the restore as an argument (std::optional<bool> copy through StartRestore → RestoreBackupGroups → PromptBatchRestoreTargets → RestoreSaves → ShowRestoreConfirm), not as the member m_batch_restore_copy that was reset before the async "Checking backups..." box ended; so no second confirm after the check. A batch that shrinks to one save keeps the answer; "Restore for a specific user" with several saves asks the same question first.
 - host tests: pass (quick), nro: not built, switch: pending (bulk restore with Restore and with Without a copy: no question after the check).

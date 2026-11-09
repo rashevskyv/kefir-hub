@@ -28,8 +28,8 @@ namespace sphaira {
 extern App* g_app;
 
 namespace {
-// "No" to PC Install for this cable: the backend then sees MTP and drops its marker to ask again.
-// Its marker is removed without a question until the cable is unplugged.
+// "No" (or B) to PC Install: no more PC Install questions until Kefir Hub restarts, on any cable.
+// The install probe is skipped (MTP starts at once) and the backend's marker is removed without a question.
 std::atomic<bool> g_pc_install_declined{false};
 
 // a plain 5 V charger and a PC both report a LowPower charger, so auto MTP starts for both. Only a PC
@@ -217,7 +217,6 @@ void App::PollUsbStorage() {
             m_usb_mounts.size(), haze::IsRunning() ? 1 : 0, pc_enumerated ? 1 : 0);
         if (charger == PsmChargerType_Unconnected) {
             m_usb_pending_mtp = false;
-            g_pc_install_declined = false;
             if (m_usb_auto_mtp) {
                 RestoreUsbAfterAutoMtp();
             } else if (haze::IsRunning() && !pc_enumerated) {
@@ -242,7 +241,7 @@ void App::PollUsbStorage() {
             m_usb_pending_mtp = false;
             // ask for a USB install app first; MTP only when nobody answers
             // (or in a build without network install, where Start() is a no-op).
-            if (App::GetUsbInstallOnConnect()) {
+            if (App::GetUsbInstallOnConnect() && !g_pc_install_declined) {
                 usb_probe::Start();
             }
             if (usb_probe::GetState() == usb_probe::State::Idle) {
@@ -285,7 +284,7 @@ void App::OfferPcInstallSwitch() {
         return;
     }
     if (g_pc_install_declined) {
-        log_write("[USB] PC install marker ignored: declined for this cable\n");
+        log_write("[USB] PC install marker ignored: declined until restart\n");
         DeletePcInstallMarker();
         return;
     }

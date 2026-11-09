@@ -30,6 +30,11 @@
 6. Відкриється черга. Перевірте сховища й розміри, виберіть потрібне й натисніть **A** ([[Install selected]]).
 7. Дочекайтеся [[Session summary]].
 
+<!-- draft
+- [[No]] (or B) to "A PC install app is waiting." — on plug-in or after the marker file — holds until Kefir Hub restarts: no more PC Install questions on any cable, MTP starts at once, the marker file is removed without a question
+- [[PC Install (USB)]] in the menu still works after that; restart Kefir Hub to get the question again
+-->
+
 Коли USB-черга завершується, Kefir Hub спершу завершує сеанс із ПК, а потім чекає на [[Session summary]]. DBI Backend Qt може зупинити свій сервер і змінити режим, поки підсумок лишається відкритим. Натисніть **B** ([[Back]]), щоб закрити екран. Щоб установити ще раз через USB, знову відкрийте [[PC Install (USB)]] і запустіть сервер на ПК. Вихід із сеансу більше не заморожує екран на кілька секунд.
 
 Черга, екран ходу встановлення, згортання, вимкнення екрана та підсумок працюють так само, як для файлів на карті пам'яті. Див. [Перегляньте чергу](sd-card.md#queue) і наступні розділи.

@@ -30,6 +30,11 @@ On sysMMC, Kefir Hub shows the ban warning when you choose [[PC Install (USB)]].
 6. The queue opens. Check the targets and sizes, select what you want, and press **A** ([[Install selected]]).
 7. Wait for the [[Session summary]].
 
+<!-- draft
+- [[No]] (or B) to "A PC install app is waiting." — on plug-in or after the marker file — holds until Kefir Hub restarts: no more PC Install questions on any cable, MTP starts at once, the marker file is removed without a question
+- [[PC Install (USB)]] in the menu still works after that; restart Kefir Hub to get the question again
+-->
+
 When the USB queue finishes, Kefir Hub ends the PC session first and then waits on [[Session summary]]. DBI Backend Qt can stop its server and switch modes while the summary stays open. Press **B** ([[Back]]) to close the screen. To install again over USB, open [[PC Install (USB)]] again and start the PC server. Leaving the session no longer freezes the screen for seconds.
 
 The queue, the progress screen, minimizing, screen off and the summary work the same as for files on the microSD card. See [Review the queue](sd-card.md#queue) and the sections after it.
