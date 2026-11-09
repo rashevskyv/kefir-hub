@@ -31,8 +31,6 @@ auto WriteCounters(FuelGauge& g, const zero::Counters& c, std::string& failed) -
     R_SUCCEED();
 }
 
-constexpr unsigned NEAR_EMPTY_PCT = 10;
-
 } // namespace
 
 // backs the chip up, writes VE and (when the chip is not near empty) the counters at 1 %, verifies by reading. `failed` says why when it did not.
@@ -56,11 +54,14 @@ auto WriteZero(int mv, std::string& failed) -> Result {
         failed = "The gauge did not take the empty voltage."_i18n;
         R_THROW(Result_ArchiveRead);
     }
-    // the cut-off is the empty battery: a chip far from it gets the counters at 1 % (not 0: HOS switches off at 0 %), else it
-    // keeps the % it had (91 % at a 3.18 V cut-off, 2026-11-06) and the charge seems to start near full. A chip already near
-    // empty (5 % after the sleep, owner 2026-11-06) keeps its own %: the charge goes on from it.
-    if (const auto soc = g.Read(MAX17050_RepSOC); soc && static_cast<unsigned>(*soc >> 8) <= NEAR_EMPTY_PCT) {
-        log_write("[Zero] the chip says %u %%: near empty, the counters stay\n", static_cast<unsigned>(*soc >> 8));
+    // the cut-off is the empty battery: a chip far from it at a still empty cell gets the counters at 1 % (not 0: HOS switches
+    // off at 0 %), else the charge seems to start near full. A chip near empty, or a cell charged since, keeps its own %.
+    const auto soc = g.Read(MAX17050_RepSOC);
+    const auto vcell = g.Read(MAX17050_VCell);
+    const unsigned pct = soc ? static_cast<unsigned>(*soc >> 8) : 0;
+    const int now_mv = vcell ? static_cast<int>((*vcell >> 3) * 0.625) : 0;
+    if (!soc || !zero::CountersAtOnePercent(now_mv, pct)) {
+        log_write("[Zero] the chip says %u %% at %d mV: the counters stay\n", pct, now_mv);
         R_SUCCEED();
     }
     const auto full = g.Read(MAX17050_FullCap);

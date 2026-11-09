@@ -20,6 +20,9 @@ int main() {
     // a log value outside the battery's real range is not a zero
     assert(InRange(3193) && InRange(3000) && InRange(2990) && InRange(2800) && InRange(3400));
     assert(!InRange(2799) && !InRange(3401) && !InRange(3450) && !InRange(0));
+    assert(CountersAtOnePercent(3180, 91) && CountersAtOnePercent(3700, 11)); // 2026-11-06: a wrong 91 % at the empty cell
+    assert(!CountersAtOnePercent(4190, 100) && !CountersAtOnePercent(3701, 50)); // 2026-11-09: charged asleep, the % is right
+    assert(!CountersAtOnePercent(3200, 10) && !CountersAtOnePercent(0, 91));   // near empty already; no voltage read
 
     // switched on without the charger: the counters say 0
     CountersIn in{0x2310, 0x2304, 0x1000, 0x1000};

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.319 — battery calibration: a sleep with a charge is not a cut-off; no 1 % on a charged cell
+- 2026-11-09: the drain slept at 3.20 V (gauge 0 %), charged on USB to 4.19 V, and the Hub wrote the zero with the counters at 1 %. Now such a sleep starts the drain over (new drain time, no zero); WriteZero writes 1 % only at ≤ 3.70 V (zero::CountersAtOnePercent).
+- host tests: pass, nro: not built, switch: pending. i18n: en + uk only (translation proxy was down).
+
 ## v0.14.318 — Add to / Remove from Nintendo Switch Online (LayeredFS overlay) in the ROM list and file manager
 - Writes the ROM, covers and an edited lclassics.titlesdb to /atmosphere/contents/<NSO tid>/romfs; only entries the Hub added can be removed. N64 without a tested config is experimental and warns.
 - host tests: pass, nro: built, switch: pending (RomFS read needs prod.keys; covers, SNES sfromsig, GBA, Genesis PNG, Virtual Boy and N64 untested on a console).
