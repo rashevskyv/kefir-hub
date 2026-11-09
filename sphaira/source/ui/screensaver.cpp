@@ -321,16 +321,29 @@ void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& inf
     const auto t = m_drift_accum > 0.f ? m_drift_accum : (float)m_drift.GetSecondsD();
     // whole pixels: the font puts every glyph on a whole pixel while bars and lines take fractions,
     // so at this slow drift the text stepped a pixel at a time and the rest slid on its own.
-    const float cx = std::round(SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x);
-    const float cy = std::round(SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y);
-    const float left = cx - BLOCK_W / 2.f;
+    float cx = std::round(SCREEN_WIDTH / 2.f + std::sin(t * 0.021f) * DRIFT_X + m_user_offset_x);
+    float cy = std::round(SCREEN_HEIGHT / 2.f + std::cos(t * 0.013f) * DRIFT_Y + m_user_offset_y);
+
+    // the block is a rectangle around (cx, cy): half_w each side, `up` above, `down` below.
+    // Keep the whole rectangle on the panel, and give the stick back what the edge took,
+    // so pushing into an edge does not wind up an offset the block then has to unwind.
+    const auto fit = [&](float half_w, float up, float down) {
+        constexpr float MARGIN = 10.f;
+        const float fx = std::clamp(cx, MARGIN + half_w, std::max(MARGIN + half_w, SCREEN_WIDTH - MARGIN - half_w));
+        const float fy = std::clamp(cy, MARGIN + up, std::max(MARGIN + up, SCREEN_HEIGHT - MARGIN - down));
+        m_user_offset_x += fx - cx;
+        m_user_offset_y += fy - cy;
+        cx = fx;
+        cy = fy;
+    };
 
     if (info.battery_view) {
         if (info.bright) {
             gfx::drawDrainFill(vg, SCREEN_WIDTH, SCREEN_HEIGHT, t);
         }
-        // the block spans cy-190 .. cy+145 and about 640 px: keep all of it on the panel, whatever the stick and the drift add up to.
-        DrawBatteryView(vg, info, std::clamp(cx, 330.f, SCREEN_WIDTH - 330.f), std::clamp(cy, 200.f, SCREEN_HEIGHT - 155.f), pdata);
+        // the battery block spans cy-190 .. cy+145 and about 640 px across (five 120 px columns).
+        fit(330.f, 190.f, 145.f);
+        DrawBatteryView(vg, info, cx, cy, pdata);
         DrawBrightnessNote(vg);
         return;
     }
@@ -394,7 +407,9 @@ void Screensaver::DrawContent(NVGcontext* vg, Theme* theme, const SaverInfo& inf
     total += show_graph ? graph_h + 10.f : 0.f;
     total += show_completion ? completion_h + 10.f : 0.f;
 
-    float y = std::clamp(cy - total / 2.f, 10.f, std::max(10.f, SCREEN_HEIGHT - 10.f - total));
+    fit(BLOCK_W / 2.f, total / 2.f, total / 2.f);
+    const float left = cx - BLOCK_W / 2.f;
+    float y = cy - total / 2.f;
 
     // the clock is deliberately the biggest thing on the panel: it is what a
     // glance from across the room can actually resolve.

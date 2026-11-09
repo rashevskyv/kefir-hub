@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.321 — screensaver block stays inside the screen on every side
+- One rectangle per view (transfer: 840 px x the visible rows; battery: 660 x 335 px) is clamped to the panel with a 10 px margin; the stick offset gives back what the edge took, so it does not wind up. Before, the transfer view had no horizontal limit and went off the left and right edges.
+- host tests: not run (UI only), nro: not built, switch: pending.
+
 ## v0.14.320 — battery calibration: only the zero is written; a sleep is never a cut-off
 - A sleep (S line) is never a cut-off: Cutoffs() skips the gap before an S line, the drain page goes on (no tail, no marker cut_mv). The zero = the last drain line before a real switch-off. The full battery writes nothing in cycle 1 either (WriteFactoryFull and PlanCounters removed): the reset set the factory capacity, the chip learns its own; FullCap is noted for the report.
 - host tests: pass, nro: built (before the bump, the binary says 0.14.319), switch: pending.
