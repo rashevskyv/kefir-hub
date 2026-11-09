@@ -30,7 +30,7 @@ void Menu::RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& lo
     RestoreSaves(entries, entries, location, backup_root);
 }
 
-void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root) {
+void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<bool> copy) {
     if (sources.size() != targets.size()) {
         App::Push<OptionBox>("Source and target count mismatch."_i18n, "OK"_i18n);
         return;
@@ -63,7 +63,7 @@ void Menu::RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, 
     auto src_ptr = std::make_shared<std::vector<Entry>>(std::move(sources));
     auto dst_ptr = std::make_shared<std::vector<Entry>>(std::move(targets));
 
-    ShowRestoreConfirm(src_ptr, dst_ptr, location, backup_root);
+    ShowRestoreConfirm(src_ptr, dst_ptr, location, backup_root, copy);
 }
 
 namespace {
@@ -129,17 +129,14 @@ auto RestoreNotes(bool many, bool replaces_live) -> std::string {
 } // namespace
 
 // the question comes before the backup scan, so the wait is after the answer, not before it.
-void Menu::ConfirmBatchRestore(size_t count, std::function<void()> scan) {
+// the scan is asynchronous (check boxes, user pickers): the answer goes with it as an argument.
+void Menu::ConfirmBatchRestore(size_t count, std::function<void(bool copy)> scan) {
     const auto prompt = "Saves to restore: "_i18n + std::to_string(count) + "\n\n" + RestoreNotes(true, true);
-    App::Push<OptionBox>(prompt, "No"_i18n, "Without a copy"_i18n, "Restore"_i18n, 2, [this, scan](auto choice) {
+    App::Push<OptionBox>(prompt, "No"_i18n, "Without a copy"_i18n, "Restore"_i18n, 2, [scan](auto choice) {
         if (!choice || *choice == 0) {
             return;
         }
-        // ShowRestoreConfirm takes the answer when the scan reaches it in this call; a question on the
-        // way (a user picker) answers later, and then ShowRestoreConfirm asks again.
-        m_batch_restore_copy = *choice == 2;
-        scan();
-        m_batch_restore_copy.reset();
+        scan(*choice == 2);
     });
 }
 
@@ -148,12 +145,11 @@ void Menu::ShowRestoreConfirm(
     std::shared_ptr<std::vector<Entry>> sources,
     std::shared_ptr<std::vector<Entry>> targets,
     const dump::DumpLocation& location,
-    const fs::FsPath& backup_root) {
+    const fs::FsPath& backup_root,
+    std::optional<bool> copy) {
 
-    if (m_batch_restore_copy) { // asked already, before the scan
-        const bool make_safety_copy = *m_batch_restore_copy;
-        m_batch_restore_copy.reset();
-        ExecuteRestore(sources, targets, location, backup_root, make_safety_copy);
+    if (copy) { // asked already, before the check: no question after it
+        ExecuteRestore(sources, targets, location, backup_root, *copy);
         return;
     }
 

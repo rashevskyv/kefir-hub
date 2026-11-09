@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.323 — bulk save restore: one question, first; the check runs right before the restore
+- The answer to [[Saves to restore: ]] (Restore / Without a copy) now goes with the restore as an argument (std::optional<bool> copy through StartRestore → RestoreBackupGroups → PromptBatchRestoreTargets → RestoreSaves → ShowRestoreConfirm), not as the member m_batch_restore_copy that was reset before the async "Checking backups..." box ended; so no second confirm after the check. A batch that shrinks to one save keeps the answer; "Restore for a specific user" with several saves asks the same question first.
+- host tests: pass (quick), nro: not built, switch: pending (bulk restore with Restore and with Without a copy: no question after the check).
+
 ## v0.14.322 — one screensaver frame for every view: the inside is separate from the frame
 - ui/saver_frame.hpp (FitSaverFrame) is the frame of every screensaver: the drifting, stick-moved centre and the rectangle kept whole on the panel. ui/screensaver_views.cpp is the inside: each view (transfer, battery calibration) gives its size (Measure) and draws in the rectangle it gets (Draw). screensaver.cpp keeps only what is the same for all: brightness, drift, stick, switch-on, the brightness note, the hint line; the brightness note now shows on the transfer saver too.
 - host tests: pass (quick, new test_saver_frame), nro: built (0.14.322), switch: pending.

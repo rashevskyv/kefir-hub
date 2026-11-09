@@ -170,6 +170,11 @@ Select several saves (or several backup groups), then choose [[Restore]]. [[Rest
 - The restore box has a second bar for the whole restore, for example [[Done:]] 3 / 40 with a percentage, above the bar of the current save.
 - The biggest saves are restored last. When the console memory runs out, the smaller ones are already in.
 - In a bulk restore, the backup check box says [[Checking backups...]] and shows which backup of how many it is checking.
+<!-- draft
+- since 0.14.323: several saves get one question only, and it comes first: [[Saves to restore: ]] N with [[No]], [[Without a copy]], [[Restore]]; after it come the user pickers (if any), then [[Checking backups...]], then the restore itself; no second [[Yes]] dialog after the check (the old text "one dialog lists every save ... confirm it with [[Yes]]" is no longer true)
+- [[Without a copy]] and [[Restore]] now act the same way, only the copy differs; before, the answer was sometimes lost during the check and the Hub asked again
+- [[Restore for a specific user]] with several saves asks the same first question, then which user, then checks and restores
+-->
 
 ## Undo a restore
 The safety copy from `/dumps/recovery/` is an ordinary save ZIP of the save as it was before the restore.

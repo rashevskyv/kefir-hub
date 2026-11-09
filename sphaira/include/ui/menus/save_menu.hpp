@@ -259,23 +259,25 @@ private:
     void BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
     void RestoreSaves(std::vector<Entry> entries);
     void RestoreSaves(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root);
-    void RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root);
+    // copy: the answer to the batch question (make a safety copy?); none = not asked yet, ShowRestoreConfirm asks.
+    void RestoreSaves(std::vector<Entry> sources, std::vector<Entry> targets, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<bool> copy = std::nullopt);
     void ShowRestoreConfirm(
         std::shared_ptr<std::vector<Entry>> sources,
         std::shared_ptr<std::vector<Entry>> targets,
         const dump::DumpLocation& location,
-        const fs::FsPath& backup_root);
+        const fs::FsPath& backup_root,
+        std::optional<bool> copy = std::nullopt);
     void ExecuteRestore(
         std::shared_ptr<std::vector<Entry>> sources,
         std::shared_ptr<std::vector<Entry>> targets,
         const dump::DumpLocation& location,
         const fs::FsPath& backup_root,
         bool make_safety_copy = true);
-    // several saves: ask first, then run the slow backup scan in `scan`; the answer skips ShowRestoreConfirm.
-    void ConfirmBatchRestore(size_t count, std::function<void()> scan);
+    // several saves: ask first, then run the slow backup scan in `scan` with the answer; it skips ShowRestoreConfirm.
+    void ConfirmBatchRestore(size_t count, std::function<void(bool copy)> scan);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
-    void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt);
+    void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt, std::optional<bool> copy = std::nullopt);
     // collect (off the UI thread, via ProgressBox) + show the picker for one
     // save, then restore the chosen archive. remote_names are archive file
     // names just downloaded from WebDAV (flagged with a cloud marker); empty
@@ -295,9 +297,9 @@ private:
     void DeleteOlderBackups(const std::vector<Entry>& seeds);
     void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid = nullptr, bool force_user_picker = false);
     void RestoreSingleBackupGroup(Entry group, const AccountUid* explicit_dest_uid, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
-    void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker = false, bool return_to_actions = false);
-    void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false);
-    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false, std::shared_ptr<std::optional<AccountUid>> shared_uid = nullptr, bool auto_match = true);
+    void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker = false, bool return_to_actions = false, std::optional<bool> copy = std::nullopt);
+    void RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false, std::optional<bool> copy = std::nullopt);
+    void PromptBatchRestoreTargets(std::shared_ptr<std::vector<Entry>> seeds, size_t step, std::shared_ptr<std::vector<AccountProfileBase>> accounts, std::shared_ptr<std::vector<Entry>> resolved_targets, std::shared_ptr<std::set<std::string>> seen_target_keys, const dump::DumpLocation& location, const fs::FsPath& backup_root, bool return_to_actions = false, std::shared_ptr<std::optional<AccountUid>> shared_uid = nullptr, bool auto_match = true, std::optional<bool> copy = std::nullopt);
     void DeleteBackupGroups(const std::vector<Entry>& groups);
     void PromptSaveTypeOptions(SaveOp op);
     void SyncSavesRemote();
@@ -358,7 +360,6 @@ private:
     bool m_dirty{};
     mutable std::vector<Entry> m_backup_cache{}; // last ReadBackupEntries() result, see ScanHomebrew()
     mutable bool m_backup_cache_valid{};
-    std::optional<bool> m_batch_restore_copy{}; // set only while ConfirmBatchRestore runs its scan
     bool m_backup_scan_pending{}; // the current view needs the library; Update() starts the scan
     struct BackupScanJob; // thread + progress, see save_menu_scan.cpp
     std::unique_ptr<BackupScanJob> m_backup_scan{};
