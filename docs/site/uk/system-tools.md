@@ -252,6 +252,16 @@ Hub завантажує список останніх оновлень ігор
 - Потрібна повна памʼять, тож запускайте Kefir Hub з гри (утримуйте **R** під час запуску).
 - На прошивках від 20.0.0 до 22.5.0 системний браузер просить оновити систему і не відкриває жодної сторінки. Тому рядок лише каже, що потрібна прошивка 23.0.1 або новіша ([[The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.]]).
 
+### [[Chromium (experimental)]] { #chromium }
+
+<!-- draft
+- new row [[Chromium (experimental)]] in Tools, Settings group, right under [[Web browser]]; it starts Chromium NX (github.com/shodowlo/chromium-nx), the Chromium browser as a homebrew; experimental: it may be slow or not start at all
+- in Applet Mode (from the album) it does not start: Kefir Hub shows how to enter Title Mode (Chromium takes about 1.9 GB)
+- in Title Mode **A** shows a warning first: experimental, takes the full memory (start Kefir Hub from a game, hold **R**), on the first start it downloads its own files (about 430 MB); [[Back]] or [[Start]]
+- [[Start]]: when `/switch/chromium-nx/chromium-nx.nro` is missing, Kefir Hub downloads it (about 28 MB) from the latest GitHub release, then Kefir Hub closes and Chromium NX starts
+- Chromium NX itself downloads its image `chromium-full.ext4` (about 430 MB) on the first start and updates itself from its releases; its files (profile, settings, downloads) stay in `/switch/chromium-nx/`
+-->
+
 ## Battery calibration {#battery-calibration}
 
 <!-- draft

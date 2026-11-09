@@ -269,6 +269,16 @@ The emuMMC is one container: the list has a line [[emuMMC]] with the sum, and it
 
 [[Web browser]] (Tools, Settings group): a page with [[Enter an address]] and the [[Favourites]]; the address comes from the console keyboard or is sent from a phone or a computer (the QR page, as in other text fields; "https://" is added when missing); [[Add to favourites]] sits above the list; on a favourite **A** opens it in the console's own browser (the same applet BrowseNX starts), **X** [[Select]]s it and **Y** [[Invert]]s the marks, as in the File Browser; **START** ([[Options]]) offers [[Open]], [[Add to favourites]] and [[Remove]] for the marked favourites, or for the one under the cursor when none is marked; the favourites are kept in `/config/kefir/web_favorites.txt`; it needs the full memory, so start Kefir Hub from a game (hold **R** while launching it); on firmware 20.0.0 to 22.5.0 the system browser asks for a system update and opens no page, so the row only says that firmware 23.0.1 or newer is needed ([[The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first.]]).
 
+### [[Chromium (experimental)]] { #chromium }
+
+<!-- draft
+- new row [[Chromium (experimental)]] in Tools, Settings group, right under [[Web browser]]; it starts Chromium NX (github.com/shodowlo/chromium-nx), the Chromium browser as a homebrew; experimental: it may be slow or not start at all
+- in Applet Mode (from the album) it does not start: Kefir Hub shows how to enter Title Mode (Chromium takes about 1.9 GB)
+- in Title Mode **A** shows a warning first: experimental, takes the full memory (start Kefir Hub from a game, hold **R**), on the first start it downloads its own files (about 430 MB); [[Back]] or [[Start]]
+- [[Start]]: when `/switch/chromium-nx/chromium-nx.nro` is missing, Kefir Hub downloads it (about 28 MB) from the latest GitHub release, then Kefir Hub closes and Chromium NX starts
+- Chromium NX itself downloads its image `chromium-full.ext4` (about 430 MB) on the first start and updates itself from its releases; its files (profile, settings, downloads) stay in `/switch/chromium-nx/`
+-->
+
 ## Battery calibration {#battery-calibration}
 
 <!-- draft

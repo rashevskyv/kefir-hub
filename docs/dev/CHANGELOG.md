@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.330 — Tools: Chromium (experimental) starts Chromium NX
+- New row [[Chromium (experimental)]] under [[Web browser]] (`chromium_nx.cpp`): Applet Mode shows the Title Mode help; Title Mode warns (experimental, full memory, ~430 MB first-start download), then downloads `/switch/chromium-nx/chromium-nx.nro` from github.com/shodowlo/chromium-nx latest release when missing and starts it; Chromium NX gets its own image and updates. i18n: 7 new keys, plus 57 keys that were missing from 24 languages. Docs: drafts in system-tools (EN, UK).
+- host tests: i18n pass; run.sh FAILED on older checks (archive.org fixture, 6 doc labels), nro: built, switch: pending (Applet Mode block; warning; download + start; Chromium NX first start).
+
 ## v0.14.329 — cheat list, tick popups and the archive tree use the same X / Y marks
 - `cheat_download_menu.cpp` (nx-cheats-db): X [[Select]] marks and steps on, Y [[Invert]], A [[Download]] the marked cheats or the one under the cursor (was A Toggle, X Select All, Y Download); the mark is drawn with `gfx::drawMarkedRow` (was "[X]"); CheatSlips [[Preview]] moves from X to R. `popup_multi_select.cpp` (Choose games / Choose files / Add-on content): X marks and steps on, Y inverts, A or B close (was A tick, X All, Y None); a tap marks the row; drawn with `drawMarkedRow`. `zip_extract_box.cpp`: X steps on; A on the tree goes to the extract rows (was a second toggle). Docs: cheats, console transfer, software (EN, UK).
 - host tests: pass (quick), nro: built, switch: pending (cheat list X/Y/A; Choose games X/Y, tap; Extract Options X steps, A goes down).

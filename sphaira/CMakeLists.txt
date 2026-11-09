@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.329)
+set(sphaira_VERSION 0.14.330)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -372,6 +372,7 @@ add_executable(sphaira
     source/repack/romfs_image.cpp
     source/repack/romfs_walk.cpp
     source/game_updates.cpp
+    source/chromium_nx.cpp
     source/bios_download.cpp
     source/download_jobs.cpp
     source/rom_download.cpp

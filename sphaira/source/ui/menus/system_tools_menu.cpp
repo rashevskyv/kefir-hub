@@ -1,5 +1,6 @@
 #include "ui/menus/tools_menu.hpp"
 #include "battery_page.hpp"
+#include "chromium_nx.hpp"
 
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/users_menu.hpp"
@@ -279,6 +280,7 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
             App::Push<ui::menu::wifi::Menu>();
         }),
         Tool("Web browser"_i18n, "Open a web page in the console's own browser. Needs the full memory."_i18n, OpenBrowser),
+        Tool("Chromium (experimental)"_i18n, "The Chromium browser as a homebrew (Chromium NX). Needs the full memory."_i18n, chromium_nx::Open),
         Tool("Users"_i18n, "Create, rename, backup and link console user profiles."_i18n, [](){
             App::Push<ui::menu::users::Menu>();
         }),

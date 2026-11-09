@@ -4200,5 +4200,12 @@
   "All marked": "Усі позначені",
   "Only this file": "Тільки цей файл",
   "Download the listed files one by one": "Завантажити файли зі списку по одному",
-  "Download the archive as one packed file": "Завантажити архів одним запакованим файлом"
+  "Download the archive as one packed file": "Завантажити архів одним запакованим файлом",
+  "Chromium (experimental)": "Chromium (експериментально)",
+  "The Chromium browser as a homebrew (Chromium NX). Needs the full memory.": "Браузер Chromium як homebrew (Chromium NX). Потребує повної пам'яті.",
+  "Chromium NX": "Chromium NX",
+  "Chromium NX could not start.": "Не вдалося запустити Chromium NX.",
+  "Downloading Chromium NX...": "Завантаження Chromium NX...",
+  "Chromium NX download failed!": "Не вдалося завантажити Chromium NX!",
+  "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).": "Chromium NX — експериментальний: він може працювати повільно або не запуститися взагалі. Він займає всю пам'ять консолі, тож запустіть Kefir Hub із гри (утримуйте R під час її запуску). Під час першого запуску він сам завантажує свої файли (близько 430 МБ)."
 }

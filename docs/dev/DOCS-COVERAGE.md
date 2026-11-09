@@ -112,6 +112,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Module Manager | Tools → Tools | uninstaller_menu.cpp | system-tools#module-manager | doc |
 | Fan curve | Tools → Tools | settings_fancurve*.cpp | system-tools#fan-curve | doc |
 | Wi-Fi manager | Tools → Tools | wifi_menu.cpp, wifi_manager.cpp | system-tools#wi-fi | doc |
+| Chromium NX launcher (experimental) | Tools → Tools | chromium_nx.cpp | system-tools#chromium | draft (v0.14.330) |
 | Tools → Tools captions (Diagnostics / Settings / Maintenance) | Tools → Tools | tools_menu.cpp (SystemToolsMenu) | system-tools | draft (v0.14.018) |
 | System information: grouped parameter → value tables, serial source | Tools → Tools → System information | system_info*.cpp, ui/menus/system_info_menu.cpp | system-tools#system-information | draft (v0.14.019) |
 | Fill free SD space with zeros | Tools → Tools (Maintenance) | zero_fill.cpp, tools_menu.cpp | system-tools#fill-free-sd-space-with-zeros | doc |
