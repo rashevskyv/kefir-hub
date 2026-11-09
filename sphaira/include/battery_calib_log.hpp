@@ -18,8 +18,8 @@ inline constexpr const char* LOG_HEADER = "time,kind,step,psm_pct,gauge_pct,rem_
 struct Sample {
     std::int64_t time{};   // unix time
     char kind{'D'};        // 'D' drain, 'C' charge. A line of kind 'S' is a flag, not a sample: the console slept at a low
-                           // battery and was woken (the drain page writes it; ParseLine skips it, so the gap around it counts
-                           // as a cut-off in Cutoffs)
+                           // battery and was woken (the drain page writes it; ParseLine skips it, and Cutoffs does not take
+                           // the gap before it for a cut-off)
     int step{1};           // the calibration step (1 to 4) the line belongs to
     int psm_pct{-1};       // what the console shows
     int gauge_pct{-1};     // the gauge's own RepSOC
@@ -93,11 +93,19 @@ struct Cutoff {
 inline constexpr std::int64_t CUTOFF_GAP_S = 30;  // a drain line this much before the next line (or the end of the log)
 inline constexpr int CUTOFF_MAX_MV = 3400;        // and the voltage then this low: not a page that was left at 80 % (or by HOME at 3.45 V)
 
+// a sleep flag line ("<time>,S,..."): the drain page woke after the gap before it, so that gap was a sleep, not a switch-off
+inline auto IsSleepLine(std::string_view line) -> bool {
+    const auto comma = line.find(',');
+    return comma != std::string_view::npos && line.substr(comma, 3) == ",S,";
+}
+
+// A sleep is never a cut-off (owner, 2026-11-09): the zero is the moment the console really switched off.
 inline auto Cutoffs(std::string_view text) -> std::vector<Cutoff> {
     std::vector<Cutoff> out;
     std::optional<Sample> prev;
+    bool slept = false; // an S line came after prev
     const auto close = [&](const std::optional<Sample>& next) {
-        if (!prev || prev->kind != 'D' || prev->mv <= 0 || prev->mv > CUTOFF_MAX_MV) {
+        if (!prev || slept || prev->kind != 'D' || prev->mv <= 0 || prev->mv > CUTOFF_MAX_MV) {
             return;
         }
         const bool ended = !next || next->kind != 'D' || next->time - prev->time > CUTOFF_GAP_S;
@@ -112,6 +120,9 @@ inline auto Cutoffs(std::string_view text) -> std::vector<Cutoff> {
         if (const auto s = ParseLine(line)) {
             close(s);
             prev = s;
+            slept = false;
+        } else if (IsSleepLine(line)) {
+            slept = true;
         }
     }
     close(std::nullopt);

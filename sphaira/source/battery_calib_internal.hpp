@@ -37,6 +37,4 @@ void ApplyLedger();
 namespace sphaira::battery::zero_write {
 // the cut-off voltage into V_empty; the counters stay as the chip has them
 auto WriteZero(int mv, std::string& failed) -> Result;
-// cycle 1, the charger ended the charge: FullCap and FullCapNom = the factory capacity, the counters 100 % (cap = 0.5 mAh units)
-auto WriteFactoryFull(std::string& failed, std::uint16_t& cap) -> Result;
 } // namespace sphaira::battery::zero_write

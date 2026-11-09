@@ -394,9 +394,9 @@ void DrainMenu::CalibTick() {
         m_run_s += static_cast<u64>(now - m_calib_last);
     }
     // a gap in the once-a-second tick after a low voltage on battery: the console slept (a low battery puts it to sleep) and
-    // was woken, with or without the charger (the user plugs it in before he wakes it). The same gap and voltage that
-    // Cutoffs() in the log calls a cut-off. The values before the gap decide: after it the charger may already be in.
-    if (!m_calib->charge && !m_calib->tail && m_calib_last && now - m_calib_last > calib::CUTOFF_GAP_S
+    // was woken, with or without the charger. The S line it writes keeps Cutoffs() from taking the gap for a cut-off. The
+    // values before the gap decide: after it the charger may already be in.
+    if (!m_calib->charge && m_calib_last && now - m_calib_last > calib::CUTOFF_GAP_S
         && !m_tick_charger && m_tick_mv > 0 && m_tick_mv <= calib::CUTOFF_MAX_MV) {
         OnSleptAwake(now);
     }
@@ -471,36 +471,18 @@ void DrainMenu::CalibTick() {
 
 void DrainMenu::OnSleptAwake(s64 now) {
     const auto slept = now - m_calib_last;
-    // the cell charged in the sleep (2026-11-09: 3.20 V, gauge 0 %, then 4.19 V after a night on USB with the cut lost): the
-    // console never reached its real cut-off (3.01 V the day before), so this is no zero. The drain starts over from here: a
-    // new start time, so the gap in the log before it does not count as this drain's cut-off.
-    if (m_mv > m_tick_mv + CHARGED_ASLEEP_MV) {
-        if (auto m = calib_flow::LoadMarker()) {
-            m->drain_time = now;
-            calib_flow::SaveMarker(*m);
-        }
-        log_write("[Calib] the console slept %lld s after %d mV on battery and charged meanwhile (now %d mV): no cut-off, the drain starts over\n",
-                  static_cast<long long>(slept), m_tick_mv, m_mv);
-        App::Notify("The console charged in the sleep: the drain starts over"_i18n);
-        return;
-    }
-    m_calib->tail = true;  // the tail title only; the load and the brightness follow the voltage (SOFT_MV)
-    m_calib_mode = -1;
-    if (auto m = calib_flow::LoadMarker()) {
-        m->cutoffs++;          // a Hub started again after this goes on in the tail too
-        m->cut_mv = m_tick_mv; // the zero's fallback when the drain log is lost
-        if (m_tick_qh) m->qh_last = m_tick_qh;
-        calib_flow::SaveMarker(*m);
-    }
+    // A sleep is never a cut-off (owner, 2026-11-09): the zero is the moment the console really switched off, which the Hub
+    // finds in the log at its next start (a new boot). HOS sleeps at the gauge's 0 % (3.20 V) and may charge in the sleep
+    // (4.19 V after a night on USB with the cut lost); the real cut-off came lower (3.01 V). The S line tells Cutoffs() so.
     if (m_log) {
         std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,%d\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_tick_mv, m_charger ? 1 : 0);
         std::fflush(m_log);
         fsdevCommitDevice("sdmc");
     }
-    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d): counted as a cut-off\n",
-              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0);
-    // with the charger in the next tick ends the drain (on_drained): the zero in cycle 1, then the charge
-    App::Notify(m_charger ? "The console slept: the drain is over"_i18n : "The console slept: the drain goes on slowly"_i18n);
+    const bool charged = m_mv > m_tick_mv + CHARGED_ASLEEP_MV;
+    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d, charged %d): a sleep, the drain goes on\n",
+              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0, charged ? 1 : 0);
+    App::Notify(charged ? "The console charged in the sleep: the drain starts over"_i18n : "The console slept: the drain goes on slowly"_i18n);
 }
 
 auto DrainMenu::CalibTitle() const -> std::string {

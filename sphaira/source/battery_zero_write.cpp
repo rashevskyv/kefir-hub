@@ -1,5 +1,5 @@
-// Battery calibration, cycle 1 (battery_zero.hpp): the zero is the cut-off voltage in V_empty and the counters at 1 %; the full battery (the charger ended
-// the charge) gets the factory capacity of this console's battery and the counters at 100 %. Nothing is computed from QH.
+// Battery calibration, cycle 1 (battery_zero.hpp): the zero is the cut-off voltage in V_empty and the counters at 1 % while the
+// cell is still empty. The only write of the calibration after the reset.
 #include "battery_page.hpp"
 #include "battery_internal.hpp"
 #include "battery_init.hpp"
@@ -68,32 +68,6 @@ auto WriteZero(int mv, std::string& failed) -> Result {
     const auto nom = g.Read(MAX17050_FullCapNom);
     R_UNLESS(full && nom && *full && *nom, Result_ArchiveRead);
     return WriteCounters(g, zero::Counters{true, static_cast<std::uint16_t>(*nom / 100), static_cast<std::uint16_t>(*full / 100), 0x0100}, failed);
-}
-
-// The charger ended the charge: FullCap and FullCapNom = the factory capacity of the battery in PRODINFO (the table the reset
-// wrote), the counters 100 %, and this system's copy. A backup is made first. `cap` gets the written FullCap (0.5 mAh units).
-auto WriteFactoryFull(std::string& failed, std::uint16_t& cap) -> Result {
-    auto s = detail::Read();
-    R_UNLESS(s.gauge, Result_ArchiveRead);
-    std::string name;
-    R_TRY(detail::Backup(s, name));
-    FuelGauge g;
-    R_UNLESS(g.open, Result_ArchiveRead);
-    const auto factory = ChooseTable(s.cal0_version, s.cal0_vendor)[2];
-    const auto old_full = g.Read(MAX17050_FullCap);
-    const auto old_nom = g.Read(MAX17050_FullCapNom);
-    log_write("[Cap] full by the charger: FullCap %u FullCapNom %u -> factory %u (CAL0 version %d, vendor %c)\n", old_full.value_or(0),
-              old_nom.value_or(0), factory, s.cal0_version, s.cal0_vendor ? s.cal0_vendor : '?');
-    if (!g.WriteVerify(MAX17050_FullCap, factory) || !g.WriteVerify(MAX17050_FullCapNom, factory)) {
-        failed = "The gauge did not take the factory capacity."_i18n;
-        R_THROW(Result_ArchiveRead);
-    }
-    const auto c = zero::PlanCounters({factory, factory, 0, 0, true});
-    R_UNLESS(c.ok, Result_ArchiveRead);
-    R_TRY(WriteCounters(g, c, failed));
-    R_TRY(detail::SaveCopyOf(g)); // HOS keeps its own copy of the learned values: it must not bring the old ones back
-    cap = factory;
-    R_SUCCEED();
 }
 
 } // namespace sphaira::battery::zero_write

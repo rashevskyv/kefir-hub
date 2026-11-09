@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.320 — battery calibration: only the zero is written; a sleep is never a cut-off
+- A sleep (S line) is never a cut-off: Cutoffs() skips the gap before an S line, the drain page goes on (no tail, no marker cut_mv). The zero = the last drain line before a real switch-off. The full battery writes nothing in cycle 1 either (WriteFactoryFull and PlanCounters removed): the reset set the factory capacity, the chip learns its own; FullCap is noted for the report.
+- host tests: pass, nro: built (before the bump, the binary says 0.14.319), switch: pending.
+
 ## v0.14.319 — battery calibration: a sleep with a charge is not a cut-off; no 1 % on a charged cell
 - 2026-11-09: the drain slept at 3.20 V (gauge 0 %), charged on USB to 4.19 V, and the Hub wrote the zero with the counters at 1 %. Now such a sleep starts the drain over (new drain time, no zero); WriteZero writes 1 % only at ≤ 3.70 V (zero::CountersAtOnePercent).
 - host tests: pass, nro: not built, switch: pending. i18n: en + uk only (translation proxy was down).

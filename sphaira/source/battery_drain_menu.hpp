@@ -86,8 +86,8 @@ struct DrainMenu final : ui::menu::MenuBase {
     // once a second: the time on battery (or on the charger), a line in the log, and the end of a charge phase
     void CalibTick();
 
-    // the console slept at a low battery (the lock screen) and was woken while it still drains: a cut-off for the drain.
-    // A flag line in the log, the marker counts it, and the run goes to the tail (its title; the load and the brightness follow SOFT_MV)
+    // the console slept at a low battery (the lock screen) and was woken while it still drains: a sleep, never a cut-off.
+    // A flag line in the log (Cutoffs() skips the gap before it), and the drain goes on
     void OnSleptAwake(s64 now);
 
     auto CalibTitle() const -> std::string;

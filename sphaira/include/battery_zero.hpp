@@ -1,11 +1,11 @@
 #pragma once
 
-// Battery calibration, cycle 1 (owner, 2026-11-05): two facts, nothing counted.
-//   The zero: the console is drained until it switches itself off; the last voltage the drain log saw is the real empty battery.
-//   It goes into V_empty (0x3A), bits 15..7 = VE in 10 mV, the threshold the chip takes as empty. The charge counters stay as
-//   the chip has them: a QH difference written there taught the chip 7066 mAh against a 4667 mAh design (owner's console).
-//   The full: the charger chip ends the charge (bq24193 CHRG_STAT = done). FullCap and FullCapNom get the factory capacity of
-//   this console's battery (never more), the counters 100 %. Cycle 2 writes nothing: the chip learns from these two points.
+// Battery calibration (owner, 2026-11-09): the Hub writes only the zero, then watches.
+//   The zero: the console is drained until it switches itself off (a new boot; a sleep is never a cut-off); the last voltage
+//   the drain log saw is the real empty battery. It goes into V_empty (0x3A), bits 15..7 = VE in 10 mV, the threshold the chip
+//   takes as empty; the counters go to 1 % only while the cell is still empty (CountersAtOnePercent).
+//   The full: the charger chip ends the charge (ChargeDone). Nothing is written: the reset already set the factory capacity,
+//   and the chip learns its own over the two cycles. The Hub only reads FullCap for the report.
 // No libnx: host-tested by tests/test_battery_zero.cpp.
 
 #include <cstdint>
@@ -58,34 +58,9 @@ inline auto ChargeDone(std::uint8_t reg08, int mv, int avg_ma) -> bool {
     return (((reg08 >> 4) & 0x3) == 0x3 && mv >= DONE_MIN_MV) || (mv >= TAPER_MIN_MV && avg_ma < TAPER_MA && avg_ma > -TAPER_MA);
 }
 
-struct CountersIn {
-    std::uint16_t full_cap{};     // 0x10
-    std::uint16_t full_cap_nom{}; // 0x23
-    std::uint16_t qh_at_start{};  // 0x4D at the cut-off: the last value the drain page saw on battery (else when the Hub started)
-    std::uint16_t qh_now{};       // 0x4D now: the difference is what the charger put in since
-    bool full{};                  // the counters say 100 %
-};
 struct Counters {
     bool ok{};
     std::uint16_t mix{}, rep{}, soc{}; // 0x0F, 0x05, 0x06
 };
-
-// the charge since the cut-off, as the three counters; two's complement QH so a discharge since then reads as 0
-inline auto PlanCounters(const CountersIn& in) -> Counters {
-    if (!in.full_cap || !in.full_cap_nom) {
-        return {};
-    }
-    if (in.full) {
-        return {true, in.full_cap_nom, in.full_cap, 0x6400};
-    }
-    const auto delta = static_cast<std::int16_t>(in.qh_now - in.qh_at_start);
-    const std::uint32_t charged = delta > 0 ? static_cast<std::uint32_t>(delta) : 0u;
-    Counters c;
-    c.mix = static_cast<std::uint16_t>(charged < in.full_cap_nom ? charged : in.full_cap_nom);
-    c.rep = static_cast<std::uint16_t>(static_cast<std::uint32_t>(c.mix) * in.full_cap / in.full_cap_nom);
-    c.soc = static_cast<std::uint16_t>(static_cast<std::uint32_t>(c.rep) * 0x6400 / in.full_cap); // 1/256 %
-    c.ok = true;
-    return c;
-}
 
 } // namespace sphaira::battery::zero

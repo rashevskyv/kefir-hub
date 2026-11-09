@@ -111,8 +111,6 @@ int main() {
     assert(back.last_set_brightness == 1 && back.boot_time == 4242);
     {
         Marker c;
-        c.cut_mv = 3195; // what the page saw before a sleep: survives a lost drain log
-        assert(Parse(Format(c)).cut_mv == 3195 && Parse("cut_mv=-5\n").cut_mv == 0);
         // the gauge's QH counter + 1 at the last tick on battery: the baseline of the charge after the cut-off
         c.qh_last = 0xFD89;
         assert(Parse(Format(c)).qh_last == 0xFD89 && Parse("qh_last=-5\n").qh_last == 0 && Parse("qh_last=70000\n").qh_last == 0);

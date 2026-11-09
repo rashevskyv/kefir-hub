@@ -48,6 +48,16 @@ int main() {
     assert(cuts[0].mv == 3220 && cuts[0].gauge_pct == 31 && cuts[0].step == 1);
     assert(cuts[1].mv == 3205 && cuts[1].gauge_pct == 1 && cuts[1].time == 2101);
     assert(Cutoffs(LOG_HEADER).empty());
+    // 2026-11-09: the drain slept at 3.20 V and the page woke (its S line): a sleep, not a cut-off; a real switch-off later is
+    std::string sleep = LOG_HEADER;
+    d.time = 3000; d.mv = 3200; d.gauge_pct = 0; sleep += FormatLine(d);
+    sleep += "56000,S,1,91,100,3200,-1,-1,0,0.0,0,0,1\n";
+    d.time = 56001; d.mv = 4190; d.gauge_pct = 100; sleep += FormatLine(d);
+    assert(Cutoffs(sleep).empty() && !ZeroCutoff(sleep, 1));
+    d.time = 56002; d.mv = 3010; d.gauge_pct = 0; sleep += FormatLine(d);              // drained again, then switched off
+    assert(Cutoffs(sleep).size() == 1 && ZeroCutoff(sleep, 1)->mv == 3010);
+    sleep += "60000,S,1,0,0,3010,-1,-1,0,0.0,0,0,0\n";                                  // a sleep at the end of the log too
+    assert(Cutoffs(sleep).empty());
 
     // a cycle is a drain to the cut-off and then a charge to 100 %; the log alone tells when it is done
     // the zero of the cycle: its last cut-off (the tail mode's one, the lowest)

@@ -56,7 +56,6 @@ struct Marker {
     bool drain_started{};              // the Hub's drain page was started in a cycle step and not left on purpose
     std::int64_t drain_time{};         // when it was started
     int cutoffs{};                     // cut-offs seen in this cycle: 0 = maximum load, 1 or more = the tail mode
-    int cut_mv{};                      // the voltage the drain page saw before the last sleep gap: the zero when the log is lost
     int qh_last{};                     // the gauge's QH counter (0x4D) + 1 at the last tick on battery, 0 = none: the charge that comes in
                                        // after the cut-off is counted from it, also when the console was off or the Hub restarted
     int cap_raw[2]{};                  // cycle 1 and 2: the capacity measured from the cut-off to the full battery (FullCap units), 0 = none
@@ -236,7 +235,6 @@ inline auto Format(const Marker& m) -> std::string {
     kv("started", m.drain_started ? 1 : 0);
     kv("time", m.drain_time);
     kv("cutoffs", m.cutoffs);
-    kv("cut_mv", m.cut_mv);
     kv("qh_last", m.qh_last);
     kv("cap1", m.cap_raw[0]);
     kv("cap2", m.cap_raw[1]);
@@ -273,7 +271,6 @@ inline auto Parse(std::string_view text) -> Marker {
         else if (key == "started") m.drain_started = v != 0;
         else if (key == "time") m.drain_time = v;
         else if (key == "cutoffs") m.cutoffs = static_cast<int>(v < 0 ? 0 : v);
-        else if (key == "cut_mv") m.cut_mv = static_cast<int>(v < 0 ? 0 : v);
         else if (key == "qh_last") m.qh_last = static_cast<int>(v < 0 || v > 0x10000 ? 0 : v);
         else if (key == "cap1") m.cap_raw[0] = static_cast<int>(v < 0 || v > 0x8000 ? 0 : v);
         else if (key == "cap2") m.cap_raw[1] = static_cast<int>(v < 0 || v > 0x8000 ? 0 : v);

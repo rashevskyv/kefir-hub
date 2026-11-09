@@ -2,8 +2,8 @@
 // 1 the factory reset, at any charge level (battery_write.cpp, detail::RunReset: the init of 0.14.111-163; the init seeds the
 //   counters from the voltage, so the old "charge to 100 % first" is not needed).
 // 2 cycle 1: drain to the cut-off; at the next Hub start the last voltage of the drain log is written into the gauge as the
-//   zero (battery_zero_write.cpp); then charge until the charger ends it, and the factory capacity is written.
-//   cycle 2: the same drain and charge, nothing written: the chip learns by itself.
+//   zero (battery_zero_write.cpp); then charge until the charger ends it, nothing written
+//   (the reset set the factory capacity). cycle 2: the same drain and charge, nothing written: the chip learns by itself.
 // 3 report, 4 transfer to the other systems (battery_calib_report.cpp). Actions > Check runs cycle 2 again.
 // A cycle counts by the drain log alone (battery_calib_log.hpp, CycleDoneByLog): the console cut off, then a charge line saw
 // 100 %. The marker on the SD (battery_calib_state.hpp, calib.txt) keeps the step, the zero and what a drain needs to go on
@@ -240,12 +240,7 @@ void DrainAgain() {
 void WriteZeroThenCharge(Marker m) {
     const auto after = static_cast<std::int64_t>(detail::LoadState().reset_at);
     const auto cut = ZeroCutoff(ReadLog(), 1, after);
-    int mv = cut ? cut->mv : 0;
-    if (!cut && m.cut_mv) {
-        // the log is gone (deleted under the page), but the page noted the voltage before the sleep itself
-        log_write("[Zero] the log has no cut-off of cycle 1's drain; the marker's own note says %d mV\n", m.cut_mv);
-        mv = m.cut_mv;
-    }
+    const int mv = cut ? cut->mv : 0;
     if (!mv) {
         log_write("[Zero] the log has no cut-off of cycle 1's drain\n");
         // the zero comes only from a cut-off: OK drains again, the next switch-off gives it
@@ -561,31 +556,20 @@ auto MeasureCapacityIfFull() -> Measure {
     if (!reg08 || !avg || !zero::ChargeDone(*reg08, mv, static_cast<int>(*avg))) {
         return Measure::NotYet;
     }
+    // the full writes nothing (owner, 2026-11-09): the reset already set the factory capacity, and the chip learns its own at
+    // the end of the charge; a write here would wipe what it learned. The capacity is noted for the report.
+    const auto full = g.Read(MAX17050_FullCap);
+    m->cap_raw[cycle - 1] = full && *full ? *full : 1;
     if (cycle == 2) {
-        // cycle 2 writes nothing: the chip learned its capacity itself; noted for the report
-        const auto full = g.Read(MAX17050_FullCap);
-        m->cap_raw[1] = full && *full ? *full : 1;
         // the second measure for the report: what the QH counter saw come in since the cut-off (qh_last = QH + 1 there)
         if (const auto qh = g.Read(MAX17050_QH); qh && m->qh_last) {
             const auto in = static_cast<std::int16_t>(*qh - static_cast<std::uint16_t>(m->qh_last - 1));
             m->qh_cap2 = in > 0 ? in : 0;
         }
-        SaveMarker(*m);
-        log_write("[Cap] cycle 2: the charger ended the charge (%d mV, REG08 %02X); the chip learned FullCap %u, QH counted %d, nothing written\n",
-                  mv, *reg08, full.value_or(0), m->qh_cap2);
-        return Measure::Done;
     }
-    std::string failed;
-    std::uint16_t cap{};
-    const auto rc = zero_write::WriteFactoryFull(failed, cap);
-    log_write("[Cap] cycle 1: the charger ended the charge (%d mV, REG08 %02X), factory capacity %d mAh, rc 0x%X\n", mv, *reg08, cap / 2, rc);
-    if (R_FAILED(rc)) {
-        App::Notify(failed.empty() ? std::string{"The gauge did not take the factory capacity."_i18n} : failed);
-        return Measure::Refused;
-    }
-    m->cap_raw[0] = cap;
     SaveMarker(*m);
-    App::Notify("The battery is full: the factory capacity is written"_i18n + " (" + std::to_string(cap / 2) + " mAh)");
+    log_write("[Cap] cycle %d: the charger ended the charge (%d mV, REG08 %02X); the chip learned FullCap %u, QH counted %d, nothing written\n",
+              cycle, mv, *reg08, full.value_or(0), cycle == 2 ? m->qh_cap2 : -1);
     return Measure::Done;
 }
 
