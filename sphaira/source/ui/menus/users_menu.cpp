@@ -6,6 +6,7 @@
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/sidebar.hpp"
 
@@ -175,44 +176,25 @@ auto Menu::TryLoadAvatar(Item& u) -> bool {
 }
 
 void Menu::ToggleCurrentSelection() {
-    if (m_items.empty()) {
-        return;
-    }
-    auto& item = m_items[m_index];
-    item.selected ^= 1;
-    m_selected_count += item.selected ? 1 : -1;
-    if (m_index + 1 < static_cast<s64>(m_items.size())) {
-        SetIndex(m_index + 1);
+    const auto next = marks::Toggle(m_items.size(), m_index, marks::Selected(m_items));
+    m_selected_count = marks::Count(m_items.size(), marks::Selected(m_items));
+    if (next != m_index) {
+        SetIndex(next);
         m_list->EnsureVisible(m_index, m_items.size());
     }
 }
 
 void Menu::InvertSelection() {
-    m_selected_count = 0;
-    for (auto& item : m_items) {
-        item.selected ^= 1;
-        if (item.selected) {
-            m_selected_count++;
-        }
-    }
+    m_selected_count = marks::Invert(m_items.size(), marks::Selected(m_items));
 }
 
 void Menu::ClearSelection() {
-    for (auto& item : m_items) {
-        item.selected = false;
-    }
-    m_selected_count = 0;
+    m_selected_count = marks::SetAll(m_items.size(), false, marks::Selected(m_items));
 }
 
 auto Menu::SelectedUsers() const -> std::vector<account_link::User> {
     std::vector<account_link::User> out;
-    for (const auto& u : m_items) {
-        if (u.selected) {
-            out.push_back(u);
-        }
-    }
-    if (out.empty() && !m_items.empty()) {
-        const auto i = (m_index >= 0 && static_cast<size_t>(m_index) < m_items.size()) ? m_index : 0;
+    for (const auto i : marks::Targets(m_items.size(), m_index, marks::Selected(m_items))) {
         out.push_back(m_items[i]);
     }
     return out;

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.328 — one X / Y selection handler for every list (`ui/marks.hpp`)
+- New `sphaira/include/ui/marks.hpp`: Toggle (X marks and steps to the next row that takes a mark), Invert (Y), SetAll, Count, Marked, Targets (marked rows, else the cursor row). Homebrew, file browser, save menu, games, game components, DBI queue, system tools lists, Wi-Fi, users, backups, NAND library, restore lists, save picker and the image viewer now call it instead of their own loops. Behaviour now the same everywhere: X steps over rows that take no mark (folders, headers, failed DBI rows); Y clears such rows; game components' Y is [[Invert]] (was Select all) and X steps on; the image viewer keeps the picture on X. Left out: archive tree checkboxes (zip extract) and the cheat list (A toggles there).
+- host tests: pass (quick, new test_marks), nro: built (labelled 0.14.327), switch: pending (X/Y in homebrew with folders, file browser files vs folders, game components, DBI queue).
+
 ## v0.14.327 — battery pages: the current is labelled "Into the battery" / "From the battery"
 - The drain/charge page and the saver label the gauge's Current by its sign (the value stays without a sign); it is the cell's own current, the console's supply from the charger does not pass the sense resistor.
 - host tests: not run (UI labels only), nro: built (labelled 0.14.326), switch: pending.

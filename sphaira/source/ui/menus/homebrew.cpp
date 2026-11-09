@@ -5,6 +5,7 @@
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/homebrew_internal.hpp"
 #include "ui/menus/install_share.hpp"
+#include "ui/marks.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
@@ -306,48 +307,29 @@ void Menu::OnLayoutChange() {
 }
 
 
+// X / Y marks (ui/marks.hpp): only apps take a mark, folders and the updater stub do not.
 void Menu::ToggleCurrentSelection() {
-    if (m_entries_current.empty()) {
-        return;
-    }
-
-    auto& entry = GetEntry();
-    if (!entry.is_dir && !IsKefirUpdaterStub(entry)) {
-        entry.selected ^= 1;
-        m_selected_count += entry.selected ? 1 : -1;
-    }
-
-    if (m_index + 1 < static_cast<s64>(m_entries_current.size())) {
-        SetIndex(m_index + 1);
+    const auto app = [this](size_t i) { const auto& e = GetEntry(i); return !e.is_dir && !IsKefirUpdaterStub(e); };
+    const auto next = marks::Toggle(m_entries_current.size(), m_index, [this](size_t i) -> auto& { return GetEntry(i).selected; }, app);
+    m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+    if (next != m_index) {
+        SetIndex(next);
         m_list->EnsureVisible(m_index, m_entries_current.size());
     }
 }
 
 void Menu::InvertSelection() {
-    m_selected_count = 0;
     // only the apps of the folder on screen
-    for (const auto index : m_entries_index[Filter_All]) {
-        auto& entry = Entry(index);
-        if (entry.is_dir || IsKefirUpdaterStub(entry)) {
-            entry.selected = false;
-            continue;
-        }
-        if (entry.hbini.hidden && !m_show_hidden.Get()) {
-            entry.selected = false;
-            continue;
-        }
-        entry.selected ^= 1;
-        if (entry.selected) {
-            m_selected_count++;
-        }
-    }
+    const auto& rows = m_entries_index[Filter_All];
+    const auto app = [this, &rows](size_t i) {
+        const auto& e = Entry(rows[i]);
+        return !e.is_dir && !IsKefirUpdaterStub(e) && !(e.hbini.hidden && !m_show_hidden.Get());
+    };
+    m_selected_count = marks::Invert(rows.size(), [this, &rows](size_t i) -> auto& { return Entry(rows[i]).selected; }, app);
 }
 
 void Menu::ClearSelection() {
-    for (auto& entry : m_entries) {
-        entry.selected = false;
-    }
-    m_selected_count = 0;
+    m_selected_count = marks::SetAll(m_entries.size(), false, marks::Selected(m_entries));
 }
 
 auto Menu::GetSelectedEntries() const -> std::vector<NroEntry> {

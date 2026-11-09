@@ -11,6 +11,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/theme_creator.hpp"
 #include "ui/layout.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
@@ -179,20 +180,14 @@ void Menu::UpdateFullscreenAction() {
     }});
 }
 
+// X / Y marks (ui/marks.hpp). X stays on the picture on screen: here a step would change the picture.
 void Menu::ToggleCurrentSelection() {
-    if (m_image_index < 0 || static_cast<size_t>(m_image_index) >= m_image_selected.size()) {
-        return;
-    }
-
-    m_image_selected[m_image_index] = !m_image_selected[m_image_index];
+    marks::Toggle(m_image_selected.size(), m_image_index, [this](size_t i) -> u8& { return m_image_selected[i]; });
     UpdateImageSubHeading();
 }
 
 void Menu::InvertSelection() {
-    for (size_t i = 0; i < m_image_selected.size(); i++) {
-        m_image_selected[i] = !m_image_selected[i];
-    }
-
+    marks::Invert(m_image_selected.size(), [this](size_t i) -> u8& { return m_image_selected[i]; });
     UpdateImageSubHeading();
 }
 
@@ -421,23 +416,13 @@ auto Menu::GetDisplayName() const -> std::string {
 }
 
 auto Menu::GetSelectedCount() const -> size_t {
-    return std::count(m_image_selected.begin(), m_image_selected.end(), true);
+    return marks::Count(m_image_selected.size(), [this](size_t i) { return m_image_selected[i] != 0; });
 }
 
 auto Menu::GetTargetIndices() const -> std::vector<s64> {
-    std::vector<s64> out;
-
-    if (GetSelectedCount()) {
-        for (s64 i = 0; static_cast<size_t>(i) < m_image_selected.size(); i++) {
-            if (m_image_selected[i]) {
-                out.push_back(i);
-            }
-        }
-    } else if (m_image_index >= 0 && static_cast<size_t>(m_image_index) < m_image_paths.size()) {
-        out.push_back(m_image_index);
-    }
-
-    return out;
+    const auto rows = std::min(m_image_selected.size(), m_image_paths.size());
+    const auto targets = marks::Targets(rows, m_image_index, [this](size_t i) { return m_image_selected[i] != 0; });
+    return {targets.begin(), targets.end()};
 }
 
 auto Menu::GetTargetPaths() const -> std::vector<fs::FsPath> {

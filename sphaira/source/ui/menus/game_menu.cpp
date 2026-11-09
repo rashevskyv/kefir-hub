@@ -17,6 +17,7 @@
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/popup_list.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 
 #include "yati/nx/ncm.hpp"
@@ -583,18 +584,10 @@ void Menu::OnLayoutChange() {
 }
 
 void Menu::ToggleCurrentSelection() {
-    if (m_entries.empty()) {
-        return;
-    }
-
-    auto& entry = m_entries[m_index];
-    entry.selected ^= 1;
-    m_selected_count += entry.selected ? 1 : -1;
-
-    // step onto the next row, the way the file browser does, so a run of
-    // entries can be ticked without moving the cursor by hand in between.
-    if (m_index + 1 < static_cast<s64>(m_entries.size())) {
-        SetIndex(m_index + 1);
+    const auto next = marks::Toggle(m_entries.size(), m_index, marks::Selected(m_entries));
+    m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+    if (next != m_index) {
+        SetIndex(next);
         m_list->EnsureVisible(m_index, m_entries.size());
         return;
     }
@@ -603,13 +596,7 @@ void Menu::ToggleCurrentSelection() {
 }
 
 void Menu::InvertSelection() {
-    m_selected_count = 0;
-    for (auto& entry : m_entries) {
-        entry.selected ^= 1;
-        if (entry.selected) {
-            m_selected_count++;
-        }
-    }
+    m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
     UpdateStorageHighlight();
 }
 

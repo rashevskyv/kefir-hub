@@ -4,6 +4,7 @@
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "ui/menus/filebrowser_forwarder.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/marks.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "ui/popup_list.hpp"
@@ -395,41 +396,25 @@ void FsView::ToggleSelection() {
         m_menu->ResetSelection();
     }
 
-    const bool current_is_file = GetEntry().IsFile();
-    const bool bulk_select = App::GetApp()->m_controller.GotHeld(Button::R2);
-    if (bulk_select) {
-        s64 visible_selected_count{};
-        for (u32 i = 0; i < m_entries_current.size(); i++) {
-            if (GetEntry(i).selected) {
-                visible_selected_count++;
-            }
-        }
-
-        const auto set = visible_selected_count != static_cast<s64>(m_entries_current.size());
-        for (u32 i = 0; i < m_entries_current.size(); i++) {
-            if (!IsParentEntry(i)) {
-                GetEntry(i).selected = set;
-            }
-        }
+    // X / Y marks (ui/marks.hpp); from a file, X steps on to the next file only.
+    const auto rows = m_entries_current.size();
+    const auto mark = [this](size_t i) -> auto& { return GetEntry(i).selected; };
+    const auto any = [this](size_t i) { return !IsParentEntry(i); };
+    const auto file = [this](size_t i) { return !IsParentEntry(i) && GetEntry(i).IsFile(); };
+    auto next = m_index;
+    if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
+        // R2 + X marks the whole folder, or clears it when every row is marked already.
+        const auto all = marks::Count(rows, mark) == marks::Count(rows, any);
+        marks::SetAll(rows, !all, mark, any);
+    } else if (GetEntry().IsFile()) {
+        next = marks::Toggle(rows, m_index, mark, file);
     } else {
-        GetEntry().selected ^= 1;
+        next = marks::Toggle(rows, m_index, mark, any);
     }
 
-    m_selected_count = 0;
-    for (const auto& e : m_entries) {
-        if (e.selected) {
-            m_selected_count++;
-        }
-    }
-
-    s64 next_index = m_index + 1;
-    if (current_is_file) {
-        while (next_index < static_cast<s64>(m_entries_current.size()) && !GetEntry(next_index).IsFile()) {
-            next_index++;
-        }
-    }
-    if (!bulk_select && next_index < static_cast<s64>(m_entries_current.size())) {
-        SetIndex(next_index);
+    m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+    if (next != m_index) {
+        SetIndex(next);
     } else {
         m_menu->UpdateSubheading();
     }
@@ -444,18 +429,9 @@ void FsView::InvertSelection() {
         m_menu->ResetSelection();
     }
 
-    for (u32 i = 0; i < m_entries_current.size(); i++) {
-        if (!IsParentEntry(i)) {
-            GetEntry(i).selected ^= 1;
-        }
-    }
-
-    m_selected_count = 0;
-    for (const auto& e : m_entries) {
-        if (e.selected) {
-            m_selected_count++;
-        }
-    }
+    marks::Invert(m_entries_current.size(), [this](size_t i) -> auto& { return GetEntry(i).selected; },
+        [this](size_t i) { return !IsParentEntry(i); });
+    m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
 
     m_menu->UpdateSubheading();
 }

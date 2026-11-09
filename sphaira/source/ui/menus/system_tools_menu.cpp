@@ -29,11 +29,21 @@
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "ui/marks.hpp"
 
 #include <algorithm>
 
 namespace sphaira::ui::menu::tools {
 namespace {
+
+// the X/Y mark of a row (ui/marks.hpp) and the rows that take one
+template<typename Items>
+auto MarkOf(Items& items) {
+    return [&items](size_t i) -> auto& { return items[i].marked; };
+}
+auto Markable(const std::vector<settings::SettingsItem>& items) {
+    return [&items](size_t i) { return items[i].selectable; };
+}
 
 void ComingSoon() {
     App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
@@ -295,23 +305,13 @@ SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings:
         SetAction(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }});
     }
     SetAction(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }});
-    // selectable rows (the Web browser favourites) are marked like files in the File Browser: X marks one and
-    // moves to the next row, Y inverts all
+    // selectable rows (the Web browser favourites, ROM files) take the X/Y marks of ui/marks.hpp
     if (std::any_of(m_items.begin(), m_items.end(), [](const auto& item) { return item.selectable; })) {
         SetAction(Button::X, Action{"Select"_i18n, [this](){
-            if (m_items[m_index].selectable) {
-                m_items[m_index].marked = !m_items[m_index].marked;
-            }
-            if (m_index + 1 < static_cast<s64>(m_items.size())) {
-                SetIndex(m_index + 1);
-            }
+            SetIndex(marks::Toggle(m_items.size(), m_index, MarkOf(m_items), Markable(m_items)));
         }});
         SetAction(Button::Y, Action{"Invert"_i18n, [this](){
-            for (auto& item : m_items) {
-                if (item.selectable) {
-                    item.marked = !item.marked;
-                }
-            }
+            marks::Invert(m_items.size(), MarkOf(m_items), Markable(m_items));
         }});
     }
 
@@ -540,16 +540,7 @@ void SystemToolsMenu::SetIndex(s64 index) {
 }
 
 auto SystemToolsMenu::TargetRows() const -> std::vector<size_t> {
-    std::vector<size_t> rows;
-    for (size_t i = 0; i < m_items.size(); i++) {
-        if (m_items[i].selectable && m_items[i].marked) {
-            rows.push_back(i);
-        }
-    }
-    if (rows.empty() && m_index >= 0 && m_index < static_cast<s64>(m_items.size()) && m_items[m_index].selectable) {
-        rows.push_back(static_cast<size_t>(m_index));
-    }
-    return rows;
+    return marks::Targets(m_items.size(), m_index, MarkOf(m_items), Markable(m_items));
 }
 
 void SystemToolsMenu::SetOptions(std::function<void(const std::vector<size_t>&)> cb) {
@@ -560,10 +551,7 @@ void SystemToolsMenu::SetOptions(std::function<void(const std::vector<size_t>&)>
 
 void SystemToolsMenu::OnSelect() {
     if (m_on_marked) {
-        std::vector<size_t> marked;
-        for (size_t i = 0; i < m_items.size(); i++) {
-            if (m_items[i].selectable && m_items[i].marked) marked.push_back(i);
-        }
+        const auto marked = marks::Marked(m_items.size(), MarkOf(m_items), Markable(m_items));
         const auto& here = m_items[m_index];
         // a row that is not a file (the filter row) does its own thing
         if (!marked.empty() && (here.selectable || !here.action)) {

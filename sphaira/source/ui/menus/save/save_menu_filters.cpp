@@ -3,6 +3,7 @@
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "save_menu_internal.hpp"
+#include "ui/marks.hpp"
 #include "ui/sidebar.hpp"
 
 #include <algorithm>
@@ -15,37 +16,17 @@
 namespace sphaira::ui::menu::save {
 
 void Menu::ToggleCurrentSelection() {
-    if (m_entries.empty()) {
-        return;
-    }
-
-    m_entries[m_index].selected ^= 1;
-    if (m_entries[m_index].selected) {
-        m_selected_count++;
-    } else {
-        m_selected_count--;
-    }
-
-    // step onto the next entry, the way the file browser does.
-    if (m_index + 1 < static_cast<s64>(m_entries.size())) {
-        SetIndex(m_index + 1);
+    const auto next = marks::Toggle(m_entries.size(), m_index, marks::Selected(m_entries));
+    m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+    if (next != m_index) {
+        SetIndex(next);
         const auto g = ComputeGridSections();
         m_list->EnsureVisible(EntryToDisplay(m_index, g), g.display_count);
     }
 }
 
 void Menu::InvertSelection() {
-    if (m_entries.empty()) {
-        return;
-    }
-
-    m_selected_count = 0;
-    for (auto& e : m_entries) {
-        e.selected ^= 1;
-        if (e.selected) {
-            m_selected_count++;
-        }
-    }
+    m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
 }
 
 void Menu::ChangeCategory(s64 delta) {

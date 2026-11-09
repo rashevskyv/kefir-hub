@@ -3,6 +3,7 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 
 #include <algorithm>
@@ -84,42 +85,27 @@ void ManageBackupsMenu::UpdateSubHeading() {
 }
 
 void ManageBackupsMenu::ToggleCurrentSelection(bool advance) {
-    if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
-        return;
-    }
-    m_entries[m_index].selected ^= 1;
-    m_selected_count += m_entries[m_index].selected ? 1 : -1;
-    if (advance && m_index + 1 < static_cast<s64>(m_entries.size())) {
-        m_index++;
+    const auto next = marks::Toggle(m_entries.size(), m_index, marks::Selected(m_entries));
+    m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+    if (advance && next != m_index) {
+        m_index = next;
         m_list->EnsureVisible(m_index, m_entries.size());
     }
     UpdateSubHeading();
 }
 
 void ManageBackupsMenu::SelectAll() {
-    for (auto& e : m_entries) {
-        e.selected = true;
-    }
-    m_selected_count = static_cast<s64>(m_entries.size());
+    m_selected_count = marks::SetAll(m_entries.size(), true, marks::Selected(m_entries));
     UpdateSubHeading();
 }
 
 void ManageBackupsMenu::InvertSelection() {
-    m_selected_count = 0;
-    for (auto& e : m_entries) {
-        e.selected ^= 1;
-        if (e.selected) {
-            m_selected_count++;
-        }
-    }
+    m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
     UpdateSubHeading();
 }
 
 void ManageBackupsMenu::ClearSelection() {
-    for (auto& e : m_entries) {
-        e.selected = false;
-    }
-    m_selected_count = 0;
+    m_selected_count = marks::SetAll(m_entries.size(), false, marks::Selected(m_entries));
     UpdateSubHeading();
 }
 

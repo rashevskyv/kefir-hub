@@ -12,6 +12,7 @@
 #include "net.hpp"
 #include "ui/list.hpp"
 #include "ui/menus/menu_base.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -47,25 +48,13 @@ struct RemoteUserPacksMenu final : MenuBase {
             std::make_pair(Button::A, Action{"Restore"_i18n, [this](){ OnRestore(); }}),
             std::make_pair(Button::B, Action{"Back"_i18n, [this](){ SetPop(); }}),
             std::make_pair(Button::X, Action{"Select"_i18n, [this](){
-                if (m_entries.empty()) {
-                    return;
-                }
-                m_entries[m_index].selected ^= 1;
-                m_selected_count += m_entries[m_index].selected ? 1 : -1;
-                if (m_index + 1 < static_cast<s64>(m_entries.size())) {
-                    m_index++;
-                    m_list->EnsureVisible(m_index, m_entries.size());
-                }
+                m_index = marks::Toggle(m_entries.size(), m_index, marks::Selected(m_entries));
+                m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+                m_list->EnsureVisible(m_index, m_entries.size());
                 UpdateSubHeading();
             }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
-                m_selected_count = 0;
-                for (auto& e : m_entries) {
-                    e.selected ^= 1;
-                    if (e.selected) {
-                        m_selected_count++;
-                    }
-                }
+                m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
                 UpdateSubHeading();
             }})
         );
@@ -195,13 +184,8 @@ private:
             return;
         }
         std::vector<account_user::Pack> picked;
-        for (const auto& e : m_entries) {
-            if (e.selected) {
-                picked.push_back(e.pack);
-            }
-        }
-        if (picked.empty() && !m_entries.empty()) {
-            picked.push_back(m_entries[m_index].pack);
+        for (const auto i : marks::Targets(m_entries.size(), m_index, marks::Selected(m_entries))) {
+            picked.push_back(m_entries[i].pack);
         }
         DownloadRemotePacks(std::move(picked));
     }

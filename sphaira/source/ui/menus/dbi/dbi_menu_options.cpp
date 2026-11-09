@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "swkbd.hpp"
+#include "ui/marks.hpp"
 #include "ui/sidebar.hpp"
 
 #include <algorithm>
@@ -11,6 +12,15 @@
 #include <string>
 
 namespace sphaira::ui::menu::dbi {
+namespace {
+
+// a queue row takes an X/Y mark only when its analysis succeeded
+template<typename Queue>
+auto Installable(const Queue& queue) {
+    return [&queue](size_t i) { return R_SUCCEEDED(queue[i].analysis_result); };
+}
+
+} // namespace
 
 void Menu::UpdateActions() {
     const auto state = m_state.load();
@@ -20,24 +30,21 @@ void Menu::UpdateActions() {
             std::make_pair(Button::X, Action{"Select"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
                 if (m_install_requested) return;
-                if (m_index >= 0 && m_index < static_cast<s64>(m_queue.size())) {
-                    if (R_SUCCEEDED(m_queue[m_index].analysis_result)) {
-                        m_queue[m_index].selected = !m_queue[m_index].selected;
-                        m_queue[m_index].sync_dirty = true;
-                    }
-                    if (m_index + 1 < static_cast<s64>(m_queue.size())) {
-                        SetIndex(m_index + 1);
-                    }
+                const auto at = m_index;
+                const auto next = marks::Toggle(m_queue.size(), m_index, marks::Selected(m_queue), Installable(m_queue));
+                if (at >= 0 && at < static_cast<s64>(m_queue.size())) {
+                    m_queue[at].sync_dirty = true;
+                }
+                if (next != m_index) {
+                    SetIndex(next);
                 }
             }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
                 if (m_install_requested) return;
+                marks::Invert(m_queue.size(), marks::Selected(m_queue), Installable(m_queue));
                 for (auto& entry : m_queue) {
-                    if (R_SUCCEEDED(entry.analysis_result)) {
-                        entry.selected = !entry.selected;
-                        entry.sync_dirty = true;
-                    }
+                    entry.sync_dirty = true;
                 }
             }}),
             std::make_pair(Button::A, Action{"Install selected"_i18n, [this]() { StartInstall(); }}),

@@ -11,6 +11,7 @@
 #include "ui/list.hpp"
 #include "ui/menus/install_share.hpp"
 #include "ui/menus/menu_base.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -153,42 +154,27 @@ struct NandPackLibraryMenu final : MenuBase {
     }
 
     void ToggleCurrentSelection(bool advance = true) {
-        if (m_entries.empty() || m_index < 0 || static_cast<size_t>(m_index) >= m_entries.size()) {
-            return;
-        }
-        m_entries[m_index].selected ^= 1;
-        m_selected_count += m_entries[m_index].selected ? 1 : -1;
-        if (advance && m_index + 1 < static_cast<s64>(m_entries.size())) {
-            m_index++;
+        const auto next = marks::Toggle(m_entries.size(), m_index, marks::Selected(m_entries));
+        m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
+        if (advance && next != m_index) {
+            m_index = next;
             m_list->EnsureVisible(m_index, m_entries.size());
         }
         UpdateSubHeading();
     }
 
     void SelectAll() {
-        for (auto& e : m_entries) {
-            e.selected = true;
-        }
-        m_selected_count = static_cast<s64>(m_entries.size());
+        m_selected_count = marks::SetAll(m_entries.size(), true, marks::Selected(m_entries));
         UpdateSubHeading();
     }
 
     void InvertSelection() {
-        m_selected_count = 0;
-        for (auto& e : m_entries) {
-            e.selected ^= 1;
-            if (e.selected) {
-                m_selected_count++;
-            }
-        }
+        m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
         UpdateSubHeading();
     }
 
     void ClearSelection() {
-        for (auto& e : m_entries) {
-            e.selected = false;
-        }
-        m_selected_count = 0;
+        m_selected_count = marks::SetAll(m_entries.size(), false, marks::Selected(m_entries));
         UpdateSubHeading();
     }
 

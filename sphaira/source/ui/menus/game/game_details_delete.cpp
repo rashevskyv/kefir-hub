@@ -1,6 +1,7 @@
 // Game Details → Content tab: tick components with X / Y and delete them (START → Game actions, or A on one row).
 #include "ui/menus/game/game_details_internal.hpp"
 
+#include "ui/marks.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "app.hpp"
@@ -15,22 +16,20 @@
 namespace sphaira::ui::menu::game {
 
 auto DbiDetailsMenu::MarkedCount() const -> size_t {
-    return static_cast<size_t>(std::count(m_marked.begin(), m_marked.end(), 1));
+    return marks::Count(m_marked.size(), [this](size_t i) -> const u8& { return m_marked[i]; });
 }
 
-// X on the Content tab ticks the row under the cursor; Y ticks every row, or clears them when all are ticked.
+// the X/Y marks of the Content tab (ui/marks.hpp): X marks the row under the cursor and steps on, Y inverts.
 void DbiDetailsMenu::SyncSelectActions() {
     if (m_tab == Tab::Content) {
         SetAction(Button::X, Action{"Select"_i18n, [this](){
             m_marked.resize(m_components.size(), 0);
-            if (m_row_index >= 0 && m_row_index < static_cast<s64>(m_marked.size())) {
-                m_marked[m_row_index] ^= 1;
-            }
+            m_row_index = marks::Toggle(m_marked.size(), m_row_index, [this](size_t i) -> u8& { return m_marked[i]; });
+            m_list->EnsureVisible(m_row_index, m_marked.size());
         }});
-        SetAction(Button::Y, Action{"Select all"_i18n, [this](){
+        SetAction(Button::Y, Action{"Invert"_i18n, [this](){
             m_marked.resize(m_components.size(), 0);
-            const u8 value = MarkedCount() == m_marked.size() ? 0 : 1;
-            std::fill(m_marked.begin(), m_marked.end(), value);
+            marks::Invert(m_marked.size(), [this](size_t i) -> u8& { return m_marked[i]; });
         }});
     } else if (m_tab == Tab::Saves) {
         SetAction(Button::X, Action{"Create save slot"_i18n, [this](){
@@ -46,13 +45,10 @@ void DbiDetailsMenu::SyncSelectActions() {
 // the ticked rows, or just the one under the cursor when none is ticked.
 auto DbiDetailsMenu::DeleteTargets() const -> std::vector<GameComponentRow> {
     std::vector<GameComponentRow> out;
-    for (size_t i = 0; i < m_marked.size() && i < m_components.size(); i++) {
-        if (m_marked[i]) {
-            out.push_back(m_components[i]);
-        }
-    }
-    if (out.empty() && m_row_index >= 0 && m_row_index < static_cast<s64>(m_components.size())) {
-        out.push_back(m_components[m_row_index]);
+    const auto rows = m_components.size();
+    const auto mark = [this](size_t i) { return i < m_marked.size() && m_marked[i]; };
+    for (const auto i : marks::Targets(rows, m_row_index, mark)) {
+        out.push_back(m_components[i]);
     }
     return out;
 }

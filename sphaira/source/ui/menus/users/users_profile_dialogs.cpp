@@ -14,6 +14,7 @@
 #include "ui/menus/file_picker.hpp"
 #include "ui/menus/menu_base.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/marks.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/steamgriddb_icon.hpp"
@@ -41,10 +42,8 @@ struct SavePickMenu final : MenuBase {
         this->SetActions(
             std::make_pair(Button::A, Action{"Backup"_i18n, [this](){
                 std::vector<save::Entry> picked;
-                for (auto& e : m_entries) {
-                    if (e.selected) {
-                        picked.push_back(e);
-                    }
+                for (const auto i : marks::Marked(m_entries.size(), marks::Selected(m_entries))) {
+                    picked.push_back(m_entries[i]);
                 }
                 auto cb = m_cb;
                 SetPop();
@@ -56,14 +55,8 @@ struct SavePickMenu final : MenuBase {
                 cb(std::nullopt);
             }}),
             std::make_pair(Button::X, Action{"Select"_i18n, [this](){
-                if (m_entries.empty()) {
-                    return;
-                }
-                m_entries[m_index].selected ^= 1;
-                if (m_index + 1 < static_cast<s64>(m_entries.size())) {
-                    m_index++;
-                    m_list->EnsureVisible(m_index, m_entries.size());
-                }
+                m_index = marks::Toggle(m_entries.size(), m_index, marks::Selected(m_entries));
+                m_list->EnsureVisible(m_index, m_entries.size());
             }})
         );
         m_list = std::make_unique<List>(1, 8, Vec4{75.f, 110.f, 1145.f, 560.f}, Vec4{75.f, 110.f, 1130.f, 70.f});

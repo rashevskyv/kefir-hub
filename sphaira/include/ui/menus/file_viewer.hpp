@@ -121,7 +121,7 @@ private:
     fs::FsPath m_path;
     std::vector<fs::FsPath> m_image_paths{};
     std::vector<std::string> m_image_titles{};
-    std::vector<bool> m_image_selected{};
+    std::vector<u8> m_image_selected{}; // X / Y marks (ui/marks.hpp), one per image
     s64 m_image_index{};
     fs::FsNativeSd m_sd_fs{};
     fs::Fs* m_fs{&m_sd_fs};
