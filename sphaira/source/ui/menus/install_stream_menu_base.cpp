@@ -34,7 +34,14 @@ static void JoinInstallThread() {
 }
 
 void BackgroundInstaller::TeardownWorker() {
-    JoinInstallThread();
+    // On exit a worker stuck in a system IPC must not hold the Hub open (the system then kills it).
+    if (s_install_thread_created) {
+        if (R_FAILED(waitSingle(waiterForThread(&s_install_thread), 5'000'000'000ULL))) {
+            log_write("[BackgroundInstaller] worker did not exit in 5 s, leaving it\n");
+            return;
+        }
+        JoinInstallThread();
+    }
 }
 
 void BackgroundInstaller::RegisterMtpCallbacks() {

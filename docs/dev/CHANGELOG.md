@@ -3,7 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.343 — install names the system call it waits in; exit no longer waits forever for a stuck worker
+- Hellblade (13.5 GB, MTP) stalled after `register'd all ncas`: one of ncm db Set/Commit, ns PushApplicationRecord, avm push never returned (UI fine). Now a `[yati] ...` line precedes each call. `TeardownWorker` waits 5 s for the install thread on exit, then leaves it (before: endless wait, the system killed the Hub). host tests: not run (libnx code), nro: built, switch: Hellblade retry pending.
+
 ## v0.14.342 — MTP install: the receive buffer has a hard cap (the Hub aborted mid-install)
+- v0.14.342 on hardware: 16 games in a row over MTP, peak unread 32 MB, no "device stopped responding".
 - Owner's report (2026-11-10): the Hub stopped during an MTP install and closed with an error. Log: `begin userAppExit` without `begin app exit` = abort() on a worker thread. Cause: `Stream::Push` accepted data after a 500 ms wait without limit, so the buffer grew by the USB-minus-SD rate (41 vs 35 MB/s measured: ~400 MB for a 2.8 GB game) until operator new failed. Now unread data stops at 32 MB (Push waits in 500 ms slices, fails the write after 15 s with no progress); the reserve (72 MB) covers the vector, so it never reallocates. `[Stream::Disable]` logs peak unread MB and hard waits per file. Trade-off: when the SD is slower, USB parks in short pulses (watch for "device stopped responding"). host tests: not run (libnx code), nro: built, switch: batch install of 18 games pending.
 
 ## v0.14.341 — screensaver: a finished install shows a full bar and 100 %

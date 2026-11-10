@@ -408,8 +408,11 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
         buf.write(std::addressof(info.info), sizeof(info.info));
     }
 
+    // One line before each blocking IPC: a stalled install names its call (Hellblade, v0.14.342).
     pbox->SetInstallTransfer("Updating ncm database"_i18n);
+    log_write("[yati] ncm db set\n");
     R_TRY(ncmContentMetaDatabaseSet(std::addressof(db), std::addressof(cnmt.key), buf.buf.data(), buf.tell()));
+    log_write("[yati] ncm db commit\n");
     R_TRY(ncmContentMetaDatabaseCommit(std::addressof(db)));
 
     // push record.
@@ -418,8 +421,10 @@ Result Yati::RegisterNcasAndPushRecord(const CnmtCollection& cnmt, u32 latest_ve
     content_storage_record.storage_id = storage_id;
     pbox->SetInstallTransfer("Pushing application record"_i18n);
 
+    log_write("[yati] ns push record\n");
     R_TRY(ns::PushApplicationRecord(std::addressof(ns_app), app_id, std::addressof(content_storage_record), 1));
     if (hosversionAtLeast(6,0,0)) {
+        log_write("[yati] avm push launch version\n");
         R_TRY(avmInitialize());
         ON_SCOPE_EXIT(avmExit());
 
