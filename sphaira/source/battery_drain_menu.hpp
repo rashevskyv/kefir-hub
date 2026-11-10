@@ -2,6 +2,7 @@
 
 #include "battery_page.hpp"
 #include "battery_calib_log.hpp"
+#include "battery_drain_load.hpp"
 #include "fuel_gauge.hpp"
 #include "battery_internal.hpp"
 #include "account/account_restore.hpp"
@@ -44,11 +45,12 @@ constexpr int CIRCLES_START = 8;
 constexpr int CIRCLES_MIN = 2;
 constexpr u32 GPU_BUSY = 950;       // nvgpu load, 1000 = 100 %
 constexpr double SLOW_FRAME_MS = 70.0;
-constexpr float TAIL_BRIGHTNESS = 0.01f; // below SOFT_MV: as low as the panel goes
-// every drain: at this voltage under load (SOFT_TICKS polls in a row) the load goes off for good and the brightness goes to the
-// minimum, so the console drains slowly to a real empty. Above it the drain is the full load and the full brightness, always.
-constexpr int SOFT_MV = 3500;
-constexpr int SOFT_TICKS = 5;
+constexpr float TAIL_BRIGHTNESS = 0.01f; // as low as the panel goes
+constexpr int SCREEN_USER = 1000;        // m_calib_mode: the user's own brightness (charger in)
+// the screen is part of the load: its brightness follows the load level (battery_drain_load.hpp)
+inline auto LevelBrightness(int level) -> float {
+    return std::max(TAIL_BRIGHTNESS, level / 100.f);
+}
 constexpr const char* CALIB_LOG = "/config/kefir/battery/calib-log.csv";
 constexpr size_t CALIB_LOG_MAX = 4u * 1024 * 1024; // a longer log is kept as .old and a new one is started
 constexpr float NOMINAL_V = 3.7f; // for Wh from mAh
@@ -58,7 +60,7 @@ constexpr size_t LIVE_N = 240; // points on a chart; the history squashes to sta
 // nvgpu NVGPU_GPU_IOCTL_PMU_GET_GPU_LOAD on /dev/nvhost-ctrl-gpu: the GPU load in 1/1000 (as Status Monitor reads it)
 constexpr u32 NVGPU_GET_GPU_LOAD = 0x80044715;
 
-extern std::atomic<bool> g_load;
+extern std::atomic<int> g_load; // per cent of the full load, 0 = off
 extern std::atomic<bool> g_stop;
 extern std::atomic<u64> g_busy[LOAD_CORES];
 
@@ -145,7 +147,7 @@ private:
     // what the screensaver paints: the cycle, the battery bar, power and temperature, the energy, the time on battery
     auto SaverReadout() const -> ui::SaverInfo;
     // the calibration's drain under load on the battery: the screen is part of the load (the saver at full brightness)
-    bool DrainLoad() const { return m_calib && !m_calib->charge && !m_charger && g_load; }
+    bool DrainLoad() const { return m_calib && !m_calib->charge && !m_charger && g_load > 0; }
     // +1 while the battery charges, -1 while it drains (the live current), 0 when it hardly moves
     int BatteryDir() const { return m_ma > 30 ? 1 : m_ma < -30 ? -1 : 0; }
     // the percent on the screen: 99 while the battery still takes current, so nobody pulls the charger at a 100 % that comes early
@@ -153,9 +155,9 @@ private:
 
     int m_cycle;
     std::optional<CalibRun> m_calib;
-    int m_calib_mode{-1};   // 1 the user's screen (charger in), 2 the minimum (below SOFT_MV), 3 full; -1 = put it back at the next poll
-    bool m_soft{};          // the drain got to SOFT_MV: no load and the minimum brightness until the cut-off
-    int m_soft_n{};         // polls in a row at or below SOFT_MV
+    int m_calib_mode{-1};   // the brightness the calibration set: SCREEN_USER, or the load level; -1 = put it back at the next poll
+    int m_level{100};       // the load the cell's real charge allows, per cent (battery_drain_load.hpp); 100 down to a real 10 %
+    int m_rest_mv{};        // the smoothed rest voltage the level comes from; 0 = no value yet
     u64 m_run_s{};          // seconds of this run
     s64 m_calib_last{};
     int m_tick_mv{};        // the voltage and the charger at the last tick: what was true before a sleep gap
@@ -205,7 +207,7 @@ private:
     float m_wh_in{};
     float m_wh_out{};
     u32 m_cycle_got{};
-    bool m_dimmed{};
+    int m_dimmed{100}; // the load level the plain drain last set the brightness for
     wizard::DrainStep m_step{wizard::DrainStep::Draining};
     TimeStamp m_step_poll{};
     bool m_step_read{};

@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.332 — battery reset: the chip learns the real capacity; the drain load goes down gradually
+- Root cause of the 8069 mAh FullCap (and the 7370 / 7672 mAh before): the factory init wrote a second VFSOC read to QH0 (0x4C), copied from BDF. The chip learns FullCapNom from QH0 - QH at the next rest, so it counted 12944 mAh for a 2785 mAh drain (dQacc 0x0247 -> 0x0570, FullCapNom 4667 -> 8428 mAh before any charge). The init now writes QH (0x4D) there, as HOS boot does (`Src::Qh`, battery_init.hpp); the same drain then gives 4545 mAh. A calibration started before this build must be started again from the reset.
+- Drain load (`battery_drain_load.hpp`, host-tested): no hard cut at 3.5 V under load (that was a real 22 %). The level follows the cell's rest voltage (voltage + current x 125 mOhm; the gauge showed 2 % and 38 % at the real 10 %): 100 % down to a real 10 %, 30 % at a real 1 %, 0 at the cut-off. CPU threads duty-cycle, GPU circles and brightness scale with it; `g_load` is the level, the drain log's load column too. The level is not latched: a console that charged in a sleep gets the full load and the white saver back.
+- host tests: pass (quick), nro: built, switch: pending (reset + 2 cycles: FullCap near 4500 mAh; load chip 100 % -> 30 % -> Off below 3.55 V rest; white saver while the load is on).
+
 ## v0.14.331 — R2 + Y marks all or none in every X / Y list
 - `marks::OnY` (ui/marks.hpp) is the one Y handler: Y inverts, hold R2 + Y marks every row, or clears the marks when all rows are marked (`marks::All`; R2 is read once, `marks::WholeList` in app.cpp). All 17 Y callers use it, popups, cheat list and archive tree included. The file browser's R2 + X (the same "all or none") moves to R2 + Y; X there only marks and steps on. Docs: getting-started, file-browser (EN, UK).
 - host tests: pass (quick), nro: built, switch: pending (R2 + Y in the file browser, Homebrew, Choose games, cheat list, Extract Options).

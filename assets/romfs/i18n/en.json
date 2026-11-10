@@ -4124,7 +4124,7 @@
   "The queue did not wait for these questions. Choose for each game, then press X.": "The queue did not wait for these questions. Choose for each game, then press X.",
   "Screen type": "Screen type",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.",
+  "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.",
   "About 0 %: the zero is right.": "About 0 %: the zero is right.",
   "Above 3 %: the zero is off. Start the calibration over.": "Above 3 %: the zero is off. Start the calibration over.",
   "Before the calibration": "Before the calibration",

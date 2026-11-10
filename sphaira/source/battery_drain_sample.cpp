@@ -116,9 +116,10 @@ void DrainMenu::SampleLive() {
     u32 gpu{};
     if (m_gpu_fd_ok && R_SUCCEEDED(nvIoctl(m_gpu_fd, NVGPU_GET_GPU_LOAD, &gpu)) && gpu <= 1000) {
         Roll(m_gpu, gpu / 10.f);
-        if (g_load && gpu < GPU_BUSY) {
+        if (g_load > 0 && gpu < GPU_BUSY) {
             m_circles = std::min(CIRCLES, m_circles + 2);
         }
+        m_circles = std::min(m_circles, std::max(CIRCLES_MIN, CIRCLES * g_load / 100)); // a part load draws a part of the circles
     }
     FuelGauge g;
     const auto mv = g.Read(MAX17050_VCell);

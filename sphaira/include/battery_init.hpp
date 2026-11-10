@@ -49,12 +49,14 @@ enum class Src {
     Table,       // table[value]
     MiscOr15,    // the MiscCFG read in step 1 | 0x8000
     VfSoc,       // first VFSOC read
-    VfSoc2,      // second VFSOC read (BDF writes it to QH0)
+    Qh,          // QH (0x4D), for QH0: the chip learns the capacity from QH0 - QH at the next rest. HOS boot (Atmosphere powctl)
+                 // and Maxim's guide write QH there. BDF writes a second VFSOC read: a per cent as a charge, and the chip
+                 // learned 8428 mAh on a 4667 mAh battery (2026-11-09)
     RemCap,      // RemCap(table[2], VFSOC)
     FullCapQ,    // table[2] >> 4
     VEmpty,      // SLOT_VEMPTY: 0xA05F, or the calibration's zero voltage in VE
 };
-enum Slot { SLOT_MISC = 0, SLOT_VFSOC = 1, SLOT_VFSOC2 = 2, SLOT_VEMPTY = 3 };
+enum Slot { SLOT_MISC = 0, SLOT_VFSOC = 1, SLOT_QH = 2, SLOT_VEMPTY = 3 };
 
 struct Step {
     Op op;
@@ -63,7 +65,7 @@ struct Step {
     std::uint16_t value; // constant, table index, slot or milliseconds
 };
 
-// FINDINGS §5 steps 1..44, the 48 model words expanded into step 12.
+// FINDINGS §5 steps 1..44, the 48 model words expanded into step 12. One step differs from BDF: QH0 gets QH (Src::Qh).
 inline auto FactoryInitSteps() -> std::vector<Step> {
     std::vector<Step> s{
         {Op::Read, 0x2B, Src::Const, SLOT_MISC},
@@ -101,8 +103,8 @@ inline auto FactoryInitSteps() -> std::vector<Step> {
         {Op::Read, 0xFF, Src::Const, SLOT_VFSOC},
         {Op::Write, 0x60, Src::Const, 0x0080},
         {Op::Write, 0x48, Src::VfSoc, 0},
-        {Op::Read, 0xFF, Src::Const, SLOT_VFSOC2},
-        {Op::Write, 0x4C, Src::VfSoc2, 0},
+        {Op::Read, 0x4D, Src::Const, SLOT_QH},
+        {Op::Write, 0x4C, Src::Qh, 0},
         {Op::Write, 0x60, Src::Const, 0x0000},
         {Op::Verify, 0x17, Src::Const, 0x0060},
         {Op::Verify, 0x0F, Src::RemCap, 0},
@@ -130,7 +132,7 @@ inline auto StepValue(const Step& st, const Table& t, const std::array<std::uint
         case Src::MiscOr15: return static_cast<std::uint16_t>(slots[SLOT_MISC] | 0x8000);
         case Src::VfSoc: return slots[SLOT_VFSOC];
         case Src::VEmpty: return slots[SLOT_VEMPTY];
-        case Src::VfSoc2: return slots[SLOT_VFSOC2];
+        case Src::Qh: return slots[SLOT_QH];
         case Src::RemCap: return RemCap(t[2], slots[SLOT_VFSOC]);
         case Src::FullCapQ: return static_cast<std::uint16_t>(t[2] >> 4);
     }

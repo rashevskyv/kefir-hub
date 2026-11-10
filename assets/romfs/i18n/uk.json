@@ -4124,7 +4124,7 @@
   "Queue done. Choose what to do with the skipped files.": "Чергу завершено. Виберіть, що робити з пропущеними файлами.",
   "Screen type": "Тип екрана",
   "Auto knows only the Switch OLED model. Choose OLED for an aftermarket OLED panel: the battery drain then lights the whole screen.": "«Автоматично» розпізнає лише Switch OLED. Для неоригінальної OLED-панелі виберіть OLED: тоді під час розряду батареї світиться весь екран.",
-  "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty.": "Нижче 3,5 В: навантаження вимкнено, яскравість мінімальна, тож консоль повільно розряджається до справжнього нуля.",
+  "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Батарея майже порожня: навантаження і яскравість зменшуються разом із зарядом, тож консоль повільно розряджається до справжнього нуля.",
   "About 0 %: the zero is right.": "Близько 0 %: нуль правильний.",
   "Above 3 %: the zero is off. Start the calibration over.": "Понад 3 %: нуль неправильний. Почніть калібрування заново.",
   "Before the calibration": "До калібрування",

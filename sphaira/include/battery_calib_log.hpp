@@ -28,7 +28,7 @@ struct Sample {
     int mv{};
     int ma{};
     double temp_c{};
-    bool load{};           // the Hub's CPU / GPU load is on
+    int load{};            // the Hub's CPU / GPU load, per cent of the full one (logs before 0.14.332: 1 = on)
     int brightness{-1};    // percent the Hub set, -1 not its own
     bool charger{};
 };
@@ -36,7 +36,7 @@ struct Sample {
 inline auto FormatLine(const Sample& s) -> std::string {
     char buf[192];
     std::snprintf(buf, sizeof(buf), "%lld,%c,%d,%d,%d,%d,%d,%d,%d,%.1f,%d,%d,%d\n", static_cast<long long>(s.time), s.kind, s.step, s.psm_pct,
-        s.gauge_pct, s.rem_mah, s.full_mah, s.mv, s.ma, s.temp_c, s.load ? 1 : 0, s.brightness, s.charger ? 1 : 0);
+        s.gauge_pct, s.rem_mah, s.full_mah, s.mv, s.ma, s.temp_c, s.load, s.brightness, s.charger ? 1 : 0);
     return buf;
 }
 
@@ -57,7 +57,7 @@ inline auto ParseLine(std::string_view line) -> std::optional<Sample> {
     }
     s.time = t;
     s.kind = kind;
-    s.load = load != 0;
+    s.load = load;
     s.charger = charger != 0;
     return s;
 }

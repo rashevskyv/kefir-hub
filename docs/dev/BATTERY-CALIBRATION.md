@@ -174,6 +174,18 @@ holds, from the start of step 1: the brightness and auto-brightness the user had
 At any Hub start with the charger in, the Hub restores from the marker. If the current brightness differs from the last one the Hub
 set, the user changed it himself (he may have gone to sleep): the Hub leaves the user's value alone.
 
+**Capacity learning and QH0 (2026-11-10).** The chip learns FullCapNom at a rest as dQacc / dPacc: dQacc (0x45, 32 capacity
+LSB a unit) grows by QH0 - QH, dPacc (0x46, 1/16 % a unit) by the VFSOC change since the last rest. The factory init must
+write QH (0x4D) to QH0 (0x4C), as HOS boot does (Atmosphere powctl_max17050_driver.cpp). BDF writes a second VFSOC read
+there; with that the drain of 2026-11-09 gave dQ = (0x4117 - 0xDBF7) & 0xFFFF = 25888 LSB instead of 5571 (the real
+2785 mAh), dQacc 0x0247 -> 0x0570, and FullCapNom 4667 -> 8428 mAh before any charge; in the charge RepCap then ran to
+100 % at half the charge and FullCap followed it to 8069 mAh. With QH in QH0 the same drain gives 4545 mAh. Fixed in
+0.14.332 (`Src::Qh` in battery_init.hpp).
+
+**Light load before the cut-off (owner, 2026-11-10).** `battery_drain_load.hpp`: the load follows the cell's rest voltage
+(voltage + current x 125 mOhm), full down to a real 10 %, 30 % at a real 1 %, off at the cut-off; the brightness follows.
+The history below is the rule before 0.14.332.
+
 **Light load before the cut-off (owner, 2026-11-01).** The drain keeps the full load only down to 3.3 V under load (`SOFT_MV`).
 Below it the load goes off for good and the user's brightness and auto-brightness come back, so the console cuts off at a light
 load: under 1 A it cut off at 3.09 V, a voltage sagged by the load, and that is what the zero wrote into V_empty.

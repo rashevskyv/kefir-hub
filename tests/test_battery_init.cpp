@@ -61,6 +61,21 @@ int main() {
         }
     }
     assert(model == 48 && remcap == 5781 && status == 0 && cycles == 0x0060);
+
+    // the chip's reads feed the writes: VFSOC0 gets VFSOC, QH0 gets QH. A VFSOC in QH0 (BDF) made the chip learn the capacity
+    // from (0x4117 - QH) & 0xFFFF = 12944 mAh over 66 %: FullCapNom 8428 mAh on the 4667 mAh battery (2026-11-09)
+    std::array<std::uint16_t, 256> chip{};
+    chip[0xFF] = 0x4117;
+    chip[0x4D] = 0xF1BA;
+    std::array<std::uint16_t, 4> live{};
+    for (const auto& st : steps) {
+        if (st.op == Op::Read) {
+            live[st.value] = chip[st.reg];
+        } else if (st.op == Op::Write || st.op == Op::Verify) {
+            chip[st.reg] = StepValue(st, TABLE_0A, live);
+        }
+    }
+    assert(chip[0x48] == 0x4117 && chip[0x4C] == 0xF1BA && chip[0x06] == 0x4117);
     assert(v_empty == 0x9F5F); // the reset writes the zero it was given, not the factory 0xA05F
 
     std::puts("test_battery_init: ok");

@@ -7,6 +7,10 @@ namespace {
 
 // the gauge's own sign (the cell's sense resistor; the console's supply from the charger does not pass it): the value is shown
 // without a sign, the label says the direction (owner, 2026-11-09)
+auto LoadLabel(bool draining, int level) -> std::string {
+    return !draining || level <= 0 ? "Off"_i18n : level >= 100 ? "Maximum"_i18n : std::to_string(level) + " %";
+}
+
 auto CurrentLabel(int ma) -> std::string {
     return ma >= 0 ? "Into the battery"_i18n : "From the battery"_i18n;
 }
@@ -174,9 +178,8 @@ void DrainMenu::DrawCalib(NVGcontext* vg, Theme* theme) {
         return w;
     };
     if (!m_calib->charge) {
-        const std::string load_text = m_calib->charge || m_charger || !g_load ? (m_soft && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
-        const int brightness = m_calib->charge ? static_cast<int>(m_saved_brightness * 100.f + 0.5f)
-            : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
+        const std::string load_text = LoadLabel(!m_charger, g_load);
+        const int brightness = m_charger ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : std::max(1, m_level);
         const float w1 = Chip(fx, 282.f + below, "Load:"_i18n, load_text);
         Chip(fx + w1 + 12.f, 282.f + below, "Brightness:"_i18n, std::to_string(brightness) + " %");
 
@@ -345,7 +348,7 @@ auto DrainMenu::SaverReadout() const -> ui::SaverInfo {
         std::snprintf(i, sizeof(i), "%d mA", std::abs(m_ma));
         std::snprintf(t, sizeof(t), "%.1f \u00B0C", m_temp);
         info.bright = DrainLoad() && App::IsOledModel(); // an LCD's backlight drains the same on black: full brightness is enough
-        const auto load = m_calib->charge || m_charger || !g_load ?(m_soft && !m_charger ? "Minimum"_i18n : "Off"_i18n) : "Maximum"_i18n;
+        const auto load = LoadLabel(!m_calib->charge && !m_charger, g_load);
         if (m_calib->charge) {
             info.columns = {{"Charge"_i18n, std::to_string(std::max(0, ShownPct())) + " %"}, {CurrentLabel(m_ma), i}, {"Voltage"_i18n, v},
                             {"Temperature"_i18n, t}, {"Charging for"_i18n, HoursMinutes(DrainSeconds())}};

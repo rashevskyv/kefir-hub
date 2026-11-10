@@ -4,7 +4,7 @@
 
 namespace sphaira::battery {
 
-std::atomic<bool> g_load{false};
+std::atomic<int> g_load{0}; // the load now, in per cent of the full one (battery_drain_load.hpp); 0 = off
 std::atomic<bool> g_stop{false};
 // ticks each load thread spent burning: busy ticks / elapsed ticks is the load the Hub puts on that core.
 // (svcGetInfo IdleTickCount answers 0 here, which drew every core at 100 % even on the charger.)
@@ -24,7 +24,8 @@ void Burn(void* arg) {
     bool first_chunk = true;
     volatile double x = 1.0001;
     while (!g_stop) {
-        if (!g_load) {
+        const int level = g_load;
+        if (level <= 0) {
             svcSleepThread(50'000'000ULL);
             continue;
         }
@@ -34,6 +35,9 @@ void Burn(void* arg) {
         }
         const u64 spent = armGetSystemTick() - t0;
         g_busy[core] += spent;
+        if (level < 100) {
+            svcSleepThread(armTicksToNs(spent) * (100 - level) / level); // a part load: the core rests in proportion to what it burned
+        }
         if (first_chunk) {
             first_chunk = false;
             log_write("[Battery] burn thread %zu first chunk took %llu ticks\n", static_cast<size_t>(core), (unsigned long long)spent);
@@ -80,7 +84,7 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     SetAction(Button::B, Action{"Stop"_i18n, [this]() {
         // the full load starves the UI, so the question would appear late: pause the load while it is open
         m_stop_ask = true;
-        g_load = false;
+        g_load = 0;
         App::Push<ui::OptionBox>(m_calib
             ? (m_calib->charge ? "Leave the charge page? The calibration remembers where it is."_i18n
                                : "Stop the drain? The calibration remembers where it is."_i18n)
@@ -120,7 +124,7 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
             WriteSavedBrightness(m_saved_brightness, m_saved_auto);
         }
         // automatic brightness off and the brightness at the maximum on every model: the drain goes faster.
-        // The calibration's charge leaves the user's brightness alone (the screen only stays on). Only SOFT_MV under load
+        // The calibration's charge leaves the user's brightness alone (the screen only stays on). Only a nearly empty cell
         // takes it to the minimum (Poll).
         if (!(m_calib && m_calib->charge)) {
             if (m_saved_auto) {
@@ -146,7 +150,7 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     }
 
     g_stop = false;
-    g_load = false;
+    g_load = 0;
     for (int i = 0; i < LOAD_CORES; i++) {
         const Result create_rc = threadCreate(&m_threads[i], Burn, reinterpret_cast<void*>(static_cast<uintptr_t>(i)), nullptr, 0x4000, LOAD_PRIO, i);
         if (R_SUCCEEDED(create_rc)) {
@@ -268,7 +272,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
         if (m_calib) {
             m_calib_mode = -1; // the calibration puts its own value back (ApplyCalibScreen)
         } else {
-            lblSetCurrentBrightnessSetting(m_soft ? TAIL_BRIGHTNESS : 1.0f);
+            lblSetCurrentBrightnessSetting(LevelBrightness(m_level));
         }
     }
     PsmChargerType charger{};
@@ -295,27 +299,32 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     } else if (m_temp <= COOL_C) {
         m_hot = false;
     }
-    if (!(m_calib && m_calib->charge) && !m_soft && !m_charger && m_mv > 0) {
-        m_soft_n = m_mv <= SOFT_MV ? m_soft_n + 1 : 0;
-        if (m_soft_n >= SOFT_TICKS) {
-            m_soft = true;
-            log_write("[Battery] %d mV under load: the load is off and the brightness at the minimum until the cut-off\n", m_mv);
+    // The load follows how empty the cell really is (battery_drain_load.hpp, owner 2026-11-10): full down to a real 10 %, then less,
+    // the brightness with it. On the charger the level stays: a plain drain's screen does not go bright while the battery charges.
+    if (!(m_calib && m_calib->charge) && !m_charger && m_mv > 0) {
+        const int rest = load::RestMv(m_mv, m_ma);
+        m_rest_mv = m_rest_mv ? (m_rest_mv * 3 + rest) / 4 : rest; // smoothed: one poll's noise must not move the load
+        const int level = load::Level(load::RealPct10(m_rest_mv));
+        if ((level < 100) != (m_level < 100)) {
+            log_write("[Battery] %d mV at %d mA, rest %d mV: the load %s\n", m_mv, m_ma, m_rest_mv, level < 100 ? "goes down with the charge from here" : "is full again");
         }
+        m_level = level;
+    } else {
+        m_rest_mv = 0;
     }
-    // a drain is a drain (owner, 2026-11-07): the full load and the full brightness down to SOFT_MV, the minimum of both only below it
-    const bool load = !m_stop_ask && !m_charger && !m_docked && !m_hot && !(m_calib && m_calib->charge) && !m_soft;
-    if (load != g_load) {
-        log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", load ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
+    const int level_now = !m_stop_ask && !m_charger && !m_docked && !m_hot && !(m_calib && m_calib->charge) ? m_level : 0;
+    if ((level_now > 0) != (g_load > 0)) {
+        log_write("[Battery] drain load %s (%d%%, %.1f C, charger %d, docked %d)\n", level_now > 0 ? "on" : "off", m_pct, m_temp, m_charger, m_docked);
     }
-    g_load = load;
+    g_load = level_now;
     if (m_calib) {
         ApplyCalibScreen();
         CalibTick();
     } else if (m_lbl) {
-        if (m_soft != m_dimmed) {
-            m_dimmed = m_soft;
+        if (m_level != m_dimmed) {
+            m_dimmed = m_level;
             if (!m_saver.IsActive()) { // the saver owns the brightness while it is on; the reapply puts this back after it
-                lblSetCurrentBrightnessSetting(m_soft ? TAIL_BRIGHTNESS : 1.0f);
+                lblSetCurrentBrightnessSetting(LevelBrightness(m_level));
             }
         }
     }
@@ -335,7 +344,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
     } else {
         m_status = m_docked ? "Paused: take the console out of the dock"_i18n
             : m_hot ? "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n
-            : m_soft ? "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."_i18n
+            : m_level < 100 ? "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty."_i18n
         : "Kefir Hub loads the CPU and GPU to drain the battery. The console switches itself off; then charge it to 100%."_i18n;
     }
 }
@@ -367,15 +376,16 @@ void DrainMenu::UpdateStep() {
 }
 
 void DrainMenu::ApplyCalibScreen() {
-    if (!m_lbl || !m_calib || m_calib->charge || m_saver.IsActive()) {
+    // the saver owns the brightness while it is on; only the drain's own white page follows the load down
+    if (!m_lbl || !m_calib || m_calib->charge || (m_saver.IsActive() && !DrainLoad())) {
         return;
     }
-    const int mode = m_charger ? 1 : m_soft ? 2 : 3;
+    const int mode = m_charger ? SCREEN_USER : m_level;
     if (mode == m_calib_mode) {
         return;
     }
     m_calib_mode = mode;
-    if (mode == 1) {
+    if (mode == SCREEN_USER) {
         lblSetCurrentBrightnessSetting(m_saved_brightness);
         if (m_saved_auto) {
             lblEnableAutoBrightnessControl();
@@ -384,7 +394,7 @@ void DrainMenu::ApplyCalibScreen() {
         if (m_saved_auto) {
             lblDisableAutoBrightnessControl();
         }
-        lblSetCurrentBrightnessSetting(mode == 2 ? TAIL_BRIGHTNESS : 1.0f);
+        lblSetCurrentBrightnessSetting(LevelBrightness(m_level));
     }
 }
 
@@ -428,7 +438,7 @@ void DrainMenu::CalibTick() {
         sm.ma = m_ma;
         sm.temp_c = m_temp;
         sm.load = g_load;
-        sm.brightness = m_calib->charge ? -1 : m_calib_mode == 1 ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : m_calib_mode == 2 ? 1 : 100;
+        sm.brightness = m_calib->charge ? -1 : m_charger ? static_cast<int>(m_saved_brightness * 100.f + 0.5f) : std::max(1, m_level);
         sm.charger = m_charger;
         const auto line = calib::FormatLine(sm);
         std::fputs(line.c_str(), m_log);
@@ -519,8 +529,8 @@ auto DrainMenu::CalibStatus() const -> std::string {
     if (m_hot) {
         return "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n;
     }
-    if (m_soft) {
-        return "Below 3.5 V: the load is off and the brightness is at the minimum, so the console drains slowly to a real empty."_i18n
+    if (m_level < 100) {
+        return "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty."_i18n
             + " " + (charge::HizActive()
                 ? "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n
                 : "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);
