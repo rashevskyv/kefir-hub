@@ -19,7 +19,17 @@ namespace {
 // device has stopped responding and killing the transfer. proportional
 // compaction in ReadChunk keeps this cheap regardless of size.
 constexpr u64 MAX_BUFFER_SIZE = 1024ULL*1024ULL*16ULL;
-constexpr u64 MAX_BUFFER_RESERVE_SIZE = 1024ULL*1024ULL*48ULL;
+
+// hard cap on unread data. above it Push() waits (in PUSH_STALL_TIMEOUT_NS
+// slices) for the installer instead of appending. without it the buffer grew
+// by the usb-minus-sd rate for the whole copy (~6 MB/s at 41 vs 35 MB/s:
+// hundreds of MB per game, GBs for a big one) until operator new failed and
+// the process aborted mid-install (2026-11-10). the wait ends as soon as
+// ReadChunk() takes one chunk, so the usb thread parks in short pulses only.
+constexpr u64 MAX_BUFFER_HARD_SIZE = 1024ULL*1024ULL*32ULL;
+// ReadChunk() compacts once half the buffer is consumed, so the vector is at
+// most ~2x the unread data: reserve that once and it never reallocates.
+constexpr u64 MAX_BUFFER_RESERVE_SIZE = MAX_BUFFER_HARD_SIZE*2 + 1024ULL*1024ULL*8ULL;
 
 // Push() blocking is normal and frequent, and a burst of short pauses is
 // expected while the pipeline paces itself; only a genuinely long stall risks
@@ -231,12 +241,29 @@ Result Stream::ReadChunk(void* buf, s64 size, u64* bytes_read) {
 }
 
 bool Stream::Push(const void* buf, s64 size) {
+    u64 hard_wait_start = 0;
     while (!m_token.stop_requested()) {
         if (INSTALL_STATE == InstallState_Finished) {
             return true;
         }
 
         SCOPED_MUTEX(&m_mutex);
+        // hard cap (see MAX_BUFFER_HARD_SIZE). re-loop after each slice so a
+        // finished install, Disable() or a stop request ends the wait. if the
+        // installer takes nothing for READ_STALL_TIMEOUT_NS it is stuck: fail
+        // the write (the host cancels the copy) rather than grow forever.
+        if (m_active && (m_buffer.size() - m_read_offset) >= MAX_BUFFER_HARD_SIZE) {
+            const auto now = armTicksToNs(armGetSystemTick());
+            if (!hard_wait_start) {
+                hard_wait_start = now;
+                m_hard_waits++;
+            } else if (now - hard_wait_start >= READ_STALL_TIMEOUT_NS) {
+                log_write("[Stream::Push] installer took no data for %llu s, failing the write\n", READ_STALL_TIMEOUT_NS / 1000000000ULL);
+                return false;
+            }
+            condvarWaitTimeout(std::addressof(m_can_write), std::addressof(m_mutex), PUSH_STALL_TIMEOUT_NS);
+            continue;
+        }
         #if USE_CONDI_VAR
         // deliberately `if`, not `while`: wait for at most one drain and then
         // accept the data regardless of whether the buffer is still over the
@@ -285,6 +312,7 @@ bool Stream::Push(const void* buf, s64 size) {
         const auto offset = m_buffer.size();
         m_buffer.resize(offset + size);
         std::memcpy(m_buffer.data() + offset, buf, size);
+        m_peak_unread = std::max<u64>(m_peak_unread, m_buffer.size() - m_read_offset);
         condvarWakeOne(&m_can_read);
         return true;
     }
@@ -293,9 +321,9 @@ bool Stream::Push(const void* buf, s64 size) {
 }
 
 void Stream::Disable() {
-    log_write("[Stream::Disable] disabling file\n");
-
     SCOPED_MUTEX(&m_mutex);
+    log_write("[Stream::Disable] disabling file (peak unread %llu MB, capacity %zu MB, hard waits %llu)\n",
+        (unsigned long long)(m_peak_unread / (1024*1024)), m_buffer.capacity() / (1024*1024), (unsigned long long)m_hard_waits);
     m_active = false;
     condvarWakeOne(&m_can_read);
     condvarWakeOne(&m_can_write);

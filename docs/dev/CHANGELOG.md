@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.342 — MTP install: the receive buffer has a hard cap (the Hub aborted mid-install)
+- Owner's report (2026-11-10): the Hub stopped during an MTP install and closed with an error. Log: `begin userAppExit` without `begin app exit` = abort() on a worker thread. Cause: `Stream::Push` accepted data after a 500 ms wait without limit, so the buffer grew by the USB-minus-SD rate (41 vs 35 MB/s measured: ~400 MB for a 2.8 GB game) until operator new failed. Now unread data stops at 32 MB (Push waits in 500 ms slices, fails the write after 15 s with no progress); the reserve (72 MB) covers the vector, so it never reallocates. `[Stream::Disable]` logs peak unread MB and hard waits per file. Trade-off: when the SD is slower, USB parks in short pulses (watch for "device stopped responding"). host tests: not run (libnx code), nro: built, switch: batch install of 18 games pending.
+
 ## v0.14.341 — screensaver: a finished install shows a full bar and 100 %
 - Owner's report (2026-11-10): after an install the screensaver said "Finished" over an empty bar at 0 %. The finished session has reset its byte counters; the screensaver now draws the bar full and 100 % when the session is complete (also with errors; the Failed row stays). host tests: not run (draw code only), nro: not built, switch: pending.
 

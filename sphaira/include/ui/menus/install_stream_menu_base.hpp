@@ -32,6 +32,8 @@ private:
     std::stop_token m_token{};
     std::vector<u8> m_buffer{};
     size_t m_read_offset{0};
+    u64 m_peak_unread{0}; // most unread bytes held at once (logged by Disable)
+    u64 m_hard_waits{0};  // Push() calls that hit MAX_BUFFER_HARD_SIZE
     CondVar m_can_read{};
     CondVar m_can_write{};
 
