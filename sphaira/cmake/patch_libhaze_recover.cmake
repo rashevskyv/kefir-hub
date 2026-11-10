@@ -212,3 +212,39 @@ haze_patch_once("source/ptp_responder_ptp_operations.cpp"
     "        /* sphaira: the host ended the data phase early (PC-side cancel); drop the partial file. */\n        if (has_known_size && offset < file_size) {\n            log_write(\"[LIBHAZE] host cancelled transfer: %s\\n\", obj->GetName());\n            R_RETURN(this->WriteResponse(PtpResponseCode_IncompleteTransfer));\n        }"
     "        /* sphaira: PC-side cancel: drop the partial file. A class Cancel Request has no response phase. */\n        if (has_known_size && offset < file_size) {\n            log_write(\"[LIBHAZE] host cancelled transfer: %s\\n\", obj->GetName());\n            R_SUCCEED_IF(m_usb_server.ConsumeHostCancel());\n            R_RETURN(this->WriteResponse(PtpResponseCode_IncompleteTransfer));\n        }"
     "ptp_responder_ptp_operations.cpp host cancel response")
+
+# --- 26. a send (console -> PC) honours the class Cancel Request too ---
+# The send waited for its bulk URB only: a Cancel Request that came while a file went to the PC was read
+# after the file (both control stages timed out, log of 2026-11-10), and Windows dropped the device.
+haze_patch_once("source/async_usb_server.cpp"
+    "a send watches the control endpoint"
+    "            wait_rc = m_reactor->WaitFor(std::addressof(waiter_idx), waiterForEvent(g_usb_session.GetCompletionEvent(ep)));"
+    "            /* sphaira: a send watches the control endpoint too; a Cancel / Device Reset Request ends it. */
+            while (true) {
+                wait_rc = m_reactor->WaitFor(std::addressof(waiter_idx), waiterForEvent(g_usb_session.GetCompletionEvent(ep)), waiterForEvent(g_usb_session.GetSetupEvent()));
+                if (R_FAILED(wait_rc) || waiter_idx != 1) {
+                    break;
+                }
+                if (g_usb_session.HandleSetupPacket()) {
+                    host_cancel = true;
+                    break;
+                }
+            }"
+    "async_usb_server.cpp setup event wait on send")
+
+haze_patch_once("source/async_usb_server.cpp"
+    "R_UNLESS(read, haze::ResultCancelled());"
+    "            m_host_cancelled.store(true, std::memory_order_release);\n            *out_size_transferred = 0;\n            R_SUCCEED();"
+    "            m_host_cancelled.store(true, std::memory_order_release);\n            /* sphaira: a cancelled send ends the operation; a cancelled receive reports the end of data. */\n            R_UNLESS(read, haze::ResultCancelled());\n            *out_size_transferred = 0;\n            R_SUCCEED();"
+    "async_usb_server.cpp host cancel ends a send")
+
+haze_patch_once("source/ptp_responder.cpp"
+    "m_usb_server.ConsumeHostCancel()"
+    "                const Result resp_rc = this->WriteResponse(PtpResponseCode_TransactionCanceled);"
+    "                /* sphaira: the host's class Cancel Request ended a send: it has no response phase. */
+                if (m_usb_server.ConsumeHostCancel()) {
+                    log_write(\"[LIBHAZE] host cancelled the transaction\\n\");
+                    R_SUCCEED();
+                }
+                const Result resp_rc = this->WriteResponse(PtpResponseCode_TransactionCanceled);"
+    "ptp_responder.cpp host cancel of a send")

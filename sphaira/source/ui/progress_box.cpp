@@ -123,7 +123,8 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
 
     // any job can run for hours: Minus, or the blank timeout of the
     // settings, hands the screen to the screensaver; any input brings the box back.
-    if (!m_detached) {
+    // A detached box (an MTP copy, an install) too: App::Update() calls StopSaver() while the box has no input.
+    {
         if (!m_saver_action) {
             m_saver_action = true;
             m_last_input.Update();
@@ -167,6 +168,14 @@ auto ProgressBox::Update(Controller* controller, TouchInfo* touch) -> void {
             ShowCancelConfirmation();
         }
     }
+}
+
+void ProgressBox::StopSaver() {
+    if (m_saver.IsActive()) {
+        m_saver.Stop();
+        m_saver.FlushPendingBrightness();
+    }
+    m_last_input.Update();
 }
 
 auto ProgressBox::SetActionName(const std::string& action)  -> ProgressBox& {

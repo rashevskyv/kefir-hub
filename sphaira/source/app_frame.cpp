@@ -162,6 +162,9 @@ void App::Update() {
                 }
             }
         }
+        if (!block_background_update || m_active_transfer_pbox->IsMinimized()) {
+            m_active_transfer_pbox->StopSaver();
+        }
 
         // its worker thread signals exit once the transfer finishes; reclaim
         // it here rather than in the ProgressBox's own (never-called) Update().

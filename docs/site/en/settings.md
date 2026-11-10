@@ -199,6 +199,7 @@ While the install queue runs, press **−** to darken the screen. These options 
 - choose OLED for an aftermarket OLED panel (Retro Remake SUPER7 OLED, SUPER5 OLED on a Lite): the Hub cannot read the panel
 - on an OLED the battery calibration's drain screensaver lights the whole screen near white in slowly moving tints, the readout dark on it (a lit OLED pixel draws power); on an LCD the screensaver stays black at 100 % brightness
 - during the drain the screensaver ignores [[Minus button]] and [[Brightness]]: it is the readout page at full brightness
+- new in v0.14.336: [[Inactivity timeout]] also starts the screen-off mode while the small transfer window is open (a copy over MTP to or from the PC, a queue install, an update download); any button brings the window back; a minimised window never starts it
 -->
 
 ## [[Dump]] {#dump}

@@ -325,9 +325,10 @@ void haze_callback(const ::haze::CallbackData *data) {
 
         case ::haze::CallbackType_ReadEnd:
         case ::haze::CallbackType_WriteEnd: {
-            log_write("[LIBHAZE] Transfer Finished: %s\n", e.file.filename);
             {
                 SCOPED_MUTEX(&g_mtp_ui_mutex);
+                // the bytes and the abort tell a whole file from one the PC (or the cable) cut short
+                log_write("[LIBHAZE] Transfer Finished%s: %s (%lld bytes)\n", e.file.aborted ? " (aborted)" : "", e.file.filename, static_cast<long long>(g_mtp_file_bytes));
                 OnFileDone(g_mtp_state, e.file.aborted, g_mtp_file_bytes);
                 if (g_mtp_pbox) {
                     g_mtp_pbox->SetOverallOpen(static_cast<s64>(g_mtp_state.files_done), g_mtp_state.bytes_done);

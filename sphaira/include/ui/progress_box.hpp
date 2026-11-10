@@ -96,6 +96,9 @@ struct ProgressBox final : Widget, InstallProgress {
     // Update() and thus never blocks input to whatever menu is on screen.
     // it can be minimised into a small corner badge via R3 (see App::Update()).
     void SetDetached(bool detached) { m_detached = detached; }
+    // a detached box that gets no Update() this frame (minimised, a dialog or an install page over it):
+    // the screensaver ends, since no press could wake it, and the idle time starts again.
+    void StopSaver();
     auto IsDetached() const { return m_detached; }
     void ToggleMinimized() override { m_minimized = !m_minimized; }
     auto IsMinimized() const -> bool override { return m_minimized; }
