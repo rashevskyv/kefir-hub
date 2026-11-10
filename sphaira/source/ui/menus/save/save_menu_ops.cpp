@@ -130,8 +130,22 @@ auto RestoreNotes(bool many, bool replaces_live) -> std::string {
 
 // the question comes before the backup scan, so the wait is after the answer, not before it.
 // the scan is asynchronous (check boxes, user pickers): the answer goes with it as an argument.
-void Menu::ConfirmBatchRestore(size_t count, std::function<void(bool copy)> scan) {
-    const auto prompt = "Saves to restore: "_i18n + std::to_string(count) + "\n\n" + RestoreNotes(true, true);
+// no save of these games is on the console: nothing to keep a copy of, so no copy question.
+void Menu::ConfirmBatchRestore(const std::vector<Entry>& seeds, std::function<void(bool copy)> scan) {
+    const auto infos = DiscoverSaveDataInfo();
+    const bool any_live = std::ranges::any_of(seeds, [&infos](const Entry& s) {
+        return std::ranges::any_of(infos, [&s](const FsSaveDataInfo& i) {
+            return i.save_data_type == s.save_data_type && (IsSystemLikeSave(i.save_data_type)
+                ? i.system_save_data_id == s.system_save_data_id : i.application_id == s.application_id);
+        });
+    });
+    const auto prompt = "Saves to restore: "_i18n + std::to_string(seeds.size()) + "\n\n" + RestoreNotes(true, any_live);
+    if (!any_live) {
+        App::Push<OptionBox>(prompt, "No"_i18n, "Restore"_i18n, [scan](auto choice) {
+            if (choice && *choice == 1) scan(false);
+        });
+        return;
+    }
     App::Push<OptionBox>(prompt, "No"_i18n, "Without a copy"_i18n, "Restore"_i18n, 2, [scan](auto choice) {
         if (!choice || *choice == 0) {
             return;
@@ -215,7 +229,7 @@ void Menu::ExecuteRestore(
     static_cast<void>(backup_root);
     App::PopToMenu();
     for (auto& dst : *targets) {
-        dst.skip_recovery = !make_safety_copy;
+        dst.skip_recovery = !make_safety_copy || dst.is_planned_create; // a new slot has nothing to keep
     }
 
     struct Failure {

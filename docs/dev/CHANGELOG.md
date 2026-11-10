@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.339 — batch restore: two backups of one save no longer stop it; no copy question when no save is on the console
+- Owner's run on 0.14.337 (2026-11-10, one user, no saves): all games selected, Restore, 33 checks for 32 archives in /dumps, then "This user already gets another backup of this game..." in a loop. One game had a second backup in a DBI/JKSV/Checkpoint folder, and both went to the same slot. Now the newer backup is restored and the other is left out with a log line (`[RESTORE] ... two backups for one save`); the message and its i18n key are gone. The restore queue is logged (`[RESTORE] queue:`).
+- The batch question (No / Without a copy / Restore) asks about a copy only when a save of the selected games is on the console; otherwise it is No / Restore. A new slot never gets a safety copy. host tests: pass (3 old fails: battery i18n keys, EN/UK parity, HTTP fixture), nro: not built, switch: pending.
+
 ## v0.14.338 — battery: a cycle is counted when the drain log turned over; an uncounted cycle says why and asks
 - Owner's run on 0.14.335 (2026-11-10): cycle 1 drained to the switch-off (3.086 V), the zero was written, the charge ended at 19:05 with the chip's own learning (FullCap 0x2476 -> 0x24F9 = RepCap, RepSOC 100 %, the charger done), and the Hub said "This cycle was not counted... The log says why" in a toast, every time the cycle was opened. Cause: calib-log.csv passed 4 MB in the charge, the next open of the page kept it as .old and started a new file, and the cycle count read the new file only, so it found no switch-off. `ReadLog` (battery_calib.cpp, now shared with the report) reads the .old file and then the one in use.
 - A charge that ends with no switch-off of its drain in the log opens a dialog (the reason, [[Back]] / [[Drain again]]) in place of the toast. A new drain of a cycle drops the capacity noted by an older charge of that cycle (`StartDrain`), or the next charge would end at the first 100 %.

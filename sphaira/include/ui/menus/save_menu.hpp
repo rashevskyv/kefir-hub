@@ -274,7 +274,7 @@ private:
         const fs::FsPath& backup_root,
         bool make_safety_copy = true);
     // several saves: ask first, then run the slow backup scan in `scan` with the answer; it skips ShowRestoreConfirm.
-    void ConfirmBatchRestore(size_t count, std::function<void(bool copy)> scan);
+    void ConfirmBatchRestore(const std::vector<Entry>& seeds, std::function<void(bool copy)> scan);
     // entry point from "Start Restore": handles the optional remote pre-sync,
     // and shows the backup picker for a single selected save.
     void StartRestore(std::vector<Entry> entries, const dump::DumpLocation& location, const fs::FsPath& backup_root, std::optional<BackupSource> source_filter = std::nullopt, std::optional<bool> copy = std::nullopt);

@@ -140,7 +140,7 @@ void Menu::StartRestore(std::vector<Entry> entries, const dump::DumpLocation& lo
     entries = ExpandGameGroups(entries);
     if (entries.empty()) return;
     if (entries.size() > 1 && !copy) {
-        ConfirmBatchRestore(entries.size(), [this, entries, location, backup_root, source_filter](bool answer) {
+        ConfirmBatchRestore(entries, [this, entries, location, backup_root, source_filter](bool answer) {
             StartRestore(entries, location, backup_root, source_filter, answer);
         });
         return;
@@ -516,6 +516,9 @@ void Menu::RestoreBackupGroups(std::vector<Entry> groups, bool force_user_picker
     }
     KeepNewestPerSlot(groups);
     std::erase_if(groups, [](const Entry& g) { return g.backup_members.empty(); });
+    for (const auto& g : groups) {
+        log_write("[RESTORE] queue: %s src=%u %s\n", g.GetName(), static_cast<unsigned>(g.backup_source), g.backup_members.front().path.s);
+    }
     if (groups.empty()) {
         App::Push<OptionBox>("No backups found for selected saves."_i18n, "OK"_i18n);
         return;
@@ -567,11 +570,20 @@ void Menu::PromptBatchRestoreTargets(
 
         const auto key = SaveEntryKey(*target);
         if (!seen_target_keys->insert(key).second) {
-            // ask this save again, one by one (a shared answer would just repeat the clash).
-            App::Push<OptionBox>("This user already gets another backup of this game. Choose another user, or restore one backup on its own."_i18n, "OK"_i18n,
-                [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, copy](auto) {
-                    if ((*seeds)[step].save_data_type == FsSaveDataType_Account) PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, nullptr, false, copy);
-                });
+            // two backups go to one save (the same game in /dumps and in a DBI or JKSV folder):
+            // the newer one is restored, the other one is left out. no question.
+            size_t first = 0;
+            while (first < step && SaveEntryKey((*resolved_targets)[first]) != key) first++;
+            auto& cur = (*seeds)[step];
+            log_write("[RESTORE] %s: two backups for one save: %s, %s; the newer one is restored\n",
+                cur.GetName(), first < step ? (*seeds)[first].backup_path.s : "?", cur.backup_path.s);
+            if (first < step && cur.backup_timestamp > (*seeds)[first].backup_timestamp) {
+                (*seeds)[first] = std::move(cur);
+                (*resolved_targets)[first] = std::move(*target);
+            }
+            seeds->erase(seeds->begin() + step);
+            resolved_targets->erase(resolved_targets->begin() + step);
+            PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid, auto_match, copy);
             return;
         }
 

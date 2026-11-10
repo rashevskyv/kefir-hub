@@ -250,7 +250,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
 
             case ActionType::Restore:
                 if (actual_seeds.size() > 1) {
-                    ConfirmBatchRestore(actual_seeds.size(), [this, actual_seeds](bool copy) { RestoreBackupGroups(actual_seeds, false, true, copy); });
+                    ConfirmBatchRestore(actual_seeds, [this, actual_seeds](bool copy) { RestoreBackupGroups(actual_seeds, false, true, copy); });
                 } else {
                     RestoreBackupGroups(actual_seeds, false, true);
                 }
@@ -259,7 +259,7 @@ void Menu::PromptBackupGroupAction(const std::vector<Entry>& seeds) {
             case ActionType::RestoreForUser:
                 // many saves: the one question comes first; the user pickers and the checks follow it.
                 if (actual_seeds.size() > 1) {
-                    ConfirmBatchRestore(actual_seeds.size(), [this, actual_seeds](bool copy) { RestoreBackupGroups(actual_seeds, true, true, copy); });
+                    ConfirmBatchRestore(actual_seeds, [this, actual_seeds](bool copy) { RestoreBackupGroups(actual_seeds, true, true, copy); });
                 } else {
                     RestoreBackupGroups(actual_seeds, true, true);
                 }
