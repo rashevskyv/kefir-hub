@@ -1,4 +1,5 @@
 #include "haze/haze_game_proxy_internal.hpp"
+#include "ui/menus/game/game_internal.hpp"
 
 namespace sphaira::haze {
 
@@ -56,6 +57,7 @@ Result FsGameProxy::GetNsp(const std::string& game, std::shared_ptr<GameNsp>& ou
     }
 
     auto nsp = std::make_shared<GameNsp>();
+    nsp->app_id = it->second.app_id;
     const auto rc = title::BuildNspEntries(it->second.app_id, it->second.name.c_str(), title::ContentFlag_All, false, nsp->entries);
     if (R_FAILED(rc)) {
         // e.g. missing keys or a corrupt install - only this game fails.
@@ -101,6 +103,7 @@ Result FsGameProxy::BuildMergedCacheIfNeeded() {
         }
 
         auto nsp = std::make_shared<GameNsp>();
+        nsp->app_id = rec.app_id;
         FsDirectoryEntry fe{};
         std::snprintf(fe.name, sizeof(fe.name), "%s", entry.path.s);
         fe.type = FsDirEntryType_File;
@@ -143,6 +146,7 @@ Result FsGameProxy::BuildForwarderCacheIfNeeded() {
         }
 
         auto nsp = std::make_shared<GameNsp>();
+        nsp->app_id = rec.app_id;
         FsDirectoryEntry fe{};
         std::snprintf(fe.name, sizeof(fe.name), "%s", entry.path.s);
         fe.type = FsDirEntryType_File;
@@ -227,6 +231,23 @@ Result FsGameProxy::ModsSdItem(const char* path, fs::FsPath& out) const {
         R_THROW(FsError_NotImplemented);
     }
     return ModsSdPath(pp, out);
+}
+
+Result FsGameProxy::DeleteGame(u64 app_id) {
+    log_write("[MTP-GAMES] deleting game %016lX\n", app_id);
+    const auto rc = ui::menu::game::DeleteApplicationKeepSave(app_id);
+    log_write("[MTP-GAMES] delete %016lX: 0x%X\n", app_id, rc);
+    R_TRY(rc);
+
+    SCOPED_MUTEX(&m_cache_mutex);
+    const auto is_game = [app_id](const auto& kv) { return kv.second.app_id == app_id; };
+    const auto is_nsp = [app_id](const auto& kv) { return kv.second->app_id == app_id; };
+    std::erase_if(m_games, is_game);
+    std::erase_if(m_forwarders, is_game);
+    std::erase_if(m_cache, is_nsp);
+    std::erase_if(m_merged_cache, is_nsp);
+    std::erase_if(m_forwarder_cache, is_nsp);
+    R_SUCCEED();
 }
 
 } // namespace sphaira::haze

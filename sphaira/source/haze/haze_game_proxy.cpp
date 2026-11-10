@@ -81,6 +81,18 @@ Result FsGameProxy::CreateFile(const char* path, s64 size, u32 option) {
 }
 
 Result FsGameProxy::DeleteFile(const char* path) {
+    const auto pp = Parse(path);
+    if (pp.kind == sphaira::mtp::PathKind::MergedFile || pp.kind == sphaira::mtp::PathKind::ForwardersFile) {
+        std::shared_ptr<GameNsp> nsp;
+        size_t index{};
+        if (pp.kind == sphaira::mtp::PathKind::MergedFile) {
+            R_TRY(FindMergedFile(pp.filename, nsp, index));
+        } else {
+            R_TRY(FindForwarderFile(pp.filename, nsp, index));
+        }
+        return DeleteGame(nsp->app_id);
+    }
+
     fs::FsPath sd_path;
     R_TRY(ModsSdItem(path, sd_path));
     return m_sd.DeleteFile(sd_path);
@@ -100,6 +112,12 @@ Result FsGameProxy::CreateDirectory(const char* path) {
 }
 
 Result FsGameProxy::DeleteDirectoryRecursively(const char* path) {
+    if (const auto pp = Parse(path); pp.kind == sphaira::mtp::PathKind::SeparateGameDir) {
+        const auto it = m_games.find(pp.game);
+        R_UNLESS(it != m_games.end(), FsError_PathNotFound);
+        return DeleteGame(it->second.app_id);
+    }
+
     fs::FsPath sd_path;
     R_TRY(ModsSdItem(path, sd_path));
     return m_sd.DeleteDirectoryRecursively(sd_path);

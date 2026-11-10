@@ -148,7 +148,7 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 | `Saves` | Game saves, unpacked. Read-only: copy them to the PC. | No |
 | `NAND Saves (USER:/save)` | The raw save files of games in system memory, read and write. | No |
 | `NAND System Saves (SYSTEM:/save)` | The raw save files of the system, read and write. | No |
-| `Games (read-only)` | Installed games, updates and DLC as NSP files. Copying one to the PC makes a dump of it. Nothing is written to the microSD card. | No |
+| `Games` | Installed games, updates and DLC as NSP files. Copying one to the PC makes a dump of it. Deleting a game removes it from the console. | No |
 | A folder you added | That folder of the microSD card as its own drive. | — |
 | A mounted folder | The folder you mounted from the File Browser (see [Share one folder](#mount)). | — |
 
@@ -168,7 +168,7 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 | [[Show Saves (read-only)]] | Shows the unpacked saves drive. | On |
 | [[Show NAND Saves (USER:/save)]] | Shows the raw game saves drive. | Off |
 | [[Show NAND System Saves (SYSTEM:/save)]] | Shows the raw system saves drive. | Off |
-| [[Show Games (read-only)]] | Shows the installed games drive. | On |
+| [[Show Games]] | Shows the installed games drive. | On |
 | [[Dump format]] | How the games drive lists games, see below. | [[Both]] |
 | [[microSD card name]] | Your own name for the microSD card drive. | `microSD card` |
 | [[Install folder name]] | Your own name for the install drive. | `Install (NSP, XCI, NSZ, XCZ)` |
@@ -189,6 +189,12 @@ A change restarts a running MTP connection. If every drive is off, MTP does not 
 With [[Separate files]] or [[Both]], each game folder also has a `Mods` folder. It is the game's
 `/atmosphere/contents/<Title ID>/` folder on the microSD card (mods and cheats): copy mods into it or out of it, rename
 or delete them, like on the SD card drive. The NSP files next to it stay read-only.
+
+<!-- draft (v0.14.344): delete a game over MTP
+- Drive `Games` (was `Games (read-only)`); toggle [[Show Games]] (was "Show Games (read-only)").
+- Delete a game's NSP in the drive root or `Merged`, or a forwarder in `Forwarders`, or a game folder in `Separate`: the Hub removes the game from the console, like Delete in the Games menu. Saves stay.
+- A single update or DLC file inside a `Separate` game folder cannot be deleted (the PC shows an error).
+-->
 
 <!-- shot: sharing-mtp-storages | Settings, MTP storages page with the Show toggles, Dump format = Both, names and Add folder -->
 

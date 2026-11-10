@@ -1921,7 +1921,6 @@
   "Unmounted": "Відмонтовано",
   "Updating Homebrew": "Оновлення Homebrew",
   "Unmount": "Розмонтувати",
-  "Show Games (read-only)": "Показати ігри (лише читання)",
   "Dump format": "Формат дампу",
   "Compatible dump": "Сумісний дамп",
   "Separate files": "Окремі файли",
@@ -1934,7 +1933,6 @@
   "Each folder is one game. Inside are separate NSP files for the base, the update and each DLC.": "Кожна папка — одна гра. Усередині окремі NSP: база, оновлення і кожен DLC.",
   "HOME-menu forwarders (homebrew icons). These are not Nintendo games. Copy one to dump that icon as an NSP.": "Форвардери HOME-меню (іконки homebrew). Це не ігри Nintendo. Скопіюйте файл, щоб зняти дамп іконки як NSP.",
   "HOME-menu homebrew icons, not Nintendo games.": "іконки homebrew у HOME-меню, не ігри Nintendo.",
-  "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card.": "Показує диск лише для читання з встановленими іграми, оновленнями та DLC у вигляді NSP-файлів. Копіювання на ПК дампить їх; на карту microSD нічого не записується.",
   "Include platform in title": "Додати платформу до назви",
   "Version (optional)": "Версія (необов’язково)",
   "Applet Mode has limited memory. NSZ packages are unlikely to install. Use Title Mode for reliable installation.": "У Applet Mode доступно мало пам’яті. Пакети NSZ, найімовірніше, не встановляться. Для надійного встановлення використовуйте Title Mode.",
@@ -4217,5 +4215,7 @@
   "Chromium NX could not start.": "Не вдалося запустити Chromium NX.",
   "Downloading Chromium NX...": "Завантаження Chromium NX...",
   "Chromium NX download failed!": "Не вдалося завантажити Chromium NX!",
-  "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).": "Chromium NX — експериментальний: він може працювати повільно або не запуститися взагалі. Він займає всю пам'ять консолі, тож запустіть Kefir Hub із гри (утримуйте R під час її запуску). Під час першого запуску він сам завантажує свої файли (близько 430 МБ)."
+  "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).": "Chromium NX — експериментальний: він може працювати повільно або не запуститися взагалі. Він займає всю пам'ять консолі, тож запустіть Kefir Hub із гри (утримуйте R під час її запуску). Під час першого запуску він сам завантажує свої файли (близько 430 МБ).",
+  "Show a drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it. Deleting a game there removes it from the console; its saves stay.": "Показує диск з встановленими іграми, оновленнями та DLC у вигляді файлів NSP. Копіювання одного на ПК створює його дамп. Видалення гри там видаляє її з консолі; її збереження залишаються.",
+  "Show Games": "Показати ігри"
 }

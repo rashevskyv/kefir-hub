@@ -56,7 +56,7 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
     items.emplace_back(MakeBoolItem("Show NAND Saves (USER:/save)"_i18n, "Show a read/write drive with raw NAND user save files (DISA containers)."_i18n, App::GetMtpShowRawSaves, App::SetMtpShowRawSaves));
     items.emplace_back(MakeBoolItem("Show NAND System Saves (SYSTEM:/save)"_i18n, "Show a read/write drive with raw NAND system save files."_i18n, App::GetMtpShowRawSystemSaves, App::SetMtpShowRawSystemSaves));
-    items.emplace_back(MakeBoolItem("Show Games (read-only)"_i18n, "Show a read-only drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it; nothing is written to the microSD card."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
+    items.emplace_back(MakeBoolItem("Show Games"_i18n, "Show a drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it. Deleting a game there removes it from the console; its saves stay."_i18n, App::GetMtpShowGames, App::SetMtpShowGames));
 
     items.emplace_back(SettingsItem{
         "Dump format"_i18n,

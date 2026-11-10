@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.344 — MTP Games drive: deleting a game removes it from the console; the drive is named "Games"
+- `FsGameProxy::DeleteFile` (Merged / Forwarders NSP) and `DeleteDirectoryRecursively` (Separate game folder) call `DeleteApplicationKeepSave` (as the Games menu: content + record, saves stay) and drop the game from the drive caches. Single update/DLC files stay undeletable. Storage `Games (read-only)` → `Games`, toggle `Show Games` (all 26 languages). host tests: quick green, nro: built, switch: pending (delete 19 games, then one MTP drop of all 19).
+
 ## v0.14.343 — install names the system call it waits in; exit no longer waits forever for a stuck worker
 - Hellblade (13.5 GB, MTP) stalled after `register'd all ncas`: one of ncm db Set/Commit, ns PushApplicationRecord, avm push never returned (UI fine). Now a `[yati] ...` line precedes each call. `TeardownWorker` waits 5 s for the install thread on exit, then leaves it (before: endless wait, the system killed the Hub). host tests: not run (libnx code), nro: built, switch: verified — Hellblade (retry), DOOM Eternal (33 GB), Dead Space 2 installed over MTP, the stall did not reproduce (each IPC < 70 ms). Open: the stuck v0.14.342 worker did not block exit (join passed in 0.3 s), so the stall was not an endless IPC on that thread.
 

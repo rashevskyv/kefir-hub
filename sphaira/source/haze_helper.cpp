@@ -421,7 +421,7 @@ bool Init() {
     storage_defs.push_back({
         App::GetMtpShowGames(),
         "", // no custom-name option for the Games drive.
-        "Games (read-only)",
+        "Games",
         [](const char* display_name) {
             return MakeFsGameProxy("games", display_name);
         }

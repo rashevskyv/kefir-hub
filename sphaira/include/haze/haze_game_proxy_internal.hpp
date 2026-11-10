@@ -55,8 +55,8 @@ struct FsGameProxy final : FsProxyBase {
     Result GetFreeSpace(const char *path, s64 *out) override;
     Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override;
 
-    // the drive is a view of installed content: everything that would modify it
-    // is rejected, except inside a game's mods folder, which is a real SD folder.
+    // the drive is a view of installed content: deleting a game removes it (DeleteGame),
+    // a game's mods folder is a real SD folder; every other write is rejected.
     Result CreateFile(const char* path, s64 size, u32 option) override;
     Result DeleteFile(const char* path) override;
     Result RenameFile(const char *old_path, const char *new_path) override;
@@ -90,6 +90,7 @@ private:
     // every installed component of one game, plus the directory listing that
     // describes them.
     struct GameNsp {
+        u64 app_id{};
         std::vector<title::NspEntry> entries{};
         std::vector<FsDirectoryEntry> listing{};
     };
@@ -126,9 +127,14 @@ private:
     Result ModsSdPath(const sphaira::mtp::ParsedPath& pp, fs::FsPath& out) const;
     // same, for an item inside a mods folder; anything else is not writable.
     Result ModsSdItem(const char* path, fs::FsPath& out) const;
+    // deleting a game's file (Merged, Forwarders) or folder (Separate) removes the game
+    // from the console like the Games menu does (saves stay), then drops it from the drive.
+    Result DeleteGame(u64 app_id);
 
-    // game folder name -> title. built once at registration, immutable
-    // afterwards (safe for concurrent reads). forwarders live in m_forwarders.
+    // game folder name -> title. built once at registration; DeleteGame() erases
+    // entries. forwarders live in m_forwarders.
+    // ponytail: read without the lock on the haze command thread, which is also where
+    // DeleteGame() runs; lock the readers if commands ever run on several threads.
     std::map<std::string, GameRec, CaseInsensitiveLess> m_games{};
     std::map<std::string, GameRec, CaseInsensitiveLess> m_forwarders{};
 
