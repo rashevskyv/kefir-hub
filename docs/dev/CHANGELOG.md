@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.341 — screensaver: a finished install shows a full bar and 100 %
+- Owner's report (2026-11-10): after an install the screensaver said "Finished" over an empty bar at 0 %. The finished session has reset its byte counters; the screensaver now draws the bar full and 100 % when the session is complete (also with errors; the Failed row stays). host tests: not run (draw code only), nro: not built, switch: pending.
+
 ## v0.14.340 — Backups tab: Y selects the group under the cursor, R2 + Y the whole list (in the footer)
 - Owner's request (2026-11-10): Y on the Backups tab selected both the Kefir Hub and the DBI group. Now Y ([[Select all / none]]) marks all or none of the section under the cursor (by backup source); R2 + Y ([[Select all]]) marks the whole list and is shown in the footer (a display-only action). Other tabs keep Y = Invert. Docs drafts in docs/site/{en,uk}/saves.md. host tests: quick pass, nro: not built, switch: pending.
 

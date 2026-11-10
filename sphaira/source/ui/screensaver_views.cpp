@@ -288,15 +288,17 @@ void DrawTransfer(NVGcontext* vg, const SaverInfo& info, SaverRect block, const 
 
     if (rows.bar) {
         const Vec4 bar{left, y + 28.f, BLOCK_W, 14.f};
+        // a finished session has reset its byte counters, so its ratio reads 0; finished means the whole bar.
+        const double ratio = rows.completion ? 1.0 : info.ratio;
         // OLED mode lights only the pixels that carry information, so the empty part of the track stays unlit; the filled length still reads.
         if (!oled) {
             gfx::drawRect(vg, bar, nvgRGBA(255, 255, 255, 40), 7.f);
         }
-        gfx::drawRect(vg, bar.x, bar.y, std::max(4.f, bar.w * (float)info.ratio), bar.h, accent_col, 7.f);
+        gfx::drawRect(vg, bar.x, bar.y, std::max(4.f, bar.w * (float)ratio), bar.h, accent_col, 7.f);
         if (info.package_count) {
             gfx::drawTextArgs(vg, left, y, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, dim_col, "%s: %zu", "Installed"_i18n.c_str(), info.installed);
         }
-        gfx::drawTextArgs(vg, left + BLOCK_W, y, 22.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, accent_col, "%.0f%%", info.ratio * 100.0);
+        gfx::drawTextArgs(vg, left + BLOCK_W, y, 22.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, accent_col, "%.0f%%", ratio * 100.0);
         y += BAR_H;
     }
 
