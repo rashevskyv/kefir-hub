@@ -29,7 +29,7 @@ void DbiDetailsMenu::SyncSelectActions() {
         }});
         SetAction(Button::Y, Action{"Invert"_i18n, [this](){
             m_marked.resize(m_components.size(), 0);
-            marks::Invert(m_marked.size(), [this](size_t i) -> u8& { return m_marked[i]; });
+            marks::OnY(m_marked.size(), [this](size_t i) -> u8& { return m_marked[i]; });
         }});
     } else if (m_tab == Tab::Saves) {
         SetAction(Button::X, Action{"Create save slot"_i18n, [this](){

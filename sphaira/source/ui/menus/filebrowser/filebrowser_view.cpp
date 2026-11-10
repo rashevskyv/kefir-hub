@@ -401,16 +401,7 @@ void FsView::ToggleSelection() {
     const auto mark = [this](size_t i) -> auto& { return GetEntry(i).selected; };
     const auto any = [this](size_t i) { return !IsParentEntry(i); };
     const auto file = [this](size_t i) { return !IsParentEntry(i) && GetEntry(i).IsFile(); };
-    auto next = m_index;
-    if (App::GetApp()->m_controller.GotHeld(Button::R2)) {
-        // R2 + X marks the whole folder, or clears it when every row is marked already.
-        const auto all = marks::Count(rows, mark) == marks::Count(rows, any);
-        marks::SetAll(rows, !all, mark, any);
-    } else if (GetEntry().IsFile()) {
-        next = marks::Toggle(rows, m_index, mark, file);
-    } else {
-        next = marks::Toggle(rows, m_index, mark, any);
-    }
+    const auto next = GetEntry().IsFile() ? marks::Toggle(rows, m_index, mark, file) : marks::Toggle(rows, m_index, mark, any);
 
     m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
     if (next != m_index) {
@@ -429,7 +420,7 @@ void FsView::InvertSelection() {
         m_menu->ResetSelection();
     }
 
-    marks::Invert(m_entries_current.size(), [this](size_t i) -> auto& { return GetEntry(i).selected; },
+    marks::OnY(m_entries_current.size(), [this](size_t i) -> auto& { return GetEntry(i).selected; },
         [this](size_t i) { return !IsParentEntry(i); });
     m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
 

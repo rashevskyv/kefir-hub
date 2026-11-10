@@ -1,7 +1,7 @@
 #pragma once
 // X / Y marks of a list: one rule for every list with X/Y select. X flips the mark of the row under the cursor and
-// the cursor steps to the next row that takes a mark; Y inverts; an action works on the marked rows, or on the row
-// under the cursor when none is marked. A list keeps the mark in its own rows: `mark(i)` returns it as a reference
+// the cursor steps to the next row that takes a mark; Y inverts, R2 + Y marks all or none; an action works on the
+// marked rows, or on the row under the cursor when none is marked. A list keeps the mark in its own rows: `mark(i)` returns it as a reference
 // (bool& or u8&), `can(i)` says whether row i takes a mark (a folder, a caption or a parent entry may not).
 // Drawing a marked row is gfx::drawMarkedRow.
 
@@ -61,6 +61,29 @@ auto Invert(std::size_t rows, Mark mark, Can can = AnyRow) -> std::size_t {
         mark(i) = can(i) && !mark(i);
     }
     return Count(rows, mark);
+}
+
+// R2 + Y: every row that takes a mark gets one, or none when every such row has one already. Returns the number of
+// marks.
+template<typename Mark, typename Can = decltype(AnyRow)>
+auto All(std::size_t rows, Mark mark, Can can = AnyRow) -> std::size_t {
+    std::size_t marked = 0, markable = 0;
+    for (std::size_t i = 0; i < rows; i++) {
+        if (can(i)) {
+            markable++;
+            marked += mark(i) ? 1 : 0;
+        }
+    }
+    return SetAll(rows, marked != markable, mark, can);
+}
+
+// true while R2 is held (app.cpp); a list never reads it itself, OnY does
+auto WholeList() -> bool;
+
+// Y of every list: R2 + Y marks all or none (All), Y alone inverts (Invert). Returns the number of marks.
+template<typename Mark, typename Can = decltype(AnyRow)>
+auto OnY(std::size_t rows, Mark mark, Can can = AnyRow) -> std::size_t {
+    return WholeList() ? All(rows, mark, can) : Invert(rows, mark, can);
 }
 
 // the marked rows only

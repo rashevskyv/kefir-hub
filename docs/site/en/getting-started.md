@@ -31,6 +31,7 @@ How to move around Kefir Hub: buttons, the screen layout, option panels, dialogs
 | **−** | Return to the [[Homebrew]] tab from anywhere. On the [[Homebrew]] tab: exit Kefir Hub |
 | **X** | Select the item (for actions on several items) |
 | **Y** | Invert the selection |
+| hold **R2** + **Y** | Select all items, or clear the selection when all are selected |
 | **L** / **R** | Switch tabs on the main screen. In other lists: one page up / down |
 | **ZL** / **ZR** | Jump to the first / last item of a list |
 | **R3** | Minimize or expand a running background task |

@@ -5,6 +5,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/install_queue.hpp"
 #include "ui/error_box.hpp"
+#include "ui/marks.hpp"
 
 #include "ui/menus/main_menu.hpp"
 #include "ui/menus/filebrowser.hpp"
@@ -130,6 +131,10 @@ auto App::GetExePath() -> fs::FsPath {
 
 auto App::GetApp() -> App* {
     return g_app;
+}
+
+auto ui::marks::WholeList() -> bool {
+    return g_app && g_app->m_controller.GotHeld(Button::R2);
 }
 
 auto App::IsExiting() -> bool {

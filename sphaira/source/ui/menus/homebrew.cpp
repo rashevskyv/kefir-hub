@@ -325,7 +325,7 @@ void Menu::InvertSelection() {
         const auto& e = Entry(rows[i]);
         return !e.is_dir && !IsKefirUpdaterStub(e) && !(e.hbini.hidden && !m_show_hidden.Get());
     };
-    m_selected_count = marks::Invert(rows.size(), [this, &rows](size_t i) -> auto& { return Entry(rows[i]).selected; }, app);
+    m_selected_count = marks::OnY(rows.size(), [this, &rows](size_t i) -> auto& { return Entry(rows[i]).selected; }, app);
 }
 
 void Menu::ClearSelection() {

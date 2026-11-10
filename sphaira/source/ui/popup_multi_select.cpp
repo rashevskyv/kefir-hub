@@ -141,7 +141,7 @@ auto PopupMultiSelect::Toggle(s64 index) -> s64 {
 }
 
 void PopupMultiSelect::Invert() {
-    marks::Invert(m_selected.size(), Mark(), Markable());
+    marks::OnY(m_selected.size(), Mark(), Markable());
     OnChanged();
 }
 

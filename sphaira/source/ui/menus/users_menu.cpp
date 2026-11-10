@@ -185,7 +185,7 @@ void Menu::ToggleCurrentSelection() {
 }
 
 void Menu::InvertSelection() {
-    m_selected_count = marks::Invert(m_items.size(), marks::Selected(m_items));
+    m_selected_count = marks::OnY(m_items.size(), marks::Selected(m_items));
 }
 
 void Menu::ClearSelection() {

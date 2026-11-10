@@ -65,7 +65,7 @@ struct RestoreBackupMenu final : MenuBase {
                 UpdateSubHeading();
             }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
-                m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
+                m_selected_count = marks::OnY(m_entries.size(), marks::Selected(m_entries));
                 UpdateSubHeading();
             }}),
             std::make_pair(Button::SELECT, Action{"Delete"_i18n, [this](){

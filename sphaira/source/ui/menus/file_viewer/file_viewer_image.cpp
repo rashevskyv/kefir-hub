@@ -187,7 +187,7 @@ void Menu::ToggleCurrentSelection() {
 }
 
 void Menu::InvertSelection() {
-    marks::Invert(m_image_selected.size(), [this](size_t i) -> u8& { return m_image_selected[i]; });
+    marks::OnY(m_image_selected.size(), [this](size_t i) -> u8& { return m_image_selected[i]; });
     UpdateImageSubHeading();
 }
 

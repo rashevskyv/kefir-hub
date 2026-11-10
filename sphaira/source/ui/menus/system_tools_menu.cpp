@@ -313,7 +313,7 @@ SystemToolsMenu::SystemToolsMenu(const std::string& title, std::vector<settings:
             SetIndex(marks::Toggle(m_items.size(), m_index, MarkOf(m_items), Markable(m_items)));
         }});
         SetAction(Button::Y, Action{"Invert"_i18n, [this](){
-            marks::Invert(m_items.size(), MarkOf(m_items), Markable(m_items));
+            marks::OnY(m_items.size(), MarkOf(m_items), Markable(m_items));
         }});
     }
 

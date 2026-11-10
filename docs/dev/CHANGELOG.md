@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.331 — R2 + Y marks all or none in every X / Y list
+- `marks::OnY` (ui/marks.hpp) is the one Y handler: Y inverts, hold R2 + Y marks every row, or clears the marks when all rows are marked (`marks::All`; R2 is read once, `marks::WholeList` in app.cpp). All 17 Y callers use it, popups, cheat list and archive tree included. The file browser's R2 + X (the same "all or none") moves to R2 + Y; X there only marks and steps on. Docs: getting-started, file-browser (EN, UK).
+- host tests: pass (quick), nro: built, switch: pending (R2 + Y in the file browser, Homebrew, Choose games, cheat list, Extract Options).
+
 ## v0.14.330 — Tools: Chromium (experimental) starts Chromium NX
 - New row [[Chromium (experimental)]] under [[Web browser]] (`chromium_nx.cpp`): Applet Mode shows the Title Mode help; Title Mode warns (experimental, full memory, ~430 MB first-start download), then downloads `/switch/chromium-nx/chromium-nx.nro` from github.com/shodowlo/chromium-nx latest release when missing and starts it; Chromium NX gets its own image and updates. i18n: 7 new keys, plus 57 keys that were missing from 24 languages. Docs: drafts in system-tools (EN, UK).
 - host tests: i18n pass; run.sh FAILED on older checks (archive.org fixture, 6 doc labels), nro: built, switch: pending (Applet Mode block; warning; download + start; Chromium NX first start).

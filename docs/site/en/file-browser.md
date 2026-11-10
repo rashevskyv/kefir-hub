@@ -18,6 +18,7 @@ The File Browser opens in the last folder you used on the memory card.
 | hold **ZR** + **B** | Close the File Browser from any folder |
 | **X** | Select the item and move to the next one |
 | **Y** | Invert the selection |
+| hold **R2** + **Y** | Select every item in the folder, or clear the selection when all are selected |
 | **+** | [[File Options]] |
 | hold **ZR** + **+** | [[Advanced Options]] |
 | **L3** | Split the screen into two panes |

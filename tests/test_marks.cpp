@@ -45,6 +45,13 @@ int main() {
     assert(SetAll(m.size(), false, mark, can) == 0);
     assert(Count(m.size(), mark) == 0);
 
+    // R2 + Y: some marked -> all; all marked -> none; a row that takes no mark stays clear
+    m = {1, 1, 0, 0, 0};
+    assert(All(m.size(), mark, can) == 3);
+    assert((m == std::vector<std::uint8_t>{0, 1, 1, 0, 1}));
+    assert(All(m.size(), mark, can) == 0);
+    assert(Count(m.size(), mark) == 0);
+
     // targets: the cursor row when nothing is marked; none on a row that takes no mark; else the marks
     assert((Targets(m.size(), 2, mark, can) == std::vector<std::size_t>{2}));
     assert(Targets(m.size(), 3, mark, can).empty());

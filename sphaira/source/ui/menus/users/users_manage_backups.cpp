@@ -100,7 +100,7 @@ void ManageBackupsMenu::SelectAll() {
 }
 
 void ManageBackupsMenu::InvertSelection() {
-    m_selected_count = marks::Invert(m_entries.size(), marks::Selected(m_entries));
+    m_selected_count = marks::OnY(m_entries.size(), marks::Selected(m_entries));
     UpdateSubHeading();
 }
 

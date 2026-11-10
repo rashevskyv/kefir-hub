@@ -42,7 +42,7 @@ void Menu::UpdateActions() {
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this]() {
                 SCOPED_MUTEX(&m_mutex);
                 if (m_install_requested) return;
-                marks::Invert(m_queue.size(), marks::Selected(m_queue), Installable(m_queue));
+                marks::OnY(m_queue.size(), marks::Selected(m_queue), Installable(m_queue));
                 for (auto& entry : m_queue) {
                     entry.sync_dirty = true;
                 }

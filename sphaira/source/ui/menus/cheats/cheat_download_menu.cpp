@@ -188,7 +188,7 @@ CheatDownloadMenu::CheatDownloadMenu(CheatSource source, const GameCheatInfo& ga
             }}),
             std::make_pair(Button::Y, Action{"Invert"_i18n, [this](){
                 if (!m_cheats.empty() && !m_loading) {
-                    marks::Invert(m_cheats.size(), marks::Selected(m_cheats));
+                    marks::OnY(m_cheats.size(), marks::Selected(m_cheats));
                 }
             }}),
             std::make_pair(Button::R, Action{"Preview"_i18n, [this](){

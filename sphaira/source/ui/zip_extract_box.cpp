@@ -165,7 +165,7 @@ auto ZipExtractBox::Toggle(s64 index) -> s64 {
 
 // Y: every row flips; a folder then takes the marks of its files again.
 void ZipExtractBox::Invert() {
-    marks::Invert(m_nodes.size(), [this](std::size_t i) -> char& { return m_checked[i]; });
+    marks::OnY(m_nodes.size(), [this](std::size_t i) -> char& { return m_checked[i]; });
     SyncDirChecks();
 }
 
