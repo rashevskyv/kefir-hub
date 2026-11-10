@@ -105,7 +105,7 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
     // Minus starts the screensaver here (the menus use it to jump to the Homebrew tab, which would close this page)
     SetAction(Button::SELECT, Action{"Screensaver"_i18n, [this]() {
         if (!m_saver.IsActive()) {
-            m_saver.Start(DrainLoad());
+            StartSaver();
             m_idle.Reset(m_idle_clock.GetSecondsD());
         }
     }});
@@ -235,7 +235,7 @@ void DrainMenu::Update(Controller* controller, TouchInfo* touch) {
         }
         const long timeout = detail::SaverSeconds();
         if (m_idle.Update(ui::BlankPhase_Installing, false, timeout, in, now_sec)) {
-            m_saver.Start(DrainLoad());
+            StartSaver();
             m_idle.Reset(now_sec);
         }
     }
@@ -482,7 +482,7 @@ void DrainMenu::CalibTick() {
 void DrainMenu::OnSleptAwake(s64 now) {
     const auto slept = now - m_calib_last;
     // A sleep is never a cut-off (owner, 2026-11-09): the zero is the moment the console really switched off, which the Hub
-    // finds in the log at its next start (a new boot). HOS sleeps at the gauge's 0 % (3.20 V) and may charge in the sleep
+    // finds in the log at its next start (a new boot). HOS sleeps at 3.20 V (the gauge said 30 % once) and may charge in the sleep
     // (4.19 V after a night on USB with the cut lost); the real cut-off came lower (3.01 V). The S line tells Cutoffs() so.
     if (m_log) {
         std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,%d\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_tick_mv, m_charger ? 1 : 0);

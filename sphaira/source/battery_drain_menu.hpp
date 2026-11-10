@@ -148,6 +148,8 @@ private:
     auto SaverReadout() const -> ui::SaverInfo;
     // the calibration's drain under load on the battery: the screen is part of the load (the saver at full brightness)
     bool DrainLoad() const { return m_calib && !m_calib->charge && !m_charger && g_load > 0; }
+    // the drain's saver starts at full brightness: the next poll puts the load level's own brightness back (ApplyCalibScreen)
+    void StartSaver() { m_saver.Start(DrainLoad()); m_calib_mode = -1; }
     // +1 while the battery charges, -1 while it drains (the live current), 0 when it hardly moves
     int BatteryDir() const { return m_ma > 30 ? 1 : m_ma < -30 ? -1 : 0; }
     // the percent on the screen: 99 while the battery still takes current, so nobody pulls the charger at a 100 % that comes early
@@ -160,6 +162,7 @@ private:
     int m_rest_mv{};        // the smoothed rest voltage the level comes from; 0 = no value yet
     u64 m_run_s{};          // seconds of this run
     s64 m_calib_last{};
+    int m_psm_volt{-1};     // psm's battery voltage state at the last sample, logged when it changes
     int m_tick_mv{};        // the voltage and the charger at the last tick: what was true before a sleep gap
     bool m_tick_charger{};
     int m_qh{};             // the gauge's QH counter + 1 at the last live sample, 0 = not read

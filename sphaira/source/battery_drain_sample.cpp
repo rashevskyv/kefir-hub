@@ -128,6 +128,13 @@ void DrainMenu::SampleLive() {
         m_mv = static_cast<int>((*mv >> 3) * 0.625);
         Push(m_volts, m_mv / 1000.f);
         m_ma = static_cast<int>(*ma);
+        // what HOS's own power logic makes of the voltage (3 normal, 2 no boost, 1 sleep, 0 shut down). The console slept at
+        // 3.20 V in five drains and passed it awake in one (2026-11-09): the log tells which state did it
+        PsmBatteryVoltageState state{};
+        if (R_SUCCEEDED(psmGetBatteryVoltageState(&state)) && static_cast<int>(state) != m_psm_volt) {
+            m_psm_volt = state;
+            log_write("[Battery] psm voltage state %d at %d mV, %d mA\n", m_psm_volt, m_mv, m_ma);
+        }
         const float w = m_mv / 1000.f * std::abs(m_ma) / 1000.f;
         Push(m_watts, w);
         (m_ma < 0 ? m_wh_out : m_wh_in) += w * (LIVE_MS / 1000.f) / 3600.f; // Wh over one sample

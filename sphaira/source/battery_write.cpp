@@ -150,7 +150,9 @@ auto FactoryInit(FuelGauge& g, const Table& t, u16 v_empty, std::string& failed)
     R_SUCCEED();
 }
 
-// BDF Y: the nine learned parameters into the chip.
+// BDF Y: the nine learned parameters into the chip, then the capacity learning starts again from the restored FullCapNom, as
+// in HOS's own restore (Atmosphere powctl WriteInternalState): dPacc = 200 %, dQacc = FullCapNom / 16. BDF leaves both, so
+// the chip's next rest took FullCapNom back to the ratio of its old accumulators.
 auto RestoreParams(FuelGauge& g, const Params& p) -> Result {
     const u8 verify_regs[] = {0x38, 0x39, 0x10, 0x23, 0x12, 0x22, 0x32, 0x42};
     const size_t verify_idx[] = {0, 1, 2, 3, 5, 6, 7, 8};
@@ -163,6 +165,7 @@ auto RestoreParams(FuelGauge& g, const Params& p) -> Result {
         }
     }
     R_UNLESS(g.Write(0x36, p.v[4]), Result_ArchiveRead);
+    R_UNLESS(g.WriteVerify(0x46, 0x0C80) && g.WriteVerify(0x45, static_cast<u16>(p.v[3] >> 4)), Result_ArchiveRead);
     svcSleepThread(350'000'000ULL);
     R_SUCCEED();
 }
