@@ -1,8 +1,43 @@
 #include "battery_drain_menu.hpp"
 #include "battery_calib_internal.hpp"
 #include "battery_zero.hpp"
+#include "battery_charge.hpp"
 
 namespace sphaira::battery {
+
+// a cut-off cell rests back up by 0.2-0.3 V; more than this over a sleep gap is the charger's work
+constexpr int CHARGED_ASLEEP_MV = 400;
+
+void DrainMenu::OnSleptAwake(s64 now) {
+    const auto slept = now - m_calib_last;
+    // A sleep is never a cut-off (owner, 2026-11-09): the zero is the moment the console really switched off, which the Hub
+    // finds in the log at its next start (a new boot). HOS sleeps at 3.20 V (the gauge said 30 % once) and takes the Hub's cut of
+    // the charger input back in the sleep (REG00 04), so with the charger in it charges there (2026-11-10: 3.19 V -> 4.04 V in
+    // 28 minutes, twice in one boot); the real cut-off came lower (3.01 V). The S line tells Cutoffs() so.
+    if (m_log) {
+        std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,%d\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_tick_mv, m_charger ? 1 : 0);
+        std::fflush(m_log);
+        fsdevCommitDevice("sdmc");
+    }
+    m_slept_mv = m_tick_mv;
+    m_slept_charged = m_mv > m_tick_mv + CHARGED_ASLEEP_MV;
+    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d, charged %d): a sleep, the drain goes on\n",
+              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0, m_slept_charged ? 1 : 0);
+    App::Notify(m_slept_charged ? "The console charged in the sleep: the drain starts over"_i18n : "The console slept: the drain goes on slowly"_i18n);
+    if (m_slept_charged) { // the drain starts over: a dialog says why (not when it goes on: the page must keep its log to the cut-off)
+        App::Push<ui::OptionBox>(SleptNote(), "OK"_i18n);
+    }
+}
+
+// The toast above is gone in seconds and the user was unlocking the console then (owner, 2026-11-10: "did it see a cut-off or
+// not?"). The page says what happened until it closes.
+auto DrainMenu::SleptNote() const -> std::string {
+    char v[16];
+    std::snprintf(v, sizeof(v), "%.2f", m_slept_mv / 1000.0);
+    return "The console went to sleep at"_i18n + " " + v + " V. " + "A low battery does that: it is not a switch-off, so the zero was not set."_i18n + " "
+        + (m_slept_charged ? "It charged in the sleep, so the drain starts over."_i18n : "The drain goes on until the console switches off by itself."_i18n)
+        + (charge::HizActive() ? " " + "Take the charger out: with it in, the console charges in every such sleep and never switches off."_i18n : std::string{});
+}
 
 void DrainMenu::OpenCalibLog() {
     fs::FsNativeSd sd;

@@ -91,6 +91,7 @@ struct DrainMenu final : ui::menu::MenuBase {
     // the console slept at a low battery (the lock screen) and was woken while it still drains: a sleep, never a cut-off.
     // A flag line in the log (Cutoffs() skips the gap before it), and the drain goes on
     void OnSleptAwake(s64 now);
+    auto SleptNote() const -> std::string; // the status line after such a sleep: what happened and what to do
 
     auto CalibTitle() const -> std::string;
 
@@ -165,6 +166,9 @@ private:
     int m_psm_volt{-1};     // psm's battery voltage state at the last sample, logged when it changes
     int m_tick_mv{};        // the voltage and the charger at the last tick: what was true before a sleep gap
     bool m_tick_charger{};
+    int m_slept_mv{};       // the console slept at this voltage in this run (not a cut-off); 0 = it did not
+    bool m_slept_charged{}; // and the charger charged it in that sleep
+    bool m_sleep_lock{};    // the applet sleep lock is held while the page drains (the constructor says why)
     int m_qh{};             // the gauge's QH counter + 1 at the last live sample, 0 = not read
     int m_tick_qh{};        // the same at the last tick on battery: the baseline of the charge that comes in after the cut-off
     TimeStamp m_qh_saved{}; // when it was last written to the marker

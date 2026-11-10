@@ -12,9 +12,6 @@ std::atomic<u64> g_busy[LOAD_CORES]{};
 
 namespace {
 
-// a cut-off cell rests back up by 0.2-0.3 V; more than this over a sleep gap is the charger's work
-constexpr int CHARGED_ASLEEP_MV = 400;
-
 void Burn(void* arg) {
     const auto core = reinterpret_cast<uintptr_t>(arg);
     // pinned: the idle-tick call answers only for the core the caller runs on, and a sleeping thread
@@ -112,6 +109,15 @@ DrainMenu::DrainMenu(int cycle, std::optional<CalibRun> calib)
 
     App::SetAutoSleepDisabled(true);
     appletSetMediaPlaybackState(true); // keeps the screen from dimming
+    // Experiment (owner, 2026-11-10): HOS puts the console to sleep at 3.20 V (the empty battery picture), and in that sleep the
+    // Hub does not run, so the charger charges. An applet's sleep lock may hold the sleep off: the drain then gets to the real
+    // switch-off with the charger in. The log says whether it held.
+    if (!(m_calib && m_calib->charge)) {
+        log_write("[Battery] asking for the sleep lock\n");
+        const Result lock_rc = appletRequestToAcquireSleepLock();
+        m_sleep_lock = R_SUCCEEDED(lock_rc);
+        log_write("[Battery] sleep lock rc 0x%X\n", lock_rc);
+    }
     if ((m_lbl = R_SUCCEEDED(lblInitialize()))) {
         lblGetCurrentBrightnessSetting(&m_saved_brightness);
         lblIsAutoBrightnessControlEnabled(&m_saved_auto);
@@ -199,6 +205,9 @@ DrainMenu::~DrainMenu() {
     appletSetIdleTimeDetectionExtension(m_saved_idle);
     appletSetMediaPlaybackState(false);
     App::SetAutoSleepDisabled(false);
+    if (m_sleep_lock) {
+        appletReleaseSleepLock();
+    }
     CloseCalibLog();
     log_write("[Battery] drain stopped\n");
 }
@@ -479,22 +488,6 @@ void DrainMenu::CalibTick() {
     }
 }
 
-void DrainMenu::OnSleptAwake(s64 now) {
-    const auto slept = now - m_calib_last;
-    // A sleep is never a cut-off (owner, 2026-11-09): the zero is the moment the console really switched off, which the Hub
-    // finds in the log at its next start (a new boot). HOS sleeps at 3.20 V (the gauge said 30 % once) and may charge in the sleep
-    // (4.19 V after a night on USB with the cut lost); the real cut-off came lower (3.01 V). The S line tells Cutoffs() so.
-    if (m_log) {
-        std::fprintf(m_log, "%lld,S,%d,%d,%d,-1,-1,%d,0,0.0,0,0,%d\n", static_cast<long long>(now), m_calib->step, m_pct, m_gauge_pct, m_tick_mv, m_charger ? 1 : 0);
-        std::fflush(m_log);
-        fsdevCommitDevice("sdmc");
-    }
-    const bool charged = m_mv > m_tick_mv + CHARGED_ASLEEP_MV;
-    log_write("[Calib] the console slept %lld s after %d mV on battery (now %d mV, charger %d, charged %d): a sleep, the drain goes on\n",
-              static_cast<long long>(slept), m_tick_mv, m_mv, m_charger ? 1 : 0, charged ? 1 : 0);
-    App::Notify(charged ? "The console charged in the sleep: the drain starts over"_i18n : "The console slept: the drain goes on slowly"_i18n);
-}
-
 auto DrainMenu::CalibTitle() const -> std::string {
     return calib_flow::CycleName(m_calib->step) + ": " + (m_calib->charge ? "charge"_i18n : m_calib->tail ? "drain after the cut-off"_i18n : "drain to the cut-off"_i18n);
 }
@@ -529,11 +522,14 @@ auto DrainMenu::CalibStatus() const -> std::string {
     if (m_hot) {
         return "Paused: the battery is hot, waiting until it cools to 55 °C"_i18n;
     }
+    if (m_slept_mv && (m_level >= 100 || !m_slept_charged)) { // charged and nearly empty again: the hints below matter more
+        return SleptNote();
+    }
     if (m_level < 100) {
         return "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty."_i18n
             + " " + (charge::HizActive()
-                ? "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n
-                : "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);
+                ? "Take the charger out now: at about 3.2 V the console goes to sleep, and with the charger in it charges there instead of switching off."_i18n
+                : "If the screen goes dark at about 3.2 V, the console sleeps: press POWER once and the drain goes on."_i18n + " " + "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);
     }
     if (charge::HizActive()) {
         return "The charger is in, its input is cut: the console drains on the battery. When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n;
