@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.340 — Backups tab: Y selects the group under the cursor, R2 + Y the whole list (in the footer)
+- Owner's request (2026-11-10): Y on the Backups tab selected both the Kefir Hub and the DBI group. Now Y ([[Select all / none]]) marks all or none of the section under the cursor (by backup source); R2 + Y ([[Select all]]) marks the whole list and is shown in the footer (a display-only action). Other tabs keep Y = Invert. Docs drafts in docs/site/{en,uk}/saves.md. host tests: quick pass, nro: not built, switch: pending.
+
 ## v0.14.339 — batch restore: two backups of one save no longer stop it; no copy question when no save is on the console
 - Owner's run on 0.14.337 (2026-11-10, one user, no saves): all games selected, Restore, 33 checks for 32 archives in /dumps, then "This user already gets another backup of this game..." in a loop. One game had a second backup in a DBI/JKSV/Checkpoint folder, and both went to the same slot. Now the newer backup is restored and the other is left out with a log line (`[RESTORE] ... two backups for one save`); the message and its i18n key are gone. The restore queue is logged (`[RESTORE] queue:`).
 - The batch question (No / Without a copy / Restore) asks about a copy only when a save of the selected games is on the console; otherwise it is No / Restore. A new slot never gets a safety copy. host tests: pass (3 old fails: battery i18n keys, EN/UK parity, HTTP fixture), nro: not built, switch: pending.

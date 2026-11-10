@@ -65,6 +65,8 @@ Menu::Menu(u32 flags, u64 app_id_filter, Category category)
         }})
     );
 
+    UpdateSelectHints();
+
     if (!m_app_id_filter) {
         this->SetAction(Button::L, Action{"Previous tab"_i18n, [this](){
             ChangeCategory(-1);

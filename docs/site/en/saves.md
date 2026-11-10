@@ -174,6 +174,9 @@ Select several saves (or several backup groups), then choose [[Restore]]. [[Rest
 - since 0.14.323: several saves get one question only, and it comes first: [[Saves to restore: ]] N with [[No]], [[Without a copy]], [[Restore]]; after it come the user pickers (if any), then [[Checking backups...]], then the restore itself; no second [[Yes]] dialog after the check (the old text "one dialog lists every save ... confirm it with [[Yes]]" is no longer true)
 - [[Without a copy]] and [[Restore]] now act the same way, only the copy differs; before, the answer was sometimes lost during the check and the Hub asked again
 - [[Restore for a specific user]] with several saves asks the same first question, then which user, then checks and restores
+- since 0.14.339: when no save of the selected games is on the console, the first question is [[Saves to restore: ]] N with [[No]] and [[Restore]] only (no [[Without a copy]], nothing to copy); when some are, the copy is made only of those, a new save gets none
+- since 0.14.339: one game with backups from several programs (Kefir Hub, DBI, JKSV, Checkpoint): only the newest backup is restored, the others are left out, no question; the old message "This user already gets another backup of this game..." is gone (the "Give each backup a different user, or restore just one" sentence above is no longer true for the same user)
+- since 0.14.339, [[Backups]] tab: **Y** ([[Select all / none]]) selects all or none of the group under the cursor ([[Kefir Hub]], DBI...); **R2 + Y** ([[Select all]], shown in the footer) selects the whole list; the other tabs keep **Y** = [[Invert]]
 -->
 
 ## Undo a restore

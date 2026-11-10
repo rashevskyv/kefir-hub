@@ -174,6 +174,7 @@ private:
     void DisplayShowSavesOptions();
     void ToggleCurrentSelection();
     void InvertSelection();
+    void UpdateSelectHints();
     void ChangeCategory(s64 delta);
     void SetCategory(Category category);
     void DrawCategoryTabs(NVGcontext* vg, Theme* theme);
