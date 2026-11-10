@@ -218,6 +218,9 @@ inline void StartDrain(Marker& m, std::int64_t now, std::int64_t boot_time = 0) 
     m.drain_time = now;
     m.boot_time = boot_time;
     m.qh_last = 0; // a new drain: the QH of an older one is not its baseline
+    if (const int cycle = CycleOf(m.step)) {
+        m.cap_raw[cycle - 1] = 0; // nor is the capacity of an older charge of this cycle: the next charge would end at once on it
+    }
 }
 
 // ---- the file --------------------------------------------------------------------------------------------------------------

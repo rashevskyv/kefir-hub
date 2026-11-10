@@ -32,7 +32,6 @@ using namespace calib_flow;
 
 namespace {
 
-constexpr const char* LOG_PATH = "/config/kefir/battery/calib-log.csv";
 constexpr const char* LEDGER_PATH = "/config/kefir/battery/ledger.txt";
 
 void Say(const std::string& text, std::function<void()> then = {}) {
@@ -122,9 +121,7 @@ void ShowReport() {
         facts->design_mah = design / 2;
         facts->verdict = report::Judge(full, s.regs[MAX17050_FullCapNom], design);
         facts->model = ModelOf(s);
-        std::vector<u8> log;
-        if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(LOG_PATH, log)) && !log.empty()) {
-            const std::string_view text{reinterpret_cast<const char*>(log.data()), log.size()};
+        if (const auto text = ReadLog(); !text.empty()) {
             facts->cuts = Cutoffs(text);
             if (const auto m = LoadMarker(); m && m->full_at[0]) {
                 if (const auto cut = ZeroCutoff(text, 2, m->full_at[0])) {

@@ -49,6 +49,25 @@ namespace calib_flow {
 
 constexpr const char* MARKER_PATH = "/config/kefir/battery/calib.txt";
 constexpr const char* LOG_PATH = "/config/kefir/battery/calib-log.csv";
+constexpr const char* LOG_OLD_PATH = "/config/kefir/battery/calib-log.csv.old";
+
+// The drain log of this calibration. A log over CALIB_LOG_MAX is kept as .old and a new one is started (OpenCalibLog), so the
+// switch-off of a cycle can be in the old file (2026-11-10: the log turned over in cycle 1's charge, the count read the new
+// file only and the cycle was never counted). The callers drop the lines of older runs by their time.
+// ponytail: one older file; a calibration that writes over 8 MB (about 50 hours of open pages) loses its first lines.
+auto ReadLog() -> std::string {
+    std::string text;
+    for (const char* path : {LOG_OLD_PATH, LOG_PATH}) {
+        std::vector<u8> data;
+        if (R_SUCCEEDED(fs::FsNativeSd{}.read_entire_file(path, data)) && !data.empty()) {
+            text.append(reinterpret_cast<const char*>(data.data()), data.size());
+            if (text.back() != '\n') { // a file that ends in a cut line must not join the next one's first line
+                text += '\n';
+            }
+        }
+    }
+    return text;
+}
 
 auto LoadMarker() -> std::optional<Marker> {
     std::vector<u8> data;
@@ -99,14 +118,6 @@ auto ReadBattery() -> Battery {
 
 auto ChargerIn() -> bool {
     return ReadBattery().charger_in;
-}
-
-auto ReadLog() -> std::string {
-    std::vector<u8> data;
-    if (R_FAILED(fs::FsNativeSd{}.read_entire_file(LOG_PATH, data))) {
-        return {};
-    }
-    return {reinterpret_cast<const char*>(data.data()), data.size()};
 }
 
 // ---- the cycles: counted by the log --------------------------------------------------------------------------------------
@@ -167,6 +178,7 @@ auto ScreenNow() -> std::pair<int, bool> {
 // ---- the runs -----------------------------------------------------------------------------------------------------------
 
 void OnChargeDone(int was);
+void DrainAgain();
 void StartChargeRun(const Marker& m);
 void WriteZeroThenCharge(Marker m);
 
@@ -204,10 +216,18 @@ void StartDrainRun(Marker& m) {
 void OnChargeDone(int was) {
     auto m = LoadCurrent();
     if (m && IsCycle(m->step) && CycleOf(m->step) == was) {
-        // the log did not count this cycle (its cut-off is missing): the same drain again would loop, the list says where it is
-        log_write("[Calib] the charge ended but cycle %d was not counted: the steps, not a new drain\n", was);
-        App::Notify("This cycle was not counted: its capacity was not measured. The log says why."_i18n);
-        ShowSteps();
+        // The log did not count this cycle: it has no switch-off of this cycle's drain. The same drain again by itself would
+        // loop, and a toast with "the log says why" told the user nothing (owner, 2026-11-10): the dialog says the reason and
+        // asks.
+        log_write("[Calib] the charge ended but cycle %d was not counted: no switch-off of its drain in the log\n", was);
+        App::Push<ui::OptionBox>("This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain."_i18n + " " + "A cycle counts only from a switch-off to a full charge, so the drain must run again."_i18n,
+            "Back"_i18n, "Drain again"_i18n, 1, [](auto op) {
+                if (op && *op == 1) {
+                    DrainAgain();
+                } else {
+                    ShowSteps();
+                }
+            });
     } else if (m && IsCycle(m->step)) {
         StartDrainRun(*m);
     } else if (m && m->step == Step::Report) {

@@ -120,8 +120,9 @@ int main() {
         const auto cb = Parse(Format(c));
         assert(cb.cap_raw[0] == 0x2300 && cb.cap_raw[1] == 0x2200);
         assert(Parse("cap1=-3\ncap2=99999\n").cap_raw[0] == 0 && Parse("cap1=-3\ncap2=99999\n").cap_raw[1] == 0);
-        StartDrain(c, 100); // a new drain does not keep the QH of an older one
-        assert(c.qh_last == 0);
+        c.step = Step::Cycle1;
+        StartDrain(c, 100); // a new drain does not keep the QH of an older one, nor this cycle's capacity of an older charge
+        assert(c.qh_last == 0 && c.cap_raw[0] == 0 && c.cap_raw[1] == 0x2200);
     }
     assert(back.zero_mv == 3193 && back.zero_at == 777 && back.full_at[0] == 999 && back.full_at[1] == 0);
     const auto bad = Parse("step=99\r\ncutoffs=-4\r\nnonsense\r\nphase=x\r\nstarted=1\r\n");

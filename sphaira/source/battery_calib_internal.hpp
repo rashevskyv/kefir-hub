@@ -13,6 +13,7 @@
 namespace sphaira::battery::calib_flow {
 
 auto LoadMarker() -> std::optional<calib::Marker>;
+auto ReadLog() -> std::string; // the drain log of this calibration: the file kept as .old, then the one in use
 void SaveMarker(const calib::Marker& m);
 auto Now() -> std::int64_t;
 auto StepLabel(int i) -> std::string;
