@@ -168,7 +168,8 @@ private:
     int m_qh{};             // the gauge's QH counter + 1 at the last live sample, 0 = not read
     int m_tick_qh{};        // the same at the last tick on battery: the baseline of the charge that comes in after the cut-off
     TimeStamp m_qh_saved{}; // when it was last written to the marker
-    bool m_measured{};      // the capacity of this cycle is measured, or refused
+    bool m_measured{};      // the capacity of this cycle is measured
+    bool m_waits_full{};    // the charger ended the charge, the console shows less than 100 %: the gauge has not marked the full
     TimeStamp m_measure_ts{};
     void MeasureOnFull();
     bool m_stop_ask{};      // the "stop?" question is open: the load is paused

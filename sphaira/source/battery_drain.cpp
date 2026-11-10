@@ -512,7 +512,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
             }
             return which + ": " + "the battery is full."_i18n + " " + next;
         }
-        return which + ": " + "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile."_i18n + " " + next;
+        return which + ": " + (m_waits_full ? "the charger ended the charge, but the gauge shows less than 100 %: it has not taken the battery for full yet. Keep the charger in: the Hub waits and writes what the gauge does to its log."_i18n : "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile."_i18n) + " " + next;
     }
     if (m_charger) {
         if (m_step == wizard::DrainStep::CycleCounted) {

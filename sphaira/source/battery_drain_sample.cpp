@@ -66,7 +66,9 @@ void DrainMenu::MeasureOnFull() {
         return;
     }
     m_measure_ts.Update();
-    m_measured = calib_flow::MeasureCapacityIfFull() != calib_flow::Measure::NotYet;
+    const auto got = calib_flow::MeasureCapacityIfFull();
+    m_waits_full = got == calib_flow::Measure::Waits;
+    m_measured = got == calib_flow::Measure::Done && m_pct >= 100; // 100 % is in the log by now: the cycle count needs that line
 }
 
 auto DrainMenu::ZeroSeen() const -> bool {
@@ -134,6 +136,9 @@ void DrainMenu::SampleLive() {
         if (R_SUCCEEDED(psmGetBatteryVoltageState(&state)) && static_cast<int>(state) != m_psm_volt) {
             m_psm_volt = state;
             log_write("[Battery] psm voltage state %d at %d mV, %d mA\n", m_psm_volt, m_mv, m_ma);
+            if (m_log) { // a V line: the Hub's log is cut at every start, the drain log keeps what HOS thought before a sleep or a cut-off
+                std::fprintf(m_log, "%lld,V,%d,%d,%d\n", static_cast<long long>(std::time(nullptr)), m_psm_volt, m_mv, m_ma);
+            }
         }
         const float w = m_mv / 1000.f * std::abs(m_ma) / 1000.f;
         Push(m_watts, w);

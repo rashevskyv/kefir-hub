@@ -239,12 +239,12 @@ void DrainAgain() {
 // cycle 1's drain cut the console off: the last voltage of the log becomes the gauge's empty point, then the charge page
 void WriteZeroThenCharge(Marker m) {
     const auto after = static_cast<std::int64_t>(detail::LoadState().reset_at);
-    const auto cut = ZeroCutoff(ReadLog(), 1, after);
+    const auto cut = ZeroCutoff(ReadLog(), 1, after, ReadBattery().boot_time);
     const int mv = cut ? cut->mv : 0;
     if (!mv) {
-        log_write("[Zero] the log has no cut-off of cycle 1's drain\n");
-        // the zero comes only from a cut-off: OK drains again, the next switch-off gives it
-        App::Push<ui::OptionBox>("The console switched off, but the drain log has no last voltage. The zero cannot be set from it."_i18n + "\n\n" + "OK starts the drain again."_i18n,
+        log_write("[Zero] the log has no cut-off of cycle 1's drain that this boot came after: no zero\n");
+        // the zero comes only from a real switch-off (the drain page saw the charger: the dock): OK drains again
+        App::Push<ui::OptionBox>("The console has not switched off by itself in this drain, so there is no empty voltage yet. The zero is set only from a real switch-off."_i18n + " " + "Take the console out of the dock, or take the charger out."_i18n + "\n\n" + "OK starts the drain again."_i18n,
             "OK"_i18n, [](auto) { DrainAgain(); });
         return;
     }
@@ -462,10 +462,11 @@ auto Resume(Marker m) -> bool {
     }
     Sync(m, detail::LoadState().reset_at != 0);
     auto b = ReadBattery();
-    // the log's own word: a drain line this low and then nothing (or the charge) = the console switched off in this drain
+    // the log's own word: a drain line this low, then nothing (or the charge), and a boot after it = the console switched off
+    // in this drain. Without the boot a Hub that was closed at a low battery and opened on the charger looked like a cut-off.
     if (IsCycle(m.step) && m.drain_started) {
         for (const auto& c : Cutoffs(ReadLog())) {
-            if (c.step == CycleOf(m.step) && c.time >= m.drain_time) {
+            if (c.step == CycleOf(m.step) && c.time >= m.drain_time && SwitchedOff(c, b.boot_time)) {
                 b.cut_in_log = true;
             }
         }
@@ -536,7 +537,9 @@ auto MeasureCapacityIfFull() -> Measure {
         return Measure::NotYet;
     }
     const int cycle = CycleOf(m->step);
-    if (m->cap_raw[cycle - 1]) {
+    u32 pct{};
+    psmGetBatteryChargePercentage(&pct);
+    if (m->cap_raw[cycle - 1] && pct >= 100) {
         return Measure::Done;
     }
     FuelGauge g;
@@ -553,8 +556,15 @@ auto MeasureCapacityIfFull() -> Measure {
     // full = the charger chip ended the charge; with the charger out nobody says so: wait for it
     const auto reg08 = charger != PsmChargerType_Unconnected ? charge::ChargerStatus() : std::nullopt;
     const auto avg = g.Current(MAX17050_AvgCurrent);
-    if (!reg08 || !avg || !zero::ChargeDone(*reg08, mv, static_cast<int>(*avg))) {
+    const bool ended = reg08 && avg && zero::ChargeDone(*reg08, mv, static_cast<int>(*avg));
+    detail::LogLearning(g, mv, static_cast<int>(pct), ended);
+    if (!ended) {
         return Measure::NotYet;
+    }
+    // The charger is done but the console shows less than 100 %: the chip did not take this for a full battery, so its FullCap
+    // is not this charge's capacity, and the cycle cannot count (2026-11-06: 89 % at the charger's end). Wait; the log says why.
+    if (pct < 100) {
+        return Measure::Waits;
     }
     // the full writes nothing (owner, 2026-11-09): the reset already set the factory capacity, and the chip learns its own at
     // the end of the charge; a write here would wipe what it learned. The capacity is noted for the report.

@@ -161,11 +161,19 @@ inline auto CycleDoneByLog(std::string_view text, int step, std::int64_t after =
     return std::nullopt;
 }
 
-// the zero: the last cut-off of the step's drain, before any charge line of the step that follows it
-inline auto ZeroCutoff(std::string_view text, int step, std::int64_t after = 0) -> std::optional<Cutoff> {
+// A cut-off line is a real switch-off only when the console booted after it (`boot` = when this boot began). A drain page that
+// was left at a low battery (the dock, a closed Hub) ends the log with the same kind of line, and the zero must not come from
+// it (owner, 2026-11-09: the zero is the moment the console really switched off).
+inline auto SwitchedOff(const Cutoff& c, std::int64_t boot) -> bool {
+    return boot > c.time;
+}
+
+// the zero: the last cut-off of the step's drain, before any charge line of the step that follows it. The zero write always
+// passes `boot`; the report, which only shows the cut-off, does not.
+inline auto ZeroCutoff(std::string_view text, int step, std::int64_t after = 0, std::int64_t boot = INT64_MAX) -> std::optional<Cutoff> {
     std::optional<Cutoff> last_cut;
     for (const auto& c : Cutoffs(text)) {
-        if (c.step == step && c.time >= after) {
+        if (c.step == step && c.time >= after && SwitchedOff(c, boot)) {
             last_cut = c;
         }
     }

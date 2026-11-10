@@ -58,6 +58,8 @@ auto LoadState() -> wizard::State;
 void SaveState(const wizard::State& st);
 // HOS's cycle total x100 now (this MMC's set:sys copy + the chip's Cycles delta), without a full Read()
 auto CycleTotalNow() -> std::optional<u32>;
+// a charge near the top: what the chip's capacity learning sees, one log line every two minutes and when the charger ends
+void LogLearning(FuelGauge& g, int mv, int psm_pct, bool charger_done);
 // step 5: this MMC's copy takes the chip's model and the larger cycle count; records the match when both cycles are done.
 // `failed` gets the reason on an error. No popups: the hop to the other MMC runs it by itself.
 auto MatchNow(std::string& failed) -> Result;

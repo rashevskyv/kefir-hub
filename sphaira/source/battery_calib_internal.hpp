@@ -21,8 +21,9 @@ auto CycleName(int cycle) -> std::string; // "Calibration cycle 1/2"
 void ShowSteps();
 // The full battery of the cycle (battery_zero.hpp): the charger is in and it ended the charge. Cycle 1 writes the factory capacity;
 // cycle 2 writes nothing and notes what the chip learned. Not tied to the Hub's pages: the Hub also calls it at its start.
-// NotYet = not full / no cycle in the charge phase; Done = done (now or before); Refused = tried, failed.
-enum class Measure { NotYet, Done, Refused };
+// NotYet = not full / no cycle in the charge phase; Done = done (now or before); Waits = the charger ended the charge but the
+// console shows less than 100 %: the gauge has not taken the battery for full, nothing is noted.
+enum class Measure { NotYet, Done, Waits };
 auto MeasureCapacityIfFull() -> Measure;
 void StartOver();
 void StartCheck();

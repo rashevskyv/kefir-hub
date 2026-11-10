@@ -63,6 +63,14 @@ int main() {
     // the zero of the cycle: its last cut-off (the tail mode's one, the lowest)
     assert(ZeroCutoff(run, 1) && ZeroCutoff(run, 1)->mv == 3205 && ZeroCutoff(run, 1)->time == 2101);
     assert(!ZeroCutoff(run, 1, 3000));                     // a cycle that began later has no cut-off yet
+    // a real switch-off has a boot after it: a page left at a low battery in this boot (the dock, a closed Hub) is no zero
+    assert(SwitchedOff(cuts[1], 2200) && !SwitchedOff(cuts[1], 2101) && !SwitchedOff(cuts[1], 1500));
+    assert(!ZeroCutoff(run, 1, 0, 1500));                  // this boot began before both lines: the console never went off
+    assert(ZeroCutoff(run, 1, 0, 2050)->mv == 3220);       // booted after the first one only: the second is a left page
+    assert(ZeroCutoff(run, 1, 0, 2200)->mv == 3205);
+    // a V line (psm's voltage state) is no sample and hides no cut-off
+    assert(!ParseLine("2102,V,1,3198,-420"));
+    assert(Cutoffs(run + "9700,V,1,3198,-420" + std::string(1, 10)).size() == 2);
     assert(!CycleDoneByLog(run, 1));                       // charged to 3.7 V only, never 100 %
     ch.time = 9500; ch.psm_pct = 99; run += FormatLine(ch);
     assert(!CycleDoneByLog(run, 1));

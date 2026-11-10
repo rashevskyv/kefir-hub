@@ -63,6 +63,25 @@ void SaveState(const wizard::State& st) {
     fs.write_entire_file(STATE_PATH, std::vector<u8>(text.begin(), text.end()));
 }
 
+// The chip takes a battery for full (FullCap = RepCap, 100 %) when VFSOC is over FullSOCThr while Current and AvgCurrent are
+// both between 0.125 and 1.25 of ICHGTerm. Whether it did was never seen on a console: these lines show it.
+void LogLearning(FuelGauge& g, int mv, int psm_pct, bool charger_done) {
+    static s64 last_at = 0;
+    static bool last_done = false;
+    const auto now = static_cast<s64>(std::time(nullptr));
+    if (charger_done == last_done && now - last_at < 120) {
+        return;
+    }
+    last_at = now;
+    last_done = charger_done;
+    const auto r = [&g](u8 reg) { return static_cast<unsigned>(g.Read(reg).value_or(0xFFFF)); };
+    log_write("[Learn] psm %d%% %d mV charger done %d: VFSOC %04X RepSOC %04X RepCap %04X FullCap %04X FullCapNom %04X Current %d AvgCurrent %d mA "
+              "FullSOCThr %04X ICHGTerm %04X dQacc %04X dPacc %04X QH %04X LearnCFG %04X\n",
+              psm_pct, mv, charger_done ? 1 : 0, r(MAX17050_VFSOC), r(MAX17050_RepSOC), r(MAX17050_RepCap), r(MAX17050_FullCap), r(MAX17050_FullCapNom),
+              static_cast<int>(g.Current(MAX17050_Current).value_or(0)), static_cast<int>(g.Current(MAX17050_AvgCurrent).value_or(0)),
+              r(0x13), r(0x1E), r(0x45), r(0x46), r(MAX17050_QH), r(0x28));
+}
+
 auto CycleTotalNow() -> std::optional<u32> {
     if (R_FAILED(setsysInitialize())) {
         return std::nullopt;
