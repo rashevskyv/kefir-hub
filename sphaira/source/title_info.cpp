@@ -11,6 +11,7 @@
 #include "yati/nx/ns.hpp"
 #include "ui/progress_box.hpp"
 #include "utils/utils.hpp"
+#include "title_export_name.hpp"
 #if DOCS_DEMO
 #include "demo/demo_data.hpp"
 #endif
@@ -240,9 +241,8 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
 #endif
 
     auto data = demo_title ? nullptr : nxtcGetApplicationMetadataEntryById(app_id);
-    // ponytail: a one-letter name is a NACP v2 entry cached raw before v0.14.297 ("E" for Zelda BotW);
-    // load it again. Longer junk needs "Title cache" off/on in the Games options.
-    if (data && std::strlen(data->name) <= 1) {
+    // a NACP v2 entry cached raw (deflated bytes, "E" for Zelda BotW): load it again.
+    if (data && IsRawNacpName(data->name)) {
         nxtcFreeApplicationMetadata(&data);
         data = nullptr;
     }
@@ -296,8 +296,8 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
             if (R_SUCCEEDED(nsGetApplicationDesiredLanguage(&control->nacp, &lang))) {
                 result->lang = *lang;
 
-                // NACP v2 fallback: an empty (or one-letter junk) name means the new compressed format (FW 20.0+)
-                if (strnlen(result->lang.name, sizeof(result->lang.name)) <= 1) {
+                // NACP v2 fallback: a name that is not text means the new compressed format (FW 20.0+)
+                if (IsRawNacpName({result->lang.name, strnlen(result->lang.name, sizeof(result->lang.name))})) {
                     const auto* raw = reinterpret_cast<const u8*>(&control->nacp);
                     bool decoded = TryParseNacpV2(raw, sizeof(NacpStruct), result->lang.name, result->lang.author);
                     if (decoded) {
@@ -310,9 +310,9 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
                     }
                     // the cache picks its own entry from the raw NACP, which in v2 is junk: give it the decoded name.
                     if (decoded) {
-                        for (auto& entry : control->nacp.lang_data.lang) {
-                            entry = result->lang;
-                        }
+                        for (auto& entry : control->nacp.lang_data.lang) entry = result->lang;
+                    } else { // not a name at all: show the title id and keep the junk out of the cache
+                        std::snprintf(result->lang.name, sizeof(result->lang.name), "%016lX", app_id); valid = false;
                     }
                 }
             } else {

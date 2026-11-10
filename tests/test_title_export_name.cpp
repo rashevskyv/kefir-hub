@@ -163,7 +163,24 @@ static int test_format_mtp_game_dir_name() {
     return 0;
 }
 
+static int test_is_raw_nacp_name() {
+    using namespace sphaira::title;
+
+    CHECK(!IsRawNacpName("Resident Evil 6"));
+    CHECK(!IsRawNacpName("Castlevania: Belmont's Curse"));
+    CHECK(!IsRawNacpName("\xD0\x9A\xD0\xB5\xD1\x84\xD1\x96\xD1\x80"));      // Кефір
+    CHECK(!IsRawNacpName("\xE3\x82\xBC\xE3\x83\xAB\xE3\x83\x80 \xF0\x9F\x8E\xAE")); // ゼルダ + emoji
+    CHECK(IsRawNacpName(""));
+    CHECK(IsRawNacpName("E"));                        // v2 first byte cached raw (Zelda BotW)
+    CHECK(IsRawNacpName("*\x9C" "AJa2uEBT1Hhm"));     // deflate bytes: a lone continuation byte
+    CHECK(IsRawNacpName("OkAp\x01V4X1awL3e6F"));      // control byte
+    CHECK(IsRawNacpName("abc\xE3\x82"));              // cut multibyte at the end
+    CHECK(IsRawNacpName("ab\xC0\xAF" "cd"));          // overlong encoding
+    return 0;
+}
+
 int main() {
+    if (test_is_raw_nacp_name() != 0) return 1;
     if (test_is_usable_title_name() != 0) return 1;
     if (test_resolve_export_title_name_hierarchy() != 0) return 1;
     if (test_sanitize_utf8_title_name() != 0) return 1;

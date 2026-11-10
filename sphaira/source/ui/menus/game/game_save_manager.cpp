@@ -255,8 +255,8 @@ void PromptIncreaseSaveSize(
     const s64 cur_data = row.extra.data_size;
     const s64 cur_journal = row.extra.journal_size;
 
-    if (cur_data <= 0 || (cur_data % 0x4000 != 0) ||
-        cur_journal < 0 || (cur_journal % 0x4000 != 0)) {
+    // an unaligned live size is the game's own (Resident Evil 6); the presets below are aligned.
+    if (cur_data <= 0 || cur_journal < 0) {
         App::Notify("Save slot sizing is invalid or unaligned."_i18n);
         return;
     }

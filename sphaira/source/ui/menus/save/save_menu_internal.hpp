@@ -51,6 +51,7 @@ void PlanRestoreCreation(
     const AccountUid& dest_uid,
     const fs::FsPath& archive_path,
     std::function<void(std::optional<Entry>)> cb,
-    size_t step = 0, size_t count = 0); // step of count in a bulk restore, for the box title
+    size_t step = 0, size_t count = 0, // step of count in a bulk restore, for the box title
+    std::function<void()> on_skip = {}); // bulk restore: a bad backup offers "Skip" (this) and "Stop"
 
 } // namespace sphaira::ui::menu::save

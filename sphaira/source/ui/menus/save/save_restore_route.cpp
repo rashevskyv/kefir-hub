@@ -278,7 +278,23 @@ static void PickArchiveFromCandidates(const std::vector<BackupCandidate>& candid
     App::Push(std::move(popup));
 }
 
-void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const fs::FsPath& archive_path, std::function<void(std::optional<Entry>)> cb, size_t step, size_t count) {
+// a backup that cannot be restored: say which game and file, and why; in a bulk restore offer to skip it.
+static void ReportBadBackup(const Entry& group, const fs::FsPath& archive_path, const std::string& reason, Result rc,
+                            std::function<void(std::optional<Entry>)> cb, std::function<void()> on_skip) {
+    const char* file = std::strrchr(archive_path.s, '/');
+    log_write("[RESTORE] %s: %s rc=0x%X %s\n", group.GetName(), archive_path.s, rc, reason.c_str());
+    const auto msg = std::string{group.GetName()} + "\n" + (file ? file + 1 : archive_path.s) + "\n\n" + reason;
+    if (!on_skip) {
+        App::Push<OptionBox>(msg, "OK"_i18n);
+        cb(std::nullopt);
+        return;
+    }
+    App::Push<OptionBox>(msg, "Skip"_i18n, "Stop"_i18n, 0, [cb, on_skip](auto op) {
+        if (op && *op == 0) on_skip(); else cb(std::nullopt);
+    });
+}
+
+void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const fs::FsPath& archive_path, std::function<void(std::optional<Entry>)> cb, size_t step, size_t count, std::function<void()> on_skip) {
 
     const auto outcome = bundle::EvaluateRestoreDestination(
         false, group.save_data_type, group.save_data_rank, group.save_data_index, group.application_id);
@@ -324,7 +340,8 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
                 // (PlanAccountSaveCreation reports "not installed" when it is not).
                 if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : static_cast<Result>(FsError_PathNotFound);
             } else {
-                ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, false);
+                // a save may hold only empty folders (BioShock Remastered: "/BACKUP/"): that is a backup too.
+                ctx->admission = InspectSaveArchiveAdmission(archive_path, pbox, true);
                 if (!ctx->admission.admitted) return ctx->admission.rc ? ctx->admission.rc : static_cast<Result>(FsError_PathNotFound);
             }
             if (pbox->ShouldExit()) return Result_TransferCancelled;
@@ -351,22 +368,16 @@ void PlanRestoreCreation(const Entry& group, const AccountUid& dest_uid, const f
             }
             return 0;
         },
-        [group, ctx, cb](Result rc) mutable {
+        [group, ctx, cb, archive_path, on_skip](Result rc) mutable {
             if (rc == Result_TransferCancelled) {
                 cb(std::nullopt);
                 return;
             }
-            if (!ctx->admission.admitted) {
-                App::Push<OptionBox>("Invalid or corrupt save backup archive."_i18n, "OK"_i18n);
-                cb(std::nullopt); return;
-            }
-            if (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) {
-                App::Push<OptionBox>(GetBackendStatusMessage(ctx->status, group.GetName()), "OK"_i18n);
-                cb(std::nullopt); return;
-            }
-            if (!ctx->reinspect_ok) {
-                App::Push<OptionBox>("Selected backup archive has changed or is no longer available."_i18n, "OK"_i18n);
-                cb(std::nullopt); return;
+            const auto reason = !ctx->admission.admitted ? "Invalid or corrupt save backup archive."_i18n
+                : (R_FAILED(ctx->plan_rc) || ctx->status != SaveBackendStatus::Success) ? GetBackendStatusMessage(ctx->status, group.GetName())
+                : !ctx->reinspect_ok ? "Selected backup archive has changed or is no longer available."_i18n : std::string{};
+            if (!reason.empty()) {
+                return ReportBadBackup(group, archive_path, reason, rc, cb, on_skip);
             }
 
             Entry target = group;
@@ -545,7 +556,7 @@ void Menu::PromptBatchRestoreTargets(
     bool return_to_actions, std::shared_ptr<std::optional<AccountUid>> shared_uid, bool auto_match, std::optional<bool> copy) {
 
     if (step >= seeds->size()) {
-        RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root, copy);
+        if (!seeds->empty()) RestoreSaves(std::move(*seeds), std::move(*resolved_targets), location, backup_root, copy);
         return;
     }
 
@@ -568,14 +579,22 @@ void Menu::PromptBatchRestoreTargets(
         PromptBatchRestoreTargets(seeds, step + 1, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid, auto_match, copy);
     };
 
+    // "Skip" on a bad backup: drop this save from the batch and go on with the next one.
+    const auto skip_step = [this, seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid, auto_match, copy]() {
+        seeds->erase(seeds->begin() + step);
+        resolved_targets->erase(resolved_targets->begin() + step);
+        PromptBatchRestoreTargets(seeds, step, accounts, resolved_targets, seen_target_keys, location, backup_root, return_to_actions, shared_uid, auto_match, copy);
+    };
+
     const auto& current_seed = (*seeds)[step];
-    const auto resolve_for_uid = [this, &current_seed, on_target_resolved, step, seeds](const AccountUid* uid) {
+    const auto resolve_for_uid = [this, &current_seed, on_target_resolved, skip_step, step, seeds](const AccountUid* uid) {
         const auto candidates = FindLiveRestoreCandidates(current_seed, uid);
         if (candidates.empty()) {
             const auto archive_path = current_seed.backup_members.empty()
                 ? current_seed.backup_path
                 : current_seed.backup_members.front().path;
-            PlanRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved, step, seeds->size());
+            PlanRestoreCreation(current_seed, uid ? *uid : AccountUid{}, archive_path, on_target_resolved, step, seeds->size(),
+                seeds->size() > 1 ? std::function<void()>{skip_step} : std::function<void()>{});
             return;
         }
         ResolveRestoreTarget(current_seed, uid, on_target_resolved);

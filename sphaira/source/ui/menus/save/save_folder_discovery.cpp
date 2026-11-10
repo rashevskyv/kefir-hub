@@ -333,8 +333,7 @@ auto InspectSaveFolderAdmission(const fs::FsPath& folder_path, ProgressBox* pbox
                 DecodedSaveMetaInternal decoded{};
                 if (DecodeNxSaveMeta(meta_buf, static_cast<size_t>(meta_size), decoded)) {
                     if (decoded.owner_id != 0 &&
-                        decoded.data_size > 0 && (decoded.data_size % 0x4000 == 0) &&
-                        decoded.journal_size >= 0 && (decoded.journal_size % 0x4000 == 0) &&
+                        decoded.data_size > 0 && decoded.journal_size >= 0 &&
                         decoded.save_data_type == FsSaveDataType_Account &&
                         decoded.save_data_rank == FsSaveDataRank_Primary &&
                         decoded.save_data_index == 0) {

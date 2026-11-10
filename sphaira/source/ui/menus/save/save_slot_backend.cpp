@@ -14,6 +14,10 @@ namespace sphaira::ui::menu::save {
 
 namespace {
 
+// a size the 16 KiB round-up below cannot overflow.
+constexpr u64 kMaxSaveSize = static_cast<u64>(std::numeric_limits<s64>::max()) - 0x4000;
+constexpr s64 AlignSaveSize(s64 size) { return (size + 0x3FFF) & ~s64{0x3FFF}; }
+
 constexpr bool IsConcreteSaveDataSpace(FsSaveDataSpaceId space_id) {
     return space_id == FsSaveDataSpaceId_System ||
            space_id == FsSaveDataSpaceId_User ||
@@ -212,28 +216,26 @@ auto PlanAccountSaveCreation(
             return FsError_PathNotFound;
         }
 
-        if (base_data_u64 == 0 || base_data_u64 > static_cast<u64>(std::numeric_limits<s64>::max()) || (base_data_u64 % 0x4000 != 0)) {
-            if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
-            return FsError_InvalidSize;
-        }
-        if (base_journal_u64 > static_cast<u64>(std::numeric_limits<s64>::max()) || (base_journal_u64 % 0x4000 != 0)) {
+        // a game may declare an unaligned size (Resident Evil 6: 0x472bf) and the console keeps it so:
+        // the new slot gets it rounded up to the 16 KiB block.
+        if (base_data_u64 == 0 || base_data_u64 > kMaxSaveSize || base_journal_u64 > kMaxSaveSize) {
             if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
             return FsError_InvalidSize;
         }
 
-        final_data = static_cast<s64>(base_data_u64);
-        final_journal = static_cast<s64>(base_journal_u64);
+        final_data = AlignSaveSize(static_cast<s64>(base_data_u64));
+        final_journal = AlignSaveSize(static_cast<s64>(base_journal_u64));
 
         if (archive_sizing && archive_sizing->has_sizing) {
             const s64 arch_data = archive_sizing->data_size;
             const s64 arch_journal = archive_sizing->journal_size;
-            if (arch_data <= 0 || arch_data > std::numeric_limits<s64>::max() || (arch_data % 0x4000 != 0) ||
-                arch_journal < 0 || arch_journal > std::numeric_limits<s64>::max() || (arch_journal % 0x4000 != 0)) {
+            if (arch_data <= 0 || static_cast<u64>(arch_data) > kMaxSaveSize ||
+                arch_journal < 0 || static_cast<u64>(arch_journal) > kMaxSaveSize) {
                 if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
                 return FsError_InvalidSize;
             }
-            final_data = std::max(final_data, arch_data);
-            final_journal = std::max(final_journal, arch_journal);
+            final_data = std::max(final_data, AlignSaveSize(arch_data));
+            final_journal = std::max(final_journal, AlignSaveSize(arch_journal));
             provenance = SizingProvenance::InstalledControlDataAndArchiveMetadata;
         }
     } else {
@@ -264,14 +266,14 @@ auto PlanAccountSaveCreation(
         }
         const s64 arch_data = archive_sizing->data_size;
         const s64 arch_journal = archive_sizing->journal_size;
-        if (arch_data <= 0 || arch_data > std::numeric_limits<s64>::max() || (arch_data % 0x4000 != 0) ||
-            arch_journal < 0 || arch_journal > std::numeric_limits<s64>::max() || (arch_journal % 0x4000 != 0)) {
+        if (arch_data <= 0 || static_cast<u64>(arch_data) > kMaxSaveSize ||
+            arch_journal < 0 || static_cast<u64>(arch_journal) > kMaxSaveSize) {
             if (out_status) *out_status = SaveBackendStatus::InvalidSizes;
             return FsError_InvalidSize;
         }
 
-        final_data = arch_data;
-        final_journal = arch_journal;
+        final_data = AlignSaveSize(arch_data);
+        final_journal = AlignSaveSize(arch_journal);
         owner_id = archive_sizing->owner_id;
         provenance = SizingProvenance::ArchiveMetadata;
     }
@@ -426,8 +428,8 @@ auto ExtendSaveDataChecked(
         return result;
     }
 
-    if (current_extra.data_size <= 0 || (current_extra.data_size % 0x4000 != 0) ||
-        current_extra.journal_size < 0 || (current_extra.journal_size % 0x4000 != 0)) {
+    // the live size may be unaligned (made so by the game's NACP); the request is aligned.
+    if (current_extra.data_size <= 0 || current_extra.journal_size < 0) {
         result.status = SaveBackendStatus::InvalidSizes;
         result.rc = FsError_InvalidSize;
         return result;

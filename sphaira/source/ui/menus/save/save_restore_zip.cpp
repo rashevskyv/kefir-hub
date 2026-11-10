@@ -114,12 +114,11 @@ Result RestoreSaveZip(ProgressBox* pbox, const Entry& e, const fs::FsPath& path,
                 log_write("Archive metadata identity mismatch with planned save creation request\n");
                 return FsError_PathNotFound;
             }
+            // the archive size may be unaligned (the game made it so); the request is it rounded up.
             if (archive_meta.meta.data_size <= 0 ||
                 archive_meta.meta.data_size > e.creation_request.data_size ||
-                (archive_meta.meta.data_size % 0x4000 != 0) ||
                 archive_meta.meta.journal_size < 0 ||
-                archive_meta.meta.journal_size > e.creation_request.journal_size ||
-                (archive_meta.meta.journal_size % 0x4000 != 0)) {
+                archive_meta.meta.journal_size > e.creation_request.journal_size) {
                 log_write("Archive metadata sizing mismatch with planned save creation request\n");
                 return FsError_InvalidSize;
             }

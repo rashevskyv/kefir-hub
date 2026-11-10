@@ -24,6 +24,28 @@ inline bool IsUsableTitleName(std::string_view name) {
     return false;
 }
 
+// A NACP name that is not text: empty or one letter, a control byte, or broken UTF-8.
+// That is what a v1 reader sees in a v2 (FW 20.0+) NACP, whose names are deflated bytes.
+inline bool IsRawNacpName(std::string_view name) {
+    if (name.size() <= 1) {
+        return true;
+    }
+    for (size_t i = 0; i < name.size();) {
+        const auto c = static_cast<unsigned char>(name[i]);
+        const size_t len = c < 0x80 ? 1 : (c & 0xE0) == 0xC0 ? 2 : (c & 0xF0) == 0xE0 ? 3 : (c & 0xF8) == 0xF0 ? 4 : 0;
+        if (len == 0 || i + len > name.size() || c < 0x20 || c == 0x7F || (len == 2 && c < 0xC2)) {
+            return true;
+        }
+        for (size_t k = 1; k < len; k++) {
+            if ((static_cast<unsigned char>(name[i + k]) & 0xC0) != 0x80) {
+                return true;
+            }
+        }
+        i += len;
+    }
+    return false;
+}
+
 // Formats a 64-bit Title ID as a 16-character uppercase hex string.
 inline std::string FormatTitleId(std::uint64_t id) {
     char buf[17];
