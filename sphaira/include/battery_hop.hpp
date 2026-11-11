@@ -25,16 +25,17 @@ inline auto Trim(std::string_view s) -> std::string_view {
 // 1-based position of the hekate boot entry that starts Atmosphère in the sysMMC (want_emu = false) or the emuMMC.
 // hekate counts every [section] except [config], in file order; that number is what autoboot= means. 0 = no such entry.
 // sysMMC = emummc_force_disable=1; emuMMC = emummcforce=1, or else the first Atmosphère entry that does not force
-// the sysMMC (it follows emummc.ini).
+// the sysMMC (it follows emummc.ini). An entry with stock=1 is never one: hekate loads no Atmosphère kernel or modules
+// there, so the Hub cannot run (Kefir's "Full Stock", 2026-11-11: the hop chose it for the sysMMC).
 inline auto FindEntry(std::string_view ini, bool want_emu) -> int {
     int index = 0;
     int found = 0;
     int fallback = 0;
     bool in_entry = false;
-    bool cfw = false, force_sys = false, force_emu = false;
+    bool cfw = false, force_sys = false, force_emu = false, stock = false;
 
     const auto close = [&]() {
-        if (!in_entry || !cfw || found) {
+        if (!in_entry || !cfw || stock || found) {
             return;
         }
         if (want_emu) {
@@ -62,7 +63,7 @@ inline auto FindEntry(std::string_view ini, bool want_emu) -> int {
             if (in_entry) {
                 index++;
             }
-            cfw = force_sys = force_emu = false;
+            cfw = force_sys = force_emu = stock = false;
             continue;
         }
         const auto eq = line.find('=');
@@ -77,6 +78,8 @@ inline auto FindEntry(std::string_view ini, bool want_emu) -> int {
             force_sys = true;
         } else if (key == "emummcforce" && val == "1") {
             force_emu = true;
+        } else if (key == "stock" && val == "1") {
+            stock = true;
         } else if (key == "payload") {
             cfw = false;
             force_sys = force_emu = false;

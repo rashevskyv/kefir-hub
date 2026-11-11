@@ -258,13 +258,8 @@ MainMenu::~MainMenu() {
 void MainMenu::Update(Controller* controller, TouchInfo* touch) {
     // Update runs only while the Hub is on top, so a launch prompt shows first and the hint follows it.
     if (m_current_menu == m_centre_menu.get() && hint::TakeFirst(FirstRunHint::Main)) {
-        const uiButton* target = nullptr;
-        for (auto& button : m_current_menu->GetUiButtons()) {
-            if (button.m_button == Button::R) {
-                target = &button;
-            }
-        }
-        App::Push<HintBox>("Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there."_i18n, target);
+        App::Push<HintBox>("Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there."_i18n,
+                           m_current_menu->GetUiButtons(), Button::R);
     }
 
     m_current_menu->Update(controller, touch);

@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.349 — battery transfer: the hop does not pick a stock hekate entry; first-run hint keeps the footer legend
+- Owner's screenshot (2026-11-11, Kefir 929): step 4's A said "This hekate cannot start a payload for one boot". Two causes, none in hekate. (1) The Hub chose Kefir's "Full Stock" entry (fss0 + emummc_force_disable=1 + stock=1) for the sysMMC; with stock=1 hekate loads no Atmosphère kernel or modules, so the Hub cannot run there and the transfer could never end. `hop::FindEntry` now skips stock=1 entries, and the box says that hekate has no entry that starts Atmosphere in the sysMMC and to turn Semi-stock on (Kefir's way into the sysMMC: the Semi-Stock Status package) and open the Hub there.
+- (2) Open, not changed: `isHekatePayloadApiSupported` (utils_reboot.cpp) wants the section `[hekate-payload-api]`, and Kefir's hekate writes `[api]` (payload_handoff.c), so the one-boot request path has never run on any console; every reboot to a payload uses the payload.bin swap. Turning it on changes TegraExplorer launches too and needs a console test first.
+- First-run hint on the main screen (owner): the footer legend was gone and the frame's fill covered the R button. `HintBox` takes the page's footer row, draws all of it above the dim, and draws the frame before the button, around the drawn glyph and label.
+- host tests: pass (quick), nro: built, switch: pending
+
 ## v0.14.348 — battery: a calibration page longer than the screen scrolls; the report lists only this calibration's switch-offs
 - Owner's screenshot of the report on 0.14.346 (2026-11-11): the lines ran over the road map, over the footer and past the screen. `calib_ui::Page` had no limit: it now cuts its lines at its room (above the road map or the footer), scrolls with the d-pad or a stick, and shows a scroll bar when the lines do not fit.
 - The report listed five switch-offs, three of them of older runs (2026-11-08, 11-09) named "Calibration cycle 1/2 (1/4)" to "(3/4)": since 0.14.338 it reads calib-log.csv.old too, and it never dropped the runs before the reset. It now keeps the switch-offs at or after `reset_at`.

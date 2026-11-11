@@ -24,6 +24,12 @@ int main() {
     assert(FindEntry(plain, false) == 0); // "Stock" is not a CFW entry (no fss0): nothing to hop to
     assert(FindEntry("", true) == 0 && FindEntry("[config]\nautoboot=0\n", false) == 0);
 
+    // Kefir's own ini (2026-11-11): its only sysMMC entry is "Full Stock" with stock=1, where no Atmosphère loads and the Hub
+    // cannot run; "Atmosphere" is a payload entry. Nothing to hop to.
+    const std::string kefir = "[config]\nautoboot=1\n[Atmosphere]\npayload=bootloader/payloads/fusee.bin\n"
+                              "[Full Stock]\nfss0=atmosphere/package3\nemummc_force_disable=1\nstock=1\n";
+    assert(FindEntry(kefir, false) == 0 && FindEntry(kefir, true) == 0);
+
     // the boot request goes in at 0x94 and nothing else changes
     std::vector<std::uint8_t> hekate(0x4000, 0xAB);
     assert(PatchBootCfg(hekate, 3));

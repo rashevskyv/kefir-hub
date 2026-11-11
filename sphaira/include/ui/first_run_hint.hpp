@@ -23,10 +23,10 @@ void ResetAll();
 
 } // namespace hint
 
-// Dims the screen and shows a text box. With a target footer button, the button
-// is drawn above the dim, framed, and the box sits above it. Closes with A or B.
+// Dims the screen and shows a text box. With the footer row of the page below, the row is drawn above the dim, its
+// `target` button framed, and the box sits above that button. Closes with A or B.
 struct HintBox final : Widget {
-    HintBox(std::string text, const uiButton* target);
+    HintBox(std::string text, uiButtons row = {}, Button target = Button::NONE);
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -38,8 +38,8 @@ struct HintBox final : Widget {
 
 private:
     std::string m_text;
-    std::unique_ptr<uiButton> m_target;
-    Vec4 m_frame{};
+    uiButtons m_row; // the legend of the page below: this box has no chrome, so it draws the row itself
+    Vec4 m_frame{};  // around the target button; w == 0 = no target
 };
 
 } // namespace sphaira::ui

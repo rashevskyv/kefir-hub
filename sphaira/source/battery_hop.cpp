@@ -40,7 +40,7 @@ auto RebootInto(u32 mmc, std::string& why) -> bool {
     }
     const int index = hop::FindEntry({reinterpret_cast<const char*>(ini.data()), ini.size()}, mmc == 2);
     if (!index) {
-        why = "No hekate boot entry for"_i18n + " " + MmcName(mmc) + ".";
+        why = mmc == 1 ? "hekate has no entry that starts Atmosphere in the sysMMC: the stock entry does not load Kefir Hub."_i18n : "No hekate boot entry for"_i18n + " " + MmcName(mmc) + ".";
         return false;
     }
     if (R_FAILED(sd.read_entire_file(HEKATE_BIN, payload)) || !hop::PatchBootCfg(payload, index)) {
@@ -95,7 +95,7 @@ void OfferHop() {
                 st.hop_to = st.hop_from = 0;
                 detail::SaveState(st);
                 account_restore::ClearReopenHubHint();
-                App::Push<ui::OptionBox>("Could not switch:"_i18n + " " + why + "\n\n" + "Boot the other MMC yourself, open Tools → Tools → Battery → + and press A on step 5."_i18n, "OK"_i18n);
+                App::Push<ui::OptionBox>("Could not switch:"_i18n + " " + why + "\n\n" + "Start the other system yourself and open Kefir Hub there: the calibration moves by itself. For the sysMMC, turn Semi-stock on with the Semi-Stock Status package."_i18n, "OK"_i18n);
             }
         });
 }

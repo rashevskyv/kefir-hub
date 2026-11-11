@@ -43,17 +43,16 @@ void ResetAll() {
 
 } // namespace hint
 
-HintBox::HintBox(std::string text, const uiButton* target) : m_text{std::move(text)} {
-    if (target) {
-        // copy the parts that draw the button; the footer owner keeps its own row.
-        m_target = std::make_unique<uiButton>(target->m_button, target->m_button_str, target->m_action_str);
-        m_target->m_button_pos = target->m_button_pos;
-        m_target->m_hint_pos = target->m_hint_pos;
-        m_target->m_button_size = target->m_button_size;
-        m_target->m_hint_size = target->m_hint_size;
-
-        const auto pos = target->GetPos();
-        m_frame = Vec4{pos.x - 8.f, pos.y - 8.f, pos.w + 16.f, pos.h + 16.f};
+HintBox::HintBox(std::string text, uiButtons row, Button target) : m_text{std::move(text)}, m_row{std::move(row)} {
+    for (const auto& b : m_row) {
+        if (b.m_button == target) {
+            // The frame goes around what is drawn: the glyph and its label are right- and top-aligned at their positions.
+            // (The button's own box is its touch area: wider, and it ran past the screen's edge, owner 2026-11-11.)
+            const float left = b.m_button_pos.x - b.m_button_pos.w;
+            const float top = std::min(b.m_button_pos.y, b.m_hint_pos.y);
+            const float bottom = std::max(b.m_button_pos.y + b.m_button_size, b.m_hint_pos.y + b.m_hint_size);
+            m_frame = Vec4{left - 12.f, top - 8.f, b.m_hint_pos.x - left + 24.f, bottom - top + 20.f};
+        }
     }
 }
 
@@ -66,9 +65,12 @@ void HintBox::Update(Controller* controller, TouchInfo* touch) {
 void HintBox::Draw(NVGcontext* vg, Theme* theme) {
     gfx::dimBackground(vg);
 
-    if (m_target) {
-        m_target->Draw(vg, theme);
+    // The frame first: it fills its inside, and drawn after the button it covered the button it was to point at.
+    if (m_frame.w > 0.f) {
         gfx::drawRectOutline(vg, theme, 4.f, m_frame);
+    }
+    for (auto& b : m_row) { // the whole legend, so the screen below does not lose its footer
+        b.Draw(vg, theme);
     }
 
     // measure the text, then place the box above the target or in the centre.
@@ -82,7 +84,7 @@ void HintBox::Draw(NVGcontext* vg, Theme* theme) {
     const float box_h = BOX_PAD + text_h + BOX_PAD * 2.f;
 
     Vec4 box{(SCREEN_WIDTH - BOX_W) / 2.f, (SCREEN_HEIGHT - box_h) / 2.f, BOX_W, box_h};
-    if (m_target) {
+    if (m_frame.w > 0.f) {
         const float right = m_frame.x + m_frame.w;
         box.x = std::clamp(right - BOX_W, BOX_EDGE, SCREEN_WIDTH - BOX_EDGE - BOX_W);
         box.y = std::max(BOX_EDGE, m_frame.y - 24.f - box_h);
