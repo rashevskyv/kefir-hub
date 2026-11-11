@@ -3,6 +3,9 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.345 — MTP: games install from the Games drive folders "Install to SD" / "Install to NAND"; the Install drive is gone
+- `Games` root (every Dump format) lists `Install to SD` and `Install to NAND`; a NSP/NSZ/XCI/XCZ copied there streams to the background installer (`haze_game_proxy_install.cpp`, same callbacks as the microSD root drop) and the folder forces the target (`InstallQueuePath` / `InstallTargetFromPath` → `ConfigOverride::sd_card_install` in `RunInstall`). Storage `Install (NSP, XCI, NSZ, XCZ)`, its options `Show Install folder` / `Install folder name` and `FsInstallProxy` removed. microSD root drop unchanged (uses Install location). host tests: quick green, nro: not built, switch: pending (one drop of 19 games into Install to SD; one into Install to NAND).
+
 ## v0.14.344 — MTP Games drive: deleting a game removes it from the console; the drive is named "Games"
 - `FsGameProxy::DeleteFile` (Merged / Forwarders NSP) and `DeleteDirectoryRecursively` (Separate game folder) call `DeleteApplicationKeepSave` (as the Games menu: content + record, saves stay) and drop the game from the drive caches. Single update/DLC files stay undeletable. Storage `Games (read-only)` → `Games`, toggle `Show Games` (all 26 languages). host tests: quick green, nro: built, switch: pending (delete 19 games, then one MTP drop of all 19).
 

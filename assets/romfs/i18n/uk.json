@@ -1281,8 +1281,6 @@
   "MTP Storages": "Сховища MTP",
   "Show microSD card": "Показувати карту microSD",
   "Enable or disable microSD card storage in MTP.": "Увімкнути або вимкнути сховище карти microSD в MTP.",
-  "Show Install folder": "Показувати папку Install",
-  "Enable or disable Install folder in MTP.": "Увімкнути або вимкнути папку Install в MTP.",
   "Show Saves (read-only)": "Показувати Saves (лише читання)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Показувати диск лише для читання з розшифрованими сейвами ігор. Файли можна скопіювати на ПК; запис вимкнено.",
   "Show NAND Saves (USER:/save)": "Показувати NAND сейви (USER:/save)",
@@ -1298,8 +1296,6 @@
   "Not a valid save backup directory.": "Некоректна папка бекапу сейву.",
   "microSD card name": "Назва карти microSD",
   "Set custom name for microSD card in MTP.": "Встановити власну назву для карти microSD в MTP.",
-  "Install folder name": "Назва папки Install",
-  "Set custom name for Install folder in MTP.": "Встановити власну назву для папки Install в MTP.",
   "No MTP storages enabled": "Не увімкнено жодного сховища MTP",
   "Folder exposed over MTP. Select to remove it.": "Папка, доступна по MTP. Виберіть, щоб видалити.",
   "Remove this folder from MTP?": "Видалити цю папку з MTP?",
@@ -1480,7 +1476,6 @@
   "Save sync location": "Розташування синхронізації збережень",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Мережеве розташування, куди вивантажуються резервні копії збережень. Підходять лише WebDAV-розташування.",
   "Use the Appstore to re-install hbmenu": "Скористайтеся Appstore, щоб перевстановити hbmenu",
-  "Please launch MTP install menu before trying to install": "Спершу відкрийте меню встановлення через MTP",
   "MTP connected": "MTP підключено",
   "MTP disconnected": "MTP відключено",
   "Failed to connect to the SMB server. Please check your network connection, server IP address, share name, and credentials.": "Не вдалося підключитися до SMB-сервера. Перевірте мережеве з'єднання, IP-адресу сервера, назву спільної папки та облікові дані.",
@@ -4217,5 +4212,10 @@
   "Chromium NX download failed!": "Не вдалося завантажити Chromium NX!",
   "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).": "Chromium NX — експериментальний: він може працювати повільно або не запуститися взагалі. Він займає всю пам'ять консолі, тож запустіть Kefir Hub із гри (утримуйте R під час її запуску). Під час першого запуску він сам завантажує свої файли (близько 430 МБ).",
   "Show a drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it. Deleting a game there removes it from the console; its saves stay.": "Показує диск з встановленими іграми, оновленнями та DLC у вигляді файлів NSP. Копіювання одного на ПК створює його дамп. Видалення гри там видаляє її з консолі; її збереження залишаються.",
-  "Show Games": "Показати ігри"
+  "Show Games": "Показати ігри",
+  "Install to SD": "Встановити на SD",
+  "Delete a game here to remove it from the console. Its saves stay.": "Видаліть гру тут, щоб видалити її з консолі. Її збереження залишаться.",
+  "Install to NAND": "Встановити на NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Скопіюйте сюди файл NSP, NSZ, XCI чи XCZ, щоб встановити його в системну пам'ять.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Скопіюйте сюди файл NSP, NSZ, XCI або XCZ, щоб встановити його на карту microSD."
 }

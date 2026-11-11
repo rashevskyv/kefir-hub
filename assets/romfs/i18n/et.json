@@ -1042,8 +1042,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "HOME-menüü homebrew ikoonid, mitte Nintendo mängud.",
   "microSD card name": "microSD-kaardi nimi",
   "Set custom name for microSD card in MTP.": "Määra MTP-s microSD-kaardile kohandatud nimi.",
-  "Install folder name": "Installikausta nimi",
-  "Set custom name for Install folder in MTP.": "Määra MTP-s installikaustale kohandatud nimi.",
   "No MTP storages enabled": "MTP-salvestusruume pole lubatud",
   "Folder exposed over MTP. Select to remove it.": "MTP kaudu kuvatav kaust. Vali eemaldamiseks.",
   "Remove this folder from MTP?": "Kas eemaldada see kaust MTP-st?",
@@ -1133,8 +1131,6 @@
   "MTP Storages": "MTP-salvestusruumid",
   "Show microSD card": "Kuva microSD-kaart",
   "Enable or disable microSD card storage in MTP.": "Luba või keela microSD-kaardi salvestusruum MTP-s.",
-  "Show Install folder": "Kuva installikaust",
-  "Enable or disable Install folder in MTP.": "Luba või keela installikaust MTP-s.",
   "Show Saves (read-only)": "Kuva salvestusfailid (ainult lugemiseks)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Kuva kirjutuskaitstud ketas dekrüpteeritud mängu salvestusfailidega. Faile saab arvutisse kopeerida; kirjutamine on keelatud.",
   "Show NAND Saves (USER:/save)": "Kuva NAND-i salvestusfailid (USER:/save)",
@@ -1248,7 +1244,6 @@
   "Save sync location": "Salvestiste sünkroonimise asukoht",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Võrguasukoht, kuhu salvestiste varukoopiad üles laaditakse. Kasutada saab ainult WebDAV asukohti.",
   "Use the Appstore to re-install hbmenu": "Kasutage hbmenu uuesti installimiseks Appstore'i",
-  "Please launch MTP install menu before trying to install": "Käivitage enne installimise proovimist MTP installimenüü",
   "MTP connected": "MTP ühendatud",
   "Previous/Next game": "Eelmine/Järgmine mäng",
   "Previous/Next tab": "Eelmine/Järgmine vaheleht",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Võta laadija välja: ühendatuna laeb konsool igas sellises unerežiimis ega lülitu kunagi välja.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Aku on peaaegu tühi: koormus ja heledus vähenevad laengu vähenedes, nii et konsool tühjeneb aeglaselt kuni täieliku tühjenemiseni.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Tsükkel loetakse ainult väljalülitamisest täislaadimiseni, seega peab aku uuesti tühjaks saama.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Seda tsüklit pole veel arvesse võetud. Aku on täis, kuid Hubil puudub kirje selle kohta, et konsool lülitus selle tühjenemise lõpus välja."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Seda tsüklit pole veel arvesse võetud. Aku on täis, kuid Hubil puudub kirje selle kohta, et konsool lülitus selle tühjenemise lõpus välja.",
+  "Install to SD": "Installi SD-le",
+  "Delete a game here to remove it from the console. Its saves stay.": "Kustuta siit mäng, et see konsoolilt eemaldada. Selle salvestused jäävad alles.",
+  "Install to NAND": "Paigalda NAND-ile",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Kopeeri NSP-, NSZ-, XCI- või XCZ-fail siia, et see süsteemimällu installida.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Kopeerige NSP-, NSZ-, XCI- või XCZ-fail siia, et see microSD-kaardile installida."
 }

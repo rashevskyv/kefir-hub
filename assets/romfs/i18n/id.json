@@ -1009,8 +1009,6 @@
   "MTP Storages": "Penyimpanan MTP",
   "Show microSD card": "Tampilkan kartu microSD",
   "Enable or disable microSD card storage in MTP.": "Aktifkan atau nonaktifkan penyimpanan kartu microSD di MTP.",
-  "Show Install folder": "Tampilkan folder Install",
-  "Enable or disable Install folder in MTP.": "Aktifkan atau nonaktifkan folder Install di MTP.",
   "Show Saves (read-only)": "Tampilkan Save (hanya-baca)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Tampilkan drive hanya-baca dengan data save game yang didekripsi. File dapat disalin ke PC; penulisan dinonaktifkan.",
   "Show NAND Saves (USER:/save)": "Tampilkan Save NAND (USER:/save)",
@@ -1091,8 +1089,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "Ikon homebrew menu HOME, bukan game Nintendo.",
   "microSD card name": "Nama kartu microSD",
   "Set custom name for microSD card in MTP.": "Atur nama kustom untuk kartu microSD di MTP.",
-  "Install folder name": "Nama folder instalasi",
-  "Set custom name for Install folder in MTP.": "Atur nama kustom untuk folder Instal di MTP.",
   "No MTP storages enabled": "Tidak ada penyimpanan MTP yang diaktifkan",
   "Folder exposed over MTP. Select to remove it.": "Folder yang diekspos melalui MTP. Pilih untuk menghapusnya.",
   "Remove this folder from MTP?": "Hapus folder ini dari MTP?",
@@ -1248,7 +1244,6 @@
   "Save sync location": "Lokasi sinkronisasi simpanan",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Lokasi jaringan tempat cadangan simpanan diunggah. Hanya lokasi WebDAV yang dapat digunakan.",
   "Use the Appstore to re-install hbmenu": "Gunakan Appstore untuk memasang ulang hbmenu",
-  "Please launch MTP install menu before trying to install": "Silakan luncurkan menu pasang MTP sebelum mencoba memasang",
   "MTP connected": "MTP terhubung",
   "microSD": "microSD",
   "microSD free": "microSD kosong",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Cabut pengisi daya: jika terpasang, konsol akan mengisi daya di setiap mode tidur tersebut dan tidak akan pernah mati.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Baterai hampir habis: beban dan kecerahan turun seiring berkurangnya daya, sehingga konsol terkuras perlahan hingga benar-benar habis.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Siklus dihitung hanya dari mati hingga daya penuh, jadi pengosongan harus dijalankan lagi.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Siklus ini belum dihitung. Baterai sudah penuh, tetapi Hub tidak memiliki catatan bahwa konsol mati pada akhir pengosongan ini."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Siklus ini belum dihitung. Baterai sudah penuh, tetapi Hub tidak memiliki catatan bahwa konsol mati pada akhir pengosongan ini.",
+  "Install to SD": "Instal ke SD",
+  "Delete a game here to remove it from the console. Its saves stay.": "Hapus game di sini untuk menghapusnya dari konsol. Data penyimpanannya tetap ada.",
+  "Install to NAND": "Instal ke NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Salin file NSP, NSZ, XCI, atau XCZ ke sini untuk menginstalnya ke memori sistem.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Salin file NSP, NSZ, XCI, atau XCZ ke sini untuk memasangnya ke kartu microSD."
 }

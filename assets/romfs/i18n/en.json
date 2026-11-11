@@ -1119,8 +1119,6 @@
   "MTP Storages": "MTP Storages",
   "Show microSD card": "Show microSD card",
   "Enable or disable microSD card storage in MTP.": "Enable or disable microSD card storage in MTP.",
-  "Show Install folder": "Show Install folder",
-  "Enable or disable Install folder in MTP.": "Enable or disable Install folder in MTP.",
   "Show Saves (read-only)": "Show Saves (read-only)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.",
   "Show NAND Saves (USER:/save)": "Show NAND Saves (USER:/save)",
@@ -1153,8 +1151,6 @@
   "Show a drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it. Deleting a game there removes it from the console; its saves stay.": "Show a drive with installed games, updates and DLC as NSP files. Copying one to the PC dumps it. Deleting a game there removes it from the console; its saves stay.",
   "microSD card name": "microSD card name",
   "Set custom name for microSD card in MTP.": "Set custom name for microSD card in MTP.",
-  "Install folder name": "Install folder name",
-  "Set custom name for Install folder in MTP.": "Set custom name for Install folder in MTP.",
   "No MTP storages enabled": "No MTP storages enabled",
   "Folder exposed over MTP. Select to remove it.": "Folder exposed over MTP. Select to remove it.",
   "Remove this folder from MTP?": "Remove this folder from MTP?",
@@ -1310,7 +1306,6 @@
   "Save sync location": "Save sync location",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Network location that save backups are uploaded to. Only WebDAV locations can be used.",
   "Use the Appstore to re-install hbmenu": "Use the Appstore to re-install hbmenu",
-  "Please launch MTP install menu before trying to install": "Please launch MTP install menu before trying to install",
   "MTP connected": "MTP connected",
   "MTP disconnected": "MTP disconnected",
   "read-only": "read-only",
@@ -4214,5 +4209,10 @@
   "Chromium NX could not start.": "Chromium NX could not start.",
   "Downloading Chromium NX...": "Downloading Chromium NX...",
   "Chromium NX download failed!": "Chromium NX download failed!",
-  "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).": "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB)."
+  "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).": "Chromium NX is experimental: it may be slow or not start at all. It takes the full memory of the console, so start Kefir Hub from a game (hold R while launching it). On its first start it downloads its own files (about 430 MB).",
+  "Install to SD": "Install to SD",
+  "Install to NAND": "Install to NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.",
+  "Delete a game here to remove it from the console. Its saves stay.": "Delete a game here to remove it from the console. Its saves stay."
 }

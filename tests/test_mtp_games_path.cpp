@@ -259,6 +259,27 @@ static int test_parse_games_path() {
         CHECK(ParseGamesPath("/Separate/Game A/Mods/romfs/./a").kind == PathKind::Invalid);
     }
 
+    // install folders: at the root in every layout, English and locale names.
+    for (const auto layout : {GamesLayout::Compatible, GamesLayout::Separate, GamesLayout::Both}) {
+        auto dir = ParseGamesPath("/Install to SD", layout);
+        CHECK(dir.kind == PathKind::InstallDir && dir.install_sd);
+        auto file = ParseGamesPath("/install to nand/Game.nsz", layout);
+        CHECK(file.kind == PathKind::InstallFile && !file.install_sd && file.filename == "Game.nsz");
+        CHECK(ParseGamesPath("/Install to SD/a/b.nsp", layout).kind == PathKind::Invalid);
+    }
+    {
+        GamesFolderNames names;
+        names.install_sd = "Встановити на SD";
+        auto res = ParseGamesPath("/Встановити на SD/x.xci", GamesLayout::Both, names);
+        CHECK(res.kind == PathKind::InstallFile && res.install_sd && res.filename == "x.xci");
+        CHECK(ParseGamesPath("/Install to SD/x.xci", GamesLayout::Both, names).kind == PathKind::InstallFile);
+    }
+    // the installer reads the target back from the queued path, whatever the locale.
+    CHECK(InstallTargetFromPath(InstallQueuePath(true, "x.nsp")) == 1);
+    CHECK(InstallTargetFromPath(InstallQueuePath(false, "x.nsp")) == 0);
+    CHECK(InstallTargetFromPath("x.nsp") == -1);
+    CHECK(InstallTargetFromPath("/install/x.nsp") == -1);
+
     CHECK(IsForwarderTitleId(0x0500000000123000ULL));
     CHECK(IsForwarderTitleId(0x03DB1280BD84000ULL));
     CHECK(IsForwarderTitleId(0x03DB12780BD84000ULL));

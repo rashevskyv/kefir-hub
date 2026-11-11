@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(sphaira_VERSION 0.14.344)
+set(sphaira_VERSION 0.14.345)
 # project(VERSION) normalizes numeric components; keep the release label's padding.
 set(sphaira_RELEASE_LABEL "${sphaira_VERSION}")
 
@@ -333,6 +333,7 @@ add_executable(sphaira
     source/haze/haze_save_proxy_scan.cpp
     source/haze/haze_game_proxy.cpp
     source/haze/haze_game_proxy_catalog.cpp
+    source/haze/haze_game_proxy_install.cpp
     source/threaded_file_transfer.cpp
     source/threaded_file_transfer_core.cpp
     source/threaded_file_transfer_preflight.cpp

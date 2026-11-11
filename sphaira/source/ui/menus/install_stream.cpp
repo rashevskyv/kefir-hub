@@ -2,6 +2,7 @@
 
 #if ENABLE_NETWORK_INSTALL
 #include "yati/yati.hpp"
+#include "mtp_games_path.hpp"
 #include "log.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/progress_box.hpp"
@@ -157,7 +158,12 @@ Result RunInstall(ui::InstallProgress* pbox, Stream* source) {
     if (IsNroPath(source->GetPath())) {
         return InstallNroFromStream(pbox, source);
     }
-    return yati::InstallFromSource(pbox, source, source->GetPath());
+    // a file dropped into the Games drive's "Install to SD/NAND" folder forces its target.
+    yati::ConfigOverride override{};
+    if (const auto target = sphaira::mtp::InstallTargetFromPath(source->GetPath().s); target >= 0) {
+        override.sd_card_install = target == 1;
+    }
+    return yati::InstallFromSource(pbox, source, source->GetPath(), override);
 }
 
 Stream::Stream(const fs::FsPath& path, std::stop_token token) {

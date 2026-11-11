@@ -1059,8 +1059,6 @@
   "MTP Storages": "Pamięci masowe MTP",
   "Show microSD card": "Pokaż kartę microSD",
   "Enable or disable microSD card storage in MTP.": "Włącz lub wyłącz pamięć karty microSD w MTP.",
-  "Show Install folder": "Pokaż folder Install",
-  "Enable or disable Install folder in MTP.": "Włącz lub wyłącz folder Install w MTP.",
   "Show Saves (read-only)": "Pokaż zapisy (tylko do odczytu)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Pokaż dysk tylko do odczytu z odszyfrowanymi zapisami gier. Pliki można kopiować na komputer; zapisywanie jest wyłączone.",
   "Show NAND Saves (USER:/save)": "Pokaż zapisy NAND (USER:/save)",
@@ -1141,8 +1139,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "Ikony homebrew w menu HOME, nie gry Nintendo.",
   "microSD card name": "Nazwa karty microSD",
   "Set custom name for microSD card in MTP.": "Ustaw niestandardową nazwę karty microSD w MTP.",
-  "Install folder name": "Nazwa folderu instalacji",
-  "Set custom name for Install folder in MTP.": "Ustaw niestandardową nazwę folderu instalacji w MTP.",
   "No MTP storages enabled": "Brak włączonych pamięci MTP",
   "Folder exposed over MTP. Select to remove it.": "Folder udostępniony przez MTP. Wybierz, aby go usunąć.",
   "Remove this folder from MTP?": "Usunąć ten folder z MTP?",
@@ -1248,7 +1244,6 @@
   "Save sync location": "Lokalizacja synchronizacji zapisów",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Lokalizacja sieciowa, do której przesyłane są kopie zapasowe zapisów. Można używać wyłącznie lokalizacji WebDAV.",
   "Use the Appstore to re-install hbmenu": "Użyj Appstore, aby ponownie zainstalować hbmenu",
-  "Please launch MTP install menu before trying to install": "Uruchom menu instalacji MTP przed rozpoczęciem instalacji",
   "MTP connected": "Połączono przez MTP",
   "MTP disconnected": "MTP rozłączony",
   "read-only": "tylko do odczytu",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Wyjmij ładowarkę: gdy jest podłączona, konsola ładuje się w każdym takim trybie uśpienia i nigdy się nie wyłącza.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Bateria jest prawie rozładowana: obciążenie i jasność spadają wraz z poziomem naładowania, dzięki czemu konsola powoli rozładowuje się do końca.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Cykl liczy się tylko od wyłączenia do pełnego naładowania, więc rozładowanie musi nastąpić ponownie.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Ten cykl nie został jeszcze policzony. Bateria jest pełna, ale Hub nie ma zapisu, że konsola wyłączyła się pod koniec tego rozładowania."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Ten cykl nie został jeszcze policzony. Bateria jest pełna, ale Hub nie ma zapisu, że konsola wyłączyła się pod koniec tego rozładowania.",
+  "Install to SD": "Zainstaluj na SD",
+  "Delete a game here to remove it from the console. Its saves stay.": "Usuń grę tutaj, aby usunąć ją z konsoli. Jej zapisy pozostaną.",
+  "Install to NAND": "Zainstaluj na NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Skopiuj tutaj plik NSP, NSZ, XCI lub XCZ, aby zainstalować go w pamięci systemowej.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Skopiuj tutaj plik NSP, NSZ, XCI lub XCZ, aby zainstalować go na karcie microSD."
 }

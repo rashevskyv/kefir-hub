@@ -280,7 +280,9 @@ void haze_callback(const ::haze::CallbackData *data) {
             {
                 SCOPED_MUTEX(&g_shared_data.mutex);
                 if (g_shared_data.in_progress && !g_shared_data.current_file.empty()) {
-                    if (std::strstr(e.file.filename, g_shared_data.current_file.c_str()) != nullptr) {
+                    // the file name only: a Games install folder queues its English path,
+                    // while Explorer writes into the folder's localized name.
+                    if (std::strstr(e.file.filename, GetLastComponent(g_shared_data.current_file.c_str())) != nullptr) {
                         break;
                     }
                 }
@@ -379,17 +381,6 @@ bool Init() {
             return MakeFsProxy(std::make_unique<fs::FsNativeSd>(), "", display_name);
         }
     });
-
-#if ENABLE_NETWORK_INSTALL
-    storage_defs.push_back({
-        App::GetMtpShowInstall(),
-        App::GetMtpNameInstall(),
-        "Install (NSP, XCI, NSZ, XCZ)",
-        [](const char* display_name) {
-            return MakeFsInstallProxy("install", display_name);
-        }
-    });
-#endif
 
     storage_defs.push_back({
         App::GetMtpShowSaves(),

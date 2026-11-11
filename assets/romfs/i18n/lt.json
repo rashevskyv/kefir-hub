@@ -1067,8 +1067,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "HOME-meniu homebrew piktogramos, ne Nintendo žaidimai.",
   "microSD card name": "microSD kortelės pavadinimas",
   "Set custom name for microSD card in MTP.": "Nustatyti pasirinktinį microSD kortelės pavadinimą MTP.",
-  "Install folder name": "Diegimo katalogo pavadinimas",
-  "Set custom name for Install folder in MTP.": "Nustatyti pasirinktinį diegimo katalogo pavadinimą MTP.",
   "No MTP storages enabled": "Nėra įjungtų MTP saugyklų",
   "Folder exposed over MTP. Select to remove it.": "Katalogas viešinamas per MTP. Pasirinkite, norėdami jį pašalinti.",
   "Remove this folder from MTP?": "Pašalinti šį katalogą iš MTP?",
@@ -1083,8 +1081,6 @@
   "MTP Storages": "MTP saugyklos",
   "Show microSD card": "Rodyti microSD kortelę",
   "Enable or disable microSD card storage in MTP.": "Įjungti arba iūjungti microSD kortelės saugyklę MTP.",
-  "Show Install folder": "Rodyti diegimo aplanką",
-  "Enable or disable Install folder in MTP.": "Įjungti arba iūjungti diegimo aplanką MTP.",
   "Show Saves (read-only)": "Rodyti irašus (tik skaitymui)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Rodyti tik skaitymui skirtą diską su iūšifruotais žaidimų irašais. Failus galima nukopijuoti į PC; rašymas iūjungtas.",
   "Show NAND Saves (USER:/save)": "Rodyti NAND irašus (USER:/save)",
@@ -1223,7 +1219,6 @@
   "Save sync location": "Išsaugojimo sinchronizavimo vieta",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Tinklo vieta, į kurią įkeliamos išsaugojimo atsarginės kopijos. Galima naudoti tik WebDAV vietas.",
   "Use the Appstore to re-install hbmenu": "Naudokite Appstore, kad iš naujo įdiegtumėte hbmenu",
-  "Please launch MTP install menu before trying to install": "Prieš bandydami diegti, paleiskite MTP diegimo meniu",
   "MTP connected": "MTP prijungtas",
   "Set the capture resolution of the IR camera.": "Nustatykite IR kameros fiksavimo raišką.",
   "Set the trimmed output resolution (must be <= source format).": "Nustatykite apkirptos išvesties raišką (turi būti <= šaltinio formato).",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Ištraukite įkroviklį: kai jis prijungtas, konsolė kraunasi per kiekvieną tokį miego režimą ir niekada neišsijungia.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Baterija beveik išsikrovusi: apkrova ir ekrano ryškumas mažėja kartu su įkrova, todėl konsolė lėtai išsikrauna iki visiško išsikrovimo.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Ciklas skaičiuojamas tik nuo išjungimo iki visiško įkrovimo, todėl iškrovimą reikia pakartoti.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Šis ciklas dar neskaičiuotas. Baterija pilna, bet „Hub“ neturi įrašo, kad konsolė išsijungė šio išsikrovimo pabaigoje."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Šis ciklas dar neskaičiuotas. Baterija pilna, bet „Hub“ neturi įrašo, kad konsolė išsijungė šio išsikrovimo pabaigoje.",
+  "Install to SD": "Įdiegti į SD",
+  "Delete a game here to remove it from the console. Its saves stay.": "Čia ištrinkite žaidimą, kad pašalintumėte jį iš konsolės. Jo išsaugoti duomenys išliks.",
+  "Install to NAND": "Diegti į NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Nukopijuokite NSP, NSZ, XCI arba XCZ failą čia, kad įdiegtumėte jį į sistemos atmintį.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Nukopijuokite NSP, NSZ, XCI arba XCZ failą čia, kad įdiegtumėte jį į „microSD“ kortelę."
 }

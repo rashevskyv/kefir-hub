@@ -1034,8 +1034,6 @@
   "MTP Storages": "MTP жадтары",
   "Show microSD card": "microSD картасын көрсету",
   "Enable or disable microSD card storage in MTP.": "MTP ішінде microSD картасы жадын қосу немесе өшіру.",
-  "Show Install folder": "Install папкасын көрсету",
-  "Enable or disable Install folder in MTP.": "MTP ішінде Install папкасын қосу немесе өшіру.",
   "Show Saves (read-only)": "Сақтауларды көрсету (тек оқу үшін)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Шифры шешілген ойын сақтаулары бар тек оқуға арналған диск көрсету. Файлдарды ПК-ға көшіруге болады, жазуға тыйым салынған.",
   "Show NAND Saves (USER:/save)": "NAND сақтауларын көрсету (USER:/save)",
@@ -1191,8 +1189,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "HOME мәзірінің homebrew белгішелері, Nintendo ойындары емес.",
   "microSD card name": "microSD картасының аты",
   "Set custom name for microSD card in MTP.": "MTP ішінде microSD картасы үшін реттелетін атауды орнату.",
-  "Install folder name": "Орнату қалтасының аты",
-  "Set custom name for Install folder in MTP.": "MTP ішіндегі Орнату қалтасы үшін реттелетін атауды орнату.",
   "No MTP storages enabled": "Ешқандай MTP жады қосылмаған",
   "Folder exposed over MTP. Select to remove it.": "MTP арқылы көрсетілген қалта. Оны жою үшін таңдаңыз.",
   "Remove this folder from MTP?": "Бұл қалтаны MTP-тен жою керек пе?",
@@ -1298,7 +1294,6 @@
   "Save sync location": "Саксты синхрондау орны",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Сакс сақтық көшірмелері жүктелетін желі орны. Тек WebDAV орындарын пайдалануға болады.",
   "Use the Appstore to re-install hbmenu": "hbmenu қайта орнату үшін Appstore пайдаланыңыз",
-  "Please launch MTP install menu before trying to install": "Орнатуға әрекет жасамас бұрын MTP орнату мәзірін іске қосыңыз",
   "MTP connected": "MTP қосылды",
   "Cancel queue": "Кезекти болдырмау",
   "Already installed. Reinstall?": "Қайта орнатылған. Қайта орнату керек пе?",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Зарядтағышты ажыратыңыз: ол қосулы тұрса, консоль осындай әр ұйқы режимінде зарядталып, ешқашан өшпейді.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Батарея деңгейі аз қалды: зарядтың азаюына байланысты жүктеме мен жарықтық төмендейді, сондықтан консоль толығымен таусылғанша ақырын разрядталады.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Цикл тек сөндірілген күйден толық зарядталғанға дейін санақылады, сондықтан зарядты қайта тастау қажет.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Бұл цикл әлі есептелмеген. Батарея толық, бірақ Hub-та бұл разрядтың соңында консоль өшкені туралы жазба жоқ."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Бұл цикл әлі есептелмеген. Батарея толық, бірақ Hub-та бұл разрядтың соңында консоль өшкені туралы жазба жоқ.",
+  "Install to SD": "SD-ге орнату",
+  "Delete a game here to remove it from the console. Its saves stay.": "Консольден жою үшін мұнда ойынды өшіріңіз. Оның сақталымдары қалады.",
+  "Install to NAND": "NAND-қа орнату",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Жүйе жадына орнату үшін NSP, NSZ, XCI немесе XCZ файлын осында көшіріңіз.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "NSP, NSZ, XCI немесе XCZ файлын microSD картасына орнату үшін осында көшіріңіз."
 }

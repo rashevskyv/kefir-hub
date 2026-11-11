@@ -23,6 +23,10 @@ enum class PathKind {
     // <game>/Mods[/sub/path]: the game's /atmosphere/contents/<tid> folder on
     // the SD card. `filename` is the path inside it ("" for the folder itself).
     ModsPath,
+    // "Install to SD" / "Install to NAND" and a file dropped into one: the file
+    // streams to the installer, `install_sd` says where, `filename` is its name.
+    InstallDir,
+    InstallFile,
     Invalid
 };
 
@@ -41,6 +45,8 @@ struct GamesFolderNames {
     std::string forwarders{"Forwarders"};
     std::string readme{"Readme.txt"};
     std::string mods{"Mods"};
+    std::string install_sd{"Install to SD"};
+    std::string install_nand{"Install to NAND"};
 };
 
 // owo HOME-menu forwarders (0x05…) and the known HBL 0x03 titles.
@@ -55,7 +61,21 @@ struct ParsedPath {
     PathKind kind{PathKind::Invalid};
     std::string game{};
     std::string filename{};
+    bool install_sd{};
 };
+
+// the path an install folder hands to the installer: the English folder name, so
+// InstallTargetFromPath() reads the target back whatever the locale.
+inline auto InstallQueuePath(bool sd, std::string_view filename) -> std::string {
+    return std::string(sd ? "/Install to SD/" : "/Install to NAND/") + std::string(filename);
+}
+
+// 1 = microSD, 0 = system memory, -1 = not an install-folder path (the setting decides).
+inline auto InstallTargetFromPath(std::string_view path) -> int {
+    if (path.starts_with("/Install to SD/")) return 1;
+    if (path.starts_with("/Install to NAND/")) return 0;
+    return -1;
+}
 
 inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = GamesLayout::Both,
     const GamesFolderNames& names = {})
@@ -105,6 +125,8 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     auto is_forwarders = [&](std::string_view s) { return match_name(s, "Forwarders", names.forwarders); };
     auto is_readme = [&](std::string_view s) { return match_name(s, "Readme.txt", names.readme); };
     auto is_mods = [&](std::string_view s) { return match_name(s, "Mods", names.mods); };
+    auto is_install_sd = [&](std::string_view s) { return match_name(s, "Install to SD", names.install_sd); };
+    auto is_install_nand = [&](std::string_view s) { return match_name(s, "Install to NAND", names.install_nand); };
 
     // segments[game_at] is a game folder; true when the rest is its mods folder.
     auto parse_mods = [&](size_t game_at) {
@@ -130,6 +152,20 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     if (segments.size() == 1 && is_readme(segments[0])) {
         result.kind = PathKind::InfoFile;
         result.filename = std::string(segments[0]);
+        return result;
+    }
+
+    // the install folders sit at the root in every layout.
+    if (is_install_sd(segments[0]) || is_install_nand(segments[0])) {
+        result.install_sd = is_install_sd(segments[0]);
+        if (segments.size() == 1) {
+            result.kind = PathKind::InstallDir;
+        } else if (segments.size() == 2) {
+            result.kind = PathKind::InstallFile;
+            result.filename = std::string(segments[1]);
+        } else {
+            result.kind = PathKind::Invalid;
+        }
         return result;
     }
 

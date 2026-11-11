@@ -52,7 +52,6 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 
     items.emplace_back(MakeBoolItem("Show microSD card"_i18n, "Enable or disable microSD card storage in MTP."_i18n, App::GetMtpShowSd, App::SetMtpShowSd));
-    items.emplace_back(MakeBoolItem("Show Install folder"_i18n, "Enable or disable Install folder in MTP."_i18n, App::GetMtpShowInstall, App::SetMtpShowInstall));
     items.emplace_back(MakeBoolItem("Show Saves (read-only)"_i18n, "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled."_i18n, App::GetMtpShowSaves, App::SetMtpShowSaves));
     items.emplace_back(MakeBoolItem("Show NAND Saves (USER:/save)"_i18n, "Show a read/write drive with raw NAND user save files (DISA containers)."_i18n, App::GetMtpShowRawSaves, App::SetMtpShowRawSaves));
     items.emplace_back(MakeBoolItem("Show NAND System Saves (SYSTEM:/save)"_i18n, "Show a read/write drive with raw NAND system save files."_i18n, App::GetMtpShowRawSystemSaves, App::SetMtpShowRawSystemSaves));
@@ -84,18 +83,6 @@ auto BuildMtpStorageItems() -> std::vector<SettingsItem> {
             std::string value = App::GetMtpNameSd();
             if (R_SUCCEEDED(swkbd::ShowText(value, "microSD card name"_i18n.c_str(), value.c_str()))) {
                 App::SetMtpNameSd(value);
-            }
-        }
-    });
-
-    items.emplace_back(SettingsItem{
-        "Install folder name"_i18n,
-        "Set custom name for Install folder in MTP."_i18n,
-        [](){ const auto n = App::GetMtpNameInstall(); return n.empty() ? "Default"_i18n : n; },
-        [](){
-            std::string value = App::GetMtpNameInstall();
-            if (R_SUCCEEDED(swkbd::ShowText(value, "Install folder name"_i18n.c_str(), value.c_str()))) {
-                App::SetMtpNameInstall(value);
             }
         }
     });

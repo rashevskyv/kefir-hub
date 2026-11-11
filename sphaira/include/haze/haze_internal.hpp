@@ -296,7 +296,6 @@ auto BuildGameDirName(u64 application_id) -> std::string;
 
 std::shared_ptr<::haze::FileSystemProxyImpl> MakeFsProxy(std::unique_ptr<fs::Fs> fs, const char* name, const char* display_name, const char* base_path = "");
 #if ENABLE_NETWORK_INSTALL
-std::shared_ptr<::haze::FileSystemProxyImpl> MakeFsInstallProxy(const char* name, const char* display_name);
 #endif
 std::shared_ptr<::haze::FileSystemProxyImpl> MakeFsSaveProxy(const char* name, const char* display_name);
 std::shared_ptr<::haze::FileSystemProxyImpl> MakeFsGameProxy(const char* name, const char* display_name);

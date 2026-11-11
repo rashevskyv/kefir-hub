@@ -207,7 +207,10 @@ auto FsGameProxy::InfoText(std::string_view which) const -> std::string {
     return "This drive dumps installed titles as NSP files you can copy to a PC."_i18n + "\n\n"
         + m_names.merged + " — " + "One NSP per game with base, update and DLC together."_i18n + "\n"
         + m_names.separate + " — " + "A folder per game with each component as its own NSP."_i18n + "\n"
-        + m_names.forwarders + " — " + "HOME-menu homebrew icons, not Nintendo games."_i18n + "\n";
+        + m_names.forwarders + " — " + "HOME-menu homebrew icons, not Nintendo games."_i18n + "\n"
+        + m_names.install_sd + " — " + "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card."_i18n + "\n"
+        + m_names.install_nand + " — " + "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory."_i18n + "\n"
+        + "Delete a game here to remove it from the console. Its saves stay."_i18n + "\n";
 }
 
 auto FsGameProxy::InfoDirEntry(std::string_view which) const -> FsDirectoryEntry {

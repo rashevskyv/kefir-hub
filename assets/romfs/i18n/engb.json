@@ -1110,8 +1110,6 @@
   "MTP Storages": "MTP Storages",
   "Show microSD card": "Show microSD card",
   "Enable or disable microSD card storage in MTP.": "Enable or disable microSD card storage in MTP.",
-  "Show Install folder": "Show Install folder",
-  "Enable or disable Install folder in MTP.": "Enable or disable Install folder in MTP.",
   "Show Saves (read-only)": "Show Saves (read-only)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.",
   "Show NAND Saves (USER:/save)": "Show NAND Saves (USER:/save)",
@@ -1142,8 +1140,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "HOME-menu homebrew icons, not Nintendo games.",
   "microSD card name": "microSD card name",
   "Set custom name for microSD card in MTP.": "Set custom name for microSD card in MTP.",
-  "Install folder name": "Install folder name",
-  "Set custom name for Install folder in MTP.": "Set custom name for Install folder in MTP.",
   "No MTP storages enabled": "No MTP storages enabled",
   "Folder exposed over MTP. Select to remove it.": "Folder exposed over MTP. Select to remove it.",
   "Remove this folder from MTP?": "Remove this folder from MTP?",
@@ -1299,7 +1295,6 @@
   "Save sync location": "Save sync location",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Network location that save backups are uploaded to. Only WebDAV locations can be used.",
   "Use the Appstore to re-install hbmenu": "Use the Appstore to re-install hbmenu",
-  "Please launch MTP install menu before trying to install": "Please launch MTP install menu before trying to install",
   "MTP connected": "MTP connected",
   "MTP disconnected": "MTP disconnected",
   "read-only": "read-only",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Take the charger out: with it in, the console charges in every such sleep and never switches off.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "A cycle counts only from a switch-off to a full charge, so the drain must run again.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.",
+  "Install to SD": "Install to SD",
+  "Delete a game here to remove it from the console. Its saves stay.": "Delete a game here to remove it from the console. Its saves stay.",
+  "Install to NAND": "Install to NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card."
 }

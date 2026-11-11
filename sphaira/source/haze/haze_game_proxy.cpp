@@ -8,7 +8,9 @@ Result FsGameProxy::GetTotalSpace(const char *path, s64 *out) {
 }
 
 Result FsGameProxy::GetFreeSpace(const char *path, s64 *out) {
-    // only the per-game mods folders take writes, and they live on the SD card.
+    // the mods folders live on the SD card.
+    // ponytail: one value per drive, so Explorer checks a NAND install against SD space too;
+    // the installer checks the real target itself.
     return m_sd.GetFreeSpace("/", out);
 }
 
@@ -30,6 +32,16 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
         }
 
         case sphaira::mtp::PathKind::InfoFile:
+            *out_entry_type = FsDirEntryType_File;
+            R_SUCCEED();
+
+        case sphaira::mtp::PathKind::InstallDir:
+            R_UNLESS(INSTALL_FOLDERS, FsError_PathNotFound);
+            *out_entry_type = FsDirEntryType_Dir;
+            R_SUCCEED();
+
+        case sphaira::mtp::PathKind::InstallFile:
+            R_UNLESS(FindInstallEntry(pp.filename), FsError_PathNotFound);
             *out_entry_type = FsDirEntryType_File;
             R_SUCCEED();
 
@@ -74,6 +86,10 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
 }
 
 Result FsGameProxy::CreateFile(const char* path, s64 size, u32 option) {
+    if (const auto pp = Parse(path); pp.kind == sphaira::mtp::PathKind::InstallFile) {
+        return InstallCreate(pp, size);
+    }
+
     fs::FsPath sd_path;
     R_TRY(ModsSdItem(path, sd_path));
     R_TRY(m_sd.CreateDirectoryRecursivelyWithPath(sd_path));
@@ -91,6 +107,11 @@ Result FsGameProxy::DeleteFile(const char* path) {
             R_TRY(FindForwarderFile(pp.filename, nsp, index));
         }
         return DeleteGame(nsp->app_id);
+    }
+    if (pp.kind == sphaira::mtp::PathKind::InstallFile) {
+        // nothing is stored; succeed so Explorer's replace flow goes on.
+        std::erase_if(m_install_entries, [&](const auto& e) { return !strcasecmp(e.name, pp.filename.c_str()); });
+        R_SUCCEED();
     }
 
     fs::FsPath sd_path;
@@ -133,6 +154,10 @@ Result FsGameProxy::RenameDirectory(const char *old_path, const char *new_path) 
 Result FsGameProxy::SetFileSize(FsFile *file, s64 size) {
     FileHandle* h;
     std::memcpy(&h, &file->s, sizeof(h));
+    if (h->install) {
+        h->install_size = size;
+        R_SUCCEED();
+    }
     R_UNLESS(h->is_sd, FsError_NotImplemented);
     return h->sd.SetSize(size);
 }
@@ -140,6 +165,9 @@ Result FsGameProxy::SetFileSize(FsFile *file, s64 size) {
 Result FsGameProxy::WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) {
     FileHandle* h;
     std::memcpy(&h, &file->s, sizeof(h));
+    if (h->install) {
+        return InstallWrite(*h, off, buf, write_size);
+    }
     R_UNLESS(h->is_sd, FsError_NotImplemented);
     return h->sd.Write(off, buf, write_size, option);
 }
@@ -155,6 +183,13 @@ Result FsGameProxy::OpenFile(const char *path, u32 mode, FsFile *out_file) {
         R_UNLESS(!pp.filename.empty(), FsError_PathNotFound);
         R_TRY(m_sd.OpenFile(sd_path, mode, &handle->sd));
         handle->is_sd = true;
+        auto raw = handle.release();
+        std::memcpy(&out_file->s, &raw, sizeof(raw));
+        R_SUCCEED();
+    }
+
+    if (pp.kind == sphaira::mtp::PathKind::InstallFile) {
+        R_TRY(InstallOpen(pp, mode, *handle));
         auto raw = handle.release();
         std::memcpy(&out_file->s, &raw, sizeof(raw));
         R_SUCCEED();
@@ -184,6 +219,10 @@ Result FsGameProxy::GetFileSize(FsFile *file, s64 *out_size) {
     if (h->is_sd) {
         return h->sd.GetSize(out_size);
     }
+    if (h->install) {
+        *out_size = h->install_size;
+        R_SUCCEED();
+    }
     if (!h->info.empty()) {
         *out_size = static_cast<s64>(h->info.size());
         R_SUCCEED();
@@ -199,6 +238,7 @@ Result FsGameProxy::ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u3
     if (h->is_sd) {
         return h->sd.Read(off, buf, read_size, option, out_bytes_read);
     }
+    R_UNLESS(!h->install, FsError_NotImplemented);
     if (!h->info.empty()) {
         *out_bytes_read = 0;
         if (off < 0 || off >= static_cast<s64>(h->info.size())) {
@@ -220,6 +260,9 @@ Result FsGameProxy::ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u3
 void FsGameProxy::CloseFile(FsFile *file) {
     FileHandle* h;
     std::memcpy(&h, &file->s, sizeof(h));
+    if (h->install) {
+        InstallClose(*h);
+    }
     delete h;
     std::memset(file, 0, sizeof(*file));
 }
@@ -264,8 +307,17 @@ Result FsGameProxy::OpenDirectory(const char *path, u32 mode, FsDir *out_dir) {
                     handle->entries.emplace_back(InfoDirEntry(""));
                 }
             }
+            if (INSTALL_FOLDERS && (mode & FsDirOpenMode_ReadDirs)) {
+                handle->entries.emplace_back(MakeVirtualDirEntry(m_names.install_sd));
+                handle->entries.emplace_back(MakeVirtualDirEntry(m_names.install_nand));
+            }
             break;
         }
+
+        case sphaira::mtp::PathKind::InstallDir:
+            // empty: a dropped file is installed, never stored.
+            R_UNLESS(INSTALL_FOLDERS, FsError_PathNotFound);
+            break;
 
         case sphaira::mtp::PathKind::MergedDir: {
             if (mode & FsDirOpenMode_ReadFiles) {

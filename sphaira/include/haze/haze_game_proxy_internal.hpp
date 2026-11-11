@@ -40,6 +40,8 @@ struct FsGameProxy final : FsProxyBase {
         m_names.forwarders = "Forwarders"_i18n;
         m_names.readme = "Readme.txt"_i18n;
         m_names.mods = "Mods"_i18n;
+        m_names.install_sd = "Install to SD"_i18n;
+        m_names.install_nand = "Install to NAND"_i18n;
         ScanGames();
         log_write("[MTP-GAMES] layout=%d scanned %zu games, %zu forwarders\n",
             static_cast<int>(m_layout), m_games.size(), m_forwarders.size());
@@ -56,7 +58,8 @@ struct FsGameProxy final : FsProxyBase {
     Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override;
 
     // the drive is a view of installed content: deleting a game removes it (DeleteGame),
-    // a game's mods folder is a real SD folder; every other write is rejected.
+    // a game's mods folder is a real SD folder, a file dropped into "Install to SD/NAND"
+    // streams to the installer; every other write is rejected.
     Result CreateFile(const char* path, s64 size, u32 option) override;
     Result DeleteFile(const char* path) override;
     Result RenameFile(const char *old_path, const char *new_path) override;
@@ -104,6 +107,11 @@ private:
         // a real file in the game's mods folder on the SD card.
         fs::File sd{};
         bool is_sd{};
+        // a file being dropped into an install folder; nothing is stored.
+        bool install{};
+        u32 mode{};
+        s64 install_size{};
+        std::string install_name{};
     };
 
     struct DirHandle {
@@ -130,6 +138,14 @@ private:
     // deleting a game's file (Merged, Forwarders) or folder (Separate) removes the game
     // from the console like the Games menu does (saves stay), then drops it from the drive.
     Result DeleteGame(u64 app_id);
+    // the install folders: Explorer creates the file, then opens it for writing.
+    Result InstallCreate(const sphaira::mtp::ParsedPath& pp, s64 size);
+    auto FindInstallEntry(const std::string& name) -> FsDirectoryEntry*;
+    Result InstallOpen(const sphaira::mtp::ParsedPath& pp, u32 mode, FileHandle& h);
+    Result InstallWrite(FileHandle& h, s64 off, const void* buf, u64 size);
+    void InstallClose(FileHandle& h);
+    // true when the build streams MTP files to the installer (the install folders exist).
+    static constexpr bool INSTALL_FOLDERS = ENABLE_NETWORK_INSTALL;
 
     // game folder name -> title. built once at registration; DeleteGame() erases
     // entries. forwarders live in m_forwarders.
@@ -152,6 +168,8 @@ private:
     sphaira::mtp::GamesFolderNames m_names{};
     // backs the mods folders; open sd files keep a pointer to it.
     fs::FsNativeSd m_sd{};
+    // the file last created in an install folder, so Explorer finds it after CreateFile.
+    std::vector<FsDirectoryEntry> m_install_entries{};
 };
 
 } // namespace sphaira::haze

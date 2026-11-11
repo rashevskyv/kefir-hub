@@ -1108,8 +1108,6 @@
   "MTP Storages": "MTP Depolama Birimleri",
   "Show microSD card": "microSD kartı göster",
   "Enable or disable microSD card storage in MTP.": "MTP'de microSD kart depolama birimini etkinleştirin veya devre dışı bırakın.",
-  "Show Install folder": "Install klasörünü göster",
-  "Enable or disable Install folder in MTP.": "MTP'de Install klasörünü etkinleştirin veya devre dışı bırakın.",
   "Show Saves (read-only)": "Kayıtları göster (salt okunur)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Şifresi çözülmüş oyun kayıtlarıyla salt okunur bir sürücü gösterir. Dosyalar bilgisayara kopyalanabilir; yazma devre dışıdır.",
   "Show NAND Saves (USER:/save)": "NAND Kayıtlarını Göster (USER:/save)",
@@ -1165,8 +1163,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "Nintendo oyunları değil, HOME menüsü homebrew simgeleri.",
   "microSD card name": "microSD kart adı",
   "Set custom name for microSD card in MTP.": "MTP'de microSD kart için özel ad ayarlayın.",
-  "Install folder name": "Yükleme klasörü adı",
-  "Set custom name for Install folder in MTP.": "MTP'de Yükleme klasörü için özel ad ayarlayın.",
   "No MTP storages enabled": "Etkinleştirilmiş MTP depolaması yok",
   "Folder exposed over MTP. Select to remove it.": "MTP üzerinden sunulan klasör. Kaldırmak için seçin.",
   "Remove this folder from MTP?": "Bu klasör MTP'den kaldırılsın mı?",
@@ -1197,7 +1193,6 @@
   "Save sync location": "Kayıt eşitleme konumu",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Kayıt yedeklemelerinin yüklendiği ağ konumu. Yalnızca WebDAV konumları kullanılabilir.",
   "Use the Appstore to re-install hbmenu": "hbmenu'yü yeniden yüklemek için Appstore'u kullanın",
-  "Please launch MTP install menu before trying to install": "Lütfen yüklemeyi denemeden önce MTP yükleme menüsünü başlatın",
   "MTP connected": "MTP bağlandı",
   "Configure the WebDAV server address.": "WebDAV sunucu adresini yapılandırın.",
   "Set the WebDAV server username.": "WebDAV sunucu kullanıcı adını ayarlayın.",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Şarj cihazını çıkarın: takılıyken konsol bu tür her uyku modunda şarj olur ve asla kapanmaz.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Pil neredeyse bitmek üzere: şarj azaldıkça yük ve parlaklık düşer, böylece konsol tamamen boşalana kadar yavaşça tükenir.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Bir döngü yalnızca kapalı konumdan tam şarja kadar sayılır, bu nedenle deşarjın tekrar yapılması gerekir.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Bu döngü henüz sayılmadı. Pil dolu, ancak Hub'ın bu deşarjın sonunda konsolun kapandığına dair bir kaydı yok."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Bu döngü henüz sayılmadı. Pil dolu, ancak Hub'ın bu deşarjın sonunda konsolun kapandığına dair bir kaydı yok.",
+  "Install to SD": "SD'ye yükle",
+  "Delete a game here to remove it from the console. Its saves stay.": "Konsoldan kaldırmak için burada bir oyunu silin. Kayıt dosyaları kalır.",
+  "Install to NAND": "NAND'a Yükle",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Sisteme kurmak için buraya bir NSP, NSZ, XCI veya XCZ dosyası kopyalayın.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "microSD kartına yüklemek için buraya bir NSP, NSZ, XCI veya XCZ dosyası kopyalayın."
 }

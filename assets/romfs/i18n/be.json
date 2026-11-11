@@ -1092,8 +1092,6 @@
   "HOME-menu homebrew icons, not Nintendo games.": "Значкі хаўмбрау ў HOME-меню, не гульні Nintendo.",
   "microSD card name": "Назва карты microSD",
   "Set custom name for microSD card in MTP.": "Вустанавіць уласную назву для карты microSD у MTP.",
-  "Install folder name": "Назва папкі ўсталявання",
-  "Set custom name for Install folder in MTP.": "Вустанавіць уласную назву для папкі ўсталявання ў MTP.",
   "No MTP storages enabled": "Няма ўключаных сховішчаў MTP",
   "Folder exposed over MTP. Select to remove it.": "Папка, выстаўленая праз MTP. Выберыце, каб выдаліць яе.",
   "Remove this folder from MTP?": "Выдаліць гэтую папку з MTP?",
@@ -1283,8 +1281,6 @@
   "MTP Storages": "Сховішчы MTP",
   "Show microSD card": "Паказаць карту microSD",
   "Enable or disable microSD card storage in MTP.": "Уключыць або адключыць сховішча карты microSD у MTP.",
-  "Show Install folder": "Паказаць тэчку ўсталёўкі",
-  "Enable or disable Install folder in MTP.": "Уключыць або адключыць тэчку ўсталёўкі ў MTP.",
   "Show Saves (read-only)": "Паказаць захаванні (толькі для чытання)",
   "Show a read-only drive with decrypted game saves. Files can be copied to the PC; writing is disabled.": "Паказаць дыск толькі для чытання з расшыфраванымі гульнявымі захаваннямі. Файлы можна капіяваць на ПК, запіс забаронены.",
   "Show NAND Saves (USER:/save)": "Паказаць захаванні NAND (USER:/save)",
@@ -1348,7 +1344,6 @@
   "Save sync location": "Захаваць размяшчэнне сінхранізацыі",
   "Network location that save backups are uploaded to. Only WebDAV locations can be used.": "Сеткавае размяшчэнне, куды загружаюцца рэзервовыя копіі захаванняў. Можна выкарыстоўваць толькі WebDAV-размяшчэнні.",
   "Use the Appstore to re-install hbmenu": "Выкарыстоўвайце Appstore для пераўсталёўкі hbmenu",
-  "Please launch MTP install menu before trying to install": "Калі ласка, запусціце меню ўсталёўкі MTP перад спробай усталёўкі",
   "MTP connected": "MTP падключана",
   "Failed to copy or move files": "Не атрымалася скапіяваць ці перанесці файлы",
   "Use Folder": "Выкарыстоўваць папку",
@@ -4279,5 +4274,10 @@
   "Take the charger out: with it in, the console charges in every such sleep and never switches off.": "Выцягніце зарадная прыладу: калі яна ўстаўлена, кансоль зараджаецца пры кожным такім рэжыме сна і ніколі не выключаецца.",
   "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty.": "Батарэя амаль разраджана: нагрузка і яркасць зніжаюцца разам з зарадам, таму кансоль павольна разраджаецца да поўнага выключэння.",
   "A cycle counts only from a switch-off to a full charge, so the drain must run again.": "Цыкл лічыцца толькі ад выключэння да поўнай зарадкі, таму разрад трэба паўтарыць.",
-  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Цей цикл ще не враховано. Батарея повна, але в Hub немає запису про те, що консоль вимкнулася в кінці цього розряду."
+  "This cycle is not counted yet. The battery is full, but the Hub has no record that the console switched off at the end of this drain.": "Цей цикл ще не враховано. Батарея повна, але в Hub немає запису про те, що консоль вимкнулася в кінці цього розряду.",
+  "Install to SD": "Усталяваць на SD",
+  "Delete a game here to remove it from the console. Its saves stay.": "Выдаліце ​​гульню тут, каб выдаліць яе з кансолі. Яе захаванні застануцца.",
+  "Install to NAND": "Усталяваць у NAND",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Скапіруйце сюды файл NSP, NSZ, XCI ці XCZ, каб усталяваць яго ў сістэмную памяць.",
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Скапіруйце сюды файл NSP, NSZ, XCI або XCZ, каб усталяваць яго на карту microSD."
 }

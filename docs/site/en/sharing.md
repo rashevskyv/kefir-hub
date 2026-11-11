@@ -144,11 +144,10 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 | Drive | What it holds | Shown by default |
 |---|---|---|
 | `microSD card` | The whole microSD card, read and write. | Yes |
-| `Install (NSP, XCI, NSZ, XCZ)` | Game files copied here are installed. See [Install over MTP](install/mtp.md). | Yes |
 | `Saves` | Game saves, unpacked. Read-only: copy them to the PC. | No |
 | `NAND Saves (USER:/save)` | The raw save files of games in system memory, read and write. | No |
 | `NAND System Saves (SYSTEM:/save)` | The raw save files of the system, read and write. | No |
-| `Games` | Installed games, updates and DLC as NSP files. Copying one to the PC makes a dump of it. Deleting a game removes it from the console. | No |
+| `Games` | Installed games, updates and DLC as NSP files. Copying one to the PC makes a dump of it. Deleting a game removes it from the console. A game file copied into [[Install to SD]] or [[Install to NAND]] is installed there, see [Install over MTP](install/mtp.md). | Yes |
 | A folder you added | That folder of the microSD card as its own drive. | — |
 | A mounted folder | The folder you mounted from the File Browser (see [Share one folder](#mount)). | — |
 
@@ -164,14 +163,12 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 | Option | What it does | Default |
 |---|---|---|
 | [[Show microSD card]] | Shows the microSD card drive. | On |
-| [[Show Install folder]] | Shows the install drive. | On |
 | [[Show Saves (read-only)]] | Shows the unpacked saves drive. | On |
 | [[Show NAND Saves (USER:/save)]] | Shows the raw game saves drive. | Off |
 | [[Show NAND System Saves (SYSTEM:/save)]] | Shows the raw system saves drive. | Off |
 | [[Show Games]] | Shows the installed games drive. | On |
 | [[Dump format]] | How the games drive lists games, see below. | [[Both]] |
 | [[microSD card name]] | Your own name for the microSD card drive. | `microSD card` |
-| [[Install folder name]] | Your own name for the install drive. | `Install (NSP, XCI, NSZ, XCZ)` |
 | [[Add folder]] | Pick a folder on the microSD card; it becomes its own drive. | |
 | *each added folder* | Select it and choose [[Remove]] at [[Remove this folder from MTP?]] to remove it. | |
 
