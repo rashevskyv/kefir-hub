@@ -223,6 +223,11 @@ inline void StartDrain(Marker& m, std::int64_t now, std::int64_t boot_time = 0) 
     }
 }
 
+// the charge the QH counter saw come in since the last drain tick (FullCap units, 0.5 mAh; the counter wraps), 0 = no baseline
+inline auto QhIn(const Marker& m, std::uint16_t qh) -> int {
+    return m.qh_last ? static_cast<std::int16_t>(qh - static_cast<std::uint16_t>(m.qh_last - 1)) : 0;
+}
+
 // ---- the file --------------------------------------------------------------------------------------------------------------
 
 // key=value lines

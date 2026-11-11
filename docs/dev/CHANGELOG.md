@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.346 — battery: the charge page says why it opens well over the percentage of the switch-off
+- Owner's run on 0.14.338 (2026-11-11): cycle 2 switched off at 1 % (3.10 V, 23:07, the charger in with its input cut), and a minute after the power-on at 11:36 the page showed 19 %. Nothing was written: the gauge's own QH counter rose by 1826 (913 mAh, 19.3 % of 4732 mAh) between the last drain tick and the Hub's start, and the cell stood at 4.10 V under 2 A, as it did at 20 % the day before. The charge came in before the system started (the Hub's cut of the charger input does not hold where the Hub does not run).
+- The charge page now says it in its status line when 3 % or more came in before its first sample (`ChargedOffNote`, battery_drain_sample.cpp): the amount in mAh and percent, "The console charges while the Hub does not run. That is expected and does not harm the calibration." `QhIn` (battery_calib_state.hpp) is the counter's difference, shared with the report's second capacity measure.
+- Cycle 2's drain on 0.14.338: the sleep lock was taken (rc 0) and the console passed HOS's sleep voltage (psm state 1 at 3.19 V) awake with the charger in, then switched off by itself at about 3.10 V with the gauge at 0 - 1 %. The experiment of 0.14.335 holds.
+- host tests: pass (quick), nro: built, switch: pending
+
 ## v0.14.345 — MTP: games install from the Games drive folders "Install to SD" / "Install to NAND"; the Install drive is gone
 - `Games` root (every Dump format) lists `Install to SD` and `Install to NAND`; a NSP/NSZ/XCI/XCZ copied there streams to the background installer (`haze_game_proxy_install.cpp`, same callbacks as the microSD root drop) and the folder forces the target (`InstallQueuePath` / `InstallTargetFromPath` → `ConfigOverride::sd_card_install` in `RunInstall`). Storage `Install (NSP, XCI, NSZ, XCZ)`, its options `Show Install folder` / `Install folder name` and `FsInstallProxy` removed. microSD root drop unchanged (uses Install location). host tests: quick green, nro: not built, switch: pending (one drop of 19 games into Install to SD; one into Install to NAND).
 

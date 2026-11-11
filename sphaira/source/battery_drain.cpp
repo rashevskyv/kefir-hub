@@ -505,7 +505,7 @@ auto DrainMenu::CalibStatus() const -> std::string {
             }
             return which + ": " + "the battery is full."_i18n + " " + next;
         }
-        return which + ": " + (m_waits_full ? "the charger ended the charge, but the gauge shows less than 100 %: it has not taken the battery for full yet. Keep the charger in: the Hub waits and writes what the gauge does to its log."_i18n : "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile."_i18n) + " " + next;
+        return which + ": " + (m_waits_full ? "the charger ended the charge, but the gauge shows less than 100 %: it has not taken the battery for full yet. Keep the charger in: the Hub waits and writes what the gauge does to its log."_i18n : "charging. Keep the charger in until the charger ends the charge: the Hub then goes on by itself. You can use the console meanwhile."_i18n) + " " + ChargedOffNote() + next;
     }
     if (m_charger) {
         if (m_step == wizard::DrainStep::CycleCounted) {
@@ -528,8 +528,8 @@ auto DrainMenu::CalibStatus() const -> std::string {
     if (m_level < 100) {
         return "The battery is nearly empty: the load and the brightness go down with the charge, so the console drains slowly to a real empty."_i18n
             + " " + (charge::HizActive()
-                ? "Take the charger out now: at about 3.2 V the console goes to sleep, and with the charger in it charges there instead of switching off."_i18n
-                : "If the screen goes dark at about 3.2 V, the console sleeps: press POWER once and the drain goes on."_i18n + " " + "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);
+                ? (m_sleep_lock ? "When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n : "Take the charger out now: at about 3.2 V the console goes to sleep, and with the charger in it charges there instead of switching off."_i18n)
+                : (m_sleep_lock ? std::string{} : "If the screen goes dark at about 3.2 V, the console sleeps: press POWER once and the drain goes on."_i18n + " ") + "When it switches off, plug the charger in. It may not start for about 20 minutes: this is normal. Then switch it on and open Kefir Hub."_i18n);
     }
     if (charge::HizActive()) {
         return "The charger is in, its input is cut: the console drains on the battery. When it switches off, switch it on again (it may need 10 to 15 minutes) and open Kefir Hub yourself: it writes the zero."_i18n;

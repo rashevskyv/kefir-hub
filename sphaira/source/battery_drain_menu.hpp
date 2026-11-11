@@ -92,6 +92,7 @@ struct DrainMenu final : ui::menu::MenuBase {
     // A flag line in the log (Cutoffs() skips the gap before it), and the drain goes on
     void OnSleptAwake(s64 now);
     auto SleptNote() const -> std::string; // the status line after such a sleep: what happened and what to do
+    auto ChargedOffNote() const -> std::string; // the charge page: why it opens at a percentage well over the switch-off's
 
     auto CalibTitle() const -> std::string;
 
@@ -172,6 +173,8 @@ private:
     int m_qh{};             // the gauge's QH counter + 1 at the last live sample, 0 = not read
     int m_tick_qh{};        // the same at the last tick on battery: the baseline of the charge that comes in after the cut-off
     TimeStamp m_qh_saved{}; // when it was last written to the marker
+    int m_in_mah{-1};       // the charge page: what came in between the last drain tick and the page's first sample, -1 = not read
+    int m_in_pct{};         // the same in percent of the gauge's full capacity
     bool m_measured{};      // the capacity of this cycle is measured
     bool m_waits_full{};    // the charger ended the charge, the console shows less than 100 %: the gauge has not marked the full
     TimeStamp m_measure_ts{};

@@ -593,7 +593,7 @@ auto MeasureCapacityIfFull() -> Measure {
     if (cycle == 2) {
         // the second measure for the report: what the QH counter saw come in since the cut-off (qh_last = QH + 1 there)
         if (const auto qh = g.Read(MAX17050_QH); qh && m->qh_last) {
-            const auto in = static_cast<std::int16_t>(*qh - static_cast<std::uint16_t>(m->qh_last - 1));
+            const int in = QhIn(*m, *qh);
             m->qh_cap2 = in > 0 ? in : 0;
         }
     }

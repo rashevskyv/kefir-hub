@@ -39,6 +39,16 @@ auto DrainMenu::SleptNote() const -> std::string {
         + (charge::HizActive() ? " " + "Take the charger out: with it in, the console charges in every such sleep and never switches off."_i18n : std::string{});
 }
 
+// The user saw 1 % at the switch-off and sees 19 % a minute after the power-on (owner, 2026-11-11): the page says that it is
+// charge that came in, not a rewrite. Under 3 % it is not worth a line.
+auto DrainMenu::ChargedOffNote() const -> std::string {
+    if (m_in_pct < 3) {
+        return {};
+    }
+    return "The percentage is right. Since the switch-off the battery already took about"_i18n + " " + std::to_string(m_in_mah) + " " + "mAh from the charger"_i18n + " (" + std::to_string(m_in_pct) + " %). "
+        + "The console charges while the Hub does not run. That is expected and does not harm the calibration."_i18n + " ";
+}
+
 void DrainMenu::OpenCalibLog() {
     fs::FsNativeSd sd;
     sd.CreateDirectoryRecursively("/config/kefir/battery");
@@ -181,6 +191,19 @@ void DrainMenu::SampleLive() {
     }
     if (const auto qh = g.Read(MAX17050_QH)) {
         m_qh = *qh + 1;
+        // The charge page's first sample: what came in since the last drain tick. The console charges while it is off and while
+        // it starts, so the page opens well over the 1 % of the switch-off (owner, 2026-11-11: 19 %, +913 mAh by this counter,
+        // nothing written): ChargedOffNote says so.
+        if (m_calib && m_calib->charge && m_in_mah < 0) {
+            m_in_mah = 0;
+            const auto m = calib_flow::LoadMarker();
+            const auto full = g.Read(MAX17050_FullCap);
+            if (const int in = m ? calib::QhIn(*m, *qh) : 0; in > 0 && full && *full) {
+                m_in_mah = in / 2;
+                m_in_pct = in * 100 / *full;
+                log_write("[Calib] the charge page opens with %d mAh in since the last drain tick (%d %% of the full capacity)\n", m_in_mah, m_in_pct);
+            }
+        }
     }
     if (const auto v = g.Read(MAX17050_Temp)) {
         Push(m_temps, static_cast<s16>(*v) / 256.f);

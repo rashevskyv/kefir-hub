@@ -124,6 +124,16 @@ int main() {
         StartDrain(c, 100); // a new drain does not keep the QH of an older one, nor this cycle's capacity of an older charge
         assert(c.qh_last == 0 && c.cap_raw[0] == 0 && c.cap_raw[1] == 0x2200);
     }
+    { // the charge that came in since the last drain tick; the counter wraps
+        Marker q;
+        assert(QhIn(q, 500) == 0);      // no baseline
+        q.qh_last = 56133 + 1;
+        assert(QhIn(q, 57959) == 1826); // 2026-11-11: 913 mAh came in between the switch-off and the Hub's start
+        q.qh_last = 65530 + 1;
+        assert(QhIn(q, 10) == 16);      // the counter wrapped
+        q.qh_last = 1000 + 1;
+        assert(QhIn(q, 900) == -100);   // a drain since then
+    }
     assert(back.zero_mv == 3193 && back.zero_at == 777 && back.full_at[0] == 999 && back.full_at[1] == 0);
     const auto bad = Parse("step=99\r\ncutoffs=-4\r\nnonsense\r\nphase=x\r\nstarted=1\r\n");
     assert(bad.step == Step::Reset && bad.cutoffs == 0 && bad.drain_started);
