@@ -1,4 +1,5 @@
 #include "ui/menus/tools_menu.hpp"
+#include "ui/first_run_hint.hpp"
 #include "bios_download.hpp"
 
 #include "ui/menus/appstore.hpp"
@@ -240,6 +241,17 @@ Menu::~Menu() {
 
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+
+    if (hint::TakeFirst(FirstRunHint::Tools)) {
+        App::Push<OptionBox>(
+            "What is where in Tools:\n\n"
+            "Game Tools: games and saves.\n"
+            "Updater: Kefir and firmware updates. It replaces Kefir Updater.\n"
+            "Themes: theme packs.\n"
+            "Software: Homebrew App Store, DBI and mod tools.\n"
+            "Tools: system tools and sysmodule manager.\n"
+            "Kefir Settings: Kefir switches."_i18n, "OK"_i18n);
+    }
 
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
         if (touch && m_index == i) {

@@ -12,6 +12,7 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/nvg_util.hpp"
+#include "ui/first_run_hint.hpp"
 #include "ui/option_box.hpp"
 #include "ui/about_box.hpp"
 #include "ui/popup_list.hpp"
@@ -325,6 +326,10 @@ void Menu::BuildCategories() {
                 MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
                 MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),
                 MakeBoolItem("Scripted input"_i18n, "Debug: press buttons from /config/kefir/demo/input.txt (one name per line: A, B, Up...; wait N; dump writes the open screens to state.txt)."_i18n, App::GetScriptInput, App::SetScriptInput),
+                { "Show first-run hints again"_i18n, "Show the one-time hints for the main screen, Tools and Kefir Settings again."_i18n, [](){ return std::string{}; }, [](){
+                    hint::ResetAll();
+                    App::Notify("The hints will show again."_i18n);
+                }},
                 { "About"_i18n, "View application version and changelog."_i18n, [](){ return "v" + std::string(APP_VERSION); }, [](){
                     App::Push<AboutBox>();
                 }},

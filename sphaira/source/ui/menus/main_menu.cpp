@@ -2,6 +2,7 @@
 
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/tools_menu.hpp"
+#include "ui/first_run_hint.hpp"
 #include "ui/menus/users_menu.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
@@ -255,6 +256,17 @@ MainMenu::~MainMenu() {
 }
 
 void MainMenu::Update(Controller* controller, TouchInfo* touch) {
+    // Update runs only while the Hub is on top, so a launch prompt shows first and the hint follows it.
+    if (m_current_menu == m_centre_menu.get() && hint::TakeFirst(FirstRunHint::Main)) {
+        const uiButton* target = nullptr;
+        for (auto& button : m_current_menu->GetUiButtons()) {
+            if (button.m_button == Button::R) {
+                target = &button;
+            }
+        }
+        App::Push<HintBox>("Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there."_i18n, target);
+    }
+
     m_current_menu->Update(controller, touch);
 
     // offline at the start: the check failed. Look again when the network comes up (also after a later reconnect),

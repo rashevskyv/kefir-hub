@@ -4220,5 +4220,12 @@
   "Delete a game here to remove it from the console. Its saves stay.": "Видаліть гру тут, щоб видалити її з консолі. Її збереження залишаться.",
   "Install to NAND": "Встановити на NAND",
   "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Скопіюйте сюди файл NSP, NSZ, XCI чи XCZ, щоб встановити його в системну пам'ять.",
-  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Скопіюйте сюди файл NSP, NSZ, XCI або XCZ, щоб встановити його на карту microSD."
+  "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Скопіюйте сюди файл NSP, NSZ, XCI або XCZ, щоб встановити його на карту microSD.",
+  "Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there.": "Натисніть R, щоб відкрити «Інструменти». Там є ігри та збереження, оновлення Kefir і прошивок, теми та налаштування Kefir.",
+  "What is where in Tools:\n\nGame Tools: games and saves.\nUpdater: Kefir and firmware updates. It replaces Kefir Updater.\nThemes: theme packs.\nSoftware: Homebrew App Store, DBI and mod tools.\nTools: system tools and sysmodule manager.\nKefir Settings: Kefir switches.": "Що де в «Інструментах»:\n\nІгрові інструменти: ігри та збереження.\nОновлювач: оновлення Kefir і прошивок. Замінює старий Kefir Updater.\nТеми: пакети тем.\nДодаткові програми: Homebrew App Store, DBI та інструменти для модів.\nІнструменти: системні інструменти та менеджер модулів.\nНалаштування Кефіра: перемикачі Kefir.",
+  "Here is what used to be in the Ultrahand overlay: Overclock status, 40MB Memory, USB 3.0, Redirect Emunand saves to SD, 8GB DRAM status, Nextendo and Translate Interface.\n\nDBI and the Homebrew App Store are in Tools → Software.": "Ось що було в оверлеї Ultrahand: статус розгону, пам'ять 40 МБ, USB 3.0, перенаправлення сейвів Emunand на SD, статус 8 ГБ оперативної пам'яті, Nextendo і переклад інтерфейсу.\n\nDBI та Homebrew App Store є в «Інструменти» → «Додаткові програми».",
+  "Press A or B to close.": "Натисніть A або B, щоб закрити.",
+  "Show first-run hints again": "Показати підказки знову",
+  "Show the one-time hints for the main screen, Tools and Kefir Settings again.": "Знову показати одноразові підказки для головного екрана, Інструментів і Налаштувань Кефіра.",
+  "The hints will show again.": "Підказки знову з'являться."
 }

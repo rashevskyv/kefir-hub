@@ -14,6 +14,7 @@
 #include "ui/hold_confirm_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/option_box.hpp"
+#include "ui/first_run_hint.hpp"
 #include "ui/progress_box.hpp"
 
 #include <algorithm>
@@ -298,6 +299,13 @@ void KefirSettingsMenu::OnFocusGained() {
 
 void KefirSettingsMenu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
+
+    if (hint::TakeFirst(FirstRunHint::KefirSettings)) {
+        App::Push<OptionBox>(
+            "Here is what used to be in the Ultrahand overlay: Overclock status, 40MB Memory, USB 3.0, "
+            "Redirect Emunand saves to SD, 8GB DRAM status, Nextendo and Translate Interface.\n\n"
+            "DBI and the Homebrew App Store are in Tools → Software."_i18n, "OK"_i18n);
+    }
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
         if (touch && m_index == i) {
             FireAction(Button::A);

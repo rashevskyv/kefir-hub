@@ -3,6 +3,13 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.347 — first-run hints: the main screen (R = Tools), Tools and Kefir Settings
+- Three one-time hints for users who come from the old pack. Main screen: a dimmed frame around the **R** footer button, "Press R to open Tools." Tools: a list of its pages. Kefir Settings: where the old Ultrahand items are, and that DBI and the Homebrew App Store are in Tools → Software. Each hint closes with A or B and shows once (`hints` section in the config: `main_shown`, `tools_shown`, `kefir_settings_shown`).
+- Hub Settings → General → "Show first-run hints again" clears the three flags.
+- New: `sphaira/source/ui/first_run_hint.cpp` (`HintBox`, `hint::TakeFirst`, `hint::ResetAll`). Hints 2 and 3 reuse OptionBox. English and Ukrainian strings added; other languages follow the translator run.
+- Docs: "First-run hints" section in `docs/site/en` and `docs/site/uk` getting-started (drafts).
+- host tests: pass (tests/run.sh --quick); nro: built (WSL, ReleaseWithInstall); switch: pending (owner checks the three hints on a console, and the reset option).
+
 ## v0.14.346 — battery: the charge page says why it opens well over the percentage of the switch-off
 - Owner's run on 0.14.338 (2026-11-11): cycle 2 switched off at 1 % (3.10 V, 23:07, the charger in with its input cut), and a minute after the power-on at 11:36 the page showed 19 %. Nothing was written: the gauge's own QH counter rose by 1826 (913 mAh, 19.3 % of 4732 mAh) between the last drain tick and the Hub's start, and the cell stood at 4.10 V under 2 A, as it did at 20 % the day before. The charge came in before the system started (the Hub's cut of the charger input does not hold where the Hub does not run).
 - The charge page now says it in its status line when 3 % or more came in before its first sample (`ChargedOffNote`, battery_drain_sample.cpp): the amount in mAh and percent, "The console charges while the Hub does not run. That is expected and does not harm the calibration." `QhIn` (battery_calib_state.hpp) is the counter's difference, shared with the report's second capacity measure.

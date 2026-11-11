@@ -4217,5 +4217,12 @@
   "Install to NAND": "Install to NAND",
   "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.": "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card.",
   "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.": "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory.",
-  "Delete a game here to remove it from the console. Its saves stay.": "Delete a game here to remove it from the console. Its saves stay."
+  "Delete a game here to remove it from the console. Its saves stay.": "Delete a game here to remove it from the console. Its saves stay.",
+  "Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there.": "Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there.",
+  "What is where in Tools:\n\nGame Tools: games and saves.\nUpdater: Kefir and firmware updates. It replaces Kefir Updater.\nThemes: theme packs.\nSoftware: Homebrew App Store, DBI and mod tools.\nTools: system tools and sysmodule manager.\nKefir Settings: Kefir switches.": "What is where in Tools:\n\nGame Tools: games and saves.\nUpdater: Kefir and firmware updates. It replaces Kefir Updater.\nThemes: theme packs.\nSoftware: Homebrew App Store, DBI and mod tools.\nTools: system tools and sysmodule manager.\nKefir Settings: Kefir switches.",
+  "Here is what used to be in the Ultrahand overlay: Overclock status, 40MB Memory, USB 3.0, Redirect Emunand saves to SD, 8GB DRAM status, Nextendo and Translate Interface.\n\nDBI and the Homebrew App Store are in Tools → Software.": "Here is what used to be in the Ultrahand overlay: Overclock status, 40MB Memory, USB 3.0, Redirect Emunand saves to SD, 8GB DRAM status, Nextendo and Translate Interface.\n\nDBI and the Homebrew App Store are in Tools → Software.",
+  "Press A or B to close.": "Press A or B to close.",
+  "Show first-run hints again": "Show first-run hints again",
+  "Show the one-time hints for the main screen, Tools and Kefir Settings again.": "Show the one-time hints for the main screen, Tools and Kefir Settings again.",
+  "The hints will show again.": "The hints will show again."
 }

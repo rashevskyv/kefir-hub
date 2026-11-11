@@ -119,6 +119,16 @@ While an install queue runs, press **−** to turn the screen off or dim it, or 
 progress. Any button turns the screen back on. What **−** does, and whether the screen turns off by itself, is set
 in [[Settings]] → [[Install]] → [[Screen off (Minus)]]. See [Installing games](install/index.md).
 
+## First-run hints
+Each hint shows once. Close a hint with **A** or **B**.
+
+<!-- draft
+- The first time the main screen opens: the hint frames the **R** button in the footer and says that **R** opens [[Tools]].
+- The first time you open [[Tools]]: the hint lists its pages: [[Game Tools]], [[Updater]] (it replaces the old Kefir Updater), [[Themes]], [[Software]], [[Tools]] and [[Kefir Settings]].
+- The first time you open [[Kefir Settings]]: the hint lists the items that were in the old Ultrahand overlay: [[Overclock status]], [[40MB Memory]], [[USB 3.0]], [[Redirect Emunand saves to SD]], [[8GB DRAM status]], [[Nextendo]] and [[Translate Interface]]. It also says that DBI and the [[Homebrew App Store]] are in [[Software]].
+- To show the hints again: [[Settings]] > [[General]] > [[Show first-run hints again]]. The main-screen hint returns when you go back to the main screen.
+-->
+
 ## Problems
 **A button does nothing.** Look at the footer: the button may have no job on this screen, or another one.
 
