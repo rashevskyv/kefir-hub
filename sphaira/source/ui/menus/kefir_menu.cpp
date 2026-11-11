@@ -19,7 +19,7 @@
 namespace sphaira::ui::menu::kefir {
 using namespace detail;
 
-Menu::Menu() : MenuBase{"Updater", MenuFlag_None} {
+Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater", MenuFlag_None}, m_pending_manual_firmware{std::move(manual_firmware)} {
     RefreshSystemInfo();
 
     this->SetActions(

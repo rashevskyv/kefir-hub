@@ -4,6 +4,7 @@
 #include "ui/menus/filebrowser_assoc.hpp"
 #include "ui/menus/filebrowser_forwarder.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/kefir_menu.hpp"
 #include "ui/marks.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
@@ -124,12 +125,11 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                 return;
             }
 
-            if (!m_menu->IsFolderPicker() && IsSd() && m_is_update_folder && m_daybreak_path.has_value()) {
-                App::Push<OptionBox>("Open with DayBreak?"_i18n, "No"_i18n, "Yes"_i18n, 1, [this](auto op_index){
+            if (!m_menu->IsFolderPicker() && IsSd() && m_is_update_folder) {
+                App::Push<OptionBox>("Install firmware from this folder?"_i18n + "\n\n" + m_path.s, "No"_i18n, "Yes"_i18n, 1, [this](auto op_index){
                     if (op_index && *op_index) {
-                        // daybreak uses native fs so do not use nro_add_arg_file
-                        // otherwise it'll fail to open the folder...
-                        nro_launch(m_daybreak_path.value(), nro_add_arg(m_path));
+                        // the Updater validates and installs the folder as soon as it gains focus.
+                        App::Push<kefir::Menu>(m_path);
                     }
                 });
                 return;

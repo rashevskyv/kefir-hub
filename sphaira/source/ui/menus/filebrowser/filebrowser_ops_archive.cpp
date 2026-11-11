@@ -426,27 +426,6 @@ auto FsView::CheckIfUpdateFolder() -> Result {
     R_UNLESS(IsSd(), Result_FileBrowserDirNotDaybreak);
     R_UNLESS(m_fs->IsNative(), Result_FileBrowserDirNotDaybreak);
 
-    // check if we have already tried to find daybreak
-    if (m_daybreak_path.has_value() && m_daybreak_path.value().empty()) {
-        return FsError_FileNotFound;
-    }
-
-    // check that we have daybreak installed
-    if (!m_daybreak_path.has_value()) {
-        auto daybreak_path = DAYBREAK_PATH;
-        if (!m_fs->FileExists(DAYBREAK_PATH)) {
-            if (auto e = nro_find(homebrew::GetNroEntries(), "Daybreak", "Atmosphere-NX", {}); e.has_value()) {
-                daybreak_path = e.value().path;
-            } else {
-                log_write("failed to find daybreak\n");
-                m_daybreak_path = "";
-                return FsError_FileNotFound;
-            }
-        }
-        m_daybreak_path = daybreak_path;
-        log_write("found daybreak in: %s\n", m_daybreak_path.value().s);
-    }
-
     // check that we have enough ncas and not too many
     R_UNLESS(m_entries.size() > 150 && m_entries.size() < 300, Result_FileBrowserDirNotDaybreak);
 

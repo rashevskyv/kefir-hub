@@ -45,7 +45,9 @@ struct UpdaterEntry {
 };
 
 struct Menu final : MenuBase {
-    Menu();
+    // manual_firmware: a firmware folder to validate and install on first focus
+    // (the File Browser passes a folder of firmware NCAs here).
+    explicit Menu(std::optional<fs::FsPath> manual_firmware = std::nullopt);
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "Updater"; }

@@ -53,8 +53,8 @@ Press **A** on a `.nro` to launch it. Press **+** → [[Install Forwarder]] to m
 | text files (`.txt`, `.ini`, `.json`, `.log`, `.md` and others) | Asks: [[View as text]], [[Edit]] or [[Edit on PC / phone]]. See [Edit a text file](#edit-a-text-file) |
 | any other file | Opens the list of apps that can open it, if there are any. See [Open a file in another app](#open-a-file-in-another-app) |
 
-A folder with a firmware update (150 to 300 `.nca` files) asks [[Open with DayBreak?]] when Daybreak is installed.
-To install firmware, use the [Updater](updater.md) instead.
+A folder with a firmware update (150 to 300 `.nca` files) asks [[Install firmware from this folder?]].
+"Yes" opens the [Updater](updater.md), which validates and installs the firmware from that folder.
 
 ## Select several items
 1. Press **X** on each item. The cursor moves to the next item.

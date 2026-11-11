@@ -116,8 +116,6 @@ inline constexpr RomDatabaseEntry PATHS[]{
     { "atomiswave", "Atomiswave", { "atomiswave", } },
 };
 
-constexpr fs::FsPath DAYBREAK_PATH{"/switch/daybreak.nro"};
-
 
 auto GetRomDatabaseFromPath(std::string_view path) -> RomDatabaseIndexs;
 auto GetRomIcon(std::string filename, const RomDatabaseIndexs& db_indexs, const NroEntry& nro) -> std::vector<u8>;

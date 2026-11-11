@@ -281,7 +281,6 @@ private:
     Vec4 m_list_clip{};
     std::vector<int> m_thumbs{};
     std::vector<file_icon::Mosaic> m_mosaics{};
-    std::optional<fs::FsPath> m_daybreak_path{};
 
     // one synthetic row is pinned to the top of the listing: ".." normally, or
     // "select current folder" in folder-picker mode (where row 0 already means
