@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.287 — Prelude-Nextendo v5.0.0 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
 ## v0.14.286 — Prelude-Nextendo v4.0.21 (robot)
 Hosts +0/-0 lines, patch folders +0/-0.
 host tests: pass (quick) | nro: built (CI) | switch: pending
