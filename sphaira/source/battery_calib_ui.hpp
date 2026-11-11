@@ -188,6 +188,13 @@ struct Page final : ui::menu::MenuBase {
 
     void Update(Controller* controller, TouchInfo* touch) override {
         MenuBase::Update(controller, touch);
+        if (m_scroll_max > 0.f) { // a page longer than its room: the d-pad or a stick moves it
+            if (controller->GotHeld(Button::ANY_DOWN)) {
+                m_scroll = std::min(m_scroll + 12.f, m_scroll_max);
+            } else if (controller->GotHeld(Button::ANY_UP)) {
+                m_scroll = std::max(m_scroll - 12.f, 0.f);
+            }
+        }
         if (m_auto > 0) {
             const int left = m_auto - static_cast<int>(m_auto_since.GetSeconds());
             if (controller->m_kdown) {
@@ -233,7 +240,12 @@ struct Page final : ui::menu::MenuBase {
         const auto good = nvgRGB(0x4C, 0xAF, 0x50);
         const auto warn = nvgRGB(0xF5, 0x9E, 0x0B);
         constexpr float X = 90.f, W = 1100.f;
-        float y = 118.f;
+        // A page longer than its room scrolls and is cut at the room's edges (the report, 2026-11-11: its lines ran over the
+        // road map and the footer and past the screen).
+        const float top = 110.f, bottom = m_road_step > 0 ? 552.f : 636.f;
+        float y = 118.f - m_scroll;
+        nvgSave(vg);
+        nvgScissor(vg, 0.f, top, 1280.f, bottom - top);
         const auto box_height = [&](const std::string& s, float size, float width) {
             float b[4]{};
             const auto wrapped = WrapText(vg, size, width, s);
@@ -295,6 +307,11 @@ struct Page final : ui::menu::MenuBase {
                 }
             }
         }
+        nvgRestore(vg);
+        const float content = y + m_scroll + 8.f - top; // in pixels, as the bar's "rows"
+        m_scroll_max = std::max(0.f, content - (bottom - top));
+        m_scroll = std::min(m_scroll, m_scroll_max);
+        ui::gfx::drawScrollbar(vg, theme, X + W + 30.f, top + 8.f, bottom - top - 8.f, static_cast<u32>(m_scroll), static_cast<u32>(content), static_cast<u32>(bottom - top));
         if (m_road_step > 0) {
             DrawRoadmap(vg, theme, m_road_step, m_road_step - 1, 4);
         }
@@ -322,6 +339,8 @@ private:
     std::function<bool()> m_waiting;
     bool m_was_waiting{};
     int m_road_step{};
+    float m_scroll{};     // how far the lines are moved up
+    float m_scroll_max{}; // 0 = the lines fit (Draw measures them)
 };
 
 } // namespace sphaira::battery::calib_ui

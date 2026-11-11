@@ -123,6 +123,9 @@ void ShowReport() {
         facts->model = ModelOf(s);
         if (const auto text = ReadLog(); !text.empty()) {
             facts->cuts = Cutoffs(text);
+            // Only this calibration's: the log and its .old keep older runs, and the report listed their switch-offs as cycle 1
+            // of this one (2026-11-11: "(1/4)" to "(3/4)" were of 2026-11-08 and 11-09).
+            std::erase_if(facts->cuts, [reset = static_cast<std::int64_t>(detail::LoadState().reset_at)](const Cutoff& c) { return c.time < reset; });
             if (const auto m = LoadMarker(); m && m->full_at[0]) {
                 if (const auto cut = ZeroCutoff(text, 2, m->full_at[0])) {
                     facts->cut2_pct = cut->gauge_pct;

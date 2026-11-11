@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.348 — battery: a calibration page longer than the screen scrolls; the report lists only this calibration's switch-offs
+- Owner's screenshot of the report on 0.14.346 (2026-11-11): the lines ran over the road map, over the footer and past the screen. `calib_ui::Page` had no limit: it now cuts its lines at its room (above the road map or the footer), scrolls with the d-pad or a stick, and shows a scroll bar when the lines do not fit.
+- The report listed five switch-offs, three of them of older runs (2026-11-08, 11-09) named "Calibration cycle 1/2 (1/4)" to "(3/4)": since 0.14.338 it reads calib-log.csv.old too, and it never dropped the runs before the reset. It now keeps the switch-offs at or after `reset_at`.
+- The calibration of 2026-11-10/11 ended: zero 3.086 V, FullCap 4686 mAh against 4667 mAh design, 4456 mAh counted by QH from cycle 2's switch-off (3.098 V, gauge 0 %) to full; both report checks passed. The chip learned the full by itself in both cycles.
+- host tests: pass (quick), nro: built, switch: pending
+
 ## v0.14.347 — first-run hints: the main screen (R = Tools), Tools and Kefir Settings
 - Three one-time hints for users who come from the old pack. Main screen: a dimmed frame around the **R** footer button, "Press R to open Tools." Tools: a list of its pages. Kefir Settings: where the old Ultrahand items are, and that DBI and the Homebrew App Store are in Tools → Software. Each hint closes with A or B and shows once (`hints` section in the config: `main_shown`, `tools_shown`, `kefir_settings_shown`).
 - Hub Settings → General → "Show first-run hints again" clears the three flags.
