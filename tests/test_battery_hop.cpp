@@ -30,6 +30,14 @@ int main() {
                               "[Full Stock]\nfss0=atmosphere/package3\nemummc_force_disable=1\nstock=1\n";
     assert(FindEntry(kefir, false) == 0 && FindEntry(kefir, true) == 0);
 
+    // the way into the other MMC: Semi-stock when the card can do it, a hekate entry otherwise
+    assert(PickWay(false, true, true, false) == Way::SemiStockOn);
+    assert(PickWay(false, true, true, true) == Way::SemiStockOn);   // a stale backup next to enabled=1 is replaced
+    assert(PickWay(false, false, true, false) == Way::Hekate);      // enabled=0 already: its backup would never lead back
+    assert(PickWay(false, true, false, false) == Way::Hekate);      // no rescue script: not a Kefir card
+    assert(PickWay(true, false, true, true) == Way::SemiStockOff);
+    assert(PickWay(true, false, true, false) == Way::Hekate);       // sysMMC without Semi-stock: nothing to end
+
     // the boot request goes in at 0x94 and nothing else changes
     std::vector<std::uint8_t> hekate(0x4000, 0xAB);
     assert(PatchBootCfg(hekate, 3));

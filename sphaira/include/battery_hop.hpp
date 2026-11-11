@@ -90,6 +90,21 @@ inline auto FindEntry(std::string_view ini, bool want_emu) -> int {
     return found ? found : (want_emu ? fallback : 0);
 }
 
+// How the Hub gets into the other MMC. A Kefir card has no hekate entry that starts Atmosphère in the sysMMC: the way
+// there is Semi-stock (emummc.ini enabled=0, started by the plain Atmosphere entry) and the way back is its end.
+//  - to the sysMMC: emummc.ini has enabled=1 and the card carries Kefir's rescue script → turn Semi-stock on.
+//    With enabled=0 already, "on" would save a backup that can never lead back, so it is not chosen.
+//  - to the emuMMC: both Semi-stock backups are there → turn Semi-stock off.
+//  - anything else: a hekate boot entry (FindEntry).
+enum class Way { SemiStockOn, SemiStockOff, Hekate };
+
+inline auto PickWay(bool to_emu, bool emummc_enabled, bool rescue_script, bool backups) -> Way {
+    if (to_emu) {
+        return backups ? Way::SemiStockOff : Way::Hekate;
+    }
+    return emummc_enabled && rescue_script ? Way::SemiStockOn : Way::Hekate;
+}
+
 // hekate keeps its boot request (boot_cfg_t, 0x84 bytes) at 0x94 of its payload and reads it at start: byte 0 holds
 // the flags (bit 0 = boot at once), byte 1 the entry number, byte 2 the list (0 = hekate_ipl.ini), byte 3 extras, and
 // 0x80 bytes of id / emuMMC path. false when the file is too small to be hekate.
