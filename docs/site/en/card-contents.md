@@ -92,12 +92,10 @@ System modules shipped by Kefir, by folder name under `contents/`:
 | Path | What it is |
 |---|---|
 | `.overlays/` | Overlays (open with **L + D-pad down + R-stick**): `ovlmenu.ovl` (Ultrahand menu), `ovlSysmodules.ovl`, `ovlEdiZon.ovl` (cheats), `NX-FanControl.ovl`, `sys-patch-overlay.ovl`. |
-| `.packages/` | Ultrahand packages: the Kefir Menu (Settings, Software, Theme, Translate Interface). |
-| `kefir-hub.nro` | Kefir Hub. |
-| `kefir-updater/` | Kefir updater: `kefir-updater.nro`, `update.te` (the script TegraExplorer runs), `version` (installed Kefir version). |
+| `.packages/` | The Ultrahand Kefir Menu package: Semi-Stock, Reboot, Shutdown. |
+| `kefir-hub/` | Kefir Hub: `kefir-hub.nro`. |
+| `kefir-updater/` | Kefir update files: `update.te` (the script TegraExplorer runs), `version` (installed Kefir version). |
 | `DBI/` | DBI, the installer app. |
-| `daybreak/` | Daybreak, the firmware updater from the Atmosphère team. |
-| `linkalho/` | Linkalho, links a user to an account without a network. |
 | `NX-Activity-Log/` | NX-Activity-Log, play time statistics. |
 | `NxThemesInstaller/` | NXThemesInstaller, installs HOME menu themes. |
 | `TorrentShopNX/` | TorrentShopNX. |

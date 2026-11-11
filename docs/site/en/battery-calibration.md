@@ -1,5 +1,8 @@
 # Battery calibration
 
+!!! warning "Experimental feature"
+    Battery calibration is an experimental feature. You run it at your own risk.
+
 Battery calibration finds the real empty point of the battery and sets the fuel gauge zero. The wizard is in Kefir Hub: see [System tools](system-tools.md#battery-calibration). The guide below is an interactive simulator, not the real console. It still shows an earlier order of the steps, so follow the screens on the console where they differ.
 
 **Where:** [[Tools]] → [[Maintenance]] → [[Battery calibration]]

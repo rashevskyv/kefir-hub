@@ -92,12 +92,10 @@ Kefir записує на карту памʼяті ці папки й файл�
 | Шлях | Що це |
 |---|---|
 | `.overlays/` | Оверлеї (відкрити: **L + хрестовина вниз + правий стік**): `ovlmenu.ovl` (меню Ultrahand), `ovlSysmodules.ovl`, `ovlEdiZon.ovl` (чіти), `NX-FanControl.ovl`, `sys-patch-overlay.ovl`. |
-| `.packages/` | Пакети Ultrahand: Kefir Menu (Settings, Software, Theme, Translate Interface). |
-| `kefir-hub.nro` | Kefir Hub. |
-| `kefir-updater/` | Оновлювач Kefir: `kefir-updater.nro`, `update.te` (скрипт, який виконує TegraExplorer), `version` (встановлена версія Kefir). |
+| `.packages/` | Пакет Ultrahand Kefir Menu: Semi-Stock, Reboot, Shutdown. |
+| `kefir-hub/` | Kefir Hub: `kefir-hub.nro`. |
+| `kefir-updater/` | Файли оновлення Kefir: `update.te` (скрипт, який виконує TegraExplorer), `version` (встановлена версія Kefir). |
 | `DBI/` | DBI, застосунок-інсталятор. |
-| `daybreak/` | Daybreak, оновлювач прошивки від команди Atmosphère. |
-| `linkalho/` | Linkalho, привʼязує користувача до акаунта без мережі. |
 | `NX-Activity-Log/` | NX-Activity-Log, статистика часу гри. |
 | `NxThemesInstaller/` | NXThemesInstaller, встановлює теми HOME-меню. |
 | `TorrentShopNX/` | TorrentShopNX. |
