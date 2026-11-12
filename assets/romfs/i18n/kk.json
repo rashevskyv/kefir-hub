@@ -404,7 +404,6 @@
   "Interface translation has been removed.\n\nA reboot is recommended now to ensure system stability and restore original interface text. If you reboot later, some system text may appear inconsistent or cause minor issues until restarted.\n\nReboot now?": "Интерфейс аудармасы жойылды.\n\nЖүйенің тұрақтылығын қамтамасыз ету және бастапқы интерфейс мәтінін қалпына келтіру үшін енді қайта жүктеу ұсынылады. Егер кейінірек қайта жүктесеңіз, кейбір жүйелік мәтіндер қайта іске қосылғанға дейін сәйкессіз көрінуі немесе кішігірім мәселелер тудыруы мүмкін.\n\nҚазір қайта жүктеу керек пе?",
   "Reboot later": "Кейінірек қайта жүктеу",
   "Reboot now": "Қазір қайта жүктеу",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater жойылды.\n\nKefir жаңартулары енді Жаңартушы (Updater) мәзірінде жасалады.\n\nОған қолмен өту үшін R пернесін басып, Жаңартушыны таңдаңыз, содан кейін Kefir нұсқасын таңдаңыз.",
   "Apply": "Қолдану",
   "Module activated": "Модуль қосылды",
   "Failed to activate module": "Модульді қосу мүмкін болмады",

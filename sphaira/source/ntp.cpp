@@ -2,12 +2,17 @@
 #include "app.hpp"
 #include "defines.hpp"
 #include "evman.hpp"
+#include "fs.hpp"
+#include "hekate_clock.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
 
 #include <arpa/inet.h>
 #include <atomic>
+#include <cstdlib>
 #include <cstring>
+#include <minIni.h>
+#include <optional>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -305,6 +310,38 @@ Result SetSystemTime(u64 timestamp, bool& out_used_fallback) {
     R_SUCCEED();
 }
 
+// The raw max77620 rtc, read the way hekate reads it (bdk/rtc/max77620-rtc.c:34).
+// hekate reads the chip directly; the offsets HOS keeps on top of it are invisible to it.
+std::optional<hekate_clock::RtcDate> ReadRawRtc() {
+    if (R_FAILED(i2cInitialize())) {
+        return std::nullopt;
+    }
+    ON_SCOPE_EXIT(i2cExit());
+    I2cSession s{};
+    if (R_FAILED(i2cOpenSession(&s, I2cDevice_Max77620Rtc))) {
+        return std::nullopt;
+    }
+    ON_SCOPE_EXIT(i2csessionClose(&s));
+
+    // UPDATE0 bit 4 copies the running counters into the read registers.
+    // Bit 0 would write the registers back into the clock: never set it.
+    const u8 latch[2] = {0x04, 0x10};
+    if (R_FAILED(i2csessionSendAuto(&s, latch, sizeof(latch), I2cTransactionOption_All))) {
+        return std::nullopt;
+    }
+    svcSleepThread(16'000'000);
+
+    u8 control{};
+    u8 regs[7]{};
+    const u8 cmd_control[] = {0x40, 0x01, 0x03, 0xC1, 0x01};
+    const u8 cmd_time[] = {0x40, 0x01, 0x07, 0xC1, sizeof(regs)};
+    if (R_FAILED(i2csessionExecuteCommandList(&s, &control, sizeof(control), cmd_control, sizeof(cmd_control))) ||
+        R_FAILED(i2csessionExecuteCommandList(&s, regs, sizeof(regs), cmd_time, sizeof(cmd_time)))) {
+        return std::nullopt;
+    }
+    return hekate_clock::DecodeRtc(regs, control);
+}
+
 Result RunSync() {
     ReportSyncStage("checking network connection");
     if (!HasInternet()) {
@@ -323,6 +360,10 @@ Result RunSync() {
         ReportSyncFailure(std::string("querying ") + server, rc);
     }
     R_TRY(rc);
+    const u64 reply_tick = armGetSystemTick();
+    const auto utc_now = [&] {
+        return network_time + armTicksToNs(armGetSystemTick() - reply_tick) / 1'000'000'000ULL;
+    };
 
     u64 current_time{};
     ReportSyncStage("reading User Clock");
@@ -337,6 +378,8 @@ Result RunSync() {
     ReportSyncStage("clock offset " + std::to_string(offset) + " seconds");
     if (offset > -MIN_CORRECTION_SECONDS && offset < MIN_CORRECTION_SECONDS) {
         ReportSyncStage("clock already synchronized");
+        // hekate keeps its own offset, which may still be wrong; costs no sd write when it is right.
+        SyncHekateClock(utc_now());
         R_SUCCEED();
     }
 
@@ -347,6 +390,7 @@ Result RunSync() {
         ReportSyncFailure("synchronization", set_time_rc);
         R_THROW(set_time_rc);
     }
+    SyncHekateClock(utc_now());
 
     if (used_fallback) {
         const s64 new_offset = static_cast<s64>(network_time) - static_cast<s64>(current_time);
@@ -396,6 +440,41 @@ void ThreadFunc(void*) {
 }
 
 } // namespace
+
+void SyncHekateClock(u64 utc) {
+    using namespace hekate_clock;
+    if (!fs::DirExists("/bootloader")) {
+        return; // no hekate on this card
+    }
+    const auto rtc = ReadRawRtc();
+    if (!rtc) {
+        log_write("[NTP] hekate clock: rtc read failed\n");
+        return;
+    }
+    TimeCalendarTime cal{};
+    TimeCalendarAdditionalInfo info{};
+    const auto tz_rc = timeToCalendarTimeWithMyRule(utc, &cal, &info);
+    if (R_FAILED(tz_rc)) {
+        log_write("[NTP] hekate clock: timezone failed 0x%08X\n", R_VALUE(tz_rc));
+        return;
+    }
+
+    // Nyx shows local wall time; info.offset is this zone's utc offset now, dst included.
+    const bool auto_dst = ini_getl("config", "timedst", 1, NYX_INI) != 0;
+    const auto wanted = Offset(static_cast<s64>(utc) + info.offset, *rtc, auto_dst);
+    char stored[16]{};
+    ini_gets("config", "timeoffset", "0", stored, sizeof(stored), NYX_INI);
+    if (!NeedsWrite(static_cast<u32>(std::strtoul(stored, nullptr, 16)), wanted)) {
+        log_write("[NTP] hekate clock: timeoffset=%s unchanged\n", stored);
+        return;
+    }
+    const auto hex = Hex(wanted);
+    if (ini_puts("config", "timeoffset", hex.c_str(), NYX_INI)) {
+        log_write("[NTP] hekate clock: timeoffset=%s (was %s, timedst=%d)\n", hex.c_str(), stored, auto_dst);
+    } else {
+        log_write("[NTP] hekate clock: writing %s failed\n", NYX_INI);
+    }
+}
 
 void Start() {
     if (g_thread_running) {

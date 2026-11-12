@@ -479,7 +479,6 @@
   "Not Ready...": "Neparuošta...",
   "Error loading page!": "Klaida įkeliant puslapį!",
   "Open Updater": "Atidaryti atnaujinimo įrankį",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater pašalintas.\n\nKefir atnaujinimai dabar atliekami Updater meniu.\n\nNorėdami patekti ten rankiniu būdu, paspauskite R, pasirinkite Updater, tada pasirinkite Kefir versiją.",
   "Apply": "Pritaikyti",
   "Module activated": "Modulis aktyvuotas",
   "Failed to activate module": "Nepavyko aktyvuoti modulio",

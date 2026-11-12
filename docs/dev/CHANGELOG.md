@@ -3,6 +3,12 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.353 — main screen ↔ Tools swipe follows the finger; Tools tour frames each tile; Kefir Updater tile opens the Updater
+- Main screen: a sideways drag moves the page with the finger and eases to the nearer page on release (a fifth of the way is enough); R / L and a tap on the new page dots slide too. After the first "press R" hint the page peeks at Tools once. First-start page shows the Hub icon.
+- Tools first run: a 4-step tour (Game Tools, Updater, Software, Tools) with a spotlight frame around each tile, not one big popup (owner: the 0.14.352 frame filled the tile). Ownfoil left Software (it lives in Game Tools).
+- The Kefir Updater stub tile keeps its icon and name and opens the Hub Updater, no popup; the page title is "Updater"; "Latest Kefir: unknown" offline says "Connect to the internet". In Kefir safe mode (exosphere config item 65014) the Hub asks once per start to update Kefir. NTP time sync also writes hekate's `nyx.ini` timeoffset (`hekate_clock.hpp`, test `test_hekate_clock.cpp`).
+- host tests: pass (quick), nro: built, switch: pending (swipe, tour frame, safe-mode notice, hekate clock; tour and dots seen working in 0.14.352)
+
 ## v0.14.351 — battery transfer: the notice and the confirm box say to hold R and open the Album
 - Console check of 0.14.350 (owner, 2026-11-12): the whole way worked. emuMMC → Semi-stock on → sysMMC → match → Semi-stock off → emuMMC. After it `/config/semistock` holds only `restore.te`, `emummc.ini` has `enabled=1`, `exosphere.ini` has `blank_prodinfo_sysmmc=1`, `Return_to_emuMMC.te` and `/config/ultrahand/romfs` are gone, `hop_to=0`.
 - Owner: "open Kefir Hub" is not enough, the user may never reach it: in the sysMMC there is no Kefir Hub icon on the HOME Menu. On Kefir the Album alone opens the album: the Hub starts only with R held while the Album opens (`override_key=R` in atmosphere/config/override_config.ini), and the first wording missed that (owner). For a hop to the sysMMC the boot notice (Ultrahand) now says "hold R and open the Album. Keep R held until Kefir Hub starts", and the confirm box adds the same line. For a hop to the emuMMC the notice adds "No icon? Hold R, open the Album, keep R held until Kefir Hub starts."

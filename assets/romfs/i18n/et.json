@@ -404,7 +404,6 @@
   "Delete Selected files?": "Kustutada valitud failid?",
   "Are you sure you want to delete ": "Kas olete kindel, et soovite kustutada: ",
   "Scanning ": "Skannitakse ",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater on eemaldatud.\n\nKefir uuendused toimuvad nüüd Updater menüüs.\n\nSinna käsitsi jõudmiseks vajuta R, vali Updater ja seejärel vali Kefir versioon.",
   "Apply": "Rakenda",
   "Module activated": "Moodul on aktiveeritud",
   "Failed to activate module": "Mooduli aktiveerimine ebaõnnestus",

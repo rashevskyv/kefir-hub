@@ -27,6 +27,7 @@ private:
     bool m_list_opened{false};
     bool m_page_shown{false};
     std::string m_start_language{};
+    int m_icon{}; // nvg image of the Hub's own icon, 0 when the nro has none
 };
 
 } // namespace sphaira::ui

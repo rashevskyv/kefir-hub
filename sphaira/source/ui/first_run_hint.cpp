@@ -43,7 +43,14 @@ void ResetAll() {
 
 } // namespace hint
 
-HintBox::HintBox(std::string text, uiButtons row, Button target) : m_text{std::move(text)}, m_row{std::move(row)} {
+HintBox::HintBox(std::vector<HintStep> steps) : m_steps{std::move(steps)} {
+    if (m_steps.empty()) {
+        m_steps.emplace_back();
+    }
+}
+
+HintBox::HintBox(std::string text, uiButtons row, Button target) : m_steps{{std::move(text)}}, m_row{std::move(row)} {
+    auto& m_frame = m_steps[0].frame;
     for (const auto& b : m_row) {
         if (b.m_button == target) {
             // The frame goes around what is drawn: the glyph and its label are right- and top-aligned at their positions.
@@ -57,17 +64,36 @@ HintBox::HintBox(std::string text, uiButtons row, Button target) : m_text{std::m
 }
 
 void HintBox::Update(Controller* controller, TouchInfo* touch) {
-    if (controller && (controller->GotDown(Button::A) || controller->GotDown(Button::B))) {
+    if (!controller) {
+        return;
+    }
+    if (controller->GotDown(Button::A) && m_step + 1 < m_steps.size()) {
+        m_step++;
+    } else if (controller->GotDown(Button::A) || controller->GotDown(Button::B)) {
         SetPop();
     }
 }
 
 void HintBox::Draw(NVGcontext* vg, Theme* theme) {
-    gfx::dimBackground(vg);
-
-    // The frame first: it fills its inside, and drawn after the button it covered the button it was to point at.
+    const auto& m_text = m_steps[m_step].text;
+    const auto& m_frame = m_steps[m_step].frame;
+    // A spotlight: the dim has a hole over the target, so the target stays bright, and the frame is a stroke only
+    // (drawRectOutline fills its inside and hid the tile it was to point at, owner 2026-11-12).
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT);
     if (m_frame.w > 0.f) {
-        gfx::drawRectOutline(vg, theme, 4.f, m_frame);
+        nvgRoundedRect(vg, m_frame.x, m_frame.y, m_frame.w, m_frame.h, 8.f);
+        nvgPathWinding(vg, NVG_HOLE);
+    }
+    nvgFillColor(vg, nvgRGBA(0, 0, 0, 180));
+    nvgFill(vg);
+
+    if (m_frame.w > 0.f) {
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, m_frame.x, m_frame.y, m_frame.w, m_frame.h, 8.f);
+        nvgStrokeWidth(vg, 4.f);
+        nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+        nvgStroke(vg);
     }
     for (auto& b : m_row) { // the whole legend, so the screen below does not lose its footer
         b.Draw(vg, theme);
@@ -87,7 +113,10 @@ void HintBox::Draw(NVGcontext* vg, Theme* theme) {
     if (m_frame.w > 0.f) {
         const float right = m_frame.x + m_frame.w;
         box.x = std::clamp(right - BOX_W, BOX_EDGE, SCREEN_WIDTH - BOX_EDGE - BOX_W);
-        box.y = std::max(BOX_EDGE, m_frame.y - 24.f - box_h);
+        box.y = m_frame.y - 24.f - box_h;
+        if (box.y < BOX_EDGE) { // no room above the target (a tile in the top row): below it
+            box.y = m_frame.y + m_frame.h + 24.f;
+        }
     }
 
     gfx::drawRect(vg, box, theme->GetColour(ThemeEntryID_POPUP), 5);
@@ -97,7 +126,8 @@ void HintBox::Draw(NVGcontext* vg, Theme* theme) {
     );
     gfx::drawTextBox(
         vg, box.x + BOX_PAD, box.y + box_h - BOX_PAD - 20.f, 18.f, BOX_W - BOX_PAD * 2.f,
-        theme->GetColour(ThemeEntryID_TEXT_INFO), "Press A or B to close."_i18n.c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP
+        theme->GetColour(ThemeEntryID_TEXT_INFO),
+        (m_step + 1 < m_steps.size() ? "A: next · B: close"_i18n : "Press A or B to close."_i18n).c_str(), NVG_ALIGN_LEFT | NVG_ALIGN_TOP
     );
 }
 

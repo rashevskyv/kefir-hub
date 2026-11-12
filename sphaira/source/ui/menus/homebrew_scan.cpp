@@ -98,107 +98,8 @@ void AppendUniqueEntries(std::vector<NroEntry>& dest, std::vector<NroEntry>& src
     }
 }
 
-
-class HoldOkBox final : public Widget {
-public:
-    using Callback = std::function<void()>;
-
-    HoldOkBox(std::string message, Callback callback)
-    : m_message{std::move(message)}
-    , m_callback{std::move(callback)} {
-        m_pos = Vec4{240.f, 136.f, 800.f, 444.f};
-        SetActions(
-            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){
-                SetPop();
-            }})
-        );
-    }
-
-    auto IsModal() const -> bool override { return true; }
-
-    void Update(Controller* controller, TouchInfo* touch) override {
-        Widget::Update(controller, touch);
-
-        if (controller->GotHeld(Button::A)) {
-            if (!m_holding) {
-                m_holding = true;
-                m_hold_start = armTicksToNs(armGetSystemTick());
-            }
-
-            const auto now = armTicksToNs(armGetSystemTick());
-            m_progress = std::min(1.f, static_cast<float>(now - m_hold_start) / 5'000'000'000.f);
-            if (m_progress >= 1.f) {
-                m_callback();
-                SetPop();
-            }
-        } else {
-            m_holding = false;
-            m_progress = 0.f;
-        }
-    }
-
-    void Draw(NVGcontext* vg, Theme* theme) override {
-        gfx::dimBackground(vg);
-        gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
-
-        constexpr float padding = 38.f;
-        constexpr float text_size = 18.f;
-        constexpr float line_height = 1.28f;
-        const Vec4 button{m_pos.x, m_pos.y + m_pos.h - 86.f, m_pos.w, 86.f};
-        const float text_x = m_pos.x + padding;
-        const float text_w = m_pos.w - padding * 2.f;
-        const float text_area_y = m_pos.y + 22.f;
-        const float text_area_h = button.y - text_area_y - 18.f;
-
-        nvgSave(vg);
-        nvgFontSize(vg, text_size);
-        nvgTextLineHeight(vg, line_height);
-        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
-
-        float bounds[4]{};
-        nvgTextBoxBounds(vg, text_x, 0.f, text_w, m_message.c_str(), nullptr, bounds);
-        const float text_h = bounds[3] - bounds[1];
-        const float text_y = text_area_y + std::max(0.f, (text_area_h - text_h) / 2.f) - bounds[1];
-
-        gfx::drawTextBox(
-            vg, text_x, text_y, text_size, text_w,
-            theme->GetColour(ThemeEntryID_TEXT), m_message.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP
-        );
-        nvgRestore(vg);
-
-        gfx::drawRect(vg, button.x, button.y - 2.f, button.w, 2.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
-        gfx::drawRectOutline(vg, theme, 4.f, Vec4{button.x + 170.f, button.y + 10.f, button.w - 340.f, button.h - 20.f});
-
-        const Vec4 bar{button.x + 198.f, button.y + button.h - 22.f, button.w - 396.f, 6.f};
-        gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_LINE_SEPARATOR), 3.f);
-        gfx::drawRect(vg, bar.x, bar.y, bar.w * m_progress, bar.h, theme->GetColour(ThemeEntryID_TEXT_SELECTED), 3.f);
-
-        gfx::drawText(
-            vg, button.x + button.w / 2.f, button.y + 35.f, 24.f,
-            theme->GetColour(ThemeEntryID_TEXT_SELECTED),
-            "OK", NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE
-        );
-    }
-
-private:
-    std::string m_message;
-    Callback m_callback;
-    bool m_holding{};
-    u64 m_hold_start{};
-    float m_progress{};
-};
-
-
 } // namespace
 
-void ShowKefirUpdaterRemovedDialog() {
-    App::Push<HoldOkBox>(
-        "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version."_i18n,
-        []() {
-            g_kefir_updater_notice_ack.Set(true);
-            ueventSignal(&g_change_uevent);
-        });
-}
 auto ShouldSignalChange(std::string_view path, bool is_directory) -> bool {
     const auto search_paths = LoadSearchPaths();
     return path::PathAffectsHomebrew(path, search_paths, is_directory);
@@ -348,7 +249,8 @@ void Menu::ScanHomebrew() {
         }
     }
 
-    if (!g_kefir_updater_notice_ack.Get() && std::ranges::none_of(m_entries, [](const auto& entry) {
+    // Kefir no longer ships Kefir Updater: keep its tile, A opens the Hub's own updater page
+    if (std::ranges::none_of(m_entries, [](const auto& entry) {
         return IsKefirUpdaterEntry(entry);
     })) {
         NroEntry entry{};

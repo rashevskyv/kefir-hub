@@ -329,7 +329,6 @@
   "Themes": "Tēmas",
   "Legacy": "Mantojums",
   "Sort": "Kārtot",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater ir noņemts.\n\nKefir atjauninājumi tagad notiek izvēlnē Updater.\n\nLai tur nokļūtu manuāli, nospiediet R, izvēlieties Updater un pēc tam izvēlieties Kefir versiju.",
   "Apply": "Lietot",
   "Module activated": "Modulis aktivizēts",
   "Failed to activate module": "Neizdevās aktivizēt moduli",

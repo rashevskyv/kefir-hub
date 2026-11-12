@@ -403,7 +403,6 @@
   "Themes": "Temalar",
   "Legacy": "Eski",
   "Sort": "Sırala",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater kaldırıldı.\n\nKefir güncellemeleri artık Updater menüsünden yapılmaktadır.\n\nManuel olarak gitmek için R tuşuna basın, Updater seçeneğini seçin, ardından bir Kefir sürümü seçin.",
   "Apply": "Uygula",
   "Module activated": "Modül etkinleştirildi",
   "Failed to activate module": "Modül etkinleştirilemedi",

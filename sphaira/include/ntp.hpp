@@ -18,4 +18,9 @@ void Start();
 void Stop();
 s64 GetDisplayOffset();
 
+// Makes hekate's own clock (Nyx) show the same time: writes the offset between
+// utc (posix seconds, correct now) and the raw rtc to /bootloader/nyx.ini.
+// Called after every successful sync; any other clock source can call it too.
+void SyncHekateClock(u64 utc);
+
 } // namespace sphaira::ntp

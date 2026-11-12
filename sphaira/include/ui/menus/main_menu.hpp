@@ -50,6 +50,11 @@ private:
     void UpdateBackAction();
     void CopyActionsToCurrentMenu();
     void CheckForUpdate();
+    static auto PageDotsRect() -> Vec4;
+    auto SlideRest() const -> float; // m_slide of the current page at rest
+
+    static constexpr int PEEK_FRAMES = 60;     // about 1 s at 60 fps
+    static constexpr float PEEK_DIST = 180.f; // how far Tools shows at the peak
 
 private:
     std::unique_ptr<MenuBase> m_centre_menu{};
@@ -62,6 +67,12 @@ private:
     UpdateState m_update_state{UpdateState::Pending};
     bool m_launch_link_prompt_checked{};
     bool m_net_up{true}; // the network state seen last frame
+    float m_slide{};        // 0 = the main screen shown, SCREEN_WIDTH = Tools shown; between = sliding
+    bool m_dragging{};      // a sideways drag holds the page
+    float m_drag_base{};    // m_slide when the drag began
+    bool m_safe_mode_checked{}; // the Kefir safe-mode notice is looked at once per start
+    bool m_peek_pending{}; // the first-run hint is up; when it closes, the page peeks at Tools
+    int m_peek_frame{-1};  // frame of the peek animation, -1 = not running
 };
 
 } // namespace sphaira::ui::menu::main

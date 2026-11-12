@@ -2,6 +2,7 @@
 
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/tools_menu.hpp"
+#include "ui/menus/kefir_menu.hpp"
 #include "ui/first_run_hint.hpp"
 #include "ui/menus/users_menu.hpp"
 #include "ui/option_box.hpp"
@@ -20,6 +21,10 @@
 
 #include <yyjson.h>
 #include <iomanip>
+#include <cstdlib>
+#include <cmath>
+#include <algorithm>
+#include "ui/nvg_util.hpp"
 
 namespace sphaira::ui::menu::main {
 namespace {
@@ -257,12 +262,78 @@ MainMenu::~MainMenu() {
 
 void MainMenu::Update(Controller* controller, TouchInfo* touch) {
     // Update runs only while the Hub is on top, so a launch prompt shows first and the hint follows it.
+    // the hint closed (Update runs again): the page slides a little to the left and back, so Tools shows behind it.
+    if (m_peek_pending) {
+        m_peek_pending = false;
+        m_peek_frame = 0;
+    } else if (m_peek_frame >= 0 && ++m_peek_frame > PEEK_FRAMES) {
+        m_peek_frame = -1;
+    }
+
+    // Kefir's Safe Mode (hekate `safemode=1` → exosphere ConfigItem 65014): mods, modules, theme and translation are
+    // off. Usually it is the way out of a Kefir that no longer boots after a firmware update, so say what to do now.
+    if (!m_safe_mode_checked) {
+        m_safe_mode_checked = true;
+        u64 safe = 0;
+        if (R_SUCCEEDED(splInitialize())) {
+            if (R_FAILED(splGetConfig(static_cast<SplConfigItem>(65014), &safe))) {
+                safe = 0; // an Atmosphère without the Kefir safe-mode item
+            }
+            splExit();
+        }
+        if (safe) {
+            log_write("[SafeMode] Kefir safe mode is on\n");
+            App::Push<OptionBox>(
+                "Safe mode\n\nModules, mods, the theme and the translation are off.\n\n"
+                "Update Kefir now. Until you do, the console may not start normally."_i18n,
+                "Later"_i18n, "Open Updater"_i18n, 1,
+                [](auto op_index) {
+                    if (op_index && *op_index == 1) {
+                        App::Push<menu::kefir::Menu>();
+                    }
+                });
+            return;
+        }
+    }
+
     if (m_current_menu == m_centre_menu.get() && hint::TakeFirst(FirstRunHint::Main)) {
         App::Push<HintBox>("Press R to open Tools. Games, saves, Kefir and firmware updates, themes and Kefir settings are there."_i18n,
                            m_current_menu->GetUiButtons(), Button::R);
+        m_peek_pending = true;
     }
 
-    m_current_menu->Update(controller, touch);
+    // a tap on the page dots flips the page, like R / L
+    if (touch && touch->is_clicked && touch->in_range(PageDotsRect())) {
+        SwitchTo(m_current_menu == m_centre_menu.get() ? m_tools_menu.get() : m_centre_menu.get());
+    }
+
+    // A sideways drag moves the page with the finger, like the next tab on a phone; on release it settles on the
+    // page it is closer to (a fifth of the way is enough), and Draw eases it there. Mostly-vertical drags stay
+    // list scrolls; once a drag is sideways, the page below gets no touch until the finger is up.
+    TouchInfo no_touch{};
+    TouchInfo* child_touch = touch;
+    if (touch && touch->is_touching && !touch->is_pinch) {
+        const float dx = float((s32)touch->cur.x - (s32)touch->initial.x);
+        const float dy = float((s32)touch->cur.y - (s32)touch->initial.y);
+        if (!m_dragging && std::abs(dx) > 30.f && std::abs(dx) > 2.f * std::abs(dy)) {
+            m_dragging = true;
+            m_drag_base = SlideRest();
+        }
+        if (m_dragging) {
+            m_slide = std::clamp(m_drag_base - dx, 0.f, float(SCREEN_WIDTH));
+            child_touch = &no_touch;
+        }
+    } else if (m_dragging) {
+        m_dragging = false;
+        child_touch = &no_touch; // the release ends the drag: not a tap or a fling in the list
+        const bool to_tools = m_drag_base == 0.f ? m_slide > SCREEN_WIDTH * 0.2f : m_slide > SCREEN_WIDTH * 0.8f;
+        auto* target = to_tools ? m_tools_menu.get() : m_centre_menu.get();
+        if (target != m_current_menu) {
+            SwitchTo(target);
+        }
+    }
+
+    m_current_menu->Update(controller, child_touch);
 
     // offline at the start: the check failed. Look again when the network comes up (also after a later reconnect),
     // unless an update is already found, downloading or installed.
@@ -278,7 +349,62 @@ void MainMenu::Update(Controller* controller, TouchInfo* touch) {
 }
 
 void MainMenu::Draw(NVGcontext* vg, Theme* theme) {
-    m_current_menu->Draw(vg, theme);
+    // m_slide: 0 = the main screen, SCREEN_WIDTH = Tools. Away from a drag it eases to the current page, so R / L,
+    // the dots and a released swipe all slide. Eased here, not in Update: Update stops while a hint is on top.
+    if (!m_dragging) {
+        const float rest = SlideRest();
+        m_slide += (rest - m_slide) * 0.25f;
+        if (std::abs(rest - m_slide) < 0.5f) {
+            m_slide = rest;
+        }
+    }
+    const float peek = m_peek_frame >= 0 && m_current_menu == m_centre_menu.get() && !m_dragging
+        ? PEEK_DIST * std::sin(3.14159265f * m_peek_frame / PEEK_FRAMES) : 0.f;
+    const float p = m_slide + peek;
+
+    if (p < 0.5f) {
+        m_centre_menu->Draw(vg, theme);
+    } else if (p > SCREEN_WIDTH - 0.5f) {
+        m_tools_menu->Draw(vg, theme);
+    } else {
+        nvgSave(vg);
+        nvgTranslate(vg, -p, 0.f);
+        m_centre_menu->Draw(vg, theme);
+        nvgRestore(vg);
+        nvgSave(vg);
+        nvgTranslate(vg, SCREEN_WIDTH - p, 0.f);
+        m_tools_menu->Draw(vg, theme);
+        nvgRestore(vg);
+        if (peek >= 1.f) { // the peek marks the edge, so the hint "there is more" reads at a glance
+            gfx::drawRect(vg, SCREEN_WIDTH - p - 2.f, 97.f, 3.f, 539.f, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
+        }
+    }
+
+    // page dots, like a phone home screen: the main screen and Tools. A pill keeps them readable over tiles.
+    const auto r = PageDotsRect();
+    gfx::drawRect(vg, r, nvgRGBA(0, 0, 0, 110), r.h / 2.f);
+    const bool on_tools = p > SCREEN_WIDTH / 2.f;
+    for (int i = 0; i < 2; i++) {
+        const float cx = r.x + r.w / 2.f + (i ? 12.f : -12.f);
+        nvgBeginPath(vg);
+        nvgCircle(vg, cx, r.y + r.h / 2.f, 5.f);
+        if ((i == 1) == on_tools) {
+            nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT));
+            nvgFill(vg);
+        } else {
+            nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT));
+            nvgStrokeWidth(vg, 1.5f);
+            nvgStroke(vg);
+        }
+    }
+}
+
+auto MainMenu::SlideRest() const -> float {
+    return m_current_menu == m_tools_menu.get() ? float(SCREEN_WIDTH) : 0.f;
+}
+
+auto MainMenu::PageDotsRect() -> Vec4 {
+    return Vec4{SCREEN_WIDTH / 2.f - 30.f, 612.f, 60.f, 22.f};
 }
 
 void MainMenu::OnFocusGained() {

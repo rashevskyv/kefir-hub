@@ -11,7 +11,6 @@
 namespace sphaira::ui::menu::homebrew {
 
 extern UEvent g_change_uevent;
-extern option::OptionBool g_kefir_updater_notice_ack;
 inline constexpr const char* KEFIR_UPDATER_STUB_PATH = "/switch/kefir-updater/kefir-updater.nro";
 
 inline auto GenerateStarPath(const fs::FsPath& nro_path) -> fs::FsPath {
@@ -36,9 +35,9 @@ inline auto GetNroFilename(const NroEntry& e) -> std::string {
     return filename;
 }
 
-// The stub is the "Removed" notice entry the scan adds when there is no Kefir Updater. It has no
-// file. A real Kefir Updater lives at the same path, so the path alone does not tell them apart:
-// only the stub carries the version text "Removed" (set in homebrew_scan.cpp).
+// The stub is the "Kefir Updater" tile the scan adds when there is no Kefir Updater; A on it opens
+// the Hub's updater page. It has no file. A real Kefir Updater lives at the same path, so the path
+// alone does not tell them apart: only the stub carries the version text "Removed" (set in homebrew_scan.cpp).
 inline auto IsKefirUpdaterStub(const NroEntry& e) -> bool {
     return e.path == KEFIR_UPDATER_STUB_PATH &&
         !std::strcmp(e.nacp.display_version, "Removed");
@@ -49,8 +48,6 @@ inline auto IsKefirUpdaterEntry(const NroEntry& e) -> bool {
         !strcasecmp(e.GetName(), "Kefir Updater") ||
         !strcasecmp(e.path, KEFIR_UPDATER_STUB_PATH);
 }
-
-void ShowKefirUpdaterRemovedDialog();
 
 // the picture of a (virtual) folder row: /config/kefir/homebrew_folders/<id>.jpg
 auto FolderIconPath(u32 id) -> fs::FsPath;

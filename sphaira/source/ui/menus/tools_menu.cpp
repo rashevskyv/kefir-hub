@@ -242,15 +242,25 @@ Menu::~Menu() {
 void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
 
+    // a tour over the tiles: the names are on screen, so each stop frames one tile and says what is inside it.
     if (hint::TakeFirst(FirstRunHint::Tools)) {
-        App::Push<OptionBox>(
-            "What is where in Tools:\n\n"
-            "Game Tools: games and saves.\n"
-            "Updater: Kefir and firmware updates. It replaces Kefir Updater.\n"
-            "Themes: theme packs.\n"
-            "Software: Homebrew App Store, DBI and mod tools.\n"
-            "Tools: system tools and sysmodule manager.\n"
-            "Kefir Settings: Kefir switches."_i18n, "OK"_i18n);
+        const auto tile = [this](const std::string& label) -> Vec4 {
+            for (size_t i = 0; i < m_items.size(); i++) {
+                if (m_items[i].label == label) {
+                    // the grid of the constructor: tiles 370x155 from (75, 110), 10 px apart, 3 in a row
+                    const float x = 75.f + (i % 3) * 380.f;
+                    const float y = 110.f + (i / 3) * 165.f - m_list->GetYoff();
+                    return Vec4{x - 6.f, y - 6.f, 382.f, 167.f};
+                }
+            }
+            return {};
+        };
+        App::Push<HintBox>(std::vector<HintStep>{
+            {"Games, saves, emulators, cheats and outside shops such as Tinfoil."_i18n, tile("Game Tools"_i18n)},
+            {"Updates of Kefir, the firmware and Kefir Hub itself."_i18n, tile("Updater"_i18n)},
+            {"Homebrew App Store, DBI and other apps."_i18n, tile("Software"_i18n)},
+            {"Many system tools: sysmodules, clean-up, console info and more."_i18n, tile("Tools"_i18n)},
+        });
     }
 
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {

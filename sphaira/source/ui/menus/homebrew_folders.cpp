@@ -9,6 +9,7 @@
 #include "swkbd.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/homebrew_internal.hpp"
+#include "ui/menus/kefir_menu.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/popup_list.hpp"
 #include "ui/error_box.hpp"
@@ -170,8 +171,8 @@ void Menu::UpdateActions() {
         auto& e = GetEntry();
         if (e.is_dir) {
             Enter(e.folder_id);
-        } else if (!g_kefir_updater_notice_ack.Get() && IsKefirUpdaterEntry(e)) {
-            ShowKefirUpdaterRemovedDialog();
+        } else if (IsKefirUpdaterEntry(e)) {
+            App::Push<menu::kefir::Menu>();
         } else if (OfferDeleteHubCopy(e)) {
             // asked instead of starting a second Kefir Hub
         } else {

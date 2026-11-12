@@ -554,7 +554,6 @@
   "Write a profiles & play hours pack into this console?\n\nUsers and hours here will be replaced. Hub stages the pack, then TegraExplorer writes and signs the system saves.\n\nBack up SYSTEM in hekate first.\nIf the console will not boot after restore:\n• hekate > restore SYSTEM backup, or\n• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (only if a raw 0010/00F0 snapshot was taken).\nY selects the pack folder.": "Запісаць пакет профіляў і гадзін гульні ў гэтую кансоль?\n\nКарыстальнікі і гадзіны тут будуць замененыя. Hub падрыхтоўвае пакет, пасля чаго TegraExplorer запісвае і падпісвае сістэмныя захаванні.\n\nЗрабіце рэзервовую копію SYSTEM у hekate спачатку.\nКалі кансоль не загрузіцца пасля аднаўлення:\n• hekate > аднавіць рэзервовую копію SYSTEM, або\n• hekate > payloads > tegraexplorer > Undo_restore_if_wont_boot.te (толькі калі быў зроблены здымак сырых дадзеных 0010/00F0).\nY выбірае папку пакета.",
   "Preparing TegraExplorer restore": "Падрыхтоўка аднаўлення TegraExplorer",
   "Staging restore": "Падрыхтоўка аднаўлення",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Абнаўленне Kefir было выдалена.\n\nЦяпер абнаўленні Kefir адбываюцца ў меню Абнаўленне.\n\nКаб перайсці туды ў ручным рэжыме, націсніце R, выберыце Абнаўленне, затым выберыце версію Kefir.",
   "Apply": "Ужыць",
   "Module activated": "Модуль актываваны",
   "Failed to activate module": "Не ўдалося актываваць модуль",

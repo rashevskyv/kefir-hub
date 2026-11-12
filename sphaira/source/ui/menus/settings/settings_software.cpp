@@ -7,7 +7,6 @@
 
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/ghdl.hpp"
-#include "ui/menus/ownfoil.hpp"
 
 #include "app.hpp"
 #include "app_paths.hpp"
@@ -47,18 +46,6 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
         },
         [](){
             App::Push<DbiMenu>();
-        },
-        SettingsItemKind::Folder,
-    });
-
-    items.emplace_back(SettingsItem{
-        "Ownfoil"_i18n,
-        "Browse and install titles from a self-hosted Ownfoil server."_i18n,
-        [](){
-            return std::string{};
-        },
-        [](){
-            App::Push<ui::menu::ownfoil::Menu>(MenuFlag_None);
         },
         SettingsItemKind::Folder,
     });

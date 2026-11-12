@@ -465,7 +465,6 @@
   "USB Configuration": "USB配置",
   "Data Storage": "資料儲存",
   "Open Updater": "開啟 Updater",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater 已被移除。\n\nKefir 更新現在透過 Updater 選單進行。\n\n要手動進入，請按 R，選擇 Updater，然後選擇 Kefir 版本。",
   "Current Kefir:": "目前的開菲爾：",
   "Latest Kefir:": "最新開菲爾：",
   "Current Firmware:": "當前韌體：",

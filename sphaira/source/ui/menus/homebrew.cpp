@@ -30,7 +30,6 @@ namespace sphaira::ui::menu::homebrew {
 
 Menu* g_menu{};
 constinit UEvent g_change_uevent;
-option::OptionBool g_kefir_updater_notice_ack{"homebrew", "kefir_updater_notice_ack", false};
 
 void SignalChange() {
     ueventSignal(&g_change_uevent);

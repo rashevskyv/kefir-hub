@@ -19,7 +19,7 @@
 namespace sphaira::ui::menu::kefir {
 using namespace detail;
 
-Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater", MenuFlag_None}, m_pending_manual_firmware{std::move(manual_firmware)} {
+Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater"_i18n, MenuFlag_None}, m_pending_manual_firmware{std::move(manual_firmware)} {
     RefreshSystemInfo();
 
     this->SetActions(
@@ -256,7 +256,7 @@ void Menu::FetchLinks() {
     m_error_message.clear();
     m_entries.clear();
     m_tile_entries.clear();
-    m_latest_kefir = "Unknown";
+    m_latest_kefir = net::IsConnectedCached() ? std::string{"Unknown"} :"Connect to the internet"_i18n;
     BuildSectionedEntries(m_entries, {});
     m_tile_entries = TileSlots(m_entries);
     m_index = 0;
@@ -280,6 +280,9 @@ void Menu::FetchLinks() {
                 m_retry_on_connect = !net::IsConnectedCached();
                 m_error_message = m_retry_on_connect ? "No internet connection. The list loads when the console connects."_i18n
                                                      : "Failed to load updater lists."_i18n;
+                if (m_retry_on_connect) {
+                    m_latest_kefir = "Connect to the internet"_i18n;
+                }
                 m_index = 0;
                 SetIndex(0);
                 return false;

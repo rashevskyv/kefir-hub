@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace sphaira::ui {
 
@@ -23,10 +24,18 @@ void ResetAll();
 
 } // namespace hint
 
+// One stop of a tour: the text and the screen area it frames (w == 0 = nothing framed).
+struct HintStep {
+    std::string text;
+    Vec4 frame{};
+};
+
 // Dims the screen and shows a text box. With the footer row of the page below, the row is drawn above the dim, its
 // `target` button framed, and the box sits above that button. Closes with A or B.
+// With steps it is a tour: A goes to the next step (the last one closes), B closes at once.
 struct HintBox final : Widget {
     HintBox(std::string text, uiButtons row = {}, Button target = Button::NONE);
+    explicit HintBox(std::vector<HintStep> steps);
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -37,9 +46,9 @@ struct HintBox final : Widget {
     }
 
 private:
-    std::string m_text;
+    std::vector<HintStep> m_steps; // m_steps[m_step].frame: around the target; w == 0 = no target
+    size_t m_step{};
     uiButtons m_row; // the legend of the page below: this box has no chrome, so it draws the row itself
-    Vec4 m_frame{};  // around the target button; w == 0 = no target
 };
 
 } // namespace sphaira::ui

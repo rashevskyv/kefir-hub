@@ -504,7 +504,6 @@
   "System is enabled.": "Sistem diaktifkan.",
   "All Accounts is enabled.": "Semua Akun diaktifkan.",
   "All Accounts": "Semua Akun",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater telah dihapus.\n\nPembaruan Kefir sekarang dilakukan di menu Updater.\n\nUntuk menuju ke sana secara manual, tekan R, pilih Updater, lalu pilih versi Kefir.",
   "Apply": "Terapkan",
   "Module activated": "Modul diaktifkan",
   "Failed to activate module": "Gagal mengaktifkan modul",

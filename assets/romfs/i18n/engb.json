@@ -454,7 +454,6 @@
   "Not Ready...": "Not Ready...",
   "Error loading page!": "Error loading page!",
   "Open Updater": "Open Updater",
-  "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.": "Kefir Updater has been removed.\n\nKefir updates now happen in the Updater menu.\n\nTo get there manually, press R, choose Updater, then choose a Kefir version.",
   "Apply": "Apply",
   "Module activated": "Module activated",
   "Failed to activate module": "Failed to activate module",
