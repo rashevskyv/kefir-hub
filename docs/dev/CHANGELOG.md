@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.354 — the first-run peek at Tools is the real page slide, without the green edge line
+- Owner (0.14.353): swipe and tour look right; the peek drew a green line between the pages that a real swipe does not have. The line is gone, so the peek looks the same as a swipe.
+- host tests: pass (quick), nro: built, switch: pending (the peek)
+
 ## v0.14.353 — main screen ↔ Tools swipe follows the finger; Tools tour frames each tile; Kefir Updater tile opens the Updater
 - Main screen: a sideways drag moves the page with the finger and eases to the nearer page on release (a fifth of the way is enough); R / L and a tap on the new page dots slide too. After the first "press R" hint the page peeks at Tools once. First-start page shows the Hub icon.
 - Tools first run: a 4-step tour (Game Tools, Updater, Software, Tools) with a spotlight frame around each tile, not one big popup (owner: the 0.14.352 frame filled the tile). Ownfoil left Software (it lives in Game Tools).

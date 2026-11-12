@@ -375,9 +375,6 @@ void MainMenu::Draw(NVGcontext* vg, Theme* theme) {
         nvgTranslate(vg, SCREEN_WIDTH - p, 0.f);
         m_tools_menu->Draw(vg, theme);
         nvgRestore(vg);
-        if (peek >= 1.f) { // the peek marks the edge, so the hint "there is more" reads at a glance
-            gfx::drawRect(vg, SCREEN_WIDTH - p - 2.f, 97.f, 3.f, 539.f, theme->GetColour(ThemeEntryID_HIGHLIGHT_1));
-        }
     }
 
     // page dots, like a phone home screen: the main screen and Tools. A pill keeps them readable over tiles.
