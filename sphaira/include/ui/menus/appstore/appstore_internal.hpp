@@ -94,6 +94,7 @@ void DrawIcon(NVGcontext* vg, const LazyImage& l, const LazyImage& d, Vec4 vec, 
 // Info & utilities
 auto AppDlToStr(u32 value) -> std::string;
 void ReadFromInfoJson(Entry& e);
+void ClassifyInstalledBinary(Entry& e); // e.binary is on the card: sets installed_version and status
 auto FindCaseInsensitive(std::string_view base, std::string_view term) -> bool;
 auto IsRetroArchPackage(const Entry& e) -> bool;
 

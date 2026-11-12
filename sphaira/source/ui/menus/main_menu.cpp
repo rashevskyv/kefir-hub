@@ -126,22 +126,13 @@ void MainMenu::CheckForUpdate() {
                     return true;
                 }
 
-                auto json = yyjson_read_file(CACHE_PATH, YYJSON_READ_NOFLAG, nullptr, nullptr);
-                if (!json) {
-                    log_write("[UpdateCheck] failed to parse cached release JSON\n");
+                auto_update::Release release;
+                if (!auto_update::ReadRelease(CACHE_PATH, release)) {
+                    log_write("[UpdateCheck] cached release JSON unreadable or without tag_name\n");
                     auto_update::SetJobState(auto_update::JobState::Failed);
                     return false;
                 }
-                ON_SCOPE_EXIT(yyjson_doc_free(json));
-
-                auto root = yyjson_doc_get_root(json);
-                auto tag_key = root ? yyjson_obj_get(root, "tag_name") : nullptr;
-                const auto version = tag_key ? yyjson_get_str(tag_key) : nullptr;
-                if (!version || *version == '\0') {
-                    log_write("[UpdateCheck] tag_name missing or empty in release JSON\n");
-                    auto_update::SetJobState(auto_update::JobState::Failed);
-                    return false;
-                }
+                const auto version = release.tag.c_str();
 
                 if (!version::IsNewer(APP_VERSION, version)) {
                     log_write("[UpdateCheck] Installed %s >= remote %s; no update required\n", APP_VERSION, version);
@@ -152,33 +143,11 @@ void MainMenu::CheckForUpdate() {
 
                 log_write("[UpdateCheck] Found newer remote release %s (installed: %s)\n", version, APP_VERSION);
 
-                auto body_key = yyjson_obj_get(root, "body");
-                const auto body = body_key ? yyjson_get_str(body_key) : "";
-
-                auto assets_val = yyjson_obj_get(root, "assets");
-                std::vector<auto_update::ReleaseAsset> assets;
-                if (assets_val && yyjson_is_arr(assets_val)) {
-                    size_t idx, max;
-                    yyjson_val* asset_item;
-                    yyjson_arr_foreach(assets_val, idx, max, asset_item) {
-                        if (!yyjson_is_obj(asset_item)) continue;
-                        auto name_val = yyjson_obj_get(asset_item, "name");
-                        auto url_val = yyjson_obj_get(asset_item, "browser_download_url");
-                        auto type_val = yyjson_obj_get(asset_item, "content_type");
-                        auto size_val = yyjson_obj_get(asset_item, "size");
-                        if (name_val && url_val) {
-                            assets.push_back({
-                                .name = yyjson_get_str(name_val) ? yyjson_get_str(name_val) : "",
-                                .browser_download_url = yyjson_get_str(url_val) ? yyjson_get_str(url_val) : "",
-                                .content_type = (type_val && yyjson_get_str(type_val)) ? yyjson_get_str(type_val) : "",
-                                .size = size_val ? yyjson_get_uint(size_val) : 0,
-                            });
-                        }
-                    }
-                }
+                const auto& body = release.body;
+                const auto& assets = release.assets;
 
                 m_update_version = version;
-                m_update_description = body ? body : "";
+                m_update_description = body;
                 m_update_state = UpdateState::Update;
 
                 std::string url;

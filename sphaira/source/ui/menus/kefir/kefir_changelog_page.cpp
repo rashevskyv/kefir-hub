@@ -23,8 +23,9 @@ auto StateOf(const std::string& current, const std::string& target) -> KefirStat
     return KefirState::Latest;
 }
 
-constexpr float BUTTON_W = 260.f;
-constexpr float BUTTON_H = 46.f;
+constexpr float BUTTON_W = 420.f;
+constexpr float BUTTON_H = 64.f;
+constexpr float BUTTON_FONT = 24.f;
 constexpr float BUTTON_GAP = 24.f; // between the last line of the text and the button
 
 } // namespace
@@ -55,7 +56,7 @@ void KefirChangelogBox::DrawPage(NVGcontext* vg, Theme* theme) {
     const auto target = "Kefir " + (m_target_version.empty() ? std::string{"?"} : m_target_version);
     const std::string head = state == KefirState::Update ? "Update available:"_i18n
         : state == KefirState::NotInstalled ? "Kefir is not installed. Available:"_i18n
-        : "You have the latest Kefir:"_i18n;
+        : "No Kefir update. Available:"_i18n;
     const auto head_text = head + " " + target;
     const auto installed = "Installed:"_i18n + " " +
         (detail::IsKnownVersion(m_current_version) ? "Kefir " + m_current_version : std::string{"not installed"_i18n});
@@ -91,13 +92,13 @@ void KefirChangelogBox::DrawPage(NVGcontext* vg, Theme* theme) {
         m_text_area.y + m_text_height + BUTTON_GAP - m_scroll, BUTTON_W, BUTTON_H};
     const auto label = ButtonLabel();
     if (AtEnd()) {
+        gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect); // the outline first: it fills the rect
         gfx::drawRect(vg, m_install_button_rect, nvgRGBA(46, 125, 50, 255), 4.f);
-        gfx::drawRectOutline(vg, theme, 4.f, m_install_button_rect);
-        gfx::drawText(vg, m_install_button_rect.x + BUTTON_W / 2.f, m_install_button_rect.y + BUTTON_H / 2.f, 18.f,
+        gfx::drawText(vg, m_install_button_rect.x + BUTTON_W / 2.f, m_install_button_rect.y + BUTTON_H / 2.f, BUTTON_FONT,
             nvgRGBA(255, 255, 255, 255), label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
     } else {
         gfx::drawRect(vg, m_install_button_rect, nvgRGBA(60, 60, 64, 255), 4.f);
-        gfx::drawText(vg, m_install_button_rect.x + BUTTON_W / 2.f, m_install_button_rect.y + BUTTON_H / 2.f, 18.f,
+        gfx::drawText(vg, m_install_button_rect.x + BUTTON_W / 2.f, m_install_button_rect.y + BUTTON_H / 2.f, BUTTON_FONT,
             theme->GetColour(ThemeEntryID_TEXT_INFO), label.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
     }
     nvgRestore(vg);

@@ -2,6 +2,7 @@
 #include "ui/menus/kefir/kefir_internal.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
 #include "ui/menus/kefir/kefir_changelog.hpp"
+#include "ui/menus/kefir/kefir_apps.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
 #include "app.hpp"
@@ -31,6 +32,8 @@ Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater"_i18n,
                 if (m_kefir_page) {
                     m_kefir_page->Activate();
                 }
+            } else if (m_tab == UpdaterTab::Apps) {
+                m_apps->Activate();
             } else if (!m_entries.empty() && !m_loading) {
                 OpenSelected();
             }
@@ -45,6 +48,10 @@ Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater"_i18n,
             SetPop();
         }}),
         std::make_pair(Button::X, Action{"Refresh"_i18n, [this](){
+            if (m_tab == UpdaterTab::Apps) {
+                m_apps->Refresh();
+                return;
+            }
             m_retry_on_connect = false;
             m_loaded = false;
             RefreshSystemInfo();
@@ -79,6 +86,10 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         if (m_kefir_page) {
             m_kefir_page->Update(controller, touch);
         }
+        return;
+    }
+    if (m_tab == UpdaterTab::Apps) {
+        m_apps->Update(controller, touch);
         return;
     }
 
@@ -380,7 +391,7 @@ void Menu::SetIndex(s64 index) {
 }
 
 void Menu::UpdateSubheading() {
-    if (m_tab == UpdaterTab::Kefir) {
+    if (m_tab != UpdaterTab::Firmware) {
         this->SetSubHeading({});
         return;
     }
@@ -449,6 +460,9 @@ void Menu::SetTab(UpdaterTab tab) {
         return;
     }
     m_tab = tab;
+    if (m_tab == UpdaterTab::Apps && !m_apps) {
+        m_apps = std::make_unique<AppsTab>(UPDATER_KEFIR_PAGE);
+    }
     App::PlaySoundEffect(SoundEffect_Focus);
     UpdateSubheading();
 }

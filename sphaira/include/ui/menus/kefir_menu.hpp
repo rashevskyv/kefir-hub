@@ -38,10 +38,11 @@ enum class UpdaterViewMode {
 };
 
 // the tabs of the Updater, in the order of the tab bar
-enum class UpdaterTab { Kefir, Firmware };
-constexpr s64 UPDATER_TAB_COUNT = 2;
+enum class UpdaterTab { Kefir, Firmware, Apps };
+constexpr s64 UPDATER_TAB_COUNT = 3;
 
 class KefirChangelogBox;
+class AppsTab;
 
 struct UpdaterEntry {
     UpdaterEntryType type{};
@@ -102,6 +103,7 @@ private:
     std::vector<UpdaterEntry> m_kefir_entries;
     UpdaterTab m_tab{UpdaterTab::Kefir};
     std::unique_ptr<KefirChangelogBox> m_kefir_page;
+    std::unique_ptr<AppsTab> m_apps; // made when the Apps tab is first opened: its check reads the whole card
     std::vector<s64> m_tile_entries;
     s64 m_index{};
     s64 m_tile_index{};

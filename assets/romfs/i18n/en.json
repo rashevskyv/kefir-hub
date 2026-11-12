@@ -4250,5 +4250,18 @@
   "You have the latest Kefir:": "You have the latest Kefir:",
   "Installed:": "Installed:",
   "Loading updater links...": "Loading updater links...",
-  "No Kefir download found.": "No Kefir download found."
+  "No Kefir download found.": "No Kefir download found.",
+  "Run to update Kefir": "Run to update Kefir",
+  "No Kefir update. Available:": "No Kefir update. Available:",
+  "Checking for updates...": "Checking for updates...",
+  "No apps found.": "No apps found.",
+  "Newest:": "Newest:",
+  "No update info": "No update info",
+  "Press A to restart": "Press A to restart",
+  "Failed, press A to try again": "Failed, press A to try again",
+  "No source knows this app.": "No source knows this app.",
+  "Already the newest version.": "Already the newest version.",
+  "Choose the DBI language in Additional programs → DBI.": "Choose the DBI language in Additional programs → DBI.",
+  "Which language does your DBI use?": "Which language does your DBI use?",
+  "updated": "updated"
 }

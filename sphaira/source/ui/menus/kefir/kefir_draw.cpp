@@ -1,6 +1,7 @@
 #include "ui/menus/kefir/kefir_internal.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
 #include "ui/menus/kefir/kefir_changelog.hpp"
+#include "ui/menus/kefir/kefir_apps.hpp"
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 
@@ -12,12 +13,16 @@ using namespace detail;
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
-    const std::string tab_names[UPDATER_TAB_COUNT]{"Kefir"_i18n, "Firmware"_i18n};
-    const char* tab_labels[UPDATER_TAB_COUNT]{tab_names[0].c_str(), tab_names[1].c_str()};
+    const std::string tab_names[UPDATER_TAB_COUNT]{"Kefir"_i18n, "Firmware"_i18n, "Apps"_i18n};
+    const char* tab_labels[UPDATER_TAB_COUNT]{tab_names[0].c_str(), tab_names[1].c_str(), tab_names[2].c_str()};
     gfx::drawTabBar(vg, theme, UPDATER_TAB_BAR, tab_labels, UPDATER_TAB_COUNT, static_cast<s64>(m_tab));
 
     if (m_tab == UpdaterTab::Kefir) {
         DrawKefirTab(vg, theme);
+        return;
+    }
+    if (m_tab == UpdaterTab::Apps) {
+        m_apps->Draw(vg, theme);
         return;
     }
 

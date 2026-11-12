@@ -9,6 +9,7 @@
 #include "path_util.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
+#include <yyjson.h>
 
 #include <algorithm>
 #include <cctype>
@@ -196,7 +197,46 @@ void Poll() {
         });
 }
 
-void StartDownload() {
+auto ReadRelease(const char* path, Release& out) -> bool {
+    auto json = yyjson_read_file(path, YYJSON_READ_NOFLAG, nullptr, nullptr);
+    if (!json) {
+        return false;
+    }
+    ON_SCOPE_EXIT(yyjson_doc_free(json));
+
+    const auto str = [](yyjson_val* obj, const char* key) -> std::string {
+        const auto v = obj ? yyjson_get_str(yyjson_obj_get(obj, key)) : nullptr;
+        return v ? v : "";
+    };
+    auto root = yyjson_doc_get_root(json);
+    out = {};
+    out.tag = str(root, "tag_name");
+    if (out.tag.empty()) {
+        return false;
+    }
+    out.body = str(root, "body");
+
+    auto assets_val = yyjson_obj_get(root, "assets");
+    if (assets_val && yyjson_is_arr(assets_val)) {
+        size_t idx, max;
+        yyjson_val* item;
+        yyjson_arr_foreach(assets_val, idx, max, item) {
+            if (!yyjson_is_obj(item) || !yyjson_obj_get(item, "name") || !yyjson_obj_get(item, "browser_download_url")) {
+                continue;
+            }
+            const auto size_val = yyjson_obj_get(item, "size");
+            out.assets.push_back({
+                .name = str(item, "name"),
+                .browser_download_url = str(item, "browser_download_url"),
+                .content_type = str(item, "content_type"),
+                .size = size_val ? yyjson_get_uint(size_val) : 0,
+            });
+        }
+    }
+    return true;
+}
+
+void StartDownload(bool show_progress) {
     Job job;
     {
         std::lock_guard lock(g_job_mutex);
@@ -213,7 +253,7 @@ void StartDownload() {
 
     constexpr fs::FsPath temp_path{"/switch/sphaira/cache/sphaira_update.temp"};
     const auto mode = static_cast<Mode>(App::GetAutoUpdateMode());
-    if (mode == Mode::Silent) {
+    if (mode == Mode::Silent && !show_progress) {
         StartSilentDownload(job.url, temp_path);
     } else {
         StartTransferDownload(job.url, job.version, temp_path);

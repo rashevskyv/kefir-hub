@@ -146,6 +146,24 @@ auto GetSearchPaths() -> std::vector<std::string> {
     return LoadSearchPaths();
 }
 
+auto ScanInstalledNros() -> std::vector<NroEntry> {
+    std::vector<NroEntry> entries;
+    nro_scan(DEFAULT_SEARCH_PATH, entries);
+
+    for (const auto& path_str : LoadSearchPaths()) {
+        const fs::FsPath path{path_str};
+        if (!fs::DirExists(path)) {
+            continue;
+        }
+
+        std::vector<NroEntry> custom_entries;
+        if (R_SUCCEEDED(nro_scan_depth(path, custom_entries, 2))) {
+            AppendUniqueEntries(entries, custom_entries);
+        }
+    }
+    return entries;
+}
+
 auto GetShareableHomebrewRoots() -> std::vector<std::string> {
     std::vector<std::string> roots;
     auto add_unique = [&](const std::string& p) {
@@ -234,20 +252,7 @@ auto RemoveSearchPath(const fs::FsPath& path) -> bool {
 void Menu::ScanHomebrew() {
     TimeStamp ts;
     FreeEntries();
-    nro_scan(DEFAULT_SEARCH_PATH, m_entries);
-
-    const auto search_paths = LoadSearchPaths();
-    for (const auto& path_str : search_paths) {
-        const fs::FsPath path{path_str};
-        if (!fs::DirExists(path)) {
-            continue;
-        }
-
-        std::vector<NroEntry> custom_entries;
-        if (R_SUCCEEDED(nro_scan_depth(path, custom_entries, 2))) {
-            AppendUniqueEntries(m_entries, custom_entries);
-        }
-    }
+    m_entries = ScanInstalledNros();
 
     // Kefir no longer ships Kefir Updater: keep its tile, A opens the Hub's own updater page
     if (std::ranges::none_of(m_entries, [](const auto& entry) {
@@ -257,7 +262,8 @@ void Menu::ScanHomebrew() {
         entry.path = KEFIR_UPDATER_STUB_PATH;
         std::strncpy(entry.nacp.lang.name, "Kefir Updater", sizeof(entry.nacp.lang.name) - 1);
         std::strncpy(entry.nacp.lang.author, "rashevskyv", sizeof(entry.nacp.lang.author) - 1);
-        std::strncpy(entry.nacp.display_version, "Removed", sizeof(entry.nacp.display_version) - 1);
+        std::strncpy(entry.nacp.display_version, "Removed", sizeof(entry.nacp.display_version) - 1); // the stub's marker, never shown
+        entry.icon_size = 1; // the icon is not loaded yet (LoadAppIcon reads it from the romfs)
         m_entries.emplace_back(entry);
     }
 

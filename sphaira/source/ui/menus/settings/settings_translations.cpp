@@ -1,6 +1,7 @@
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/translation_policy.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
+#include "ui/menus/kefir/kefir_apps_state.hpp"
 #include "download.hpp"
 #include "threaded_file_transfer.hpp"
 #include "utils/utils.hpp"
@@ -422,6 +423,9 @@ auto InstallDbiTranslation(ProgressBox* pbox, const DbiTranslationEntry& entry) 
     ));
     R_TRY(MovePath("/switch/DBI/DBI_new.nro", "/switch/DBI/DBI.nro"));
     R_TRY(MovePath("/switch/DBI/translation_new.bin", "/switch/DBI/translation.bin"));
+    // the Updater's Apps tab updates DBI later with this same language
+    const auto asset = FileNameFromUrl(entry.translation_url);
+    fs::write_entire_file(fs::FsPath{::sphaira::ui::menu::kefir::DBI_LANGUAGE_RECORD}, std::vector<u8>(asset.begin(), asset.end()));
     R_SUCCEED();
 }
 

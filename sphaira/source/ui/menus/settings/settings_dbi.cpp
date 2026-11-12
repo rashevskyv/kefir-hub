@@ -20,8 +20,6 @@ namespace {
 
 using namespace detail;
 
-const auto DBI_TRANSLATIONS_PACKAGE = paths::PACKAGES + "/Software/DBI/Fan Translations/package.ini";
-
 auto BuildDbiItems() -> std::vector<SettingsItem> {
     std::vector<SettingsItem> items;
 

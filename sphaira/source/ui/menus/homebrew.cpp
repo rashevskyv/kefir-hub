@@ -39,6 +39,21 @@ namespace {
 
 // loads the icon of an app row; true when an image was made (counts against the per-frame budget)
 auto LoadAppIcon(NVGcontext* vg, NroEntry& e) -> bool {
+    // the Kefir Updater tile has no file: its icon is the one kefir-updater.nro had, kept in the romfs
+    if (IsKefirUpdaterStub(e)) {
+        if (e.image || !e.icon_size) {
+            return false;
+        }
+        e.icon_size = 0; // one try only
+        std::vector<u8> data;
+        if (R_SUCCEEDED(fs::FsStdio().read_entire_file("romfs:/theme/kefir_updater.jpg", data))) {
+            const auto image = ImageLoadIcon(data);
+            if (!image.data.empty() && image.w == 256 && image.h == 256) {
+                e.image = nvgCreateImageRGBA(vg, image.w, image.h, 0, image.data.data());
+            }
+        }
+        return e.image != 0;
+    }
     if (e.image || !e.icon_size || !e.icon_offset) {
         return false;
     }
@@ -148,11 +163,12 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             }
             has_star = e.has_star.value();
         }
-        std::string title_text = GetNroFilename(e);
+        std::string title_text = IsKefirUpdaterStub(e) ? std::string{e.GetName()} : GetNroFilename(e);
         if (has_star) {
             title_text = std::string("\u2605 ") + title_text;
         }
-        DrawHbMenuHeader(vg, theme, e.image, title_text.c_str(), e.GetAuthor(), e.GetDisplayVersion(), e.GetName());
+        const std::string version = IsKefirUpdaterStub(e) ? std::string{"Run to update Kefir"_i18n} : std::string{e.GetDisplayVersion()};
+        DrawHbMenuHeader(vg, theme, e.image, title_text.c_str(), e.GetAuthor(), version.c_str(), e.GetName());
     }
 
     // max images per frame, in order to not hit io / gpu too hard.
@@ -222,6 +238,17 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
             subtitle = layout != grid::LayoutType_HbMenu ? "Folder"_i18n : std::string{};
             if (layout == grid::LayoutType_List) {
                 card_version = "[" + card_version + "]";
+            }
+        }
+
+        if (IsKefirUpdaterStub(e)) {
+            // no file and no version: say what the tile does instead
+            if (layout == grid::LayoutType_HbMenu) {
+                card_name = e.GetName();
+                card_version = "Run to update Kefir"_i18n;
+            } else {
+                subtitle = "Run to update Kefir"_i18n;
+                card_version.clear();
             }
         }
 

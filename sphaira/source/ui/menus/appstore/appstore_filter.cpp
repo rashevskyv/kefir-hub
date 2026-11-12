@@ -17,6 +17,50 @@
 #include <vector>
 
 namespace sphaira::ui::menu::appstore {
+// the status of a store entry whose binary is on the card. Shared with the Updater's Apps tab.
+void ClassifyInstalledBinary(Entry& e) {
+    // first check the info.json
+    ReadFromInfoJson(e);
+    // if we didn't get an installed_version from info.json, try reading it from NACP
+    if (e.installed_version.empty()) {
+        NacpStruct nacp;
+        if (R_SUCCEEDED(nro_get_nacp(e.binary, nacp))) {
+            e.installed_version = nacp_util::GetDisplayVersion(nacp);
+        }
+    }
+    // if we get here, this means that we have the file, but not the .info file
+    // report the file as locally installed to match hb-appstore.
+    if (e.status == EntryStatus::Get) {
+        if (IsRetroArchPackage(e)) {
+            e.status = EntryStatus::Update;
+        } else {
+            // filter out some apps.
+            bool filtered{};
+
+            // ignore hbmenu if it was replaced with sphaira.
+            if (e.name == "hbmenu") {
+                NacpStruct nacp;
+                if (R_SUCCEEDED(nro_get_nacp(e.binary, nacp))) {
+                    filtered = std::strcmp(nacp_util::GetName(nacp), "nx-hbmenu");
+                }
+            }
+            // ignore single retroarch core.
+            else if (e.name == "snes9x_2010") {
+                filtered = true;
+            }
+            // todo: filter
+            // - sys-clk
+
+            if (!filtered) {
+                // installed outside the store: any source (default, user, Ports) with a newer version offers an update
+                e.status = version::IsNewer(e.installed_version, e.version) ? EntryStatus::Update : EntryStatus::Local;
+            } else {
+                log_write("filtered: %s path: %s\n", e.name.c_str(), e.binary.c_str());
+            }
+        }
+    }
+}
+
 void Menu::ScanHomebrew() {
     App::SetBoostMode(true);
     ON_SCOPE_EXIT(App::SetBoostMode(false));
@@ -81,46 +125,7 @@ void Menu::ScanHomebrew() {
             ReadFromInfoJson(e);
         } else {
             if (fs.FileExists(e.binary)) {
-                // first check the info.json
-                ReadFromInfoJson(e);
-                // if we didn't get an installed_version from info.json, try reading it from NACP
-                if (e.installed_version.empty()) {
-                    NacpStruct nacp;
-                    if (R_SUCCEEDED(nro_get_nacp(e.binary, nacp))) {
-                        e.installed_version = nacp_util::GetDisplayVersion(nacp);
-                    }
-                }
-                // if we get here, this means that we have the file, but not the .info file
-                // report the file as locally installed to match hb-appstore.
-                if (e.status == EntryStatus::Get) {
-                    if (IsRetroArchPackage(e)) {
-                        e.status = EntryStatus::Update;
-                    } else {
-                        // filter out some apps.
-                        bool filtered{};
-
-                        // ignore hbmenu if it was replaced with sphaira.
-                        if (e.name == "hbmenu") {
-                            NacpStruct nacp;
-                            if (R_SUCCEEDED(nro_get_nacp(e.binary, nacp))) {
-                                filtered = std::strcmp(nacp_util::GetName(nacp), "nx-hbmenu");
-                            }
-                        }
-                        // ignore single retroarch core.
-                        else if (e.name == "snes9x_2010") {
-                            filtered = true;
-                        }
-                        // todo: filter
-                        // - sys-clk
-
-                        if (!filtered) {
-                            // installed outside the store: any source (default, user, Ports) with a newer version offers an update
-                            e.status = version::IsNewer(e.installed_version, e.version) ? EntryStatus::Update : EntryStatus::Local;
-                        } else {
-                            log_write("filtered: %s path: %s\n", e.name.c_str(), e.binary.c_str());
-                        }
-                    }
-                }
+                ClassifyInstalledBinary(e);
             }
         }
 

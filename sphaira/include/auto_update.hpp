@@ -45,6 +45,13 @@ struct ReleaseAsset {
     uint64_t size{0};
 };
 
+// the parts of a GitHub "releases/latest" answer the updaters use
+struct Release {
+    std::string tag{};
+    std::string body{};
+    std::vector<ReleaseAsset> assets{};
+};
+
 inline std::string ToLower(std::string_view str) {
     std::string result;
     result.reserve(str.size());
@@ -164,7 +171,11 @@ void RestartIntoNew();
 // Once per frame from the App loop: after a silent update (nobody asked for it) tells the user and asks
 // whether to restart now. A confirmed update never asks, it restarts by itself.
 void Poll();
-void StartDownload();
+// show_progress: the user asked for this update (the Updater's Apps tab), so it gets a progress box even in Silent mode
+void StartDownload(bool show_progress = false);
+
+// reads a saved "releases/latest" answer; false when the file is not JSON or has no tag_name
+auto ReadRelease(const char* path, Release& out) -> bool;
 #endif
 
 } // namespace sphaira::auto_update

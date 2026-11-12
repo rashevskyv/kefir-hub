@@ -45,25 +45,6 @@ auto AutoUpdateModeDescription(long mode) -> std::string {
     }
 }
 
-auto UpdateNowValue() -> std::string {
-    const auto job = auto_update::GetJob();
-    switch (job.state) {
-        case auto_update::JobState::Downloading:
-        case auto_update::JobState::Installing:
-            return "Updating"_i18n;
-        case auto_update::JobState::Ready:
-            return "Ready — restart"_i18n;
-        case auto_update::JobState::Available:
-            return job.version.empty() ? "Update"_i18n : job.version;
-        case auto_update::JobState::Failed:
-            return "Failed"_i18n;
-        case auto_update::JobState::Checking:
-            return "Checking..."_i18n;
-        default:
-            return "Up to date"_i18n;
-    }
-}
-
 auto BuildAutoUpdateItems() -> std::vector<SettingsItem> {
     const auto mode = App::GetAutoUpdateMode();
     std::vector<SettingsItem> items = {
@@ -80,20 +61,6 @@ auto BuildAutoUpdateItems() -> std::vector<SettingsItem> {
                     App::SetAutoUpdateMode(*op_index);
                 }
             }, App::GetAutoUpdateMode());
-        }},
-        { "Update now"_i18n,
-          auto_update::GetJob().state == auto_update::JobState::Ready
-              ? "The new version is installed. Tap to restart."_i18n
-              : "Download a waiting release, or retry a failed download."_i18n,
-          UpdateNowValue, [](){
-            const auto job = auto_update::GetJob();
-            if (job.state == auto_update::JobState::Ready) {
-                App::ExitRestart();
-                return;
-            }
-            if (job.state == auto_update::JobState::Available || job.state == auto_update::JobState::Failed) {
-                auto_update::StartDownload();
-            }
         }},
     };
 

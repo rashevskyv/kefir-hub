@@ -4253,5 +4253,18 @@
   "You have the latest Kefir:": "У вас найновіший Kefir:",
   "Installed:": "Встановлено:",
   "Loading updater links...": "Завантаження списку оновлень...",
-  "No Kefir download found.": "Не знайдено завантаження Kefir."
+  "No Kefir download found.": "Не знайдено завантаження Kefir.",
+  "Run to update Kefir": "Запустіть, щоб оновити Kefir",
+  "No Kefir update. Available:": "Оновлення Kefir немає. Доступний:",
+  "Checking for updates...": "Перевірка оновлень...",
+  "No apps found.": "Програм не знайдено.",
+  "Newest:": "Найновіша:",
+  "No update info": "Немає даних про оновлення",
+  "Press A to restart": "Натисніть A, щоб перезапустити",
+  "Failed, press A to try again": "Помилка, натисніть A, щоб повторити",
+  "No source knows this app.": "Жодне джерело не знає цієї програми.",
+  "Already the newest version.": "Це вже найновіша версія.",
+  "Choose the DBI language in Additional programs → DBI.": "Виберіть мову DBI в «Додаткові програми» → DBI.",
+  "Which language does your DBI use?": "Яка мова у вашого DBI?",
+  "updated": "оновлено"
 }

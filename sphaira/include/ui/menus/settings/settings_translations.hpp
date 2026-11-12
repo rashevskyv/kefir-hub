@@ -27,6 +27,8 @@ struct InterfaceTranslationEntry {
 
 namespace detail {
 
+// the list of DBI fan translations Kefir ships (an Ultrahand package)
+inline const auto DBI_TRANSLATIONS_PACKAGE = paths::PACKAGES + "/Software/DBI/Fan Translations/package.ini";
 inline const auto TRANSLATIONS_CACHE_PATH = paths::DATA_ROOT + "/cache/translations.json";
 
 auto DownloadFile(ProgressBox* pbox, const std::string& label, const std::string& url, const fs::FsPath& dst) -> Result;
