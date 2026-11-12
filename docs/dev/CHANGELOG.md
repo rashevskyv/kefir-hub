@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.358 — Vietnamese letters through a fallback font
+The shared fonts have no Vietnamese letters (ế, ệ, ơ, ư...); `romfs:/fonts/vietnamese.ttf` (a 9 KB Lato subset, OFL) is a fallback of the standard font.
+host tests: see build log · nro: built · switch: pending (Vietnamese UI text shows all letters)
+
 ## v0.14.357 — Kefir Updater tile: icon through the theme loader, the hint wraps in two lines
 - Tile icon loads with `nvgCreateImage("romfs:/theme/kefir_updater.jpg")` (the theme icon path) and logs a failure; in the detailed grid "Run to update Kefir" wraps over the author and version lines instead of scrolling.
 - host tests: pass (quick), nro: built, switch: pending (tile icon, two-line hint)
