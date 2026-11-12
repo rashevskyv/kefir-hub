@@ -45,12 +45,10 @@ auto LoadAppIcon(NVGcontext* vg, NroEntry& e) -> bool {
             return false;
         }
         e.icon_size = 0; // one try only
-        std::vector<u8> data;
-        if (R_SUCCEEDED(fs::FsStdio().read_entire_file("romfs:/theme/kefir_updater.jpg", data))) {
-            const auto image = ImageLoadIcon(data);
-            if (!image.data.empty() && image.w == 256 && image.h == 256) {
-                e.image = nvgCreateImageRGBA(vg, image.w, image.h, 0, image.data.data());
-            }
+        // the same loader as the theme icons (app_theme.cpp): nanovg reads the romfs file itself
+        e.image = nvgCreateImage(vg, "romfs:/theme/kefir_updater.jpg", 0);
+        if (!e.image) {
+            log_write("[homebrew] Kefir Updater icon failed to load from romfs\n");
         }
         return e.image != 0;
     }
@@ -266,7 +264,15 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
                 DrawAppGrid(vg, theme, shape, images);
             }
         } else {
-            DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), subtitle.c_str(), card_version.c_str(), e.selected);
+            const bool wrap_hint = IsKefirUpdaterStub(e) && layout == grid::LayoutType_GridDetail;
+            DrawEntry(vg, theme, layout, v, selected, e.image, card_name.c_str(), wrap_hint ? "" : subtitle.c_str(), card_version.c_str(), e.selected);
+            if (wrap_hint) {
+                // the hint is the whole point of this tile: wrap it over the author and version lines
+                // instead of scrolling it. Offsets match DrawEntry's GridDetail text column.
+                const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT);
+                gfx::drawTextBox(vg, v.x + 148.f, v.y + 80.f, 18.f, v.w - 30.f - 148.f, colour, subtitle.c_str(),
+                    NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE, nullptr, 1.3f);
+            }
         }
         DrawSelectionMark(vg, theme, layout, v, v, e.selected, m_selected_count > 0);
     });
