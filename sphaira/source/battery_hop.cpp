@@ -226,9 +226,12 @@ void OfferHop() {
     const u32 there = here == 2 ? 1 : 2;
     const auto other = MmcName(there);
     const auto way = WayTo(there);
-    const auto note = way == hop::Way::SemiStockOn ? "\n\n" + "Kefir Hub turns Semi-stock on for this and turns it off on the way back."_i18n
-                    : way == hop::Way::SemiStockOff ? "\n\n" + "Kefir Hub turns Semi-stock off for this and turns it on again on the way back."_i18n
-                    : std::string{};
+    auto note = way == hop::Way::SemiStockOn ? "\n\n" + "Kefir Hub turns Semi-stock on for this and turns it off on the way back."_i18n
+              : way == hop::Way::SemiStockOff ? "\n\n" + "Kefir Hub turns Semi-stock off for this and turns it on again on the way back."_i18n
+              : std::string{};
+    if (there == 1) {
+        note += "\n\n" + "In the sysMMC, hold R and open the Album. Keep R held until Kefir Hub starts."_i18n;
+    }
     App::Push<ui::OptionBox>(
         "The last step is the match in"_i18n + " " + other + ".\n\n" +
             "Kefir Hub restarts into it, matches there as soon as you open it, and then offers to come back. Restart into"_i18n + " " + other + "?" + note,
@@ -239,7 +242,9 @@ void OfferHop() {
             st.hop_to = there;
             st.hop_from = here;
             detail::SaveState(st);
-            account_restore::ArmReopenHubHint("Battery calibration: open Kefir Hub to finish the match."_i18n, false);
+            // the sysMMC has no Kefir Hub icon on the HOME Menu: the Hub starts there only with R held while the Album opens, and the notice must say so (owner, 2026-11-12)
+            account_restore::ArmReopenHubHint(there == 1 ? "Battery calibration: hold R and open the Album. Keep R held until Kefir Hub starts. It finishes the match by itself."_i18n
+                                                         : "Battery calibration: open Kefir Hub to finish the match. No icon? Hold R, open the Album, keep R held until Kefir Hub starts."_i18n, false);
             std::string why;
             bool switched = false;
             if (!SwitchTo(there, why, switched)) {
@@ -283,20 +288,23 @@ void PollHop() {
     App::Push<ui::ProgressBox>(0, "Match the other MMC"_i18n, "Battery"_i18n, [failed](auto) -> Result {
         return detail::MatchNow(*failed);
     }, [failed, from](Result rc) {
+        std::string text;
         if (R_FAILED(rc)) {
-            App::Push<ui::OptionBox>("The match failed:"_i18n + " " + *failed + "\n\n" + "Open Tools → Tools → Battery → + and press A on step 5 to try again."_i18n, "OK"_i18n);
-            return;
+            // The hop state stays: step 5 can try again here, and the first system clears it when the user goes back.
+            // The way back is offered all the same, or a failed match would leave the user in Semi-stock with no word about it.
+            text = "The match failed:"_i18n + " " + *failed + "\n\n" + "Open Tools → Tools → Battery → + and press A on step 5 to try again."_i18n;
+        } else {
+            auto s = detail::LoadState();
+            s.hop_to = s.hop_from = 0;
+            detail::SaveState(s);
+            account_restore::ClearReopenHubHint();
+            // the wizard ends here: the marker is on the shared microSD, so the first system sees step 5 as done
+            if (auto m = calib_flow::LoadMarker()) {
+                calib::TransferDone(*m);
+                calib_flow::SaveMarker(*m);
+            }
+            text = "Calibration complete: both MMCs hold the same calibrated model and one cycle count."_i18n;
         }
-        auto s = detail::LoadState();
-        s.hop_to = s.hop_from = 0;
-        detail::SaveState(s);
-        account_restore::ClearReopenHubHint();
-        // the wizard ends here: the marker is on the shared microSD, so the first system sees step 5 as done
-        if (auto m = calib_flow::LoadMarker()) {
-            calib::TransferDone(*m);
-            calib_flow::SaveMarker(*m);
-        }
-        const auto text = "Calibration complete: both MMCs hold the same calibrated model and one cycle count."_i18n;
         if (!from) {
             App::Push<ui::OptionBox>(text, "OK"_i18n);
             return;
