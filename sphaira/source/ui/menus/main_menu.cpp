@@ -281,6 +281,11 @@ void MainMenu::Update(Controller* controller, TouchInfo* touch) {
             }
             splExit();
         }
+        // hekate leaves this flag on a safe-mode boot for the Ultrahand notice, which deletes it; if Ultrahand did
+        // not run, the flag must not show a stale notice on the next normal boot
+        if (fs::FsNativeSd sd; sd.FileExists("/config/kefir/safemode_notice.flag")) {
+            sd.DeleteFile("/config/kefir/safemode_notice.flag");
+        }
         if (safe) {
             log_write("[SafeMode] Kefir safe mode is on\n");
             App::Push<OptionBox>(

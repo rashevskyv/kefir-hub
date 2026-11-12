@@ -28,13 +28,15 @@ constexpr const char* DOWNGRADE_FIX_SAVE = "/save/8000000000000073";
 constexpr size_t UPDATE_TASK_BUFFER_SIZE = 0x100000;
 constexpr s64 TILE_COLUMNS = 3;
 constexpr s64 TILE_EMPTY = -1;
-constexpr s64 UPDATER_LIST_PAGE_ROWS = 6;
+// the tab bar sits where the save types have theirs; each tab draws below it
+constexpr Vec4 UPDATER_TAB_BAR{40.f, 94.f, 1200.f, 44.f};
+constexpr Vec4 UPDATER_KEFIR_PAGE{40.f, 148.f, 1200.f, 492.f};
+constexpr s64 UPDATER_LIST_PAGE_ROWS = 5;
 constexpr float UPDATER_LIST_ROW_HEIGHT = 74.f;
 constexpr float UPDATER_LIST_ROW_GAP = 8.f;
-constexpr float UPDATER_INFO_Y_OFFSET = 11.f;
-constexpr float UPDATER_INFO_ROW_GAP = 25.f;
-constexpr float UPDATER_LIST_TOP_OFFSET = 1.f + 66.f;
-constexpr float UPDATER_TILE_TOP_OFFSET = 1.f + 112.f;
+constexpr float UPDATER_INFO_Y_OFFSET = 61.f;
+constexpr float UPDATER_LIST_TOP_OFFSET = 93.f;
+constexpr float UPDATER_TILE_TOP_OFFSET = 163.f;
 constexpr float UPDATER_TILE_CLIP_TOP_OFFSET = UPDATER_TILE_TOP_OFFSET - 35.f;
 
 class DowngradeWarningBox final : public Widget {
@@ -79,7 +81,6 @@ auto ResolveSelectableIndex(const std::vector<UpdaterEntry>& entries, s64 index,
 auto TileSlots(const std::vector<UpdaterEntry>& entries) -> std::vector<s64>;
 auto ResolveTileSlotIndex(const std::vector<s64>& slots, s64 index, s64 previous) -> s64;
 auto TileGroupLabel(UpdaterEntryType type) -> const char*;
-void AddSectionEntry(std::vector<UpdaterEntry>& out, std::string name);
 void AppendEntriesOfType(std::vector<UpdaterEntry>& out, const std::vector<UpdaterEntry>& entries, UpdaterEntryType type);
 void BuildSectionedEntries(std::vector<UpdaterEntry>& out, const std::vector<UpdaterEntry>& downloads);
 auto ParseUpdaterLinks(const fs::FsPath& path, std::vector<UpdaterEntry>& out, std::string& latest_kefir) -> bool;

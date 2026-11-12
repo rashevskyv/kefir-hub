@@ -63,13 +63,23 @@ class KefirChangelogBox final : public Widget {
 public:
     using Callback = std::function<void()>;
 
-    KefirChangelogBox(UpdaterEntry entry, Callback callback);
+    // page: draw in this area of the Updater's Kefir tab instead of a modal popup. Then the box has no frame or title,
+    // the Update button is the end of the scrolled text, L/R stay with the tabs, and the owner calls Activate on A.
+    KefirChangelogBox(UpdaterEntry entry, Callback callback, std::optional<Vec4> page = std::nullopt);
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
-    auto IsModal() const -> bool override { return true; }
+    auto IsModal() const -> bool override { return !m_page; }
+
+    void Activate(); // page mode: A installs at the end of the text, elsewhere it says to read to the end
+    auto GetUrl() const -> const std::string& { return m_entry.url; }
 
 private:
+    void DrawPage(NVGcontext* vg, Theme* theme);
+    auto ButtonLabel() const -> std::string;
+    auto AtEnd() const -> bool { return !m_loading && m_scroll >= m_max_scroll - 1.f; }
+
+    bool m_page{};
     static constexpr float CHANGELOG_FONT_SIZE = 20.f;
     static constexpr float CHANGELOG_HEADER_FONT_SIZE = 26.f;
     static constexpr float CHANGELOG_PREAMBLE_FONT_SIZE = 24.f;

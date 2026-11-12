@@ -292,6 +292,42 @@ void drawRectVarying(NVGcontext* vg, const Vec4& v, const NVGcolor& c, float rTL
     nvgFill(vg);
 }
 
+namespace {
+constexpr float TAB_GAP = 4.f;
+auto TabWidth(const Vec4& bar, s64 count) -> float {
+    return (bar.w - TAB_GAP * float(count - 1)) / float(count);
+}
+} // namespace
+
+void drawTabBar(NVGcontext* vg, const Theme* theme, const Vec4& bar, const char* const* labels, s64 count, s64 selected) {
+    const float w = TabWidth(bar, count);
+    const float body_top = bar.y + bar.h;
+    constexpr float radius = 8.f;
+    for (s64 i = 0; i < count; i++) {
+        if (i == selected) {
+            continue;
+        }
+        const float x = bar.x + float(i) * (w + TAB_GAP);
+        const float y = bar.y + 5.f;
+        drawRectVarying(vg, Vec4{x, y, w, body_top - y}, theme->GetColour(ThemeEntryID_GRID), radius, radius, 0.f, 0.f);
+        drawText(vg, x + w * 0.5f, (y + body_top) * 0.5f, 20.f, theme->GetColour(ThemeEntryID_TEXT_INFO), labels[i], NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    }
+    drawRect(vg, bar.x, body_top, bar.w, 1.f, theme->GetColour(ThemeEntryID_LINE));
+    if (selected >= 0 && selected < count) {
+        const float x = bar.x + float(selected) * (w + TAB_GAP);
+        drawRectVarying(vg, Vec4{x, bar.y, w, bar.h + 1.f}, theme->GetColour(ThemeEntryID_POPUP), radius, radius, 0.f, 0.f);
+        drawRectVarying(vg, Vec4{x, bar.y, w, 3.f}, theme->GetColour(ThemeEntryID_HIGHLIGHT_1), radius, radius, 0.f, 0.f);
+        drawTextBold(vg, x + w * 0.5f, (bar.y + body_top) * 0.5f, 20.f, theme->GetColour(ThemeEntryID_TEXT), labels[selected], NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    }
+}
+
+auto tabAt(const Vec4& bar, s64 count, float x) -> s64 {
+    if (count <= 0 || x < bar.x || x >= bar.x + bar.w) {
+        return -1;
+    }
+    return std::clamp<s64>(s64((x - bar.x) / (TabWidth(bar, count) + TAB_GAP)), 0, count - 1);
+}
+
 void drawRectOutline(NVGcontext* vg, const Theme* theme, float size, float x, float y, float w, float h, float rounding) {
     drawRectOutlineInternal(vg, theme, size, {x,y,w,h}, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), rounding);
 }

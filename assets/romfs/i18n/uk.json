@@ -4244,5 +4244,14 @@
   "Press A or B to close.": "Натисніть A або B, щоб закрити.",
   "Show first-run hints again": "Показати підказки знову",
   "Show the one-time hints for the main screen, Tools and Kefir Settings again.": "Знову показати одноразові підказки для головного екрана, Інструментів і Налаштувань Кефіра.",
-  "The hints will show again.": "Підказки знову з'являться."
+  "The hints will show again.": "Підказки знову з'являться.",
+  "Kefir": "Kefir",
+  "Read the changelog to the end, then press": "Прочитайте список змін до кінця і натисніть",
+  "at the very bottom.": "у самому низу.",
+  "Update available:": "Є оновлення:",
+  "Kefir is not installed. Available:": "Kefir не встановлено. Доступний:",
+  "You have the latest Kefir:": "У вас найновіший Kefir:",
+  "Installed:": "Встановлено:",
+  "Loading updater links...": "Завантаження списку оновлень...",
+  "No Kefir download found.": "Не знайдено завантаження Kefir."
 }

@@ -37,6 +37,12 @@ enum class UpdaterViewMode {
     Tiles,
 };
 
+// the tabs of the Updater, in the order of the tab bar
+enum class UpdaterTab { Kefir, Firmware };
+constexpr s64 UPDATER_TAB_COUNT = 2;
+
+class KefirChangelogBox;
+
 struct UpdaterEntry {
     UpdaterEntryType type{};
     std::string name;
@@ -67,6 +73,11 @@ private:
     void EnsureTileVisible();
     bool MoveTileSelection(s64 step);
     void InstallKefir(const UpdaterEntry& entry, std::function<void()> on_success = {});
+    // the install itself, after the changelog was read: space check, network, download, reboot prompt
+    void RunKefirInstall(const UpdaterEntry& entry, std::function<void()> on_success = {});
+    void SetTab(UpdaterTab tab);
+    void SyncKefirPage(); // the Kefir tab shows the changelog of the Kefir entry the links offer
+    void DrawKefirTab(NVGcontext* vg, Theme* theme);
     void DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check = false);
     void OpenManualFirmwarePicker();
     void StartManualZipFirmware(const fs::FsPath& zip_path);
@@ -87,7 +98,10 @@ private:
     void PromptKefirThenFirmware(const UpdaterEntry& firmware_entry);
 
 private:
-    std::vector<UpdaterEntry> m_entries;
+    std::vector<UpdaterEntry> m_entries; // the Firmware tab
+    std::vector<UpdaterEntry> m_kefir_entries;
+    UpdaterTab m_tab{UpdaterTab::Kefir};
+    std::unique_ptr<KefirChangelogBox> m_kefir_page;
     std::vector<s64> m_tile_entries;
     s64 m_index{};
     s64 m_tile_index{};

@@ -22,6 +22,11 @@ void drawRect(NVGcontext*, const Vec4& v, const NVGpaint& p, float rounding = 0.
 // bottom-left). used for tab shapes that round only their top corners.
 void drawRectVarying(NVGcontext*, const Vec4& v, const NVGcolor& c, float rTL, float rTR, float rBR, float rBL);
 
+// A row of tabs like the save types (Installed / Deleted / Backups): the selected tab is raised with an accent line.
+// tabAt returns the tab under x, or -1. (The save menu and game details still draw their own copy.)
+void drawTabBar(NVGcontext*, const Theme*, const Vec4& bar, const char* const* labels, s64 count, s64 selected);
+auto tabAt(const Vec4& bar, s64 count, float x) -> s64;
+
 void drawRectOutline(NVGcontext*, const Theme*, float size, float x, float y, float w, float h, float rounding = 4.0F);
 void drawRectOutline(NVGcontext*, const Theme*, float size, const Vec4& v, float rounding = 4.0F);
 

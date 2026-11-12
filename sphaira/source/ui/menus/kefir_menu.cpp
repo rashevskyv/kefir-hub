@@ -21,12 +21,25 @@ using namespace detail;
 
 Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater"_i18n, MenuFlag_None}, m_pending_manual_firmware{std::move(manual_firmware)} {
     RefreshSystemInfo();
+    if (m_pending_manual_firmware) {
+        m_tab = UpdaterTab::Firmware; // the File Browser sent a firmware: its tab is the one that matters
+    }
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
-            if (!m_entries.empty() && !m_loading) {
+            if (m_tab == UpdaterTab::Kefir) {
+                if (m_kefir_page) {
+                    m_kefir_page->Activate();
+                }
+            } else if (!m_entries.empty() && !m_loading) {
                 OpenSelected();
             }
+        }}),
+        std::make_pair(Button::L, Action{"Previous tab"_i18n, [this](){
+            SetTab(static_cast<UpdaterTab>((static_cast<s64>(m_tab) + UPDATER_TAB_COUNT - 1) % UPDATER_TAB_COUNT));
+        }}),
+        std::make_pair(Button::R, Action{"Next tab"_i18n, [this](){
+            SetTab(static_cast<UpdaterTab>((static_cast<s64>(m_tab) + 1) % UPDATER_TAB_COUNT));
         }}),
         std::make_pair(Button::B, Action{"Back"_i18n, [this](){
             SetPop();
@@ -53,6 +66,20 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     if (m_retry_on_connect && !m_loading && net::IsConnectedCached()) {
         m_retry_on_connect = false;
         FetchLinks();
+    }
+
+    if (touch && touch->is_clicked && touch->in_range(UPDATER_TAB_BAR)) {
+        if (const auto tab = gfx::tabAt(UPDATER_TAB_BAR, UPDATER_TAB_COUNT, touch->cur.x); tab >= 0) {
+            SetTab(static_cast<UpdaterTab>(tab));
+        }
+        return;
+    }
+
+    if (m_tab == UpdaterTab::Kefir) {
+        if (m_kefir_page) {
+            m_kefir_page->Update(controller, touch);
+        }
+        return;
     }
 
     if (m_entries.empty()) {
@@ -255,6 +282,7 @@ void Menu::FetchLinks() {
     m_loading = true;
     m_error_message.clear();
     m_entries.clear();
+    m_kefir_entries.clear();
     m_tile_entries.clear();
     m_latest_kefir = net::IsConnectedCached() ? std::string{"Unknown"} :"Connect to the internet"_i18n;
     BuildSectionedEntries(m_entries, {});
@@ -290,6 +318,8 @@ void Menu::FetchLinks() {
 
             m_retry_on_connect = false;
             BuildSectionedEntries(m_entries, entries);
+            AppendEntriesOfType(m_kefir_entries, entries, UpdaterEntryType::Kefir);
+            SyncKefirPage();
             m_tile_entries = TileSlots(m_entries);
             m_latest_kefir = latest_kefir.empty() ? "Unknown" : latest_kefir;
 
@@ -350,6 +380,10 @@ void Menu::SetIndex(s64 index) {
 }
 
 void Menu::UpdateSubheading() {
+    if (m_tab == UpdaterTab::Kefir) {
+        this->SetSubHeading({});
+        return;
+    }
     const auto count = detail::SelectableCount(m_entries);
     if (m_entries.empty() || !count) {
         this->SetSubHeading("0 / 0");
@@ -397,21 +431,41 @@ bool Menu::IsKefirUpdate(const UpdaterEntry& entry) const {
 }
 
 bool Menu::FindKefirUpdate(UpdaterEntry& out) const {
-    for (const auto& entry : m_entries) {
-        if (entry.type == UpdaterEntryType::Kefir && entry.pack) {
-            out = entry;
-            return true;
-        }
+    // the pack first, then any Kefir download
+    const auto it = std::ranges::find_if(m_kefir_entries, [](const auto& e) { return e.pack; });
+    if (it != m_kefir_entries.end()) {
+        out = *it;
+        return true;
     }
-
-    for (const auto& entry : m_entries) {
-        if (entry.type == UpdaterEntryType::Kefir) {
-            out = entry;
-            return true;
-        }
+    if (!m_kefir_entries.empty()) {
+        out = m_kefir_entries.front();
+        return true;
     }
-
     return false;
+}
+
+void Menu::SetTab(UpdaterTab tab) {
+    if (tab == m_tab) {
+        return;
+    }
+    m_tab = tab;
+    App::PlaySoundEffect(SoundEffect_Focus);
+    UpdateSubheading();
+}
+
+void Menu::SyncKefirPage() {
+    UpdaterEntry entry;
+    if (!FindKefirUpdate(entry)) {
+        m_kefir_page.reset();
+        return;
+    }
+    // FetchLinks rebuilds the lists more than once: a new page (and a new download of the changelog) only for a new link
+    if (m_kefir_page && m_kefir_page->GetUrl() == entry.url) {
+        return;
+    }
+    m_kefir_page = std::make_unique<KefirChangelogBox>(entry, [this, entry]() {
+        RunKefirInstall(entry);
+    }, UPDATER_KEFIR_PAGE);
 }
 
 } // namespace sphaira::ui::menu::kefir

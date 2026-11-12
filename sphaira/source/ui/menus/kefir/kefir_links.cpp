@@ -185,15 +185,6 @@ auto TileGroupLabel(UpdaterEntryType type) -> const char* {
     return "";
 }
 
-void AddSectionEntry(std::vector<UpdaterEntry>& out, std::string name) {
-    out.push_back({
-        .type = UpdaterEntryType::Section,
-        .name = std::move(name),
-        .url = {},
-        .pack = false,
-    });
-}
-
 void AppendEntriesOfType(std::vector<UpdaterEntry>& out, const std::vector<UpdaterEntry>& entries, UpdaterEntryType type) {
     for (const auto& entry : entries) {
         if (entry.type == type) {
@@ -203,12 +194,8 @@ void AppendEntriesOfType(std::vector<UpdaterEntry>& out, const std::vector<Updat
 }
 
 void BuildSectionedEntries(std::vector<UpdaterEntry>& out, const std::vector<UpdaterEntry>& downloads) {
+    // the Firmware tab: Kefir has a tab of its own, so the list needs no section headers
     out.clear();
-
-    AddSectionEntry(out, "KEFIR");
-    AppendEntriesOfType(out, downloads, UpdaterEntryType::Kefir);
-
-    AddSectionEntry(out, "FIRMWARE");
     AppendEntriesOfType(out, downloads, UpdaterEntryType::Firmware);
     out.push_back({
         .type = UpdaterEntryType::FirmwareManual,

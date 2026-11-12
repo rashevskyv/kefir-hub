@@ -4241,5 +4241,14 @@
   "Press A or B to close.": "Press A or B to close.",
   "Show first-run hints again": "Show first-run hints again",
   "Show the one-time hints for the main screen, Tools and Kefir Settings again.": "Show the one-time hints for the main screen, Tools and Kefir Settings again.",
-  "The hints will show again.": "The hints will show again."
+  "The hints will show again.": "The hints will show again.",
+  "Kefir": "Kefir",
+  "Read the changelog to the end, then press": "Read the changelog to the end, then press",
+  "at the very bottom.": "at the very bottom.",
+  "Update available:": "Update available:",
+  "Kefir is not installed. Available:": "Kefir is not installed. Available:",
+  "You have the latest Kefir:": "You have the latest Kefir:",
+  "Installed:": "Installed:",
+  "Loading updater links...": "Loading updater links...",
+  "No Kefir download found.": "No Kefir download found."
 }

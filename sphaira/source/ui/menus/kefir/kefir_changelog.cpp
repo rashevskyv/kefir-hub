@@ -229,8 +229,9 @@ auto DownloadAndInstallKefir(ProgressBox* pbox, const UpdaterEntry& entry) -> Re
 } // namespace detail
 
 
-KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback)
-: m_entry{std::move(entry)}
+KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback, std::optional<Vec4> page)
+: m_page{page.has_value()}
+, m_entry{std::move(entry)}
 , m_callback{std::move(callback)} {
     m_current_version = detail::ReadFirstLine(KEFIR_VERSION_PATH);
     m_target_version = detail::ExtractKefirVersion(m_entry.name, m_entry.url);
@@ -239,6 +240,33 @@ KefirChangelogBox::KefirChangelogBox(UpdaterEntry entry, Callback callback)
         m_title = "Kefir " + std::to_string(version) + " changelog";
     } else {
         m_title = "Kefir changelog";
+    }
+
+    if (m_page) {
+        // in the Updater page: A comes from the owner (Activate), B and L/R stay with the Updater and its tabs
+        m_pos = *page;
+        SetActions(
+            std::make_pair(Button::UP, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
+                ScrollBy(-CHANGELOG_SCROLL_STEP);
+            }}),
+            std::make_pair(Button::DOWN, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
+                ScrollBy(CHANGELOG_SCROLL_STEP);
+            }}),
+            std::make_pair(Button::LEFT | Button::L2, Action{[this](){
+                if (m_page_time.GetNs() >= PAGE_MIN_NS) {
+                    m_page_time.Update();
+                    ScrollBy(-m_text_area.h + CHANGELOG_SCROLL_STEP);
+                }
+            }}),
+            std::make_pair(Button::RIGHT | Button::R2, Action{[this](){
+                if (m_page_time.GetNs() >= PAGE_MIN_NS) {
+                    m_page_time.Update();
+                    ScrollBy(m_text_area.h - CHANGELOG_SCROLL_STEP);
+                }
+            }})
+        );
+        LoadChangelog();
+        return;
     }
 
     m_pos = Vec4{70.f, 42.f, 1140.f, 636.f};
@@ -323,7 +351,16 @@ void KefirChangelogBox::Update(Controller* controller, TouchInfo* touch) {
         }
     }
 
-    if (touch->is_clicked) {
+    if (m_page) {
+        // the button scrolls with the text: a tap counts only while all of it is in sight
+        const auto& b = m_install_button_rect;
+        if (touch && touch->is_clicked && touch->in_range(b) && b.y >= m_text_area.y && b.y + b.h <= m_text_area.y + m_text_area.h) {
+            Activate();
+        }
+        return;
+    }
+
+    if (touch && touch->is_clicked) {
         if (m_unlocked && touch->in_range(m_install_button_rect)) {
             if (!m_installing) {
                 m_installing = true;
@@ -335,6 +372,11 @@ void KefirChangelogBox::Update(Controller* controller, TouchInfo* touch) {
 }
 
 void KefirChangelogBox::Draw(NVGcontext* vg, Theme* theme) {
+    if (m_page) {
+        DrawPage(vg, theme);
+        return;
+    }
+
     gfx::dimBackground(vg);
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
 

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.355 — the Updater has tabs: Kefir (its changelog as a page, the button at the end) and Firmware
+- Kefir tab: the version on offer and whether it is an update, the changelog in the page, and Install/Update/Reinstall at the end of the text; A before the end shows a notice to read to the end. L/R or a tap switch tabs. Firmware tab: the firmware list without section headers. The Hub deletes `/config/kefir/safemode_notice.flag` (hekate 0013 writes it on a safe-mode boot, the Ultrahand on-boot block shows and deletes it).
+- host tests: pass (quick), nro: built, switch: pending (tabs, Kefir page scroll/button/notice, firmware list, install from the page)
+
 ## v0.14.354 — the first-run peek at Tools is the real page slide, without the green edge line
 - Owner (0.14.353): swipe and tour look right; the peek drew a green line between the pages that a real swipe does not have. The line is gone, so the peek looks the same as a swipe.
 - host tests: pass (quick), nro: built, switch: pending (the peek)

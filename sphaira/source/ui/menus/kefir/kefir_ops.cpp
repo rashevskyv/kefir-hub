@@ -117,41 +117,50 @@ void Menu::InstallKefir(const UpdaterEntry& entry, std::function<void()> on_succ
     }
     App::Push<KefirChangelogBox>(entry,
         [this, entry, on_success = std::move(on_success)]() mutable {
-            net::RequireConnection([this, entry, on_success = std::move(on_success)]() mutable {
-                App::Push<ProgressBox>(0, "Installing"_i18n, entry.name,
-                    [entry](auto pbox) -> Result {
-                        return detail::DownloadAndInstallKefir(pbox, entry);
-                    },
-                    [this, entry, on_success = std::move(on_success)](Result rc) mutable {
-                        if (R_FAILED(rc)) {
-                            if (rc == Result_TransferCancelled) {
-                                return;
-                            }
-                            if (rc == Result_AppstoreFailedZipDownload) {
-                                App::PushErrorBox(rc, "Failed to download"_i18n + " " + entry.name);
-                            } else {
-                                App::PushErrorBox(rc, "Failed to install"_i18n + " " + entry.name);
-                            }
-                            return;
-                        }
+            RunKefirInstall(entry, std::move(on_success));
+        });
+}
 
-                        RefreshSystemInfo();
-                        if (on_success) {
-                            on_success();
-                            return;
-                        }
+void Menu::RunKefirInstall(const UpdaterEntry& entry, std::function<void()> on_success) {
+    if (!EnoughSdSpace(KEFIR_NEED_MB)) {
+        return;
+    }
+    net::RequireConnection([this, entry, on_success = std::move(on_success)]() mutable {
+        App::Push<ProgressBox>(0, "Installing"_i18n, entry.name,
+            [entry](auto pbox) -> Result {
+                return detail::DownloadAndInstallKefir(pbox, entry);
+            },
+            [this, entry, on_success = std::move(on_success)](Result rc) mutable {
+                if (R_FAILED(rc)) {
+                    if (rc == Result_TransferCancelled) {
+                        return;
+                    }
+                    if (rc == Result_AppstoreFailedZipDownload) {
+                        App::PushErrorBox(rc, "Failed to download"_i18n + " " + entry.name);
+                    } else {
+                        App::PushErrorBox(rc, "Failed to install"_i18n + " " + entry.name);
+                    }
+                    return;
+                }
 
-                        App::Push<OptionBox>(
-                            "Kefir package installed."_i18n + "\n\n" + "Reboot now?"_i18n,
-                            "Later"_i18n, "Reboot"_i18n, 1,
-                            [](auto op_index) {
-                                if (op_index && *op_index == 1) {
-                                    utils::requestForcedReboot();
-                                }
-                            });
+                RefreshSystemInfo();
+                m_kefir_page.reset(); // the Kefir tab reads the new installed version
+                SyncKefirPage();
+                if (on_success) {
+                    on_success();
+                    return;
+                }
+
+                App::Push<OptionBox>(
+                    "Kefir package installed."_i18n + "\n\n" + "Reboot now?"_i18n,
+                    "Later"_i18n, "Reboot"_i18n, 1,
+                    [](auto op_index) {
+                        if (op_index && *op_index == 1) {
+                            utils::requestForcedReboot();
+                        }
                     });
             });
-        });
+    });
 }
 
 void Menu::DownloadFirmware(const UpdaterEntry& entry, bool skip_support_check) {

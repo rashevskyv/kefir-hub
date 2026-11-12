@@ -1,5 +1,6 @@
 #include "ui/menus/kefir/kefir_internal.hpp"
 #include "ui/menus/kefir/kefir_firmware.hpp"
+#include "ui/menus/kefir/kefir_changelog.hpp"
 #include "ui/nvg_util.hpp"
 #include "i18n.hpp"
 
@@ -11,48 +12,32 @@ using namespace detail;
 void Menu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
 
+    const std::string tab_names[UPDATER_TAB_COUNT]{"Kefir"_i18n, "Firmware"_i18n};
+    const char* tab_labels[UPDATER_TAB_COUNT]{tab_names[0].c_str(), tab_names[1].c_str()};
+    gfx::drawTabBar(vg, theme, UPDATER_TAB_BAR, tab_labels, UPDATER_TAB_COUNT, static_cast<s64>(m_tab));
+
+    if (m_tab == UpdaterTab::Kefir) {
+        DrawKefirTab(vg, theme);
+        return;
+    }
+
     const auto tiles = static_cast<UpdaterViewMode>(m_view_mode.Get()) == UpdaterViewMode::Tiles;
-    const auto info_colour = theme->GetColour(ThemeEntryID_TEXT_INFO);
     const auto info_y = GetY() + UPDATER_INFO_Y_OFFSET;
     nvgSave(vg);
     nvgFontSize(vg, 17.f);
-    nvgFillColor(vg, info_colour);
+    nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-    // Current Kefir
-    const std::string current_kefir_lbl = "Current Kefir:"_i18n;
-    nvgText(vg, 80.f, info_y, current_kefir_lbl.c_str(), nullptr);
-    nvgText(vg, 81.f, info_y, current_kefir_lbl.c_str(), nullptr);
-    float ck_bounds[4]{};
-    nvgTextBounds(vg, 80.f, info_y, current_kefir_lbl.c_str(), nullptr, ck_bounds);
-    // no /switch/kefir-updater/version: Kefir is not installed here (plain Atmosphere or another pack), or the file was deleted
-    const auto current_kefir = detail::IsKnownVersion(m_current_kefir) ? m_current_kefir : "not installed"_i18n;
-    nvgText(vg, ck_bounds[2] + 7.f, info_y, current_kefir.c_str(), nullptr);
-
-    // Latest Kefir
-    const std::string latest_kefir_lbl = "Latest Kefir:"_i18n;
-    nvgText(vg, 650.f, info_y, latest_kefir_lbl.c_str(), nullptr);
-    nvgText(vg, 651.f, info_y, latest_kefir_lbl.c_str(), nullptr);
-    float lk_bounds[4]{};
-    nvgTextBounds(vg, 650.f, info_y, latest_kefir_lbl.c_str(), nullptr, lk_bounds);
-    nvgText(vg, lk_bounds[2] + 7.f, info_y, m_latest_kefir.c_str(), nullptr);
-
-    // Current Firmware
-    const std::string current_fw_lbl = "Current Firmware:"_i18n;
-    nvgText(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, current_fw_lbl.c_str(), nullptr);
-    nvgText(vg, 81.f, info_y + UPDATER_INFO_ROW_GAP, current_fw_lbl.c_str(), nullptr);
-    float cf_bounds[4]{};
-    nvgTextBounds(vg, 80.f, info_y + UPDATER_INFO_ROW_GAP, current_fw_lbl.c_str(), nullptr, cf_bounds);
-    nvgText(vg, cf_bounds[2] + 7.f, info_y + UPDATER_INFO_ROW_GAP, m_current_firmware.c_str(), nullptr);
-
-    // Console
-    const std::string console_lbl = "Console:"_i18n;
-    nvgText(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, console_lbl.c_str(), nullptr);
-    nvgText(vg, 651.f, info_y + UPDATER_INFO_ROW_GAP, console_lbl.c_str(), nullptr);
-    float c_bounds[4]{};
-    nvgTextBounds(vg, 650.f, info_y + UPDATER_INFO_ROW_GAP, console_lbl.c_str(), nullptr, c_bounds);
-    nvgText(vg, c_bounds[2] + 7.f, info_y + UPDATER_INFO_ROW_GAP, m_console_revision.c_str(), nullptr);
-
+    // a bold label and its value
+    const auto info = [vg, info_y](float x, const std::string& label, const std::string& value) {
+        nvgText(vg, x, info_y, label.c_str(), nullptr);
+        nvgText(vg, x + 1.f, info_y, label.c_str(), nullptr);
+        float bounds[4]{};
+        nvgTextBounds(vg, x, info_y, label.c_str(), nullptr, bounds);
+        nvgText(vg, bounds[2] + 7.f, info_y, value.c_str(), nullptr);
+    };
+    info(80.f, "Current Firmware:"_i18n, m_current_firmware);
+    info(650.f, "Console:"_i18n, m_console_revision);
     nvgRestore(vg);
 
     if (m_loading) {
@@ -63,7 +48,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (!m_error_message.empty()) {
-        gfx::drawTextArgs(vg, 80.f, GetY() + 71.f, 17.f,
+        gfx::drawTextArgs(vg, 80.f, info_y + 25.f, 17.f,
             NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_ERROR),
             "%s", m_error_message.c_str());
     }
@@ -80,6 +65,18 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     } else {
         DrawList(vg, theme);
     }
+}
+
+void Menu::DrawKefirTab(NVGcontext* vg, Theme* theme) {
+    if (m_kefir_page) {
+        m_kefir_page->Draw(vg, theme);
+        return;
+    }
+    const auto& page = UPDATER_KEFIR_PAGE;
+    const std::string text = m_loading ? std::string{"Loading updater links..."_i18n}
+        : !m_error_message.empty() ? m_error_message : std::string{"No Kefir download found."_i18n};
+    gfx::drawTextBox(vg, page.x + 100.f, page.y + page.h / 2.f - 20.f, 22.f, page.w - 200.f,
+        theme->GetColour(m_loading ? ThemeEntryID_TEXT_INFO : ThemeEntryID_ERROR), text.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 }
 
 // the firmware the console runs now: its entry is yellow, so it is clear it is the same version
