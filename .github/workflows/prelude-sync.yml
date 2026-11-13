@@ -1,5 +1,5 @@
 # Prelude-Nextendo -> Kefir Hub, with no human in the loop (decided 2026-10-29).
-# Once a day: if NextendoNetwork/Prelude-Nextendo has a new release, tools/nextendo/sync.py brings its hosts lines and
+# Once a day: if NextendoNetwork/Prelude-Nextendo (git.nextendo.network) has a new release, tools/nextendo/sync.py brings its hosts lines and
 # patch files into the Hub (strict checks stand in for a review), the host tests run, the NRO is built, the commit goes
 # to master and a release is published; the console's self-update picks it up.
 # The release is skipped when master already holds unreleased work (sphaira_VERSION != latest release tag): then only

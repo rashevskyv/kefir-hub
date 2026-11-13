@@ -359,6 +359,18 @@ host tests: not run (i18n contract: pass), nro: not built, switch: pending (hop 
 The old text said to come back at 100 %, but the Hub already measures by itself while the page is open; en/uk edited by hand, the other languages by translate.py.
 host tests: not run (i18n contract: pass), nro: not built, switch: pending
 
+## v0.14.287 (origin robot, merged in v0.14.364) — Prelude-Nextendo v5.0.0 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
+## v0.14.286 (origin robot, merged in v0.14.364) — Prelude-Nextendo v4.0.21 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
+## v0.14.285 (origin robot, merged in v0.14.364) — Prelude-Nextendo v4.0.19 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
 ## v0.14.284 — i18n: the 43 missing strings (battery calibration, Nextendo) translated in every language
 Filled by tools/i18n-translate for the release; the deployment i18n contract passes. Verification: host tests: not run, nro: built, switch: pending.
 
