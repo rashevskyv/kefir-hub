@@ -2,7 +2,7 @@
 
 // The Apps tab of the Updater: every app the Homebrew menu shows, with the newest version its source knows.
 // A updates the selected app: Kefir Hub from its GitHub release, DBI from DBIPatcher with the language
-// the card has, every other app from the App Store sources.
+// the card has, the apps of GITHUB_APPS from their GitHub release, every other app from the App Store sources.
 
 #include "ui/widget.hpp"
 #include "ui/list.hpp"
@@ -45,12 +45,14 @@ private:
     void UpdateHub(const AppRow& row);
     void UpdateDbi(const AppRow& row);
     void UpdateStoreApp(const AppRow& row);
+    void UpdateGithubApp(const AppRow& row);
     void Installed(Result rc, const std::string& name); // after an update: tell, then read the card again
     auto StatusText(const AppRow& row) const -> std::string;
 
     std::vector<AppRow> m_rows;
     std::unique_ptr<List> m_list;
     s64 m_index{};
+    std::string m_retroarch_built; // the Last-Modified of the buildbot's RetroArch nightly; empty: no answer
     u32 m_pending{}; // answers still running (the callbacks run on the ui thread)
     bool m_loading{};
 };

@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.376 — Updater → Apps: the Software link apps and the RetroArch nightly
+UAModDownloader, UAPlay, ModCD and SimpleModDownloader come from one list (GITHUB_APPS) for Tools → Software and Updater → Apps; the Updater checks their GitHub release tag (only for the apps on the card) and downloads the same nro. RetroArch: the Hub records the nightly's Last-Modified on install; the Updater compares it with a HEAD of the buildbot archive and shows build dates.
+host tests: pass (quick), nro: built (DocsDemo), switch: pending
+
 ## v0.14.375 — Nextendo account: sign-up QR and Sign in
 Kefir Settings → Nextendo has a "Nextendo account" row; it and the reminder's "Link through Nextendo" open one box: a QR code to wiki.nextendo.network/setup/create-account, Later and Sign in. Sign in (Nextendo on for this boot only) opens the user selector, then the console's own account link screen (psel EnsureNetworkServiceAccountAvailable); a linked profile is told to unlink first; a failed open shows the System Settings steps. The v0.14.373 unlink-on-switch-on flow (Profiles for Nextendo) is removed. 7 strings in all 26 languages; docs stay drafts until a console test.
 host tests: pass (quick + i18n contract + doc labels + docs draft contract) · nro: built (ReleaseWithInstall) · switch: pending — Sign in opens the Nextendo link screen; already-linked profile box; QR scans to the sign-up page.

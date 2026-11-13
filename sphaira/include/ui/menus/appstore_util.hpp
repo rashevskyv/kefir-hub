@@ -18,6 +18,8 @@ inline auto IsRetroArchPackageName(std::string_view name, std::string_view title
 }
 
 constexpr const char* RETROARCH_NIGHTLY_URL = "https://buildbot.libretro.com/nightly/nintendo/switch/libnx/RetroArch.7z";
+// the Last-Modified of the nightly the Hub installed; the Updater compares it with the buildbot's
+constexpr const char* RETROARCH_NIGHTLY_RECORD = "/switch/sphaira/cache/retroarch_nightly.txt";
 
 // an entry may name its own zip (recompiles hosted on their own GitHub release).
 inline auto ResolveAppstoreZipUrl(std::string_view name, std::string_view title, std::string_view base_url, std::string_view direct_url = {}) -> std::string {

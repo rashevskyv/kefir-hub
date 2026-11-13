@@ -217,6 +217,12 @@ auto InstallApp(ProgressBox* pbox, const Entry& entry) -> Result {
                 info_file.Write(0, info_content.data(), info_content.size(), FsWriteOption_Flush);
                 info_file.Close();
             }
+
+            // which nightly the card has now; no Last-Modified: no record, so the Updater offers it again
+            fs.DeleteFile(RETROARCH_NIGHTLY_RECORD);
+            if (const auto it = api_result.header.Find("Last-Modified"); it != api_result.header.m_map.cend()) {
+                fs.write_entire_file(RETROARCH_NIGHTLY_RECORD, std::vector<u8>(it->second.begin(), it->second.end()));
+            }
         }
         R_SUCCEED();
     }

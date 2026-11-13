@@ -2,6 +2,7 @@
 #include "ui/menus/kefir/kefir_apps.hpp"
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/appstore/appstore_internal.hpp"
+#include "ui/menus/appstore_util.hpp"
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
@@ -74,6 +75,23 @@ auto RowOrder(const AppRow& a, const AppRow& b) -> bool {
     return strcasecmp(a.name.c_str(), b.name.c_str()) < 0;
 }
 
+// the saved answer of an app's GitHub release: "/switch/sphaira/cache/apps_gh_UAPlay.nro.json"
+auto GithubReleaseCache(const GithubApp& app) -> std::string {
+    return "/switch/sphaira/cache/apps_gh_" + std::string(app.asset) + ".json";
+}
+
+// only the apps on the card: a release nobody has installed is not worth a request
+auto InstalledGithubApps() -> std::vector<const GithubApp*> {
+    std::vector<const GithubApp*> out;
+    fs::FsNativeSd sd;
+    for (const auto& app : GITHUB_APPS) {
+        if (sd.FileExists(fs::FsPath{std::string(app.nro_path)})) {
+            out.push_back(&app);
+        }
+    }
+    return out;
+}
+
 auto ReadTextFile(const char* path) -> std::string {
     std::vector<u8> data;
     if (R_FAILED(fs::read_entire_file(fs::FsPath{path}, data))) {
@@ -105,7 +123,8 @@ void AppsTab::Refresh() {
 
     // the rows are built when the last answer is in; a failed answer keeps the file saved last time
     const auto sources = appstore::LoadSources();
-    m_pending = sources.size() + 2;
+    const auto github_apps = InstalledGithubApps();
+    m_pending = sources.size() + 3 + github_apps.size();
     const auto done = [this](auto&) {
         if (!--m_pending) {
             m_loading = false;
@@ -119,6 +138,19 @@ void AppsTab::Refresh() {
     }
     for (const auto& [url, path] : {std::pair{HUB_RELEASE_URL, HUB_RELEASE_CACHE}, std::pair{DBI_RELEASE_URL, DBI_RELEASE_CACHE}}) {
         curl::Api().ToFileAsync(curl::Url{url}, curl::Path{path}, curl::Flags{curl::Flag_Cache},
+            curl::StopToken{this->GetToken()}, curl::Header{{"Accept", "application/vnd.github+json"}}, curl::OnComplete{done});
+    }
+    // the RetroArch nightly: a HEAD request gives its Last-Modified, the 350 MB archive stays on the server
+    curl::Api().ToMemoryAsync(curl::Url{appstore::RETROARCH_NIGHTLY_URL}, curl::Flags{curl::Flag_NoBody},
+        curl::StopToken{this->GetToken()}, curl::OnComplete{[this, done](auto& result) {
+            m_retroarch_built.clear();
+            if (const auto it = result.header.Find("Last-Modified"); result.success && it != result.header.m_map.cend()) {
+                m_retroarch_built = it->second;
+            }
+            done(result);
+        }});
+    for (const auto* app : github_apps) {
+        curl::Api().ToFileAsync(curl::Url{GithubReleaseApiUrl(*app)}, curl::Path{GithubReleaseCache(*app)}, curl::Flags{curl::Flag_Cache},
             curl::StopToken{this->GetToken()}, curl::Header{{"Accept", "application/vnd.github+json"}}, curl::OnComplete{done});
     }
 }
@@ -162,6 +194,12 @@ void AppsTab::Build() {
         if (row.source == AppSource::Dbi) {
             row.latest = has_dbi_release ? dbi_release.tag : std::string{};
             row.state = AppStateOf(row.installed, row.latest);
+        } else if (row.source == AppSource::Github) {
+            auto_update::Release release;
+            if (auto_update::ReadRelease(GithubReleaseCache(*FindGithubApp(row.path)).c_str(), release)) {
+                row.latest = ReleaseVersion(release.tag);
+            }
+            row.state = AppStateOf(row.installed, row.latest);
         } else if (auto it = store.find(Lower(row.path)); it != store.end()) {
             row.store = std::make_shared<appstore::Entry>(std::move(it->second));
             store.erase(it); // one row per store entry
@@ -171,6 +209,18 @@ void AppsTab::Build() {
             }
             row.latest = row.store->version;
             row.state = StoreState(*row.store);
+            // RetroArch installs the buildbot nightly: the build date is its version, not the store's number
+            if (appstore::IsRetroArchPackage(*row.store)) {
+                auto record = ReadTextFile(appstore::RETROARCH_NIGHTLY_RECORD);
+                while (!record.empty() && (record.back() == '\n' || record.back() == '\r' || record.back() == ' ')) {
+                    record.pop_back();
+                }
+                if (!record.empty()) {
+                    row.installed = HttpDateDay(record);
+                }
+                row.latest = HttpDateDay(m_retroarch_built);
+                row.state = NightlyState(record, m_retroarch_built);
+            }
         }
         m_rows.push_back(std::move(row));
     }
@@ -199,6 +249,8 @@ void AppsTab::Activate() {
     }
     if (row.source == AppSource::Dbi) {
         UpdateDbi(row);
+    } else if (row.source == AppSource::Github) {
+        UpdateGithubApp(row);
     } else {
         UpdateStoreApp(row);
     }
@@ -285,6 +337,21 @@ void AppsTab::UpdateStoreApp(const AppRow& row) {
     auto entry = row.store;
     App::Push<ProgressBox>(0, "Updating"_i18n, row.name, [entry](auto pbox) -> Result {
         return appstore::InstallApp(pbox, *entry);
+    }, [this, name = row.name](Result rc) {
+        Installed(rc, name);
+    });
+}
+
+void AppsTab::UpdateGithubApp(const AppRow& row) {
+    const auto* app = FindGithubApp(row.path);
+    if (!app) {
+        return;
+    }
+    App::Push<ProgressBox>(0, "Updating"_i18n, row.name, [app](auto pbox) -> Result {
+        using namespace settings::detail;
+        R_TRY(DownloadFile(pbox, i18n::get(app->downloading), GithubDownloadUrl(*app), GithubTempPath(*app)));
+        R_TRY(MovePath(GithubTempPath(*app), std::string(app->nro_path)));
+        R_SUCCEED();
     }, [this, name = row.name](Result rc) {
         Installed(rc, name);
     });

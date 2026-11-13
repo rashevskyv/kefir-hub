@@ -21,6 +21,7 @@
 - [[UAModDownloader]] and [[UAPlay]] show only when the Kefir Hub language is Ukrainian
 - [[UAPlay]] downloads UAPlay.nro (Ukrainian films and series: UAkino, UAFlix, UASerials) from github.com/Small182/UAPlay-nx to /switch/UAPlay.nro; its optional NSP forwarder needs exactly that path
 - [[UAModDownloader]], [[UAPlay]], [[ModCD]] and [[SimpleModDownloader]] show the app's own icon at the left instead of the arrow
+- an installed [[UAModDownloader]], [[UAPlay]], [[ModCD]] or [[SimpleModDownloader]] also updates from [[Updater]] → [[Apps]] (from the same GitHub release)
 - Ownfoil is no longer in this menu (it stays in [Install over the network](install/network.md))
 -->
 

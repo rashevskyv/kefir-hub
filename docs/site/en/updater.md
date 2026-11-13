@@ -179,7 +179,8 @@ The warning box also has a QR code that opens a manual downgrade guide.
 <!-- draft
 - the [[Apps]] tab lists Kefir Hub, DBI and every app from the [[Homebrew]] tab, with [[Installed:]] and [[Newest:]] versions; while it loads: [[Checking for updates...]]; empty: [[No apps found.]]
 - the tag per app: [[UPDATE]], [[Up to date]] or [[No update info]]
-- **A** on an app with [[UPDATE]] downloads the new version: Kefir Hub from its GitHub release, DBI from DBIPatcher, other apps from the [[Homebrew App Store]] sources; then "<app>: [[updated]]"
+- **A** on an app with [[UPDATE]] downloads the new version: Kefir Hub from its GitHub release, DBI from DBIPatcher, UAModDownloader, UAPlay, ModCD and SimpleModDownloader (the apps of [Software](software.md)) from their own GitHub release, RetroArch from the libretro buildbot nightly, other apps from the [[Homebrew App Store]] sources; then "<app>: [[updated]]"
+- RetroArch: [[Installed:]] and [[Newest:]] are build dates (the nightly has no version number); a RetroArch installed before this version, or not by the Hub, shows [[UPDATE]] once
 - Kefir Hub: the row shows the download percent, then [[Press A to restart]]; on error [[Failed, press A to try again]]
 - DBI: if the DBI language is not known, the Hub asks [[Which language does your DBI use?]]; with no choice it says [[Choose the DBI language in Additional programs → DBI.]]
 - **A** on an app without an update: [[Already the newest version.]] or [[No source knows this app.]]

@@ -4,6 +4,7 @@
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
+#include "ui/menus/kefir/kefir_apps_state.hpp"
 
 #include "ui/menus/appstore.hpp"
 #include "ui/menus/ghdl.hpp"
@@ -50,73 +51,22 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
         SettingsItemKind::Folder,
     });
 
-    // UAModDownloader has Ukrainian mods only: it is shown with the Ukrainian Hub language
-    if (i18n::IsUkrainian()) {
+    // the apps downloaded straight from their GitHub release; the Updater's Apps tab updates them from the same list
+    for (const auto& app : kefir::GITHUB_APPS) {
+        if (app.ukrainian_only && !i18n::IsUkrainian()) {
+            continue;
+        }
         items.emplace_back(MakePackageAction({
-            "UAModDownloader"_i18n,
-            "Ukrainian mods."_i18n,
-            [](auto pbox) -> Result {
-                R_TRY(DownloadFile(
-                    pbox,
-                    "Downloading UAModDownloader..."_i18n,
-                    "https://github.com/pro100luk/UAModDownloader/releases/latest/download/UAModDownloader.nro",
-                    "/switch/UAModDownloader/UAModDownloader_new.nro"
-                ));
-                R_TRY(MovePath("/switch/UAModDownloader/UAModDownloader_new.nro", "/switch/UAModDownloader/UAModDownloader.nro"));
+            i18n::get(app.name),
+            i18n::get(app.description),
+            [&app](auto pbox) -> Result {
+                R_TRY(DownloadFile(pbox, i18n::get(app.downloading), kefir::GithubDownloadUrl(app), kefir::GithubTempPath(app)));
+                R_TRY(MovePath(kefir::GithubTempPath(app), std::string(app.nro_path)));
                 R_SUCCEED();
             },
         }));
-        items.back().icon = "romfs:/theme/uamoddownloader.jpg";
-
-        // UAPlay's NSP forwarder starts sdmc:/switch/UAPlay.nro, so the file goes there, not to a folder
-        items.emplace_back(MakePackageAction({
-            "UAPlay"_i18n,
-            "Ukrainian films and series."_i18n,
-            [](auto pbox) -> Result {
-                R_TRY(DownloadFile(
-                    pbox,
-                    "Downloading UAPlay..."_i18n,
-                    "https://github.com/Small182/UAPlay-nx/releases/latest/download/UAPlay.nro",
-                    "/switch/UAPlay_new.nro"
-                ));
-                R_TRY(MovePath("/switch/UAPlay_new.nro", "/switch/UAPlay.nro"));
-                R_SUCCEED();
-            },
-        }));
-        items.back().icon = "romfs:/theme/uaplay.jpg";
+        items.back().icon = std::string(app.icon);
     }
-
-    items.emplace_back(MakePackageAction({
-        "ModCD"_i18n,
-        "ECLIPS graphic mods."_i18n,
-        [](auto pbox) -> Result {
-            R_TRY(DownloadFile(
-                pbox,
-                "Downloading ModCD..."_i18n,
-                "https://github.com/kawaii-flesh/ModCD/releases/latest/download/ModCD.nro",
-                "/switch/ModCD/ModCD_new.nro"
-            ));
-            R_TRY(MovePath("/switch/ModCD/ModCD_new.nro", "/switch/ModCD/ModCD.nro"));
-            R_SUCCEED();
-        },
-    }));
-    items.back().icon = "romfs:/theme/modcd.jpg";
-
-    items.emplace_back(MakePackageAction({
-        "SimpleModDownloader"_i18n,
-        "Game mods from GameBanana."_i18n,
-        [](auto pbox) -> Result {
-            R_TRY(DownloadFile(
-                pbox,
-                "Downloading SimpleModDownloader..."_i18n,
-                "https://github.com/PoloNX/SimpleModDownloader/releases/latest/download/SimpleModDownloader.nro",
-                "/switch/SimpleModDownloader/SimpleModDownloader_new.nro"
-            ));
-            R_TRY(MovePath("/switch/SimpleModDownloader/SimpleModDownloader_new.nro", "/switch/SimpleModDownloader/SimpleModDownloader.nro"));
-            R_SUCCEED();
-        },
-    }));
-    items.back().icon = "romfs:/theme/simplemoddownloader.jpg";
 
     items.emplace_back(SettingsItem{
         "Custom Link"_i18n,
