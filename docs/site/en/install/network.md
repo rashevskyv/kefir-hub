@@ -105,10 +105,9 @@ appears on the [[Homebrew]] tab.
 An FTP program does not tell the console how big a file is. So the [[FTP Install]] screen shows no percent and no
 time left. It shows:
 
-- [[Mode]]: `FTP`.
-- [[Installed]]: how many files are finished.
-- [[Written]]: how much data has been written so far.
-- [[Average speed]].
+- Row 1: [[Mode]] `FTP`, how many files are [[Installed]] and [[Failed]].
+- Row 2: [[Average speed]].
+- Row 3: the game name, how much of it is [[Written]], and [[Package size]] as `--`.
 
 Shrunk to a badge with **R3**, it shows `--` instead of a percent. When the FTP program has nothing more to send,
 the screen changes to [[Session summary]] (see [When the queue finishes](sd-card.md#summary)).

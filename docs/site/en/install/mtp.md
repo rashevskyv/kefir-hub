@@ -46,7 +46,7 @@ If you copy a game file to the microSD card drive instead, it is only stored on 
 
 ## What the progress shows {#progress}
 
-The PC does not tell the console how big the file is, so the console cannot show a percentage for the whole copy. The top row shows [[Mode]] MTP, how many files are [[Installed]], how much was [[Written]] and the [[Average speed]]. [[Remaining]] appears only when the size is known. Use the copy window on the PC to see how far the copy is.
+The PC does not tell the console how big the file is, so the console cannot show a percentage for the whole copy. Row 1 shows [[Mode]] MTP, how many files are [[Installed]] and [[Failed]]. Row 2 shows the [[Average speed]]. Row 3 shows the game name and how much of it is [[Written]]; [[Package size]] shows `--`. Use the copy window on the PC to see how far the copy is.
 
 Copying many files over MTP shows [[Copying via MTP]] with one bar for the current file and, under it, the line [[Copied so far:]] with the number of finished [[files]], their size and the average speed of the whole copy; the count starts again when the copy ends (the PC does not tell the total, so there is no bar for the whole batch).
 

@@ -8,6 +8,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.367 — install screen: three rows, labelled package numbers, header keeps free / total
+Header EmuNAND/microSD always show free / total (an install no longer replaces it). Install rows: queue (package, overall, installed, failed); average speed + remaining (game / queue); game title left with fixed-width "Written" / "Package size" on the right, no NCA name. Top bar = current game. Docs rows text + 4 shots retaken.
+host tests: pass (quick) · nro: built (DocsDemo) · switch: pending
+
 ## v0.14.366 — build fix
 homebrew_scan.cpp: enum and int mixed in a conditional (-Werror=extra) in the v0.14.365 folder fingerprint.
 host tests: pass (quick) · nro: built · switch: pending

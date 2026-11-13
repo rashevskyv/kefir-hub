@@ -58,7 +58,7 @@ For files on a network share the install size is not checked in advance; the que
 
 ## Watch the progress {#progress}
 
-While the queue runs, the top row shows the [[Package]] number, [[Overall]] progress, how many packages are [[Installed]] and [[Failed]], the [[Average speed]] and the time [[Remaining]]. Below it are the current package, a speed graph and a log of every step.
+While the queue runs, three rows of text show the progress. Row 1 shows the [[Package]] number, [[Overall]] progress and how many packages are [[Installed]] and [[Failed]]. Row 2 shows the [[Average speed]] and the time [[Remaining]] (for this game / for the whole queue). Row 3 shows the game name on the left, and on the right how much of it is [[Written]] and its [[Package size]]. Below are two bars (this game, the whole queue), a speed graph and a log of every step. In the header, EmuNAND and microSD always show free / total space.
 
 <!-- shot: install-sd-card-queue-progress | Queue installing package 2 of 4, progress bar, speed graph and log -->
 

@@ -229,6 +229,7 @@ protected:
     bool m_session_failed{false};
     std::string m_fail_reason{};
     std::string m_current_title{};
+    ScrollingText m_scroll_install_title{}; // a long game title scrolls beside the fixed numbers
     std::string m_current_transfer{};
     s64 m_progress_offset{0};
     s64 m_progress_size{0};

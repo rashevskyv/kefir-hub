@@ -113,15 +113,12 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     // column changes, so nothing shifts as the cursor moves between titles.
     // The column is sized from six digits plus a space and the two widest
     // unit letters, measured in the current font so it scales with language.
-    // In projection mode ("+focus / total") or install progress mode ("written / total"),
-    // reserve space for both values.
+    // In projection mode ("+focus / total / free") reserve space for all three values.
     const float value_col_w = [&]{
         nvgFontSize(vg, storage_font);
         const char* template_str = (m_storage_projection && m_storage_highlight_active)
             ? "+000000 WW / 000000 WW / 000000 WW"
-            : (m_storage_install_progress && m_storage_highlight_active)
-                ? "+000000 WW / 000000 WW"
-                : "000000 WW / 000000 WW";
+            : "000000 WW / 000000 WW";
         gfx::textBounds(vg, 0, 0, bounds, template_str);
         return bounds[2] - bounds[0];
     }();
@@ -144,8 +141,8 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
 
     // value shown next to a bar: "free / total" normally, "size / free" in
     // highlight mode (the game's size never hides what is left), "+focus /
-    // total / free" for a projection (planned install usage), or "written /
-    // total" for active package install progress.
+    // total / free" for a projection (planned install usage). An active install
+    // keeps "free / total": the package's own progress is on the install screen.
     // A bar with no bytes for this title stays free-space grey: only the
     // storage that actually holds the game (or the planned install) turns blue.
     auto storage_value_of = [&](s64 free_bytes, s64 total_bytes, u64 highlight_bytes, u64 focus_bytes) -> std::string {
@@ -154,14 +151,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
                    utils::formatSizeStorage(highlight_bytes) + " / " +
                    utils::formatSizeStorage(free_bytes);
         }
-        if (!m_storage_highlight_active || !highlight_bytes) {
+        if (!m_storage_highlight_active || !highlight_bytes || m_storage_install_progress) {
             return utils::formatSizeStorage(free_bytes) + " / " + utils::formatSizeStorage(total_bytes);
         }
-        const auto value = utils::formatSizeStorage(highlight_bytes);
-        if (m_storage_install_progress) {
-            return utils::formatSizeStorage(focus_bytes) + " / " + value;
-        }
-        return value + " / " + utils::formatSizeStorage(free_bytes);
+        return utils::formatSizeStorage(highlight_bytes) + " / " + utils::formatSizeStorage(free_bytes);
     };
 
     // Determine the exact rightmost boundary of the NAND storage part on Row 1 (y=48).
@@ -306,7 +299,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             // Normally show free / total. Games replace it with the exact size of the
             // focused title or the sum of the current multi-selection.
             const auto value = storage_value_of(free_bytes, total_bytes, highlight_bytes, focus_bytes);
-            const auto text_col = theme->GetColour(m_storage_highlight_active && highlight_bytes
+            const auto text_col = theme->GetColour(m_storage_highlight_active && highlight_bytes && !m_storage_install_progress
                 ? ThemeEntryID_HIGHLIGHT_1 : ThemeEntryID_TEXT_INFO);
 
             nvgFontSize(vg, storage_font);

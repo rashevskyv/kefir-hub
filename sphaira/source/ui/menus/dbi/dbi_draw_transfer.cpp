@@ -1,7 +1,6 @@
 #if ENABLE_NETWORK_INSTALL
 
 #include "ui/menus/dbi/dbi_internal.hpp"
-#include "path_util.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -16,34 +15,27 @@ namespace sphaira::ui::menu::dbi {
 
 void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
     const auto state = m_state.load();
-    if (state == State::Installing) {
-        // yellow bar = remaining bytes of the package being written, on its dest only.
-        // Label displays cumulative written / total progress without projecting the queue.
-        s64 sd_written{}, nand_written{};
-        s64 sd_total{}, nand_total{};
-        bool show = false;
-        if (m_current_package < m_queue.size()) {
-            const auto& entry = m_queue[m_current_package];
-            if (entry.install_selected && !entry.installed
-                && R_SUCCEEDED(entry.analysis_result) && (!entry.install_result.has_value() || R_SUCCEEDED(*entry.install_result))) {
-                const auto size = PlanSize(entry);
-                const auto written = std::clamp<s64>(m_total_write.load() - m_package_write_start, 0, size);
-                if (size > 0) {
-                    if (entry.install_sd) {
-                        sd_written = written;
-                        sd_total = size;
-                    } else {
-                        nand_written = written;
-                        nand_total = size;
-                    }
-                    show = true;
-                }
-            }
+    // the package being written: its planned size (0 = not known, e.g. a stream) and the bytes written so far.
+    s64 pkg_size{};
+    bool pkg_sd = false;
+    if (m_current_package < m_queue.size()) {
+        const auto& entry = m_queue[m_current_package];
+        if (entry.install_selected && !entry.installed
+            && R_SUCCEEDED(entry.analysis_result) && (!entry.install_result.has_value() || R_SUCCEEDED(*entry.install_result))) {
+            pkg_size = std::max<s64>(0, PlanSize(entry));
+            pkg_sd = entry.install_sd;
         }
-        if (show) {
-            SetStorageInstallProgress(nand_written, nand_total, sd_written, sd_total);
+    }
+    s64 pkg_written = std::max<s64>(0, m_total_write.load() - m_package_write_start);
+    if (pkg_size > 0) {
+        pkg_written = std::min(pkg_written, pkg_size);
+    }
+    // yellow bar in the header = remaining bytes of the package being written, on its dest only.
+    if (state == State::Installing && pkg_size > 0) {
+        if (pkg_sd) {
+            SetStorageInstallProgress(0, 0, pkg_written, pkg_size);
         } else {
-            ClearStorageHighlight();
+            SetStorageInstallProgress(pkg_written, pkg_size, 0, 0);
         }
     } else {
         ClearStorageHighlight();
@@ -75,8 +67,7 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
         // around by minutes between frames.
         return m_history_count < 4 ? std::string{} : FormatEta(bytes_left, avg_write_bps);
     };
-    const auto file_eta = (m_progress_size > 0 && m_progress_size >= m_progress_offset)
-        ? format_eta(m_progress_size - m_progress_offset) : std::string{};
+    const auto pkg_eta = pkg_size > pkg_written ? format_eta(pkg_size - pkg_written) : std::string{};
     const auto total_eta = (!has_deferred_plan && m_plan_total_bytes > overall_done)
         ? format_eta(m_plan_total_bytes - overall_done) : std::string{};
 
@@ -88,57 +79,74 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
     } else {
         std::snprintf(overall_buf, sizeof(overall_buf), "%.0f%%", overall_ratio * 100.0);
     }
+    // three rows: the queue as a whole; speed and time left; the current game with its own numbers.
+    constexpr float ROW_FONT = 17.f;
+    const auto info_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
+    const auto selected_col = theme->GetColour(ThemeEntryID_TEXT_SELECTED);
+    const auto failed_col = m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt;
     const bool known_batch = HasKnownBatchTotals(m_origin);
-    std::vector<StatItem> header;
+    std::vector<StatItem> row1;
     if (known_batch) {
-        header = {
+        row1 = {
             {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
-            {"Overall"_i18n, overall_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
-            {"Installed"_i18n, std::to_string(m_stats.installed)},
-            {"Failed"_i18n, std::to_string(m_stats.failed), m_stats.failed ? std::optional{theme->GetColour(ThemeEntryID_ERROR)} : std::nullopt},
-            {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
+            {"Overall"_i18n, overall_buf, selected_col},
         };
-        if (!file_eta.empty() || !total_eta.empty()) {
-            header.push_back({"Remaining"_i18n,
-                (file_eta.empty() ? "--" : file_eta) + " / " + (total_eta.empty() ? "--" : total_eta)});
-        }
     } else {
-        const auto mode = m_origin == TransportOrigin::Mtp ? "MTP" : "FTP";
-        header = {
-            {"Mode"_i18n, mode},
-            {"Installed"_i18n, std::to_string(m_stats.installed)},
-            {"Written"_i18n, utils::formatSizeStorage(std::max<s64>(0, m_total_write.load()))},
-            {"Average speed"_i18n, avg_buf, theme->GetColour(ThemeEntryID_TEXT_SELECTED)},
-        };
-        if (m_progress_size > 0) {
-            auto remaining = utils::formatSizeStorage(std::max<s64>(0, m_progress_size - m_progress_offset));
-            if (!file_eta.empty()) remaining += " · " + file_eta;
-            header.push_back({"Remaining"_i18n, std::move(remaining)});
-        }
-        if (m_stats.failed) {
-            header.push_back({"Failed"_i18n, std::to_string(m_stats.failed), theme->GetColour(ThemeEntryID_ERROR)});
-        }
+        row1 = {{"Mode"_i18n, m_origin == TransportOrigin::Mtp ? "MTP" : "FTP"}};
     }
-    DrawStatRow(vg, theme->GetColour(ThemeEntryID_TEXT_INFO), 70.f, GetY() + 10.f, 18.f, header);
+    row1.push_back({"Installed"_i18n, std::to_string(m_stats.installed)});
+    row1.push_back({"Failed"_i18n, std::to_string(m_stats.failed), failed_col});
+    DrawStatRow(vg, info_col, 70.f, GetY() + 4.f, ROW_FONT, row1);
+
+    std::vector<StatItem> row2{{"Average speed"_i18n, avg_buf, selected_col}};
+    if (!pkg_eta.empty() || !total_eta.empty()) {
+        // "this game / the whole queue"; a stream does not know the queue, so only the game.
+        auto remaining = pkg_eta.empty() ? std::string{"--"} : pkg_eta;
+        if (known_batch) {
+            remaining += " / " + (total_eta.empty() ? std::string{"--"} : total_eta);
+        }
+        row2.push_back({"Remaining"_i18n, std::move(remaining)});
+    }
+    DrawStatRow(vg, info_col, 70.f, GetY() + 25.f, ROW_FONT, row2);
+
     const auto display_title = !m_current_title.empty()
         ? m_current_title
         : (m_current_package < m_queue.size() ? m_queue[m_current_package].file_name : "");
     if (!display_title.empty()) {
-        std::string title = display_title;
-        if (!m_current_transfer.empty() &&
-            !path::EndsWithIC(m_current_transfer, ".nca") &&
-            !path::EndsWithIC(m_current_transfer, ".ncz") &&
-            m_current_transfer.find(".nca") == std::string::npos &&
-            m_current_transfer.find(".ncz") == std::string::npos) {
-            title += " — " + m_current_transfer;
+        // the numbers sit in a fixed block at the right edge, each value in a fixed slot after its label,
+        // so the labels never move while the values grow; the title takes what is left and scrolls when longer.
+        const float y = GetY() + 46.f;
+        constexpr float RIGHT = 70.f + 1140.f;
+        constexpr float LABEL_GAP = 6.f;
+        constexpr float CELL_GAP = 24.f;
+        nvgFontSize(vg, ROW_FONT);
+        float b[4];
+        const auto text_w = [&](const std::string& s) {
+            gfx::textBounds(vg, 0, 0, b, s.c_str());
+            return b[2] - b[0];
+        };
+        const float value_w = text_w("000.00 WW");
+        const std::pair<std::string, std::string> cells[] = {
+            {"Written"_i18n + ":", utils::formatSizeStorage(pkg_written)},
+            {"Package size"_i18n + ":", pkg_size > 0 ? utils::formatSizeStorage(pkg_size) : std::string{"--"}},
+        };
+        float block_w = CELL_GAP * (std::size(cells) - 1);
+        for (const auto& [label, value] : cells) {
+            block_w += text_w(label) + 0.7f + LABEL_GAP + value_w;
         }
-        nvgSave(vg);
-        nvgIntersectScissor(vg, 70.f, GetY() + 38.f, 1140.f, 25.f);
-        gfx::drawTextArgs(vg, 70.f, GetY() + 38.f, 18.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
-            theme->GetColour(ThemeEntryID_TEXT), "%s", title.c_str());
-        nvgRestore(vg);
+        float x = RIGHT - block_w;
+        const float title_w = std::max(0.f, x - CELL_GAP - 70.f);
+        m_scroll_install_title.Draw(vg, true, 70.f, y, title_w, ROW_FONT, NVG_ALIGN_LEFT | NVG_ALIGN_TOP,
+            theme->GetColour(ThemeEntryID_TEXT), display_title);
+        for (const auto& [label, value] : cells) {
+            gfx::drawTextArgs(vg, x, y, ROW_FONT, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", label.c_str());
+            gfx::drawTextArgs(vg, x + 0.7f, y, ROW_FONT, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, info_col, "%s", label.c_str());
+            x += text_w(label) + 0.7f + LABEL_GAP;
+            gfx::drawTextArgs(vg, x, y, ROW_FONT, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", value.c_str());
+            x += value_w + CELL_GAP;
+        }
     }
-    // two bars of the same size, a percentage beside each: the current transfer on top, the whole queue underneath.
+    // two bars of the same size, a percentage beside each: the current game on top, the whole queue underneath.
     {
         constexpr float BAR_W = 1090.f; // the rest of the 1140 px row is for the percentage
         const auto pct_col = theme->GetColour(ThemeEntryID_TEXT);
@@ -154,19 +162,22 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
                 gfx::drawTextArgs(vg, bar.x + bar.w + 12.f, bar.y + bar.h / 2.f, 16.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, pct_col, "--");
             }
         };
-        const bool current_known = m_progress_size > 0;
-        const double current_ratio = current_known
-            ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0;
+        // the top bar is the game in the row above (its numbers); a stream without a planned size
+        // falls back to the transfer it reports.
+        const bool current_known = pkg_size > 0 || m_progress_size > 0;
+        const double current_ratio = pkg_size > 0
+            ? std::clamp<double>((double)pkg_written / (double)pkg_size, 0.0, 1.0)
+            : current_known ? std::clamp<double>((double)m_progress_offset / (double)m_progress_size, 0.0, 1.0) : 0.0;
         // the whole queue by bytes; a stream (MTP/FTP) does not say how many packages come, so its overall is unknown
-        draw_bar(GetY() + 65.f, current_ratio, current_known);
-        draw_bar(GetY() + 80.f, overall_ratio, overall.has_value());
+        draw_bar(GetY() + 68.f, current_ratio, current_known);
+        draw_bar(GetY() + 83.f, overall_ratio, overall.has_value());
     }
 
     // R/W speed graph: red = source read, blue = storage write.
     {
         const auto red = nvgRGBA(231, 76, 60, 255);
         const auto blue = nvgRGBA(52, 152, 219, 255);
-        const Vec4 plot{110.f, GetY() + 95.f, 930.f, 125.f};
+        const Vec4 plot{110.f, GetY() + 98.f, 930.f, 122.f};
         const float pad = 4.f;
 
         gfx::drawRect(vg, plot, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3.f);
