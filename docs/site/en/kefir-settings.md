@@ -68,25 +68,43 @@ If no translation exists for your firmware, the first row shows your firmware an
 
 ## Nextendo
 
-<!-- draft
-- [[Nextendo]] is a folder in [[Kefir Settings]]; it opens a page with the status, the switches and the version rows
-- Nextendo is the Nextendo Network: online play for supported games on the emuMMC, off by default; after the user switches it on, Kefir Hub sets it up (hosts file, real PRODINFO inside the emuMMC)
-- [[Nextendo on emuMMC]] is off by default and is never switched on without the user; a choice the user made is kept, and a console that already runs Nextendo stays on after the update; changing it asks for a hold of **A** and restarts the console only if a file really changed
-- [[Nextendo on sysNAND (Semi-stock)]] is shown only while Semi-stock is on; it is off by default; the warning says the Nintendo services then go to Nextendo and the eShop may stop working
-- every toggle row of Kefir Settings (also the Nextendo ones) shows a switch instead of the words On/Off: knob on the right and a green track = on, knob on the left and a red track = off, knob in the middle and a grey track = the setting waits for the user's choice (shown only by a row that has such a state; the Nextendo switches are always on or off)
-- the [[Status]] row of the Nextendo page appears only when Nextendo cannot work: a red lamp + "No patch for this firmware" (this Kefir Hub has no ssl patch for the firmware), or a grey lamp + [[Not in use]] (the console is not on the emuMMC and not in Semi-stock); otherwise the switches alone show the state
-- the [[USB 3.0]] row shows the same switch as the other toggle rows (it showed On/Off text before v0.14.282)
-- the page title and the Tools tile read [[Kefir Settings]] (UK: "Налаштування Кефіра"); the page title was not translated before v0.14.282
-- leaving Semi-stock (back in the emuMMC) removes the sysNAND hosts file and switches that option off
-- [[System firmware]] shows the installed version; the description shows the first 16 digits of the ssl build ID of the console; Nextendo works when this Kefir Hub carries the ssl patch for that ID; without it Nextendo is switched off until a Kefir Hub update brings the patch
-- Kefir Hub carries the Nextendo patches itself (game patches, certificate patches, browser certificates) and writes them to the card at start: folders `nextendo_*` in `atmosphere/exefs_patches` and `atmosphere/nro_patches`, and `atmosphere/contents/0100000000000803`; when Nextendo is off they are deleted
-- a Kefir update keeps the `nextendo_*` folders; Semi-stock moves them out of the way while it is on
-- the Hub and the Prelude-Nextendo app: the hosts file the Hub writes ends with `# managed by Kefir Hub`; while Nextendo is off in the Hub, a hosts file the Prelude app wrote stays, and so do its PRODINFO and DNS settings; with Nextendo on, the Hub writes its own file over it
-- new Prelude-Nextendo releases reach the console as an ordinary Kefir Hub update (the Hub updates itself); no Kefir update is needed
-- [[Server]] shows the server address used in the hosts file; [[Release]] shows the Prelude-Nextendo release the build is based on
-- while Nextendo is in use, the [[Games]] list marks every installed game Nextendo supports with a green [[Online]] badge and the number of players online now (see the Games page); with Nextendo off the Hub makes no such request
-- the [[Release]] row says: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0; the line "Required Notice: Copyright 2026 Nextendo Network" stands at the bottom of the page, above the buttons, in English
--->
+Nextendo Network gives online play to supported games on the emuMMC. The online services of these games go to the Nextendo servers; the Nintendo servers are not reached. Nextendo is off until you switch it on.
+
+**Where:** [[Tools]] → [[Kefir Settings]] → [[Nextendo]]
+
+<!-- shot: kefir-settings-nextendo | Nextendo page on the emuMMC: Nextendo on emuMMC switched on, System firmware, Server and Release rows, the Required Notice line at the bottom -->
+
+To switch Nextendo on:
+
+1. Start Kefir on the emuMMC and open Kefir Hub.
+2. Open [[Tools]] → [[Kefir Settings]] → [[Nextendo]].
+3. Select [[Nextendo on emuMMC]] and hold **A**.
+4. Kefir Hub writes the Nextendo files to the memory card. If a file changed, the console restarts.
+5. Start a supported game and open its online mode.
+
+The [[Games]] list marks every installed game that Nextendo supports with a green [[Online]] badge and the number of players online now. See [Games](games.md).
+
+To switch Nextendo off, select [[Nextendo on emuMMC]] again and hold **A**. Kefir Hub deletes its Nextendo files; your own patches stay.
+
+| Row | What it shows |
+|---|---|
+| [[Nextendo on emuMMC]] | On or off. Off by default. |
+| [[Nextendo on sysNAND (Semi-stock)]] | Shown only while Semi-stock is on. Off by default. |
+| [[System firmware]] | The installed firmware. The description shows the ssl ID that the Nextendo patch must match. |
+| [[Server]] | The Nextendo server address in the hosts file. |
+| [[Release]] | The Prelude-Nextendo release that Kefir Hub is based on. |
+| [[Status]] | Shown only when Nextendo cannot work (see below). |
+
+Kefir Hub writes these files: the hosts file `atmosphere/hosts/emummc.txt`, the `nextendo_*` folders in `atmosphere/exefs_patches` and `atmosphere/nro_patches`, and the browser certificates in `atmosphere/contents/0100000000000803`. A Kefir update keeps the `nextendo_*` folders. New Prelude-Nextendo releases come with Kefir Hub updates; no Kefir update is needed.
+
+!!! warning
+    [[Nextendo on sysNAND (Semi-stock)]] sends the Nintendo services of the original system to the Nextendo Network. The eShop and other official online features may stop working. Semi-stock has no PRODINFO protection. Leaving Semi-stock switches this option off.
+
+**[[Status]]: [[No patch for this firmware]].** This Kefir Hub has no Nextendo patch for the installed firmware, so Nextendo is off. Update Kefir Hub; it gets the patch when Prelude-Nextendo adds one.
+
+**[[Status]]: [[Not in use]].** The console runs neither the emuMMC nor Semi-stock. Start Kefir on the emuMMC.
+
+**Prelude-Nextendo app.** If you set up Nextendo with the Prelude-Nextendo app, its hosts file stays while Nextendo is off in Kefir Hub. When you switch Nextendo on in Kefir Hub, Kefir Hub writes its own hosts file over it.
 
 ## Problems
 
