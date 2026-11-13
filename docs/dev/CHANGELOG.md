@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.359 — the Vietnamese font and the Kefir Updater icon load from romfs
+Both were read while romfs was not mounted (Hub mounts it only around reads); now each read has its own romfsInit/romfsExit.
+host tests: pass · nro: built · switch: pending (Vietnamese letters, Kefir Updater tile icon)
+
 ## v0.14.358 — Vietnamese letters through a fallback font
 The shared fonts have no Vietnamese letters (ế, ệ, ơ, ư...); `romfs:/fonts/vietnamese.ttf` (a 9 KB Lato subset, OFL) is a fallback of the standard font.
 host tests: see build log · nro: built · switch: pending (Vietnamese UI text shows all letters)

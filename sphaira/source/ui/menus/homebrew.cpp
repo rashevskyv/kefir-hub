@@ -45,8 +45,11 @@ auto LoadAppIcon(NVGcontext* vg, NroEntry& e) -> bool {
             return false;
         }
         e.icon_size = 0; // one try only
-        // the same loader as the theme icons (app_theme.cpp): nanovg reads the romfs file itself
-        e.image = nvgCreateImage(vg, "romfs:/theme/kefir_updater.jpg", 0);
+        // the same loader as the theme icons (app_theme.cpp); romfs is mounted only around reads
+        if (R_SUCCEEDED(romfsInit())) {
+            e.image = nvgCreateImage(vg, "romfs:/theme/kefir_updater.jpg", 0);
+            romfsExit();
+        }
         if (!e.image) {
             log_write("[homebrew] Kefir Updater icon failed to load from romfs\n");
         }

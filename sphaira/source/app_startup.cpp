@@ -575,11 +575,16 @@ App::App(const char* argv0) {
     auto extended_font = nvgCreateFontMem(this->vg, "Extended", (unsigned char*)font_extended.address, font_extended.size, 0);
     nvgAddFallbackFontId(this->vg, standard_font, extended_font);
 
-    // no shared font has the Vietnamese letters (ế, ệ, ơ, ư...): a Lato subset covers only them
-    if (const auto vi_font = nvgCreateFont(this->vg, "Vietnamese", "romfs:/fonts/vietnamese.ttf"); vi_font >= 0) {
-        nvgAddFallbackFontId(this->vg, standard_font, vi_font);
-    } else {
-        log_write("failed to load romfs:/fonts/vietnamese.ttf\n");
+    // no shared font has the Vietnamese letters (ế, ệ, ơ, ư...): a Lato subset covers only them.
+    // romfs is mounted only around reads; fontstash copies the file into memory, so unmount right after.
+    if (R_SUCCEEDED(romfsInit())) {
+        const auto vi_font = nvgCreateFont(this->vg, "Vietnamese", "romfs:/fonts/vietnamese.ttf");
+        romfsExit();
+        if (vi_font >= 0) {
+            nvgAddFallbackFontId(this->vg, standard_font, vi_font);
+        } else {
+            log_write("failed to load romfs:/fonts/vietnamese.ttf\n");
+        }
     }
 
     const PlSharedFontType lang_font[] = {
