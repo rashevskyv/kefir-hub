@@ -139,6 +139,24 @@ void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& 
         return;
     }
 
+    if (!item.icon.empty()) {
+        // loaded once per path; romfs is mounted only around reads (nanovg copies the file)
+        static std::unordered_map<std::string, int> images;
+        auto it = images.find(item.icon);
+        if (it == images.end()) {
+            int image = 0;
+            if (R_SUCCEEDED(romfsInit())) {
+                image = nvgCreateImage(vg, item.icon.c_str(), 0);
+                romfsExit();
+            }
+            it = images.emplace(item.icon, image).first;
+        }
+        if (it->second) {
+            gfx::drawImage(vg, v.x + 17.f, v.y + 11.f, 44.f, 44.f, it->second, 6.f);
+            return;
+        }
+    }
+
     const auto colour = theme->GetColour(selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT_INFO);
     const auto x = v.x + 18.f;
     const auto y = v.y + 15.f;

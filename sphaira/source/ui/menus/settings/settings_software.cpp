@@ -50,20 +50,24 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
         SettingsItemKind::Folder,
     });
 
-    items.emplace_back(MakePackageAction({
-        "UAModDownloader"_i18n,
-        "Ukrainian mods."_i18n,
-        [](auto pbox) -> Result {
-            R_TRY(DownloadFile(
-                pbox,
-                "Downloading UAModDownloader..."_i18n,
-                "https://github.com/pro100luk/UAModDownloader/releases/latest/download/UAModDownloader.nro",
-                "/switch/UAModDownloader/UAModDownloader_new.nro"
-            ));
-            R_TRY(MovePath("/switch/UAModDownloader/UAModDownloader_new.nro", "/switch/UAModDownloader/UAModDownloader.nro"));
-            R_SUCCEED();
-        },
-    }));
+    // UAModDownloader has Ukrainian mods only: it is shown with the Ukrainian Hub language
+    if (i18n::IsUkrainian()) {
+        items.emplace_back(MakePackageAction({
+            "UAModDownloader"_i18n,
+            "Ukrainian mods."_i18n,
+            [](auto pbox) -> Result {
+                R_TRY(DownloadFile(
+                    pbox,
+                    "Downloading UAModDownloader..."_i18n,
+                    "https://github.com/pro100luk/UAModDownloader/releases/latest/download/UAModDownloader.nro",
+                    "/switch/UAModDownloader/UAModDownloader_new.nro"
+                ));
+                R_TRY(MovePath("/switch/UAModDownloader/UAModDownloader_new.nro", "/switch/UAModDownloader/UAModDownloader.nro"));
+                R_SUCCEED();
+            },
+        }));
+        items.back().icon = "romfs:/theme/uamoddownloader.jpg";
+    }
 
     items.emplace_back(MakePackageAction({
         "ModCD"_i18n,
@@ -79,6 +83,7 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
     }));
+    items.back().icon = "romfs:/theme/modcd.jpg";
 
     items.emplace_back(MakePackageAction({
         "SimpleModDownloader"_i18n,
@@ -94,6 +99,7 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
             R_SUCCEED();
         },
     }));
+    items.back().icon = "romfs:/theme/simplemoddownloader.jpg";
 
     items.emplace_back(SettingsItem{
         "Custom Link"_i18n,
@@ -113,7 +119,7 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
 
 } // namespace
 
-SoftwareMenu::SoftwareMenu() : MenuBase{"Software", MenuFlag_None} {
+SoftwareMenu::SoftwareMenu() : MenuBase{"Software"_i18n, MenuFlag_None} {
     m_items = BuildSoftwareItems();
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){

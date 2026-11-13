@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.362 — Kefir tab status lines; Software menu: translated title, UAModDownloader for Ukrainian only, app icons
+The Kefir tab shows the state ("You have the latest Kefir installed"), then Available and Installed on their own lines in one size, and a hint to scroll the changelog down. The Software menu title is translated; UAModDownloader shows only with the Ukrainian Hub language; UAModDownloader, ModCD and SimpleModDownloader show their own NRO icons (romfs:/theme/*.jpg) instead of the download arrow.
+host tests: pass · nro: built · switch: pending (Kefir tab lines, Software title, icons, UAModDownloader with uk only)
+
 ## v0.14.360 — the Kefir changelog in the Updater scrolls by finger drag
 KefirChangelogBox moves the text with a touch drag (AboutBox pattern), clamped like the buttons; a tap on the button still installs.
 host tests: pass · nro: built · switch: pending (drag up/down, tap on the end button)

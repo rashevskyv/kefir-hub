@@ -51,6 +51,8 @@ struct SettingsItem {
     std::function<int()> tri{};
     // a status lamp drawn in place of the text value: 1 green, 0 red, -1 grey. A short text may stay in `value`.
     std::function<int()> lamp{};
+    // a romfs picture (an app's own icon) drawn in place of the kind icon
+    std::string icon{};
 };
 
 struct SettingsCategory {

@@ -54,19 +54,24 @@ void KefirChangelogBox::Activate() {
 void KefirChangelogBox::DrawPage(NVGcontext* vg, Theme* theme) {
     const auto state = StateOf(m_current_version, m_target_version);
     const auto target = "Kefir " + (m_target_version.empty() ? std::string{"?"} : m_target_version);
-    const std::string head = state == KefirState::Update ? "Update available:"_i18n
-        : state == KefirState::NotInstalled ? "Kefir is not installed. Available:"_i18n
-        : "No Kefir update. Available:"_i18n;
-    const auto head_text = head + " " + target;
+    // the state on its own line; the available and the installed version below it, one per line, in one size
+    const std::string head = state == KefirState::Update ? "A Kefir update is available"_i18n
+        : state == KefirState::NotInstalled ? "Kefir is not installed"_i18n
+        : "You have the latest Kefir installed"_i18n;
+    const auto available = "Available:"_i18n + " " + target;
     const auto installed = "Installed:"_i18n + " " +
         (detail::IsKnownVersion(m_current_version) ? "Kefir " + m_current_version : std::string{"not installed"_i18n});
+    const auto hint = "Scroll the changelog down to install."_i18n;
+    const auto info = theme->GetColour(ThemeEntryID_TEXT_INFO);
 
     gfx::drawTextBold(vg, m_pos.x + 8.f, m_pos.y + 6.f, 24.f,
-        theme->GetColour(state == KefirState::Latest ? ThemeEntryID_TEXT : ThemeEntryID_TEXT_SELECTED), head_text.c_str());
-    gfx::drawText(vg, m_pos.x + 8.f, m_pos.y + 40.f, 17.f, theme->GetColour(ThemeEntryID_TEXT_INFO), installed.c_str());
-    gfx::drawRect(vg, m_pos.x, m_pos.y + 70.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
+        theme->GetColour(state == KefirState::Latest ? ThemeEntryID_TEXT : ThemeEntryID_TEXT_SELECTED), head.c_str());
+    gfx::drawText(vg, m_pos.x + 8.f, m_pos.y + 42.f, 18.f, info, available.c_str());
+    gfx::drawText(vg, m_pos.x + 8.f, m_pos.y + 68.f, 18.f, info, installed.c_str());
+    gfx::drawText(vg, m_pos.x + m_pos.w - 8.f, m_pos.y + 68.f, 18.f, info, hint.c_str(), NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+    gfx::drawRect(vg, m_pos.x, m_pos.y + 98.f, m_pos.w, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
 
-    m_text_area = Vec4{m_pos.x + 8.f, m_pos.y + 82.f, m_pos.w - 48.f, m_pos.h - 82.f};
+    m_text_area = Vec4{m_pos.x + 8.f, m_pos.y + 110.f, m_pos.w - 48.f, m_pos.h - 110.f};
     if (m_loading) {
         gfx::drawText(vg, m_text_area.x + m_text_area.w / 2.f, m_text_area.y + m_text_area.h / 2.f, 24.f,
             theme->GetColour(ThemeEntryID_TEXT_INFO), "Loading changelog..."_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
