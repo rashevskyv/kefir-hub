@@ -491,6 +491,9 @@
         "console-transfer-ip-entry": {
             "user": true
         },
+        "install-keys-dump": {
+            "user": true
+        },
         "install-usb-waiting": {
             "steps": [
                 "R",

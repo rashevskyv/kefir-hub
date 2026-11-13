@@ -4390,5 +4390,9 @@
   "Already the newest version.": "已是最新版本。",
   "Choose the DBI language in Additional programs → DBI.": "请在 附加程序 → DBI 中选择 DBI 语言。",
   "Which language does your DBI use?": "您的 DBI 使用哪种语言？",
-  "updated": "已更新"
+  "updated": "已更新",
+  "Failed to reboot": "重启失败",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin 不在 /bootloader/payloads 中，因此 Hub 无法导出密钥。请将其复制到该目录，然后重新安装。",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "重启并导出密钥吗？\n主机将重启，Lockpick_RCM 会保存新密钥，随后主机正常启动。此后，请重新安装游戏。",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "自动密钥转储已关闭：/config/autokeys.disable 存在于 microSD 上。将其删除以转储密钥。"
 }

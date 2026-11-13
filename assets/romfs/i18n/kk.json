@@ -4332,5 +4332,9 @@
   "Already the newest version.": "Бұл қазірдің өзінде ең жаңа нұсқа.",
   "Choose the DBI language in Additional programs → DBI.": "DBI тілін Қосымша бағдарламалар → DBI ішінде таңдаңыз.",
   "Which language does your DBI use?": "DBI қандай тілді қолданады?",
-  "updated": "жаңартылды"
+  "updated": "жаңартылды",
+  "Failed to reboot": "Қайта жүктеу сәтсіз аяқталды",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin /bootloader/payloads ішінде жоқ, сондықтан Hub кілттерді дамптай алмайды. Оны сол жерге көшіріп, қайта орнатыңыз.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Қайта іске қосып, кілттерді дамп жасау керек пе?\nКонсоль қайта іске қосылады, Lockpick_RCM жаңа кілттерді сақтайды, содан кейін консоль әдеттегідей қосылады. Одан кейін ойынды қайта орнатыңыз.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Кілттерді автоматты түрде жинау өшірілген: /config/autokeys.disable файлы microSD картасында тұр. Кілттерді жинау үшін оны жойыңыз."
 }

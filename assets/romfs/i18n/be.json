@@ -4332,5 +4332,9 @@
   "Already the newest version.": "Гэта ўжо найноўшая версія.",
   "Choose the DBI language in Additional programs → DBI.": "Выберыце мову DBI ў «Дадатковыя праграмы» → DBI.",
   "Which language does your DBI use?": "Якую мову выкарыстоўвае ваш DBI?",
-  "updated": "абноўлена"
+  "updated": "абноўлена",
+  "Failed to reboot": "Не ўдалося перазагрузіць",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin няма ў /bootloader/payloads, таму Hub не можа дастаць ключы. Скапіруйце яго туды, затым усталюйце зноў.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Перазагрузіць і зрабіць дамп ключоў?\nКансоль перазагрузіцца, Lockpick_RCM захавае новыя ключы, пасля чаго кансоль запусціцца як звычайна. Пасля гэтага ўсталюйце гульню зноў.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Аўтаматычны дамп ключоў адключаны: /config/autokeys.disable знаходзіцца на microSD. Выдаліце яго, каб зрабіць дамп ключоў."
 }

@@ -4332,5 +4332,9 @@
   "Already the newest version.": "Jau ir jaunākā versija.",
   "Choose the DBI language in Additional programs → DBI.": "Izvēlieties DBI valodu sadaļā Programmatūra → DBI.",
   "Which language does your DBI use?": "Kādu valodu lieto jūsu DBI?",
-  "updated": "atjaunināts"
+  "updated": "atjaunināts",
+  "Failed to reboot": "Neizdevās restartēt",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin nav atrodāms /bootloader/payloads, tāpēc Hub nevar eksportēt atslēgas. Nokopējiet to tur un instalējiet atkārtoti.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Restartēt un saglabāt atslēgas?\nKonsole restartēsies, Lockpick_RCM saglabās jaunās atslēgas, un konsole ieslēgsies kā parasti. Pēc tam instalējiet spēli vēlreiz.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automātiskā atslēgu dabas ir izslēgta: /config/autokeys.disable atrodas uz microSD. Dzēsiet to, lai izveidotu atslēgu dabu."
 }

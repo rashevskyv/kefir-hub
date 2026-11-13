@@ -4332,5 +4332,9 @@
   "Already the newest version.": "Zaten en yeni sürüm.",
   "Choose the DBI language in Additional programs → DBI.": "DBI dilini Ek programlar → DBI içinden seçin.",
   "Which language does your DBI use?": "DBI'nız hangi dili kullanıyor?",
-  "updated": "güncellendi"
+  "updated": "güncellendi",
+  "Failed to reboot": "Yeniden başlatılamadı",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin, /bootloader/payloads içinde değil, bu yüzden Hub anahtarları dökemiyor. Oraya kopyalayın ve tekrar yükleyin.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Yeniden başlat ve anahtarları dökümle?\nKonsol yeniden başlar, Lockpick_RCM yeni anahtarları kaydeder ve ardından konsol normal şekilde başlar. Ardından oyunu tekrar yükleyin.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Otomatik anahtar dökümü kapalı: /config/autokeys.disable microSD üzerinde bulunuyor. Anahtarları dökmek için bunu silin."
 }

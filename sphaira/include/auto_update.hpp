@@ -152,8 +152,15 @@ inline int SelectBestAsset(std::span<const ReleaseAsset> assets, std::string_vie
     return best_index;
 }
 
+// The update replaces the file the Hub runs from. Started as /hbmenu.nro (the Kefir layout),
+// it updates /hbmenu.nro: a copy under /switch is never preferred and never created.
+// No argv[0] at all: the Kefir layout keeps the Hub only as /hbmenu.nro.
+inline auto InstallDestinationFor(std::string_view running_exe_path) -> std::string {
+    return running_exe_path.empty() ? std::string{"/hbmenu.nro"} : std::string{running_exe_path};
+}
+
 #ifdef __SWITCH__
-// Resolves the destination install path for the NRO update.
+// Resolves the destination install path for the NRO update (see InstallDestinationFor).
 fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path);
 
 // Atomically installs the staging file to destination (and /hbmenu.nro if replace_hbmenu is enabled).

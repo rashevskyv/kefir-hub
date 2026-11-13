@@ -4337,5 +4337,9 @@
   "Already the newest version.": "Đã là phiên bản mới nhất.",
   "Choose the DBI language in Additional programs → DBI.": "Chọn ngôn ngữ DBI trong Chương trình bổ sung → DBI.",
   "Which language does your DBI use?": "DBI của bạn dùng ngôn ngữ nào?",
-  "updated": "đã cập nhật"
+  "updated": "đã cập nhật",
+  "Failed to reboot": "Khởi động lại thất bại",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin không có trong /bootloader/payloads, nên Hub không thể xuất khóa. Hãy sao chép vào đó rồi cài đặt lại.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Khởi động lại và trích xuất khóa?\nMáy sẽ khởi động lại, Lockpick_RCM lưu các khóa mới, sau đó máy khởi động như bình thường. Sau đó, hãy cài đặt lại trò chơi.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Tính năng xuất khóa tự động đã tắt: /config/autokeys.disable có trên microSD. Xóa tệp này để xuất khóa."
 }

@@ -4332,5 +4332,9 @@
   "Already the newest version.": "See on juba uusim versioon.",
   "Choose the DBI language in Additional programs → DBI.": "Vali DBI keel jaotises Lisaprogrammid → DBI.",
   "Which language does your DBI use?": "Millist keelt sinu DBI kasutab?",
-  "updated": "värskendatud"
+  "updated": "värskendatud",
+  "Failed to reboot": "Taaskäivitamine ebaõnnestus",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin ei ole kaustas /bootloader/payloads, mistõttu ei saa Hub võtmeid tõmmata. Kopeeri see sinna ja installi uuesti.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Taaskäivitada ja võtmed salvestada?\nKonsool taaskäivitub, Lockpick_RCM salvestab uued võtmed ja konsool käivitub tavapäraselt. Pärast seda installi mäng uuesti.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automaatne võtmete tõmmis on välja lülitatud: /config/autokeys.disable on microSD kaardil. Kustuta see võtmete tõmmise tegemiseks."
 }

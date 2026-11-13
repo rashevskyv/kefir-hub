@@ -4337,5 +4337,9 @@
   "Already the newest version.": "Redan den senaste versionen.",
   "Choose the DBI language in Additional programs → DBI.": "Välj DBI-språk i Extra program → DBI.",
   "Which language does your DBI use?": "Vilket språk använder din DBI?",
-  "updated": "uppdaterad"
+  "updated": "uppdaterad",
+  "Failed to reboot": "Misslyckades med att starta om",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin finns inte i /bootloader/payloads, så Hub kan inte dumpa nycklarna. Kopiera den dit och installera igen.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Starta om och dumpa nycklarna?\nKonsolen startar om, Lockpick_RCM sparar nya nycklar och konsolen startar sedan som vanligt. Installera spelet igen efter det.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatisk nyckeldumpning är avstängd: /config/autokeys.disable finns på microSD-kortet. Ta bort den för att dumpa nycklarna."
 }

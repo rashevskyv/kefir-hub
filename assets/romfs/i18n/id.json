@@ -4332,5 +4332,9 @@
   "Already the newest version.": "Sudah versi terbaru.",
   "Choose the DBI language in Additional programs → DBI.": "Pilih bahasa DBI di Program tambahan → DBI.",
   "Which language does your DBI use?": "DBI Anda memakai bahasa apa?",
-  "updated": "diperbarui"
+  "updated": "diperbarui",
+  "Failed to reboot": "Gagal memuat ulang",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin tidak ada di /bootloader/payloads, sehingga Hub tidak dapat mendump kunci. Salin ke sana, lalu instal lagi.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Muat ulang dan dump kunci?\nKonsol akan dimulai ulang, Lockpick_RCM menyimpan kunci baru, lalu konsol menyala seperti biasa. Setelah itu, instal ulang game tersebut.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Dump kunci otomatis dimatikan: /config/autokeys.disable ada di microSD. Hapus untuk mendump kunci."
 }

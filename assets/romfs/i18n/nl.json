@@ -4337,5 +4337,9 @@
   "Already the newest version.": "Al de nieuwste versie.",
   "Choose the DBI language in Additional programs → DBI.": "Kies de DBI-taal onder Software → DBI.",
   "Which language does your DBI use?": "Welke taal gebruikt uw DBI?",
-  "updated": "bijgewerkt"
+  "updated": "bijgewerkt",
+  "Failed to reboot": "Herstarten mislukt",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin staat niet in /bootloader/payloads, dus de Hub kan de keys niet dumpen. Kopieer het daarheen en installeer opnieuw.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Opnieuw opstarten en sleutels dumpen?\nDe console wordt herstart, Lockpick_RCM slaat nieuwe sleutels op en de console start zoals gebruikelijk op. Installeer het spel daarna opnieuw.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatische keys dumpen is uitgeschakeld: /config/autokeys.disable staat op de microSD. Verwijder dit om de keys te dumpen."
 }

@@ -261,7 +261,8 @@ void Menu::DeleteHomebrew(const DeletePlan& plan, bool with_folder) {
         // the plan exists for one app only: its HOME tiles go with it, its folder when the user chose that
         DeleteTiles(plan);
         if (with_folder && !plan.folder.empty()) {
-            R_TRY(fs::DeleteDirectoryRecursively(plan.folder));
+            // the native SD call: the free stdio fs::DeleteDirectoryRecursively is a stub (0xFFFF)
+            R_TRY(fs.DeleteDirectoryRecursively(plan.folder));
         }
         return 0;
     }, [this](Result rc){

@@ -4332,5 +4332,9 @@
   "Already the newest version.": "Jau naujausia versija.",
   "Choose the DBI language in Additional programs → DBI.": "Pasirinkite DBI kalbą skiltyje Programinė įranga → DBI.",
   "Which language does your DBI use?": "Kokią kalbą naudoja jūsų DBI?",
-  "updated": "atnaujinta"
+  "updated": "atnaujinta",
+  "Failed to reboot": "Nepavyko paleisti iš naujo",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin nėra /bootloader/payloads, todėl Hub negali išgauti raktų. Nukopijuokite jį ten ir įdiekite iš naujo.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Paleisti iš naujo ir išsaugoti raktus?\nKonsolė pasileis iš naujo, Lockpick_RCM išsaugos naujus raktus, o tada konsolė įsikraus kaip įprastai. Po to įdiekite žaidimą iš naujo.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatinis raktų kopijavimas išjungtas: /config/autokeys.disable yra microSD kortelėje. Ištrinkite jį, kad nukopijuotumėte raktus."
 }

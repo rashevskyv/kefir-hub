@@ -75,12 +75,21 @@ static int test_running_from_hbmenu() {
     return 0;
 }
 
+// started as /hbmenu.nro the update replaces /hbmenu.nro, never a copy under /switch
+static int test_install_destination() {
+    CHECK(auto_update::InstallDestinationFor("/hbmenu.nro") == "/hbmenu.nro");
+    CHECK(auto_update::InstallDestinationFor("/switch/kefir-hub/kefir-hub.nro") == "/switch/kefir-hub/kefir-hub.nro");
+    CHECK(auto_update::InstallDestinationFor("") == "/hbmenu.nro");
+    return 0;
+}
+
 int main() {
     if (test_empty_assets() != 0) return 1;
     if (test_exact_nro_match() != 0) return 1;
     if (test_fallback_nro_match() != 0) return 1;
     if (test_non_executable_ignored() != 0) return 1;
     if (test_running_from_hbmenu() != 0) return 1;
+    if (test_install_destination() != 0) return 1;
 
     std::printf("ok  auto_update_asset: %d checks passed\n", g_checks);
     return 0;

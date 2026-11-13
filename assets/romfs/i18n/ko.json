@@ -4337,5 +4337,9 @@
   "Already the newest version.": "이미 최신 버전입니다.",
   "Choose the DBI language in Additional programs → DBI.": "DBI 언어는 소프트웨어 → DBI에서 선택하세요.",
   "Which language does your DBI use?": "DBI에서 어떤 언어를 사용하나요?",
-  "updated": "업데이트됨"
+  "updated": "업데이트됨",
+  "Failed to reboot": "재부팅 실패",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin이 /bootloader/payloads에 없어 Hub이 키를 덤프할 수 없습니다. 해당 위치에 복사한 후 다시 설치하세요.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "재부팅하고 키를 덤프하시겠습니까?\n콘솔이 재부팅되고 Lockpick_RCM이 새 키를 저장한 다음 콘솔이 평소대로 부팅됩니다. 그 후 게임을 다시 설치하세요.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "자동 키 덤프가 꺼져 있습니다: /config/autokeys.disable 파일이 microSD에 있습니다. 키를 덤프하려면 삭제하세요."
 }

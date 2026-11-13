@@ -4364,5 +4364,9 @@
   "Already the newest version.": "Já é a versão mais recente.",
   "Choose the DBI language in Additional programs → DBI.": "Escolha o idioma do DBI em Programas → DBI.",
   "Which language does your DBI use?": "Que idioma usa o seu DBI?",
-  "updated": "atualizado"
+  "updated": "atualizado",
+  "Failed to reboot": "Falha ao reiniciar",
+  "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "O Lockpick_RCM.bin não está em /bootloader/payloads, pelo que o Hub não consegue extrair as chaves. Copie-o para lá e instale novamente.",
+  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Reiniciar e extrair as chaves?\nA consola é reiniciada, o Lockpick_RCM guarda as novas chaves e depois a consola arranca normalmente. De seguida, volta a instalar o jogo.",
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "O dump automático de chaves está desativado: /config/autokeys.disable está no microSD. Elimine-o para fazer o dump das chaves."
 }

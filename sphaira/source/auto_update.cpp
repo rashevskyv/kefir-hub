@@ -261,32 +261,7 @@ void StartDownload(bool show_progress) {
 }
 
 fs::FsPath ResolveInstallDestination(const fs::FsPath& running_exe_path) {
-    if (!running_exe_path.empty() && strcasecmp(running_exe_path.s, "/hbmenu.nro") != 0) {
-        return running_exe_path;
-    }
-
-    fs::FsNativeSd fs;
-    if (fs.FileExists("/switch/kefir-hub/kefir-hub.nro")) {
-        return "/switch/kefir-hub/kefir-hub.nro";
-    }
-    if (fs.FileExists("/switch/kefir-hub.nro")) {
-        return "/switch/kefir-hub.nro";
-    }
-    if (fs.FileExists("/switch/sphaira/sphaira.nro")) {
-        return "/switch/sphaira/sphaira.nro";
-    }
-    if (fs.FileExists("/switch/sphaira.nro")) {
-        return "/switch/sphaira.nro";
-    }
-
-    // Running as /hbmenu.nro with no copy among the apps (the owner deleted it): update
-    // /hbmenu.nro itself and do not bring the second copy back.
-    if (!running_exe_path.empty()) {
-        return "/hbmenu.nro";
-    }
-
-    // Default standard path
-    return "/switch/kefir-hub/kefir-hub.nro";
+    return fs::FsPath{InstallDestinationFor(running_exe_path.s)};
 }
 
 namespace {
@@ -355,7 +330,7 @@ bool InstallNroUpdate(const fs::FsPath& staging_path, const fs::FsPath& dest_pat
         return false;
     }
 
-    if (replace_hbmenu && !ReplaceWithCopy(fs, "/hbmenu.nro", staging_path, file_size)) {
+    if (replace_hbmenu && strcasecmp(dest_path.s, "/hbmenu.nro") && !ReplaceWithCopy(fs, "/hbmenu.nro", staging_path, file_size)) {
         log_write("[AutoUpdate] Warning: failed to copy update to /hbmenu.nro\n");
     }
 
