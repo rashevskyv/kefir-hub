@@ -152,7 +152,8 @@ void AppsTab::Build() {
     for (const auto& nro : homebrew::ScanInstalledNros()) {
         AppRow row{.name = nro.GetName(), .path = nro.path.s, .installed = nro.GetDisplayVersion()};
         row.source = SourceOf(row.path, hub_path.s);
-        if (row.source == AppSource::Hub) {
+        // a second Hub copy under /switch is not a second row: the Hub row above is the one that updates
+        if (row.source == AppSource::Hub || row.name == "Kefir Hub") {
             continue;
         }
         if (row.name.empty()) {

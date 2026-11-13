@@ -8,6 +8,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.371 — Updater → Apps: one Kefir Hub row
+Started as /hbmenu.nro, the Hub row now points at /hbmenu.nro (0.14.370), so a leftover /switch copy named "Kefir Hub" is skipped instead of shown as a second row.
+host tests: pass (quick) · nro: DocsDemo built · switch: pending (Updater → Apps with a stale /switch/kefir-hub copy shows one Hub row)
+
 ## v0.14.370 — self-update replaces the started file; app delete with its folder works
 Update target = the file the Hub was started from (`InstallDestinationFor`): started as /hbmenu.nro it updates /hbmenu.nro and no longer prefers or creates /switch/kefir-hub/kefir-hub.nro (the update then ran from there). Homebrew → Delete with folder called the stdio `fs::DeleteDirectoryRecursively` stub (always 0xFFFF, "Delete failed!" after the .nro was already gone); it now uses the native SD call.
 host tests: pass (quick; test_auto_update_asset covers the destination) · nro: DocsDemo built · switch: pending (update started from /hbmenu.nro writes nothing to /switch; delete an app with its folder)
