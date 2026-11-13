@@ -60,6 +60,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Install location (5 modes), auto balancing, reserve space, per-package target | Settings → Install; queue options | install_plan.hpp, dbi_menu_options.cpp | install/index#location | doc |
 | Install options (3 groups) | Settings → Install | settings_categories.cpp:436-514 | install/index#install-options | doc |
 | Automatic launch-required version reset after game updates | All installation sources | yati.cpp, yati_metadata.cpp | install/index#problems | draft; HOME launch and downgrade checks pending on Switch |
+| Keys error → "Reboot and dump the keys?" (hekate autokeys runs Lockpick_RCM) | after any failed install | keys_dump.cpp, yati.cpp (InstallFromCollections) | install/index#problems (draft, shot install-keys-dump [USER]) | draft (v0.14.369); switch pending |
 | Install one/several files, recursive folder | File Browser | filebrowser_view.cpp, filebrowser_recursive_install.cpp | install/sd-card | doc |
 | Install queue: review, buttons, progress, skip, cancel, summary, errors.txt | Install queue | dbi_*.cpp | install/sd-card#queue | doc |
 | Minimize to badge | R3 | app_frame.cpp:169-230 | install/sd-card#minimize | R3 from any menu since v0.13.962 (was L3); Package target moved to L3 |

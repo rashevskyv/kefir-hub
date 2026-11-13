@@ -95,6 +95,10 @@ void SetInstallRunning(bool running) {
     }
 }
 
+auto InstallRunning() -> bool {
+    return g_running;
+}
+
 void Poll() {
     const auto last = g_last_tick.load();
     if (!last) {

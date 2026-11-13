@@ -8,6 +8,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.369 — keys error offers "Reboot and dump the keys?"
+Every install path ends in `yati::InstallFromCollections`; a keys result (missing NCA key area, title KEK, master key, eTicket device key) arms one question, shown after the error box closes and the install stops (MTP/FTP: 5 s quiet). Reboot deletes `/config/autokeys.bin`, so Kefir's hekate (patch 0001 autokeys) runs Lockpick_RCM on the next autoboot and boots on; no Lockpick_RCM.bin or `/config/autokeys.disable` → a message, no reboot. Not the reboot-to-payload path: its fallback (payload.bin swap / hekate_ipl.ini autoboot) has no restore and would start Lockpick on every boot. `keys_dump.hpp` + host test; en/uk strings; docs draft install/index#problems, shot install-keys-dump [USER].
+host tests: pass · nro: DocsDemo built · switch: pending (key dump through hekate autokeys, MTP once after the batch)
+
 ## v0.14.368 — Games list: Nextendo "Online N" badge
 Installed games that Nextendo Network supports get a green Online badge with the current player count (grid, list, details cover), only while Nextendo is in use on this boot. Counts from nextendo.network/api/online-counts in the background, at most once a minute, 15 s timeout, last good counts kept; no request while Nextendo is off. Parser `nextendo_online.hpp` + host test; "Online" in all 26 languages; docs drafts (games, kefir-settings) + shot marker games-online-badge.
 host tests: pass (quick; the full run fails only on the older EN/UK key parity check, 3 stale uk.json keys) · nro: DocsDemo built · switch: pending (badge on a console with Nextendo on, count updates, no badge with Nextendo off; console shot games-online-badge)

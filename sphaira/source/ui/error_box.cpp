@@ -4,6 +4,7 @@
 #include "i18n.hpp"
 #include "hats_version.hpp"
 #include "version_compare.hpp"
+#include <atomic>
 #include <cstdio>
 
 namespace sphaira::ui {
@@ -345,7 +346,20 @@ auto FormatResult(Result rc) -> std::string {
     return out;
 }
 
+namespace {
+std::atomic<int> g_error_boxes{0};
+} // namespace
+
+auto ErrorBoxShown() -> bool {
+    return g_error_boxes > 0;
+}
+
+ErrorBox::~ErrorBox() {
+    --g_error_boxes;
+}
+
 ErrorBox::ErrorBox(const std::string& message) : m_message{message} {
+    ++g_error_boxes;
     log_write("[ERROR] %s\n", m_message.c_str());
 
     m_pos.w = 770.f;

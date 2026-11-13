@@ -13,6 +13,8 @@ void NoteInstalled(u64 app_id);
 // A queue install (PC, local) is running: its packages arrive one by one and the base game may come later,
 // so the question waits. Releasing it restarts the quiet time. Safe to call with the same value twice.
 void SetInstallRunning(bool running);
+// true while such a queue install runs. Any thread.
+auto InstallRunning() -> bool;
 
 // Once per frame from the App loop: when nothing was installed for a few seconds,
 // asks to keep or delete the noted titles whose base game is not installed.

@@ -1,5 +1,6 @@
 #include "app_frame_buffer.hpp"
 #include "orphan_content.hpp"
+#include "keys_dump.hpp"
 #include "battery_page.hpp"
 #include "auto_update.hpp"
 #include "app.hpp"
@@ -162,6 +163,7 @@ void App::Loop() {
 
         this->Poll();
         orphan_content::Poll();
+        keys_dump::Poll();
         battery::PollInterruptedDrain();
         battery::PollHop();
         battery::PollCalibration();

@@ -11,11 +11,14 @@ auto GetResultCodeName(Result rc) -> const char*;
 auto GetResultDescription(Result rc) -> std::string;
 // the "0x%08X" form used wherever a raw result is shown to the user.
 auto FormatResult(Result rc) -> std::string;
+// true while an ErrorBox exists (pushed or about to be). Any thread.
+auto ErrorBoxShown() -> bool;
 
 class ErrorBox final : public Widget {
 public:
     ErrorBox(Result code, const std::string& message);
     ErrorBox(const std::string& message);
+    ~ErrorBox() override;
 
     auto Update(Controller* controller, TouchInfo* touch) -> void override;
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;

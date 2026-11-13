@@ -22,6 +22,7 @@
 #include "utils/utils.hpp"
 #include "forced_language.hpp"
 #include "control_patch.hpp"
+#include "keys_dump.hpp"
 #include <sys/statvfs.h>
 
 #include <minIni.h>
@@ -553,11 +554,11 @@ Result InstallFromCollections(ui::InstallProgress* pbox, source::Base* source, c
         dynamic_override.sd_card_install = ChooseInstallTarget(total_size, is_compressed);
     }
 
-    if (source->IsStream()) {
-        return detail::InstallInternalStream(pbox, source, collections, dynamic_override);
-    } else {
-        return detail::InstallInternal(pbox, source, collections, dynamic_override);
-    }
+    const auto rc = source->IsStream() ? detail::InstallInternalStream(pbox, source, collections, dynamic_override)
+                                       : detail::InstallInternal(pbox, source, collections, dynamic_override);
+    // every install path (file, queue, USB, game card, MTP, FTP, web) ends here: one keys check for all.
+    keys_dump::NoteInstallResult(rc);
+    return rc;
 }
 
 } // namespace sphaira::yati
