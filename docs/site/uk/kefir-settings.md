@@ -63,11 +63,13 @@
 
 ## Nextendo
 
-Nextendo Network дає онлайн-гру в підтримуваних іграх на emuMMC. Онлайн-сервіси цих ігор ідуть на сервери Nextendo; до серверів Nintendo консоль не звертається. Nextendo вимкнено, доки ви його не ввімкнете.
+Nextendo Network дає онлайн-гру в підтримуваних іграх на emuMMC. Онлайн-сервіси цих ігор ідуть на сервери Nextendo замість серверів Nintendo. Nextendo вимкнено, доки ви його не ввімкнете.
 
 **Де:** [[Tools]] → [[Kefir Settings]] → [[Nextendo]]
 
 <!-- shot: kefir-settings-nextendo | Nextendo page on the emuMMC: Nextendo on emuMMC switched on, System firmware, Server and Release rows, the Required Notice line at the bottom -->
+
+Потрібні інтернет на emuMMC і безкоштовний обліковий запис Nextendo. Створіть його на [сайті Nextendo](https://nextendo.network/register).
 
 Щоб увімкнути Nextendo:
 
@@ -75,7 +77,8 @@ Nextendo Network дає онлайн-гру в підтримуваних ігр
 2. Відкрийте [[Tools]] → [[Kefir Settings]] → [[Nextendo]].
 3. Виберіть [[Nextendo on emuMMC]] і утримуйте **A**.
 4. Kefir Hub запише файли Nextendo на карту пам'яті. Якщо якийсь файл змінився, консоль перезавантажиться.
-5. Запустіть підтримувану гру і відкрийте її онлайн-режим.
+5. Прив'яжіть консоль до свого облікового запису Nextendo. Як це зробити, описано в [посібнику Nextendo в Discord](https://discord.gg/XPfeCMwnzQ).
+6. Запустіть підтримувану гру і відкрийте її онлайн-режим.
 
 У списку [[Games]] кожна встановлена гра, яку підтримує Nextendo, має зелену позначку [[Online]] і кількість гравців онлайн. Див. [Ігри](games.md).
 

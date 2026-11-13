@@ -68,11 +68,13 @@ If no translation exists for your firmware, the first row shows your firmware an
 
 ## Nextendo
 
-Nextendo Network gives online play to supported games on the emuMMC. The online services of these games go to the Nextendo servers; the Nintendo servers are not reached. Nextendo is off until you switch it on.
+Nextendo Network gives online play to supported games on the emuMMC. The online services of these games go to the Nextendo servers instead of the Nintendo servers. Nextendo is off until you switch it on.
 
 **Where:** [[Tools]] → [[Kefir Settings]] → [[Nextendo]]
 
 <!-- shot: kefir-settings-nextendo | Nextendo page on the emuMMC: Nextendo on emuMMC switched on, System firmware, Server and Release rows, the Required Notice line at the bottom -->
+
+You need internet on the emuMMC and a free Nextendo account. Create the account on the [Nextendo site](https://nextendo.network/register).
 
 To switch Nextendo on:
 
@@ -80,7 +82,8 @@ To switch Nextendo on:
 2. Open [[Tools]] → [[Kefir Settings]] → [[Nextendo]].
 3. Select [[Nextendo on emuMMC]] and hold **A**.
 4. Kefir Hub writes the Nextendo files to the memory card. If a file changed, the console restarts.
-5. Start a supported game and open its online mode.
+5. Link the console to your Nextendo account. The [Nextendo guide in Discord](https://discord.gg/XPfeCMwnzQ) describes how.
+6. Start a supported game and open its online mode.
 
 The [[Games]] list marks every installed game that Nextendo supports with a green [[Online]] badge and the number of players online now. See [Games](games.md).
 
