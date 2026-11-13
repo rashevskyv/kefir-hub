@@ -354,7 +354,9 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
 
     std::shared_ptr<PromptData> prompt{}, expired{};
     std::shared_ptr<ResolveData> resolve{};
+    std::shared_ptr<AccountPick> pick{};
     if (mutexTryLock(&m_mutex)) {
+        if (m_account_pick && m_account_pick->choice == -1) pick = m_account_pick;
         if (m_prompt_data && m_prompt_data->expired) {
             expired = std::move(m_prompt_data);
         } else if (m_prompt_data && m_prompt_data->choice == -1) {
@@ -422,7 +424,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
     }
 
     if (m_screensaver.IsActive()) {
-        if (prompt || resolve) {
+        if (prompt || resolve || pick) {
             m_screensaver.Stop();
             m_inactivity_tracker.Reset(now_sec);
         } else {
@@ -436,6 +438,7 @@ void InstallSession::Update(Controller* controller, TouchInfo* touch) {
     }
 
     ShowPrompts(prompt, resolve);
+    ShowAccountPick(pick);
 
     std::optional<CompatibilityWarning> warn_popup{};
     {

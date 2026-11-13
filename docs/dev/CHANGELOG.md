@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.363 — DBI installs a game's cache and user save from the PC (Just Dance offline mod)
+New queue files `<game> - <option> <TID>.kefir-cache.tar` / `.kefir-save.tar`: the Hub creates or grows the game's cache storages (`.kefir/sizes`) and the user save, writes with journal commits; the account is asked once, the queue goes on and the save waits at the end.
+host tests: pass · nro: built · switch: pending (Just Dance 2025 cache 0…8 + OfflineSaveNx.txt, account pick with 2 users)
+
 ## v0.14.362 — Kefir tab status lines; Software menu: translated title, UAModDownloader for Ukrainian only, app icons
 The Kefir tab shows the state ("You have the latest Kefir installed"), then Available and Installed on their own lines in one size, and a hint to scroll the changelog down. The Software menu title is translated; UAModDownloader shows only with the Ukrainian Hub language; UAModDownloader, ModCD and SimpleModDownloader show their own NRO icons (romfs:/theme/*.jpg) instead of the download arrow.
 host tests: pass · nro: built · switch: pending (Kefir tab lines, Software title, icons, UAModDownloader with uk only)

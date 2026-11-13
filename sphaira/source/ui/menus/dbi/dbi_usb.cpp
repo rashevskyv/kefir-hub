@@ -3,6 +3,7 @@
 #include "ui/menus/dbi/dbi_internal.hpp"
 #include "sd_bundle.hpp"
 #include "sd_bundle_rules.hpp"
+#include "save_bundle_rules.hpp"
 #include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
 #include "app.hpp"
@@ -259,7 +260,8 @@ void Menu::ThreadFunction() {
                 if (!selected) continue;
                 if (m_cancel_requested) break;
 
-                const auto go = CheckQueuedUpdate(i, final_pass);
+                const auto save_kind = save_bundle::KindOf(name);
+                const auto go = save_kind != save_bundle::Kind::None ? CheckSaveBundle(name, final_pass) : CheckQueuedUpdate(i, final_pass);
                 if (!go) {
                     order.Defer(i);
                     continue;
@@ -341,9 +343,14 @@ void Menu::ThreadFunction() {
                         });
                     }
                     // a microSD bundle goes through the same retry, live queue and status path.
-                    install_rc = sd_bundle::IsBundleName(name)
-                        ? sd_bundle::Receive(this, m_usb_source.get(), m_usb_source->GetFileSize(name))
-                        : yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                    if (save_kind != save_bundle::Kind::None) {
+                        install_rc = sd_bundle::ReceiveSave(this, m_usb_source.get(), m_usb_source->GetFileSize(name),
+                            save_kind == save_bundle::Kind::Cache, save_bundle::TitleOf(name), m_save_uid);
+                    } else {
+                        install_rc = sd_bundle::IsBundleName(name)
+                            ? sd_bundle::Receive(this, m_usb_source.get(), m_usb_source->GetFileSize(name))
+                            : yati::InstallFromCollections(this, m_usb_source.get(), analysis.collections, override);
+                    }
                     if (sync_supported) {
                         m_usb_source->SetPostReadHook(nullptr);
                     }

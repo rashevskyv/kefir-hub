@@ -2,6 +2,8 @@
 
 #include "ui/menus/dbi/dbi_internal.hpp"
 #include "sd_bundle_rules.hpp"
+#include "save_bundle_rules.hpp"
+#include "app.hpp"
 #include "path_util.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -65,7 +67,7 @@ s64 QueuePackageSize(const QueueEntry& entry) {
 // (possibly compressed) source size, so they get the same 1.6x factor that
 // yati::ChooseInstallTarget uses, otherwise the plan under-books their space.
 Result AnalyzeQueueName(yati::source::Usb* source, const std::string& name, yati::InstallAnalysis& out) {
-    if (sd_bundle::IsBundleName(name)) {
+    if (sd_bundle::IsBundleName(name) || save_bundle::KindOf(name) != save_bundle::Kind::None) {
         out = {};
         out.source_size = out.install_size = std::max<s64>(0, source->GetFileSize(name));
         out.suggested_sd = true;
@@ -215,6 +217,69 @@ std::optional<bool> InstallSession::CheckQueuedUpdate(size_t i, bool final_pass)
             return std::nullopt;
     }
     return true;
+}
+
+// a save bundle needs its game on the console, and a user's save needs the user. Neither waits
+// in the first pass: the file goes after the queue, and the user answers the list meanwhile.
+std::optional<bool> InstallSession::CheckSaveBundle(const std::string& name, bool final_pass) {
+    m_current_file_deferred = false;
+    const auto tid = save_bundle::TitleOf(name);
+    if (!tid) {
+        AddLog("Skipped: "_i18n + name, LogKind::Warning);
+        return false;
+    }
+    if (!ConsoleVersion(tid)) {
+        if (!final_pass) {
+            AddLog("Asked after the queue: "_i18n + name, LogKind::Normal);
+            return std::nullopt;
+        }
+        AddLog("Skipped: "_i18n + name + " — " + "not installed"_i18n, LogKind::Warning);
+        return false;
+    }
+    if (save_bundle::KindOf(name) != save_bundle::Kind::Account) {
+        return true;
+    }
+
+    std::shared_ptr<AccountPick> pick;
+    {
+        SCOPED_MUTEX(&m_mutex);
+        pick = m_account_pick;
+    }
+    if (!pick) {
+        pick = std::make_shared<AccountPick>();
+        for (const auto& acc : App::GetAccountList()) {
+            pick->uids.push_back(acc.uid);
+            pick->names.emplace_back(acc.nickname);
+        }
+        if (pick->uids.empty()) {
+            AddLog("Skipped: "_i18n + name + " — " + "No user profiles"_i18n, LogKind::Warning);
+            return false;
+        }
+        if (pick->uids.size() == 1) {
+            pick->choice = 0; // one user: nothing to ask
+        }
+        SCOPED_MUTEX(&m_mutex);
+        m_account_pick = pick;
+    }
+    for (;;) {
+        const int choice = pick->choice;
+        const bool interrupted = m_cancel_requested || m_skip_requested || GetToken().stop_requested();
+        switch (save_bundle::NextPickStep(choice, final_pass, interrupted)) {
+            case save_bundle::PickStep::Use:
+                m_save_uid = pick->uids[choice];
+                AddLog(name + " → " + pick->names[choice], LogKind::Normal);
+                return true;
+            case save_bundle::PickStep::Skip:
+                AddLog("Skipped: "_i18n + name, LogKind::Warning);
+                return false;
+            case save_bundle::PickStep::Defer:
+                AddLog("Asked after the queue: "_i18n + name, LogKind::Normal);
+                return std::nullopt;
+            case save_bundle::PickStep::Wait:
+                svcSleepThread(10'000'000ULL); // 10ms
+                continue;
+        }
+    }
 }
 
 } // namespace sphaira::ui::menu::dbi

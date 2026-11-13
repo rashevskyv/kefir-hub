@@ -267,6 +267,19 @@ protected:
     std::optional<bool> m_current_file_reinstall_choice{};
     bool m_current_file_skipped{false};
 
+    // the user a save bundle writes to (save_bundle_rules.hpp NextPickStep): asked once per
+    // session in a list the UI thread shows, while the queue goes on.
+    struct AccountPick {
+        std::vector<AccountUid> uids;
+        std::vector<std::string> names;
+        std::atomic<int> choice{-1};
+    };
+    std::shared_ptr<AccountPick> m_account_pick{}; // guarded by m_mutex
+    AccountUid m_save_uid{};                        // worker thread only
+    // a save bundle: true = write it now, false = skip it, nullopt = after the queue.
+    std::optional<bool> CheckSaveBundle(const std::string& name, bool final_pass);
+    void ShowAccountPick(const std::shared_ptr<AccountPick>& pick); // UI thread
+
     // how AskOrDefer treats a question (update_choice.hpp).
     AskMode m_ask_mode{AskMode::Stream};
     // questions the first pass did not wait for, and their answers from the Resolve page (worker thread only).

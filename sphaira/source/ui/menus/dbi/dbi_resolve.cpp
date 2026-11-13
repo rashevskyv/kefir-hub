@@ -116,6 +116,14 @@ void ResolveMenu::Draw(NVGcontext* vg, Theme* theme) {
     });
 }
 
+void InstallSession::ShowAccountPick(const std::shared_ptr<AccountPick>& pick) {
+    int expected = -1;
+    if (!pick || !pick->choice.compare_exchange_strong(expected, -2)) return;
+    App::Push<PopupList>("Select user to create save for"_i18n, pick->names, [pick](auto op_index) {
+        pick->choice = op_index ? static_cast<int>(*op_index) : -3;
+    });
+}
+
 void InstallSession::ShowPrompts(const std::shared_ptr<PromptData>& prompt, const std::shared_ptr<ResolveData>& resolve) {
     if (resolve && !resolve->shown.exchange(true)) {
         App::Push<ResolveMenu>(resolve);
