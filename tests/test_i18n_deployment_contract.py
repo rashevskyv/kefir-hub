@@ -24,6 +24,7 @@ ALLOWED_IDENTICAL = {
     'Page %ld / %ld',
     'Homebrew App Store',
     'UAModDownloader',
+    'UAPlay',
     'SimpleModDownloader',
     'SteamGridDB',
     'Kefir Cheats',

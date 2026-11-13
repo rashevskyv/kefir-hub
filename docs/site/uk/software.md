@@ -4,21 +4,23 @@
 
 **Де:** [[Tools]] → [[Software]]
 
-<!-- shot: software-list | Software menu: Homebrew App Store, DBI, UAModDownloader (Ukrainian only), ModCD, SimpleModDownloader, Custom Link -->
+<!-- shot: software-list | Software menu: Homebrew App Store, DBI, UAModDownloader and UAPlay (Ukrainian only), ModCD, SimpleModDownloader, Custom Link -->
 
 | Пункт | Що це |
 |---|---|
 | [[Homebrew App Store]] | Перегляд, установлення, оновлення й видалення homebrew-застосунків. |
 | [[DBI]] | Завантаження збірок DBI, його конфігу та фанатських перекладів. |
 | [[UAModDownloader]] | Завантажує застосунок UAModDownloader (українські моди). |
+| [[UAPlay]] | Завантажує застосунок UAPlay (фільми та серіали українською). |
 | [[ModCD]] | Завантажує застосунок ModCD (графічні моди ECLIPS). |
 | [[SimpleModDownloader]] | Завантажує застосунок SimpleModDownloader (моди для ігор із GameBanana). |
 | [[Custom Link]] | Завантажити `.zip` або `.nro` за будь-яким прямим посиланням. |
 
 <!-- draft
 - the screen title is [[Software]] in the interface language
-- [[UAModDownloader]] shows only when the Kefir Hub language is Ukrainian
-- [[UAModDownloader]], [[ModCD]] and [[SimpleModDownloader]] show the app's own icon at the left instead of the arrow
+- [[UAModDownloader]] and [[UAPlay]] show only when the Kefir Hub language is Ukrainian
+- [[UAPlay]] downloads UAPlay.nro (Ukrainian films and series: UAkino, UAFlix, UASerials) from github.com/Small182/UAPlay-nx to /switch/UAPlay.nro; its optional NSP forwarder needs exactly that path
+- [[UAModDownloader]], [[UAPlay]], [[ModCD]] and [[SimpleModDownloader]] show the app's own icon at the left instead of the arrow
 - Ownfoil is no longer in this menu (it stays in [Install over the network](install/network.md))
 -->
 

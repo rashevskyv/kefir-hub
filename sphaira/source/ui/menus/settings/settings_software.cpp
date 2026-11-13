@@ -67,6 +67,23 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
             },
         }));
         items.back().icon = "romfs:/theme/uamoddownloader.jpg";
+
+        // UAPlay's NSP forwarder starts sdmc:/switch/UAPlay.nro, so the file goes there, not to a folder
+        items.emplace_back(MakePackageAction({
+            "UAPlay"_i18n,
+            "Ukrainian films and series."_i18n,
+            [](auto pbox) -> Result {
+                R_TRY(DownloadFile(
+                    pbox,
+                    "Downloading UAPlay..."_i18n,
+                    "https://github.com/Small182/UAPlay-nx/releases/latest/download/UAPlay.nro",
+                    "/switch/UAPlay_new.nro"
+                ));
+                R_TRY(MovePath("/switch/UAPlay_new.nro", "/switch/UAPlay.nro"));
+                R_SUCCEED();
+            },
+        }));
+        items.back().icon = "romfs:/theme/uaplay.jpg";
     }
 
     items.emplace_back(MakePackageAction({
