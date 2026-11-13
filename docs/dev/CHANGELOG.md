@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.378 — MTP: the Install drive is back by default; "Install folders in Games" is an option
+The drive `Install (NSP, XCI, NSZ, XCZ)` returns with Show Install folder and Install folder name; there Install location decides. New option Install folders in Games (off): on, the Games drive gets Install to SD / Install to NAND and the Install drive is hidden. 2 new strings + 5 restored, all 26 languages; docs drafts (install/mtp, sharing).
+host tests: pass (quick + i18n contract) · nro: built (DocsDemo) · switch: pending — Install drive installs; the option moves the folders to Games and hides the drive.
+
 ## v0.14.376 — Updater → Apps: the Software link apps and the RetroArch nightly
 UAModDownloader, UAPlay, ModCD and SimpleModDownloader come from one list (GITHUB_APPS) for Tools → Software and Updater → Apps; the Updater checks their GitHub release tag (only for the apps on the card) and downloads the same nro. RetroArch: the Hub records the nightly's Last-Modified on install; the Updater compares it with a HEAD of the buildbot archive and shows build dates.
 host tests: pass (quick), nro: built (DocsDemo), switch: pending

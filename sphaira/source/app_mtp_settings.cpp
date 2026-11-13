@@ -33,6 +33,48 @@ auto App::GetMtpShowSd() -> bool {
     return g_app->m_mtp_show_sd.Get();
 }
 
+auto App::GetMtpShowInstall() -> bool {
+    return g_app->m_mtp_show_install.Get();
+}
+
+auto App::GetMtpInstallInGames() -> bool {
+    return g_app->m_mtp_install_in_games.Get();
+}
+
+auto App::GetMtpNameInstall() -> std::string {
+    return g_app->m_mtp_name_install.Get();
+}
+
+void App::SetMtpShowInstall(bool enable) {
+    if (App::GetMtpShowInstall() != enable) {
+        g_app->m_mtp_show_install.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpInstallInGames(bool enable) {
+    if (App::GetMtpInstallInGames() != enable) {
+        g_app->m_mtp_install_in_games.Set(enable);
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
+void App::SetMtpNameInstall(std::string value) {
+    if (App::GetMtpNameInstall() != value) {
+        g_app->m_mtp_name_install.Set(std::move(value));
+        if (App::GetMtpEnable()) {
+            SetMtpEnable(false);
+            SetMtpEnable(true);
+        }
+    }
+}
+
 auto App::GetMtpShowSaves() -> bool {
     return g_app->m_mtp_show_saves.Get();
 }

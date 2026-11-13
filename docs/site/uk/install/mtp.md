@@ -2,11 +2,12 @@
 
 Під'єднайте консоль до ПК USB-кабелем, і вона з'явиться у файловому менеджері ПК, як телефон. Скопіюйте файл гри на диск для встановлення, і консоль встановить його просто під час копіювання. Сам файл на консолі не зберігається.
 
-**Де:** на ПК — диск `Games` → [[Install to SD]] або [[Install to NAND]]
+**Де:** на ПК — диск `Install (NSP, XCI, NSZ, XCZ)`; з увімкненим [[Install folders in Games]] — диск `Games` → [[Install to SD]] або [[Install to NAND]]
 
 <!-- draft (v0.14.345, uk)
-- The drive `Install (NSP, XCI, NSZ, XCZ)` is gone, with its options "Show Install folder" and "Install folder name".
-- To install over MTP, open the `Games` drive. At its root are two folders, in every [[Dump format]]: [[Install to SD]] and [[Install to NAND]].
+- (v0.14.378) The drive `Install (NSP, XCI, NSZ, XCZ)` is back and is the default: copy a game file into it, [[Install location]] decides where it goes. Its options [[Show Install folder]] and [[Install folder name]] are back.
+- [[Install folders in Games]] (off by default) moves the install folders into the `Games` drive: the `Install` drive is then hidden and the points below apply. The change restarts MTP.
+- With [[Install folders in Games]] on, the `Games` drive has two folders at its root, in every [[Dump format]]: [[Install to SD]] and [[Install to NAND]]. With it off, they are not there and Readme.txt does not name them.
 - Copy an NSP, NSZ, XCI or XCZ file into [[Install to SD]]: it installs to the microSD card. Into [[Install to NAND]]: to the system memory. The folder decides, [[Install location]] is not used.
 - The file is not stored: the folder stays empty after the copy. Other file types are refused.
 - The `Games` drive must be on ([[Show Games]], on by default).
@@ -34,7 +35,7 @@ MTP і USB-накопичувачі використовують той сами
 ## Встановіть гру {#install}
 
 1. На ПК відкрийте консоль у файловому менеджері.
-2. Відкрийте диск `Games`, а в ньому теку [[Install to SD]] або [[Install to NAND]].
+2. Відкрийте диск `Install (NSP, XCI, NSZ, XCZ)`. З увімкненим [[Install folders in Games]] відкрийте диск `Games`, а в ньому теку [[Install to SD]] або [[Install to NAND]].
 3. Скопіюйте в неї один або кілька файлів NSP, NSZ, XCI чи XCZ.
 4. Консоль відкриє екран [[MTP Install]] і встановлюватиме файл у міру надходження.
 5. Кілька файлів встановлюються один за одним в одному сеансі.
@@ -66,7 +67,7 @@ MTP і USB-накопичувачі використовують той сами
 
 - [[Skip if already installed]] не використовується: уже встановлена гра встановлюється знову.
 - [[Convert to standard crypto]] і [[Re-encrypt to master key 0]] не застосовуються.
-- Куди встановити гру, вирішує тека; [[Install location]] не використовується (див. [Куди встановлюються ігри](index.md#location)).
+- Куди встановити гру, вирішує [[Install location]] (див. [Куди встановлюються ігри](index.md#location)). У теках [[Install to SD]] і [[Install to NAND]] диска `Games` натомість вирішує тека.
 - Файл домашньої програми `.nro`, скопійований на диск для встановлення, не встановлюється як гра. Він зберігається у `/switch/<назва>/<назва>.nro` і з'являється на вкладці домашніх програм.
 
 ## Сховища MTP {#storages}
@@ -76,7 +77,10 @@ MTP і USB-накопичувачі використовують той сами
 | Параметр | Що робить | Типово |
 |---|---|---|
 | [[Show microSD card]] | Показує диск карти пам'яті. | Увімк. |
+| [[Show Install folder]] | Показує диск для встановлення. | Увімк. |
+| [[Install folders in Games]] | Переносить [[Install to SD]] і [[Install to NAND]] на диск `Games` і ховає диск для встановлення. | Вимк. |
 | [[microSD card name]] | Власна назва диска карти пам'яті. | `microSD card` |
+| [[Install folder name]] | Власна назва диска для встановлення. | `Install (NSP, XCI, NSZ, XCZ)` |
 
 Інші диски з цієї сторінки (збереження, ігри) описано в розділі [Спільний доступ](../sharing.md). Якщо вимкнути всі диски, MTP не запуститься, і з'явиться [[No MTP storages enabled]].
 

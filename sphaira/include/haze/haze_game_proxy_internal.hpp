@@ -42,6 +42,7 @@ struct FsGameProxy final : FsProxyBase {
         m_names.mods = "Mods"_i18n;
         m_names.install_sd = "Install to SD"_i18n;
         m_names.install_nand = "Install to NAND"_i18n;
+        m_install_folders = INSTALL_FOLDERS && App::GetMtpInstallInGames();
         ScanGames();
         log_write("[MTP-GAMES] layout=%d scanned %zu games, %zu forwarders\n",
             static_cast<int>(m_layout), m_games.size(), m_forwarders.size());
@@ -146,6 +147,8 @@ private:
     void InstallClose(FileHandle& h);
     // true when the build streams MTP files to the installer (the install folders exist).
     static constexpr bool INSTALL_FOLDERS = ENABLE_NETWORK_INSTALL;
+    // Settings → MTP put the install folders here (off: the Install drive has them).
+    bool m_install_folders{};
 
     // game folder name -> title. built once at registration; DeleteGame() erases
     // entries. forwarders live in m_forwarders.

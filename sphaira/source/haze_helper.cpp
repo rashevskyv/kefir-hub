@@ -382,6 +382,18 @@ bool Init() {
         }
     });
 
+#if ENABLE_NETWORK_INSTALL
+    // the install drive, unless the install folders sit in the Games drive
+    storage_defs.push_back({
+        App::GetMtpShowInstall() && !App::GetMtpInstallInGames(),
+        App::GetMtpNameInstall(),
+        "Install (NSP, XCI, NSZ, XCZ)",
+        [](const char* display_name) {
+            return MakeFsInstallProxy("install", display_name);
+        }
+    });
+#endif
+
     storage_defs.push_back({
         App::GetMtpShowSaves(),
         "", // no custom-name option for the Saves drive.

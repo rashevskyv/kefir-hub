@@ -36,7 +36,7 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
             R_SUCCEED();
 
         case sphaira::mtp::PathKind::InstallDir:
-            R_UNLESS(INSTALL_FOLDERS, FsError_PathNotFound);
+            R_UNLESS(m_install_folders, FsError_PathNotFound);
             *out_entry_type = FsDirEntryType_Dir;
             R_SUCCEED();
 
@@ -307,7 +307,7 @@ Result FsGameProxy::OpenDirectory(const char *path, u32 mode, FsDir *out_dir) {
                     handle->entries.emplace_back(InfoDirEntry(""));
                 }
             }
-            if (INSTALL_FOLDERS && (mode & FsDirOpenMode_ReadDirs)) {
+            if (m_install_folders && (mode & FsDirOpenMode_ReadDirs)) {
                 handle->entries.emplace_back(MakeVirtualDirEntry(m_names.install_sd));
                 handle->entries.emplace_back(MakeVirtualDirEntry(m_names.install_nand));
             }
@@ -316,7 +316,7 @@ Result FsGameProxy::OpenDirectory(const char *path, u32 mode, FsDir *out_dir) {
 
         case sphaira::mtp::PathKind::InstallDir:
             // empty: a dropped file is installed, never stored.
-            R_UNLESS(INSTALL_FOLDERS, FsError_PathNotFound);
+            R_UNLESS(m_install_folders, FsError_PathNotFound);
             break;
 
         case sphaira::mtp::PathKind::MergedDir: {

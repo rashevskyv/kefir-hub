@@ -2,11 +2,12 @@
 
 Connect the console to a PC with a USB cable and it shows up in the PC's file manager like a phone. Copy a game file into the install drive and the console installs it while the file is being copied. The file itself is not stored on the console.
 
-**Where:** on the PC, the drive `Games` → [[Install to SD]] or [[Install to NAND]]
+**Where:** on the PC, the drive `Install (NSP, XCI, NSZ, XCZ)`; with [[Install folders in Games]] on, the drive `Games` → [[Install to SD]] or [[Install to NAND]]
 
 <!-- draft (v0.14.345)
-- The drive `Install (NSP, XCI, NSZ, XCZ)` is gone, with its options "Show Install folder" and "Install folder name".
-- To install over MTP, open the `Games` drive. At its root are two folders, in every [[Dump format]]: [[Install to SD]] and [[Install to NAND]].
+- (v0.14.378) The drive `Install (NSP, XCI, NSZ, XCZ)` is back and is the default: copy a game file into it, [[Install location]] decides where it goes. Its options [[Show Install folder]] and [[Install folder name]] are back.
+- [[Install folders in Games]] (off by default) moves the install folders into the `Games` drive: the `Install` drive is then hidden and the points below apply. The change restarts MTP.
+- With [[Install folders in Games]] on, the `Games` drive has two folders at its root, in every [[Dump format]]: [[Install to SD]] and [[Install to NAND]]. With it off, they are not there and Readme.txt does not name them.
 - Copy an NSP, NSZ, XCI or XCZ file into [[Install to SD]]: it installs to the microSD card. Into [[Install to NAND]]: to the system memory. The folder decides, [[Install location]] is not used.
 - The file is not stored: the folder stays empty after the copy. Other file types are refused.
 - The `Games` drive must be on ([[Show Games]], on by default).
@@ -34,7 +35,7 @@ When the PC opens the connection you see [[MTP connected]].
 ## Install a game {#install}
 
 1. On the PC, open the console in the file manager.
-2. Open the drive `Games`, then the folder [[Install to SD]] or [[Install to NAND]].
+2. Open the drive `Install (NSP, XCI, NSZ, XCZ)`. With [[Install folders in Games]] on, open the drive `Games`, then the folder [[Install to SD]] or [[Install to NAND]].
 3. Copy one or more NSP, NSZ, XCI or XCZ files into it.
 4. The console opens the [[MTP Install]] screen and installs the file as it arrives.
 5. Several files are installed one after another in the same session.
@@ -68,7 +69,7 @@ When you cancel on the console, Windows shows no error: the copy window closes.
 
 - [[Skip if already installed]] is not used: a game that is already installed is installed again.
 - [[Convert to standard crypto]] and [[Re-encrypt to master key 0]] are not applied.
-- The folder decides where the game goes; [[Install location]] is not used (see [Where games go](index.md#location)).
+- [[Install location]] decides where the game goes (see [Where games go](index.md#location)). In the `Games` folders [[Install to SD]] and [[Install to NAND]] the folder decides instead.
 - A `.nro` homebrew file copied into the install drive is not installed as a game. It is saved to `/switch/<name>/<name>.nro` and appears in the Homebrew tab.
 
 ## MTP storages {#storages}
@@ -78,7 +79,10 @@ When you cancel on the console, Windows shows no error: the copy window closes.
 | Option | What it does | Default |
 |---|---|---|
 | [[Show microSD card]] | Shows the microSD card drive. | On |
+| [[Show Install folder]] | Shows the install drive. | On |
+| [[Install folders in Games]] | Puts [[Install to SD]] and [[Install to NAND]] into the `Games` drive and hides the install drive. | Off |
 | [[microSD card name]] | Your own name for the microSD card drive. | `microSD card` |
+| [[Install folder name]] | Your own name for the install drive. | `Install (NSP, XCI, NSZ, XCZ)` |
 
 The other drives on this page (saves, games) are described in [Sharing](../sharing.md). If every drive is turned off, MTP does not start and you see [[No MTP storages enabled]].
 

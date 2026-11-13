@@ -191,7 +191,12 @@ auto FsGameProxy::Parse(const char* path) const -> sphaira::mtp::ParsedPath {
     // libhaze names the storage root "/games"; strip that so listings and
     // reads see "/", "/Merged", "/Separate/...", "/Forwarders" like the
     // host tests (and the locale's names, which m_names holds).
-    return sphaira::mtp::ParseGamesPath(FixPath(path).s, m_layout, m_names);
+    auto pp = sphaira::mtp::ParseGamesPath(FixPath(path).s, m_layout, m_names);
+    // the install folders are off: their names are not special here
+    if (!m_install_folders && (pp.kind == sphaira::mtp::PathKind::InstallDir || pp.kind == sphaira::mtp::PathKind::InstallFile)) {
+        pp = {};
+    }
+    return pp;
 }
 
 auto FsGameProxy::InfoText(std::string_view which) const -> std::string {
@@ -208,8 +213,10 @@ auto FsGameProxy::InfoText(std::string_view which) const -> std::string {
         + m_names.merged + " — " + "One NSP per game with base, update and DLC together."_i18n + "\n"
         + m_names.separate + " — " + "A folder per game with each component as its own NSP."_i18n + "\n"
         + m_names.forwarders + " — " + "HOME-menu homebrew icons, not Nintendo games."_i18n + "\n"
-        + m_names.install_sd + " — " + "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card."_i18n + "\n"
-        + m_names.install_nand + " — " + "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory."_i18n + "\n"
+        + (m_install_folders
+            ? m_names.install_sd + " — " + "Copy an NSP, NSZ, XCI or XCZ file here to install it to the microSD card."_i18n + "\n"
+                + m_names.install_nand + " — " + "Copy an NSP, NSZ, XCI or XCZ file here to install it to the system memory."_i18n + "\n"
+            : std::string{})
         + "Delete a game here to remove it from the console. Its saves stay."_i18n + "\n";
 }
 
