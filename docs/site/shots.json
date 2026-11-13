@@ -248,16 +248,27 @@
                 "wait 5"
             ]
         },
-        "updater-changelog": {
+        "updater-apps": {
             "steps": [
                 "R",
                 "wait 1",
                 "Down",
                 "A",
                 "wait 5",
+                "R",
+                "wait 1",
+                "R",
+                "wait 6"
+            ]
+        },
+        "updater-changelog": {
+            "steps": [
+                "R",
+                "wait 1",
+                "Down",
                 "A",
-                "wait 3",
-                "Down 3",
+                "wait 6",
+                "Down 60",
                 "wait 1"
             ]
         },

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.364 — the 53 new strings translated in every language; docs drafts for the Updater tabs and the Software menu
+Translations written by Claude subagents (the i18n proxy was down); stale doc labels fixed (battery, emulators). Merged origin/master (Prelude-Nextendo v5.0.0).
+host tests: pass (quick) · i18n contract: pass · doc labels: 0 unknown · docs site: built en+uk · shots: updater-main/-changelog/-apps, software-list (en, uk) · nro: built · switch: pending
+
 ## v0.14.363 — DBI installs a game's cache and user save from the PC (Just Dance offline mod)
 New queue files `<game> - <option> <TID>.kefir-cache.tar` / `.kefir-save.tar`: the Hub creates or grows the game's cache storages (`.kefir/sizes`) and the user save, writes with journal commits; the account is asked once, the queue goes on and the save waits at the end.
 host tests: pass · nro: built · switch: pending (Just Dance 2025 cache 0…8 + OfflineSaveNx.txt, account pick with 2 users)

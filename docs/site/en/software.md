@@ -4,17 +4,23 @@ Get homebrew apps: the Homebrew App Store, DBI builds, mod downloaders and direc
 
 **Where:** [[Tools]] → [[Software]]
 
-<!-- shot: software-list | Software menu: Homebrew App Store, DBI, Ownfoil, UAModDownloader, ModCD, SimpleModDownloader, Custom Link -->
+<!-- shot: software-list | Software menu: Homebrew App Store, DBI, UAModDownloader (Ukrainian only), ModCD, SimpleModDownloader, Custom Link -->
 
 | Item | What it is |
 |---|---|
 | [[Homebrew App Store]] | Browse, install, update and remove homebrew apps. |
 | [[DBI]] | Download DBI builds, its config and fan translations. |
-| [[Ownfoil]] | Install titles from your own Ownfoil server. See [Install over the network](install/network.md). |
 | [[UAModDownloader]] | Downloads the UAModDownloader app (Ukrainian mods). |
 | [[ModCD]] | Downloads the ModCD app (ECLIPS graphic mods). |
 | [[SimpleModDownloader]] | Downloads the SimpleModDownloader app (game mods from GameBanana). |
 | [[Custom Link]] | Download a `.zip` or `.nro` from any direct link. |
+
+<!-- draft
+- the screen title is [[Software]] in the interface language
+- [[UAModDownloader]] shows only when the Kefir Hub language is Ukrainian
+- [[UAModDownloader]], [[ModCD]] and [[SimpleModDownloader]] show the app's own icon at the left instead of the arrow
+- Ownfoil is no longer in this menu (it stays in [Install over the network](install/network.md))
+-->
 
 All items need an internet connection.
 

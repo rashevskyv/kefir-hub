@@ -4,7 +4,22 @@ Update Kefir, install system firmware (update or downgrade), and keep Kefir Hub 
 
 **Where:** [[Tools]] → [[Updater]]
 
-<!-- shot: updater-main | Updater screen in list layout: header with Current Kefir, Latest Kefir, Current Firmware, Console; KEFIR and FIRMWARE sections -->
+<!-- draft
+- the [[Homebrew]] tab has a Kefir Updater tile with its own icon and the line [[Run to update Kefir]]; it opens this Updater
+-->
+
+<!-- shot: updater-main | Updater opened on the Kefir tab: tabs Kefir / Firmware / Apps, the state line, Available and Installed lines, the changelog -->
+
+<!-- draft
+- the Updater has three tabs at the top: [[Kefir]], [[Firmware]] and [[Apps]]; **L** ([[Previous tab]]) and **R** ([[Next tab]]) switch them, a tap on a tab opens it
+- [[Kefir]] tab: one line with the state ([[A Kefir update is available]], [[Kefir is not installed]] or [[You have the latest Kefir installed]]), then [[Available:]] with the Kefir version on offer and [[Installed:]] with the installed version, each on its own line; at the right: [[Scroll the changelog down to install.]]
+- below them the Kefir changelog fills the page; the button at the end of the text is [[Install]] (Kefir not installed), [[Update]] (newer Kefir on offer) or [[Reinstall]] (same version)
+- [[Firmware]] tab: the header lines [[Current Firmware:]] and [[Console:]], and the FIRMWARE list as before, with [[Install manually]]
+- [[Apps]] tab: see "Update apps" below
+- without internet the Kefir tab shows [[Connect to the internet]]
+- the old KEFIR list section is gone; the header above the tabs shows only [[Current Firmware:]] and [[Console:]]; [[Current Kefir:]] and [[Latest Kefir:]] are no longer shown (fix the "four lines" list and the KEFIR section text below)
+-->
+
 
 ## What the screen shows
 
@@ -48,6 +63,14 @@ If it is not connected yet, the list loads by itself once it connects. Press **X
 
 ## Update Kefir
 
+<!-- draft
+- replaces steps 1-4: open the [[Kefir]] tab (it opens first); the changelog is the page itself
+- scroll with **D-pad**, the sticks, **L**/**R** page keys, or drag the text with a finger
+- the button ([[Install]] / [[Update]] / [[Reinstall]]) sits at the very end of the text and turns green when you reach it; press **A** or tap it
+- **A** before the end shows: [[Read the changelog to the end, then press]] «button» [[at the very bottom.]]
+- steps 5-6 (download, unpack, reboot prompt) stay the same
+-->
+
 1. In the **KEFIR** section, select the version you want and press **A**.
 2. A changelog window opens. It lists the changes between your version and the selected one (in Ukrainian when the interface language is Ukrainian).
 3. Scroll to the bottom with **D-pad** down (**L** / **R** scroll a page). [[Install]] unlocks only after you reach the end.
@@ -64,7 +87,7 @@ In the changelog window:
 - The sticks glide: the harder you push, the faster the text scrolls. A light touch is slow; a full push is about 20 lines a second at most. This way you cannot skip the notes in a blink.
 - Choose [[Install]] with **Down** at the bottom.
 
-<!-- shot: updater-changelog | Kefir changelog window scrolled to the bottom, Install button selected -->
+<!-- shot: updater-changelog | Kefir tab scrolled to the end of the changelog, the green Install / Update / Reinstall button -->
 
 Press **B** in the changelog window to cancel. Nothing is downloaded until you press [[Install]].
 
@@ -150,6 +173,20 @@ reports that the `Nintendo` folder on the memory card is invalid and offers to d
 affect your saves.
 
 The warning box also has a QR code that opens a manual downgrade guide.
+
+## Update apps
+
+<!-- draft
+- the [[Apps]] tab lists Kefir Hub, DBI and every app from the [[Homebrew]] tab, with [[Installed:]] and [[Newest:]] versions; while it loads: [[Checking for updates...]]; empty: [[No apps found.]]
+- the tag per app: [[UPDATE]], [[Up to date]] or [[No update info]]
+- **A** on an app with [[UPDATE]] downloads the new version: Kefir Hub from its GitHub release, DBI from DBIPatcher, other apps from the [[Homebrew App Store]] sources; then "<app>: [[updated]]"
+- Kefir Hub: the row shows the download percent, then [[Press A to restart]]; on error [[Failed, press A to try again]]
+- DBI: if the DBI language is not known, the Hub asks [[Which language does your DBI use?]]; with no choice it says [[Choose the DBI language in Additional programs → DBI.]]
+- **A** on an app without an update: [[Already the newest version.]] or [[No source knows this app.]]
+- **X** ([[Refresh]]) checks again
+-->
+
+<!-- shot: updater-apps | Updater Apps tab: Kefir Hub, DBI and homebrew apps with Installed/Newest versions and UPDATE tags -->
 
 ## Update Kefir Hub
 
