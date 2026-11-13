@@ -120,7 +120,7 @@ There is no menu switch to turn the reminder back on. To do it, open `/config/ke
 <!-- draft
 - the reminder buttons are now [[Later]], [[Link through Nextendo]] and [[Link and reboot]]
 - [[Don't remind again]] moved: [[Later]] now opens a box with [[OK]] and [[Don't remind again]]
-- [[Link through Nextendo]] links nothing by itself; it shows the [[Nextendo account]] box: a QR code to the Nextendo sign-up steps, [[Later]] and [[Sign in]] (see Kefir Settings → Nextendo)
+- [[Link through Nextendo]] links nothing by itself; it shows the [[Nextendo account]] box: a QR code to the Nextendo sign-up form, [[Later]] and [[Sign in]] (see Kefir Settings → Nextendo)
 - the Nextendo account is entered on the console's own screen, never in Kefir Hub
 - a profile with a donor link cannot sign in to Nextendo; unlink it first
 -->

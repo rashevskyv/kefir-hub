@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.379 — Nextendo account: QR to the sign-up form, Sign in switches Nextendo on
+The QR code goes straight to nextendo.network/register (the form walks through the account, the console link and the first game). Sign in while Nextendo is off on the emuMMC offers Switch on: Kefir Hub stores the setting, writes the files and restarts; after the restart the link reminder leads back to Sign in. No patch for the firmware, sysNAND without Semi-stock and Semi-stock get a box with the reason (Semi-stock keeps its own warning). 2 new strings and "Switch on" back, all 26 languages; docs drafts.
+host tests: pass (quick + i18n contract + doc labels + docs draft contract) · nro: built (ReleaseWithInstall) · switch: pending — Switch on from Sign in, one restart, then Sign in opens the Nextendo link screen.
+
 ## v0.14.378 — MTP: the Install drive is back by default; "Install folders in Games" is an option
 The drive `Install (NSP, XCI, NSZ, XCZ)` returns with Show Install folder and Install folder name; there Install location decides. New option Install folders in Games (off): on, the Games drive gets Install to SD / Install to NAND and the Install drive is hidden. 2 new strings + 5 restored, all 26 languages; docs drafts (install/mtp, sharing).
 host tests: pass (quick + i18n contract) · nro: built (DocsDemo) · switch: pending — Install drive installs; the option moves the folders to Games and hides the drive.
