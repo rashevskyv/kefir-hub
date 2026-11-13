@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Tautkan lewat Nextendo",
+  "Switch on": "Aktifkan",
+  "Choose profiles": "Pilih profil",
+  "Profiles for Nextendo": "Profil untuk Nextendo",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "Aktifkan Nextendo sekarang? Kefir Hub melepas tautan profil yang dicentang. Data simpanan gimnya tetap ada. Konsol akan dimulai ulang.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Bermain online di Nextendo memerlukan akun Nextendo gratis.\n1. Pindai kode dan buat akunnya. Jika pendaftaran ditutup, Discord Nextendo memberi tahu kapan dibuka.\n2. Aktifkan Nextendo: Pengaturan Kefir → Nextendo.\n3. Setelah mulai ulang: Pengaturan Sistem → Pengguna → profil → Tautkan Akun Nintendo. Masuk dengan akun Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Bermain online di Nextendo memerlukan akun Nextendo gratis: pindai kode untuk membuatnya.\nSetelah mulai ulang, tautkan setiap profil yang bermain online: Pengaturan Sistem → Pengguna → profil → Tautkan Akun Nintendo. Masuk dengan akun Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Bermain online di Nextendo memerlukan akun Nextendo gratis: pindai kode untuk membuatnya.\nProfil yang ditautkan dengan Linkalho atau donor Kefir Hub tidak bisa bermain online di Nextendo. Pilih profil yang bermain online: Kefir Hub melepas tautannya lalu memulai ulang.\nLalu tautkan masing-masing: Pengaturan Sistem → Pengguna → profil → Tautkan Akun Nintendo. Masuk dengan akun Nextendo.",
   "Online": "Online",
   "__language_name": "Indonesian — Bahasa Indonesia",
   "Switch-Handheld!": "Mode Genggam",

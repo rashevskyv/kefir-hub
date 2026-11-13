@@ -309,7 +309,7 @@ auto StartShareServer() -> Result {
     R_THROW(Result_FsUnknownStdioError);
 }
 
-
+} // namespace
 
 auto CreateQrImage(const std::string& url) -> int {
     const auto qr = QrCode::Encode(url);
@@ -335,8 +335,6 @@ auto CreateQrImage(const std::string& url) -> int {
 
     return nvgCreateImageRGBA(App::GetVg(), image_size, image_size, 0, rgba.data());
 }
-
-} // namespace
 
 auto WebShow(const std::string& url) -> Result {
     WebCommonConfig config{};

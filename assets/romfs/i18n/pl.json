@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Połącz przez Nextendo",
+  "Switch on": "Włącz",
+  "Choose profiles": "Wybierz profile",
+  "Profiles for Nextendo": "Profile dla Nextendo",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "Włączyć Nextendo teraz? Kefir Hub odłączy zaznaczone profile. Ich zapisy gier zostaną. Konsola uruchomi się ponownie.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Gra online w Nextendo wymaga darmowego konta Nextendo.\n1. Zeskanuj kod i załóż konto. Jeśli rejestracja jest zamknięta, Discord Nextendo poda, kiedy zostanie otwarta.\n2. Włącz Nextendo: Kefir Settings → Nextendo.\n3. Po ponownym uruchomieniu: Ustawienia systemu → Użytkownicy → profil → Połącz konto Nintendo. Zaloguj się kontem Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Gra online w Nextendo wymaga darmowego konta Nextendo: zeskanuj kod, aby je założyć.\nPo ponownym uruchomieniu połącz każdy profil, który gra online: Ustawienia systemu → Użytkownicy → profil → Połącz konto Nintendo. Zaloguj się kontem Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Gra online w Nextendo wymaga darmowego konta Nextendo: zeskanuj kod, aby je założyć.\nProfil połączony przez Linkalho lub dawcę Kefir Hub nie może grać online w Nextendo. Wybierz profile, które grają online: Kefir Hub je odłączy i uruchomi konsolę ponownie.\nNastępnie połącz każdy: Ustawienia systemu → Użytkownicy → profil → Połącz konto Nintendo. Zaloguj się kontem Nextendo.",
   "Online": "Online",
   "__language_name": "Polish — Polski",
   "Switch-Handheld!": "Tryb przenośny",

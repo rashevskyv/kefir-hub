@@ -80,6 +80,20 @@ Nextendo Network дає онлайн-гру в підтримуваних ігр
 5. Прив'яжіть консоль до свого облікового запису Nextendo. Як це зробити, описано в [посібнику Nextendo в Discord](https://discord.gg/XPfeCMwnzQ).
 6. Запустіть підтримувану гру і відкрийте її онлайн-режим.
 
+<!-- draft
+- selecting [[Nextendo on emuMMC]] while it is off first shows a box with a QR code to https://nextendo.network/register and the account steps
+- the Nextendo server accepts only a Nextendo account: a profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo
+- no profile is linked: [[Continue]] goes on to the usual hold **A** switch
+- some profiles are linked: [[Choose profiles]] opens the list [[Profiles for Nextendo]]; **X** ticks a profile, **Y** inverts, **A** or **B** closes the list
+- after the list: [[Switch on]] switches Nextendo on, unlinks the ticked profiles and restarts the console once; game saves stay; nothing ticked = Nextendo is only switched on
+- [[Cancel]] in either box changes nothing
+- step 5 changes: after the restart link each profile that plays online in System Settings → Users → the profile → Link Nintendo Account; sign in with the Nextendo account (OWNER: check on a console what the sign-in screen asks for)
+- unlinked profiles get the startup reminder with [[Link through Nextendo]] (see Users)
+- Kefir Hub cannot yet tell a Nextendo link from a donor link
+-->
+
+<!-- shot: kefir-settings-nextendo-account | Box after selecting Nextendo on emuMMC with linked profiles: QR code, account text, Cancel and Choose profiles -->
+
 У списку [[Games]] кожна встановлена гра, яку підтримує Nextendo, має зелену позначку [[Online]] і кількість гравців онлайн. Див. [Ігри](games.md).
 
 Щоб вимкнути Nextendo, знову виберіть [[Nextendo on emuMMC]] і утримуйте **A**. Kefir Hub видалить свої файли Nextendo; ваші власні патчі лишаться.

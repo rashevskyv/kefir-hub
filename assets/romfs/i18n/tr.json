@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Nextendo ile bağla",
+  "Switch on": "Aç",
+  "Choose profiles": "Profilleri seç",
+  "Profiles for Nextendo": "Nextendo için profiller",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "Nextendo şimdi açılsın mı? Kefir Hub işaretli profillerin bağlantısını kaldırır. Oyun kayıtları kalır. Konsol yeniden başlar.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendo'da çevrim içi oynamak için ücretsiz bir Nextendo hesabı gerekir.\n1. Kodu tarayın ve hesabı oluşturun. Kayıtlar kapalıysa, Nextendo Discord'u ne zaman açılacağını duyurur.\n2. Nextendo'yu açın: Kefir Ayarları → Nextendo.\n3. Yeniden başlatmadan sonra: Sistem Ayarları → Kullanıcılar → profil → Nintendo Hesabını Bağla. Nextendo hesabıyla oturum açın.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendo'da çevrim içi oynamak için ücretsiz bir Nextendo hesabı gerekir: oluşturmak için kodu tarayın.\nYeniden başlatmadan sonra çevrim içi oynayan her profili bağlayın: Sistem Ayarları → Kullanıcılar → profil → Nintendo Hesabını Bağla. Nextendo hesabıyla oturum açın.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendo'da çevrim içi oynamak için ücretsiz bir Nextendo hesabı gerekir: oluşturmak için kodu tarayın.\nLinkalho veya bir Kefir Hub bağışçısıyla bağlanan profil Nextendo'da çevrim içi oynayamaz. Çevrim içi oynayacak profilleri seçin: Kefir Hub bağlantılarını kaldırır ve yeniden başlatır.\nArdından her birini bağlayın: Sistem Ayarları → Kullanıcılar → profil → Nintendo Hesabını Bağla. Nextendo hesabıyla oturum açın.",
   "Online": "Çevrimiçi",
   "__language_name": "Turkish — Türkçe",
   "Switch-Handheld!": "El Tipi Modu",

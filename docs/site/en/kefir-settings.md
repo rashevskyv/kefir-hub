@@ -85,6 +85,20 @@ To switch Nextendo on:
 5. Link the console to your Nextendo account. The [Nextendo guide in Discord](https://discord.gg/XPfeCMwnzQ) describes how.
 6. Start a supported game and open its online mode.
 
+<!-- draft
+- selecting [[Nextendo on emuMMC]] while it is off first shows a box with a QR code to https://nextendo.network/register and the account steps
+- the Nextendo server accepts only a Nextendo account: a profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo
+- no profile is linked: [[Continue]] goes on to the usual hold **A** switch
+- some profiles are linked: [[Choose profiles]] opens the list [[Profiles for Nextendo]]; **X** ticks a profile, **Y** inverts, **A** or **B** closes the list
+- after the list: [[Switch on]] switches Nextendo on, unlinks the ticked profiles and restarts the console once; game saves stay; nothing ticked = Nextendo is only switched on
+- [[Cancel]] in either box changes nothing
+- step 5 changes: after the restart link each profile that plays online in System Settings → Users → the profile → Link Nintendo Account; sign in with the Nextendo account (OWNER: check on a console what the sign-in screen asks for)
+- unlinked profiles get the startup reminder with [[Link through Nextendo]] (see Users)
+- Kefir Hub cannot yet tell a Nextendo link from a donor link
+-->
+
+<!-- shot: kefir-settings-nextendo-account | Box after selecting Nextendo on emuMMC with linked profiles: QR code, account text, Cancel and Choose profiles -->
+
 The [[Games]] list marks every installed game that Nextendo supports with a green [[Online]] badge and the number of players online now. See [Games](games.md).
 
 To switch Nextendo off, select [[Nextendo on emuMMC]] again and hold **A**. Kefir Hub deletes its Nextendo files; your own patches stay.

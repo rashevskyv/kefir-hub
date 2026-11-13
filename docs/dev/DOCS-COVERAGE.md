@@ -43,7 +43,8 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Create, rename, avatar, delete | Users options | users/users_profile*.cpp | users | doc; rename: max length unclear |
 | Per-profile backup/restore, user backup library | **unreachable** | users_profile.cpp:78, users_restore*.cpp, users_manage*.cpp | — | none: no menu reaches it (dead code) |
 | Link / unlink Nintendo Account (donor) | Users options | account/account_link_*.cpp | users#link-profiles-to-a-nintendo-account-offline | partial: online/eShop risk |
-| Startup link reminder | launch | main_menu.cpp:51 | users#the-link-reminder-at-startup | doc |
+| Startup link reminder | launch | main_menu.cpp:51 | users#the-link-reminder-at-startup | partial (draft: Link through Nextendo, shot users-nextendo-guide [USER]) |
+| Nextendo account steps on switch-on | Kefir Settings → Nextendo | nextendo_link_box.cpp | kefir-settings#nextendo | partial (draft, shot kefir-settings-nextendo-account [USER]) |
 | Profiles and play hours backup/restore (TegraExplorer) | Users → CONSOLE MOVE | users/users_nand*.cpp, account/nand_transfer*.cpp | users#back-up, users#restore | doc; unfinished dump choices documented; users-unfinished-dump: [USER] Switch shot pending |
 | Manage backups, receive from another console | Users → Manage Backups | users_nand_library*.cpp, install_share.cpp:374 | users#manage-backups, console-transfer | doc |
 | Undo profile restore | hekate → TegraExplorer | account_restore.cpp | console-transfer#undo-a-profiles-restore | doc |

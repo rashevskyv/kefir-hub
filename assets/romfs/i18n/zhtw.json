@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "透過 Nextendo 連動",
+  "Switch on": "開啟",
+  "Choose profiles": "選擇使用者",
+  "Profiles for Nextendo": "用於 Nextendo 的使用者",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "現在開啟 Nextendo 嗎？Kefir Hub 會解除勾選使用者的連動。遊戲存檔會保留。主機將重新啟動。",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "在 Nextendo 上線上遊玩需要一個免費的 Nextendo 帳號。\n1. 掃描條碼並建立帳號。如果註冊已關閉，Nextendo 的 Discord 會通知何時重新開放。\n2. 開啟 Nextendo：開菲爾設定 → Nextendo。\n3. 重新啟動後：設定 → 使用者 → 該使用者 → 連動任天堂帳號。使用 Nextendo 帳號登入。",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "在 Nextendo 上線上遊玩需要一個免費的 Nextendo 帳號：掃描條碼即可建立。\n重新啟動後，連動每個要線上遊玩的使用者：設定 → 使用者 → 該使用者 → 連動任天堂帳號。使用 Nextendo 帳號登入。",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "在 Nextendo 上線上遊玩需要一個免費的 Nextendo 帳號：掃描條碼即可建立。\n透過 Linkalho 或 Kefir Hub 捐贈帳號連動的使用者無法在 Nextendo 上線上遊玩。選擇要線上遊玩的使用者：Kefir Hub 會解除其連動並重新啟動。\n然後逐一連動：設定 → 使用者 → 該使用者 → 連動任天堂帳號。使用 Nextendo 帳號登入。",
   "Online": "線上",
   "__language_name": "Chinese (Traditional) — 繁體中文",
   "No Internet": "沒有網際網路",

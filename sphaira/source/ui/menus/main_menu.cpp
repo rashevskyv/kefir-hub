@@ -7,11 +7,13 @@
 #include "ui/menus/users_menu.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
+#include "ui/nextendo_link_box.hpp"
 
 #include "account/account_link.hpp"
 #include "app.hpp"
 #include "auto_update.hpp"
 #include "log.hpp"
+#include "nextendo_apply.hpp"
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -61,13 +63,14 @@ void CheckLaunchAccountLinkPrompt() {
     }
     account_link::SetLaunchLinkPrompted(true);
 
-    // 3-button layout matches updates: top Minus = don't remind; bottom B = Later, + = Link.
+    // 3-button layout matches updates: top Minus = Nextendo; bottom B = Later (then "Don't remind again"), + = Link.
     App::Push<OptionBox>(
         "Some user profiles are not linked to a Nintendo Account.\n\n"
         "Kefir Hub can safely link them using built-in donors. Each unlinked profile receives a different donor. This does not delete or modify game saves. "
         "Some games require a linked Nintendo Account to start. Already linked profiles are left unchanged.\n\n"
         "The console will reboot after linking."_i18n,
-        "Later"_i18n, "Don't remind again"_i18n, "Link and reboot"_i18n, 2,
+        // with Nextendo on, one A press must not link the profiles to donors
+        "Later"_i18n, "Link through Nextendo"_i18n, "Link and reboot"_i18n, ::sphaira::nextendo::Active() ? 1 : 2,
         [](auto op) {
             if (!op) {
                 return;
@@ -75,14 +78,20 @@ void CheckLaunchAccountLinkPrompt() {
             if (*op == 2) {
                 StartLaunchAccountLink();
             } else if (*op == 1) {
-                App::SetAccountLinkPromptSkip(true);
-                App::Push<OptionBox>(
-                    "You won't be asked again at launch. To link manually later: Tools → Users → Link Nintendo Account."_i18n,
-                    "OK"_i18n);
+                nextendo_link::PushGuide();
             } else {
                 App::Push<OptionBox>(
                     "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start."_i18n,
-                    "OK"_i18n);
+                    "OK"_i18n, "Don't remind again"_i18n, 0,
+                    [](auto op) {
+                        if (!op || *op != 1) {
+                            return;
+                        }
+                        App::SetAccountLinkPromptSkip(true);
+                        App::Push<OptionBox>(
+                            "You won't be asked again at launch. To link manually later: Tools → Users → Link Nintendo Account."_i18n,
+                            "OK"_i18n);
+                    });
             }
         });
 }

@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Прывязаць праз Nextendo",
+  "Switch on": "Уключыць",
+  "Choose profiles": "Выбраць профілі",
+  "Profiles for Nextendo": "Профілі для Nextendo",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "Уключыць Nextendo зараз? Kefir Hub адвяжа адзначаныя профілі. Іх захаванні гульняў застануцца. Кансоль перазапусціцца.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Для гульні анлайн у Nextendo патрэбны бясплатны ўліковы запіс Nextendo.\n1. Скануйце код і стварыце ўліковы запіс. Калі рэгістрацыя закрыта, Discord Nextendo паведаміць, калі яе адкрыюць.\n2. Уключыце Nextendo: Налады Kefir → Nextendo.\n3. Пасля перазапуску: Сістэмныя налады → Карыстальнікі → профіль → Прывязаць уліковы запіс Nintendo. Увайдзіце з уліковым запісам Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Для гульні анлайн у Nextendo патрэбны бясплатны ўліковы запіс Nextendo: скануйце код, каб стварыць яго.\nПасля перазапуску прывяжыце кожны профіль для гульні анлайн: Сістэмныя налады → Карыстальнікі → профіль → Прывязаць уліковы запіс Nintendo. Увайдзіце з уліковым запісам Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Для гульні анлайн у Nextendo патрэбны бясплатны ўліковы запіс Nextendo: скануйце код, каб стварыць яго.\nПрофіль, прывязаны праз Linkalho або донара Kefir Hub, не можа гуляць анлайн у Nextendo. Выберыце профілі для гульні анлайн: Kefir Hub адвяжа іх і перазапусціць кансоль.\nПотым прывяжыце кожны: Сістэмныя налады → Карыстальнікі → профіль → Прывязаць уліковы запіс Nintendo. Увайдзіце з уліковым запісам Nextendo.",
   "Online": "Анлайн",
   "__language_name": "Belarusian — Беларуская",
   "Switch-Handheld!": "Партатыўны рэжым",

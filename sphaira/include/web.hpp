@@ -27,6 +27,8 @@ struct WebUploadState {
 };
 
 auto WebShow(const std::string& url) -> Result;
+// an NVG image of the QR code for text (version 4: up to about 78 bytes); the caller deletes it
+auto CreateQrImage(const std::string& text) -> int;
 auto WebShareFolder(const fs::FsPath& path, WebShareResult& out) -> Result;
 
 // brings the http server up without touching the mounted folder list, and

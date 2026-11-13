@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Liên kết qua Nextendo",
+  "Switch on": "Bật",
+  "Choose profiles": "Chọn hồ sơ",
+  "Profiles for Nextendo": "Hồ sơ cho Nextendo",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "Bật Nextendo ngay? Kefir Hub sẽ hủy liên kết các hồ sơ đã đánh dấu. Dữ liệu lưu game của chúng vẫn giữ nguyên. Máy sẽ khởi động lại.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Chơi trực tuyến trên Nextendo cần một tài khoản Nextendo miễn phí.\n1. Quét mã và tạo tài khoản. Nếu đăng ký đang đóng, Discord của Nextendo sẽ báo khi nào mở lại.\n2. Bật Nextendo: Cài đặt Kefir → Nextendo.\n3. Sau khi khởi động lại: Cài đặt hệ thống → Người dùng → hồ sơ → Liên kết tài khoản Nintendo. Đăng nhập bằng tài khoản Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Chơi trực tuyến trên Nextendo cần một tài khoản Nextendo miễn phí: quét mã để tạo.\nSau khi khởi động lại, hãy liên kết từng hồ sơ chơi trực tuyến: Cài đặt hệ thống → Người dùng → hồ sơ → Liên kết tài khoản Nintendo. Đăng nhập bằng tài khoản Nextendo.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Chơi trực tuyến trên Nextendo cần một tài khoản Nextendo miễn phí: quét mã để tạo.\nHồ sơ được liên kết bằng Linkalho hoặc tài khoản cho của Kefir Hub không thể chơi trực tuyến trên Nextendo. Chọn các hồ sơ chơi trực tuyến: Kefir Hub sẽ hủy liên kết và khởi động lại.\nSau đó liên kết từng hồ sơ: Cài đặt hệ thống → Người dùng → hồ sơ → Liên kết tài khoản Nintendo. Đăng nhập bằng tài khoản Nextendo.",
   "Online": "Trực tuyến",
   "__language_name": "Vietnamese — Tiếng Việt",
   "No Internet": "Không có Internet",

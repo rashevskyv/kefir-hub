@@ -6,6 +6,7 @@
 #include "hekate_clock.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "nextendo_apply.hpp"
 
 #include <arpa/inet.h>
 #include <atomic>
@@ -409,6 +410,13 @@ Result RunSync() {
 }
 
 void ThreadFunc(void*) {
+    // DNS-MITM reads the hosts file on the first DNS query; System Settings links a profile
+    // to Nextendo only after that (Prelude-Nextendo does the same query at boot).
+    if (::sphaira::nextendo::Active()) {
+        const auto* he = gethostbyname("accounts.nintendo.com");
+        log_write("[Nextendo] dns warmup: %s\n", he ? "ok" : "failed");
+    }
+
     // start the first synchronization attempt immediately upon launch.
     u64 wait_ns = 0;
 

@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Nextendo로 연동",
+  "Switch on": "켜기",
+  "Choose profiles": "프로필 선택",
+  "Profiles for Nextendo": "Nextendo용 프로필",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "지금 Nextendo를 켤까요? Kefir Hub가 체크한 프로필의 연동을 해제합니다. 게임 세이브 데이터는 그대로 남습니다. 본체가 재시작됩니다.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendo에서 온라인 플레이를 하려면 무료 Nextendo 계정이 필요합니다.\n1. 코드를 스캔해 계정을 만드세요. 가입이 닫혀 있으면 Nextendo Discord에서 다시 열리는 시기를 알려 줍니다.\n2. Nextendo를 켜세요: Kefir 설정 → Nextendo.\n3. 재시작 후: 설정 → 사용자 → 프로필 → 닌텐도 어카운트 연동. Nextendo 계정으로 로그인하세요.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendo에서 온라인 플레이를 하려면 무료 Nextendo 계정이 필요합니다. 코드를 스캔해 만드세요.\n재시작 후 온라인으로 플레이할 각 프로필을 연동하세요: 설정 → 사용자 → 프로필 → 닌텐도 어카운트 연동. Nextendo 계정으로 로그인하세요.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendo에서 온라인 플레이를 하려면 무료 Nextendo 계정이 필요합니다. 코드를 스캔해 만드세요.\nLinkalho나 Kefir Hub 도너로 연동된 프로필은 Nextendo에서 온라인 플레이를 할 수 없습니다. 온라인으로 플레이할 프로필을 고르면 Kefir Hub가 연동을 해제하고 재시작합니다.\n그다음 각 프로필을 연동하세요: 설정 → 사용자 → 프로필 → 닌텐도 어카운트 연동. Nextendo 계정으로 로그인하세요.",
   "Online": "온라인",
   "__language_name": "Korean — 한국어",
   "No Internet": "인터넷 연결 없음",

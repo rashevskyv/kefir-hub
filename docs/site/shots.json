@@ -936,6 +936,12 @@
                 "wait 2"
             ]
         },
+        "users-nextendo-guide": {
+            "user": true
+        },
+        "kefir-settings-nextendo-account": {
+            "user": true
+        },
         "updater-manual-picker": {
             "steps": [
                 "R",

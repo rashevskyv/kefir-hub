@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Seo Nextendo kaudu",
+  "Switch on": "Lülita sisse",
+  "Choose profiles": "Vali profiilid",
+  "Profiles for Nextendo": "Profiilid Nextendo jaoks",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "Kas lülitada Nextendo kohe sisse? Kefir Hub eemaldab märgitud profiilide sidumise. Nende mängusalvestused jäävad alles. Konsool taaskäivitub.",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendos võrgus mängimiseks on vaja tasuta Nextendo kontot.\n1. Skanni kood ja loo konto. Kui registreerimine on suletud, teatab Nextendo Discord, millal see avatakse.\n2. Lülita Nextendo sisse: Kefiri seaded → Nextendo.\n3. Pärast taaskäivitust: Süsteemi seaded → Kasutajad → profiil → Seo Nintendo konto. Logi sisse Nextendo kontoga.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendos võrgus mängimiseks on vaja tasuta Nextendo kontot: skanni kood, et see luua.\nPärast taaskäivitust seo iga võrgus mängiv profiil: Süsteemi seaded → Kasutajad → profiil → Seo Nintendo konto. Logi sisse Nextendo kontoga.",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendos võrgus mängimiseks on vaja tasuta Nextendo kontot: skanni kood, et see luua.\nLinkalho või Kefir Hubi doonoriga seotud profiil ei saa Nextendos võrgus mängida. Vali võrgus mängivad profiilid: Kefir Hub eemaldab nende sidumise ja taaskäivitab konsooli.\nSeejärel seo igaüks: Süsteemi seaded → Kasutajad → profiil → Seo Nintendo konto. Logi sisse Nextendo kontoga.",
   "Online": "Võrgus",
   "__language_name": "Estonian — Eesti",
   "Switch-Handheld!": "Käeshoitav režiim",

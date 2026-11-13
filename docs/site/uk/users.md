@@ -120,7 +120,20 @@ Kefir Hub може створити таку прив'язку без інтер
 Окремого перемикача, щоб знову ввімкнути нагадування, немає. Для цього відкрийте `/config/kefir/config.ini` і в
 розділі `[config]` задайте `account_link_prompt_skip=0`.
 
-<!-- shot: users-launch-reminder | Startup dialog "Some user profiles are not linked" with Later, Don't remind again, Link and reboot -->
+<!-- draft
+- the reminder buttons are now [[Later]], [[Link through Nextendo]] and [[Link and reboot]]
+- [[Don't remind again]] moved: [[Later]] now opens a box with [[OK]] and [[Don't remind again]]
+- [[Link through Nextendo]] links nothing; it shows a box with a QR code to https://nextendo.network/register and three steps
+- step 1: create a free Nextendo account; sign-ups may be closed, the Nextendo Discord says when they open
+- step 2: switch on Nextendo in [[Kefir Settings]] → [[Nextendo]]
+- step 3: after the restart, System Settings → Users → the profile → Link Nintendo Account, sign in with the Nextendo account
+- the Nextendo account is entered on the console's own System Settings screen, never in Kefir Hub
+- a profile with a donor link cannot play online on Nextendo; see Kefir Settings → Nextendo
+-->
+
+<!-- shot: users-nextendo-guide | Box after Link through Nextendo: QR code on the left, the three account steps, OK -->
+
+<!-- shot: users-launch-reminder | Startup dialog "Some user profiles are not linked" with Later, Link through Nextendo, Link and reboot -->
 
 ## Резервна копія і відновлення профілів та годин {#back-up-and-restore-profiles-play-hours}
 Розділ [[CONSOLE MOVE]] в [[Options]] копіює всі профілі консолі разом з наіграними годинами (час гри, який показують

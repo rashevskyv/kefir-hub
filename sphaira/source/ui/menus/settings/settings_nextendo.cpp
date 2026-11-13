@@ -10,6 +10,7 @@
 #include "app.hpp"
 #include "i18n.hpp"
 #include "nextendo_apply.hpp"
+#include "ui/nextendo_link_box.hpp"
 #include "ui/nvg_util.hpp"
 
 #include <algorithm>
@@ -79,14 +80,23 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
         items.back().lamp = StatusLamp;
     }
 
-    items.emplace_back(MakeKefirToggle({
+    auto emu = MakeKefirToggle({
         "Nextendo on emuMMC"_i18n,
         "Sends the online services of supported games to the Nextendo Network on the emuMMC."_i18n,
         [](){ return nx::EmuEnabled(); },
         [](bool enabled){ return ApplyChoice(nx::SetEmuEnabled, enabled); },
         "The console restarts to apply this. Nextendo uses the real PRODINFO of the console inside the emuMMC; Nintendo servers are not reached."_i18n,
         0.5f,
-    }));
+    });
+    // switching on first shows the account steps and which linked profiles to unlink for Nextendo
+    emu.action = [toggle = emu.action](){
+        if (nx::EmuEnabled() || !nx::FirmwareOk()) {
+            toggle();
+        } else {
+            nextendo_link::PushSwitchOn(toggle);
+        }
+    };
+    items.emplace_back(std::move(emu));
 
     // only while Semi-stock is on; the option is switched off when Semi-stock ends
     if (nx::CurrentMode() == nx::Mode::SemiStock) {

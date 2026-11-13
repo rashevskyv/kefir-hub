@@ -1,4 +1,12 @@
 {
+  "Link through Nextendo": "Nextendoでリンク",
+  "Switch on": "オンにする",
+  "Choose profiles": "プロフィールを選ぶ",
+  "Profiles for Nextendo": "Nextendo用のプロフィール",
+  "Switch on Nextendo now? Kefir Hub unlinks the ticked profiles. Their game saves stay. The console restarts.": "今すぐNextendoをオンにしますか？Kefir Hubはチェックしたプロフィールのリンクを解除します。ゲームのセーブデータは残ります。本体は再起動します。",
+  "Online play on Nextendo needs a free Nextendo account.\n1. Scan the code and create the account. If sign-ups are closed, the Nextendo Discord says when they open.\n2. Switch on Nextendo: Kefir Settings → Nextendo.\n3. After the restart: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendoでオンラインプレイをするには、無料のNextendoアカウントが必要です。\n1. コードを読み取ってアカウントを作成します。登録が締め切られている場合は、NextendoのDiscordで再開時期が案内されます。\n2. Nextendoをオンにします: Kefir設定 → Nextendo。\n3. 再起動後: 設定 → ユーザー → プロフィール → ニンテンドーアカウントとの連携。Nextendoアカウントでログインします。",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nAfter the restart, link each profile that plays online: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendoでオンラインプレイをするには、無料のNextendoアカウントが必要です。コードを読み取って作成してください。\n再起動後、オンラインで遊ぶ各プロフィールを連携します: 設定 → ユーザー → プロフィール → ニンテンドーアカウントとの連携。Nextendoアカウントでログインします。",
+  "Online play on Nextendo needs a free Nextendo account: scan the code to create one.\nA profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo. Choose the profiles that play online: Kefir Hub unlinks them and restarts.\nThen link each one: System Settings → Users → the profile → Link Nintendo Account. Sign in with the Nextendo account.": "Nextendoでオンラインプレイをするには、無料のNextendoアカウントが必要です。コードを読み取って作成してください。\nLinkalhoやKefir Hubのドナーで連携したプロフィールは、Nextendoでオンラインプレイできません。オンラインで遊ぶプロフィールを選ぶと、Kefir Hubが連携を解除して再起動します。\nその後、各プロフィールを連携します: 設定 → ユーザー → プロフィール → ニンテンドーアカウントとの連携。Nextendoアカウントでログインします。",
   "Online": "オンライン",
   "__language_name": "Japanese — 日本語",
   "No Internet": "インターネットなし",
