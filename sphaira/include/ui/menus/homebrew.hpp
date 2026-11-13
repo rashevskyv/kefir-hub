@@ -52,6 +52,8 @@ void NotifyPathChanged(std::string_view path, bool is_directory = false);
 auto GetSearchPaths() -> std::vector<std::string>;
 // the nro files the Homebrew menu shows: /switch and the added search paths (no Kefir Updater tile)
 auto ScanInstalledNros() -> std::vector<NroEntry>;
+// hash of the .nro files (path + size) in the folders ScanInstalledNros reads; lists folders, opens no file
+auto FingerprintInstalledNros() -> u64;
 auto GetShareableHomebrewRoots() -> std::vector<std::string>;
 auto IsSearchPath(const fs::FsPath& path) -> bool;
 auto AddSearchPath(const fs::FsPath& path) -> bool;
@@ -148,6 +150,8 @@ private:
     s64 m_selected_count{};
     std::unique_ptr<List> m_list{};
     bool m_dirty{};
+    u64 m_scan_fp{}; // FingerprintInstalledNros() at the last scan
+    u64 m_next_check{}; // system tick of the next fingerprint check
 
     option::OptionLong m_sort{INI_SECTION, "sort", SortType::SortType_AlphabeticalStar};
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};

@@ -477,6 +477,23 @@ inline auto PathAffectsHomebrew(std::string_view path, std::span<const std::stri
     return false;
 }
 
+// Folds one listed .nro (full path + file size) into the homebrew folder fingerprint
+// (FNV-1a). A delete, add, rename or replace with another size changes the result.
+inline auto FoldNroListing(std::uint64_t hash, std::string_view nro_path, std::uint64_t size) -> std::uint64_t {
+    const auto mix = [&hash](unsigned char c) {
+        hash ^= c;
+        hash *= 0x100000001b3ULL;
+    };
+    for (const char c : nro_path) {
+        mix(static_cast<unsigned char>(c));
+    }
+    mix(0);
+    for (int i = 0; i < 8; i++) {
+        mix(static_cast<unsigned char>(size >> (i * 8)));
+    }
+    return hash;
+}
+
 // Returns true only if path is an exact direct child of /config/kefir/nand_transfer/
 // and its basename starts with "_restore_".
 // Rejects empty paths, root, parent, nested paths, backslashes, colons, traversal components.

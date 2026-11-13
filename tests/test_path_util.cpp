@@ -430,6 +430,14 @@ static int test_path_affects_homebrew() {
     CHECK(!path::PathAffectsHomebrew("/atmosphere/contents/0100000000001000/exefs.nsp"));
     CHECK(!path::PathAffectsHomebrew("/Nintendo/Album/2026/08/21/photo.jpg"));
     CHECK(!path::PathAffectsHomebrew("/atmosphere/kips", custom_roots, true));
+
+    // folder fingerprint: same listing -> same hash; delete / rename / resize -> another hash
+    const std::uint64_t seed = 0xcbf29ce484222325ULL;
+    const auto both = path::FoldNroListing(path::FoldNroListing(seed, "/switch/a/a.nro", 100), "/switch/b/b.nro", 200);
+    CHECK(both == path::FoldNroListing(path::FoldNroListing(seed, "/switch/a/a.nro", 100), "/switch/b/b.nro", 200));
+    CHECK(both != path::FoldNroListing(seed, "/switch/a/a.nro", 100));
+    CHECK(path::FoldNroListing(seed, "/switch/a/a.nro", 100) != path::FoldNroListing(seed, "/switch/a/a.nro", 101));
+    CHECK(path::FoldNroListing(seed, "/switch/a/a.nro", 100) != path::FoldNroListing(seed, "/switch/a/b.nro", 100));
     CHECK(!path::PathAffectsHomebrew(""));
 
     return 0;

@@ -98,7 +98,40 @@ void AppendUniqueEntries(std::vector<NroEntry>& dest, std::vector<NroEntry>& src
     }
 }
 
+void FoldNroDir(fs::Fs* fs, const fs::FsPath& path, u32 depth, u64& hash) {
+    fs::Dir d;
+    if (R_FAILED(fs->OpenDirectory(path, FsDirOpenMode_ReadFiles | (depth ? FsDirOpenMode_ReadDirs : 0), &d))) {
+        return;
+    }
+    std::vector<FsDirectoryEntry> entries;
+    if (R_FAILED(d.ReadAll(entries))) {
+        return;
+    }
+    for (const auto& e : entries) {
+        if ('.' == e.name[0]) {
+            continue;
+        }
+        fs::FsPath full;
+        std::snprintf(full, sizeof(full), "%s/%s", path.s, e.name);
+        if (e.type == FsDirEntryType_Dir) {
+            FoldNroDir(fs, full, depth - 1, hash);
+        } else if (path::EndsWithIC(e.name, ".nro")) {
+            hash = path::FoldNroListing(hash, full.s, e.file_size);
+        }
+    }
+}
+
 } // namespace
+
+auto FingerprintInstalledNros() -> u64 {
+    fs::FsNativeSd fs;
+    u64 hash = 0xcbf29ce484222325ULL;
+    FoldNroDir(&fs, DEFAULT_SEARCH_PATH, 1, hash); // nro_scan reads /switch and one level of folders
+    for (const auto& path : LoadSearchPaths()) {
+        FoldNroDir(&fs, fs::FsPath{path}, 2, hash); // custom paths: nro_scan_depth(path, 2)
+    }
+    return hash;
+}
 
 auto ShouldSignalChange(std::string_view path, bool is_directory) -> bool {
     const auto search_paths = LoadSearchPaths();
@@ -252,6 +285,7 @@ auto RemoveSearchPath(const fs::FsPath& path) -> bool {
 void Menu::ScanHomebrew() {
     TimeStamp ts;
     FreeEntries();
+    m_scan_fp = FingerprintInstalledNros(); // before the scan: a change during the scan shows at the next check
     m_entries = ScanInstalledNros();
 
     // Kefir no longer ships Kefir Updater: keep its tile, A opens the Hub's own updater page

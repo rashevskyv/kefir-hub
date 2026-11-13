@@ -137,6 +137,15 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
         m_dirty = true;
     }
 
+    // the file manager, MTP, FTP, HTTP or a launched app may change the folders without a signal
+    // ponytail: listing on the UI thread every 5 s; move to a worker thread if it shows as a stutter
+    if (armGetSystemTick() >= m_next_check) {
+        m_next_check = armGetSystemTick() + armNsToTicks(5'000'000'000ULL);
+        if (!m_entries.empty() && FingerprintInstalledNros() != m_scan_fp) {
+            m_dirty = true;
+        }
+    }
+
     if (m_dirty) {
         SortAndFindLastFile(true);
     }
@@ -286,6 +295,7 @@ void Menu::OnFocusGained() {
     if (m_entries.empty()) {
         ScanHomebrew();
     }
+    m_next_check = 0; // back from another tab or menu: check the folders at the next frame
 }
 
 
