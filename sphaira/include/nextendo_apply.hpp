@@ -8,6 +8,7 @@
 
 #include <switch.h>
 
+#include <optional>
 #include <string>
 
 namespace sphaira::nextendo {
@@ -32,6 +33,16 @@ auto ServerIpsInUse() -> ServerIps;
 void StoreServerIps(const ServerIps& ips);
 // Background check of the newest release (at most once a day, only while Nextendo is active, no call otherwise).
 void RefreshServerIpsAsync();
+// Nextendo is in use on this boot: switched on for the current mode and the firmware is patched.
+auto Active() -> bool;
+
+// Online player counts for the games list badge (main thread). Tick every frame while the list is open:
+// it reads Active() and asks the server at most once a minute. Recheck when the list gets the focus back: it
+// re-reads Active() (a setting changed meanwhile applies at once, no extra request otherwise).
+// Players: nullopt when Nextendo is off or the game unsupported.
+void OnlineCountsTick();
+void OnlineCountsRecheck();
+auto OnlinePlayers(u64 app_id) -> std::optional<int>;
 
 // Make the card match the settings (see MakePlan). `changed` is set when a file or key was really written:
 // the console must restart for dns_mitm and exosphere to read it. Cheap when nothing differs; no network.

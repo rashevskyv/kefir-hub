@@ -8,6 +8,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.368 — Games list: Nextendo "Online N" badge
+Installed games that Nextendo Network supports get a green Online badge with the current player count (grid, list, details cover), only while Nextendo is in use on this boot. Counts from nextendo.network/api/online-counts in the background, at most once a minute, 15 s timeout, last good counts kept; no request while Nextendo is off. Parser `nextendo_online.hpp` + host test; "Online" in all 26 languages; docs drafts (games, kefir-settings) + shot marker games-online-badge.
+host tests: pass (quick; the full run fails only on the older EN/UK key parity check, 3 stale uk.json keys) · nro: DocsDemo built · switch: pending (badge on a console with Nextendo on, count updates, no badge with Nextendo off; console shot games-online-badge)
+
 ## v0.14.367 — install screen: three rows, labelled package numbers, header keeps free / total
 Header EmuNAND/microSD always show free / total (an install no longer replaces it). Install rows: queue (package, overall, installed, failed); average speed + remaining (game / queue); game title left with fixed-width "Written" / "Package size" on the right, no NCA name. Top bar = current game. Docs rows text + 4 shots retaken.
 host tests: pass (quick) · nro: built (DocsDemo) · switch: pending

@@ -6,6 +6,7 @@
 #include "defines.hpp"
 #include "i18n.hpp"
 #include "image.hpp"
+#include "nextendo_apply.hpp"
 #include "ui/error_box.hpp"
 #include "ui/option_box.hpp"
 #include "ui/nvg_util.hpp"
@@ -304,19 +305,32 @@ auto BuildMoveSummary(const title::MovePlan& plan, NcmStorageId target) -> std::
     return msg;
 }
 
+// The one dynamic badge label. Main thread only, and every caller uses the labels before it collects again.
+static char g_online_label[48];
+
 auto CollectEntryBadgeLabels(const Entry& e, bool include_storage,
     std::array<const char*, kMaxGameBadges>& out) -> std::size_t
 {
-    return CollectGameBadgeLabels(
+    auto n = CollectGameBadgeLabels(
         e.sd_size != 0, e.nand_size != 0, e.on_gamecard,
         e.content_flags & title::ContentFlag_Application,
         e.content_flags & (title::ContentFlag_Patch | title::ContentFlag_DataPatch),
         e.content_flags & title::ContentFlag_AddOnContent,
         e.layeredfs,
         include_storage, out);
+    // Nextendo supports the installed game (nullopt also while Nextendo is off): "Online 16"
+    const auto players = (e.installed && (e.content_flags & title::ContentFlag_Application)) ? nextendo::OnlinePlayers(e.app_id) : std::nullopt;
+    if (players && n < kMaxGameBadges) {
+        std::snprintf(g_online_label, sizeof(g_online_label), "%s %d", "Online"_i18n.c_str(), *players);
+        out[n++] = g_online_label;
+    }
+    return n;
 }
 
 auto GameBadgeColour(const char* label) -> NVGcolor {
+    if (label == g_online_label) {
+        return nvgRGBA(0, 150, 90, 255);
+    }
     if (!std::strcmp(label, "SD")) {
         return nvgRGBA(0, 128, 160, 255);
     }

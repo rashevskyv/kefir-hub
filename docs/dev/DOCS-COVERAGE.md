@@ -74,6 +74,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Feature | UI | Code | Page | Status |
 |---|---|---|---|---|
 | Games list, badges, launch, random | Game Tools → Games | game_menu.cpp | games#read-the-list, #launch-a-game | doc |
+| Nextendo Online badge (player count) | Game Tools → Games | game_internal.cpp, nextendo_refresh.cpp | games#read-the-list (draft, shot games-online-badge [USER]) | partial: draft since v0.14.368 |
 | Game details (Content/Tickets/Saves tabs, component actions) | A on game | game_details*.cpp | games#see-a-games-details | doc |
 | Move NAND↔SD | + / Game Actions | title_move.cpp, game_details_ops.cpp | games#move-a-game-between-nand-and-microsd | doc |
 | Dump NSP, dump locations, dump options | + → Dump | game_ops.cpp, dumper.cpp | games#export-a-game-as-nsp-dump, #dump-options | doc |

@@ -22,7 +22,12 @@ Games with no installed content or unreadable data also appear, unless you turn 
 
 <!-- draft
 - the list rescans by itself when a game was installed, updated or deleted while another screen was on top of it (a USB install that opened over the list, the installer, the file browser): on the way back the toast [[Updating application record list]] shows and the new game is in the list; [[Refresh]] is only needed when nothing changed in the console's records (a file copied by hand)
+- new badge, green: [[Online]] + the number of players online now (for example "Online 16"); shown only when all three hold: the game is installed (base game present), Nextendo Network supports it, and Nextendo is in use on this boot ([[Nextendo on emuMMC]] on in the emuMMC, or [[Nextendo on sysNAND (Semi-stock)]] in Semi-stock, and the firmware has the ssl patch); 0 players still shows the badge (the game is supported)
+- the numbers come from nextendo.network, at most once a minute while the list is open, in the background; with no internet the badge shows the last numbers the Hub got, or no badge before the first answer; the badge also shows on the game's details cover and in List layout next to the other badges
+- the label word follows the UI language; the number does not
 -->
+
+<!-- shot: games-online-badge | Games list on a console with Nextendo on: a supported game with the green "Online 16" badge under Base / Update -->
 
 ## Launch a game
 1. Focus the game.

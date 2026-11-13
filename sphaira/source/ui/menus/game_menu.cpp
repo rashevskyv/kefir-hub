@@ -3,6 +3,7 @@
 #include "fs.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
+#include "nextendo_apply.hpp"
 #include "swkbd.hpp"
 #include "utils/utils.hpp"
 
@@ -418,6 +419,7 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     MenuBase::Update(controller, touch);
+    nextendo::OnlineCountsTick(); // the Online badge: cheap per frame, asks the server at most once a minute
     m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
         if (touch && m_index == i) {
             FireAction(Button::A);
@@ -540,6 +542,7 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
 
 void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    nextendo::OnlineCountsRecheck(); // the Nextendo setting may have changed meanwhile
     if (m_entries.empty()) {
         ScanHomebrew();
         return;

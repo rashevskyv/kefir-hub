@@ -84,6 +84,7 @@ If no translation exists for your firmware, the first row shows your firmware an
 - the Hub and the Prelude-Nextendo app: the hosts file the Hub writes ends with `# managed by Kefir Hub`; while Nextendo is off in the Hub, a hosts file the Prelude app wrote stays, and so do its PRODINFO and DNS settings; with Nextendo on, the Hub writes its own file over it
 - new Prelude-Nextendo releases reach the console as an ordinary Kefir Hub update (the Hub updates itself); no Kefir update is needed
 - [[Server]] shows the server address used in the hosts file; [[Release]] shows the Prelude-Nextendo release the build is based on
+- while Nextendo is in use, the [[Games]] list marks every installed game Nextendo supports with a green [[Online]] badge and the number of players online now (see the Games page); with Nextendo off the Hub makes no such request
 - the [[Release]] row says: based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0; the line "Required Notice: Copyright 2026 Nextendo Network" stands at the bottom of the page, above the buttons, in English
 -->
 
