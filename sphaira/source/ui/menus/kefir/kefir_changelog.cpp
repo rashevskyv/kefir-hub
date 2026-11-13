@@ -351,6 +351,19 @@ void KefirChangelogBox::Update(Controller* controller, TouchInfo* touch) {
         }
     }
 
+    // a finger drag moves the text (as in AboutBox); no scroll sound, it would play every frame. is_scroll (as in List):
+    // a tap's jitter must not move the text off the end, or the tap on the button would show the "read to the end" notice
+    if (touch && touch->is_scroll && !m_loading && touch->in_range(m_text_area)) {
+        const auto y = static_cast<float>(touch->cur.y);
+        if (m_touch_dragging) {
+            m_scroll = std::clamp(m_scroll + m_touch_last_y - y, 0.f, m_max_scroll);
+        }
+        m_touch_dragging = true;
+        m_touch_last_y = y;
+    } else {
+        m_touch_dragging = false;
+    }
+
     if (m_page) {
         // the button scrolls with the text: a tap counts only while all of it is in sight
         const auto& b = m_install_button_rect;

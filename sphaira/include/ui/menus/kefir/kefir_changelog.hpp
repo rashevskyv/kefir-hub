@@ -114,6 +114,8 @@ private:
     TimeStamp m_stick_time{};
     TimeStamp m_page_time{};
     float m_stick_rest{}; // the fraction of a pixel the stick has not scrolled yet
+    bool m_touch_dragging{};
+    float m_touch_last_y{};
 };
 
 } // namespace sphaira::ui::menu::kefir
