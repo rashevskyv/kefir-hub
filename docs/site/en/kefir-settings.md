@@ -86,18 +86,17 @@ To switch Nextendo on:
 6. Start a supported game and open its online mode.
 
 <!-- draft
-- selecting [[Nextendo on emuMMC]] while it is off first shows a box with a QR code to https://nextendo.network/register and the account steps
-- the Nextendo server accepts only a Nextendo account: a profile linked with Linkalho or a Kefir Hub donor cannot play online on Nextendo
-- no profile is linked: [[Continue]] goes on to the usual hold **A** switch
-- some profiles are linked: [[Choose profiles]] opens the list [[Profiles for Nextendo]]; **X** ticks a profile, **Y** inverts, **A** or **B** closes the list
-- after the list: [[Switch on]] switches Nextendo on, unlinks the ticked profiles and restarts the console once; game saves stay; nothing ticked = Nextendo is only switched on
-- [[Cancel]] in either box changes nothing
-- step 5 changes: after the restart link each profile that plays online in System Settings → Users → the profile → Link Nintendo Account; sign in with the Nextendo account (OWNER: check on a console what the sign-in screen asks for)
-- unlinked profiles get the startup reminder with [[Link through Nextendo]] (see Users)
+- new row [[Nextendo account]] on the Nextendo page: a box with a QR code to the Nextendo sign-up steps (https://wiki.nextendo.network/setup/create-account), [[Later]] and [[Sign in]]
+- [[Sign in]] works only while Nextendo is on for this boot; otherwise a box says to switch Nextendo on first
+- [[Sign in]] opens the console's user selector, then the console's own account link screen; with Nextendo on it goes to Nextendo, not to Nintendo (OWNER: check on a console what the screen asks for; the Nextendo wiki says the Nextendo e-mail and password)
+- a profile that is already linked (Linkalho, Kefir Hub donor, Nintendo) gets a box: unlink it first in Tools → Users → Unlink Nintendo Account
+- if the console screen does not open, an error box gives the manual way: System Settings → Users → the profile → Link Nintendo Account
+- step 5 changes: sign in with [[Nextendo account]] → [[Sign in]]
+- the Nextendo wiki asks for a confirmed e-mail and a Discord link on the Nextendo account
 - Kefir Hub cannot yet tell a Nextendo link from a donor link
 -->
 
-<!-- shot: kefir-settings-nextendo-account | Box after selecting Nextendo on emuMMC with linked profiles: QR code, account text, Cancel and Choose profiles -->
+<!-- shot: kefir-settings-nextendo-account | Box after Nextendo account: QR code, sign-up and sign-in text, Later and Sign in -->
 
 The [[Games]] list marks every installed game that Nextendo supports with a green [[Online]] badge and the number of players online now. See [Games](games.md).
 
