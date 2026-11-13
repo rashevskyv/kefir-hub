@@ -16,7 +16,7 @@
 - below them the Kefir changelog fills the page; the button at the end of the text is [[Install]] (Kefir not installed), [[Update]] (newer Kefir on offer) or [[Reinstall]] (same version)
 - [[Firmware]] tab: the header lines [[Current Firmware:]] and [[Console:]], and the FIRMWARE list as before, with [[Install manually]]
 - [[Apps]] tab: see "Update apps" below
-- without internet the Kefir tab shows [[Connect to the internet]]
+- without internet the Kefir tab shows [[No internet connection. The list loads when the console connects.]] and loads by itself once the console connects
 - the old KEFIR list section is gone; the header above the tabs shows only [[Current Firmware:]] and [[Console:]]; [[Current Kefir:]] and [[Latest Kefir:]] are no longer shown (fix the "four lines" list and the KEFIR section text below)
 -->
 
@@ -199,6 +199,10 @@ Kefir Hub перевіряє наявність власної нової вер
 | [[When to install]] | [[Off]]: не перевіряти. [[Silent]]: завантажувати у фоні; наступний запуск відкриє нову версію. [[Ask]]: показувати запит, коли знайдено нову версію. | [[Silent]] |
 | [[Update now]] | Завантажує реліз, що очікує, або повторює невдале завантаження. Коли нова версія готова, виберіть цей пункт, щоб перезапустити Kefir Hub. | — |
 | [[Skipped version]] | З'являється, лише якщо ви пропустили версію. Виберіть його, щоб Kefir Hub знову питав про цю версію. | — |
+
+<!-- draft
+- [[Update now]] is no longer in [[Settings]] → [[General]] → [[Auto-update]]: update Kefir Hub by hand in [[Updater]] → [[Apps]] → Kefir Hub (**A**, the row shows the percent, then [[Press A to restart]]); see "Update apps"
+-->
 
 У режимі [[Ask]] за кожного запуску, коли є нова версія, з'являється запит
 «[[A new version is available. Update now?]]»

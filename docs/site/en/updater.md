@@ -16,7 +16,7 @@ Update Kefir, install system firmware (update or downgrade), and keep Kefir Hub 
 - below them the Kefir changelog fills the page; the button at the end of the text is [[Install]] (Kefir not installed), [[Update]] (newer Kefir on offer) or [[Reinstall]] (same version)
 - [[Firmware]] tab: the header lines [[Current Firmware:]] and [[Console:]], and the FIRMWARE list as before, with [[Install manually]]
 - [[Apps]] tab: see "Update apps" below
-- without internet the Kefir tab shows [[Connect to the internet]]
+- without internet the Kefir tab shows [[No internet connection. The list loads when the console connects.]] and loads by itself once the console connects
 - the old KEFIR list section is gone; the header above the tabs shows only [[Current Firmware:]] and [[Console:]]; [[Current Kefir:]] and [[Latest Kefir:]] are no longer shown (fix the "four lines" list and the KEFIR section text below)
 -->
 
@@ -198,6 +198,10 @@ Kefir Hub checks for its own new version when it starts. The behaviour is set in
 | [[When to install]] | [[Off]]: never check. [[Silent]]: download in the background; the next launch uses the new version. [[Ask]]: show a prompt when a new version is found. | [[Silent]] |
 | [[Update now]] | Downloads a waiting release, or retries a failed download. When the new version is ready, select it to restart Kefir Hub. | — |
 | [[Skipped version]] | Shown only after you skip a version. Select it to be asked about that version again. | — |
+
+<!-- draft
+- [[Update now]] is no longer in [[Settings]] → [[General]] → [[Auto-update]]: update Kefir Hub by hand in [[Updater]] → [[Apps]] → Kefir Hub (**A**, the row shows the percent, then [[Press A to restart]]); see "Update apps"
+-->
 
 With [[Ask]], this prompt appears once per launch when a new version exists:
 "[[A new version is available. Update now?]]"

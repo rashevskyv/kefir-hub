@@ -77,6 +77,11 @@ DBI Backend Qt 2.9.10 і новіші: папка з портами, файла�
 - Поки що лише USB. Старіший Kefir Hub позначає такий рядок як помилку і продовжує чергу.
 <!-- shot: install-usb-release-dialog | DBI Backend Qt: Choose what to install, Donkey Kong Country Trilogy -->
 
+<!-- draft
+- a release folder can also hold `<game> - <option> <TID>.kefir-cache.tar` and `<game> - <option> <TID>.kefir-save.tar` (for example the Just Dance offline mod): the Hub creates or grows the game's cache storage and writes the files there; the save file goes into the user's save of that game
+- the account for the save is asked once; the queue goes on, and the save is written at the end of the queue
+-->
+
 ## Значок швидкості USB {#usb-speed}
 
 Екран очікування показує режим USB:

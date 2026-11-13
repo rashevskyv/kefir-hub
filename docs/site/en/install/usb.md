@@ -72,6 +72,11 @@ DBI Backend Qt 2.9.10 and later: drop a folder with ports, port files, translati
 - This works over USB only for now. An older Kefir Hub marks such a row as failed and goes on with the queue.
 <!-- shot: install-usb-release-dialog | DBI Backend Qt: Choose what to install, Donkey Kong Country Trilogy -->
 
+<!-- draft
+- a release folder can also hold `<game> - <option> <TID>.kefir-cache.tar` and `<game> - <option> <TID>.kefir-save.tar` (for example the Just Dance offline mod): the Hub creates or grows the game's cache storage and writes the files there; the save file goes into the user's save of that game
+- the account for the save is asked once; the queue goes on, and the save is written at the end of the queue
+-->
+
 ## The USB speed badge {#usb-speed}
 
 The waiting screen shows the USB mode:
