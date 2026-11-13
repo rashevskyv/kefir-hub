@@ -29,7 +29,7 @@ MTP and USB storage use the same USB port. Turning MTP on turns USB storage off 
 
 When the PC opens the connection you see [[MTP connected]].
 
-<!-- shot: install-mtp-explorer | Windows Explorer showing the console with the microSD card and Install (NSP, XCI, NSZ, XCZ) drives -->
+<!-- shot: install-mtp-explorer | Windows Explorer showing the console with the microSD card and Games drives -->
 
 ## Install a game {#install}
 

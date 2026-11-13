@@ -29,7 +29,7 @@ MTP і USB-накопичувачі використовують той сами
 
 Коли ПК відкриває з'єднання, з'являється [[MTP connected]].
 
-<!-- shot: install-mtp-explorer | Windows Explorer showing the console with the microSD card and Install (NSP, XCI, NSZ, XCZ) drives -->
+<!-- shot: install-mtp-explorer | Windows Explorer showing the console with the microSD card and Games drives -->
 
 ## Встановіть гру {#install}
 

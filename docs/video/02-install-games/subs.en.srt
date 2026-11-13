@@ -311,105 +311,109 @@ Wait a few seconds, or turn MTP off and on, then copy the file again.
 On the PC, open the console in Explorer.
 
 79
-00:04:26,267 --> 00:04:31,200
-There are two drives: the microSD card and "Install (NSP, XCI, NSZ, XCZ)".
+00:04:26,267 --> 00:04:29,667
+There are two drives: the microSD card and "Games".
 
 80
-00:04:31,200 --> 00:04:33,733
-Copy a game file to the Install drive.
+00:04:29,667 --> 00:04:32,733
+Copy the game into its "Install to SD" folder.
 
 81
-00:04:33,733 --> 00:04:39,267
-The console installs it while it is being copied, so the file itself is not kept on
+00:04:32,733 --> 00:04:35,267
+Copy a game file to the Install drive.
 
 82
-00:04:39,267 --> 00:04:41,267
-the card.
+00:04:35,267 --> 00:04:40,800
+The console installs it while it is being copied, so the file itself is not kept on
 
 83
-00:04:41,267 --> 00:04:43,400
-The console opens "MTP Install".
+00:04:40,800 --> 00:04:42,800
+the card.
 
 84
-00:04:43,400 --> 00:04:48,667
-There is no percentage, because the PC does not tell the console the file size.
+00:04:42,800 --> 00:04:44,933
+The console opens "MTP Install".
 
 85
-00:04:48,667 --> 00:04:52,200
-Watch the copy window on the PC to see how far it is.
+00:04:44,933 --> 00:04:50,200
+There is no percentage, because the PC does not tell the console the file size.
 
 86
-00:04:52,200 --> 00:04:55,467
-It closes at about the time the install finishes.
+00:04:50,200 --> 00:04:53,733
+Watch the copy window on the PC to see how far it is.
 
 87
-00:04:55,467 --> 00:04:59,000
-When the file is done you see "MTP install success!".
+00:04:53,733 --> 00:04:57,000
+It closes at about the time the install finishes.
 
 88
-00:04:59,000 --> 00:05:02,067
-A few seconds later the Session summary opens.
+00:04:57,000 --> 00:05:00,533
+When the file is done you see "MTP install success!".
 
 89
-00:05:02,067 --> 00:05:04,067
-B closes it.
+00:05:00,533 --> 00:05:03,600
+A few seconds later the Session summary opens.
 
 90
-00:05:04,067 --> 00:05:09,333
-Note: if you copy a game to the microSD card drive, it is only saved as a file.
+00:05:03,600 --> 00:05:05,600
+B closes it.
 
 91
-00:05:09,333 --> 00:05:12,467
-You can install it later from the File Browser.
+00:05:05,600 --> 00:05:10,867
+Note: if you copy a game to the microSD card drive, it is only saved as a file.
 
 92
-00:05:12,467 --> 00:05:16,667
-To cancel, press X on the console or cancel the copy on the PC.
+00:05:10,867 --> 00:05:14,000
+You can install it later from the File Browser.
 
 93
-00:05:16,667 --> 00:05:21,533
-Files that are already installed stay, and the unfinished one is removed.
+00:05:14,000 --> 00:05:18,200
+To cancel, press X on the console or cancel the copy on the PC.
 
 94
-00:05:21,533 --> 00:05:27,000
-If you cancel on the console, Windows shows no error: the copy window just closes.
+00:05:18,200 --> 00:05:23,067
+Files that are already installed stay, and the unfinished one is removed.
 
 95
-00:05:27,000 --> 00:05:32,400
-If a game installed but the console says it cannot be started yet, the game needs
+00:05:23,067 --> 00:05:28,533
+If you cancel on the console, Windows shows no error: the copy window just closes.
 
 96
-00:05:32,400 --> 00:05:34,400
-newer firmware.
+00:05:28,533 --> 00:05:33,933
+If a game installed but the console says it cannot be started yet, the game needs
 
 97
-00:05:34,400 --> 00:05:36,400
-Update the firmware and Kefir.
+00:05:33,933 --> 00:05:35,933
+newer firmware.
 
 98
-00:05:36,400 --> 00:05:38,933
-You do not need to reinstall the game.
+00:05:35,933 --> 00:05:37,933
+Update the firmware and Kefir.
 
 99
-00:05:38,933 --> 00:05:43,067
-For more, read the Installing games page in the documentation.
+00:05:37,933 --> 00:05:40,467
+You do not need to reinstall the game.
 
 100
-00:05:43,067 --> 00:05:46,800
-It has separate pages for the microSD card, USB and MTP.
+00:05:40,467 --> 00:05:44,600
+For more, read the Installing games page in the documentation.
 
 101
-00:05:46,800 --> 00:05:51,667
-After installing a game update, Kefir Hub automatically resets the stored
+00:05:44,600 --> 00:05:48,333
+It has separate pages for the microSD card, USB and MTP.
 
 102
-00:05:51,667 --> 00:05:53,667
-launch-version requirement.
+00:05:48,333 --> 00:05:53,200
+After installing a game update, Kefir Hub automatically resets the stored
 
 103
-00:05:53,667 --> 00:05:56,067
-Skipped packages leave it unchanged.
+00:05:53,200 --> 00:05:55,200
+launch-version requirement.
 
 104
-00:05:56,067 --> 00:06:00,067
+00:05:55,200 --> 00:05:57,600
+Skipped packages leave it unchanged.
+
+105
+00:05:57,600 --> 00:06:01,600
 This does not block later online version checks by Nintendo.

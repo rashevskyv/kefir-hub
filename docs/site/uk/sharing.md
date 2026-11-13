@@ -140,7 +140,7 @@ FTP-сервер працює у фоні, поки відкрито Kefir Hub.
 MTP і [[USB storage]] (USB-накопичувачі, підключені до консолі) використовують один USB-порт. Увімкнення MTP вимикає
 USB-накопичувачі, і консоль показує [[USB storage turned off to free the USB port]].
 
-<!-- shot: sharing-mtp-pc | Windows File Explorer showing the console with the drives microSD card and Install (NSP, XCI, NSZ, XCZ) -->
+<!-- shot: sharing-mtp-pc | Windows File Explorer showing the console with the drives microSD card and Games -->
 
 ### Диски, які бачить ПК {#mtp-drives}
 

@@ -137,7 +137,7 @@ With a USB cable the console appears on the PC like a phone or camera. You copy 
 MTP and [[USB storage]] (USB drives connected to the console) use the same USB port. Turning MTP on turns USB storage
 off, and the console shows [[USB storage turned off to free the USB port]].
 
-<!-- shot: sharing-mtp-pc | Windows File Explorer showing the console with the drives microSD card and Install (NSP, XCI, NSZ, XCZ) -->
+<!-- shot: sharing-mtp-pc | Windows File Explorer showing the console with the drives microSD card and Games -->
 
 ### Drives the PC sees {#mtp-drives}
 
