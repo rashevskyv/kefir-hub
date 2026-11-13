@@ -940,7 +940,12 @@
                 "Down",
                 "A",
                 "wait 5",
+                "R",
+                "wait 2",
                 "Up",
+                "A",
+                "wait 2",
+                "Down 6",
                 "A",
                 "wait 2"
             ]

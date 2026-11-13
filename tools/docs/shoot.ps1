@@ -48,6 +48,7 @@ if (Test-Path $Nro) { Copy-Item $Nro $HubNro -Force; Write-Host "hub: $Nro" } el
 
 $fixtures = "$Repo\docs\site\fixtures\sdmc"
 if (Test-Path $fixtures) { Copy-Item "$fixtures\*" $Sdmc -Recurse -Force }
+Set-HubIni config log_enabled '0'  # a log toast and the LOG badge must never be in a docs shot
 
 $Lang | ForEach-Object { Assert-Lang $_ }
 $taken = 0; $skipped = @(); $scene = $null; $iniSet = @()

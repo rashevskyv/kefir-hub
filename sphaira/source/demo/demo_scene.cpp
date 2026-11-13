@@ -33,10 +33,10 @@ void ExtractOptions() {
 
 // Updater -> firmware -> after the download validated (kefir_ops.cpp PromptInstallFirmware).
 void FirmwareConfirm() {
-    // the demo console is on emuMMC (header EmuNAND), whatever Eden reports.
-    std::string message = std::string{"Install firmware 22.5.0 on "} + (EmuNand() ? "emuMMC" : ui::menu::kefir::detail::GetFirmwareTargetName()) + "?\n\n";
-    message += "FAT32 + exFAT support\n";
-    message += "Do not power off the console during installation.";
+    // the demo console is on emuMMC (header EmuNAND), whatever Eden reports. Same text as the real prompt.
+    std::string message = "Install firmware"_i18n + " 22.5.0 → " + (EmuNand() ? "emuMMC" : ui::menu::kefir::detail::GetFirmwareTargetName()) + "?\n\n";
+    message += "FAT32 + exFAT support"_i18n + "\n";
+    message += "Do not power off the console during installation."_i18n;
     App::Push<ui::OptionBox>(message, "Cancel"_i18n, "Install"_i18n, 1, [](auto) {});
 }
 
