@@ -87,8 +87,9 @@ void InstallSession::DrawInstalling(NVGcontext* vg, Theme* theme) {
     const bool known_batch = HasKnownBatchTotals(m_origin);
     std::vector<StatItem> row1;
     if (known_batch) {
+        const auto pos = SelectedQueuePosition(m_queue, m_current_package);
         row1 = {
-            {"Package"_i18n, std::to_string(std::min(m_current_package + 1, m_queue.size())) + "/" + std::to_string(m_queue.size())},
+            {"Package"_i18n, std::to_string(pos.number) + "/" + std::to_string(pos.count)},
             {"Overall"_i18n, overall_buf, selected_col},
         };
     } else {

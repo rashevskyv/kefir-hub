@@ -33,6 +33,25 @@ size_t FindQueueIndex(const Entries& entries, std::string_view batch_id, std::st
     return QueueIndexNotFound;
 }
 
+// "package N of M" counts only the packages the queue installs: the PC list may hold 34 files with one ticked,
+// and "1 of 34" then reads as 33 more to come. N = selected packages up to and including `current`.
+struct QueuePosition {
+    size_t number;
+    size_t count;
+};
+
+template <typename Entries>
+QueuePosition SelectedQueuePosition(const Entries& entries, size_t current) {
+    QueuePosition out{0, 0};
+    for (size_t i = 0; i < entries.size(); ++i) {
+        if (!entries[i].install_selected) continue;
+        ++out.count;
+        if (i <= current) ++out.number;
+    }
+    if (out.count && !out.number) out.number = 1;
+    return out;
+}
+
 template <typename Entries>
 bool AllQueueEntriesTerminal(const Entries& entries) {
     if (entries.empty()) return false;

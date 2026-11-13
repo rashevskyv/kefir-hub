@@ -8,6 +8,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.372 — install counter counts only the ticked packages
+The screensaver and the transfer page show "package N / M" over the packages the queue installs, not over every file of the PC list (34 files with one ticked read "1/34"; now "1/1"). Bar and time left already used the ticked packages only.
+- host tests: pass (quick) · nro: built (DocsDemo) · switch: pending — PC install with part of the list ticked: counter M = ticked count.
+
 ## v0.14.371 — Updater → Apps: one Kefir Hub row
 Started as /hbmenu.nro, the Hub row now points at /hbmenu.nro (0.14.370), so a leftover /switch copy named "Kefir Hub" is skipped instead of shown as a second row.
 host tests: pass (quick) · nro: DocsDemo built · switch: pending (Updater → Apps with a stale /switch/kefir-hub copy shows one Hub row)

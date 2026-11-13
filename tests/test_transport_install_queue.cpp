@@ -12,6 +12,9 @@ struct Entry {
     std::string file_name;
     std::optional<unsigned> install_result;
 };
+struct Pick {
+    bool install_selected;
+};
 }
 
 int main() {
@@ -55,4 +58,16 @@ int main() {
     assert(!ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, false, true));
     assert(ShouldStartSummaryGracePeriod(TransportOrigin::Mtp, true, false, false));
     assert(ShouldStartSummaryGracePeriod(TransportOrigin::Ftp, true, false, false));
+
+    // a PC list of 34 with one ticked is "1 of 1", not "1 of 34"
+    std::vector<Pick> list(34, Pick{false});
+    list[0].install_selected = true;
+    assert(SelectedQueuePosition(list, 0).number == 1 && SelectedQueuePosition(list, 0).count == 1);
+    // ticked: 0, 5, 9; the third one is "3 of 3", the second "2 of 3"
+    list[5].install_selected = list[9].install_selected = true;
+    assert(SelectedQueuePosition(list, 9).number == 3 && SelectedQueuePosition(list, 9).count == 3);
+    assert(SelectedQueuePosition(list, 5).number == 2);
+    // nothing ticked: no counter
+    std::vector<Pick> none(3, Pick{false});
+    assert(SelectedQueuePosition(none, 0).number == 0 && SelectedQueuePosition(none, 0).count == 0);
 }

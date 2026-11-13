@@ -558,8 +558,9 @@ auto InstallSession::ComputeSaverInfo() -> SaverInfo {
             info.file += info.file.empty() ? m_current_transfer : " — " + m_current_transfer;
         }
         const bool known_batch = HasKnownBatchTotals(m_origin);
-        info.package = known_batch ? std::min(m_current_package + 1, m_queue.size()) : 0;
-        info.package_count = known_batch ? m_queue.size() : 0;
+        const auto pos = known_batch ? SelectedQueuePosition(m_queue, m_current_package) : QueuePosition{0, 0};
+        info.package = pos.number;
+        info.package_count = pos.count;
         info.installed = m_stats.installed;
         info.failed = m_stats.failed;
         info.is_complete = (state == State::Summary);
