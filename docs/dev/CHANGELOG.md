@@ -6,6 +6,10 @@ Entries without a detail line are commit titles only; their verification state w
 ## unreleased
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.366 — build fix
+homebrew_scan.cpp: enum and int mixed in a conditional (-Werror=extra) in the v0.14.365 folder fingerprint.
+host tests: pass (quick) · nro: built · switch: pending
+
 ## v0.14.365 — Homebrew menu refreshes after files change elsewhere (file manager, MTP, FTP, HTTP)
 On return to the Apps tab and every 5 s while it is open, the menu lists the scanned folders (no .nro opened) and rescans when an .nro was added, deleted, renamed or replaced.
 host tests: pass (quick) · nro: not built · switch: pending (delete an app in the file manager → back to Apps; MTP/FTP delete while Apps is open; no scroll stutter every 5 s)

@@ -100,7 +100,7 @@ void AppendUniqueEntries(std::vector<NroEntry>& dest, std::vector<NroEntry>& src
 
 void FoldNroDir(fs::Fs* fs, const fs::FsPath& path, u32 depth, u64& hash) {
     fs::Dir d;
-    if (R_FAILED(fs->OpenDirectory(path, FsDirOpenMode_ReadFiles | (depth ? FsDirOpenMode_ReadDirs : 0), &d))) {
+    if (R_FAILED(fs->OpenDirectory(path, FsDirOpenMode_ReadFiles | (depth ? u32{FsDirOpenMode_ReadDirs} : 0u), &d))) {
         return;
     }
     std::vector<FsDirectoryEntry> entries;
