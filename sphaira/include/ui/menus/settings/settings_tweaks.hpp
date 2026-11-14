@@ -22,6 +22,8 @@ struct KefirSetting {
     float hold_seconds{0.5f};
     // true while the setting waits for the user's choice (switch drawn grey); unset = never
     std::function<bool()> pending{};
+    // added under warning_on only when the setting is switched on (what the user must do next)
+    std::string note_on{};
 };
 
 struct PackageAction {

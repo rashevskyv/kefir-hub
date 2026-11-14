@@ -1,6 +1,7 @@
 {
   "Sign in": "Oturum aç",
   "Nextendo account": "Nextendo hesabı",
+  "Online play also needs a free Nextendo account. After the restart, sign up and sign a profile in here:": "Çevrimiçi oyun için ücretsiz bir Nextendo hesabı da gerekir. Yeniden başlatmadan sonra buradan kaydolun ve bir profille giriş yapın:",
   "Sign up for a Nextendo account, or sign a profile in to it.": "Bir Nextendo hesabı oluşturun ya da bir profille oturum açın.",
   "Online play on Nextendo needs a free Nextendo account.\nNo account yet: scan the code and sign up on the phone.\nThen select Sign in and choose the profile. Kefir Hub switches on Nextendo if needed; you only enter the Nextendo e-mail and password.": "Nextendo'da çevrim içi oynamak için ücretsiz bir Nextendo hesabı gerekir.\nHenüz hesap yoksa: kodu tarayın ve telefonda kaydolun.\nSonra \"Oturum aç\" ve profili seçin. Kefir Hub gerekirse Nextendo'yu açar; yalnızca Nextendo e-posta adresini ve parolasını girersiniz.",
   "Switch on Nextendo first: Kefir Settings → Nextendo. Sign in after the console restarts.": "Önce Nextendo'yu açın: Kefir Ayarları → Nextendo. Konsol yeniden başladıktan sonra oturum açın.",

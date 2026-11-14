@@ -1,6 +1,7 @@
 {
   "Sign in": "サインイン",
   "Nextendo account": "Nextendoアカウント",
+  "Online play also needs a free Nextendo account. After the restart, sign up and sign a profile in here:": "オンラインプレイには無料の Nextendo アカウントも必要です。再起動後、ここで登録してプロフィールでサインインしてください：",
   "Sign up for a Nextendo account, or sign a profile in to it.": "Nextendoアカウントを作成するか、プロフィールでサインインします。",
   "Online play on Nextendo needs a free Nextendo account.\nNo account yet: scan the code and sign up on the phone.\nThen select Sign in and choose the profile. Kefir Hub switches on Nextendo if needed; you only enter the Nextendo e-mail and password.": "Nextendoでオンラインプレイするには、無料のNextendoアカウントが必要です。\nアカウントがない場合：コードをスキャンしてスマートフォンで登録してください。\n次に「サインイン」を選んでプロフィールを選択してください。必要ならKefir HubがNextendoをオンにします。入力するのはNextendoのメールアドレスとパスワードだけです。",
   "Switch on Nextendo first: Kefir Settings → Nextendo. Sign in after the console restarts.": "先にNextendoをオンにしてください：Kefir設定 → Nextendo。本体の再起動後にサインインしてください。",

@@ -37,6 +37,9 @@ void ToggleKefirSetting(const KefirSetting& setting) {
             ? "This setting changes Kefir or Atmosphere files and will reboot the console."
             : "This setting changes Kefir or Atmosphere files and will reboot the console.";
     }
+    if (enabled && !setting.note_on.empty()) {
+        warning += "\n\n" + setting.note_on;
+    }
 
     App::Push<HoldConfirmBox>(
         warning,

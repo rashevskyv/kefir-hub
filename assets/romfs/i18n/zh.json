@@ -1,6 +1,7 @@
 {
   "Sign in": "登录",
   "Nextendo account": "Nextendo 账号",
+  "Online play also needs a free Nextendo account. After the restart, sign up and sign a profile in here:": "在线游戏还需要一个免费的 Nextendo 账户。重启后，请在此注册并用档案登录：",
   "Sign up for a Nextendo account, or sign a profile in to it.": "注册 Nextendo 账号，或用用户登录该账号。",
   "Online play on Nextendo needs a free Nextendo account.\nNo account yet: scan the code and sign up on the phone.\nThen select Sign in and choose the profile. Kefir Hub switches on Nextendo if needed; you only enter the Nextendo e-mail and password.": "在 Nextendo 上联机游玩需要一个免费的 Nextendo 账号。\n还没有账号：扫描二维码，在手机上注册。\n然后选择“登录”和用户。需要时 Kefir Hub 会开启 Nextendo；你只需输入 Nextendo 的电子邮箱和密码。",
   "Switch on Nextendo first: Kefir Settings → Nextendo. Sign in after the console restarts.": "请先开启 Nextendo：开菲尔设置 → Nextendo。主机重启后再登录。",

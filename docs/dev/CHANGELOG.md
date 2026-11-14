@@ -10,6 +10,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.386 — Nextendo: switching it on says that an account is needed
+The hold-A box of Nextendo on emuMMC / on sysNAND adds, only when switching on: online play needs a free Nextendo account, sign up and sign in after the restart in Kefir Settings → Nextendo → Nextendo account. A hold-A box with a long text now shrinks the font to fit.
+host tests: pass (quick, i18n/doc contracts); nro: built; switch: pending (switch Nextendo on: the box shows the account note; switch off: no note; the text fits the box)
+
 ## v0.14.385 — Back from an app: the Apps tab opens on the same folder and row (owner, 2026-11-14)
 An app started from Apps returns to the Hub through the loader (checked on .69: a test NRO that returns after 3 s brings the Hub back in 0.6 s). The Hub now saves the folder and the app path before the launch (`homebrew/return_path`, `return_folder` in config.ini) and, at the first scan after the restart, opens that folder and puts the cursor on that app. Not fixable in the Hub: apps that exit to HOME themselves (`__nx_applet_exit_mode = 1`, DBI does this) and HOME → Close end the whole loader process; a game started from the Hub replaces it.
 host tests: pass (--quick) | nro: built | switch: pending (launch an app from a folder and from the top level, exit it with its own Exit: the Hub returns on that row)

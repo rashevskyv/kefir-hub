@@ -1,6 +1,7 @@
 {
   "Sign in": "Logi sisse",
   "Nextendo account": "Nextendo konto",
+  "Online play also needs a free Nextendo account. After the restart, sign up and sign a profile in here:": "Võrgumänguks on vaja ka tasuta Nextendo kontot. Pärast taaskäivitamist registreeru ja logi profiiliga sisse siin:",
   "Sign up for a Nextendo account, or sign a profile in to it.": "Loo Nextendo konto või logi profiiliga sellesse sisse.",
   "Online play on Nextendo needs a free Nextendo account.\nNo account yet: scan the code and sign up on the phone.\nThen select Sign in and choose the profile. Kefir Hub switches on Nextendo if needed; you only enter the Nextendo e-mail and password.": "Nextendos võrgus mängimiseks on vaja tasuta Nextendo kontot.\nKontot veel pole: skanni kood ja registreeru telefonis.\nSeejärel vali „Logi sisse“ ja profiil. Kefir Hub lülitab vajadusel Nextendo sisse; sina sisestad ainult Nextendo e-posti ja parooli.",
   "Switch on Nextendo first: Kefir Settings → Nextendo. Sign in after the console restarts.": "Lülita esmalt Nextendo sisse: Kefiri seaded → Nextendo. Logi sisse pärast konsooli taaskäivitust.",

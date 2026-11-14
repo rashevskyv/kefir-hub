@@ -80,25 +80,33 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
         items.back().lamp = StatusLamp;
     }
 
-    items.emplace_back(MakeKefirToggle({
+    // switching on is not enough: online play also needs an account, so the confirm box says where to make one
+    const auto account_note = "Online play also needs a free Nextendo account. After the restart, sign up and sign a profile in here:"_i18n +
+        "\n" + "Kefir Settings"_i18n + " → Nextendo → " + "Nextendo account"_i18n;
+
+    KefirSetting emu{
         "Nextendo on emuMMC"_i18n,
         "Sends the online services of supported games to the Nextendo Network on the emuMMC."_i18n,
         [](){ return nx::EmuEnabled(); },
         [](bool enabled){ return ApplyChoice(nx::SetEmuEnabled, enabled); },
         "The console restarts to apply this. Nextendo uses the real PRODINFO of the console inside the emuMMC; Nintendo servers are not reached."_i18n,
         0.5f,
-    }));
+    };
+    emu.note_on = account_note;
+    items.emplace_back(MakeKefirToggle(emu));
 
     // only while Semi-stock is on; the option is switched off when Semi-stock ends
     if (nx::CurrentMode() == nx::Mode::SemiStock) {
-        items.emplace_back(MakeKefirToggle({
+        KefirSetting sys{
             "Nextendo on sysNAND (Semi-stock)"_i18n,
             "Uses Nextendo on the original system instead of the official online. Off by default."_i18n,
             [](){ return nx::SysEnabled(); },
             [](bool enabled){ return ApplyChoice(nx::SetSysEnabled, enabled); },
             "Semi-stock is meant for the official Nintendo online. With this on, the Nintendo services go to the Nextendo Network instead, so the eShop and other official online features may stop working.\n\nThere is no PRODINFO protection in Semi-stock. The console restarts to apply this."_i18n,
             3.f,
-        }));
+        };
+        sys.note_on = account_note;
+        items.emplace_back(MakeKefirToggle(sys));
     }
 
     items.emplace_back(SettingsItem{

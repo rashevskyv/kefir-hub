@@ -89,6 +89,7 @@ To switch Nextendo on:
 - new row [[Nextendo account]] on the Nextendo page: a box with a QR code to the Nextendo sign-up form (https://nextendo.network/register), [[Later]] and [[Sign in]]
 - [[Sign in]] while Nextendo is off on the emuMMC: a box offers [[Switch on]]; Kefir Hub switches Nextendo on and restarts the console; after the restart select [[Sign in]] again (the startup link reminder leads there too)
 - on the sysNAND (Semi-stock) [[Sign in]] only says to switch Nextendo on in this page first
+- (v0.14.386) switching on [[Nextendo on emuMMC]] or [[Nextendo on sysNAND (Semi-stock)]]: the hold-A box adds [[Online play also needs a free Nextendo account. After the restart, sign up and sign a profile in here:]] and the path [[Kefir Settings]] → [[Nextendo]] → [[Nextendo account]]; switching off does not show it. A long text in a hold-A box gets a smaller font instead of running under the button
 - [[Sign in]] opens the console's user selector, then the console's own account link screen; with Nextendo on it goes to Nextendo, not to Nintendo (OWNER: check on a console what the screen asks for; the Nextendo wiki says the Nextendo e-mail and password)
 - a profile that is already linked (Linkalho, Kefir Hub donor, Nintendo) gets a box: unlink it first in Tools → Users → Unlink Nintendo Account
 - if the console screen does not open, an error box gives the manual way: System Settings → Users → the profile → Link Nintendo Account

@@ -93,6 +93,12 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     float text_y_start = m_compact ? m_pos.y : (m_pos.y + 30.f);
 
     nvgTextBoxBounds(vg, m_pos.x + padding, text_y_start, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
+    // a long text (several paragraphs, a long language) gets a smaller font rather than running under the button
+    while (bounds[3] - bounds[1] > text_area_h && font_size > 15.f) {
+        font_size -= 1.f;
+        nvgFontSize(vg, font_size);
+        nvgTextBoxBounds(vg, m_pos.x + padding, text_y_start, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
+    }
     float text_h = bounds[3] - bounds[1];
     float text_y = text_y_start + (text_area_h - text_h) / 2.f;
 
