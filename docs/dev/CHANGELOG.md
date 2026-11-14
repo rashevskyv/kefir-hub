@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.382 — Auto backup: an empty save keeps the last copy
+When a changed save is empty now (a game wiped it), the auto backup keeps its last automatic copy in /dumps and does not move it to the Trash.
+host tests: pass (quick) · nro: built (ReleaseWithInstall) · switch: pending — with 0.14.381.
+
 ## v0.14.381 — Trash, action journal, auto backup of changed saves
 Deleted save backups (Delete, Delete older backups, Delete backups), deleted or replaced profile packs, Delete user (a profile pack and a copy of every save first) and Clean system junk → Saves of removed users (a copy first) go to `/config/kefir/trash` instead of being erased. Tools → Trash lists them with Restore, Delete forever (hold A) and Empty the Trash; items go after 30 days or, oldest first, below 1 GB free. Every delete and restore is written to `/config/kefir/actions.log`. On each Hub start a background badge copies the saves whose commit id changed (`/config/kefir/autobackup.txt`, option Saves → Auto backup of changed saves, on); the older automatic copy goes to the Trash; stops below 2 GB free; an MTP/network install stops it and starts. 19 new strings, all 26 languages; docs drafts (saves, users, system-tools EN/UK); guide backup-saves. Not covered: file browser, MTP, FTP, web deletes, NAND backups, homebrew.
 host tests: pass (quick incl. test_trash, test_save_auto_backup_state + i18n contract + doc labels) · nro: built (ReleaseWithInstall) · switch: pending — trash restore of a backup and of a deleted user's saves, Empty the Trash, first auto backup run time, MTP install during auto backup.

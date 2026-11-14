@@ -87,6 +87,12 @@ auto Menu::AutoBackupChangedOn(ProgressBox* pbox, const std::vector<AccountUid>&
                 continue;
             }
             const std::string now_path = out.s[0] ? out.s : EMPTY;
+            if (now_path == EMPTY) {
+                // the save is empty now (a game may have wiped it): the last copy stays, it may be the only good one
+                states[e.save_data_id] = autobackup::State{extra.commit_id, old.empty() ? EMPTY : old};
+                SaveStates(states);
+                continue;
+            }
             if (!old.empty() && old != EMPTY && old != now_path && sd.FileExists(old.c_str())) {
                 if (old_bin.empty()) {
                     old_bin = trash::NewItem(trash::SD, "backup", "Older automatic save copies"_i18n, std::time(nullptr));
