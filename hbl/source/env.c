@@ -2,6 +2,7 @@
 #include <string.h>
 
 bool g_isApplication = false;
+bool g_isAutomaticGameplayRecording = false;
 
 CodeMemoryCapability g_codeMemoryCapability = CodeMemoryUnavailable;
 
@@ -38,6 +39,31 @@ void getIsApplication(void) {
     }
 }
 
+void getIsAutomaticGameplayRecording(void) {
+    Result rc;
+
+    // Do nothing if the HOS version predates [4.0.0], or we're not an application.
+    if (hosversionBefore(4, 0, 0) || !g_isApplication)
+        return;
+
+    // Retrieve our process' Program ID
+    u64 cur_progid = 0;
+    rc = svcGetInfo(&cur_progid, InfoType_ProgramId, CUR_PROCESS_HANDLE, 0);
+    if (R_FAILED(rc)) diagAbortWithResult(rc);
+
+    // Try reading our NACP
+    rc = nsInitialize();
+    if (R_SUCCEEDED(rc)) {
+        NsApplicationControlData data;
+        u64 size = 0;
+        rc = nsGetApplicationControlData(NsApplicationControlSource_Storage, cur_progid, &data, sizeof(data), &size);
+        nsExit();
+
+        if (R_SUCCEEDED(rc) && data.nacp.video_capture == 2)
+            g_isAutomaticGameplayRecording = true;
+    }
+}
+
 u64 calculateMaxHeapSize(void) {
     u64 size = 0;
     u64 mem_available = 0, mem_used = 0;
@@ -49,9 +75,7 @@ u64 calculateMaxHeapSize(void) {
         size = (mem_available - mem_used - 0x200000) & ~0x1FFFFF;
     if (size == 0)
         size = 0x2000000 * 16;
-    // Leave 96 MiB of the application pool free, as sphaira does. Suspect for the icon that hangs
-    // on a black screen when opened after a game (video capture off did not help); sphaira's icon does not.
-    if (size > 0x6000000)
+    if (size > 0x6000000 && g_isAutomaticGameplayRecording)
         size -= 0x6000000;
 
     return size;

@@ -9,12 +9,14 @@ typedef enum {
 } CodeMemoryCapability;
 
 extern bool g_isApplication;
+extern bool g_isAutomaticGameplayRecording;
 extern CodeMemoryCapability g_codeMemoryCapability;
 extern void*  g_heapAddr;
 extern size_t g_heapSize;
 extern Handle g_procHandle;
 
 void getIsApplication(void);
+void getIsAutomaticGameplayRecording(void);
 u64 calculateMaxHeapSize(void);
 void setupHbHeap(void);
 void getOwnProcessHandle(void);

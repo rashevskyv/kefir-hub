@@ -421,6 +421,7 @@ void NX_NORETURN loadNro(void) {
 int main(int argc, char **argv) {
     memcpy(g_savedTls, (const u8*)armGetTls() + 0x100, 0x100);
     getIsApplication();
+    getIsAutomaticGameplayRecording();
     setupHbHeap();
     getOwnProcessHandle();
     getCodeMemoryCapability();
