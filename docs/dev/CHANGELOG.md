@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.380 — Kazakh UI translation in Latin script (Qazaqşa)
+All 4,358 strings in `assets/romfs/i18n/kk.json` (`Kazakh — Qazaqşa`) are now in the Kazakh Latin alphabet (`Ä ä, Ğ ğ, Ñ ñ, Ö ö, Ş ş, Ū ū, Ü ü, İ i, Y y`), whose characters are covered by the Switch standard font; translation tools and the i18n deployment contract guard against Cyrillic in `kk.json`.
+host tests: pass (quick + i18n contract) · nro: not built · switch: pending — Kazakh language selection and UI strings render in Latin without missing glyphs.
+
 ## v0.14.379 — Nextendo account: QR to the sign-up form, Sign in switches Nextendo on
 The QR code goes straight to nextendo.network/register (the form walks through the account, the console link and the first game). Sign in while Nextendo is off on the emuMMC offers Switch on: Kefir Hub stores the setting, writes the files and restarts; after the restart the link reminder leads back to Sign in. No patch for the firmware, sysNAND without Semi-stock and Semi-stock get a box with the reason (Semi-stock keeps its own warning). 2 new strings and "Switch on" back, all 26 languages; docs drafts.
 host tests: pass (quick + i18n contract + doc labels + docs draft contract) · nro: built (ReleaseWithInstall) · switch: pending — Switch on from Sign in, one restart, then Sign in opens the Nextendo link screen.

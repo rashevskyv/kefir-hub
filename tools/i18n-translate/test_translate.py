@@ -459,6 +459,10 @@ def test_deployment_no_untranslated_sentences():
     assert not offenders, f"Found {len(offenders)} untranslated English sentences in non-English locales:\n" + "\n".join(offenders[:10])
 
 
+def test_deployment_kk_latin_only():
+    kk = t.load("kk")
+    cyr_keys = [k for k, v in kk.items() if any("\u0400" <= ch <= "\u04ff" for ch in v)]
+    assert not cyr_keys, f"kk.json must use Latin script only, found Cyrillic in {len(cyr_keys)} keys: {cyr_keys[:5]}"
 
 
 # ── live: real requests through the proxy ────────────────────────────
