@@ -2,6 +2,8 @@
 
 #include "ui/progress_box.hpp"
 #include <switch.h>
+#include <functional>
+#include <vector>
 
 namespace sphaira::cleanup {
 
@@ -16,8 +18,10 @@ struct Options {
     bool unused_tickets{false};
     bool erpt_reports{true};
     bool contents_folders{true};
-    // off by default: these are a person's saves, gone for good once deleted.
+    // off by default: these are a person's saves. delete_user_saves deletes them (the caller copies each
+    // into the trash first); without it the step is skipped.
     bool deleted_user_saves{false};
+    std::function<Result(ui::ProgressBox*, const std::vector<FsSaveDataInfo>&)> delete_user_saves;
 };
 
 struct Report {

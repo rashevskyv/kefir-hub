@@ -159,7 +159,10 @@ struct Menu final : grid::Menu {
     void BackupSaves(std::vector<Entry> entries);
     void DeleteSaves(std::vector<Entry> entries);
     auto BackupSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const fs::FsPath& backup_root = "/dumps") -> Result;
-    auto DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result;
+    // a copy of each save goes into the trash item first (trash.hpp); no copy, no delete.
+    auto DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const std::string& trash_item) -> Result;
+    // copies every save of these users that changed since its last automatic copy (save_auto_backup.cpp).
+    auto AutoBackupChangedOn(ProgressBox* pbox, const std::vector<AccountUid>& uids, size_t* copied) -> Result;
 
 private:
     void SetIndex(s64 index);
@@ -376,5 +379,13 @@ private:
     mutable option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_Grid};
     Category m_category{Category::All};
 };
+
+// on Hub start: a corner badge copies the saves that changed since last time (Saves settings → Auto backup of
+// changed saves).
+void StartAutoBackup();
+// asks a running auto backup to stop after the save it copies now; false when none runs.
+auto StopAutoBackup() -> bool;
+auto GetAutoBackupEnabled() -> bool;
+void SetAutoBackupEnabled(bool enable);
 
 } // namespace sphaira::ui::menu::save

@@ -9,6 +9,8 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_orphans.hpp"
+#include "trash.hpp"
+#include <ctime>
 #include <vector>
 #include <cstring>
 
@@ -31,15 +33,19 @@ auto DeleteLiveSaveEntry(const Entry& e) -> Result {
 
 } // namespace
 
-auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries) -> Result {
+auto Menu::DeleteSavesOn(ProgressBox* pbox, std::vector<Entry> entries, const std::string& trash_item) -> Result {
+    R_UNLESS(!trash_item.empty(), Result_FsInvalidType);
+    const fs::FsPath copy_root{trash::InItem(trash_item, DEFAULT_BACKUP_ROOT)};
     for (size_t i = 0; i < entries.size(); i++) {
         R_TRY(pbox->ShouldExitResult());
         auto& e = entries[i];
         detail::LoadControlEntry(e);
         pbox->SetTitle(e.GetName());
         pbox->UpdateTransfer(i + 1, entries.size());
+        // a copy into the trash first: no copy, no delete.
+        pbox->SetActionName("Backing up before deleting..."_i18n);
+        R_TRY(BackupSaveInternal(pbox, MakeSdCardDumpLocation(), e, true, true, copy_root));
         pbox->SetActionName("Deleting save data..."_i18n);
-
         R_TRY(DeleteLiveSaveEntry(e));
     }
     R_SUCCEED();
@@ -74,10 +80,16 @@ void Menu::DeleteSaves(std::vector<Entry> entries) {
             if (e.is_backup) {
                 pbox->SetActionName("Deleting backup files..."_i18n);
                 const auto backups = CollectBackups(&sd_fs, e, backup_root);
+                const auto item = backups.empty() ? std::string{} : trash::NewItem(trash::SD, "backup", e.GetName(), std::time(nullptr));
+                R_UNLESS(backups.empty() || !item.empty(), Result_FsInvalidType);
                 for (const auto& b : backups) {
                     R_TRY(pbox->ShouldExitResult());
-                    R_TRY(sd_fs.DeleteFile(b.path));
+                    // into the trash, not gone: Kefir Settings → Trash puts it back.
+                    R_UNLESS(trash::Move(trash::SD, item, b.path.s), Result_FsInvalidType);
                     (*deleted_count)++;
+                }
+                if (!item.empty()) {
+                    trash::Journal(trash::SD, "delete save backup", e.GetName(), item, std::time(nullptr));
                 }
 
                 // Also clean up empty game directories in DBI and dumps

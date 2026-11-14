@@ -16,6 +16,7 @@
 #include "game_updates.hpp"
 #include "zero_fill.hpp"
 #include "system_cleanup.hpp"
+#include "ui/menus/trash_menu.hpp"
 
 #include "app.hpp"
 #include "option.hpp"
@@ -33,6 +34,7 @@
 #include "ui/marks.hpp"
 
 #include <algorithm>
+#include <ctime>
 
 namespace sphaira::ui::menu::tools {
 namespace {
@@ -72,7 +74,7 @@ void OpenCleanup() {
         "Tickets of games that are no longer installed."_i18n,
         "Crash reports in /atmosphere/erpt_reports."_i18n,
         "Mods and cheats folders in /atmosphere/contents for games that are no longer on the console. Sysmodules are kept."_i18n,
-        "Saves of users that are no longer on the console. They cannot be restored afterwards."_i18n,
+        "Saves of users that are no longer on the console. A copy of each goes to the Trash first."_i18n,
         "Removes everything ticked above."_i18n,
     };
     auto checks = std::make_shared<std::vector<bool>>();
@@ -90,6 +92,9 @@ void OpenCleanup() {
         if (App::GetProgressActive()) {
             App::Notify("Finish or stop the running transfer first."_i18n);
             return;
+        }
+        if (opts->deleted_user_saves) {
+            opts->delete_user_saves = trash_page::RemovedUserSavesDeleter();
         }
         auto report = std::make_shared<cleanup::Report>();
         App::Push<ui::ProgressBox>(0, "Clean system junk"_i18n, "", [opts, report](auto pbox) -> Result {
@@ -288,6 +293,7 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
         Tool("Battery calibration"_i18n, "Drain the battery to the cut-off, set the zero and run two full cycles."_i18n, battery::OpenCalibration),
         Tool("Battery"_i18n, "Fuel gauge state, the system's saved copy and a backup."_i18n, battery::Open),
         Tool("Storage manager"_i18n, "What fills the microSD card: games, saves, emuMMC, homebrew and the rest."_i18n, ui::menu::storage::Open),
+        Tool("Trash"_i18n, "Saves, save backups and profiles that the Hub deleted. Restore them or delete them for good."_i18n, trash_page::Open),
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
         Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),

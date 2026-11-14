@@ -18,6 +18,8 @@
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_menu_detail.hpp"
 #include "ui/menus/save/save_bundle_util.hpp"
+#include "trash.hpp"
+#include <ctime>
 
 #include <algorithm>
 #include <cstring>
@@ -469,8 +471,13 @@ void Menu::DeleteOlderBackups(const std::vector<Entry>& seeds) {
             App::Push<ProgressBox>(0, "Delete older backups"_i18n, "", [to_prune, deleted_count, failed_count, first_error](auto pbox) -> Result {
                 fs::FsNativeSd sd_fs;
                 for (const auto& item : to_prune) {
+                    // into the trash, not gone: Kefir Settings → Trash puts them back.
+                    const auto bin = trash::NewItem(trash::SD, "backup", item.group.GetName(), std::time(nullptr));
                     for (const auto& cand : item.older) {
-                        const auto rc = sd_fs.DeleteFile(cand.path);
+                        Result rc = Result_FsInvalidType;
+                        if (trash::Move(trash::SD, bin, cand.path.s)) {
+                            rc = 0;
+                        }
                         if (R_SUCCEEDED(rc)) {
                             (*deleted_count)++;
                             const auto slash = std::strrchr(cand.path.s, '/');
@@ -485,6 +492,7 @@ void Menu::DeleteOlderBackups(const std::vector<Entry>& seeds) {
                             }
                         }
                     }
+                    trash::Journal(trash::SD, "delete older save backups", item.group.GetName(), bin, std::time(nullptr));
                 }
                 return *first_error;
             }, [this, deleted_count, failed_count](Result rc) {
@@ -521,8 +529,17 @@ void Menu::DeleteBackupGroups(const std::vector<Entry>& groups) {
                 const fs::FsPath backup_root{DEFAULT_BACKUP_ROOT};
                 for (const auto& g : groups) {
                     auto archives = CollectGroupArchives(&sd_fs, g, backup_root);
+                    if (archives.empty()) {
+                        continue;
+                    }
+                    // into the trash, not gone: Kefir Settings → Trash puts them back.
+                    const auto bin = trash::NewItem(trash::SD, "backup", g.GetName(), std::time(nullptr));
+                    trash::Journal(trash::SD, "delete save backups", g.GetName(), bin, std::time(nullptr));
                     for (const auto& a : archives) {
-                        const auto rc = sd_fs.DeleteFile(a.path);
+                        Result rc = Result_FsInvalidType;
+                        if (trash::Move(trash::SD, bin, a.path.s)) {
+                            rc = 0;
+                        }
                         if (R_SUCCEEDED(rc)) {
                             (*deleted_count)++;
                             const auto slash = std::strrchr(a.path.s, '/');

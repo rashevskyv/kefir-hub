@@ -5,6 +5,8 @@
 #include "ui/menus/kefir_menu.hpp"
 #include "ui/first_run_hint.hpp"
 #include "ui/menus/users_menu.hpp"
+#include "ui/menus/trash_menu.hpp"
+#include "ui/menus/save_menu.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/nextendo_link_box.hpp"
@@ -393,6 +395,8 @@ void MainMenu::OnFocusGained() {
 
     if (!m_launch_link_prompt_checked && !App::NeedsLanguageSelection()) {
         m_launch_link_prompt_checked = true;
+        trash_page::PurgeOnStart();
+        save::StartAutoBackup();
         if (!users::OfferPendingRestore()) {
             CheckLaunchAccountLinkPrompt();
         }

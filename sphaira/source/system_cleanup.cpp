@@ -352,7 +352,11 @@ Result DeleteStaleContentsFolders(ui::ProgressBox* pbox, fs::Fs& fs, Report& out
     R_SUCCEED();
 }
 
-Result DeleteSavesOfRemovedUsers(ui::ProgressBox* pbox, Report& out) {
+Result DeleteSavesOfRemovedUsers(ui::ProgressBox* pbox, const Options& o, Report& out) {
+    if (!o.delete_user_saves) {
+        out.skipped++;
+        R_SUCCEED();
+    }
     std::vector<AccountUid> users;
     for (const auto& acc : App::GetAccountList()) {
         users.push_back(acc.uid);
@@ -367,7 +371,7 @@ Result DeleteSavesOfRemovedUsers(ui::ProgressBox* pbox, Report& out) {
     if (R_FAILED(fsOpenSaveDataInfoReader(&reader, FsSaveDataSpaceId_User))) {
         R_SUCCEED();
     }
-    std::vector<u64> to_delete;
+    std::vector<FsSaveDataInfo> to_delete;
     FsSaveDataInfo info;
     s64 total{};
     while (R_SUCCEEDED(fsSaveDataInfoReaderRead(&reader, &info, 1, &total)) && total) {
@@ -378,16 +382,15 @@ Result DeleteSavesOfRemovedUsers(ui::ProgressBox* pbox, Report& out) {
             return !std::memcmp(&u, &info.uid, sizeof(u));
         });
         if (!known) {
-            to_delete.push_back(info.save_data_id);
+            to_delete.push_back(info);
         }
     }
     fsSaveDataInfoReaderClose(&reader);
-    for (const auto id : to_delete) {
-        R_TRY(pbox->ShouldExitResult());
-        if (R_SUCCEEDED(fsDeleteSaveDataFileSystemBySaveDataSpaceId(FsSaveDataSpaceId_User, id))) {
-            out.removed++;
-        }
+    if (to_delete.empty()) {
+        R_SUCCEED();
     }
+    R_TRY(o.delete_user_saves(pbox, to_delete));
+    out.removed += to_delete.size();
     R_SUCCEED();
 }
 
@@ -425,7 +428,7 @@ Result Run(ui::ProgressBox* pbox, const Options& o, Report& out) {
     step(o.unused_tickets, "Deleting unused tickets", [&]{ return DeleteUnusedTickets(pbox, both, out); });
     step(o.erpt_reports, "Deleting error reports", [&]{ return DeleteFolderContents(pbox, sd_fs, "/atmosphere/erpt_reports", out.removed); });
     step(o.contents_folders, "Deleting folders of removed games", [&]{ return DeleteStaleContentsFolders(pbox, sd_fs, out); });
-    step(o.deleted_user_saves, "Deleting saves of removed users", [&]{ return DeleteSavesOfRemovedUsers(pbox, out); });
+    step(o.deleted_user_saves, "Deleting saves of removed users", [&]{ return DeleteSavesOfRemovedUsers(pbox, o, out); });
 
     s64 sd_fs_after{};
     sd_fs.GetFreeSpace("/", &sd_fs_after);

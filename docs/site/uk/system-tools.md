@@ -299,6 +299,11 @@ Hub завантажує список останніх оновлень ігор
 | [[Folders of removed games]] | Папки в `/atmosphere/contents` ігор, яких уже немає на консолі. Системні модулі лишаються. |
 | [[Saves of removed users]] | Збереження користувачів, видалених з консолі. Вимкнено за замовчуванням: їх не відновити. |
 
+<!-- draft
+- (v0.14.381) [[Saves of removed users]]: [[Saves of users that are no longer on the console. A copy of each goes to the Trash first.]] The copies are in [[Trash]] as [[Saves of removed users]]; the "cannot be restored" in the table is no longer true
+- new row in [[Tools]] → [[Tools]], before [[Clean system junk]]: [[Trash]], see [Saves](saves.md#trash)
+-->
+
 ## Заповнення вільного місця на SD нулями { #fill-free-sd-space-with-zeros }
 
 Записує нулі в місце на карті пам'яті, яке не зайняте файлами. Файли, ігри й збереження лишаються як були.

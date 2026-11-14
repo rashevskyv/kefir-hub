@@ -11,6 +11,7 @@
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_paths.hpp"
+#include "ui/menus/save_menu.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/first_run_hint.hpp"
 #include "ui/option_box.hpp"
@@ -302,6 +303,7 @@ auto BuildSavesCategoryItems() -> std::vector<SettingsItem> {
         }
     });
     items.emplace_back(MakeBoolItem("Compress backup"_i18n, "Save backups as compressed ZIP archives to reduce disk space."_i18n, App::GetSaveCompressBackup, App::SetSaveCompressBackup));
+    items.emplace_back(MakeBoolItem("Auto backup of changed saves"_i18n, "On each Hub start, copy the saves that changed since the last copy. The older copy goes to the Trash."_i18n, save::GetAutoBackupEnabled, save::SetAutoBackupEnabled));
     items.emplace_back(MakeBoolItem("Auto backup on restore"_i18n, "ZIP restores always create a verified SD recovery archive regardless of this setting. RAW container restore is unsupported."_i18n, App::GetSaveAutoBackupOnRestore, App::SetSaveAutoBackupOnRestore));
     items.emplace_back(MakeFolderItem("Save Backup Search Paths"_i18n, "Manage custom folders scanned for save backups."_i18n, BuildSaveBackupSearchPathsItems));
 

@@ -9,10 +9,12 @@
 #include "path_util.hpp"
 #include "threaded_file_transfer.hpp"
 #include "ui/progress_box.hpp"
+#include "trash.hpp"
 
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -405,14 +407,18 @@ auto DeleteUserPack(const std::string& dir) -> Result {
     const auto root_old = paths::DATA_ROOT + "/user_packs/";
     R_UNLESS(!dir.empty() && (dir.find(root_new) == 0 || dir.find(root_old) == 0), Result_FsInvalidType);
     fs::FsNativeSd sd;
-    if (sd.FileExists(dir.c_str())) {
-        R_TRY(sd.DeleteFile(dir.c_str()));
-    } else if (sd.DirExists(dir.c_str())) {
-        R_TRY(sd.DeleteDirectoryRecursively(dir.c_str()));
-    } else {
-        return Result_FsInvalidType;
+    R_UNLESS(sd.FileExists(dir.c_str()) || sd.DirExists(dir.c_str()), Result_FsInvalidType);
+    // into the trash, not gone: Kefir Settings → Trash puts it back.
+    const auto now = std::time(nullptr);
+    auto name = dir;
+    while (name.ends_with('/')) {
+        name.pop_back();
     }
-    log_write("[USER] deleted pack %s\n", dir.c_str());
+    name = name.substr(name.find_last_of('/') + 1);
+    const auto bin = trash::NewItem(trash::SD, "profile", name, now);
+    R_UNLESS(trash::Move(trash::SD, bin, dir), Result_FsInvalidType);
+    trash::Journal(trash::SD, "delete profile pack", name, bin, now);
+    log_write("[USER] pack %s moved to %s\n", dir.c_str(), bin.c_str());
     R_SUCCEED();
 }
 

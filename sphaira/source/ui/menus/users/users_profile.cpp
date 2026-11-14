@@ -11,6 +11,7 @@
 #include "image.hpp"
 #include "path_util.hpp"
 #include "swkbd.hpp"
+#include "trash.hpp"
 #include "ui/hold_confirm_box.hpp"
 #include "ui/image_crop.hpp"
 #include "ui/list.hpp"
@@ -25,6 +26,7 @@
 
 #include <switch/applets/psel.h>
 
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -377,11 +379,27 @@ void Menu::RunDelete(std::vector<save::Entry> save_backup) {
     auto all_saves = CollectSaves(uids);
     auto helper = std::make_shared<save::Menu>(MenuFlag_None);
     App::Push<ProgressBox>(0, "Deleting"_i18n, title,
-        [uids, save_backup = std::move(save_backup), all_saves = std::move(all_saves), helper](auto pbox) mutable -> Result {
+        [uids, title, save_backup = std::move(save_backup), all_saves = std::move(all_saves), helper](auto pbox) mutable -> Result {
             if (!save_backup.empty()) {
                 pbox->NewTransfer("Backing up saves"_i18n);
                 R_TRY(helper->BackupSavesOn(pbox, save_backup));
             }
+            // the trash keeps the profile and every save of it for a while, asked or not:
+            // no copy, no delete. Kefir Settings → Trash puts them back.
+            const auto now = std::time(nullptr);
+            const auto bin = trash::NewItem(trash::SD, "user", title, now);
+            R_UNLESS(!bin.empty(), Result_FsInvalidType);
+            pbox->NewTransfer("Writing account backup"_i18n);
+            std::vector<std::string> pack_dirs;
+            R_TRY(account_user::ExportUserPacks(uids, pack_dirs, false, false));
+            for (const auto& dir : pack_dirs) {
+                R_UNLESS(trash::Move(trash::SD, bin, dir), Result_FsInvalidType);
+            }
+            if (!all_saves.empty()) {
+                pbox->NewTransfer("Deleting saves"_i18n);
+                R_TRY(helper->DeleteSavesOn(pbox, all_saves, bin));
+            }
+            trash::Journal(trash::SD, "delete user profile", title, bin, now);
             for (const auto& uid : uids) {
                 auto nick = LiveNameForUid(uid);
                 if (nick.empty()) {
@@ -389,10 +407,6 @@ void Menu::RunDelete(std::vector<save::Entry> save_backup) {
                 }
                 pbox->NewTransfer(nick);
                 R_TRY(account_user::Delete(uid));
-            }
-            if (!all_saves.empty()) {
-                pbox->NewTransfer("Deleting saves"_i18n);
-                R_TRY(helper->DeleteSavesOn(pbox, all_saves));
             }
             R_SUCCEED();
         }, [this](Result rc) {

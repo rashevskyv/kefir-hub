@@ -63,6 +63,7 @@ A name holds up to 31 Latin characters or up to 15 Cyrillic letters. A longer na
 <!-- draft
 - (v0.14.380) [[Delete user]]: the backup questions come first, the hold confirm last. Order: [[Backup all accounts]] or [[Skip]], then [[Choose saves]] or [[Skip]], then hold **A**.
 - when a backup was skipped (profiles or saves), the hold box starts with [[Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.]]
+- (v0.14.381) before [[Delete user]] deletes them, the profile backup and a copy of every save of the user go to the [[Trash]] (kind [[User profile and its saves]]), so the delete can be undone for 30 days; the [[Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.]] text and the warning below are no longer fully true
 - [[Unlink Nintendo Account]] first offers [[Backup all accounts]] or [[Skip]]: the profile pack keeps the Nintendo Account link, so an unlink can be undone by a restore.
 -->
 

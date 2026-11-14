@@ -8,6 +8,7 @@
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
 #include "ui/menus/dbi_menu.hpp"
+#include "ui/menus/save_menu.hpp"
 #include "ui/menus/dbi/install_queue_state.hpp"
 #include "evman.hpp"
 #include <cstring>
@@ -107,6 +108,13 @@ bool BackgroundInstaller::OnInstallStart(const char* path, ui::menu::dbi::Transp
                                         && !session->IsCancelRequested()
                                         && !session->ShouldExit()
                                         && session->GetState() != ui::menu::dbi::State::Cancelled);
+
+        if (!can_reuse_session && ui::menu::save::StopAutoBackup()) {
+            // the auto backup of saves gives way: it stops after the save it copies now (up to 30 s)
+            for (int i = 0; i < 300 && App::HasActiveTransfer() && !App::IsExiting(); i++) {
+                svcSleepThread(100'000'000);
+            }
+        }
 
         if (!can_reuse_session && (App::GetProgressActive() || App::HasActiveTransfer() || s_installing.load())) {
             log_write("[BackgroundInstaller] Already installing, rejecting start\n");

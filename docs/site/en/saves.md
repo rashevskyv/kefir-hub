@@ -210,6 +210,27 @@ The first time the saves open after Kefir Hub starts, it looks for such saves. W
 
 Deleting backups removes the ZIP files from the microSD card, including DBI backups of that game.
 
+## [[Trash]] {#trash}
+<!-- draft
+- (v0.14.381) new page [[Tools]] → [[Tools]] → [[Trash]]: [[Saves, save backups and profiles that the Hub deleted. Restore them or delete them for good.]]
+- what goes there: a save backup deleted with [[Delete]], [[Delete older backups]] or [[Delete backups]]; a profile backup that is deleted or replaced; [[Delete user]] puts a profile backup and a copy of every save of the user there before it deletes them; [[Saves of removed users]] in [[Clean system junk]] puts a copy of each save there first
+- a deleted save from the console still gets its `AUTO - ...zip` backup on the [[Backups]] tab, as before
+- header: [[Kept for 30 days, or until the card is low on space]]. Items older than 30 days go at Hub start; when less than 1 GB is free, the oldest go first. The Hub then shows [[Trash: old items removed: ]] N
+- each row: the name, then the kind ([[Save backup]], [[Profile backup]], [[User profile and its saves]], [[Save]]), the date and the size
+- **A** on a row: [[Back]], [[Delete forever]], [[Restore]]. [[Restore]] puts the files back where they were: [[Put back where it was. Restore a save from its backup in Saves, a profile in Users.]] A file whose place is taken stays in the Trash: [[Some files stay in the Trash: a file with the same name is already in their place.]]
+- [[Delete forever]] and the last row [[Empty the Trash]] need a hold on **A**
+- files: `/config/kefir/trash/<date-time>/files/<original path>`; each delete and restore is written to `/config/kefir/actions.log` (date, what, name, where the copy is)
+- not covered: deletes in the file browser, over MTP, FTP or the web page, NAND backups, homebrew
+-->
+
+<!-- draft
+- (v0.14.381) [[Tools]] → [[Settings]] → [[Saves]] → [[Auto backup of changed saves]], on by default: [[On each Hub start, copy the saves that changed since the last copy. The older copy goes to the Trash.]]
+- it runs in the background as a corner badge [[Auto backup of changed saves]]; at the end the Hub shows [[Saves backed up: ]] N (nothing when no save changed)
+- the copies are normal backups on the [[Backups]] tab (`/dumps`); the older automatic copy of the same save goes to the [[Trash]] item [[Older automatic save copies]]
+- the first start copies every save of every user, later starts only the changed ones; it stops when less than 2 GB is free; a save that a suspended game holds is copied on a later start
+- an install over MTP or the network stops it after the save it copies now; the install then starts (the other saves are copied at the next Hub start)
+-->
+
 ## Sync backups with WebDAV
 You need a WebDAV network location. Add one in [[Tools]] → [[Settings]] → [[Saves]] → [[Save sync location]] → [[+ Add network location]], or in the file browser (see [File browser](file-browser.md)).
 

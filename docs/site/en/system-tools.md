@@ -316,6 +316,11 @@ The list opens from the bottom. Press A on a row to tick or untick it, then choo
 | [[Folders of removed games]] | Folders in `/atmosphere/contents` of games that are no longer on the console. Sysmodules are kept. |
 | [[Saves of removed users]] | Saves of users that were deleted from the console. Off by default: these cannot be restored. |
 
+<!-- draft
+- (v0.14.381) [[Saves of removed users]]: [[Saves of users that are no longer on the console. A copy of each goes to the Trash first.]] The copies are in [[Trash]] as [[Saves of removed users]]; the "cannot be restored" in the table is no longer true
+- new row in [[Tools]] → [[Tools]], before [[Clean system junk]]: [[Trash]], see [Saves](saves.md#trash)
+-->
+
 ## Fill free SD space with zeros
 
 Overwrites the space no file uses on the memory card with zeros. Files, games and saves stay as they are. Use it
