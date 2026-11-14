@@ -3,12 +3,14 @@
 // Auto backup of changed saves on Hub start: what was copied last time.
 // One line per save: "<save_data_id hex> <commit_id hex> <backup path>". libnx-free, host-tested.
 
+#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace sphaira::ui::menu::save::autobackup {
 
@@ -59,6 +61,71 @@ inline auto Format(const States& states) -> std::string {
         out += buf + st.path + "\n";
     }
     return out;
+}
+
+// games the auto backup leaves out: one line per game and save type, "<application_id hex> <type> <name>".
+// type is an FsSaveDataType value, or ALL_TYPES for every save of the game.
+inline constexpr const char* EXCLUDE_PATH = "/config/kefir/autobackup_exclude.txt";
+inline constexpr int ALL_TYPES = -1;
+
+struct Exclusion {
+    std::uint64_t app_id{};
+    int type{ALL_TYPES};
+    std::string name;
+};
+
+inline auto ParseExclusions(std::string_view text) -> std::vector<Exclusion> {
+    std::vector<Exclusion> out;
+    while (!text.empty()) {
+        const auto nl = text.find('\n');
+        auto line = std::string{text.substr(0, nl)};
+        text = nl == std::string_view::npos ? std::string_view{} : text.substr(nl + 1);
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) {
+            line.pop_back();
+        }
+        char* end{};
+        const auto id = std::strtoull(line.c_str(), &end, 16);
+        if (!id || *end != ' ') {
+            continue;
+        }
+        const char* p = end + 1;
+        const auto type = std::strtol(p, &end, 10);
+        if (end == p || (*end != ' ' && *end != '\0')) {
+            continue;
+        }
+        out.push_back(Exclusion{id, static_cast<int>(type), *end ? std::string{end + 1} : std::string{}});
+    }
+    return out;
+}
+
+inline auto FormatExclusions(const std::vector<Exclusion>& list) -> std::string {
+    std::string out;
+    char buf[48];
+    for (const auto& x : list) {
+        std::snprintf(buf, sizeof(buf), "%016llx %d ", static_cast<unsigned long long>(x.app_id), x.type);
+        out += buf + x.name + "\n";
+    }
+    return out;
+}
+
+inline auto IsExcluded(const std::vector<Exclusion>& list, std::uint64_t app_id, int type) -> bool {
+    for (const auto& x : list) {
+        if (x.app_id == app_id && (x.type == ALL_TYPES || x.type == type)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// "Size limit": saves bigger than this are left out. Index 0 is no limit.
+inline constexpr std::array<std::uint64_t, 5> SIZE_LIMITS{0, 16ULL << 20, 64ULL << 20, 256ULL << 20, 1ULL << 30};
+inline constexpr std::array<const char*, 5> SIZE_LIMIT_LABELS{"Off", "16 MB", "64 MB", "256 MB", "1 GB"};
+
+inline auto TooBig(std::uint64_t size, long limit_index) -> bool {
+    if (limit_index <= 0 || limit_index >= static_cast<long>(SIZE_LIMITS.size())) {
+        return false;
+    }
+    return size > SIZE_LIMITS[static_cast<std::size_t>(limit_index)];
 }
 
 // a save needs a new copy when it changed since the last one, or the last copy is gone.

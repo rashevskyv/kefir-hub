@@ -224,10 +224,16 @@ Deleting backups removes the ZIP files from the microSD card, including DBI back
 -->
 
 <!-- draft
-- (v0.14.381) [[Tools]] → [[Settings]] → [[Saves]] → [[Auto backup of changed saves]], on by default: [[On each Hub start, copy the saves that changed since the last copy. The new copy replaces the older one.]]
+- (v0.14.381, page since v0.14.384) [[Tools]] → [[Settings]] → [[Saves]] → [[Auto backup]] opens a page: [[Copy changed saves on each Hub start, upload them, size limit and excluded games.]]
+- [[Auto backup of changed saves]], on by default: [[On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.]] A save with a fresh manual backup is not copied again
+- [[Auto-sync after backup]]: [[Shared with Backup: upload every new backup, manual or automatic, to the save sync location.]] It is the same switch as in [[Remote]]
+- [[Upload auto backups]], off by default: [[Upload each new automatic copy to the save sync location, also when "Auto-sync after backup" is off.]] The place is [[Save sync location]] (or the first WebDAV location); after the upload the older automatic copy is deleted on the server too (one copy there as well); with no WebDAV location or no network the copies stay on the card only
+- [[Size limit]]: [[Off]], 16 MB, 64 MB, 256 MB, 1 GB. [[Saves bigger than this are left out of the auto backup.]]
+- [[Excluded games]] (a section of the same page): [[Games and save types that the auto backup leaves out.]] [[Add game]] lists the games with saves on this console, then the type: [[All]], [[Account]] or [[Device]]. **A** on a row → [[Remove from the list?]] → [[Remove]]. The list is in `/config/kefir/autobackup_exclude.txt`
+- the auto backup copies the saves of every user and the device saves of the games
 - it runs in the background as a corner badge of a fixed size: the game name, the save number of the total (for example 3 / 12), the bar of the current save and under it the bar of all; at the end the Hub shows [[Saves backed up: ]] N (nothing when no save changed)
 - the copies are normal backups on the [[Backups]] tab (`/dumps`); one automatic copy per save: the new copy replaces the older automatic one (the old file is deleted, not moved to the Trash); an empty save keeps its last copy
-- the first start copies every save of every user, later starts only the changed ones; it stops when less than 2 GB is free; a save that a suspended game holds is copied on a later start
+- the first start copies every save, later starts only the changed ones; it stops when less than 2 GB is free; a save that a suspended game holds is copied on a later start
 - an install over MTP or the network stops it after the save it copies now; the install then starts (the other saves are copied at the next Hub start)
 -->
 

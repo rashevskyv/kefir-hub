@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.384 — Auto backup page: skip fresh backups, upload, size limit, excluded games
+Saves → Auto backup is a page: the switch, Auto-sync after backup (shared), Upload auto backups, Size limit, Excluded games (game + All/Account/Device, `/config/kefir/autobackup_exclude.txt`). A save with a fresh manual backup is not copied again; device saves are copied too. Upload uses the save sync location and deletes the older auto copy there; a failed upload is not retried.
+host tests: pass (quick, test_save_auto_backup_state, i18n/doc contracts); nro: built; switch: pending (page, add/remove game, upload to WebDAV, size limit).
+
 ## v0.14.383 — Auto backup: fixed badge with two bars, one copy per save
 The minimized badge of a job with an overall count (the auto backup) has a fixed size: game name, "N / M", the bar of the current save and the bar of all. The auto backup first finds the changed saves, then copies them; the new automatic copy replaces the old one (deleted, not moved to the Trash). Setting text changed, "Older automatic save copies" removed, all 26 languages; docs drafts.
 host tests: pass (quick + i18n contract + doc labels + docs draft contract) · nro: built (ReleaseWithInstall) · switch: pending — badge size stays fixed, two bars, N / M; one auto copy per save.

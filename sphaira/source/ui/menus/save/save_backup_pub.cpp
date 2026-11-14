@@ -97,17 +97,8 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
             }
 
             if (App::GetSaveAutosync()) {
-                const auto webdav_locations = GetWebdavLocations();
-                if (!webdav_locations.empty()) {
-                    location::Entry target_loc = webdav_locations.front();
-                    const auto active_name = App::GetWebdavUrlName();
-                    for (const auto& l : webdav_locations) {
-                        if (l.name == active_name) {
-                            target_loc = l;
-                            break;
-                        }
-                    }
-                    const auto loc = target_loc;
+                if (const auto picked = PickSyncLocation()) {
+                    const auto loc = *picked;
                     m_backup_cache_valid = false; // this writes backups
                     App::Push<ProgressBox>(0, "Auto-syncing saves..."_i18n, "", [this, entries, loc, location, created_paths](auto pbox) mutable -> Result {
                         // the bar runs on synthetic per-file units, so a byte-rate
@@ -140,13 +131,7 @@ void Menu::BackupSaves(std::vector<Entry> entries, const dump::DumpLocation& loc
 
                                 curl::ApiResult res{};
                                 if (location.entry.type == dump::DumpLocationType_SdCard) {
-                                    curl::Api api(CURL_LOCATION_TO_API(loc));
-                                    api.SetUpload(true);
-                                    api.SetOption(curl::Path{latest_path});
-                                    api.SetOption(curl::UploadInfo{remote_name});
-                                    api.SetOption(MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), total_units));
-
-                                    res = curl::FromFile(api);
+                                    res = UploadSdBackup(loc, e, latest_path, MakeAggregateProgressCb(pbox, true, static_cast<s64>(i), total_units));
                                 } else {
                                     // stdio location (e.g. usb hdd): curl::Path uploads
                                     // always open the file via the native sd fs, so a

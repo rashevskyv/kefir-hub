@@ -380,12 +380,10 @@ private:
     Category m_category{Category::All};
 };
 
-// on Hub start: a corner badge copies the saves that changed since last time (Saves settings → Auto backup of
-// changed saves).
+// on Hub start: a corner badge copies the saves that changed since their last backup (Saves settings → Auto backup;
+// the settings page is settings::BuildAutoBackupItems in save_auto_backup.cpp).
 void StartAutoBackup();
 // asks a running auto backup to stop after the save it copies now; false when none runs.
 auto StopAutoBackup() -> bool;
-auto GetAutoBackupEnabled() -> bool;
-void SetAutoBackupEnabled(bool enable);
 
 } // namespace sphaira::ui::menu::save

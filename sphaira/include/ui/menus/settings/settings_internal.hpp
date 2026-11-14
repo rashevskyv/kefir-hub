@@ -43,6 +43,7 @@ auto BuildAutoUpdateItems() -> std::vector<SettingsItem>;
 auto BuildHomebrewSearchPathsItems() -> std::vector<SettingsItem>;
 auto BuildSaveBackupSearchPathsItems() -> std::vector<SettingsItem>;
 auto BuildSavesCategoryItems() -> std::vector<SettingsItem>;
+auto BuildAutoBackupItems() -> std::vector<SettingsItem>; // save_auto_backup.cpp: it owns the options
 auto BuildForwarderItems() -> std::vector<SettingsItem>;
 auto BuildScreenOffItems() -> std::vector<SettingsItem>;
 auto BuildMtpStorageItems() -> std::vector<SettingsItem>;

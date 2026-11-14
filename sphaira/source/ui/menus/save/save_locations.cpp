@@ -5,6 +5,7 @@
 #include "fs.hpp"
 #include "location.hpp"
 #include "option.hpp"
+#include "log.hpp"
 #include <cstring>
 #include <algorithm>
 #include <memory>
@@ -53,6 +54,41 @@ auto GetWebdavLocations() -> std::vector<location::Entry> {
     }
 
     return locations;
+}
+
+auto PickSyncLocation() -> std::optional<location::Entry> {
+    const auto locations = GetWebdavLocations();
+    if (locations.empty()) {
+        return std::nullopt;
+    }
+    const auto active_name = App::GetWebdavUrlName();
+    for (const auto& l : locations) {
+        if (l.name == active_name) {
+            return l;
+        }
+    }
+    return locations.front();
+}
+
+auto UploadSdBackup(const location::Entry& loc, const Entry& e, const fs::FsPath& path, curl::OnProgress progress) -> curl::ApiResult {
+    const auto s = path.toString();
+    const auto slash = s.find_last_of('/');
+    const auto name = slash == std::string::npos ? s : s.substr(slash + 1);
+    curl::Api api(CURL_LOCATION_TO_API(loc));
+    api.SetUpload(true);
+    api.SetOption(curl::Path{path});
+    api.SetOption(curl::UploadInfo{"sphaira-saves/" + BuildSaveBasePath(e, false, "").toString() + "/" + name});
+    api.SetOption(std::move(progress));
+    return curl::FromFile(api);
+}
+
+auto DeleteRemoteBackup(const location::Entry& loc, const Entry& e, const std::string& name) -> bool {
+    curl::Api api(CURL_LOCATION_TO_API(loc));
+    api.SetOption(curl::Url{loc.url + "/sphaira-saves/" + BuildSaveBasePath(e, false, "").toString() + "/" + name});
+    api.SetOption(curl::CustomRequest{"DELETE"});
+    const auto res = curl::ToMemory(api);
+    log_write("[SYNC] delete %s: success=%d code=%ld\n", name.c_str(), res.success, res.code);
+    return res.success;
 }
 
 auto MakeSdCardDumpLocation() -> dump::DumpLocation {

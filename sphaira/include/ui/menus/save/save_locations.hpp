@@ -5,6 +5,7 @@
 #include "dumper.hpp"
 #include "download.hpp"
 #include "ui/progress_box.hpp"
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,12 @@ constexpr s64 SYNC_PROGRESS_SCALE = 1'000'000;
 
 auto WebdavLocationKey(std::string url) -> std::string;
 auto GetWebdavLocations() -> std::vector<location::Entry>;
+// the "Save sync location" of the settings, else the first WebDAV location; none when there is no WebDAV location.
+auto PickSyncLocation() -> std::optional<location::Entry>;
+// uploads a backup file on the microSD card to "sphaira-saves/<save folder>/<file name>" on the WebDAV location.
+auto UploadSdBackup(const location::Entry& loc, const Entry& e, const fs::FsPath& path, curl::OnProgress progress) -> curl::ApiResult;
+// deletes "sphaira-saves/<save folder>/<name>" on the WebDAV location; false when the server refuses or has no such file.
+auto DeleteRemoteBackup(const location::Entry& loc, const Entry& e, const std::string& name) -> bool;
 auto MakeSdCardDumpLocation() -> dump::DumpLocation;
 auto MakeDumpLocationFromFsEntry(const filebrowser::FsEntry& fs_entry) -> dump::DumpLocation;
 auto MakeLocationLabel(const std::string& name, const fs::FsPath& backup_root) -> std::string;
