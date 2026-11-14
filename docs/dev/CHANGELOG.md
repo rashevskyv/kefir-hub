@@ -10,6 +10,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.387 — icon loader leaves 96 MiB free, as sphaira does (test for the hang after a game)
+The HOME icon of the Hub hangs on a black screen when it opens after a game (two testers; video capture off did not help); sphaira's own icon does not. The icon loader (hbl) took all application memory but 2 MiB since 0.13.528; now it always leaves 96 MiB free and no longer reads its nacp through ns. Only a NEW icon gets the new loader; existing icons are not remade yet.
+host tests: not run (hbl is not host-tested) · nro: built (hbl exefs/main and owo.o rebuilt) · switch: pending (make a new icon, open it after a game).
+
 ## v0.14.386 — Nextendo: switching it on says that an account is needed
 The hold-A box of Nextendo on emuMMC / on sysNAND adds, only when switching on: online play needs a free Nextendo account, sign up and sign in after the restart in Kefir Settings → Nextendo → Nextendo account. A hold-A box with a long text now shrinks the font to fit.
 host tests: pass (quick, i18n/doc contracts); nro: built; switch: pending (switch Nextendo on: the box shows the account note; switch off: no note; the text fits the box)
