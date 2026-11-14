@@ -294,6 +294,22 @@ void Menu::OnFocusGained() {
     MenuBase::OnFocusGained();
     if (m_entries.empty()) {
         ScanHomebrew();
+
+        // first scan after an app started from this tab returned: the same folder and row
+        char path[FS_MAX_PATH]{};
+        if (ini_gets(INI_SECTION, "return_path", "", path, sizeof(path), App::CONFIG_PATH) > 0) {
+            const auto folder = static_cast<u32>(ini_getl(INI_SECTION, "return_folder", hb_folders::ROOT, App::CONFIG_PATH));
+            ini_puts(INI_SECTION, "return_path", nullptr, App::CONFIG_PATH);
+            ini_puts(INI_SECTION, "return_folder", nullptr, App::CONFIG_PATH);
+            Enter(folder); // a deleted folder falls back to the top level
+            for (s64 i = 0; i < static_cast<s64>(m_entries_current.size()); i++) {
+                if (!GetEntry(i).is_dir && !std::strcmp(GetEntry(i).path.s, path)) {
+                    SetIndex(i);
+                    m_list->EnsureVisible(i, m_entries_current.size());
+                    break;
+                }
+            }
+        }
     }
     m_next_check = 0; // back from another tab or menu: check the folders at the next frame
 }

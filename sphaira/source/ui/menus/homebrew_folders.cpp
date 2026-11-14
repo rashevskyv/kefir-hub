@@ -19,6 +19,7 @@
 #include "i18n.hpp"
 #include "image.hpp"
 
+#include <minIni.h>
 #include <cstdio>
 
 namespace sphaira::ui::menu::homebrew {
@@ -176,6 +177,9 @@ void Menu::UpdateActions() {
         } else if (OfferDeleteHubCopy(e)) {
             // asked instead of starting a second Kefir Hub
         } else {
+            // the loader starts the Hub again when the app returns: OnFocusGained puts the cursor back here
+            ini_puts(INI_SECTION, "return_path", e.path.s, App::CONFIG_PATH);
+            ini_putl(INI_SECTION, "return_folder", m_folder, App::CONFIG_PATH);
             nro_launch(e.path);
         }
     }});
