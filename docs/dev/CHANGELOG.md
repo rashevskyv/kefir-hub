@@ -9,6 +9,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.380 — Delete user: backups first, warning, hold A last; backup offer before Unlink
+Users → Delete user asks first about the profiles backup and the saves backup, then shows the hold-A confirm; a skipped backup puts "Warning: there is no backup..." on top of it. Unlink Nintendo Account first offers the profiles backup (it keeps the link). 1 new string, all 26 languages; docs drafts (users EN/UK); guide: Nextendo and link-account warnings.
+host tests: pass (quick + i18n contract) · nro: built (ReleaseWithInstall) · switch: pending — Delete user order and warning; Unlink offers the backup.
+
 ## v0.14.379 — Nextendo account: QR to the sign-up form, Sign in switches Nextendo on
 The QR code goes straight to nextendo.network/register (the form walks through the account, the console link and the first game). Sign in while Nextendo is off on the emuMMC offers Switch on: Kefir Hub stores the setting, writes the files and restarts; after the restart the link reminder leads back to Sign in. No patch for the firmware, sysNAND without Semi-stock and Semi-stock get a box with the reason (Semi-stock keeps its own warning). 2 new strings and "Switch on" back, all 26 languages; docs drafts.
 host tests: pass (quick + i18n contract + doc labels + docs draft contract) · nro: built (ReleaseWithInstall) · switch: pending — Switch on from Sign in, one restart, then Sign in opens the Nextendo link screen.

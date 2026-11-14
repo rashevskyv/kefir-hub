@@ -826,6 +826,7 @@
   "Select the highlighted file.": "Обрати підсвічений файл.",
   "Icon shows file thumbnails and folder previews.": "Макет «Іконка» показує мініатюри файлів і прев’ю вмісту папок.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Видалити цього користувача? Скасувати не можна. Його ігрові сейви теж видаляться. Утримуйте A.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Увага: бекапу немає. Профіль, видалений без бекапу, і його збереження відновити неможливо.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Видалити вибраних користувачів? Скасувати не можна. Їхні ігрові сейви теж видаляться. Утримуйте A.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Видалити вибраних користувачів? Ігрові сейви цих користувачів потім теж видаляться.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "Збекапити зараз усі профілі на цій консолі (ім’я, аватар, прив’язка Nintendo)?",

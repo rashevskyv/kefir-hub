@@ -149,76 +149,83 @@ void Menu::ConfirmDelete() {
         return;
     }
 
-    const auto msg = (uids.size() > 1)
-        ? "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n
-        : "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n;
-    App::Push<HoldConfirmBox>(msg, [this, uids](bool ok) {
-        if (!ok) {
+    // the backups are asked first and the hold-A confirm comes last, so the user sees the
+    // warning about a missing backup right before the point of no return.
+    AskProfileBackup([this, uids](bool profile_backed) {
+        auto saves = CollectSaves(uids);
+        if (saves.empty()) {
+            ConfirmDeleteHold(uids.size(), profile_backed, {});
             return;
         }
-
-        auto ask_saves_then_delete = [this, uids]() {
-            auto saves = CollectSaves(uids);
-            if (saves.empty()) {
-                RunDelete({});
-                return;
-            }
-            App::Push<OptionBox>(
-                "Back up game saves for these users? You can pick which games."_i18n,
-                "Skip"_i18n, "Choose saves"_i18n, 1,
-                [this, saves](auto op) mutable {
-                    if (!op) {
-                        return;
-                    }
-                    if (*op == 0) {
-                        RunDelete({});
-                        return;
-                    }
-                    PickSavesForBackup(std::move(saves), [this](auto picked) {
-                        if (!picked) {
-                            return;
-                        }
-                        RunDelete(std::move(*picked));
-                    });
-                });
-        };
-
         App::Push<OptionBox>(
-            "Back up all user profiles on this console now (name, avatar, Nintendo link)?"_i18n,
-            "Skip"_i18n, "Backup all accounts"_i18n, 1,
-            [this, uids, ask_saves_then_delete](auto op) {
+            "Back up game saves for these users? You can pick which games."_i18n,
+            "Skip"_i18n, "Choose saves"_i18n, 1,
+            [this, n = uids.size(), profile_backed, saves](auto op) mutable {
                 if (!op) {
                     return;
                 }
-                if (*op != 1) {
-                    ask_saves_then_delete();
+                if (*op == 0) {
+                    ConfirmDeleteHold(n, false, {});
                     return;
                 }
-
-                std::vector<AccountUid> all_uids;
-                for (const auto& base : App::GetAccountList()) {
-                    all_uids.push_back(base.uid);
-                }
-                if (all_uids.empty()) {
-                    ask_saves_then_delete();
-                    return;
-                }
-
-                auto dirs = std::make_shared<std::vector<std::string>>();
-                App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n,
-                    [all_uids = std::move(all_uids), dirs](auto pbox) -> Result {
-                        pbox->NewTransfer("Writing account backup"_i18n);
-                        R_TRY(account_user::ExportUserPacks(all_uids, *dirs, false, false));
-                        R_SUCCEED();
-                    }, [ask_saves_then_delete, dirs](Result rc) {
-                        if (R_FAILED(rc) || dirs->empty()) {
-                            App::Push<OptionBox>("Could not write the account backup."_i18n, "OK"_i18n);
-                            return;
-                        }
-                        ask_saves_then_delete();
-                    }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
+                PickSavesForBackup(std::move(saves), [this, n, profile_backed](auto picked) {
+                    if (!picked) {
+                        return;
+                    }
+                    const bool saves_backed = !picked->empty();
+                    ConfirmDeleteHold(n, profile_backed && saves_backed, std::move(*picked));
+                });
             });
     });
+}
+
+void Menu::ConfirmDeleteHold(size_t count, bool backed_up, std::vector<save::Entry> save_backup) {
+    auto msg = (count > 1)
+        ? "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n
+        : "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm."_i18n;
+    if (!backed_up) {
+        msg = "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored."_i18n + "\n\n" + msg;
+    }
+    App::Push<HoldConfirmBox>(msg, [this, save_backup = std::move(save_backup)](bool ok) mutable {
+        if (ok) {
+            RunDelete(std::move(save_backup));
+        }
+    });
+}
+
+// one question before any change to the profiles: a pack of every profile (name, avatar,
+// Nintendo link) restores what a delete or an unlink removes. next(true) after a good backup.
+void Menu::AskProfileBackup(std::function<void(bool)> next) {
+    App::Push<OptionBox>(
+        "Back up all user profiles on this console now (name, avatar, Nintendo link)?"_i18n,
+        "Skip"_i18n, "Backup all accounts"_i18n, 1,
+        [next](auto op) {
+            if (!op) {
+                return;
+            }
+            std::vector<AccountUid> all_uids;
+            for (const auto& base : App::GetAccountList()) {
+                all_uids.push_back(base.uid);
+            }
+            if (*op != 1 || all_uids.empty()) {
+                next(false);
+                return;
+            }
+
+            auto dirs = std::make_shared<std::vector<std::string>>();
+            App::Push<ProgressBox>(0, "Backup user"_i18n, "Backup user"_i18n,
+                [all_uids = std::move(all_uids), dirs](auto pbox) -> Result {
+                    pbox->NewTransfer("Writing account backup"_i18n);
+                    R_TRY(account_user::ExportUserPacks(all_uids, *dirs, false, false));
+                    R_SUCCEED();
+                }, [next, dirs](Result rc) {
+                    if (R_FAILED(rc) || dirs->empty()) {
+                        App::Push<OptionBox>("Could not write the account backup."_i18n, "OK"_i18n);
+                        return;
+                    }
+                    next(true);
+                }, 1, PRIO_PREEMPTIVE, 1024 * 256, false);
+        });
 }
 
 void Menu::ConfirmLinkNintendoAccount() {
@@ -452,14 +459,17 @@ void Menu::ConfirmUnlinkNintendoAccount() {
         ? "Unlink Nintendo Account from the selected linked profiles? Link data is removed from the system save. The console will reboot immediately."_i18n
         : "Unlink Nintendo Account from all linked profiles? Link data is removed from the system save. The console will reboot immediately."_i18n;
 
-    App::Push<OptionBox>(
-        msg,
-        "Cancel"_i18n, "Unlink and reboot"_i18n, 1,
-        [this, targets = std::move(targets)](auto op) mutable {
-            if (op && *op == 1) {
-                RunUnlinkNintendoAccount(std::move(targets));
-            }
-        });
+    // the profile pack holds the Nintendo link, so a backup first lets the user undo the unlink.
+    AskProfileBackup([this, msg, targets = std::move(targets)](bool) mutable {
+        App::Push<OptionBox>(
+            msg,
+            "Cancel"_i18n, "Unlink and reboot"_i18n, 1,
+            [this, targets = std::move(targets)](auto op) mutable {
+                if (op && *op == 1) {
+                    RunUnlinkNintendoAccount(std::move(targets));
+                }
+            });
+    });
 }
 
 void Menu::RunUnlinkNintendoAccount(std::vector<AccountUid> uids) {

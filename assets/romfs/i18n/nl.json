@@ -2257,6 +2257,7 @@
   "Select the highlighted file.": "Selecteer het geselecteerde bestand.",
   "Icon shows file thumbnails and folder previews.": "Pictogram toont miniatuurafbeeldingen en mapvoorbeelden.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Deze gebruiker verwijderen? Dit kan niet ongedaan worden gemaakt. Spelopgeslagen bestanden worden ook verwijderd. Houd A ingedrukt om te bevestigen.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Let op: er is geen back-up. Een profiel dat zonder back-up is verwijderd, en de bijbehorende opslagdata, kunnen niet worden hersteld.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "De geselecteerde gebruikers verwijderen? Dit kan niet ongedaan worden gemaakt. Spelopgeslagen bestanden worden ook verwijderd. Houd A ingedrukt om te bevestigen.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "De geselecteerde gebruiker(s) verwijderen? Spelopgeslagen bestanden voor deze gebruikers worden daarna verwijderd.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "Nu een back-up maken van alle gebruikersprofielen op deze console (naam, avatar, Nintendo-koppeling)?",

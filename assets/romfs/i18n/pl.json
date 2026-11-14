@@ -712,6 +712,7 @@
   "Select the highlighted file.": "Wybierz zaznaczony plik.",
   "Icon shows file thumbnails and folder previews.": "Ikona pokazuje miniatury plików i podglądy folderów.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Usunąć tego użytkownika? Tej operacji nie można cofnąć. Zapisy gry tego użytkownika również zostaną usunięte. Przytrzymaj A, aby potwierdzić.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Uwaga: brak kopii zapasowej. Profilu usuniętego bez kopii zapasowej ani jego zapisów nie da się przywrócić.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Usunąć zaznaczonych użytkowników? Tej operacji nie można cofnąć. Zapisy gry tych użytkowników również zostaną usunięte. Przytrzymaj A, aby potwierdzić.",
   "Backup": "Kopia zapasowa",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Usunąć zaznaczonego użytkownika/użytkowników? Zapisy gry dla tych użytkowników zostaną następnie usunięte.",

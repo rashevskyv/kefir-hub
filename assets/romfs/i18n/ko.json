@@ -2207,6 +2207,7 @@
   "Select the highlighted file.": "하이라이트된 파일을 선택합니다.",
   "Icon shows file thumbnails and folder previews.": "아이콘은 파일 썸네일과 폴더 미리보기를 표시합니다.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "이 사용자를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다. 게임 세이브 데이터도 함께 삭제됩니다. 확인하려면 A를 길게 누르세요.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "경고: 백업이 없습니다. 백업 없이 삭제한 사용자와 그 세이브 데이터는 복원할 수 없습니다.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "선택한 사용자를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다. 게임 세이브 데이터도 함께 삭제됩니다. 확인하려면 A를 길게 누르세요.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "선택한 사용자(들)를 삭제하시겠습니까? 해당 사용자의 게임 세이브 데이터가 그 후에 삭제됩니다.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "이 본체의 모든 사용자 프로필(이름, 아바타, 닌텐도 연동)을 지금 백업하시겠습니까?",

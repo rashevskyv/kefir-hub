@@ -2158,6 +2158,7 @@
   "Select the highlighted file.": "Sélectionner le fichier en surbrillance.",
   "Icon shows file thumbnails and folder previews.": "L'icône affiche des miniatures de fichiers et des aperçus de dossiers.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Supprimer cet utilisateur ? Cette action est irréversible. Ses sauvegardes de jeux seront également supprimées. Maintenez A pour confirmer.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Attention : il n'y a pas de sauvegarde. Un profil supprimé sans sauvegarde et ses données de jeu ne peuvent pas être restaurés.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Supprimer les utilisateurs sélectionnés ? Cette action est irréversible. Leurs sauvegardes de jeux seront également supprimées. Maintenez A pour confirmer.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Supprimer le ou les utilisateurs sélectionnés ? Les sauvegardes de jeux de ces utilisateurs seront supprimées ensuite.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "Sauvegarder tous les profils d'utilisateur sur cette console maintenant (nom, avatar, lien Nintendo) ?",

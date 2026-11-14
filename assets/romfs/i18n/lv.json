@@ -737,6 +737,7 @@
   "Select the highlighted file.": "Atlasiet iezīmēto failu.",
   "Icon shows file thumbnails and folder previews.": "Ikona rāda failu sīktēlus un mapju priekšskatījumus.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Dzēst šo lietotāju? To nevarēs atsaukt. Tiks dzēsti arī viņa spēļu saglabātie dati. Turiet nospiestu A, lai apstiprinātu.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Uzmanību: rezerves kopijas nav. Bez rezerves kopijas dzēstu profilu un tā saglabājumus nevar atjaunot.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Dzēst atlasītos lietotājus? To nevarēs atsaukt. Tiks dzēsti arī viņu spēļu saglabātie dati. Turiet nospiestu A, lai apstiprinātu.",
   "Backup": "Dublēt",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Dzēst atlasīto lietotāju(-s)? Šo lietotāju spēļu saglabātie dati tiks dzēsti vēlāk.",

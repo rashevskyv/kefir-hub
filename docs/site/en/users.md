@@ -52,13 +52,19 @@ A name holds up to 31 Latin characters or up to 15 Cyrillic letters. A longer na
 
 ## Delete a profile
 1. Select the profile (or mark several with **X**), press **A**, choose [[Delete user]].
-2. Hold **A** to confirm. The game saves of the deleted profiles are deleted too.
-3. Kefir Hub offers to back up all profiles on the console (name, avatar, Nintendo Account link) first.
+2. Kefir Hub offers to back up all profiles on the console (name, avatar, Nintendo Account link) first.
    Choose [[Backup all accounts]] or [[Skip]]. The backup goes to `/config/kefir/account_backups/`.
-4. If the profiles have game saves, Kefir Hub offers to back them up. Choose [[Choose saves]], mark games with
+3. If the profiles have game saves, Kefir Hub offers to back them up. Choose [[Choose saves]], mark games with
    **X** and press **A** to back up the marked saves, or choose [[Skip]].
    The saves go to your save backup folder, see [Saves](saves.md).
+4. Hold **A** to confirm. If you skipped a backup, the box warns that the profile and its saves cannot be restored.
 5. The profiles and their saves are deleted.
+
+<!-- draft
+- (v0.14.380) [[Delete user]]: the backup questions come first, the hold confirm last. Order: [[Backup all accounts]] or [[Skip]], then [[Choose saves]] or [[Skip]], then hold **A**.
+- when a backup was skipped (profiles or saves), the hold box starts with [[Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.]]
+- [[Unlink Nintendo Account]] first offers [[Backup all accounts]] or [[Skip]]: the profile pack keeps the Nintendo Account link, so an unlink can be undone by a restore.
+-->
 
 You cannot delete every profile: at least one must stay.
 
@@ -96,7 +102,8 @@ The launch offer to link unlinked profiles never comes on sysMMC. [[Link Nintend
 
 ## Remove a Nintendo Account link
 1. Mark the linked profiles to unlink with **X**. With nothing marked, all linked profiles are unlinked.
-2. Press **A**, choose [[Unlink Nintendo Account]], confirm with [[Unlink and reboot]].
+2. Press **A**, choose [[Unlink Nintendo Account]]. Kefir Hub offers to back up all profiles first: choose [[Backup all accounts]] or [[Skip]].
+   Then confirm with [[Unlink and reboot]].
 3. The console reboots.
 
 This removes any link, including a real Nintendo Account, not only donor links.

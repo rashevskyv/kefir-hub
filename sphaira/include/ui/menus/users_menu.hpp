@@ -5,6 +5,7 @@
 #include "account/account_link.hpp"
 #include "option.hpp"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -66,6 +67,8 @@ private:
     void ConfirmPickedRestorePacks(std::vector<account_user::Pack> picked);
     void RunPrepareRestoreSnapshot(std::vector<account_user::Pack> packs);
     void ConfirmDelete();
+    void ConfirmDeleteHold(size_t count, bool backed_up, std::vector<save::Entry> save_backup);
+    static void AskProfileBackup(std::function<void(bool)> next);
     void RunLinkNintendoAccount();
     void RunUnlinkNintendoAccount(std::vector<AccountUid> uids);
     void RunRename(const std::string& nickname);

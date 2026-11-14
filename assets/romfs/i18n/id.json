@@ -785,6 +785,7 @@
   "Select the highlighted file.": "Pilih file yang disorot.",
   "Icon shows file thumbnails and folder previews.": "Ikon menampilkan thumbnail file dan pratinjau folder.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Hapus pengguna ini? Tindakan ini tidak dapat dibatalkan. Save game mereka juga akan dihapus. Tahan A untuk mengonfirmasi.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Peringatan: tidak ada cadangan. Profil yang dihapus tanpa cadangan beserta data simpanannya tidak dapat dipulihkan.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Hapus pengguna yang dipilih? Tindakan ini tidak dapat dibatalkan. Save game mereka juga akan dihapus. Tahan A untuk mengonfirmasi.",
   "Backup": "Cadangkan",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Hapus pengguna yang dipilih? Save game untuk pengguna tersebut akan ikut dihapus setelahnya.",

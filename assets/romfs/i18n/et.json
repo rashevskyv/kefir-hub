@@ -785,6 +785,7 @@
   "Select the highlighted file.": "Vali esiletõstetud fail.",
   "Icon shows file thumbnails and folder previews.": "Ikoonil kuvatakse failide pisipildid ja kaustade eelvaated.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Kas kustutada see kasutaja? Seda ei saa tagasi võtta. Kustutatakse ka tema mängusalvestised. Hia all A-d kinnitamiseks.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Hoiatus: varukoopiat pole. Ilma varukoopiata kustutatud profiili ja selle salvestusi ei saa taastada.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Kas kustutada valitud kasutajad? Seda ei saa tagasi võtta. Kustutatakse ka nende mängusalvestised. Hoia all A-d kinnitamiseks.",
   "Backup": "Varunda",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Kas kustutada valitud kasutaja(d)? Nende kasutajate mängusalvestised kustutatakse seejärel.",

@@ -2157,6 +2157,7 @@
   "Select the highlighted file.": "Välj den markerade filen.",
   "Icon shows file thumbnails and folder previews.": "Ikon visar filminiatyrer och mappförhandsvisningar.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Radera den här användaren? Detta kan inte ångras. Deras spara-filer kommer också att raderas. Håll A intryckt för att bekräfta.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Varning: det finns ingen säkerhetskopia. En profil som tas bort utan säkerhetskopia och dess sparfiler kan inte återställas.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Radera de markerade användarna? Detta kan inte ångras. Deras spara-filer kommer också att raderas. Håll A intryckt för att bekräfta.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Radera markerad(e) användare? Spara-filer för dessa användare kommer att raderas efteråt.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "Säkerhetskopiera alla användarprofiler på denna konsol nu (namn, avatar, Nintendo-länk)?",

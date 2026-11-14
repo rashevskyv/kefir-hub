@@ -710,6 +710,7 @@
   "Select the highlighted file.": "Бөліп көрсетілген файлды таңдаңыз.",
   "Icon shows file thumbnails and folder previews.": "Белгіше файл нобайлары мен қалта алдын ала қарауларын көрсетеді.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Бұл пайдаланушыны жою керек пе? Бұл әрекетті кері қайтару мүмкін емес. Сондай-ақ олардың ойын сақтау файлдары да жойылады. Растау үшін A басып тұрыңыз.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Назар аударыңыз: сақтық көшірме жоқ. Сақтық көшірмесіз жойылған профильді және оның сақтауларын қалпына келтіру мүмкін емес.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Таңдалған пайдаланушыларды жою керек пе? Бұл әрекетті кері қайтару мүмкін емес. Сондай-ақ олардың ойын сақтау файлдары да жойылады. Растау үшін A басып тұрыңыз.",
   "Backup": "Сақтық көшірме",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Таңдалған пайдаланушы(лер)ді жою керек пе? Бұл пайдаланушылардың ойын сақтау файлдары кейін жойылады.",

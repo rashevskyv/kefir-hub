@@ -2135,6 +2135,7 @@
   "Select the highlighted file.": "Selecionar o arquivo em destaque.",
   "Icon shows file thumbnails and folder previews.": "O ícone mostra miniaturas de arquivos e visualizações de pastas.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Excluir este usuário? Isso não pode ser desfeito. Os salvamentos de jogos dele também serão excluídos. Mantenha A pressionado para confirmar.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Atenção: não há backup. Um perfil excluído sem backup e seus dados salvos não podem ser recuperados.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Excluir os usuários selecionados? Isso não pode ser desfeito. Os salvamentos de jogos deles também serão excluídos. Mantenha A pressionado para confirmar.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Excluir o(s) usuário(s) selecionado(s)? Os salvamentos de jogos desses usuários serão excluídos em seguida.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "Fazer backup de todos os perfis de usuário neste console agora (nome, avatar, vínculo da Nintendo)?",

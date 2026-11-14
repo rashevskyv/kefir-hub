@@ -52,13 +52,19 @@
 
 ## Видалити профіль {#delete-a-profile}
 1. Виберіть профіль (або позначте кілька кнопкою **X**), натисніть **A**, виберіть [[Delete user]].
-2. Утримуйте **A** для підтвердження. Ігрові збереження видалених профілів теж видаляються.
-3. Kefir Hub спершу запропонує зробити резервну копію всіх профілів консолі (ім'я, аватар, прив'язка Nintendo Account).
+2. Kefir Hub спершу запропонує зробити резервну копію всіх профілів консолі (ім'я, аватар, прив'язка Nintendo Account).
    Виберіть [[Backup all accounts]] або [[Skip]]. Копія зберігається в `/config/kefir/account_backups/`.
-4. Якщо в профілів є ігрові збереження, Kefir Hub запропонує їх зберегти. Виберіть [[Choose saves]], позначте ігри
+3. Якщо в профілів є ігрові збереження, Kefir Hub запропонує їх зберегти. Виберіть [[Choose saves]], позначте ігри
    кнопкою **X** і натисніть **A**, щоб зберегти позначені, або виберіть [[Skip]].
    Збереження потрапляють у вашу папку резервних копій, див. [Збереження](saves.md).
+4. Утримуйте **A** для підтвердження. Якщо ви пропустили бекап, вікно попередить, що профіль і його збереження відновити неможливо.
 5. Профілі та їхні збереження видаляються.
+
+<!-- draft
+- (v0.14.380) [[Delete user]]: the backup questions come first, the hold confirm last. Order: [[Backup all accounts]] or [[Skip]], then [[Choose saves]] or [[Skip]], then hold **A**.
+- when a backup was skipped (profiles or saves), the hold box starts with [[Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.]]
+- [[Unlink Nintendo Account]] first offers [[Backup all accounts]] or [[Skip]]: the profile pack keeps the Nintendo Account link, so an unlink can be undone by a restore.
+-->
 
 Видалити всі профілі не можна: хоча б один має лишитися.
 
@@ -99,7 +105,8 @@ Kefir Hub може створити таку прив'язку без інтер
 ## Зняти прив'язку Nintendo Account {#remove-a-nintendo-account-link}
 1. Позначте кнопкою **X** прив'язані профілі, з яких треба зняти прив'язку. Якщо нічого не позначено, прив'язку
    знімуть з усіх прив'язаних профілів.
-2. Натисніть **A**, виберіть [[Unlink Nintendo Account]], підтвердьте кнопкою [[Unlink and reboot]].
+2. Натисніть **A**, виберіть [[Unlink Nintendo Account]]. Kefir Hub спершу запропонує зберегти всі профілі: виберіть [[Backup all accounts]] або [[Skip]].
+   Потім підтвердьте кнопкою [[Unlink and reboot]].
 3. Консоль перезавантажиться.
 
 Знімається будь-яка прив'язка, зокрема справжнього Nintendo Account, а не лише прив'язки донорів.

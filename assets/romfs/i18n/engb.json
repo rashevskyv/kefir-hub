@@ -712,6 +712,7 @@
   "Select the highlighted file.": "Select the highlighted file.",
   "Icon shows file thumbnails and folder previews.": "Icon shows file thumbnails and folder previews.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.",
   "Backup": "Backup",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Delete the selected user(s)? Game saves for those users will be deleted afterwards.",

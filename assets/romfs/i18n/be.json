@@ -1060,6 +1060,7 @@
   "Select the highlighted file.": "Выберыце выдзелены файл.",
   "Icon shows file thumbnails and folder previews.": "Значок паказвае мініяцюры файлаў і папярэдні прагляд тэчак.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Выдаліць гэтага карыстальніка? Гэтае дзеянне немагчыма адмяніць. Яго захаванні гульняў таксама будуць выдаленыя. Утрымлівайце A для пацверджання.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Увага: рэзервовай копіі няма. Профіль, выдалены без рэзервовай копіі, і яго захаванні аднавіць немагчыма.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Выдаліць выбраных карыстальнікаў? Гэтае дзеянне немагчыма адмяніць. Іх захаванні гульняў таксама будуць выдаленыя. Утрымлівайце A для пацверджання.",
   "Backup": "Рэзервовая копія",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Выдаліць выбранага(-ых) карыстальніка(-ў)? Захаванні гульняў для гэтых карыстальнікаў будуць выдаленыя пазней.",

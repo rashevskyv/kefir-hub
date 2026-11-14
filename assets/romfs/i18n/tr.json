@@ -636,6 +636,7 @@
   "Select the highlighted file.": "Vurgulanan dosyayı seçin.",
   "Icon shows file thumbnails and folder previews.": "Simge, dosya küçük resimlerini ve klasör önizlemelerini gösterir.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Bu kullanıcı silinsin mi? Bu işlem geri alınamaz. Kullanıcının oyun kayıtları da silinecektir. Onaylamak için A tuşunu basılı tutun.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Uyarı: yedek yok. Yedeksiz silinen bir profil ve kayıtları geri yüklenemez.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Seçilen kullanıcılar silinsin mi? Bu işlem geri alınamaz. Kullanıcıların oyun kayıtları da silinecektir. Onaylamak için A tuşunu basılı tutun.",
   "Backup": "Yedekle",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Seçilen kullanıcı(lar) silinsin mi? Bu kullanıcıların oyun kayıtları daha sonra silinecektir.",

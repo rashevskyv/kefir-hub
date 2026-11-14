@@ -2207,6 +2207,7 @@
   "Select the highlighted file.": "ハイライトされたファイルを選択します。",
   "Icon shows file thumbnails and folder previews.": "アイコンにファイルのサムネイルやフォルダのプレビューを表示します。",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "このユーザーを削除しますか？この操作は取り消せません。セーブデータも同時に削除されます。Aボタンを長押しして確定してください。",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "警告：バックアップがありません。バックアップなしで削除したユーザーとそのセーブデータは復元できません。",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "選択したユーザーを削除しますか？この操作は取り消せません。セーブデータも同時に削除されます。Aボタンを長押しして確定してください。",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "選択したユーザーを削除しますか？該当ユーザーのセーブデータも後で削除されます。",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "この本体のすべてのユーザープロファイル（名前、アバター、Nintendoアカウントの連携）を今すぐバックアップしますか？",

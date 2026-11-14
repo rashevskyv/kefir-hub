@@ -2186,6 +2186,7 @@
   "Select the highlighted file.": "選擇反白顯示的檔案。",
   "Icon shows file thumbnails and folder previews.": "圖示顯示檔案縮圖與資料夾預覽。",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "刪除此使用者？此操作無法復原。其遊戲存檔也將被刪除。按住 A 確認。",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "警告：沒有備份。未備份就刪除的使用者及其存檔將無法復原。",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "刪除所選使用者？此操作無法復原。其遊戲存檔也將被刪除。按住 A 確認。",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "刪除所選使用者？這些使用者的遊戲存檔隨後將被刪除。",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "立即備份此主機上的所有使用者個人檔案（姓名、頭像、Nintendo 關聯）？",

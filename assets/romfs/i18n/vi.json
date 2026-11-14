@@ -2182,6 +2182,7 @@
   "Select the highlighted file.": "Chọn tệp được đánh dấu.",
   "Icon shows file thumbnails and folder previews.": "Biểu tượng hiển thị hình thu nhỏ của tệp và xem trước thư mục.",
   "Delete this user? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Xóa người dùng này? Thao tác này không thể hoàn tác. Dữ liệu lưu game của họ cũng sẽ bị xóa. Giữ A để xác nhận.",
+  "Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.": "Cảnh báo: không có bản sao lưu. Hồ sơ bị xóa khi chưa sao lưu và dữ liệu lưu của nó sẽ không thể khôi phục.",
   "Delete the selected users? This cannot be undone. Their game saves will also be deleted. Hold A to confirm.": "Xóa những người dùng đã chọn? Thao tác này không thể hoàn tác. Dữ liệu lưu game của họ cũng sẽ bị xóa. Giữ A để xác nhận.",
   "Delete the selected user(s)? Game saves for those users will be deleted afterwards.": "Xóa (các) người dùng đã chọn? Dữ liệu lưu game của những người dùng đó sẽ bị xóa sau đó.",
   "Back up all user profiles on this console now (name, avatar, Nintendo link)?": "Sao lưu tất cả hồ sơ người dùng trên máy này ngay bây giờ (tên, hình đại diện, liên kết Nintendo)?",
