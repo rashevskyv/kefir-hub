@@ -75,6 +75,38 @@ void DrawMiniBadge(NVGcontext* vg, Theme* theme, const std::string& title, s64 o
     gfx::drawTextArgs(vg, x + w - 15.f, y + 8.f, 13.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", expand_buf);
 }
 
+// the corner badge of a job over many items (the auto backup of saves): a fixed size, so it does not jump as the
+// names change. The item name and "done / total" on top, the item's bar, then the bar of the whole job.
+void DrawMiniBadgeOverall(NVGcontext* vg, Theme* theme, const std::string& name, s64 offset, s64 size, s64 done, s64 total) {
+    constexpr float w = 420.f, h = 84.f, y = 20.f;
+    const float x = SCREEN_WIDTH - w - 20.f;
+    gfx::drawRect(vg, x, y, w, h, theme->GetColour(ThemeEntryID_POPUP), 6);
+
+    char count[48];
+    std::snprintf(count, sizeof(count), "%lld / %lld", static_cast<long long>(std::min(done + 1, total)), static_cast<long long>(total));
+    float bounds[4];
+    nvgFontSize(vg, 15.f);
+    gfx::textBounds(vg, 0, 0, bounds, count);
+    const float count_w = bounds[2] - bounds[0];
+
+    gfx::drawTextArgs(vg, x + w - 15.f, y + 8.f, 15.f, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s", count);
+    nvgSave(vg);
+    nvgIntersectScissor(vg, x + 15.f, y, w - 45.f - count_w, h);
+    gfx::drawTextArgs(vg, x + 15.f, y + 8.f, 15.f, NVG_ALIGN_LEFT | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT), "%s", name.c_str());
+    nvgRestore(vg);
+
+    const float bar_x = x + 15.f, bar_w = w - 30.f;
+    const auto bar = [&](float bar_y, s64 part, s64 whole) {
+        gfx::drawRect(vg, bar_x, bar_y, bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 3);
+        if (whole > 0) {
+            const float f = static_cast<float>(std::clamp<s64>(part, 0, whole)) / static_cast<float>(whole);
+            gfx::drawRect(vg, bar_x, bar_y, f * bar_w, 8.f, theme->GetColour(ThemeEntryID_PROGRESSBAR), 3);
+        }
+    };
+    bar(y + 40.f, offset, size);
+    bar(y + 62.f, done, total);
+}
+
 // write-speed plot as in the DBI install view: 1/2/5 x 10^n MiB/s grid, newest sample on the right,
 auto ShortDuration(double seconds) -> std::string {
     const auto s = static_cast<u64>(std::max(0.0, seconds));
@@ -282,6 +314,10 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
         return;
     }
 
+    if (m_minimized && m_overall_total.load() > 0) {
+        DrawMiniBadgeOverall(vg, theme, title, offset, size, m_overall_done.load(), m_overall_total.load());
+        return;
+    }
     if (m_minimized) {
         std::string speed_str{};
         if (speed_sample_count >= 3 && speed > 0 && !hide_speed) {

@@ -225,9 +225,9 @@ Kefir Hub бере:
 -->
 
 <!-- draft
-- (v0.14.381) [[Tools]] → [[Settings]] → [[Saves]] → [[Auto backup of changed saves]], on by default: [[On each Hub start, copy the saves that changed since the last copy. The older copy goes to the Trash.]]
-- it runs in the background as a corner badge [[Auto backup of changed saves]]; at the end the Hub shows [[Saves backed up: ]] N (nothing when no save changed)
-- the copies are normal backups on the [[Backups]] tab (`/dumps`); the older automatic copy of the same save goes to the [[Trash]] item [[Older automatic save copies]]
+- (v0.14.381) [[Tools]] → [[Settings]] → [[Saves]] → [[Auto backup of changed saves]], on by default: [[On each Hub start, copy the saves that changed since the last copy. The new copy replaces the older one.]]
+- it runs in the background as a corner badge of a fixed size: the game name, the save number of the total (for example 3 / 12), the bar of the current save and under it the bar of all; at the end the Hub shows [[Saves backed up: ]] N (nothing when no save changed)
+- the copies are normal backups on the [[Backups]] tab (`/dumps`); one automatic copy per save: the new copy replaces the older automatic one (the old file is deleted, not moved to the Trash); an empty save keeps its last copy
 - the first start copies every save of every user, later starts only the changed ones; it stops when less than 2 GB is free; a save that a suspended game holds is copied on a later start
 - an install over MTP or the network stops it after the save it copies now; the install then starts (the other saves are copied at the next Hub start)
 -->

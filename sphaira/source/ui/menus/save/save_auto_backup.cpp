@@ -1,6 +1,6 @@
 // Auto backup of changed saves on Hub start. The Hub is hbmenu, so it starts often: a save that changed since its
-// last automatic copy gets a new one in /dumps (the Saves → Backups library). The older automatic copy goes to the
-// trash (trash.hpp), so a save broken by a game still has its earlier copy for 30 days.
+// last automatic copy gets a new one in /dumps (the Saves → Backups library). The new copy replaces the older
+// automatic one: one automatic copy per save, they do not pile up.
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/save/save_auto_backup_state.hpp"
 #include "ui/menus/save/save_locations.hpp"
@@ -12,7 +12,7 @@
 #include "i18n.hpp"
 #include "log.hpp"
 #include "option.hpp"
-#include "trash.hpp"
+#include "defines.hpp"
 
 #include <atomic>
 #include <ctime>
@@ -52,63 +52,65 @@ void SaveStates(const autobackup::States& states) {
 auto Menu::AutoBackupChangedOn(ProgressBox* pbox, const std::vector<AccountUid>& uids, size_t* copied) -> Result {
     fs::FsNativeSd sd;
     auto states = LoadStates();
-    std::string old_bin; // the trash item for the older copies, made on the first one
+    pbox->SetTitle("Auto backup of changed saves"_i18n);
+
+    // first the changed saves (a quick read of each save's commit id), so the badge can show "N / total"
+    struct Job { Entry e; u64 commit; std::string old; };
+    std::vector<Job> jobs;
     for (const auto& uid : uids) {
-        if (g_stop.load()) {
-            break;
-        }
         for (auto& e : ListAccountSaves(uid)) {
-            R_TRY(pbox->ShouldExitResult());
-            if (g_stop.load()) {
-                log_write("[AUTOBACKUP] stop: an install starts\n");
-                break;
-            }
             FsSaveDataExtraData extra{};
             if (R_FAILED(fsReadSaveDataFileSystemExtraDataBySaveDataSpaceId(&extra, sizeof(extra), static_cast<FsSaveDataSpaceId>(e.save_data_space_id), e.save_data_id))) {
                 continue;
             }
             const auto it = states.find(e.save_data_id);
-            const auto old = it == states.end() ? std::string{} : it->second.path;
+            auto old = it == states.end() ? std::string{} : it->second.path;
             const bool exists = old == EMPTY || (!old.empty() && sd.FileExists(old.c_str()));
-            if (!autobackup::NeedsCopy(states, e.save_data_id, extra.commit_id, exists)) {
-                continue;
-            }
-            s64 free{};
-            if (R_SUCCEEDED(sd.GetFreeSpace("/", &free)) && free < MIN_FREE) {
-                log_write("[AUTOBACKUP] stop: %lld bytes free\n", static_cast<long long>(free));
-                break;
-            }
-            detail::LoadControlEntry(e);
-            fs::FsPath out{};
-            // a save that a suspended game holds open cannot be read now: it is copied on a later start.
-            const auto rc = BackupSaveInternal(pbox, MakeSdCardDumpLocation(), e, true, true, DEFAULT_BACKUP_ROOT, &out);
-            if (R_FAILED(rc)) {
-                log_write("[AUTOBACKUP] %016lX skipped: 0x%X\n", e.save_data_id, rc);
-                continue;
-            }
-            const std::string now_path = out.s[0] ? out.s : EMPTY;
-            if (now_path == EMPTY) {
-                // the save is empty now (a game may have wiped it): the last copy stays, it may be the only good one
-                states[e.save_data_id] = autobackup::State{extra.commit_id, old.empty() ? EMPTY : old};
-                SaveStates(states);
-                continue;
-            }
-            if (!old.empty() && old != EMPTY && old != now_path && sd.FileExists(old.c_str())) {
-                if (old_bin.empty()) {
-                    old_bin = trash::NewItem(trash::SD, "backup", "Older automatic save copies"_i18n, std::time(nullptr));
-                }
-                trash::Move(trash::SD, old_bin, old);
-            }
-            states[e.save_data_id] = autobackup::State{extra.commit_id, now_path};
-            SaveStates(states);
-            if (now_path != EMPTY) {
-                (*copied)++;
+            if (autobackup::NeedsCopy(states, e.save_data_id, extra.commit_id, exists)) {
+                jobs.push_back(Job{e, extra.commit_id, std::move(old)});
             }
         }
     }
-    if (!old_bin.empty()) {
-        trash::Journal(trash::SD, "auto backup: older copies", "Older automatic save copies"_i18n, old_bin, std::time(nullptr));
+
+    const auto total = static_cast<s64>(jobs.size());
+    ON_SCOPE_EXIT(pbox->SetOverall(0, 0));
+    for (s64 i = 0; i < total; i++) {
+        auto& [e, commit, old] = jobs[i];
+        pbox->SetOverall(i, total);
+        R_TRY(pbox->ShouldExitResult());
+        if (g_stop.load()) {
+            log_write("[AUTOBACKUP] stop: an install starts\n");
+            break;
+        }
+        s64 free{};
+        if (R_SUCCEEDED(sd.GetFreeSpace("/", &free)) && free < MIN_FREE) {
+            log_write("[AUTOBACKUP] stop: %lld bytes free\n", static_cast<long long>(free));
+            break;
+        }
+        detail::LoadControlEntry(e);
+        fs::FsPath out{};
+        // a save that a suspended game holds open cannot be read now: it is copied on a later start.
+        const auto rc = BackupSaveInternal(pbox, MakeSdCardDumpLocation(), e, true, true, DEFAULT_BACKUP_ROOT, &out);
+        if (R_FAILED(rc)) {
+            log_write("[AUTOBACKUP] %016lX skipped: 0x%X\n", e.save_data_id, rc);
+            continue;
+        }
+        const std::string now_path = out.s[0] ? out.s : EMPTY;
+        if (now_path == EMPTY) {
+            // the save is empty now (a game may have wiped it): the last copy stays, it may be the only good one
+            states[e.save_data_id] = autobackup::State{commit, old.empty() ? EMPTY : old};
+            SaveStates(states);
+            continue;
+        }
+        // one automatic copy per save: the new one replaces the old one, the copies do not pile up
+        if (!old.empty() && old != EMPTY && old != now_path) {
+            sd.DeleteFile(old.c_str());
+        }
+        states[e.save_data_id] = autobackup::State{commit, now_path};
+        SaveStates(states);
+        (*copied)++;
     }
+    pbox->SetOverall(total, total);
     R_SUCCEED();
 }
 
