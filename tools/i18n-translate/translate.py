@@ -60,7 +60,9 @@ RULES:
     "cheat" (game cheat codes) is uk чіт / чіти, never "чит" / "чити".
 11. After a number with a percent sign never add an apostrophe suffix ("%100'e", "%35'te"): the
    format check reads it as a printf specifier. Word it around the number instead, for example
-   tr "%100 seviyesine kadar", "%35 seviyesinde"."""
+   tr "%100 seviyesine kadar", "%35 seviyesinde".
+12. For kk (Kazakh), always write in the Kazakh Latin alphabet (Qazaqşa: Ä ä, Ğ ğ, Ñ ñ, Ö ö, Ş ş,
+   Ū ū, Ü ü, İ i, Y y), never Cyrillic."""
 
 
 def build_prompt(codes):

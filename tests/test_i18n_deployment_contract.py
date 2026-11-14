@@ -115,6 +115,18 @@ def test_no_untranslated_english_sentences():
     assert not offenders, f"Found {len(offenders)} untranslated English sentences:\n" + "\n".join(offenders[:10])
 
 
+def test_kk_latin_script_only():
+    kk = json.loads((I18N / "kk.json").read_text(encoding="utf-8"))
+    cyr_offenders = [
+        k for k, v in kk.items()
+        if any("\u0400" <= ch <= "\u04ff" for ch in v)
+    ]
+    assert not cyr_offenders, (
+        f"kk.json must use Kazakh Latin script only, found Cyrillic in {len(cyr_offenders)} keys: "
+        f"{cyr_offenders[:5]}"
+    )
+
+
 if __name__ == "__main__":
     test_ru_json_absent()
     test_all_25_languages_present()
@@ -122,4 +134,5 @@ if __name__ == "__main__":
     test_key_completeness()
     test_printf_specifiers_and_newlines()
     test_no_untranslated_english_sentences()
+    test_kk_latin_script_only()
     print("All i18n deployment contracts verified successfully.")

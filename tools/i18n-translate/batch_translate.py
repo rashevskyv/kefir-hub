@@ -91,7 +91,8 @@ def request_batch(url, model, texts, codes, timeout=90):
         f"5. Technical terms, paths, file extensions, buttons (A, B, X, Y, L, R, ZL, ZR, HOME), and brands "
         f"(FTP, MTP, USB, NRO, NSP, NSZ, XCI, NCA, microSD, emuMMC, hbmenu, hekate, sphaira, Kefir, DBI, Tinfoil) "
         f"must remain untouched.\n"
-        f"6. Do not include markdown code blocks or explanations."
+        f"6. For kk (Kazakh), always use the Kazakh Latin alphabet (Qazaqşa: Ä ä, Ğ ğ, Ñ ñ, Ö ö, Ş ş, Ū ū, Ü ü, İ i, Y y), never Cyrillic.\n"
+        f"7. Do not include markdown code blocks or explanations."
     )
 
     items = [{"id": i, "text": t} for i, t in enumerate(texts)]
