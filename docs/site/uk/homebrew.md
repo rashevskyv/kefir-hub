@@ -23,6 +23,11 @@
 
 Коли ви вийдете із застосунку, знову відкриється Homebrew Menu (`/hbmenu.nro`).
 
+<!-- draft
+- after the app exits with its own Exit, Kefir Hub opens again on the same folder and with the cursor on that app (only for apps started from this list)
+- some apps exit straight to the HOME Menu (DBI does this); HOME → Close on a running app also ends Kefir Hub; a game started from Kefir Hub replaces it
+-->
+
 Якщо серед застосунків є другий файл Kefir Hub (коли Kefir Hub — ваше Homebrew Menu), **A** питає [[Keep]] / [[Launch]] / [[Delete]]. Типово вибрано [[Launch]], тож налагоджувальна копія все одно запускається.
 
 ## Сортування й вигляд

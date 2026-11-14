@@ -23,6 +23,11 @@ an app in the [File Browser](file-browser.md).
 
 When you exit the app, the Homebrew Menu (`/hbmenu.nro`) opens again.
 
+<!-- draft
+- after the app exits with its own Exit, Kefir Hub opens again on the same folder and with the cursor on that app (only for apps started from this list)
+- some apps exit straight to the HOME Menu (DBI does this); HOME → Close on a running app also ends Kefir Hub; a game started from Kefir Hub replaces it
+-->
+
 - A second Kefir Hub file among the apps (when Kefir Hub is your Homebrew Menu): A asks [[Keep]] / [[Launch]] / [[Delete]]; [[Launch]] is the default, so a debug copy still starts.
 
 ## Sort and change the layout
