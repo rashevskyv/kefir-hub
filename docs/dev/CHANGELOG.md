@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.394 — save backup drops idle MTP Saves mounts first
+A writable MTP mount of a save may lock the backup's read-only open; the backup now calls ReleaseSaveMounts() first (a save the PC has open stays locked). Note on the journal limit in WriteFile. Correction to v0.14.393: tests/run.sh has 2 failures that already fail at v0.14.392 (EN/UK key parity: 3 extra UK keys; archive.org demo fixture is HTML, not JSON); all other suites pass.
+host tests: quick green; full: only the 2 old failures | nro: not built | switch: pending (back up a save the PC browsed over MTP; a file larger than the save journal fails on the PC)
+
 ## v0.14.393 — MTP Saves drive is writable again
 The Saves drive (decrypted saves) was read-only since v0.13.864. Saves now mount writable (read-only fallback when the open fails); create, write, resize, rename and delete inside a save commit at once; a write handle commits after close, and a failed commit shows "MTP: a save file was not written" on the console (the PC already got OK). Toggle renamed to "Show saves"; the old read-only label/description keys are replaced in all 26 languages.
 host tests: pass except the old archive.org demo fixture (HTML instead of JSON, unrelated) | nro: not built | switch: pending (copy a file into Saves/<game>/<user>, overwrite, rename, delete; start the game and see the change; running-game save is read-only)

@@ -135,6 +135,9 @@ struct FsSaveProxy final : FsProxyBase {
         return h->file.SetSize(size);
     }
     // runs once per usb packet -- no logging in here.
+    // ponytail: no commit while the handle is open, so a file larger than the
+    // save journal fails mid-write (the PC sees the error). Mid-file commits
+    // need a close/reopen per journal-sized chunk.
     Result WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) override {
         FileHandle* h;
         std::memcpy(&h, &file->s, sizeof(h));

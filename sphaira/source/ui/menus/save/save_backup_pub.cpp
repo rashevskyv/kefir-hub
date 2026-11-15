@@ -4,6 +4,7 @@
 #include "app.hpp"
 #include "log.hpp"
 #include "fs.hpp"
+#include "haze_helper.hpp"
 #include "download.hpp"
 #include "defines.hpp"
 #include "i18n.hpp"
@@ -357,6 +358,10 @@ Result Menu::BackupSaveInternal(ProgressBox* pbox, const dump::DumpLocation& loc
         extra.attr.save_data_index != attr.save_data_index) {
         return FsError_PathNotFound;
     }
+
+    // the MTP Saves drive keeps saves mounted writable, which may lock this
+    // open. drop its idle mounts first; a save the PC has open stays locked.
+    haze::ReleaseSaveMounts();
 
     // try and open the save file system
     fs::FsNativeSave save_fs{(FsSaveDataType)e.save_data_type, save_data_space_id, &attr, true};
