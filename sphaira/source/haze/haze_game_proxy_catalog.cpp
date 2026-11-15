@@ -95,28 +95,32 @@ Result FsGameProxy::BuildMergedCacheIfNeeded() {
     // for this MTP session; add lightweight sizing only if hardware measurements
     // show memory or listing latency is a problem.
     for (const auto& [dir_name, rec] : m_games) {
-        title::NspEntry entry;
-        const auto rc = title::BuildMergedNspEntry(rec.app_id, rec.name.c_str(), entry);
-        if (R_FAILED(rc)) {
-            log_write("[MTP-GAMES] failed to build merged nsp for %s 0x%X\n", dir_name.c_str(), rc);
-            continue;
-        }
-
-        auto nsp = std::make_shared<GameNsp>();
-        nsp->app_id = rec.app_id;
-        FsDirectoryEntry fe{};
-        std::snprintf(fe.name, sizeof(fe.name), "%s", entry.path.s);
-        fe.type = FsDirEntryType_File;
-        fe.file_size = entry.nsp_size;
-
-        nsp->entries.emplace_back(std::move(entry));
-        nsp->listing.emplace_back(fe);
-
-        m_merged_cache.emplace(fe.name, std::move(nsp));
+        AddMergedEntry(dir_name, rec);
     }
 
     m_merged_built = true;
     R_SUCCEED();
+}
+
+void FsGameProxy::AddMergedEntry(const std::string& dir_name, const GameRec& rec) {
+    title::NspEntry entry;
+    const auto rc = title::BuildMergedNspEntry(rec.app_id, rec.name.c_str(), entry);
+    if (R_FAILED(rc)) {
+        log_write("[MTP-GAMES] failed to build merged nsp for %s 0x%X\n", dir_name.c_str(), rc);
+        return;
+    }
+
+    auto nsp = std::make_shared<GameNsp>();
+    nsp->app_id = rec.app_id;
+    FsDirectoryEntry fe{};
+    std::snprintf(fe.name, sizeof(fe.name), "%s", entry.path.s);
+    fe.type = FsDirEntryType_File;
+    fe.file_size = entry.nsp_size;
+
+    nsp->entries.emplace_back(std::move(entry));
+    nsp->listing.emplace_back(fe);
+
+    m_merged_cache.emplace(fe.name, std::move(nsp));
 }
 
 Result FsGameProxy::FindMergedFile(const std::string& filename, std::shared_ptr<GameNsp>& nsp, size_t& index) {
@@ -257,6 +261,44 @@ Result FsGameProxy::DeleteGame(u64 app_id) {
     std::erase_if(m_cache, is_nsp);
     std::erase_if(m_merged_cache, is_nsp);
     std::erase_if(m_forwarder_cache, is_nsp);
+    R_SUCCEED();
+}
+
+Result FsGameProxy::DeleteComponent(const std::string& game, const std::shared_ptr<GameNsp>& nsp, size_t index) {
+    const auto status = nsp->entries[index].status;
+    // game card content has no storage of ours to delete from (same rule as Game Details).
+    R_UNLESS(status.storageID == NcmStorageId_SdCard || status.storageID == NcmStorageId_BuiltInUser, FsError_NotImplemented);
+
+    const auto rc = title::DeleteComponent(status);
+    log_write("[MTP-GAMES] delete component %016lX type %u: 0x%X\n", status.application_id, status.meta_type, rc);
+    R_TRY(rc);
+
+    const auto app_id = nsp->app_id;
+    title::MetaEntries left;
+    const bool gone = R_FAILED(title::GetMetaEntries(app_id, left)) || left.empty();
+    const auto is_game = [app_id](const auto& kv) { return kv.second.app_id == app_id; };
+    const auto is_nsp = [app_id](const auto& kv) { return kv.second->app_id == app_id; };
+
+    SCOPED_MUTEX(&m_cache_mutex);
+    // the Merged nsp still holds the deleted ncas.
+    std::erase_if(m_merged_cache, is_nsp);
+    if (gone) {
+        std::erase_if(m_games, is_game);
+        std::erase_if(m_cache, is_nsp);
+        R_SUCCEED();
+    }
+
+    // drop the one file and keep the other names: Explorer deletes the next file of the
+    // same selection by the name it already holds. a copy, so open handles keep their index.
+    if (const auto it = m_cache.find(game); it != m_cache.end() && it->second == nsp) {
+        auto copy = std::make_shared<GameNsp>(*nsp);
+        copy->entries.erase(copy->entries.begin() + index);
+        copy->listing.erase(copy->listing.begin() + index);
+        it->second = std::move(copy);
+    }
+    if (const auto it = m_games.find(game); m_merged_built && it != m_games.end()) {
+        AddMergedEntry(it->first, it->second);
+    }
     R_SUCCEED();
 }
 

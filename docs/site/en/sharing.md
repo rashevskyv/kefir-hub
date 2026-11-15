@@ -194,7 +194,7 @@ or delete them, like on the SD card drive. The NSP files next to it stay read-on
 <!-- draft (v0.14.344): delete a game over MTP
 - Drive `Games` (was `Games (read-only)`); toggle [[Show Games]] (was "Show Games (read-only)").
 - Delete a game's NSP in the drive root or `Merged`, or a forwarder in `Forwarders`, or a game folder in `Separate`: the Hub removes the game from the console, like Delete in the Games menu. Saves stay.
-- A single update or DLC file inside a `Separate` game folder cannot be deleted (the PC shows an error).
+- Delete a single NSP inside a `Separate` game folder: the Hub removes only that component (base, update or DLC) and keeps the rest of the game. Saves stay.
 -->
 
 <!-- shot: sharing-mtp-storages | Settings, MTP storages page with the Show toggles, Dump format = Both, names and Add folder -->

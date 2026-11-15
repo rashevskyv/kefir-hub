@@ -361,6 +361,13 @@ Result DeleteComponent(const NsApplicationContentMetaStatus& status) {
 
     R_TRY(ncm::DeleteKey(std::addressof(session.cs), std::addressof(session.db), std::addressof(key)));
     ns::InvalidateApplicationControlCache(am.get(), status.application_id);
+
+    // an update from the eShop or another installer raises the launch-required version;
+    // with the update gone the base would ask for it again.
+    if (key.type == NcmContentMetaType_Patch && hosversionAtLeast(6,0,0) && R_SUCCEEDED(avmInitialize())) {
+        log_write("[DELETE] launch version reset %016lX: 0x%X\n", app_id, avmPushLaunchVersion(app_id, 0));
+        avmExit();
+    }
     R_SUCCEED();
 }
 

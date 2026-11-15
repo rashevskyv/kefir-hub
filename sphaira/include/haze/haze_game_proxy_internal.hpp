@@ -139,6 +139,10 @@ private:
     // deleting a game's file (Merged, Forwarders) or folder (Separate) removes the game
     // from the console like the Games menu does (saves stay), then drops it from the drive.
     Result DeleteGame(u64 app_id);
+    // deleting one nsp in a Separate game folder removes only that component (base, update or dlc).
+    Result DeleteComponent(const std::string& game, const std::shared_ptr<GameNsp>& nsp, size_t index);
+    // builds the Merged nsp of one game into m_merged_cache; the caller holds m_cache_mutex.
+    void AddMergedEntry(const std::string& dir_name, const GameRec& rec);
     // the install folders: Explorer creates the file, then opens it for writing.
     Result InstallCreate(const sphaira::mtp::ParsedPath& pp, s64 size);
     auto FindInstallEntry(const std::string& name) -> FsDirectoryEntry*;

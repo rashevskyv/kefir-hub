@@ -59,6 +59,8 @@ struct NspEntry {
     std::vector<Generated> generated{};
     // copy of the icon, if invalid, it will use the default icon.
     int icon{};
+    // the installed component this nsp streams (BuildNspEntries only; zero for a merged nsp).
+    NsApplicationContentMetaStatus status{};
 
     // reads from anywhere within the nsp. short reads happen at collection
     // boundaries, callers must loop on *bytes_read.

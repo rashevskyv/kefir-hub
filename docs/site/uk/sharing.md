@@ -197,7 +197,7 @@ USB-накопичувачі, і консоль показує [[USB storage tur
 <!-- draft (v0.14.344): видалення гри по MTP
 - Диск `Games` (був `Games (read-only)`); перемикач [[Show Games]] (був "Show Games (read-only)").
 - Видаліть NSP гри в корені диска чи в `Merged`, форвардер у `Forwarders` або папку гри в `Separate`: Hub видаляє гру з консолі, як «Видалити» в меню «Ігри». Збереження лишаються.
-- Окремий файл оновлення чи DLC у папці гри в `Separate` видалити не можна (ПК покаже помилку).
+- Видаліть окремий NSP у папці гри в `Separate`: Hub видаляє лише цей компонент (базу, оновлення чи DLC), решта гри лишається. Збереження лишаються.
 -->
 
 <!-- shot: sharing-mtp-storages | Settings, MTP storages page with the Show toggles, Dump format = Both, names and Add folder -->

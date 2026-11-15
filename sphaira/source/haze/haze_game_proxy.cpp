@@ -108,6 +108,12 @@ Result FsGameProxy::DeleteFile(const char* path) {
         }
         return DeleteGame(nsp->app_id);
     }
+    if (pp.kind == sphaira::mtp::PathKind::SeparateFile) {
+        std::shared_ptr<GameNsp> nsp;
+        size_t index{};
+        R_TRY(FindFile(pp.game, pp.filename, nsp, index));
+        return DeleteComponent(pp.game, nsp, index);
+    }
     if (pp.kind == sphaira::mtp::PathKind::InstallFile) {
         // nothing is stored; succeed so Explorer's replace flow goes on.
         std::erase_if(m_install_entries, [&](const auto& e) { return !strcasecmp(e.name, pp.filename.c_str()); });

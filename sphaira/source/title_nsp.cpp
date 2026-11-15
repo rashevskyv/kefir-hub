@@ -291,6 +291,7 @@ Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder,
             first_rc = first_rc ? first_rc : rc;
             continue;
         }
+        nsp.status = info.status;
         out.emplace_back(std::move(nsp));
     }
     if (out.empty() && first_rc) {
