@@ -217,7 +217,7 @@ def test_behavioral_model():
             check(last_route[6] == info.save_data_rank, "Routed save_data_rank must match exact retained info")
             check(last_route[7] == info.save_data_index, "Routed save_data_index must match exact retained info")
             check(last_route[8] == info.save_data_id, "Routed save_data_id must match exact retained info")
-            check(last_route[9] is True, "Routed read_only must strictly be True")
+            check(last_route[9] is False, "A save that opens writable must not take the read-only fallback")
 
     # -------------------------------------------------------------------------
     # System Full Disambiguator Collision Matrix (forcing DisambiguateFinalName)
@@ -286,7 +286,7 @@ def test_behavioral_model():
     check(routed_col3[6] == 1, "Rank 1 difference must survive exact routing")
     check(routed_col3[7] == 2, "Index 2 difference must survive exact routing")
     check(routed_col3[8] == 0x5555, "Save data ID must survive exact routing")
-    check(routed_col3[9] is True, "read_only=True must survive exact routing")
+    check(routed_col3[9] is False, "writable open must survive exact routing")
 
     # Narrowly scoped test for System BCAT full disambiguator
     col_bcat1 = SyntheticSaveInfo(save_data_id=0x7777, space_id=0, save_type=6, app_id=0, uid=(0, 0), rank=0, index=0, sys_save_id=0x01000000000000BB)
@@ -308,8 +308,8 @@ def test_behavioral_model():
     rc, _ = col_bcat_proxy.open_directory(f"/System BCAT/{expected_bcat3}")
     check(rc == FS_SUCCESS, "open_directory must succeed on System BCAT full disambiguated path")
     routed_bcat3 = col_bcat_proxy.attempted_routes[0]
-    check(routed_bcat3[1] == 2 and routed_bcat3[6] == 1 and routed_bcat3[7] == 2 and routed_bcat3[9] is True,
-          "System BCAT rank/index/space/read_only must survive routing")
+    check(routed_bcat3[1] == 2 and routed_bcat3[6] == 1 and routed_bcat3[7] == 2 and routed_bcat3[9] is False,
+          "System BCAT rank/index/space/writable open must survive routing")
 
     # =========================================================================
     # Part 3: Stale Paths, Alternate-Space Fallback Refusal, Presence & Mount Errors
@@ -374,9 +374,11 @@ def test_behavioral_model():
     rc, _ = mount_err_proxy.open_directory("/Super Game [0100000000001000]/Bob")
     check(rc == FS_ERROR_MOUNT_FAILED, "Mount error must be returned unchanged")
 
-    # The model records exactly one attempted route:
-    check(len(mount_err_proxy.attempted_routes) == 1, "Exactly one mount attempt must be recorded")
-    bob_attempt = mount_err_proxy.attempted_routes[0]
+    # The model records the writable attempt and one read-only fallback, both on the stored record:
+    check(len(mount_err_proxy.attempted_routes) == 2, "A writable and a read-only mount attempt must be recorded")
+    check(mount_err_proxy.attempted_routes[0][9] is False, "First attempt must be writable")
+    check(mount_err_proxy.attempted_routes[1][:9] == mount_err_proxy.attempted_routes[0][:9], "Fallback must use the same stored record")
+    bob_attempt = mount_err_proxy.attempted_routes[1]
     check(bob_attempt[0] == bob_key, "Attempt key must match Bob's path")
     check(bob_attempt[1] == 4, "Attempt MUST route to stored space 4 (SdUser)")
     check(bob_attempt[1] != 1, "Attempt MUST NOT fall back or redirect to space 1 (User)")
@@ -384,7 +386,7 @@ def test_behavioral_model():
     check(bob_attempt[3] == rec_acc_bob.application_id, "Attempt must use stored application_id")
     check(bob_attempt[5] == rec_acc_bob.uid, "Attempt must use stored uid")
     check(bob_attempt[8] == rec_acc_bob.save_data_id, "Attempt must use stored save_data_id")
-    check(bob_attempt[9] is True, "Attempt must strictly use read_only=True")
+    check(bob_attempt[9] is True, "Fallback attempt must use read_only=True")
 
     # Assert no attempted tuple has space_id == 1:
     check(all(r[1] != 1 for r in mount_err_proxy.attempted_routes), "No attempted route may use candidate space_id=1")
@@ -393,8 +395,8 @@ def test_behavioral_model():
     check(len(mount_err_proxy.remap_attempts) == 0, "remap_attempts must remain empty")
     check(mount_err_proxy.remap_candidate_uses == 0, "remap_candidate_uses must remain 0")
 
-    # Verify no second attempt occurred:
-    check(len(mount_err_proxy.attempted_routes) == 1, "No second attempt or alternate-space retry must occur")
+    # Verify no third attempt occurred:
+    check(len(mount_err_proxy.attempted_routes) == 2, "No alternate-space retry must occur")
 
     # Verify tree is not rewritten or rescanned:
     check(full_tree["Super Game [0100000000001000]"]["Bob"] is rec_acc_bob, "Tree record must remain immutable")
@@ -420,7 +422,7 @@ def test_behavioral_model():
         "System/System [0100000000000003]": FS_ERROR_MOUNT_FAILED,
     })
     err_path = "/System/System [0100000000000003]"
-    expected_sys_route = (
+    sys_route = (
         "System/System [0100000000000003]",
         101,  # SafeMode space_id
         0,    # FsSaveDataType_System
@@ -430,75 +432,96 @@ def test_behavioral_model():
         0,    # rank
         0,    # index
         0x1003,  # save_data_id
-        True, # read_only
     )
+    # writable open, then the read-only fallback; both on the stored record.
+    expected_sys_routes = [sys_route + (False,), sys_route + (True,)]
 
     # 1. OpenFile:
     sys_err_proxy.attempted_routes.clear()
     rc, h = sys_err_proxy.open_file(f"{err_path}/slot0/savedata.bin", FS_OPEN_READ)
     check(rc == FS_ERROR_MOUNT_FAILED and h is None, "OpenFile must propagate mount error unchanged")
-    check(len(sys_err_proxy.attempted_routes) == 1, "OpenFile must record exactly one mount attempt")
-    check(sys_err_proxy.attempted_routes[0] == expected_sys_route, "OpenFile must attempt exact stored System record without alternate space")
+    check(len(sys_err_proxy.attempted_routes) == 2,"OpenFile must record the writable and the read-only attempt")
+    check(sys_err_proxy.attempted_routes == expected_sys_routes, "OpenFile must attempt exact stored System record without alternate space")
 
     # 2. OpenDirectory:
     sys_err_proxy.attempted_routes.clear()
     rc, h = sys_err_proxy.open_directory(f"{err_path}/slot0")
     check(rc == FS_ERROR_MOUNT_FAILED and h is None, "OpenDirectory must propagate mount error unchanged")
-    check(len(sys_err_proxy.attempted_routes) == 1, "OpenDirectory must record exactly one mount attempt")
-    check(sys_err_proxy.attempted_routes[0] == expected_sys_route, "OpenDirectory must attempt exact stored System record without alternate space")
+    check(len(sys_err_proxy.attempted_routes) == 2,"OpenDirectory must record the writable and the read-only attempt")
+    check(sys_err_proxy.attempted_routes == expected_sys_routes, "OpenDirectory must attempt exact stored System record without alternate space")
 
     # 3. GetEntryType:
     sys_err_proxy.attempted_routes.clear()
     rc, t = sys_err_proxy.get_entry_type(f"{err_path}/slot0/savedata.bin")
     check(rc == FS_ERROR_MOUNT_FAILED and t is None, "GetEntryType must propagate mount error unchanged")
-    check(len(sys_err_proxy.attempted_routes) == 1, "GetEntryType must record exactly one mount attempt")
-    check(sys_err_proxy.attempted_routes[0] == expected_sys_route, "GetEntryType must attempt exact stored System record without alternate space")
+    check(len(sys_err_proxy.attempted_routes) == 2,"GetEntryType must record the writable and the read-only attempt")
+    check(sys_err_proxy.attempted_routes == expected_sys_routes, "GetEntryType must attempt exact stored System record without alternate space")
 
     # 4. GetTotalSpace:
     sys_err_proxy.attempted_routes.clear()
     rc, total = sys_err_proxy.get_total_space(err_path)
     check(rc == FS_ERROR_MOUNT_FAILED and total == 0, "GetTotalSpace must propagate mount error unchanged")
-    check(len(sys_err_proxy.attempted_routes) == 1, "GetTotalSpace must record exactly one mount attempt")
-    check(sys_err_proxy.attempted_routes[0] == expected_sys_route, "GetTotalSpace must attempt exact stored System record without alternate space")
+    check(len(sys_err_proxy.attempted_routes) == 2,"GetTotalSpace must record the writable and the read-only attempt")
+    check(sys_err_proxy.attempted_routes == expected_sys_routes, "GetTotalSpace must attempt exact stored System record without alternate space")
 
     # 5. GetFreeSpace:
     sys_err_proxy.attempted_routes.clear()
     rc, free = sys_err_proxy.get_free_space(err_path)
     check(rc == FS_ERROR_MOUNT_FAILED and free == 0, "GetFreeSpace must propagate mount error unchanged")
-    check(len(sys_err_proxy.attempted_routes) == 1, "GetFreeSpace must record exactly one mount attempt")
-    check(sys_err_proxy.attempted_routes[0] == expected_sys_route, "GetFreeSpace must attempt exact stored System record without alternate space")
+    check(len(sys_err_proxy.attempted_routes) == 2,"GetFreeSpace must record the writable and the read-only attempt")
+    check(sys_err_proxy.attempted_routes == expected_sys_routes, "GetFreeSpace must attempt exact stored System record without alternate space")
 
     # =========================================================================
-    # Part 4: Fail-Closed Mutation Matrix, Byte Integrity, LRU Eviction & Handle Lifetime
+    # Part 4: Writable Changes, Byte Integrity, LRU Eviction & Handle Lifetime
     # =========================================================================
-    p4_proxy = SyntheticFsSaveProxy(full_tree)
+    mut_proxy = SyntheticFsSaveProxy(full_tree)
 
-    # 1. Fail-closed mutation matrix across game and top-level buckets
-    target_mut_paths = [
-        "/Super Game [0100000000001000]/Alice/slot0/savedata.bin",
-        "/System/System [0100000000000001]/slot0/savedata.bin",
-        "/Temporary/0100000000005000/slot0/savedata.bin",
-        "/System BCAT/System BCAT [0100000000000010]/slot0/savedata.bin",
+    # 1. Every change inside a save lands and commits at once, across game and top-level buckets
+    target_mut_dirs = [
+        "/Super Game [0100000000001000]/Alice/slot0",
+        "/System/System [0100000000000001]/slot0",
+        "/Temporary/0100000000005000/slot0",
+        "/System BCAT/System BCAT [0100000000000010]/slot0",
     ]
-    for mp in target_mut_paths:
-        check(p4_proxy.create_file(mp, 1024) == FS_ERROR_NOT_IMPLEMENTED, "create_file must reject with NotImplemented")
-        check(p4_proxy.delete_file(mp) == FS_ERROR_NOT_IMPLEMENTED, "delete_file must reject with NotImplemented")
-        check(p4_proxy.rename_file(mp, mp + ".bak") == FS_ERROR_NOT_IMPLEMENTED, "rename_file must reject with NotImplemented")
-        dir_p = mp.rsplit("/", 1)[0]
-        check(p4_proxy.create_directory(dir_p + "/newdir") == FS_ERROR_NOT_IMPLEMENTED, "create_directory must reject with NotImplemented")
-        check(p4_proxy.delete_directory_recursively(dir_p) == FS_ERROR_NOT_IMPLEMENTED, "delete_directory_recursively must reject with NotImplemented")
-        check(p4_proxy.rename_directory(dir_p, dir_p + "_bak") == FS_ERROR_NOT_IMPLEMENTED, "rename_directory must reject with NotImplemented")
+    for dir_p in target_mut_dirs:
+        new_p = dir_p + "/new.bin"
+        check(mut_proxy.create_file(new_p, 0) == FS_SUCCESS, "create_file inside a save must succeed")
+        rc, h = mut_proxy.open_file(new_p, FS_OPEN_WRITE | FS_OPEN_APPEND)
+        check(rc == FS_SUCCESS and h is not None, "open_file WRITE|APPEND inside a save must succeed")
+        fs_m = h["fs"]
+        check(fs_m.commits == 1, "create_file must commit at once")
+        check(mut_proxy.set_file_size(h, 3) == FS_SUCCESS, "set_file_size must succeed")
+        check(mut_proxy.write_file(h, 0, b"abc") == FS_SUCCESS, "write_file must succeed")
+        check(fs_m.commits == 1, "writes must not commit while the handle is open")
+        mut_proxy.close_file(h)
+        check(fs_m.commits == 2, "CloseFile of a write handle must commit")
+        check(bytes(fs_m.files["/slot0/new.bin"]) == b"abc", "written bytes must be in the save")
 
-        rc, h = p4_proxy.open_file(mp, FS_OPEN_WRITE)
-        check(rc == FS_ERROR_NOT_IMPLEMENTED and h is None, "open_file WRITE must reject before mounting")
-        rc, h = p4_proxy.open_file(mp, FS_OPEN_APPEND)
-        check(rc == FS_ERROR_NOT_IMPLEMENTED and h is None, "open_file APPEND must reject before mounting")
-        rc, h = p4_proxy.open_file(mp, FS_OPEN_READ | FS_OPEN_WRITE)
-        check(rc == FS_ERROR_NOT_IMPLEMENTED and h is None, "open_file READ|WRITE must reject before mounting")
+        check(mut_proxy.rename_file(new_p, dir_p + "/renamed.bin") == FS_SUCCESS, "rename_file inside a save must succeed")
+        check("/slot0/renamed.bin" in fs_m.files and "/slot0/new.bin" not in fs_m.files, "rename_file must move the file")
+        check(mut_proxy.delete_file(dir_p + "/renamed.bin") == FS_SUCCESS, "delete_file must succeed")
+        check("/slot0/renamed.bin" not in fs_m.files, "delete_file must remove the file")
+        check(mut_proxy.create_directory(dir_p + "/newdir") == FS_SUCCESS, "create_directory must succeed")
+        check(mut_proxy.rename_directory(dir_p + "/newdir", dir_p + "/otherdir") == FS_SUCCESS, "rename_directory must succeed")
+        check(mut_proxy.delete_directory_recursively(dir_p + "/otherdir") == FS_SUCCESS, "delete_directory_recursively must succeed")
+        check("/slot0/otherdir" not in fs_m.dirs and "/slot0/newdir" not in fs_m.dirs, "directory changes must land")
+        check(fs_m.commits == 7, "every change must commit at once")
+        check(bytes(fs_m.files["/slot0/savedata.bin"]) == b"original_save_data_bytes_12345", "other files must stay unchanged")
 
-    check(p4_proxy.mount_count == 0, "Mutations must reject before mounting save")
+    # Virtual levels (game, save type) cannot change; a rename cannot leave its save.
+    check(mut_proxy.create_directory("/Super Game [0100000000001000]/NewBucket") == FS_ERROR_PATH_NOT_FOUND,
+          "create_directory on a virtual level must fail")
+    check(mut_proxy.delete_directory_recursively("/Super Game [0100000000001000]") == FS_ERROR_PATH_NOT_FOUND,
+          "deleting a virtual level must fail")
+    check(mut_proxy.rename_file("/Super Game [0100000000001000]/Alice/slot0/savedata.bin",
+                                "/Super Game [0100000000001000]/Bob/slot0/savedata.bin") == FS_ERROR_PATH_NOT_FOUND,
+          "rename_file to another save must fail")
+    check(mut_proxy.rename_directory("/Super Game [0100000000001000]/Alice/slot0",
+                                     "/System/System [0100000000000001]/slot0") == FS_ERROR_PATH_NOT_FOUND,
+          "rename_directory to another save must fail")
 
-    # 2. ReadFile byte integrity and CloseFile without commit
+    # 2. ReadFile byte integrity and CloseFile of a read handle without commit
+    p4_proxy = SyntheticFsSaveProxy(full_tree)
     alice_file_path = "/Super Game [0100000000001000]/Alice/slot0/savedata.bin"
     rc, alice_handle = p4_proxy.open_file(alice_file_path, FS_OPEN_READ)
     check(rc == FS_SUCCESS and alice_handle is not None, "open_file READ on Alice save must succeed")
@@ -506,9 +529,6 @@ def test_behavioral_model():
 
     fs_alice = alice_handle["fs"]
     check(fs_alice.side_effects == 0 and fs_alice.commits == 0, "No side effects on read open")
-
-    check(p4_proxy.write_file(alice_handle, 0, b"malicious") == FS_ERROR_NOT_IMPLEMENTED, "write_file rejected")
-    check(p4_proxy.set_file_size(alice_handle, 0) == FS_ERROR_NOT_IMPLEMENTED, "set_file_size rejected")
 
     sz = p4_proxy.get_file_size(alice_handle)
     expected_data = b"original_save_data_bytes_12345"
@@ -543,7 +563,7 @@ def test_behavioral_model():
     check(fs_alice.commits == 0, "CloseFile must not call commit")
     check(fs_alice.side_effects == 0, "CloseFile must have 0 side effects")
 
-    print("Synthetic behavioral model checks: ALL PASS (22 fail-closed, multi-type, and LRU groups)")
+    print("Synthetic behavioral model checks: ALL PASS (writable, multi-type, and LRU groups)")
 
 if __name__ == "__main__":
     test_source_contracts()

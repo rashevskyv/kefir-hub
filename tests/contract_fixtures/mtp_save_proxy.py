@@ -80,10 +80,11 @@ class SyntheticNativeFs:
 
 class SyntheticFsSaveProxy:
     """
-    Connected behavioral model of FsSaveProxy enforcing the read-only contract.
-    Exercises mutation rejection before parsing/mounting, read-only OpenFile,
-    directory enumeration, non-committing CloseFile, LRU cache eviction,
-    exact retained field routing, and mount error propagation.
+    Connected behavioral model of the writable FsSaveProxy.
+    Exercises commit-at-once changes inside a save, same-save renames,
+    writable-then-read-only mounting, directory enumeration, commit on close of
+    a write handle, LRU cache eviction, exact retained field routing, and mount
+    error propagation.
     """
     MOUNT_CACHE_MAX = 4
 
@@ -143,23 +144,27 @@ class SyntheticFsSaveProxy:
             self.mounts[key]["tick"] = self.mount_tick
             return FS_SUCCESS, self.mounts[key]["fs"]
 
-        # Record exact attempted route tuple BEFORE checking backend open result / mount error.
-        # This models FsNativeSave construction with immutable stored record fields.
-        route_tuple = (
-            key,
-            type_info.save_data_space_id,
-            type_info.save_data_type,
-            type_info.application_id,
-            type_info.system_save_data_id,
-            type_info.uid,
-            type_info.save_data_rank,
-            type_info.save_data_index,
-            type_info.save_data_id,
-            True,  # read_only = true
-        )
-        self.attempted_routes.append(route_tuple)
+        # Record exact attempted route tuples BEFORE checking backend open result / mount error.
+        # This models FsNativeSave construction with immutable stored record fields:
+        # a writable open first, then one read-only fallback on failure.
+        for read_only in (False, True):
+            route_tuple = (
+                key,
+                type_info.save_data_space_id,
+                type_info.save_data_type,
+                type_info.application_id,
+                type_info.system_save_data_id,
+                type_info.uid,
+                type_info.save_data_rank,
+                type_info.save_data_index,
+                type_info.save_data_id,
+                read_only,
+            )
+            self.attempted_routes.append(route_tuple)
+            if key not in self.mount_errors:
+                break
 
-        # If backend mount fails, return the injected mount error immediately without caching.
+        # If both opens fail, return the injected mount error without caching.
         if key in self.mount_errors:
             return self.mount_errors[key], None
 
@@ -173,36 +178,54 @@ class SyntheticFsSaveProxy:
         self.mounts[key] = {"fs": fs, "tick": self.mount_tick}
         return FS_SUCCESS, fs
 
-    # Every mutation callback rejects before Parse, MountSave, or filesystem side effects
+    # Every change inside a save (depth 3) runs on the mounted save and commits at once.
+    def _mutate(self, path, op):
+        pp = self.parse(path)
+        if pp["depth"] < 3:
+            return FS_ERROR_PATH_NOT_FOUND
+        rc, fs = self.mount_save(pp)
+        if rc != FS_SUCCESS:
+            return rc
+        op(fs, pp["rest"])
+        fs.commit()
+        return FS_SUCCESS
+
+    # A rename stays inside one save: same game and same save type.
+    def _mutate_rename(self, old_path, new_path, op):
+        pp_old, pp_new = self.parse(old_path), self.parse(new_path)
+        if pp_new["depth"] < 3:
+            return FS_ERROR_PATH_NOT_FOUND
+        if pp_old["game"].lower() != pp_new["game"].lower() or pp_old["type"].lower() != pp_new["type"].lower():
+            return FS_ERROR_PATH_NOT_FOUND
+        return self._mutate(old_path, lambda fs, rest: op(fs, rest, pp_new["rest"]))
+
     def create_file(self, path, size, option=0):
-        return FS_ERROR_NOT_IMPLEMENTED
+        return self._mutate(path, lambda fs, p: fs.create_file(p, size))
 
     def delete_file(self, path):
-        return FS_ERROR_NOT_IMPLEMENTED
+        return self._mutate(path, lambda fs, p: fs.delete_file(p))
 
     def rename_file(self, old_path, new_path):
-        return FS_ERROR_NOT_IMPLEMENTED
+        return self._mutate_rename(old_path, new_path, lambda fs, a, b: fs.rename_file(a, b))
 
     def create_directory(self, path):
-        return FS_ERROR_NOT_IMPLEMENTED
+        return self._mutate(path, lambda fs, p: fs.create_directory(p))
 
     def delete_directory_recursively(self, path):
-        return FS_ERROR_NOT_IMPLEMENTED
+        return self._mutate(path, lambda fs, p: fs.delete_directory_recursively(p))
 
     def rename_directory(self, old_path, new_path):
-        return FS_ERROR_NOT_IMPLEMENTED
+        return self._mutate_rename(old_path, new_path, lambda fs, a, b: fs.rename_directory(a, b))
 
     def set_file_size(self, file_handle, size):
-        return FS_ERROR_NOT_IMPLEMENTED
+        file_handle["fs"].set_size(file_handle["path"], size)
+        return FS_SUCCESS
 
     def write_file(self, file_handle, off, buf, option=0):
-        return FS_ERROR_NOT_IMPLEMENTED
+        file_handle["fs"].write(file_handle["path"], off, buf)
+        return FS_SUCCESS
 
     def open_file(self, path, mode):
-        # Fail-closed rejection before Parse or MountSave
-        if mode & (FS_OPEN_WRITE | FS_OPEN_APPEND):
-            return FS_ERROR_NOT_IMPLEMENTED, None
-
         pp = self.parse(path)
         if pp["depth"] < 3:
             return FS_ERROR_PATH_NOT_FOUND, None
@@ -214,7 +237,8 @@ class SyntheticFsSaveProxy:
         if pp["rest"] not in fs.files:
             return FS_ERROR_PATH_NOT_FOUND, None
 
-        handle = {"fs": fs, "path": pp["rest"], "closed": False}
+        handle = {"fs": fs, "path": pp["rest"], "closed": False,
+                  "writable": bool(mode & (FS_OPEN_WRITE | FS_OPEN_APPEND))}
         return FS_SUCCESS, handle
 
     def get_file_size(self, file_handle):
@@ -226,7 +250,9 @@ class SyntheticFsSaveProxy:
 
     def close_file(self, file_handle):
         file_handle["closed"] = True
-        # Read-only CloseFile never calls commit!
+        # CloseFile commits only a write handle, after the handle is closed.
+        if file_handle["writable"]:
+            file_handle["fs"].commit()
 
     def open_directory(self, path, mode=3):
         pp = self.parse(path)

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.393 — MTP Saves drive is writable again
+The Saves drive (decrypted saves) was read-only since v0.13.864. Saves now mount writable (read-only fallback when the open fails); create, write, resize, rename and delete inside a save commit at once; a write handle commits after close, and a failed commit shows "MTP: a save file was not written" on the console (the PC already got OK). Toggle renamed to "Show saves"; the old read-only label/description keys are replaced in all 26 languages.
+host tests: pass except the old archive.org demo fixture (HTML instead of JSON, unrelated) | nro: not built | switch: pending (copy a file into Saves/<game>/<user>, overwrite, rename, delete; start the game and see the change; running-game save is read-only)
+
 ## v0.14.392 — MTP Games: delete one update or DLC in a Separate game folder
 Deleting an NSP inside Separate/<game> answered GeneralError (Windows: "device stopped responding"); it now removes only that component through title::DeleteComponent (as Game Details). Deleting an update also resets the launch-required version. Merged entry of the game is rebuilt.
 host tests: pass (quick) | nro: built (local, sent by nxlink) | switch: pending (select UPD + DLC in Separate, delete, base stays and starts; Separate and Merged listings correct)

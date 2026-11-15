@@ -145,12 +145,21 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 |---|---|---|
 | `microSD card` | The whole microSD card, read and write. | Yes |
 | `Install (NSP, XCI, NSZ, XCZ)` | Game files copied here are installed. See [Install over MTP](install/mtp.md). Hidden when [[Install folders in Games]] is on. | Yes |
-| `Saves` | Game saves, unpacked. Read-only: copy them to the PC. | No |
+| `Saves` | Game saves, unpacked, read and write. | No |
 | `NAND Saves (USER:/save)` | The raw save files of games in system memory, read and write. | No |
 | `NAND System Saves (SYSTEM:/save)` | The raw save files of the system, read and write. | No |
 | `Games` | Installed games, updates and DLC as NSP files. Copying one to the PC makes a dump of it. Deleting a game removes it from the console. With [[Install folders in Games]] on, a game file copied into [[Install to SD]] or [[Install to NAND]] is installed there, see [Install over MTP](install/mtp.md). | Yes |
 | A folder you added | That folder of the microSD card as its own drive. | — |
 | A mounted folder | The folder you mounted from the File Browser (see [Share one folder](#mount)). | — |
+
+<!-- draft (v0.14.393): Saves drive is writable
+- Drive `Saves` (was read-only); toggle [[Show saves]] (was "Show Saves (read-only)").
+- Inside a save folder (game → user or Device/BCAT/Cache → files) the PC can copy files in, overwrite, rename, delete and make folders. Each change is saved on the console at once.
+- The game and save-type folders cannot be changed. A file cannot be moved to another save.
+- A save the Hub cannot open for writing (likely: a game that is running) opens read-only, and changes to it fail on the PC. Close the game first. (switch: pending)
+- If saving a copied file on the console fails, the PC still shows the copy as done; the console shows [[MTP: a save file was not written]].
+- Back up the save first (see Saves).
+-->
 
 !!! warning
     The two NAND drives give direct write access to save data in system memory. A wrong file copied there can break
@@ -166,7 +175,7 @@ off, and the console shows [[USB storage turned off to free the USB port]].
 | [[Show microSD card]] | Shows the microSD card drive. | On |
 | [[Show Install folder]] | Shows the install drive. | On |
 | [[Install folders in Games]] | Puts [[Install to SD]] and [[Install to NAND]] into the `Games` drive and hides the install drive. | Off |
-| [[Show Saves (read-only)]] | Shows the unpacked saves drive. | On |
+| [[Show saves]] | Shows the unpacked saves drive. | On |
 | [[Show NAND Saves (USER:/save)]] | Shows the raw game saves drive. | Off |
 | [[Show NAND System Saves (SYSTEM:/save)]] | Shows the raw system saves drive. | Off |
 | [[Show Games]] | Shows the installed games drive. | On |

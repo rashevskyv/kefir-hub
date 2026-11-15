@@ -103,44 +103,46 @@ struct FsSaveProxy final : FsProxyBase {
         return fs->GetEntryType(pp.rest, out_entry_type);
     }
 
-    // the drive is a view of decrypted saves: everything that would modify
-    // it is rejected fail-closed, matching the settings contract.
+    // writable drive: every change inside a save is committed at once, so it
+    // lands on the console. levels 0-2 are virtual and cannot be changed.
     Result CreateFile(const char* path, s64 size, u32 option) override {
-        log_write("[MTP-SAVES] rejecting CreateFile(%s)\n", path);
-        R_THROW(FsError_NotImplemented);
+        log_write("[MTP-SAVES] CreateFile(%s)\n", path);
+        return Mutate(path, [&](fs::FsNative& fs, const fs::FsPath& p) { return fs.CreateFile(p, size, option); });
     }
     Result DeleteFile(const char* path) override {
-        log_write("[MTP-SAVES] rejecting DeleteFile(%s)\n", path);
-        R_THROW(FsError_NotImplemented);
+        log_write("[MTP-SAVES] DeleteFile(%s)\n", path);
+        return Mutate(path, [](fs::FsNative& fs, const fs::FsPath& p) { return fs.DeleteFile(p); });
     }
     Result RenameFile(const char *old_path, const char *new_path) override {
-        log_write("[MTP-SAVES] rejecting RenameFile(%s)\n", old_path);
-        R_THROW(FsError_NotImplemented);
+        log_write("[MTP-SAVES] RenameFile(%s -> %s)\n", old_path, new_path);
+        return MutateRename(old_path, new_path, [](fs::FsNative& fs, const fs::FsPath& a, const fs::FsPath& b) { return fs.RenameFile(a, b); });
     }
     Result CreateDirectory(const char* path) override {
-        log_write("[MTP-SAVES] rejecting CreateDirectory(%s)\n", path);
-        R_THROW(FsError_NotImplemented);
+        log_write("[MTP-SAVES] CreateDirectory(%s)\n", path);
+        return Mutate(path, [](fs::FsNative& fs, const fs::FsPath& p) { return fs.CreateDirectory(p); });
     }
     Result DeleteDirectoryRecursively(const char* path) override {
-        log_write("[MTP-SAVES] rejecting DeleteDirectoryRecursively(%s)\n", path);
-        R_THROW(FsError_NotImplemented);
+        log_write("[MTP-SAVES] DeleteDirectoryRecursively(%s)\n", path);
+        return Mutate(path, [](fs::FsNative& fs, const fs::FsPath& p) { return fs.DeleteDirectoryRecursively(p); });
     }
     Result RenameDirectory(const char *old_path, const char *new_path) override {
-        log_write("[MTP-SAVES] rejecting RenameDirectory(%s)\n", old_path);
-        R_THROW(FsError_NotImplemented);
+        log_write("[MTP-SAVES] RenameDirectory(%s -> %s)\n", old_path, new_path);
+        return MutateRename(old_path, new_path, [](fs::FsNative& fs, const fs::FsPath& a, const fs::FsPath& b) { return fs.RenameDirectory(a, b); });
     }
     Result SetFileSize(FsFile *file, s64 size) override {
-        log_write("[MTP-SAVES] rejecting SetFileSize()\n");
-        R_THROW(FsError_NotImplemented);
+        FileHandle* h;
+        std::memcpy(&h, &file->s, sizeof(h));
+        return h->file.SetSize(size);
     }
+    // runs once per usb packet -- no logging in here.
     Result WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) override {
-        log_write("[MTP-SAVES] rejecting WriteFile()\n");
-        R_THROW(FsError_NotImplemented);
+        FileHandle* h;
+        std::memcpy(&h, &file->s, sizeof(h));
+        return h->file.Write(off, buf, write_size, option);
     }
 
     Result OpenFile(const char *path, u32 mode, FsFile *out_file) override {
         log_write("[MTP-SAVES] OpenFile(%s)\n", path);
-        R_UNLESS(!(mode & (FsOpenMode_Write | FsOpenMode_Append)), FsError_NotImplemented);
 
         const auto pp = Parse(path);
         R_UNLESS(pp.depth >= 3, FsError_PathNotFound);
@@ -150,6 +152,7 @@ struct FsSaveProxy final : FsProxyBase {
 
         auto handle = std::make_unique<FileHandle>();
         handle->fs = fs;
+        handle->writable = (mode & (FsOpenMode_Write | FsOpenMode_Append)) != 0;
         R_TRY(fs->OpenFile(pp.rest, mode, &handle->file));
 
         auto raw = handle.release();
@@ -169,6 +172,19 @@ struct FsSaveProxy final : FsProxyBase {
     void CloseFile(FsFile *file) override {
         FileHandle* h;
         std::memcpy(&h, &file->s, sizeof(h));
+        if (h && h->writable) {
+            // a save commits only with no write handle open: close first.
+            // File::Close commits too but drops the result; a failed commit
+            // keeps the journal, so this second commit fails the same way.
+            // ponytail: libhaze has already sent OK to the PC here, so a failed
+            // commit is shown only on the console. Reporting it to the PC needs
+            // a libhaze patch that commits in SendObject before the response.
+            h->file.Close();
+            if (const auto rc = h->fs->Commit(); R_FAILED(rc)) {
+                log_write("[MTP-SAVES] commit failed 0x%X\n", rc);
+                App::Notify("MTP: a save file was not written"_i18n);
+            }
+        }
         delete h;
         std::memset(file, 0, sizeof(*file));
     }
@@ -263,6 +279,7 @@ private:
     struct FileHandle {
         std::shared_ptr<fs::FsNative> fs{};
         fs::File file{};
+        bool writable{};
     };
 
     struct DirHandle {
@@ -320,6 +337,27 @@ private:
         return it == m_tree.end() ? nullptr : &it->second;
     }
 
+    // one change inside a save (depth 3), then a commit.
+    template <typename Op>
+    Result Mutate(const char* path, Op&& op) {
+        const auto pp = Parse(path);
+        R_UNLESS(pp.depth >= 3, FsError_PathNotFound);
+        std::shared_ptr<fs::FsNative> fs;
+        R_TRY(MountSave(pp, fs));
+        R_TRY(op(*fs, pp.rest));
+        return fs->Commit();
+    }
+
+    // a rename stays inside one save: same game and same save type.
+    template <typename Op>
+    Result MutateRename(const char* old_path, const char* new_path, Op&& op) {
+        const auto pp_new = Parse(new_path);
+        const auto pp_old = Parse(old_path);
+        R_UNLESS(pp_new.depth >= 3, FsError_PathNotFound);
+        R_UNLESS(!strcasecmp(pp_old.game.c_str(), pp_new.game.c_str()) && !strcasecmp(pp_old.type.c_str(), pp_new.type.c_str()), FsError_PathNotFound);
+        return Mutate(old_path, [&](fs::FsNative& fs, const fs::FsPath& p) { return op(fs, p, pp_new.rest); });
+    }
+
     Result MountSave(const ParsedPath& pp, std::shared_ptr<fs::FsNative>& out) {
         const auto game_it = m_tree.find(pp.game);
         R_UNLESS(game_it != m_tree.end(), FsError_PathNotFound);
@@ -347,10 +385,17 @@ private:
         attr.save_data_rank = info.save_data_rank;
         attr.save_data_index = info.save_data_index;
 
-        auto fs = std::make_shared<fs::FsNativeSave>((FsSaveDataType)info.save_data_type, (FsSaveDataSpaceId)info.save_data_space_id, &attr, true);
-        if (const auto rc = fs->GetFsOpenResult(); R_FAILED(rc)) {
-            log_write("[MTP-SAVES] failed to mount save %s 0x%X\n", key.c_str(), rc);
-            return rc;
+        // writable first. a busy save (a running game) or one the Hub may not
+        // write opens read-only, and changes to it fail on the PC.
+        const auto type = (FsSaveDataType)info.save_data_type;
+        const auto space = (FsSaveDataSpaceId)info.save_data_space_id;
+        auto fs = std::make_shared<fs::FsNativeSave>(type, space, &attr, false);
+        if (R_FAILED(fs->GetFsOpenResult())) {
+            fs = std::make_shared<fs::FsNativeSave>(type, space, &attr, true);
+            if (const auto rc = fs->GetFsOpenResult(); R_FAILED(rc)) {
+                log_write("[MTP-SAVES] failed to mount save %s 0x%X\n", key.c_str(), rc);
+                return rc;
+            }
         }
 
         if (m_mounts.size() >= MOUNT_CACHE_MAX) {

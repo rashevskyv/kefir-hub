@@ -4,9 +4,9 @@ Compiler-free source contract and synthetic behavioral regression test for MTP s
 
 NOTE ON SCOPE AND COVERAGE:
 This test executes static source contracts and a Python behavioral model of the
-allocation, naming algorithms, and fail-closed read-only proxy enforcement.
-It validates algorithmic invariance, collision resolution, boundary conditions,
-mutation rejection, and C++ source patterns. It does NOT execute the C++ binary,
+allocation, naming algorithms, and the writable proxy (commit at once,
+same-save renames, writable-then-read-only mounting).
+It validates algorithmic invariance, collision resolution and boundary conditions. It does NOT execute the C++ binary,
 libnx/libhaze runtime, Windows MTP stack, or target Nintendo Switch hardware.
 """
 
