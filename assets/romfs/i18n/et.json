@@ -526,6 +526,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Saate linkida hiljem valikus Tööriistad → Kasutajad → Lingi Nintendo Konto. Mõned mängud nõuavad käivitamiseks seotud kontot.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "Linkimine pole apleti režiimis saadaval, kui mäng on peatatud. Palun sulgege peatatud mäng või käivitage Kefir Hub installitud pealkirjana.",
   "All user profiles are already linked.": "Kõik kasutajaprofiilid on juba seotud.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Profiili linkimise olekut ei õnnestunud lugeda, seega seda uuesti ei lingita. Eemalda esmalt link: Tööriistad → Kasutajad → Eemalda Nintendo Account link.",
   "Failed to link Nintendo Account.": "Nintendo Konto linkimine ebaõnnestus.",
   "Applying Nintendo Account link": "Nintendo Konto linkimise rakendamine",
   "Linking account...": "Konto linkimine...",

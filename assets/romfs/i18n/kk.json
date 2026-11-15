@@ -601,6 +601,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Кейінірек Tools → Users → Link Nintendo Account арқылы байланыстыруға болады. Кейбір ойындарды іске қосу үшін байланыстырылған тіркелгі қажет.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "Ойын тоқтатылып тұрған кезде апплет режимінде байланыстыру қолжетімсіз. Тоқтатылған ойынды жабыңыз немесе Kefir Hub қолданбасын орнатылған тақырып ретінде іске қосыңыз.",
   "All user profiles are already linked.": "Барлық пайдаланушы профильдері бұрыннан байланыстырылған.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Профильдің байланыс күйін оқу мүмкін болмады, сондықтан ол қайта байланыстырылмайды. Алдымен байланысын ажыратыңыз: Құралдар → Қолданушылар → Nintendo Account байланысын үзу.",
   "Failed to link Nintendo Account.": "Nintendo Account байланыстыру сәтсіз аяқталды.",
   "Applying Nintendo Account link": "Nintendo Account байланысы қолданылуда",
   "Linking account...": "Тіркелгіні байланыстыру...",

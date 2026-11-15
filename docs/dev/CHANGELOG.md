@@ -10,6 +10,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.389 — Users: a profile whose link status cannot be read can be unlinked
+Seen after Nextendo was switched off: the profile showed "Link status unavailable", Link said "All user profiles are already linked." and Unlink said "No linked profiles to unlink.", so nothing could fix it. Unlink now takes such profiles too (rollback copy kept); Link says the status could not be read and to unlink first. New key in all 26 languages (translated by hand, proxy down); docs draft EN/UK.
+host tests: pass (full, except two checks that fail at HEAD too: the archive.org http fixture; EN/UK parity, uk has 3 keys en lacks) · nro: not built · switch: pending (unlink the "Link status unavailable" profile after Nextendo off, then link again).
+
 ## v0.14.388 — 0.14.387 icon loader change reverted
 A new icon made from 0.14.387 still hung after a game, and testers then found that after Zelda BotW, Mario Kart 8 or Mario Odyssey no application starts at all (other games too), while after Stardew Valley the Hub starts: the hang is not in the Hub or its loader. The hbl heap is back to nx-hbloader's rule (96 MiB kept only for automatic gameplay recording).
 host tests: pass (quick) · nro: not built (hbl back to the 0.14.386 source) · switch: pending.

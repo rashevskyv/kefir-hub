@@ -2178,6 +2178,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Podes associar mais tarde em Tools → Users → Link Nintendo Account. Alguns jogos exigem uma conta associada para iniciar.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "A associação não está disponível no modo applet enquanto um jogo está suspenso. Fecha o jogo suspenso ou inicia o Kefir Hub como um título instalado.",
   "All user profiles are already linked.": "Todos os perfis de utilizador já estão associados.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Não foi possível ler o estado de associação de um perfil, por isso não é associado novamente. Desassocie-o primeiro: Ferramentas → Utilizadores → Desvincular Conta Nintendo.",
   "Failed to link Nintendo Account.": "Falha ao associar a Conta Nintendo.",
   "Applying Nintendo Account link": "A aplicar a associação da Conta Nintendo",
   "Linking account...": "A associar conta...",

@@ -724,6 +724,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Anda dapat menautkan nanti di Peralatan → Pengguna → Tautkan Akun Nintendo. Beberapa game memerlukan akun yang tertaut untuk dimulai.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "Penautan tidak tersedia dalam mode applet saat game ditangguhkan. Harap tutup game yang ditangguhkan atau luncurkan Kefir Hub sebagai judul yang diinstal.",
   "All user profiles are already linked.": "Semua profil pengguna sudah tertaut.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Status tautan profil tidak dapat dibaca, jadi profil tidak ditautkan lagi. Lepaskan tautannya terlebih dahulu: Alat → Pengguna → Batal Tautkan Akun Nintendo.",
   "Failed to link Nintendo Account.": "Gagal menautkan Akun Nintendo.",
   "Applying Nintendo Account link": "Menerapkan tautan Akun Nintendo",
   "Linking account...": "Menautkan akun...",

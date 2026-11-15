@@ -676,6 +676,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Вы можаце прывязаць пазней у Інструменты → Карыстальнікі → Прывязаць Nintendo Account. Для запуску некаторых гульняў патрабуецца прывязаны акаўнт.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "Прывязка недаступная ў рэжыме аплета, пакуль гульня прыпынена. Калі ласка, зачыніце прыпыненую гульню або запусціце Kefir Hub як усталяваны тытул.",
   "All user profiles are already linked.": "Усе профілі карыстальнікаў ужо прывязаны.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Не ўдалося прачытаць статус прывязкі профілю, таму ён не прывязваецца паўторна. Спачатку адвяжыце яго: Інструменты → Карыстальнікі → Адвязаць Nintendo Account.",
   "Failed to link Nintendo Account.": "Не ўдалося прывязаць Nintendo Account.",
   "Applying Nintendo Account link": "Ужыванне прывязкі Nintendo Account",
   "Linking account...": "Прывязка акаўнта...",

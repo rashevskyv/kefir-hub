@@ -65,6 +65,7 @@
 - when a backup was skipped (profiles or saves), the hold box starts with [[Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.]]
 - (v0.14.381) before [[Delete user]] deletes them, the profile backup and a copy of every save of the user go to the [[Trash]] (kind [[User profile and its saves]]), so the delete can be undone for 30 days; the [[Warning: there is no backup. A profile deleted without a backup and its saves cannot be restored.]] text and the warning below are no longer fully true
 - [[Unlink Nintendo Account]] first offers [[Backup all accounts]] or [[Skip]]: the profile pack keeps the Nintendo Account link, so an unlink can be undone by a restore.
+- (v0.14.389) a profile with [[Link status unavailable]] is now unlinked too by [[Unlink Nintendo Account]] (marked or all; the unlink keeps a rollback copy in `/config/kefir/account_link_rollback/`). Seen after Nextendo was switched off: the profile linked through Nextendo showed [[Link status unavailable]], [[Link Nintendo Account]] said [[All user profiles are already linked.]] and unlink said [[No linked profiles to unlink.]]. Now [[Link Nintendo Account]] says [[The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.]]
 -->
 
 Видалити всі профілі не можна: хоча б один має лишитися.

@@ -238,14 +238,15 @@ void Menu::ConfirmLinkNintendoAccount() {
     }
 
     bool any_needed = false;
+    bool any_unknown = false;
     for (const auto& u : m_items) {
-        if (u.linked_known && !u.horizon_linked) {
-            any_needed = true;
-            break;
-        }
+        any_needed |= u.linked_known && !u.horizon_linked;
+        any_unknown |= !u.linked_known;
     }
     if (!any_needed) {
-        App::Push<OptionBox>("All user profiles are already linked."_i18n, "OK"_i18n);
+        App::Push<OptionBox>(any_unknown
+            ? "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account."_i18n
+            : "All user profiles are already linked."_i18n, "OK"_i18n);
         return;
     }
 
@@ -452,13 +453,15 @@ void Menu::ConfirmUnlinkNintendoAccount() {
     std::vector<AccountUid> targets;
     if (m_selected_count > 0) {
         for (const auto& u : m_items) {
-            if (u.selected && u.linked_known && u.horizon_linked) {
+            if (u.selected && (u.horizon_linked || !u.linked_known)) {
                 targets.push_back(u.uid);
             }
         }
     } else {
+        // a profile whose link status cannot be read is unlinked too: its link data is the likely reason the read
+        // fails (seen after Nextendo was switched off). The unlink keeps a rollback copy.
         for (const auto& u : m_items) {
-            if (u.linked_known && u.horizon_linked) {
+            if (u.horizon_linked || !u.linked_known) {
                 targets.push_back(u.uid);
             }
         }

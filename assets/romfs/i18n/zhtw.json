@@ -2128,6 +2128,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "您稍後可在 工具 → 用戶 → 連結 Nintendo Account 中進行連結。部分遊戲需要連結帳戶才能啟動。",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "當遊戲掛起時，Applet 模式下無法進行連結。請關閉掛起的遊戲，或以已安裝標題啟動 Kefir Hub。",
   "All user profiles are already linked.": "所有使用者設定檔均已連結。",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "無法讀取某個使用者的連結狀態，因此不會重新連結。請先解除連結：工具 → 用戶 → 解除 Nintendo Account 關聯。",
   "Failed to link Nintendo Account.": "連結 Nintendo Account 失敗。",
   "Applying Nintendo Account link": "正在套用 Nintendo Account 連結",
   "Linking account...": "正在連結帳戶...",

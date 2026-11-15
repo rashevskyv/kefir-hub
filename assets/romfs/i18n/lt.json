@@ -551,6 +551,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Galite susieti vėliau dalyje Įrankiai → Vartotojai → Susieti Nintendo Account. Kai kuriems žaidimams paleisti reikia susietos paskyros.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "Susiejimas nepasiekiamas apletų režimu, kai žaidimas yra sustabdytas. Uždarykite sustabdytą žaidimą arba paleiskite Kefir Hub kaip įdiegtą pavadinimą.",
   "All user profiles are already linked.": "Visi vartotojų profiliai jau susieti.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Nepavyko nuskaityti profilio susiejimo būsenos, todėl jis nesusiejamas iš naujo. Pirmiausia atsiekite jį: Įrankiai → Vartotojai → Atsieti Nintendo Account.",
   "Failed to link Nintendo Account.": "Nepavyko susieti Nintendo Account.",
   "Applying Nintendo Account link": "Taikoma Nintendo Account sąsaja",
   "Linking account...": "Paskyra siejama...",

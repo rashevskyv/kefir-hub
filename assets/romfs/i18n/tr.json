@@ -500,6 +500,7 @@
   "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start.": "Daha sonra Araçlar → Kullanıcılar → Nintendo Hesabını Bağla bölümünden bağlayabilirsiniz. Bazı oyunların başlaması için bağlı bir hesap gereklidir.",
   "Linking is unavailable in applet mode while a game is suspended. Please close the suspended game or launch Kefir Hub as an installed title.": "Bir oyun askıdayken applet modunda bağlama işlemi yapılamaz. Lütfen askıdaki oyunu kapatın veya Kefir Hub'ı kurulu bir başlık olarak başlatın.",
   "All user profiles are already linked.": "Tüm kullanıcı profilleri zaten bağlı.",
+  "The link status of a profile could not be read, so it is not linked again. Unlink it first: Tools → Users → Unlink Nintendo Account.": "Bir profilin bağlantı durumu okunamadı, bu yüzden yeniden bağlanmıyor. Önce bağlantısını kaldırın: Araçlar → Kullanıcılar → Nintendo Hesabının Bağlantısını Kes.",
   "Failed to link Nintendo Account.": "Nintendo Hesabı bağlanamadı.",
   "Applying Nintendo Account link": "Nintendo Hesabı bağlantısı uygulanıyor",
   "Linking account...": "Hesap bağlanıyor...",
