@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.392 — MTP Games: delete one update or DLC in a Separate game folder
 Deleting an NSP inside Separate/<game> answered GeneralError (Windows: "device stopped responding"); it now removes only that component through title::DeleteComponent (as Game Details). Deleting an update also resets the launch-required version. Merged entry of the game is rebuilt.
-host tests: pass (quick) | nro: not built | switch: pending (select UPD + DLC in Separate, delete, base stays and starts; Separate and Merged listings correct)
+host tests: pass (quick) | nro: built (local, sent by nxlink) | switch: pending (select UPD + DLC in Separate, delete, base stays and starts; Separate and Merged listings correct)
 
 ## v0.14.391 — Prelude-Nextendo v5.0.1 (robot)
 Hosts +0/-0 lines, patch folders +0/-0.
