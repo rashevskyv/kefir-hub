@@ -4,6 +4,7 @@ Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
 ## unreleased
+chore: prelude-sync clones the Prelude tag with git when the Forgejo archive download fails (HTTP 500 for v5.0.1 on 2026-11-15). Fallback run locally on v5.0.1: checks pass, only the tag changes.
 docs: Homebrew (EN, UK) draft: back from an app on the same folder and row; apps that exit to HOME, HOME → Close and games end the Hub.
 docs: Kefir Settings → Nextendo written out (EN, UK): account, switch on/off, page rows, files, Semi-stock warning, Status messages. Label check 0 unknown, strict build OK; shot kefir-settings-nextendo not taken.
 docs: MTP shot markers and video 02 (script + subtitles) name the Games drive instead of the removed Install (NSP, XCI, NSZ, XCZ) drive.

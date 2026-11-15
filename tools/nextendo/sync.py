@@ -22,8 +22,10 @@ import ipaddress
 import json
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -268,8 +270,16 @@ def fetch(url):
 
 
 def download(tag, into):
-    with zipfile.ZipFile(io.BytesIO(fetch("%s/archive/%s.zip" % (FORGE, tag)))) as zf:
-        zf.extractall(into)
+    if not TAG.match(tag):
+        raise Refused("unexpected tag: " + tag)
+    try:
+        with zipfile.ZipFile(io.BytesIO(fetch("%s/archive/%s.zip" % (FORGE, tag)))) as zf:
+            zf.extractall(into)
+    except urllib.error.HTTPError as e:
+        # the Forgejo answered 500 for every new archive on 2026-11-15 (v5.0.1); a git clone still worked
+        print("archive download failed (%s), cloning the tag" % e, file=sys.stderr)
+        subprocess.run(["git", "-c", "advice.detachedHead=false", "clone", "-q", "--depth", "1", "--branch", tag,
+                        "https://git.nextendo.network/%s.git" % REPO, str(Path(into) / "src")], check=True)
     (top,) = [p for p in Path(into).iterdir() if p.is_dir()]
     return top
 
