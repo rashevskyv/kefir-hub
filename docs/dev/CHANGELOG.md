@@ -5,11 +5,11 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.394 — save backup drops idle MTP Saves mounts first
 A writable MTP mount of a save may lock the backup's read-only open; the backup now calls ReleaseSaveMounts() first (a save the PC has open stays locked). Note on the journal limit in WriteFile. Correction to v0.14.393: tests/run.sh has 2 failures that already fail at v0.14.392 (EN/UK key parity: 3 extra UK keys; archive.org demo fixture is HTML, not JSON); all other suites pass.
-host tests: quick green; full: only the 2 old failures | nro: not built | switch: pending (back up a save the PC browsed over MTP; a file larger than the save journal fails on the PC)
+host tests: quick green; full: only the 2 old failures | nro: built (local compile check; release NRO from CI) | switch: pending (back up a save the PC browsed over MTP; a file larger than the save journal fails on the PC)
 
 ## v0.14.393 — MTP Saves drive is writable again
 The Saves drive (decrypted saves) was read-only since v0.13.864. Saves now mount writable (read-only fallback when the open fails); create, write, resize, rename and delete inside a save commit at once; a write handle commits after close, and a failed commit shows "MTP: a save file was not written" on the console (the PC already got OK). Toggle renamed to "Show saves"; the old read-only label/description keys are replaced in all 26 languages.
-host tests: pass except the old archive.org demo fixture (HTML instead of JSON, unrelated) | nro: not built | switch: pending (copy a file into Saves/<game>/<user>, overwrite, rename, delete; start the game and see the change; running-game save is read-only)
+host tests: pass except the old archive.org demo fixture (HTML instead of JSON, unrelated) | nro: built (local compile check; release NRO from CI) | switch: pending (copy a file into Saves/<game>/<user>, overwrite, rename, delete; start the game and see the change; running-game save is read-only)
 
 ## v0.14.392 — MTP Games: delete one update or DLC in a Separate game folder
 Deleting an NSP inside Separate/<game> answered GeneralError (Windows: "device stopped responding"); it now removes only that component through title::DeleteComponent (as Game Details). Deleting an update also resets the launch-required version. Merged entry of the game is rebuilt.
