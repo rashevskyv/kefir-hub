@@ -10,6 +10,10 @@ docs: MTP shot markers and video 02 (script + subtitles) name the Games drive in
 docs: firmware shots retaken (confirm prompt in the UI language, the manual picker inside a dummy firmware folder from fixtures); shoot.ps1 turns the Hub log off for shots.
 docs: drafts for DBI cache/save tars (install/usb), Update now moved to Updater → Apps (settings, updater); video 06 scenes 3-8 rewritten for the Updater tabs (re-record); guide site (switch-hub, kefir-hub) steps for the tabs.
 
+## v0.14.390 — header: the title starts 40 px from the left edge, as the status block ends 40 px from the right
+The version, title, counter and sub heading started at x=80, the clock/battery block ends at x=1240: the left margin was twice the right one. Now both are 40 px (title_x = SCREEN_WIDTH - bar_right). Docs shots show the old header until retaken.
+host tests: pass (quick) · nro: built · switch: pending (look at the header).
+
 ## v0.14.389 — Users: a profile whose link status cannot be read can be unlinked
 Seen after Nextendo was switched off: the profile showed "Link status unavailable", Link said "All user profiles are already linked." and Unlink said "No linked profiles to unlink.", so nothing could fix it. Unlink now takes such profiles too (rollback copy kept); Link says the status could not be read and to unlink first. New key in all 26 languages (translated by hand, proxy down); docs draft EN/UK.
 host tests: pass (full, except two checks that fail at HEAD too: the archive.org http fixture; EN/UK parity, uk has 3 keys en lacks) · nro: not built · switch: pending (unlink the "Link status unavailable" profile after Nextendo off, then link again).

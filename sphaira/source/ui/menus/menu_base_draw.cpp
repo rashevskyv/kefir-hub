@@ -435,6 +435,9 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         return;
     }
 
+    // the title block starts as far from the left edge as the status block ends from the right one.
+    const float title_x = SCREEN_WIDTH - bar_right;
+
     // Measure version text for positioning on the top row
     nvgFontSize(vg, 14.f);
     char ver_buf[64];
@@ -442,7 +445,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     gfx::textBounds(vg, 0, 0, bounds, ver_buf);
     const float ver_w = bounds[2] - bounds[0];
 
-    gfx::drawTextArgs(vg, 80, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
+    gfx::drawTextArgs(vg, title_x, start_y - 28.f, 14.f, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT_INFO), "v%s", APP_VERSION);
 
     constexpr float GAP_MARGIN = 30.f;
     constexpr float GAP_INNER = 20.f;
@@ -450,7 +453,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     const float gap_right = (draw_status ? m_status_left_x : text_w) - GAP_MARGIN;
 
     float counter_w = 0.f;
-    if (!m_sub_heading.empty() && draw_status && gap_right > 80.f + 100.f) {
+    if (!m_sub_heading.empty() && draw_status && gap_right > title_x + 100.f) {
         // Pin the right edge at gap_right. The slot is as wide as "N / N" for
         // this list so 1/13 vs 2/13 does not shift the counter (or start a
         // 1px scroll because measured width != drawn width).
@@ -468,7 +471,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
                 slot_w = std::max(slot_w, bounds[2] - bounds[0]);
             }
         }
-        counter_w = std::min(slot_w, gap_right - 80.f - 100.f);
+        counter_w = std::min(slot_w, gap_right - title_x - 100.f);
         nvgSave(vg);
         nvgIntersectScissor(vg, gap_right - counter_w, 0.f, counter_w + 1.f, SCREEN_HEIGHT);
         gfx::drawText(vg, gap_right, start_y, 18.f, theme->GetColour(ThemeEntryID_TEXT),
@@ -489,7 +492,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         }
     }
 
-    const float avail_title_w = std::max(50.f, sub_right - 80.f - (stat_w > 0.f ? stat_w + 14.f : 0.f));
+    const float avail_title_w = std::max(50.f, sub_right - title_x - (stat_w > 0.f ? stat_w + 14.f : 0.f));
 
     // Dynamic title scaling: base 28px, reduce up to 40% (min 16.8px), then scroll
     constexpr float BASE_TITLE_FONT = 28.f;
@@ -515,18 +518,18 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     }
 
     if (title_needs_scroll) {
-        m_scroll_title.Draw(vg, true, 80.f, start_y, avail_title_w, title_font_size,
+        m_scroll_title.Draw(vg, true, title_x, start_y, avail_title_w, title_font_size,
             NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), m_title);
     } else {
         m_scroll_title.Reset(m_title);
-        gfx::drawTextArgs(vg, 80.f, start_y, title_font_size,
+        gfx::drawTextArgs(vg, title_x, start_y, title_font_size,
             NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, theme->GetColour(ThemeEntryID_TEXT), "%s", m_title.c_str());
     }
 
     nvgFontSize(vg, title_font_size);
     gfx::textBounds(vg, 0, 0, bounds, m_title.c_str());
     const float rendered_title_w = std::min(bounds[2] - bounds[0], avail_title_w);
-    float title_sub_x = 80.f + rendered_title_w + 10.f;
+    float title_sub_x = title_x + rendered_title_w + 10.f;
 
     if (!m_title_stat_top.empty() || !m_title_stat_bottom.empty()) {
         const auto stat_col = theme->GetColour(ThemeEntryID_TEXT_INFO);
@@ -540,7 +543,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
     if (!m_title_sub_heading.empty()) {
         if (m_title_sub_heading_top_row) {
             // Upper expanded slot after measured version text (10px gap)
-            const float top_left = 80.f + ver_w + 10.f;
+            const float top_left = title_x + ver_w + 10.f;
             const float top_w = gap_right - top_left;
             if (top_w > 0) {
                 m_scroll_title_sub_heading.Draw(vg, true, top_left, start_y - 28.f, top_w, 16,
