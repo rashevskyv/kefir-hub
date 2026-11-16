@@ -7,6 +7,7 @@
 #include "ui/menus/users_menu.hpp"
 #include "ui/menus/trash_menu.hpp"
 #include "ui/menus/save_menu.hpp"
+#include "ui/about_box.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include "ui/nextendo_link_box.hpp"
@@ -185,8 +186,8 @@ void MainMenu::CheckForUpdate() {
                 if (mode == auto_update::Mode::Silent) {
                     auto_update::StartDownload();
                 } else if (mode == auto_update::Mode::Notify && auto_update::ConsumeNotifyPrompt()) {
-                    App::Push<OptionBox>(
-                        "A new version is available. Update now?"_i18n,
+                    auto box = std::make_unique<OptionBox>(
+                        "A new version is available. Update now?"_i18n + "\n" + APP_VERSION + " -> " + version,
                         "Later"_i18n, "Skip this update"_i18n, "Update"_i18n, 2,
                         [ver = std::string(version)](auto op) {
                             if (!op) {
@@ -200,6 +201,10 @@ void MainMenu::CheckForUpdate() {
                             }
                         }
                     );
+                    box->SetExtra("What's new"_i18n, [ver = std::string(version)]() {
+                        App::Push<AboutBox>(std::string{APP_VERSION}, ver);
+                    });
+                    App::Push(std::move(box));
                 } else {
                     log_write("[UpdateCheck] %s available (mode=%ld)\n", version, App::GetAutoUpdateMode());
                 }

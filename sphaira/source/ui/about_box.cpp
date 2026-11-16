@@ -20,10 +20,15 @@ namespace {
 
 constexpr const char* GITHUB_RELEASES_URL{"https://api.github.com/repos/rashevskyv/kefir-hub/releases/latest"};
 constexpr fs::FsPath CACHE_PATH{"/switch/sphaira/cache/sphaira_latest.json"};
+// ponytail: the newest 30 releases; a Hub more than 30 releases behind sees only those
+constexpr const char* GITHUB_RELEASE_LIST_URL{"https://api.github.com/repos/rashevskyv/kefir-hub/releases?per_page=30"};
+constexpr fs::FsPath RELEASE_LIST_CACHE_PATH{"/switch/sphaira/cache/sphaira_releases.json"};
 
 } // namespace
 
-AboutBox::AboutBox() {
+AboutBox::AboutBox(std::string installed, std::string target)
+: m_installed{std::move(installed)}
+, m_target{std::move(target)} {
     m_version_str = "v" + std::string(APP_VERSION);
     m_pos = Vec4{70.f, 42.f, 1140.f, 636.f};
     SetUiButtonPos({m_pos.x + m_pos.w - 30.f, m_pos.y + m_pos.h - 49.f});
@@ -33,7 +38,11 @@ AboutBox::AboutBox() {
             SetPop();
         }}),
         std::make_pair(Button::X, Action{"Refresh notes"_i18n, [this](){
-            FetchLatestChangelog();
+            if (IsWhatsNew()) {
+                FetchReleaseRange();
+            } else {
+                FetchLatestChangelog();
+            }
         }}),
         std::make_pair(Button::UP | Button::LS_UP | Button::RS_UP, Action{static_cast<u8>(ActionType::DOWN | ActionType::HELD), [this](){
             ScrollBy(-SCROLL_STEP);
@@ -49,8 +58,62 @@ AboutBox::AboutBox() {
         }})
     );
 
+    if (IsWhatsNew()) {
+        FetchReleaseRange();
+        return;
+    }
     LoadChangelog();
     RefreshFooterActions();
+}
+
+// every release between the installed and the offered version (the update dialogs' Y button)
+void AboutBox::FetchReleaseRange() {
+    m_loading = true;
+    m_text.clear();
+    m_scroll = 0.f;
+    m_max_scroll = 0.f;
+
+    fs::FsNativeSd().CreateDirectoryRecursively("/switch/sphaira/cache");
+
+    curl::Api().ToFileAsync(
+        curl::Url{GITHUB_RELEASE_LIST_URL},
+        curl::Path{RELEASE_LIST_CACHE_PATH},
+        curl::StopToken{this->GetToken()},
+        curl::Header{
+            { "Accept", "application/vnd.github+json" },
+        },
+        curl::OnComplete{[this](auto& result) {
+            m_loading = false;
+            if (!result.success) {
+                m_text = "Failed to download changelog from GitHub.\nCheck your internet connection and press X to retry."_i18n;
+                return false;
+            }
+
+            auto json = yyjson_read_file(RELEASE_LIST_CACHE_PATH, YYJSON_READ_NOFLAG, nullptr, nullptr);
+            if (!json) {
+                m_text = "Failed to parse release notes."_i18n;
+                return false;
+            }
+            ON_SCOPE_EXIT(yyjson_doc_free(json));
+
+            std::vector<auto_update::ReleaseNote> notes;
+            auto root = yyjson_doc_get_root(json);
+            size_t idx, max;
+            yyjson_val* item;
+            yyjson_arr_foreach(root, idx, max, item) {
+                if (yyjson_get_bool(yyjson_obj_get(item, "prerelease")) || yyjson_get_bool(yyjson_obj_get(item, "draft"))) {
+                    continue;
+                }
+                const char* tag = yyjson_get_str(yyjson_obj_get(item, "tag_name"));
+                const char* body = yyjson_get_str(yyjson_obj_get(item, "body"));
+                if (tag) {
+                    notes.push_back({.tag = tag, .body = body ? body : ""});
+                }
+            }
+            m_text = auto_update::ReleaseNotesBetween(notes, m_installed, m_target);
+            return true;
+        }}
+    );
 }
 
 void AboutBox::Update(Controller* controller, TouchInfo* touch) {
@@ -280,20 +343,22 @@ void AboutBox::Draw(NVGcontext* vg, Theme* theme) {
     gfx::drawRect(vg, m_pos, theme->GetColour(ThemeEntryID_POPUP), 5.f);
 
     // Title
+    const auto title = IsWhatsNew() ? "What's new"_i18n : "About Kefir Hub"_i18n;
     gfx::drawText(vg, m_pos.x + m_pos.w / 2.f, m_pos.y + 24.f, 27.f,
-        theme->GetColour(ThemeEntryID_TEXT_SELECTED), "About Kefir Hub"_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+        theme->GetColour(ThemeEntryID_TEXT_SELECTED), title.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
-    // Version and GitHub Subtitle
+    // Version and GitHub Subtitle (What's new: from which version to which)
     nvgSave(vg);
     nvgFontSize(vg, 16.f);
     nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
 
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-    const std::string ver_display = "Version: "_i18n + m_version_str;
+    const std::string ver_display = IsWhatsNew() ? "Installed: "_i18n + m_installed : "Version: "_i18n + m_version_str;
     nvgText(vg, m_pos.x + 42.f, m_pos.y + 64.f, ver_display.c_str(), nullptr);
 
     nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
-    nvgText(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 64.f, "github.com/rashevskyv/kefir-hub", nullptr);
+    const std::string right = IsWhatsNew() ? "Update"_i18n + ": " + m_target : std::string{"github.com/rashevskyv/kefir-hub"};
+    nvgText(vg, m_pos.x + m_pos.w - 42.f, m_pos.y + 64.f, right.c_str(), nullptr);
     nvgRestore(vg);
 
     // Dividers
@@ -303,7 +368,7 @@ void AboutBox::Draw(NVGcontext* vg, Theme* theme) {
     m_text_area = Vec4{m_pos.x + 42.f, m_pos.y + 108.f, m_pos.w - 96.f, m_pos.h - 188.f};
 
     const auto job_state = static_cast<std::uint8_t>(auto_update::GetJob().state);
-    if (job_state != m_footer_job_state) {
+    if (!IsWhatsNew() && job_state != m_footer_job_state) {
         RefreshFooterActions();
     }
 

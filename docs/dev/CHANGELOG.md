@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.395 — "What's new" (Y) in the Hub update prompts
+Ask prompt: "<installed> -> <new>" line, rows [Skip this update | What's new] / [Later | Update]; Silent restart prompt: [What's new] / [Later | Restart Kefir Hub]. Y opens AboutBox in What's new mode: GitHub release notes of every release after the installed one up to the new one (releases?per_page=30, newest first, English); B returns to the prompt. OptionBox::SetExtra; auto_update::ReleaseNotesBetween (host test). i18n "What's new" in 26 languages.
+host tests: quick green | nro: not built | switch: pending (Ask prompt Y → notes → B back to the prompt; Silent restart prompt Y; D-pad between the rows; a range of several releases)
+
 ## v0.14.394 — save backup drops idle MTP Saves mounts first
 A writable MTP mount of a save may lock the backup's read-only open; the backup now calls ReleaseSaveMounts() first (a save the PC has open stays locked). Note on the journal limit in WriteFile. Correction to v0.14.393: tests/run.sh has 2 failures that already fail at v0.14.392 (EN/UK key parity: 3 extra UK keys; archive.org demo fixture is HTML, not JSON); all other suites pass.
 host tests: quick green; full: only the 2 old failures | nro: built (local compile check; release NRO from CI) | switch: pending (back up a save the PC browsed over MTP; a file larger than the save journal fails on the PC)

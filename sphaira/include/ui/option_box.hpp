@@ -34,6 +34,10 @@ public:
     OptionBox(const std::string& message, const Option& a, const Option& b, const Option& c, s64 index, const Callback& cb, int image = 0, bool own_image = false);
     ~OptionBox();
 
+    // one more button on Y that does not close the box (it opens a screen on top, B there comes back here).
+    // 3 options: it shares the upper row with the middle option; 2 options: it gets the upper row alone.
+    void SetExtra(const std::string& label, std::function<void()> on_select);
+
     auto Update(Controller* controller, TouchInfo* touch) -> void override;
     auto Draw(NVGcontext* vg, Theme* theme) -> void override;
     auto OnFocusGained() noexcept -> void override;
@@ -44,6 +48,8 @@ private:
     auto Setup(s64 index) -> void; // common setup values
     void SetIndex(s64 index);
     void LayoutButtons();
+    void MoveTo(float dx, float dy); // the nearest button in that direction (layout with the extra button)
+    auto HasExtra() const -> bool { return static_cast<bool>(m_on_extra); }
 
 private:
     const std::string m_message;
@@ -56,6 +62,8 @@ private:
 
     s64 m_index{};
     std::vector<OptionBoxEntry> m_entries{};
+    size_t m_base{}; // options that close the box; the extra button, if any, comes after them
+    std::function<void()> m_on_extra{};
     bool m_layout_done{false};
 };
 

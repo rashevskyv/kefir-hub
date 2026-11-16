@@ -7,6 +7,7 @@
 #include "log.hpp"
 #include "nro.hpp"
 #include "path_util.hpp"
+#include "ui/about_box.hpp"
 #include "ui/option_box.hpp"
 #include "ui/progress_box.hpp"
 #include <yyjson.h>
@@ -188,13 +189,18 @@ void Poll() {
         g_ready_prompt = false;
         version = g_job.version;
     }
-    App::Push<ui::OptionBox>(
+    auto box = std::make_unique<ui::OptionBox>(
         "Kefir Hub was updated to"_i18n + " " + version + ".\n\n" + "The new version runs after a restart. Restart now?"_i18n,
         "Later"_i18n, "Restart Kefir Hub"_i18n, 1, [](auto op) {
             if (op && *op == 1) {
                 RestartIntoNew();
             }
         });
+    // the running Hub is still the old version: the notes go from it to the one just installed
+    box->SetExtra("What's new"_i18n, [version]() {
+        App::Push<ui::AboutBox>(std::string{APP_VERSION}, version);
+    });
+    App::Push(std::move(box));
 }
 
 auto ReadRelease(const char* path, Release& out) -> bool {

@@ -53,6 +53,12 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 
 Kefir Hub checks for a new version at start and again whenever the network comes up after the console was offline (not while an update is found, downloading or installed). With [[Silent]], a new version found at start (with internet) downloads in the background right away. The [[Updating]] window title shows the old and the new version ("0.14.160 -> 0.14.161"); the lines under it say only [[Downloading]] and [[Installing]]. An update you accepted on screen ([[Ask]] → [[Update]], or [[Update Kefir Hub]] in [[About]]) restarts Kefir Hub by itself when it is installed. A [[Silent]] update asks when it is ready: [[Kefir Hub was updated to]] <version>, [[The new version runs after a restart. Restart now?]] with [[Later]] / [[Restart Kefir Hub]]. The new version is used on the next launch, and [[Update now]] then shows [[Ready — restart]].
 
+<!-- draft (v0.14.395): What's new in the restart prompt
+- The [[Silent]] restart prompt has a third button on the upper row: [[What's new]] (**Y**). Lower row: [[Later]] | [[Restart Kefir Hub]].
+- [[What's new]] shows the release notes from the running version up to the one just installed (English). **B** returns to the restart prompt.
+- The [[Ask]] prompt has the same button; see Updater → Kefir Hub update.
+-->
+
 The [[About]] window shows the version, the release notes, and a button to [[Update Kefir Hub]] or [[Restart Kefir Hub]] when a newer version is available or already downloaded. Press **X** ([[Refresh notes]]) if the notes did not load.
 
 <!-- shot: settings-about | About Kefir Hub window with version and release notes -->

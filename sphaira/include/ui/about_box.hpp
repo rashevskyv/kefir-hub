@@ -8,7 +8,8 @@ namespace sphaira::ui {
 
 class AboutBox final : public Widget {
 public:
-    AboutBox();
+    // with a target: "What's new", the notes of every release after `installed` up to `target`
+    explicit AboutBox(std::string installed = {}, std::string target = {});
 
     void Update(Controller* controller, TouchInfo* touch) override;
     void Draw(NVGcontext* vg, Theme* theme) override;
@@ -22,12 +23,16 @@ private:
 
     void LoadChangelog();
     void FetchLatestChangelog();
+    void FetchReleaseRange();
+    auto IsWhatsNew() const -> bool { return !m_target.empty(); }
     void ApplyRelease(const char* tag, const char* body, const std::string& download_url);
     void RefreshFooterActions();
     void ScrollBy(float amount);
     void DrawChangelogText(NVGcontext* vg, Theme* theme);
 
     std::string m_title{"About Kefir Hub"};
+    const std::string m_installed;
+    const std::string m_target;
     std::string m_version_str;
     std::string m_text;
     Vec4 m_text_area{};

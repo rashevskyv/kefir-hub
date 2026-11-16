@@ -211,7 +211,13 @@ With [[Ask]], this prompt appears once per launch when a new version exists:
 - [[Skip this update]] — do not ask about this version again.
 - [[Update]] — download and install now. When it finishes, restart Kefir Hub.
 
-<!-- shot: updater-hub-update-prompt | "A new version is available. Update now?" prompt with Later / Skip this update / Update -->
+<!-- draft (v0.14.395): What's new in the update prompt
+- The prompt shows "<installed> -> <new>" under the question. Upper row: [[Skip this update]] | [[What's new]]; lower row: [[Later]] | [[Update]].
+- **Y** (or [[What's new]] + **A**) opens the [[What's new]] screen: the release notes of every version after the installed one up to the new one, newest first. Subtitle: [[Installed: ]] <version> and [[Update]]: <version>. **X** reloads the notes.
+- **B** on that screen returns to the same prompt. The notes are in English (GitHub release notes).
+-->
+
+<!-- shot: updater-hub-update-prompt | "A new version is available. Update now?" prompt with Skip this update / What's new on the upper row and Later / Update on the lower row (retake) -->
 
 The update replaces the Kefir Hub file you started. If [[Replace hbmenu on exit]] is on, `/hbmenu.nro` is replaced too.
 

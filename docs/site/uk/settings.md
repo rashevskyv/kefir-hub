@@ -45,6 +45,12 @@ Kefir Hub перевіряє наявність нової версії під �
 - Оновлення, яке ви прийняли на екрані ([[Ask]] → [[Update]] або [[Update Kefir Hub]] в [[About]]), після встановлення саме перезапускає Kefir Hub.
 - Тихе оновлення ([[Silent]]) питає, коли воно готове: [[Kefir Hub was updated to]] <версія>, [[The new version runs after a restart. Restart now?]] з варіантами [[Later]] / [[Restart Kefir Hub]].
 
+<!-- draft (v0.14.395): What's new in the restart prompt
+- The [[Silent]] restart prompt has a third button on the upper row: [[What's new]] (**Y**). Lower row: [[Later]] | [[Restart Kefir Hub]].
+- [[What's new]] shows the release notes from the running version up to the one just installed (English). **B** returns to the restart prompt.
+- The [[Ask]] prompt has the same button; see Updater → Kefir Hub update.
+-->
+
 **Де:** [[Settings]] → [[General]] → [[Auto-update]]
 
 | Параметр | Що робить | Типово |

@@ -83,7 +83,35 @@ static int test_install_destination() {
     return 0;
 }
 
+// What's new: only the releases between the installed and the offered version, newest first, own titles dropped
+static int test_release_notes_between() {
+    const std::vector<auto_update::ReleaseNote> releases = {
+        { .tag = "0.14.391", .body = "# Kefir Hub 0.14.391\r\n\r\nUpdate from 0.14.378.\r\n\r\n### Saves\r\n- old" },
+        { .tag = "0.14.394", .body = "# Kefir Hub 0.14.394\n\nUpdate from 0.14.391.\n\n### USB and MTP\n- saves writable" },
+        { .tag = "0.14.395", .body = "### Later\n- not offered yet" },
+        { .tag = "0.14.392", .body = "### Games\n- delete one DLC" },
+        { .tag = "0.14.393", .body = "" },
+    };
+    const auto text = auto_update::ReleaseNotesBetween(releases, "0.14.391", "0.14.394");
+    CHECK(text.find("0.14.391") == std::string::npos);
+    CHECK(text.find("0.14.395") == std::string::npos);
+    CHECK(text.find("not offered") == std::string::npos);
+    CHECK(text.find("Update from") == std::string::npos);
+    CHECK(text.find("# Kefir Hub 0.14.394\n") == 0);
+    const auto p394 = text.find("saves writable");
+    const auto p393 = text.find("# Kefir Hub 0.14.393\n");
+    const auto p392 = text.find("delete one DLC");
+    CHECK(p394 != std::string::npos && p393 != std::string::npos && p392 != std::string::npos);
+    CHECK(p394 < p393 && p393 < p392);
+    // the body's own title is replaced, not repeated
+    CHECK(text.find("# Kefir Hub 0.14.394", 1) == std::string::npos);
+    CHECK(text.find('\r') == std::string::npos);
+    CHECK(auto_update::ReleaseNotesBetween(releases, "0.14.394", "0.14.394").empty());
+    return 0;
+}
+
 int main() {
+    if (test_release_notes_between() != 0) return 1;
     if (test_empty_assets() != 0) return 1;
     if (test_exact_nro_match() != 0) return 1;
     if (test_fallback_nro_match() != 0) return 1;

@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cstring>
 
+#include "version_compare.hpp"
+
 #ifdef __SWITCH__
 #include "fs.hpp"
 #endif
@@ -51,6 +53,63 @@ struct Release {
     std::string body{};
     std::vector<ReleaseAsset> assets{};
 };
+
+// one entry of a GitHub "releases" list, for the What's new screen
+struct ReleaseNote {
+    std::string tag{};
+    std::string body{};
+};
+
+// What the user gets going from `installed` to `target`: every release newer than installed and not newer than
+// target, newest first, each under a "# Kefir Hub <tag>" heading. The body's own "# ..." title and its
+// "Update from X." line are dropped (the screen shows the range above the text).
+inline auto ReleaseNotesBetween(std::span<const ReleaseNote> releases, const std::string& installed, const std::string& target) -> std::string {
+    std::vector<const ReleaseNote*> picked;
+    for (const auto& r : releases) {
+        if (version::IsNewer(installed, r.tag) && !version::IsNewer(target, r.tag)) {
+            picked.push_back(&r);
+        }
+    }
+    std::stable_sort(picked.begin(), picked.end(), [](const ReleaseNote* a, const ReleaseNote* b) {
+        return version::IsNewer(b->tag, a->tag);
+    });
+
+    std::string out;
+    for (const auto* r : picked) {
+        if (!out.empty()) {
+            out += "\n";
+        }
+        out += "# Kefir Hub " + r->tag + "\n";
+        bool seen_text = false;
+        size_t pos = 0;
+        while (pos < r->body.size()) {
+            auto end = r->body.find('\n', pos);
+            if (end == std::string::npos) {
+                end = r->body.size();
+            }
+            std::string_view line{r->body.data() + pos, end - pos};
+            if (line.ends_with('\r')) {
+                line.remove_suffix(1);
+            }
+            pos = end + 1;
+            if (!seen_text) {
+                if (line.empty()) {
+                    continue;
+                }
+                seen_text = true;
+                if (line.starts_with("# ")) {
+                    continue;
+                }
+            }
+            if (line.starts_with("Update from ")) {
+                continue;
+            }
+            out.append(line);
+            out += '\n';
+        }
+    }
+    return out;
+}
 
 inline std::string ToLower(std::string_view str) {
     std::string result;

@@ -3,6 +3,7 @@
 #include "app.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace sphaira::ui {
 namespace {
@@ -249,7 +250,7 @@ auto OptionBox::Draw(NVGcontext* vg, Theme* theme) -> void {
             m_button_yoff = std::max(190.f, m_button_yoff);
         }
 
-        const float button_rows = m_entries.size() == 3 ? 2.f : 1.f;
+        const float button_rows = (m_base == 3 || HasExtra()) ? 2.f : 1.f;
         m_pos.h = m_button_yoff + OPTION_BUTTON_HEIGHT * button_rows;
         m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
         LayoutButtons();
@@ -319,6 +320,31 @@ void OptionBox::LayoutButtons() {
     box.y += m_button_yoff;
     box.h -= m_button_yoff;
 
+    if (HasExtra()) {
+        // upper row: [middle option | extra] for 3 options, [extra] alone otherwise; lower row: the first and last option
+        Vec4 top = box;
+        top.h = OPTION_BUTTON_HEIGHT;
+        if (m_base == 3) {
+            top.w *= 0.5f;
+            m_entries[1].UpdateLayout(top);
+            top.x += top.w;
+        }
+        m_entries[m_base].UpdateLayout(top);
+
+        Vec4 bot = box;
+        bot.y += OPTION_BUTTON_HEIGHT;
+        bot.h = OPTION_BUTTON_HEIGHT;
+        if (m_base > 1) {
+            bot.w *= 0.5f;
+        }
+        m_entries[0].UpdateLayout(bot);
+        bot.x += bot.w;
+        if (m_base > 1) {
+            m_entries[m_base - 1].UpdateLayout(bot);
+        }
+        return;
+    }
+
     if (m_entries.size() == 1) {
         m_entries[0].UpdateLayout(box);
         return;
@@ -347,12 +373,17 @@ void OptionBox::LayoutButtons() {
 }
 
 auto OptionBox::Setup(s64 index) -> void {
+    m_base = m_entries.size();
     m_index = std::min<s64>(m_entries.size() - 1, index);
     m_entries[m_index].Selected(true);
     LayoutButtons();
 
     SetActions(
         std::make_pair(Button::LEFT, Action{[this](){
+            if (HasExtra()) {
+                MoveTo(-1.f, 0.f);
+                return;
+            }
             if (m_entries.size() == 3) {
                 if (m_index == 2) {
                     SetIndex(0);
@@ -366,6 +397,10 @@ auto OptionBox::Setup(s64 index) -> void {
             }
         }}),
         std::make_pair(Button::RIGHT, Action{[this](){
+            if (HasExtra()) {
+                MoveTo(1.f, 0.f);
+                return;
+            }
             if (m_entries.size() == 3) {
                 if (m_index == 0) {
                     SetIndex(2);
@@ -379,21 +414,33 @@ auto OptionBox::Setup(s64 index) -> void {
             }
         }}),
         std::make_pair(Button::UP, Action{[this](){
+            if (HasExtra()) {
+                MoveTo(0.f, -1.f);
+                return;
+            }
             if (m_entries.size() == 3 && m_index != 1) {
                 SetIndex(1);
             }
         }}),
         std::make_pair(Button::DOWN, Action{[this](){
+            if (HasExtra()) {
+                MoveTo(0.f, 1.f);
+                return;
+            }
             if (m_entries.size() == 3 && m_index == 1) {
                 SetIndex(2);
             }
         }}),
         std::make_pair(Button::A, Action{[this](){
+            if (static_cast<size_t>(m_index) >= m_base) {
+                m_on_extra();
+                return;
+            }
             m_callback(m_index);
             SetPop();
         }}),
         std::make_pair(Button::B, Action{[this](){
-            if (m_entries.size() >= 2) {
+            if (m_base >= 2) {
                 m_callback(0);
             } else {
                 m_callback({});
@@ -401,18 +448,52 @@ auto OptionBox::Setup(s64 index) -> void {
             SetPop();
         }}),
         std::make_pair(Button::SELECT, Action{[this](){
-            if (m_entries.size() == 3) {
+            if (m_base == 3) {
                 m_callback(1);
                 SetPop();
             }
         }}),
         std::make_pair(Button::START, Action{[this](){
-            if (m_entries.size() >= 2) {
-                m_callback(static_cast<s64>(m_entries.size() - 1));
+            if (m_base >= 2) {
+                m_callback(static_cast<s64>(m_base - 1));
                 SetPop();
             }
         }})
     );
+}
+
+void OptionBox::SetExtra(const std::string& label, std::function<void()> on_select) {
+    m_on_extra = std::move(on_select);
+    m_entries.emplace_back(AddGlyphIfMissing(label, "\uE0E3"), m_pos); // Y
+    LayoutButtons();
+    SetAction(Button::Y, Action{[this](){
+        m_on_extra();
+    }});
+}
+
+void OptionBox::MoveTo(float dx, float dy) {
+    const auto& cur = m_entries[m_index].GetPos();
+    const float cx = cur.x + cur.w / 2.f;
+    const float cy = cur.y + cur.h / 2.f;
+    s64 best = -1;
+    float best_d = 0.f;
+    for (s64 i = 0; i < static_cast<s64>(m_entries.size()); i++) {
+        const auto& p = m_entries[i].GetPos();
+        const float ox = p.x + p.w / 2.f - cx;
+        const float oy = p.y + p.h / 2.f - cy;
+        // left/right stay in the row, up/down go to the other row
+        if ((dx != 0.f && (ox * dx <= 1.f || std::abs(oy) > 1.f)) || (dy != 0.f && oy * dy <= 1.f)) {
+            continue;
+        }
+        const float d = std::abs(ox) + std::abs(oy);
+        if (best < 0 || d < best_d) {
+            best = i;
+            best_d = d;
+        }
+    }
+    if (best >= 0) {
+        SetIndex(best);
+    }
 }
 
 void OptionBox::SetIndex(s64 index) {

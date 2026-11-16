@@ -2089,6 +2089,7 @@
   "Launch now?": "今すぐ起動しますか？",
   "Close picker": "ピッカーを閉じる",
   "Refresh notes": "ノートを更新",
+  "What's new": "新機能",
   "Update Kefir Hub": "Kefir Hubをアップデート",
   "Delete installed interface translation files.": "インストールされたインターフェース翻訳ファイルを削除します。",
   "This removes installed system interface translation files.\n\nHold A to continue.": "インストールされたシステムインターフェースの翻訳ファイルを削除します。\n\nAボタンを長押しして続行してください。",
