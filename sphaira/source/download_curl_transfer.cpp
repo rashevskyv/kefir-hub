@@ -8,6 +8,21 @@
 #include <ranges>
 
 namespace sphaira::curl {
+namespace {
+struct ResumeProgress {
+    const Api* api;
+    const DataStruct* chunk;
+};
+
+// after a resume libcurl counts only the requested range (dlnow from 0, dltotal = the rest);
+// add the bytes already on disk so callers see the whole file, not 80% -> 0% -> 100%.
+auto ResumeProgressCallback(void* p, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) -> int {
+    const auto rp = static_cast<const ResumeProgress*>(p);
+    const curl_off_t base = rp->chunk->resume_offset;
+    return ProgressCallbackFunc2(const_cast<Api*>(rp->api), dltotal > 0 ? dltotal + base : 0, dlnow + base, ultotal, ulnow);
+}
+} // namespace
+
 void SetCommonCurlOptions(CURL* curl, const Api& e) {
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_USERAGENT, APP_USER_AGENT);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -179,6 +194,10 @@ auto DownloadInternal(CURL* curl, const Api& e) -> ApiResult {
     // write calls.
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_WRITEFUNCTION, has_file ? WriteFileCallback : WriteMemoryCallback);
     CURL_EASY_SETOPT_LOG(curl, CURLOPT_WRITEDATA, &chunk);
+
+    const ResumeProgress resume_progress{&e, &chunk};
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFODATA, &resume_progress);
+    CURL_EASY_SETOPT_LOG(curl, CURLOPT_XFERINFOFUNCTION, ResumeProgressCallback);
 
     // Retry interrupted HTTP file downloads. Only bytes already persisted in the
     // temporary file are used as the resume point; any in-memory tail is discarded.

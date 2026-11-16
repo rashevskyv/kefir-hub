@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.396 — download progress no longer jumps back after a resumed retry
+After a retry with Range resume libcurl reports only the rest of the file (dlnow from 0, dltotal = remainder; checked with libcurl 8.5 on the real 19.9 MB release NRO), so the Silent update header bar went 80% -> 0% -> 100% and back and forth on every retry. DownloadInternal now adds the bytes already on disk to both values before any OnProgress (Silent bar, ProgressBox, download jobs).
+host tests: quick green | nro: not built | switch: pending (Silent update on weak Wi-Fi: the bar only grows; log has "[CURL] download attempt N failed" when a retry happened)
+
 ## v0.14.395 — "What's new" (Y) in the Hub update prompts
 Ask prompt: "<installed> -> <new>" line, rows [Skip this update | What's new] / [Later | Update]; Silent restart prompt: [What's new] / [Later | Restart Kefir Hub]. Y opens AboutBox in What's new mode: GitHub release notes of every release after the installed one up to the new one (releases?per_page=30, newest first, English); B returns to the prompt. OptionBox::SetExtra; auto_update::ReleaseNotesBetween (host test). i18n "What's new" in 26 languages.
 host tests: quick green | nro: built, sent to the console (nxlink) | switch: pending (Ask prompt Y → notes → B back to the prompt; Silent restart prompt Y; D-pad between the rows; a range of several releases)
