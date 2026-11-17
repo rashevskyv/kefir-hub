@@ -403,7 +403,7 @@ void DbiDetailsMenu::ShowCurrentActions() {
                 }, "Create a new save data slot for a local user."_i18n)->SetIcon(ActionIcon::Save);
 
                 options->Add<SidebarEntryCallback>("Backup and restore"_i18n, [app_id = CurrentEntry().app_id](){
-                    App::Push<save::Menu>(MenuFlag_None, app_id);
+                    save::OpenWhenAutoBackupEnds([app_id](){ App::Push<save::Menu>(MenuFlag_None, app_id); });
                 }, "Open the saves menu showing only this game."_i18n);
             }
             return;
@@ -467,7 +467,7 @@ void DbiDetailsMenu::ShowCurrentActions() {
             ON_SCOPE_EXIT(App::Push(std::move(options)));
 
             options->Add<SidebarEntryCallback>("Backup and restore"_i18n, [app_id = CurrentEntry().app_id](){
-                App::Push<save::Menu>(MenuFlag_None, app_id);
+                save::OpenWhenAutoBackupEnds([app_id](){ App::Push<save::Menu>(MenuFlag_None, app_id); });
             }, "Open the saves menu showing only this game."_i18n);
 
             options->Add<SidebarEntryCallback>("Increase save size"_i18n, [this, row](){

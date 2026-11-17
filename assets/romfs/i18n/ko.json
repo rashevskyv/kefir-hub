@@ -2863,6 +2863,7 @@
   "Trash: old items removed: ": "휴지통: 오래된 항목 삭제됨: ",
   "Saves backed up: ": "백업된 세이브: ",
   "Auto backup of changed saves": "변경된 세이브 자동 백업",
+  "Auto backup of saves is running. Wait until it ends.": "세이브 데이터 자동 백업이 진행 중입니다. 끝날 때까지 기다려 주세요.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Hub를 시작할 때마다 변경된 세이브 복사, 업로드, 크기 제한, 제외할 게임.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Hub를 시작할 때마다 마지막 백업 이후 변경된 세이브를 복사합니다. 새 복사본이 이전 자동 복사본을 대체합니다.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "백업과 공유: 수동이든 자동이든 새 백업을 모두 세이브 동기화 위치에 업로드합니다.",

@@ -47,13 +47,13 @@ auto CreateTexture(NVGcontext* vg, const u8* data, std::size_t size) -> int {
 SaveHubMenu::SaveHubMenu(u32 flags) : MenuBase{"Saves"_i18n, flags} {
     m_items = {
         { "Installed Games"_i18n, "View and manage saves for currently installed games."_i18n, 0, [](){
-            App::Push<ui::menu::save::Menu>(MenuFlag_None, 0, ui::menu::save::Category::Installed);
+            ui::menu::save::OpenWhenAutoBackupEnds([](){ App::Push<ui::menu::save::Menu>(MenuFlag_None, 0, ui::menu::save::Category::Installed); });
         }},
         { "Deleted Games"_i18n, "View and manage saves for uninstalled games."_i18n, 0, [](){
-            App::Push<ui::menu::save::Menu>(MenuFlag_None, 0, ui::menu::save::Category::Deleted);
+            ui::menu::save::OpenWhenAutoBackupEnds([](){ App::Push<ui::menu::save::Menu>(MenuFlag_None, 0, ui::menu::save::Category::Deleted); });
         }},
         { "Backups"_i18n, "Browse and restore save backups on SD and external storage."_i18n, 0, [](){
-            App::Push<ui::menu::save::Menu>(MenuFlag_None, 0, ui::menu::save::Category::Backups);
+            ui::menu::save::OpenWhenAutoBackupEnds([](){ App::Push<ui::menu::save::Menu>(MenuFlag_None, 0, ui::menu::save::Category::Backups); });
         }},
     };
 

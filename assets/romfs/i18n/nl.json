@@ -2863,6 +2863,7 @@
   "Trash: old items removed: ": "Prullenbak: oude items verwijderd: ",
   "Saves backed up: ": "Opslagbestanden geback-upt: ",
   "Auto backup of changed saves": "Automatische back-up van gewijzigde opslagbestanden",
+  "Auto backup of saves is running. Wait until it ends.": "De automatische back-up van opgeslagen spellen loopt. Wacht tot die klaar is.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Gewijzigde saves kopiëren bij elke start van de Hub, uploaden, groottelimiet en uitgesloten games.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Bij elke start van de Hub worden de saves gekopieerd die sinds hun laatste back-up zijn gewijzigd. De nieuwe kopie vervangt de oudere automatische.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Gedeeld met Back-up: elke nieuwe back-up, handmatig of automatisch, wordt geüpload naar de synclocatie voor saves.",

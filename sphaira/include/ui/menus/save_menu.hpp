@@ -383,6 +383,8 @@ private:
 // on Hub start: a corner badge copies the saves that changed since their last backup (Saves settings → Auto backup;
 // the settings page is settings::BuildAutoBackupItems in save_auto_backup.cpp).
 void StartAutoBackup();
+// opens the saves list now, or, while the auto backup runs, after it ends (a box says so; B gives up).
+void OpenWhenAutoBackupEnds(std::function<void()> open);
 // asks a running auto backup to stop after the save it copies now; false when none runs.
 auto StopAutoBackup() -> bool;
 

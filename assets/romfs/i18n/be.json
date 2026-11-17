@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Сметніца: выдалена старых запісаў: ",
   "Saves backed up: ": "Скапіявана захаванняў: ",
   "Auto backup of changed saves": "Аўтакопія змененых захаванняў",
+  "Auto backup of saves is running. Wait until it ends.": "Ідзе аўтаматычнае рэзервовае капіраванне захаванняў. Пачакайце, пакуль яно скончыцца.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Капіраваць змененыя захаванні пры кожным запуску Hub, запампоўваць іх, ліміт памеру і выключаныя гульні.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Пры кожным запуску Hub капіюе захаванні, якія змяніліся з іх апошняй рэзервовай копіі. Новая копія замяняе старэйшую аўтаматычную.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Агульная з рэзервовым капіраваннем: кожная новая копія, ручная ці аўтаматычная, запампоўваецца ў месца сінхранізацыі захаванняў.",

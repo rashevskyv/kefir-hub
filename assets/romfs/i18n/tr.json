@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Çöp Kutusu: eski öğeler kaldırıldı: ",
   "Saves backed up: ": "Yedeklenen kayıtlar: ",
   "Auto backup of changed saves": "Değişen kayıtların otomatik yedeği",
+  "Auto backup of saves is running. Wait until it ends.": "Kayıtların otomatik yedeklemesi sürüyor. Bitene kadar bekleyin.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Değişen kayıtları her Hub açılışında kopyala, yükle, boyut sınırı ve hariç tutulan oyunlar.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Hub her açıldığında, son yedeklerinden bu yana değişen kayıtları kopyalar. Yeni kopya eski otomatik kopyanın yerini alır.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Yedekleme ile ortak: manuel ya da otomatik her yeni yedek, kayıt eşitleme konumuna yüklenir.",

@@ -2863,6 +2863,7 @@
   "Trash: old items removed: ": "ゴミ箱：古い項目を削除しました：",
   "Saves backed up: ": "バックアップしたセーブデータ：",
   "Auto backup of changed saves": "変更されたセーブデータの自動バックアップ",
+  "Auto backup of saves is running. Wait until it ends.": "セーブデータの自動バックアップを実行中です。終わるまでお待ちください。",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Hub の起動ごとに変更されたセーブをコピー、アップロード、サイズ上限、除外するゲーム。",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Hub の起動ごとに、前回のバックアップ以降に変更されたセーブをコピーします。新しいコピーは古い自動コピーを置き換えます。",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "バックアップと共通：手動・自動を問わず、新しいバックアップをセーブ同期先にアップロードします。",

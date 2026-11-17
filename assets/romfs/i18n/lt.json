@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Šiukšlinė: pašalinta senų įrašų: ",
   "Saves backed up: ": "Nukopijuota išsaugojimų: ",
   "Auto backup of changed saves": "Pakitusių išsaugojimų automatinė kopija",
+  "Auto backup of saves is running. Wait until it ends.": "Vyksta automatinė išsaugojimų atsarginė kopija. Palaukite, kol ji baigsis.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Kopijuoti pakeistus išsaugojimus kiekvieną kartą paleidus Hub, juos įkelti, dydžio riba ir neįtraukti žaidimai.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Kiekvieną kartą paleidus Hub, nukopijuojami išsaugojimai, pasikeitę nuo paskutinės jų atsarginės kopijos. Nauja kopija pakeičia senesnę automatinę.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Bendra su atsargine kopija: kiekviena nauja kopija, rankinė ar automatinė, įkeliama į išsaugojimų sinchronizavimo vietą.",

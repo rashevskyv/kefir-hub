@@ -2864,6 +2864,7 @@
   "Trash: old items removed: ": "Papelera: elementos antiguos eliminados: ",
   "Saves backed up: ": "Partidas respaldadas: ",
   "Auto backup of changed saves": "Respaldo automático de partidas modificadas",
+  "Auto backup of saves is running. Wait until it ends.": "Se está haciendo la copia de seguridad automática de las partidas. Espera a que termine.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Respaldar las partidas cambiadas en cada inicio del Hub, subirlas, límite de tamaño y juegos excluidos.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Cada vez que se inicia el Hub, respalda las partidas que cambiaron desde su último respaldo. El respaldo nuevo reemplaza al automático anterior.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Compartido con el respaldo: cada respaldo nuevo, manual o automático, se sube a la ubicación de sincronización de partidas.",

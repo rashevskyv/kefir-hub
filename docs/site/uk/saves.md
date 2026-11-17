@@ -236,6 +236,7 @@ Kefir Hub бере:
 - the copies are normal backups on the [[Backups]] tab (`/dumps`); one automatic copy per save: the new copy replaces the older automatic one (the old file is deleted, not moved to the Trash); an empty save keeps its last copy
 - the first start copies every save, later starts only the changed ones; it stops when less than 2 GB is free; a save that a suspended game holds is copied on a later start
 - an install over MTP or the network stops it after the save it copies now; the install then starts (the other saves are copied at the next Hub start)
+- (v0.14.397) while it runs, opening a saves list ([[Installed Games]], [[Deleted Games]], [[Backups]], [[Tools]] → [[Saves]], or [[Backup and restore]] of a game) shows a box [[Auto backup of changed saves]]: [[Auto backup of saves is running. Wait until it ends.]] The list opens by itself when the auto backup ends; **B** closes the box and the list does not open. Before, a backup or restore started then failed
 -->
 
 ## Синхронізація з WebDAV

@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Kosz: usunięto stare elementy: ",
   "Saves backed up: ": "Skopiowano zapisy: ",
   "Auto backup of changed saves": "Automatyczna kopia zmienionych zapisów",
+  "Auto backup of saves is running. Wait until it ends.": "Trwa automatyczna kopia zapasowa zapisów. Poczekaj, aż się zakończy.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Kopiowanie zmienionych zapisów przy każdym uruchomieniu Hub, wysyłanie, limit rozmiaru i wykluczone gry.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Przy każdym uruchomieniu Hub kopiuje zapisy zmienione od ich ostatniej kopii zapasowej. Nowa kopia zastępuje starszą automatyczną.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Wspólne z kopią zapasową: każda nowa kopia, ręczna lub automatyczna, jest wysyłana do miejsca synchronizacji zapisów.",

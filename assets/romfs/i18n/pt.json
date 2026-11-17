@@ -2890,6 +2890,7 @@
   "Trash: old items removed: ": "Lixo: itens antigos removidos: ",
   "Saves backed up: ": "Dados guardados copiados: ",
   "Auto backup of changed saves": "Cópia automática de dados guardados alterados",
+  "Auto backup of saves is running. Wait until it ends.": "A cópia de segurança automática dos jogos guardados está em curso. Aguarde até terminar.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Copiar os dados guardados alterados a cada arranque do Hub, enviá-los, limite de tamanho e jogos excluídos.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "A cada arranque do Hub, copia os dados guardados alterados desde a sua última cópia de segurança. A nova cópia substitui a cópia automática anterior.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Partilhado com a cópia de segurança: cada nova cópia, manual ou automática, é enviada para o local de sincronização de dados guardados.",

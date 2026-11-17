@@ -2863,6 +2863,7 @@
   "Trash: old items removed: ": "Papperskorgen: gamla objekt borttagna: ",
   "Saves backed up: ": "Sparfiler säkerhetskopierade: ",
   "Auto backup of changed saves": "Automatisk säkerhetskopia av ändrade sparfiler",
+  "Auto backup of saves is running. Wait until it ends.": "Automatisk säkerhetskopiering av sparfiler pågår. Vänta tills den är klar.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Kopiera ändrade sparfiler vid varje start av Hub, ladda upp dem, storleksgräns och undantagna spel.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Vid varje start av Hub kopieras sparfiler som ändrats sedan deras senaste säkerhetskopia. Den nya kopian ersätter den äldre automatiska.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Delas med säkerhetskopieringen: varje ny säkerhetskopia, manuell eller automatisk, laddas upp till synkplatsen för sparfiler.",

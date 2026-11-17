@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.397 — Saves wait for the running auto backup
+Opening a saves list (Saves hub tiles, Tools → Saves, a game's Backup and restore) while the auto backup of changed saves runs now shows a wait box ("Auto backup of saves is running. Wait until it ends."); the list opens when the auto backup ends, B gives up. Before, a manual backup started then failed. New string in all 26 languages.
+host tests: quick green; full run has 2 old failures, not from this change (EN/UK key parity 4324 vs 4327 at HEAD; demo http fixture archive.org/.../Best NES Games.zip/index is not JSON, unchanged since Oct 31) | nro: not built | switch: pending (start the Hub with changed saves, open Saves → Installed Games at once: the box waits, then the list opens; B closes the box)
+
 ## v0.14.396 — download progress no longer jumps back after a resumed retry
 After a retry with Range resume libcurl reports only the rest of the file (dlnow from 0, dltotal = remainder; checked with libcurl 8.5 on the real 19.9 MB release NRO), so the Silent update header bar went 80% -> 0% -> 100% and back and forth on every retry. DownloadInternal now adds the bytes already on disk to both values before any OnProgress (Silent bar, ProgressBox, download jobs).
 host tests: quick green | nro: built, sent to the console (nxlink) | switch: pending (Silent update on weak Wi-Fi: the bar only grows; log has "[CURL] download attempt N failed" when a retry happened)

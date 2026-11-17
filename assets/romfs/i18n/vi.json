@@ -2863,6 +2863,7 @@
   "Trash: old items removed: ": "Thùng rác: đã xóa mục cũ: ",
   "Saves backed up: ": "Đã sao lưu dữ liệu lưu: ",
   "Auto backup of changed saves": "Tự động sao lưu dữ liệu lưu đã thay đổi",
+  "Auto backup of saves is running. Wait until it ends.": "Đang tự động sao lưu dữ liệu lưu. Hãy đợi đến khi hoàn tất.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Sao chép dữ liệu lưu đã thay đổi mỗi lần Hub khởi động, tải lên, giới hạn kích thước và trò chơi bị loại trừ.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Mỗi lần Hub khởi động, sao chép các dữ liệu lưu đã thay đổi kể từ bản sao lưu gần nhất của chúng. Bản sao mới thay thế bản sao tự động cũ hơn.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Dùng chung với Sao lưu: mọi bản sao lưu mới, thủ công hay tự động, đều được tải lên vị trí đồng bộ dữ liệu lưu.",

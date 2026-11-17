@@ -2864,6 +2864,7 @@
   "Trash: old items removed: ": "Papierkorb: alte Einträge entfernt: ",
   "Saves backed up: ": "Spielstände gesichert: ",
   "Auto backup of changed saves": "Automatische Sicherung geänderter Spielstände",
+  "Auto backup of saves is running. Wait until it ends.": "Die automatische Sicherung der Spielstände läuft. Warte, bis sie beendet ist.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Geänderte Spielstände bei jedem Hub-Start kopieren, hochladen, Größenlimit und ausgeschlossene Spiele.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Bei jedem Start des Hub werden die Spielstände kopiert, die sich seit ihrer letzten Sicherung geändert haben. Die neue Kopie ersetzt die ältere automatische.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Gemeinsam mit der Sicherung: Jede neue Sicherung, manuell oder automatisch, wird zum Speicherort für die Spielstand-Synchronisierung hochgeladen.",

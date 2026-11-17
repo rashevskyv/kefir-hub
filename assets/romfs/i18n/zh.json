@@ -2916,6 +2916,7 @@
   "Trash: old items removed: ": "回收站：已删除旧项目：",
   "Saves backed up: ": "已备份存档：",
   "Auto backup of changed saves": "自动备份已更改的存档",
+  "Auto backup of saves is running. Wait until it ends.": "正在自动备份存档。请等待其完成。",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "每次启动 Hub 时复制有更改的存档、上传、大小限制和排除的游戏。",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "每次启动 Hub 时，复制自上次备份以来有更改的存档。新副本会替换较早的自动副本。",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "与备份共用：每个新备份（手动或自动）都会上传到存档同步位置。",

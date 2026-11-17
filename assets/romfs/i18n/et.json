@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Prügikast: vanu kirjeid eemaldatud: ",
   "Saves backed up: ": "Salvestusi kopeeritud: ",
   "Auto backup of changed saves": "Muutunud salvestuste automaatne varundus",
+  "Auto backup of saves is running. Wait until it ends.": "Salvestuste automaatne varundus käib. Oota, kuni see lõpeb.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Kopeeri muutunud salvestused igal Hubi käivitamisel, laadi need üles, suuruse piirang ja välja jäetud mängud.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Igal Hubi käivitamisel kopeeritakse salvestused, mis on pärast nende viimast varukoopiat muutunud. Uus koopia asendab vanema automaatse.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Ühine varundamisega: iga uus varukoopia, käsitsi või automaatne, laaditakse salvestuste sünkroonimise asukohta.",

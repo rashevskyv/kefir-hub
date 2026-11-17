@@ -2864,6 +2864,7 @@
   "Trash: old items removed: ": "Corbeille : anciens éléments supprimés : ",
   "Saves backed up: ": "Sauvegardes copiées : ",
   "Auto backup of changed saves": "Copie automatique des sauvegardes modifiées",
+  "Auto backup of saves is running. Wait until it ends.": "La sauvegarde automatique des données de jeu est en cours. Attendez qu'elle se termine.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Copier les sauvegardes modifiées à chaque démarrage du Hub, les envoyer, limite de taille et jeux exclus.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "À chaque démarrage du Hub, copie les sauvegardes modifiées depuis leur dernière copie de sécurité. La nouvelle copie remplace l'ancienne copie automatique.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Partagé avec la copie de sécurité : chaque nouvelle copie, manuelle ou automatique, est envoyée vers l'emplacement de synchronisation des sauvegardes.",

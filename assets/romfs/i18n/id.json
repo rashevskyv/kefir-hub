@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Tempat Sampah: item lama dihapus: ",
   "Saves backed up: ": "Data simpanan dicadangkan: ",
   "Auto backup of changed saves": "Cadangan otomatis data simpanan yang berubah",
+  "Auto backup of saves is running. Wait until it ends.": "Pencadangan otomatis data simpanan sedang berjalan. Tunggu sampai selesai.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Salin data simpanan yang berubah setiap Hub dimulai, unggah, batas ukuran, dan game yang dikecualikan.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Setiap Hub dimulai, salin data simpanan yang berubah sejak cadangan terakhirnya. Salinan baru menggantikan salinan otomatis yang lebih lama.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Dipakai bersama Cadangan: setiap cadangan baru, manual atau otomatis, diunggah ke lokasi sinkronisasi data simpanan.",

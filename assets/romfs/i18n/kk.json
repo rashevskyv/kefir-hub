@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Қоқыс жәшігі: ескі жазбалар өшірілді: ",
   "Saves backed up: ": "Көшірілген сақталулар: ",
   "Auto backup of changed saves": "Өзгерген сақталуларды автоматты сақтау",
+  "Auto backup of saves is running. Wait until it ends.": "Сақтаулардың автоматты сақтық көшірмесі жасалуда. Аяқталғанша күтіңіз.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Hub әр іске қосылғанда өзгерген сақтауларды көшіру, жүктеп салу, өлшем шегі және шығарылған ойындар.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Hub әр іске қосылғанда соңғы сақтық көшірмеден бері өзгерген сақтауларды көшіреді. Жаңа көшірме ескі автоматты көшірмені алмастырады.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Сақтық көшірмемен ортақ: әр жаңа көшірме, қолмен немесе автоматты, сақтауларды синхрондау орнына жүктеледі.",

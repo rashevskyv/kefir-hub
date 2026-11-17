@@ -2858,6 +2858,7 @@
   "Trash: old items removed: ": "Atkritne: noņemti veci ieraksti: ",
   "Saves backed up: ": "Nokopēti saglabājumi: ",
   "Auto backup of changed saves": "Mainīto saglabājumu automātiskā kopija",
+  "Auto backup of saves is running. Wait until it ends.": "Notiek saglabājumu automātiskā dublēšana. Uzgaidiet, līdz tā beidzas.",
   "Copy changed saves on each Hub start, upload them, size limit and excluded games.": "Kopēt mainītos saglabājumus katrā Hub palaišanā, augšupielādēt tos, izmēra ierobežojums un izslēgtās spēles.",
   "On each Hub start, copy the saves that changed since their last backup. The new copy replaces the older automatic one.": "Katrā Hub palaišanā kopē saglabājumus, kas mainījušies kopš to pēdējās rezerves kopijas. Jaunā kopija aizstāj vecāko automātisko.",
   "Shared with Backup: upload every new backup, manual or automatic, to the save sync location.": "Kopīgs ar rezerves kopēšanu: katra jaunā kopija, manuāla vai automātiska, tiek augšupielādēta saglabājumu sinhronizācijas vietā.",

@@ -21,6 +21,7 @@
 #include "title_info.hpp"
 
 #include <atomic>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -243,6 +244,27 @@ void StartAutoBackup() {
     if (!App::PushTransfer(std::move(pbox))) {
         g_running = false;
     }
+}
+
+void OpenWhenAutoBackupEnds(std::function<void()> open) {
+    if (!g_running.load()) {
+        open();
+        return;
+    }
+    // the auto backup holds saves open: a backup or restore started now fails. The box waits for it; B gives up.
+    // ponytail: only the entry to the saves list waits; the auto backup starts on Hub start, before anyone is inside.
+    App::Push<ProgressBox>(0, "Auto backup of changed saves"_i18n, "", [](ProgressBox* pbox) -> Result {
+        pbox->NewTransfer("Auto backup of saves is running. Wait until it ends."_i18n);
+        while (g_running.load()) { // the UI thread clears it when the badge box closes
+            R_TRY(pbox->ShouldExitResult());
+            svcSleepThread(100'000'000);
+        }
+        R_SUCCEED();
+    }, [open](Result rc) {
+        if (R_SUCCEEDED(rc)) {
+            open();
+        }
+    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false); // it only sleeps: no CPU boost
 }
 
 auto StopAutoBackup() -> bool {
