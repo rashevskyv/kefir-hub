@@ -97,21 +97,53 @@ std::optional<bool> KeyAreaKeyMatches(const keys::Keys& k, u8 key_gen) {
     return std::memcmp(by_console, by_file, sizeof(by_file)) == 0;
 }
 
+// the NCA key generation of the installed firmware: SystemVersion is rebuilt with every firmware, so its
+// NCA uses the newest key the firmware needs. Not exosphere's key generation: on Mariko that is the newest
+// key Atmosphere knows (22 on firmware 20.5.0 and on 23.0.1 alike), not what the firmware needs.
+std::optional<u8> FirmwareKeyGeneration() {
+    constexpr u64 SYSTEM_VERSION_ID = 0x0100000000000809;
+    NcmContentMetaDatabase db{};
+    if (R_FAILED(ncmOpenContentMetaDatabase(&db, NcmStorageId_BuiltInSystem))) {
+        return std::nullopt;
+    }
+    ON_SCOPE_EXIT(ncmContentMetaDatabaseClose(&db));
+    NcmContentMetaKey key{};
+    NcmContentId id{};
+    if (R_FAILED(ncmContentMetaDatabaseGetLatestContentMetaKey(&db, &key, SYSTEM_VERSION_ID)) ||
+        R_FAILED(ncmContentMetaDatabaseGetContentIdByType(&db, &id, &key, NcmContentType_Data))) {
+        return std::nullopt;
+    }
+    NcmContentStorage cs{};
+    if (R_FAILED(ncmOpenContentStorage(&cs, NcmStorageId_BuiltInSystem))) {
+        return std::nullopt;
+    }
+    ON_SCOPE_EXIT(ncmContentStorageClose(&cs));
+    NcmRightsId rights{};
+    if (R_FAILED(ncmContentStorageGetRightsIdFromContentId(&cs, &rights, &id, FsContentAttributes_All))) {
+        return std::nullopt;
+    }
+    return rights.key_generation;
+}
+
 KeysState CheckKeys() {
-    // no Atmosphere (an emulator) = no key engine to ask and no way to dump: say nothing.
+#if DOCS_DEMO
+    // Eden screenshots: the fixture microSD has no keys, and a start-up box would break every recipe.
+    return KeysState::Unknown;
+#endif
+    // no Atmosphere = no autokeys dump: say nothing.
     u64 exo{};
     if (R_FAILED(splInitialize())) {
         return KeysState::Unknown;
     }
     const Result exo_rc = splGetConfig(static_cast<SplConfigItem>(65000), &exo);
     splExit();
-    const u8 master = (exo >> 32) & 0xFF;
-    if (R_FAILED(exo_rc) || master >= 0x1F) {
-        log_write("[keys] check skipped: exosphere 0x%X master %u\n", exo_rc, master);
+    const auto fw_gen = FirmwareKeyGeneration();
+    if (R_FAILED(exo_rc) || !fw_gen || *fw_gen >= 0x20) {
+        log_write("[keys] check skipped: exosphere 0x%X firmware key gen %d\n", exo_rc, fw_gen ? *fw_gen : -1);
         return KeysState::Unknown;
     }
-    // NCA key generation: 0 and 1 both mean master key 0 (keys::Keys::FixKey, spl).
-    const u8 key_gen = master + 1;
+    // NCA key generation, as nca::DecryptKeak passes it: 0 and 1 both mean master key 0 (keys::Keys::FixKey, spl).
+    const u8 key_gen = *fw_gen;
 
     fs::FsNativeSd sd;
     const bool file_found = sd.FileExists(PROD_KEYS_PATH);
@@ -142,8 +174,8 @@ KeysState CheckKeys() {
     const bool eticket_found = k.eticket_rsa_kek.IsValid();
 
     const auto state = Classify(true, true, other_console, current_found, matches, eticket_found);
-    log_write("[keys] master %u: area %d titlekek %d master %d match %d eticket %d other console %d -> state %d\n",
-              master, k.HasNcaKeyArea(key_gen, app), k.HasTitleKek(key_gen), k.HasMasterKey(key_gen), matches,
+    log_write("[keys] firmware key gen %u: area %d titlekek %d master %d match %d eticket %d other console %d -> state %d\n",
+              key_gen, k.HasNcaKeyArea(key_gen, app), k.HasTitleKek(key_gen), k.HasMasterKey(key_gen), matches,
               eticket_found, other_console, static_cast<int>(state));
     return state;
 }
