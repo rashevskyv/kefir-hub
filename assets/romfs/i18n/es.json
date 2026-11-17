@@ -4395,6 +4395,11 @@
   "updated": "actualizado",
   "Failed to reboot": "Error al reiniciar",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin no está en /bootloader/payloads, por lo que el Hub no puede volcar las claves. Cópialo allí e instálalo de nuevo.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "¿Reiniciar y volcar las claves?\nLa consola se reinicia, Lockpick_RCM guarda las nuevas claves, y luego la consola arranca con normalidad. Después, vuelve a instalar el juego.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "El volcado automático de claves está desactivado: /config/autokeys.disable está en la microSD. Elimínalo para volcar las claves."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "El volcado automático de claves está desactivado: /config/autokeys.disable está en la microSD. Elimínalo para volcar las claves.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Faltan las claves de la consola, están desactualizadas o no corresponden a esta consola. Sin ellas, Kefir Hub no puede volcar juegos (la carpeta Games por MTP queda vacía) ni instalar algunos juegos.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "¿Volcar las claves ahora? La consola se reinicia, guarda las claves nuevas y vuelve a arrancar sola. No tienes que pulsar nada.",
+  "Yes, dump the keys": "Sí, volcar las claves",
+  "The keys are dumped. Game dumps and installs work now.": "Las claves se han volcado. El volcado y la instalación de juegos ya funcionan.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Las claves siguen faltando o son incorrectas después del volcado. Actualiza Kefir o pon el Lockpick_RCM.bin más reciente en /bootloader/payloads y vuelve a iniciar Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Puede que falten juegos aquí porque las claves de la consola faltan o son incorrectas. Inicia Kefir Hub y elige «Sí, volcar las claves»: la consola se reinicia y las vuelca sola. Después vuelve a conectarte."
 }

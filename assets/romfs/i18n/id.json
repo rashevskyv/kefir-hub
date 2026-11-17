@@ -4389,6 +4389,11 @@
   "updated": "diperbarui",
   "Failed to reboot": "Gagal memuat ulang",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin tidak ada di /bootloader/payloads, sehingga Hub tidak dapat mendump kunci. Salin ke sana, lalu instal lagi.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Muat ulang dan dump kunci?\nKonsol akan dimulai ulang, Lockpick_RCM menyimpan kunci baru, lalu konsol menyala seperti biasa. Setelah itu, instal ulang game tersebut.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Dump kunci otomatis dimatikan: /config/autokeys.disable ada di microSD. Hapus untuk mendump kunci."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Dump kunci otomatis dimatikan: /config/autokeys.disable ada di microSD. Hapus untuk mendump kunci.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Kunci konsol tidak ada, sudah usang, atau tidak cocok untuk konsol ini. Tanpa kunci, Kefir Hub tidak bisa mendump game (folder Games lewat MTP tetap kosong) dan tidak bisa memasang beberapa game.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Dump kunci sekarang? Konsol akan dimulai ulang, menyimpan kunci baru, lalu menyala lagi sendiri. Anda tidak perlu menekan apa pun.",
+  "Yes, dump the keys": "Ya, dump kunci",
+  "The keys are dumped. Game dumps and installs work now.": "Kunci sudah didump. Dump dan pemasangan game sekarang berfungsi.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Kunci masih tidak ada atau salah setelah dump. Perbarui Kefir atau taruh Lockpick_RCM.bin terbaru di /bootloader/payloads, lalu jalankan Kefir Hub lagi.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Game mungkin tidak muncul di sini karena kunci konsol tidak ada atau salah. Jalankan Kefir Hub dan pilih \"Ya, dump kunci\": konsol dimulai ulang dan mendump kunci sendiri. Lalu sambungkan lagi."
 }

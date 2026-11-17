@@ -1,5 +1,6 @@
 #include "haze/haze_game_proxy_internal.hpp"
 #include "ui/menus/game/game_internal.hpp"
+#include "keys_dump.hpp"
 
 namespace sphaira::haze {
 
@@ -204,16 +205,20 @@ auto FsGameProxy::Parse(const char* path) const -> sphaira::mtp::ParsedPath {
 }
 
 auto FsGameProxy::InfoText(std::string_view which) const -> std::string {
+    // the start-up check result does not change in a session, so the readme size stays right.
+    const std::string keys = keys_dump::KeysBad()
+        ? "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again."_i18n + "\n\n"
+        : std::string{};
     if (which == "merged") {
-        return "Each file is one game. Base, update and DLC are packed into a single NSP. Use this when the installer expects one file per title."_i18n + "\n";
+        return keys + "Each file is one game. Base, update and DLC are packed into a single NSP. Use this when the installer expects one file per title."_i18n + "\n";
     }
     if (which == "separate") {
-        return "Each folder is one game. Inside are separate NSP files for the base, the update and each DLC."_i18n + "\n";
+        return keys + "Each folder is one game. Inside are separate NSP files for the base, the update and each DLC."_i18n + "\n";
     }
     if (which == "forwarders") {
         return "HOME-menu forwarders (homebrew icons). These are not Nintendo games. Copy one to dump that icon as an NSP."_i18n + "\n";
     }
-    return "This drive dumps installed titles as NSP files you can copy to a PC."_i18n + "\n\n"
+    return keys + "This drive dumps installed titles as NSP files you can copy to a PC."_i18n + "\n\n"
         + m_names.merged + " — " + "One NSP per game with base, update and DLC together."_i18n + "\n"
         + m_names.separate + " — " + "A folder per game with each component as its own NSP."_i18n + "\n"
         + m_names.forwarders + " — " + "HOME-menu homebrew icons, not Nintendo games."_i18n + "\n"

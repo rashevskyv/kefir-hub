@@ -557,7 +557,7 @@ Result InstallFromCollections(ui::InstallProgress* pbox, source::Base* source, c
     const auto rc = source->IsStream() ? detail::InstallInternalStream(pbox, source, collections, dynamic_override)
                                        : detail::InstallInternal(pbox, source, collections, dynamic_override);
     // every install path (file, queue, USB, game card, MTP, FTP, web) ends here: one keys check for all.
-    keys_dump::NoteInstallResult(rc);
+    keys_dump::NoteKeysResult(rc);
     return rc;
 }
 

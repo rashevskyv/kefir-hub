@@ -4389,6 +4389,11 @@
   "updated": "atjaunināts",
   "Failed to reboot": "Neizdevās restartēt",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin nav atrodāms /bootloader/payloads, tāpēc Hub nevar eksportēt atslēgas. Nokopējiet to tur un instalējiet atkārtoti.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Restartēt un saglabāt atslēgas?\nKonsole restartēsies, Lockpick_RCM saglabās jaunās atslēgas, un konsole ieslēgsies kā parasti. Pēc tam instalējiet spēli vēlreiz.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automātiskā atslēgu dabas ir izslēgta: /config/autokeys.disable atrodas uz microSD. Dzēsiet to, lai izveidotu atslēgu dabu."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automātiskā atslēgu dabas ir izslēgta: /config/autokeys.disable atrodas uz microSD. Dzēsiet to, lai izveidotu atslēgu dabu.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Konsoles atslēgu nav, tās ir novecojušas vai neder šai konsolei. Bez tām Kefir Hub nevar izveidot spēļu kopijas (mape Games caur MTP paliek tukša) un nevar instalēt dažas spēles.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Iegūt atslēgas tagad? Konsole tiks restartēta, saglabās jaunās atslēgas un pati atkal ieslēgsies. Nekas nav jāspiež.",
+  "Yes, dump the keys": "Jā, iegūt atslēgas",
+  "The keys are dumped. Game dumps and installs work now.": "Atslēgas ir iegūtas. Spēļu kopēšana un instalēšana tagad darbojas.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Pēc iegūšanas atslēgu joprojām nav vai tās ir nepareizas. Atjauniniet Kefir vai ievietojiet jaunāko Lockpick_RCM.bin mapē /bootloader/payloads, tad vēlreiz palaidiet Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Šeit var trūkt spēļu, jo konsoles atslēgu nav vai tās ir nepareizas. Palaidiet Kefir Hub un izvēlieties “Jā, iegūt atslēgas”: konsole restartēsies un pati iegūs atslēgas. Pēc tam pievienojieties vēlreiz."
 }

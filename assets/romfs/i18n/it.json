@@ -4394,6 +4394,11 @@
   "updated": "aggiornato",
   "Failed to reboot": "Riavvio fallito",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin non è in /bootloader/payloads, quindi l'Hub non può estrarre le chiavi. Copialo lì e installalo di nuovo.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Riavviare ed estrarre le chiavi?\nLa console si riavvia, Lockpick_RCM salva le nuove chiavi e la console si avvia normalmente. Dopodiché, installa di nuovo il gioco.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Il dump automatico delle chiavi è disattivato: /config/autokeys.disable si trova sulla microSD. Eliminalo per eseguire il dump delle chiavi."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Il dump automatico delle chiavi è disattivato: /config/autokeys.disable si trova sulla microSD. Eliminalo per eseguire il dump delle chiavi.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Le chiavi della console mancano, sono obsolete o non corrispondono a questa console. Senza di esse Kefir Hub non può fare il dump dei giochi (la cartella Games via MTP resta vuota) né installare alcuni giochi.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Eseguire ora il dump delle chiavi? La console si riavvia, salva le nuove chiavi e si riaccende da sola. Non devi premere nulla.",
+  "Yes, dump the keys": "Sì, esegui il dump delle chiavi",
+  "The keys are dumped. Game dumps and installs work now.": "Il dump delle chiavi è stato eseguito. Il dump e l'installazione dei giochi ora funzionano.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Dopo il dump le chiavi mancano ancora o sono errate. Aggiorna Kefir o metti l'ultimo Lockpick_RCM.bin in /bootloader/payloads, poi avvia di nuovo Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Qui potrebbero mancare dei giochi perché le chiavi della console mancano o sono errate. Avvia Kefir Hub e scegli \"Sì, esegui il dump delle chiavi\": la console si riavvia e ne esegue il dump da sola. Poi ricollegati."
 }

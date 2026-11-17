@@ -4394,6 +4394,11 @@
   "updated": "アップデート済み",
   "Failed to reboot": "再起動に失敗しました",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin が /bootloader/payloads にないため、Hubはキーをダンプできません。そこにコピーして、再度インストールしてください。",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "再起動してキーをダンプしますか？\nコンソールが再起動し、Lockpick_RCMが新しいキーを保存した後、通常通り起動します。その後、ゲームを再度インストールしてください。",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "自動キーダンプが無効になっています: /config/autokeys.disable がmicroSD上にあります。キーをダンプするにはこれを削除してください。"
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "自動キーダンプが無効になっています: /config/autokeys.disable がmicroSD上にあります。キーをダンプするにはこれを削除してください。",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "本体のキーがないか、古いか、この本体に合っていません。キーがないと Kefir Hub はゲームをダンプできず（MTP の Games フォルダーは空のままです）、一部のゲームをインストールできません。",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "今すぐキーをダンプしますか？本体が再起動し、新しいキーを保存して、自動で再び起動します。何も押す必要はありません。",
+  "Yes, dump the keys": "はい、キーをダンプする",
+  "The keys are dumped. Game dumps and installs work now.": "キーをダンプしました。ゲームのダンプとインストールが使えるようになりました。",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "ダンプ後もキーがないか、正しくありません。Kefir を更新するか、最新の Lockpick_RCM.bin を /bootloader/payloads に置いてから、Kefir Hub をもう一度起動してください。",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "本体のキーがないか正しくないため、ここにゲームが表示されない場合があります。Kefir Hub を起動して「はい、キーをダンプする」を選んでください。本体が再起動し、自動でキーをダンプします。その後、もう一度接続してください。"
 }

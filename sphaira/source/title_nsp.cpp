@@ -3,6 +3,7 @@
 #include "title_export_name.hpp"
 #include "title_info.hpp"
 #include "app.hpp"
+#include "keys_dump.hpp"
 #include "defines.hpp"
 #include "log.hpp"
 #include "utils/utils.hpp"
@@ -275,7 +276,10 @@ Result BuildNspEntries(u64 app_id, const char* name, u32 flags, bool app_folder,
     R_TRY(GetMetaEntries(app_id, meta_entries, flags));
 
     keys::Keys keys;
-    R_TRY(keys::parse_keys(keys, true));
+    if (const Result rc = keys::parse_keys(keys, true); R_FAILED(rc)) {
+        keys_dump::NoteKeysResult(rc); // a dump (menu or MTP Games) needs the keys too: offer the key dump
+        return rc;
+    }
 
     Result first_rc = 0;
     for (const auto& status : meta_entries) {
@@ -348,7 +352,10 @@ Result BuildMergedNspEntry(u64 app_id, const char* name, u32 flags, NspEntry& ou
     R_UNLESS(!selected_metas.empty(), Result_GameNoNspEntriesBuilt);
 
     keys::Keys keys;
-    R_TRY(keys::parse_keys(keys, true));
+    if (const Result rc = keys::parse_keys(keys, true); R_FAILED(rc)) {
+        keys_dump::NoteKeysResult(rc); // a dump (menu or MTP Games) needs the keys too: offer the key dump
+        return rc;
+    }
 
     // every game belongs in the merged folder: a component that cannot be built (no ticket, odd meta)
     // is left out and logged instead of dropping the whole game.

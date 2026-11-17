@@ -4389,6 +4389,11 @@
   "updated": "värskendatud",
   "Failed to reboot": "Taaskäivitamine ebaõnnestus",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin ei ole kaustas /bootloader/payloads, mistõttu ei saa Hub võtmeid tõmmata. Kopeeri see sinna ja installi uuesti.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Taaskäivitada ja võtmed salvestada?\nKonsool taaskäivitub, Lockpick_RCM salvestab uued võtmed ja konsool käivitub tavapäraselt. Pärast seda installi mäng uuesti.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automaatne võtmete tõmmis on välja lülitatud: /config/autokeys.disable on microSD kaardil. Kustuta see võtmete tõmmise tegemiseks."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automaatne võtmete tõmmis on välja lülitatud: /config/autokeys.disable on microSD kaardil. Kustuta see võtmete tõmmise tegemiseks.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Konsooli võtmed puuduvad, on aegunud või ei sobi sellele konsoolile. Ilma nendeta ei saa Kefir Hub mängudest tõmmist teha (MTP kaudu jääb kaust Games tühjaks) ega mõnda mängu installida.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Kas teha võtmete tõmmis kohe? Konsool taaskäivitub, salvestab uued võtmed ja käivitub ise uuesti. Midagi vajutama ei pea.",
+  "Yes, dump the keys": "Jah, tee võtmete tõmmis",
+  "The keys are dumped. Game dumps and installs work now.": "Võtmete tõmmis on tehtud. Mängude tõmmised ja installimine töötavad nüüd.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Võtmed puuduvad pärast tõmmist endiselt või on valed. Uuenda Kefirit või pane uusim Lockpick_RCM.bin kausta /bootloader/payloads ja käivita Kefir Hub uuesti.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Siit võivad mängud puududa, sest konsooli võtmed puuduvad või on valed. Käivita Kefir Hub ja vali „Jah, tee võtmete tõmmis“: konsool taaskäivitub ja teeb tõmmise ise. Seejärel ühenda uuesti."
 }

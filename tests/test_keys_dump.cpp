@@ -24,6 +24,26 @@ int main() {
     // stopped, payload present, dumps allowed -> ask.
     assert(Decide(true, false, true, false) == Offer::Ask);
 
+    // start-up check: (services_ok, file, other console, current keys, key engine agrees, eticket kek)
+    // a failed service (emulator) never makes a verdict, whatever the file says.
+    assert(Classify(false, false, true, false, false, false) == KeysState::Unknown);
+    assert(Classify(true, false, false, true, true, true) == KeysState::Missing);
+    assert(Classify(true, true, true, true, true, true) == KeysState::Wrong);
+    assert(Classify(true, true, false, true, false, true) == KeysState::Wrong);
+    assert(Classify(true, true, false, false, true, true) == KeysState::Outdated);
+    assert(Classify(true, true, false, true, true, false) == KeysState::Outdated);
+    assert(Classify(true, true, false, true, true, true) == KeysState::Ok);
+    assert(!IsBad(KeysState::Ok) && !IsBad(KeysState::Unknown));
+    assert(IsBad(KeysState::Missing) && IsBad(KeysState::Outdated) && IsBad(KeysState::Wrong));
+
+    // start-up notice: ask only when bad; after a dump say the result, never ask again (no reboot loop).
+    assert(DecideStartup(false, KeysState::Ok) == StartupNotice::None);
+    assert(DecideStartup(false, KeysState::Unknown) == StartupNotice::None);
+    assert(DecideStartup(false, KeysState::Outdated) == StartupNotice::Ask);
+    assert(DecideStartup(true, KeysState::Ok) == StartupNotice::Dumped);
+    assert(DecideStartup(true, KeysState::Wrong) == StartupNotice::StillBad);
+    assert(DecideStartup(true, KeysState::Unknown) == StartupNotice::None);
+
     std::puts("test_keys_dump: ok");
     return 0;
 }

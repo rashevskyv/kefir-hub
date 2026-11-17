@@ -4017,7 +4017,6 @@
   "Export failed!": "Експорт не вдався!",
   "Not enough free space on the install location. Free up space or change the install location.": "Недостатньо вільного місця у місці встановлення. Звільніть місце або змініть місце встановлення.",
   "Your keys are missing or outdated. Dump prod.keys again with the latest Lockpick_RCM.": "Ключі відсутні або застарілі. Знову зробіть дамп prod.keys найновішим Lockpick_RCM.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Перезавантажити й зняти ключі?\nКонсоль перезавантажиться, Lockpick_RCM збереже нові ключі, а потім консоль запуститься як зазвичай. Після цього встановіть гру знову.",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "У /bootloader/payloads немає Lockpick_RCM.bin, тому Hub не може зняти ключі. Скопіюйте його туди й установіть гру знову.",
   "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Автоматичне знімання ключів вимкнено: на microSD є /config/autokeys.disable. Видаліть цей файл, щоб зняти ключі.",
   "Failed to reboot": "Не вдалося перезавантажити",
@@ -4326,5 +4325,11 @@
   "Already the newest version.": "Це вже найновіша версія.",
   "Choose the DBI language in Additional programs → DBI.": "Виберіть мову DBI в «Додаткові програми» → DBI.",
   "Which language does your DBI use?": "Яка мова у вашого DBI?",
-  "updated": "оновлено"
+  "updated": "оновлено",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Ключі консолі відсутні, застарілі або не підходять до цієї консолі. Без них Kefir Hub не може дампити ігри (тека Games через MTP лишається порожньою) і не може встановити деякі ігри.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Зняти ключі зараз? Консоль перезавантажиться, збереже нові ключі й запуститься сама. Нічого натискати не треба.",
+  "Yes, dump the keys": "Так, зняти ключі",
+  "The keys are dumped. Game dumps and installs work now.": "Ключі знято. Дамп і встановлення ігор тепер працюють.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Після знімання ключі досі відсутні або неправильні. Оновіть Kefir або покладіть найновіший Lockpick_RCM.bin у /bootloader/payloads, потім знову запустіть Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Ігор тут може не бути, бо ключі консолі відсутні або неправильні. Запустіть Kefir Hub і виберіть «Так, зняти ключі»: консоль перезавантажиться й сама зніме їх. Потім підключіться знову."
 }

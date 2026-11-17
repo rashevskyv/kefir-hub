@@ -4394,6 +4394,11 @@
   "updated": "uppdaterad",
   "Failed to reboot": "Misslyckades med att starta om",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin finns inte i /bootloader/payloads, så Hub kan inte dumpa nycklarna. Kopiera den dit och installera igen.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Starta om och dumpa nycklarna?\nKonsolen startar om, Lockpick_RCM sparar nya nycklar och konsolen startar sedan som vanligt. Installera spelet igen efter det.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatisk nyckeldumpning är avstängd: /config/autokeys.disable finns på microSD-kortet. Ta bort den för att dumpa nycklarna."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatisk nyckeldumpning är avstängd: /config/autokeys.disable finns på microSD-kortet. Ta bort den för att dumpa nycklarna.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Konsolens nycklar saknas, är föråldrade eller passar inte den här konsolen. Utan dem kan Kefir Hub inte dumpa spel (mappen Games via MTP förblir tom) och kan inte installera vissa spel.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Dumpa nycklarna nu? Konsolen startar om, sparar nya nycklar och startar sedan igen av sig själv. Du behöver inte trycka på något.",
+  "Yes, dump the keys": "Ja, dumpa nycklarna",
+  "The keys are dumped. Game dumps and installs work now.": "Nycklarna är dumpade. Speldumpar och installationer fungerar nu.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Nycklarna saknas fortfarande eller är fel efter dumpningen. Uppdatera Kefir eller lägg senaste Lockpick_RCM.bin i /bootloader/payloads och starta sedan Kefir Hub igen.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Spel kan saknas här eftersom konsolens nycklar saknas eller är fel. Starta Kefir Hub och välj ”Ja, dumpa nycklarna”: konsolen startar om och dumpar dem av sig själv. Anslut sedan igen."
 }

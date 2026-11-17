@@ -4389,6 +4389,11 @@
   "updated": "atnaujinta",
   "Failed to reboot": "Nepavyko paleisti iš naujo",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin nėra /bootloader/payloads, todėl Hub negali išgauti raktų. Nukopijuokite jį ten ir įdiekite iš naujo.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Paleisti iš naujo ir išsaugoti raktus?\nKonsolė pasileis iš naujo, Lockpick_RCM išsaugos naujus raktus, o tada konsolė įsikraus kaip įprastai. Po to įdiekite žaidimą iš naujo.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatinis raktų kopijavimas išjungtas: /config/autokeys.disable yra microSD kortelėje. Ištrinkite jį, kad nukopijuotumėte raktus."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Automatinis raktų kopijavimas išjungtas: /config/autokeys.disable yra microSD kortelėje. Ištrinkite jį, kad nukopijuotumėte raktus.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Konsolės raktų nėra, jie pasenę arba netinka šiai konsolei. Be jų Kefir Hub negali kopijuoti žaidimų (aplankas Games per MTP lieka tuščias) ir negali įdiegti kai kurių žaidimų.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Nukopijuoti raktus dabar? Konsolė pasileis iš naujo, išsaugos naujus raktus ir vėl įsijungs pati. Nieko spausti nereikia.",
+  "Yes, dump the keys": "Taip, nukopijuoti raktus",
+  "The keys are dumped. Game dumps and installs work now.": "Raktai nukopijuoti. Žaidimų kopijavimas ir diegimas dabar veikia.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Po kopijavimo raktų vis dar nėra arba jie neteisingi. Atnaujinkite Kefir arba įdėkite naujausią Lockpick_RCM.bin į /bootloader/payloads, tada vėl paleiskite Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Čia gali trūkti žaidimų, nes konsolės raktų nėra arba jie neteisingi. Paleiskite Kefir Hub ir pasirinkite „Taip, nukopijuoti raktus“: konsolė pasileis iš naujo ir pati nukopijuos raktus. Tada vėl prisijunkite."
 }

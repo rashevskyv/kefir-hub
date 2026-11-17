@@ -4394,6 +4394,11 @@
   "updated": "đã cập nhật",
   "Failed to reboot": "Khởi động lại thất bại",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin không có trong /bootloader/payloads, nên Hub không thể xuất khóa. Hãy sao chép vào đó rồi cài đặt lại.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Khởi động lại và trích xuất khóa?\nMáy sẽ khởi động lại, Lockpick_RCM lưu các khóa mới, sau đó máy khởi động như bình thường. Sau đó, hãy cài đặt lại trò chơi.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Tính năng xuất khóa tự động đã tắt: /config/autokeys.disable có trên microSD. Xóa tệp này để xuất khóa."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Tính năng xuất khóa tự động đã tắt: /config/autokeys.disable có trên microSD. Xóa tệp này để xuất khóa.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Khóa của máy bị thiếu, đã cũ hoặc không khớp với máy này. Không có khóa, Kefir Hub không thể xuất game (thư mục Games qua MTP sẽ trống) và không thể cài một số game.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Xuất khóa ngay bây giờ? Máy sẽ khởi động lại, lưu khóa mới rồi tự bật lại. Bạn không cần nhấn gì cả.",
+  "Yes, dump the keys": "Có, xuất khóa",
+  "The keys are dumped. Game dumps and installs work now.": "Đã xuất khóa. Giờ đây xuất và cài đặt game đã hoạt động.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Sau khi xuất, khóa vẫn bị thiếu hoặc sai. Hãy cập nhật Kefir hoặc đặt Lockpick_RCM.bin mới nhất vào /bootloader/payloads, rồi khởi động lại Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Có thể thiếu game ở đây vì khóa của máy bị thiếu hoặc sai. Hãy mở Kefir Hub và chọn \"Có, xuất khóa\": máy sẽ khởi động lại và tự xuất khóa. Sau đó kết nối lại."
 }

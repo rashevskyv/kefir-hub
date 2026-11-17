@@ -4389,6 +4389,11 @@
   "updated": "абноўлена",
   "Failed to reboot": "Не ўдалося перазагрузіць",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin няма ў /bootloader/payloads, таму Hub не можа дастаць ключы. Скапіруйце яго туды, затым усталюйце зноў.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Перазагрузіць і зрабіць дамп ключоў?\nКансоль перазагрузіцца, Lockpick_RCM захавае новыя ключы, пасля чаго кансоль запусціцца як звычайна. Пасля гэтага ўсталюйце гульню зноў.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Аўтаматычны дамп ключоў адключаны: /config/autokeys.disable знаходзіцца на microSD. Выдаліце яго, каб зрабіць дамп ключоў."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Аўтаматычны дамп ключоў адключаны: /config/autokeys.disable знаходзіцца на microSD. Выдаліце яго, каб зрабіць дамп ключоў.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Ключы кансолі адсутнічаюць, састарэлі або не падыходзяць да гэтай кансолі. Без іх Kefir Hub не можа рабіць дамп гульняў (папка Games праз MTP застаецца пустой) і не можа ўсталяваць некаторыя гульні.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Зрабіць дамп ключоў зараз? Кансоль перазапусціцца, захавае новыя ключы і сама загрузіцца. Нічога націскаць не трэба.",
+  "Yes, dump the keys": "Так, зрабіць дамп ключоў",
+  "The keys are dumped. Game dumps and installs work now.": "Дамп ключоў зроблены. Дамп і ўсталёўка гульняў цяпер працуюць.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Пасля дампу ключы ўсё яшчэ адсутнічаюць або няправільныя. Абнавіце Kefir або пакладзіце найноўшы Lockpick_RCM.bin у /bootloader/payloads, затым зноў запусціце Kefir Hub.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Гульняў тут можа не быць, бо ключы кансолі адсутнічаюць або няправільныя. Запусціце Kefir Hub і выберыце «Так, зрабіць дамп ключоў»: кансоль перазапусціцца і сама зробіць іх дамп. Потым падключыцеся зноў."
 }

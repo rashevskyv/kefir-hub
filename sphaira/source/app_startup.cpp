@@ -13,6 +13,7 @@
 #include "fs.hpp"
 #include "ftpsrv_helper.hpp"
 #include "haze_helper.hpp"
+#include "keys_dump.hpp"
 #include "image.hpp"
 #include "nacp_util.hpp"
 #include "net.hpp"
@@ -479,6 +480,9 @@ App::App(const char* argv0) {
 
     // a fill with zeros that a crash or a power-off stopped leaves a card-sized file: free the card.
     zero_fill::RemoveLeftover();
+
+    // before MTP and FTP start: the MTP Games readme says when the keys are bad.
+    keys_dump::CheckAtStartup();
 
     if (App::GetFtpEnable()) {
         ftpsrv::Init();

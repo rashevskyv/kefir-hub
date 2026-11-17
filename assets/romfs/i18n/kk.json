@@ -4389,6 +4389,11 @@
   "updated": "жаңартылды",
   "Failed to reboot": "Қайта жүктеу сәтсіз аяқталды",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin /bootloader/payloads ішінде жоқ, сондықтан Hub кілттерді дамптай алмайды. Оны сол жерге көшіріп, қайта орнатыңыз.",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "Қайта іске қосып, кілттерді дамп жасау керек пе?\nКонсоль қайта іске қосылады, Lockpick_RCM жаңа кілттерді сақтайды, содан кейін консоль әдеттегідей қосылады. Одан кейін ойынды қайта орнатыңыз.",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Кілттерді автоматты түрде жинау өшірілген: /config/autokeys.disable файлы microSD картасында тұр. Кілттерді жинау үшін оны жойыңыз."
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "Кілттерді автоматты түрде жинау өшірілген: /config/autokeys.disable файлы microSD картасында тұр. Кілттерді жинау үшін оны жойыңыз.",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "Консоль кілттері жоқ, ескірген немесе бұл консольге сәйкес келмейді. Оларсыз Kefir Hub ойындардың дампын жасай алмайды (MTP арқылы Games қалтасы бос қалады) және кейбір ойындарды орната алмайды.",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "Кілттерді қазір жинау керек пе? Консоль қайта іске қосылып, жаңа кілттерді сақтайды да, өзі қайта жүктеледі. Ештеңе басудың қажеті жоқ.",
+  "Yes, dump the keys": "Иә, кілттерді жинау",
+  "The keys are dumped. Game dumps and installs work now.": "Кілттер жиналды. Ойындардың дампы мен орнатылуы енді жұмыс істейді.",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Жинағаннан кейін де кілттер жоқ немесе қате. Kefir-ді жаңартыңыз немесе ең жаңа Lockpick_RCM.bin файлын /bootloader/payloads ішіне салыңыз, содан кейін Kefir Hub-ты қайта іске қосыңыз.",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Мұнда ойындар болмауы мүмкін, себебі консоль кілттері жоқ немесе қате. Kefir Hub-ты іске қосып, «Иә, кілттерді жинау» тармағын таңдаңыз: консоль қайта іске қосылып, кілттерді өзі жинайды. Содан кейін қайта қосылыңыз."
 }

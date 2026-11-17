@@ -4446,6 +4446,11 @@
   "updated": "已更新",
   "Failed to reboot": "重新啟動失敗",
   "Lockpick_RCM.bin is not in /bootloader/payloads, so the Hub cannot dump the keys. Copy it there, then install again.": "Lockpick_RCM.bin 不在 /bootloader/payloads 中，因此 Hub 無法導出密鑰。請將其複製到該目錄，然後重新安裝。",
-  "Reboot and dump the keys?\nThe console restarts, Lockpick_RCM saves new keys, then the console starts as usual. After that, install the game again.": "重新啟動並匯出金鑰嗎？\n主機將重新啟動，Lockpick_RCM 會儲存新金鑰，隨後主機正常啟動。此後，請重新安裝遊戲。",
-  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "自動金鑰轉儲已關閉：/config/autokeys.disable 存在於 microSD 上。將其刪除以轉儲金鑰。"
+  "Automatic key dump is turned off: /config/autokeys.disable is on the microSD. Delete it to dump the keys.": "自動金鑰轉儲已關閉：/config/autokeys.disable 存在於 microSD 上。將其刪除以轉儲金鑰。",
+  "The console keys are missing, outdated or do not fit this console. Without them Kefir Hub cannot dump games (the Games folder over MTP stays empty) and cannot install some games.": "主機金鑰缺少、已過時或與此主機不符。沒有金鑰，Kefir Hub 無法轉儲遊戲（透過 MTP 的 Games 資料夾會是空的），也無法安裝部分遊戲。",
+  "Dump the keys now? The console restarts, saves new keys and starts again by itself. You do not need to press anything.": "現在轉儲金鑰嗎？主機將重新啟動、儲存新的金鑰，然後自動再次開機。不需要按任何按鍵。",
+  "Yes, dump the keys": "是，轉儲金鑰",
+  "The keys are dumped. Game dumps and installs work now.": "金鑰已轉儲。現在可以轉儲與安裝遊戲了。",
+  "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "轉儲後金鑰仍然缺少或不正確。請更新 Kefir，或將最新的 Lockpick_RCM.bin 放入 /bootloader/payloads，然後重新啟動 Kefir Hub。",
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "由於主機金鑰缺少或不正確，這裡可能缺少遊戲。請啟動 Kefir Hub 並選擇「是，轉儲金鑰」：主機將重新啟動並自動轉儲金鑰。然後重新連線。"
 }

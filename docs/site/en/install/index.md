@@ -142,9 +142,12 @@ After an install from any source that leaves an update or DLC without its base g
 
 <!-- draft
 - an install fails with the error "Your keys are missing or outdated" when the console keys in /switch/prod.keys are missing, wrong or older than the game needs; nothing is installed
-- after the error box is closed and the install has stopped (MTP and FTP: about five seconds after the last file), Kefir Hub asks one question: "Reboot and dump the keys?"; buttons [[No]] and [[Reboot]]
-- [[No]]: nothing else happens
-- [[Reboot]]: the console restarts; Kefir's hekate starts Lockpick_RCM before the boot logo, Lockpick saves new /switch/prod.keys, and the console starts as usual; Kefir Hub does not open by itself; install the game again
+- at every start Kefir Hub checks /switch/prod.keys: the file exists, it has the keys of the current firmware, the eTicket key fits this console, and the console's own key engine confirms the key area key; no Atmosphère (emulator) or a service error = no check, no message
+- keys missing, outdated or wrong: at start Kefir Hub shows what does not work without them (game dumps, the MTP Games folder, installs of some games) and asks "Dump the keys now?"; buttons [[Not now]] and [[Yes, dump the keys]]
+- the same question comes after the error box of a failed install or a failed dump (menu or MTP Games) closes and the transfer has stopped (MTP and FTP: about five seconds after the last file); the Hub asks once per start
+- [[Not now]]: nothing else happens; the MTP Games readme then starts with a note that games may be missing because of the keys
+- [[Yes, dump the keys]]: the console restarts; Kefir's hekate starts Lockpick_RCM before the boot logo, Lockpick saves new /switch/prod.keys, and the console starts as usual; nothing to press; Kefir Hub does not open by itself
+- next start of Kefir Hub after the dump: keys fine = "The keys are dumped. Game dumps and installs work now."; still bad = a message to update Kefir or Lockpick_RCM, and no second question in that start (no reboot loop); the Hub knows a dump was asked by /config/kefir/keys_dump_requested
 - how: Kefir Hub deletes /config/autokeys.bin (hekate's record of the last key dump); hekate then dumps the keys on the next autoboot
 - /bootloader/payloads/Lockpick_RCM.bin missing: Kefir Hub says so and does not restart
 - /config/autokeys.disable on the microSD: automatic key dump is off; Kefir Hub says so and does not restart
@@ -152,6 +155,6 @@ After an install from any source that leaves an update or DLC without its base g
 - a game that needs newer system firmware than the console has gives the same error after a fresh dump: update the firmware (see [Updater](../updater.md))
 -->
 <!-- TODO(verify): which result code a too-new game gives on old firmware (MasterKey missing vs. the other key codes) -->
-<!-- shot: install-keys-dump | the question "Reboot and dump the keys?" with No / Reboot after a failed install -->
+<!-- shot: install-keys-dump | the start-up question "Dump the keys now?" with Not now / Yes, dump the keys -->
 
 **You need the error details later.** Install errors are written to `/config/kefir/errors.txt` on the microSD card, even when logging is off.
