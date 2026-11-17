@@ -45,7 +45,7 @@ If you copy a game file to the microSD card drive instead, it is only stored on 
 
 <!-- shot: install-mtp-progress | MTP Install screen during a copy: Mode MTP, Written, Average speed, log -->
 
-<!-- draft (v0.14.400): install a whole folder
+<!-- draft (v0.14.401): install a whole folder
 - Copy a whole folder into the drive `Install (NSP, XCI, NSZ, XCZ)`: every NSP, NSZ, XCI and XCZ file in it and in its subfolders is installed, one after another.
 - Other files in the folder (for example Readme.txt) are skipped without an error. A single non-game file at the drive root is still refused.
 - A folder `Mods` (or [[Mods]]) with game folders named `<name> [Title ID]` inside it, as `Games` → `Merged` → [[Mods]] gives it: its files are written to `/atmosphere/contents/<Title ID>/` on the microSD card (mods and cheats); a file that is already there is replaced. The game does not need to be installed yet. The same works for a `Separate` game folder with its [[Mods]] folder.
