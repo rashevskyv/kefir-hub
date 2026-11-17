@@ -234,6 +234,7 @@ void Menu::ThreadFunction() {
                     }
                 }
                 bool selected{};
+                bool ticked{};
                 yati::InstallAnalysis analysis{};
                 bool plan_sd{};
                 bool analysis_deferred{};
@@ -241,6 +242,7 @@ void Menu::ThreadFunction() {
                 {
                     SCOPED_MUTEX(&m_mutex);
                     selected = m_queue[i].install_selected;
+                    ticked = m_queue[i].selected;
                     analysis = m_queue[i].analysis;
                     plan_sd = m_queue[i].install_sd;
                     analysis_deferred = m_queue[i].analysis_deferred;
@@ -257,7 +259,11 @@ void Menu::ThreadFunction() {
                         m_current_file_skipped = false;
                     }
                 }
-                if (!selected) continue;
+                if (!selected) {
+                    // a ticked row that does not install sends no status to the PC; leave a trace.
+                    if (ticked) log_write("[DBI] ticked but not in the install plan, not sent: %s\n", name.c_str());
+                    continue;
+                }
                 if (m_cancel_requested) break;
 
                 const auto save_kind = save_bundle::KindOf(name);

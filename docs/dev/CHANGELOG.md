@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.398 — PC Install (USB) no longer drops the first package
+The review poll analysed new PC rows on a copy of the queue and then wrote the copy back; an "Install selected" pressed during that analysis lost its install flags, and the install loop only re-plans rows after the active one, so row 0 was skipped with no status to the PC (seen: Zelda TOTK, 1 of 21, PC report "not reached"). New rows are now analysed first and merged into the live queue under one lock. A ticked row that still does not install is logged ("[DBI] ticked but not in the install plan").
+host tests: quick green | nro: built, not sent | switch: pending (PC preset with unticked rows, press A right after connect: the first file installs; console log has no "ticked but not in the install plan")
+
 ## v0.14.397 — Saves wait for the running auto backup
 Opening a saves list (Saves hub tiles, Tools → Saves, a game's Backup and restore) while the auto backup of changed saves runs now shows a wait box ("Auto backup of saves is running. Wait until it ends."); the list opens when the auto backup ends, B gives up. Before, a manual backup started then failed. New string in all 26 languages.
 host tests: quick green; full run has 2 old failures, not from this change (EN/UK key parity 4324 vs 4327 at HEAD; demo http fixture archive.org/.../Best NES Games.zip/index is not JSON, unchanged since Oct 31) | nro: built (with the uncommitted Ownfoil empty-list text box fix in the tree), not sent: the console did not answer | switch: pending (start the Hub with changed saves, open Saves → Installed Games at once: the box waits, then the list opens; B closes the box)

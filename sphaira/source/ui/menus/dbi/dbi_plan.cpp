@@ -220,72 +220,89 @@ bool Menu::ApplyLiveQueue(const std::vector<yati::source::Usb::LiveQueueItem>& i
 
     if (!is_installing) {
         // ReviewQueue mode: entire queue can be reordered, items added, removed, target/selected updated
-        std::unordered_map<std::string, QueueEntry> existing_map;
+        std::unordered_set<std::string> known;
         {
             SCOPED_MUTEX(&m_mutex);
             for (const auto& entry : m_queue) {
-                existing_map.emplace(entry.file_name, entry);
+                known.insert(entry.file_name);
             }
         }
 
-        std::vector<QueueEntry> new_queue;
-        new_queue.reserve(items.size());
+        // New rows are analysed over USB without the lock. The queue is rebuilt from
+        // the live m_queue afterwards: a copy taken before the analysis lost an
+        // "Install selected" pressed meanwhile (install_selected went back to false
+        // and the first package was skipped without a status to the PC).
+        std::unordered_map<std::string, QueueEntry> added;
+        for (const auto& item : items) {
+            if (known.contains(item.name) || added.contains(item.name)) {
+                continue;
+            }
+            QueueEntry entry{};
+            entry.file_name = item.name;
+            if (m_usb_source) {
+                entry.analysis_result = AnalyzeQueueName(m_usb_source.get(), item.name, entry.analysis);
+                s64 pc_size = m_usb_source->GetFileSize(item.name);
+                if (pc_size > 0) {
+                    entry.analysis.source_size = pc_size;
+                }
+            }
+            entry.target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
+            entry.selected = item.selected && R_SUCCEEDED(entry.analysis_result);
+            if (R_FAILED(entry.analysis_result)) {
+                AddError(item.name, "Analysis"_i18n, entry.analysis_result);
+            }
+            added.emplace(item.name, std::move(entry));
+        }
 
         // The PC applies the console's plan after it arrives; a reply fetched right after the send still has the
         // old tick, and taking it over made the checkmark vanish for one poll. Ignore ticks/targets for 1.5 s.
         const u64 sent = m_plan_sent_tick.load();
         const bool plan_in_flight = sent && armTicksToNs(armGetSystemTick() - sent) < 1'500'000'000ull;
 
-        for (const auto& item : items) {
-            auto it = existing_map.find(item.name);
-            if (it != existing_map.end()) {
-                QueueEntry entry = std::move(it->second);
-                existing_map.erase(it);
-
-                // a tick or target changed on the console keeps its value until the PC
-                // has been told (SendQueuePlanIfChanged); otherwise this poll would
-                // put the tick straight back.
-                if (!entry.sync_dirty && !plan_in_flight) {
-                    bool new_sel = item.selected && R_SUCCEEDED(entry.analysis_result);
-                    if (entry.selected != new_sel) {
-                        entry.selected = new_sel;
-                        changed = true;
-                    }
-
-                    InstallTarget new_target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
-                    if (entry.target != new_target) {
-                        entry.target = new_target;
-                        changed = true;
-                    }
-                }
-                new_queue.emplace_back(std::move(entry));
-            } else {
-                // New item added from host
-                QueueEntry entry{};
-                entry.file_name = item.name;
-                if (m_usb_source) {
-                    entry.analysis_result = AnalyzeQueueName(m_usb_source.get(), item.name, entry.analysis);
-                    s64 pc_size = m_usb_source->GetFileSize(item.name);
-                    if (pc_size > 0) {
-                        entry.analysis.source_size = pc_size;
-                    }
-                }
-                entry.target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
-                entry.selected = item.selected && R_SUCCEEDED(entry.analysis_result);
-                if (R_FAILED(entry.analysis_result)) {
-                    AddError(item.name, "Analysis"_i18n, entry.analysis_result);
-                }
-                new_queue.emplace_back(std::move(entry));
-                changed = true;
-            }
-        }
-
-        if (!existing_map.empty()) {
-            changed = true;
-        }
-
         {
             SCOPED_MUTEX(&m_mutex);
+            std::unordered_map<std::string, QueueEntry> existing_map;
+            for (auto& entry : m_queue) {
+                existing_map.emplace(entry.file_name, std::move(entry));
+            }
+
+            std::vector<QueueEntry> new_queue;
+            new_queue.reserve(items.size());
+
+            for (const auto& item : items) {
+                auto it = existing_map.find(item.name);
+                if (it != existing_map.end()) {
+                    QueueEntry entry = std::move(it->second);
+                    existing_map.erase(it);
+
+                    // a tick or target changed on the console keeps its value until the PC
+                    // has been told (SendQueuePlanIfChanged); otherwise this poll would
+                    // put the tick straight back.
+                    if (!entry.sync_dirty && !plan_in_flight) {
+                        bool new_sel = item.selected && R_SUCCEEDED(entry.analysis_result);
+                        if (entry.selected != new_sel) {
+                            entry.selected = new_sel;
+                            changed = true;
+                        }
+
+                        InstallTarget new_target = (item.target == 1) ? InstallTarget::Sd : ((item.target == 2) ? InstallTarget::Nand : InstallTarget::Auto);
+                        if (entry.target != new_target) {
+                            entry.target = new_target;
+                            changed = true;
+                        }
+                    }
+                    new_queue.emplace_back(std::move(entry));
+                } else if (auto node = added.extract(item.name)) {
+                    // New item added from host, analysed above
+                    new_queue.emplace_back(std::move(node.mapped()));
+                    changed = true;
+                }
+            }
+
+            if (!existing_map.empty()) {
+                changed = true;
+            }
+
             m_queue = std::move(new_queue);
             for (size_t i = 0; i < m_queue.size(); i++) {
                 m_queue[i].source_index = i;
