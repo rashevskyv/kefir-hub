@@ -19,6 +19,7 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
 
     switch (pp.kind) {
         case sphaira::mtp::PathKind::Root:
+        case sphaira::mtp::PathKind::ModsRootDir:
         case sphaira::mtp::PathKind::MergedDir:
         case sphaira::mtp::PathKind::SeparateDir:
         case sphaira::mtp::PathKind::ForwardersDir:
@@ -133,8 +134,11 @@ Result FsGameProxy::RenameFile(const char *old_path, const char *new_path) {
 }
 
 Result FsGameProxy::CreateDirectory(const char* path) {
+    // the game's own mods folder too: Merged/Mods lists only games that have one.
+    const auto pp = Parse(path);
+    R_UNLESS(pp.kind == sphaira::mtp::PathKind::ModsPath, FsError_NotImplemented);
     fs::FsPath sd_path;
-    R_TRY(ModsSdItem(path, sd_path));
+    R_TRY(ModsSdPath(pp, sd_path));
     return m_sd.CreateDirectoryRecursively(sd_path);
 }
 
@@ -292,6 +296,7 @@ Result FsGameProxy::OpenDirectory(const char *path, u32 mode, FsDir *out_dir) {
                 }
                 if (mode & FsDirOpenMode_ReadDirs) {
                     handle->entries.emplace_back(MakeVirtualDirEntry(m_names.forwarders));
+                    handle->entries.emplace_back(MakeVirtualDirEntry(m_names.mods));
                 }
             } else if (m_layout == sphaira::mtp::GamesLayout::Separate) {
                 if (mode & FsDirOpenMode_ReadDirs) {
@@ -335,6 +340,22 @@ Result FsGameProxy::OpenDirectory(const char *path, u32 mode, FsDir *out_dir) {
                     }
                 }
                 handle->entries.emplace_back(InfoDirEntry("merged"));
+            }
+            if (mode & FsDirOpenMode_ReadDirs) {
+                handle->entries.emplace_back(MakeVirtualDirEntry(m_names.mods));
+            }
+            break;
+        }
+
+        case sphaira::mtp::PathKind::ModsRootDir: {
+            // only games with a /atmosphere/contents/<tid> folder: a copy to the PC
+            // should not bring hundreds of empty folders.
+            if (mode & FsDirOpenMode_ReadDirs) {
+                for (const auto& [name, game] : m_games) {
+                    if (m_sd.DirExists(title::GetContentsPath(game.app_id))) {
+                        handle->entries.emplace_back(MakeVirtualDirEntry(name));
+                    }
+                }
             }
             break;
         }

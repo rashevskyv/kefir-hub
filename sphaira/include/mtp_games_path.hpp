@@ -2,6 +2,8 @@
 
 #include <cctype>
 #include <cstdint>
+#include <cstdio>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -27,6 +29,9 @@ enum class PathKind {
     // streams to the installer, `install_sd` says where, `filename` is its name.
     InstallDir,
     InstallFile,
+    // Merged/<Mods> (the drive root in the Compatible layout): one folder per game that has
+    // /atmosphere/contents/<tid>; the paths below it are ModsPath.
+    ModsRootDir,
     Invalid
 };
 
@@ -57,6 +62,36 @@ inline auto IsForwarderTitleId(std::uint64_t tid) -> bool {
     return tid == 0x03DB1280BD84000ULL || tid == 0x03DB12780BD84000ULL;
 }
 
+inline auto EqualsIc(std::string_view a, std::string_view b) -> bool {
+    if (a.size() != b.size()) return false;
+    for (size_t k = 0; k < a.size(); ++k) {
+        if (std::tolower(static_cast<unsigned char>(a[k])) != std::tolower(static_cast<unsigned char>(b[k]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// "/a//b/" -> {"a", "b"}.
+inline auto SplitPath(std::string_view path) -> std::vector<std::string_view> {
+    std::vector<std::string_view> segments;
+    size_t i = 0;
+    while (i < path.size()) {
+        while (i < path.size() && path[i] == '/') {
+            ++i;
+        }
+        if (i >= path.size()) {
+            break;
+        }
+        const size_t start = i;
+        while (i < path.size() && path[i] != '/') {
+            ++i;
+        }
+        segments.push_back(path.substr(start, i - start));
+    }
+    return segments;
+}
+
 struct ParsedPath {
     PathKind kind{PathKind::Invalid};
     std::string game{};
@@ -81,37 +116,14 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     const GamesFolderNames& names = {})
 {
     ParsedPath result{};
-    std::vector<std::string_view> segments;
-
-    size_t i = 0;
-    while (i < path.size()) {
-        while (i < path.size() && path[i] == '/') {
-            ++i;
-        }
-        if (i >= path.size()) {
-            break;
-        }
-        size_t start = i;
-        while (i < path.size() && path[i] != '/') {
-            ++i;
-        }
-        segments.push_back(path.substr(start, i - start));
-    }
+    const auto segments = SplitPath(path);
 
     if (segments.empty()) {
         result.kind = PathKind::Root;
         return result;
     }
 
-    auto equals_ic = [](std::string_view a, std::string_view b) {
-        if (a.size() != b.size()) return false;
-        for (size_t k = 0; k < a.size(); ++k) {
-            if (std::tolower(static_cast<unsigned char>(a[k])) != std::tolower(static_cast<unsigned char>(b[k]))) {
-                return false;
-            }
-        }
-        return true;
-    };
+    const auto equals_ic = EqualsIc;
 
     auto match_name = [&](std::string_view seg, std::string_view english, const std::string& localized) {
         if (equals_ic(seg, english)) {
@@ -128,23 +140,41 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     auto is_install_sd = [&](std::string_view s) { return match_name(s, "Install to SD", names.install_sd); };
     auto is_install_nand = [&](std::string_view s) { return match_name(s, "Install to NAND", names.install_nand); };
 
-    // segments[game_at] is a game folder; true when the rest is its mods folder.
-    auto parse_mods = [&](size_t game_at) {
-        if (segments.size() <= game_at + 1 || !is_mods(segments[game_at + 1])) {
-            return false;
-        }
+    // a game's mods folder: `game` names the game, segments[from...] is the path inside it.
+    auto mods_item = [&](std::string_view game, size_t from) {
         result.kind = PathKind::ModsPath;
-        result.game = std::string(segments[game_at]);
-        for (size_t k = game_at + 2; k < segments.size(); ++k) {
+        result.game = std::string(game);
+        for (size_t k = from; k < segments.size(); ++k) {
             // the path is joined onto a real SD folder: never let it climb out.
             if (segments[k] == "." || segments[k] == "..") {
                 result = ParsedPath{};
-                return true;
+                return;
             }
             if (!result.filename.empty()) {
                 result.filename.push_back('/');
             }
             result.filename += segments[k];
+        }
+    };
+
+    // segments[game_at] is a game folder; true when the rest is its mods folder.
+    auto parse_mods = [&](size_t game_at) {
+        if (segments.size() <= game_at + 1 || !is_mods(segments[game_at + 1])) {
+            return false;
+        }
+        mods_item(segments[game_at], game_at + 2);
+        return true;
+    };
+
+    // segments[at] is the merged mods folder: <Mods>/<game>/<path inside the game's mods folder>.
+    auto parse_mods_root = [&](size_t at) {
+        if (segments.size() <= at || !is_mods(segments[at])) {
+            return false;
+        }
+        if (segments.size() == at + 1) {
+            result.kind = PathKind::ModsRootDir;
+        } else {
+            mods_item(segments[at + 1], at + 2);
         }
         return true;
     };
@@ -186,6 +216,9 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     }
 
     if (layout == GamesLayout::Compatible) {
+        if (parse_mods_root(0)) {
+            return result;
+        }
         if (segments.size() == 1) {
             result.kind = PathKind::MergedFile;
             result.filename = std::string(segments[0]);
@@ -213,6 +246,9 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     }
 
     if (is_merged(segments[0])) {
+        if (parse_mods_root(1)) {
+            return result;
+        }
         if (segments.size() == 1) {
             result.kind = PathKind::MergedDir;
         } else if (segments.size() == 2 && is_readme(segments[1])) {
@@ -250,6 +286,110 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
     }
 
     return result;
+}
+
+inline constexpr const char* INSTALL_EXT[] = { ".nsp", ".xci", ".nsz", ".xcz" };
+
+inline auto IsInstallName(std::string_view name) -> bool {
+    const auto dot = name.rfind('.');
+    if (dot == std::string_view::npos) {
+        return false;
+    }
+    for (const auto ext : INSTALL_EXT) {
+        if (EqualsIc(name.substr(dot), ext)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// "Zelda [0100F2C0115B6000]" -> 0x0100F2C0115B6000: the last "[16 hex digits]" in a name
+// (the Games drive names game folders "<name> [TID]").
+inline auto TitleIdFromName(std::string_view name) -> std::optional<std::uint64_t> {
+    std::optional<std::uint64_t> out;
+    for (size_t open = 0; open + 18 <= name.size(); ++open) {
+        if (name[open] != '[' || name[open + 17] != ']') {
+            continue;
+        }
+        std::uint64_t tid = 0;
+        bool hex = true;
+        for (size_t k = open + 1; k < open + 17 && hex; ++k) {
+            const auto c = static_cast<unsigned char>(name[k]);
+            hex = std::isxdigit(c);
+            tid = (tid << 4) | static_cast<std::uint64_t>(std::isdigit(c) ? c - '0' : std::tolower(c) - 'a' + 10);
+        }
+        if (hex) {
+            out = tid;
+        }
+    }
+    return out;
+}
+
+// what a file dropped on the MTP Install drive (alone or inside a folder) becomes.
+enum class DropKind {
+    Install, // an NSP/XCI/NSZ/XCZ: streams to the installer.
+    Mod,     // a file in a game's mods folder: written to `sd_path` on the SD card.
+    Skip,    // any other file inside a dropped folder (a readme): accepted and discarded.
+    Reject,  // any other file at the drive root: refused, as before folders were accepted.
+};
+
+struct Drop {
+    DropKind kind{DropKind::Reject};
+    std::string sd_path{};
+};
+
+// "/atmosphere/contents/" + 16 hex digits: a game's mods folder itself, not a file in it.
+inline constexpr size_t CONTENTS_TID_PATH_LEN = 37;
+
+// a path in a game's mods folder as the Games drive lays it out: ".../<Mods>/<name [TID]>/<rest>"
+// (Merged) or ".../<name [TID]>/<Mods>/<rest>" (Separate). <Mods> is "Mods" or the locale's name.
+// returns "/atmosphere/contents/<TID>[/<rest>]", nullopt for any other path.
+inline auto ModsDropSdPath(std::string_view path, std::string_view mods_name) -> std::optional<std::string> {
+    const auto segments = SplitPath(path);
+    for (const auto seg : segments) {
+        // the result is a real SD path: never let it climb out.
+        if (seg == "." || seg == "..") {
+            return std::nullopt;
+        }
+    }
+    for (size_t k = 0; k < segments.size(); ++k) {
+        if (!EqualsIc(segments[k], "Mods") && (mods_name.empty() || !EqualsIc(segments[k], mods_name))) {
+            continue;
+        }
+        size_t rest = 0;
+        std::optional<std::uint64_t> tid;
+        if (k + 1 < segments.size() && (tid = TitleIdFromName(segments[k + 1]))) {
+            rest = k + 2;
+        } else if (k > 0 && (tid = TitleIdFromName(segments[k - 1]))) {
+            rest = k + 1;
+        } else {
+            continue;
+        }
+        char base[48];
+        std::snprintf(base, sizeof(base), "/atmosphere/contents/%016llX", static_cast<unsigned long long>(*tid));
+        std::string out = base;
+        for (size_t r = rest; r < segments.size(); ++r) {
+            out += '/';
+            out += segments[r];
+        }
+        return out;
+    }
+    return std::nullopt;
+}
+
+inline auto ClassifyInstallDrop(std::string_view path, std::string_view mods_name) -> Drop {
+    const auto segments = SplitPath(path);
+    if (segments.empty()) {
+        return {};
+    }
+    // the mods rule comes first: a mod may hold any file, even an nsp.
+    if (auto sd = ModsDropSdPath(path, mods_name); sd && sd->size() > CONTENTS_TID_PATH_LEN) {
+        return { DropKind::Mod, std::move(*sd) };
+    }
+    if (IsInstallName(segments.back())) {
+        return { DropKind::Install };
+    }
+    return { segments.size() > 1 ? DropKind::Skip : DropKind::Reject };
 }
 
 } // namespace sphaira::mtp

@@ -8,14 +8,6 @@ namespace sphaira::haze {
 #if ENABLE_NETWORK_INSTALL
 namespace {
 
-bool IsInstallFile(const std::string& name) {
-    const auto dot = name.rfind('.');
-    if (dot == std::string::npos) {
-        return false;
-    }
-    return std::ranges::any_of(SUPPORTED_EXT, [&](const char* ext) { return !strcasecmp(name.c_str() + dot, ext); });
-}
-
 bool InstallEnabled() {
     SCOPED_MUTEX(&g_shared_data.mutex);
     return g_shared_data.enabled;
@@ -29,7 +21,7 @@ auto FsGameProxy::FindInstallEntry(const std::string& name) -> FsDirectoryEntry*
 }
 
 Result FsGameProxy::InstallCreate(const sphaira::mtp::ParsedPath& pp, s64 size) {
-    R_UNLESS(IsInstallFile(pp.filename), FsError_NotImplemented);
+    R_UNLESS(sphaira::mtp::IsInstallName(pp.filename), FsError_NotImplemented);
     R_UNLESS(InstallEnabled(), FsError_NotImplemented);
     // one install at a time: only the file in flight needs to stay visible.
     std::erase_if(m_install_entries, [&](const auto& e) { return strcasecmp(e.name, pp.filename.c_str()) != 0; });

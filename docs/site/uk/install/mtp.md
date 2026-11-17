@@ -45,6 +45,15 @@ MTP і USB-накопичувачі використовують той сами
 
 <!-- shot: install-mtp-progress | MTP Install screen during a copy: Mode MTP, Written, Average speed, log -->
 
+<!-- draft (v0.14.400): install a whole folder, uk
+- Copy a whole folder into the drive `Install (NSP, XCI, NSZ, XCZ)`: every NSP, NSZ, XCI and XCZ file in it and in its subfolders is installed, one after another.
+- Other files in the folder (for example Readme.txt) are skipped without an error. A single non-game file at the drive root is still refused.
+- A folder `Mods` (or [[Mods]]) with game folders named `<name> [Title ID]` inside it, as `Games` → `Merged` → [[Mods]] gives it: its files are written to `/atmosphere/contents/<Title ID>/` on the microSD card (mods and cheats); a file that is already there is replaced. The game does not need to be installed yet. The same works for a `Separate` game folder with its [[Mods]] folder.
+- So a `Merged` folder copied from the `Games` drive to the PC and back into the install drive installs the games and puts their mods and cheats back.
+- A game folder in [[Mods]] without `[Title ID]` in its name is skipped.
+- Not yet in the [[Install to SD]] / [[Install to NAND]] folders of the `Games` drive ([[Install folders in Games]] on): there only single files install.
+-->
+
 ## Що показує хід встановлення {#progress}
 
 ПК не повідомляє консолі розмір файлу, тож консоль не може показати відсоток для всього копіювання. Рядок 1: [[Mode]] MTP, скільки файлів [[Installed]] і [[Failed]]. Рядок 2: [[Average speed]]. Рядок 3: назва гри і скільки з неї [[Written]]; [[Package size]] показує `--`. Наскільки просунулося копіювання, дивіться у вікні копіювання на ПК.

@@ -1,6 +1,9 @@
 // The MTP "Install (NSP, XCI, NSZ, XCZ)" drive (the default; Settings → MTP can move the install folders
 // into the Games drive instead, haze_game_proxy_install.cpp) and the installer callbacks every MTP install
 // path shares (that drive, the Games install folders, the microSD root drop).
+// The drive takes whole folders too (a Games "Merged" folder copied to the PC and back): every
+// NSP/XCI/NSZ/XCZ in them installs, the files of a game's mods folder go to its
+// /atmosphere/contents/<tid> on the SD card, other files are skipped (mtp::ClassifyInstallDrop).
 #include "haze/haze_internal.hpp"
 
 #include "app.hpp"
@@ -32,6 +35,9 @@ namespace sphaira::haze {
 struct FsInstallProxy final : FsProxyVfs {
     using FsProxyVfs::FsProxyVfs;
 
+    // FsFile.s.session tags what an open file is; FsProxyVfs uses object_id and own_handle.
+    enum HandleKind : u32 { Handle_Install = 0, Handle_Mod = 1, Handle_Skip = 2 };
+
     Result FailedIfNotEnabled() {
         SCOPED_MUTEX(&g_shared_data.mutex);
         if (!g_shared_data.enabled) {
@@ -41,25 +47,8 @@ struct FsInstallProxy final : FsProxyVfs {
         R_SUCCEED();
     }
 
-    Result IsValidFileType(const char* name) {
-        const char* ext = std::strrchr(name, '.');
-        if (!ext) {
-            R_THROW(FsError_NotImplemented);
-        }
-
-        bool found = false;
-        for (size_t i = 0; i < std::size(SUPPORTED_EXT); i++) {
-            if (!strcasecmp(ext, SUPPORTED_EXT[i])) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            R_THROW(FsError_NotImplemented);
-        }
-
-        R_SUCCEED();
+    auto Classify(const char* path) const -> sphaira::mtp::Drop {
+        return sphaira::mtp::ClassifyInstallDrop(FixPath(path).s, m_mods_name);
     }
 
     Result GetTotalSpace(const char *path, s64 *out) override {
@@ -78,22 +67,89 @@ struct FsInstallProxy final : FsProxyVfs {
     }
 
     Result GetEntryType(const char *path, FsDirEntryType *out_entry_type) override {
+        const auto fixed = FixPath(path);
+        if (const auto it = m_dropped.find(fixed.s); it != m_dropped.end()) {
+            *out_entry_type = it->second;
+            R_SUCCEED();
+        }
+        if (const auto sd = sphaira::mtp::ModsDropSdPath(fixed.s, m_mods_name)) {
+            return m_sd.GetEntryType(sd->c_str(), out_entry_type);
+        }
         R_TRY(FsProxyVfs::GetEntryType(path, out_entry_type));
         if (*out_entry_type == FsDirEntryType_File) {
             R_TRY(FailedIfNotEnabled());
         }
         R_SUCCEED();
     }
+    // a dropped folder: a game's mods folder is made on the SD card, any other one is only
+    // remembered so the files inside it can arrive.
+    Result CreateDirectory(const char* path) override {
+        const auto fixed = FixPath(path);
+        if (const auto sd = sphaira::mtp::ModsDropSdPath(fixed.s, m_mods_name)) {
+            log_write("[MTP] mods folder %s -> %s\n", fixed.s, sd->c_str());
+            return m_sd.CreateDirectoryRecursively(sd->c_str());
+        }
+        m_dropped[fixed.s] = FsDirEntryType_Dir;
+        R_SUCCEED();
+    }
     Result CreateFile(const char* path, s64 size, u32 option) override {
+        const auto drop = Classify(path);
+        switch (drop.kind) {
+            case sphaira::mtp::DropKind::Mod: {
+                const fs::FsPath sd{drop.sd_path.c_str()};
+                log_write("[MTP] mod file %s -> %s\n", path, sd.s);
+                R_TRY(m_sd.CreateDirectoryRecursivelyWithPath(sd));
+                // a restore replaces the file: the drive lists nothing, so Explorer never asks.
+                m_sd.DeleteFile(sd);
+                return m_sd.CreateFile(sd, size, option);
+            }
+            case sphaira::mtp::DropKind::Skip:
+                log_write("[MTP] skipping %s\n", path);
+                m_dropped[FixPath(path).s] = FsDirEntryType_File;
+                R_SUCCEED();
+            case sphaira::mtp::DropKind::Reject:
+                R_THROW(FsError_NotImplemented);
+            case sphaira::mtp::DropKind::Install:
+                break;
+        }
         R_TRY(FailedIfNotEnabled());
-        R_TRY(IsValidFileType(path));
+        // files of different folders share one flat list by name: a second drop of the same
+        // name replaces the old entry (one install runs at a time).
+        if (const auto file_name = GetFileName(path)) {
+            std::erase_if(m_entries, [file_name](const auto& e) { return !strcasecmp(file_name, e.name); });
+        }
         R_TRY(FsProxyVfs::CreateFile(path, size, option));
         R_SUCCEED();
     }
+    Result DeleteFile(const char* path) override {
+        const auto drop = Classify(path);
+        if (drop.kind == sphaira::mtp::DropKind::Mod) {
+            return m_sd.DeleteFile(drop.sd_path.c_str());
+        }
+        if (m_dropped.erase(FixPath(path).s)) {
+            R_SUCCEED();
+        }
+        return FsProxyVfs::DeleteFile(path);
+    }
     Result OpenFile(const char *path, u32 mode, FsFile *out_file) override {
+        const auto drop = Classify(path);
+        if (drop.kind == sphaira::mtp::DropKind::Mod) {
+            // ponytail: one mod file at a time, libhaze sends one object at a time.
+            R_TRY(m_sd.OpenFile(drop.sd_path.c_str(), mode, &m_mod_file));
+            std::memset(out_file, 0, sizeof(*out_file));
+            out_file->s.session = Handle_Mod;
+            R_SUCCEED();
+        }
+        if (drop.kind == sphaira::mtp::DropKind::Skip) {
+            R_UNLESS(m_dropped.contains(FixPath(path).s), FsError_PathNotFound);
+            std::memset(out_file, 0, sizeof(*out_file));
+            out_file->s.session = Handle_Skip;
+            R_SUCCEED();
+        }
         R_TRY(FailedIfNotEnabled());
-        R_TRY(IsValidFileType(path));
+        R_UNLESS(drop.kind == sphaira::mtp::DropKind::Install, FsError_NotImplemented);
         R_TRY(FsProxyVfs::OpenFile(path, mode, out_file));
+        out_file->s.session = Handle_Install;
         log_write("[MTP] done file open: %s mode: 0x%X\n", path, mode);
 
         if (mode & FsOpenMode_Write) {
@@ -113,7 +169,27 @@ struct FsInstallProxy final : FsProxyVfs {
         log_write("[MTP] got file: %s\n", path);
         R_SUCCEED();
     }
+    Result GetFileSize(FsFile *file, s64 *out_size) override {
+        switch (file->s.session) {
+            case Handle_Mod: return m_mod_file.GetSize(out_size);
+            case Handle_Skip: *out_size = 0; R_SUCCEED();
+            default: return FsProxyVfs::GetFileSize(file, out_size);
+        }
+    }
+    Result SetFileSize(FsFile *file, s64 size) override {
+        switch (file->s.session) {
+            case Handle_Mod: return m_mod_file.SetSize(size);
+            case Handle_Skip: R_SUCCEED();
+            default: return FsProxyVfs::SetFileSize(file, size);
+        }
+    }
     Result WriteFile(FsFile *file, s64 off, const void *buf, u64 write_size, u32 option) override {
+        if (file->s.session == Handle_Mod) {
+            return m_mod_file.Write(off, buf, write_size, option);
+        }
+        if (file->s.session == Handle_Skip) {
+            R_SUCCEED();
+        }
         SCOPED_MUTEX(&g_shared_data.mutex);
         if (!g_shared_data.enabled) {
             log_write("[MTP] failing as not enabled\n");
@@ -129,6 +205,13 @@ struct FsInstallProxy final : FsProxyVfs {
         R_SUCCEED();
     }
     void CloseFile(FsFile *file) override {
+        if (file->s.session != Handle_Install) {
+            if (file->s.session == Handle_Mod) {
+                m_mod_file.Close();
+            }
+            std::memset(file, 0, sizeof(*file));
+            return;
+        }
         bool update{};
         {
             SCOPED_MUTEX(&g_shared_data.mutex);
@@ -151,11 +234,40 @@ struct FsInstallProxy final : FsProxyVfs {
         FsProxyVfs::CloseFile(file);
     }
 
+    // a dropped folder lists nothing: its games are installed, its mods are on the SD card.
+    Result OpenDirectory(const char *path, u32 mode, FsDir *out_dir) override {
+        R_TRY(FsProxyVfs::OpenDirectory(path, mode, out_dir));
+        out_dir->s.own_handle = FixPath(path) != "/";
+        R_SUCCEED();
+    }
+    Result ReadDirectory(FsDir *d, s64 *out_total_entries, size_t max_entries, FsDirectoryEntry *buf) override {
+        if (d->s.own_handle) {
+            *out_total_entries = 0;
+            R_SUCCEED();
+        }
+        return FsProxyVfs::ReadDirectory(d, out_total_entries, max_entries, buf);
+    }
+    Result GetDirectoryEntryCount(FsDir *d, s64 *out_count) override {
+        if (d->s.own_handle) {
+            *out_count = 0;
+            R_SUCCEED();
+        }
+        return FsProxyVfs::GetDirectoryEntryCount(d, out_count);
+    }
+
     // installs are already multi-threaded via yati.
     bool MultiThreadTransfer(s64 size, bool read) override {
         App::IsFileBaseEmummc();
         return false;
     }
+
+private:
+    // the Games drive's mods folder name in this locale ("Mods" is always accepted too).
+    const std::string m_mods_name{"Mods"_i18n};
+    // folders and skipped files of a dropped folder, by full path.
+    std::map<std::string, FsDirEntryType, CaseInsensitiveLess> m_dropped{};
+    fs::FsNativeSd m_sd{};
+    fs::File m_mod_file{};
 };
 #endif
 

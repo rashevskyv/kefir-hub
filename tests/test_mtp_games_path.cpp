@@ -251,8 +251,7 @@ static int test_parse_games_path() {
         CHECK(ParseGamesPath("/Separate/Game A/Mods", GamesLayout::Both, names).kind == PathKind::ModsPath);
     }
     {
-        // no mods folder in the merged layout, and an nsp keeps its meaning.
-        CHECK(ParseGamesPath("/Mods", GamesLayout::Compatible).kind == PathKind::MergedFile);
+        // an nsp keeps its meaning next to a mods folder.
         CHECK(ParseGamesPath("/Separate/Game A/Mods.nsp").kind == PathKind::SeparateFile);
         // a mods path is joined onto a real SD folder: no way out of it.
         CHECK(ParseGamesPath("/Separate/Game A/Mods/../../x").kind == PathKind::Invalid);
@@ -289,8 +288,92 @@ static int test_parse_games_path() {
     return 0;
 }
 
+// Merged/<Mods>: one folder per game with mods, its subfolders are the game's SD folder.
+static int test_merged_mods() {
+    using namespace sphaira::mtp;
+
+    CHECK(ParseGamesPath("/Merged/Mods").kind == PathKind::ModsRootDir);
+    CHECK(ParseGamesPath("/Mods", GamesLayout::Compatible).kind == PathKind::ModsRootDir);
+    {
+        auto res = ParseGamesPath("/Merged/Mods/Game A [0100000000010000]/romfs/x.bin");
+        CHECK(res.kind == PathKind::ModsPath);
+        CHECK(res.game == "Game A [0100000000010000]");
+        CHECK(res.filename == "romfs/x.bin");
+    }
+    {
+        auto res = ParseGamesPath("/Mods/Game A/cheats", GamesLayout::Compatible);
+        CHECK(res.kind == PathKind::ModsPath && res.game == "Game A" && res.filename == "cheats");
+    }
+    {
+        GamesFolderNames names;
+        names.merged = "Злиті";
+        names.mods = "Моди";
+        auto game = ParseGamesPath("/Злиті/Моди/Гра", GamesLayout::Both, names);
+        CHECK(game.kind == PathKind::ModsPath && game.game == "Гра" && game.filename.empty());
+        CHECK(ParseGamesPath("/Злиті/Mods", GamesLayout::Both, names).kind == PathKind::ModsRootDir);
+        // the merged games and the readme keep their meaning.
+        CHECK(ParseGamesPath("/Злиті/Гра [0100000000010000].nsp", GamesLayout::Both, names).kind == PathKind::MergedFile);
+        CHECK(ParseGamesPath("/Злиті/Readme.txt", GamesLayout::Both, names).kind == PathKind::InfoFile);
+    }
+    CHECK(ParseGamesPath("/Merged/Mods/Game A/../../x").kind == PathKind::Invalid);
+    return 0;
+}
+
+// a folder dropped on the Install drive: games install, mods go to the SD card, the rest is skipped.
+static int test_install_drop() {
+    using namespace sphaira::mtp;
+
+    CHECK(TitleIdFromName("Zelda [0100F2C0115B6000]") == 0x0100F2C0115B6000ULL);
+    CHECK(TitleIdFromName("Zelda [0100f2c0115b6000]") == 0x0100F2C0115B6000ULL);
+    CHECK(TitleIdFromName("[01006A800016E000]") == 0x01006A800016E000ULL);
+    // the last match wins: a name may carry a bracket of its own.
+    CHECK(TitleIdFromName("Game [Deluxe] [0100000000010000]") == 0x0100000000010000ULL);
+    CHECK(!TitleIdFromName("Zelda"));
+    CHECK(!TitleIdFromName("Zelda [0100F2C0115B600]"));
+    CHECK(!TitleIdFromName("Zelda [0100F2C0115B600G]"));
+    CHECK(!TitleIdFromName("Zelda [0100F2C0115B6000"));
+
+    const std::string mods = "Моди";
+    // the whole Merged folder copied back from the PC.
+    CHECK(ClassifyInstallDrop("/Злиті/Zelda [0100F2C0115B6000][v0].nsp", mods).kind == DropKind::Install);
+    CHECK(ClassifyInstallDrop("/Злиті/Sub/deeper/Game.NSZ", mods).kind == DropKind::Install);
+    CHECK(ClassifyInstallDrop("/Злиті/Прочитай.txt", mods).kind == DropKind::Skip);
+    {
+        auto d = ClassifyInstallDrop("/Злиті/Моди/Zelda [0100F2C0115B6000]/romfs/Text/ua.msbt", mods);
+        CHECK(d.kind == DropKind::Mod);
+        CHECK(d.sd_path == "/atmosphere/contents/0100F2C0115B6000/romfs/Text/ua.msbt");
+    }
+    {
+        auto d = ClassifyInstallDrop("/Злиті/Mods/Zelda [0100f2c0115b6000]/cheats/ABCDEF0123456789.txt", mods);
+        CHECK(d.kind == DropKind::Mod);
+        CHECK(d.sd_path == "/atmosphere/contents/0100F2C0115B6000/cheats/ABCDEF0123456789.txt");
+    }
+    // the Separate layout puts the mods folder inside the game folder.
+    {
+        auto d = ClassifyInstallDrop("/Окремі/Zelda [0100F2C0115B6000]/Моди/exefs/main.npdm", mods);
+        CHECK(d.kind == DropKind::Mod);
+        CHECK(d.sd_path == "/atmosphere/contents/0100F2C0115B6000/exefs/main.npdm");
+        CHECK(ClassifyInstallDrop("/Окремі/Zelda [0100F2C0115B6000]/Zelda [BASE].nsp", mods).kind == DropKind::Install);
+    }
+    // any file in a mods folder is a mod, even an nsp.
+    CHECK(ClassifyInstallDrop("/Моди/Game [0100000000010000]/exefs.nsp", mods).kind == DropKind::Mod);
+    // a mods folder without a title id in the game folder name: nothing to map it to.
+    CHECK(ClassifyInstallDrop("/Злиті/Моди/Zelda/romfs/a.bin", mods).kind == DropKind::Skip);
+    CHECK(ClassifyInstallDrop("/Злиті/Моди/Zelda [0100F2C0115B6000]/../../x", mods).kind == DropKind::Skip);
+    // a single file at the drive root keeps the old rule.
+    CHECK(ClassifyInstallDrop("/Game.xci", mods).kind == DropKind::Install);
+    CHECK(ClassifyInstallDrop("/notes.txt", mods).kind == DropKind::Reject);
+
+    // folders: the game's mods folder itself maps to its SD folder, the others are virtual.
+    CHECK(ModsDropSdPath("/Злиті/Моди/Zelda [0100F2C0115B6000]", mods) == std::string("/atmosphere/contents/0100F2C0115B6000"));
+    CHECK(ModsDropSdPath("/Окремі/Zelda [0100F2C0115B6000]/Mods", mods) == std::string("/atmosphere/contents/0100F2C0115B6000"));
+    CHECK(!ModsDropSdPath("/Злиті/Моди", mods));
+    CHECK(!ModsDropSdPath("/Злиті", mods));
+    return 0;
+}
+
 int main() {
-    if (test_parse_games_path()) {
+    if (test_parse_games_path() || test_merged_mods() || test_install_drop()) {
         return 1;
     }
     std::printf("ok  mtp_games_path: %d checks passed\n", g_checks);

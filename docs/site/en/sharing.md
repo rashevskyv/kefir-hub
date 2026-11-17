@@ -200,6 +200,12 @@ With [[Separate files]] or [[Both]], each game folder also has a `Mods` folder. 
 `/atmosphere/contents/<Title ID>/` folder on the microSD card (mods and cheats): copy mods into it or out of it, rename
 or delete them, like on the SD card drive. The NSP files next to it stay read-only.
 
+<!-- draft (v0.14.400): mods folder in Merged
+- With [[Compatible dump]] or [[Both]], `Merged` (with [[Compatible dump]]: the drive root) also has a folder [[Mods]].
+- It has one folder per installed game that has a `/atmosphere/contents/<Title ID>/` folder on the microSD card, named like the game: `<name> [Title ID]`. Inside are that folder's files: `romfs`, `exefs`, `cheats` and so on. Copy, rename or delete them like in the `Mods` folder of a `Separate` game.
+- Copy the whole `Merged` folder to the PC: you get the merged dumps and their mods. Copy it back into the drive `Install (NSP, XCI, NSZ, XCZ)`: the games install and the mods and cheats go back to `/atmosphere/contents/<Title ID>/`. See [Install over MTP](install/mtp.md#install).
+-->
+
 <!-- draft (v0.14.344): delete a game over MTP
 - Drive `Games` (was `Games (read-only)`); toggle [[Show Games]] (was "Show Games (read-only)").
 - Delete a game's NSP in the drive root or `Merged`, or a forwarder in `Forwarders`, or a game folder in `Separate`: the Hub removes the game from the console, like Delete in the Games menu. Saves stay.

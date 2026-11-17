@@ -203,6 +203,12 @@ USB-накопичувачі, і консоль показує [[USB storage tur
 Це папка гри `/atmosphere/contents/<Title ID>/` на карті пам'яті (моди й чіти): копіюйте в неї моди й з неї, перейменовуйте
 чи видаляйте, як на диску карти пам'яті. Файли NSP поруч лишаються лише для читання.
 
+<!-- draft (v0.14.400): mods folder in Merged, uk
+- With [[Compatible dump]] or [[Both]], `Merged` (with [[Compatible dump]]: the drive root) also has a folder [[Mods]].
+- It has one folder per installed game that has a `/atmosphere/contents/<Title ID>/` folder on the microSD card, named like the game: `<name> [Title ID]`. Inside are that folder's files: `romfs`, `exefs`, `cheats` and so on. Copy, rename or delete them like in the `Mods` folder of a `Separate` game.
+- Copy the whole `Merged` folder to the PC: you get the merged dumps and their mods. Copy it back into the drive `Install (NSP, XCI, NSZ, XCZ)`: the games install and the mods and cheats go back to `/atmosphere/contents/<Title ID>/`. See [Install over MTP](install/mtp.md#install).
+-->
+
 <!-- draft (v0.14.344): видалення гри по MTP
 - Диск `Games` (був `Games (read-only)`); перемикач [[Show Games]] (був "Show Games (read-only)").
 - Видаліть NSP гри в корені диска чи в `Merged`, форвардер у `Forwarders` або папку гри в `Separate`: Hub видаляє гру з консолі, як «Видалити» в меню «Ігри». Збереження лишаються.

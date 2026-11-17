@@ -2,6 +2,7 @@
 
 #include "haze_helper.hpp"
 #include "haze/mtp_transfer_state.hpp"
+#include "mtp_games_path.hpp"
 #include "app.hpp"
 #include "fs.hpp"
 #include "log.hpp"
@@ -50,7 +51,6 @@ struct InstallSharedData {
 };
 
 extern InstallSharedData g_shared_data;
-inline constexpr const char* SUPPORTED_EXT[] = { ".nsp", ".xci", ".nsz", ".xcz" };
 void on_thing();
 #endif
 
