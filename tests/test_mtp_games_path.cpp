@@ -264,7 +264,14 @@ static int test_parse_games_path() {
         CHECK(dir.kind == PathKind::InstallDir && dir.install_sd);
         auto file = ParseGamesPath("/install to nand/Game.nsz", layout);
         CHECK(file.kind == PathKind::InstallFile && !file.install_sd && file.filename == "Game.nsz");
-        CHECK(ParseGamesPath("/Install to SD/a/b.nsp", layout).kind == PathKind::Invalid);
+        // a dropped folder: the path inside the install folder.
+        auto nested = ParseGamesPath("/Install to SD/Merged/Mods/x [0100000000010000]/romfs", layout);
+        CHECK(nested.kind == PathKind::InstallFile && nested.install_sd);
+        CHECK(nested.filename == "Merged/Mods/x [0100000000010000]/romfs");
+        CHECK(ClassifyInstallDrop(ParseGamesPath("/Install to SD/a/b.nsp", layout).filename, "").kind == DropKind::Install);
+        CHECK(ClassifyInstallDrop(ParseGamesPath("/Install to SD/a/readme.txt", layout).filename, "").kind == DropKind::Skip);
+        CHECK(ClassifyInstallDrop(ParseGamesPath("/Install to SD/readme.txt", layout).filename, "").kind == DropKind::Reject);
+        CHECK(ParseGamesPath("/Install to SD/a/../b.nsp", layout).kind == PathKind::Invalid);
     }
     {
         GamesFolderNames names;

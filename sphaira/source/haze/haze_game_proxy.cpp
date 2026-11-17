@@ -42,9 +42,7 @@ Result FsGameProxy::GetEntryType(const char *path, FsDirEntryType *out_entry_typ
             R_SUCCEED();
 
         case sphaira::mtp::PathKind::InstallFile:
-            R_UNLESS(FindInstallEntry(pp.filename), FsError_PathNotFound);
-            *out_entry_type = FsDirEntryType_File;
-            R_SUCCEED();
+            return InstallEntryType(pp, out_entry_type);
 
         case sphaira::mtp::PathKind::ModsPath: {
             fs::FsPath sd_path;
@@ -116,9 +114,7 @@ Result FsGameProxy::DeleteFile(const char* path) {
         return DeleteComponent(pp.game, nsp, index);
     }
     if (pp.kind == sphaira::mtp::PathKind::InstallFile) {
-        // nothing is stored; succeed so Explorer's replace flow goes on.
-        std::erase_if(m_install_entries, [&](const auto& e) { return !strcasecmp(e.name, pp.filename.c_str()); });
-        R_SUCCEED();
+        return InstallDelete(pp);
     }
 
     fs::FsPath sd_path;
@@ -136,6 +132,9 @@ Result FsGameProxy::RenameFile(const char *old_path, const char *new_path) {
 Result FsGameProxy::CreateDirectory(const char* path) {
     // the game's own mods folder too: Merged/Mods lists only games that have one.
     const auto pp = Parse(path);
+    if (pp.kind == sphaira::mtp::PathKind::InstallFile) {
+        return InstallMkdir(pp);
+    }
     R_UNLESS(pp.kind == sphaira::mtp::PathKind::ModsPath, FsError_NotImplemented);
     fs::FsPath sd_path;
     R_TRY(ModsSdPath(pp, sd_path));
@@ -168,6 +167,9 @@ Result FsGameProxy::SetFileSize(FsFile *file, s64 size) {
         h->install_size = size;
         R_SUCCEED();
     }
+    if (h->skip) {
+        R_SUCCEED();
+    }
     R_UNLESS(h->is_sd, FsError_NotImplemented);
     return h->sd.SetSize(size);
 }
@@ -177,6 +179,9 @@ Result FsGameProxy::WriteFile(FsFile *file, s64 off, const void *buf, u64 write_
     std::memcpy(&h, &file->s, sizeof(h));
     if (h->install) {
         return InstallWrite(*h, off, buf, write_size);
+    }
+    if (h->skip) {
+        R_SUCCEED();
     }
     R_UNLESS(h->is_sd, FsError_NotImplemented);
     return h->sd.Write(off, buf, write_size, option);
@@ -229,7 +234,7 @@ Result FsGameProxy::GetFileSize(FsFile *file, s64 *out_size) {
     if (h->is_sd) {
         return h->sd.GetSize(out_size);
     }
-    if (h->install) {
+    if (h->install || h->skip) {
         *out_size = h->install_size;
         R_SUCCEED();
     }
@@ -248,7 +253,7 @@ Result FsGameProxy::ReadFile(FsFile *file, s64 off, void *buf, u64 read_size, u3
     if (h->is_sd) {
         return h->sd.Read(off, buf, read_size, option, out_bytes_read);
     }
-    R_UNLESS(!h->install, FsError_NotImplemented);
+    R_UNLESS(!h->install && !h->skip, FsError_NotImplemented);
     if (!h->info.empty()) {
         *out_bytes_read = 0;
         if (off < 0 || off >= static_cast<s64>(h->info.size())) {

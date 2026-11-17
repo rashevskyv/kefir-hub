@@ -110,6 +110,8 @@ private:
         bool is_sd{};
         // a file being dropped into an install folder; nothing is stored.
         bool install{};
+        // a non-game file inside a folder dropped there: accepted and discarded.
+        bool skip{};
         u32 mode{};
         s64 install_size{};
         std::string install_name{};
@@ -143,7 +145,12 @@ private:
     Result DeleteComponent(const std::string& game, const std::shared_ptr<GameNsp>& nsp, size_t index);
     // builds the Merged nsp of one game into m_merged_cache; the caller holds m_cache_mutex.
     void AddMergedEntry(const std::string& dir_name, const GameRec& rec);
-    // the install folders: Explorer creates the file, then opens it for writing.
+    // the install folders: Explorer creates the file, then opens it for writing. A dropped
+    // folder works as on the Install drive (mtp::ClassifyInstallDrop): games install, a game's
+    // mods folder goes to the SD card, other files are skipped.
+    Result InstallEntryType(const sphaira::mtp::ParsedPath& pp, FsDirEntryType* out);
+    Result InstallMkdir(const sphaira::mtp::ParsedPath& pp);
+    Result InstallDelete(const sphaira::mtp::ParsedPath& pp);
     Result InstallCreate(const sphaira::mtp::ParsedPath& pp, s64 size);
     auto FindInstallEntry(const std::string& name) -> FsDirectoryEntry*;
     Result InstallOpen(const sphaira::mtp::ParsedPath& pp, u32 mode, FileHandle& h);
@@ -177,6 +184,8 @@ private:
     fs::FsNativeSd m_sd{};
     // the file last created in an install folder, so Explorer finds it after CreateFile.
     std::vector<FsDirectoryEntry> m_install_entries{};
+    // folders created inside an install folder (path inside it), so the files in them can arrive.
+    std::set<std::string, CaseInsensitiveLess> m_install_dirs{};
 };
 
 } // namespace sphaira::haze

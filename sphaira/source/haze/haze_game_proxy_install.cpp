@@ -1,6 +1,8 @@
 // The "Install to SD" / "Install to NAND" folders of the MTP Games drive. A file dropped
 // there streams to the background installer like the microSD root drop (haze_fs_proxy.cpp);
 // the queued path names the folder, RunInstall() reads the target back from it.
+// A dropped folder works as on the Install drive (haze_install_proxy.cpp): every game in it
+// installs, a game's mods folder goes to /atmosphere/contents/<tid>, other files are skipped.
 #include "haze/haze_game_proxy_internal.hpp"
 
 namespace sphaira::haze {
@@ -20,9 +22,49 @@ auto FsGameProxy::FindInstallEntry(const std::string& name) -> FsDirectoryEntry*
     return it != m_install_entries.end() ? &*it : nullptr;
 }
 
+Result FsGameProxy::InstallEntryType(const sphaira::mtp::ParsedPath& pp, FsDirEntryType* out) {
+    if (m_install_dirs.contains(pp.filename)) {
+        *out = FsDirEntryType_Dir;
+        R_SUCCEED();
+    }
+    if (const auto sd = sphaira::mtp::ModsDropSdPath(pp.filename, m_names.mods)) {
+        return m_sd.GetEntryType(sd->c_str(), out);
+    }
+    R_UNLESS(FindInstallEntry(pp.filename), FsError_PathNotFound);
+    *out = FsDirEntryType_File;
+    R_SUCCEED();
+}
+
+Result FsGameProxy::InstallMkdir(const sphaira::mtp::ParsedPath& pp) {
+    if (const auto sd = sphaira::mtp::ModsDropSdPath(pp.filename, m_names.mods)) {
+        log_write("[MTP-GAMES] mods folder %s -> %s\n", pp.filename.c_str(), sd->c_str());
+        return m_sd.CreateDirectoryRecursively(sd->c_str());
+    }
+    m_install_dirs.emplace(pp.filename);
+    R_SUCCEED();
+}
+
+Result FsGameProxy::InstallDelete(const sphaira::mtp::ParsedPath& pp) {
+    if (const auto drop = sphaira::mtp::ClassifyInstallDrop(pp.filename, m_names.mods); drop.kind == sphaira::mtp::DropKind::Mod) {
+        return m_sd.DeleteFile(drop.sd_path.c_str());
+    }
+    // nothing is stored; succeed so Explorer's replace flow goes on.
+    std::erase_if(m_install_entries, [&](const auto& e) { return !strcasecmp(e.name, pp.filename.c_str()); });
+    R_SUCCEED();
+}
+
 Result FsGameProxy::InstallCreate(const sphaira::mtp::ParsedPath& pp, s64 size) {
-    R_UNLESS(sphaira::mtp::IsInstallName(pp.filename), FsError_NotImplemented);
-    R_UNLESS(InstallEnabled(), FsError_NotImplemented);
+    const auto drop = sphaira::mtp::ClassifyInstallDrop(pp.filename, m_names.mods);
+    if (drop.kind == sphaira::mtp::DropKind::Mod) {
+        const fs::FsPath sd{drop.sd_path.c_str()};
+        log_write("[MTP-GAMES] mod file %s -> %s\n", pp.filename.c_str(), sd.s);
+        R_TRY(m_sd.CreateDirectoryRecursivelyWithPath(sd));
+        // a restore replaces the file: the folder lists nothing, so Explorer never asks.
+        m_sd.DeleteFile(sd);
+        return m_sd.CreateFile(sd, size, 0);
+    }
+    R_UNLESS(drop.kind != sphaira::mtp::DropKind::Reject, FsError_NotImplemented);
+    R_UNLESS(drop.kind == sphaira::mtp::DropKind::Skip || InstallEnabled(), FsError_NotImplemented);
     // one install at a time: only the file in flight needs to stay visible.
     std::erase_if(m_install_entries, [&](const auto& e) { return strcasecmp(e.name, pp.filename.c_str()) != 0; });
     if (auto e = FindInstallEntry(pp.filename)) {
@@ -34,8 +76,20 @@ Result FsGameProxy::InstallCreate(const sphaira::mtp::ParsedPath& pp, s64 size) 
 }
 
 Result FsGameProxy::InstallOpen(const sphaira::mtp::ParsedPath& pp, u32 mode, FileHandle& h) {
+    const auto drop = sphaira::mtp::ClassifyInstallDrop(pp.filename, m_names.mods);
+    if (drop.kind == sphaira::mtp::DropKind::Mod) {
+        R_TRY(m_sd.OpenFile(drop.sd_path.c_str(), mode, &h.sd));
+        h.is_sd = true;
+        R_SUCCEED();
+    }
     const auto entry = FindInstallEntry(pp.filename);
     R_UNLESS(entry || (mode & FsOpenMode_Write), FsError_PathNotFound);
+    if (drop.kind == sphaira::mtp::DropKind::Skip) {
+        log_write("[MTP-GAMES] skipping %s\n", pp.filename.c_str());
+        h.skip = true;
+        R_SUCCEED();
+    }
+    R_UNLESS(drop.kind == sphaira::mtp::DropKind::Install, FsError_NotImplemented);
     if (mode & FsOpenMode_Write) {
         {
             SCOPED_MUTEX(&g_shared_data.mutex);
@@ -86,6 +140,9 @@ void FsGameProxy::InstallClose(FileHandle& h) {
     }
 }
 #else
+Result FsGameProxy::InstallEntryType(const sphaira::mtp::ParsedPath&, FsDirEntryType*) { R_THROW(FsError_PathNotFound); }
+Result FsGameProxy::InstallMkdir(const sphaira::mtp::ParsedPath&) { R_THROW(FsError_NotImplemented); }
+Result FsGameProxy::InstallDelete(const sphaira::mtp::ParsedPath&) { R_THROW(FsError_NotImplemented); }
 auto FsGameProxy::FindInstallEntry(const std::string&) -> FsDirectoryEntry* { return nullptr; }
 Result FsGameProxy::InstallCreate(const sphaira::mtp::ParsedPath&, s64) { R_THROW(FsError_NotImplemented); }
 Result FsGameProxy::InstallOpen(const sphaira::mtp::ParsedPath&, u32, FileHandle&) { R_THROW(FsError_PathNotFound); }

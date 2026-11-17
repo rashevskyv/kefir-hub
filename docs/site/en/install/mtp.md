@@ -51,7 +51,7 @@ If you copy a game file to the microSD card drive instead, it is only stored on 
 - A folder `Mods` (or [[Mods]]) with game folders named `<name> [Title ID]` inside it, as `Games` → `Merged` → [[Mods]] gives it: its files are written to `/atmosphere/contents/<Title ID>/` on the microSD card (mods and cheats); a file that is already there is replaced. The game does not need to be installed yet. The same works for a `Separate` game folder with its [[Mods]] folder.
 - So a `Merged` folder copied from the `Games` drive to the PC and back into the install drive installs the games and puts their mods and cheats back.
 - A game folder in [[Mods]] without `[Title ID]` in its name is skipped.
-- Not yet in the [[Install to SD]] / [[Install to NAND]] folders of the `Games` drive ([[Install folders in Games]] on): there only single files install.
+- (v0.14.402) The same works in the [[Install to SD]] / [[Install to NAND]] folders of the `Games` drive ([[Install folders in Games]] on); there the folder decides where the games install.
 -->
 
 ## What the progress shows {#progress}

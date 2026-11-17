@@ -25,8 +25,9 @@ enum class PathKind {
     // <game>/Mods[/sub/path]: the game's /atmosphere/contents/<tid> folder on
     // the SD card. `filename` is the path inside it ("" for the folder itself).
     ModsPath,
-    // "Install to SD" / "Install to NAND" and a file dropped into one: the file
-    // streams to the installer, `install_sd` says where, `filename` is its name.
+    // "Install to SD" / "Install to NAND" and anything dropped into one: `install_sd` says
+    // where, `filename` is the path inside the folder ("Game.nsp", "Merged/Mods/x [TID]/romfs");
+    // ClassifyInstallDrop(filename) says what it becomes.
     InstallDir,
     InstallFile,
     // Merged/<Mods> (the drive root in the Compatible layout): one folder per game that has
@@ -190,11 +191,18 @@ inline ParsedPath ParseGamesPath(std::string_view path, GamesLayout layout = Gam
         result.install_sd = is_install_sd(segments[0]);
         if (segments.size() == 1) {
             result.kind = PathKind::InstallDir;
-        } else if (segments.size() == 2) {
-            result.kind = PathKind::InstallFile;
-            result.filename = std::string(segments[1]);
-        } else {
-            result.kind = PathKind::Invalid;
+            return result;
+        }
+        result.kind = PathKind::InstallFile;
+        for (size_t k = 1; k < segments.size(); ++k) {
+            // a mods file in it is joined onto a real SD folder: never let it climb out.
+            if (segments[k] == "." || segments[k] == "..") {
+                return ParsedPath{};
+            }
+            if (!result.filename.empty()) {
+                result.filename.push_back('/');
+            }
+            result.filename += segments[k];
         }
         return result;
     }
