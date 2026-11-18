@@ -327,9 +327,6 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             bool amber{}; // MTP started, no computer answered yet: not "on" until one does
         };
 
-        const float storage_left = label_x;
-        const float storage_span_w = std::max(0.f, storage_right - storage_left);
-
         std::vector<ServiceBadgeItem> badges;
         badges.push_back({pdata.mtp_waiting ? "MTP…" : "MTP", pdata.mtp_running && !pdata.mtp_waiting, false, pdata.mtp_waiting});
         badges.push_back({"FTP", pdata.ftp_running});
@@ -352,9 +349,10 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             }
         }
 
-        const float margin_m = std::max(4.f, (storage_span_w - block1_w) * 0.5f);
+        // centered over the bars themselves, not over the labels + bars + values block
+        const float margin_m = std::max(4.f, (bar_w - block1_w) * 0.5f);
 
-        float cur_badge_x = storage_left + margin_m;
+        float cur_badge_x = bar_x + margin_m;
         for (const auto& b : badges) {
             nvgFontSize(vg, badge_font);
             gfx::textBounds(vg, 0, 0, bounds, b.name);
