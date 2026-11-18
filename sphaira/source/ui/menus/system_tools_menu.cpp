@@ -1,6 +1,7 @@
 #include "ui/menus/tools_menu.hpp"
 #include "battery_page.hpp"
 #include "chromium_nx.hpp"
+#include "parental_controls.hpp"
 
 #include "ui/menus/uninstaller_menu.hpp"
 #include "ui/menus/users_menu.hpp"
@@ -46,10 +47,6 @@ auto MarkOf(Items& items) {
 }
 auto Markable(const std::vector<settings::SettingsItem>& items) {
     return [&items](size_t i) { return items[i].selectable; };
-}
-
-void ComingSoon() {
-    App::Push<ui::OptionBox>("Coming soon"_i18n, "OK"_i18n);
 }
 
 void OpenCleanup() {
@@ -296,7 +293,8 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
         Tool("Trash"_i18n, "Saves, save backups and profiles that the Hub deleted. Restore them or delete them for good."_i18n, trash_page::Open),
         Tool("Clean system junk"_i18n, "Delete old updates, lost game files, unused tickets and other leftovers."_i18n, OpenCleanup),
         Tool("Fill free SD space with zeros"_i18n, "Overwrite unused microSD space."_i18n, FillSdWithZeros),
-        Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, ComingSoon),
+        Tool("Remove parental controls"_i18n, "Clear the console parental-control PIN."_i18n, parental::Remove),
+        Tool("Manage parental controls"_i18n, "Play-time limits, bed time and blocked games with NS Parental Control."_i18n, parental::OpenManager),
     };
     return items;
 }

@@ -122,7 +122,8 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | System information: grouped parameter → value tables, serial source | Tools → Tools → System information | system_info*.cpp, ui/menus/system_info_menu.cpp | system-tools#system-information | draft (v0.14.019) |
 | Fill free SD space with zeros | Tools → Tools (Maintenance) | zero_fill.cpp, tools_menu.cpp | system-tools#fill-free-sd-space-with-zeros | doc |
 | Fill free NAND space with zeros | Tools → Tools | — | — | removed in v0.14.018 |
-| Remove parental controls | Tools → Tools | tools_menu.cpp (ComingSoon) | system-tools | "planned" (Coming soon) |
+| Remove parental controls | Tools → Tools (Maintenance) | parental_controls.cpp (Remove) | system-tools#parental-controls | draft (v0.14.404) |
+| Manage parental controls (NS Parental Control download) | Tools → Tools (Maintenance) | parental_controls.cpp (OpenManager) | system-tools#parental-controls | draft (v0.14.404) |
 | Clean system junk | Tools → Tools | system_cleanup.cpp | system-tools#clean-system-junk | doc |
 | Game transfer between consoles: Send installed games / Receive games | Console Transfer | web_games.cpp, ui/menus/console_games_transfer.cpp | console-transfer#move-installed-games | draft (v0.14.020) |
 | Theme packs, favorites, Themezer, NXThemes Installer | Tools → Themes | settings_themes.cpp, themezer*.cpp | themes | doc |

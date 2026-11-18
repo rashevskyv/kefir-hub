@@ -17,7 +17,8 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | [[Maintenance]] | [[Battery]] | Fuel gauge state against the saved copy, verdict, backup. See [Battery](#battery). |
 | [[Maintenance]] | [[Clean system junk]] | Deletes leftovers. See [Clean system junk](#clean-system-junk). |
 | [[Maintenance]] | [[Fill free SD space with zeros]] | Overwrites the unused space of the memory card. See [Fill free SD space with zeros](#fill-free-sd-space-with-zeros). |
-| [[Maintenance]] | [[Remove parental controls]] | Planned; opens a "Coming soon" message. |
+| [[Maintenance]] | [[Remove parental controls]] | Deletes the console's parental-control PIN and restrictions at once. See [Parental controls](#parental-controls). |
+| [[Maintenance]] | [[Manage parental controls]] | Play-time limits with NS Parental Control. See [Parental controls](#parental-controls). |
 
 ## [[Check game updates]]
 
@@ -349,6 +350,20 @@ The console does not sleep and the screen does not dim while the fill runs.
 After a crash or a power-off during a fill, Kefir Hub removes the temporary file at its next start.
 
 The card gets real zeros (the file is not encrypted).
+
+## Parental controls {#parental-controls}
+
+**Where:** [[Tools]] → [[Tools]] → [[Remove parental controls]], [[Manage parental controls]]
+
+<!-- draft
+- [[Remove parental controls]] runs at once, with no question: it deletes the console's own parental-control settings (PIN, restrictions, play timer) and the link to the Nintendo Switch Parental Controls phone app
+- the result is one message: [[Parental controls are removed: no PIN, no restrictions and no link to the phone app.]]; if the console still reports restrictions: [[The console still has parental controls. Restart the console and try again.]]
+- [[Manage parental controls]] uses NS Parental Control (github.com/TristanIsrael/NSParentalControl, GPL-3.0): a sysmodule plus an Ultrahand overlay; play-time limits, bed time, earliest play time and blocked games for each user
+- when it is not installed, a message explains it; **Download** gets the newest release from GitHub (about 1 MB) and installs `/atmosphere/contents/4200000000003103` (with `flags/boot2.flag`) and `/switch/.overlays/parental_control.ovl`; **Back** does nothing
+- after the install: [[NS Parental Control is installed. Restart the console to start it.]]
+- the limits are set in the overlay: open the Ultrahand overlay menu, pick Parental Control; its own administrator PIN is A A A A until it is changed; it does not use the console's own PIN, so [[Remove parental controls]] does not remove NS Parental Control
+- when it is installed, [[Manage parental controls]] shows only how to open it
+-->
 
 ## Problems
 
