@@ -105,6 +105,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 |---|---|---|---|---|
 | Updater tabs (Kefir / Firmware / Apps), Kefir tab page, update Kefir, changelog | Tools → Updater | kefir_menu.cpp, kefir/kefir_changelog_page.cpp | updater#update-kefir | draft (v0.14.364): tabs, Kefir tab lines, touch scroll; partial: reboot behaviour |
 | Updater Apps tab: update Kefir Hub, DBI, homebrew apps | Updater → Apps | kefir/kefir_apps.cpp | updater#update-apps | draft (v0.14.364); shot updater-apps pending |
+| Kefir Updater tile: guide to Tools → Updater, then hidden; Options → Remove | Apps tab, Kefir Updater tile | first_run_hint.cpp, main_menu.cpp, homebrew_ops.cpp | updater, homebrew | draft (v0.14.403); switch: pending |
 | Firmware download/install, manual from folder/zip | Updater → FIRMWARE | kefir_ops.cpp, kefir_firmware*.cpp | updater#update-the-firmware | doc |
 | Manual firmware folder deletion: Keep/Delete, default Keep, B keeps source | Updater manual folder install success | kefir_ops.cpp | updater | doc; [USER] updater-firmware-folder-delete capture pending |
 | Downgrade warning, downgrade fix modes, recovery | Updater | kefir_downgrade_box.cpp | updater#downgrade-the-firmware | partial: TegraExplorer step |
