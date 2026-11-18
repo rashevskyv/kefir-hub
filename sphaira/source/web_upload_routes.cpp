@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -184,6 +185,68 @@ void HandleUploadManifest(Socket sock, const std::string& req) {
     SendResponse(sock, "200 OK", "application/json", "{\"status\":\"ok\"}");
 }
 
+auto RunDirectInstall(const std::string& name, s64 content_length, const std::string& item_id,
+                      const std::function<std::unique_ptr<yati::source::Stream>()>& make_source) -> DirectInstallResult {
+    std::shared_ptr<ui::menu::dbi::InstallSession> session = App::GetActiveInstallSession();
+    if (session && session->GetOrigin() != ui::menu::dbi::TransportOrigin::Web) {
+        return {"409 Conflict", "Another transport installation is in progress"};
+    }
+
+    const auto ext = path::Extension(name);
+    const bool is_compressed = path::EqualsIC(ext, "nsz") || path::EqualsIC(ext, "xcz") || path::EqualsIC(ext, "ncz");
+    const bool install_to_sd = yati::ChooseInstallTarget(content_length, is_compressed);
+
+    if (!session) {
+        session = std::make_shared<ui::menu::dbi::InstallSession>("Web install"_i18n, 0, ui::menu::dbi::TransportOrigin::Web);
+        session->EnqueueFile(name, content_length, install_to_sd, item_id);
+        if (!App::PushInstallSession(session)) {
+            return {"500 Internal Server Error", "Installation not possible (Cannot start install session)"};
+        }
+    } else if (!session->HasQueuedItem(item_id, name)) {
+        session->EnqueueFile(name, content_length, install_to_sd, item_id);
+    }
+
+    const auto stream_source = make_source();
+
+    const std::string dest_str = install_to_sd ? " (SD Card)" : " (System Memory)";
+    {
+        std::scoped_lock lock{g_upload_state.name_mutex};
+        g_upload_state.name = "Installing: " + name + dest_str;
+    }
+    g_upload_state.total.store(content_length);
+    g_upload_state.bytes.store(0);
+    g_upload_state.active.store(true);
+
+    session->SetCurrentPackage(item_id, name, content_length, install_to_sd);
+    session->SetState(ui::menu::dbi::State::Installing);
+
+    fs::FsPath dummy_path = "/";
+    dummy_path += name;
+
+    yati::ConfigOverride override{};
+    override.sd_card_install = install_to_sd;
+
+    const auto rc = yati::InstallFromSource(session.get(), stream_source.get(), dummy_path, override);
+
+    const auto cur_pkg = session->GetCurrentPackageIndex();
+    session->MarkPackageComplete(cur_pkg, rc);
+
+    if (session->AllPackagesTerminal()) {
+        session->TransitionToSummary();
+    }
+
+    g_upload_state.active.store(false);
+
+    if (R_FAILED(rc)) {
+        log_write("Direct install failed: 0x%X\\n", rc);
+        char err_msg[128]{};
+        std::snprintf(err_msg, sizeof(err_msg), "Installation failed: 0x%X", rc);
+        return {"500 Internal Server Error", err_msg};
+    }
+
+    return {"200 OK", "Installed"};
+}
+
 void ReceiveUpload(Socket sock, const std::string& req, const std::string& query) {
     const auto length_str = HeaderValue(req, "content-length");
     if (length_str.empty()) {
@@ -229,80 +292,20 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
 
     if (direct_install) {
         const auto item_id = GetQueryValue(query, "id");
-        std::shared_ptr<ui::menu::dbi::InstallSession> session = App::GetActiveInstallSession();
-        if (session && session->GetOrigin() != ui::menu::dbi::TransportOrigin::Web) {
-            SendResponse(sock, "409 Conflict", "text/plain", "Another transport installation is in progress");
-            return;
-        }
-
-        const auto ext = path::Extension(name);
-        const bool is_compressed = path::EqualsIC(ext, "nsz") || path::EqualsIC(ext, "xcz") || path::EqualsIC(ext, "ncz");
-        const bool install_to_sd = yati::ChooseInstallTarget(content_length, is_compressed);
-
-        if (!session) {
-            session = std::make_shared<ui::menu::dbi::InstallSession>("Web install"_i18n, 0, ui::menu::dbi::TransportOrigin::Web);
-            session->EnqueueFile(name, content_length, install_to_sd, item_id);
-            if (!App::PushInstallSession(session)) {
-                SendResponse(sock, "500 Internal Server Error", "text/plain", "Installation not possible (Cannot start install session)");
-                return;
+        const auto res = RunDirectInstall(name, content_length, item_id, [&]() -> std::unique_ptr<yati::source::Stream> {
+            std::string initial_body;
+            const auto header_end = req.find("\r\n\r\n");
+            if (header_end != std::string::npos) {
+                const auto body_start = header_end + 4;
+                const auto available = static_cast<s64>(req.size() - body_start);
+                const auto write_size = std::min<s64>(available, content_length);
+                if (write_size > 0) {
+                    initial_body = req.substr(body_start, write_size);
+                }
             }
-        } else {
-            if (!session->HasQueuedItem(item_id, name)) {
-                session->EnqueueFile(name, content_length, install_to_sd, item_id);
-            }
-        }
-
-        std::string initial_body;
-        const auto header_end = req.find("\r\n\r\n");
-        if (header_end != std::string::npos) {
-            const auto body_start = header_end + 4;
-            const auto available = static_cast<s64>(req.size() - body_start);
-            const auto write_size = std::min<s64>(available, content_length);
-            if (write_size > 0) {
-                initial_body = req.substr(body_start, write_size);
-            }
-        }
-
-        auto stream_source = std::make_unique<SocketStream>(sock, initial_body, content_length);
-
-        const std::string dest_str = install_to_sd ? " (SD Card)" : " (System Memory)";
-        {
-            std::scoped_lock lock{g_upload_state.name_mutex};
-            g_upload_state.name = "Installing: " + name + dest_str;
-        }
-        g_upload_state.total.store(content_length);
-        g_upload_state.bytes.store(initial_body.size());
-        g_upload_state.active.store(true);
-
-        session->SetCurrentPackage(item_id, name, content_length, install_to_sd);
-        session->SetState(ui::menu::dbi::State::Installing);
-
-        fs::FsPath dummy_path = "/";
-        dummy_path += name;
-
-        yati::ConfigOverride override{};
-        override.sd_card_install = install_to_sd;
-
-        const auto rc = yati::InstallFromSource(session.get(), stream_source.get(), dummy_path, override);
-
-        const auto cur_pkg = session->GetCurrentPackageIndex();
-        session->MarkPackageComplete(cur_pkg, rc);
-
-        if (session->AllPackagesTerminal()) {
-            session->TransitionToSummary();
-        }
-
-        g_upload_state.active.store(false);
-
-        if (R_FAILED(rc)) {
-            log_write("Direct install failed: 0x%X\n", rc);
-            char err_msg[128]{};
-            std::snprintf(err_msg, sizeof(err_msg), "Installation failed: 0x%X", rc);
-            SendResponse(sock, "500 Internal Server Error", "text/plain", err_msg);
-            return;
-        }
-
-        SendResponse(sock, "200 OK", "text/plain", "Installed");
+            return std::make_unique<SocketStream>(sock, initial_body, content_length);
+        });
+        SendResponse(sock, res.status, "text/plain", res.message);
         return;
     }
 

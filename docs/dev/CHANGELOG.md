@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.410 — Web install: a package arrives over several connections and installs in order
+With Upload connections on (2/3), a game dropped in the browser is sent in 1 MB parts over several connections. `POST /upload?part=new&install=1` answers at once and installs on that worker; parts (`PUT ?part=<item>&offset=N`) go into a 6 MB in-order window (`web_part_buffer.hpp`, host test) that yati reads as a stream; the page polls `GET ?part=<item>&state=1`. Off or applet mode: 403, the page uses the old single PUT. `RunDirectInstall` is now shared by both paths. NCAs stay sequential: the three pipeline threads (read, decompress, write) already use the three cores.
+host tests: quick green | nro: built (0.14.410, see below) | switch: pending — install an NSP and an NSZ with Off, 2, 3 and compare speed; cancel in the browser mid-install (page shows Cancelling… until the console stops); cancel from the console; a part retry.
+
 ## v0.14.409 — Web server: upload one file over several connections (option, default Off)
 Settings › Network › Upload connections (Off / 2 / 3). On: the browser creates the file at its final size (`POST /upload?part=new`), sends 1 MB parts in parallel (`PUT /upload?part=<id>&offset=N`) into one shared handle, then `done=1`; incomplete → file deleted; Off: server answers 403 and the page uses the old single PUT. Direct game install is unchanged (one connection). Web workers 3 → 5. New: `web_part_upload.cpp`, `web_part_range.hpp` (host test).
 host tests: quick green | nro: built (0.14.409; also holds the uncommitted ownfoil/settings_internal/settings_kefir/system_tools_menu/web.cpp changes of earlier work) | switch: pending — measure Off vs 2 vs 3 on Wi-Fi (speed in the browser queue), cancel mid-file, tab closed mid-file (file removed after 30 s on the next upload), card full, applet mode, status page while uploading.

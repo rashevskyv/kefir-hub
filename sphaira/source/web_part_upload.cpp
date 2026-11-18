@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 #include <sys/socket.h>
@@ -245,43 +246,12 @@ void HandlePut(Socket sock, const std::string& req, const std::string& query, co
         return;
     }
 
-    std::vector<u8> buf(len);
-    s64 fill = 0;
-    if (const auto header_end = req.find("\r\n\r\n"); header_end != std::string::npos) {
-        const auto body_start = header_end + 4;
-        fill = std::min<s64>(static_cast<s64>(req.size() - body_start), len);
-        if (fill > 0) {
-            std::memcpy(buf.data(), req.data() + body_start, fill);
+    std::vector<u8> buf;
+    if (const auto err = ReadPartBody(sock, req, len, buf)) {
+        if (err->status) {
+            SendResponse(sock, err->status, "text/plain", err->message);
         }
-    }
-
-    u32 idle_count = 0;
-    while (fill < len) {
-        if (!WebShareIsRunning()) {
-            return;
-        }
-        if (auto pbox = WebGetProgressBox(); pbox && pbox->ShouldExit()) {
-            SendResponse(sock, "400 Bad Request", "text/plain", "Cancelled by user");
-            return;
-        }
-        const auto got = recv(sock, buf.data() + fill, len - fill, 0);
-        if (got > 0) {
-            idle_count = 0;
-            fill += got;
-            p->last_tick.store(Now());
-        } else if (got == 0) {
-            SendResponse(sock, "400 Bad Request", "text/plain", "Part ended early");
-            return;
-        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            if (++idle_count > IDLE_TIMEOUT_MS) {
-                SendResponse(sock, "408 Request Timeout", "text/plain", "Receive timeout");
-                return;
-            }
-            svcSleepThread(1'000'000);
-        } else {
-            SendResponse(sock, "500 Internal Server Error", "text/plain", "Socket read failed");
-            return;
-        }
+        return;
     }
 
     if (R_FAILED(p->file.Write(offset, buf.data(), len, FsWriteOption_None))) {
@@ -318,14 +288,64 @@ void HandleDone(Socket sock, const std::string& id, bool ok) {
 
 } // namespace
 
+auto ReadPartBody(Socket sock, const std::string& req, s64 len, std::vector<u8>& buf) -> std::optional<PartBodyError> {
+    using namespace web::detail;
+    buf.resize(len);
+    s64 fill = 0;
+    if (const auto header_end = req.find("\r\n\r\n"); header_end != std::string::npos) {
+        const auto body_start = header_end + 4;
+        fill = std::min<s64>(static_cast<s64>(req.size() - body_start), len);
+        if (fill > 0) {
+            std::memcpy(buf.data(), req.data() + body_start, fill);
+        }
+    }
+
+    u32 idle_count = 0;
+    while (fill < len) {
+        if (!WebShareIsRunning()) {
+            return PartBodyError{nullptr, ""};
+        }
+        if (auto pbox = WebGetProgressBox(); pbox && pbox->ShouldExit()) {
+            return PartBodyError{"400 Bad Request", "Cancelled by user"};
+        }
+        const auto got = recv(sock, buf.data() + fill, len - fill, 0);
+        if (got > 0) {
+            idle_count = 0;
+            fill += got;
+        } else if (got == 0) {
+            return PartBodyError{"400 Bad Request", "Part ended early"};
+        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            if (++idle_count > IDLE_TIMEOUT_MS) {
+                return PartBodyError{"408 Request Timeout", "Receive timeout"};
+            }
+            svcSleepThread(1'000'000);
+        } else {
+            return PartBodyError{"500 Internal Server Error", "Socket read failed"};
+        }
+    }
+    return std::nullopt;
+}
+
 void HandlePartUpload(Socket sock, const std::string& req, const std::string& method, const std::string& query) {
     const auto part = GetQueryValue(query, "part");
     if (method == "POST" && part == "new") {
-        HandleCreate(sock, query);
+        if (GetQueryValue(query, "install") == "1") {
+            HandleInstallCreate(sock, query);
+        } else {
+            HandleCreate(sock, query);
+        }
+    } else if (method == "GET") {
+        HandleInstallState(sock, part);
+    } else if (method == "POST" && IsInstallPartId(part)) {
+        HandleInstallCancel(sock, part);
     } else if (method == "POST") {
         HandleDone(sock, part, GetQueryValue(query, "done") == "1");
     } else if (method == "PUT") {
-        HandlePut(sock, req, query, part);
+        if (IsInstallPartId(part)) {
+            HandleInstallPut(sock, req, query, part);
+        } else {
+            HandlePut(sock, req, query, part);
+        }
     } else {
         SendResponse(sock, "405 Method Not Allowed", "text/plain", "Bad method");
     }
