@@ -4238,7 +4238,7 @@
   "Skipped during the queue": "キュー内でスキップされました",
   "Skip all": "すべてスキップ",
   "On the console: ": "本体: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "キューはこれらの質問を待ちませんでした。各ゲームで選択し、Xを押してください。",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "キューはこれらの質問を待ちませんでした。各ゲームで選択し、+を押してください。",
   "Resolve": "解決",
   "Queue done. Choose what to do with the skipped files.": "キューが完了しました。スキップされたファイルの処理を選択してください。",
   "Screen type": "画面タイプ",

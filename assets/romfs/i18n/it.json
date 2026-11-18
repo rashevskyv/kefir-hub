@@ -4238,7 +4238,7 @@
   "Skipped during the queue": "Saltato durante la coda",
   "Skip all": "Salta tutto",
   "On the console: ": "Sulla console: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "La coda non ha atteso queste domande. Scegli per ciascun gioco, quindi premi X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "La coda non ha atteso queste domande. Scegli per ciascun gioco, quindi premi +.",
   "Resolve": "Risolvi",
   "Queue done. Choose what to do with the skipped files.": "Coda completata. Scegli cosa fare con i file saltati.",
   "Screen type": "Tipo di schermo",

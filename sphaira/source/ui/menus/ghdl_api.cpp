@@ -400,7 +400,7 @@ void OpenDirectLinkPrompt(std::string filled);
 void OfferFixDirectUrl(std::string url, const std::string& message) {
     App::Push<OptionBox>(
         message,
-        "OK"_i18n, "Edit URL"_i18n, 1, [url = std::move(url)](auto op_index){
+        "Close"_i18n, "Edit URL"_i18n, 1, [url = std::move(url)](auto op_index){
             if (op_index && *op_index) {
                 OpenDirectLinkPrompt(url);
             }

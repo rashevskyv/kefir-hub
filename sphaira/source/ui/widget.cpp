@@ -1,6 +1,7 @@
 #include "ui/widget.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/layout.hpp"
+#include "ui/footer_order.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -181,21 +182,20 @@ auto LayoutUiButtonsRowJustified(NVGcontext* vg, Widget::uiButtons& buttons, siz
     }
 }
 
-auto GetUiButtonSortPriority(Button button) -> int {
-    switch (button) {
-        case Button::START: return 0;
-        case Button::A: return 10;
-        case Button::B: return 20;
-        case Button::X: return 30;
-        case Button::Y: return 40;
-        case Button::L2: return 50;
-        case Button::R2: return 60;
-        case Button::L: return 70;
-        case Button::R: return 80;
-        case Button::SELECT: return 90;
-        default: return 1000;
-    }
+constexpr auto Bits(Button button) -> u64 {
+    return static_cast<u64>(button);
 }
+
+// footer_order.hpp is libnx-free and spells the pad bits out: keep it honest.
+static_assert(Bits(Button::A) == footer::A && Bits(Button::B) == footer::B);
+static_assert(Bits(Button::X) == footer::X && Bits(Button::Y) == footer::Y);
+static_assert(Bits(Button::L3) == footer::L3 && Bits(Button::R3) == footer::R3);
+static_assert(Bits(Button::L) == footer::L && Bits(Button::R) == footer::R);
+static_assert(Bits(Button::L2) == footer::ZL && Bits(Button::R2) == footer::ZR);
+static_assert(Bits(Button::START) == footer::PLUS && Bits(Button::SELECT) == footer::MINUS);
+static_assert(Bits(Button::LEFT) == footer::ANY_LEFT && Bits(Button::RIGHT) == footer::ANY_RIGHT);
+static_assert(Bits(Button::UP) == footer::ANY_UP && Bits(Button::DOWN) == footer::ANY_DOWN);
+static_assert(Bits(Button::DPAD_LEFT) == footer::DPAD_LEFT && Bits(Button::DPAD_RIGHT) == footer::DPAD_RIGHT);
 
 } // namespace
 
@@ -382,6 +382,11 @@ void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
         current_bottom_w += unscaled_widths[k - 1];
         const float current_top_w = total_content_pixels - current_bottom_w;
 
+        // L and R (ZL/ZR, L3/R3, left/right) stay on one row, the left one on the left.
+        if (footer::IsPair(Bits(buttons[k - 1].m_button), Bits(buttons[k].m_button))) {
+            continue;
+        }
+
         const float diff = std::abs(current_bottom_w - current_top_w);
         const float max_w = std::max(current_bottom_w, current_top_w);
 
@@ -403,15 +408,9 @@ void Widget::SetupUiButtons(uiButtons& buttons, const Vec2& button_pos) {
     LayoutUiButtonsRowJustified(vg, buttons, 0, best_k, Vec2{button_pos.x, y_bottom}, left_bound_x, final_scale, UI_HINT_SIZE_2ROW, UI_GLYPH_SIZE_2ROW, 2);
 }
 
-auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool sort) -> uiButtons {
+auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos) -> uiButtons {
     uiButtons draw_actions;
     draw_actions.reserve(actions.size());
-
-    const std::pair<Button, Button> swap_buttons[] = {
-        {Button::L, Button::R},
-        {Button::L2, Button::R2},
-        {Button::LEFT, Button::RIGHT},
-    };
 
     // build array
     for (const auto& [button, action] : actions) {
@@ -430,37 +429,13 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
             }
         }
 
-        bool should_swap = false;
-        if (!sort) {
-            for (auto [left, right] : swap_buttons) {
-                if (button == right && draw_actions.size() && draw_actions.back().m_button == left) {
-                    const auto s = draw_actions.back();
-                    draw_actions.back().m_button = button;
-                    draw_actions.back().m_button_str = btn_str;
-                    draw_actions.back().m_action_str = action.m_hint;
-                    draw_actions.emplace_back(s);
-                    should_swap = true;
-                    break;
-                }
-            }
-        }
-
-        if (!should_swap) {
-            draw_actions.emplace_back(ui_button);
-        }
+        draw_actions.emplace_back(ui_button);
     }
 
-    if (sort) {
-        std::stable_sort(draw_actions.begin(), draw_actions.end(), [](const auto& lhs, const auto& rhs) {
-            const auto lhs_priority = GetUiButtonSortPriority(lhs.m_button);
-            const auto rhs_priority = GetUiButtonSortPriority(rhs.m_button);
-            if (lhs_priority != rhs_priority) {
-                return lhs_priority < rhs_priority;
-            }
-            return static_cast<u64>(lhs.m_button) < static_cast<u64>(rhs.m_button);
-        });
-    }
-
+    // one order for every window, laid out right to left: see ui/footer_order.hpp.
+    std::stable_sort(draw_actions.begin(), draw_actions.end(), [](const auto& lhs, const auto& rhs) {
+        return footer::Before(Bits(lhs.m_button), Bits(rhs.m_button));
+    });
 
     // setup positions.
     SetupUiButtons(draw_actions, button_pos);
@@ -470,7 +445,7 @@ auto Widget::GetUiButtons(const Actions& actions, const Vec2& button_pos, bool s
 
 auto Widget::GetUiButtons() -> uiButtons& {
     if (m_ui_buttons_dirty) {
-        m_ui_buttons = GetUiButtons(m_actions, m_button_pos, m_sort_ui_buttons);
+        m_ui_buttons = GetUiButtons(m_actions, m_button_pos);
         m_ui_buttons_dirty = false;
     }
 

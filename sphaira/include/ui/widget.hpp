@@ -158,23 +158,17 @@ struct Widget : public Object {
         m_ui_buttons_dirty = true;
     }
 
-    void SetUiButtonSort(bool sort = true) {
-        m_sort_ui_buttons = sort;
-        m_ui_buttons_dirty = true;
-    }
-
     // The laid out hint row. Measuring it costs an nvgTextBounds per label and
     // per glyph, so it is kept until something that decides the layout changes:
     // the action set or the anchor. The font is loaded once at startup and the
     // hints are baked when the Action is built, so nothing else moves it.
     auto GetUiButtons() -> uiButtons&;
     static void SetupUiButtons(uiButtons& buttons, const Vec2& button_pos = {1220, 675});
-    static auto GetUiButtons(const Actions& actions, const Vec2& button_pos = {1220, 675}, bool sort = false) -> uiButtons;
+    static auto GetUiButtons(const Actions& actions, const Vec2& button_pos = {1220, 675}) -> uiButtons;
 
     Actions m_actions{};
     uiButtons m_ui_buttons{};
     bool m_ui_buttons_dirty{true};
-    bool m_sort_ui_buttons{};
     Vec2 m_button_pos{1220, 675};
     bool m_focus{false};
     bool m_pop{false};

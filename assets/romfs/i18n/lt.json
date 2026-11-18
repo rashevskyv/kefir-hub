@@ -4233,7 +4233,7 @@
   "Skipped during the queue": "Praleista eilėje",
   "Skip all": "Praleisti viską",
   "On the console: ": "Konsolėje: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "Eilė nelaukė šių klausimų. Pasirinkite kiekvienam žaidimui ir paspauskite X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "Eilė nelaukė šių klausimų. Pasirinkite kiekvienam žaidimui ir paspauskite +.",
   "Resolve": "Išspręsti",
   "Queue done. Choose what to do with the skipped files.": "Eilė baigta. Pasirinkite, ką daryti su praleistais failais.",
   "Screen type": "Ekrano tipas",

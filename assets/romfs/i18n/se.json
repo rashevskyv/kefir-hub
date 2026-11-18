@@ -4238,7 +4238,7 @@
   "Skipped during the queue": "Hoppade över i kön",
   "Skip all": "Hoppa över alla",
   "On the console: ": "På konsolen: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "Köer väntade inte på dessa frågor. Välj för varje spel och tryck sedan på X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "Köer väntade inte på dessa frågor. Välj för varje spel och tryck sedan på +.",
   "Resolve": "Lös",
   "Queue done. Choose what to do with the skipped files.": "Kö klar. Välj vad du vill göra med de överhoppade filerna.",
   "Screen type": "Skärmtyp",

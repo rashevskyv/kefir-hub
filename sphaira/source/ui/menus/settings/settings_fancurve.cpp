@@ -69,7 +69,6 @@ FanCurveMenu::~FanCurveMenu() {
 
 void FanCurveMenu::RefreshActions() {
     RemoveActions();
-    SetUiButtonSort(true);
     SetAction(Button::SELECT, Action{App::HandleMinus});
 
     if (m_editing) {

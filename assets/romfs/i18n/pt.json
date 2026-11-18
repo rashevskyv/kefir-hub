@@ -4264,7 +4264,7 @@
   "Skipped during the queue": "Ignorado durante a fila",
   "Skip all": "Saltar tudo",
   "On the console: ": "Na consola: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "A fila não esperou por estas perguntas. Escolha para cada jogo e prima X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "A fila não esperou por estas perguntas. Escolha para cada jogo e prima +.",
   "Resolve": "Resolver",
   "Queue done. Choose what to do with the skipped files.": "Fila concluída. Escolha o que fazer com os ficheiros ignorados.",
   "Screen type": "Tipo de ecrã",

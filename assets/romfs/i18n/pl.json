@@ -4233,7 +4233,7 @@
   "Skipped during the queue": "Pominięto w kolejce",
   "Skip all": "Pomiń wszystkie",
   "On the console: ": "Na konsoli: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "Kolejka nie czekała na te pytania. Wybierz dla każdej gry, a następnie naciśnij X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "Kolejka nie czekała na te pytania. Wybierz dla każdej gry, a następnie naciśnij +.",
   "Resolve": "Rozwiąż",
   "Queue done. Choose what to do with the skipped files.": "Kolejka ukończona. Wybierz, co zrobić z pominiętymi plikami.",
   "Screen type": "Typ ekranu",

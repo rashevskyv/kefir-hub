@@ -234,11 +234,11 @@ void App::DisplayForwarderOptions(bool left_side) {
         }
 
         App::Push<ui::OptionBox>(
-            "SteamGridDB API key"_i18n, "Remove"_i18n, "Replace"_i18n, 1, [](auto op_index){
-                if (!op_index) {
+            "SteamGridDB API key"_i18n, "Back"_i18n, "Remove"_i18n, "Replace"_i18n, 2, [](auto op_index){
+                if (!op_index || *op_index == 0) {
                     return;
                 }
-                if (*op_index) {
+                if (*op_index == 2) {
                     ui::steamgriddb::RequestApiKey();
                 } else {
                     ui::steamgriddb::SetApiKey("");

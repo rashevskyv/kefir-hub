@@ -55,14 +55,14 @@ ResolveMenu::ResolveMenu(std::shared_ptr<ResolveData> data)
                 if (op) m_data->rows[i].choice = static_cast<int>(*op);
             }, row.choice);
         }}),
-        std::make_pair(Button::X, Action{"Resolve"_i18n, [this](){
+        std::make_pair(Button::START, Action{"Resolve"_i18n, [this](){
             Finish(false);
         }}),
         std::make_pair(Button::B, Action{"Skip all"_i18n, [this](){
             Finish(true);
         }})
     );
-    SetTitleSubHeading("The queue did not wait for these questions. Choose for each game, then press X."_i18n);
+    SetTitleSubHeading("The queue did not wait for these questions. Choose for each game, then press +."_i18n);
     m_list = std::make_unique<List>(1, 7, Vec4{75.f, GetY() + 44.f, 1130.f, 575.f}, Vec4{75.f, GetY() + 44.f, 1130.f, 79.f});
 }
 

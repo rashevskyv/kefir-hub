@@ -22,7 +22,10 @@ public:
     , m_on_apply{std::move(on_apply)} {
         SetActions(
             std::make_pair(Button::A, Action{"Apply"_i18n, [this](){ Apply(); }}),
-            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){ SetPop(); }})
+            std::make_pair(Button::B, Action{"Cancel"_i18n, [this](){ SetPop(); }}),
+            // footer hints only: m_viewport reads the pad itself.
+            std::make_pair(Button::L2, Action{ActionType::UP, "Zoom"_i18n, " + /", [](){}}),
+            std::make_pair(Button::LEFT, Action{ActionType::UP, "Move"_i18n, "///", [](){}})
         );
 
         if (!m_raw_data.empty() && m_image_w > 0 && m_image_h > 0) {
@@ -88,8 +91,6 @@ public:
         m_scroll_source.Draw(vg, true, 1210.f - source_width, 55.f, source_width, 18.f,
             NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), m_source);
 
-        gfx::drawText(vg, 70.f, 675.f, 18.f, theme->GetColour(ThemeEntryID_TEXT_INFO),
-            "\uE0E6 + \uE0EB/\uE0EC Zoom   \uE0EB/\uE0EC/\uE0ED/\uE0EE Move", NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         Widget::Draw(vg, theme);
     }
 

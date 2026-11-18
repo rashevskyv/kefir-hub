@@ -4233,7 +4233,7 @@
   "Skipped during the queue": "Kuyruk sırasında atlandı",
   "Skip all": "Tümünü atla",
   "On the console: ": "Konsolda: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "Kuyruk bu soruları beklemedi. Her oyun için seçim yapın ve X tuşuna basın.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "Kuyruk bu soruları beklemedi. Her oyun için seçim yapın ve + tuşuna basın.",
   "Resolve": "Çöz",
   "Queue done. Choose what to do with the skipped files.": "Kuyruk tamamlandı. Atlanan dosyalarla ne yapılacağını seçin.",
   "Screen type": "Ekran türü",

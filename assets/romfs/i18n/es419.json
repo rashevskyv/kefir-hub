@@ -4239,7 +4239,7 @@
   "Skipped during the queue": "Omitido durante la cola",
   "Skip all": "Omitir todo",
   "On the console: ": "En la consola: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "La cola no esperó estas preguntas. Elige para cada juego y presiona X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "La cola no esperó estas preguntas. Elige para cada juego y presiona +.",
   "Resolve": "Resolver",
   "Queue done. Choose what to do with the skipped files.": "Cola terminada. Elige qué hacer con los archivos omitidos.",
   "Screen type": "Tipo de pantalla",

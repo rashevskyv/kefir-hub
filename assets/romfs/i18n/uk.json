@@ -4211,7 +4211,7 @@
   "Skipped during the queue": "Пропущено в черзі",
   "Skip all": "Пропустити все",
   "On the console: ": "На консолі: ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "Черга не чекала на ці питання. Виберіть для кожної гри, потім натисніть X.",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "Черга не чекала на ці питання. Виберіть для кожної гри, потім натисніть +.",
   "Resolve": "Вирішити",
   "Queue done. Choose what to do with the skipped files.": "Чергу завершено. Виберіть, що робити з пропущеними файлами.",
   "Screen type": "Тип екрана",

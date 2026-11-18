@@ -86,7 +86,7 @@ void CheckLaunchAccountLinkPrompt() {
             } else {
                 App::Push<OptionBox>(
                     "You can link later in Tools → Users → Link Nintendo Account. Some games require a linked account to start."_i18n,
-                    "OK"_i18n, "Don't remind again"_i18n, 0,
+                    "Close"_i18n, "Don't remind again"_i18n, 0,
                     [](auto op) {
                         if (!op || *op != 1) {
                             return;

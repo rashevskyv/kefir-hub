@@ -4290,7 +4290,7 @@
   "Skipped during the queue": "在佇列中已略過",
   "Skip all": "略過全部",
   "On the console: ": "在主機上： ",
-  "The queue did not wait for these questions. Choose for each game, then press X.": "佇列未等待這些問題。請為每個遊戲進行選擇，然後按 X。",
+  "The queue did not wait for these questions. Choose for each game, then press +.": "佇列未等待這些問題。請為每個遊戲進行選擇，然後按 +。",
   "Resolve": "解決",
   "Queue done. Choose what to do with the skipped files.": "佇列已完成。請選擇如何處理略過的檔案。",
   "Screen type": "螢幕類型",

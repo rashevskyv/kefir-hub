@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.416 — Footer hints: one button order in every window (left before right, A rightmost, B next to it)
+`ui/footer_order.hpp` orders every footer row: arrows, −, +, ZL ZR, L R, L3 R3, ZR+Y, Y, X, B, A; a two-row footer no longer splits a left/right pair; the fan curve lost its own sort mode. Dialogs: sysMMC install warning is Back / Don't show again / Install, SteamGridDB key is Back / Remove / Replace, two "OK" on B became "Close". Icon crop hints moved into the footer (translated). DBI "Skipped during the queue": Resolve moved from X to + (hint text in all languages).
+host tests: pass (test_footer_order) | nro: not built | switch: pending — fan curve, DBI queue (L3/R3), file browser two-row footer, icon crop, the three dialogs. Docs screenshots not redone.
+
 ## v0.14.414 — Settings: Web server in the background (option, default Off) + WEB badge
 Like FTP: starts when the console is online, rebinds after sleep, stops on an IP change and starts again; closing the server window no longer stops it. The top bar shows a WEB badge.
 host tests: not run | nro: built (0.14.414) | switch: pending — turn it on, check the WEB badge, sleep/wake, an upload and an install without the window, Applet Mode untouched.
