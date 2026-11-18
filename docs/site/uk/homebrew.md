@@ -170,8 +170,11 @@ Kefir Hub може показувати застосунки з інших па�
 **У застосунку немає іконки.** Kefir Hub показує лише іконки розміром 256 × 256 пікселів. Замість інших видно
 типове зображення.
 
-**У списку є «Kefir Updater» з версією «Removed».** Kefir Updater замінено на [[Updater]] у [[Tools]].
-Натисніть **A** на цьому пункті, прочитайте повідомлення й утримуйте **A** на OK п'ять секунд. Пункт зникне.
+**У списку є «Kefir Updater».** Kefir Updater замінено на [[Updater]] у [[Tools]].
+<!-- draft
+- the Kefir Updater tile (line [[Run to update Kefir]]) is there for users of the old Kefir Updater; **A** on it shows the way to [[Tools]] → [[Updater]] and opens it, then the tile leaves the list for good
+- [[Options]] (**+**) on the tile → [[Remove]] removes it at once; it does not come back
+-->
 
 **Застосунок прихований, і я не можу його показати.** Увімкніть [[Show Hidden]]. У Kefir Hub немає команди, щоб
 приховати чи показати застосунок. Приховані застосунки позначено у `/config/kefir/playlog.ini`: рядок `hidden`

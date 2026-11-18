@@ -413,7 +413,7 @@ the gap. Code tasks follow the delivery ritual and update `docs/site`.
       activity log). Play time per game from the real sources DBI reads (pdm), so it survives firmware changes and does
       not break like nx-activity-log; the screen looks like nx-activity-log (per-game totals, launches, first / last
       played, timeline).
-- [ ] F.23 **Kefir Updater replaced by a guided tour** (user, 2026-10-16; later). Kefir Updater goes away with the Hub.
+- [x] F.23 **Kefir Updater replaced by a guided tour** (user, 2026-10-16; later). Kefir Updater goes away with the Hub.
       When the user opens Kefir Updater (or its launcher), say it is no longer used and that the Hub updates Kefir, then
       walk them there with the scripted-input engine (demo input): press the buttons on screen step by step, show each
       menu passed, stop on the Hub's update page. Replaces today's unclear text instruction.

@@ -288,6 +288,14 @@ void Menu::DisplayOptions() {
             AddFolderOptions(options.get());
             return;
         }
+        // the Kefir Updater tile has no file: its only action is to leave the list
+        if (m_selected_count == 0 && !m_entries_current.empty() && IsKefirUpdaterStub(GetEntry())) {
+            options->Add<SidebarEntryHeader>("THIS HOMEBREW"_i18n);
+            options->Add<SidebarEntryCallback>("Remove"_i18n, [this](){
+                HideUpdaterStub();
+            }, true)->SetIcon(ActionIcon::Delete);
+            return;
+        }
         const auto targets = GetSelectedEntries();
         if (!targets.empty()) {
             fs::FsNativeSd fs;

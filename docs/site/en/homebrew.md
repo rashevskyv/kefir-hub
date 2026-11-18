@@ -172,8 +172,11 @@ Deeper folders need a [search folder](#add-a-search-folder). A name that starts 
 
 **An app has no icon.** Kefir Hub shows only icons of 256 × 256 pixels. Other sizes show the default picture.
 
-**"Kefir Updater" with the version "Removed" is in the list.** Kefir Updater was replaced by the [[Updater]] in
-[[Tools]]. Press **A** on the entry, read the message and hold **A** on OK for five seconds. The entry disappears.
+**"Kefir Updater" is in the list.** Kefir Updater was replaced by the [[Updater]] in [[Tools]].
+<!-- draft
+- the Kefir Updater tile (line [[Run to update Kefir]]) is there for users of the old Kefir Updater; **A** on it shows the way to [[Tools]] → [[Updater]] and opens it, then the tile leaves the list for good
+- [[Options]] (**+**) on the tile → [[Remove]] removes it at once; it does not come back
+-->
 
 **An app is hidden and I cannot unhide it.** Turn on [[Show Hidden]]. Kefir Hub has no command to hide or unhide an
 app. Apps are marked hidden in `/config/kefir/playlog.ini`: a `hidden` line under the app's path.

@@ -5,7 +5,9 @@ Update Kefir, install system firmware (update or downgrade), and keep Kefir Hub 
 **Where:** [[Tools]] → [[Updater]]
 
 <!-- draft
-- the [[Homebrew]] tab has a Kefir Updater tile with its own icon and the line [[Run to update Kefir]]; it opens this Updater
+- the [[Homebrew]] tab has a Kefir Updater tile with its own icon and the line [[Run to update Kefir]], for users of the old Kefir Updater
+- **A** on that tile shows the way here: the **R** button in the footer is framed and pressed, the page slides to [[Tools]], the [[Updater]] tile pulses, then this Updater opens; **A** or **B** skips the animation
+- after that the Kefir Updater tile is gone from the list for good; [[Options]] (**+**) on the tile → [[Remove]] removes it without the animation
 -->
 
 <!-- shot: updater-main | Updater opened on the Kefir tab: tabs Kefir / Firmware / Apps, the state line, Available and Installed lines, the changelog -->

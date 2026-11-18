@@ -9,6 +9,7 @@ What Kefir Hub has gained recently and what is planned next. The list can change
 
 | Feature | What it does |
 |---|---|
+| Guided tour for Kefir Updater | The old Kefir Updater tile shows the way to [[Tools]] → [[Updater]] and opens it. See [Updater](updater.md). |
 | System cleanup | One list of checkboxes removes old updates, orphaned content, placeholders, unused tickets and similar leftovers, and shows what each step freed. |
 | System information | All console, Atmosphère, SD card, battery and hardware data in grouped tables. See [System tools](system-tools.md#system-information). |
 | Game patches | Remove the linked-account requirement, allow screenshots and video capture, at install time or later on an installed game. |
@@ -57,4 +58,3 @@ What Kefir Hub has gained recently and what is planned next. The list can change
 | Feature | Status | What it does |
 |---|---|---|
 | Activity log | Planned | Play time per game, with totals, launches, first and last played, and a timeline. |
-| Guided tour for Kefir Updater | Planned | When you open Kefir Updater, the Hub explains that it now updates Kefir and walks you to the update page. |

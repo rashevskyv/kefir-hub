@@ -50,6 +50,7 @@ private:
     void UpdateBackAction();
     void CopyActionsToCurrentMenu();
     void CheckForUpdate();
+    void StartUpdaterGuide();
     static auto PageDotsRect() -> Vec4;
     auto SlideRest() const -> float; // m_slide of the current page at rest
 

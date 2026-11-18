@@ -231,7 +231,9 @@ MainMenu::MainMenu() {
         std::make_pair(Button::SELECT, Action{App::HandleMinus})
     );
 
-    m_centre_menu = std::make_unique<homebrew::Menu>();
+    auto homebrew_menu = std::make_unique<homebrew::Menu>();
+    homebrew_menu->on_open_updater = [this]{ StartUpdaterGuide(); };
+    m_centre_menu = std::move(homebrew_menu);
     m_tools_menu = std::make_unique<tools::Menu>();
     m_current_menu = m_centre_menu.get();
 
@@ -384,6 +386,20 @@ void MainMenu::Draw(NVGcontext* vg, Theme* theme) {
             nvgStroke(vg);
         }
     }
+}
+
+// A on the old Kefir Updater tile: R is pressed, the page flips to Tools, the Updater tile pulses and opens.
+// The tile is not needed after that: it leaves the list.
+void MainMenu::StartUpdaterGuide() {
+    App::Push<UpdaterGuide>(this, FooterButtonFrame(m_current_menu->GetUiButtons(), Button::R),
+        [this]() {
+            SwitchTo(m_tools_menu.get());
+            return static_cast<tools::Menu&>(*m_tools_menu).FocusUpdater();
+        },
+        [this]() {
+            static_cast<homebrew::Menu&>(*m_centre_menu).HideUpdaterStub();
+            App::Push<menu::kefir::Menu>();
+        });
 }
 
 auto MainMenu::SlideRest() const -> float {

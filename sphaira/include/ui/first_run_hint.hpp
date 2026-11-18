@@ -2,6 +2,7 @@
 
 #include "ui/widget.hpp"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -49,6 +50,34 @@ private:
     std::vector<HintStep> m_steps; // m_steps[m_step].frame: around the target; w == 0 = no target
     size_t m_step{};
     uiButtons m_row; // the legend of the page below: this box has no chrome, so it draws the row itself
+};
+
+// the frame around one button of a footer row (its glyph and label); w == 0 when the row has no such button
+auto FooterButtonFrame(const Widget::uiButtons& row, Button target) -> Vec4;
+
+// A on the old Kefir Updater tile: shows where the updater is now (updater_guide_timeline.hpp). R is framed and
+// pressed, `open_tools` flips the page and returns the Updater tile, the tile pulses, then `done` runs.
+// A or B skips to `done`. The page below keeps its header and footer.
+struct UpdaterGuide final : Widget {
+    UpdaterGuide(Widget* below, Vec4 r_frame, std::function<Vec4()> open_tools, std::function<void()> done);
+
+    void Update(Controller* controller, TouchInfo* touch) override;
+    void Draw(NVGcontext* vg, Theme* theme) override;
+
+    // drawn after the chrome, so the dim covers the footer and the spotlight shows R through it
+    auto IsModal() const -> bool override { return true; }
+    // the footer is the one of the page below (it changes when the page flips)
+    auto GetFooterOwner() -> Widget* override { return m_below; }
+
+private:
+    void Finish();
+
+    Widget* m_below;
+    Vec4 m_r_frame;
+    Vec4 m_tile{};
+    std::function<Vec4()> m_open_tools;
+    std::function<void()> m_done;
+    int m_frame{};
 };
 
 } // namespace sphaira::ui

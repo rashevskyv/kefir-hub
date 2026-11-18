@@ -29,7 +29,11 @@ struct Menu final : MenuBase {
     void Draw(NVGcontext* vg, Theme* theme) override;
     void OnFocusGained() override;
 
+    // selects the Updater tile and returns its frame on screen (the Kefir Updater guide pulses it)
+    auto FocusUpdater() -> Vec4;
+
 private:
+    auto TileFrame(const std::string& label) const -> Vec4; // w == 0: no such tile
     void LoadIcons();
     void SetIndex(s64 index);
     void OnSelect();

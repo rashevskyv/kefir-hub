@@ -173,7 +173,11 @@ void Menu::UpdateActions() {
         if (e.is_dir) {
             Enter(e.folder_id);
         } else if (IsKefirUpdaterEntry(e)) {
-            App::Push<menu::kefir::Menu>();
+            if (on_open_updater) {
+                on_open_updater();
+            } else {
+                App::Push<menu::kefir::Menu>();
+            }
         } else if (OfferDeleteHubCopy(e)) {
             // asked instead of starting a second Kefir Hub
         } else {

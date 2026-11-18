@@ -88,6 +88,11 @@ struct Menu final : grid::Menu {
         return GetEntry(m_index);
     }
 
+    // A on the Kefir Updater tile: MainMenu shows the way to Tools → Updater. Unset: the updater opens at once.
+    std::function<void()> on_open_updater{};
+    // the Kefir Updater tile stays off the list from now on
+    void HideUpdaterStub();
+
 private:
     void SetIndex(s64 index);
     void InstallHomebrew();
@@ -157,6 +162,7 @@ private:
     option::OptionLong m_order{INI_SECTION, "order", OrderType::OrderType_Descending};
     option::OptionLong m_layout{INI_SECTION, "layout", LayoutType::LayoutType_GridDetail};
     option::OptionBool m_show_hidden{INI_SECTION, "show_hidden", false};
+    option::OptionBool m_updater_stub_hidden{INI_SECTION, "kefir_updater_hidden", false};
 };
 
 } // namespace sphaira::ui::menu::homebrew

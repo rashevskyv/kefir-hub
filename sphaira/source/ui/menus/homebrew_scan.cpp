@@ -288,8 +288,9 @@ void Menu::ScanHomebrew() {
     m_scan_fp = FingerprintInstalledNros(); // before the scan: a change during the scan shows at the next check
     m_entries = ScanInstalledNros();
 
-    // Kefir no longer ships Kefir Updater: keep its tile, A opens the Hub's own updater page
-    if (std::ranges::none_of(m_entries, [](const auto& entry) {
+    // Kefir no longer ships Kefir Updater: keep its tile, A shows the way to the Hub's own updater page.
+    // Gone after that guide ran once or after "Remove" in its options.
+    if (!m_updater_stub_hidden.Get() && std::ranges::none_of(m_entries, [](const auto& entry) {
         return IsKefirUpdaterEntry(entry);
     })) {
         NroEntry entry{};
@@ -453,6 +454,11 @@ void Menu::Sort() {
     std::sort(m_entries_current.begin(), m_entries_current.end(), sorter);
 }
 
+
+void Menu::HideUpdaterStub() {
+    m_updater_stub_hidden.Set(true);
+    SortAndFindLastFile(true);
+}
 
 void Menu::SortAndFindLastFile(bool scan) {
     fs::FsPath path;
