@@ -29,6 +29,7 @@
 | [[Auto-update]] | Підсторінка: як встановлюються нові версії Kefir Hub. Див. [Оновлення Kefir Hub](#update-kefir-hub). | |
 | [[Language]] | Мова інтерфейсу. Після зміни Kefir Hub питає [[Restart Kefir Hub?]]; виберіть [[Restart]], щоб мова змінилася всюди. | Питає під час першого запуску |
 | [[Text scroll speed]] | Як швидко прокручуються довгі написи: [[Slow]], [[Normal]], [[Fast]]. | [[Normal]] |
+| [[L button on the main screen]] | Що **L** відкриває або запускає на вкладці [[Homebrew]]. Див. [Кнопка L на головному екрані](#l-button). | [[Off]] |
 | [[12 Hour Time]] | Показує годинник у 12-годинному форматі. | Вимк. |
 | [[Clock sync]] | У фоні звіряє годинник консолі з сервером точного часу в інтернеті. | Увімк. |
 | [[Logging]] | Записує журнал у `/config/kefir/log.txt`. Сповільнює Kefir Hub; вмикайте лише для звіту про проблему. Див. [Як отримати журнал](troubleshooting.md#get-the-log). | Вимк. |
@@ -36,6 +37,26 @@
 | [[About]] | Показує встановлену версію і примітки до найновішого випуску. | |
 | [[Restart Kefir Hub]] | Закриває і знову відкриває Kefir Hub. | |
 | [[Exit]] | Закриває Kefir Hub. | |
+
+### Кнопка L на головному екрані {#l-button}
+
+**Де:** [[Settings]] → [[General]] → [[L button on the main screen]]
+
+<!-- draft
+- the row shows the current choice, or [[Off]]; **A** opens a page with the choices
+- [[Off]] (default): **L** on the [[Homebrew]] tab turns the page in the list, as before
+- under [[Tools]]: every tile of the [[Tools]] tab; [[Game Tools]], [[Software]], [[Tools]] and [[Console Transfer]] open a page of their rows, with [[The whole menu]] first
+- under [[Install & Share]]: [[Install & Share]] (the panel), [[Web Server]], [[MTP]], [[FTP]], [[PC Install (USB)]], [[Ownfoil]]
+- the current choice has a green tick; a menu row has the tick when the choice is the menu or one of its rows
+- **A** on a row picks it and closes the page (and the menu page above it); **B** goes back without a change
+- on the [[Homebrew]] tab the footer shows **L** with the name of the choice; **R** still opens [[Tools]]; on the [[Tools]] tab **L** still goes back
+- [[MTP]] and [[FTP]]: **L** turns the server on when it is off and off when it is on, with a notification ([[MTP started]], [[MTP stopped]], [[FTP started]], [[FTP stopped]])
+- [[Web Server]] needs the internet: offline, **L** first tries to connect, and says so with a retry when it cannot
+- [[Remove parental controls]] is not in the list: it acts at once, without a question
+- [[Kefir Settings]] is in the list only on Kefir; a choice that is not on the console works as [[Off]]
+-->
+
+<!-- shot: settings-l-button | the L button page: Off ticked, the Tools tiles, Install & Share -->
 
 ### Оновлення Kefir Hub {#update-kefir-hub}
 

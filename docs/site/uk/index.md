@@ -46,6 +46,10 @@ Kefir Hub — це homebrew-застосунок (`.nro`), тому він за�
 У Kefir Hub є дві вкладки. Натисніть **R**, щоб перейти на [[Tools]], натисніть **L** або **B**, щоб повернутися на
 [[Homebrew]].
 
+<!-- draft
+- on the [[Homebrew]] tab **L** can open any [[Tools]] menu or start an Install & Share action; set it in [[Settings]] → [[General]] → [[L button on the main screen]] (link: settings.md#l-button)
+-->
+
 - **[[Homebrew]]** — список homebrew-застосунків на карті пам'яті. Див. [Homebrew](homebrew.md).
 - **[[Tools]]** — сітка з усім іншим:
 

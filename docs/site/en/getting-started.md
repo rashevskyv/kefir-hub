@@ -36,6 +36,10 @@ How to move around Kefir Hub: buttons, the screen layout, option panels, dialogs
 | **ZL** / **ZR** | Jump to the first / last item of a list |
 | **R3** | Minimize or expand a running background task |
 
+<!-- draft
+- **L** on the [[Homebrew]] tab does what [[L button on the main screen]] in [[Settings]] → [[General]] sets; [[Off]] (default) = one page up (link: settings.md#l-button)
+-->
+
 A screen can give a button another job. The footer always shows what each button does right now.
 In the [File Browser](file-browser.md), for example, **−** goes back one screen.
 

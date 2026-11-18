@@ -29,6 +29,7 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 | [[Auto-update]] | Sub-page: how new Kefir Hub versions are installed. See [Update Kefir Hub](#update-kefir-hub). | |
 | [[Language]] | Interface language. After a change Kefir Hub asks [[Restart Kefir Hub?]]; choose [[Restart]] to apply it everywhere. | Asked on first start |
 | [[Text scroll speed]] | How fast long labels scroll: [[Slow]], [[Normal]], [[Fast]]. | [[Normal]] |
+| [[L button on the main screen]] | What **L** opens or starts on the [[Homebrew]] tab. See [L button on the main screen](#l-button). | [[Off]] |
 | [[12 Hour Time]] | Shows the clock in 12-hour format. | Off |
 | [[Clock sync]] | Corrects the console clock from an internet time server in the background. | On |
 | [[Logging]] | Writes a log to `/config/kefir/log.txt`. Slows Kefir Hub down; turn it on only to report a problem. See [Get the log](troubleshooting.md#get-the-log). | Off |
@@ -36,6 +37,26 @@ Changes are saved to the microSD card as soon as you make them. There is no Save
 | [[About]] | Shows the installed version and the release notes of the latest version. | |
 | [[Restart Kefir Hub]] | Closes and reopens Kefir Hub. | |
 | [[Exit]] | Closes Kefir Hub. | |
+
+### L button on the main screen {#l-button}
+
+**Where:** [[Settings]] → [[General]] → [[L button on the main screen]]
+
+<!-- draft
+- the row shows the current choice, or [[Off]]; **A** opens a page with the choices
+- [[Off]] (default): **L** on the [[Homebrew]] tab turns the page in the list, as before
+- under [[Tools]]: every tile of the [[Tools]] tab; [[Game Tools]], [[Software]], [[Tools]] and [[Console Transfer]] open a page of their rows, with [[The whole menu]] first
+- under [[Install & Share]]: [[Install & Share]] (the panel), [[Web Server]], [[MTP]], [[FTP]], [[PC Install (USB)]], [[Ownfoil]]
+- the current choice has a green tick; a menu row has the tick when the choice is the menu or one of its rows
+- **A** on a row picks it and closes the page (and the menu page above it); **B** goes back without a change
+- on the [[Homebrew]] tab the footer shows **L** with the name of the choice; **R** still opens [[Tools]]; on the [[Tools]] tab **L** still goes back
+- [[MTP]] and [[FTP]]: **L** turns the server on when it is off and off when it is on, with a notification ([[MTP started]], [[MTP stopped]], [[FTP started]], [[FTP stopped]])
+- [[Web Server]] needs the internet: offline, **L** first tries to connect, and says so with a retry when it cannot
+- [[Remove parental controls]] is not in the list: it acts at once, without a question
+- [[Kefir Settings]] is in the list only on Kefir; a choice that is not on the console works as [[Off]]
+-->
+
+<!-- shot: settings-l-button | the L button page: Off ticked, the Tools tiles, Install & Share -->
 
 ### Update Kefir Hub {#update-kefir-hub}
 

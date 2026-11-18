@@ -19,6 +19,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 |---|---|---|---|---|
 | Settings navigation, entry points | Tools → Settings | settings_menu.cpp, tools_menu.cpp:202 | settings | doc |
 | Auto-update (when, update now, skipped version) | General → Auto-update | settings_categories_items.cpp | settings#update-kefir-hub | partial: check timing |
+| L button on the main screen (picker of Tools menus and Install & Share actions) | General → L button on the main screen | l_button.cpp, l_button_targets.hpp, main_menu.cpp AddOnLRPress | settings#l-button | draft (v0.14.407) |
 | Language, scroll speed, 12h time, clock sync, logging, restart/exit | General | app_settings.cpp, app_network_settings.cpp, log.cpp | settings#general | doc |
 | About box | General → About | about_box.cpp | settings#update-kefir-hub | doc |
 | Homebrew search paths, replace hbmenu on exit | Homebrew | settings_categories_items.cpp, app_settings.cpp:362 | settings#homebrew | doc |

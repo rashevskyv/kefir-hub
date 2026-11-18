@@ -72,6 +72,7 @@ Hosts +0/-0 lines, patch folders +0/-0.
 host tests: pass (quick) | nro: built (CI) | switch: pending
 
 ## unreleased
+docs: L button on the main screen (v0.14.407) drafts on Settings › General, the main screen tabs and Getting started (EN, UK); coverage row. Label check 0 unknown, strict build OK; shot settings-l-button not taken (needs a DocsDemo build).
 chore: prelude-sync clones the Prelude tag with git when the Forgejo archive download fails (HTTP 500 for v5.0.1 on 2026-11-15). Fallback run locally on v5.0.1: checks pass, only the tag changes.
 docs: Homebrew (EN, UK) draft: back from an app on the same folder and row; apps that exit to HOME, HOME → Close and games end the Hub.
 docs: Kefir Settings → Nextendo written out (EN, UK): account, switch on/off, page rows, files, Semi-stock warning, Status messages. Label check 0 unknown, strict build OK; shot kefir-settings-nextendo not taken.

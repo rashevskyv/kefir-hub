@@ -45,6 +45,10 @@ Nothing interrupts the language list. The notice about the HOME Menu icon (forwa
 ## The two tabs
 Kefir Hub has two tabs. Press **R** to go to [[Tools]], press **L** or **B** to go back to [[Homebrew]].
 
+<!-- draft
+- on the [[Homebrew]] tab **L** can open any [[Tools]] menu or start an Install & Share action; set it in [[Settings]] → [[General]] → [[L button on the main screen]] (link: settings.md#l-button)
+-->
+
 - **[[Homebrew]]** lists the homebrew apps on your memory card. See [Homebrew](homebrew.md).
 - **[[Tools]]** is a grid of everything else:
 
