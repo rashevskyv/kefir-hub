@@ -20,6 +20,11 @@ struct ToolItem {
     std::function<void()> action;
 };
 
+// the rows of the Tools tab, Game Tools and the Tools page, as their menus build them (the L button reuses them)
+auto TileItems() -> std::vector<ToolItem>; // all tiles: the tab drops Kefir Settings off Kefir itself
+auto GameToolItems() -> std::vector<ToolItem>;
+auto SystemToolItems() -> std::vector<settings::SettingsItem>;
+
 struct Menu final : MenuBase {
     Menu();
     ~Menu();

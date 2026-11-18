@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Иә, кілттерді жинау",
   "The keys are dumped. Game dumps and installs work now.": "Кілттер жиналды. Ойындардың дампы мен орнатылуы енді жұмыс істейді.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Жинағаннан кейін де кілттер жоқ немесе қате. Kefir-ді жаңартыңыз немесе ең жаңа Lockpick_RCM.bin файлын /bootloader/payloads ішіне салыңыз, содан кейін Kefir Hub-ты қайта іске қосыңыз.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Мұнда ойындар болмауы мүмкін, себебі консоль кілттері жоқ немесе қате. Kefir Hub-ты іске қосып, «Иә, кілттерді жинау» тармағын таңдаңыз: консоль қайта іске қосылып, кілттерді өзі жинайды. Содан кейін қайта қосылыңыз."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Мұнда ойындар болмауы мүмкін, себебі консоль кілттері жоқ немесе қате. Kefir Hub-ты іске қосып, «Иә, кілттерді жинау» тармағын таңдаңыз: консоль қайта іске қосылып, кілттерді өзі жинайды. Содан кейін қайта қосылыңыз.",
+  "L button on the main screen": "Басты экрандағы L түймесі",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Басты экранда L түймесімен мәзірді ашу немесе әрекетті іске қосу. R бұрынғыдай Құралдар ашады.",
+  "L turns the page in the list, as before.": "L бұрынғыдай тізімді бетпен парақтайды.",
+  "The whole menu": "Бүкіл мәзір",
+  "Open the Install & Share panel.": "«Орнату және бөлісу» панелін ашу.",
+  "Turn the MTP server on or off.": "MTP серверін қосу немесе өшіру.",
+  "Turn the FTP server on or off.": "FTP серверін қосу немесе өшіру.",
+  "FTP started": "FTP іске қосылды",
+  "FTP stopped": "FTP тоқтатылды"
 }

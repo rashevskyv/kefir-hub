@@ -4415,5 +4415,14 @@
   "Yes, dump the keys": "Sì, esegui il dump delle chiavi",
   "The keys are dumped. Game dumps and installs work now.": "Il dump delle chiavi è stato eseguito. Il dump e l'installazione dei giochi ora funzionano.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Dopo il dump le chiavi mancano ancora o sono errate. Aggiorna Kefir o metti l'ultimo Lockpick_RCM.bin in /bootloader/payloads, poi avvia di nuovo Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Qui potrebbero mancare dei giochi perché le chiavi della console mancano o sono errate. Avvia Kefir Hub e scegli \"Sì, esegui il dump delle chiavi\": la console si riavvia e ne esegue il dump da sola. Poi ricollegati."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Qui potrebbero mancare dei giochi perché le chiavi della console mancano o sono errate. Avvia Kefir Hub e scegli \"Sì, esegui il dump delle chiavi\": la console si riavvia e ne esegue il dump da sola. Poi ricollegati.",
+  "L button on the main screen": "Tasto L nella schermata principale",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Apri un menu o avvia un’azione con L nella schermata principale. R apre ancora Strumenti.",
+  "L turns the page in the list, as before.": "L scorre la lista di una pagina, come prima.",
+  "The whole menu": "L’intero menu",
+  "Open the Install & Share panel.": "Apri il pannello «Installa e condividi».",
+  "Turn the MTP server on or off.": "Attiva o disattiva il server MTP.",
+  "Turn the FTP server on or off.": "Attiva o disattiva il server FTP.",
+  "FTP started": "FTP avviato",
+  "FTP stopped": "FTP arrestato"
 }

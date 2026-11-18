@@ -173,8 +173,8 @@ void StartShareServerFromTools() {
 
 } // namespace
 
-ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, MenuFlag_None} {
-    m_items = {
+auto ConsoleTransferItems() -> std::vector<ConsoleTransferItem> {
+    return {
         {
             "Send installed games"_i18n,
             "Offer installed games (base, updates, DLC) to another console on the same Wi-Fi."_i18n,
@@ -246,6 +246,48 @@ ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, M
             }
         },
     };
+}
+
+void ToggleMtp() {
+    if (haze::IsRunning()) {
+        App::SetMtpEnable(false);
+        App::Notify("MTP stopped"_i18n);
+        return;
+    }
+    App::SetMtpEnable(true);
+    App::Notify(haze::IsRunning() ? "MTP started"_i18n : "Failed to start MTP"_i18n);
+}
+
+auto InstallShareItems() -> std::vector<ConsoleTransferItem> {
+    std::vector<ConsoleTransferItem> items{
+        {"Install & Share"_i18n, "Open the Install & Share panel."_i18n, [](){
+            auto options = std::make_unique<Sidebar>("Install & Share"_i18n, Sidebar::Side::RIGHT);
+            AddInstallShareOptions(options.get());
+            AddSettingsOption(options.get());
+            App::Push(std::move(options));
+        }},
+        {"Web Server"_i18n, "Start the web sharing server to transfer files via web browser."_i18n, [](){
+            net::RequireConnection([](){ StartShareServerFromTools(); });
+        }},
+        {"MTP"_i18n, "Turn the MTP server on or off."_i18n, ToggleMtp},
+        {"FTP"_i18n, "Turn the FTP server on or off."_i18n, [](){
+            App::SetFtpEnable(!App::GetFtpEnable());
+            App::Notify(App::GetFtpEnable() ? "FTP started"_i18n : "FTP stopped"_i18n);
+        }},
+    };
+#if ENABLE_NETWORK_INSTALL
+    items.push_back({"PC Install (USB)"_i18n, "Install games from a PC over USB: DBI Backend, ns-usbloader (Awoo/Tinfoil or GoldLeaf) and fluffy."_i18n, [](){
+        App::ConfirmInstall([](){ App::Push<ui::menu::dbi::Menu>(MenuFlag_None); });
+    }});
+#endif
+    items.push_back({"Ownfoil"_i18n, "Browse and install titles from a self-hosted Ownfoil server."_i18n, [](){
+        App::Push<ui::menu::ownfoil::Menu>(MenuFlag_None);
+    }});
+    return items;
+}
+
+ConsoleTransferMenu::ConsoleTransferMenu() : MenuBase{"Console Transfer"_i18n, MenuFlag_None} {
+    m_items = ConsoleTransferItems();
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }}),
@@ -336,22 +378,9 @@ void AddInstallShareOptions(Sidebar* options) {
     const std::string mtp_title = haze::IsRunning() ? "MTP: Active"_i18n : "Mount MTP"_i18n;
 
     mtp_state->entry = options->Add<SidebarEntryCallback>(mtp_title, [mtp_state](){
-        if (haze::IsRunning()) {
-            App::SetMtpEnable(false);
-            App::Notify("MTP stopped"_i18n);
-            if (mtp_state->entry) {
-                mtp_state->entry->SetTitle("Mount MTP"_i18n);
-            }
-        } else {
-            App::SetMtpEnable(true);
-            if (haze::IsRunning()) {
-                App::Notify("MTP started"_i18n);
-                if (mtp_state->entry) {
-                    mtp_state->entry->SetTitle("MTP: Active"_i18n);
-                }
-            } else {
-                App::Notify("Failed to start MTP"_i18n);
-            }
+        ToggleMtp();
+        if (mtp_state->entry) {
+            mtp_state->entry->SetTitle(haze::IsRunning() ? "MTP: Active"_i18n : "Mount MTP"_i18n);
         }
     }, "Toggle the MTP responder to browse SD card files on PC."_i18n);
 

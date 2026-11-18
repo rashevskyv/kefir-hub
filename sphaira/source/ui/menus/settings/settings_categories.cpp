@@ -9,6 +9,7 @@
 #include "ui/menus/filebrowser.hpp"
 #include "ui/menus/file_picker.hpp"
 #include "ui/menus/homebrew.hpp"
+#include "ui/menus/l_button.hpp"
 #include "ui/menus/save/save_locations.hpp"
 #include "ui/menus/save/save_paths.hpp"
 #include "ui/menus/save_menu.hpp"
@@ -338,6 +339,10 @@ void Menu::BuildCategories() {
                         }
                     }, App::GetTextScrollSpeed());
                 }},
+                { "L button on the main screen"_i18n, "Open a menu or start an action with L on the main screen. R still opens Tools."_i18n, [](){
+                    const auto name = l_button::Label();
+                    return name.empty() ? "Off"_i18n : name;
+                }, l_button::OpenPicker },
                 MakeBoolItem("12 Hour Time"_i18n, "Use 12 hour clock format."_i18n, App::Get12HourTimeEnable, App::Set12HourTimeEnable),
                 MakeBoolItem("Clock sync"_i18n, "Correct the console clock from an internet time server in the background."_i18n, App::GetNtpEnable, App::SetNtpEnable),
                 MakeBoolItem("Logging"_i18n, "Write logs to /config/kefir/log.txt."_i18n, App::GetLogEnable, App::SetLogEnable),

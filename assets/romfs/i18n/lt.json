@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Taip, nukopijuoti raktus",
   "The keys are dumped. Game dumps and installs work now.": "Raktai nukopijuoti. Žaidimų kopijavimas ir diegimas dabar veikia.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Po kopijavimo raktų vis dar nėra arba jie neteisingi. Atnaujinkite Kefir arba įdėkite naujausią Lockpick_RCM.bin į /bootloader/payloads, tada vėl paleiskite Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Čia gali trūkti žaidimų, nes konsolės raktų nėra arba jie neteisingi. Paleiskite Kefir Hub ir pasirinkite „Taip, nukopijuoti raktus“: konsolė pasileis iš naujo ir pati nukopijuos raktus. Tada vėl prisijunkite."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Čia gali trūkti žaidimų, nes konsolės raktų nėra arba jie neteisingi. Paleiskite Kefir Hub ir pasirinkite „Taip, nukopijuoti raktus“: konsolė pasileis iš naujo ir pati nukopijuos raktus. Tada vėl prisijunkite.",
+  "L button on the main screen": "L mygtukas pagrindiniame ekrane",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "L mygtuku pagrindiniame ekrane atidarykite meniu arba paleiskite veiksmą. R kaip ir anksčiau atidaro Įrankiai.",
+  "L turns the page in the list, as before.": "L verčia sąrašo puslapį, kaip anksčiau.",
+  "The whole menu": "Visas meniu",
+  "Open the Install & Share panel.": "Atidaryti skydelį „Įdiegti ir bendrinti“.",
+  "Turn the MTP server on or off.": "Įjungti arba išjungti MTP serverį.",
+  "Turn the FTP server on or off.": "Įjungti arba išjungti FTP serverį.",
+  "FTP started": "FTP paleistas",
+  "FTP stopped": "FTP sustabdytas"
 }

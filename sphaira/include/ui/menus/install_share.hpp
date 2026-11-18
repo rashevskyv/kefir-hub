@@ -17,6 +17,12 @@ struct ConsoleTransferItem {
     std::function<void()> action;
 };
 
+// the rows of Console Transfer, and the actions of Install & Share as rows (the L button reuses them)
+auto ConsoleTransferItems() -> std::vector<ConsoleTransferItem>;
+auto InstallShareItems() -> std::vector<ConsoleTransferItem>;
+// MTP on when off, off when on, with a notification
+void ToggleMtp();
+
 struct ConsoleTransferMenu final : MenuBase {
     ConsoleTransferMenu();
     ~ConsoleTransferMenu() = default;

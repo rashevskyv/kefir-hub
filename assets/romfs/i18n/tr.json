@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Evet, anahtarları dök",
   "The keys are dumped. Game dumps and installs work now.": "Anahtarlar döküldü. Oyun dökümü ve kurulumu artık çalışıyor.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Dökümden sonra anahtarlar hâlâ eksik ya da yanlış. Kefir'i güncelleyin ya da en yeni Lockpick_RCM.bin dosyasını /bootloader/payloads içine koyun, ardından Kefir Hub'ı yeniden başlatın.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Konsol anahtarları eksik ya da yanlış olduğu için burada oyunlar eksik olabilir. Kefir Hub'ı başlatın ve \"Evet, anahtarları dök\" seçeneğini seçin: konsol yeniden başlar ve anahtarları kendiliğinden döker. Sonra yeniden bağlanın."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Konsol anahtarları eksik ya da yanlış olduğu için burada oyunlar eksik olabilir. Kefir Hub'ı başlatın ve \"Evet, anahtarları dök\" seçeneğini seçin: konsol yeniden başlar ve anahtarları kendiliğinden döker. Sonra yeniden bağlanın.",
+  "L button on the main screen": "Ana ekranda L düğmesi",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Ana ekranda L ile bir menü açın veya bir işlem başlatın. R yine Araçlar açar.",
+  "L turns the page in the list, as before.": "L, eskisi gibi listede sayfa çevirir.",
+  "The whole menu": "Menünün tamamı",
+  "Open the Install & Share panel.": "“Yükle ve Paylaş” panelini aç.",
+  "Turn the MTP server on or off.": "MTP sunucusunu aç veya kapat.",
+  "Turn the FTP server on or off.": "FTP sunucusunu aç veya kapat.",
+  "FTP started": "FTP başlatıldı",
+  "FTP stopped": "FTP durduruldu"
 }

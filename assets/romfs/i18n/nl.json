@@ -4415,5 +4415,14 @@
   "Yes, dump the keys": "Ja, keys dumpen",
   "The keys are dumped. Game dumps and installs work now.": "De keys zijn gedumpt. Games dumpen en installeren werkt nu.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "De keys ontbreken na het dumpen nog steeds of zijn onjuist. Werk Kefir bij of zet de nieuwste Lockpick_RCM.bin in /bootloader/payloads en start Kefir Hub daarna opnieuw.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Hier kunnen games ontbreken omdat de keys van de console ontbreken of onjuist zijn. Start Kefir Hub en kies \"Ja, keys dumpen\": de console herstart en dumpt ze vanzelf. Maak daarna opnieuw verbinding."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Hier kunnen games ontbreken omdat de keys van de console ontbreken of onjuist zijn. Start Kefir Hub en kies \"Ja, keys dumpen\": de console herstart en dumpt ze vanzelf. Maak daarna opnieuw verbinding.",
+  "L button on the main screen": "L-knop op het hoofdscherm",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Open een menu of start een actie met L op het hoofdscherm. R opent nog steeds Hulpmiddelen.",
+  "L turns the page in the list, as before.": "L bladert zoals eerder een pagina in de lijst.",
+  "The whole menu": "Het hele menu",
+  "Open the Install & Share panel.": "Het paneel ‘Installeren en delen’ openen.",
+  "Turn the MTP server on or off.": "De MTP-server aan- of uitzetten.",
+  "Turn the FTP server on or off.": "De FTP-server aan- of uitzetten.",
+  "FTP started": "FTP gestart",
+  "FTP stopped": "FTP gestopt"
 }

@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Ya, dump kunci",
   "The keys are dumped. Game dumps and installs work now.": "Kunci sudah didump. Dump dan pemasangan game sekarang berfungsi.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Kunci masih tidak ada atau salah setelah dump. Perbarui Kefir atau taruh Lockpick_RCM.bin terbaru di /bootloader/payloads, lalu jalankan Kefir Hub lagi.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Game mungkin tidak muncul di sini karena kunci konsol tidak ada atau salah. Jalankan Kefir Hub dan pilih \"Ya, dump kunci\": konsol dimulai ulang dan mendump kunci sendiri. Lalu sambungkan lagi."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Game mungkin tidak muncul di sini karena kunci konsol tidak ada atau salah. Jalankan Kefir Hub dan pilih \"Ya, dump kunci\": konsol dimulai ulang dan mendump kunci sendiri. Lalu sambungkan lagi.",
+  "L button on the main screen": "Tombol L di layar utama",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Buka menu atau jalankan tindakan dengan L di layar utama. R tetap membuka Alat.",
+  "L turns the page in the list, as before.": "L membalik halaman daftar, seperti sebelumnya.",
+  "The whole menu": "Seluruh menu",
+  "Open the Install & Share panel.": "Buka panel “Instal & Bagikan”.",
+  "Turn the MTP server on or off.": "Nyalakan atau matikan server MTP.",
+  "Turn the FTP server on or off.": "Nyalakan atau matikan server FTP.",
+  "FTP started": "FTP dimulai",
+  "FTP stopped": "FTP dihentikan"
 }

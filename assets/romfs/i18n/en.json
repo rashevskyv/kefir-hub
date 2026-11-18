@@ -4343,5 +4343,14 @@
   "Yes, dump the keys": "Yes, dump the keys",
   "The keys are dumped. Game dumps and installs work now.": "The keys are dumped. Game dumps and installs work now.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.",
+  "L button on the main screen": "L button on the main screen",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Open a menu or start an action with L on the main screen. R still opens Tools.",
+  "L turns the page in the list, as before.": "L turns the page in the list, as before.",
+  "The whole menu": "The whole menu",
+  "Open the Install & Share panel.": "Open the Install & Share panel.",
+  "Turn the MTP server on or off.": "Turn the MTP server on or off.",
+  "Turn the FTP server on or off.": "Turn the FTP server on or off.",
+  "FTP started": "FTP started",
+  "FTP stopped": "FTP stopped"
 }

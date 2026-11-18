@@ -2,6 +2,7 @@
 
 #include "ui/menus/homebrew.hpp"
 #include "ui/menus/tools_menu.hpp"
+#include "ui/menus/l_button.hpp"
 #include "ui/menus/kefir_menu.hpp"
 #include "ui/first_run_hint.hpp"
 #include "ui/menus/users_menu.hpp"
@@ -413,6 +414,9 @@ auto MainMenu::PageDotsRect() -> Vec4 {
 void MainMenu::OnFocusGained() {
     Widget::OnFocusGained();
     m_current_menu->OnFocusGained();
+    // the L choice may have changed in Settings, which is opened on top of this menu
+    AddOnLRPress();
+    CopyActionsToCurrentMenu();
 
     if (!m_launch_link_prompt_checked && !App::NeedsLanguageSelection()) {
         m_launch_link_prompt_checked = true;
@@ -471,10 +475,17 @@ void MainMenu::AddOnLRPress() {
     RemoveAction(Button::L);
     RemoveAction(Button::R);
 
+    // CopyActionsToCurrentMenu only sets: a copy of an L that was since turned off would stay
+    m_centre_menu->RemoveAction(Button::L);
+
     if (m_current_menu == m_centre_menu.get()) {
         SetAction(Button::R, Action{i18n::get(m_tools_menu->GetShortTitle()), [this]{
             SwitchTo(m_tools_menu.get());
         }});
+        // none chosen: no L action, so the list keeps L for turning the page
+        if (const auto name = l_button::Label(); !name.empty()) {
+            SetAction(Button::L, Action{name, []{ l_button::Run(); }});
+        }
     } else {
         SetAction(Button::L, Action{i18n::get(m_centre_menu->GetShortTitle()), [this]{
             SwitchTo(m_centre_menu.get());

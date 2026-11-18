@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Jā, iegūt atslēgas",
   "The keys are dumped. Game dumps and installs work now.": "Atslēgas ir iegūtas. Spēļu kopēšana un instalēšana tagad darbojas.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Pēc iegūšanas atslēgu joprojām nav vai tās ir nepareizas. Atjauniniet Kefir vai ievietojiet jaunāko Lockpick_RCM.bin mapē /bootloader/payloads, tad vēlreiz palaidiet Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Šeit var trūkt spēļu, jo konsoles atslēgu nav vai tās ir nepareizas. Palaidiet Kefir Hub un izvēlieties “Jā, iegūt atslēgas”: konsole restartēsies un pati iegūs atslēgas. Pēc tam pievienojieties vēlreiz."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Šeit var trūkt spēļu, jo konsoles atslēgu nav vai tās ir nepareizas. Palaidiet Kefir Hub un izvēlieties “Jā, iegūt atslēgas”: konsole restartēsies un pati iegūs atslēgas. Pēc tam pievienojieties vēlreiz.",
+  "L button on the main screen": "L poga galvenajā ekrānā",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Ar L galvenajā ekrānā atver izvēlni vai palaiž darbību. R joprojām atver Rīki.",
+  "L turns the page in the list, as before.": "L pāršķir saraksta lapu, kā līdz šim.",
+  "The whole menu": "Visa izvēlne",
+  "Open the Install & Share panel.": "Atvērt paneli “Instalēt un kopīgot”.",
+  "Turn the MTP server on or off.": "Ieslēgt vai izslēgt MTP serveri.",
+  "Turn the FTP server on or off.": "Ieslēgt vai izslēgt FTP serveri.",
+  "FTP started": "FTP palaists",
+  "FTP stopped": "FTP apturēts"
 }

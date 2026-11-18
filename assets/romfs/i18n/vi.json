@@ -4415,5 +4415,14 @@
   "Yes, dump the keys": "Có, xuất khóa",
   "The keys are dumped. Game dumps and installs work now.": "Đã xuất khóa. Giờ đây xuất và cài đặt game đã hoạt động.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Sau khi xuất, khóa vẫn bị thiếu hoặc sai. Hãy cập nhật Kefir hoặc đặt Lockpick_RCM.bin mới nhất vào /bootloader/payloads, rồi khởi động lại Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Có thể thiếu game ở đây vì khóa của máy bị thiếu hoặc sai. Hãy mở Kefir Hub và chọn \"Có, xuất khóa\": máy sẽ khởi động lại và tự xuất khóa. Sau đó kết nối lại."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Có thể thiếu game ở đây vì khóa của máy bị thiếu hoặc sai. Hãy mở Kefir Hub và chọn \"Có, xuất khóa\": máy sẽ khởi động lại và tự xuất khóa. Sau đó kết nối lại.",
+  "L button on the main screen": "Nút L trên màn hình chính",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Mở một menu hoặc chạy một thao tác bằng L trên màn hình chính. R vẫn mở Công cụ.",
+  "L turns the page in the list, as before.": "L lật trang danh sách như trước.",
+  "The whole menu": "Toàn bộ menu",
+  "Open the Install & Share panel.": "Mở bảng “Cài đặt & Chia sẻ”.",
+  "Turn the MTP server on or off.": "Bật hoặc tắt máy chủ MTP.",
+  "Turn the FTP server on or off.": "Bật hoặc tắt máy chủ FTP.",
+  "FTP started": "Đã khởi động FTP",
+  "FTP stopped": "Đã dừng FTP"
 }

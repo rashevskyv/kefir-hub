@@ -4467,5 +4467,14 @@
   "Yes, dump the keys": "是，轉儲金鑰",
   "The keys are dumped. Game dumps and installs work now.": "金鑰已轉儲。現在可以轉儲與安裝遊戲了。",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "轉儲後金鑰仍然缺少或不正確。請更新 Kefir，或將最新的 Lockpick_RCM.bin 放入 /bootloader/payloads，然後重新啟動 Kefir Hub。",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "由於主機金鑰缺少或不正確，這裡可能缺少遊戲。請啟動 Kefir Hub 並選擇「是，轉儲金鑰」：主機將重新啟動並自動轉儲金鑰。然後重新連線。"
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "由於主機金鑰缺少或不正確，這裡可能缺少遊戲。請啟動 Kefir Hub 並選擇「是，轉儲金鑰」：主機將重新啟動並自動轉儲金鑰。然後重新連線。",
+  "L button on the main screen": "主畫面上的 L 鍵",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "在主畫面上用 L 鍵開啟選單或執行動作。R 鍵仍會開啟工具。",
+  "L turns the page in the list, as before.": "L 鍵照舊在清單中翻頁。",
+  "The whole menu": "整個選單",
+  "Open the Install & Share panel.": "開啟「安裝與分享」面板。",
+  "Turn the MTP server on or off.": "開啟或關閉 MTP 伺服器。",
+  "Turn the FTP server on or off.": "開啟或關閉 FTP 伺服器。",
+  "FTP started": "FTP 已啟動",
+  "FTP stopped": "FTP 已停止"
 }

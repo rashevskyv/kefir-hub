@@ -4416,5 +4416,14 @@
   "Yes, dump the keys": "Ja, Schlüssel auslesen",
   "The keys are dumped. Game dumps and installs work now.": "Die Schlüssel wurden ausgelesen. Spiele-Dumps und Installationen funktionieren jetzt.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Die Schlüssel fehlen nach dem Auslesen immer noch oder sind falsch. Aktualisiere Kefir oder lege die neueste Lockpick_RCM.bin in /bootloader/payloads und starte Kefir Hub dann erneut.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Hier fehlen möglicherweise Spiele, weil die Konsolenschlüssel fehlen oder falsch sind. Starte Kefir Hub und wähle „Ja, Schlüssel auslesen“: Die Konsole startet neu und liest sie von selbst aus. Verbinde dich danach erneut."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Hier fehlen möglicherweise Spiele, weil die Konsolenschlüssel fehlen oder falsch sind. Starte Kefir Hub und wähle „Ja, Schlüssel auslesen“: Die Konsole startet neu und liest sie von selbst aus. Verbinde dich danach erneut.",
+  "L button on the main screen": "L-Taste im Hauptbildschirm",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Mit L im Hauptbildschirm ein Menü öffnen oder eine Aktion starten. R öffnet weiterhin Werkzeuge.",
+  "L turns the page in the list, as before.": "L blättert wie bisher eine Seite in der Liste.",
+  "The whole menu": "Das ganze Menü",
+  "Open the Install & Share panel.": "Das Feld „Installieren & Teilen“ öffnen.",
+  "Turn the MTP server on or off.": "Den MTP-Server ein- oder ausschalten.",
+  "Turn the FTP server on or off.": "Den FTP-Server ein- oder ausschalten.",
+  "FTP started": "FTP gestartet",
+  "FTP stopped": "FTP gestoppt"
 }

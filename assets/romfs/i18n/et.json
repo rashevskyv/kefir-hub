@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Jah, tee võtmete tõmmis",
   "The keys are dumped. Game dumps and installs work now.": "Võtmete tõmmis on tehtud. Mängude tõmmised ja installimine töötavad nüüd.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Võtmed puuduvad pärast tõmmist endiselt või on valed. Uuenda Kefirit või pane uusim Lockpick_RCM.bin kausta /bootloader/payloads ja käivita Kefir Hub uuesti.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Siit võivad mängud puududa, sest konsooli võtmed puuduvad või on valed. Käivita Kefir Hub ja vali „Jah, tee võtmete tõmmis“: konsool taaskäivitub ja teeb tõmmise ise. Seejärel ühenda uuesti."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Siit võivad mängud puududa, sest konsooli võtmed puuduvad või on valed. Käivita Kefir Hub ja vali „Jah, tee võtmete tõmmis“: konsool taaskäivitub ja teeb tõmmise ise. Seejärel ühenda uuesti.",
+  "L button on the main screen": "L-nupp avaekraanil",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Ava avaekraanil L-nupuga menüü või käivita toiming. R avab endiselt Tööriistad.",
+  "L turns the page in the list, as before.": "L lehitseb loendit lehe kaupa, nagu varem.",
+  "The whole menu": "Kogu menüü",
+  "Open the Install & Share panel.": "Ava paneel „Installi ja jaga”.",
+  "Turn the MTP server on or off.": "Lülita MTP-server sisse või välja.",
+  "Turn the FTP server on or off.": "Lülita FTP-server sisse või välja.",
+  "FTP started": "FTP käivitatud",
+  "FTP stopped": "FTP peatatud"
 }

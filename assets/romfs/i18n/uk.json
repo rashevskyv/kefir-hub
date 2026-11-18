@@ -4346,5 +4346,14 @@
   "Yes, dump the keys": "Так, зняти ключі",
   "The keys are dumped. Game dumps and installs work now.": "Ключі знято. Дамп і встановлення ігор тепер працюють.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Після знімання ключі досі відсутні або неправильні. Оновіть Kefir або покладіть найновіший Lockpick_RCM.bin у /bootloader/payloads, потім знову запустіть Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Ігор тут може не бути, бо ключі консолі відсутні або неправильні. Запустіть Kefir Hub і виберіть «Так, зняти ключі»: консоль перезавантажиться й сама зніме їх. Потім підключіться знову."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Ігор тут може не бути, бо ключі консолі відсутні або неправильні. Запустіть Kefir Hub і виберіть «Так, зняти ключі»: консоль перезавантажиться й сама зніме їх. Потім підключіться знову.",
+  "L button on the main screen": "Кнопка L на головному екрані",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Відкрити меню або запустити дію кнопкою L на головному екрані. R, як і раніше, відкриває Інструменти.",
+  "L turns the page in the list, as before.": "L гортає список на сторінку, як і раніше.",
+  "The whole menu": "Усе меню",
+  "Open the Install & Share panel.": "Відкрити панель «Встановлення та обмін».",
+  "Turn the MTP server on or off.": "Увімкнути або вимкнути сервер MTP.",
+  "Turn the FTP server on or off.": "Увімкнути або вимкнути сервер FTP.",
+  "FTP started": "FTP запущено",
+  "FTP stopped": "FTP зупинено"
 }

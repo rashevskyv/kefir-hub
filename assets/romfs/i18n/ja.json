@@ -4415,5 +4415,14 @@
   "Yes, dump the keys": "はい、キーをダンプする",
   "The keys are dumped. Game dumps and installs work now.": "キーをダンプしました。ゲームのダンプとインストールが使えるようになりました。",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "ダンプ後もキーがないか、正しくありません。Kefir を更新するか、最新の Lockpick_RCM.bin を /bootloader/payloads に置いてから、Kefir Hub をもう一度起動してください。",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "本体のキーがないか正しくないため、ここにゲームが表示されない場合があります。Kefir Hub を起動して「はい、キーをダンプする」を選んでください。本体が再起動し、自動でキーをダンプします。その後、もう一度接続してください。"
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "本体のキーがないか正しくないため、ここにゲームが表示されない場合があります。Kefir Hub を起動して「はい、キーをダンプする」を選んでください。本体が再起動し、自動でキーをダンプします。その後、もう一度接続してください。",
+  "L button on the main screen": "メイン画面のLボタン",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "メイン画面でLボタンを押してメニューを開くか、操作を実行します。Rは引き続きツールを開きます。",
+  "L turns the page in the list, as before.": "Lはこれまでどおりリストのページを送ります。",
+  "The whole menu": "メニュー全体",
+  "Open the Install & Share panel.": "「インストール＆共有」パネルを開きます。",
+  "Turn the MTP server on or off.": "MTPサーバーをオン/オフします。",
+  "Turn the FTP server on or off.": "FTPサーバーをオン/オフします。",
+  "FTP started": "FTPを開始しました",
+  "FTP stopped": "FTPを停止しました"
 }

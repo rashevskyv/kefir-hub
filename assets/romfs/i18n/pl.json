@@ -4410,5 +4410,14 @@
   "Yes, dump the keys": "Tak, zrzuć klucze",
   "The keys are dumped. Game dumps and installs work now.": "Klucze zostały zrzucone. Zrzuty i instalacja gier teraz działają.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Po zrzucie nadal brakuje kluczy albo są błędne. Zaktualizuj Kefir albo umieść najnowszy Lockpick_RCM.bin w /bootloader/payloads, a potem ponownie uruchom Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Może tu brakować gier, ponieważ brakuje kluczy konsoli albo są błędne. Uruchom Kefir Hub i wybierz „Tak, zrzuć klucze”: konsola uruchomi się ponownie i sama zrzuci klucze. Potem połącz się ponownie."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Może tu brakować gier, ponieważ brakuje kluczy konsoli albo są błędne. Uruchom Kefir Hub i wybierz „Tak, zrzuć klucze”: konsola uruchomi się ponownie i sama zrzuci klucze. Potem połącz się ponownie.",
+  "L button on the main screen": "Przycisk L na ekranie głównym",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Otwórz menu lub uruchom akcję przyciskiem L na ekranie głównym. R nadal otwiera Narzędzia.",
+  "L turns the page in the list, as before.": "L przewija listę o stronę, jak dotąd.",
+  "The whole menu": "Całe menu",
+  "Open the Install & Share panel.": "Otwórz panel „Instaluj i udostępnij”.",
+  "Turn the MTP server on or off.": "Włącz lub wyłącz serwer MTP.",
+  "Turn the FTP server on or off.": "Włącz lub wyłącz serwer FTP.",
+  "FTP started": "FTP uruchomiony",
+  "FTP stopped": "FTP zatrzymany"
 }

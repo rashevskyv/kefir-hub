@@ -301,6 +301,8 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
 
 } // namespace
 
+auto SystemToolItems() -> std::vector<settings::SettingsItem> { return ToolItems(); }
+
 SystemToolsMenu::SystemToolsMenu() : SystemToolsMenu{"Tools"_i18n, ToolItems()} {
 }
 

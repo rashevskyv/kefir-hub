@@ -4416,5 +4416,14 @@
   "Yes, dump the keys": "Oui, dumper les clés",
   "The keys are dumped. Game dumps and installs work now.": "Les clés ont été dumpées. Le dump et l'installation des jeux fonctionnent maintenant.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Les clés sont toujours absentes ou incorrectes après le dump. Mettez à jour Kefir ou placez le dernier Lockpick_RCM.bin dans /bootloader/payloads, puis relancez Kefir Hub.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Des jeux peuvent manquer ici, car les clés de la console sont absentes ou incorrectes. Lancez Kefir Hub et choisissez « Oui, dumper les clés » : la console redémarre et les dumpe toute seule. Puis reconnectez-vous."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Des jeux peuvent manquer ici, car les clés de la console sont absentes ou incorrectes. Lancez Kefir Hub et choisissez « Oui, dumper les clés » : la console redémarre et les dumpe toute seule. Puis reconnectez-vous.",
+  "L button on the main screen": "Bouton L sur l’écran principal",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Ouvrir un menu ou lancer une action avec L sur l’écran principal. R ouvre toujours Outils.",
+  "L turns the page in the list, as before.": "L tourne la page de la liste, comme avant.",
+  "The whole menu": "Le menu entier",
+  "Open the Install & Share panel.": "Ouvrir le panneau « Installer et partager ».",
+  "Turn the MTP server on or off.": "Activer ou désactiver le serveur MTP.",
+  "Turn the FTP server on or off.": "Activer ou désactiver le serveur FTP.",
+  "FTP started": "FTP démarré",
+  "FTP stopped": "FTP arrêté"
 }

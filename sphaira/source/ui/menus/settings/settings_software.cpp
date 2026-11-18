@@ -20,11 +20,8 @@
 #include <vector>
 
 namespace sphaira::ui::menu::settings {
-namespace {
-
-using namespace detail;
-
 auto BuildSoftwareItems() -> std::vector<SettingsItem> {
+    using namespace detail;
     std::vector<SettingsItem> items;
 
     items.emplace_back(SettingsItem{
@@ -82,9 +79,6 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
 
     return items;
 }
-
-
-} // namespace
 
 SoftwareMenu::SoftwareMenu() : MenuBase{"Software"_i18n, MenuFlag_None} {
     m_items = BuildSoftwareItems();

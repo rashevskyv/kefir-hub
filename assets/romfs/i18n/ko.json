@@ -4415,5 +4415,14 @@
   "Yes, dump the keys": "예, 키 덤프",
   "The keys are dumped. Game dumps and installs work now.": "키를 덤프했습니다. 이제 게임 덤프와 설치가 작동합니다.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "덤프 후에도 키가 없거나 올바르지 않습니다. Kefir를 업데이트하거나 최신 Lockpick_RCM.bin을 /bootloader/payloads에 넣은 다음 Kefir Hub를 다시 시작하세요.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "본체 키가 없거나 올바르지 않아 여기에 게임이 없을 수 있습니다. Kefir Hub를 시작하고 \"예, 키 덤프\"를 선택하세요. 본체가 다시 시작되어 키를 자동으로 덤프합니다. 그런 다음 다시 연결하세요."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "본체 키가 없거나 올바르지 않아 여기에 게임이 없을 수 있습니다. Kefir Hub를 시작하고 \"예, 키 덤프\"를 선택하세요. 본체가 다시 시작되어 키를 자동으로 덤프합니다. 그런 다음 다시 연결하세요.",
+  "L button on the main screen": "메인 화면의 L 버튼",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "메인 화면에서 L로 메뉴를 열거나 동작을 실행합니다. R은 계속 도구을(를) 엽니다.",
+  "L turns the page in the list, as before.": "L은 이전처럼 목록을 한 페이지씩 넘깁니다.",
+  "The whole menu": "메뉴 전체",
+  "Open the Install & Share panel.": "'설치 및 공유' 패널을 엽니다.",
+  "Turn the MTP server on or off.": "MTP 서버를 켜거나 끕니다.",
+  "Turn the FTP server on or off.": "FTP 서버를 켜거나 끕니다.",
+  "FTP started": "FTP 시작됨",
+  "FTP stopped": "FTP 중지됨"
 }

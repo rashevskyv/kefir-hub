@@ -4415,5 +4415,14 @@
   "Yes, dump the keys": "Ja, dumpa nycklarna",
   "The keys are dumped. Game dumps and installs work now.": "Nycklarna är dumpade. Speldumpar och installationer fungerar nu.",
   "The keys are still missing or wrong after the dump. Update Kefir or put the latest Lockpick_RCM.bin in /bootloader/payloads, then start Kefir Hub again.": "Nycklarna saknas fortfarande eller är fel efter dumpningen. Uppdatera Kefir eller lägg senaste Lockpick_RCM.bin i /bootloader/payloads och starta sedan Kefir Hub igen.",
-  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Spel kan saknas här eftersom konsolens nycklar saknas eller är fel. Starta Kefir Hub och välj ”Ja, dumpa nycklarna”: konsolen startar om och dumpar dem av sig själv. Anslut sedan igen."
+  "Games may be missing here because the console keys are missing or wrong. Start Kefir Hub and choose \"Yes, dump the keys\": the console restarts and dumps them by itself. Then connect again.": "Spel kan saknas här eftersom konsolens nycklar saknas eller är fel. Starta Kefir Hub och välj ”Ja, dumpa nycklarna”: konsolen startar om och dumpar dem av sig själv. Anslut sedan igen.",
+  "L button on the main screen": "L-knappen på huvudskärmen",
+  "Open a menu or start an action with L on the main screen. R still opens Tools.": "Öppna en meny eller starta en åtgärd med L på huvudskärmen. R öppnar fortfarande Verktyg.",
+  "L turns the page in the list, as before.": "L bläddrar en sida i listan, som förut.",
+  "The whole menu": "Hela menyn",
+  "Open the Install & Share panel.": "Öppna panelen ”Installera och dela”.",
+  "Turn the MTP server on or off.": "Slå på eller av MTP-servern.",
+  "Turn the FTP server on or off.": "Slå på eller av FTP-servern.",
+  "FTP started": "FTP startad",
+  "FTP stopped": "FTP stoppad"
 }

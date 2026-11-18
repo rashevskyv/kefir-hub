@@ -127,6 +127,9 @@ private:
     ScrollingText m_scroll_description{};
 };
 
+// the rows of the Software page (the L button reuses them)
+auto BuildSoftwareItems() -> std::vector<SettingsItem>;
+
 struct SoftwareMenu final : MenuBase {
     SoftwareMenu();
     ~SoftwareMenu();

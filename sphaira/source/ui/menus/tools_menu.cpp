@@ -172,8 +172,8 @@ void DrawToolsGrid(NVGcontext* vg, Theme* theme, List& list, s64 selected, const
 
 } // namespace
 
-Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
-    m_items = {
+auto TileItems() -> std::vector<ToolItem> {
+    return {
         { "File Browser"_i18n, "Browse and manage SD card files."_i18n, 0, [](){
             App::Push<ui::menu::filebrowser::Menu>(MenuFlag_None);
         }},
@@ -202,6 +202,10 @@ Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
             App::Push<ConsoleTransferMenu>();
         }},
     };
+}
+
+Menu::Menu() : MenuBase{"Tools"_i18n, MenuFlag_Tab} {
+    m_items = TileItems();
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
@@ -356,8 +360,8 @@ void Menu::DisplayConnectionOptions() {
     AddSettingsOption(options.get());
 }
 
-GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
-    m_items = {
+auto GameToolItems() -> std::vector<ToolItem> {
+    return {
         { "Games"_i18n, "View, launch and manage installed games."_i18n, 0, [](){
             App::Push<ui::menu::game::Menu>(MenuFlag_None);
         }},
@@ -374,6 +378,10 @@ GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
             App::Push<ui::menu::ownfoil::Menu>(MenuFlag_None);
         }},
     };
+}
+
+GameToolsMenu::GameToolsMenu() : MenuBase{"Game Tools"_i18n, MenuFlag_None} {
+    m_items = GameToolItems();
 
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){ OnSelect(); }}),
