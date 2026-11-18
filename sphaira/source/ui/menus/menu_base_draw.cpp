@@ -333,6 +333,7 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
         std::vector<ServiceBadgeItem> badges;
         badges.push_back({pdata.mtp_waiting ? "MTP…" : "MTP", pdata.mtp_running && !pdata.mtp_waiting, false, pdata.mtp_waiting});
         badges.push_back({"FTP", pdata.ftp_running});
+        badges.push_back({"WEB", pdata.web_running});
         if (pdata.usb3_enabled) {
             badges.push_back({"USB 3.0", true});
         }

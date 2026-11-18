@@ -11,6 +11,7 @@
 #include "log.hpp"
 #include "nro.hpp"
 #include "nxlink.h"
+#include "web.hpp"
 #include "ui/nvg_util.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "utils/devoptab_curl_thread.hpp"
@@ -72,6 +73,7 @@ void App::Loop() {
         }
 
         ui::gfx::updateHighlightAnimation();
+        WebShareBackgroundTick();
 
         // fire all events in in a 3ms timeslice
         TimeStamp ts_event;

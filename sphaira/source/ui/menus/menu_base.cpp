@@ -5,6 +5,7 @@
 #include "ntp.hpp"
 #include "haze_helper.hpp"
 #include "ftpsrv_helper.hpp"
+#include "web.hpp"
 #include "hats_version.hpp"
 #include "ui/menus/settings/settings_fs_utils.hpp"
 #include "ui/menus/menu_base.hpp"
@@ -106,6 +107,7 @@ auto MenuBase::GetPolledData(bool force_refresh) -> PolledData {
         data.mtp_running = haze::IsRunning() || App::IsMtpWaitingForPc();
         data.mtp_waiting = App::IsMtpWaitingForPc();
         data.ftp_running = ftpsrv::IsRunning();
+        data.web_running = WebShareIsRunning();
 
         static std::string s_cached_sys_version{};
         static bool s_sys_version_loaded = false;

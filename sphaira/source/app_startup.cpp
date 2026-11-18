@@ -301,6 +301,7 @@ App::App(const char* argv0) {
             if (app->m_nxlink_enabled.LoadFrom(Key, Value)) {}
             else if (app->m_mtp_enabled.LoadFrom(Key, Value)) {}
             else if (app->m_ftp_enabled.LoadFrom(Key, Value)) {}
+            else if (app->m_web_background.LoadFrom(Key, Value)) {}
             else if (app->m_hdd_enabled.LoadFrom(Key, Value)) {}
             else if (app->m_hdd_write_protect.LoadFrom(Key, Value)) {}
             else if (app->m_log_enabled.LoadFrom(Key, Value)) {}

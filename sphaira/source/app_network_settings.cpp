@@ -3,6 +3,7 @@
 #include "ntp.hpp"
 #include "i18n.hpp"
 #include "ftpsrv_helper.hpp"
+#include "web.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include <usbhsfs.h>
 #include <switch.h>
@@ -71,6 +72,10 @@ auto App::GetWebdavUrlName() -> std::string {
 
 auto App::GetFtpEnable() -> bool {
     return g_app->m_ftp_enabled.Get();
+}
+
+auto App::GetWebBackground() -> bool {
+    return g_app->m_web_background.Get();
 }
 
 auto App::GetFtpAnon() -> bool {
@@ -157,6 +162,16 @@ void App::SetFtpEnable(bool enable) {
             ui::menu::stream::BackgroundInstaller::RegisterMtpCallbacks();
         } else {
             ftpsrv::Exit();
+        }
+    }
+}
+
+void App::SetWebBackground(bool enable) {
+    if (App::GetWebBackground() != enable) {
+        g_app->m_web_background.Set(enable);
+        // on: the main loop brings the server up within a few seconds (WebShareBackgroundTick)
+        if (!enable) {
+            WebShareStop();
         }
     }
 }

@@ -4360,5 +4360,7 @@
   "Download from the internet for about 1 minute to measure the real speed of your connection? A fast connection uses a few hundred MB of data.": "Download from the internet for about 1 minute to measure the real speed of your connection? A fast connection uses a few hundred MB of data.",
   "peak": "peak",
   "first byte": "first byte",
-  "no data": "no data"
+  "no data": "no data",
+  "Web server": "Web server",
+  "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.": "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open."
 }

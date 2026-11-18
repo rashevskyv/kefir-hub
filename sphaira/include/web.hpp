@@ -38,6 +38,9 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
 void WebShareStop();
 WebUploadState WebGetUploadState();
 bool WebShareIsRunning();
+// Settings > Network > Web server: called every frame by the main loop. Starts the server when the console is
+// online, keeps it bound across sleep and drops it when the address changes. Does nothing when the option is off.
+void WebShareBackgroundTick();
 // Settings > Network > Upload connections: 0 = off (one connection, as before), 2 or 3 = parts sent in parallel
 option::OptionLong& WebUploadConnsOption();
 void WebSetProgressBox(ui::ProgressBox* pbox);

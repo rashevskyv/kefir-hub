@@ -292,3 +292,10 @@ Deleting the file from Kefir Hub's own file browser does not work reliably: Kefi
 **Every install asks for confirmation.** The console runs sysMMC and [[Ban warning on sysMMC]] is on. Choose [[Install]] to install. Choose [[Don't show again]] to stop the warning. See [Install](install/index.md#ban-warning).
 
 *Kefir Hub shows [[Warning! Logs are enabled, Kefir Hub will run slowly!]] at every start.* Turn [[Logging]] off.
+
+<!-- draft
+- since 0.14.414: [[Settings]] → [[Network]] → [[Web server]] (off by default): the web server runs in the background like [[FTP]], without its window; it starts a few seconds after the console is online, survives sleep, and stops when the console's address changes (then starts again by itself)
+- a [[WEB]] badge in the top bar, next to [[MTP]] and [[FTP]], lights up while the server runs
+- open http://kefir.local (or the console's IP) in a browser; the window with the QR code is still there when started from Tools, but closing it (B) no longer stops the server while this option is on
+- not available in Applet Mode (the server stays tied to its window there)
+-->

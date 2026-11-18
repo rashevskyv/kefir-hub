@@ -4363,5 +4363,7 @@
   "Download from the internet for about 25 seconds to measure the real speed of your connection? A fast connection uses a few hundred MB of data.": "Завантажувати дані з інтернету приблизно 1 хвилину, щоб виміряти справжню швидкість з'єднання? Швидке з'єднання витратить кілька сотень МБ трафіку.",
   "peak": "пік",
   "first byte": "перший байт",
-  "no data": "немає даних"
+  "no data": "немає даних",
+  "Web server": "Веб-сервер",
+  "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.": "Веб-сервер працює у фоні, як FTP: відкрийте адресу консолі в браузері, щоб надсилати чи завантажувати файли. Вимкнено = він працює лише поки відкрите його вікно."
 }

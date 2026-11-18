@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.414 — Settings: Web server in the background (option, default Off) + WEB badge
+Like FTP: starts when the console is online, rebinds after sleep, stops on an IP change and starts again; closing the server window no longer stops it. The top bar shows a WEB badge.
+host tests: not run | nro: built (0.14.414) | switch: pending — turn it on, check the WEB badge, sleep/wake, an upload and an install without the window, Applet Mode untouched.
+
 ## v0.14.413 — Speed test runs 20 s each (the speed had no time to ramp up)
 Console result of 0.14.412: HTTP 18.8, HTTPS 18.7, 4 connections 24.0 MB/s (peak 27) — the internet link is fast, so the 7 MB/s web upload limit is in the Hub's receive path.
 host tests: not run | nro: built (0.14.413) | switch: pending

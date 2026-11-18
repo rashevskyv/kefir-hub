@@ -548,7 +548,10 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
                 }
                 svcSleepThread(100'000'000LL);
             }
-            WebShareStop();
+            // in the background mode the server outlives its window
+            if (!App::GetWebBackground()) {
+                WebShareStop();
+            }
             R_SUCCEED();
         },
         [qr_image](Result) {
@@ -559,6 +562,33 @@ void WebPushServerProgressBox(const std::string& url, int qr_image, const std::s
 
 bool WebShareIsRunning() {
     return g_share_running.load();
+}
+
+void WebShareBackgroundTick() {
+    // applet mode keeps the server tied to its window (two workers, the box tells the user to keep it open)
+    if (!App::GetWebBackground() || App::IsApplet()) {
+        return;
+    }
+    if (g_share_running) {
+        if (!TickShareNetwork()) {
+            WebShareStop(); // the next try below brings it back when the console is online again
+        }
+        return;
+    }
+    static TimeStamp s_retry;
+    static bool s_first = true;
+    if (!s_first && s_retry.GetMs() < 3000) {
+        return;
+    }
+    s_first = false;
+    s_retry.Update();
+    u32 ip{};
+    if (R_FAILED(nifmGetCurrentIpAddress(&ip)) || !ip) {
+        return;
+    }
+    if (R_SUCCEEDED(StartShareServer())) {
+        log_write("[WEB] background server is up\n");
+    }
 }
 
 } // namespace sphaira

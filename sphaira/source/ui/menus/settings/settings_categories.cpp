@@ -404,6 +404,7 @@ void Menu::BuildCategories() {
             "Servers that let a PC reach this console."_i18n,
             {
                 MakeBoolItem("FTP"_i18n, "Run the FTP server in the background."_i18n, App::GetFtpEnable, App::SetFtpEnable),
+                MakeBoolItem("Web server"_i18n, "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open."_i18n, App::GetWebBackground, App::SetWebBackground),
                 MakeFolderItem("FTP settings"_i18n, "Login, anonymous access and port."_i18n, BuildFtpItems),
                 MakeBoolItem("MTP"_i18n, "Run the MTP server in the background. Shares the USB port with USB storage, so turning this on turns USB storage off."_i18n, App::GetMtpEnable, App::SetMtpEnable),
                 MakeFolderItem("MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, BuildMtpStorageItems),

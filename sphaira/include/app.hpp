@@ -153,6 +153,7 @@ public:
     // extra folders exposed as MTP storages (absolute SD paths).
     static auto GetMtpFolders() -> std::vector<std::string>;
     static auto GetFtpEnable() -> bool;
+    static auto GetWebBackground() -> bool;
     static auto GetFtpAnon() -> bool;
     static auto GetFtpUser() -> std::string;
     static auto GetFtpPass() -> std::string;
@@ -257,6 +258,7 @@ public:
     static void AddMtpFolder(const std::string& path);
     static void RemoveMtpFolder(const std::string& path);
     static void SetFtpEnable(bool enable);
+    static void SetWebBackground(bool enable);
     static void SetFtpAnon(bool enable);
     static void SetFtpUser(std::string value);
     static void SetFtpPass(std::string value);
@@ -479,6 +481,7 @@ public:
     // extra MTP storage folders, '|'-separated absolute paths ('|' is illegal in FAT names).
     option::OptionString m_mtp_folders{INI_SECTION, "mtp_folders", ""};
     option::OptionBool m_ftp_enabled{INI_SECTION, "ftp_enabled", true};
+    option::OptionBool m_web_background{INI_SECTION, "web_background", false};
     option::OptionBool m_ftp_anon{INI_SECTION, "ftp_anon", true};
     option::OptionString m_ftp_user{INI_SECTION, "ftp_user", ""};
     option::OptionString m_ftp_pass{INI_SECTION, "ftp_pass", ""};

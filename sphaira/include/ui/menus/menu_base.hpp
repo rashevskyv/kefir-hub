@@ -30,6 +30,7 @@ struct PolledData {
     bool mtp_running{};
     bool mtp_waiting{}; // started, but no computer has answered yet
     bool ftp_running{};
+    bool web_running{};
     bool usb3_enabled{};
     bool is_emummc{};
     // Full system version string (Kefir, firmware, AMS)
