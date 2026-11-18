@@ -4357,5 +4357,11 @@
   "FTP started": "FTP запущено",
   "FTP stopped": "FTP зупинено",
   "Upload connections": "З’єднань для завантаження",
-  "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload.": "Веб-сервер: передавати один файл кількома з’єднаннями одразу. По Wi-Fi може бути швидше. Вимкнено = одне з’єднання, як раніше. Діє з наступного завантаження."
+  "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload.": "Веб-сервер: передавати один файл кількома з’єднаннями одразу. По Wi-Fi може бути швидше. Вимкнено = одне з’єднання, як раніше. Діє з наступного завантаження.",
+  "Internet speed test": "Перевірка швидкості інтернету",
+  "Download from the internet and show the real speed: HTTP, HTTPS, one and four connections.": "Завантажує дані з інтернету й показує справжню швидкість: HTTP, HTTPS, одне та чотири з'єднання.",
+  "Download from the internet for about 25 seconds to measure the real speed of your connection? A fast connection uses a few hundred MB of data.": "Завантажувати дані з інтернету приблизно 25 секунд, щоб виміряти справжню швидкість з'єднання? Швидке з'єднання витратить кілька сотень МБ трафіку.",
+  "peak": "пік",
+  "first byte": "перший байт",
+  "no data": "немає даних"
 }

@@ -9,6 +9,7 @@ Manage sysmodules, set the fan curve, manage saved Wi-Fi networks and user profi
 | Group | Item | What it is |
 |---|---|---|
 | [[Diagnostics]] | [[System information]] | Console, Atmosphère, storage, power, battery, hardware and play activity. See [System information](#system-information). |
+| [[Diagnostics]] | [[Internet speed test]] | Downloads from the internet for about 25 seconds and shows the real speed. See [Internet speed test](#internet-speed-test). |
 | [[Diagnostics]] | [[Check game updates]] | Find installed games that have a newer update. |
 | [[Settings]] | [[Module Manager]] | Start, stop and set autostart for installed sysmodules. |
 | [[Settings]] | [[Fan curve]] | Fan speed curves for handheld and docked mode. |
@@ -375,3 +376,13 @@ The card gets real zeros (the file is not encrypted).
 **"Failed to install the fan module."** The curve is saved, but until the next reboot the fan uses the previous curve. Reboot the console.
 
 **"No saved Wi-Fi networks".** Add a network in the console's System Settings first.
+
+## [[Internet speed test]]
+
+<!-- draft
+- since 0.14.411: [[Tools]] → [[Tools]] → [[Internet speed test]]; a question first ([[Start]] / [[Back]]), then a progress box [[Internet speed test]] ("Cloudflare")
+- three runs of 8 s each, one after another: HTTP with 1 connection, HTTPS with 1 connection, HTTP with 4 connections; data is thrown away (nothing saved to the card)
+- result dialog, one line per run: average speed in MB/s and Mbit/s, [[peak]] (best one second), [[first byte]] time in ms; a failed run says [[no data]] and the curl error
+- how to read it: HTTP much faster than HTTPS = TLS costs CPU; 4 connections faster than 1 = the limit is per connection; the same = the whole Wi-Fi link is the limit
+- a fast connection uses a few hundred MB of data; [[B]] stops the test
+-->

@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.411 — Tools: Internet speed test
+Tools → Internet speed test downloads from Cloudflare for 3 × 8 s (HTTP 1 connection, HTTPS 1 connection, HTTP 4 connections) and shows average, peak and first-byte time, to find what limits the Wi-Fi.
+host tests: speed_test pass | nro: built (0.14.411) | switch: pending
+
 ## v0.14.410 — Web install: a package arrives over several connections and installs in order
 With Upload connections on (2/3), a game dropped in the browser is sent in 1 MB parts over several connections. `POST /upload?part=new&install=1` answers at once and installs on that worker; parts (`PUT ?part=<item>&offset=N`) go into a 6 MB in-order window (`web_part_buffer.hpp`, host test) that yati reads as a stream; the page polls `GET ?part=<item>&state=1`. Off or applet mode: 403, the page uses the old single PUT. `RunDirectInstall` is now shared by both paths. NCAs stay sequential: the three pipeline threads (read, decompress, write) already use the three cores.
 host tests: quick green | nro: built (0.14.410, see below) | switch: pending — install an NSP and an NSZ with Off, 2, 3 and compare speed; cancel in the browser mid-install (page shows Cancelling… until the console stops); cancel from the console; a part retry.

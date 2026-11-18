@@ -15,6 +15,7 @@
 #include "ui/progress_box.hpp"
 #include "ui/nvg_util.hpp"
 #include "game_updates.hpp"
+#include "speed_test.hpp"
 #include "zero_fill.hpp"
 #include "system_cleanup.hpp"
 #include "ui/menus/trash_menu.hpp"
@@ -275,6 +276,7 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
         Tool("Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
         }),
+        Tool("Internet speed test"_i18n, "Download from the internet and show the real speed: HTTP, HTTPS, one and four connections."_i18n, speedtest::Open),
         Tool("Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, [](){
             ui::menu::settings::OpenFanCurveMenu();
         }),
