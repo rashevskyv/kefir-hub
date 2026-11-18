@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.408 — L button setting: no list rebuild per frame
+The Settings row value is drawn every frame; `l_button::Label()` now resolves the choice once per saved id and language instead of rebuilding the group list (and reading the Kefir version file) each frame.
+host tests: quick green | nro: not built | switch: pending (same items as v0.14.407)
+
 ## v0.14.407 — L button on the main screen opens any menu or action
 Settings › General › L button on the main screen picks what L does on the main screen (default Off: L turns the page as before). The page lists the Tools tiles (Game Tools, Software, Tools and Console Transfer open a page of their rows, with "The whole menu" first) and Install & Share (the panel, Web Server, MTP and FTP on/off, PC Install, Ownfoil); the footer shows "L <name>". Rows come from the menus' own lists (`TileItems`, `GameToolItems`, `SystemToolItems`, `BuildSoftwareItems`, `ConsoleTransferItems`, `InstallShareItems`); the choice is saved as `<group>/<en key>` (`l_button_targets.hpp`, host test). Remove parental controls is not offered (it acts without a question). 9 new strings in all languages (written by hand: the translate proxy was down).
 host tests: quick green, i18n contract ok; full run has 2 failures that were there before (EN/UK key parity: 3 extra UK keys at HEAD; the archive.org http fixture) | nro: not built | switch: pending — the row value, the picker and its sub-pages, a pick closes both pages, the footer L after leaving Settings, Off brings back the page turn, MTP/FTP toggles with the notification, Web Server offline.

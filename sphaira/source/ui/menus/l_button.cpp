@@ -53,7 +53,7 @@ auto Rows(std::string_view group) -> std::vector<Row> {
     return out;
 }
 
-// ponytail: rebuilds the group's list per lookup; fine for ~50 rows on a page open
+// ponytail: rebuilds the group's list per lookup; fine for ~50 rows on a page open or an L press (Label() caches)
 auto Resolve(const Target& t) -> std::optional<Row> {
     if (t.key == "Kefir Settings" && sphaira::hats::getKefirVersion().empty()) {
         return std::nullopt; // the Tools tab hides it off Kefir too
@@ -138,8 +138,15 @@ auto Label() -> std::string {
     if (!t) {
         return {};
     }
-    const auto row = Resolve(*t);
-    return row ? row->label : std::string{};
+    // the Settings row draws this every frame: resolve once per choice and language
+    static std::string cached_key, cached_label;
+    auto key = g_choice.Get() + '\n' + i18n::get(t->key);
+    if (key != cached_key) {
+        const auto row = Resolve(*t);
+        cached_label = row ? row->label : std::string{};
+        cached_key = std::move(key);
+    }
+    return cached_label;
 }
 
 void Run() {
