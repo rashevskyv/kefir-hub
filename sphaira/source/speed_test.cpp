@@ -23,7 +23,7 @@ namespace {
 
 using Clock = std::chrono::steady_clock;
 
-constexpr int SECONDS = 8;
+constexpr int SECONDS = 20;
 // the server refuses a very big file, so a finished 25 MB file is simply requested again until the clock ends the run
 constexpr const char* PATH = "speed.cloudflare.com/__down?bytes=25000000";
 
