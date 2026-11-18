@@ -21,6 +21,9 @@ constexpr const char* SYSMODULE_PATH = "/atmosphere/contents/4200000000003103/ex
 constexpr const char* OVERLAY_PATH = "/switch/.overlays/parental_control.ovl";
 constexpr const char* RELEASE_API = "https://api.github.com/repos/TristanIsrael/NSParentalControl/releases/latest";
 constexpr const char* ZIP_PART = "/config/kefir/nsparentalcontrol.zip";
+constexpr u64 PROGRAM_ID = 0x4200000000003103;
+constexpr const char* FLAGS_DIR = "/atmosphere/contents/4200000000003103/flags";
+constexpr const char* BOOT2_FLAG_PATH = "/atmosphere/contents/4200000000003103/flags/boot2.flag";
 
 // IParentalControlService commands that libnx has no wrapper for (switchbrew Parental_Control_services).
 constexpr u32 CMD_DELETE_SETTINGS = 1043;
@@ -29,6 +32,47 @@ constexpr u32 CMD_DELETE_PAIRING = 1941;
 auto Installed() -> bool {
     fs::FsNativeSd fs;
     return fs.FileExists(SYSMODULE_PATH) && fs.FileExists(OVERLAY_PATH);
+}
+
+auto AutostartOn() -> bool {
+    return fs::FsNativeSd().FileExists(BOOT2_FLAG_PATH);
+}
+
+// stops the module now and takes it out of the console start; the files stay. true = it was on.
+auto StopModule() -> bool {
+    fs::FsNativeSd fs;
+    const bool autostart = fs.FileExists(BOOT2_FLAG_PATH);
+    if (autostart) {
+        fs.DeleteFile(BOOT2_FLAG_PATH);
+    }
+    bool running = false;
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        running = R_SUCCEEDED(pmshellTerminateProgram(PROGRAM_ID));
+        pmshellExit();
+    }
+    log_write("[PCTL] NS Parental Control stop: autostart %d, running %d\n", autostart, running);
+    return autostart || running;
+}
+
+// puts the module back into the console start and starts it. true = it runs now.
+auto StartModule() -> bool {
+    fs::FsNativeSd fs;
+    fs.CreateDirectoryRecursively(FLAGS_DIR);
+    if (!fs.FileExists(BOOT2_FLAG_PATH)) {
+        fs.CreateFile(BOOT2_FLAG_PATH, 0, 0);
+    }
+    bool started = false;
+    if (R_SUCCEEDED(pmshellInitialize())) {
+        const NcmProgramLocation location{
+            .program_id = PROGRAM_ID,
+            .storageID = NcmStorageId_None,
+        };
+        u64 pid{};
+        started = R_SUCCEEDED(pmshellLaunchProgram(PmLaunchFlag_None, &location, &pid));
+        pmshellExit();
+    }
+    log_write("[PCTL] NS Parental Control start: %d\n", started);
+    return started;
 }
 
 void ShowHowTo(bool just_installed) {
@@ -86,18 +130,38 @@ void Remove() {
         pctlExit();
     }
 
+    // NS Parental Control is stopped, not deleted: Manage parental controls turns it on again.
+    std::string module_line;
+    if (Installed() && StopModule()) {
+        module_line = "\n\n" + "NS Parental Control is stopped and does not start with the console. Manage parental controls turns it on again."_i18n;
+    }
+
     if (R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Parental controls could not be removed."_i18n);
+        App::PushErrorBox(rc, "Parental controls could not be removed."_i18n + module_line);
     } else if (still_on) {
-        App::Push<ui::OptionBox>("The console still has parental controls. Restart the console and try again."_i18n, "OK"_i18n);
+        App::Push<ui::OptionBox>("The console still has parental controls. Restart the console and try again."_i18n + module_line, "OK"_i18n);
     } else {
-        App::Push<ui::OptionBox>("Parental controls are removed: no PIN, no restrictions and no link to the phone app."_i18n, "OK"_i18n);
+        App::Push<ui::OptionBox>("Parental controls are removed: no PIN, no restrictions and no link to the phone app."_i18n + module_line, "OK"_i18n);
     }
 }
 
 void OpenManager() {
-    if (Installed()) {
+    if (Installed() && AutostartOn()) {
         ShowHowTo(false);
+        return;
+    }
+    if (Installed()) {
+        App::Push<ui::OptionBox>("NS Parental Control is off. Turn it on? It then also starts with the console."_i18n,
+            "Back"_i18n, "Turn on"_i18n, 1, [](auto op) {
+            if (!op || *op != 1) {
+                return;
+            }
+            if (StartModule()) {
+                ShowHowTo(false);
+            } else {
+                App::Push<ui::OptionBox>("NS Parental Control is on. Restart the console to start it."_i18n, "OK"_i18n);
+            }
+        });
         return;
     }
     App::Push<ui::OptionBox>(

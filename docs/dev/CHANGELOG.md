@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.405 — Remove parental controls also stops NS Parental Control
+When NS Parental Control is installed and on, Remove parental controls stops it now (`pmshellTerminateProgram`) and deletes its `flags/boot2.flag`; the files and limits stay, the message says so. Manage parental controls on a stopped install asks "Turn on": the flag is back and the module starts (`pmshellLaunchProgram`), or the box asks for a restart. A stop protects nothing (Module Manager, safe mode, a PC), so no PIN question. 3 new strings in all languages.
+host tests: quick green, i18n contract ok | nro: not built | switch: pending — Remove with NS Parental Control on: limits stop at once and after a restart; Manage → Turn on: limits work again without a restart (or after one).
+
 ## v0.14.404 — Remove parental controls works; Manage parental controls installs NS Parental Control
 Tools → Maintenance → Remove parental controls (was "Coming soon") deletes the console's parental-control settings and the phone-app link at once, no question (`parental_controls.cpp`: pctl 1941 DeletePairing, 1043 DeleteSettings), then re-reads IsRestrictionEnabled for the message. New row Manage parental controls: explains NS Parental Control (github.com/TristanIsrael/NSParentalControl, sysmodule 4200000000003103 + Ultrahand overlay, own PIN A A A A), Download takes the latest release zip from the GitHub API and unpacks only the sysmodule folder and the overlay (`parental::MapZipEntry`), then asks for a restart; when installed it only shows how to open it. UK by hand, other languages by a translator subagent.
 host tests: quick green, test_parental_zip_map 15 checks ok (full run: the EN/UK key parity check fails, 3 uk-only keys already at HEAD) | nro: not built | switch: pending — Remove with a PIN set (HOME settings ask no PIN after), with a phone-app link; Manage: download, restart, overlay Parental Control opens, a limit blocks a game; Manage again shows only the how-to.

@@ -10,10 +10,11 @@
 
 namespace sphaira::parental {
 
-// clears the console's parental controls (PIN, restrictions, the link to the phone app). No question.
+// clears the console's parental controls (PIN, restrictions, the link to the phone app) and stops
+// NS Parental Control (now and at boot; its files stay). No question.
 void Remove();
 
-// explains NS Parental Control; downloads and installs it when it is missing.
+// explains NS Parental Control; downloads and installs it when it is missing, turns it on when it is stopped.
 void OpenManager();
 
 // release zip entry -> SD path; nullopt = skip it. The release zip has a version folder on top

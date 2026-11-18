@@ -17,7 +17,7 @@
 | [[Maintenance]] | [[Battery]] | Стан датчика заряду і збереженої копії, висновок, резервна копія. Див. [Батарея](#battery). |
 | [[Maintenance]] | [[Clean system junk]] | Видаляє залишки. Див. [Очищення системи](#clean-system-junk). |
 | [[Maintenance]] | [[Fill free SD space with zeros]] | Заповнює нулями вільне місце на карті пам'яті. Див. [Заповнення вільного місця на SD нулями](#fill-free-sd-space-with-zeros). |
-| [[Maintenance]] | [[Remove parental controls]] | Одразу видаляє PIN і обмеження батьківського контролю консолі. Див. [Батьківський контроль](#parental-controls). |
+| [[Maintenance]] | [[Remove parental controls]] | Одразу видаляє PIN і обмеження батьківського контролю консолі та зупиняє NS Parental Control. Див. [Батьківський контроль](#parental-controls). |
 | [[Maintenance]] | [[Manage parental controls]] | Ліміти часу гри через NS Parental Control. Див. [Батьківський контроль](#parental-controls). |
 
 ## [[Check game updates]] { #check-game-updates }
@@ -334,12 +334,15 @@ Hub завантажує список останніх оновлень ігор
 
 <!-- draft
 - [[Remove parental controls]] runs at once, with no question: it deletes the console's own parental-control settings (PIN, restrictions, play timer) and the link to the Nintendo Switch Parental Controls phone app
+- if NS Parental Control is installed and on, [[Remove parental controls]] also stops it: the module stops at once and its `flags/boot2.flag` is deleted, so it does not start with the console; its files and its limits stay; the message adds [[NS Parental Control is stopped and does not start with the console. Manage parental controls turns it on again.]]
 - the result is one message: [[Parental controls are removed: no PIN, no restrictions and no link to the phone app.]]; if the console still reports restrictions: [[The console still has parental controls. Restart the console and try again.]]
 - [[Manage parental controls]] uses NS Parental Control (github.com/TristanIsrael/NSParentalControl, GPL-3.0): a sysmodule plus an Ultrahand overlay; play-time limits, bed time, earliest play time and blocked games for each user
 - when it is not installed, a message explains it; **Download** gets the newest release from GitHub (about 1 MB) and installs `/atmosphere/contents/4200000000003103` (with `flags/boot2.flag`) and `/switch/.overlays/parental_control.ovl`; **Back** does nothing
 - after the install: [[NS Parental Control is installed. Restart the console to start it.]]
-- the limits are set in the overlay: open the Ultrahand overlay menu, pick Parental Control; its own administrator PIN is A A A A until it is changed; it does not use the console's own PIN, so [[Remove parental controls]] does not remove NS Parental Control
-- when it is installed, [[Manage parental controls]] shows only how to open it
+- the limits are set in the overlay: open the Ultrahand overlay menu, pick Parental Control; its own administrator PIN is A A A A until it is changed; it does not use the console's own PIN
+- when it is installed, [[Manage parental controls]] shows only how to open it (when it is on)
+- when it is installed but stopped: [[NS Parental Control is off. Turn it on? It then also starts with the console.]] **Turn on** creates `flags/boot2.flag` and starts the module; if it cannot start now: [[NS Parental Control is on. Restart the console to start it.]]
+- the stop protects nothing on purpose: a CFW console can stop or delete any module (Module Manager, safe mode, a PC)
 -->
 
 ## Проблеми
