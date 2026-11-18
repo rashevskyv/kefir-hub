@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.412 — Speed test: finished 25 MB file is requested again until 8 s end
+The first console run ended at once with no bytes: the server refuses a 1 GB file. Now 25 MB files in a loop, errors show their curl text.
+host tests: not run | nro: built (0.14.412) | switch: pending
+
 ## v0.14.411 — Tools: Internet speed test
 Tools → Internet speed test downloads from Cloudflare for 3 × 8 s (HTTP 1 connection, HTTPS 1 connection, HTTP 4 connections) and shows average, peak and first-byte time, to find what limits the Wi-Fi.
 host tests: speed_test pass | nro: built (0.14.411) | switch: pending

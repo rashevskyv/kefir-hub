@@ -24,8 +24,8 @@ namespace {
 using Clock = std::chrono::steady_clock;
 
 constexpr int SECONDS = 8;
-// the file is far bigger than 8 s of any link here, so a run always ends by the clock
-constexpr const char* PATH = "speed.cloudflare.com/__down?bytes=1000000000";
+// the server refuses a very big file, so a finished 25 MB file is simply requested again until the clock ends the run
+constexpr const char* PATH = "speed.cloudflare.com/__down?bytes=25000000";
 
 struct Run {
     const char* name;
@@ -73,6 +73,7 @@ auto Measure(ui::ProgressBox* pbox, const Run& run) -> Line {
         curl_easy_setopt(c.easy, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(c.easy, CURLOPT_SSL_VERIFYHOST, 0L);
         curl_easy_setopt(c.easy, CURLOPT_CONNECTTIMEOUT, 10L);
+        curl_easy_setopt(c.easy, CURLOPT_FAILONERROR, 1L);
         curl_easy_setopt(c.easy, CURLOPT_BUFFERSIZE, 1024L * 512L);
         curl_multi_add_handle(multi, c.easy);
     }
@@ -83,9 +84,28 @@ auto Measure(ui::ProgressBox* pbox, const Run& run) -> Line {
     s64 window_bytes = 0, peak = 0; // bytes in the best one-second window
     auto window_start = begin;
     int running = 0;
+    CURLcode err = CURLE_OK;
     for (;;) {
         curl_multi_perform(multi, &running);
         curl_multi_poll(multi, nullptr, 0, 50, nullptr);
+
+        // a finished file starts again while time is left; a failed one stays out (its error is kept)
+        int msgs = 0;
+        while (auto m = curl_multi_info_read(multi, &msgs)) {
+            if (m->msg != CURLMSG_DONE) {
+                continue;
+            }
+            const auto easy = m->easy_handle;
+            curl_multi_remove_handle(multi, easy);
+            if (m->data.result == CURLE_OK) {
+                if (Ms(begin, Clock::now()) < SECONDS * 1000) {
+                    curl_multi_add_handle(multi, easy);
+                    running++;
+                }
+            } else {
+                err = m->data.result;
+            }
+        }
 
         s64 total = 0;
         for (auto& c : conns) {
@@ -121,19 +141,11 @@ auto Measure(ui::ProgressBox* pbox, const Run& run) -> Line {
     if (!conns.empty()) {
         curl_easy_getinfo(conns[0].easy, CURLINFO_STARTTRANSFER_TIME, &ttfb);
     }
-    // a failed connect ends the run with no bytes
-    CURLcode err = CURLE_OK;
     for (auto& c : conns) {
         c.count.stop = true;
     }
-    int msgs = 0;
-    while (auto m = curl_multi_info_read(multi, &msgs)) {
-        if (m->msg == CURLMSG_DONE && m->data.result != CURLE_OK && total == 0) {
-            err = m->data.result;
-        }
-    }
     for (auto& c : conns) {
-        curl_multi_remove_handle(multi, c.easy);
+        curl_multi_remove_handle(multi, c.easy); // fails harmlessly when it is already out
         curl_easy_cleanup(c.easy);
     }
     curl_multi_cleanup(multi);
