@@ -304,7 +304,12 @@ FsView::~FsView() {
 void FsView::Update(Controller* controller, TouchInfo* touch) {
     ApplyRemoteMetadata();
     m_list->OnUpdate(controller, touch, m_index, m_entries_current.size(), [this](bool touch, auto i) {
-        if (touch && m_index == i) {
+        if (touch && m_selected_count && !IsParentEntry(i) && !(m_menu->IsFolderPicker() && i == 0)) {
+            // marks on: a tap flips the mark of the tapped row (X); the cursor stays on it
+            SetIndex(i);
+            FireAction(Button::X);
+            SetIndex(i);
+        } else if (touch && m_index == i) {
             FireAction(Button::A);
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);

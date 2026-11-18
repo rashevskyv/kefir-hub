@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Белгілі бір пайдаланушы үшін қалпына келтіру",
   "Backup actions": "Сақтық көшірме әрекеттері",
   "Restore, check or delete the selected backups.": "Таңдалған сақтық көшірмелерді қалпына келтіру, тексеру немесе жою.",
+  "Move the selected backups to the Trash.": "Таңдалған сақтық көшірмелерді Қоқыс жәшігіне жылжыту.",
   "Not restored:": "Қалпына келтірілмеді:",
   "Restored: ": "Қалпына келтірілді: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(сақтау файлы өзгертілген болуы мүмкін; көшірмесі /dumps/recovery ішінде)",

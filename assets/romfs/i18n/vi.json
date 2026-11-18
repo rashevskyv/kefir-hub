@@ -3277,6 +3277,7 @@
   "Restore for a specific user": "Khôi phục cho người dùng cụ thể",
   "Backup actions": "Tác vụ sao lưu",
   "Restore, check or delete the selected backups.": "Khôi phục, kiểm tra hoặc xóa các bản sao lưu đã chọn.",
+  "Move the selected backups to the Trash.": "Chuyển các bản sao lưu đã chọn vào Thùng rác.",
   "Not restored:": "Chưa được khôi phục:",
   "Restored: ": "Đã khôi phục: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(bản lưu có thể đã bị thay đổi; bản sao nằm ở /dumps/recovery)",

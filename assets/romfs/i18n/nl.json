@@ -3277,6 +3277,7 @@
   "Restore for a specific user": "Herstellen voor een specifieke gebruiker",
   "Backup actions": "Backupacties",
   "Restore, check or delete the selected backups.": "Geselecteerde backups herstellen, controleren of verwijderen.",
+  "Move the selected backups to the Trash.": "Geselecteerde backups naar de Prullenbak verplaatsen.",
   "Not restored:": "Niet hersteld:",
   "Restored: ": "Hersteld: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(de opslag kan zijn gewijzigd; een kopie staat in /dumps/recovery)",

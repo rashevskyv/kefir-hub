@@ -3278,6 +3278,7 @@
   "Restore for a specific user": "Für bestimmten Benutzer wiederherstellen",
   "Backup actions": "Backup-Aktionen",
   "Restore, check or delete the selected backups.": "Ausgewählte Backups wiederherstellen, überprüfen oder löschen.",
+  "Move the selected backups to the Trash.": "Ausgewählte Backups in den Papierkorb verschieben.",
   "Not restored:": "Nicht wiederhergestellt:",
   "Restored: ": "Wiederhergestellt: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(der Speicherstand wurde möglicherweise geändert; eine Kopie liegt in /dumps/recovery)",

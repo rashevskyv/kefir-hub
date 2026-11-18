@@ -65,8 +65,6 @@ Menu::Menu(u32 flags, u64 app_id_filter, Category category)
         }})
     );
 
-    UpdateSelectHints();
-
     if (!m_app_id_filter) {
         this->SetAction(Button::L, Action{"Previous tab"_i18n, [this](){
             ChangeCategory(-1);
@@ -176,7 +174,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
             return; // landed on the empty divider gap; nothing to focus there.
         }
 
-        if (touch && m_index == entry) {
+        if (touch && m_selected_count) {
+            // marks on: a tap flips the mark of the tapped tile (X); the cursor stays on it
+            SetIndex(entry);
+            FireAction(Button::X);
+            SetIndex(entry);
+        } else if (touch && m_index == entry) {
             FireAction(Button::A);
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);

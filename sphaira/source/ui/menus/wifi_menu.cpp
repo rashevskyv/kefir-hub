@@ -152,7 +152,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     }
 
     m_list->OnUpdate(controller, touch, m_index, m_items.size(), [this](bool touch, auto i) {
-        if (touch && m_index == i) {
+        if (touch && m_selected_count) {
+            // marks on: a tap flips the mark of the tapped row (X); the cursor stays on it
+            SetIndex(i);
+            FireAction(Button::X);
+            SetIndex(i);
+        } else if (touch && m_index == i) {
             FireAction(Button::A);
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);
@@ -276,7 +281,7 @@ void Menu::ShowContextMenu() {
         options->Add<SidebarEntryHeader>("BATCH ACTIONS"_i18n);
         options->Add<SidebarEntryCallback>("Delete selected"_i18n, [this](){
             ConfirmDeleteBatch();
-        }, true, "Remove all selected Wi-Fi networks from the console."_i18n);
+        }, true, "Remove all selected Wi-Fi networks from the console."_i18n)->SetIcon(ActionIcon::Delete);
 
         options->Add<SidebarEntryHeader>("SELECTION"_i18n);
         options->Add<SidebarEntryCallback>("Select all"_i18n, [this](){
@@ -362,7 +367,7 @@ void Menu::ShowContextMenu() {
 
     options->Add<SidebarEntryCallback>("Delete network"_i18n, [this, target](){
         ConfirmDeleteSingle(target);
-    }, true, "Remove this Wi-Fi network from saved profiles."_i18n);
+    }, true, "Remove this Wi-Fi network from saved profiles."_i18n)->SetIcon(ActionIcon::Delete);
 
     options->Add<SidebarEntryHeader>("WIRELESS"_i18n);
     const bool wifi_on = sphaira::wifi::IsWirelessEnabled();

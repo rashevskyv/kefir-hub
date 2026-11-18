@@ -3277,6 +3277,7 @@
   "Restore for a specific user": "특정 사용자 복원",
   "Backup actions": "백업 작업",
   "Restore, check or delete the selected backups.": "선택한 백업을 복원, 확인 또는 삭제합니다.",
+  "Move the selected backups to the Trash.": "선택한 백업을 휴지통으로 이동합니다.",
   "Not restored:": "복원되지 않음:",
   "Restored: ": "복원됨: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(세이브 데이터가 변경되었을 수 있으며, 복사본은 /dumps/recovery에 있습니다)",

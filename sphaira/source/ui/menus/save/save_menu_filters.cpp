@@ -26,29 +26,16 @@ void Menu::ToggleCurrentSelection() {
 }
 
 void Menu::InvertSelection() {
-    // Backups tab: Y marks all or none of the section under the cursor (Kefir Hub, DBI...), R2 + Y the whole list.
+    // Backups tab: Y inverts the section under the cursor only (Kefir Hub, DBI...); R2 + Y is the whole list.
     if (m_category == Category::Backups && !marks::WholeList() && m_index >= 0 && m_index < static_cast<s64>(m_entries.size())) {
         const auto source = m_entries[m_index].backup_source;
-        const auto in_section = [this, source](size_t i) { return m_entries[i].backup_source == source; };
-        bool all = true;
-        for (size_t i = 0; i < m_entries.size(); i++) all = all && (!in_section(i) || m_entries[i].selected);
-        for (size_t i = 0; i < m_entries.size(); i++) if (in_section(i)) m_entries[i].selected = !all;
+        for (auto& e : m_entries) {
+            if (e.backup_source == source) e.selected = !e.selected; // the other sections keep their marks
+        }
         m_selected_count = marks::Count(m_entries.size(), marks::Selected(m_entries));
         return;
     }
     m_selected_count = marks::OnY(m_entries.size(), marks::Selected(m_entries));
-}
-
-// the footer of the Backups tab says what Y and R2 + Y do; the other tabs keep "Invert".
-void Menu::UpdateSelectHints() {
-    const bool backups = m_category == Category::Backups;
-    SetAction(Button::Y, Action{backups ? "Select all / none"_i18n : "Invert"_i18n, [this](){ InvertSelection(); }});
-    if (backups) {
-        // footer only (type 0: never dispatched, a mask key would fire on R2 or Y alone): Y reads R2 itself.
-        SetAction(Button::R2 | Button::Y, Action{u8{0}, "Select all"_i18n, std::string{gfx::getButton(Button::R2)} + "+" + gfx::getButton(Button::Y), [](){}});
-    } else {
-        RemoveAction(Button::R2 | Button::Y);
-    }
 }
 
 void Menu::ChangeCategory(s64 delta) {
@@ -87,7 +74,6 @@ void Menu::SetCategory(Category category) {
     }
 
     m_category = category;
-    UpdateSelectHints();
     if (!m_app_id_filter && m_layout.Get() == grid::LayoutType_Grid) {
         OnLayoutChange();
     }
@@ -312,6 +298,10 @@ void Menu::DisplaySaveOptions() {
             options->Add<SidebarEntryCallback>("Backup actions"_i18n, [this](){
                 PromptSaveAction();
             }, "Restore, check or delete the selected backups."_i18n)->SetIcon(ActionIcon::Refresh);
+            options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+                const auto groups = ExpandGameGroups(GetSelectedEntries());
+                if (!groups.empty()) DeleteBackupGroups(groups);
+            }, true, "Move the selected backups to the Trash."_i18n)->SetIcon(ActionIcon::Delete);
         } else {
             options->Add<SidebarEntryCallback>("Restore"_i18n, [this](){
                 PromptSaveTypeOptions(SaveOp::Restore);

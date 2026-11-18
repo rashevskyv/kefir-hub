@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Restore for a specific user",
   "Backup actions": "Backup actions",
   "Restore, check or delete the selected backups.": "Restore, check or delete the selected backups.",
+  "Move the selected backups to the Trash.": "Move the selected backups to the Bin.",
   "Not restored:": "Not restored:",
   "Restored: ": "Restored: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(the save may be changed; its copy is in /dumps/recovery)",

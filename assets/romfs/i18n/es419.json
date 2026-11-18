@@ -3278,6 +3278,7 @@
   "Restore for a specific user": "Restaurar para un usuario específico",
   "Backup actions": "Acciones de respaldo",
   "Restore, check or delete the selected backups.": "Restaurar, comprobar o eliminar las copias de seguridad seleccionadas.",
+  "Move the selected backups to the Trash.": "Mover las copias de seguridad seleccionadas a la Papelera.",
   "Not restored:": "No restaurado:",
   "Restored: ": "Restaurado: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(la partida guardada puede haber cambiado; su copia está en /dumps/recovery)",

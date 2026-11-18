@@ -92,8 +92,11 @@ struct RemoteUserPacksMenu final : MenuBase {
             return;
         }
         m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
-            if (touch && m_index == i) {
+            if (touch && (m_index == i || m_selected_count)) {
+                // marks on: a tap on any row flips its mark (X); the cursor stays on it
+                m_index = i;
                 FireAction(Button::X);
+                m_index = i;
             } else {
                 App::PlaySoundEffect(SoundEffect_Focus);
                 m_index = i;

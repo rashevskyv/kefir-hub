@@ -421,7 +421,12 @@ void Menu::Update(Controller* controller, TouchInfo* touch) {
     MenuBase::Update(controller, touch);
     nextendo::OnlineCountsTick(); // the Online badge: cheap per frame, asks the server at most once a minute
     m_list->OnUpdate(controller, touch, m_index, m_entries.size(), [this](bool touch, auto i) {
-        if (touch && m_index == i) {
+        if (touch && m_selected_count) {
+            // marks on: a tap flips the mark of the tapped row (X); the cursor stays on it
+            SetIndex(i);
+            FireAction(Button::X);
+            SetIndex(i);
+        } else if (touch && m_index == i) {
             FireAction(Button::A);
         } else {
             App::PlaySoundEffect(SoundEffect_Focus);

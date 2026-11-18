@@ -3303,6 +3303,7 @@
   "Restore for a specific user": "Restaurar para um usuário específico",
   "Backup actions": "Ações de backup",
   "Restore, check or delete the selected backups.": "Restaurar, verificar ou excluir os backups selecionados.",
+  "Move the selected backups to the Trash.": "Mover os backups selecionados para a Lixeira.",
   "Not restored:": "Não restaurado:",
   "Restored: ": "Restaurado: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(o save pode ter sido alterado; a sua cópia está em /dumps/recovery)",

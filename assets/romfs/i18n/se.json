@@ -3277,6 +3277,7 @@
   "Restore for a specific user": "Återställ för en specifik användare",
   "Backup actions": "Säkerhetskopieringsåtgärder",
   "Restore, check or delete the selected backups.": "Återställ, kontrollera eller radera de valda säkerhetskopiorna.",
+  "Move the selected backups to the Trash.": "Flytta de valda säkerhetskopiorna till Papperskorgen.",
   "Not restored:": "Ej återställd:",
   "Restored: ": "Återställd: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(sparfilen kan ha ändrats; en kopia finns i /dumps/recovery)",

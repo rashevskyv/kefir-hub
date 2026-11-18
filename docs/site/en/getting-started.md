@@ -74,6 +74,11 @@ Some dangerous actions ask you to hold **A** until a bar fills up.
 - Tap an item to select it. Tap it again to open it.
 - Swipe up or down to scroll.
 - Tap a hint in the footer to press that button.
+<!-- draft
+- since 0.14.406: while some items are selected, a tap on any item flips its mark (like **X**) and the cursor stays on it; it does not open the item; with nothing selected a tap works as before
+- since 0.14.406: every list with **X** / **Y** marks shows **ZR+Y** [[Select all / none]] in the footer next to **Y** [[Invert]]
+- since 0.14.406: on tiles and in check lists the mark is a square outline in the theme highlight colour; a selected item has a smaller filled square inside it (it was a tick)
+-->
 
 ## Type text
 When Kefir Hub needs text (a file name, a folder name, an address), the console keyboard opens.

@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Belirli bir kullanıcı için geri yükle",
   "Backup actions": "Yedekleme eylemleri",
   "Restore, check or delete the selected backups.": "Seçilen yedeklemeleri geri yükleyin, kontrol edin veya silin.",
+  "Move the selected backups to the Trash.": "Seçilen yedeklemeleri Çöp Kutusuna taşıyın.",
   "Not restored:": "Geri yüklenmedi:",
   "Restored: ": "Geri Yüklendi: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(kayıt dosyası değiştirilmiş olabilir; kopyası /dumps/recovery içindedir)",

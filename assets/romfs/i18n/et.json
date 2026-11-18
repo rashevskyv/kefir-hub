@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Taasta konkreetse kasutaja jaoks",
   "Backup actions": "Varukoopia tegevused",
   "Restore, check or delete the selected backups.": "Taasta, kontrolli või kustuta valitud varukoopiad.",
+  "Move the selected backups to the Trash.": "Teisalda valitud varukoopiad Prügikasti.",
   "Not restored:": "Taastamata:",
   "Restored: ": "Taastatud: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(salvestis võib olla muutunud; selle koopia on kaustas /dumps/recovery)",

@@ -342,34 +342,26 @@ void drawMarkedRow(NVGcontext* vg, const Theme* theme, const Vec4& row) {
 }
 
 void drawCheckbox(NVGcontext* vg, const Theme* theme, float x, float y, float size, bool checked) {
-    nvgBeginPath(vg);
-    nvgRect(vg, x, y, size, size);
-    nvgFillColor(vg, theme->GetColour(ThemeEntryID_BACKGROUND));
-    nvgFill(vg);
+    // a square outline in the highlight colour; marked = a smaller filled square inside it.
+    // The opaque backing keeps both readable over tile artwork.
+    const auto hl = theme->GetColour(ThemeEntryID_HIGHLIGHT_1);
+    const float stroke = std::max(2.f, size / 10.f);
+    const float r = size / 7.f;
+
+    auto bg = theme->GetColour(ThemeEntryID_BACKGROUND);
+    bg.a = 1.f;
+    drawRect(vg, x, y, size, size, bg, r);
 
     nvgBeginPath(vg);
-    nvgRect(vg, x, y, size, size);
-    nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT));
-    nvgStrokeWidth(vg, 3.f);
+    nvgRoundedRect(vg, x + stroke / 2.f, y + stroke / 2.f, size - stroke, size - stroke, r);
+    nvgStrokeColor(vg, hl);
+    nvgStrokeWidth(vg, stroke);
     nvgStroke(vg);
 
-    if (!checked) {
-        return;
+    if (checked) {
+        const float in = size * 0.27f;
+        drawRect(vg, x + in, y + in, size - in * 2.f, size - in * 2.f, hl, r / 2.f);
     }
-
-    // the tick is a glyph, not a shape, so it gets a 1px black halo to stay
-    // legible on a light theme where box and tick would otherwise both be pale.
-    // scale with the box (18px at the standard 20px CHECKBOX_SIZE).
-    const float tick = size * (18.f / 20.f);
-    const float cx = x + size / 2.f;
-    const float cy = y + (size - tick) / 2.f;
-    const auto outline = nvgRGBA(0, 0, 0, 255);
-
-    drawText(vg, cx - 1.f, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-    drawText(vg, cx + 1.f, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-    drawText(vg, cx, cy - 1.f, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-    drawText(vg, cx, cy + 1.f, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, outline);
-    drawText(vg, cx, cy, tick, "", nullptr, NVG_ALIGN_CENTER | NVG_ALIGN_TOP, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
 }
 
 void drawCloud(NVGcontext* vg, float cx, float cy, float w, const NVGcolor& c) {

@@ -3286,6 +3286,7 @@
   "Restore for a specific user": "Відновити для певного користувача",
   "Backup actions": "Дії з резервною копією",
   "Restore, check or delete the selected backups.": "Відновити, перевірити або видалити вибрані резервні копії.",
+  "Move the selected backups to the Trash.": "Перемістити вибрані резервні копії в Кошик.",
   "Not restored:": "Не відновлено:",
   "Restored: ": "Відновлено: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(збереження могло бути змінене; його копія знаходиться в /dumps/recovery)",

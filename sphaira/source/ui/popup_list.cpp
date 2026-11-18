@@ -201,21 +201,9 @@ auto PopupList::Draw(NVGcontext* vg, Theme* theme) -> void {
 
         const bool is_check = m_checks && i < static_cast<s64>(m_checks->size());
         if (is_check) {
-            // tick box on the right: hollow when off, filled with a tick when on.
+            // the same mark box as every list (gfx::drawCheckbox), on the right.
             const float box = 26.f;
-            const float bx = x + w - m_text_xoffset - box;
-            const float by = mid_y - box / 2.f;
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, bx, by, box, box, 4.f);
-            if ((*m_checks)[i]) {
-                nvgFillColor(vg, theme->GetColour(ThemeEntryID_TEXT_SELECTED));
-                nvgFill(vg);
-                gfx::drawText(vg, bx + box / 2.f, mid_y, 20.f, "", NULL, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_POPUP));
-            } else {
-                nvgStrokeColor(vg, theme->GetColour(ThemeEntryID_TEXT_INFO));
-                nvgStrokeWidth(vg, 2.f);
-                nvgStroke(vg);
-            }
+            gfx::drawCheckbox(vg, theme, x + w - m_text_xoffset - box, mid_y - box / 2.f, box, (*m_checks)[i]);
         } else if (m_menu_style || m_checks) {
             // action menu (or the action rows of a check list): no value tick, a right chevron per row.
             DrawChevron(vg, x + w - 24.f, mid_y, theme->GetColour(ThemeEntryID_TEXT));

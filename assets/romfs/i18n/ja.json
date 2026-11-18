@@ -3277,6 +3277,7 @@
   "Restore for a specific user": "特定のユーザーのデータを復元",
   "Backup actions": "バックアップの操作",
   "Restore, check or delete the selected backups.": "選択したバックアップを復元、確認、または削除します。",
+  "Move the selected backups to the Trash.": "選択したバックアップをゴミ箱に移動します。",
   "Not restored:": "復元されませんでした:",
   "Restored: ": "復元完了: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(セーブデータが変更されている可能性があります。コピーは /dumps/recovery にあります)",

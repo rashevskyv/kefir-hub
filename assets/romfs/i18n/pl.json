@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Przywróć dla określonego użytkownika",
   "Backup actions": "Działania kopii zapasowej",
   "Restore, check or delete the selected backups.": "Przywróć, sprawdź lub usuń wybrane kopie zapasowe.",
+  "Move the selected backups to the Trash.": "Przenieś wybrane kopie zapasowe do Kosza.",
   "Not restored:": "Nie przywrócono:",
   "Restored: ": "Przywrócono: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(zapis mógł ulec zmianie; jego kopia znajduje się w /dumps/recovery)",

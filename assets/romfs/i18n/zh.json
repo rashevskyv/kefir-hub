@@ -3329,6 +3329,7 @@
   "Restore for a specific user": "为指定用户恢复",
   "Backup actions": "备份操作",
   "Restore, check or delete the selected backups.": "还原、检查或删除选定的备份。",
+  "Move the selected backups to the Trash.": "将选定的备份移到回收站。",
   "Not restored:": "未恢复：",
   "Restored: ": "已恢复: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "（存档可能已被修改；其副本位于 /dumps/recovery）",

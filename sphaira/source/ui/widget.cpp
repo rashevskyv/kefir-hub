@@ -2,6 +2,7 @@
 #include "ui/nvg_util.hpp"
 #include "ui/layout.hpp"
 #include "app.hpp"
+#include "i18n.hpp"
 #include "log.hpp"
 
 #include <algorithm>
@@ -310,13 +311,25 @@ void Widget::SetAction(Button button, Action action) {
         m_ui_buttons_dirty = true;
     }
 
+    const bool invert = button == Button::Y && action.m_hint == "Invert"_i18n;
     m_actions.insert_or_assign(button, action);
+
+    // every Y "Invert" goes through marks::OnY, where R2 + Y marks all or none: the footer says so next to Y.
+    // Footer only (type 0: never dispatched, a mask key would fire on R2 or Y alone); Y reads R2 itself.
+    if (invert) {
+        SetAction(Button::R2 | Button::Y, Action{u8{0}, "Select all / none"_i18n, std::string{gfx::getButton(Button::R2)} + "+" + gfx::getButton(Button::Y), [](){}});
+    } else if (button == Button::Y) {
+        RemoveAction(Button::R2 | Button::Y);
+    }
 }
 
 void Widget::RemoveAction(Button button) {
     if (auto it = m_actions.find(button); it != m_actions.end()) {
         m_actions.erase(it);
         m_ui_buttons_dirty = true;
+    }
+    if (button == Button::Y) {
+        RemoveAction(Button::R2 | Button::Y);
     }
 }
 

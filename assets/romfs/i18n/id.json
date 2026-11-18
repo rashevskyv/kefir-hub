@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Pulihkan untuk pengguna tertentu",
   "Backup actions": "Tindakan cadangan",
   "Restore, check or delete the selected backups.": "Pulihkan, periksa, atau hapus cadangan yang dipilih.",
+  "Move the selected backups to the Trash.": "Pindahkan cadangan yang dipilih ke Tempat Sampah.",
   "Not restored:": "Tidak dipulihkan:",
   "Restored: ": "Dipulihkan: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(penyimpanan mungkin telah berubah; salinannya ada di /dumps/recovery)",

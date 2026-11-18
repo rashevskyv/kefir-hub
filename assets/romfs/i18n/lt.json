@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Atkurti konkrečiam vartotojui",
   "Backup actions": "Atsarginės kopijos veiksmai",
   "Restore, check or delete the selected backups.": "Atkurti, patikrinti arba ištrinti pasirinktas atsargines kopijas.",
+  "Move the selected backups to the Trash.": "Perkelti pasirinktas atsargines kopijas į Šiukšlinę.",
   "Not restored:": "Neatkurta:",
   "Restored: ": "Atkurta: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(išsaugojimas galėjo pasikeisti; jo kopija yra /dumps/recovery)",

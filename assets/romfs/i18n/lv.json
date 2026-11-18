@@ -3272,6 +3272,7 @@
   "Restore for a specific user": "Atjaunot konkrētam lietotājam",
   "Backup actions": "Dublējuma darbības",
   "Restore, check or delete the selected backups.": "Atjaunot, pārbaudīt vai dzēst atlasītās dublējumkopijas.",
+  "Move the selected backups to the Trash.": "Pārvietot atlasītās dublējumkopijas uz Atkritni.",
   "Not restored:": "Nav atjaunots:",
   "Restored: ": "Atjaunots: ",
   "(the save may be changed; its copy is in /dumps/recovery)": "(saglabāšana varētu būt mainīta; tās kopija ir atrodama /dumps/recovery)",
