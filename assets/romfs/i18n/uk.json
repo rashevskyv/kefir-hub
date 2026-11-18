@@ -4355,5 +4355,7 @@
   "Turn the MTP server on or off.": "Увімкнути або вимкнути сервер MTP.",
   "Turn the FTP server on or off.": "Увімкнути або вимкнути сервер FTP.",
   "FTP started": "FTP запущено",
-  "FTP stopped": "FTP зупинено"
+  "FTP stopped": "FTP зупинено",
+  "Upload connections": "З’єднань для завантаження",
+  "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload.": "Веб-сервер: передавати один файл кількома з’єднаннями одразу. По Wi-Fi може бути швидше. Вимкнено = одне з’єднання, як раніше. Діє з наступного завантаження."
 }

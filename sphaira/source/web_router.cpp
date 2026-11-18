@@ -225,6 +225,11 @@ void HandleRequest(Socket sock) {
     std::string query;
     auto path = SplitPathAndQuery(first_line.substr(path_start, path_end - path_start), query);
 
+    if ((method == "POST" || method == "PUT") && path == "/upload" && !GetQueryValue(query, "part").empty()) {
+        HandlePartUpload(sock, req, method, query);
+        return;
+    }
+
     if (method == "POST") {
         if (path == "/upload" && GetQueryValue(query, "manifest") == "1") {
             HandleUploadManifest(sock, req);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fs.hpp"
+#include "option.hpp"
 #include <switch.h>
 #include <string>
 #include <vector>
@@ -37,6 +38,8 @@ auto WebStartServer(const std::string& page_path, WebShareResult& out) -> Result
 void WebShareStop();
 WebUploadState WebGetUploadState();
 bool WebShareIsRunning();
+// Settings > Network > Upload connections: 0 = off (one connection, as before), 2 or 3 = parts sent in parallel
+option::OptionLong& WebUploadConnsOption();
 void WebSetProgressBox(ui::ProgressBox* pbox);
 ui::ProgressBox* WebGetProgressBox();
 // the second line of a server window: "Or open: kefir.local/input" (the QR and the first line use the IP); empty when there is no other name

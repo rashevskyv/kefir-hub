@@ -4352,5 +4352,7 @@
   "Turn the MTP server on or off.": "Turn the MTP server on or off.",
   "Turn the FTP server on or off.": "Turn the FTP server on or off.",
   "FTP started": "FTP started",
-  "FTP stopped": "FTP stopped"
+  "FTP stopped": "FTP stopped",
+  "Upload connections": "Upload connections",
+  "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload.": "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload."
 }

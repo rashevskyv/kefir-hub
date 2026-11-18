@@ -151,6 +151,11 @@ Servers that let a PC reach the console. Details: [Share files with a PC](sharin
 | [[PC Install on connect]] | When a computer is plugged in, Kefir Hub first asks for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and opens [[PC Install (USB)]] if one answers. Otherwise MTP starts as before. See [PC Install over USB](install/usb.md#auto-open). | On |
 | [[Nxlink]] | Lets you send `.nro` files from a PC with the nxlink tool (for homebrew developers). | On |
 
+<!-- draft (v0.14.409): Upload connections
+- new row [[Upload connections]] in [[Settings]] → [[Network]], after [[Nxlink]]: [[Off]] (default), 2, 3; **A** opens the list
+- web server only: the browser sends one file in 1 MB parts over 2 or 3 connections at once (can be faster over Wi-Fi); [[Off]] = one connection, as before; takes effect on the next upload; a game installed directly from the browser always uses one connection
+-->
+
 ## [[Sources]] {#sources}
 
 Network locations and USB drives you browse and install from. Details: [File browser](file-browser.md).

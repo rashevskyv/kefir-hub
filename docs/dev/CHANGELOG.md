@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.409 — Web server: upload one file over several connections (option, default Off)
+Settings › Network › Upload connections (Off / 2 / 3). On: the browser creates the file at its final size (`POST /upload?part=new`), sends 1 MB parts in parallel (`PUT /upload?part=<id>&offset=N`) into one shared handle, then `done=1`; incomplete → file deleted; Off: server answers 403 and the page uses the old single PUT. Direct game install is unchanged (one connection). Web workers 3 → 5. New: `web_part_upload.cpp`, `web_part_range.hpp` (host test).
+host tests: quick green | nro: built (0.14.409; also holds the uncommitted ownfoil/settings_internal/settings_kefir/system_tools_menu/web.cpp changes of earlier work) | switch: pending — measure Off vs 2 vs 3 on Wi-Fi (speed in the browser queue), cancel mid-file, tab closed mid-file (file removed after 30 s on the next upload), card full, applet mode, status page while uploading.
+
 ## v0.14.408 — L button setting: no list rebuild per frame
 The Settings row value is drawn every frame; `l_button::Label()` now resolves the choice once per saved id and language instead of rebuilding the group list (and reading the Kefir version file) each frame.
 host tests: quick green | nro: built (0.14.408, 20:31, clean; also holds the uncommitted ownfoil.cpp, settings_internal.cpp, settings_kefir.cpp, system_tools_menu.cpp, web.cpp and tegra changes) | switch: pending (same items as v0.14.407)

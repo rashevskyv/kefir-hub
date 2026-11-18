@@ -154,7 +154,45 @@ i.status='cancelled';i.progress=0;i.speed='';renderQueue();updateQueueCount();}
 function clearCompletedQueue(){transferQueue=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status));renderQueue();updateQueueCount();}
 async function startTransfers(){if(isTransferring)return;isTransferring=true;const btn=document.getElementById('start-transfers-btn');if(btn)btn.disabled=true;const ov=document.getElementById('transfer-overlay');if(ov)ov.style.display='flex';
 try{const pendingInstalls=transferQueue.filter(i=>i.type==='upload'&&i.status==='pending'&&i.install);if(pendingInstalls.length>0){try{const manifest=pendingInstalls.map((i,idx)=>({id:i.id||('up_'+idx),name:i.name,size:i.file?i.file.size:0}));const resp=await fetch('/upload?manifest=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(manifest)});if(!resp.ok){const errTxt=await resp.text();for(const pi of pendingInstalls){pi.status='failed';pi.speed='Manifest failed: '+(errTxt||resp.statusText);}updateQueueCount();renderQueue();return;}}catch(e){for(const pi of pendingInstalls){pi.status='failed';pi.speed='Manifest error: '+(e.message||'Network error');}updateQueueCount();renderQueue();return;}}while(true){const next=transferQueue.find(i=>i.status==='pending');if(!next)break;if(next.type==='upload')await uploadFileItem(next);else await downloadFileItem(next);updateQueueCount();renderQueue();}}finally{isTransferring=false;if(btn)btn.disabled=false;if(ov)ov.style.display='none';navigateTo(currentPath,false);}}
-function uploadFileItem(item){return new Promise(res=>{item.status='uploading';renderQueue();const xhr=new XMLHttpRequest();item.xhr=xhr;let url='/upload?path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name);if(item.install){url+='&install=1&id='+encodeURIComponent(item.id||'');item.status='installing';}xhr.open('PUT',url,true);let startTime=Date.now();let lastTime=startTime;let lastLoaded=0;
+async function uploadParts(item){
+item.status='uploading';item.progress=0;renderQueue();
+const ctrl=new AbortController();let cancelled=false;
+item.xhr={abort(){cancelled=true;ctrl.abort();}};
+const total=item.file.size;let id=null;
+const post=(q)=>fetch('/upload?'+q,{method:'POST',signal:ctrl.signal});
+try{
+const r=await post('part=new&path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name)+'&size='+total);
+if(r.status===403)return uploadSingle(item);
+if(!r.ok)throw new Error(await r.text()||r.statusText);
+const info=await r.json();id=info.id;
+const CH=1024*1024;const conns=Math.max(1,Math.min(info.conns||1,8));
+let next=0,loaded=0,lastTime=Date.now(),lastLoaded=0;
+const worker=async()=>{
+while(!cancelled&&next<total){
+const off=next;next+=CH;const blob=item.file.slice(off,Math.min(off+CH,total));
+let ok=false,err='';
+for(let t=0;t<3&&!ok&&!cancelled;t++){
+try{const p=await fetch('/upload?part='+id+'&offset='+off,{method:'PUT',body:blob,signal:ctrl.signal});if(p.ok)ok=true;else err=await p.text();}catch(e){err=e.message||'Network error';}
+}
+if(!ok)throw new Error(err||'Part failed');
+loaded+=blob.size;item.progress=total?(loaded/total)*100:100;
+const now=Date.now();if(now-lastTime>=500){item.speed=formatBytes((loaded-lastLoaded)/((now-lastTime)/1000))+'/s';lastTime=now;lastLoaded=loaded;}
+renderQueue();
+}
+};
+await Promise.all(Array.from({length:conns},worker));
+if(cancelled)throw new Error('cancelled');
+const d=await post('part='+id+'&done=1');
+if(!d.ok)throw new Error(await d.text()||d.statusText);
+item.status='completed';item.progress=100;item.speed='';
+}catch(e){
+ctrl.abort();
+if(id){try{await fetch('/upload?part='+id+'&done=0',{method:'POST'});}catch(_){}}
+if(cancelled){item.status='cancelled';}else{item.status='failed';item.speed='Error: '+(e.message||'failed');}
+}
+}
+function uploadFileItem(item){return item.install?uploadSingle(item):uploadParts(item);}
+function uploadSingle(item){return new Promise(res=>{item.status='uploading';renderQueue();const xhr=new XMLHttpRequest();item.xhr=xhr;let url='/upload?path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name);if(item.install){url+='&install=1&id='+encodeURIComponent(item.id||'');item.status='installing';}xhr.open('PUT',url,true);let startTime=Date.now();let lastTime=startTime;let lastLoaded=0;
 xhr.upload.addEventListener('progress',e=>{if(e.lengthComputable){const now=Date.now();item.progress=(e.loaded/e.total)*100;const diff=(now-lastTime)/1000;if(diff>=0.5){const speed=(e.loaded-lastLoaded)/diff;item.speed=formatBytes(speed)+'/s';lastTime=now;lastLoaded=e.loaded;}if(item.install&&item.progress>=99){item.status='installing';}renderQueue();}});
 xhr.onload=()=>{if(xhr.status===200){item.status='completed';item.progress=100;item.speed='';}else{item.status='failed';item.speed='Error: '+(xhr.responseText||xhr.statusText);}res();};
 xhr.onerror=()=>{item.status='failed';item.speed='Network error';res();};

@@ -32,34 +32,6 @@ namespace {
 
 using namespace web::detail;
 
-// Serializes write operations (upload/install) across the worker threads. Read
-// operations (browse/status/download/view) stay concurrent; only one transfer
-// touches the shared g_upload_state / install pipeline at a time.
-std::atomic_bool g_transfer_busy{false};
-
-auto UniqueUploadPath(fs::Fs& sd, const fs::FsPath& dir, const std::string& name) -> fs::FsPath {
-    auto out = fs::AppendPath(dir, name);
-    if (!sd.FileExists(out) && !sd.DirExists(out)) {
-        return out;
-    }
-
-    auto stem = name;
-    std::string ext;
-    if (const auto dot = name.find_last_of('.'); dot != std::string::npos) {
-        stem = name.substr(0, dot);
-        ext = name.substr(dot);
-    }
-
-    for (u64 i = 1; ; i++) {
-        char buf[FS_MAX_PATH]{};
-        std::snprintf(buf, sizeof(buf), "%s (%llu)%s", stem.c_str(), static_cast<unsigned long long>(i), ext.c_str());
-        out = fs::AppendPath(dir, buf);
-        if (!sd.FileExists(out) && !sd.DirExists(out)) {
-            return out;
-        }
-    }
-}
-
 } // namespace
 
 void HandleUploadManifest(Socket sock, const std::string& req) {

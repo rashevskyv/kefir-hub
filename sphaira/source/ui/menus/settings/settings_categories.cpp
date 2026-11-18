@@ -21,6 +21,7 @@
 #include "ui/screensaver.hpp"
 #include "ui/steamgriddb_icon.hpp"
 #include "app.hpp"
+#include "web.hpp"
 #include "auto_update.hpp"
 #include "evman.hpp"
 #include "i18n.hpp"
@@ -408,6 +409,21 @@ void Menu::BuildCategories() {
                 MakeFolderItem("MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, BuildMtpStorageItems),
                 MakeBoolItem("PC Install on connect"_i18n, "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual."_i18n, App::GetUsbInstallOnConnect, App::SetUsbInstallOnConnect),
                 MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),
+                { "Upload connections"_i18n, "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload."_i18n, [](){
+                    const auto val = WebUploadConnsOption().Get();
+                    return val >= 2 ? std::to_string(std::min<long>(val, 3)) : "Off"_i18n;
+                }, [](){
+                    PopupList::Items items;
+                    items.push_back("Off"_i18n);
+                    items.push_back("2");
+                    items.push_back("3");
+                    const auto val = WebUploadConnsOption().Get();
+                    App::Push<PopupList>("Upload connections"_i18n, std::move(items), [](std::optional<s64> op_index){
+                        if (op_index) {
+                            WebUploadConnsOption().Set(*op_index == 0 ? 0 : *op_index + 1);
+                        }
+                    }, val >= 2 ? std::min<long>(val, 3) - 1 : 0);
+                }},
             }
         },
         {
