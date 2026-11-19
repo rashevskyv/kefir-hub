@@ -202,6 +202,12 @@ auto FindAssocFor(const std::vector<FileAssocEntry>& all, std::string_view folde
         if (group_a != group_b) {
             return group_a < group_b;
         }
+        // SwitchWave is the preferred media player: list it before NXMP and the rest.
+        const bool wave_a = !strcasecmp(a.name.c_str(), "SwitchWave");
+        const bool wave_b = !strcasecmp(b.name.c_str(), "SwitchWave");
+        if (wave_a != wave_b) {
+            return wave_a;
+        }
         return strcasecmp(a.name.c_str(), b.name.c_str()) < 0;
     });
 

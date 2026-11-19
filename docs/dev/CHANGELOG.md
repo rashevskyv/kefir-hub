@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.421 — File Browser: SwitchWave is listed before NXMP for video/audio files
+The "Launch option" list sorted launchers by name, so NXMP came first. SwitchWave is now first (after RetroArch/TICO grouping is unchanged); NXMP stays in the list.
+host tests: not run, nro: not built, switch: pending (open an .mkv/.avi/.ts: SwitchWave is the top entry)
+
 ## v0.14.420 — FTP listener pauses while a web transfer runs
 FTP slowed LAN receive 3-6x while its listener ran (core and priority do not matter; 0x3F priority is invalid). Now the listener closes for the whole web upload/install/part session and reopens after it; an FTP transfer in the last 2 s keeps it open. The FTP thread starts on core 1 (core 2 fallback).
 host tests: not run, nro: built, switch: console LAN pull with FTP on 1.6/2.1 -> 5.1/11.4 MB/s (1/4 conns); web install of a 21 MB DLC ok with 1, 4 and Auto connections; abandoned tab keeps FTP paused until the next part=new (30 s)
