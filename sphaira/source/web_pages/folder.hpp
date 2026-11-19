@@ -154,21 +154,39 @@ i.status='cancelled';i.progress=0;i.speed='';renderQueue();updateQueueCount();}
 function clearCompletedQueue(){transferQueue=transferQueue.filter(i=>['pending','uploading','downloading','installing'].includes(i.status));renderQueue();updateQueueCount();}
 async function startTransfers(){if(isTransferring)return;isTransferring=true;const btn=document.getElementById('start-transfers-btn');if(btn)btn.disabled=true;const ov=document.getElementById('transfer-overlay');if(ov)ov.style.display='flex';
 try{const pendingInstalls=transferQueue.filter(i=>i.type==='upload'&&i.status==='pending'&&i.install);if(pendingInstalls.length>0){try{const manifest=pendingInstalls.map((i,idx)=>({id:i.id||('up_'+idx),name:i.name,size:i.file?i.file.size:0}));const resp=await fetch('/upload?manifest=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(manifest)});if(!resp.ok){const errTxt=await resp.text();for(const pi of pendingInstalls){pi.status='failed';pi.speed='Manifest failed: '+(errTxt||resp.statusText);}updateQueueCount();renderQueue();return;}}catch(e){for(const pi of pendingInstalls){pi.status='failed';pi.speed='Manifest error: '+(e.message||'Network error');}updateQueueCount();renderQueue();return;}}while(true){const next=transferQueue.find(i=>i.status==='pending');if(!next)break;if(next.type==='upload')await uploadFileItem(next);else await downloadFileItem(next);updateQueueCount();renderQueue();}}finally{isTransferring=false;if(btn)btn.disabled=false;if(ov)ov.style.display='none';navigateTo(currentPath,false);}}
+function connsDecide(s,now,rate){
+if(s.skip){s.skip=0;return 0;}
+var k=s.target,L=s.lvl,l=L[k];
+if(l)l.rate=l.rate*0.5+rate*0.5;else l=L[k]={rate:rate,t:now,n:0};
+l.t=now;l.n++;
+if(l.n<3)return 0;
+var p=L[k-1],nt=k;
+if(k<s.max&&now>=s.probeAt&&(k==1||!p||l.rate>=(s.pr?1.15:1.08)*p.rate)){nt=k+1;s.pr=0;}
+else if(k>1&&p&&l.rate<1.04*p.rate){nt=k-1;s.pr=0;s.probeAt=now+12000;}
+else if(k<s.max&&now>=s.probeAt){nt=k+1;s.pr=1;s.probeAt=now+12000;delete L[nt];}
+if(nt==k)return 0;
+s.target=nt;s.skip=1;if(L[nt])L[nt].n=0;
+return 1;}
 async function uploadParts(item){
 const inst=!!item.install;item.status=inst?'installing':'uploading';item.progress=0;renderQueue();
 const ctrl=new AbortController();let cancelled=false;
 item.xhr={abort(){cancelled=true;ctrl.abort();}};
-const total=item.file.size;let id=null;
+const total=item.file.size;let id=null,tm=0;
 const post=(q)=>fetch('/upload?'+q,{method:'POST',signal:ctrl.signal});
 try{
 const r=await post(inst?'part=new&install=1&id='+encodeURIComponent(item.id||'')+'&name='+encodeURIComponent(item.name)+'&size='+total:'part=new&path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name)+'&size='+total);
 if(r.status===403)return uploadSingle(item);
 if(!r.ok)throw new Error(await r.text()||r.statusText);
 const info=await r.json();id=inst?item.id:info.id;
-const CH=1024*1024;const conns=Math.max(1,Math.min(info.conns||1,8));
+const CH=1024*1024;const fx=parseInt(new URLSearchParams(location.search).get('conns'),10);
+const fixed=fx>=1&&fx<=8;const auto=!fixed&&!!info.auto;
+const mx=fixed?fx:auto?Math.max(1,Math.min(info.conns||1,6)):Math.max(1,Math.min(info.conns||1,8));
+const S={target:auto?Math.min(2,mx):mx,max:mx,lvl:{},probeAt:0,skip:0};
 let next=0,loaded=0,lastTime=Date.now(),lastLoaded=0;
-const worker=async()=>{
+if(auto){let pl=0,pt=Date.now();tm=setInterval(()=>{const n=Date.now(),r=(loaded-pl)/((n-pt)/1000);pl=loaded;pt=n;if(connsDecide(S,n,r))console.log('[conns]',S.target,r);},1000);}
+const worker=async(w)=>{
 while(!cancelled&&next<total){
+if(w>=S.target){await new Promise(r=>setTimeout(r,100));continue;}
 const off=next;next+=CH;const blob=item.file.slice(off,Math.min(off+CH,total));
 let ok=false,err='';
 for(let t=0;t<3&&!ok&&!cancelled;t++){
@@ -176,11 +194,11 @@ try{const p=await fetch('/upload?part='+id+'&offset='+off,{method:'PUT',body:blo
 }
 if(!ok)throw new Error(err||'Part failed');
 loaded+=blob.size;item.progress=total?(loaded/total)*100:100;
-const now=Date.now();if(now-lastTime>=500){item.speed=formatBytes((loaded-lastLoaded)/((now-lastTime)/1000))+'/s';lastTime=now;lastLoaded=loaded;}
+const now=Date.now();if(now-lastTime>=500){item.speed=formatBytes((loaded-lastLoaded)/((now-lastTime)/1000))+'/s'+(S.max>1?' · '+S.target+' conns':'');lastTime=now;lastLoaded=loaded;}
 renderQueue();
 }
 };
-await Promise.all(Array.from({length:conns},worker));
+await Promise.all(Array.from({length:mx},(_,w)=>worker(w)));
 if(cancelled)throw new Error('cancelled');
 if(inst){for(;;){await new Promise(r=>setTimeout(r,700));if(cancelled)throw new Error('cancelled');const s=await(await fetch('/upload?part='+encodeURIComponent(id)+'&state=1',{signal:ctrl.signal})).json();if(s.state==='ok')break;if(s.state==='failed')throw new Error(s.message||'Install failed');}}
 else{const d=await post('part='+id+'&done=1');
@@ -192,7 +210,7 @@ if(id&&!inst){try{await fetch('/upload?part='+id+'&done=0',{method:'POST'});}cat
 if(id&&inst){item.cancelling=true;item.status='installing';renderQueue();try{await fetch('/upload?part='+encodeURIComponent(id)+'&done=0',{method:'POST'});for(let k=0;k<120;k++){const s=await(await fetch('/upload?part='+encodeURIComponent(id)+'&state=1')).json();if(s.state==='ok'||s.state==='failed')break;await new Promise(r=>setTimeout(r,500));}}catch(_){}}
 if(cancelled){item.status='cancelled';}else{item.status='failed';item.speed='Error: '+(e.message||'failed');}
 item.cancelling=false;
-}
+}finally{clearInterval(tm);}
 }
 function uploadFileItem(item){return uploadParts(item);}
 function uploadSingle(item){return new Promise(res=>{item.status='uploading';renderQueue();const xhr=new XMLHttpRequest();item.xhr=xhr;let url='/upload?path='+encodeURIComponent(item.uploadPath)+'&name='+encodeURIComponent(item.name);if(item.install){url+='&install=1&id='+encodeURIComponent(item.id||'');item.status='installing';}xhr.open('PUT',url,true);let startTime=Date.now();let lastTime=startTime;let lastLoaded=0;

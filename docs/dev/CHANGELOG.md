@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.417 — Web upload: Auto number of connections (default), up to 6, 8 server workers
+The page starts with 2 connections and adds one while the speed grows by 8%, drops one when it no longer pays 4% (re-probes every 12 s); `?conns=N` in the address forces a fixed number. Measured on Wi-Fi (PC to console): 1 connection 5.5–5.8 MB/s, Auto 7.7–9.5, plateau ~10 from 3 connections; SD write is only ~10% of it, a smaller receive window is worse, a bigger one is much worse (2 MB: 2.6 MB/s).
+host tests: pass | nro: built | switch: pending — cancel mid-file, tab closed, an install with Auto, Applet Mode (1 connection)
+
 ## v0.14.416 — Footer hints: one button order in every window (left before right, A rightmost, B next to it)
 `ui/footer_order.hpp` orders every footer row: arrows, −, +, ZL ZR, L R, L3 R3, ZR+Y, Y, X, B, A; a two-row footer no longer splits a left/right pair; the fan curve lost its own sort mode. Dialogs: sysMMC install warning is Back / Don't show again / Install, SteamGridDB key is Back / Remove / Replace, two "OK" on B became "Close". Icon crop hints moved into the footer (translated). DBI "Skipped during the queue": Resolve moved from X to + (hint text in all languages).
 host tests: pass (test_footer_order) | nro: not built | switch: pending — fan curve, DBI queue (L3/R3), file browser two-row footer, icon crop, the three dialogs. Docs screenshots not redone.

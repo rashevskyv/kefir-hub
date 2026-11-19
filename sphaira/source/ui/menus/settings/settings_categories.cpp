@@ -317,6 +317,30 @@ auto BuildSavesCategoryItems() -> std::vector<SettingsItem> {
     return items;
 }
 
+// Upload connections: one table for the value text and the popup. Stored values: 0 Off, 2/3/4/6, 7 Auto.
+struct UploadConnsChoice {
+    const char* label; // nullptr: Off (value 0) or Auto (value 7), translated when shown
+    long value;
+};
+
+const std::array<UploadConnsChoice, 6>& UploadConnsChoices() {
+    static const std::array<UploadConnsChoice, 6> choices{{
+        {nullptr, 0}, {"2", 2}, {"3", 3}, {"4", 4}, {"6", 6}, {nullptr, 7},
+    }};
+    return choices;
+}
+
+std::string UploadConnsLabel(const UploadConnsChoice& c) {
+    return c.label ? std::string{c.label} : (c.value == 0 ? "Off"_i18n : "Auto"_i18n);
+}
+
+// stored value -> table index; 5 (not offered) maps to 4, anything else is clamped like the server does
+s64 UploadConnsIndex(long val) {
+    if (val < 2) return 0;
+    if (val >= 7) return 5;
+    return val >= 5 ? val - 2 : val - 1; // 2->1, 3->2, 4->3, 5->3, 6->4
+}
+
 void Menu::BuildCategories() {
     auto* app = App::GetApp();
 
@@ -410,20 +434,18 @@ void Menu::BuildCategories() {
                 MakeFolderItem("MTP storages"_i18n, "Configure which folders are visible over MTP and their names."_i18n, BuildMtpStorageItems),
                 MakeBoolItem("PC Install on connect"_i18n, "When a computer is plugged in, look for a USB install app (DBI Backend, ns-usbloader, Goldleaf) for a few seconds and open PC Install (USB) if one answers. Otherwise MTP starts as usual."_i18n, App::GetUsbInstallOnConnect, App::SetUsbInstallOnConnect),
                 MakeBoolItem("Nxlink"_i18n, "Receive .nro files from a PC."_i18n, App::GetNxlinkEnable, App::SetNxlinkEnable),
-                { "Upload connections"_i18n, "Web server: send one file over several connections at once. Can be faster over Wi-Fi. Off = one connection, as before. Applies to the next upload."_i18n, [](){
-                    const auto val = WebUploadConnsOption().Get();
-                    return val >= 2 ? std::to_string(std::min<long>(val, 3)) : "Off"_i18n;
+                { "Upload connections"_i18n, "Web server: send one file over several connections at once. Auto lets the page pick the number that is fastest, up to 6. Off = one connection. Applies to the next upload."_i18n, [](){
+                    return UploadConnsLabel(UploadConnsChoices()[UploadConnsIndex(WebUploadConnsOption().Get())]);
                 }, [](){
                     PopupList::Items items;
-                    items.push_back("Off"_i18n);
-                    items.push_back("2");
-                    items.push_back("3");
-                    const auto val = WebUploadConnsOption().Get();
+                    for (const auto& c : UploadConnsChoices()) {
+                        items.push_back(UploadConnsLabel(c));
+                    }
                     App::Push<PopupList>("Upload connections"_i18n, std::move(items), [](std::optional<s64> op_index){
                         if (op_index) {
-                            WebUploadConnsOption().Set(*op_index == 0 ? 0 : *op_index + 1);
+                            WebUploadConnsOption().Set(UploadConnsChoices()[*op_index].value);
                         }
-                    }, val >= 2 ? std::min<long>(val, 3) - 1 : 0);
+                    }, UploadConnsIndex(WebUploadConnsOption().Get()));
                 }},
             }
         },

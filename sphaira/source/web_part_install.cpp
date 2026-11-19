@@ -10,6 +10,7 @@
 #include "web.hpp"
 #include "web_part_buffer.hpp"
 #include "web_part_range.hpp"
+#include "web_upload_conns.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "log.hpp"
@@ -87,7 +88,8 @@ auto IsInstallPartId(const std::string& id) -> bool {
 
 void HandleInstallCreate(Socket sock, const std::string& query) {
     // the page falls back to one plain PUT on 403; applet mode has only 2 workers
-    const auto conns = std::clamp<long>(WebUploadConnsOption().Get(), 0, 3);
+    const auto opt = WebUploadConnsOption().Get();
+    const int conns = web::UploadConnsMax(opt, true);
     if (conns < 2 || App::IsApplet()) {
         SendResponse(sock, "403 Forbidden", "text/plain", "disabled");
         return;
@@ -123,7 +125,8 @@ void HandleInstallCreate(Socket sock, const std::string& query) {
     }
 
     // answer now: the page starts sending parts, this worker installs until the package is done
-    SendResponse(sock, "200 OK", "application/json", "{\"conns\":" + std::to_string(conns) + "}");
+    SendResponse(sock, "200 OK", "application/json", "{\"conns\":" + std::to_string(conns) +
+        ",\"auto\":" + (web::UploadConnsAuto(opt) ? "true" : "false") + "}");
 
     const auto res = RunDirectInstall(name, size, item_id, [&]() -> std::unique_ptr<yati::source::Stream> {
         return std::make_unique<PartStream>(buf);

@@ -51,8 +51,8 @@ constexpr u16 SHARE_PORT_FALLBACK_LAST = 8090;
 // Multiple worker threads accept() on the same listening socket so a status
 // poll (e.g. from a second device) can still be served while another thread
 // is blocked handling a long upload/install request. A multi-connection upload
-// (web_part_upload.cpp) keeps 3 of them busy and leaves 2 for status polls.
-constexpr size_t SHARE_WORKER_COUNT = 5;
+// (web_part_upload.cpp) keeps up to 6 of them busy and leaves 2 for status polls.
+constexpr size_t SHARE_WORKER_COUNT = 8;
 // seconds without an ip before the server gives up and closes itself.
 constexpr unsigned SHARE_OFFLINE_GIVEUP = 30;
 

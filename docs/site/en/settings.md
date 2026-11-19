@@ -152,8 +152,9 @@ Servers that let a PC reach the console. Details: [Share files with a PC](sharin
 | [[Nxlink]] | Lets you send `.nro` files from a PC with the nxlink tool (for homebrew developers). | On |
 
 <!-- draft (v0.14.409): Upload connections
-- new row [[Upload connections]] in [[Settings]] → [[Network]], after [[Nxlink]]: [[Off]] (default), 2, 3; **A** opens the list
-- web server only: the browser sends one file in 1 MB parts over 2 or 3 connections at once (can be faster over Wi-Fi); [[Off]] = one connection, as before; takes effect on the next upload; a game installed directly from the browser uses the same connections: its parts are read in order while they arrive
+- new row [[Upload connections]] in [[Settings]] → [[Network]], after [[Nxlink]]: [[Off]] (default), 2, 3, 4, 6, [[Auto]]; **A** opens the list
+- [[Auto]]: the page picks the connection count (1 to 6) by measuring the upload speed
+- web server only: the browser sends one file in 1 MB parts over several connections at once (can be faster over Wi-Fi); [[Off]] = one connection, as before; takes effect on the next upload; a game installed directly from the browser uses the same connections: its parts are read in order while they arrive
 -->
 
 ## [[Sources]] {#sources}

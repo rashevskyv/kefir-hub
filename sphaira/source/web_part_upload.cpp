@@ -10,6 +10,7 @@
 #include "web_upload.hpp"
 #include "web.hpp"
 #include "web_part_range.hpp"
+#include "web_upload_conns.hpp"
 #include "app.hpp"
 #include "log.hpp"
 #include "path_util.hpp"
@@ -58,7 +59,7 @@ auto UniqueUploadPath(fs::Fs& sd, const fs::FsPath& dir, const std::string& name
 }
 
 option::OptionLong& WebUploadConnsOption() {
-    static option::OptionLong opt{App::INI_SECTION, "web_upload_conns", 0};
+    static option::OptionLong opt{App::INI_SECTION, "web_upload_conns", 7}; // 7 = Auto
     return opt;
 }
 
@@ -129,7 +130,8 @@ void Release(const std::shared_ptr<PartUpload>& p, bool keep) {
 
 void HandleCreate(Socket sock, const std::string& query) {
     // the page falls back to one plain PUT on 403
-    const auto conns = std::clamp<long>(WebUploadConnsOption().Get(), 0, 3);
+    const auto opt = WebUploadConnsOption().Get();
+    const int conns = web::UploadConnsMax(opt, false);
     if (conns < 2) {
         SendResponse(sock, "403 Forbidden", "text/plain", "disabled");
         return;
@@ -228,7 +230,8 @@ void HandleCreate(Socket sock, const std::string& query) {
     const auto final_name = p->path.toString();
     SendResponse(sock, "200 OK", "application/json",
         "{\"id\":\"" + p->id + "\",\"name\":\"" + JsonEscape(final_name.substr(final_name.find_last_of('/') + 1)) +
-        "\",\"conns\":" + (App::IsApplet() ? std::string("1") : std::to_string(conns)) + "}");
+        "\",\"conns\":" + (App::IsApplet() ? std::string("1") : std::to_string(conns)) +
+        ",\"auto\":" + (web::UploadConnsAuto(opt) ? "true" : "false") + "}");
 }
 
 void HandlePut(Socket sock, const std::string& req, const std::string& query, const std::string& id) {

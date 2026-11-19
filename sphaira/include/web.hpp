@@ -41,7 +41,7 @@ bool WebShareIsRunning();
 // Settings > Network > Web server: called every frame by the main loop. Starts the server when the console is
 // online, keeps it bound across sleep and drops it when the address changes. Does nothing when the option is off.
 void WebShareBackgroundTick();
-// Settings > Network > Upload connections: 0 = off (one connection, as before), 2 or 3 = parts sent in parallel
+// Settings > Network > Upload connections: 0 = off (one connection), 2/3/4/6 = that many parts in parallel, 7 = Auto (the page picks, see web_upload_conns.hpp)
 option::OptionLong& WebUploadConnsOption();
 void WebSetProgressBox(ui::ProgressBox* pbox);
 ui::ProgressBox* WebGetProgressBox();
