@@ -137,21 +137,41 @@ void MountFolderDevices() {
 
 
 const char* INI_PATH = "/config/ftpsrv/config.ini";
-// lowest priority on core 0: at PRIO_PREEMPTIVE on core 2 (shared with nxlink) an enabled FTP server cut the
-// receive speed of every other socket ~3x (LAN download 2 MB/s instead of 6-9). its work is not time critical.
-constexpr int THREAD_PRIO = 0x3F;
-constexpr int THREAD_CORE = 0;
+// at PRIO_PREEMPTIVE on core 2 (shared with nxlink) an enabled FTP server cut the receive speed of every
+// other socket ~3x (LAN download 2 MB/s instead of 6-9). a lower priority is not possible: threadCreate
+// rejects 0x3F with 0xE001 (invalid priority), 0x3B (PRIO_PREEMPTIVE) is the lowest usable one. so the
+// only lever is the core: try core 1 first (off nxlink's core 2). core 0 is skipped: with it FTP did not
+// start (v0.14.418). core 2 stays as the last attempt (old behaviour), so the server always starts.
+struct ThreadAttempt { int core; int prio; };
+constexpr ThreadAttempt THREAD_ATTEMPTS[] = {
+    {1, PRIO_PREEMPTIVE},
+    {2, PRIO_PREEMPTIVE},
+};
 FtpSrvConfig g_ftpsrv_config = {0};
 std::atomic_bool g_should_exit = false;
 bool g_is_running{false}; // guarded by g_mutex (Init/Exit/IsRunning)
 Thread g_thread;
 Mutex g_mutex{};
+std::atomic_int g_pause_count{0}; // PauseForTransfer: > 0 = the listener stays closed
+std::atomic<u64> g_last_activity_ns{0}; // last command/data callback
+
+auto NowNs() -> u64 {
+    return armTicksToNs(armGetSystemTick());
+}
+
+// ponytail: ftpsrv keeps its session count private (static g_ftp), so a callback in the last 2 s stands
+// for "a session is busy". cost: a client idle longer than that is dropped when a web transfer starts.
+auto FtpIdle() -> bool {
+    return NowNs() - g_last_activity_ns.load() > 2'000'000'000ULL;
+}
 
 void ftp_log_callback(enum FTP_API_LOG_TYPE type, const char* msg) {
+    g_last_activity_ns.store(NowNs());
     App::NotifyFlashLed();
 }
 
 void ftp_progress_callback(void) {
+    g_last_activity_ns.store(NowNs());
     App::NotifyFlashLed();
 }
 
@@ -164,6 +184,18 @@ void loop(void* arg) {
         // listener (also covers the ftp server being started offline).
         while (!g_should_exit && !net::IsConnected()) {
             svcSleepThread(1e+9);
+        }
+
+        // a web transfer runs: no listener (and so no session) until it ends.
+        if (g_pause_count.load() > 0) {
+            log_write("[FTP] listener closed for a web transfer\n");
+            while (!g_should_exit && g_pause_count.load() > 0) {
+                svcSleepThread(50'000'000);
+            }
+            log_write("[FTP] listener reopened\n");
+        }
+        if (g_should_exit) {
+            break;
         }
 
         auto resume_gen = net::ResumeGeneration();
@@ -179,6 +211,11 @@ void loop(void* arg) {
             // again. see net::NotifyResume.
             if (net::ResumeGeneration() != resume_gen) {
                 log_write("[FTP] resume detected, restarting listener\n");
+                break;
+            }
+
+            // an FTP transfer in progress finishes first
+            if (g_pause_count.load() > 0 && FtpIdle()) {
                 break;
             }
         }
@@ -275,26 +312,25 @@ bool Init() {
 
     MountFolderDevices();
 
-    Result rc;
-    if (R_FAILED(rc = threadCreate(&g_thread, loop, nullptr, nullptr, 1024*16, THREAD_PRIO, THREAD_CORE))) {
-        log_write("[FTP] failed to create nxlink thread: 0x%X\n", rc);
-        return false;
+    for (const auto& a : THREAD_ATTEMPTS) {
+        Result rc = threadCreate(&g_thread, loop, nullptr, nullptr, 1024*16, a.prio, a.core);
+        if (R_SUCCEEDED(rc)) {
+            if (R_FAILED(rc = svcSetThreadCoreMask(g_thread.handle, a.core, THREAD_AFFINITY_DEFAULT(a.core))) ||
+                R_FAILED(rc = threadStart(&g_thread))) {
+                threadClose(&g_thread);
+            }
+        }
+        if (R_FAILED(rc)) {
+            log_write("[FTP] thread core %d prio 0x%X: 0x%X\n", a.core, a.prio, rc);
+            continue;
+        }
+
+        log_write("[FTP] started on core %d prio 0x%X\n", a.core, a.prio);
+        return g_is_running = true;
     }
 
-    if (R_FAILED(rc = svcSetThreadCoreMask(g_thread.handle, THREAD_CORE, THREAD_AFFINITY_DEFAULT(THREAD_CORE)))) {
-        log_write("[FTP] failed to set core mask: 0x%X\n", rc);
-        threadClose(&g_thread);
-        return false;
-    }
-
-    if (R_FAILED(rc = threadStart(&g_thread))) {
-        log_write("[FTP] failed to start nxlink thread: 0x%X\n", rc);
-        threadClose(&g_thread);
-        return false;
-    }
-
-    log_write("[FTP] started\n");
-    return g_is_running = true;
+    log_write("[FTP] cannot start thread\n");
+    return false;
 }
 
 void Exit() {
@@ -316,6 +352,10 @@ void Exit() {
     log_write("[FTP] exitied\n");
 }
 
+
+void PauseForTransfer(bool pause) {
+    g_pause_count += pause ? 1 : -1;
+}
 
 bool IsRunning() {
     SCOPED_MUTEX(&g_mutex);

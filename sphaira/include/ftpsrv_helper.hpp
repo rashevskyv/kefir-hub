@@ -19,6 +19,11 @@ std::vector<std::string> GetQueuedInstallFiles();
 bool HasMoreQueuedFiles();
 bool HasActiveOrQueuedFiles();
 
+// a web transfer is running: an open FTP listener cuts the receive speed of every other socket 3-6x,
+// so the FTP thread closes it once no FTP session is busy and opens it again when the count is 0.
+// only changes a counter (nested pauses), never blocks.
+void PauseForTransfer(bool pause);
+
 bool IsRunning();
 unsigned GetPort();
 bool IsAnon();

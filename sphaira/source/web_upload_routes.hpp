@@ -2,6 +2,7 @@
 
 #include "web_http.hpp"
 #include "fs.hpp"
+#include "ftpsrv_helper.hpp"
 #include "yati/source/stream.hpp"
 #include <atomic>
 #include <functional>
@@ -43,6 +44,15 @@ auto IsInstallPartId(const std::string& id) -> bool;
 
 // one upload or install at a time; the part upload holds it from "part=new" to "done"
 extern std::atomic_bool g_transfer_busy;
+
+// held for the whole web transfer (with g_transfer_busy): FTP closes its listener meanwhile,
+// an open one cuts the receive speed of every other socket 3-6x. resumes once, when destroyed.
+struct FtpPause {
+    FtpPause() { ftpsrv::PauseForTransfer(true); }
+    ~FtpPause() { ftpsrv::PauseForTransfer(false); }
+    FtpPause(const FtpPause&) = delete;
+    FtpPause& operator=(const FtpPause&) = delete;
+};
 auto UniqueUploadPath(fs::Fs& sd, const fs::FsPath& dir, const std::string& name) -> fs::FsPath;
 
 } // namespace sphaira

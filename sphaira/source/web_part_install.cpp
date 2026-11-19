@@ -112,6 +112,7 @@ void HandleInstallCreate(Socket sock, const std::string& query) {
         return;
     }
     ON_SCOPE_EXIT(g_transfer_busy.store(false));
+    const FtpPause ftp_pause;
 
     auto buf = std::make_shared<PartBuffer>(size, WINDOW);
     {

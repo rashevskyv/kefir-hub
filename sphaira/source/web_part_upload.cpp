@@ -70,6 +70,7 @@ using namespace web::detail;
 constexpr u64 STALE_NS = 30'000'000'000ULL; // a browser that went away without "done"
 
 struct PartUpload {
+    FtpPause ftp_pause; // made right after the slot is taken, resumes FTP when the last reference drops
     std::unique_ptr<fs::Fs> fs;
     fs::FsPath path;
     fs::File file;

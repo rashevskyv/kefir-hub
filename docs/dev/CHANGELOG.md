@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.420 — FTP listener pauses while a web transfer runs
+FTP slowed LAN receive 3-6x while its listener ran (core and priority do not matter; 0x3F priority is invalid). Now the listener closes for the whole web upload/install/part session and reopens after it; an FTP transfer in the last 2 s keeps it open. The FTP thread starts on core 1 (core 2 fallback).
+host tests: not run, nro: built, switch: console LAN pull with FTP on 1.6/2.1 -> 5.1/11.4 MB/s (1/4 conns); web install of a 21 MB DLC ok with 1, 4 and Auto connections; abandoned tab keeps FTP paused until the next part=new (30 s)
+
 ## v0.14.419 — File Browser: "Install all from folder" reads a folder like DBI Backend Qt reads a release
 "Install recursively" is now "Install all from folder". A folder with only packages works as before. A folder with a port (NRO + files or archive), a mod (LayeredFS), game data, a console cache or a save is analysed by a C++ port of the backend's release analyser (`release_plan.hpp`, `release_choice.hpp`): a side panel with one tick per option (defaults as in the backend, language packs by Hub language), then the install queue gets the packages (a mod's own update instead of the newest one) and one row per ticked option. Loose files go through a tar made on the fly (`tar_stream_layout.hpp`) into the unchanged `sd_bundle::Receive`/`ReceiveSave`; an archive on the microSD is extracted in place by its rules (`sd_bundle::ExtractLocal`, new `archive::List`). A file that is already its own target is left alone.
 host tests: pass (quick; new test_release_plan, test_tar_stream_layout; full run: the 3 old failures — 24 languages miss keys (now +12, run tools/i18n-translate), http fixture, 4 old doc labels), nro: not built (console glue is uncompiled), switch: pending (mod with its own update; port NRO + archive on microSD and on a USB drive; zip/7z/rar listing time; cache and save options; a folder already in /switch; several folders at once; network location)

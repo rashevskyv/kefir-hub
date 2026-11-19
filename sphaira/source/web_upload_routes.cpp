@@ -268,6 +268,7 @@ void ReceiveUpload(Socket sock, const std::string& req, const std::string& query
         return;
     }
     ON_SCOPE_EXIT(g_transfer_busy.store(false));
+    const FtpPause ftp_pause;
 
     const auto raw_path = GetQueryValue(query, "path");
     const auto raw_name = GetQueryValue(query, "name");
