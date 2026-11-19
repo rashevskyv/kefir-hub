@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.422 — File Browser: no media player installed -> offer SwitchWave
+Opening a video/audio file with no player on the SD now asks to open the AppStore to install SwitchWave (before: nothing happened). New i18n key in en/uk; other languages need tools/i18n-translate.
+host tests: not run, nro: not built, switch: pending (open an .mkv with NXMP and SwitchWave removed)
+
 ## v0.14.421 — File Browser: SwitchWave is listed before NXMP for video/audio files
 The "Launch option" list sorted launchers by name, so NXMP came first. SwitchWave is now first (after RetroArch/TICO grouping is unchanged); NXMP stays in the list.
 host tests: not run, nro: not built, switch: pending (open an .mkv/.avi/.ts: SwitchWave is the top entry)

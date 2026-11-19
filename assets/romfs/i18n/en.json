@@ -1014,6 +1014,7 @@
   "Play with NXMP": "Play with NXMP",
   "Play the selected media file using NXMP player.": "Play the selected media file using NXMP player.",
   "NXMP not found, open AppStore to install?": "NXMP not found, open AppStore to install?",
+  "No media player found, open AppStore to install SwitchWave?": "No media player found, open AppStore to install SwitchWave?",
   "Add network location": "Add network location",
   "Connecting to SMB...": "Connecting to SMB...",
   "Enter location name (e.g. My NAS)": "Enter location name (e.g. My NAS)",

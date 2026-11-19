@@ -238,6 +238,15 @@ FsView::FsView(Menu* menu, const fs::FsPath& path, const FsEntry& entry, ViewSid
                                 }
                             }
                         );
+                    } else if (path::IsAnyOfIC(entry.GetExtension(), VIDEO_EXTENSIONS) || path::IsAnyOfIC(entry.GetExtension(), AUDIO_EXTENSIONS)) {
+                        // no media player installed: offer SwitchWave from the AppStore.
+                        App::Push<OptionBox>(
+                            "No media player found, open AppStore to install SwitchWave?"_i18n,
+                            "No"_i18n, "Yes"_i18n, 1, [](auto op_index){
+                                if (op_index && *op_index) {
+                                    App::Push<ui::menu::appstore::Menu>(MenuFlag_None);
+                                }
+                            });
                     } else {
                         log_write("assoc list is empty\n");
                     }

@@ -1169,6 +1169,7 @@
   "Play with NXMP": "Відтворити в NXMP",
   "Play the selected media file using NXMP player.": "Відтворити вибраний медіафайл за допомогою плеєра NXMP.",
   "NXMP not found, open AppStore to install?": "NXMP не знайдено, відкрити AppStore для встановлення?",
+  "No media player found, open AppStore to install SwitchWave?": "Медіаплеєр не знайдено. Відкрити AppStore, щоб встановити SwitchWave?",
   "Add network location": "Додати мережеве джерело",
   "Connecting to SMB...": "Підключення до SMB...",
   "Enter location name (e.g. My NAS)": "Введіть назву джерела (наприклад, Мій NAS)",
