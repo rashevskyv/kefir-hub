@@ -253,7 +253,30 @@ Result WriteSaveMember(ui::InstallProgress* p, struct archive* a, SaveTarget& t,
     }
 }
 
+// a port's save that is already on the console stays: a reinstall must not reset progress.
+bool Allowed(fs::Fs& fs, std::string_view path) {
+    return IsWritable(path) && !(IsSaveData(path) && fs.FileExists(fs::AppendPath("/", std::string{path}.c_str())));
+}
+
+// extracts the entries of an archive on the microSD that the rules map.
+Result ExtractRules(ui::InstallProgress* p, fs::Fs& fs, const fs::FsPath& archive_path, const std::vector<Rule>& rules) {
+    const auto map = [&](std::string_view e) -> std::optional<std::string> {
+        auto out = MapEntry(e, rules);
+        if (!out || !Allowed(fs, *out)) {
+            return std::nullopt;
+        }
+        return "/" + *out;
+    };
+    return archive::ExtractMapped(p, &fs, archive_path, map);
+}
+
 } // namespace
+
+Result ExtractLocal(ui::InstallProgress* p, const fs::FsPath& archive_path, const std::vector<Rule>& rules) {
+    p->SetInstallTransfer("Writing files to the microSD"_i18n);
+    fs::FsNativeSd fs;
+    return ExtractRules(p, fs, archive_path, rules);
+}
 
 Result Receive(ui::InstallProgress* p, yati::source::Base* source, s64 size) {
     R_UNLESS(size > 0, Result_ArchiveRead);
@@ -265,10 +288,7 @@ Result Receive(ui::InstallProgress* p, yati::source::Base* source, s64 size) {
     ON_SCOPE_EXIT(archive_read_free(a));
     R_TRY(OpenTar(a, s));
 
-    // a port's save that is already on the console stays: a reinstall must not reset progress.
-    const auto allowed = [&fs](std::string_view path) {
-        return IsWritable(path) && !(IsSaveData(path) && fs.FileExists(fs::AppendPath("/", std::string{path}.c_str())));
-    };
+    const auto allowed = [&fs](std::string_view path) { return Allowed(fs, path); };
 
     std::vector<Rule> rules;
     s64 written{};
@@ -304,14 +324,7 @@ Result Receive(ui::InstallProgress* p, yati::source::Base* source, s64 size) {
             const auto tmp = fs::AppendPath(TMP_DIR, path->substr(META_DIR.size()).c_str());
             R_TRY(WriteMember(p, a, &fs, tmp, s, written));
             ON_SCOPE_EXIT(fs.DeleteFile(tmp));
-            const auto map = [&rules, &allowed](std::string_view e) -> std::optional<std::string> {
-                auto out = MapEntry(e, rules);
-                if (!out || !allowed(*out)) {
-                    return std::nullopt;
-                }
-                return "/" + *out;
-            };
-            R_TRY(archive::ExtractMapped(p, &fs, tmp, map));
+            R_TRY(ExtractRules(p, fs, tmp, rules));
             rules.clear();
             archives++;
         } else if (!allowed(*path)) {

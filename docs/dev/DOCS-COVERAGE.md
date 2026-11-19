@@ -63,7 +63,7 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Install options (3 groups) | Settings → Install | settings_categories.cpp:436-514 | install/index#install-options | doc |
 | Automatic launch-required version reset after game updates | All installation sources | yati.cpp, yati_metadata.cpp | install/index#problems | draft; HOME launch and downgrade checks pending on Switch |
 | Keys check at start + "Dump the keys now?" (hekate autokeys runs Lockpick_RCM), result on the next start, MTP Games readme note | Hub start; after a failed install or dump | keys_dump.cpp, app_startup.cpp, title_nsp.cpp, haze_game_proxy_catalog.cpp, yati.cpp | install/index#problems (draft, shot install-keys-dump [USER]) | draft (v0.14.369, start-up check v0.14.399); switch pending |
-| Install one/several files, recursive folder | File Browser | filebrowser_view.cpp, filebrowser_recursive_install.cpp | install/sd-card | doc |
+| Install one/several files, all from folder (packages, ports, mods, saves) | File Browser | filebrowser_view.cpp, filebrowser_recursive_install.cpp | install/sd-card | doc |
 | Install queue: review, buttons, progress, skip, cancel, summary, errors.txt | Install queue | dbi_*.cpp | install/sd-card#queue | doc |
 | Minimize to badge | R3 | app_frame.cpp:169-230 | install/sd-card#minimize | R3 from any menu since v0.13.962 (was L3); Package target moved to L3 |
 | Screen off during install | − | dbi_menu_options.cpp:249-334, screensaver.cpp | install/sd-card#screen-off | doc |

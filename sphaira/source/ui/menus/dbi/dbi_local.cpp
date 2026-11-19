@@ -3,6 +3,7 @@
 #include "ui/menus/dbi/dbi_internal.hpp"
 #include "ui/menus/install_plan.hpp"
 #include "path_util.hpp"
+#include "save_bundle_rules.hpp"
 #include "app.hpp"
 #include "defines.hpp"
 #include "fs.hpp"
@@ -87,6 +88,18 @@ void Menu::LocalThreadFunction() {
         m_queue.emplace_back(std::move(entry));
     }
 
+    // the files of a release go after its packages; like a bundle from the PC (AnalyzeQueueName).
+    for (size_t j = 0; j < m_local_jobs.size(); j++) {
+        QueueEntry entry{};
+        entry.file_name = m_local_jobs[j].name;
+        entry.source_index = m_local_paths.size() + j;
+        entry.analysis.source_size = entry.analysis.install_size = m_local_jobs[j].size;
+        entry.analysis.suggested_sd = true;
+        entry.target = InstallTarget::Sd;
+        SCOPED_MUTEX(&m_mutex);
+        m_queue.emplace_back(std::move(entry));
+    }
+
     for (;;) {
         if (m_cancel_requested || GetToken().stop_requested()) {
             m_state = State::Cancelled;
@@ -147,7 +160,10 @@ void Menu::LocalThreadFunction() {
             if (!selected) continue;
             if (m_cancel_requested) break;
 
-            const auto go = CheckQueuedUpdate(i, final_pass);
+            const auto src_idx = m_queue[i].source_index;
+            const auto job = src_idx >= m_local_paths.size() ? &m_local_jobs[src_idx - m_local_paths.size()] : nullptr;
+            const bool save_job = job && save_bundle::KindOf(name) != save_bundle::Kind::None;
+            const auto go = save_job ? CheckSaveBundle(name, final_pass) : CheckQueuedUpdate(i, final_pass);
             if (!go) {
                 order.Defer(i);
                 continue;
@@ -171,10 +187,13 @@ void Menu::LocalThreadFunction() {
             const auto read_before = m_total_read.load();
             const auto write_before = m_total_write.load();
 
-            const auto src_idx = m_queue[i].source_index;
             Result result{};
-            if (src_idx >= m_local_paths.size()) {
-                result = FsError_PathNotFound;
+            if (job) {
+                {
+                    SCOPED_MUTEX(&m_mutex);
+                    m_skip_gate.Open(i);
+                }
+                result = job->run(this, m_save_uid);
             } else if (analysis_deferred) {
                 {
                     SCOPED_MUTEX(&m_mutex);

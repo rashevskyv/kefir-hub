@@ -9,7 +9,7 @@ Kefir Hub installs games, game updates and DLC from package files. This page hel
 
 Consoles running sysMMC display a warning before any installation begins to highlight what Nintendo can detect, which online services face potential bans, and why emuMMC offers a safer environment. The dialog provides three options: selecting [[Back]] cancels the installation; choosing [[Install]] proceeds with the process while causing the warning to appear again during future attempts; and clicking [[Don't show again]] disables the reminder entirely and starts the installation.
 
-This warning precedes installations initiated via the File Browser (such as using Install, Install recursively, or pressing **A** on an NSP or XCI file), the Install Forwarder within both the File Browser and Homebrew, Ownfoil, Console Transfer when receiving games, and PC Install via USB. By contrast, MTP and network stream methods—including FTP and the web server—bypass this prompt.
+This warning precedes installations initiated via the File Browser (such as using Install, Install all from folder, or pressing **A** on an NSP or XCI file), the Install Forwarder within both the File Browser and Homebrew, Ownfoil, Console Transfer when receiving games, and PC Install via USB. By contrast, MTP and network stream methods—including FTP and the web server—bypass this prompt.
 
 To re-enable the warning later, navigate to [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]], or access the same option through the sidebar menu via Menu (**Y**) → Advanced → Install options. This corresponds to the `install_ban_warning` configuration key, which defaults to on.
 

@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace sphaira::rar {
 enum class Error;
@@ -27,5 +28,8 @@ using EntryMap = std::function<std::optional<std::string>(std::string_view entry
 // Extracts the files `map` places (folders are made for them); progress through the install
 // interface, so an install session (DBI USB) can run it on its own thread.
 Result ExtractMapped(ui::InstallProgress* progress, fs::Fs* fs, const fs::FsPath& archive_path, const EntryMap& map);
+
+// The names of the files in the archive: headers only, nothing is written.
+Result List(ui::InstallProgress* progress, fs::Fs* fs, const fs::FsPath& archive_path, std::vector<std::string>& names);
 
 } // namespace sphaira::archive

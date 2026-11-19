@@ -178,9 +178,9 @@ void FsView::DisplayOptions() {
         }
 #if ENABLE_NETWORK_INSTALL
         if (!GetRecursiveInstallTargets().empty()) {
-            options->Add<SidebarEntryCallback>("Install recursively"_i18n, [this](){
+            options->Add<SidebarEntryCallback>("Install all from folder"_i18n, [this](){
                 App::ConfirmInstall([this](){ InstallFolderRecursively(); });
-            }, "Scan selected folder(s) recursively for packages and open the install queue."_i18n);
+            }, "Scan the selected folder(s) and install what is there: games, updates, DLC, ports, mods, game data and saves."_i18n);
         }
 #endif
     }

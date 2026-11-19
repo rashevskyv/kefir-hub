@@ -20,18 +20,35 @@
 
 Пункт [[Install]] з'являється, лише коли всі вибрані елементи — файли NSP, NSZ, XCI або XCZ.
 
-<!-- shot: install-sd-card-browser-options | File Browser options menu with Install and Install recursively, three NSP files selected -->
+<!-- shot: install-sd-card-browser-options | File Browser options menu with Install and Install all from folder, three NSP files selected -->
 
 ## Встановіть цілу папку {#folder}
 
 Kefir Hub може знайти пакети в папці та всіх її підпапках.
 
 1. У файловому менеджері виділіть папку. Щоб узяти кілька папок, позначте їх кнопкою **X**.
-2. Натисніть **+** і виберіть [[Install recursively]].
+2. Натисніть **+** і виберіть [[Install all from folder]].
 3. Поки триває пошук, видно [[Scanning...]]. Щоб зупинити, натисніть **B**.
 4. Відкриється [[Install queue]] з усіма знайденими пакетами.
 
-Якщо пакетів у папках немає, з'явиться [[No packages found.]]. У списку дисків і всередині архіву пункту [[Install recursively]] немає.
+Якщо пакетів у папках немає, з'явиться [[No packages found.]]. У списку дисків і всередині архіву пункту [[Install all from folder]] немає.
+
+<!-- draft
+- the item "Install recursively" is renamed [[Install all from folder]]; the same item now also installs what is in the folder besides packages
+- a folder with only packages (NSP, NSZ, XCI, XCZ) works as before: the [[Install queue]] opens with every package
+- a folder that also holds a port, a mod, game data or a save is read like a release in DBI Backend Qt: a side panel opens with one tick per option, grouped by game; the usual options are ticked already
+- option kinds in the panel: [[Port]] (an NRO with its files, goes to /switch/<name>/), [[Game data]], [[Mod]] (LayeredFS files, go to /atmosphere/contents/<title ID>/), [[Game cache]] and [[Save data]] (written into the game's cache or the user's save)
+- a mod that comes with its own game update: that update is queued, not the newest one in the folder (a newer update breaks the mod)
+- language packs: the one in the Hub language is ticked, else English
+- archives (7z, zip, rar) in the folder are opened to see what they hold; they are extracted straight to the right place; on a network location archives are not opened
+- [[Install]] in the panel opens the [[Install queue]]: packages first, then each ticked option as its own row
+- a save that is already on the console is kept (ports and user saves); a file already in its place on the microSD is left as it is
+- two ticked mods that need different updates: a message asks to change the choice
+- nothing ticked and no packages: [[Nothing to install.]]
+- on a network location a data archive of a port is not installed (archives are not opened there): copy the folder to the microSD first
+-->
+
+<!-- shot: install-sd-card-folder-choice | Install all from folder side panel: a game header, ticked Port and Mod options, Install at the top -->
 
 ## Перегляньте чергу {#queue}
 
@@ -138,7 +155,7 @@ Kefir Hub може знайти пакети в папці та всіх її п
 
 ## Проблеми {#problems}
 
-**У меню параметрів немає пункту встановлення.** Не всі вибрані елементи — файли для встановлення. Зніміть вибір із папок та інших файлів або скористайтеся [[Install recursively]] для папок.
+**У меню параметрів немає пункту встановлення.** Не всі вибрані елементи — файли для встановлення. Зніміть вибір із папок та інших файлів або скористайтеся [[Install all from folder]] для папок.
 
 **Черга каже, що нічого не вибрано.** З'являється [[Select at least one package]]: усі пакети або не вибрані, або не пройшли перевірку. Виберіть пакет кнопкою **X**.
 

@@ -15,7 +15,7 @@ Kefir Hub встановлює ігри, оновлення та DLC з файл
 - [[Install]] починає встановлення; наступного разу попередження зʼявиться знову.
 - [[Don't show again]] вимикає попередження і починає встановлення.
 
-Попередження зʼявляється перед кожним встановленням з таких джерел: файловий менеджер (Install, Install recursively, **A** на файлі NSP або XCI), Install Forwarder у файловому менеджері та в Homebrew, Ownfoil, Console Transfer (отримання ігор) і PC Install (USB). Встановлення через MTP і мережеві потоки (FTP, веб-сервер) попередження не показують.
+Попередження зʼявляється перед кожним встановленням з таких джерел: файловий менеджер (Install, Install all from folder, **A** на файлі NSP або XCI), Install Forwarder у файловому менеджері та в Homebrew, Ownfoil, Console Transfer (отримання ігор) і PC Install (USB). Встановлення через MTP і мережеві потоки (FTP, веб-сервер) попередження не показують.
 
 Щоб увімкнути попередження знову: [[Tools]] → [[Settings]] → [[Install]] → [[Ban warning on sysMMC]]. Цей самий параметр є в бічному меню: Menu (**Y**) → Advanced → Install options. Ключ в ini: `install_ban_warning`. Типово: увімкнено.
 

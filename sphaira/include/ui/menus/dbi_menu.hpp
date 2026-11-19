@@ -11,6 +11,7 @@
 #include "yati/source/usb.hpp"
 #include "yati/yati.hpp"
 #include <array>
+#include <functional>
 #include <optional>
 #include <unordered_map>
 
@@ -60,6 +61,15 @@ struct QueueEntry {
     // queues it once more (Retry). Unticked first, so a failed package the PC
     // still shows ticked is not retried in a loop.
     bool retry_armed{};
+};
+
+// a local queue entry that is not a package: files of a release (a port, a mod, a save) that
+// `run` writes. The name is a bundle name (sd_bundle_rules.hpp, save_bundle_rules.hpp); a save
+// bundle gets the user the queue asked for.
+struct LocalJob {
+    std::string name{};
+    s64 size{};
+    std::function<Result(InstallProgress*, const AccountUid&)> run{};
 };
 
 // how a session-log line is drawn: events are bold, results are coloured.
@@ -312,7 +322,8 @@ struct Menu final : InstallSession {
     Menu(u32 flags);
     // a link the usb probe already opened, with the host's first file list.
     Menu(u32 flags, std::unique_ptr<yati::source::Usb> source, std::vector<std::string> names);
-    Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes = {}, bool defer_analysis = false);
+    Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes = {}, bool defer_analysis = false,
+         std::vector<LocalJob> jobs = {});
     ~Menu();
 
     auto GetShortTitle() const -> const char* override { return "DBI"; }
@@ -359,6 +370,7 @@ private:
     fs::Fs* m_local_fs{};
     std::vector<fs::FsPath> m_local_paths{};
     std::vector<s64> m_local_source_sizes{};
+    std::vector<LocalJob> m_local_jobs{}; // queued after the packages
     bool m_defer_local_analysis{};
     std::unique_ptr<List> m_list{};
     bool m_was_mtp_enabled{};

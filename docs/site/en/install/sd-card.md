@@ -20,18 +20,35 @@ On sysMMC Kefir Hub shows the ban warning before the install queue opens. See [B
 
 [[Install]] appears only when every selected item is an NSP, NSZ, XCI or XCZ file.
 
-<!-- shot: install-sd-card-browser-options | File Browser options menu with Install and Install recursively, three NSP files selected -->
+<!-- shot: install-sd-card-browser-options | File Browser options menu with Install and Install all from folder, three NSP files selected -->
 
 ## Install a whole folder {#folder}
 
 Kefir Hub can search a folder and all its subfolders for packages.
 
 1. In the File Browser, highlight a folder. To use several folders, select them with **X**.
-2. Press **+** and select [[Install recursively]].
+2. Press **+** and select [[Install all from folder]].
 3. Kefir Hub shows [[Scanning...]] while it searches. Press **B** to stop.
 4. The [[Install queue]] opens with every package it found.
 
-If the folders hold no packages, you see [[No packages found.]]. [[Install recursively]] is not offered in the list of drives or inside an archive.
+If the folders hold no packages, you see [[No packages found.]]. [[Install all from folder]] is not offered in the list of drives or inside an archive.
+
+<!-- draft
+- the item "Install recursively" is renamed [[Install all from folder]]; the same item now also installs what is in the folder besides packages
+- a folder with only packages (NSP, NSZ, XCI, XCZ) works as before: the [[Install queue]] opens with every package
+- a folder that also holds a port, a mod, game data or a save is read like a release in DBI Backend Qt: a side panel opens with one tick per option, grouped by game; the usual options are ticked already
+- option kinds in the panel: [[Port]] (an NRO with its files, goes to /switch/<name>/), [[Game data]], [[Mod]] (LayeredFS files, go to /atmosphere/contents/<title ID>/), [[Game cache]] and [[Save data]] (written into the game's cache or the user's save)
+- a mod that comes with its own game update: that update is queued, not the newest one in the folder (a newer update breaks the mod)
+- language packs: the one in the Hub language is ticked, else English
+- archives (7z, zip, rar) in the folder are opened to see what they hold; they are extracted straight to the right place; on a network location archives are not opened
+- [[Install]] in the panel opens the [[Install queue]]: packages first, then each ticked option as its own row
+- a save that is already on the console is kept (ports and user saves); a file already in its place on the microSD is left as it is
+- two ticked mods that need different updates: a message asks to change the choice
+- nothing ticked and no packages: [[Nothing to install.]]
+- on a network location a data archive of a port is not installed (archives are not opened there): copy the folder to the microSD first
+-->
+
+<!-- shot: install-sd-card-folder-choice | Install all from folder side panel: a game header, ticked Port and Mod options, Install at the top -->
 
 ## Review the queue {#queue}
 
@@ -138,7 +155,7 @@ All other install options are in Settings, see [Install options](index.md#instal
 
 ## Problems {#problems}
 
-**The install item is missing from the options menu.** Not every selected item is an installable file. Unselect folders and other files, or use [[Install recursively]] for folders.
+**The install item is missing from the options menu.** Not every selected item is an installable file. Unselect folders and other files, or use [[Install all from folder]] for folders.
 
 **The queue says nothing is selected.** You see [[Select at least one package]]: every package is unselected or failed the check. Select one with **X**.
 

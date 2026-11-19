@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fs.hpp"
+#include "sd_bundle_rules.hpp"
 #include "ui/install_progress.hpp"
 #include "yati/source/base.hpp"
 
@@ -8,6 +10,10 @@ namespace sphaira::sd_bundle {
 // Reads a microSD bundle (sd_bundle_rules.hpp) of `size` bytes from `source` as one forward
 // stream and writes its files to the microSD. Archives in it are extracted with their rules.
 Result Receive(ui::InstallProgress* progress, yati::source::Base* source, s64 size);
+
+// The same for an archive that already is on the microSD: extracts the entries `rules` map,
+// with the rules Receive has for what may be written.
+Result ExtractLocal(ui::InstallProgress* progress, const fs::FsPath& archive_path, const std::vector<Rule>& rules);
 
 // Reads a save bundle (save_bundle_rules.hpp) the same way and writes it into the game's cache
 // storages (Kind::Cache, `uid` unused) or into `uid`'s save (Kind::Account). A missing storage is

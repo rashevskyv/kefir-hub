@@ -199,7 +199,7 @@ card.
 1. Open [[Tools]] → [[Settings]] → [[Sources]] → [[+ Add network location]] and set up the server.
    See [Settings](../settings.md#sources).
 2. Select the location. It opens in the [File Browser](../file-browser.md).
-3. Select the game files, press **+** and choose [[Install]] (or [[Install recursively]] for a whole folder).
+3. Select the game files, press **+** and choose [[Install]] (or [[Install all from folder]] for a whole folder).
 4. The install queue opens. Continue as in [Review the queue](sd-card.md#queue).
 
 ## Problems {#problems}

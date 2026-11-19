@@ -154,9 +154,9 @@ Menu::Menu(u32 flags, std::unique_ptr<yati::source::Usb> source, std::vector<std
     }
 }
 
-Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes, bool defer_analysis)
+Menu::Menu(u32 flags, fs::Fs* fs, std::vector<fs::FsPath> paths, std::vector<s64> source_sizes, bool defer_analysis, std::vector<LocalJob> jobs)
     : InstallSession{"Install queue"_i18n, flags, TransportOrigin::Dbi}, m_local_fs{fs}, m_local_paths{std::move(paths)},
-      m_local_source_sizes{std::move(source_sizes)}, m_defer_local_analysis{defer_analysis} {
+      m_local_source_sizes{std::move(source_sizes)}, m_local_jobs{std::move(jobs)}, m_defer_local_analysis{defer_analysis} {
     m_state = State::Analysing;
 
     m_session_skip_if_already_installed = App::GetApp()->m_skip_if_already_installed.Get();

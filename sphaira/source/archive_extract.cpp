@@ -377,4 +377,31 @@ Result ExtractMapped(ui::InstallProgress* progress, fs::Fs* fs, const fs::FsPath
     return Run(progress, fs, archive_path, place);
 }
 
+Result List(ui::InstallProgress* progress, fs::Fs* fs, const fs::FsPath& archive_path, std::vector<std::string>& names) {
+    if (const auto rar_path = RarPath(fs, archive_path)) {
+        rar::Reader r;
+        R_TRY(RarResult(r.Open(*rar_path, false)));
+        while (true) {
+            R_TRY(progress->CheckCancelled());
+            rar::Entry e;
+            bool end{};
+            R_TRY(RarResult(r.Next(&e, &end)));
+            if (end) {
+                R_SUCCEED();
+            }
+            if (e.is_file) {
+                names.push_back(e.name);
+            }
+            R_TRY(RarResult(r.Skip({})));
+        }
+    }
+    // nothing is placed, so every entry is skipped: only the headers are read.
+    return Run(progress, fs, archive_path, [&names](const char* name, bool raw, bool is_dir) -> std::optional<fs::FsPath> {
+        if (!raw && !is_dir) {
+            names.emplace_back(name);
+        }
+        return std::nullopt;
+    });
+}
+
 } // namespace sphaira::archive

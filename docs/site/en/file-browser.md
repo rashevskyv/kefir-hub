@@ -274,7 +274,7 @@ These appear in [[File Options]] (**+**) or [[Advanced Options]] when they fit t
 
 | Action | What it does | See |
 |---|---|---|
-| [[Install]], [[Install recursively]] | Install the selected games, or every game in the selected folders | [Install from the memory card](install/sd-card.md) |
+| [[Install]], [[Install all from folder]] | Install the selected games, or every game in the selected folders | [Install from the memory card](install/sd-card.md) |
 | [[Restore save data]] | Restore a save backup file or folder to the console | [Saves](saves.md) |
 | [[Launch payload]] | Reboot the console into a `.bin` payload through Hekate | |
 | [[Mount]], [[Unmount]] | Share the current folder with a PC over MTP, FTP or a browser | [Sharing](sharing.md) |
