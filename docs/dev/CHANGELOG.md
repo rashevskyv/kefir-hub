@@ -3,6 +3,11 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.418 — FTP server thread no longer slows the other sockets
+FTP thread moved from core 2 / PRIO_PREEMPTIVE to core 0 / lowest priority. Measured on the console (libcurl LAN download, 4 connections): FTP on 2 MB/s -> 8.4 MB/s, FTP off 9.4 MB/s.
+host tests: not run, nro: built (with a temporary diagnostic route, removed), switch: pending (clean build not measured)
+
+
 ## v0.14.417 — Web upload: Auto number of connections (default), up to 6, 8 server workers
 The page starts with 2 connections and adds one while the speed grows by 8%, drops one when it no longer pays 4% (re-probes every 12 s); `?conns=N` in the address forces a fixed number. Measured on Wi-Fi (PC to console): 1 connection 5.5–5.8 MB/s, Auto 7.7–9.5, plateau ~10 from 3 connections; SD write is only ~10% of it, a smaller receive window is worse, a bigger one is much worse (2 MB: 2.6 MB/s).
 host tests: pass | nro: built | switch: pending — cancel mid-file, tab closed, an install with Auto, Applet Mode (1 connection)

@@ -137,8 +137,10 @@ void MountFolderDevices() {
 
 
 const char* INI_PATH = "/config/ftpsrv/config.ini";
-constexpr int THREAD_PRIO = PRIO_PREEMPTIVE;
-constexpr int THREAD_CORE = 2;
+// lowest priority on core 0: at PRIO_PREEMPTIVE on core 2 (shared with nxlink) an enabled FTP server cut the
+// receive speed of every other socket ~3x (LAN download 2 MB/s instead of 6-9). its work is not time critical.
+constexpr int THREAD_PRIO = 0x3F;
+constexpr int THREAD_CORE = 0;
 FtpSrvConfig g_ftpsrv_config = {0};
 std::atomic_bool g_should_exit = false;
 bool g_is_running{false}; // guarded by g_mutex (Init/Exit/IsRunning)
