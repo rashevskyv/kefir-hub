@@ -51,6 +51,8 @@ inline constexpr GithubApp GITHUB_APPS[] = {
         "ModCD.nro", "/switch/ModCD/ModCD.nro", "romfs:/theme/modcd.jpg", false},
     {"SimpleModDownloader", "Game mods from GameBanana.", "Downloading SimpleModDownloader...", "PoloNX/SimpleModDownloader",
         "SimpleModDownloader.nro", "/switch/SimpleModDownloader/SimpleModDownloader.nro", "romfs:/theme/simplemoddownloader.jpg", false},
+    {"NXLoad", "Game catalog and download manager.", "Downloading NXLoad...", "Small182/NXLoad",
+        "NXLoad.nro", "/switch/NXLoad/NXLoad.nro", "romfs:/theme/nxload.jpg", false},
 };
 
 inline auto GithubDownloadUrl(const GithubApp& app) -> std::string {

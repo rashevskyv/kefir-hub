@@ -18,6 +18,8 @@ int main() {
     // the apps of the Software menu update from their own GitHub release, found by the nro path
     assert(SourceOf("/switch/UAPlay.nro", hub) == AppSource::Github);
     assert(SourceOf("/switch/modcd/MODCD.nro", hub) == AppSource::Github);
+    assert(SourceOf("/switch/NXLoad/NXLoad.nro", hub) == AppSource::Github);
+    assert(GithubDownloadUrl(*FindGithubApp("/switch/nxload/nxload.nro")) == "https://github.com/Small182/NXLoad/releases/latest/download/NXLoad.nro");
     assert(SourceOf("/switch/UAPlay/UAPlay.nro", hub) == AppSource::Store);
     for (const auto& app : GITHUB_APPS) {
         assert(FindGithubApp(app.nro_path) == &app);
