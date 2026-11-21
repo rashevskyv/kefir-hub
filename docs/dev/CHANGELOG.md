@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.395 — Prelude-Nextendo v5.0.2 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
 ## v0.14.394 — save backup drops idle MTP Saves mounts first
 A writable MTP mount of a save may lock the backup's read-only open; the backup now calls ReleaseSaveMounts() first (a save the PC has open stays locked). Note on the journal limit in WriteFile. Correction to v0.14.393: tests/run.sh has 2 failures that already fail at v0.14.392 (EN/UK key parity: 3 extra UK keys; archive.org demo fixture is HTML, not JSON); all other suites pass.
 host tests: quick green; full: only the 2 old failures | nro: built (local compile check; release NRO from CI) | switch: pending (back up a save the PC browsed over MTP; a file larger than the save journal fails on the PC)
