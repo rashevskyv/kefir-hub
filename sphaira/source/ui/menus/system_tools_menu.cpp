@@ -162,7 +162,7 @@ void SaveFavourites(const std::vector<web::Favourite>& list) {
 }
 
 void OpenUrl(const std::string& url) {
-    if (R_FAILED(WebShow(url))) {
+    if (R_FAILED(WebShow(url)) && !App::IsApplet()) { // in Applet Mode WebShow already showed the Title Mode help
         App::Push<ui::OptionBox>("The browser could not start. It needs the full memory: start Kefir Hub from a game (hold R while launching it)."_i18n, "OK"_i18n);
     }
 }
@@ -196,6 +196,11 @@ void AddFavourite(const std::function<void()>& reopen) {
 }
 
 void OpenBrowser() {
+    // in Applet Mode the browser hangs: the page is not even shown
+    if (App::IsApplet()) {
+        App::ShowTitleModeHelp("Web browser"_i18n);
+        return;
+    }
     // the system web applet of firmware 20.0.0 to 22.5.0 asks for a system update and opens no page: say so instead
     if (!web::BrowserWorks(HOSVER_MAJOR(hosversionGet()), HOSVER_MINOR(hosversionGet()), HOSVER_MICRO(hosversionGet()))) {
         App::Push<ui::OptionBox>("The browser needs firmware 23.0.1 or newer. Update the firmware in the Updater first."_i18n, "OK"_i18n);
@@ -271,12 +276,12 @@ auto ToolItems() -> std::vector<settings::SettingsItem> {
     std::vector<settings::SettingsItem> items {
         settings::MakeHeader("Diagnostics"_i18n),
         Tool("System information"_i18n, "Firmware, Atmosphere and console details."_i18n, sysinfo::Open),
+        Tool("Internet speed test"_i18n, "Download from the internet and show the real speed: HTTP, HTTPS, one and four connections."_i18n, speedtest::Open),
         Tool("Check game updates"_i18n, "Find installed games that have a newer update."_i18n, game_updates::Open),
         settings::MakeHeader("Settings"_i18n),
         Tool("Module Manager"_i18n, "Start, stop and configure installed sysmodules."_i18n, [](){
             App::Push<ui::menu::hats::UninstallerMenu>();
         }),
-        Tool("Internet speed test"_i18n, "Download from the internet and show the real speed: HTTP, HTTPS, one and four connections."_i18n, speedtest::Open),
         Tool("Fan curve"_i18n, "Edit Atmosphere tskin fan curves for handheld and docked modes."_i18n, [](){
             ui::menu::settings::OpenFanCurveMenu();
         }),

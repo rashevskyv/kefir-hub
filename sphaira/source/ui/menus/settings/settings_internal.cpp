@@ -247,7 +247,7 @@ auto DrawSettingsIndicator(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsI
         nvgFill(vg);
         return true;
     }
-    if (item.lamp) {
+    if (item.lamp && item.kind != SettingsItemKind::Folder) { // a folder row draws it after the label
         const float d = 9.f; // radius
         const float cx = right - d;
         nvgBeginPath(vg);
@@ -287,7 +287,8 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
     const auto label_id = selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
     const auto value = item.value ? item.value() : std::string{};
     // a switch or a lamp alone is narrow; only a text value needs the wide column
-    const auto value_width = !value.empty() ? 224.f : ((item.tri || item.lamp) ? 90.f : 0.f);
+    const bool label_lamp = item.lamp && item.kind == SettingsItemKind::Folder;
+    const auto value_width = !value.empty() ? 224.f : ((item.tri || (item.lamp && !label_lamp)) ? 90.f : 0.f);
 
     if (selected) {
         gfx::drawRect(vg, v, theme->GetColour(ThemeEntryID_SELECTED_BACKGROUND), 5.f);
@@ -304,6 +305,15 @@ void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem
         vg, text_x, v.y + 10.f, 20.f, v.w - 18.f - value_width - text_offset,
         theme->GetColour(label_id), item.label.c_str()
     );
+    if (label_lamp) {
+        float bounds[4];
+        nvgFontSize(vg, 20.f);
+        gfx::textBounds(vg, 0, 0, bounds, item.label.c_str());
+        nvgBeginPath(vg);
+        nvgCircle(vg, text_x + (bounds[2] - bounds[0]) + 16.f, v.y + 22.f, 7.f);
+        nvgFillColor(vg, IndicatorColour(item.lamp()));
+        nvgFill(vg);
+    }
     if (!item.description.empty()) {
         gfx::drawTextBox(
             vg, text_x, v.y + 39.f, 14.f, v.w - 18.f - value_width - text_offset,

@@ -30,6 +30,8 @@
 #include <unordered_set>
 
 #include "ui/progress_box.hpp"
+#include "ui/menus/settings/settings_fs_utils.hpp"
+#include "fs.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -337,7 +339,43 @@ auto CreateQrImage(const std::string& url) -> int {
     return nvgCreateImageRGBA(App::GetVg(), image_size, image_size, 0, rgba.data());
 }
 
+namespace {
+
+// What dns_mitm does with Nintendo names on this boot (Kefir patch 0010): on the emuMMC, or with a Nextendo hosts
+// file, every *nintendo* name no hosts rule matches goes to 127.0.0.1. Logged before the browser starts, because
+// the browser shows only "This function is unavailable" when a server it needs is blocked.
+void LogDnsState() {
+    using ui::menu::settings::detail::ReadTextFile;
+    const char* hosts = "/atmosphere/hosts/default.txt";
+    const char* own = App::IsEmummc() ? "/atmosphere/hosts/emummc.txt" : "/atmosphere/hosts/sysmmc.txt";
+    if (fs::FsNativeSd().FileExists(own)) {
+        hosts = own;
+    }
+    const auto text = ReadTextFile(hosts);
+    const bool nextendo = text.find("NEXTENDO NETWORK - Atmosphere DNS-MITM") != std::string::npos;
+    log_write("[web] dns: hosts %s (%zu bytes, nextendo mark %d), *nintendo* -> 127.0.0.1 fallback %d\n",
+              hosts, text.size(), nextendo, App::IsEmummc() || nextendo);
+    const auto ini = ReadTextFile("/atmosphere/config/system_settings.ini");
+    for (std::size_t pos = 0; pos < ini.size();) {
+        const auto end = std::min(ini.find('\n', pos), ini.size());
+        const auto line = ini.substr(pos, end - pos);
+        if (line.find("dns") != std::string::npos && line.find(';') != 0) {
+            log_write("[web] dns: %s\n", line.c_str());
+        }
+        pos = end + 1;
+    }
+}
+
+} // namespace
+
 auto WebShow(const std::string& url) -> Result {
+    // the browser needs the full memory: in Applet Mode it hangs instead of opening
+    if (App::IsApplet()) {
+        App::ShowTitleModeHelp("Web browser"_i18n);
+        R_THROW(MAKERESULT(Module_Libnx, LibnxError_IncompatSysVer));
+    }
+    LogDnsState();
+
     WebCommonConfig config{};
     WebCommonReply reply{};
     WebExitReason reason{};
@@ -383,10 +421,14 @@ auto WebShow(const std::string& url) -> Result {
     // if (R_FAILED(webConfigSetBootLoadingIcon(&config, true))) { log_write("failed: webConfigSetBootLoadingIcon\n"); }
     if (R_FAILED(webConfigSetUid(&config, account_uid))) { log_write("failed: webConfigSetUid\n"); }
 
-    if (R_FAILED(webConfigShow(&config, &reply))) { log_write("failed: webConfigShow\n"); }
+    const auto rc = webConfigShow(&config, &reply);
+    if (R_FAILED(rc)) {
+        log_write("[web] webConfigShow failed 0x%X\n", rc);
+        R_THROW(rc);
+    }
     if (R_FAILED(webReplyGetExitReason(&reply, &reason))) { log_write("failed: webReplyGetExitReason\n"); }
     if (R_FAILED(webReplyGetLastUrl(&reply, last_url, sizeof(last_url), &last_url_len))) { log_write("failed: webReplyGetLastUrl\n"); }
-    log_write("last url: %s\n", last_url);
+    log_write("[web] exit reason %u, last url: %s\n", static_cast<unsigned>(reason), last_url);
     R_SUCCEED();
 }
 

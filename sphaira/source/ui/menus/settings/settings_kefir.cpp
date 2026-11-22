@@ -6,6 +6,7 @@
 #include "ui/menus/settings/settings_translations.hpp"
 #include "ui/menus/settings/settings_tweaks.hpp"
 #include "hats_version.hpp"
+#include "nextendo_apply.hpp"
 #include "version_compare.hpp"
 
 #include "app.hpp"
@@ -249,6 +250,8 @@ auto BuildKefirItems() -> std::vector<SettingsItem> {
         },
         SettingsItemKind::Folder,
     });
+    // green = on, red = off; drawn right after the label, the arrow keeps the right edge
+    items.back().lamp = [](){ return ::sphaira::nextendo::Active() ? 1 : 0; };
 
     items.emplace_back(SettingsItem{
         "Translate Interface"_i18n,

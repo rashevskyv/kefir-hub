@@ -306,8 +306,9 @@ void Menu::Draw(NVGcontext* vg, Theme* theme) {
     }
 
     if (m_candidates.empty()) {
-        gfx::drawTextArgs(vg, SCREEN_WIDTH / 2.f, LIST_POS.y + LIST_POS.h / 2.f, 24.f, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE, theme->GetColour(ThemeEntryID_TEXT_INFO), "%s",
-            "No Ownfoil servers saved.\n\nPress X to add one by hand, or search the network below."_i18n.c_str());
+        constexpr float box_w = 900.f;
+        gfx::drawTextBox(vg, (SCREEN_WIDTH - box_w) / 2.f, LIST_POS.y + LIST_POS.h / 2.f - 60.f, 24.f, box_w, theme->GetColour(ThemeEntryID_TEXT_INFO),
+            "No Ownfoil servers saved.\n\nPress X to add one by hand, or search the network below."_i18n.c_str(), NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
     } else {
         m_list->Draw(vg, theme, m_candidates.size(), m_focus_discover ? List::NO_FOCUS : m_index, [this](NVGcontext* vg, Theme* theme, const Vec4& v, s64 index) {
             const auto& [x, y, w, h] = v;

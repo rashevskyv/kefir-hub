@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.423 — build checkpoint: earlier uncommitted work goes into the build
+Commits the tree changes that were only in local builds: Applet Mode shows the Title Mode help for the web browser instead of hanging, with a DNS/exit-reason log before and after the browser; Settings folder rows draw their lamp (Nextendo) right after the label; the Ownfoil empty-list text wraps in a box; the downgrade fix script calls `reboot_ofw()`. Also the first build with v0.14.416, .419, .421, .422 and NXLoad.
+host tests: pass (quick) | nro: built (0.14.423) | switch: pending — Applet Mode: Tools → Web browser shows the help, no hang; Settings → Kefir: Nextendo lamp after the label; Ownfoil with no servers; downgrade fix end; plus the pending items of 0.14.416, .419, .421, .422 and NXLoad.
+
 ## v0.14.422 — File Browser: no media player installed -> offer SwitchWave
 Opening a video/audio file with no player on the SD now asks to open the AppStore to install SwitchWave (before: nothing happened). New i18n key in en/uk; other languages need tools/i18n-translate.
 host tests: not run, nro: not built, switch: pending (open an .mkv with NXMP and SwitchWave removed)

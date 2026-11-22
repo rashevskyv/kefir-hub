@@ -51,7 +51,7 @@ goHekate = {
         color(0xFFFFFF)
         println("Rebooting in 3 seconds...")
         sleep(3000)
-        reboot()
+        reboot_ofw()
     }
 }
 
