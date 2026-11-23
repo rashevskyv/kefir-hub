@@ -13,7 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+# the repository the script runs in, not the one it lives in: the robot runs a copy from /tmp
+ROOT = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip())
 CMAKE = "sphaira/CMakeLists.txt"
 CHANGELOG = "docs/dev/CHANGELOG.md"
 VERSION = re.compile(r"set\(sphaira_VERSION (\d+(?:\.\d+){2,3})\)")  # robot releases add a 4th number
