@@ -4396,5 +4396,7 @@
   "This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.": "Ця картинка не вміщується в місце для іконки гри навіть у низькій якості. Спробуйте простішу картинку.",
   "Could not change the game": "Не вдалося змінити гру",
   "Put back the game's own name, publisher, version and icon?": "Повернути рідну назву, видавця, версію та іконку гри?",
-  "Could not restore the game": "Не вдалося відновити гру"
+  "Could not restore the game": "Не вдалося відновити гру",
+  "Kefir Hub runs as your Homebrew Menu (/hbmenu.nro). A second copy is not needed:": "Kefir Hub працює як ваше Homebrew-меню (/hbmenu.nro). Друга копія не потрібна:",
+  "Don't remind": "Не нагадувати"
 }

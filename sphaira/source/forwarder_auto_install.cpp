@@ -378,7 +378,7 @@ auto PointHubForwarderAtHbmenu() -> bool {
     if (!IsInstalled(KEFIR_HUB_FORWARDER_TID)) {
         return true;
     }
-    if (!App::GetReplaceHbmenuEnable()) {
+    if (!App::GetReplaceHbmenuEnable() && !App::IsHbmenu()) {
         return false; // the target would be this executable, not /hbmenu.nro
     }
     return InstallKefirHubForwarder(KEFIR_HUB_FORWARDER_TID);

@@ -22,6 +22,7 @@
 #include "forwarder_auto_install.hpp"
 #include "ui/first_start.hpp"
 #include "ui/menus/main_menu.hpp"
+#include "ui/menus/homebrew.hpp"
 #include "ui/menus/install_stream_menu_base.hpp"
 #include "utils/devoptab_common.hpp"
 #include "utils/devoptab_curl_thread.hpp"
@@ -683,6 +684,8 @@ App::App(const char* argv0) {
         // a full page over the menu (which is not drawn under it), not a list
         // dropped onto a screen the user has not been introduced to.
         App::Push<ui::FirstStart>();
+    } else {
+        ui::menu::homebrew::OfferDeleteHubNro();
     }
 #if DOCS_DEMO
     demo::StartScene();

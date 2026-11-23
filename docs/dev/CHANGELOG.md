@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.425 — Started as /hbmenu.nro, the Hub offers to delete its copy in /switch
+When Kefir Hub runs as the Homebrew Menu and `/switch/kefir-hub.nro` (or `/switch/kefir-hub/kefir-hub.nro`) is also Kefir Hub, a dialog at start offers Cancel / Delete / Don't remind (`[hub_copy] no_remind` in config.ini). Delete first points the Hub HOME icon at /hbmenu.nro, as the Homebrew list delete does.
+host tests: pass (quick) | nro: not built | switch: pending — start from Album with a copy in /switch: dialog; Delete removes it and the HOME icon still starts; Don't remind stops the dialog.
+
 ## v0.14.424 — Edit an installed game's name, publisher, version and icon
 Games → START (Game Options) and Game details → Game Actions get "Edit name and icon": one screen for the name, publisher, version and icon (written into the Control NCA, so the HOME menu shows them; needs sigpatches), with rows for Language and Restrictions. A tap on the icon in Game details opens it. The first change keeps the original NCA in `/config/kefir/control_original/`; "Restore original name and icon" puts it back. A big picture is re-encoded until it fits the game's icon slot; NACP v2 games (name in the newer format) change only the icon and version.
 host tests: pass (quick) | nro: not built | switch: pending — edit name + icon, check the list, details and HOME menu (after a restart); restore; a NACP v2 game (BotW); a picture from SteamGridDB and from the file browser.

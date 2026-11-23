@@ -213,17 +213,8 @@ auto Menu::OfferDeleteHubCopy(const NroEntry& e) -> bool {
             }
             // a thread: the icon reinstall takes a few seconds. The file is deleted only after
             // the icon is known to point at /hbmenu.nro.
-            App::Push<ProgressBox>(0, "Deleting"_i18n, "", [path](auto pbox) -> Result {
-                if (!forwarder_auto::PointHubForwarderAtHbmenu()) {
-                    R_THROW(Result_FsInvalidType);
-                }
-                fs::FsNativeSd fs;
-                const auto star_path = GenerateStarPath(path);
-                if (fs.FileExists(star_path)) {
-                    R_TRY(fs.DeleteFile(star_path));
-                }
-                R_TRY(fs.DeleteFile(path));
-                R_SUCCEED();
+            App::Push<ProgressBox>(0, "Deleting"_i18n, "", [path](auto) -> Result {
+                return DeleteHubCopy(path);
             }, [this](Result rc){
                 if (R_FAILED(rc)) {
                     App::PushErrorBox(rc, "Delete failed!"_i18n);
@@ -235,6 +226,74 @@ auto Menu::OfferDeleteHubCopy(const NroEntry& e) -> bool {
         }, e.image
     );
     return true;
+}
+
+Result DeleteHubCopy(const fs::FsPath& path) {
+    if (!forwarder_auto::PointHubForwarderAtHbmenu()) {
+        R_THROW(Result_FsInvalidType);
+    }
+    fs::FsNativeSd fs;
+    const auto star_path = GenerateStarPath(path);
+    if (fs.FileExists(star_path)) {
+        R_TRY(fs.DeleteFile(star_path));
+    }
+    R_TRY(fs.DeleteFile(path));
+    R_SUCCEED();
+}
+
+void OfferDeleteHubNro() {
+    static constexpr const char* SECTION = "hub_copy";
+    if (!App::IsHbmenu() || ini_getbool(SECTION, "no_remind", 0, App::CONFIG_PATH)) {
+        return;
+    }
+    if (R_FAILED(nsInitialize())) {
+        return;
+    }
+    ON_SCOPE_EXIT(nsExit());
+    std::vector<fs::FsPath> copies;
+    for (const char* p : {"/switch/kefir-hub.nro", "/switch/kefir-hub/kefir-hub.nro"}) {
+        NacpStruct nacp{};
+        if (R_FAILED(nro_get_nacp(p, nacp)) || !IsKefirHubNacp(nacp)) {
+            continue;
+        }
+        // a HOME tile made for this very file would stop working: say nothing (as OfferDeleteHubCopy).
+        bool own_tile = false;
+        if (R_SUCCEEDED(nsIsAnyApplicationEntityInstalled(owo_default_title_id(p, p), &own_tile)) && own_tile) {
+            continue;
+        }
+        copies.emplace_back(p);
+    }
+    // the Kefir Hub HOME icon is pointed at /hbmenu.nro before the delete; that needs the emuMMC.
+    if (copies.empty() || (forwarder_auto::IsHubForwarderInstalled() && !App::IsEmummc())) {
+        return;
+    }
+    std::string list;
+    for (const auto& p : copies) {
+        list += "\n" + p.toString();
+    }
+    App::Push<OptionBox>(
+        "Kefir Hub runs as your Homebrew Menu (/hbmenu.nro). A second copy is not needed:"_i18n + list,
+        "Cancel"_i18n, "Delete"_i18n, "Don't remind"_i18n, 1, [copies](auto op_index){
+            if (!op_index || !*op_index) {
+                return;
+            }
+            if (*op_index == 2) {
+                ini_putl(SECTION, "no_remind", 1, App::CONFIG_PATH);
+                return;
+            }
+            App::Push<ProgressBox>(0, "Deleting"_i18n, "", [copies](auto) -> Result {
+                for (const auto& p : copies) {
+                    R_TRY(DeleteHubCopy(p));
+                }
+                R_SUCCEED();
+            }, [](Result rc){
+                if (R_FAILED(rc)) {
+                    App::PushErrorBox(rc, "Delete failed!"_i18n);
+                } else {
+                    App::Notify("Delete successful!"_i18n);
+                }
+            });
+        });
 }
 
 void Menu::DeleteHomebrew(const DeletePlan& plan, bool with_folder) {

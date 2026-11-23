@@ -165,4 +165,9 @@ private:
     option::OptionBool m_updater_stub_hidden{INI_SECTION, "kefir_updater_hidden", false};
 };
 
+// deletes a second copy of Kefir Hub (and its star file); the Hub HOME icon is pointed at /hbmenu.nro first.
+Result DeleteHubCopy(const fs::FsPath& path);
+// started as /hbmenu.nro with a Kefir Hub copy in /switch: asks Cancel / Delete / Don't remind.
+void OfferDeleteHubNro();
+
 } // namespace sphaira::ui::menu::homebrew
