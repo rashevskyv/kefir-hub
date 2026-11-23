@@ -7,11 +7,16 @@
 #include "yati/nx/ncm.hpp"
 #include "yati/nx/ns.hpp"
 #include "app.hpp"
+#include "app_paths.hpp"
+#include "fs.hpp"
 
 #include <minIni.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdio>
 #include <cstring>
+#include <functional>
 #include <memory>
 
 namespace sphaira::control_patch {
@@ -110,20 +115,41 @@ Result PatchNca(std::vector<u8>& nca, const nacp_patch::Patch& patch, bool& chan
     const auto& data_level = levels.back();
     R_UNLESS(data_level.offset + data_level.size <= sec_size, Result_NcaBadMagic);
 
-    const std::span<const u8> romfs{sec + data_level.offset, data_level.size};
+    const std::span<u8> romfs{sec + data_level.offset, data_level.size};
     const auto file = nacp_patch::FindRomfsFile(romfs, "control.nacp");
     R_UNLESS(file && file->second >= nacp_patch::NACP_SIZE && file->first + nacp_patch::NACP_SIZE <= data_level.size, Result_NcaBadMagic);
 
+    // the whole image is checked and rehashed: an icon may change anywhere in it, and a control
+    // RomFS is small.
     const std::span<u8> section{sec, sec_size};
     bool master_exact = false;
-    if (!nacp_patch::Rehash(section, levels, ivfc.master_hash, file->first, nacp_patch::NACP_SIZE, Sha256, true, master_exact)) {
+    if (!nacp_patch::Rehash(section, levels, ivfc.master_hash, 0, data_level.size, Sha256, true, master_exact)) {
         log_write("[CONTROL] ivfc layout not understood, not patching\n");
         R_THROW(Result_NcaBadMagic);
     }
 
-    changed = nacp_patch::Apply({sec + data_level.offset + file->first, nacp_patch::NACP_SIZE}, patch);
+    changed = nacp_patch::Apply({romfs.data() + file->first, nacp_patch::NACP_SIZE}, patch);
+    if (patch.icon) {
+        auto icons = nacp_patch::ListRomfsFiles(romfs);
+        std::erase_if(icons, [](const auto& f){ return !nacp_patch::IsIconFile(f.name); });
+        R_UNLESS(!icons.empty(), Result_NcaBadMagic);
+        u64 room = icons.front().capacity;
+        for (const auto& f : icons) {
+            room = std::min(room, f.capacity);
+        }
+        const auto jpeg = patch.icon(room);
+        if (jpeg.empty() || jpeg.size() > room) {
+            log_write("[CONTROL] icon does not fit %lu bytes\n", room);
+            R_THROW(Result_IconTooLarge);
+        }
+        for (const auto& f : icons) {
+            R_UNLESS(nacp_patch::ReplaceRomfsFile(romfs, f, jpeg), Result_IconTooLarge);
+        }
+        log_write("[CONTROL] icon %zu bytes into %zu slots of %lu\n", jpeg.size(), icons.size(), room);
+        changed = true;
+    }
     if (changed) {
-        nacp_patch::Rehash(section, levels, ivfc.master_hash, file->first, nacp_patch::NACP_SIZE, Sha256, false, master_exact);
+        nacp_patch::Rehash(section, levels, ivfc.master_hash, 0, data_level.size, Sha256, false, master_exact);
         Sha256(reinterpret_cast<const u8*>(&fsh), sizeof(fsh), hdr.fs_header_hash[idx].sha256);
     }
     if (encrypted) {
@@ -144,7 +170,23 @@ Result ReadState(u64 app_id, nacp_patch::State& out) {
     R_SUCCEED();
 }
 
-Result PatchInstalled(u64 app_id, const nacp_patch::Patch& patch) {
+namespace {
+
+static_assert(offsetof(NacpStruct, titles_data_format) == nacp_patch::OFF_TITLES_DATA_FORMAT);
+static_assert(offsetof(NacpStruct, display_version) == nacp_patch::OFF_DISPLAY_VERSION);
+
+// the control NCA as it was before the first name or icon change, one file per content id.
+auto OriginalPath(const NcmContentId& id) -> fs::FsPath {
+    char hex[33]{};
+    for (int i = 0; i < 16; i++) {
+        std::snprintf(hex + i * 2, 3, "%02x", id.c[i]);
+    }
+    return fs::FsPath{(paths::DATA_ROOT + "/control_original/" + hex + ".nca").c_str()};
+}
+
+// every installed Control NCA of the game: base and update, SD and NAND.
+using ControlFn = std::function<Result(NcmContentStorage*, const NcmContentMetaKey&, const NcmContentId&)>;
+Result ForEachControl(u64 app_id, const ControlFn& fn) {
     u32 found{};
     for (const auto storage_id : {NcmStorageId_SdCard, NcmStorageId_BuiltInUser}) {
         NcmContentStorage cs{};
@@ -168,22 +210,78 @@ Result PatchInstalled(u64 app_id, const nacp_patch::Patch& patch) {
             if (R_FAILED(ncmContentMetaDatabaseGetContentIdByType(&db, &id, &key, NcmContentType_Control))) {
                 continue;
             }
-            std::vector<u8> nca;
-            R_TRY(ReadContent(&cs, id, nca));
-            bool changed{};
-            R_TRY(PatchNca(nca, patch, changed));
-            if (changed) {
-                R_TRY(WriteContent(&cs, id, nca));
-            }
+            R_TRY(fn(&cs, key, id));
             found++;
-            log_write("[CONTROL] %016lX v%u control %s\n", key.id, key.version, changed ? "patched" : "already so");
         }
     }
     R_UNLESS(found, FsError_PathNotFound);
+    R_SUCCEED();
+}
+
+// the HOME menu and ns read the new control data on their next look.
+Result Invalidated(u64 app_id, Result rc) {
     if (ns::AppManager am; am) {
         ns::InvalidateApplicationControlCache(am.get(), app_id);
     }
-    R_SUCCEED();
+    return rc;
+}
+
+} // namespace
+
+bool HasOriginal(u64 app_id) {
+    fs::FsNativeSd sd;
+    bool has = false;
+    std::ignore = ForEachControl(app_id, [&](auto*, const auto&, const NcmContentId& id) -> Result {
+        has = has || sd.FileExists(OriginalPath(id));
+        R_SUCCEED();
+    });
+    return has;
+}
+
+Result RestoreOriginal(u64 app_id) {
+    // the restrictions set since then stay: they are applied to the original again.
+    nacp_patch::State now{};
+    R_TRY(ReadState(app_id, now));
+    nacp_patch::Patch keep;
+    keep.linked_account_required = now.linked_account_required;
+    keep.screenshots_allowed = now.screenshots_allowed;
+    keep.video_allowed = now.video_allowed;
+
+    fs::FsNativeSd sd;
+    return Invalidated(app_id, ForEachControl(app_id, [&](NcmContentStorage* cs, const NcmContentMetaKey& key, const NcmContentId& id) -> Result {
+        const auto path = OriginalPath(id);
+        std::vector<u8> nca;
+        if (R_FAILED(sd.read_entire_file(path, nca))) {
+            R_SUCCEED(); // never changed, or changed by an older Hub
+        }
+        bool changed{};
+        R_TRY(PatchNca(nca, keep, changed));
+        R_TRY(WriteContent(cs, id, nca));
+        std::ignore = sd.DeleteFile(path);
+        log_write("[CONTROL] %016lX v%u control restored\n", key.id, key.version);
+        R_SUCCEED();
+    }));
+}
+
+Result PatchInstalled(u64 app_id, const nacp_patch::Patch& patch) {
+    fs::FsNativeSd sd;
+    return Invalidated(app_id, ForEachControl(app_id, [&](NcmContentStorage* cs, const NcmContentMetaKey& key, const NcmContentId& id) -> Result {
+        std::vector<u8> nca;
+        R_TRY(ReadContent(cs, id, nca));
+        const auto original = patch.EditsTitle() ? nca : std::vector<u8>{};
+        bool changed{};
+        R_TRY(PatchNca(nca, patch, changed));
+        if (changed) {
+            // kept before the first name or icon change, so "Restore original" has it.
+            if (const auto path = OriginalPath(id); !original.empty() && !sd.FileExists(path)) {
+                std::ignore = sd.CreateDirectoryRecursivelyWithPath(path);
+                R_TRY(sd.write_entire_file(path, original));
+            }
+            R_TRY(WriteContent(cs, id, nca));
+        }
+        log_write("[CONTROL] %016lX v%u control %s\n", key.id, key.version, changed ? "patched" : "already so");
+        R_SUCCEED();
+    }));
 }
 
 namespace {

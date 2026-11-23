@@ -15,10 +15,19 @@ struct Values {
     std::vector<u8> icon;
     ForwarderOptions options{};
     bool include_platform{false};
+    bool icon_changed{false}; // the user picked a new icon
 };
 
 // return true to close the editor, false to keep it open (validation failed).
 using CreateCallback = std::function<bool(const Values& values)>;
+
+// a row that opens its own dialog and applies at once (not on submit).
+struct Link {
+    std::string label;
+    std::function<std::string()> value;
+    std::function<void()> open;
+    std::string hint{};
+};
 
 struct Config {
     Values values;
@@ -31,6 +40,7 @@ struct Config {
     bool show_version{};
     bool show_platform_title{};
     bool show_forwarder_options{true};
+    std::vector<Link> links{}; // shown after the other rows, before the submit row
     CreateCallback on_create;
 };
 

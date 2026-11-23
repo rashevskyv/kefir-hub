@@ -11,6 +11,7 @@
 #include "ui/menus/game_list_info.hpp"
 #include "ui/menus/game/game_internal.hpp"
 #include "ui/menus/game/game_details.hpp"
+#include "ui/menus/game/game_edit.hpp"
 #include "ui/menus/save_menu.hpp"
 #include "ui/menus/console_games_transfer.hpp"
 #include "ui/sidebar.hpp"
@@ -182,6 +183,7 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
                     std::to_string(targets.size()) + " " + "selected"_i18n);
 
                 if (targets.size() == 1) {
+                    AddEditGameEntries(options.get(), &m_entries, targets.front().app_id);
                     options->Add<SidebarEntryCallback>("List meta records"_i18n, [this](){
                     title::MetaEntries meta_entries;
                     const auto target = GetSelectedEntries().front();

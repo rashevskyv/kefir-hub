@@ -4378,5 +4378,20 @@
   "first byte": "first byte",
   "no data": "no data",
   "Web server": "Web server",
-  "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.": "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open."
+  "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.": "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.",
+  "Restore original name and icon": "Restore original name and icon",
+  "Name, publisher, version and icon, also in the HOME menu; language and restrictions. Needs sigpatches.": "Name, publisher, version and icon, also in the HOME menu; language and restrictions. Needs sigpatches.",
+  "Put back what the game came with. Restrictions stay as they are.": "Put back what the game came with. Restrictions stay as they are.",
+  "Current icon": "Current icon",
+  "Console language": "Console language",
+  "Saving": "Saving",
+  "Restoring": "Restoring",
+  "Restored": "Restored",
+  "Could not read the game's control data": "Could not read the game's control data",
+  "This game keeps its name in a newer format: only the icon and version change": "This game keeps its name in a newer format: only the icon and version change",
+  "Saved. The HOME menu may show it after a restart": "Saved. The HOME menu may show it after a restart",
+  "This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.": "This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.",
+  "Could not change the game": "Could not change the game",
+  "Put back the game's own name, publisher, version and icon?": "Put back the game's own name, publisher, version and icon?",
+  "Could not restore the game": "Could not restore the game"
 }

@@ -4381,5 +4381,20 @@
   "first byte": "перший байт",
   "no data": "немає даних",
   "Web server": "Веб-сервер",
-  "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.": "Веб-сервер працює у фоні, як FTP: відкрийте адресу консолі в браузері, щоб надсилати чи завантажувати файли. Вимкнено = він працює лише поки відкрите його вікно."
+  "Run the web server in the background, like FTP: open the console's address in a browser to send or download files. Off = it runs only while its window is open.": "Веб-сервер працює у фоні, як FTP: відкрийте адресу консолі в браузері, щоб надсилати чи завантажувати файли. Вимкнено = він працює лише поки відкрите його вікно.",
+  "Restore original name and icon": "Повернути рідну назву та іконку",
+  "Name, publisher, version and icon, also in the HOME menu; language and restrictions. Needs sigpatches.": "Назва, видавець, версія та іконка, також у HOME-меню; мова та обмеження. Потрібні сигпатчі.",
+  "Put back what the game came with. Restrictions stay as they are.": "Повернути те, що було в грі від початку. Обмеження лишаються як є.",
+  "Current icon": "Поточна іконка",
+  "Console language": "Мова консолі",
+  "Saving": "Збереження",
+  "Restoring": "Відновлення",
+  "Restored": "Відновлено",
+  "Could not read the game's control data": "Не вдалося прочитати дані гри (control)",
+  "This game keeps its name in a newer format: only the icon and version change": "Ця гра зберігає назву в новому форматі: зміняться лише іконка та версія",
+  "Saved. The HOME menu may show it after a restart": "Збережено. HOME-меню може показати зміни після перезапуску",
+  "This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.": "Ця картинка не вміщується в місце для іконки гри навіть у низькій якості. Спробуйте простішу картинку.",
+  "Could not change the game": "Не вдалося змінити гру",
+  "Put back the game's own name, publisher, version and icon?": "Повернути рідну назву, видавця, версію та іконку гри?",
+  "Could not restore the game": "Не вдалося відновити гру"
 }

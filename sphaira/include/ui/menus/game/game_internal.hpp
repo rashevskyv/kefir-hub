@@ -96,6 +96,8 @@ auto FormatLastPlayed(u64 posix_seconds) -> std::string;
 // stat rows: left column label at x=265 (value at 372), right column at x=810
 // (value at 917). the cells below wrap those two columns row by row.
 inline constexpr float STAT_ROW_Y[]{178.f, 207.f, 236.f, 265.f};
+// the game icon on Game details; a tap opens Edit name and icon.
+inline constexpr Vec4 COVER{50.f, 108.f, 190.f, 190.f};
 inline constexpr Vec4 HEADER_CELL[HeaderItem_Count]{
     {256.f, STAT_ROW_Y[2] - 6.f, 530.f, 28.f}, // languages
     {256.f, STAT_ROW_Y[3] - 6.f, 530.f, 28.f}, // mods folder

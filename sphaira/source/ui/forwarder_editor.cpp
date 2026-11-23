@@ -39,6 +39,7 @@ enum class Row {
     VideoCapture,
     SvcDebug,
     Create,
+    Link, // Link + k is links[k]
 };
 
 class Editor final : public Widget {
@@ -54,6 +55,7 @@ public:
     , m_show_version{config.show_version}
     , m_show_platform_title{config.show_platform_title}
     , m_show_forwarder_options{config.show_forwarder_options}
+    , m_links{std::move(config.links)}
     , m_on_create{std::move(config.on_create)} {
         SetActions(
             std::make_pair(Button::A, Action{"Select"_i18n, [this](){ Activate(); }}),
@@ -77,6 +79,9 @@ public:
             m_rows.emplace_back(Row::Screenshot);
             m_rows.emplace_back(Row::VideoCapture);
             m_rows.emplace_back(Row::SvcDebug);
+        }
+        for (size_t k = 0; k < m_links.size(); k++) {
+            m_rows.emplace_back(static_cast<Row>(static_cast<int>(Row::Link) + static_cast<int>(k)));
         }
         m_rows.emplace_back(Row::Create);
 
@@ -274,6 +279,10 @@ private:
             ChooseIconSource();
             return;
         }
+        if (const auto* link = LinkOf(m_rows[m_index])) {
+            link->open();
+            return;
+        }
 
         switch (m_rows[m_index]) {
             case Row::Title:
@@ -338,6 +347,8 @@ private:
                 break;
             case Row::Create:
                 Create();
+                break;
+            case Row::Link:
                 break;
         }
     }
@@ -437,6 +448,7 @@ private:
 
     void SetIcon(std::vector<u8> icon, std::string source) {
         m_values.icon = std::move(icon);
+        m_values.icon_changed = true;
         m_icon_source = std::move(source);
         UpdatePreview();
     }
@@ -468,7 +480,15 @@ private:
         }
     }
 
+    auto LinkOf(Row row) const -> const Link* {
+        const auto k = static_cast<int>(row) - static_cast<int>(Row::Link);
+        return k >= 0 && k < static_cast<int>(m_links.size()) ? &m_links[k] : nullptr;
+    }
+
     auto GetRowLabel(Row row) const -> std::string {
+        if (const auto* link = LinkOf(row)) {
+            return link->label;
+        }
         switch (row) {
             case Row::Title: return m_title_label;
             case Row::IncludePlatform: return "Include platform in title"_i18n;
@@ -479,13 +499,16 @@ private:
             case Row::CpuCores: return "CPU Cores"_i18n;
             case Row::Screenshot: return "Screenshots"_i18n;
             case Row::VideoCapture: return "Video Capture"_i18n;
-            case Row::Create: return {};
+            case Row::Create: case Row::Link: return {};
             case Row::SvcDebug: return "svcDebug"_i18n;
         }
         return {};
     }
 
     auto GetRowHint(Row row) const -> std::string {
+        if (const auto* link = LinkOf(row)) {
+            return link->hint;
+        }
         if (row == Row::AddressSpace) {
             return "How much virtual memory the app gets. Leave Automatic (39-bit). 42-bit is the widest, but such a forwarder may not start (it did not on 23.0.1); try it only on purpose. 36-bit: only if an old app does not start. 32-bit and 32-bit (no alias): only when the app itself asks for it (Wine-NX, Box64)."_i18n;
         }
@@ -493,6 +516,9 @@ private:
     }
 
     auto GetRowValue(Row row) const -> std::string {
+        if (const auto* link = LinkOf(row)) {
+            return link->value ? link->value() : std::string{};
+        }
         switch (row) {
             case Row::Title: return m_values.title;
             case Row::IncludePlatform: return m_values.include_platform ? "Enabled"_i18n : "Disabled"_i18n;
@@ -515,7 +541,7 @@ private:
                     return "Off (needs screenshots)"_i18n;
                 }
                 return m_values.options.video_capture ? "Enabled"_i18n : "Disabled"_i18n;
-            case Row::Create: return {};
+            case Row::Create: case Row::Link: return {};
             case Row::SvcDebug:
                 switch (m_values.options.svc_debug_mode) {
                     case ForwarderSvcDebugMode::Automatic: return "Automatic"_i18n;
@@ -539,6 +565,7 @@ private:
     const bool m_show_version;
     const bool m_show_platform_title;
     const bool m_show_forwarder_options;
+    const std::vector<Link> m_links;
     const CreateCallback m_on_create;
     std::vector<Row> m_rows;
     std::unique_ptr<List> m_list;

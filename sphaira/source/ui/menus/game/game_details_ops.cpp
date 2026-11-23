@@ -5,6 +5,7 @@
 #include "romfs_pack.hpp"
 #include "repack/repack.hpp"
 #include "control_patch.hpp"
+#include "ui/menus/game/game_edit.hpp"
 #include "ui/list.hpp"
 #include "ui/sidebar.hpp"
 #include "ui/option_box.hpp"
@@ -59,34 +60,7 @@ void DbiDetailsMenu::BrowseSdPath(const fs::FsPath& path) {
     }
 
 void DbiDetailsMenu::ShowRestrictions() {
-    const auto app_id = CurrentEntry().app_id;
-    nacp_patch::State state;
-    if (const auto rc = control_patch::ReadState(app_id, state); R_FAILED(rc)) {
-        App::PushErrorBox(rc, "Could not read the game's restrictions"_i18n);
-        return;
-    }
-    const auto apply = [app_id](nacp_patch::Patch patch) {
-        App::Push<ProgressBox>(0, "Restrictions"_i18n, "", [app_id, patch](auto) -> Result {
-            return control_patch::PatchInstalled(app_id, patch);
-        }, [](Result rc){
-            if (R_SUCCEEDED(rc)) {
-                App::Notify("Applies on the next launch"_i18n);
-            } else {
-                App::PushErrorBox(rc, "Could not change the restrictions"_i18n);
-            }
-        });
-    };
-    auto sidebar = std::make_unique<Sidebar>("Restrictions"_i18n, Sidebar::Side::RIGHT);
-    sidebar->Add<SidebarEntryBool>("Linked Nintendo Account required"_i18n, state.linked_account_required, [apply](bool& v){
-        apply({.linked_account_required = v});
-    }, "Off lets the game start without a linked Nintendo Account."_i18n);
-    sidebar->Add<SidebarEntryBool>("Screenshots allowed"_i18n, state.screenshots_allowed, [apply](bool& v){
-        apply({.screenshots_allowed = v});
-    });
-    sidebar->Add<SidebarEntryBool>("Video capture allowed"_i18n, state.video_allowed, [apply](bool& v){
-        apply({.video_allowed = v});
-    }, "Also allows screenshots."_i18n);
-    App::Push(std::move(sidebar));
+    ShowGameRestrictions(CurrentEntry().app_id);
 }
 
 auto DbiDetailsMenu::ForcedLanguageText() const -> std::string {
@@ -98,26 +72,9 @@ auto DbiDetailsMenu::ForcedLanguageText() const -> std::string {
 }
 
 void DbiDetailsMenu::ShowForceLanguage() {
-    // "Off" first, then only the languages the game has.
-    PopupList::Items items{"Off"_i18n};
-    s64 current{};
-    for (size_t i = 0; i < m_language_idx.size(); i++) {
-        const auto& lang = forced_language::LANGS[m_language_idx[i]];
-        items.emplace_back(i18n::get(lang.name));
-        if (forced_language::IndexOf(m_forced_language) == m_language_idx[i]) {
-            current = static_cast<s64>(i + 1);
-        }
-    }
-    App::Push<PopupList>("Force language"_i18n, items, [this](auto op_index){
-        if (!op_index) {
-            return;
-        }
-        const auto code = *op_index ? forced_language::LANGS[m_language_idx[*op_index - 1]].code : "";
-        if (!forced_language::Set(CurrentEntry().app_id, code)) {
-            App::Notify("Could not save the language"_i18n);
-        }
+    ShowGameLanguage(CurrentEntry().app_id, m_language_idx, [this](){
         m_forced_language = forced_language::Get(CurrentEntry().app_id);
-    }, current);
+    });
 }
 
 void DbiDetailsMenu::LoadGame() {
@@ -331,6 +288,7 @@ void DbiDetailsMenu::ShowGameActions() {
         auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
         options->Add<SidebarEntryCallback>("Launch"_i18n, [this](){ LaunchEntry(CurrentEntry()); }, "Launch this game."_i18n)->SetIcon(ActionIcon::Launch);
+        AddEditGameEntries(options.get(), m_entries, CurrentEntry().app_id);
 
         const auto& entry = CurrentEntry();
 

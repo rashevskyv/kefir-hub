@@ -16,8 +16,16 @@ Result PatchNca(std::vector<u8>& nca, const nacp_patch::Patch& patch, bool& chan
 Result ReadState(u64 app_id, nacp_patch::State& out);
 
 // patches every installed Control NCA of the game (base and update, SD and NAND) and re-registers
-// it under the same content id.
+// it under the same content id. Before the first name, version or icon change the original NCA is
+// kept in /config/kefir/control_original/<content id>.nca. An icon that cannot be made small
+// enough for its slot gives Result_IconTooLarge.
 Result PatchInstalled(u64 app_id, const nacp_patch::Patch& patch);
+
+// a kept original exists for an installed control NCA of the game.
+bool HasOriginal(u64 app_id);
+// puts the kept originals back (name, publisher, version, icon) with today's restrictions, and
+// deletes them. A game update brings a new control NCA, which has no original kept.
+Result RestoreOriginal(u64 app_id);
 
 // install-time switches (Settings → Install), kept in the Hub config.ini, not in App.
 bool GetInstallNoLinkedAccount();

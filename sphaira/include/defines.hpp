@@ -288,6 +288,7 @@ enum class SphairaResult : Result {
     ArchivePassword,
     // compressing an installed game (hbp engine) failed; the engine's text says why.
     CompressFailed,
+    IconTooLarge,
 };
 
 #define MAKE_SPHAIRA_RESULT_ENUM(x) Result_##x =  MAKERESULT(Module_Sphaira, (Result)SphairaResult::x)
@@ -441,6 +442,7 @@ enum : Result {
     MAKE_SPHAIRA_RESULT_ENUM(ArchiveSolidRar),
     MAKE_SPHAIRA_RESULT_ENUM(ArchivePassword),
     MAKE_SPHAIRA_RESULT_ENUM(CompressFailed),
+    MAKE_SPHAIRA_RESULT_ENUM(IconTooLarge),
 };
 
 #undef MAKE_SPHAIRA_RESULT_ENUM

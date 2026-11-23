@@ -399,7 +399,7 @@ auto ImageResize(std::span<const u8> data, int inx, int iny, int outx, int outy)
     return {};
 }
 
-auto ImageConvertToJpg(std::span<const u8> data, int x, int y) -> ImageResult {
+auto ImageConvertToJpg(std::span<const u8> data, int x, int y, int quality) -> ImageResult {
     if (x <= 0 || y <= 0) {
         log_write("ImageConvertToJpg: invalid dimensions %dx%d\n", x, y);
         return {};
@@ -439,7 +439,7 @@ auto ImageConvertToJpg(std::span<const u8> data, int x, int y) -> ImageResult {
         std::memcpy(write_ctx->out.data() + current_size, chunk_data, chunk_size);
     };
 
-    if (stbi_write_jpg_to_func(cb, &ctx, x, y, BPP, data.data(), 100) && !ctx.overflow && !ctx.out.empty()) {
+    if (stbi_write_jpg_to_func(cb, &ctx, x, y, BPP, data.data(), quality) && !ctx.overflow && !ctx.out.empty()) {
         log_write("did jpg convert\n");
         return { std::move(ctx.out), x, y };
     }

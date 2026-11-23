@@ -1,4 +1,5 @@
 #include "ui/menus/game/game_details_internal.hpp"
+#include "ui/menus/game/game_edit.hpp"
 #include "ui/menus/game_menu.hpp"
 #include "ui/list.hpp"
 #include "ui/nvg_util.hpp"
@@ -67,6 +68,11 @@ void DbiDetailsMenu::Update(Controller* controller, TouchInfo* touch) {
 
         // a tap on a summary cell focuses and opens it, from either region.
         if (touch->is_clicked) {
+            // a tap on the icon changes it (and the name).
+            if (touch->in_range(COVER)) {
+                ShowEditGame(m_entries, CurrentEntry().app_id);
+                return;
+            }
             for (u8 i = 0; i < HeaderItem_Count; i++) {
                 if (touch->in_range(HEADER_CELL[i])) {
                     m_header_index = i;
@@ -141,7 +147,7 @@ void DbiDetailsMenu::Draw(NVGcontext* vg, Theme* theme) {
         const auto grid = theme->GetColour(ThemeEntryID_GRID);
 
         gfx::drawRect(vg, 30, 90, 1220, 550, grid, 5.f);
-        const Vec4 cover{50, 108, 190, 190};
+        const auto& cover = COVER;
         gfx::drawImage(vg, cover, entry.image ? entry.image : App::GetDefaultImage(), 7.f);
         DrawGameBadges(vg, theme, cover, entry);
 

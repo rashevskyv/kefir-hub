@@ -38,6 +38,7 @@ struct ThreadData {
     void Run();
     void Close();
     void Clear();
+    void Forget(u64 app_id);
 
     void PushAsync(u64 id);
     auto GetAsync(u64 app_id) -> ThreadResultData*;
@@ -62,6 +63,8 @@ private:
     std::vector<u64> m_ids{};
     // control data pushed to the queue.
     std::vector<std::unique_ptr<ThreadResultData>> m_result{};
+    // ids whose control data changed: the next load skips the title cache and refills it.
+    std::vector<u64> m_fresh{};
 
     std::atomic_bool m_running{};
 };
@@ -193,6 +196,12 @@ void ThreadData::Clear() {
     nxtcWipeCache();
 }
 
+void ThreadData::Forget(u64 app_id) {
+    SCOPED_MUTEX(&m_mutex_result);
+    std::erase_if(m_result, [app_id](const auto& e){ return e->id == app_id; });
+    m_fresh.emplace_back(app_id);
+}
+
 void ThreadData::PushAsync(u64 id) {
     SCOPED_MUTEX(&m_mutex_id);
     SCOPED_MUTEX(&m_mutex_result);
@@ -240,7 +249,12 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
     constexpr bool demo_title = false;
 #endif
 
-    auto data = demo_title ? nullptr : nxtcGetApplicationMetadataEntryById(app_id);
+    bool fresh{};
+    {
+        SCOPED_MUTEX(&m_mutex_result);
+        fresh = std::erase(m_fresh, app_id) > 0;
+    }
+    auto data = demo_title || fresh ? nullptr : nxtcGetApplicationMetadataEntryById(app_id);
     // a NACP v2 entry cached raw (deflated bytes, "E" for Zelda BotW): load it again.
     if (data && IsRawNacpName(data->name)) {
         nxtcFreeApplicationMetadata(&data);
@@ -470,6 +484,13 @@ auto GetAsync(u64 app_id) -> ThreadResultData* {
         return g_thread_data->GetAsync(app_id);
     }
     return {};
+}
+
+void Forget(u64 app_id) {
+    SCOPED_MUTEX(&g_mutex);
+    if (g_thread_data) {
+        g_thread_data->Forget(app_id);
+    }
 }
 
 auto Get(u64 app_id, bool* cached) -> ThreadResultData* {

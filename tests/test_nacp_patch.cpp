@@ -44,6 +44,49 @@ static void TestNacp() {
     assert(no_user[OFF_STARTUP_USER_ACCOUNT] == 0);
 }
 
+static void TestTitles() {
+    std::vector<std::uint8_t> nacp(NACP_SIZE, 0);
+    // names in English (0) and Japanese (2) only.
+    std::memcpy(&nacp[0], "Old", 3);
+    std::memcpy(&nacp[2 * LANG_ENTRY_SIZE], "Furui", 5);
+    std::memcpy(&nacp[OFF_DISPLAY_VERSION], "1.0.0", 5);
+    auto s = ReadState(nacp);
+    assert(s.titles_editable && s.version == "1.0.0");
+
+    Patch p;
+    p.name = "New name";
+    p.author = "Me";
+    p.version = std::string(40, 'v');
+    assert(p.EditsTitle());
+    assert(Apply(nacp, p));
+    assert(ReadText(&nacp[0], NAME_SIZE) == "New name" && ReadText(&nacp[NAME_SIZE], AUTHOR_SIZE) == "Me");
+    assert(ReadText(&nacp[2 * LANG_ENTRY_SIZE], NAME_SIZE) == "New name");
+    assert(nacp[1 * LANG_ENTRY_SIZE] == 0); // a language without a name stays empty
+    assert(ReadState(nacp).version == std::string(15, 'v'));
+    assert(!Apply(nacp, p));
+
+    // no name at all: the first entry gets it.
+    std::vector<std::uint8_t> empty(NACP_SIZE, 0);
+    Patch n;
+    n.name = "X";
+    assert(Apply(empty, n) && empty[0] == 'X' && empty[LANG_ENTRY_SIZE] == 0);
+
+    // a deflated title table (21.0.0+) is left alone.
+    std::vector<std::uint8_t> v2(NACP_SIZE, 0x5A);
+    v2[OFF_TITLES_DATA_FORMAT] = 1;
+    assert(!ReadState(v2).titles_editable);
+    assert(!Apply(v2, n));
+
+    // a cut never splits a UTF-8 character: 0x1FF bytes of room, "я" is 2 bytes.
+    std::string long_name(0x1FE, 'a');
+    long_name += "я";
+    std::vector<std::uint8_t> u(NACP_SIZE, 0);
+    Patch ln;
+    ln.name = long_name;
+    Apply(u, ln);
+    assert(ReadText(&u[0], NAME_SIZE) == std::string(0x1FE, 'a'));
+}
+
 static void TestRomfs() {
     // header 0x50, file table at 0x60 with two entries, data at 0x100.
     std::vector<std::uint8_t> r(0x200, 0);
@@ -64,6 +107,28 @@ static void TestRomfs() {
     assert(f && f->first == 0x100 && f->second == 0x4000);
     assert(FindRomfsFile(r, "icon_AmericanEnglish.dat")->first == 0x140);
     assert(!FindRomfsFile(r, "missing"));
+
+    // the icon slot reaches the next file, not just its own size.
+    auto files = ListRomfsFiles(r);
+    assert(files.size() == 2 && IsIconFile(files[0].name) && !IsIconFile(files[1].name));
+    auto icon = files[0];
+    assert(icon.data_off == 0x140 && icon.size == 0x20);
+    assert(files[1].capacity == 0x4000); // never less than the file itself
+    // icon at 0x140 with nacp at 0x100: nothing after it but the image end.
+    assert(icon.capacity == 0x200 - 0x140);
+
+    std::vector<std::uint8_t> small(0x10, 0xAB);
+    r[0x140 + 0x18] = 0xEE; // old bytes past the new end are zeroed
+    assert(ReplaceRomfsFile(r, icon, small));
+    assert(FindRomfsFile(r, "icon_AmericanEnglish.dat")->second == 0x10);
+    assert(r[0x140] == 0xAB && r[0x150] == 0 && r[0x158] == 0);
+    // written once smaller, the slot is still as big as before.
+    auto again = ListRomfsFiles(r)[0];
+    assert(again.size == 0x10 && again.capacity == icon.capacity);
+    std::vector<std::uint8_t> big(icon.capacity + 1, 1);
+    assert(!ReplaceRomfsFile(r, again, big));
+    std::vector<std::uint8_t> full(icon.capacity, 2);
+    assert(ReplaceRomfsFile(r, again, full) && FindRomfsFile(r, "icon_AmericanEnglish.dat")->second == icon.capacity);
 }
 
 static void TestIvfc() {
@@ -105,6 +170,7 @@ static void TestIvfc() {
 
 int main() {
     TestNacp();
+    TestTitles();
     TestRomfs();
     TestIvfc();
     std::printf("ok  nacp_patch: all checks passed\n");

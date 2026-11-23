@@ -60,6 +60,8 @@ Result Init();
 void Exit();
 // clears cache and empties the result array.
 void Clear();
+// drops one game, so its next Get() reads the control data again (after a name or icon change).
+void Forget(u64 app_id);
 
 // adds new entry to queue.
 void PushAsync(u64 app_id);
