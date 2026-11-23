@@ -7,13 +7,20 @@
 #include "account/account_link.hpp"
 #include "app.hpp"
 #include "i18n.hpp"
+#include "nextendo_accounts.hpp"
 #include "nextendo_apply.hpp"
+#include "option.hpp"
+#include "ui/popup_list.hpp"
 #include "ui/menus/settings/settings_translations.hpp"
 #include "web.hpp"
 
 #include <switch/applets/psel.h>
 
 #include <cstring>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace sphaira::ui::nextendo_link {
 namespace {
@@ -72,47 +79,87 @@ void SwitchOnFirst() {
         });
 }
 
-void SignIn() {
-    // without Nextendo loaded on this boot, the link screen would go to Nintendo
-    if (!nx::Active() || nx::RestartNeeded()) {
-        SwitchOnFirst();
+// Profiles the Hub signed in to Nextendo (the console does not say which service a link belongs to).
+option::OptionString g_signed_in{"nextendo", "signed_in_uids", ""};
+
+auto MarkText(nx::AccountMark m) -> std::string {
+    switch (m) {
+        case nx::AccountMark::NotLinked: return "Not linked: can sign in"_i18n;
+        case nx::AccountMark::Nextendo: return "Linked to Nextendo"_i18n;
+        case nx::AccountMark::OtherLink: return "Linked to another account: unlink it first"_i18n;
+        case nx::AccountMark::NextendoUnread: return "Nextendo (link status cannot be read now)"_i18n;
+        default: return "Link status cannot be read"_i18n;
+    }
+}
+
+// The console's own selector shows no link state. This list shows it, so a profile that is linked to Nextendo
+// (or to something else) is seen before the sign-in starts.
+void PickProfile(void (*then)(const AccountUid&)) {
+    auto record = nx::ParseRecord(g_signed_in.Get());
+    const auto users = account_link::ListUsers();
+    if (users.empty()) {
         return;
     }
 
-    AccountUid uid{};
-    const PselUserSelectionSettings select{};
-    auto rc = pselShowUserSelector(&uid, &select);
-    App::ResetTouchAfterApplet();
-    if (R_FAILED(rc) || !accountUidIsValid(&uid)) {
-        if (R_FAILED(rc) && !IsCancel(rc)) {
-            PushManualSteps(rc);
+    auto marks = std::make_shared<std::vector<nx::AccountMark>>();
+    PopupList::Items names;
+    std::vector<std::string> notes;
+    for (const auto& u : users) {
+        auto m = nx::MarkFor(u.linked_known, u.horizon_linked, nx::IsRecorded(record, u.uid_hex));
+        if (u.linked_known && !u.horizon_linked) {
+            record = nx::Forget(std::move(record), u.uid_hex); // unlinked meanwhile
         }
-        return;
+        marks->push_back(m);
+        names.push_back(u.nickname);
+        notes.push_back(MarkText(m));
     }
+    g_signed_in.Set(nx::FormatRecord(record));
 
-    // a Linkalho, donor or Nintendo link blocks a new link to Nextendo
-    for (const auto& u : account_link::ListUsers()) {
-        if (!std::memcmp(&u.uid, &uid, sizeof(uid)) && u.linked_known && u.horizon_linked) {
-            App::Push<OptionBox>(
-                "This profile is already linked to an account. Unlink it first: Tools → Users → Unlink Nintendo Account. Then sign in again."_i18n,
-                "OK"_i18n);
-            return;
-        }
-    }
+    auto list = std::make_unique<PopupList>(
+        "Nextendo account"_i18n, names,
+        [users, marks, then](std::optional<s64> i) {
+            if (!i || *i < 0 || *i >= static_cast<s64>(users.size())) {
+                return;
+            }
+            const auto m = (*marks)[*i];
+            if (nx::CanSignIn(m)) {
+                then(users[*i].uid);
+            } else {
+                App::Push<OptionBox>(MarkText(m) + ".", "OK"_i18n);
+            }
+        });
+    list->SetMenuStyle(true).SetDescriptions(std::move(notes));
+    App::Push(std::move(list));
+}
 
+void ConsoleLink(const AccountUid& uid) {
     // ponytail: EnsureNetworkServiceAccountAvailable is what games call for an unlinked profile;
     // not checked on a console yet. If it fails, the box gives the System Settings steps.
     PselUiSettings ui{};
-    rc = pselUiCreate(&ui, PselUiMode_EnsureNetworkServiceAccountAvailable);
+    auto rc = pselUiCreate(&ui, PselUiMode_EnsureNetworkServiceAccountAvailable);
     if (R_SUCCEEDED(rc)) {
         ui.settings.invalid_uid_list[0] = uid;
         AccountUid out{};
         rc = pselUiShow(&ui, &out);
     }
     App::ResetTouchAfterApplet();
-    if (R_FAILED(rc) && !IsCancel(rc)) {
-        PushManualSteps(rc);
+    if (R_FAILED(rc)) {
+        if (!IsCancel(rc)) {
+            PushManualSteps(rc);
+        }
+        return;
     }
+    // remembered so that the account list can mark the profile as Nextendo
+    g_signed_in.Set(nx::FormatRecord(nx::Remember(nx::ParseRecord(g_signed_in.Get()), account_link::UidHex(uid))));
+}
+
+void SignIn() {
+    // without Nextendo loaded on this boot, the link screen would go to Nintendo
+    if (!nx::Active() || nx::RestartNeeded()) {
+        SwitchOnFirst();
+        return;
+    }
+    PickProfile(ConsoleLink);
 }
 
 } // namespace

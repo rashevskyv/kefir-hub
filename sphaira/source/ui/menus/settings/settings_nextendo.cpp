@@ -11,6 +11,7 @@
 #include "i18n.hpp"
 #include "nextendo_apply.hpp"
 #include "ui/nextendo_link_box.hpp"
+#include "ui/option_box.hpp"
 #include "ui/nvg_util.hpp"
 
 #include <algorithm>
@@ -132,12 +133,51 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
         {},
     });
 
+    // The three versions come from the network each hour (RefreshVersionsAsync); only the first is compiled in.
     items.emplace_back(SettingsItem{
-        "Release"_i18n,
-        "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0."_i18n,
-        [](){ return std::string{nx::kPinnedTag}; },
+        "Release in this Hub"_i18n,
+        "The Prelude-Nextendo release whose patches and server address this Kefir Hub carries. Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0."_i18n,
+        [](){ return nx::CurrentVersions().hub; },
         {},
     });
+    items.emplace_back(SettingsItem{
+        "Newest Prelude release"_i18n,
+        "The newest Prelude-Nextendo release on the Nextendo forge, read from the internet."_i18n,
+        [](){ const auto v = nx::CurrentVersions().prelude; return v.empty() ? "Not read"_i18n : v; },
+        {},
+    });
+    items.emplace_back(SettingsItem{
+        "Nextendo server version"_i18n,
+        "The version the Nextendo server announces. The server does not announce one yet."_i18n,
+        [](){ const auto v = nx::CurrentVersions().server; return v.empty() ? "Not announced"_i18n : v; },
+        {},
+    });
+    SettingsItem check{
+        "Versions"_i18n,
+        "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release."_i18n,
+        [](){
+            switch (nx::Judge(nx::CurrentVersions())) {
+                case nx::Verdict::Match: return "Up to date"_i18n;
+                case nx::Verdict::HubAhead: return "Up to date"_i18n;
+                case nx::Verdict::Unknown: return "Not read"_i18n;
+                default: return "Update Kefir Hub"_i18n;
+            }
+        },
+        [](){
+            const auto v = nx::CurrentVersions();
+            if (nx::ActionFor(nx::Judge(v)).offer_update) {
+                App::Push<OptionBox>(
+                    Fill("A newer Nextendo release exists: %s. This Kefir Hub carries an older one, so its patches may not fit the current Nextendo. Update Kefir Hub: Updater → Apps."_i18n,
+                         v.server.empty() ? v.prelude : v.server),
+                    "OK"_i18n);
+            }
+        },
+    };
+    check.lamp = [](){
+        const auto v = nx::Judge(nx::CurrentVersions());
+        return v == nx::Verdict::Unknown ? -1 : nx::ActionFor(v).warn ? 0 : 1;
+    };
+    items.emplace_back(std::move(check));
 
     if (nx::RestartNeeded()) {
         items.emplace_back(SettingsItem{
@@ -154,6 +194,7 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
 } // namespace
 
 NextendoMenu::NextendoMenu() : MenuBase{"Nextendo", MenuFlag_None} {
+    nx::RefreshVersionsAsync();
     m_items = BuildNextendoItems();
     this->SetActions(
         std::make_pair(Button::A, Action{"Open"_i18n, [this](){
@@ -174,6 +215,7 @@ NextendoMenu::~NextendoMenu() = default;
 
 void NextendoMenu::OnFocusGained() {
     MenuBase::OnFocusGained();
+    nx::RefreshVersionsAsync();
     std::string item_label;
     if (!m_items.empty()) {
         item_label = m_items[m_index].label;

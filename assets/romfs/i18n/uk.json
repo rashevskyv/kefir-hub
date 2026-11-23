@@ -4402,5 +4402,21 @@
   "Create the save data of this game for a user.": "Створити дані збереження цієї гри для користувача.",
   "Delete the game, its updates and DLC. The save data stays.": "Видалити гру, її оновлення та DLC. Дані збережень лишаються.",
   "Download from the internet for about 1 minute to measure the real speed of your connection? A fast connection uses a few hundred MB of data.": "Завантажити з інтернету приблизно 1 хвилину, щоб виміряти реальну швидкість з'єднання? Швидке з'єднання використовує кілька сотень МБ даних.",
-  "Default icon": "Іконка за замовчуванням"
+  "Default icon": "Іконка за замовчуванням",
+  "Release in this Hub": "Реліз у цьому Hub",
+  "The Prelude-Nextendo release whose patches and server address this Kefir Hub carries. Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0.": "Реліз Prelude-Nextendo, чиї патчі та адресу сервера несе цей Kefir Hub. Заснований на Prelude-Nextendo від Nextendo Network, ліцензія PolyForm Shield 1.0.0.",
+  "Newest Prelude release": "Найновіший реліз Prelude",
+  "The newest Prelude-Nextendo release on the Nextendo forge, read from the internet.": "Найновіший реліз Prelude-Nextendo на форджі Nextendo, береться з інтернету.",
+  "Nextendo server version": "Версія сервера Nextendo",
+  "The version the Nextendo server announces. The server does not announce one yet.": "Версія, яку оголошує сервер Nextendo. Поки що сервер її не оголошує.",
+  "Versions": "Версії",
+  "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Порівнює цей Hub з найновішим релізом Prelude. Якщо вони різні, оновіть Kefir Hub: патчі та адреса сервера приходять лише з релізом Hub.",
+  "Not read": "Не прочитано",
+  "Not announced": "Не оголошено",
+  "A newer Nextendo release exists: %s. This Kefir Hub carries an older one, so its patches may not fit the current Nextendo. Update Kefir Hub: Updater → Apps.": "Є новіший реліз Nextendo: %s. Цей Kefir Hub несе старіший, тож його патчі можуть не підійти до чинного Nextendo. Оновіть Kefir Hub: Updater → Apps.",
+  "Not linked: can sign in": "Не прив'язано: можна увійти",
+  "Linked to Nextendo": "Прив'язано до Nextendo",
+  "Linked to another account: unlink it first": "Прив'язано до іншого акаунта: спершу відв'яжіть",
+  "Nextendo (link status cannot be read now)": "Nextendo (стан прив'язки зараз не прочитати)",
+  "Link status cannot be read": "Стан прив'язки не прочитати"
 }

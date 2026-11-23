@@ -5,6 +5,7 @@
 // Required Notice: Copyright 2026 Nextendo Network (PolyForm Shield 1.0.0, assets/romfs/nextendo/LICENSE.md)
 
 #include "nextendo_plan.hpp"
+#include "nextendo_versions.hpp"
 
 #include <switch.h>
 
@@ -33,6 +34,10 @@ auto ServerIpsInUse() -> ServerIps;
 void StoreServerIps(const ServerIps& ips);
 // Background check of the newest release (at most once a day, only while Nextendo is active, no call otherwise).
 void RefreshServerIpsAsync();
+// Versions for the Nextendo page: the tag this Hub carries, the newest Prelude release, the server's own version.
+// RefreshVersionsAsync is cheap to call on every page open (at most one request pair an hour).
+auto CurrentVersions() -> Versions;
+void RefreshVersionsAsync();
 // Nextendo is in use on this boot: switched on for the current mode and the firmware is patched.
 auto Active() -> bool;
 

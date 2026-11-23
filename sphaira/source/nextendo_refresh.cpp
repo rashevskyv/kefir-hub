@@ -8,6 +8,7 @@
 #include "log.hpp"
 #include "nextendo_apply.hpp"
 #include "nextendo_online.hpp"
+#include "nextendo_versions.hpp"
 #include "option.hpp"
 
 #include <yyjson.h>
@@ -58,6 +59,49 @@ auto TagFromRelease(const std::vector<u8>& body) -> std::string {
     yyjson_doc_free(doc);
     return IsSafeTag(tag) ? tag : std::string{};
 }
+
+// Versions for the Nextendo page: asked when the page opens (the user is looking at it), at most once an hour.
+// The newest Prelude tag comes from the forge, the server version from the health answer: nothing is compiled in
+// except the tag this Hub carries. Main thread only, like the online counts.
+Versions g_versions{kPinnedTag, {}, {}};
+std::int64_t g_versions_checked{};
+bool g_versions_busy{};
+
+} // namespace
+
+auto CurrentVersions() -> Versions {
+    return g_versions;
+}
+
+void RefreshVersionsAsync() {
+    const std::int64_t now = std::time(nullptr);
+    if (g_versions_busy || !VersionsDue(now, g_versions_checked)) {
+        return;
+    }
+    g_versions_checked = now; // stamped on send: a failed try waits an hour too
+    g_versions_busy = true;
+    curl::Api().ToMemoryAsync(
+        curl::Url{LatestReleaseUrl()},
+        curl::Header{{"Accept", "application/json"}},
+        curl::StopToken{},
+        curl::OnComplete{[](auto& result) {
+            g_versions_busy = false;
+            g_versions.prelude = result.success ? TagFromRelease(result.data) : std::string{};
+            return true;
+        }}
+    );
+    curl::Api().ToMemoryAsync(
+        curl::Url{std::string{kHealthUrl}},
+        curl::Header{{"Accept", "application/json"}},
+        curl::StopToken{},
+        curl::OnComplete{[](auto& result) {
+            g_versions.server = result.success ? ParseHealthVersion({reinterpret_cast<const char*>(result.data.data()), result.data.size()}) : std::string{};
+            return true;
+        }}
+    );
+}
+
+namespace {
 
 void OnConfig(const curl::ApiResult& result) {
     if (!result.success) {

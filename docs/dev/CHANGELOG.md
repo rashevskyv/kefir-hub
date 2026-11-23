@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.434 — Nextendo: versions on the page, account list with marks
+Kefir Settings → Nextendo shows three versions: the Prelude release this Hub carries (compiled in), the newest Prelude release read from git.nextendo.network and the version the Nextendo server announces (nextendo.network/api/health has no version field today: "Not announced"). Read when the page opens, at most once an hour; a lamp and a Versions row show green (same), red (a newer release exists: A explains, update Kefir Hub in Updater → Apps) or grey (not read). Seen on 2026-11-23: Hub v5.0.1, forge v5.0.2. The Hub never rewrites the card on a version difference: patches and the server address come only with a Hub release. Sign in uses a Hub profile list instead of the console selector: each profile shows Not linked / Linked to Nextendo / Linked to another account; the profiles the Hub signed in are remembered (`nextendo/signed_in_uids`). Rules in `nextendo_versions.hpp`, `nextendo_accounts.hpp`. 16 strings, EN and UK only.
+host tests: pass (quick; new test_nextendo_versions) | nro: not built | switch: pending (open Nextendo page: versions fill in; Sign in: list with marks; sign in a profile, reopen: Nextendo mark; the sign-in screen on an unlinked profile was never checked on a console)
+
 ## v0.14.432 — forwarder icon at most 32 KB, control data read back after install
 A forwarder for sotn.nro (icon 111 KB at JPEG quality 100) gave a grey HOME tile that never loads and 2137-7403 on start; DBI (19 KB) works. `install_forwarder` now saves a bigger icon again at a lower quality (`ImageFitJpeg`, moved from game_edit), then reads the control data back from ns and fails with its code. The size limit is a guess: the cause is not proven.
 host tests: pass (quick) | nro: built (0.14.432) | switch: pending — delete the grey SotN tile (0584557ACA74C000), make the forwarder again: icon shows, game starts; on an error box note the code; log line `[OWO] ... control read back`.
