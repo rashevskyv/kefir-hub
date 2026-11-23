@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.395 — Prelude-Nextendo v5.0.2 (robot)
+Hosts +0/-0 lines, patch folders +0/-0.
+host tests: pass (quick) | nro: built (CI) | switch: pending
+
 ## v0.14.435 — Updater: Update all (Y), updates first, pipensx and NXThemesInstaller
 Apps tab: Y updates every app with an update; apps with an update are listed first and only they have the accent name colour; pipensx (GitLab) and NXThemesInstaller get update info like the other Kefir package apps.
 host tests: pass (quick) | nro: built (0.14.434 tree) | switch: pending — Y on the Apps tab; pipensx and NXThemesInstaller rows show a Newest version; NXLoad must be at /switch/NXLoad/NXLoad.nro to be listed.
