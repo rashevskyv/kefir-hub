@@ -375,7 +375,20 @@ auto IsHubForwarderInstalled() -> bool {
 }
 
 auto PointHubForwarderAtHbmenu() -> bool {
+    // runs on a ProgressBox thread: let the start-up check finish its own install of the same title first.
+    while (g_thread_active) {
+        svcSleepThread(50'000'000);
+    }
+    // ns may be closed here: without it IsInstalled says "not installed" and the copy would go with the icon pointing at it.
+    if (R_FAILED(nsInitialize())) {
+        return false;
+    }
+    ON_SCOPE_EXIT(nsExit());
     if (!IsInstalled(KEFIR_HUB_FORWARDER_TID)) {
+        return true;
+    }
+    // started from that very icon as /hbmenu.nro: it already points there and cannot be reinstalled while it runs.
+    if (App::IsHbmenu() && GetOwnProgramId() == KEFIR_HUB_FORWARDER_TID) {
         return true;
     }
     if (!App::GetReplaceHbmenuEnable() && !App::IsHbmenu()) {

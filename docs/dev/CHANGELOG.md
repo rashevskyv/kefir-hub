@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.427 — Hub copy delete: the HOME icon is repointed safely
+`PointHubForwarderAtHbmenu` (used by the hbmenu copy question, the Homebrew list delete and Replace hbmenu on exit) opens ns itself (without it the icon read as "not installed" and the copy could go while the icon still pointed at it), waits for the start-up forwarder check, and skips the reinstall when the Hub runs from that icon as /hbmenu.nro.
+host tests: pass (quick) | nro: built (0.14.427) | switch: pending — start from the Hub HOME icon (as /hbmenu.nro) with a copy in /switch: Delete works, the icon still starts; start from Album: the same.
+
 ## v0.14.426 — build checkpoint for 0.14.424–425
 Fixed the link: `game_edit.cpp` was not in the sphaira source list (undefined `ShowEditGame`, `AddEditGameEntries`, `ShowGameLanguage`, `ShowGameRestrictions`).
 host tests: pass (quick) | nro: built (0.14.426) | switch: pending — the items of 0.14.424 and 0.14.425.
