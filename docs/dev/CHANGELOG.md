@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.426 — build checkpoint for 0.14.424–425
+Fixed the link: `game_edit.cpp` was not in the sphaira source list (undefined `ShowEditGame`, `AddEditGameEntries`, `ShowGameLanguage`, `ShowGameRestrictions`).
+host tests: pass (quick) | nro: built (0.14.426) | switch: pending — the items of 0.14.424 and 0.14.425.
+
 ## v0.14.425 — Started as /hbmenu.nro, the Hub offers to delete its copy in /switch
 When Kefir Hub runs as the Homebrew Menu and `/switch/kefir-hub.nro` (or `/switch/kefir-hub/kefir-hub.nro`) is also Kefir Hub, a dialog at start offers Cancel / Delete / Don't remind (`[hub_copy] no_remind` in config.ini). Delete first points the Hub HOME icon at /hbmenu.nro, as the Homebrew list delete does.
 host tests: pass (quick) | nro: not built | switch: pending — start from Album with a copy in /switch: dialog; Delete removes it and the HOME icon still starts; Don't remind stops the dialog.
