@@ -52,12 +52,6 @@ void DbiDetailsMenu::ActivateHeaderItem() {
         }
     }
 
-    // the mods folder is what LayeredFS reads replacement game files from;
-    // opening it in the file browser is the only way to see (or add) any.
-void DbiDetailsMenu::BrowseSdPath(const fs::FsPath& path) {
-        constexpr filebrowser::FsEntry sd{"microSD card", "/", filebrowser::FsType::Sd};
-        App::Push<filebrowser::Menu>(MenuFlag_None, sd, path);
-    }
 
 void DbiDetailsMenu::ShowRestrictions() {
     ShowGameRestrictions(CurrentEntry().app_id);
@@ -195,94 +189,12 @@ void DbiDetailsMenu::OpenComponentInBrowser(const GameComponentRow& component) {
     }
 
 void DbiDetailsMenu::OpenModsFolder() {
-        const auto path = title::GetContentsPath(CurrentEntry().app_id);
-        if (CurrentEntry().mods_folder) {
-            BrowseSdPath(path);
-            return;
-        }
-
-        App::Push<OptionBox>("This game has no mods folder yet. Create it?"_i18n,
-            "Back"_i18n, "Create"_i18n, 1, [this, path](auto op_index){
-                if (!op_index || !*op_index) {
-                    return;
-                }
-                const auto rc = fs::FsNativeSd().CreateDirectory(path);
-                App::PushErrorBox(rc, "Folder create failed!"_i18n);
-                if (R_SUCCEEDED(rc)) {
-                    // an empty folder is not a mod: layeredfs stays off until
-                    // something is actually copied in (OnFocusGained re-reads
-                    // it when the browser is closed).
-                    CurrentEntry().mods_folder = true;
-                    BrowseSdPath(path);
-                }
-            });
-    }
+    OpenGameModsFolder(CurrentEntry());
+}
 
 void DbiDetailsMenu::ShowCreateRepackSidebar() {
-        const auto& entry = CurrentEntry();
-        const auto flags = entry.content_flags;
-
-        const bool has_base = flags & title::ContentFlag_Application;
-        const bool has_patch = flags & title::ContentFlag_Patch;
-        const bool has_dlc = flags & title::ContentFlag_AddOnContent;
-        const bool has_mod = repack::HasRomfsMod(entry.app_id);
-
-        if (!has_base && !has_patch && !has_dlc) {
-            App::Notify("No repackable content available"_i18n);
-            return;
-        }
-
-        struct State {
-            bool base{true};
-            bool patch{true};
-            bool dlc{true};
-            bool mod{true};
-        };
-        auto state = std::make_shared<State>();
-
-        auto options = std::make_unique<Sidebar>("Create repack"_i18n, Sidebar::Side::RIGHT);
-        ON_SCOPE_EXIT(App::Push(std::move(options)));
-
-        if (has_base) {
-            options->Add<SidebarEntryCheckbox>("Application/BASE"_i18n, [state](){ return state->base; }, [state](bool val){ state->base = val; }, "Include base application."_i18n);
-        }
-        if (has_patch) {
-            options->Add<SidebarEntryCheckbox>("Patch/Update"_i18n, [state](){ return state->patch; }, [state](bool val){ state->patch = val; }, "Include highest installed update."_i18n);
-        }
-        if (has_dlc) {
-            options->Add<SidebarEntryCheckbox>("AddOnContent/DLC"_i18n, [state](){ return state->dlc; }, [state](bool val){ state->dlc = val; }, "Include all installed DLC."_i18n);
-        }
-        if (has_mod) {
-            options->Add<SidebarEntryCheckbox>("Bake in the mod"_i18n, [state](){ return state->mod; }, [state](bool val){ state->mod = val; }, "Put the LayeredFS mod of this game (romfs folder or romfs.bin) into the update, or into the base when the update is left out. The repack then installs only with sigpatches."_i18n);
-        }
-
-        options->Add<SidebarEntryCallback>("Create repack"_i18n, [this, entry, state, has_base, has_patch, has_dlc, has_mod](){
-            u32 selected_flags = 0;
-            if (has_base && state->base) {
-                selected_flags |= title::ContentFlag_Application;
-            }
-            if (has_patch && state->patch) {
-                selected_flags |= title::ContentFlag_Patch;
-            }
-            if (has_dlc && state->dlc) {
-                selected_flags |= title::ContentFlag_AddOnContent;
-            }
-
-            if (selected_flags == 0) {
-                App::Notify("No components selected"_i18n);
-                return;
-            }
-            if (has_mod && state->mod) {
-                if (!(selected_flags & (title::ContentFlag_Application | title::ContentFlag_Patch))) {
-                    App::Notify("The mod needs the base or the update in the repack"_i18n);
-                    return;
-                }
-                selected_flags |= repack::FLAG_WITH_MOD;
-            }
-
-            m_repack_callback(entry, selected_flags);
-        }, "Start creating the merged NSP."_i18n);
-    }
+    ShowRepackOptions(CurrentEntry(), m_repack_callback);
+}
 
 void DbiDetailsMenu::ShowGameActions() {
         auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
@@ -366,26 +278,28 @@ void DbiDetailsMenu::ShowGameActions() {
         }
         if (CurrentEntry().layeredfs) {
             options->Add<SidebarEntryCallback>("Delete mods"_i18n, [this](){
-                const auto app_id = CurrentEntry().app_id;
-                const auto name = CurrentEntry().GetName();
-                App::Push<OptionBox>("Delete the mods of "_i18n + name + "?\n" + "Cheats are kept."_i18n,
-                    "Back"_i18n, "Delete"_i18n, 0, [this, app_id, name](auto op_index){
-                        if (!op_index || !*op_index) {
-                            return;
-                        }
-                        App::Push<ProgressBox>(0, "Deleting"_i18n, name, [app_id](auto) -> Result {
-                            return DeleteGameMods(app_id);
-                        }, [this](Result rc){
-                            App::PushErrorBox(rc, "Delete failed!"_i18n);
-                            ProbeModsFolder(CurrentEntry());
-                            LoadGame();
-                            if (R_SUCCEEDED(rc)) {
-                                App::Notify("Mods deleted"_i18n);
-                            }
-                        });
-                    });
+                ConfirmDeleteMods(CurrentEntry().app_id, CurrentEntry().GetName(), [this](){
+                    ProbeModsFolder(CurrentEntry());
+                    LoadGame();
+                });
             }, true, "Remove this game's mods from the memory card. Cheats are kept."_i18n)->SetIcon(ActionIcon::Delete);
         }
+        options->Add<SidebarEntryCallback>("Create save"_i18n, [this](){
+            ShowCreateSave(CurrentEntry().app_id, [this](){ LoadGame(); });
+        }, "Create the save data of this game for a user."_i18n)->SetIcon(ActionIcon::Save);
+        options->Add<SidebarEntryCallback>("List meta records"_i18n, [this](){
+            ShowMetaRecords(CurrentEntry());
+        }, "Show all installed content meta records for the selected game."_i18n)->SetIcon(ActionIcon::Edit);
+        // after Archive or Delete the Games list rescans (its records changed), so this screen,
+        // which points into the list, closes first.
+        if (!CurrentEntry().IsArchived()) {
+            options->Add<SidebarEntryCallback>("Archive"_i18n, [this](){
+                ConfirmArchiveGame(CurrentEntry(), [this](){ SetPop(); });
+            }, true, "Frees up the space used by the game, its updates and DLC. The game stays in the list with its save data, reinstall it to play again."_i18n)->SetIcon(ActionIcon::Delete);
+        }
+        options->Add<SidebarEntryCallback>("Delete"_i18n, [this](){
+            ConfirmDeleteGame(CurrentEntry(), [this](){ SetPop(); });
+        }, true, "Delete the game, its updates and DLC. The save data stays."_i18n)->SetIcon(ActionIcon::Delete);
     }
 
 

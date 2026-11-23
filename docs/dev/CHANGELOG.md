@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.428 — Game details and the Games list offer the same game actions
+Game details → Game Actions gets Create save, List meta records, Archive and Delete (the screen closes after Archive or Delete, then the list rescans). The Games list → + (one game) gets Create repack, Compress game, mods folder, Pack into romfs.bin, Delete mods, Force language and Restrictions. The shared actions live in `game/game_actions.cpp`; docs drafts on Games EN/UK.
+host tests: pass (quick) | nro: built (0.14.428) | switch: pending — from details: Create save, Archive, Delete (with and without mods), the list after it; from the list: repack, compress, mods, language, restrictions.
+
 ## v0.14.427 — Hub copy delete: the HOME icon is repointed safely
 `PointHubForwarderAtHbmenu` (used by the hbmenu copy question, the Homebrew list delete and Replace hbmenu on exit) opens ns itself (without it the icon read as "not installed" and the copy could go while the icon still pointed at it), waits for the start-up forwarder check, and skips the reinstall when the Hub runs from that icon as /hbmenu.nro.
 host tests: pass (quick) | nro: built (0.14.427) | switch: pending — start from the Hub HOME icon (as /hbmenu.nro) with a copy in /switch: Delete works, the icon still starts; start from Album: the same.

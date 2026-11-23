@@ -7,6 +7,7 @@
 #include "title_info.hpp"
 #include "title_nsp.hpp"
 #include "ui/types.hpp"
+#include "ui/sidebar.hpp"
 #include "ui/menus/game/game_save_manager.hpp"
 
 #include <array>
@@ -69,6 +70,21 @@ void DropBoostForMove();
 auto BuildMoveSummary(const title::MovePlan& plan, NcmStorageId target) -> std::string;
 // Game Actions > Compress game (game_compress.cpp). on_done runs after a successful compress.
 void ShowCompressGame(u64 app_id, const std::string& name, std::function<void()> on_done);
+
+// game actions shared by the Games list and Game details (game_actions.cpp).
+// NACP indexes of the languages the game lists (empty when its control data cannot be read).
+auto GameLanguages(u64 app_id) -> std::vector<int>;
+void OpenGameModsFolder(Entry& entry);
+void ConfirmDeleteMods(u64 app_id, const std::string& name, std::function<void()> on_done);
+void ShowRepackOptions(const Entry& entry, std::function<void(Entry, u32)> on_create);
+void ShowMetaRecords(const Entry& entry);
+void ShowCreateSave(u64 app_id, std::function<void()> on_done);
+// on_done runs only after a success: the caller leaves screens that hold the entry.
+void ConfirmArchiveGame(const Entry& entry, std::function<void()> on_done);
+void ConfirmDeleteGame(Entry entry, std::function<void()> on_done);
+// Game Options of one game: repack, compress, mods, language, restrictions, meta records.
+void AddGameToolEntries(Sidebar* options, std::vector<Entry>* entries, u64 app_id,
+    std::function<void(Entry, u32)> on_repack, std::function<void()> on_changed);
 
 auto CollectEntryBadgeLabels(const Entry& e, bool include_storage,
     std::array<const char*, kMaxGameBadges>& out) -> std::size_t;

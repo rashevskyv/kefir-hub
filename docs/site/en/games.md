@@ -53,6 +53,12 @@ What **A** does on a tab row:
 - [[Tickets]] row: shows the rights ID, key generation and ticket type.
 - [[Saves]] row: opens [[Save Actions]] — see [Manage save slots](#manage-save-slots).
 
+<!-- draft
+- on the details screen **+** (Game Actions) now also has [[Create save]], [[List meta records]], [[Archive]] and [[Delete]], the same as **+** on the Games list
+- [[Archive]] and [[Delete]] on the details screen close it after they finish; the Games list then reads the library again
+- [[Delete]] on the details screen keeps the save data, as on the list; with mods it also offers [[Delete with mods]]
+-->
+
 ## Select several games
 - Press **X** to select or unselect the focused game.
 - Press **Y** to invert the selection.
@@ -201,6 +207,10 @@ The installed size of the game (base game, updates and DLC on the memory card, s
 - [[Search]]: type part of a name to show only matching games. [[Clear search]] shows all games again.
 
 ## Options
+
+<!-- draft
+- one game focused or selected: **+** on the Games list also has [[Create repack]], [[Compress game]], [[Open mods folder]] (or [[Create mods folder]]), [[Pack into romfs.bin]] and [[Delete mods]] when the game has mods, [[Force language]] and [[Restrictions]], the same as Game Actions on the details screen
+-->
 In **+** (and **+** → [[Advanced options]]):
 
 | Option | What it does | Default |

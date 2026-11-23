@@ -184,39 +184,8 @@ Menu::Menu(u32 flags) : grid::Menu{"Games"_i18n, flags} {
 
                 if (targets.size() == 1) {
                     AddEditGameEntries(options.get(), &m_entries, targets.front().app_id);
-                    options->Add<SidebarEntryCallback>("List meta records"_i18n, [this](){
-                    title::MetaEntries meta_entries;
-                    const auto target = GetSelectedEntries().front();
-                    const auto rc = GetMetaEntries(target, meta_entries);
-                    if (R_FAILED(rc)) {
-                        App::Push<ui::ErrorBox>(rc,
-                            i18n::get("Failed to list application meta entries")
-                        );
-                        return;
-                    }
-
-                    if (meta_entries.empty()) {
-                        App::Notify("No meta entries found...\n"_i18n);
-                        return;
-                    }
-
-                    PopupList::Items items;
-                    for (auto& e : meta_entries) {
-                        char buf[256];
-                        std::snprintf(buf, sizeof(buf), "Type: %s Storage: %s [%016lX][v%u]", ncm::GetMetaTypeStr(e.meta_type), ncm::GetStorageIdStr(e.storageID), e.application_id, e.version);
-                        items.emplace_back(buf);
-                    }
-
-                    App::Push<PopupList>(
-                        "Entries"_i18n, items, [this, meta_entries](auto op_index){
-                            #if 0
-                            if (op_index) {
-                                const auto& e = meta_entries[*op_index];
-                            }
-                            #endif
-                        }
-                    );
-                    }, "Show all installed content meta records for the selected game."_i18n)->SetIcon(ActionIcon::Edit);
+                    AddGameToolEntries(options.get(), &m_entries, targets.front().app_id,
+                        [this](Entry e, u32 flags){ CreateRepack(e, flags); }, [this](){ m_dirty = true; });
                 }
 
                 if (all_have_content) {

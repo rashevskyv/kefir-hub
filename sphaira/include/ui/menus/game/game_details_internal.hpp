@@ -34,7 +34,6 @@ struct DbiDetailsMenu final : MenuBase {
     void SyncActionHint();
     void ActivateHeaderItem();
     void OpenModsFolder();
-    static void BrowseSdPath(const fs::FsPath& path);
     void LoadGame();
     void LoadSaves(u64 app_id);
     void OpenComponentInBrowser(const GameComponentRow& component);

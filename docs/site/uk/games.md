@@ -53,6 +53,12 @@
 - рядок [[Tickets]]: показує rights ID, покоління ключів і тип квитка;
 - рядок [[Saves]]: відкриває [[Save Actions]] — див. [Слоти збережень](#manage-save-slots).
 
+<!-- draft
+- on the details screen **+** (Game Actions) now also has [[Create save]], [[List meta records]], [[Archive]] and [[Delete]], the same as **+** on the Games list
+- [[Archive]] and [[Delete]] on the details screen close it after they finish; the Games list then reads the library again
+- [[Delete]] on the details screen keeps the save data, as on the list; with mods it also offers [[Delete with mods]]
+-->
+
 ## Вибрати кілька ігор
 - **X** — позначити гру під курсором або зняти позначку.
 - **Y** — інвертувати вибір.
@@ -200,6 +206,10 @@ Atmosphère завантажує моди гри з папки `/atmosphere/cont
 - [[Search]] — введіть частину назви, щоб лишилися тільки відповідні ігри. [[Clear search]] знову показує всі ігри.
 
 ## Параметри
+
+<!-- draft
+- one game focused or selected: **+** on the Games list also has [[Create repack]], [[Compress game]], [[Open mods folder]] (or [[Create mods folder]]), [[Pack into romfs.bin]] and [[Delete mods]] when the game has mods, [[Force language]] and [[Restrictions]], the same as Game Actions on the details screen
+-->
 У **+** (і в **+** → [[Advanced options]]):
 
 | Параметр | Що робить | Типово |

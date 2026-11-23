@@ -4398,5 +4398,7 @@
   "Put back the game's own name, publisher, version and icon?": "Повернути рідну назву, видавця, версію та іконку гри?",
   "Could not restore the game": "Не вдалося відновити гру",
   "Kefir Hub runs as your Homebrew Menu (/hbmenu.nro). A second copy is not needed:": "Kefir Hub працює як ваше Homebrew-меню (/hbmenu.nro). Друга копія не потрібна:",
-  "Don't remind": "Не нагадувати"
+  "Don't remind": "Не нагадувати",
+  "Create the save data of this game for a user.": "Створити дані збереження цієї гри для користувача.",
+  "Delete the game, its updates and DLC. The save data stays.": "Видалити гру, її оновлення та DLC. Дані збережень лишаються."
 }
