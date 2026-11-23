@@ -41,6 +41,11 @@ Turn it off to get the old Homebrew Menu back: Kefir Hub asks [[Restore hbmenu?]
 
 <!-- shot: index-first-start | First start page in the chosen language: Kefir Hub title, HOME Menu icon advice, A = OK -->
 
+<!-- draft
+- the first-start page has **B** [[Language]] next to **A** [[OK]]: it opens the [[Language]] list again, so a wrong choice can be fixed
+- in that list the current language is focused; **B** closes the list and keeps the language
+-->
+
 1. Pick your language. The [[Language]] list opens first, at once, over a page with only the Kefir Hub title.
 2. After the choice, the page with the HOME Menu icon advice follows, already in the chosen language, with [[OK]]. Until the first set-up is done (language chosen, [[OK]] pressed) Kefir Hub does not open PC Install (USB) or ask about MTP even when a PC with a USB install app is plugged in. After [[OK]] the main screen appears in the chosen language, with no restart.
 3. If some user profiles on the console are not linked to a Nintendo Account, Kefir Hub offers to link them.

@@ -42,6 +42,11 @@ Kefir Hub — це homebrew-застосунок (`.nro`), тому він за�
 
 <!-- shot: index-first-start | First start page in the chosen language: Kefir Hub title, HOME Menu icon advice, A = OK -->
 
+<!-- draft
+- the first-start page has **B** [[Language]] next to **A** [[OK]]: it opens the [[Language]] list again, so a wrong choice can be fixed
+- in that list the current language is focused; **B** closes the list and keeps the language
+-->
+
 1. Виберіть мову у списку [[Language]], який з'являється одразу поверх сторінки з назвою Kefir Hub.
 2. Після вибору мови з'явиться сторінка з порадою щодо іконки в HOME Menu та кнопкою [[OK]]. Доки первинне настроювання не буде завершено і не буде натиснуто [[OK]], Kefir Hub не відкриває встановлення з ПК через USB і не запитує про MTP, навіть якщо підключено ПК із програмою для встановлення.
 3. Після натискання [[OK]] з'явиться головний екран вибраною мовою без перезапуску.

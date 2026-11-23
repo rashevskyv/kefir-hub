@@ -59,6 +59,10 @@ void FirstStart::Update(Controller* controller, TouchInfo* touch) {
                 }
                 // a forwarder notice that arrived during the start, now in the chosen language
                 forwarder_auto::ShowDeferredNotice();
+            }}),
+            // a wrong language: back to the list, choose again
+            std::make_pair(Button::B, Action{"Language"_i18n, [](){
+                App::ShowInitialLanguageSelection();
             }})
         );
     }
@@ -105,6 +109,8 @@ void FirstStart::Draw(NVGcontext* vg, Theme* theme) {
     gfx::drawRect(vg, 0.f, SCREEN_HEIGHT - 70.f, SCREEN_WIDTH, 1.f, theme->GetColour(ThemeEntryID_LINE_SEPARATOR));
     gfx::drawTextArgs(vg, SCREEN_WIDTH - 60.f, SCREEN_HEIGHT - 35.f, 22.f, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE,
         theme->GetColour(ThemeEntryID_TEXT), "  %s", "OK"_i18n.c_str());
+    gfx::drawTextArgs(vg, 60.f, SCREEN_HEIGHT - 35.f, 22.f, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE,
+        theme->GetColour(ThemeEntryID_TEXT), "  %s", "Language"_i18n.c_str());
 }
 
 } // namespace sphaira::ui

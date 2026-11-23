@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.430 — B on the first-start page opens the language list again
+The first-start page gets **B** Language next to **A** OK: a wrong language can be chosen again. The list then focuses the current language, and B closes it without a change. Docs drafts on index EN/UK.
+host tests: pass (quick) | nro: built (0.14.430) | switch: pending — first start (delete `/config/kefir/config.ini` language or use a fresh card): pick a language, B, pick another, OK.
+
 ## v0.14.429 — translate the new strings into all languages
 42 strings that were English-only (game edit, Hub copy question, game actions and older ones) are translated into the 24 other languages through the translation proxy (`tools/i18n-translate`).
 host tests: i18n parity pass | nro: not built | switch: pending — the new menus in a few languages.

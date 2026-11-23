@@ -270,8 +270,11 @@ void App::OpenLanguageSelectDialog(bool is_initial_setup) {
     items.reserve(languages.size());
 
     s64 initial_idx = 0;
+    // B on the first-start page opens the list again: then the language is already
+    // chosen, so focus it and let B close the list without a change.
+    const bool first_choice = is_initial_setup && App::NeedsLanguageSelection();
 
-    if (is_initial_setup) {
+    if (first_choice) {
         const std::string sys_match = i18n::MatchSystemLanguage();
         bool found = false;
         if (!sys_match.empty()) {
@@ -327,7 +330,7 @@ void App::OpenLanguageSelectDialog(bool is_initial_setup) {
         initial_idx
     );
 
-    if (is_initial_setup) {
+    if (first_choice) {
         popup->SetAllowCancel(false);
     }
 
