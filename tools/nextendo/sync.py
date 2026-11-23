@@ -338,13 +338,14 @@ def main():
     ap.add_argument("--src", type=Path)
     ap.add_argument("--tag")
     ap.add_argument("--bump", action="store_true")
+    ap.add_argument("--force", action="store_true", help="sync and release even when this tag is already in the Hub")
     a = ap.parse_args()
     try:
         if a.src:
             result = sync(a.src, a.tag or "", a.bump)
         else:
             tag = a.tag or json.loads(fetch(FORGE + "/releases/latest"))["tag_name"]
-            if tag == read_header()["tag"]:
+            if tag == read_header()["tag"] and not a.force:
                 result = {"changed": "0", "tag": tag}
             else:
                 with tempfile.TemporaryDirectory() as tmp:

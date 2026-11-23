@@ -25,6 +25,10 @@ on:
         description: "Prelude tag to sync (empty = latest release)"
         type: string
         default: ""
+      force:
+        description: "Build and release even when this Prelude tag is already in the Hub (next index, e.g. 0.14.395.1)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -68,7 +72,7 @@ jobs:
 
     - name: Sync Prelude-Nextendo
       id: sync
-      run: python3 tools/nextendo/sync.py --bump ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} | tee -a "$GITHUB_OUTPUT"
+      run: python3 tools/nextendo/sync.py --bump ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} ${{ inputs.force && '--force' || '' }} | tee -a "$GITHUB_OUTPUT"
 
     - name: Host tests
       if: steps.sync.outputs.changed == '1'
