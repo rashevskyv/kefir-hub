@@ -75,6 +75,11 @@ def main():
         assert refused(sync.collect_patches, tree(dict(good, **{extra: b"x"}))), extra
     assert refused(sync.collect_patches, tree({k: v for k, v in good.items() if k != ssl}))
     assert refused(sync.collect_patches, tree(dict(good, **{ssl: b"x" * (sync.MAX_FILE + 1)})))
+    # robot releases keep the released version and add an index
+    assert sync.robot_version("0.14.395") == "0.14.395.1"
+    assert sync.robot_version("0.14.395.1") == "0.14.395.2"
+    assert refused(sync.robot_version, "0.14")
+
     print("test_nextendo_sync_contract: ok")
 
 

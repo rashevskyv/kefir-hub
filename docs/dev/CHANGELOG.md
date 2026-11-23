@@ -189,6 +189,7 @@ Hosts +0/-0 lines, patch folders +0/-0.
 host tests: pass (quick) | nro: built (CI) | switch: pending
 
 ## unreleased
+chore: robot releases keep the released version and add an index (0.14.395 -> 0.14.395.1; a 4th number because the update check reads only numbers, "-1" would look like the same version); the version floor from dev is gone. Tests: sync contract robot_version, version_compare 4-part cases.
 chore: branches dev (work) and master (released only). prelude-sync numbers its release one above master and dev, then merges master into dev (`tools/dev/merge_master.py`: higher version wins, both CHANGELOG entries kept, any other conflict stops); deploy skill moves master to dev. Merged the robot release 0.14.395 (Prelude v5.0.2) into the local branch with the script.
 docs: drafts for Edit name and icon (v0.14.424, Games EN/UK) and the hbmenu copy question (v0.14.425, Getting started EN/UK); 2 coverage rows. Label check: my labels known (4 old unknown: [[WEB]], [[B]]); strict build aborts on the old [[WEB]] in settings.md. Shot games-edit-name-icon not taken (needs a DocsDemo build).
 docs: L button on the main screen (v0.14.407) drafts on Settings › General, the main screen tabs and Getting started (EN, UK); coverage row. Label check 0 unknown, strict build OK; shot settings-l-button not taken (needs a DocsDemo build).

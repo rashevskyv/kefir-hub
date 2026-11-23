@@ -5,8 +5,9 @@
 # Branches (decided 2026-11-23): master holds only released code, daily work goes to dev. So master is always
 # releasable; the gate stays as a guard: when master holds unreleased work (sphaira_VERSION != latest release tag)
 # only the commit is pushed and the notice says so.
-# The robot's version is one above the higher of master and dev, so numbers never repeat. After the release the robot
-# merges master into dev (tools/dev/merge_master.py resolves the version line and the CHANGELOG top) and pushes dev.
+# The robot's version is the released one plus an index: 0.14.395 -> 0.14.395.1 -> 0.14.395.2 (a 4th number, not
+# "-1": the Hub's update check reads only numbers). The next own release (0.14.396) is newer than all of them.
+# After the release the robot merges master into dev (tools/dev/merge_master.py resolves the version line and the CHANGELOG top) and pushes dev.
 # Notices: Telegram (repo secrets TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) and e-mail (an issue that mentions the owner).
 # Schedules run from the default branch only. Manual run: Actions > prelude-sync > Run workflow (dry_run on by default).
 name: prelude-sync
@@ -64,14 +65,6 @@ jobs:
         echo "master=$cur released=$rel"
         echo "can_release=$([ "$cur" = "$rel" ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
         echo "unreleased=$cur" >> "$GITHUB_OUTPUT"
-
-    - name: Version floor from dev
-      run: |
-        dev=$(git show origin/dev:sphaira/CMakeLists.txt 2>/dev/null | sed -n 's/^set(sphaira_VERSION \([0-9.]*\))$/\1/p')
-        cur=$(sed -n 's/^set(sphaira_VERSION \([0-9.]*\))$/\1/p' sphaira/CMakeLists.txt)
-        top=$(printf '%s\n%s\n' "$cur" "$dev" | sed '/^$/d' | sort -V | tail -1)
-        echo "master=$cur dev=${dev:-none} -> bump from $top"
-        sed -i "s/^set(sphaira_VERSION $cur)$/set(sphaira_VERSION $top)/" sphaira/CMakeLists.txt
 
     - name: Sync Prelude-Nextendo
       id: sync
