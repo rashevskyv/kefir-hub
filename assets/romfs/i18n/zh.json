@@ -4521,5 +4521,6 @@
   "Kefir Hub runs as your Homebrew Menu (/hbmenu.nro). A second copy is not needed:": "Kefir Hub 将作为你的 Homebrew Menu（/hbmenu.nro）运行。无需第二份副本：",
   "Don't remind": "不再提醒",
   "Create the save data of this game for a user.": "为此用户创建该游戏的存档数据。",
-  "Delete the game, its updates and DLC. The save data stays.": "删除游戏、更新和DLC。存档数据将保留。"
+  "Delete the game, its updates and DLC. The save data stays.": "删除游戏、更新和DLC。存档数据将保留。",
+  "Default icon": "默认图标"
 }

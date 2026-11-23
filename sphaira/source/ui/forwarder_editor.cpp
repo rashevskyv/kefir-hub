@@ -47,6 +47,7 @@ public:
     explicit Editor(Config config)
     : m_values{std::move(config.values)}
     , m_icon_source{config.icon_source.empty() ? "Default"_i18n : std::move(config.icon_source)}
+    , m_default_icon{std::move(config.default_icon)}
     , m_steam_query{std::move(config.steam_query)}
     , m_screen_title{config.screen_title.empty() ? "Forwarder Creation"_i18n : std::move(config.screen_title)}
     , m_title_label{config.title_label.empty() ? "App Title"_i18n : std::move(config.title_label)}
@@ -362,26 +363,24 @@ private:
     }
 
     void ChooseIconSource() {
-        App::Push<OptionBox>(
-            "Choose Icon Source"_i18n,
-            "Local File"_i18n,
-            "SteamGridDB"_i18n,
-            [weak_alive = std::weak_ptr<bool>(m_alive), this](auto index){
-                const auto alive = weak_alive.lock();
-                if (!alive || !*alive) {
-                    return;
-                }
-                if (!index) {
-                    return;
-                }
-                if (*index == 0) {
-                    SelectLocalIcon();
-                } else {
-                    SearchSteamGridDb();
-                }
-            },
-            m_preview
-        );
+        const auto cb = [weak_alive = std::weak_ptr<bool>(m_alive), this](auto index){
+            const auto alive = weak_alive.lock();
+            if (!alive || !*alive || !index) {
+                return;
+            }
+            if (*index == 0) {
+                SelectLocalIcon();
+            } else if (*index == 1) {
+                SearchSteamGridDb();
+            } else {
+                SetIcon(m_default_icon, "Default icon"_i18n);
+            }
+        };
+        if (m_default_icon.empty()) {
+            App::Push<OptionBox>("Choose Icon Source"_i18n, "Local File"_i18n, "SteamGridDB"_i18n, cb, m_preview);
+        } else {
+            App::Push<OptionBox>("Choose Icon Source"_i18n, "Local File"_i18n, "SteamGridDB"_i18n, "Default icon"_i18n, 0, cb, m_preview);
+        }
     }
 
     void SelectLocalIcon() {
@@ -557,6 +556,7 @@ private:
     std::shared_ptr<bool> m_alive{std::make_shared<bool>(true)};
     Values m_values;
     std::string m_icon_source;
+    const std::vector<u8> m_default_icon;
     const std::string m_steam_query;
     const std::string m_screen_title;
     const std::string m_title_label;

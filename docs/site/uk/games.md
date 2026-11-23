@@ -155,7 +155,8 @@
 - open: on the Games list press **+** → [[Edit name and icon]]; or on the details screen press **+** → [[Edit name and icon]]; or tap the game icon on the details screen
 - one screen: [[Name]], publisher, version, icon, [[Language]] (only when the game lists its languages; opens the same list as [[Force language]]) and [[Restrictions]] (the same switches as Game restrictions)
 - icon: a picture from SteamGridDB or from the file browser; [[Current icon]] keeps the game's own icon
-- [[Save]] writes the change into the game's control data, so the HOME menu shows it too, after a restart of the HOME menu ("[[Saved. The HOME menu may show it after a restart]]")
+- after the icon was changed once, the icon dialog ([[Choose Icon Source]]) has a third button, [[Default icon]]: it puts the game's own icon into the preview; [[Save]] writes it
+- [[Save]] writes the change into the game's control data ("[[Saved]]"); the Hub then pushes the game record to the system again, so the HOME menu reads the new name and icon without a restart (switch: pending); the Games list and the details screen show the new icon at once
 - needs sigpatches (Kefir includes sys-patch), like Game restrictions
 - a big picture is saved at lower JPEG quality until it fits the game's icon slot; if it still does not fit: "[[This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.]]"
 - some games keep their name in a newer format (for example Zelda: Breath of the Wild): only the icon and version change, the Hub says "[[This game keeps its name in a newer format: only the icon and version change]]"

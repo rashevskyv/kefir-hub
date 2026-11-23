@@ -12,6 +12,7 @@
 
 #include <minIni.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdio>
@@ -66,7 +67,7 @@ Result WriteContent(NcmContentStorage* cs, const NcmContentId& id, const std::ve
 
 } // namespace
 
-Result PatchNca(std::vector<u8>& nca, const nacp_patch::Patch& patch, bool& changed) {
+Result PatchNca(std::vector<u8>& nca, const nacp_patch::Patch& patch, bool& changed, std::vector<u8>* icon_out) {
     changed = false;
     R_UNLESS(nca.size() >= sizeof(nca::Header), Result_NcaBadMagic);
     keys::Keys keys;
@@ -126,6 +127,16 @@ Result PatchNca(std::vector<u8>& nca, const nacp_patch::Patch& patch, bool& chan
     if (!nacp_patch::Rehash(section, levels, ivfc.master_hash, 0, data_level.size, Sha256, true, master_exact)) {
         log_write("[CONTROL] ivfc layout not understood, not patching\n");
         R_THROW(Result_NcaBadMagic);
+    }
+
+    if (icon_out) {
+        // the icon as it is now: the American English one, else the first.
+        auto icons = nacp_patch::ListRomfsFiles(romfs);
+        std::erase_if(icons, [](const auto& f){ return !nacp_patch::IsIconFile(f.name); });
+        const auto us = std::ranges::find_if(icons, [](const auto& f){ return f.name == "icon_AmericanEnglish.dat"; });
+        if (const auto* f = us != icons.end() ? &*us : (icons.empty() ? nullptr : &icons.front()); f && f->data_off + f->size <= romfs.size()) {
+            icon_out->assign(romfs.data() + f->data_off, romfs.data() + f->data_off + f->size);
+        }
     }
 
     changed = nacp_patch::Apply({romfs.data() + file->first, nacp_patch::NACP_SIZE}, patch);
@@ -218,10 +229,18 @@ Result ForEachControl(u64 app_id, const ControlFn& fn) {
     R_SUCCEED();
 }
 
-// the HOME menu and ns read the new control data on their next look.
+// ns drops its cached control data, and the game's record is pushed again unchanged (ns merges
+// a pushed key with the one it has): the HOME menu gets a record update and reads the new
+// name and icon without a restart.
 Result Invalidated(u64 app_id, Result rc) {
     if (ns::AppManager am; am) {
         ns::InvalidateApplicationControlCache(am.get(), app_id);
+        ncm::ContentStorageRecord record{};
+        s32 got{};
+        if (R_SUCCEEDED(rc) && R_SUCCEEDED(ns::ListApplicationRecordContentMeta(am.get(), 0, app_id, &record, 1, &got)) && got == 1) {
+            const auto push = ns::PushApplicationRecord(am.get(), app_id, &record, 1);
+            log_write("[CONTROL] %016lX record pushed again: 0x%X\n", app_id, push);
+        }
     }
     return rc;
 }
@@ -236,6 +255,21 @@ bool HasOriginal(u64 app_id) {
         R_SUCCEED();
     });
     return has;
+}
+
+Result ReadOriginalIcon(u64 app_id, std::vector<u8>& out) {
+    out.clear();
+    fs::FsNativeSd sd;
+    R_TRY(ForEachControl(app_id, [&](auto*, const auto&, const NcmContentId& id) -> Result {
+        std::vector<u8> nca;
+        if (out.empty() && R_SUCCEEDED(sd.read_entire_file(OriginalPath(id), nca))) {
+            bool changed{};
+            std::ignore = PatchNca(nca, {}, changed, &out);
+        }
+        R_SUCCEED();
+    }));
+    R_UNLESS(!out.empty(), FsError_PathNotFound);
+    R_SUCCEED();
 }
 
 Result RestoreOriginal(u64 app_id) {

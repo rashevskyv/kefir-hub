@@ -4470,5 +4470,6 @@
   "Kefir Hub runs as your Homebrew Menu (/hbmenu.nro). A second copy is not needed:": "Kefir Hub fonctionne comme votre Homebrew Menu (/hbmenu.nro). Une seconde copie est inutile :",
   "Don't remind": "Ne pas rappeler",
   "Create the save data of this game for a user.": "Créer les données de sauvegarde de ce jeu pour un utilisateur.",
-  "Delete the game, its updates and DLC. The save data stays.": "Supprimer le jeu, ses mises à jour et DLC. Les données de sauvegarde sont conservées."
+  "Delete the game, its updates and DLC. The save data stays.": "Supprimer le jeu, ses mises à jour et DLC. Les données de sauvegarde sont conservées.",
+  "Default icon": "Icône par défaut"
 }

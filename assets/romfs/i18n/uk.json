@@ -4401,5 +4401,6 @@
   "Don't remind": "Не нагадувати",
   "Create the save data of this game for a user.": "Створити дані збереження цієї гри для користувача.",
   "Delete the game, its updates and DLC. The save data stays.": "Видалити гру, її оновлення та DLC. Дані збережень лишаються.",
-  "Download from the internet for about 1 minute to measure the real speed of your connection? A fast connection uses a few hundred MB of data.": "Завантажити з інтернету приблизно 1 хвилину, щоб виміряти реальну швидкість з'єднання? Швидке з'єднання використовує кілька сотень МБ даних."
+  "Download from the internet for about 1 minute to measure the real speed of your connection? A fast connection uses a few hundred MB of data.": "Завантажити з інтернету приблизно 1 хвилину, щоб виміряти реальну швидкість з'єднання? Швидке з'єднання використовує кілька сотень МБ даних.",
+  "Default icon": "Іконка за замовчуванням"
 }

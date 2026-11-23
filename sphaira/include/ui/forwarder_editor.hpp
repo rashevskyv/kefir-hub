@@ -32,6 +32,7 @@ struct Link {
 struct Config {
     Values values;
     std::string icon_source{};
+    std::vector<u8> default_icon{}; // set: the icon dialog also offers "Default icon"
     std::string steam_query{};
     std::string screen_title{};
     std::string title_label{};

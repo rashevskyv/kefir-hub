@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.431 — game icon: new one in the Hub at once, HOME refresh, Default icon
+A changed game reloads through ns (the manual Control NCA read gave the old icon, seen in the console log), so the Games list, details and title cache show the new icon. After a patch or restore the game record is pushed again unchanged, so the HOME menu gets an update event. The icon dialog gets **Default icon** (from the kept original). "Default icon" translated into all languages via the proxy; docs drafts on Games EN/UK.
+host tests: pass (quick) | nro: built (0.14.431) | switch: pending — change an icon: list, details and HOME menu at once without a restart; Default icon + Save; a game edited before 0.14.431 keeps the old icon in the Hub cache until it is saved again.
+
 ## v0.14.430 — B on the first-start page opens the language list again
 The first-start page gets **B** Language next to **A** OK: a wrong language can be chosen again. The list then focuses the current language, and B closes it without a change. Docs drafts on index EN/UK.
 host tests: pass (quick) | nro: built (0.14.430) | switch: pending — first start (delete `/config/kefir/config.ini` language or use a fresh card): pick a language, B, pick another, OK.

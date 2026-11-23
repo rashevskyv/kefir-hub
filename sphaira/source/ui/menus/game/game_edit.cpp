@@ -141,6 +141,8 @@ void ShowEditGame(std::vector<Entry>* entries, u64 app_id) {
     config.values.version = state.version;
     config.values.icon.assign(control->icon, control->icon + (size - sizeof(NacpStruct)));
     config.icon_source = "Current icon"_i18n;
+    // a changed icon: "Default icon" puts the game's own one back (it is saved with Save).
+    std::ignore = control_patch::ReadOriginalIcon(app_id, config.default_icon);
     config.screen_title = "Edit name and icon"_i18n;
     config.title_label = "Name"_i18n;
     config.submit_label = "Save"_i18n;
@@ -176,7 +178,7 @@ void ShowEditGame(std::vector<Entry>* entries, u64 app_id) {
         }, [entries, app_id](Result rc){
             ReloadEntry(entries, app_id);
             if (R_SUCCEEDED(rc)) {
-                App::Notify("Saved. The HOME menu may show it after a restart"_i18n);
+                App::Notify("Saved"_i18n);
             } else if (rc == Result_IconTooLarge) {
                 App::PushErrorBox(rc, "This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture."_i18n);
             } else {

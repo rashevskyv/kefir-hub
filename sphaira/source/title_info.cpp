@@ -278,11 +278,13 @@ auto ThreadData::Get(u64 app_id, bool* cached) -> ThreadResultData* {
             *cached = false;
         }
 
-        bool manual_load = true;
+        // a game the Hub just changed (Forget) is read through ns: the manual read of the
+        // rewritten Control NCA gave the old icon (v0.14.428 on the console), ns gives the new one.
+        bool manual_load = !fresh;
         u64 actual_size{};
         auto control = std::make_unique<NsApplicationControlData>();
 
-        if (hosversionBefore(20,0,0)) {
+        if (!fresh && hosversionBefore(20,0,0)) {
             TimeStamp ts;
             if (R_SUCCEEDED(nsGetApplicationControlData(NsApplicationControlSource_CacheOnly, app_id, control.get(), sizeof(NsApplicationControlData), &actual_size))) {
                 manual_load = false;
