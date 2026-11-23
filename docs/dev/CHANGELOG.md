@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.429 — translate the new strings into all languages
+42 strings that were English-only (game edit, Hub copy question, game actions and older ones) are translated into the 24 other languages through the translation proxy (`tools/i18n-translate`).
+host tests: i18n parity pass | nro: not built | switch: pending — the new menus in a few languages.
+
 ## v0.14.428 — Game details and the Games list offer the same game actions
 Game details → Game Actions gets Create save, List meta records, Archive and Delete (the screen closes after Archive or Delete, then the list rescans). The Games list → + (one game) gets Create repack, Compress game, mods folder, Pack into romfs.bin, Delete mods, Force language and Restrictions. The shared actions live in `game/game_actions.cpp`; docs drafts on Games EN/UK.
 host tests: pass (quick) | nro: built (0.14.428) | switch: pending — from details: Create save, Archive, Delete (with and without mods), the list after it; from the list: repack, compress, mods, language, restrictions.
