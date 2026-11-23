@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.436 — translate the Nextendo version and account strings and the Updater Update all strings
+19 strings (16 of v0.14.434, 3 of v0.14.435) in the 24 other languages, through the translate proxy; %s kept, no other key changed. i18n deployment contract: pass.
+host tests: not run (i18n only; deployment contract pass) | nro: not built | switch: pending
+
 ## v0.14.395 — Prelude-Nextendo v5.0.2 (robot)
 Hosts +0/-0 lines, patch folders +0/-0.
 host tests: pass (quick) | nro: built (CI) | switch: pending
