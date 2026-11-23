@@ -61,9 +61,8 @@ auto TagFromRelease(const std::vector<u8>& body) -> std::string {
 }
 
 // Versions for the Nextendo page: asked when the page opens (the user is looking at it), at most once an hour.
-// The newest Prelude tag comes from the forge, the server version from the health answer: nothing is compiled in
-// except the tag this Hub carries. Main thread only, like the online counts.
-Versions g_versions{kPinnedTag, {}, {}};
+// The newest Prelude tag comes from the forge; only the tag this Hub carries is compiled in. Main thread only, like the online counts.
+Versions g_versions{kPinnedTag, {}};
 std::int64_t g_versions_checked{};
 bool g_versions_busy{};
 
@@ -87,15 +86,6 @@ void RefreshVersionsAsync() {
         curl::OnComplete{[](auto& result) {
             g_versions_busy = false;
             g_versions.prelude = result.success ? TagFromRelease(result.data) : std::string{};
-            return true;
-        }}
-    );
-    curl::Api().ToMemoryAsync(
-        curl::Url{std::string{kHealthUrl}},
-        curl::Header{{"Accept", "application/json"}},
-        curl::StopToken{},
-        curl::OnComplete{[](auto& result) {
-            g_versions.server = result.success ? ParseHealthVersion({reinterpret_cast<const char*>(result.data.data()), result.data.size()}) : std::string{};
             return true;
         }}
     );

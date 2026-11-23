@@ -88,12 +88,22 @@ void HoldConfirmBox::Draw(NVGcontext* vg, Theme* theme) {
     
     float bounds[4]{};
     nvgFontSize(vg, font_size);
-    
+    nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+
+    // a long text makes the box taller (centred on the screen), up to the screen height
+    const float chrome_h = m_compact ? 82.f + 40.f : 86.f + 30.f + 30.f;
+    nvgTextBoxBounds(vg, 0.f, 0.f, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
+    const float want_h = std::min(SCREEN_HEIGHT - 40.f, bounds[3] - bounds[1] + chrome_h);
+    if (want_h > m_pos.h) {
+        m_pos.h = want_h;
+        m_pos.y = (SCREEN_HEIGHT - m_pos.h) / 2.f;
+    }
+
     float text_area_h = m_compact ? (m_pos.h - 82.f) : (m_pos.h - 86.f - 30.f);
     float text_y_start = m_compact ? m_pos.y : (m_pos.y + 30.f);
 
     nvgTextBoxBounds(vg, m_pos.x + padding, text_y_start, m_pos.w - padding * 2.f, m_message.c_str(), nullptr, bounds);
-    // a long text (several paragraphs, a long language) gets a smaller font rather than running under the button
+    // only a text taller than the screen gets a smaller font
     while (bounds[3] - bounds[1] > text_area_h && font_size > 15.f) {
         font_size -= 1.f;
         nvgFontSize(vg, font_size);

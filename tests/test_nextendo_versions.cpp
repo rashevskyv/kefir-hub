@@ -16,21 +16,13 @@ int main() {
     assert(Compare({5, 0, 1}, {5, 0, 2}) < 0 && Compare({5, 1, 0}, {5, 0, 9}) > 0 && Compare({4, 9, 9}, {5, 0, 0}) < 0);
     assert(Compare({5, 0, 2}, {5, 0, 2}) == 0);
 
-    assert(ParseHealthVersion("{\"ok\":true}").empty());
-    assert(ParseHealthVersion("{\"ok\":true,\"version\":\"v5.0.3\"}") == "v5.0.3");
-    assert(ParseHealthVersion("{\"version\": \"nonsense\"}").empty());
-    assert(ParseHealthVersion("{\"version\":").empty());
-
     // the real case: Hub carries v5.0.1, the forge has v5.0.2
-    assert(Judge({"v5.0.1", "v5.0.2", ""}) == Verdict::HubBehind);
-    assert(Judge({"v5.0.2", "v5.0.2", ""}) == Verdict::Match);
-    assert(Judge({"v5.0.3", "v5.0.2", ""}) == Verdict::HubAhead);
-    assert(Judge({"v5.0.1", "", ""}) == Verdict::Unknown);
-    assert(Judge({"v5.0.1", "v5.0.1", "v5.1.0"}) == Verdict::ServerNewer);
-    assert(Judge({"v5.0.1", "", "v5.1.0"}) == Verdict::ServerNewer); // server alone is enough
-    assert(Judge({"v5.0.1", "v5.0.1", "v5.0.1"}) == Verdict::Match);
-    assert(ActionFor(Verdict::HubBehind).offer_update && ActionFor(Verdict::HubBehind).warn);
-    assert(!ActionFor(Verdict::Match).warn && !ActionFor(Verdict::Unknown).offer_update && !ActionFor(Verdict::HubAhead).warn);
+    assert(Judge({"v5.0.1", "v5.0.2"}) == Verdict::HubBehind);
+    assert(Judge({"v5.0.2", "v5.0.2"}) == Verdict::Match);
+    assert(Judge({"v5.0.3", "v5.0.2"}) == Verdict::HubAhead);
+    assert(Judge({"v5.0.1", ""}) == Verdict::Unknown && Judge({"", "v5.0.2"}) == Verdict::Unknown);
+    assert(UpdateAvailable({"v5.0.1", "v5.0.2"}) && !UpdateAvailable({"v5.0.2", "v5.0.2"}));
+    assert(!UpdateAvailable({"v5.0.3", "v5.0.2"}) && !UpdateAvailable({"v5.0.1", ""}));
 
     assert(VersionsDue(1000, 0) && VersionsDue(10, 1000) && !VersionsDue(1000 + 3599, 1000) && VersionsDue(1000 + 3600, 1000));
 

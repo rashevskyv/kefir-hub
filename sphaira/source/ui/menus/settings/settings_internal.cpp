@@ -267,6 +267,28 @@ auto DrawSettingsIndicator(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsI
 }
 
 
+// Row height that fits the longest description of the list (same font and width as DrawActionListItem), at least 66.
+auto ActionListRowHeight(NVGcontext* vg, const std::vector<SettingsItem>& items, float row_w) -> float {
+    float h = 66.f;
+    nvgSave(vg);
+    nvgFontSize(vg, 14.f);
+    nvgTextLineHeight(vg, 1.f);
+    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+    for (const auto& item : items) {
+        if (item.description.empty() || item.kind == SettingsItemKind::Header) {
+            continue;
+        }
+        const auto value = item.value ? item.value() : std::string{};
+        const auto value_width = !value.empty() ? 224.f : ((item.tri || item.lamp) ? 90.f : 0.f);
+        const float text_offset = SettingsItemTextX(item, 0.f);
+        float b[4]{};
+        nvgTextBoxBounds(vg, 0.f, 0.f, row_w - 18.f - value_width - text_offset, item.description.c_str(), nullptr, b);
+        h = std::max(h, 39.f + (b[3] - b[1]) + 10.f);
+    }
+    nvgRestore(vg);
+    return std::ceil(h);
+}
+
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected) {
     if (item.kind == SettingsItemKind::Header) {
         const float text_x = v.x + 18.f;

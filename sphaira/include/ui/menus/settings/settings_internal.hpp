@@ -37,6 +37,8 @@ auto DrawSettingsIndicator(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsI
 auto SettingsItemTextX(const SettingsItem& item, float x) -> float;
 void DrawSettingsItemKindIcon(NVGcontext* vg, Theme* theme, const SettingsItem& item, Vec4 v, bool selected);
 void DrawActionListItem(NVGcontext* vg, Theme* theme, Vec4 v, const SettingsItem& item, bool selected);
+// row height for DrawActionListItem rows so that every description fits (a long one makes all rows taller)
+auto ActionListRowHeight(NVGcontext* vg, const std::vector<SettingsItem>& items, float row_w) -> float;
 
 auto ThemeValue() -> std::string;
 auto BuildAutoUpdateItems() -> std::vector<SettingsItem>;

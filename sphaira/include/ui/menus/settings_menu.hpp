@@ -200,11 +200,13 @@ struct NextendoMenu final : MenuBase {
 private:
     void SetIndex(s64 index);
     void OnSelect();
+    void MakeList();
 
 private:
     std::vector<SettingsItem> m_items;
     s64 m_index{};
     std::unique_ptr<List> m_list;
+    float m_row_h{66.f}; // grows so that the longest description fits its row
 };
 
 struct ThemesMenu final : MenuBase {

@@ -133,51 +133,26 @@ auto BuildNextendoItems() -> std::vector<SettingsItem> {
         {},
     });
 
-    // The three versions come from the network each hour (RefreshVersionsAsync); only the first is compiled in.
-    items.emplace_back(SettingsItem{
+    // One row: the release this Hub carries; when the forge has a newer Prelude release, the same row says so.
+    SettingsItem release{
         "Release in this Hub"_i18n,
-        "The Prelude-Nextendo release whose patches and server address this Kefir Hub carries. Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0."_i18n,
-        [](){ return nx::CurrentVersions().hub; },
-        {},
-    });
-    items.emplace_back(SettingsItem{
-        "Newest Prelude release"_i18n,
-        "The newest Prelude-Nextendo release on the Nextendo forge, read from the internet."_i18n,
-        [](){ const auto v = nx::CurrentVersions().prelude; return v.empty() ? "Not read"_i18n : v; },
-        {},
-    });
-    items.emplace_back(SettingsItem{
-        "Nextendo server version"_i18n,
-        "The version the Nextendo server announces. The server does not announce one yet."_i18n,
-        [](){ const auto v = nx::CurrentVersions().server; return v.empty() ? "Not announced"_i18n : v; },
-        {},
-    });
-    SettingsItem check{
-        "Versions"_i18n,
-        "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release."_i18n,
+        "Based on Prelude-Nextendo by Nextendo Network, PolyForm Shield License 1.0.0."_i18n,
         [](){
-            switch (nx::Judge(nx::CurrentVersions())) {
-                case nx::Verdict::Match: return "Up to date"_i18n;
-                case nx::Verdict::HubAhead: return "Up to date"_i18n;
-                case nx::Verdict::Unknown: return "Not read"_i18n;
-                default: return "Update Kefir Hub"_i18n;
-            }
+            const auto v = nx::CurrentVersions();
+            return nx::UpdateAvailable(v) ? v.hub + " · " + Fill("update %s: update Kefir Hub"_i18n, v.prelude) : v.hub;
         },
         [](){
             const auto v = nx::CurrentVersions();
-            if (nx::ActionFor(nx::Judge(v)).offer_update) {
+            if (nx::UpdateAvailable(v)) {
                 App::Push<OptionBox>(
-                    Fill("A newer Nextendo release exists: %s. This Kefir Hub carries an older one, so its patches may not fit the current Nextendo. Update Kefir Hub: Updater → Apps."_i18n,
-                         v.server.empty() ? v.prelude : v.server),
+                    Fill("A newer Nextendo release exists: %s. This Kefir Hub carries an older one, so its patches may not fit the current Nextendo. Update Kefir Hub: Updater → Apps."_i18n, v.prelude),
                     "OK"_i18n);
             }
         },
     };
-    check.lamp = [](){
-        const auto v = nx::Judge(nx::CurrentVersions());
-        return v == nx::Verdict::Unknown ? -1 : nx::ActionFor(v).warn ? 0 : 1;
-    };
-    items.emplace_back(std::move(check));
+    // red only while an update exists; no lamp otherwise
+    release.lamp = [](){ return nx::UpdateAvailable(nx::CurrentVersions()) ? 0 : -1; };
+    items.emplace_back(std::move(release));
 
     if (nx::RestartNeeded()) {
         items.emplace_back(SettingsItem{
@@ -205,10 +180,15 @@ NextendoMenu::NextendoMenu() : MenuBase{"Nextendo", MenuFlag_None} {
         }})
     );
 
-    m_list = std::make_unique<List>(1, 7, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, 66.f});
+    MakeList();
+    SetIndex(0);
+}
+
+void NextendoMenu::MakeList() {
+    const auto rows = std::max<s64>(1, static_cast<s64>(462.f / m_row_h));
+    m_list = std::make_unique<List>(1, rows, Vec4{75.f, 132.f, 1145.f, 462.f}, Vec4{75.f, 132.f, 1130.f, m_row_h});
     m_list->SetLayout(List::Layout::GRID);
     m_list->SetPageJump(false);
-    SetIndex(0);
 }
 
 NextendoMenu::~NextendoMenu() = default;
@@ -241,6 +221,10 @@ void NextendoMenu::Update(Controller* controller, TouchInfo* touch) {
 
 void NextendoMenu::Draw(NVGcontext* vg, Theme* theme) {
     MenuBase::Draw(vg, theme);
+    if (const auto h = ActionListRowHeight(vg, m_items, 1130.f); h != m_row_h) {
+        m_row_h = h;
+        MakeList();
+    }
     m_list->Draw(vg, theme, m_items.size(), m_index, [this](auto* vg, auto* theme, Vec4 v, auto i) {
         DrawActionListItem(vg, theme, v, m_items[i], m_index == i);
     });
