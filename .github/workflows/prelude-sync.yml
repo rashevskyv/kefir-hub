@@ -2,8 +2,11 @@
 # Once a day: if NextendoNetwork/Prelude-Nextendo (git.nextendo.network) has a new release, tools/nextendo/sync.py brings its hosts lines and
 # patch files into the Hub (strict checks stand in for a review), the host tests run, the NRO is built, the commit goes
 # to master and a release is published; the console's self-update picks it up.
-# The release is skipped when master already holds unreleased work (sphaira_VERSION != latest release tag): then only
-# the commit is pushed and the notice says so.
+# Branches (decided 2026-11-23): master holds only released code, daily work goes to dev. So master is always
+# releasable; the gate stays as a guard: when master holds unreleased work (sphaira_VERSION != latest release tag)
+# only the commit is pushed and the notice says so.
+# The robot's version is one above the higher of master and dev, so numbers never repeat. After the release the robot
+# merges master into dev (tools/dev/merge_master.py resolves the version line and the CHANGELOG top) and pushes dev.
 # Notices: Telegram (repo secrets TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) and e-mail (an issue that mentions the owner).
 # Schedules run from the default branch only. Manual run: Actions > prelude-sync > Run workflow (dry_run on by default).
 name: prelude-sync
@@ -48,7 +51,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: master
-        fetch-depth: 1
+        fetch-depth: 0   # the dev merge needs the history
 
     - name: Release gate
       id: gate
@@ -61,6 +64,14 @@ jobs:
         echo "master=$cur released=$rel"
         echo "can_release=$([ "$cur" = "$rel" ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
         echo "unreleased=$cur" >> "$GITHUB_OUTPUT"
+
+    - name: Version floor from dev
+      run: |
+        dev=$(git show origin/dev:sphaira/CMakeLists.txt 2>/dev/null | sed -n 's/^set(sphaira_VERSION \([0-9.]*\))$/\1/p')
+        cur=$(sed -n 's/^set(sphaira_VERSION \([0-9.]*\))$/\1/p' sphaira/CMakeLists.txt)
+        top=$(printf '%s\n%s\n' "$cur" "$dev" | sed '/^$/d' | sort -V | tail -1)
+        echo "master=$cur dev=${dev:-none} -> bump from $top"
+        sed -i "s/^set(sphaira_VERSION $cur)$/set(sphaira_VERSION $top)/" sphaira/CMakeLists.txt
 
     - name: Sync Prelude-Nextendo
       id: sync
@@ -124,6 +135,20 @@ jobs:
           "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$id/assets?name=kefir-hub.nro" > /dev/null
         echo "url=https://github.com/$GITHUB_REPOSITORY/releases/tag/$v" >> "$GITHUB_OUTPUT"
 
+    - name: Merge master into dev
+      id: dev
+      if: steps.sync.outputs.changed == '1' && env.DRY_RUN != 'true'
+      continue-on-error: true
+      run: |
+        git ls-remote --exit-code --heads origin dev > /dev/null || { echo "no dev branch"; exit 0; }
+        cp tools/dev/merge_master.py /tmp/merge_master.py
+        git checkout -q -B dev origin/dev
+        if python3 /tmp/merge_master.py; then
+          git push origin HEAD:dev && echo "merged=1" >> "$GITHUB_OUTPUT"
+        else
+          echo "merged=0" >> "$GITHUB_OUTPUT"; exit 1
+        fi
+
     - name: Notify
       if: always() && (failure() || steps.sync.outputs.changed == '1')
       env:
@@ -137,6 +162,7 @@ jobs:
         UNRELEASED: ${{ steps.gate.outputs.unreleased }}
         TAG: ${{ steps.sync.outputs.tag }}
         VERSION: ${{ steps.sync.outputs.version }}
+        DEV_MERGED: ${{ steps.dev.outputs.merged }}
       run: |
         mkdir -p build/prelude_sync
         {
@@ -155,7 +181,13 @@ jobs:
           fi
           if [ "$CHANGED" = "1" ] && [ -f build/prelude_sync/summary.md ]; then echo; cat build/prelude_sync/summary.md; fi
           if [ "$CHANGED" = "1" ] && [ "$DRY_RUN" != "true" ] && [ "$FAILED" != "true" ]; then
-            echo; echo "Перед наступним своїм комітом зробіть git pull: робот змінив master."
+            if [ "$DEV_MERGED" = "1" ]; then
+              echo; echo "Робот злив master у dev. Перед своїм комітом: git pull у dev."
+            elif [ "$DEV_MERGED" = "0" ]; then
+              echo; echo "⚠ Злити master у dev не вдалося (конфлікт). Локально: python tools/dev/merge_master.py"
+            else
+              echo; echo "Перед наступним своїм комітом: python tools/dev/merge_master.py (робот змінив master)."
+            fi
           fi
           echo; echo "Запуск: $RUN_URL"
         } > build/prelude_sync/notice.txt
