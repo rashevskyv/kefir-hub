@@ -18,6 +18,8 @@ Reports to the user are in Ukrainian; code, commits and this file are in English
 
 ## Workspace
 - Primary checkout: `D:\git\dev\kefir-hub` (WSL: `/mnt/d/git/dev/kefir-hub`). No git worktrees, ever.
+- Branches: work and commit on `dev`; `master` = released code only (the Prelude robot commits and releases there,
+  then merges it into `dev`). Take robot commits with `python tools/dev/merge_master.py`; `/deploy` moves `master` to `dev`.
 - Never `git push` unless the user asks. Commit on Windows (Git Bash / PowerShell), not from a Linux VM mount
   (a VM sees CRLF noise in hundreds of files — do not stage it).
 - `assets/romfs/tegra/TegraExplorer.bin` changes in the background (Kefir updates). Ignore it when checking
