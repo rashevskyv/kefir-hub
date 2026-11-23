@@ -3,6 +3,7 @@
 #include <switch.h>
 #include <cstring>
 #include <vector>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <span>
@@ -18,6 +19,7 @@
 #include "defines.hpp"
 #include "app.hpp"
 #include "nacp_util.hpp"
+#include "image.hpp"
 #include "ui/progress_box.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
@@ -134,6 +136,15 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
         nacp_patch.video_capture = options.video_capture;
         patch_nacp(config.nacp, nacp_patch);
 
+        // a 111 KB icon (sotn.nro, quality 100) gave a grey HOME tile and 2137-7403 on launch;
+        // a 19 KB one (DBI) works. Keep forwarder icons small.
+        // ponytail: 32 KiB is a guess between the two, raise it if a real limit is found.
+        constexpr std::size_t FORWARDER_ICON_MAX = 0x8000;
+        if (auto fitted = ImageFitJpeg(config.icon, FORWARDER_ICON_MAX); !fitted.empty()) {
+            log_write("[OWO] icon %zu -> %zu bytes\n", config.icon.size(), fitted.size());
+            config.icon = std::move(fitted);
+        }
+
         FileEntries romfs;
         add_file_entry(romfs, "/control.nacp", &config.nacp, sizeof(config.nacp));
         add_file_entry(romfs, "/icon_AmericanEnglish.dat", config.icon);
@@ -236,6 +247,13 @@ auto install_forwader_internal(ui::ProgressBox* pbox, OwoConfig& config, NcmStor
             R_UNLESS(R_SUCCEEDED(rc) || hosversionBefore(2,0,0), rc);
         }
     }
+
+    // ns must read the new control data, else HOME shows a grey tile that never loads.
+    auto control = std::make_unique<NsApplicationControlData>();
+    u64 control_size{};
+    const auto read_rc = nsGetApplicationControlData(NsApplicationControlSource_Storage, tid, control.get(), sizeof(*control), &control_size);
+    log_write("[OWO] %016lX control read back: 0x%X, %lu bytes\n", tid, read_rc, control_size);
+    R_TRY(read_rc);
 
     R_SUCCEED();
 }

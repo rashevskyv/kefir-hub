@@ -39,6 +39,10 @@ auto ImageNormalizeIcon(std::span<const u8> data) -> std::vector<u8>;
 // (file-viewer load path, then resize). For avatars from the SD picker.
 auto ImageNormalizeAvatar(std::span<const u8> data) -> std::vector<u8>;
 
+// Returns the JPEG as is when it fits in max_size, else a 256x256 re-encode at the best
+// quality that fits. Returns empty when nothing fits or the picture does not decode.
+auto ImageFitJpeg(std::span<const u8> jpeg, std::size_t max_size) -> std::vector<u8>;
+
 // Returns a normalized 256x256 JPEG default icon, falling back to raw default bytes.
 auto ImageGetDefaultIcon() -> std::vector<u8>;
 

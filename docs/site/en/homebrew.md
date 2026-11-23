@@ -135,6 +135,7 @@ It starts the app in title mode, with full memory.
 - [[Address space]] / [[Address Space]] has a new value [[42-bit]] (the widest; DBI calls it "42 Bit"); it needs firmware 23.0.0 or newer: on an older firmware a 42-bit forwarder does not start
 - [[Automatic]] means 39-bit (0.14.241; in 0.14.232-240 it was 42-bit on firmware 23.0.0+, and such a HOME tile did not start on 23.0.1 / Atmosphère 1.12.1); the default stays [[Automatic]]; a tile made with 42-bit that does not open: delete it and make it again
 - in the forwarder editor the value cycles 42-bit → 39-bit → 36-bit → 32-bit → 32-bit (no alias) → back to 42-bit; 42-bit is a choice on purpose, the hint says it may not start
+- 0.14.432: the forwarder icon is stored at most 32 KB (a bigger one is saved again at a lower JPEG quality; a 111 KB icon gave a grey HOME tile that never loads and error 2137-7403 on start); after install Kefir Hub reads the new icon back from the system and shows an error with a code if it cannot
 -->
 | Option | What it does | Default |
 |---|---|---|

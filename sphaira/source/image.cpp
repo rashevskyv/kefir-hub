@@ -323,6 +323,27 @@ auto ImageNormalizeIcon(std::span<const u8> data) -> std::vector<u8> {
     return jpg.data;
 }
 
+auto ImageFitJpeg(std::span<const u8> jpeg, std::size_t max_size) -> std::vector<u8> {
+    if (!jpeg.empty() && jpeg.size() <= max_size) {
+        return {jpeg.begin(), jpeg.end()};
+    }
+    auto img = ImageLoadFromMemory(jpeg);
+    if (img.data.empty()) {
+        return {};
+    }
+    if (img.w != ICON_TARGET_DIM || img.h != ICON_TARGET_DIM) {
+        img = ImageResize(img.data, img.w, img.h, ICON_TARGET_DIM, ICON_TARGET_DIM);
+    }
+    for (const int quality : {95, 90, 85, 80, 70, 60, 50, 40, 30, 20}) {
+        auto out = ImageConvertToJpg(img.data, img.w, img.h, quality).data;
+        if (!out.empty() && out.size() <= max_size) {
+            log_write("[IMAGE] jpeg at quality %d: %zu of %zu bytes\n", quality, out.size(), max_size);
+            return out;
+        }
+    }
+    return {};
+}
+
 auto ImageNormalizeAvatar(std::span<const u8> data) -> std::vector<u8> {
     if (data.empty()) {
         return {};

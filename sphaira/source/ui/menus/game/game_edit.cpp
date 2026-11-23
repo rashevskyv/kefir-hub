@@ -19,29 +19,6 @@
 namespace sphaira::ui::menu::game {
 namespace {
 
-// the icon slot of a Control NCA is as big as the icon the game came with; a new picture is
-// saved at the best JPEG quality that still fits.
-auto FitIcon(const std::vector<u8>& jpeg, std::size_t max_size) -> std::vector<u8> {
-    if (!jpeg.empty() && jpeg.size() <= max_size) {
-        return jpeg;
-    }
-    auto img = ImageLoadFromMemory(jpeg);
-    if (img.data.empty()) {
-        return {};
-    }
-    if (img.w != 256 || img.h != 256) {
-        img = ImageResize(img.data, img.w, img.h, 256, 256);
-    }
-    for (const int quality : {95, 90, 85, 80, 70, 60, 50, 40, 30, 20}) {
-        auto out = ImageConvertToJpg(img.data, img.w, img.h, quality).data;
-        if (!out.empty() && out.size() <= max_size) {
-            log_write("[EDIT] icon at quality %d: %zu of %zu bytes\n", quality, out.size(), max_size);
-            return out;
-        }
-    }
-    return {};
-}
-
 void ReloadEntry(std::vector<Entry>* entries, u64 app_id) {
     title::Forget(app_id);
     for (auto& e : *entries) {
@@ -168,7 +145,8 @@ void ShowEditGame(std::vector<Entry>* entries, u64 app_id) {
         }
         if (v.version != before.version) p.version = v.version;
         if (v.icon_changed) {
-            p.icon = [jpeg = v.icon](std::size_t max_size){ return FitIcon(jpeg, max_size); };
+            // the icon slot of a Control NCA is as big as the icon the game came with.
+            p.icon = [jpeg = v.icon](std::size_t max_size){ return ImageFitJpeg(jpeg, max_size); };
         }
         if (!p.EditsTitle()) {
             return true;

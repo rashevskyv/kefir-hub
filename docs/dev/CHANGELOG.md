@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.432 — forwarder icon at most 32 KB, control data read back after install
+A forwarder for sotn.nro (icon 111 KB at JPEG quality 100) gave a grey HOME tile that never loads and 2137-7403 on start; DBI (19 KB) works. `install_forwarder` now saves a bigger icon again at a lower quality (`ImageFitJpeg`, moved from game_edit), then reads the control data back from ns and fails with its code. The size limit is a guess: the cause is not proven.
+host tests: pass (quick) | nro: built (0.14.432) | switch: pending — delete the grey SotN tile (0584557ACA74C000), make the forwarder again: icon shows, game starts; on an error box note the code; log line `[OWO] ... control read back`.
+
 ## v0.14.431 — game icon: new one in the Hub at once, HOME refresh, Default icon
 A changed game reloads through ns (the manual Control NCA read gave the old icon, seen in the console log), so the Games list, details and title cache show the new icon. After a patch or restore the game record is pushed again unchanged, so the HOME menu gets an update event. The icon dialog gets **Default icon** (from the kept original). "Default icon" translated into all languages via the proxy; docs drafts on Games EN/UK.
 host tests: pass (quick) | nro: built (0.14.431) | switch: pending — change an icon: list, details and HOME menu at once without a restart; Default icon + Save; a game edited before 0.14.431 keeps the old icon in the Hub cache until it is saved again.
