@@ -39,6 +39,8 @@ struct GithubApp {
     std::string_view nro_path;    // where it goes on the card
     std::string_view icon;
     bool ukrainian_only;          // shown in the Software menu only with the Ukrainian Hub language
+    bool gitlab = false;          // repo lives on gitlab.com, not github.com
+    bool in_menu = true;          // false: only the Updater knows it (the Kefir package or another menu installs it)
 };
 
 inline constexpr GithubApp GITHUB_APPS[] = {
@@ -53,13 +55,27 @@ inline constexpr GithubApp GITHUB_APPS[] = {
         "SimpleModDownloader.nro", "/switch/SimpleModDownloader/SimpleModDownloader.nro", "romfs:/theme/simplemoddownloader.jpg", false},
     {"NXLoad", "Game catalog and download manager.", "Downloading NXLoad...", "Small182/NXLoad",
         "NXLoad.nro", "/switch/NXLoad/NXLoad.nro", "romfs:/theme/nxload.jpg", false},
+    // the Kefir package puts these two on the card (Kefirosphere utilities/tools_config.json has the same repos and paths)
+    {"NXThemesInstaller", "Installs HOME menu themes.", "Downloading NXThemesInstaller...", "exelix11/SwitchThemeInjector",
+        "NXThemesInstaller.nro", "/switch/NxThemesInstaller/NXThemesInstaller.nro", "", false, false, false},
+    {"pipensx", "Game catalog and torrent downloader.", "Downloading pipensx...", "pipensx-group/pipensx",
+        "pipensx.nro", "/switch/pipensx/pipensx.nro", "", false, true, false},
 };
 
 inline auto GithubDownloadUrl(const GithubApp& app) -> std::string {
+    if (app.gitlab) {
+        return "https://gitlab.com/" + std::string(app.repo) + "/-/releases/permalink/latest/downloads/" + std::string(app.asset);
+    }
     return "https://github.com/" + std::string(app.repo) + "/releases/latest/download/" + std::string(app.asset);
 }
 
+// GitLab answers a list of releases (newest first); the reader takes the first one
 inline auto GithubReleaseApiUrl(const GithubApp& app) -> std::string {
+    if (app.gitlab) {
+        std::string project(app.repo);
+        project.replace(project.find('/'), 1, "%2F");
+        return "https://gitlab.com/api/v4/projects/" + project + "/releases?per_page=1";
+    }
     return "https://api.github.com/repos/" + std::string(app.repo) + "/releases/latest";
 }
 

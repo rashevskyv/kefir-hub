@@ -50,7 +50,7 @@ auto BuildSoftwareItems() -> std::vector<SettingsItem> {
 
     // the apps downloaded straight from their GitHub release; the Updater's Apps tab updates them from the same list
     for (const auto& app : kefir::GITHUB_APPS) {
-        if (app.ukrainian_only && !i18n::IsUkrainian()) {
+        if (!app.in_menu || (app.ukrainian_only && !i18n::IsUkrainian())) {
             continue;
         }
         items.emplace_back(MakePackageAction({

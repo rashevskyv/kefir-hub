@@ -32,6 +32,14 @@ int main() {
     assert(GithubTempPath(*uaplay) == "/switch/UAPlay_new.nro");
     assert(GithubTempPath(*FindGithubApp("/switch/ModCD/ModCD.nro")) == "/switch/ModCD/ModCD_new.nro");
 
+    // apps the Kefir package installs: found by path, pipensx lives on GitLab
+    const auto* pipensx = FindGithubApp("/switch/pipensx/pipensx.nro");
+    assert(pipensx && pipensx->gitlab && !pipensx->in_menu);
+    assert(GithubReleaseApiUrl(*pipensx) == "https://gitlab.com/api/v4/projects/pipensx-group%2Fpipensx/releases?per_page=1");
+    assert(GithubDownloadUrl(*pipensx) == "https://gitlab.com/pipensx-group/pipensx/-/releases/permalink/latest/downloads/pipensx.nro");
+    assert(SourceOf("/switch/NxThemesInstaller/NxThemesInstaller.nro", hub) == AppSource::Github);
+    assert(ReleaseVersion("nxt-3.0.2") == "3.0.2");
+
     // release tags as versions: the tags of the four repos today
     assert(ReleaseVersion("UAPlay_0.5.1") == "0.5.1");
     assert(ReleaseVersion("v1.6.0") == "1.6.0");

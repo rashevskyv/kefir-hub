@@ -66,8 +66,10 @@ auto StoreState(const appstore::Entry& e) -> AppState {
 }
 
 auto RowOrder(const AppRow& a, const AppRow& b) -> bool {
+    // the apps with an update first (Hub, DBI, then the rest), then the others in the same order
     const auto rank = [](const AppRow& r) {
-        return r.source == AppSource::Hub ? 0 : r.source == AppSource::Dbi ? 1 : r.state == AppState::Update ? 2 : 3;
+        const int kind = r.source == AppSource::Hub ? 0 : r.source == AppSource::Dbi ? 1 : 2;
+        return (r.state == AppState::Update ? 0 : 3) + kind;
     };
     if (rank(a) != rank(b)) {
         return rank(a) < rank(b);
@@ -342,18 +344,82 @@ void AppsTab::UpdateStoreApp(const AppRow& row) {
     });
 }
 
+namespace {
+auto GithubJob(ProgressBox* pbox, const GithubApp& app) -> Result {
+    using namespace settings::detail;
+    R_TRY(DownloadFile(pbox, i18n::get(app.downloading), GithubDownloadUrl(app), GithubTempPath(app)));
+    R_TRY(MovePath(GithubTempPath(app), std::string(app.nro_path)));
+    R_SUCCEED();
+}
+} // namespace
+
 void AppsTab::UpdateGithubApp(const AppRow& row) {
     const auto* app = FindGithubApp(row.path);
     if (!app) {
         return;
     }
     App::Push<ProgressBox>(0, "Updating"_i18n, row.name, [app](auto pbox) -> Result {
-        using namespace settings::detail;
-        R_TRY(DownloadFile(pbox, i18n::get(app->downloading), GithubDownloadUrl(*app), GithubTempPath(*app)));
-        R_TRY(MovePath(GithubTempPath(*app), std::string(app->nro_path)));
-        R_SUCCEED();
+        return GithubJob(pbox, *app);
     }, [this, name = row.name](Result rc) {
         Installed(rc, name);
+    });
+}
+
+// Y: every app with an update, one after the other, in one box. Not the Hub (it restarts the Hub: press A on it)
+// and not a DBI that still needs its language chosen (press A on it).
+void AppsTab::UpdateAll() {
+    if (m_loading) {
+        App::PlaySoundEffect(SoundEffect_Limit);
+        return;
+    }
+    auto rows = std::make_shared<std::vector<AppRow>>();
+    for (const auto& row : m_rows) {
+        if (row.state != AppState::Update || row.source == AppSource::Hub) {
+            continue;
+        }
+        if (row.source == AppSource::Dbi && fs::FsNativeSd().FileExists("/switch/DBI/translation.bin") &&
+            DbiLanguageAsset(ReadTextFile(std::string(DBI_LANGUAGE_RECORD).c_str())).empty()) {
+            continue;
+        }
+        rows->push_back(row);
+    }
+    if (rows->empty()) {
+        App::Notify("Already the newest version."_i18n);
+        return;
+    }
+    App::Push<ProgressBox>(0, "Updating"_i18n, "", [rows](auto pbox) -> Result {
+        using settings::DbiTranslationEntry;
+        Result first_error = 0;
+        for (const auto& row : *rows) {
+            pbox->NewTransfer(row.name);
+            Result rc = 0;
+            if (row.source == AppSource::Github) {
+                if (const auto* app = FindGithubApp(row.path)) {
+                    rc = GithubJob(pbox, *app);
+                }
+            } else if (row.source == AppSource::Dbi) {
+                const auto asset = DbiLanguageAsset(ReadTextFile(std::string(DBI_LANGUAGE_RECORD).c_str()));
+                if (asset.empty()) { // no translation: only the nro
+                    rc = settings::detail::DownloadFile(pbox, "Downloading DBI..."_i18n, std::string(DBI_RELEASE_DOWNLOAD) + "DBI.nro", "/switch/DBI/DBI_new.nro");
+                    if (R_SUCCEEDED(rc)) {
+                        rc = settings::detail::MovePath("/switch/DBI/DBI_new.nro", "/switch/DBI/DBI.nro");
+                    }
+                } else {
+                    rc = settings::detail::InstallDbiTranslation(pbox, {.name = asset, .translation_url = std::string(DBI_RELEASE_DOWNLOAD) + asset});
+                }
+            } else if (row.store) {
+                rc = appstore::InstallApp(pbox, *row.store);
+            }
+            if (rc == Result_TransferCancelled) {
+                return rc;
+            }
+            if (R_FAILED(rc) && R_SUCCEEDED(first_error)) { // one failed app does not stop the others
+                first_error = rc;
+            }
+        }
+        return first_error;
+    }, [this](Result rc) {
+        Installed(rc, "Updating"_i18n);
     });
 }
 
@@ -426,7 +492,8 @@ void AppsTab::Draw(NVGcontext* vg, Theme* theme) {
         }
 
         const bool update = row.state == AppState::Update;
-        const auto name_id = update ? ThemeEntryID_TEXT_SELECTED : selected ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
+        // only an app with an update has the accent colour; the selection is the outline
+        const auto name_id = update ? ThemeEntryID_TEXT_SELECTED : ThemeEntryID_TEXT;
         gfx::drawTextBox(vg, v.x + 20.f, v.y + 11.f, 23.f, v.w - 360.f, theme->GetColour(name_id), row.name.c_str());
 
         auto versions = "Installed:"_i18n + " " + (row.installed.empty() ? std::string{"?"} : row.installed);

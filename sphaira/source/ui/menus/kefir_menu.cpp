@@ -57,6 +57,11 @@ Menu::Menu(std::optional<fs::FsPath> manual_firmware) : MenuBase{"Updater"_i18n,
             RefreshSystemInfo();
             FetchLinks();
         }}),
+        std::make_pair(Button::Y, Action{"Update all"_i18n, [this](){
+            if (m_tab == UpdaterTab::Apps) {
+                m_apps->UpdateAll();
+            }
+        }}),
         std::make_pair(Button::START, Action{"Options"_i18n, [this](){
             DisplayOptions();
         }})

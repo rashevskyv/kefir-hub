@@ -39,6 +39,7 @@ public:
 
     void Activate(); // A: update the selected app
     void Refresh();  // X: ask every source again
+    void UpdateAll(); // Y: update every app that has an update
 
 private:
     void Build(); // the rows, from the answers saved on the card

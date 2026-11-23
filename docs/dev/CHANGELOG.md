@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.435 — Updater: Update all (Y), updates first, pipensx and NXThemesInstaller
+Apps tab: Y updates every app with an update; apps with an update are listed first and only they have the accent name colour; pipensx (GitLab) and NXThemesInstaller get update info like the other Kefir package apps.
+host tests: pass (quick) | nro: built (0.14.434 tree) | switch: pending — Y on the Apps tab; pipensx and NXThemesInstaller rows show a Newest version; NXLoad must be at /switch/NXLoad/NXLoad.nro to be listed.
+
 ## v0.14.434 — Nextendo: versions on the page, account list with marks
 Kefir Settings → Nextendo shows three versions: the Prelude release this Hub carries (compiled in), the newest Prelude release read from git.nextendo.network and the version the Nextendo server announces (nextendo.network/api/health has no version field today: "Not announced"). Read when the page opens, at most once an hour; a lamp and a Versions row show green (same), red (a newer release exists: A explains, update Kefir Hub in Updater → Apps) or grey (not read). Seen on 2026-11-23: Hub v5.0.1, forge v5.0.2. The Hub never rewrites the card on a version difference: patches and the server address come only with a Hub release. Sign in uses a Hub profile list instead of the console selector: each profile shows Not linked / Linked to Nextendo / Linked to another account; the profiles the Hub signed in are remembered (`nextendo/signed_in_uids`). Rules in `nextendo_versions.hpp`, `nextendo_accounts.hpp`. 16 strings, EN and UK only.
 host tests: pass (quick; new test_nextendo_versions) | nro: not built | switch: pending (open Nextendo page: versions fill in; Sign in: list with marks; sign in a profile, reopen: Nextendo mark; the sign-in screen on an unlinked profile was never checked on a console)

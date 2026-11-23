@@ -215,6 +215,9 @@ auto ReadRelease(const char* path, Release& out) -> bool {
         return v ? v : "";
     };
     auto root = yyjson_doc_get_root(json);
+    if (yyjson_is_arr(root)) { // a list of releases (GitLab): the newest is first
+        root = yyjson_arr_get_first(root);
+    }
     out = {};
     out.tag = str(root, "tag_name");
     if (out.tag.empty()) {
