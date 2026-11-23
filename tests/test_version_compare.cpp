@@ -105,6 +105,12 @@ static int test_is_newer() {
     CHECK(!version::IsNewer("0.13.786", "0.13.601"));
     CHECK(!version::IsNewer("0.13.785", "0.13.601"));
     CHECK(!version::IsNewer("0.13.786", "0.13.786"));
+    // robot releases (prelude-sync): released version + index; a suffix like -1 would read as the same version
+    CHECK(version::IsNewer("0.14.395", "0.14.395.1"));
+    CHECK(version::IsNewer("0.14.395.1", "0.14.395.2"));
+    CHECK(version::IsNewer("0.14.395.2", "0.14.396"));
+    CHECK(!version::IsNewer("0.14.396", "0.14.395.9"));
+    CHECK(!version::IsNewer("0.14.395", "0.14.395-1"));
     CHECK(!version::IsNewer("v0.13.786", "0.13.601"));
     CHECK(!version::IsNewer("0.13.786", "v0.13.601"));
 

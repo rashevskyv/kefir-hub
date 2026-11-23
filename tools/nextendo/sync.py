@@ -246,11 +246,24 @@ def report(old, tag, cfg, tmpl, files):
 
 # --- version and changelog (robot) -------------------------------------------------------------------------
 
+def robot_version(released):
+    """The robot keeps the released version and adds an index: 0.14.395 -> 0.14.395.1 -> 0.14.395.2.
+    A fourth number (not '-1' or 'a') because the Hub's version check reads only numbers: it sees 0.14.395.1 as newer
+    than 0.14.395, and the next own release 0.14.396 as newer than both."""
+    parts = [int(p) for p in released.split(".")]
+    if len(parts) == 3:
+        parts.append(0)
+    if len(parts) != 4:
+        raise Refused("unexpected version in CMakeLists: " + released)
+    parts[3] += 1
+    return ".".join(map(str, parts))
+
+
 def bump(tag, summary_line):
     text = CMAKE.read_text(encoding="utf-8")
-    m = re.search(r"set\(sphaira_VERSION (\d+)\.(\d+)\.(\d+)\)", text)
-    old = "%s.%s.%s" % m.groups()
-    new = "%s.%s.%d" % (m.group(1), m.group(2), int(m.group(3)) + 1)
+    m = re.search(r"set\(sphaira_VERSION (\d+\.\d+\.\d+(?:\.\d+)?)\)", text)
+    old = m.group(1)
+    new = robot_version(old)
     CMAKE.write_text(text.replace(m.group(0), "set(sphaira_VERSION %s)" % new, 1), encoding="utf-8", newline="\n")
     log = CHANGELOG.read_text(encoding="utf-8")
     entry = ("## v%s — Prelude-Nextendo %s (robot)\n%s\nhost tests: pass (quick) | nro: built (CI) | switch: pending\n\n"

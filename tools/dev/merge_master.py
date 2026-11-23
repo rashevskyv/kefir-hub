@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CMAKE = "sphaira/CMakeLists.txt"
 CHANGELOG = "docs/dev/CHANGELOG.md"
-VERSION = re.compile(r"set\(sphaira_VERSION (\d+)\.(\d+)\.(\d+)\)")
+VERSION = re.compile(r"set\(sphaira_VERSION (\d+(?:\.\d+){2,3})\)")  # robot releases add a 4th number
 
 
 def git(*args, check=True):
@@ -31,8 +31,11 @@ def show(stage, path):
 
 
 def higher_version(ours, theirs):
-    a = tuple(map(int, VERSION.search(ours).groups()))
-    b = tuple(map(int, VERSION.search(theirs).groups()))
+    def key(text):
+        parts = [int(p) for p in VERSION.search(text).group(1).split(".")]
+        return tuple(parts + [0] * (4 - len(parts)))
+
+    a, b = key(ours), key(theirs)
     return ours if a >= b else theirs
 
 
