@@ -84,6 +84,8 @@ around them. When a decision is made, follow the skill: "removed" or drop it fro
 | Create repack | Details + | game_details_ops.cpp:190 | games#create-one-merged-nsp-repack | doc |
 | Delete game (keeps saves) | + → Delete | game_internal.cpp:458 | games#delete-a-game | doc |
 | Mods folder | details / + | game_details_ops.cpp:167 | games#mods-folder | doc |
+| Edit name, publisher, version, icon (+ restore) | Games + / details + / tap icon | game_edit.cpp, control_patch.cpp | games#edit-a-games-name-and-icon (draft, shot games-edit-name-icon) | draft (v0.14.424); switch pending |
+| Delete the /switch Hub copy when running as hbmenu | Hub start | homebrew_ops.cpp (OfferDeleteHubNro) | index#make-kefir-hub-open-instead-of-the-homebrew-menu (draft) | draft (v0.14.425); switch pending |
 | Pack mods into romfs.bin | details / + ; file browser /atmosphere/contents / + | romfs_pack.cpp, filebrowser_romfs_pack.cpp | games#mods-folder, file-browser | draft |
 | Save slots: create, increase size, info | Details → Saves | game_save_manager.cpp | games#manage-save-slots | doc |
 | Sort, search, filters, options | + | game_menu.cpp, game_scan.cpp | games#sort-search-and-filter, #options | doc |

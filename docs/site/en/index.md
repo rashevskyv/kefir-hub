@@ -31,6 +31,12 @@ The way you start it matters:
 Turn it off to get the old Homebrew Menu back: Kefir Hub asks [[Restore hbmenu?]] and restores it from
 `/switch/hbmenu.nro`. Default: Off.
 
+<!-- draft
+- when Kefir Hub runs as `/hbmenu.nro` and `/switch/kefir-hub.nro` (or `/switch/kefir-hub/kefir-hub.nro`) is also Kefir Hub, a question at start offers [[Cancel]], [[Delete]] and [[Don't remind]]
+- [[Delete]] removes the second copy; the Kefir Hub HOME Menu icon is first pointed at `/hbmenu.nro`, so it keeps working
+- [[Don't remind]] stops the question (`[hub_copy] no_remind=1` in `/config/kefir/config.ini`)
+-->
+
 ## First start
 
 <!-- shot: index-first-start | First start page in the chosen language: Kefir Hub title, HOME Menu icon advice, A = OK -->

@@ -32,6 +32,12 @@ Kefir Hub — це homebrew-застосунок (`.nro`), тому він за�
 Вимкніть його, щоб повернути старе Homebrew Menu: Kefir Hub спитає [[Restore hbmenu?]] і відновить його з
 `/switch/hbmenu.nro`. Типово: вимкнено.
 
+<!-- draft
+- when Kefir Hub runs as `/hbmenu.nro` and `/switch/kefir-hub.nro` (or `/switch/kefir-hub/kefir-hub.nro`) is also Kefir Hub, a question at start offers [[Cancel]], [[Delete]] and [[Don't remind]]
+- [[Delete]] removes the second copy; the Kefir Hub HOME Menu icon is first pointed at `/hbmenu.nro`, so it keeps working
+- [[Don't remind]] stops the question (`[hub_copy] no_remind=1` in `/config/kefir/config.ini`)
+-->
+
 ## Перший запуск
 
 <!-- shot: index-first-start | First start page in the chosen language: Kefir Hub title, HOME Menu icon advice, A = OK -->

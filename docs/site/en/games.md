@@ -141,6 +141,22 @@ Start a game in another language than the console's, for example English for a t
 Translation packs that carry a `kefir_lang.json` file set this automatically when you install them.
 The setting is Atmosphère's `override_language` in `/atmosphere/contents/<Title ID>/config.ini`.
 
+## Edit a game's name and icon
+
+<!-- shot: games-edit-name-icon | Edit name and icon screen of an installed game: Name, publisher, version, icon, Language and Restrictions rows -->
+
+<!-- draft
+- open: on the Games list press **+** → [[Edit name and icon]]; or on the details screen press **+** → [[Edit name and icon]]; or tap the game icon on the details screen
+- one screen: [[Name]], publisher, version, icon, [[Language]] (only when the game lists its languages; opens the same list as [[Force language]]) and [[Restrictions]] (the same switches as Game restrictions)
+- icon: a picture from SteamGridDB or from the file browser; [[Current icon]] keeps the game's own icon
+- [[Save]] writes the change into the game's control data, so the HOME menu shows it too, after a restart of the HOME menu ("[[Saved. The HOME menu may show it after a restart]]")
+- needs sigpatches (Kefir includes sys-patch), like Game restrictions
+- a big picture is saved at lower JPEG quality until it fits the game's icon slot; if it still does not fit: "[[This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.]]"
+- some games keep their name in a newer format (for example Zelda: Breath of the Wild): only the icon and version change, the Hub says "[[This game keeps its name in a newer format: only the icon and version change]]"
+- the first change keeps a copy of the original control data in `/config/kefir/control_original/`; after that **+** shows [[Restore original name and icon]]: it puts back the name, publisher, version and icon; restrictions stay as they are
+- installing the update again brings the game's own name and icon back (the update has its own control data)
+-->
+
 ## Mods folder
 Atmosphère loads mods for a game from `/atmosphere/contents/<Title ID>/` on the microSD card (LayeredFS).
 
