@@ -5,7 +5,7 @@ Entries without a detail line are commit titles only; their verification state w
 
 ## v0.14.438 — translations for the newest strings
 Eight strings already in the code (Show Saves, the Nextendo sign-in hint, the parental-control PIN note, "Update Kefir now", the Tools → Software hint, the speed-test question, the first-start download note) and "update %s: update Kefir Hub" are now in every language (proxy translation).
-host tests: i18n deployment contract pass | nro: not built | switch: pending
+host tests: i18n deployment contract pass | nro: built (0.14.438) | switch: pending
 
 ## v0.14.437 — Nextendo page: one release row, rows and hold-A boxes grow to fit their text
 Kefir Settings → Nextendo: the newest-Prelude, server-version and Versions rows are gone. "Release in this Hub" shows the tag this Hub carries; when git.nextendo.network has a newer Prelude release, the same row adds "update vX: update Kefir Hub" with a red lamp, and A explains where to update. The server health request is removed. Rows of the Nextendo page get taller when a description needs two lines (it ran past the row frame); the hold-A confirm box grows in height to fit its text and shrinks the font only when the text is taller than the screen.
