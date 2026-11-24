@@ -139,6 +139,7 @@ Result RepointApplicationRecord(u64 app_id, const NcmContentMetaKey& key, NcmSto
 
     std::vector<ncm::ContentStorageRecord> records;
     R_TRY(ReadApplicationRecords(am, app_id, records));
+    const auto original = records;
 
     bool found{};
     for (auto& record : records) {
@@ -156,7 +157,12 @@ Result RepointApplicationRecord(u64 app_id, const NcmContentMetaKey& key, NcmSto
 
     // ns has no "update one record" cmd - the list is replaced wholesale.
     R_TRY(ns::DeleteApplicationRecord(am.get(), app_id));
-    R_TRY(ns::PushApplicationRecord(am.get(), app_id, records.data(), records.size()));
+    if (const auto rc = ns::PushApplicationRecord(am.get(), app_id, records.data(), records.size()); R_FAILED(rc)) {
+        // the source copy is still intact: put the old record back so the game keeps launching from it.
+        log_write("[MOVE] record push failed 0x%X, restoring old record: 0x%X\n", rc,
+            ns::PushApplicationRecord(am.get(), app_id, original.data(), original.size()));
+        return rc;
+    }
     R_SUCCEED();
 }
 
@@ -371,19 +377,34 @@ Result DeleteComponent(const NsApplicationContentMetaStatus& status) {
     R_SUCCEED();
 }
 
-Result MoveComponent(const NsApplicationContentMetaStatus& status, NcmStorageId target_storage, ui::ProgressBox* pbox) {
-    NcmContentMetaKey key{};
-    std::vector<NcmContentInfo> infos;
-    R_TRY(GetComponentContents(GetNcmDb(status.storageID), status, key, infos));
-
-    u64 done{};
-    const auto total = SumContentSize(infos);
-    if (pbox) {
-        pbox->NewTransfer(i18n::get(ncm::GetReadableMetaTypeStr(status.meta_type)));
-        pbox->UpdateTransfer(0, total);
+Result MoveComponents(const std::vector<NsApplicationContentMetaStatus>& statuses, NcmStorageId target_storage, ui::ProgressBox* pbox) {
+    u64 total{};
+    for (const auto& status : statuses) {
+        if (status.storageID == target_storage) {
+            continue;
+        }
+        NcmContentMetaKey key{};
+        std::vector<NcmContentInfo> infos;
+        R_TRY(GetComponentContents(GetNcmDb(status.storageID), status, key, infos));
+        total += SumContentSize(infos);
     }
 
-    return MoveComponentImpl(status, target_storage, pbox, done, total);
+    // same up-front space check as MoveApplication: a half-done move strands ncas.
+    s64 nand_free{}, sd_free{};
+    fs::GetStorageSpaces(&nand_free, nullptr, &sd_free, nullptr);
+    const auto free_space = target_storage == NcmStorageId_SdCard ? sd_free : nand_free;
+    R_UNLESS(free_space <= 0 || (u64)free_space > total, Result_GameMoveNotEnoughSpace);
+
+    u64 done{};
+    for (const auto& status : statuses) {
+        R_TRY(pbox ? pbox->ShouldExitResult() : 0);
+        if (pbox) {
+            pbox->NewTransfer(i18n::get(ncm::GetReadableMetaTypeStr(status.meta_type)));
+            pbox->UpdateTransfer(done, total);
+        }
+        R_TRY(MoveComponentImpl(status, target_storage, pbox, done, total));
+    }
+    R_SUCCEED();
 }
 
 Result MoveApplication(u64 app_id, NcmStorageId target_storage, ui::ProgressBox* pbox) {

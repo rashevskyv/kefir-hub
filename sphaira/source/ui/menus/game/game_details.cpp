@@ -430,17 +430,7 @@ void DbiDetailsMenu::ShowCurrentActions() {
                 const auto label = (target == NcmStorageId_SdCard ? "Move component to SD"_i18n : "Move component to NAND"_i18n);
 
                 options->Add<SidebarEntryCallback>(label, [this, component, target](){
-                    App::Push<ProgressBox>(0, MovingToLabel(target), i18n::get(ncm::GetReadableMetaTypeStr(component.status.meta_type)), [component, target](auto pbox) -> Result {
-                        DropBoostForMove();
-                        return title::MoveComponent(component.status, target, pbox);
-                    }, [this, target](Result rc){
-                        if (R_SUCCEEDED(rc)) {
-                            App::Notify(MovedToLabel(target));
-                            LoadGame();
-                        } else if (rc != Result_TransferCancelled) {
-                            App::PushErrorBox(rc, "Move failed!"_i18n);
-                        }
-                    }, 1, PRIO_PREEMPTIVE, 1024*128, false);
+                    MoveComponentRows({component}, target);
                 }, label + ".");
             }
 

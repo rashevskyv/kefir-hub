@@ -45,6 +45,7 @@ struct DbiDetailsMenu final : MenuBase {
     auto MarkedCount() const -> size_t;
     auto DeleteTargets() const -> std::vector<GameComponentRow>;
     void ConfirmDeleteComponents(std::vector<GameComponentRow> rows);
+    void MoveComponentRows(std::vector<GameComponentRow> rows, NcmStorageId target);
     auto CurrentCount() const -> size_t;
     auto TabHeaderItem() const -> u8;
     static auto HeaderItemHint(u8 item) -> std::string;

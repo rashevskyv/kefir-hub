@@ -80,6 +80,8 @@
   "Moved to NAND": "Moved to NAND",
   "Move component to SD": "Move component to SD",
   "Move component to NAND": "Move component to NAND",
+  "Move selected components to SD": "Move selected components to SD",
+  "Move selected components to NAND": "Move selected components to NAND",
   "Move": "Move",
   "Moving": "Moving",
   "Move failed!": "Move failed!",

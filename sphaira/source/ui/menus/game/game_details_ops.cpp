@@ -196,6 +196,27 @@ void DbiDetailsMenu::ShowCreateRepackSidebar() {
     ShowRepackOptions(CurrentEntry(), m_repack_callback);
 }
 
+// moves only these components; each one is copied and registered on the target before its source is removed.
+void DbiDetailsMenu::MoveComponentRows(std::vector<GameComponentRow> rows, NcmStorageId target) {
+    std::vector<NsApplicationContentMetaStatus> statuses;
+    for (const auto& r : rows) {
+        statuses.push_back(r.status);
+    }
+    const auto title = rows.size() == 1 ? i18n::get(ncm::GetReadableMetaTypeStr(rows[0].status.meta_type)) : CurrentEntry().GetName();
+    App::Push<ProgressBox>(0, MovingToLabel(target), title, [statuses, target](auto pbox) -> Result {
+        DropBoostForMove();
+        return title::MoveComponents(statuses, target, pbox);
+    }, [this, target](Result rc){
+        if (R_SUCCEEDED(rc)) {
+            App::Notify(MovedToLabel(target));
+        } else if (rc != Result_TransferCancelled) {
+            App::PushErrorBox(rc, "Move failed!"_i18n);
+        }
+        // reload on failure too: components moved before the failing one are on the target now.
+        LoadGame();
+    }, 1, PRIO_PREEMPTIVE, 1024*128, false);
+}
+
 void DbiDetailsMenu::ShowGameActions() {
         auto options = std::make_unique<Sidebar>("Game Actions"_i18n, Sidebar::Side::RIGHT);
         ON_SCOPE_EXIT(App::Push(std::move(options)));
@@ -239,6 +260,28 @@ void DbiDetailsMenu::ShowGameActions() {
             options->Add<SidebarEntryCallback>("Delete selected components"_i18n + " (" + std::to_string(MarkedCount()) + ")", [this](){
                 ConfirmDeleteComponents(DeleteTargets());
             }, true, "Delete the ticked components. The save data stays."_i18n)->SetIcon(ActionIcon::Delete);
+        }
+
+        // Content tab: move only the ticked rows (or the row under the cursor), not the whole game.
+        if (m_tab == Tab::Content && CurrentCount()) {
+            const auto rows = DeleteTargets();
+            const auto add_move_rows = [this, &rows, &options](NcmStorageId target, const std::string& label){
+                std::vector<GameComponentRow> movable;
+                for (const auto& r : rows) {
+                    const auto src = r.status.storageID;
+                    if (src != target && (src == NcmStorageId_SdCard || src == NcmStorageId_BuiltInUser)) {
+                        movable.push_back(r);
+                    }
+                }
+                if (movable.empty()) {
+                    return;
+                }
+                options->Add<SidebarEntryCallback>(label + " (" + std::to_string(movable.size()) + ")", [this, movable, target](){
+                    MoveComponentRows(movable, target);
+                }, true, label + ".")->SetIcon(ActionIcon::Move);
+            };
+            add_move_rows(NcmStorageId_SdCard, "Move selected components to SD"_i18n);
+            add_move_rows(NcmStorageId_BuiltInUser, "Move selected components to NAND"_i18n);
         }
 
         add_move(NcmStorageId_SdCard, "Move to SD"_i18n, "Move game components from NAND to SD card."_i18n);

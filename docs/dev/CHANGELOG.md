@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.439 — move only the selected game components
+Game details → Content → START: new "Move selected components to SD / NAND" moves only the ticked rows (or the row under the cursor), not the whole game; "Move to NAND/SD" still moves the whole game. A multi-component move checks free space first. If the record update fails, the old record is pushed back, so the game still starts from its untouched source copy.
+host tests: pass except 2 unrelated docs/http fixture checks | nro: not built | switch: pending (move one DLC/update SD→NAND, cancel mid-copy, game must still start)
+
 ## v0.14.438 — translations for the newest strings
 Eight strings already in the code (Show Saves, the Nextendo sign-in hint, the parental-control PIN note, "Update Kefir now", the Tools → Software hint, the speed-test question, the first-start download note) and "update %s: update Kefir Hub" are now in every language (proxy translation).
 host tests: i18n deployment contract pass | nro: built (0.14.438) | switch: pending
