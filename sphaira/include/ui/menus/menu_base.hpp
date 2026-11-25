@@ -83,7 +83,7 @@ struct MenuBase : Widget {
     void SetStorageProjection(u64 nand_bytes, u64 sd_bytes, u64 nand_focus = 0, u64 sd_focus = 0);
     // Active package progress during installation: draws remaining bytes
     // (total - written) as a yellow segment on the destination drive,
-    // while the label displays cumulative progress as "written / total".
+    // while the label of that drive alternates (slide) between "free / total" and "written / total".
     void SetStorageInstallProgress(u64 nand_written, u64 nand_total, u64 sd_written, u64 sd_total);
     void ClearStorageHighlight();
 

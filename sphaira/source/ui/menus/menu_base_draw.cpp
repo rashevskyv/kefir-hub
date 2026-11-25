@@ -306,6 +306,31 @@ void MenuBase::DrawChrome(NVGcontext* vg, Theme* theme) {
             gfx::drawTextArgs(vg, label_x + label_col_w * 0.5f, y, storage_font,
                 NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM, text_col, "%s", label);
 
+            if (highlight_bytes && m_storage_install_progress) {
+                // the destination drive of an active install: "free / total" and the package's
+                // "written / size" take turns. The old line slides down out of the row, the new one
+                // slides in from above (2.2 s each, 0.3 s to move).
+                const auto progress = utils::formatSizeStorage(focus_bytes) + " / " + utils::formatSizeStorage(highlight_bytes);
+                const u64 ms = armTicksToNs(armGetSystemTick()) / 1000000;
+                const u64 phase = ms % 5000;
+                const bool second_half = phase >= 2500;
+                const float slide = std::clamp((static_cast<float>(phase % 2500) - 2200.f) / 300.f, 0.f, 1.f);
+                const float row_h = storage_font * 1.3f;
+                const auto& now_text = second_half ? progress : value;
+                const auto& next_text = second_half ? value : progress;
+                const auto now_col = second_half ? nvgRGBA(255, 200, 60, 255) : text_col;
+                const auto next_col = second_half ? text_col : nvgRGBA(255, 200, 60, 255);
+                nvgSave(vg);
+                nvgScissor(vg, value_x, y - row_h, value_col_w, row_h + 2.f);
+                gfx::drawTextArgs(vg, value_x, y + row_h * slide, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, now_col,
+                    "%s", now_text.c_str());
+                if (slide > 0.f) {
+                    gfx::drawTextArgs(vg, value_x, y - row_h * (1.f - slide), storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, next_col,
+                        "%s", next_text.c_str());
+                }
+                nvgRestore(vg);
+                return;
+            }
             gfx::drawTextArgs(vg, value_x, y, storage_font, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM, text_col,
                 "%s", value.c_str());
         };

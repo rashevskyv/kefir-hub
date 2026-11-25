@@ -2,6 +2,10 @@
 
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 
+## v0.14.445 — top bar: during an install the target drive alternates free / total and written / size
+The drive that receives the package shows "free / total" and the package's "written / size" (amber) in turn, sliding down and in from above every 2.5 s.
+host tests: not run | nro: building | switch: pending (check the slide on the console)
+
 ## v0.14.444 — translations for the auto backup dialog and the component move
 5 new strings in all 24 languages (the contract test failed on them; the deploy was blocked).
 host tests: i18n contract pass | nro: not built | switch: pending
