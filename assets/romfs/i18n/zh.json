@@ -4550,5 +4550,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo（当前无法读取关联状态）",
   "Link status cannot be read": "无法读取连接状态",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "将此 Hub 与最新的 Prelude 版本进行比较。如果两者不同，请更新 Kefir Hub：其补丁和服务器地址仅随 Hub 版本发布。",
-  "update %s: update Kefir Hub": "更新 %s：更新 Kefir Hub"
+  "update %s: update Kefir Hub": "更新 %s：更新 Kefir Hub",
+  "Move selected components to SD": "将所选组件移至SD卡",
+  "Move selected components to NAND": "将所选组件移至NAND",
+  "Auto backup of saves is running.": "正在自动备份存档。",
+  "Wait until it ends": "等待完成",
+  "Stop auto backup": "停止自动备份"
 }

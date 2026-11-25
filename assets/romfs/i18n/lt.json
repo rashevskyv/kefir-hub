@@ -4493,5 +4493,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (dabar negalima nuskaityti ryšio būsenos)",
   "Link status cannot be read": "Nepavyko nuskaityti ryšio būsenos",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Palygina šį Hub su naujausiu Prelude leidimu. Jei jie skiriasi, atnaujinkite Kefir Hub: jo pataisos ir serverio adresas pateikiami tik su Hub leidimu.",
-  "update %s: update Kefir Hub": "atnaujinti %s: atnaujinti Kefir Hub"
+  "update %s: update Kefir Hub": "atnaujinti %s: atnaujinti Kefir Hub",
+  "Move selected components to SD": "Perkelti pasirinktus komponentus į SD",
+  "Move selected components to NAND": "Perkelti pasirinktus komponentus į NAND",
+  "Auto backup of saves is running.": "Vyksta automatinis išsaugojimų atsarginis kopijavimas.",
+  "Wait until it ends": "Palaukti, kol baigsis",
+  "Stop auto backup": "Sustabdyti automatinį kopijavimą"
 }

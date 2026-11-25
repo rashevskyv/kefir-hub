@@ -4498,5 +4498,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (impossibile leggere ora lo stato del collegamento)",
   "Link status cannot be read": "Impossibile leggere lo stato del collegamento",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Confronta questo Hub con l'ultima versione di Prelude. Se differiscono, aggiorna Kefir Hub: le sue patch e l'indirizzo del server sono inclusi solo in una release dell'Hub.",
-  "update %s: update Kefir Hub": "aggiorna %s: aggiorna Kefir Hub"
+  "update %s: update Kefir Hub": "aggiorna %s: aggiorna Kefir Hub",
+  "Move selected components to SD": "Sposta i componenti selezionati su SD",
+  "Move selected components to NAND": "Sposta i componenti selezionati su NAND",
+  "Auto backup of saves is running.": "Il backup automatico dei salvataggi è in corso.",
+  "Wait until it ends": "Attendi il termine",
+  "Stop auto backup": "Interrompi il backup automatico"
 }

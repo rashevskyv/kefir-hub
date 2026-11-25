@@ -2,6 +2,10 @@
 
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 
+## v0.14.444 — translations for the auto backup dialog and the component move
+5 new strings in all 24 languages (the contract test failed on them; the deploy was blocked).
+host tests: i18n contract pass | nro: not built | switch: pending
+
 ## v0.14.443 — auto backup waits for the clock sync, so archives get the right date
 The auto backup started before the time server fixed the clock, so copies were named 2026-01-01. It now waits up to 40 s for the sync (`ntp::IsSynced`); an offline console starts after the wait.
 host tests: not run | nro: not built | switch: pending

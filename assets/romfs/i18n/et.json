@@ -4493,5 +4493,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (lingi olekut ei saa praegu lugeda)",
   "Link status cannot be read": "Lingi olekut ei saa lugeda",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Võrdleb seda Hubi uusima Prelude'i väljalaskega. Kui need erinevad, uuenda Kefir Hubi: selle paigad ja serveri aadress tulevad ainult Hubi väljalaskega.",
-  "update %s: update Kefir Hub": "uuenda %s: uuenda Kefir Hub"
+  "update %s: update Kefir Hub": "uuenda %s: uuenda Kefir Hub",
+  "Move selected components to SD": "Teisalda valitud komponendid SD-le",
+  "Move selected components to NAND": "Teisalda valitud komponendid NAND-i",
+  "Auto backup of saves is running.": "Salvestuste automaatne varundamine käib.",
+  "Wait until it ends": "Oota lõpuni",
+  "Stop auto backup": "Peata automaatne varundamine"
 }

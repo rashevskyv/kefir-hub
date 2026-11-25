@@ -4493,5 +4493,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (status tautan tidak dapat dibaca sekarang)",
   "Link status cannot be read": "Status tautan tidak dapat dibaca",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Membandingkan Hub ini dengan rilis Prelude terbaru. Jika berbeda, perbarui Kefir Hub: patch dan alamat servernya hanya tersedia dalam rilis Hub.",
-  "update %s: update Kefir Hub": "perbarui %s: perbarui Kefir Hub"
+  "update %s: update Kefir Hub": "perbarui %s: perbarui Kefir Hub",
+  "Move selected components to SD": "Pindahkan komponen terpilih ke SD",
+  "Move selected components to NAND": "Pindahkan komponen terpilih ke NAND",
+  "Auto backup of saves is running.": "Pencadangan otomatis data simpanan sedang berjalan.",
+  "Wait until it ends": "Tunggu hingga selesai",
+  "Stop auto backup": "Hentikan pencadangan otomatis"
 }

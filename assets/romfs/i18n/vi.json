@@ -4498,5 +4498,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (không thể đọc trạng thái liên kết lúc này)",
   "Link status cannot be read": "Không thể đọc trạng thái liên kết",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "So sánh Hub này với bản phát hành Prelude mới nhất. Nếu khác nhau, hãy cập nhật Kefir Hub: các bản vá và địa chỉ máy chủ của nó chỉ đi kèm trong bản phát hành Hub.",
-  "update %s: update Kefir Hub": "cập nhật %s: cập nhật Kefir Hub"
+  "update %s: update Kefir Hub": "cập nhật %s: cập nhật Kefir Hub",
+  "Move selected components to SD": "Chuyển các thành phần đã chọn sang SD",
+  "Move selected components to NAND": "Chuyển các thành phần đã chọn sang NAND",
+  "Auto backup of saves is running.": "Đang sao lưu tự động dữ liệu lưu.",
+  "Wait until it ends": "Chờ cho đến khi xong",
+  "Stop auto backup": "Dừng sao lưu tự động"
 }

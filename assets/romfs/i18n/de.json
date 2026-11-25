@@ -4499,5 +4499,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (Link-Status kann gerade nicht gelesen werden)",
   "Link status cannot be read": "Linkstatus kann nicht gelesen werden",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Vergleicht diesen Hub mit der neuesten Prelude-Version. Bei Abweichungen Kefir Hub aktualisieren: Patches und Serveradresse sind nur in einem Hub-Release enthalten.",
-  "update %s: update Kefir Hub": "%s aktualisieren: Kefir Hub aktualisieren"
+  "update %s: update Kefir Hub": "%s aktualisieren: Kefir Hub aktualisieren",
+  "Move selected components to SD": "Ausgewählte Komponenten auf die SD verschieben",
+  "Move selected components to NAND": "Ausgewählte Komponenten in den NAND verschieben",
+  "Auto backup of saves is running.": "Die automatische Sicherung der Spielstände läuft.",
+  "Wait until it ends": "Bis zum Ende warten",
+  "Stop auto backup": "Automatische Sicherung stoppen"
 }

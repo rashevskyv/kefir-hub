@@ -4498,5 +4498,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (지금 링크 상태를 읽을 수 없습니다)",
   "Link status cannot be read": "연결 상태를 읽을 수 없습니다",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "이 Hub를 최신 Prelude 릴리스와 비교합니다. 서로 다르면 Kefir Hub를 업데이트하세요. 패치와 서버 주소는 Hub 릴리스에만 포함됩니다.",
-  "update %s: update Kefir Hub": "%s 업데이트: Kefir Hub 업데이트"
+  "update %s: update Kefir Hub": "%s 업데이트: Kefir Hub 업데이트",
+  "Move selected components to SD": "선택한 구성 요소를 SD로 이동",
+  "Move selected components to NAND": "선택한 구성 요소를 NAND로 이동",
+  "Auto backup of saves is running.": "세이브 자동 백업이 진행 중입니다.",
+  "Wait until it ends": "끝날 때까지 기다리기",
+  "Stop auto backup": "자동 백업 중지"
 }

@@ -4498,5 +4498,10 @@
   "Nextendo (link status cannot be read now)": "Nextendo (koppelingsstatus kan nu niet worden gelezen)",
   "Link status cannot be read": "Kan koppelingsstatus niet lezen",
   "Compares this Hub with the newest Prelude release. When they differ, update Kefir Hub: its patches and server address come only with a Hub release.": "Vergelijkt deze Hub met de nieuwste Prelude-release. Werk Kefir Hub bij als ze verschillen: de patches en het serveradres zitten alleen in een Hub-release.",
-  "update %s: update Kefir Hub": "%s bijwerken: Kefir Hub bijwerken"
+  "update %s: update Kefir Hub": "%s bijwerken: Kefir Hub bijwerken",
+  "Move selected components to SD": "Geselecteerde onderdelen naar SD verplaatsen",
+  "Move selected components to NAND": "Geselecteerde onderdelen naar NAND verplaatsen",
+  "Auto backup of saves is running.": "De automatische back-up van opslagbestanden is bezig.",
+  "Wait until it ends": "Wachten tot het klaar is",
+  "Stop auto backup": "Automatische back-up stoppen"
 }
