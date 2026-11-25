@@ -152,7 +152,7 @@ auto Menu::AutoBackupChangedOn(ProgressBox* pbox, const std::vector<AccountUid>&
         g_done = i;
         R_TRY(pbox->ShouldExitResult());
         if (g_stop.load()) {
-            log_write("[AUTOBACKUP] stop: an install starts\n");
+            log_write("[AUTOBACKUP] stop: asked by an install or the user\n");
             break;
         }
         s64 free{};
@@ -258,10 +258,8 @@ void OpenWhenAutoBackupEnds(std::function<void()> open) {
     // the auto backup holds saves open: a backup or restore started now fails. Ask: wait for it, or stop it.
     // ponytail: only the entry to the saves list waits; the auto backup starts on Hub start, before anyone is inside.
     App::Push<OptionBox>("Auto backup of saves is running."_i18n, "Wait until it ends"_i18n, "Stop auto backup"_i18n, 0, [open](auto op) {
-        if (!op) {
-            return; // B: do not open the saves
-        }
-        if (*op == 1) {
+        // B picks button 0 (OptionBox with 2 buttons): it opens the waiting box, where B gives up.
+        if (op && *op == 1) {
             g_stop = true; // the job ends after the current save; the box below waits for that
         }
         App::Push<ProgressBox>(0, "Auto backup of changed saves"_i18n, "", [](ProgressBox* pbox) -> Result {
