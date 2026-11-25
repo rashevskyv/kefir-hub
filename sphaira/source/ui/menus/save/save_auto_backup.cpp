@@ -37,6 +37,7 @@ constexpr const char* EMPTY = "-"; // no own copy to keep: an empty save, or a s
 
 std::atomic<bool> g_running{false};
 std::atomic<bool> g_stop{false}; // an install over MTP or the network asks the job to give way
+std::atomic<s64> g_done{0}, g_total{0}; // the job's overall progress, shown by the waiting box and its screensaver
 
 auto Enabled() -> option::OptionBool& {
     static option::OptionBool opt{"saves", "auto_backup_changed", true};
@@ -144,9 +145,11 @@ auto Menu::AutoBackupChangedOn(ProgressBox* pbox, const std::vector<AccountUid>&
 
     const auto total = static_cast<s64>(jobs.size());
     ON_SCOPE_EXIT(pbox->SetOverall(0, 0));
+    g_total = total;
     for (s64 i = 0; i < total; i++) {
         auto& [e, commit, old] = jobs[i];
         pbox->SetOverall(i, total);
+        g_done = i;
         R_TRY(pbox->ShouldExitResult());
         if (g_stop.load()) {
             log_write("[AUTOBACKUP] stop: an install starts\n");
@@ -240,6 +243,7 @@ void StartAutoBackup() {
         }, 1, PRIO_PREEMPTIVE, 1024 * 128, false);
     pbox->SetMinimized(true);
     g_stop = false;
+    g_done = g_total = 0;
     g_running = true;
     if (!App::PushTransfer(std::move(pbox))) {
         g_running = false;
@@ -251,20 +255,31 @@ void OpenWhenAutoBackupEnds(std::function<void()> open) {
         open();
         return;
     }
-    // the auto backup holds saves open: a backup or restore started now fails. The box waits for it; B gives up.
+    // the auto backup holds saves open: a backup or restore started now fails. Ask: wait for it, or stop it.
     // ponytail: only the entry to the saves list waits; the auto backup starts on Hub start, before anyone is inside.
-    App::Push<ProgressBox>(0, "Auto backup of changed saves"_i18n, "", [](ProgressBox* pbox) -> Result {
-        pbox->NewTransfer("Auto backup of saves is running. Wait until it ends."_i18n);
-        while (g_running.load()) { // the UI thread clears it when the badge box closes
-            R_TRY(pbox->ShouldExitResult());
-            svcSleepThread(100'000'000);
+    App::Push<OptionBox>("Auto backup of saves is running."_i18n, "Wait until it ends"_i18n, "Stop auto backup"_i18n, 0, [open](auto op) {
+        if (!op) {
+            return; // B: do not open the saves
         }
-        R_SUCCEED();
-    }, [open](Result rc) {
-        if (R_SUCCEEDED(rc)) {
-            open();
+        if (*op == 1) {
+            g_stop = true; // the job ends after the current save; the box below waits for that
         }
-    }, 1, PRIO_PREEMPTIVE, 1024 * 128, false); // it only sleeps: no CPU boost
+        App::Push<ProgressBox>(0, "Auto backup of changed saves"_i18n, "", [](ProgressBox* pbox) -> Result {
+            pbox->NewTransfer("Auto backup of saves is running. Wait until it ends."_i18n);
+            while (g_running.load()) { // the UI thread clears it when the badge box closes
+                R_TRY(pbox->ShouldExitResult());
+                const auto total = g_total.load();
+                pbox->SetOverall(g_done.load(), total);
+                pbox->UpdateTransfer(g_done.load(), total > 0 ? total : 1);
+                svcSleepThread(100'000'000);
+            }
+            R_SUCCEED();
+        }, [open](Result rc) {
+            if (R_SUCCEEDED(rc)) {
+                open();
+            }
+        }, 1, PRIO_PREEMPTIVE, 1024 * 128, false); // it only sleeps: no CPU boost
+    });
 }
 
 auto StopAutoBackup() -> bool {
