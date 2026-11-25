@@ -17,6 +17,8 @@ namespace sphaira::ntp {
 void Start();
 void Stop();
 s64 GetDisplayOffset();
+// true once the clock matched the time server in this run (never on a console that stays offline).
+bool IsSynced();
 
 // Makes hekate's own clock (Nyx) show the same time: writes the offset between
 // utc (posix seconds, correct now) and the raw rtc to /bootloader/nyx.ini.

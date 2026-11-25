@@ -78,6 +78,7 @@ static_assert(sizeof(NtpPacket) == 48);
 Thread g_thread{};
 std::atomic_bool g_thread_running{};
 std::atomic_bool g_stop{};
+std::atomic_bool g_synced{}; // the clock matched the time server at least once this run
 UEvent g_wake_event{};
 std::atomic<s64> g_display_offset{0};
 
@@ -439,6 +440,7 @@ void ThreadFunc(void*) {
         const auto rc = RunSync();
         if (R_SUCCEEDED(rc)) {
             ReportSyncStage("background synchronization complete");
+            g_synced = true;
         }
         // no connection yet is the normal case on boot, so keep the fast poll
         // for it and back off only for real failures.
@@ -505,6 +507,10 @@ void Start() {
         return;
     }
     g_thread_running = true;
+}
+
+bool IsSynced() {
+    return g_synced.load();
 }
 
 void Stop() {

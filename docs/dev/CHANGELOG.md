@@ -2,6 +2,10 @@
 
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 
+## v0.14.443 — auto backup waits for the clock sync, so archives get the right date
+The auto backup started before the time server fixed the clock, so copies were named 2026-01-01. It now waits up to 40 s for the sync (`ntp::IsSynced`); an offline console starts after the wait.
+host tests: not run | nro: not built | switch: pending
+
 ## v0.14.442 — auto backup also copies BCAT saves
 The auto backup skipped the 8 BCAT saves (Smash, Tetris 99, Online classics), so a manual backup made them again ("created 8"). Found from the console's autobackup.txt and /dumps (8 `_B_` archives, none in the state).
 host tests: not run (one-line list change) | nro: not built | switch: pending

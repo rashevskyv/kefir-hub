@@ -16,6 +16,7 @@
 #include "fs.hpp"
 #include "i18n.hpp"
 #include "log.hpp"
+#include "ntp.hpp"
 #include "option.hpp"
 #include "defines.hpp"
 #include "title_info.hpp"
@@ -121,6 +122,13 @@ auto Menu::AutoBackupChangedOn(ProgressBox* pbox, const std::vector<AccountUid>&
     const auto exclusions = LoadExclusions();
     const auto limit = SizeLimit().Get();
     pbox->SetTitle("Auto backup of changed saves"_i18n);
+
+    // the copies are named by the clock, and the time server corrects it a few seconds after the network comes up:
+    // wait for that (up to 40 s; an offline console never gets it), else the archives get a wrong date.
+    for (int i = 0; i < 400 && App::GetNtpEnable() && !ntp::IsSynced() && !g_stop.load(); i++) {
+        R_TRY(pbox->ShouldExitResult());
+        svcSleepThread(100'000'000);
+    }
 
     // first the changed saves (a quick read of each save's commit id), so the badge can show "N / total"
     struct Job { Entry e; u64 commit; std::string old; };
