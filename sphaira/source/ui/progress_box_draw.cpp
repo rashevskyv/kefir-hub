@@ -338,7 +338,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     const s64 overall_total = m_overall_total.load();
     const s64 overall_done = std::clamp<s64>(m_overall_done.load(), 0, std::max<s64>(overall_total, 0));
     const bool overall_open = m_overall_open.load();
-    const bool show_overall = overall_total > 0 && !m_detached && !m_show_graph;
+    const bool show_overall = overall_total > 0 && !m_show_graph;
     if (m_detached || show_overall) {
         m_pos.h = 360.f;
         m_pos.y = (SCREEN_HEIGHT / 2.f) - (m_pos.h / 2.f);
@@ -358,7 +358,10 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
     // a job over many items: the current item's bar on top, the whole job's bar at the bottom; both as thin (8 px),
     // so the two read as one pair wherever this box is used (save restore, backups, ...)
     constexpr float PAIR_BAR_H = 8.f;
-    const Vec4 item_bar = show_overall ? Vec4{prog_bar.x, prog_bar.y - 40.f, prog_bar.w, PAIR_BAR_H} : prog_bar;
+    // a detached box (the opened badge of a background job) has its file name at 160: the pair sits lower there.
+    const float item_dy = m_detached ? -8.f : -40.f;
+    const float overall_dy = m_detached ? 32.f : (prog_bar.h - PAIR_BAR_H) / 2.f;
+    const Vec4 item_bar = show_overall ? Vec4{prog_bar.x, prog_bar.y + item_dy, prog_bar.w, PAIR_BAR_H} : prog_bar;
 
     nvgSave(vg);
     nvgIntersectScissor(vg, GetX(), GetY(), GetW(), GetH());
@@ -374,7 +377,7 @@ auto ProgressBox::Draw(NVGcontext* vg, Theme* theme) -> void {
 
     if (show_overall) {
         // the whole job: "Done: 3 / 40" and its own bar, below the bar of the current item, as thin as it.
-        const Vec4 bar = {prog_bar.x, prog_bar.y + (prog_bar.h - PAIR_BAR_H) / 2.f, prog_bar.w, PAIR_BAR_H};
+        const Vec4 bar = {prog_bar.x, prog_bar.y + overall_dy, prog_bar.w, PAIR_BAR_H};
         const auto fraction = static_cast<float>(overall_done) / static_cast<float>(overall_total);
         gfx::drawRect(vg, bar, theme->GetColour(ThemeEntryID_PROGRESSBAR_BACKGROUND), 5);
         gfx::drawRect(vg, bar.x, bar.y, bar.w * fraction, bar.h, theme->GetColour(ThemeEntryID_PROGRESSBAR), 5);

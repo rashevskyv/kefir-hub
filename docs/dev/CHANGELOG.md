@@ -2,6 +2,10 @@
 
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 
+## v0.14.446 — the opened background box (auto backup) shows the overall bar
+The expanded badge box now has the pair of bars (current item, whole job) like the modal box; it was hidden for a detached box.
+host tests: not run | nro: built | switch: pending
+
 ## v0.14.445 — top bar: during an install the target drive alternates free / total and written / size
 The drive that receives the package shows "free / total" and the package's "written / size" (amber) in turn, sliding down and in from above every 2.5 s.
 host tests: not run | nro: building | switch: pending (check the slide on the console)
