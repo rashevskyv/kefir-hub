@@ -90,15 +90,18 @@ auto AccountUids() -> std::vector<AccountUid> {
     return uids;
 }
 
-// the saves of these users and the device saves of all games: what the auto backup copies.
+// the saves of these users and the device and BCAT saves of all games: what the auto backup copies.
+// (BCAT saves, e.g. Smash, Tetris 99 and the Online classics, were left out: a manual backup then made them anew.)
 auto ListSaves(const std::vector<AccountUid>& uids) -> std::vector<Entry> {
     std::vector<Entry> out;
     for (const auto& uid : uids) {
         auto part = Menu::ListAccountSaves(uid);
         out.insert(out.end(), part.begin(), part.end());
     }
-    for (const auto& info : DiscoverSaveDataInfo(nullptr, FsSaveDataType_Device)) {
-        out.emplace_back(info);
+    for (const u8 type : {FsSaveDataType_Device, FsSaveDataType_Bcat}) {
+        for (const auto& info : DiscoverSaveDataInfo(nullptr, type)) {
+            out.emplace_back(info);
+        }
     }
     return out;
 }

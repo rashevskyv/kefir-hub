@@ -2,6 +2,10 @@
 
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 
+## v0.14.442 — auto backup also copies BCAT saves
+The auto backup skipped the 8 BCAT saves (Smash, Tetris 99, Online classics), so a manual backup made them again ("created 8"). Found from the console's autobackup.txt and /dumps (8 `_B_` archives, none in the state).
+host tests: not run (one-line list change) | nro: not built | switch: pending
+
 ## v0.14.441 — opening saves during the auto backup asks: wait or stop
 Entering the saves while the auto backup runs now shows two buttons: "Wait until it ends" and "Stop auto backup". The waiting box (and its screensaver) now shows the real overall progress instead of a frozen bar and graph.
 host tests: pass (--quick) | nro: not built | switch: pending
