@@ -3,6 +3,10 @@
 Newest first. One heading per version; add 1-3 lines per delivery (see AGENTS.md).
 Entries without a detail line are commit titles only; their verification state was not recorded.
 
+## v0.14.440 — HOME shows an edited game name and icon (19.0.0+ stage cache)
+The user saw the new name and icon in the Hub but the old ones in HOME, also after a reboot. ns 19.0.0+ has a second control cache (cmd 418 InvalidateApplicationControlCacheOfTheStage, switchbrew) that cmd 404 leaves. `ns::InvalidateApplicationControlCache` now also sends 418 on 19.0.0+ and logs both results (`[NS]`); used by game edit/restore, forwarder install and game move.
+host tests: pass (quick) | nro: built (0.14.440) | switch: pending — open the edited game, Edit name and icon → Save once more; HOME must show the new icon (after a reboot at worst); log line `[NS] ... stage cache 0x0`.
+
 ## v0.14.439 — move only the selected game components
 Game details → Content → START: new "Move selected components to SD / NAND" moves only the ticked rows (or the row under the cursor), not the whole game; "Move to NAND/SD" still moves the whole game. A multi-component move checks free space first. If the record update fails, the old record is pushed back, so the game still starts from its untouched source copy.
 host tests: pass except 2 unrelated docs/http fixture checks | nro: built (0.14.439) | switch: pending (move one DLC/update SD→NAND, cancel mid-copy, game must still start)

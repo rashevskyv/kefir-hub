@@ -157,6 +157,7 @@
 - icon: a picture from SteamGridDB or from the file browser; [[Current icon]] keeps the game's own icon
 - after the icon was changed once, the icon dialog ([[Choose Icon Source]]) has a third button, [[Default icon]]: it puts the game's own icon into the preview; [[Save]] writes it
 - [[Save]] writes the change into the game's control data ("[[Saved]]"); the Hub then pushes the game record to the system again, so the HOME menu reads the new name and icon without a restart (switch: pending); the Games list and the details screen show the new icon at once
+- 0.14.440: on firmware 19.0.0+ the HOME menu keeps the name and icon in a second system cache that also survives a reboot; [[Save]] and Restore now clear it too; a game edited with an older Hub keeps its old HOME icon until it is saved once more
 - needs sigpatches (Kefir includes sys-patch), like Game restrictions
 - a big picture is saved at lower JPEG quality until it fits the game's icon slot; if it still does not fit: "[[This picture does not fit in the game's icon slot, even at low quality. Try a simpler picture.]]"
 - some games keep their name in a newer format (for example Zelda: Breath of the Wild): only the icon and version change, the Hub says "[[This game keeps its name in a newer format: only the icon and version change]]"
